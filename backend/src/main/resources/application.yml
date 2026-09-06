@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: hesperides-backend
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:hesperides}
+    username: ${POSTGRES_USER:hesperides}
+    password: ${POSTGRES_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+server:
+  port: ${BACKEND_PORT:8080}
