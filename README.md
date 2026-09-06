@@ -1,18 +1,15 @@
 # Hesperides
 
-Plataforma integral de gestión de biodiversidad y conservación de flora. Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Development) por un equipo de 10 desarrolladores de la PUCP.
+Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Development) por un equipo de 10 desarrolladores de la PUCP.
 
 ## Descripción
 
-**Hesperides** es una aplicación web, móvil y API backend que permite a botánicos, conservacionistas y equipos de investigación:
+**Hesperides** es un proyecto de investigación que implementa una arquitectura distribuida en tres capas:
+- Backend REST escalable (Spring Boot, Java 17)
+- Frontend responsivo (Next.js, TypeScript/React)
+- Data service especializado (Python Flask)
 
-- Catalogar y monitorear especies de flora
-- Registrar observaciones de campo con geolocalización
-- Gestionar proyectos de investigación colaborativa
-- Generar reportes de biodiversidad
-- Configurar catálogos de tipos, estados y categorías sin recompilación
-
-La arquitectura sigue principios SOLID, separación de capas limpia, y garantiza trazabilidad, escalabilidad y mantenibilidad.
+El dominio funcional y las características específicas se definen en los specs de `specs/`. Este repositorio contiene por ahora la arquitectura base, las convenciones comunes y un sistema de catálogos configurables que permite extender tipos, estados y categorías sin recompilación.
 
 ## Requisitos previos
 
@@ -77,7 +74,7 @@ _Nota: Las carpetas `backend/`, `frontend/` y `services/` se crean en tareas pos
 ## Flujo de desarrollo (Spec Driven Development)
 
 1. **Especificación**: escribir el spec (SPEC-NNN) en `specs/`
-2. **Revisión**: que los arcos revisen el spec antes de código
+2. **Revisión**: que otra persona revise el spec antes de código
 3. **Código**: implementar según el spec, capas separadas
 4. **Verificación**: pruebas pasan, comportamiento verificado
 5. **Pull Request**: cambios a `develop`, review de código
@@ -101,16 +98,20 @@ _Nota: Las carpetas `backend/`, `frontend/` y `services/` se crean en tareas pos
 │   └── .mvn/wrapper/           # Maven Wrapper
 │
 ├── frontend/                   # Next.js (TypeScript/React)
-│   ├── app/
-│   ├── components/
+│   ├── src/
+│   │   ├── app/
+│   │   └── components/
 │   └── package.json
 │
 ├── services/                   # Data Service (Python)
-│   ├── app.py
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── routes/
+│   │   └── processors/
 │   └── requirements.txt
 │
 ├── shared/                     # Código compartido
-│   └── types/                  # Definiciones TypeScript/OpenAPI
+│   └── types/                  # Definiciones TypeScript (api.ts, models.ts, catalog.ts)
 │
 ├── mobile/                     # React Native (Fase 2)
 │   └── README.md               # Pendiente de desarrollo
@@ -170,9 +171,10 @@ deleted_at TIMESTAMP NULL
 ### Configuración
 Cero credenciales en el código. Toda configuración por variables de entorno:
 ```
-DATABASE_URL=postgres://...
-API_KEY=${API_KEY}
-DEBUG=${DEBUG:false}
+POSTGRES_DB=hesperides
+POSTGRES_PASSWORD=cambiar_en_local
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:dev}
 ```
 
 ## Despliegue
@@ -209,8 +211,3 @@ El despliegue a la nube está pendiente de licencias AWS. Cuando esté disponibl
 ## Licencia
 
 PUCP — Proyecto de Investigación (2026)
-
-## Contacto
-
-- Equipo: Desarrollo PUCP
-- Email: p.david@pucp.edu.pe
