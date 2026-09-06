@@ -32,3 +32,6 @@ venv/
 # SO
 .DS_Store
 Thumbs.db
+
+# Scratch de ejecucion
+.superpowers/
