@@ -1,0 +1,33 @@
+# Development override: exposes db and data-service to the host for
+# inspection (DBeaver, curl) and mounts source code for hot reload.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  db:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+
+  # NOTE: the frontend runtime image (see frontend/Dockerfile) only contains
+  # the Next.js standalone build output, not the full dev toolchain, so this
+  # mounts source for visibility/inspection while keeping the image's own
+  # entrypoint (node server.js). True Fast Refresh would require a separate
+  # dev-stage image; see task-5-report.md for details.
+  frontend:
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend:/app/src
+      - ./shared:/app/shared
+
+  data-service:
+    environment:
+      FLASK_DEBUG: "1"
+      DATA_SERVICE_PORT: ${DATA_SERVICE_PORT:-5001}
+    ports:
+      - "${DATA_SERVICE_PORT:-5001}:${DATA_SERVICE_PORT:-5001}"
+    volumes:
+      - ./services:/app

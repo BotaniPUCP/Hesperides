@@ -1,0 +1,74 @@
+# Base orchestration for the four Hesperides services.
+# Only `backend` and `frontend` are reachable from the host here;
+# `db` and `data-service` stay internal to the `hesperides-net` network.
+# Development-only exposure and hot reload live in docker-compose.dev.yml.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: hesperides-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hesperides}
+      POSTGRES_USER: ${POSTGRES_USER:-hesperides}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_local}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hesperides}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hesperides-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hesperides-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-hesperides}
+      POSTGRES_USER: ${POSTGRES_USER:-hesperides}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_local}
+      BACKEND_PORT: ${BACKEND_PORT:-8080}
+    ports:
+      - "${BACKEND_PORT:-8080}:${BACKEND_PORT:-8080}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hesperides-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: hesperides-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    networks:
+      - hesperides-net
+
+  data-service:
+    build:
+      context: ./services
+      dockerfile: Dockerfile
+    container_name: hesperides-data-service
+    environment:
+      DATA_SERVICE_PORT: ${DATA_SERVICE_PORT:-5001}
+    networks:
+      - hesperides-net
+
+networks:
+  hesperides-net:
+    driver: bridge
+
+volumes:
+  pgdata:
