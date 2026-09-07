@@ -24,10 +24,20 @@ No cómo se implementa, sino qué problema resuelve para el usuario.]
 > INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
 > - Este spec completo
 > - SPEC-000 (arquitectura y convenciones)
-> - SPEC-002 (modelo de datos) para las entidades involucradas
+> - SPEC-001 (autenticación) — la matriz de permisos de su Anexo A gobierna
+>   la autorización de TODOS los endpoints del proyecto
+> - SPEC-002 (modelo de datos) para las entidades involucradas, y su §4.1:
+>   toda entidad extiende `BaseEntity`
+> - SPEC-003 (catálogos configurables) si la feature usa cualquier tipo, estado,
+>   prioridad o categoría — son filas de `catalog_items`, nunca enums
+> - SPEC-004 (auditoría) si la feature crea, edita o desactiva algo
 > - SPEC-C01 (componentes UI) si la feature tiene interfaz
 > - SPEC-C02 (manejo de errores)
 > - SPEC-C03 (patrones de API)
+>
+> Si el SPEC-000 contradice a un spec fundacional, **manda el fundacional**: el
+> SPEC-000 se escribió antes de conocer el dominio y algunas de sus directrices
+> quedaron genéricas.
 
 ### 2.1 Módulo backend
 
@@ -130,6 +140,17 @@ Content-Type: application/json
 ## 4. Migración de base de datos
 
 > Definir el script Flyway necesario para esta feature.
+>
+> **Rango por spec propietaria:** los fundacionales ocupan `V001`–`V012`. Un
+> SPEC-1NN usa `V1NN__` en adelante. El rango lo fija la spec que **posee** la
+> tabla, no la primera que la consume.
+>
+> **Si tu feature no necesita tablas nuevas, dilo explícitamente y no inventes una
+> migración.** Muchas features operan sobre tablas que los fundacionales ya
+> crearon. Una migración duplicada rompe Flyway por conflicto de checksum.
+>
+> Toda tabla nueva lleva `created_at`, `updated_at` y `deleted_at` (SPEC-000 §5.4),
+> y su entidad JPA extiende `BaseEntity` (SPEC-002 §4.1) en vez de redeclararlos.
 
 ```sql
 -- V[N]__[descripcion].sql
@@ -252,6 +273,9 @@ CREATE INDEX idx_nombre_tabla_campo1 ON nombre_tabla(campo1);
 - [ ] Datos sensibles que NO deben exponerse en response: [listar].
 - [ ] Prevención de inyección SQL: usa JPA, no queries concatenados.
 - [ ] XSS: sanitizar inputs de texto libre.
+- [ ] Acciones auditables: ¿esta feature crea, edita o desactiva algo que deba
+      dejar rastro en `audit_log` (SPEC-004 §3.2)? Si sí, listar cuáles.
+- [ ] Qué se registra en logs y qué NO (nunca contraseñas, hashes ni tokens).
 
 ## 10. Consideraciones de extensibilidad
 
@@ -288,4 +312,9 @@ CREATE INDEX idx_nombre_tabla_campo1 ON nombre_tabla(campo1);
 - [ ] Los mensajes de error son claros para el usuario final.
 - [ ] No hay `System.out.println`, `console.log` de depuración.
 - [ ] Se usó soft delete (no DELETE físico).
-- [ ] Se usaron catálogos configurables donde corresponde.
+- [ ] Se usaron catálogos configurables donde corresponde; no hay ningún `enum`
+      de dominio ni `@Enumerated` en el código Java.
+- [ ] Toda entidad nueva extiende `BaseEntity` y no redeclara `id`, `createdAt`,
+      `updatedAt` ni `deletedAt`.
+- [ ] La autorización de cada endpoint coincide con la matriz del Anexo A de
+      SPEC-001, sin reinterpretarla.

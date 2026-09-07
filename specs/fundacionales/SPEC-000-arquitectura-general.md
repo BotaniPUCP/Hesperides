@@ -290,7 +290,11 @@ Hesperides/
 
 ## 6. Plantilla de Spec (copiar para cada HU)
 
-Todo el contenido entre las líneas de corte es la plantilla. Guardar como `specs/_plantilla.md`.
+Todo el contenido entre las líneas de corte es la plantilla.
+
+> **La copia viva es `specs/_plantilla.md`**, que ya está en el repositorio y es la
+> que debe copiarse para cada spec nuevo. Lo que sigue es una reproducción para
+> lectura; si ambas difieren, manda el archivo.
 
 ---
 
@@ -321,10 +325,20 @@ No cómo se implementa, sino qué problema resuelve para el usuario.]
 > INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
 > - Este spec completo
 > - SPEC-000 (arquitectura y convenciones)
-> - SPEC-002 (modelo de datos) para las entidades involucradas
+> - SPEC-001 (autenticación) — la matriz de permisos de su Anexo A gobierna
+>   la autorización de TODOS los endpoints del proyecto
+> - SPEC-002 (modelo de datos) para las entidades involucradas, y su §4.1:
+>   toda entidad extiende `BaseEntity`
+> - SPEC-003 (catálogos configurables) si la feature usa cualquier tipo, estado,
+>   prioridad o categoría — son filas de `catalog_items`, nunca enums
+> - SPEC-004 (auditoría) si la feature crea, edita o desactiva algo
 > - SPEC-C01 (componentes UI) si la feature tiene interfaz
 > - SPEC-C02 (manejo de errores)
 > - SPEC-C03 (patrones de API)
+>
+> Si el SPEC-000 contradice a un spec fundacional, **manda el fundacional**: este
+> documento se escribió antes de conocer el dominio y algunas de sus directrices
+> quedaron genéricas.
 
 ### 2.1 Módulo backend
 
