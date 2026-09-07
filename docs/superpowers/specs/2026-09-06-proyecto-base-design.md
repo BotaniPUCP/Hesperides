@@ -52,7 +52,7 @@ Hesperides/
 │   └── REGISTRO.md
 ├── backend/     Spring Boot 3 · Java 17 · Maven · pe.edu.pucp.hesperides
 ├── services/    Flask 3 · pytest
-├── frontend/    Next.js 14 App Router · TypeScript · Tailwind
+├── frontend/    Next.js 16 App Router · React 19 · TypeScript · Tailwind
 ├── mobile/      README: fase 2, posterior al web
 └── shared/types/  api.ts · models.ts · catalog.ts
 ```

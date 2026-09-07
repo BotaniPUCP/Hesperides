@@ -4,9 +4,9 @@
 
 **Goal:** Dejar el monorepo Hesperides listo para desarrollar features: un comando levanta los cuatro servicios, tres comandos corren los tests, y el CI valida cada PR.
 
-**Architecture:** Monorepo con `backend/` (Spring Boot 3, Java 17, Maven), `frontend/` (Next.js 14 App Router, TypeScript, Tailwind), `services/` (Flask 3), `shared/types/` (TypeScript compartido web + móvil), `mobile/` (placeholder fase 2) y `specs/`. Orquestación con Docker Compose. Cada servicio incluye el mínimo código que demuestra las convenciones y pasa un test; nada de lógica de negocio.
+**Architecture:** Monorepo con `backend/` (Spring Boot 3, Java 17, Maven), `frontend/` (Next.js 16 App Router, TypeScript, Tailwind), `services/` (Flask 3), `shared/types/` (TypeScript compartido web + móvil), `mobile/` (placeholder fase 2) y `specs/`. Orquestación con Docker Compose. Cada servicio incluye el mínimo código que demuestra las convenciones y pasa un test; nada de lógica de negocio.
 
-**Tech Stack:** Java 17 + Spring Boot 3.3 + Maven Wrapper + Flyway + PostgreSQL 16 + JUnit 5 + JaCoCo · Next.js 14 + TypeScript 5 + Tailwind 3 + Jest + React Testing Library · Python 3.11 + Flask 3 + pytest · Docker Compose · GitHub Actions
+**Tech Stack:** Java 17 + Spring Boot 3.3 + Maven Wrapper + Flyway + PostgreSQL 16 + JUnit 5 + JaCoCo · Next.js 16 + React 19 + TypeScript 5 + Tailwind 3 + Jest + React Testing Library · Python 3.11 + Flask 3 + pytest · Docker Compose · GitHub Actions
 
 **Spec:** `docs/superpowers/specs/2026-09-06-proyecto-base-design.md`
 
@@ -780,7 +780,7 @@ export const apiClient = {
 
 - [ ] **Step 7: Escribir las configuraciones del frontend**
 
-`package.json`: Next 14, React 18, TypeScript 5, Tailwind 3, Jest 29, `@testing-library/react`, `@testing-library/jest-dom`, `jest-environment-jsdom`, `eslint-config-next`. Scripts: `dev`, `build`, `start`, `lint`, `test`, `test:coverage`.
+`package.json`: Next 16, React 19, TypeScript 5, Tailwind 3, Jest 29, `@testing-library/react`, `@testing-library/jest-dom`, `jest-environment-jsdom`, `eslint-config-next`. Scripts: `dev`, `build`, `start`, `lint`, `test`, `test:coverage`.
 
 `tsconfig.json`: `strict: true`, paths `@/*` → `./src/*` y `@shared/*` → `../shared/*`.
 
