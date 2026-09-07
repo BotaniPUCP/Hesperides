@@ -70,14 +70,14 @@ Permitir que un administrador, un coordinador o un operario de campo inicien ses
 - Ningún `@Enumerated` de Java para roles ni un `enum RoleEnum`. El rol es una FK a `catalog_items`.
 - Ninguna librería de sesión basada en estado del lado del servidor (Spring Session, Redis de sesión): la autenticación es JWT stateless, con revocación vía tabla de refresh tokens (sección 4).
 
-**Patrón de catálogos aplicable:** `ROLE` (`catalog_type`, sembrado en V001, completado en V002 de SPEC-002 con `COORDINADOR` y `OPERARIO`, y con `USER` desactivado). Este spec no vuelve a sembrar `ROLE`: ya está resuelto por SPEC-002 V010. Este spec solo lo consume por FK.
+**Patrón de catálogos aplicable:** `ROLE` (`catalog_type`, sembrado en V001, completado en V002 de SPEC-002 con `COORDINADOR`, `SUPERVISOR` y `OPERARIO`, y con `USER` desactivado). Este spec no vuelve a sembrar `ROLE`: ya está resuelto por SPEC-002 V010. Este spec solo lo consume por FK.
 
 ### 2.5 Decisión: alta de cuentas cerrada, sin autorregistro
 
 **No existe endpoint de registro público.** Las cuentas las crea un administrador desde el módulo de gestión de usuarios (`POST /api/v1/users`, fuera del alcance de contratos de este spec, dentro del alcance de su modelo de datos). Razones:
 
 - El cliente confirmó que **no hay integración con los sistemas de autenticación de la PUCP** (ítem 1.3 del análisis funcional): no existe un directorio externo (LDAP/SSO institucional) contra el cual validar que quien se registra es personal autorizado del campus.
-- Los tres roles (administrador, coordinador, operario) son personal contratado o asignado por la unidad de áreas verdes, un conjunto cerrado y pequeño (decenas de personas, no miles). Un registro abierto obligaría a un flujo de aprobación posterior de todas formas — es más simple que el administrador cree la cuenta una sola vez.
+- Los cuatro roles (administrador, coordinador, supervisor de cuadrilla, operario) son personal contratado o asignado por la unidad de áreas verdes, un conjunto cerrado y pequeño (decenas de personas, no miles). Un registro abierto obligaría a un flujo de aprobación posterior de todas formas — es más simple que el administrador cree la cuenta una sola vez.
 - Un operario de campo no elige unirse al sistema: se le asigna una cuenta como parte de su alta administrativa. Igual que un lector de tarjeta de acceso al campus.
 - Registro abierto + verificación por correo institucional era la alternativa considerada; se descarta porque no hay integración con correo PUCP en el alcance de este proyecto (SPEC-000 §1: sin dependencia de servicios externos) y añadiría una superficie de ataque (creación de cuentas no autorizadas) sin necesidad real del dominio.
 
@@ -436,7 +436,7 @@ Ambos flujos comparten `AuthController` y `JwtTokenProvider`. Lo que cambia es *
 | CA-02 | En web el refresh token nunca aparece en el cuerpo de la respuesta ni es legible por JavaScript | Inspeccionar la respuesta de `POST /api/v1/auth/login` con `X-Client-Type: web` (o sin el header) en las DevTools → el JSON de `data` no contiene ningún campo `refreshToken`. En la pestaña Application/Cookies, la cookie `refresh_token` muestra el flag `HttpOnly` marcado. Ejecutar `document.cookie` en la consola del navegador → no aparece `refresh_token`. |
 | CA-03 | En móvil el refresh token sí viaja en el body y el cliente lo persiste cifrado | `POST /api/v1/auth/login` con `X-Client-Type: mobile` → `data.refreshToken` presente en el JSON. Verificar en el código de la app que se guarda con `SecureStore.setItemAsync` (o Keychain), nunca con `AsyncStorage`. |
 | CA-04 | Un usuario desactivado no puede iniciar sesión ni mantener una sesión de refresco | Desactivar un usuario de prueba (`is_active = FALSE`). `POST /api/v1/auth/login` con sus credenciales correctas → 401 con el mismo mensaje que credenciales inválidas. Con una sesión previa a la desactivación, llamar `POST /api/v1/auth/refresh` con su refresh token → 401. |
-| CA-05 | Los tres roles tienen accesos distintos y verificables por endpoint | Con un usuario `OPERARIO`, llamar un endpoint reservado a `ADMIN` (p. ej. gestión de usuarios) → 403 con el sobre `{ ok: false, message: "Insufficient permissions for this action", data: null }`. El mismo request con un usuario `ADMIN` → 200. |
+| CA-05 | Los cuatro roles tienen accesos distintos y verificables por endpoint | Con un usuario `OPERARIO`, llamar un endpoint reservado a `ADMIN` (p. ej. gestión de usuarios) → 403 con el sobre `{ ok: false, message: "Insufficient permissions for this action", data: null }`. El mismo request con un usuario `ADMIN` → 200. |
 | CA-06 | `password_hash` nunca sale en ninguna respuesta de la API | Llamar `GET /api/v1/auth/me`, `POST /api/v1/auth/login` y cualquier endpoint de `GET /api/v1/users` con un usuario autenticado → ningún campo `passwordHash` ni `password_hash` aparece en el JSON de respuesta, bajo ninguna profundidad de anidamiento. |
 | CA-07 | El logout revoca la sesión de verdad, no solo en el cliente | `POST /api/v1/auth/logout` con una sesión activa → 204. Intentar `POST /api/v1/auth/refresh` reusando el mismo refresh token (cookie o body guardado antes del logout) → 401. En la BD, la fila de `refresh_tokens` correspondiente tiene `revoked_at` no nulo. |
 | CA-08 | Múltiples peticiones simultáneas con el access token vencido disparan un único refresh | En el cliente web, forzar 3 llamadas API concurrentes con un access token ya expirado → en la pestaña Network se observa **una sola** llamada a `POST /api/v1/auth/refresh`, seguida de las 3 peticiones originales reintentadas con el nuevo access token. |
@@ -533,7 +533,7 @@ No hay mockup de Figma para este spec. El login es un formulario mínimo de dos 
 
 - [x] **Validación en backend (Bean Validation), no solo en frontend:** `LoginRequest` usa `@NotBlank`, `@Email`, `@Size(min = 8)` en el DTO; el frontend valida en paralelo solo para UX inmediata.
 - [x] **Endpoint requiere autenticación JWT:** `POST /auth/login` → no (es el punto de entrada). `POST /auth/refresh` → no requiere `Authorization`, pero sí un refresh token válido (cookie o body). `POST /auth/logout` y `GET /auth/me` → sí, `Authorization: Bearer` obligatorio.
-- [x] **Roles/permisos necesarios:** ninguno de los cuatro endpoints de este spec exige un rol específico (login/refresh/logout/me son iguales para los tres roles); la matriz de permisos por módulo (más abajo) aplica a los endpoints de negocio de los demás specs, no a estos cuatro.
+- [x] **Roles/permisos necesarios:** ninguno de los cuatro endpoints de este spec exige un rol específico (login/refresh/logout/me son iguales para los cuatro roles); la matriz de permisos por módulo (más abajo) aplica a los endpoints de negocio de los demás specs, no a estos cuatro.
 - [x] **Datos sensibles que NO deben exponerse en response:** `password_hash` — nunca, bajo ninguna circunstancia, en ningún DTO, ni siquiera en respuestas de error o de auditoría. El `UserMapper` (Entity → DTO) no tiene ningún método que lo toque: la ausencia del campo en el DTO de respuesta lo hace estructuralmente imposible de serializar, no una omisión manual que alguien pueda olvidar. Tampoco se expone `token_hash` de `refresh_tokens`, ni el refresh token en texto plano se loguea nunca (ver más abajo).
 - [x] **Prevención de inyección SQL:** JPA con `UsersRepository.findByEmailAndDeletedAtIsNull(String email)` derivado o `@Query` parametrizado. Cero concatenación de strings.
 - [x] **XSS:** `firstName`/`lastName` son texto libre de entrada administrativa (los crea un administrador, no el propio usuario en un registro abierto), pero igual se sanean al renderizar en el frontend, nunca al guardar.
@@ -613,43 +613,54 @@ Esta matriz gobierna la autorización (`@PreAuthorize` o equivalente) de **todos
 
 Convención: **C** = crear, **L** = leer/listar, **U** = actualizar, **D** = desactivar (soft delete), **V** = validar/aprobar (acción de negocio, no CRUD), **A** = asignar. Celda vacía = sin acceso; el intento responde 403.
 
-| Módulo | Acción | ADMIN | COORDINADOR | OPERARIO |
-|---|---|:---:|:---:|:---:|
-| **1.1 Usuarios** | Crear / editar / desactivar usuarios | CUD | | |
-| **1.1 Usuarios** | Ver listado y ficha de usuarios | L | L (solo su equipo, ver nota 1) | |
-| **1.2 Roles y catálogos** | Administrar `catalog_types`/`catalog_items` | CUD | | |
-| **1.2 Roles y catálogos** | Leer catálogos (para llenar selects) | L | L | L |
-| **2. Catastro** (`zones`, `species`, `green_elements`) | Crear / editar / desactivar elementos | CUD | CU (sin desactivar, ver nota 2) | |
-| **2. Catastro** | Ver mapa y ficha de elementos | L | L | L (solo lectura, sin edición) |
-| **3/4. Intervenciones** | Asignar una intervención a un operario | | A | |
-| **3/4. Intervenciones** | Registrar ejecución (iniciar/completar, subir evidencia) | | | CU (solo las propias asignadas) |
-| **3/4. Intervenciones** | Validar/observar una intervención ejecutada | | V | |
-| **3/4. Intervenciones** | Ver historial de intervenciones | L | L | L (solo las propias) |
-| **5. Contratos y proveedores** | CRUD de contratos, proveedores, ejecuciones | CUD | L (solo lectura, ver nota 3) | |
-| **6. Incidencias** | Reportar una incidencia | C | C | C |
-| **6. Incidencias** | Cambiar estado / asignar / resolver una incidencia | U, A | U, A | |
-| **6. Incidencias** | Ver incidencias | L | L | L (solo las propias/asignadas) |
-| **7. Reportes** | Generar y ver reportes de dirección/coordinación | L | L | |
-| **Configuración del sistema** (`system_parameters`) | Editar parámetros generales | CU | | |
+La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervisor** dirige su cuadrilla, y el **coordinador** planifica sobre todas las cuadrillas. El operario reporta a su supervisor y el supervisor al coordinador; por eso el coordinador ve todos los equipos y el supervisor solo el suyo.
+
+| Módulo | Acción | ADMIN | COORDINADOR | SUPERVISOR | OPERARIO |
+|---|---|:---:|:---:|:---:|:---:|
+| **1.1 Usuarios** | Crear / editar / desactivar usuarios | CUD | | | |
+| **1.1 Usuarios** | Ver listado y ficha de usuarios | L | L (todos, ver nota 1) | L (solo su cuadrilla) | |
+| **1.1 Equipos** | Crear / editar cuadrillas y su composición | CUD | CU | | |
+| **1.1 Equipos** | Ver cuadrillas | L | L (todas) | L (la suya) | L (la suya) |
+| **1.2 Roles y catálogos** | Administrar `catalog_types`/`catalog_items` | CUD | | | |
+| **1.2 Roles y catálogos** | Leer catálogos (para llenar selects) | L | L | L | L |
+| **2. Catastro** (`zones`, `species`, `green_elements`) | Crear / editar / desactivar elementos | CUD | CU (sin desactivar, ver nota 2) | | |
+| **2. Catastro** | Ver mapa y ficha de elementos | L | L | L | L (solo lectura, sin edición) |
+| **3. Intervenciones** | Crear / editar una intervención | CU | CU | | |
+| **3. Intervenciones** | Asignar una intervención | | A (a cualquier cuadrilla) | A (dentro de su cuadrilla) | |
+| **3. Intervenciones** | Registrar ejecución (iniciar/completar, subir evidencia) | | | CU (las de su cuadrilla) | CU (solo las propias asignadas) |
+| **3. Intervenciones** | Validar/observar una intervención ejecutada | | V | V (las de su cuadrilla, ver nota 4) | |
+| **3. Intervenciones** | Ver historial de intervenciones | L | L | L (las de su cuadrilla) | L (solo las propias) |
+| **4. Contratos y proveedores** | Crear / editar contratos y proveedores | CUD | CU (sin desactivar, ver nota 3) | | |
+| **4. Contratos y proveedores** | Registrar y ver ejecuciones de servicio | CUD | CU | L (las de su zona) | |
+| **5. Incidencias** | Reportar una incidencia | C | C | C | C |
+| **5. Incidencias** | Cambiar estado / asignar / resolver una incidencia | U, A | U, A | U, A (las de su cuadrilla) | |
+| **5. Incidencias** | Ver incidencias | L | L | L (las de su cuadrilla/zona) | L (solo las propias/asignadas) |
+| **6. Reportes** | Generar y ver reportes de dirección/coordinación | L | L | L (solo de su cuadrilla) | |
+| **Configuración del sistema** (`system_parameters`) | Editar parámetros generales | CU | | | |
 
 **Resumen por rol (una línea cada uno):**
 
-- **ADMIN:** control total sobre usuarios, catálogos, catastro, contratos y parámetros del sistema; solo lectura sobre la operación diaria de intervenciones e incidencias, que no le corresponde ejecutar ni validar.
-- **COORDINADOR:** planifica y valida el trabajo de campo (asigna intervenciones, valida su ejecución, gestiona incidencias) y mantiene el catastro al día, pero no administra usuarios, catálogos, contratos ni parámetros del sistema.
-- **OPERARIO:** solo puede crear/actualizar lo que a él mismo le concierne — ejecutar sus intervenciones asignadas y reportar incidencias —, y leer en modo consulta lo necesario para trabajar en campo (mapa, ficha de elementos, su propio historial); no crea, edita ni administra nada del resto del sistema.
+- **ADMIN:** control total sobre usuarios, catálogos, catastro, contratos y parámetros del sistema; solo lectura sobre la ejecución diaria del trabajo de campo, que no le corresponde ejecutar ni validar.
+- **COORDINADOR:** planifica y supervisa toda la operación — crea y edita intervenciones y contratos, asigna trabajo a cualquier cuadrilla, valida lo ejecutado y ve todos los equipos —, pero no administra usuarios, catálogos ni parámetros del sistema.
+- **SUPERVISOR:** dirige una cuadrilla: asigna a sus operarios el trabajo que el coordinador planificó, valida lo que su equipo ejecuta, y ve únicamente lo que concierne a su cuadrilla. Es el eslabón entre el operario y el coordinador.
+- **OPERARIO:** ejecuta las intervenciones que se le asignan y reporta incidencias; lee lo necesario para trabajar en campo (mapa, ficha de elementos, su propio historial) y no administra nada.
 
 **Notas:**
 
-1. Un coordinador ve el listado de usuarios para saber a quién puede asignar trabajo (necesita ver operarios activos), pero no puede crear, editar ni desactivar cuentas — esa es una acción exclusivamente administrativa (1.1). El filtro exacto ("solo su equipo" vs. "todos los operarios") lo define el SPEC-1XX de gestión de usuarios; aquí se deja establecido que el acceso es de solo lectura.
+1. El coordinador ve el listado completo de usuarios y de cuadrillas porque planifica sobre todas ellas y necesita saber a qué supervisor dirigirse; sigue sin poder crear, editar ni desactivar cuentas, que es acción exclusivamente administrativa. El supervisor ve solo a los miembros de su propia cuadrilla.
 2. El coordinador mantiene el catastro (crear/editar elementos que descubre o corrige en campo) pero no desactiva elementos: desactivar un elemento del catastro es una decisión administrativa con impacto en reportes históricos, reservada a ADMIN.
-3. El coordinador necesita ver contratos vigentes para saber qué zonas están cubiertas por terceros al planificar intervenciones de personal propio, pero no gestiona la relación comercial con el proveedor.
+3. El coordinador crea y actualiza contratos y proveedores porque es quien gestiona la relación operativa con los tercerizados y da seguimiento al cumplimiento. Lo que no puede es desactivar un proveedor o un contrato: dar de baja una relación comercial tiene implicaciones administrativas y queda en ADMIN.
+4. Un supervisor no valida su propia ejecución: si él mismo registró la intervención, la validación corresponde al coordinador. La regla concreta ("quien ejecuta no valida") la implementa el SPEC-1XX de intervenciones sobre `validated_by_user_id`, que no puede coincidir con quien registró la ejecución.
+
+**Cómo se resuelve "solo su cuadrilla":** el alcance del supervisor y del operario se calcula contra las tablas `teams`/`team_members` de SPEC-002 (V012), no contra un campo del JWT. El servicio filtra por las cuadrillas vigentes del usuario (`team_members.left_at IS NULL`), de modo que reasignar a alguien de equipo cambia su alcance en el siguiente request, sin esperar a que expire su token.
 
 Esta matriz se traduce en Spring Security como expresiones sobre el `code` del rol (leído del `UserDetails`, nunca hardcodeado como cadena mágica repetida — se centraliza en constantes de `shared/security`, p. ej. `RoleCodes.ADMIN = "ADMIN"`), por ejemplo:
 
 ```
-@PreAuthorize("hasAuthority('ADMIN')")                          // 1.1 crear usuario
-@PreAuthorize("hasAnyAuthority('ADMIN', 'COORDINADOR')")         // ver catastro con permiso de edición
-@PreAuthorize("hasAnyAuthority('ADMIN', 'COORDINADOR', 'OPERARIO')")  // leer catálogos
+@PreAuthorize("hasAuthority('ADMIN')")                                              // 1.1 crear usuario
+@PreAuthorize("hasAnyAuthority('ADMIN', 'COORDINADOR')")                            // crear una intervención o un contrato
+@PreAuthorize("hasAnyAuthority('COORDINADOR', 'SUPERVISOR')")                       // asignar trabajo
+@PreAuthorize("hasAnyAuthority('ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO')")  // leer catálogos
 ```
 
 ## Anexo B — Cómo se protegen los endpoints en Spring Security

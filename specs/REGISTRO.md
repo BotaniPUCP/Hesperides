@@ -6,6 +6,7 @@
 | SPEC-001 | Autenticación             | 👀 En revisión  | —          | S0     |              |
 | SPEC-002 | Modelo de datos           | 👀 En revisión  | —          | S0     |              |
 | SPEC-003 | Catálogos configurables   | 👀 En revisión  | —          | S0     |              |
+| SPEC-004 | Auditoría y trazabilidad  | 👀 En revisión  | —          | S0     |              |
 | SPEC-C01 | Componentes UI            | 👀 En revisión  | —          | S0     |              |
 | SPEC-C02 | Manejo de errores         | 👀 En revisión  | —          | S0     |              |
 | SPEC-C03 | Patrones de API           | 👀 En revisión  | —          | S0     |              |
@@ -25,3 +26,4 @@ que todavía no se ha escrito. La pareja que tome ese spec debe cerrarlos.
 | Almacenamiento del token en web vs. móvil | SPEC-001 | `frontend/src/lib/api.ts` marca el punto de extensión del refresh, sin implementar. El SPEC-000 pide httpOnly cookie en web y SecureStore en móvil: son dos flujos distintos en el mismo cliente, y la cookie implica protección CSRF. |
 | Entidades de dominio | SPEC-002 | `shared/types/models.ts` solo define `AuditFields`. No hay ninguna `@Entity` en el backend. |
 | Estructura de la app móvil | Spec de móvil | `mobile/` solo tiene README. Es fase 2, posterior a que el web esté listo. |
+| Composición de las cuadrillas | SPEC-1XX de equipos | Las tablas `teams`/`team_members` existen (SPEC-002 V012), pero el cliente aún no ha dicho cuántas cuadrillas hay, cómo se llaman ni qué zonas cubre cada una. |

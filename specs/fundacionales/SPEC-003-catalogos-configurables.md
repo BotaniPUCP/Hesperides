@@ -495,7 +495,7 @@ Fuente: `catalog_types` sembrados por `V001__create_catalog_tables.sql` (SPEC-00
 
 | Code | Para qué sirve | Quién lo consume | `is_system` | Ítems protegidos | Valores |
 |---|---|---|---|---|---|
-| `ROLE` | Rol del usuario en el sistema | `users.role_item_id` (SPEC-001) | TRUE | `ADMIN`, `COORDINADOR`, `OPERARIO` | **Definido**: Administrador, Coordinador, Operario de campo (`USER` genérico de V001 queda desactivado) |
+| `ROLE` | Rol del usuario en el sistema | `users.role_item_id` (SPEC-001) | TRUE | `ADMIN`, `COORDINADOR`, `SUPERVISOR`, `OPERARIO` | **Definido**: Administrador, Coordinador, Supervisor de cuadrilla, Operario de campo (`USER` genérico de V001 queda desactivado) |
 | `ZONE_TYPE` | Nivel de la jerarquía de zonificación (sector, subsector, jardín…) | `zones.zone_type_item_id` | FALSE | — | **Pendiente del cliente** |
 | `SPECIES_TYPE` | Porte/clasificación de la especie (árbol, arbusto, herbácea, césped…) | `species.species_type_item_id` | FALSE | — | **Pendiente del cliente** |
 | `SPECIES_ORIGIN` | Procedencia de la especie (nativa, introducida…) | `species.origin_item_id` | FALSE | — | **Pendiente del cliente** |

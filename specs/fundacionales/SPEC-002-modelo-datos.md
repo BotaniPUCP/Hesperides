@@ -608,8 +608,9 @@ INSERT INTO catalog_types (code, name, description, is_system) VALUES
 -- V001 sembró ADMIN y USER genéricos. Aquí se añaden los roles reales del
 -- dominio y se desactiva el USER genérico, que ningún rol de negocio usa.
 INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
-    ((SELECT id FROM catalog_types WHERE code = 'ROLE'), 'COORDINADOR', 'Coordinador',      2),
-    ((SELECT id FROM catalog_types WHERE code = 'ROLE'), 'OPERARIO',    'Operario de campo', 3);
+    ((SELECT id FROM catalog_types WHERE code = 'ROLE'), 'COORDINADOR', 'Coordinador',            2),
+    ((SELECT id FROM catalog_types WHERE code = 'ROLE'), 'SUPERVISOR',  'Supervisor de cuadrilla', 3),
+    ((SELECT id FROM catalog_types WHERE code = 'ROLE'), 'OPERARIO',    'Operario de campo',       4);
 
 UPDATE catalog_items SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP
  WHERE code = 'USER'
@@ -695,6 +696,64 @@ CREATE UNIQUE INDEX idx_system_parameters_code_active
 > ⚠️ **Pendiente del cliente:** los valores de estos nueve catálogos. Se crea el `catalog_type` para que las FK sean válidas y la UI de administración pueda listarlos, pero **no se siembra ningún ítem**. Un `INCIDENT_TYPE` inventado terminaría en un reporte a dirección como si fuera una clasificación acordada. El administrador los carga desde la UI de catálogos (módulo 1) en cuanto el cliente entregue las listas.
 
 `system_parameters` también se crea vacía por la misma razón: no se sabe qué parámetros generales quiere el cliente.
+
+### 4.10 V012 — Cuadrillas de trabajo
+
+La operación de campo no es plana: el operario reporta a un **supervisor de cuadrilla**, y el
+supervisor al coordinador. El coordinador ve todas las cuadrillas; el supervisor solo la suya.
+Estas dos tablas son las que permiten resolver "solo mi equipo" sin recorrer la jerarquía a mano
+en cada consulta.
+
+```sql
+-- V012__create_teams.sql
+-- Cuadrillas de trabajo. Un supervisor dirige una cuadrilla; los operarios
+-- pertenecen a ella. El coordinador supervisa a todos los supervisores.
+
+CREATE TABLE teams (
+    id                 BIGSERIAL PRIMARY KEY,
+    code               VARCHAR(50)  NOT NULL,
+    name               VARCHAR(150) NOT NULL,
+    supervisor_user_id BIGINT       NOT NULL REFERENCES users(id),
+    zone_id            BIGINT       REFERENCES zones(id),
+    is_active          BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at         TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_teams_code_active ON teams(code) WHERE deleted_at IS NULL;
+CREATE INDEX idx_teams_supervisor ON teams(supervisor_user_id);
+CREATE INDEX idx_teams_zone ON teams(zone_id);
+
+-- Pertenencia de operarios a una cuadrilla. Es una tabla puente con historia:
+-- left_at permite saber quién estuvo en qué cuadrilla cuando se ejecutó una
+-- intervención pasada, sin reescribir el histórico al reasignar a alguien.
+CREATE TABLE team_members (
+    id          BIGSERIAL PRIMARY KEY,
+    team_id     BIGINT    NOT NULL REFERENCES teams(id),
+    user_id     BIGINT    NOT NULL REFERENCES users(id),
+    joined_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    left_at     TIMESTAMP,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at  TIMESTAMP
+);
+
+-- Un usuario no puede estar dos veces activo en la misma cuadrilla.
+CREATE UNIQUE INDEX idx_team_members_unique_active
+    ON team_members(team_id, user_id) WHERE left_at IS NULL AND deleted_at IS NULL;
+CREATE INDEX idx_team_members_user ON team_members(user_id);
+```
+
+| Campo | Tipo | Nulo | Notas |
+|---|---|---|---|
+| `teams.supervisor_user_id` | BIGINT | No | El usuario con rol `SUPERVISOR` que dirige la cuadrilla. La FK no puede exigir el rol (es una fila de `catalog_items`); lo valida el servicio, igual que la pertenencia de tipo de catálogo de SPEC-003 §5.2. |
+| `teams.zone_id` | BIGINT | Sí | Zona habitual de la cuadrilla. Nulable: una cuadrilla puede ser polivalente o cubrir varias zonas. |
+| `team_members.left_at` | TIMESTAMP | Sí | `NULL` = miembro vigente. Se rellena al sacar a alguien de la cuadrilla, en vez de borrar la fila, para no falsear a qué equipo pertenecía cuando ejecutó una intervención antigua. |
+
+**Por qué una tabla y no una columna `supervisor_user_id` en `users`:** una columna resolvería "quién es mi jefe", pero no permite nombrar la cuadrilla, asignarle una zona, ni consultar "qué equipos existen" — que es exactamente lo que el coordinador necesita ver. Tampoco conservaría el histórico de pertenencia.
+
+> ⚠️ **Pendiente del cliente:** cuántas cuadrillas existen, cómo se llaman y qué zonas cubre cada una. La estructura queda lista; las filas las carga el administrador.
 
 ---
 
@@ -988,7 +1047,7 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 | CA-06 | Un elemento verde sin ninguna geometría es rechazado por la base | Insertar una fila de `green_elements` con `location` y `area` ambos `NULL` → la BD responde error de violación de la restricción `chk_green_elements_geometry`. La fila no se crea. |
 | CA-07 | Una incidencia sin elemento ni coordenada es rechazada | Insertar en `incidents` con `green_element_id` y `location` ambos `NULL` → error de `chk_incidents_location`. |
 | CA-08 | Los catálogos confirmados están sembrados, exactos y completos | `SELECT ci.code, ci.label FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='INTERVENTION_TYPE' ORDER BY ci.sort_order;` devuelve exactamente 6 filas: Poda, Control fitosanitario, Corte de césped, Resiembra, Decoración, Remoción de terreno. Lo mismo con `INCIDENT_STATUS` → 4 filas (Reportada, En evaluación, En atención, Resuelta) y `URGENCY_LEVEL` → 4 filas (Baja, Media, Alta, Crítica). |
-| CA-09 | Los tres roles del dominio existen y el genérico está desactivado | `SELECT ci.code, ci.is_active FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='ROLE' ORDER BY ci.sort_order;` devuelve ADMIN (`t`), COORDINADOR (`t`), OPERARIO (`t`) y USER (`f`). |
+| CA-09 | Los cuatro roles del dominio existen y el genérico está desactivado | `SELECT ci.code, ci.is_active FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='ROLE' ORDER BY ci.sort_order;` devuelve ADMIN (`t`), COORDINADOR (`t`), SUPERVISOR (`t`), OPERARIO (`t`) y USER (`f`). |
 | CA-10 | Ningún dato pendiente del cliente fue inventado | `SELECT count(*) FROM zones;`, `SELECT count(*) FROM species;` y `SELECT count(*) FROM system_parameters;` devuelven **0** en una base recién migrada. `SELECT ct.code, count(ci.id) FROM catalog_types ct LEFT JOIN catalog_items ci ON ci.catalog_type_id=ct.id WHERE ct.code IN ('ZONE_TYPE','SPECIES_TYPE','SPECIES_ORIGIN','ELEMENT_CONDITION','SUPPLY_TYPE','MEASUREMENT_UNIT','SERVICE_TYPE','FREQUENCY','INCIDENT_TYPE') GROUP BY 1;` devuelve **0** en cada uno. |
 | CA-11 | Los índices únicos respetan el soft delete | Insertar un elemento con `code='TEST-1'`; marcarlo con `UPDATE green_elements SET deleted_at = NOW() WHERE code='TEST-1'`; insertar otro elemento con el mismo `code='TEST-1'` → **funciona**. Insertar un tercero sin borrar el segundo → **falla** por índice único. |
 | CA-12 | Existen los índices espaciales GIST | `SELECT indexname FROM pg_indexes WHERE schemaname='public' AND indexdef LIKE '%USING gist%' ORDER BY 1;` incluye `idx_zones_boundary`, `idx_green_elements_location`, `idx_green_elements_area` e `idx_incidents_location`. |
@@ -1038,7 +1097,7 @@ Lo único que este spec impone al frontend es el formato de intercambio de la ge
 
 ```
 - El catálogo INCIDENT_STATUS contiene exactamente REPORTED, IN_REVIEW, IN_PROGRESS, RESOLVED en ese sort_order
-- El catálogo ROLE contiene ADMIN, COORDINADOR y OPERARIO activos, y USER inactivo
+- El catálogo ROLE contiene ADMIN, COORDINADOR, SUPERVISOR y OPERARIO activos, y USER inactivo
 - Los catálogos pendientes del cliente existen como catalog_type y tienen cero catalog_items
 - Las tablas zones, species y system_parameters están vacías tras migrar desde cero
 ```
