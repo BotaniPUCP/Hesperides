@@ -125,6 +125,66 @@ deleted_at  TIMESTAMP
 ```
 
 - `deleted_at IS NULL` significa "vigente". **Nunca se ejecuta `DELETE`.**
+
+**En SQL estas tres columnas se repiten en cada `CREATE TABLE`** — PostgreSQL no tiene herencia de columnas utilizable para esto (`INHERITS` rompe índices y claves foráneas). La repetición es física e inevitable.
+
+**En Java no se repiten.** Toda entidad de dominio extiende `BaseEntity`, una `@MappedSuperclass` que este spec define aquí para que nadie la reinvente:
+
+```java
+package pe.edu.pucp.hesperides.shared.entity;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.SQLRestriction;
+import java.time.LocalDateTime;
+
+/**
+ * Audit fields shared by every domain table (SPEC-000 section 5.4).
+ * Entities never redeclare id, createdAt, updatedAt or deletedAt.
+ */
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public abstract class BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    /** Soft delete marker. Null means the row is current. */
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    // getters y setters
+}
+```
+
+Cada entidad la extiende y añade `@SQLRestriction("deleted_at IS NULL")` para que Hibernate excluya las filas borradas lógicamente sin que cada consulta lo repita:
+
+```java
+@Entity
+@Table(name = "green_elements")
+@SQLRestriction("deleted_at IS NULL")
+public class GreenElement extends BaseEntity {
+    // solo los campos propios del elemento
+}
+```
+
+`@EnableJpaAuditing` debe estar activo en la configuración de Spring para que `@CreatedDate` y `@LastModifiedDate` se pueblen solas; sin esa anotación los campos quedan nulos y el `NOT NULL` de la base rechaza el `INSERT`.
+
+**La jerarquía completa de superclases**, para que no compitan dos mecanismos por la misma columna:
+
+| Superclase | Qué aporta | Quién la extiende | Definida en |
+|---|---|---|---|
+| `BaseEntity` | `id`, `createdAt`, `updatedAt`, `deletedAt` | Toda entidad de dominio | Este spec |
+| `Auditable extends BaseEntity` | Además `createdByUserId` y `updatedByUserId` | Solo las siete tablas de la sección 4.2 de SPEC-004 | SPEC-004 |
+| Ninguna | — | `AuditLog`, que es append-only y no tiene `updatedAt` ni `deletedAt` | SPEC-004 |
 - Los índices de unicidad que deben convivir con el soft delete son **parciales**: `WHERE deleted_at IS NULL`. Así un código liberado por borrado lógico puede reutilizarse.
 - Toda FK a catálogo se nombra `<concepto>_item_id` y referencia `catalog_items(id)`.
 - Todas las FK son `ON DELETE RESTRICT` implícito (el default de PostgreSQL). Coherente con soft delete: nada se borra en cascada porque nada se borra.
@@ -1156,7 +1216,8 @@ No aplican a este spec: no hay componentes. Los tipos de `shared/types/models.ts
 - [ ] Los tipos geométricos en Java son `org.locationtech.jts.geom.Point` / `Polygon`; no hay clase `LatLng` propia.
 - [ ] No hay ningún `@Enumerated` ni `enum` de dominio: son FK a `CatalogItem`.
 - [ ] No hay ningún `@Column` de tipo `byte[]` para imágenes.
-- [ ] Toda entidad extiende la superclase de auditoría (`created_at`, `updated_at`, `deleted_at`) y usa `@SQLRestriction("deleted_at IS NULL")` o equivalente.
+- [ ] Toda entidad extiende `BaseEntity` (§4.1) y lleva `@SQLRestriction("deleted_at IS NULL")`. Ninguna entidad redeclara `id`, `createdAt`, `updatedAt` ni `deletedAt` por su cuenta.
+- [ ] `@EnableJpaAuditing` está activo en la configuración de Spring; sin él `createdAt`/`updatedAt` quedan nulos y el `INSERT` falla por `NOT NULL`.
 - [ ] `shared/types/models.ts` refleja las entidades y extiende `AuditFields`.
 - [ ] `mvn test` pasa limpio, incluidos los tests de migración con Testcontainers.
 - [ ] `docker-compose down -v && docker-compose up --build` levanta desde cero sin error de Flyway.

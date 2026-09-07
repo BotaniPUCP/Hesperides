@@ -248,17 +248,19 @@ No se declara `ON DELETE` explícito (RESTRICT implícito de PostgreSQL, consist
 **a) Superclase `Auditable`** (`shared/audit/entity/Auditable.java`, `@MappedSuperclass`):
 
 ```java
+package pe.edu.pucp.hesperides.shared.audit.entity;
+
+import pe.edu.pucp.hesperides.shared.entity.BaseEntity;
+import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+
+/**
+ * Adds authorship on top of the timestamps BaseEntity already provides.
+ * Only the tables listed in section 4.2 extend this.
+ */
 @MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
-public abstract class Auditable {
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+public abstract class Auditable extends BaseEntity {
 
     @CreatedBy
     @Column(name = "created_by_user_id", updatable = false)
@@ -272,7 +274,9 @@ public abstract class Auditable {
 }
 ```
 
-Las entidades de la tabla de la sección 4.2 marcadas "Sí" o "Solo `updated_by_user_id`" extienden `Auditable` (o una variante `AuditableUpdateOnly` sin `@CreatedBy`/`createdByUserId` para las que solo llevan la columna de edición, evitando un campo Java que no tiene columna de respaldo). Las entidades que ya tienen su columna de autoría específica (`GreenElement`, `Intervention`, `Incident`, etc.) **no** extienden `Auditable`; siguen extendiendo la superclase de auditoría de fechas que ya define SPEC-002 (`created_at`/`updated_at`/`deleted_at`) sin los campos `*ByUserId` genéricos, para no crear dos mecanismos compitiendo por la misma columna.
+**`Auditable` extiende `BaseEntity`, no la sustituye.** No redeclara `id`, `createdAt`, `updatedAt` ni `deletedAt`: esos vienen heredados, con los mismos tipos que fija SPEC-002 §4.1. Declararlos otra vez aquí crearía dos jerarquías compitiendo por las mismas columnas, que es justo lo que este spec quiere evitar. `@EntityListeners(AuditingEntityListener.class)` tampoco se repite: `BaseEntity` ya lo declara y la anotación se hereda.
+
+Las entidades de la tabla de la sección 4.2 marcadas "Sí" o "Solo `updated_by_user_id`" extienden `Auditable` (o una variante `AuditableUpdateOnly` sin `@CreatedBy`/`createdByUserId` para las que solo llevan la columna de edición, evitando un campo Java que no tiene columna de respaldo). Las entidades que ya tienen su columna de autoría específica (`GreenElement`, `Intervention`, `Incident`, etc.) **no** extienden `Auditable`; siguen extendiendo directamente `BaseEntity` (SPEC-002 §4.1) sin los campos `*ByUserId` genéricos, para no crear dos mecanismos compitiendo por la misma columna.
 
 **b) `AuditorAware<Long>`** (`shared/audit/config/SpringSecurityAuditorAware.java`):
 
@@ -354,7 +358,7 @@ GRANT INSERT, SELECT ON audit_log TO hesperides_app;
 
 Esto es una nota operativa, no parte de la migración Flyway versionada (que corre igual en CI, en local y en producción con el mismo usuario de conexión en esta fase del proyecto, según SPEC-000). Se documenta aquí para que el spec de infraestructura/despliegue la recoja explícitamente cuando exista separación de roles de base de datos por entorno.
 
-**Consecuencia para el desarrollador:** `AuditLog` (entidad JPA) no extiende `Auditable` ni la superclase de auditoría de SPEC-002 — es la única entidad del proyecto sin `updated_at`/`deleted_at`. `AuditLogRepository` no expone ningún método `save()` para actualizar (solo inserciones nuevas vía el método que persiste una fila nueva) ni `delete()`. El `AuditLogController` (sección 7) es **estrictamente de solo lectura**: no existe ningún `PUT`, `PATCH` ni `DELETE` sobre `/api/v1/audit-log`.
+**Consecuencia para el desarrollador:** `AuditLog` (entidad JPA) no extiende `Auditable` ni `BaseEntity` (SPEC-002 §4.1) — es la única entidad del proyecto sin `updated_at`/`deleted_at`. `AuditLogRepository` no expone ningún método `save()` para actualizar (solo inserciones nuevas vía el método que persiste una fila nueva) ni `delete()`. El `AuditLogController` (sección 7) es **estrictamente de solo lectura**: no existe ningún `PUT`, `PATCH` ni `DELETE` sobre `/api/v1/audit-log`.
 
 ---
 
@@ -650,7 +654,7 @@ No hay mockup de Figma para este módulo aún; la referencia es `DataTable` + fi
 ### Después de recibir código de la IA
 
 - [ ] `V011__create_audit_log.sql` está en `backend/src/main/resources/db/migration/` y no colisiona con V001–V010.
-- [ ] `AuditLog` es la única entidad del proyecto sin `updated_at`/`deleted_at`; no extiende `Auditable` ni la superclase de auditoría de SPEC-002.
+- [ ] `AuditLog` es la única entidad del proyecto sin `updated_at`/`deleted_at`; no extiende `Auditable` ni `BaseEntity` (SPEC-002 §4.1).
 - [ ] `Auditable` (`@MappedSuperclass`) está en `shared/audit/entity/`, y solo las entidades de la tabla de la sección 4.2 la extienden.
 - [ ] `SpringSecurityAuditorAware` nunca lanza excepción; con `SecurityContext` vacío devuelve `Optional.empty()`, no un valor inventado.
 - [ ] `AuditActionCode` es un `enum` Java mapeado como `STRING` en BD, no `ORDINAL`, y no existe un `catalog_type` `ACTION_TYPE`.
