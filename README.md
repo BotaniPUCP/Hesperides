@@ -38,7 +38,7 @@ docker compose logs -f
 
 Acceso local:
 - **Frontend**: http://localhost:3000
-- **Backend**: http://localhost:8080/api/v1 (requiere autenticación)
+- **Backend**: http://localhost:8080/api/v1 (sin autenticación todavía; la define el SPEC-001)
 - **Data Service**: http://localhost:5001
 - **PostgreSQL**: localhost:5432
 
@@ -68,8 +68,6 @@ npm test
 cd services
 python -m pytest
 ```
-
-_Nota: Las carpetas `backend/`, `frontend/` y `services/` se crean en tareas posteriores._
 
 ## Flujo de desarrollo (Spec Driven Development)
 
@@ -174,7 +172,7 @@ Cero credenciales en el código. Toda configuración por variables de entorno:
 POSTGRES_DB=hesperides
 POSTGRES_PASSWORD=cambiar_en_local
 NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
-SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:dev}
+SPRING_PROFILES_ACTIVE=dev
 ```
 
 ## Despliegue

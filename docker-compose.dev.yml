@@ -12,18 +12,14 @@ services:
       SPRING_PROFILES_ACTIVE: dev
 
   # NOTE: the frontend runtime image (see frontend/Dockerfile) only contains
-  # the Next.js standalone build output, not the full dev toolchain, so this
-  # mounts source for visibility/inspection while keeping the image's own
-  # entrypoint (node server.js). True Fast Refresh would require a separate
-  # dev-stage image; see task-5-report.md for details.
-  # NODE_ENV is intentionally not overridden here: the image bakes
-  # ENV NODE_ENV=production at build time and runs the pre-built
-  # `node server.js`, so no dev process reads NODE_ENV at runtime.
-  # Real hot reload would need a separate `dev` stage in the Dockerfile.
-  frontend:
-    volumes:
-      - ./frontend:/app/src
-      - ./shared:/app/shared
+  # the Next.js standalone build output (server.js, package.json,
+  # node_modules, .next/), not the full dev toolchain, so there is no
+  # source directory here to mount for hot reload. NODE_ENV is intentionally
+  # not overridden either: the image bakes ENV NODE_ENV=production at build
+  # time and runs the pre-built `node server.js`, so no dev process reads
+  # NODE_ENV at runtime. Real hot reload/Fast Refresh would require adding a
+  # separate `dev` stage to the Dockerfile that runs `next dev` instead.
+  frontend: {}
 
   data-service:
     environment:

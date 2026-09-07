@@ -1,0 +1,34 @@
+name: CI Infra
+
+# Only run when orchestration files or this workflow itself change.
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "docker-compose.yml"
+      - "docker-compose.dev.yml"
+      - ".env.example"
+      - "backend/Dockerfile"
+      - "frontend/Dockerfile"
+      - "services/Dockerfile"
+      - ".github/workflows/ci-infra.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "docker-compose.yml"
+      - "docker-compose.dev.yml"
+      - ".env.example"
+      - "backend/Dockerfile"
+      - "frontend/Dockerfile"
+      - "services/Dockerfile"
+      - ".github/workflows/ci-infra.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose configuration
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet

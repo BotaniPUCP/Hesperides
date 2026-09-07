@@ -34,6 +34,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-hesperides}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_local}
       BACKEND_PORT: ${BACKEND_PORT:-8080}
+      # Not yet read by any Java code; scaffolding for when the backend calls the Flask data service.
       DATA_SERVICE_URL: ${DATA_SERVICE_URL:-http://data-service:5001}
     ports:
       - "${BACKEND_PORT:-8080}:${BACKEND_PORT:-8080}"
