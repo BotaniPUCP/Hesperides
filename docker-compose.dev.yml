@@ -11,15 +11,23 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
 
-  # NOTE: the frontend runtime image (see frontend/Dockerfile) only contains
-  # the Next.js standalone build output (server.js, package.json,
-  # node_modules, .next/), not the full dev toolchain, so there is no
-  # source directory here to mount for hot reload. NODE_ENV is intentionally
-  # not overridden either: the image bakes ENV NODE_ENV=production at build
-  # time and runs the pre-built `node server.js`, so no dev process reads
-  # NODE_ENV at runtime. Real hot reload/Fast Refresh would require adding a
-  # separate `dev` stage to the Dockerfile that runs `next dev` instead.
-  frontend: {}
+  # Builds the `dev` stage instead of the production runner, so `next dev`
+  # serves the app and edits on the host trigger Fast Refresh.
+  frontend:
+    build:
+      target: dev
+    environment:
+      # WSL2 does not forward filesystem events from the Windows host into the
+      # container, so the dev server has to poll. Turbopack ignores this flag,
+      # which is why the `dev` stage runs `next dev --webpack`.
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - ./shared:/shared
+      # Anonymous volumes keep the container's own node_modules and .next,
+      # which the bind mount above would otherwise shadow with the host's.
+      - /app/node_modules
+      - /app/.next
 
   data-service:
     environment:

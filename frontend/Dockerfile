@@ -17,6 +17,18 @@ ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build
 
+# Development stage: runs `next dev` with the full toolchain so edits on the
+# host trigger Fast Refresh. Selected via `target: dev` in docker-compose.dev.yml.
+# Not used in production — the runner stage below is the deployable image.
+FROM node:20-alpine AS dev
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY shared ../shared
+COPY frontend .
+ENV NODE_ENV=development
+EXPOSE 3000
+CMD ["npm", "run", "dev:docker"]
+
 # Runtime stage
 FROM node:20-alpine AS runner
 RUN addgroup -S hesperides && adduser -S hesperides -G hesperides

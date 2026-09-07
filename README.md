@@ -69,6 +69,26 @@ cd services
 python -m pytest
 ```
 
+## Trabajar en el frontend con recarga en caliente
+
+El override de desarrollo construye una etapa `dev` de la imagen que ejecuta el
+servidor de desarrollo de Next en lugar del build de producción. Editar cualquier
+archivo bajo `frontend/src/` se refleja en http://localhost:3000 sin reconstruir:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d frontend
+```
+
+Dos detalles del entorno que conviene conocer:
+
+- En desarrollo dentro de Docker se usa **webpack** (`next dev --webpack`), no
+  Turbopack. WSL2 no propaga los eventos del sistema de archivos de Windows al
+  contenedor, así que el servidor necesita sondear los cambios, y Turbopack
+  ignora esa opción. Fuera de Docker, `npm run dev` sí usa Turbopack, que es
+  más rápido.
+- El primer arranque tras `--build` tarda unos segundos en compilar. Los
+  cambios posteriores se aplican en menos de un segundo.
+
 ## Flujo de desarrollo (Spec Driven Development)
 
 1. **Especificación**: escribir el spec (SPEC-NNN) en `specs/`
