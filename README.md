@@ -48,7 +48,7 @@ Acceso local:
 
 | Servicio        | Puerto | Contenedor          | Descripción                          |
 |-----------------|--------|---------------------|--------------------------------------|
-| PostgreSQL      | 5432   | hesperides-db       | Base de datos relacional             |
+| PostgreSQL      | 5432   | hesperides-db       | Base de datos relacional con PostGIS |
 | Backend (API)   | 8080   | hesperides-backend  | Spring Boot, endpoints REST          |
 | Frontend (Web)  | 3000   | hesperides-frontend | Next.js, UI para navegador           |
 | Data Service    | 5001   | hesperides-data-service | Python Flask, procesamiento de datos |
@@ -213,7 +213,7 @@ Los tests se ejecutan automáticamente en GitHub Actions:
 ### Producción (AWS)
 El despliegue a la nube está pendiente de licencias AWS. Cuando esté disponible:
 - **Compute**: EC2 para backend
-- **Data**: RDS PostgreSQL
+- **Data**: RDS PostgreSQL con la extensión PostGIS habilitada (el catastro usa columnas `GEOMETRY`)
 - **Storage**: S3 para archivos y reportes
 - **Monitoring**: CloudWatch
 

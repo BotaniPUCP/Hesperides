@@ -5,7 +5,7 @@
 > **Backend:** Java 26 / Spring Boot 4.1 · Python 3.11+ / Flask (microservicios de datos)
 > **Frontend:** Next.js 16+ (React 19) + React Native · TypeScript · Tailwind CSS
 >   (subido desde Next.js 14 / React 18 por 1 vulnerabilidad crítica y 7 altas, incluido un bypass de autorización en middleware, CVSS 9.1)
-> **BD:** PostgreSQL · Hibernate/JPA · Flyway
+> **BD:** PostgreSQL + PostGIS · Hibernate/JPA + Hibernate Spatial · Flyway
 > **Infra:** Docker · Docker Compose · GitHub Actions
 > **Calidad:** JaCoCo (cobertura backend) · Jest + React Testing Library (frontend) · pytest (data service)
 
@@ -108,7 +108,8 @@ Hesperides/
 │   │   ├── SPEC-000-arquitectura-general.md      ← Este documento
 │   │   ├── SPEC-001-autenticacion.md
 │   │   ├── SPEC-002-modelo-datos.md
-│   │   └── SPEC-003-catalogos-configurables.md
+│   │   ├── SPEC-003-catalogos-configurables.md
+│   │   └── SPEC-004-auditoria.md
 │   ├── features/
 │   │   ├── SPEC-1XX-*.md                         ← Features del Sprint 1
 │   │   ├── SPEC-2XX-*.md                         ← Features del Sprint 2
@@ -136,6 +137,8 @@ Hesperides/
 │       │   │   │       ├── entity/        ← @Entity JPA
 │       │   │   │       └── mapper/        ← Entity ↔ DTO
 │       │   │   ├── shared/
+│       │   │   │   ├── entity/      ← BaseEntity (@MappedSuperclass de auditoría)
+│       │   │   │   ├── audit/       ← Auditable, AuditLog, AuditorAware
 │       │   │   │   ├── catalog/     ← Sistema de catálogos configurables
 │       │   │   │   ├── exception/   ← Excepciones y @ControllerAdvice
 │       │   │   │   ├── security/    ← JWT, filtros, UserDetails
@@ -610,7 +613,8 @@ Debe definir:
     POST /api/v1/auth/refresh  → { accessToken, expiresIn }
     POST /api/v1/auth/logout   → 204
     GET  /api/v1/auth/me       → datos del usuario autenticado
-- Roles: definir como catálogo configurable (ADMIN, USER, etc.)
+- Roles: catálogo configurable. Los del dominio son ADMIN, COORDINADOR,
+  SUPERVISOR (jefe de cuadrilla) y OPERARIO. Nunca un enum Java.
 - Tabla: users (id, email, password_hash, role_catalog_id,
                 is_active, last_login, created_at, updated_at, deleted_at)
 - Password hashing: BCrypt via Spring Security
@@ -664,6 +668,25 @@ Uso en código:
             retorna lista para llenar dropdowns/selects
 - Toda referencia a tipos, estados, prioridades, categorías
   usa este sistema, NO enums Java ni constantes TypeScript
+```
+
+### SPEC-004 — Auditoría y trazabilidad
+
+```
+Cierra la "trazabilidad completa de quién hizo qué, dónde, cuándo" que pide el
+cliente. Tres capas complementarias, no redundantes:
+
+- BaseEntity (@MappedSuperclass): created_at, updated_at, deleted_at en toda
+  entidad. Responde CUÁNDO. Definida en SPEC-002.
+- Auditable extends BaseEntity: añade created_by_user_id y updated_by_user_id,
+  poblados solos por AuditingEntityListener. Responde QUIÉN editó por última vez.
+- audit_log: bitácora append-only de acciones sensibles (desactivar un usuario,
+  cambiar un rol, editar un catálogo, dar de baja un elemento). Responde QUÉ
+  cambió exactamente, con el diff en JSONB.
+
+audit_log es la única tabla del proyecto sin updated_at ni deleted_at: una
+bitácora editable no sirve como bitácora. Excepción deliberada a la sección 5.4.
+Solo ADMIN puede consultarla.
 ```
 
 ### SPEC-C01 — Componentes UI compartidos
