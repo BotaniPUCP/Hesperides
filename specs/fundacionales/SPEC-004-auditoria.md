@@ -85,6 +85,7 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `USER_REACTIVATED` | ADMIN | `{ "isActive": { "before": false, "after": true } }` | **`audit_log`** |
 | `USER_ROLE_CHANGED` | ADMIN | `{ "roleItemId": { "before": 3, "after": 2 }, "roleCode": { "before": "OPERARIO", "after": "COORDINADOR" } }` | **`audit_log`** |
 | `USER_CREATED` | ADMIN | `{ "email": "...", "roleCode": "OPERARIO" }` (sin `password_hash`, ver §7) | **`audit_log`** |
+| `USER_CREDENTIALS_DELIVERY_FAILED` | (sistema, al crear un usuario o reenviar sus credenciales) | `{ "email": "...", "reason": "SMTP connection refused" }` — el mensaje técnico de la excepción, nunca la contraseña ni el cuerpo del correo | **`audit_log`** |
 | `CATALOG_ITEM_CREATED` | ADMIN | `{ "typeCode": "INCIDENT_TYPE", "code": "PLAGA", "label": "Plaga" }` | **`audit_log`** |
 | `CATALOG_ITEM_UPDATED` | ADMIN | `{ "label": { "before": "Plaga", "after": "Plaga o vector" } }` | **`audit_log`** |
 | `CATALOG_ITEM_DEACTIVATED` | ADMIN | `{ "typeCode": "...", "code": "...", "isActive": { "before": true, "after": false } }` | **`audit_log`** |
@@ -104,6 +105,23 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `GET` de cualquier recurso | — | — | **Ninguno** (no es una acción sensible; ver sección 3.4) |
 
 **Por qué esta selección y no otra:** el criterio es "¿esta acción cambia un estado que, si se hace mal o con mala intención, alguien necesitará reconstruir seis meses después sin depender de que los logs del servidor sigan existiendo?". Desactivar una cuenta, cambiar un rol, editar un catálogo que alimenta reportes a dirección, borrar lógicamente un elemento del catastro, o modificar un contrato con impacto económico califican. Un login individual exitoso, no: no cambia ningún estado de negocio, y acumular una fila de `audit_log` por cada login de cada operario todos los días durante años es exactamente el crecimiento sin control que la sección 5 advierte, sin que nadie vaya a auditar jamás "quién inició sesión el martes a las 9am" salvo como parte de investigar otra cosa (para lo cual sirve `users.last_login` y los logs).
+
+> **Enmienda (SPEC-100 §9.3): por qué `USER_CREDENTIALS_DELIVERY_FAILED` entra en esta tabla.**
+> Es la única acción de la lista que no representa un cambio de estado hecho por una persona,
+> sino el fallo de una entrega, y aun así cumple el criterio del párrafo anterior. "Esta persona
+> nunca pudo entrar al sistema" es una pregunta que aparece semanas o meses después del alta
+> ("¿por qué este operario no registró ninguna intervención en todo el mes?"), y su respuesta
+> —el correo con sus credenciales rebotó el día que se creó la cuenta— tiene que sobrevivir a la
+> rotación de logs de SLF4J, que se mide en semanas.
+>
+> No contradice el criterio de volumen de la sección 9.2: por definición solo se escribe una fila
+> cuando algo falla, de modo que en operación normal esta acción no aporta ninguna. Un sistema
+> que empezara a generarlas en masa estaría avisando de un SMTP caído, que es precisamente lo que
+> se querría ver en la bitácora.
+>
+> El envío **exitoso** de credenciales no se audita: es el caso normal, es de volumen alto, y su
+> resultado ya queda registrado en `users.credential_status` y `users.credentials_sent_at`
+> (SPEC-100 §4).
 
 ### 3.3 Diff completo vs. solo campos cambiados: se guarda solo lo que cambió
 

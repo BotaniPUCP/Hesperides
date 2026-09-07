@@ -10,8 +10,23 @@
 | SPEC-C01 | Componentes UI            | 👀 En revisión  | —          | S0     |              |
 | SPEC-C02 | Manejo de errores         | 👀 En revisión  | —          | S0     |              |
 | SPEC-C03 | Patrones de API           | 👀 En revisión  | —          | S0     |              |
+| SPEC-100 | Gestión de usuarios       | 👀 En revisión  | —          | S1     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado
+
+---
+
+## Enmiendas a specs cerrados
+
+Cuando un spec de feature obliga a corregir uno fundacional ya cerrado, la enmienda se aplica al
+archivo original (marcada como cita con su procedencia) y se anota aquí. Nadie debe descubrir por
+sorpresa que un principio fundacional cambió.
+
+| Spec enmendado | Enmendado por | Qué cambió |
+|---|---|---|
+| SPEC-000 §1 | SPEC-100 | "Sin dependencia de servicios externos" pasa a admitir **SMTP como única excepción**, con la condición de que su caída nunca impida una operación de negocio. |
+| SPEC-001 §2.5 | SPEC-100 | Se corrige la justificación del "no autorregistro": el argumento de que no había correo en el alcance ya no aplica. **La decisión de no permitir autorregistro no cambia.** |
+| SPEC-004 §3.2 | SPEC-100 | Se añade la acción auditable `USER_CREDENTIALS_DELIVERY_FAILED`. |
 
 ---
 

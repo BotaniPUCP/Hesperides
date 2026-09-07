@@ -79,7 +79,23 @@ Permitir que un administrador, un coordinador o un operario de campo inicien ses
 - El cliente confirmó que **no hay integración con los sistemas de autenticación de la PUCP** (ítem 1.3 del análisis funcional): no existe un directorio externo (LDAP/SSO institucional) contra el cual validar que quien se registra es personal autorizado del campus.
 - Los cuatro roles (administrador, coordinador, supervisor de cuadrilla, operario) son personal contratado o asignado por la unidad de áreas verdes, un conjunto cerrado y pequeño (decenas de personas, no miles). Un registro abierto obligaría a un flujo de aprobación posterior de todas formas — es más simple que el administrador cree la cuenta una sola vez.
 - Un operario de campo no elige unirse al sistema: se le asigna una cuenta como parte de su alta administrativa. Igual que un lector de tarjeta de acceso al campus.
-- Registro abierto + verificación por correo institucional era la alternativa considerada; se descarta porque no hay integración con correo PUCP en el alcance de este proyecto (SPEC-000 §1: sin dependencia de servicios externos) y añadiría una superficie de ataque (creación de cuentas no autorizadas) sin necesidad real del dominio.
+- Registro abierto + verificación por correo institucional era la alternativa considerada; se descarta porque añadiría una superficie de ataque (creación de cuentas no autorizadas por cualquiera que conozca la URL) sin necesidad real del dominio: no hay un público del que dar de alta a sí mismo, solo personal ya contratado.
+
+> **Enmienda (SPEC-100 §2.5).** La redacción original de este apartado descartaba el registro
+> abierto argumentando además que "no hay integración con correo PUCP en el alcance de este
+> proyecto (SPEC-000 §1: sin dependencia de servicios externos)". **Ese argumento ya no es
+> correcto:** SPEC-100 incorpora el envío de correo por SMTP al alcance del proyecto, y SPEC-000
+> §1 fue enmendado para admitirlo como su única dependencia externa.
+>
+> **La decisión de fondo no cambia: sigue sin haber autorregistro.** El sistema envía correo para
+> **entregar** las credenciales de una cuenta que un administrador creó, no para que un
+> desconocido se dé de alta solo. Los tres primeros argumentos de esta lista —conjunto cerrado de
+> personal, ausencia de directorio institucional contra el cual validar, y el hecho de que a un
+> operario se le asigna la cuenta en vez de solicitarla— se sostienen por sí mismos y son los que
+> gobiernan.
+>
+> Cómo llega entonces la contraseña a su destinatario: SPEC-100 §5.1 y §5.3. Qué pasa si el
+> correo no se puede entregar: SPEC-100 §2.6 (`credential_status`).
 
 ### 2.6 Decisión: sesión de un usuario desactivado
 

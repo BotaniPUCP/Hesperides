@@ -26,7 +26,24 @@ Este software se diseña para la PUCP pero debe ser adaptable a otros clientes s
 - **Catálogos configurables** en vez de datos hardcodeados (tipos, estados, roles, etiquetas).
 - **Separación estricta** entre lógica de negocio, presentación y configuración.
 - **Sin referencias hardcodeadas** a "PUCP" en lógica de negocio — usar configuración externalizada.
-- **Sin dependencia de servicios externos** (SaaS, APIs de terceros) en esta versión.
+- **Sin dependencia de servicios externos** (SaaS, APIs de terceros) en esta versión, **con una
+  única excepción: el envío de correo por SMTP** (ver nota abajo).
+
+> **Nota sobre SMTP** (enmienda introducida por SPEC-100 §2.5). El principio de "sin
+> dependencia de servicios externos" existe para evitar acoplar el sistema a un SaaS que el
+> cliente no controla y que puede cambiar de precio, de API o desaparecer. Un servidor SMTP no
+> es ese tipo de dependencia: es infraestructura estándar, la institución ya tiene uno, y
+> sustituirlo es cambiar variables de entorno, no código. Se admite porque sin él no hay forma
+> de entregar credenciales al personal, dado que el proyecto tampoco integra con el directorio
+> institucional de la PUCP (SPEC-001 §2.5).
+>
+> Condición que acota la excepción: **la indisponibilidad del SMTP nunca puede impedir una
+> operación de negocio.** Todo envío de correo ocurre fuera de la transacción que persiste el
+> cambio, y su fallo se registra como un estado recuperable, jamás como un error que revierta
+> la operación. SPEC-100 §5.3 es la aplicación concreta de esta regla; cualquier spec futuro que
+> envíe correo la sigue igual.
+>
+> Ninguna otra dependencia externa está admitida sin enmendar este documento.
 
 **Regla de oro:** si un spec no puede ser verificado por alguien que no domina la tecnología, el spec está incompleto.
 
