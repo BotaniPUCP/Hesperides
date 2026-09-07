@@ -898,12 +898,54 @@ Mantener en `specs/REGISTRO.md`:
 
 ## Anexo A — Comandos útiles de desarrollo
 
+> `docker-compose.dev.yml` es un **override**, no un compose completo: no
+> declara `build` ni `image`, solo modifica lo que ya define el archivo base.
+> Por eso todo comando de desarrollo encadena ambos archivos con `-f`.
+> Usarlo solo falla con "no image / build context" en `backend`.
+
+### Arranque desde cero (laptop nueva o repo recién clonado)
+
 ```bash
-# Levantar todo el entorno de desarrollo
-docker-compose -f docker-compose.dev.yml up -d
+# 1. Crear el .env local a partir de la plantilla (solo la primera vez).
+#    No se commitea: cada quien tiene el suyo.
+cp .env.example .env
+
+# 2. Validar que la combinacion de ambos compose es correcta
+docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet
+
+# 3. Construir imágenes y levantar los cuatro servicios
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+
+# 4. Verificar que los cuatro servicios están arriba
+docker compose -f docker-compose.yml -f docker-compose.dev.yml ps
+
+# 5. Seguir el arranque del backend (Flyway aplicando migraciones)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f backend
+```
+
+Para no repetir los dos `-f` en cada comando, exportar la variable una vez por
+terminal. A partir de ahí basta con `docker compose up -d`, `logs -f backend`,
+`ps`, `down`:
+
+```bash
+export COMPOSE_FILE="docker-compose.yml:docker-compose.dev.yml"
+```
+
+### Comandos del día a día
+
+```bash
+# Levantar el entorno ya construido (sin --build: solo tras cambiar
+# un Dockerfile o las dependencias hace falta reconstruir)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# Estado de los servicios
+docker compose -f docker-compose.yml -f docker-compose.dev.yml ps
 
 # Ver logs del backend
-docker-compose logs -f backend
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f backend
+
+# Detener el entorno conservando los datos de la BD
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down
 
 # Ejecutar tests backend
 cd backend && mvn test
@@ -917,11 +959,13 @@ cd mobile && npm test
 # Ejecutar migración Flyway manualmente
 cd backend && mvn flyway:migrate
 
-# Conectar a PostgreSQL
-docker exec -it hesperides-db psql -U postgres -d hesperides
+# Conectar a PostgreSQL (usuario y BD por defecto del .env.example)
+docker exec -it hesperides-db psql -U hesperides -d hesperides
 
-# Limpiar y reconstruir
-docker-compose down -v && docker-compose up --build
+# Limpiar y reconstruir (--volumes borra pgdata: la BD arranca vacía
+# y Flyway vuelve a aplicar todas las migraciones desde cero)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 ```
 
 ---
