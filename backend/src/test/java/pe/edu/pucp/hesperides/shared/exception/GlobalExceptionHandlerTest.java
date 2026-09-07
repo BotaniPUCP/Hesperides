@@ -2,7 +2,9 @@ package pe.edu.pucp.hesperides.shared.exception;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -99,5 +101,18 @@ class GlobalExceptionHandlerTest {
         List<Map<String, String>> errors = (List<Map<String, String>>) data.get("errors");
         assertThat(errors).hasSize(1);
         assertThat(errors.get(0)).containsEntry("field", "name").containsEntry("message", "must not be blank");
+    }
+
+    @Test
+    void noHandlerFound_returns404NotGeneric500() {
+        NoHandlerFoundException ex =
+                new NoHandlerFoundException("GET", "/api/v1/unknown", HttpHeaders.EMPTY);
+
+        ResponseEntity<ApiResponse<Void>> response = handler.handleNoHandlerFound(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isOk()).isFalse();
+        assertThat(response.getBody().getMessage()).isEqualTo("Endpoint not found");
     }
 }
