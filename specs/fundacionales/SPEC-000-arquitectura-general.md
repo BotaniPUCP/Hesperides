@@ -1,11 +1,13 @@
 # Spec Driven Development (SDD) — Guía de Proyecto PUCP
 
 > **Equipo:** 10 desarrolladores | **Plazo:** 8 semanas | **Cliente:** PUCP
-> **Tipo:** Software interno on-premise, arquitectura extensible
+> **Tipo:** Software interno con despliegue en la nube (AWS, pendiente de licencias), arquitectura extensible
 > **Backend:** Java 17+ / Spring Boot · Python 3.11+ / Flask (microservicios de datos)
-> **Frontend:** Next.js (React) + React Native · TypeScript
+> **Frontend:** Next.js 16+ (React 19) + React Native · TypeScript · Tailwind CSS
+>   (subido desde Next.js 14 / React 18 por 1 vulnerabilidad crítica y 7 altas, incluido un bypass de autorización en middleware, CVSS 9.1)
 > **BD:** PostgreSQL · Hibernate/JPA · Flyway
 > **Infra:** Docker · Docker Compose · GitHub Actions
+> **Calidad:** JaCoCo (cobertura backend) · Jest + React Testing Library (frontend) · pytest (data service)
 
 ---
 
@@ -54,7 +56,7 @@ Cada HU debe tener su spec completo **antes** de que el desarrollador comience a
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      SERVIDORES PUCP (on-premise)               │
+│         SERVIDORES CLOUD (AWS, pendiente de licencias)          │
 │                                                                 │
 │  ┌──────────────┐   ┌──────────────┐   ┌──────────────────┐    │
 │  │   Next.js    │   │ React Native │   │  (Futuro: otros  │    │
@@ -92,14 +94,14 @@ Cada HU debe tener su spec completo **antes** de que el desarrollador comience a
 ## 4. Estructura de carpetas del repositorio
 
 ```
-pruebaHesperides/
+Hesperides/
 ├── docker-compose.yml
 ├── docker-compose.dev.yml
 ├── .github/
 │   └── workflows/
 │       ├── ci-backend.yml
 │       ├── ci-frontend.yml
-│       └── ci-mobile.yml
+│       └── ci-data-service.yml
 │
 ├── specs/
 │   ├── fundacionales/
@@ -123,7 +125,7 @@ pruebaHesperides/
 │   ├── pom.xml (o build.gradle)
 │   └── src/
 │       ├── main/
-│       │   ├── java/pe/edu/pucp/proyecto/
+│       │   ├── java/pe/edu/pucp/hesperides/
 │       │   │   ├── config/          ← Configuración Spring, CORS, Security
 │       │   │   ├── modules/
 │       │   │   │   └── [modulo]/
@@ -138,14 +140,14 @@ pruebaHesperides/
 │       │   │   │   ├── exception/   ← Excepciones y @ControllerAdvice
 │       │   │   │   ├── security/    ← JWT, filtros, UserDetails
 │       │   │   │   └── util/        ← Utilidades compartidas
-│       │   │   └── ProyectoApplication.java
+│       │   │   └── HesperidesApplication.java
 │       │   └── resources/
 │       │       ├── application.yml
 │       │       ├── application-dev.yml
 │       │       ├── application-prod.yml
 │       │       └── db/migration/    ← Scripts Flyway (V1__, V2__, ...)
 │       └── test/
-│           └── java/pe/edu/pucp/proyecto/
+│           └── java/pe/edu/pucp/hesperides/
 │               └── modules/[modulo]/
 │                   ├── controller/  ← Tests de integración (@WebMvcTest)
 │                   ├── service/     ← Tests unitarios (Mockito)
@@ -166,7 +168,7 @@ pruebaHesperides/
 │   ├── tsconfig.json
 │   ├── next.config.js
 │   └── src/
-│       ├── app/                     ← App Router (Next.js 14+)
+│       ├── app/                     ← App Router (Next.js 16+)
 │       │   ├── (auth)/              ← Grupo de rutas de autenticación
 │       │   ├── (dashboard)/         ← Grupo de rutas autenticadas
 │       │   ├── layout.tsx
@@ -184,7 +186,7 @@ pruebaHesperides/
 │       └── styles/
 │           └── globals.css
 │
-├── mobile/
+├── mobile/                           ← Fase 2, posterior al lanzamiento web
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── app.json
@@ -227,7 +229,7 @@ pruebaHesperides/
 
 | Aspecto | Convención |
 |---------|-----------|
-| Package base | `pe.edu.pucp.proyecto` |
+| Package base | `pe.edu.pucp.hesperides` |
 | Clases Entity | `PascalCase`, sufijo ninguno: `User`, `Course`, `Enrollment` |
 | Clases DTO | Sufijo `Request` / `Response`: `CreateUserRequest`, `UserResponse` |
 | Clases Controller | Sufijo `Controller`: `UserController` |
@@ -276,7 +278,7 @@ pruebaHesperides/
 
 | Aspecto | Convención |
 |---------|-----------|
-| Nombres de servicio | `backend`, `frontend`, `mobile-api`, `db`, `data-service` |
+| Nombres de servicio | `backend`, `frontend`, `db`, `data-service` |
 | Puertos | Backend: 8080, Frontend: 3000, Flask: 5001, PostgreSQL: 5432 |
 | Env vars | Archivo `.env` (no commiteado), `.env.example` (commiteado con placeholders) |
 | Volúmenes | Solo para BD en dev (`pgdata:/var/lib/postgresql/data`) |
@@ -323,7 +325,7 @@ No cómo se implementa, sino qué problema resuelve para el usuario.]
 
 ### 2.1 Módulo backend
 
-- Paquete: `pe.edu.pucp.proyecto.modules.[modulo]`
+- Paquete: `pe.edu.pucp.hesperides.modules.[modulo]`
 - Entidades JPA involucradas: [listar]
 - Repositorios necesarios: [listar]
 - Servicio: `[Nombre]Service` / `[Nombre]ServiceImpl`
@@ -567,7 +569,7 @@ CREATE INDEX idx_nombre_tabla_campo1 ON nombre_tabla(campo1);
 ### Después de recibir código de la IA
 
 - [ ] El código respeta la estructura de carpetas del proyecto.
-- [ ] El paquete Java es `pe.edu.pucp.proyecto.modules.[modulo].[capa]`.
+- [ ] El paquete Java es `pe.edu.pucp.hesperides.modules.[modulo].[capa]`.
 - [ ] Los componentes TypeScript están en la carpeta correcta.
 - [ ] Los nombres de clases/componentes siguen las convenciones.
 - [ ] La migración Flyway tiene número de versión correcto.
@@ -812,7 +814,7 @@ Eres un desarrollador senior trabajando en un proyecto para la PUCP.
 
 STACK TECNOLÓGICO:
 - Backend: Java 17 + Spring Boot + JPA/Hibernate + PostgreSQL
-- Frontend web: Next.js 14+ (App Router) + TypeScript + Tailwind
+- Frontend web: Next.js 16+ (React 19, App Router) + TypeScript + Tailwind
 - Frontend móvil: React Native + TypeScript
 - Migraciones: Flyway
 - Contenedores: Docker + Docker Compose
@@ -916,7 +918,7 @@ cd mobile && npm test
 cd backend && mvn flyway:migrate
 
 # Conectar a PostgreSQL
-docker exec -it proyecto-db psql -U postgres -d proyecto_pucp
+docker exec -it hesperides-db psql -U postgres -d hesperides
 
 # Limpiar y reconstruir
 docker-compose down -v && docker-compose up --build
