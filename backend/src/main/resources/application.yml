@@ -21,3 +21,19 @@ spring:
       add-mappings: false
 server:
   port: ${BACKEND_PORT:8080}
+
+hesperides:
+  security:
+    jwt:
+      # Sin valor por defecto: si falta la variable, la aplicación no arranca
+      # (fail fast). Una clave por defecto en el código es una puerta abierta.
+      secret: ${JWT_SECRET}
+      access-token-validity-seconds: 1800
+      refresh-token-validity-days: 7
+    cookie:
+      # En desarrollo local no hay HTTPS, así que la cookie no puede ser Secure
+      # o el navegador la descarta. En producción se sobreescribe a true.
+      secure: ${COOKIE_SECURE:false}
+    login:
+      max-attempts: 5
+      window-minutes: 15

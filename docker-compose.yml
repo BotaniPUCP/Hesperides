@@ -36,6 +36,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-hesperides}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_local}
       BACKEND_PORT: ${BACKEND_PORT:-8080}
+      # Sin valor por defecto a proposito: si falta, el backend no arranca en
+      # vez de firmar los JWT con una clave conocida (SPEC-001 §9).
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatorio, definelo en .env}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       # Not yet read by any Java code; scaffolding for when the backend calls the Flask data service.
       DATA_SERVICE_URL: ${DATA_SERVICE_URL:-http://data-service:5001}
     ports:

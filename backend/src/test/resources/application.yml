@@ -1,0 +1,41 @@
+# Configuración exclusiva de tests. Existe para que las variables que en
+# producción son obligatorias (fail fast si faltan) tengan un valor conocido
+# aquí, sin debilitar esa exigencia en application.yml.
+#
+# La clave de abajo es de prueba y no protege nada: los tests no manejan datos
+# reales y cada ejecución levanta una base efímera con Testcontainers.
+
+# NOTA: este archivo REEMPLAZA a src/main/resources/application.yml, no lo
+# complementa. Por eso repite el bloque hesperides.security completo: omitir
+# una sola propiedad la deja sin resolver.
+
+hesperides:
+  security:
+    jwt:
+      secret: clave-de-prueba-suficientemente-larga-para-hs256-en-tests
+      access-token-validity-seconds: 1800
+      refresh-token-validity-days: 7
+    cookie:
+      secure: false
+    login:
+      max-attempts: 5
+      window-minutes: 15
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+logging:
+  level:
+    org.testcontainers: WARN
+    com.github.dockerjava: WARN
