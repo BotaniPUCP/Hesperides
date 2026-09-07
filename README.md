@@ -5,7 +5,7 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 ## Descripción
 
 **Hesperides** es un proyecto de investigación que implementa una arquitectura distribuida en tres capas:
-- Backend REST escalable (Spring Boot, Java 17)
+- Backend REST escalable (Spring Boot 4.1, Java 26)
 - Frontend responsivo (Next.js, TypeScript/React)
 - Data service especializado (Python Flask)
 
