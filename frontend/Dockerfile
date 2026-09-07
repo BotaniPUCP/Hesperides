@@ -10,6 +10,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY shared ../shared
 COPY frontend .
+# NEXT_PUBLIC_* variables are inlined into the client bundle at build time,
+# so this must be an ARG/ENV available before `npm run build`, not a
+# container-runtime environment variable (which would have no effect).
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build
 
 # Runtime stage
