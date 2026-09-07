@@ -3,7 +3,7 @@
 | Spec ID  | Nombre                    | Estado         | Asignado a | Sprint | Fecha cierre |
 |----------|---------------------------|----------------|------------|--------|--------------|
 | SPEC-000 | Arquitectura general      | ✅ Completado  | —          | S0     | 2026-09-06   |
-| SPEC-001 | Autenticación             | 👀 En revisión  | —          | S0     |              |
+| SPEC-001 | Autenticación             | ✅ Completado  | —          | S0     | 2026-09-07   |
 | SPEC-002 | Modelo de datos           | 👀 En revisión  | —          | S0     |              |
 | SPEC-003 | Catálogos configurables   | 👀 En revisión  | —          | S0     |              |
 | SPEC-004 | Auditoría y trazabilidad  | 👀 En revisión  | —          | S0     |              |
@@ -38,7 +38,7 @@ que todavía no se ha escrito. La pareja que tome ese spec debe cerrarlos.
 | Decisión | La cierra | Estado actual en el código |
 |----------|-----------|----------------------------|
 | Versionado de rutas en servicios internos | SPEC-C03 | El backend expone `/api/v1/health`; el data service expone `/health`, sin prefijo. El sobre de respuesta sí es idéntico en ambos. Definir si los servicios internos llevan `/api/v1` y alinear `services/app/routes/health.py`. |
-| Almacenamiento del token en web vs. móvil | SPEC-001 | `frontend/src/lib/api.ts` marca el punto de extensión del refresh, sin implementar. El SPEC-000 pide httpOnly cookie en web y SecureStore en móvil: son dos flujos distintos en el mismo cliente, y la cookie implica protección CSRF. |
+| ~~Almacenamiento del token en web vs. móvil~~ | SPEC-001 | **✅ Cerrada** al implementar SPEC-001. Web recibe el refresh token en una cookie `httpOnly`, `Secure` y `SameSite=Strict` con `Path=/api/v1/auth`, y nunca en el cuerpo. Móvil lo recibe en el body (header `X-Client-Type: mobile`) y lo guarda en SecureStore. Lo decide `AuthController.respondWithSession`, con web como valor por defecto si falta el header. CSRF: se apoya en `SameSite=Strict`, no en tokens sincronizadores, porque la API es stateless y el resto de la autenticación viaja en el header `Authorization`. El refresh encolado del Anexo C está en `frontend/src/lib/api.ts`. |
 | Entidades de dominio | SPEC-002 | `shared/types/models.ts` solo define `AuditFields`. No hay ninguna `@Entity` en el backend. |
 | Estructura de la app móvil | Spec de móvil | `mobile/` solo tiene README. Es fase 2, posterior a que el web esté listo. |
 | Composición de las cuadrillas | SPEC-1XX de equipos | Las tablas `teams`/`team_members` existen (SPEC-002 V012), pero el cliente aún no ha dicho cuántas cuadrillas hay, cómo se llaman ni qué zonas cubre cada una. |
