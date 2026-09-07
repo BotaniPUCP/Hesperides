@@ -8,7 +8,7 @@ RUN mvn -B package -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
-RUN addgroup -S hesperides && adduser -S hesperides -G hesperides
+RUN groupadd --system hesperides && useradd --system --gid hesperides --no-create-home hesperides
 WORKDIR /app
 COPY --from=build /app/target/*.jar /app/app.jar
 USER hesperides

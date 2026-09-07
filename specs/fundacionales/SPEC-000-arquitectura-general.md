@@ -2,7 +2,7 @@
 
 > **Equipo:** 10 desarrolladores | **Plazo:** 8 semanas | **Cliente:** PUCP
 > **Tipo:** Software interno con despliegue en la nube (AWS, pendiente de licencias), arquitectura extensible
-> **Backend:** Java 17+ / Spring Boot · Python 3.11+ / Flask (microservicios de datos)
+> **Backend:** Java 26 / Spring Boot 4.1 · Python 3.11+ / Flask (microservicios de datos)
 > **Frontend:** Next.js 16+ (React 19) + React Native · TypeScript · Tailwind CSS
 >   (subido desde Next.js 14 / React 18 por 1 vulnerabilidad crítica y 7 altas, incluido un bypass de autorización en middleware, CVSS 9.1)
 > **BD:** PostgreSQL · Hibernate/JPA · Flyway
@@ -813,7 +813,7 @@ VERSIONADO:
 Eres un desarrollador senior trabajando en un proyecto para la PUCP.
 
 STACK TECNOLÓGICO:
-- Backend: Java 17 + Spring Boot + JPA/Hibernate + PostgreSQL
+- Backend: Java 26 + Spring Boot 4.1 + JPA/Hibernate + PostgreSQL
 - Frontend web: Next.js 16+ (React 19, App Router) + TypeScript + Tailwind
 - Frontend móvil: React Native + TypeScript
 - Migraciones: Flyway

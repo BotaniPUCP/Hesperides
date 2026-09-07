@@ -14,7 +14,9 @@ El dominio funcional y las características específicas se definen en los specs
 ## Requisitos previos
 
 - **Docker** 24+ (compose incluido)
-- **JDK 17+** (se compila a Java 17; el entorno local tiene JDK 21)
+- **JDK 26** — obligatorio. El backend fija `<java.version>26</java.version>`; con un
+  JDK anterior `./mvnw test` falla con `release version 26 not supported`. Verifica tu
+  versión con `java -version` antes de empezar.
 - **Node.js** 20+
 - **Python** 3.11+
 - **Git**
@@ -110,7 +112,7 @@ Dos detalles del entorno que conviene conocer:
 │   ├── _plantilla.md           # Template para nuevos specs
 │   └── REGISTRO.md             # Seguimiento de specs
 │
-├── backend/                    # Spring Boot (Java 17)
+├── backend/                    # Spring Boot (Java 26)
 │   ├── src/
 │   ├── pom.xml
 │   └── .mvn/wrapper/           # Maven Wrapper
