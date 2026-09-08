@@ -12,6 +12,18 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  mail:
+    # Fail-fast: sin SMTP_HOST la aplicación no arranca (SPEC-000 §1, enmienda
+    # SPEC-100 §2.5). username/password se dejan vacíos cuando el relay local
+    # no pide autenticación.
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    from: ${SMTP_FROM}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
   mvc:
     # Required so unmapped routes raise NoHandlerFoundException and reach the
     # global handler as 404 instead of falling through to a generic 500.
@@ -21,3 +33,21 @@ spring:
       add-mappings: false
 server:
   port: ${BACKEND_PORT:8080}
+
+hesperides:
+  app:
+    # Aplicación alcanzable por el usuario; arma el enlace del correo de
+    # credenciales. Nunca se deduce del header Host del request (SPEC-100 §4).
+    public-url: ${APP_PUBLIC_URL}
+  security:
+    cookie:
+      # En desarrollo local no hay HTTPS, así que la cookie no puede ser Secure
+      # o el navegador la descarta. En producción se sobreescribe a true.
+      secure: ${COOKIE_SECURE:false}
+    jwt:
+      # Sin valor por defecto: si falta la variable, la aplicación no arranca
+      # (fail fast). Una clave por defecto en el código es una puerta abierta.
+      # En tests se define en src/test/resources/application.yml.
+      secret: ${JWT_SECRET}
+      access-token-validity-seconds: 1800
+      refresh-token-validity-days: 7

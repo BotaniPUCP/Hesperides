@@ -10,7 +10,7 @@
 | SPEC-C01 | Componentes UI            | 👀 En revisión  | —          | S0     |              |
 | SPEC-C02 | Manejo de errores         | 👀 En revisión  | —          | S0     |              |
 | SPEC-C03 | Patrones de API           | 👀 En revisión  | —          | S0     |              |
-| SPEC-100 | Gestión de usuarios       | 👀 En revisión  | —          | S1     |              |
+| SPEC-100 | Gestión de usuarios       | ✅ Completado  | —          | S1     | 2026-09-07   |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado
 
@@ -26,7 +26,9 @@ sorpresa que un principio fundacional cambió.
 |---|---|---|
 | SPEC-000 §1 | SPEC-100 | "Sin dependencia de servicios externos" pasa a admitir **SMTP como única excepción**, con la condición de que su caída nunca impida una operación de negocio. |
 | SPEC-001 §2.5 | SPEC-100 | Se corrige la justificación del "no autorregistro": el argumento de que no había correo en el alcance ya no aplica. **La decisión de no permitir autorregistro no cambia.** |
+| SPEC-003 §4 | SPEC-100 | SPEC-100 NO inventa un endpoint de catálogo propio para el select de rol: pasa la implementación que se había escrito (`GET /api/v1/catalog-items?type=`) al contrato que ya existía, `GET /api/v1/catalogs/{typeCode}/items`. Desde entonces el frontend reusa `useCatalog` contra ese endpoint. |
 | SPEC-004 §3.2 | SPEC-100 | Se añade la acción auditable `USER_CREDENTIALS_DELIVERY_FAILED`. |
+| SPEC-C02 §3.2 | SPEC-100 | Se corrige el ejemplo de error simple: el path era ficticio (`/api/v1/catalog-items/999`, "Catalog item not found"). Ahora usa el endpoint real de consumo de SPEC-003 (`/api/v1/catalogs/NOPE/items` → "Catalog type not found", 404). |
 
 ---
 

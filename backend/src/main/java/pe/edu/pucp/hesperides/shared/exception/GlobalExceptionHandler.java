@@ -3,6 +3,7 @@ package pe.edu.pucp.hesperides.shared.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,6 +44,32 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(ex.getMessage()));
     }
 
+    /**
+     * En Spring Security 7.1 las denegaciones de @PreAuthorize se lanzan como
+     * excepción durante la invocación del handler, así que nunca llegan al
+     * RestAccessDeniedHandler del filtro. Aquí se devuelve el mismo envelope y
+     * el mismo mensaje para que method-level y filter-level sean indistinguibles.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("Insufficient permissions for this action"));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
+        log.warn("Bad request: {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(FieldValidationException.class)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleFieldValidation(FieldValidationException ex) {
+        log.warn("Field validation failed with {} error(s)", ex.getErrors().size());
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.errorWithData("Validation failed", Map.of("errors", ex.getErrors())));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, Object>>> handleValidation(MethodArgumentNotValidException ex) {
         List<Map<String, String>> errors = ex.getBindingResult().getFieldErrors().stream()
@@ -60,6 +87,12 @@ public class GlobalExceptionHandler {
         log.warn("No handler found for {} {}", ex.getHttpMethod(), ex.getRequestURL());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error("Endpoint not found"));
+    }
+
+    @ExceptionHandler(TooManyAttemptsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTooManyAttempts(TooManyAttemptsException ex) {
+        log.warn("Login bloqueado por exceso de intentos: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

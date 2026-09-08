@@ -36,6 +36,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-hesperides}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_local}
       BACKEND_PORT: ${BACKEND_PORT:-8080}
+      JWT_SECRET: ${JWT_SECRET}
+      SMTP_HOST: ${SMTP_HOST:-smtp.pucp.edu.pe}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@hesperides.pucp.edu.pe}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
       # Not yet read by any Java code; scaffolding for when the backend calls the Flask data service.
       DATA_SERVICE_URL: ${DATA_SERVICE_URL:-http://data-service:5001}
     ports:

@@ -153,7 +153,8 @@ de usuarios —decenas— no la justifica todavía.
 ## 3. Contratos de API
 
 Nueve endpoints bajo `/api/v1/users`. Todos exigen access token válido; la autorización fina por
-rol sale del Anexo A de SPEC-001 y se indica en cada uno.
+rol sale del Anexo A de SPEC-001 y se indica en cada uno. Al final de esta sección hay dos
+endpoints de soporte de solo lectura (catálogo y cuadrillas) que alimentan controles del frontend.
 
 **Nota sobre el verbo de desactivación:** se usa `POST /users/{id}/deactivate`, no
 `DELETE /users/{id}`. SPEC-C03 §3.1 reserva `DELETE` para el soft delete (`deleted_at`), y aquí
@@ -483,6 +484,34 @@ Idénticas en los nueve endpoints, según SPEC-C02 y el Anexo B de SPEC-001:
 ```json
 { "ok": false, "message": "Insufficient permissions for this action", "data": null }
 ```
+
+### Endpoints de soporte (selects y filtros)
+
+Los nueve endpoints de `/users` piden al ADMIN datos que el frontend no tiene: la lista de roles
+para el formulario y la lista de cuadrillas para el filtro. Los alimentan dos contratos:
+
+**Roles — `GET /api/v1/catalogs/{typeCode}/items` (SPEC-003 §4).**
+
+El select de rol del alta de usuarios (§7.1) se puebla con `useCatalog('ROLE')`, que llama al
+endpoint de consumo de catálogos de SPEC-003 §4. Es el mecanismo de SPEC-003: un rol nuevo en el
+catálogo aparece aquí sin cambio de código ni de este spec. El contrato del ítem es
+`{ id, code, label, sortOrder, metadata }`, que es exactamente lo que espera `Select`
+(SPEC-C01 §3.2) más el orden del administrador.
+
+**Cuadrillas — `GET /api/v1/teams`.**
+
+Cuadrillas activas (`active = TRUE` y sin `deleted_at`), ordenadas por nombre, solo con `id` y
+`name`: lo mínimo que necesita el select "Cuadrilla" del filtro (§7.1). No expone miembros ni
+zonas; para eso existe el spec de cuadrillas.
+
+```json
+{ "ok": true, "message": "Teams retrieved successfully", "data": [ { "id": 2, "name": "Cuadrilla Norte" } ] }
+```
+
+> **Decisión de implementación:** `GET /api/v1/teams` no viola el principio de "no filtrar
+> listados por código"; es una lectura mínima de entidad de dominio para un desplegable. Aparte
+> de estos dos apoyos, toda la lógica de catálogos y cuadrillas pertenece a SUS specs (SPEC-003 y
+> el spec de equipos), no a este.
 
 ---
 

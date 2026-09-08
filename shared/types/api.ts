@@ -16,6 +16,20 @@ export interface Page<T> {
   };
 }
 
+/**
+ * Shape of ApiResponse.data on a users listing (SPEC-100 §3, GET /users).
+ * The backend serializes this flat shape (not the nested Page<T> above).
+ */
+export interface UsersPage<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
 export interface FieldError {
   field: string;
   message: string;

@@ -1,0 +1,22 @@
+spring:
+  mail:
+    # Valores de relleno para que @SpringBootTest arranque sin SMTP real.
+    # El envío real se prueba con GreenMail sobreescribiendo host/port via
+    # @DynamicPropertySource; el resto de entornos usa application.yml de main.
+    host: localhost
+    port: 3025
+    username:
+    password:
+    from: no-reply@hesperides.test
+
+hesperides:
+  app:
+    public-url: http://localhost:3000
+  security:
+    jwt:
+      # Define la familia completa para que @SpringBootTest arranque sin
+      # JWT_SECRET en el entorno. La app real usa el application.yml de main,
+      # donde secret es ${JWT_SECRET} sin valor por defecto (fail fast).
+      secret: clave-de-prueba-suficientemente-larga-para-hs256!!
+      access-token-validity-seconds: 1800
+      refresh-token-validity-days: 7

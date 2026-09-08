@@ -44,6 +44,20 @@ Acceso local:
 - **Data Service**: http://localhost:5001
 - **PostgreSQL**: localhost:5432
 
+### Backend en el host (alternativa al contenedor)
+
+Para iterar sobre código Java sin reconstruir la imagen cada vez, arranca el
+backend directo con Maven (carga el `.env` y apunta la BD a `localhost`):
+
+```bash
+scripts/run-backend-local.sh
+```
+
+Incluye `spring-boot-devtools`: al guardar un cambio Java el servidor se
+reinicia solo. Requiere que la BD esté arriba (`docker compose up -d db`) y que
+`.env` tenga `JWT_SECRET`/`SMTP_*`/`APP_PUBLIC_URL` (ver `.env.example`); el
+puerto 8080 debe estar libre (detén el contenedor `hesperides-backend`).
+
 ## Servicios y puertos
 
 | Servicio        | Puerto | Contenedor          | Descripción                          |

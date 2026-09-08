@@ -88,10 +88,10 @@ Referencia real: `HealthController.health()`.
 ### 3.2 Ejemplo de error simple (sin datos)
 
 ```json
-// GET /api/v1/catalog-items/999 → 404 Not Found
+// GET /api/v1/catalogs/NOPE/items → 404 Not Found
 {
   "ok": false,
-  "message": "Catalog item not found",
+  "message": "Catalog type not found",
   "data": null
 }
 ```
