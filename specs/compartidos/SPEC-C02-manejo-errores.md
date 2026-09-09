@@ -198,7 +198,25 @@ Todo pasa por `frontend/src/lib/api.ts`. La función `request<T>` ya distingue d
 | `409` | Mostrar mensaje inline o modal indicando el conflicto (ej. "Ya existe un elemento con este código de inventario"), permitiendo corregir el campo sin perder el resto del formulario. |
 | `422` | Mostrar el `message` de la excepción de regla de negocio como error visible al usuario (no es un bug, es una regla del dominio que el usuario debe entender: ej. "No se puede cerrar la intervención sin evidencia fotográfica"). |
 | `500` | Toast genérico: "Error del servidor. Intente más tarde." Nunca mostrar `error.message` crudo del backend en este caso (el backend ya lo fija a `"Unexpected server error"`, pero el frontend tampoco debe intentar interpretarlo). |
-| Error de red (`ApiError.status === 0`, `fetch` lanzó) | Toast de conexión: "Sin conexión. Verifique su red." — **ver tratamiento especial en 6.1, crítico para el uso en campo.** |
+| Error de red (`ApiError.status === 0`, `fetch` lanzó) | Toast de conexión: "Sin conexión. Verifique su red." — **ver tratamiento especial en 6.1, crítico para el uso en campo, y la advertencia de 6.0 sobre falsos positivos.** |
+
+### 6.0 `status === 0` no siempre significa "sin red"
+
+`fetch` lanza —y por tanto se traduce a `status: 0`— ante **cualquier** fallo previo a recibir
+una respuesta HTTP, no solo ante la falta de conexión. En desarrollo, la causa más frecuente no
+es la red:
+
+| Causa real | Qué ve el usuario | Cómo distinguirla |
+|---|---|---|
+| **CORS mal configurado** (preflight `OPTIONS` con 401, falta `Allow-Origin`, falta `Allow-Credentials`) | "Sin conexión. Verifique su red." | La consola del navegador muestra un error de CORS explícito, y la pestaña Network un `OPTIONS` fallido **antes** de la petición real. El backend responde 200 por `curl` |
+| Backend caído o puerto equivocado | El mismo mensaje | `curl` al endpoint también falla |
+| `NEXT_PUBLIC_API_URL` apuntando a otro host | El mismo mensaje | La URL de la petición en Network no es la esperada |
+| Sin red de verdad | El mismo mensaje | Todo falla, incluido cargar la propia página |
+
+**El mensaje al usuario no cambia** —no tiene forma de actuar distinto y especular le daría
+información falsa—, pero **quien depura debe saber que este mensaje es ambiguo**. Ante un "sin
+conexión" con el backend sano, revisar CORS antes que la red: es el caso más común y el menos
+evidente (ver SPEC-000 §5.2.2).
 
 ### 6.1 Conectividad intermitente en campo (móvil) — tratamiento obligatorio
 

@@ -7,7 +7,11 @@
 >   (subido desde Next.js 14 / React 18 por 1 vulnerabilidad crítica y 7 altas, incluido un bypass de autorización en middleware, CVSS 9.1)
 > **BD:** PostgreSQL + PostGIS · Hibernate/JPA + Hibernate Spatial · Flyway
 > **Infra:** Docker · Docker Compose · GitHub Actions
-> **Calidad:** JaCoCo (cobertura backend) · Jest + React Testing Library (frontend) · pytest (data service)
+> **Calidad:** JaCoCo 0.8.15+ (cobertura backend) · Jest + React Testing Library (frontend) · pytest (data service)
+>
+> **Versiones exactas verificadas en el pom** (§5.2.1 documenta lo que Spring Boot 4
+> cambió respecto a 3.x): Spring Boot **4.1.1**, Spring Security **7.1.1**, Java **26**
+> (Temurin 26.0.2), JJWT **0.12.6**, Testcontainers **2.x**, JaCoCo **0.8.15**.
 
 ---
 
@@ -262,6 +266,59 @@ Hesperides/
 | Excepciones | Excepciones custom + `@ControllerAdvice` global |
 | Logs | SLF4J con `@Slf4j` (Lombok). Nunca `System.out.println` |
 | Config sensible | Variables de entorno via `application.yml` con `${ENV_VAR:default}` |
+
+### 5.2.1 Spring Boot 4: qué cambió respecto a 3.x
+
+Esta sección se escribió **después** de implementar SPEC-001, al encontrar que Spring Boot 4
+modularizó y renombró cosas que en 3.x venían incluidas. Todo lo de aquí está verificado contra
+los jars reales, no deducido: cada fila costó un fallo de compilación o un test en rojo.
+
+**La regla general:** si algo "debería venir con `spring-boot-starter-web`" y no compila, en
+Boot 4 probablemente vive en su propio starter. Buscar en el BOM antes de asumir la API de 3.x.
+
+| Qué | En Spring Boot 3.x | En Spring Boot 4.1 |
+|---|---|---|
+| Autoconfiguración de Flyway | Incluida con `flyway-core` | **Exige `spring-boot-starter-flyway`.** Sin él, `flyway-core` está en el classpath pero **las migraciones no se ejecutan** — ni en tests ni al arrancar, y sin error visible |
+| Jackson | Incluido en `starter-web`, paquete `com.fasterxml.jackson` | **Jackson 3**: `spring-boot-starter-jackson`, y `ObjectMapper` vive en **`tools.jackson.databind`**. Las *anotaciones* (`@JsonInclude`) siguen en `com.fasterxml.jackson.annotation` |
+| `JsonNode.asText()` | Existe | Se llama **`asString()`** |
+| `@WebMvcTest`, `@AutoConfigureMockMvc` | `org.springframework.boot.test.autoconfigure.web.servlet` | **`org.springframework.boot.webmvc.test.autoconfigure`**, en el starter `spring-boot-starter-webmvc-test` |
+| `@MockBean` | Existe | **Eliminado.** Usar `@MockitoBean` de `org.springframework.test.context.bean.override.mockito` |
+| Bean `HttpSecurity` en slices de test | Disponible | Un `@WebMvcTest` que importe `SecurityConfig` necesita **`spring-boot-starter-security-test`** o no existe el bean |
+| Lombok como annotation processor | Lo inyecta el parent | **Hay que declararlo** en `annotationProcessorPaths` del `maven-compiler-plugin`, o `@Slf4j` no genera el campo `log` y la compilación falla |
+| JaCoCo | 0.8.12 sirve | 0.8.12 **no instrumenta bytecode de Java 26** (class file 70) y rompe todo test que cargue el contexto de Spring. Mínimo **0.8.15** |
+| Testcontainers | Artefactos `postgresql`, `junit-jupiter` | Boot 4 gestiona Testcontainers **2.x**, que los renombró a **`testcontainers-postgresql`** y **`testcontainers-junit-jupiter`** |
+| `OncePerRequestFilter` | `org.springframework.web.filter` | Sin cambio (está en `spring-web`, **no** en `spring-security-web`) |
+
+### 5.2.2 CORS: obligatorio en toda API que consuma el navegador
+
+La sección 4 reserva `shared/security/` para CORS, pero ningún spec lo había detallado. Se
+documenta aquí porque su ausencia produce un fallo desconcertante: **el frontend muestra "Sin
+conexión. Verifique su red." aunque el backend responda 200 correctamente**.
+
+**Por qué ocurre.** El frontend corre en el puerto 3000 y el backend en el 8080: para el
+navegador son orígenes distintos. Antes de cualquier `POST`, el navegador envía un *preflight*
+`OPTIONS` pidiendo permiso. Si esa petición no se responde con las cabeceras correctas, el
+navegador **aborta antes de enviar la petición real** y `fetch` lanza una excepción de red que
+el cliente no puede distinguir de una caída de internet.
+
+**Por qué no lo detectan los tests.** Ni MockMvc ni `curl` hacen preflight ni validan cabeceras
+CORS: CORS es una protección del **navegador**, no del servidor. Una suite entera en verde y un
+script de `curl` con todos sus checks pasando son compatibles con un login que ningún navegador
+puede usar. **Todo spec con interfaz web debe verificarse en un navegador real**, no solo por
+protocolo.
+
+Reglas obligatorias (implementadas en `shared/security/CorsConfig.java`):
+
+- **Lista cerrada de orígenes**, configurable por entorno (`CORS_ALLOWED_ORIGINS`). **Nunca
+  `*`**: combinado con credenciales el propio navegador rechaza la respuesta, y permitiría que
+  cualquier sitio llamase a la API con la cookie de sesión de la víctima.
+- **`allowCredentials: true`** es imprescindible: sin ello el navegador descarta la cookie
+  `httpOnly` del refresh token y la sesión no sobrevive a una recarga.
+- **El preflight `OPTIONS` se permite sin autenticación** (`requestMatchers(OPTIONS, "/api/**").permitAll()`).
+  No lleva credenciales por diseño, así que exigirlas lo condena a un 401 y rompe toda petición
+  del navegador.
+- Cabeceras admitidas mínimas: `Authorization`, `Content-Type` y `X-Client-Type` (este último lo
+  usa SPEC-001 para distinguir web de móvil).
 
 ### 5.3 Convenciones TypeScript / Next.js / React Native
 

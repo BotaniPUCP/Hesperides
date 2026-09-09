@@ -66,6 +66,17 @@ No cómo se implementa, sino qué problema resuelve para el usuario.]
 - Librerías que NO debe usar: [listar]
 - Patrón de catálogos aplicable: [si usa catálogos configurables, especificar cuáles]
 
+> **Antes de escribir código de backend, leer SPEC-000 §5.2.1.** Spring Boot 4 modularizó y
+> renombró cosas que en 3.x venían incluidas (Jackson está en `tools.jackson`, `@MockBean` ya no
+> existe, `@WebMvcTest` cambió de paquete, Flyway necesita su propio starter). Asumir la API de
+> 3.x produce errores de compilación desconcertantes o, peor, migraciones que silenciosamente no
+> se ejecutan.
+>
+> **Si la feature expone endpoints que consume el navegador, leer además §5.2.2 (CORS).** Un
+> endpoint nuevo bajo `/api/**` ya queda cubierto por la configuración existente, pero cualquier
+> cabecera personalizada que el cliente envíe debe añadirse a `allowedHeaders` o el navegador
+> bloqueará la petición.
+
 ## 3. Contratos de API
 
 > Definir TODOS los endpoints de esta feature.
@@ -306,7 +317,11 @@ CREATE INDEX idx_nombre_tabla_campo1 ON nombre_tabla(campo1);
 - [ ] No se instalaron dependencias no autorizadas.
 - [ ] Los tests generados cubren todos los criterios de aceptación.
 - [ ] Todos los tests pasan (`mvn test` / `npm test`).
-- [ ] La funcionalidad se probó manualmente en web.
+- [ ] La funcionalidad se probó manualmente **en un navegador real** (no solo con `curl` ni con
+      tests de MockMvc): esos dos no hacen preflight de CORS, así que una suite en verde es
+      compatible con una pantalla que el navegador bloquea entera (SPEC-000 §5.2.2).
+- [ ] Si la feature añade endpoints que el navegador consume, la pestaña Network no muestra
+      ningún `OPTIONS` con 401 ni error de CORS en consola.
 - [ ] La funcionalidad se probó manualmente en móvil (o simulador).
 - [ ] No hay datos hardcodeados (URLs, credenciales, nombres de PUCP en lógica).
 - [ ] Los mensajes de error son claros para el usuario final.
