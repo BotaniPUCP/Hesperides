@@ -20,6 +20,8 @@ hesperides:
     login:
       max-attempts: 5
       window-minutes: 15
+    cors:
+      allowed-origins: http://localhost:3000
 
 spring:
   jpa:

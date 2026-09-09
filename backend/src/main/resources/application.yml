@@ -37,3 +37,8 @@ hesperides:
     login:
       max-attempts: 5
       window-minutes: 15
+    cors:
+      # Lista cerrada y separada por comas. Nunca un comodín: con credenciales
+      # activas el propio navegador rechaza esa combinación, y permitiría que
+      # cualquier sitio llamara a esta API con la cookie del usuario.
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
