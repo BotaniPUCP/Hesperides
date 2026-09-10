@@ -1,16 +1,11 @@
 # SPEC-C03 — Patrones de API
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | Transversal — sin HU propia, spec fundacional compartido |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (Web y Móvil) |
-| Prioridad | Alta |
 | Sprint | S0 |
-| Dependencias | SPEC-000 (arquitectura general, sección 7 — SPEC-C03), SPEC-C02 (manejo de errores) |
-| Fecha límite | 2026-09-07 |
+| Dependencias | `REGLAS.md`, SPEC-C02 |
 
 ---
 
@@ -22,13 +17,10 @@ Este spec también **cierra la decisión pendiente** registrada en `specs/REGIST
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones), sección 7 — SPEC-C03
-> - SPEC-C02 (manejo de errores) — los códigos de error de esta sección 7 se combinan con los códigos de éxito definidos aquí
-> - `backend/src/main/java/pe/edu/pucp/hesperides/config/HealthController.java` (referencia de ruta versionada existente)
-> - `services/app/routes/health.py` (referencia del microservicio Flask, ruta a alinear por este spec)
-> - `shared/types/api.ts` (`Page<T>`, `ApiResponse<T>`)
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** SPEC-C02 (sus códigos de error se combinan con los de éxito de aquí);
+> `config/HealthController.java`, `services/app/routes/health.py` y `shared/types/api.ts`
+> (`Page<T>`, `ApiResponse<T>`).
 
 ### 2.1 Módulo backend
 
@@ -351,38 +343,22 @@ Idempotency-Key: {uuid-v4-generado-por-el-cliente}
   la reintenta al recuperar señal → solo se crea una incidencia, no dos
 ```
 
-## 12. Seguridad
+## 12. Propio de este spec
 
-- [x] Validación en backend de todo query param (tipos, rangos de `page`/`size`, formato de `bbox`/`near`), no solo en frontend.
-- [x] Endpoints de listado y creación requieren autenticación JWT (heredado de SPEC-001); este spec no redefine autenticación, solo la forma de la URL y el payload.
-- [x] Roles/permisos: cada feature define quién puede filtrar/crear/eliminar; este spec no los prescribe.
-- [x] Datos sensibles que no deben exponerse: ninguna coordenada ni dato de ubicación de un reporte marcado como confidencial debe filtrarse vía `bbox`/`near` a un rol sin permiso sobre ese recurso (la restricción de visibilidad se aplica antes del filtro geoespacial, no después).
-- [x] Prevención de inyección SQL: `Specification`/`@Query` parametrizada de Spring Data; ningún filtro (incluidos `bbox`/`near`) se concatena como string en una query nativa.
-- [x] XSS: el parámetro `search` de texto libre se trata como dato, nunca se refleja sin escapar en ninguna respuesta HTML (no aplica directamente a JSON, pero sí si algún reporte exportado a HTML lo incluye).
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de los patrones de API:
 
-## 13. Consideraciones de extensibilidad
+- **Paginación obligatoria** en todo listado, con `size` máximo de 100: sin tope, un `size`
+  arbitrario es un vector de agotamiento de memoria.
+- **Filtros geoespaciales** con SRID 4326 y funciones PostGIS (`ST_Intersects`, `ST_DWithin`),
+  nunca cálculo manual de distancia.
+- **`bbox` y `near` son excluyentes:** combinarlos es ambiguo y se rechaza con 400.
+- **`Idempotency-Key`** en los `POST` de creación sensibles a doble submit.
+- Los filtros se componen con `Specification`/`@Query` parametrizada (INV-7).
 
-- [x] Los valores de filtro por estado/urgencia/tipo son siempre `code` de catálogos configurables (SPEC-003), nunca enums Java ni listas hardcodeadas en el frontend.
-- [x] La lógica de construcción de filtros y de resolución geoespacial vive en el Service (`Specification` armada ahí), nunca en el Controller.
-- [x] El límite de paginación (20/100) y el radio máximo de búsqueda por cercanía son candidatos a configuración externa (`application.yml`) si un futuro cliente necesita valores distintos — no deben quedar como literales repetidos en múltiples controllers.
-- [x] Ninguna referencia a "PUCP" ni a nombres de zonas específicas del campus aparece en la lógica de filtros: los ejemplos de esta spec (Ficus benjamina, coordenadas del campus) son ilustrativos, no hardcodeados en código.
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-## 14. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] Spec tiene objetivo claro en una oración.
-- [x] Los contratos de paginación, filtros y filtros geoespaciales están definidos con tipos y formatos exactos.
-- [x] Hay al menos 5 criterios de aceptación verificables sin leer código (hay 8).
-- [x] Se contemplan edge cases: `size` fuera de rango, filtros geoespaciales incompatibles entre sí, doble submit.
-- [x] Se especifica comportamiento común a web y móvil (misma API, mismos query params).
-
-### Después de recibir código de la IA
-
-- [ ] Toda ruta nueva sigue `/api/v1/[recurso-plural]` sin excepciones, incluidas las del microservicio Flask.
+- [ ] Toda ruta nueva sigue `/api/v1/[recurso-plural]`, incluidas las del microservicio Flask.
 - [ ] Ningún listado nuevo omite paginación ni supera el máximo de `size`.
-- [ ] Los filtros usan `Specification`/`@Query` parametrizada, nunca SQL concatenado.
-- [ ] Los filtros geoespaciales usan SRID 4326 y las funciones PostGIS correctas (`ST_Intersects`, `ST_DWithin`), no cálculos manuales de distancia.
-- [ ] Las fechas en JSON son ISO 8601 UTC; los nombres de campo son camelCase en JSON y snake_case en BD.
-- [ ] Los `POST` de creación sensibles a doble submit implementan `Idempotency-Key`.
+- [ ] Fechas ISO 8601 UTC; campos camelCase en JSON y snake_case en BD.
 - [ ] Los tests de la sección 11 pasan.
+

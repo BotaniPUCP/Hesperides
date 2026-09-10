@@ -1,16 +1,11 @@
 # SPEC-004 — Auditoría y trazabilidad
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec fundacional, no deriva de una HU) |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (la auditoría se genera desde web y móvil por igual; la consulta es de escritorio) |
-| Prioridad | Alta |
 | Sprint | S0 (fundacional) — se activa junto con el resto de módulos de S1 en adelante |
 | Dependencias | SPEC-000 (arquitectura y convenciones), SPEC-001 (autenticación — `users`, roles, sección 9.2 de logs), SPEC-002 (modelo de datos — columnas de autoría existentes), SPEC-003 (catálogos configurables — una de las acciones auditadas), SPEC-C02 (manejo de errores), SPEC-C03 (patrones de API) |
-| Fecha límite | Fin de Semana 1 (mecanismo automático) / continuo (bitácora crece con cada sprint) |
 
 ---
 
@@ -20,13 +15,9 @@ Garantizar que Hesperides pueda responder, en cualquier momento y sin leer códi
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones) — sección 5.4 (convención de soft delete que este spec excepciona deliberadamente en `audit_log`)
-> - SPEC-001 (autenticación) — sección 9.2 (qué se registra hoy solo en logs SLF4J) y Anexo A (matriz de permisos, base para decidir quién consulta la auditoría)
-> - SPEC-002 (modelo de datos) — las 15 columnas de autoría específicas ya existentes (`registered_by_user_id`, `assigned_by_user_id`, `assigned_to_user_id`, `validated_by_user_id`, `uploaded_by_user_id` ×3, `changed_by_user_id`, `verified_by_user_id`, `responsible_user_id`, `reported_by_user_id`) y `incident_status_history` como historial append-only ya resuelto
-> - SPEC-003 (catálogos configurables) — la administración de `catalog_types`/`catalog_items` es una acción auditable de este spec
-> - SPEC-C02 (manejo de errores) y SPEC-C03 (patrones de API) — sobre de respuesta, paginación y filtros
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** SPEC-002 §4.1 (`AuditLog` es la **única** entidad que no extiende
+> `BaseEntity`) y la matriz del Anexo A de SPEC-001 (el acceso al log es solo `ADMIN`).
 
 **Este spec NO redefine ninguna tabla de SPEC-002.** No agrega `created_by_user_id`/`updated_by_user_id` a una tabla que ya resuelve su autoría con una columna específica más precisa (p. ej. `green_elements.registered_by_user_id` ya dice quién dio de alta; no necesita un `created_by_user_id` redundante). Tampoco toca `incident_status_history`, que ya es un historial append-only con su propio `changed_by_user_id`. Este spec llena exactamente dos huecos: **(a)** quién editó por última vez una ficha que no tiene una columna de autoría propia para la edición, y **(b)** un registro persistente de acciones administrativas sensibles que hoy solo existen como líneas de log SLF4J.
 
@@ -635,55 +626,37 @@ No hay mockup de Figma para este módulo aún; la referencia es `DataTable` + fi
 
 ---
 
-## 14. Seguridad
+## 14. Propio de este spec
 
-- [x] **Validación en backend (Bean Validation), no solo en frontend:** el DTO de filtros de `GET /api/v1/audit-log` valida `action` contra el enum `AuditActionCode`, `entityId` requiere `entityType`, y `dateFrom <= dateTo`, todo en el backend antes de construir la `Specification`.
-- [x] **Endpoint requiere autenticación JWT:** sí, ambos endpoints de este spec.
-- [x] **Roles/permisos necesarios:** `ADMIN` exclusivamente (sección 8), justificado explícitamente contra la matriz de permisos de SPEC-001.
-- [x] **Datos sensibles que NO deben exponerse en response:** `password_hash`, `token_hash`, cualquier token en texto plano — nunca entran a `changes` en primer lugar (sección 7), así que no hay riesgo de que el endpoint los sirva por accidente.
-- [x] **Prevención de inyección SQL:** `Specification<AuditLog>` de Spring Data JPA componiendo predicados por filtro presente, igual que el resto del proyecto (SPEC-C03 §6.1); ninguna concatenación de strings, ni siquiera para el filtro de rango de fechas.
-- [x] **XSS:** el `changes` (JSONB) puede contener texto libre proveniente de otros módulos (p. ej. una `label` de catálogo con caracteres especiales). Se sanea al renderizar en `AuditLogTable`, nunca al guardar — mismo criterio que SPEC-002 aplica a `notes`/`description` en toda tabla de dominio.
-- [x] **Confidencialidad de `ip_address`:** es un dato de auditoría de seguridad (igual que `captured_location` en SPEC-002 §5.4), visible solo a ADMIN por la misma restricción de acceso del endpoint completo — no se expone un endpoint separado más permisivo que la muestre sin el resto del contexto.
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de la auditoría:
 
----
+- **Solo `ADMIN`** accede a ambos endpoints, justificado contra la matriz del Anexo A de
+  SPEC-001. No hay un endpoint más permisivo que muestre parte del log sin su contexto.
+- **`password_hash`, `token_hash` y los tokens en claro nunca entran a `changes`** (sección 7),
+  así que el endpoint no puede servirlos por accidente.
+- **`ip_address`** es dato de auditoría de seguridad; su confidencialidad se apoya en que todo
+  el endpoint es `ADMIN`.
+- **`action` es un `enum` Java deliberadamente, no un catálogo** (§3.1): no es un dato que el
+  cliente configure. Es la única excepción consciente a INV-2 en el proyecto.
+- **`changes` se sanea al renderizar, nunca al guardar** — puede traer texto libre de otros
+  módulos.
+- **Punto de extensión:** una acción auditable nueva es un valor en `AuditActionCode` más una
+  llamada a `AuditService.record(...)`. Sin tabla ni migración nuevas (§9.2).
 
-## 15. Consideraciones de extensibilidad
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-- [x] **¿Usa catálogos configurables en vez de enums hardcodeados?** Deliberadamente **no** para `action` (sección 3.1, justificado explícitamente porque no es un dato de negocio configurable por el cliente). Sí seguiría usando catálogos para cualquier dato de negocio nuevo que este spec llegara a necesitar en el futuro (ninguno identificado hoy).
-- [x] **¿La lógica de negocio está en el Service, no en el Controller?** Sí: `AuditLogController` solo parsea filtros y delega a `AuditServiceImpl`/`AuditLogRepository`; la decisión de qué campos entran al diff vive en cada `Service` de dominio que llama a `AuditService.record(...)`, nunca en el controller de auditoría.
-- [x] **¿Los textos de UI son externalizables (i18n-ready)?** Los `message` de respuesta de este spec siguen el mismo criterio que SPEC-001/003: claves de mensaje en inglés técnico, traducibles por el frontend sin tocar el backend. Los `label` de `AuditActionCode` que la UI muestra al usuario (p. ej. "Usuario desactivado" para `USER_DEACTIVATED`) viven en un mapa de traducción del frontend, no hardcodeados en el backend.
-- [x] **¿Las reglas de negocio específicas de PUCP están en configuración, no en código?** Sí: ninguna acción de `AuditActionCode` ni ninguna tabla de este spec menciona PUCP, una zona o un rol específico del campus — el mecanismo es genérico para cualquier institución que reutilice el proyecto, igual que el resto de specs fundacionales.
-- [x] **Punto de extensión:** agregar una nueva acción auditable es agregar un valor a `AuditActionCode` y una llamada a `AuditService.record(...)` en el punto correspondiente del `Service` de dominio — no requiere nueva tabla ni migración de esquema, solo una fila de código nueva y la actualización de la tabla de la sección 3.2 de este documento (sección 9.2).
-
----
-
-## 16. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] ¿El spec tiene objetivo claro y en una oración?
-- [x] ¿Los contratos de API están definidos con tipos exactos?
-- [x] ¿La migración SQL está definida? — V011, con `CREATE TABLE audit_log` y los `ALTER TABLE` de columnas de autoría.
-- [x] ¿Hay al menos 5 criterios de aceptación verificables? — 11.
-- [x] ¿Se contemplan flujos alternativos y edge cases? — sección 10.
-- [x] ¿Se especifica comportamiento para web Y móvil? — sección 2.2/2.3 (móvil solo genera, no consulta).
-- [ ] ¿Alguien más revisó y aprobó el spec? — pendiente de peer review.
-
-### Después de recibir código de la IA
-
-- [ ] `V011__create_audit_log.sql` está en `backend/src/main/resources/db/migration/` y no colisiona con V001–V010.
-- [ ] `AuditLog` es la única entidad del proyecto sin `updated_at`/`deleted_at`; no extiende `Auditable` ni `BaseEntity` (SPEC-002 §4.1).
-- [ ] `Auditable` (`@MappedSuperclass`) está en `shared/audit/entity/`, y solo las entidades de la tabla de la sección 4.2 la extienden.
-- [ ] `SpringSecurityAuditorAware` nunca lanza excepción; con `SecurityContext` vacío devuelve `Optional.empty()`, no un valor inventado.
-- [ ] `AuditActionCode` es un `enum` Java mapeado como `STRING` en BD, no `ORDINAL`, y no existe un `catalog_type` `ACTION_TYPE`.
-- [ ] Ningún `Service` arma el diff de `changes` por reflexión o serialización genérica de la entidad completa — cada uno construye el `JsonNode` campo por campo desde una lista explícita.
-- [ ] `AuditLogController` no expone `POST`/`PUT`/`PATCH`/`DELETE`.
-- [ ] `GET /api/v1/audit-log` está protegido con `@PreAuthorize("hasAuthority('ADMIN')")`.
-- [ ] No hay ningún `System.out.println`/`console.log` de depuración, y ningún log ni fila de `audit_log` contiene `password_hash`, `token_hash` o un token completo.
-- [ ] `mvn test` pasa limpio, incluidos los tests de Testcontainers de la sección 13.2.
-- [ ] El `REVOKE UPDATE, DELETE ON audit_log` de la sección 6 queda documentado en el runbook de despliegue (fuera de Flyway), no olvidado como "ya se hará".
-
----
+- [ ] `AuditLog` no extiende `Auditable` ni `BaseEntity`, y es la única entidad sin
+      `updated_at`/`deleted_at`.
+- [ ] `AuditActionCode` se mapea como `STRING`, nunca `ORDINAL`; no existe un `catalog_type`
+      `ACTION_TYPE`.
+- [ ] Ningún `Service` arma el diff por reflexión: cada uno construye el `JsonNode` campo por
+      campo desde una lista explícita.
+- [ ] `AuditLogController` no expone `POST`/`PUT`/`PATCH`/`DELETE`, y el `GET` lleva
+      `@PreAuthorize("hasAuthority('ADMIN')")`.
+- [ ] `SpringSecurityAuditorAware` nunca lanza: con `SecurityContext` vacío devuelve
+      `Optional.empty()`.
+- [ ] El `REVOKE UPDATE, DELETE ON audit_log` (§6) queda en el runbook de despliegue, fuera de
+      Flyway. No como "ya se hará".
 
 ## Anexo — Relación con las columnas de autoría ya existentes (no duplicadas)
 

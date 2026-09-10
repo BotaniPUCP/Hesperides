@@ -1,16 +1,11 @@
 # SPEC-C01 — Componentes UI compartidos
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec transversal, no deriva de una HU) |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (Web y Móvil) |
-| Prioridad | Alta |
 | Sprint | S0 (fundacional) |
 | Dependencias | SPEC-000 (arquitectura y convenciones), SPEC-002 (modelo de datos), SPEC-003 (catálogos configurables), SPEC-C02 (manejo de errores), SPEC-C03 (patrones de API) |
-| Fecha límite | Fin de Semana 1 |
 
 ---
 
@@ -20,13 +15,9 @@ Definir el catálogo único de componentes de interfaz —tokens de diseño, pro
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código de interfaz para cualquier feature, la IA debe leer obligatoriamente:
-> - Este spec completo, incluida la sección 9 (reglas para la IA)
-> - SPEC-000 (arquitectura y convenciones) — secciones 4, 5.3 y 7
-> - SPEC-002 (modelo de datos) — para saber qué campos y catálogos alimentan cada componente
-> - SPEC-003 (catálogos configurables) — el patrón `{ id, code, label }` que consumen `Select`, `Badge` y `StatusBadge`
-> - SPEC-C02 (manejo de errores) — para los estados de error de formularios y `Toast`
-> - SPEC-C03 (patrones de API) — para la forma de la respuesta paginada que consume `DataTable`
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** SPEC-003 §6.1 (`useCatalog`, del que dependen `Select`,
+> `StatusBadge` y `UrgencyBadge`) y SPEC-C02 §6 (estados de error que renderizan estos componentes).
 
 **Este spec no define ninguna pantalla ni flujo de negocio.** Es una biblioteca. Cada SPEC-1XX en adelante referencia estos componentes por nombre e indica cuáles reutiliza; no vuelve a definir sus props.
 
@@ -909,35 +900,37 @@ Casos específicos adicionales por componente:
   feature correspondiente, que ya asume estos componentes como bloques probados.
 ```
 
-## 13. Seguridad
+## 13. Propio de este spec
 
-- [ ] Ningún componente de este catálogo hace llamadas HTTP directas: `PhotoUpload`, `Select` (con carga de catálogo) y `MapView` reciben datos o callbacks desde el componente contenedor, que a su vez usa `lib/api.ts` (SPEC-000 §5.3). Esto mantiene la autenticación y el manejo de errores centralizados en un solo lugar.
-- [ ] `errorMessage` e `helperText` de todos los campos de formulario son texto plano; no se renderiza HTML no sanitizado (`dangerouslySetInnerHTML` prohibido en cualquier componente de este catálogo).
-- [ ] Las URLs que consume `BeforeAfterViewer` y las miniaturas de `PhotoUpload` ya subidas son URLs prefirmadas de vida corta (SPEC-002 INV-06); ningún componente cachea esa URL más allá del ciclo de vida del componente en memoria.
-- [ ] `LocationPicker` solicita el permiso de geolocalización de forma explícita (nunca automática al montar el componente sin interacción del usuario) y maneja el rechazo del permiso mostrando `errorMessage`, no fallando en silencio.
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de los componentes:
 
-## 14. Consideraciones de extensibilidad
+- **Ningún componente del catálogo hace llamadas HTTP.** `PhotoUpload`, `Select` (con carga de
+  catálogo) y `MapView` reciben datos o callbacks del contenedor, que usa `lib/api.ts` (§5.3).
+  Así la autenticación y el manejo de errores quedan en un solo sitio.
+- **`errorMessage` y `helperText` son texto plano.** `dangerouslySetInnerHTML` está prohibido en
+  todo componente de este catálogo.
+- **URLs prefirmadas de vida corta** en `BeforeAfterViewer` y en las miniaturas ya subidas de
+  `PhotoUpload` (SPEC-002 INV-06). Ningún componente las cachea más allá de su ciclo de vida.
+- **`LocationPicker` pide el permiso de geolocalización de forma explícita**, nunca al montar
+  sin interacción, y muestra `errorMessage` si se rechaza en vez de fallar en silencio.
 
-- [ ] `StatusBadge` y `UrgencyBadge` resuelven color por `code` de catálogo, no por texto de `label`: un nuevo cliente que traduzca los labels no rompe el mapeo de color.
-- [ ] La paleta de la sección 3 vive en `tailwind.config.ts` y `theme/colors.ts` (móvil), nunca repetida como valores hex sueltos dentro de un componente — cambiar la marca de un futuro cliente es cambiar estos dos archivos, no buscar hex en todo el código.
-- [ ] `MapView` recibe la URL del proveedor de tiles como configuración (variable de entorno), no hardcodeada, para poder cambiar de proveedor de tiles sin tocar el componente.
-- [ ] Los textos visibles de los componentes (`placeholder` por defecto de `Select`, mensajes de `EmptyState` por defecto) están centralizados y son reemplazables, no repetidos como literales en cada punto de uso.
+**Extensibilidad.** `StatusBadge` y `UrgencyBadge` resuelven el color por `code` de catálogo,
+nunca por el texto del `label`: un cliente que traduzca los labels no rompe el mapeo. La paleta
+de §3 vive en `tailwind.config.ts` y `theme/colors.ts`, nunca como hex sueltos en un componente
+—cambiar de marca es tocar dos archivos, no buscar hex por todo el código—. La URL del
+proveedor de tiles de `MapView` es configuración, no literal.
 
-## 15. Checklist de verificación (para el desarrollador)
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-### Antes de pedir código a la IA
+- [ ] La feature declara qué componentes de este catálogo reutiliza. Si necesita uno que no
+      existe y es transversal (§10.2), se añade aquí primero, no se improvisa en la feature.
+- [ ] Ningún componente nuevo duplica uno de `components/ui`, `forms` o `map`.
+- [ ] Sin reglas de layout en línea (`style={{ display: ... }}`) en componentes web.
+- [ ] Ninguna librería de UI, mapas o formularios fuera de las autorizadas en §2.4.
+- [ ] Todo color de estado o urgencia coincide con las tablas de §3.1 **comparando el hex**, no
+      a simple vista.
+- [ ] Los componentes táctiles de pantallas de campo miden 44px o más.
+- [ ] `DataTable` probado bajo 640px: se ve como tarjetas, no con scroll horizontal.
+- [ ] Navegación completa por teclado probada en al menos un formulario y un modal.
+- [ ] Los tests de §12 pasan (`npm test` en `frontend/` y en `mobile/`).
 
-- [ ] ¿La feature que se va a construir referencia este spec y lista qué componentes de aquí va a reutilizar?
-- [ ] ¿Algún componente que la feature necesita no existe en este catálogo? Si es transversal (sección 10.2), se agrega aquí primero, no se improvisa en la feature.
-- [ ] ¿Se identificaron los `code` de catálogo (SPEC-003) que la feature va a mapear con `StatusBadge`/`UrgencyBadge`, y ya están cubiertos por las tablas de la sección 3.1?
-
-### Después de recibir código de la IA
-
-- [ ] Ningún componente nuevo duplica uno ya existente en `components/ui`, `forms` o `map`.
-- [ ] No hay `className` con reglas de layout en línea (`style={{ display: ... }}`) en componentes web.
-- [ ] No se instaló ninguna librería de componentes de UI, mapas o formularios fuera de las autorizadas en la sección 2.4.
-- [ ] Todo color de estado o urgencia usado coincide exactamente con las tablas de la sección 3.1 (comparar el hex, no "a simple vista").
-- [ ] Los componentes táctiles en pantallas de campo miden 44px o más.
-- [ ] `DataTable` se probó reduciendo el viewport a menos de 640px y se ve como tarjetas, no con scroll horizontal.
-- [ ] Los tests generados (sección 12) pasan (`npm test` en `frontend/` y en `mobile/`).
-- [ ] Se probó la navegación completa por teclado en al menos un formulario y un modal.

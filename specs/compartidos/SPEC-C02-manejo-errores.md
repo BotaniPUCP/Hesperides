@@ -1,16 +1,11 @@
 # SPEC-C02 — Manejo de errores
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | Transversal — sin HU propia, spec fundacional compartido |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (Web y Móvil) |
-| Prioridad | Alta |
 | Sprint | S0 |
-| Dependencias | SPEC-000 (arquitectura general, sección 7 — SPEC-C02) |
-| Fecha límite | 2026-09-07 |
+| Dependencias | `REGLAS.md` |
 
 ---
 
@@ -22,13 +17,9 @@ Este spec **documenta contrato ya implementado y en producción**, no propone un
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones), sección 7 — SPEC-C02
-> - El código ya implementado en `backend/src/main/java/pe/edu/pucp/hesperides/shared/exception/`
-> - `frontend/src/lib/api.ts` (cliente HTTP web)
-> - `shared/types/api.ts` (contratos TypeScript del sobre de respuesta)
-> - `services/app/routes/health.py` (referencia de cómo el microservicio Python replica el sobre)
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** código ya implementado en `shared/exception/`, `frontend/src/lib/api.ts`,
+> `shared/types/api.ts` y `services/app/routes/health.py` (el sobre replicado en Flask).
 
 ### 2.1 Módulo backend
 
@@ -308,36 +299,26 @@ Los operarios registran incidencias e intervenciones desde el móvil en el campu
   muestra el estado de "sin conexión" y permite reintentar sin perder lo ya escrito
 ```
 
-## 11. Seguridad
+## 11. Propio de este spec
 
-- [x] Validación en backend (Bean Validation) es la única fuente de verdad; la validación de frontend es solo UX, nunca sustituye la de backend.
-- [x] El manejo de errores no requiere autenticación en sí mismo, pero los códigos 401/403 sí dependen de JWT (SPEC-001).
-- [x] Roles/permisos: no aplica a este spec (lo hereda SPEC-001 para 403).
-- [x] Datos sensibles que NO deben exponerse en ninguna respuesta de error: stacktraces, nombres de clases internas, rutas de archivo del servidor, valores de campos sensibles ecoados en mensajes de validación, tokens.
-- [x] Prevención de inyección SQL: no aplica directamente a este spec (lo cubre JPA/Hibernate a nivel de repositorios).
-- [x] XSS: los `message` de error son texto plano; el frontend debe renderizarlos como texto, nunca con `dangerouslySetInnerHTML` o equivalente.
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio del manejo de errores:
 
-## 12. Consideraciones de extensibilidad
+- **Nunca salen al cliente:** stacktraces, nombres de clases internas, rutas de archivo del
+  servidor, valores de campos sensibles ecoados en mensajes de validación, tokens.
+- **XSS:** los `message` son texto plano. El frontend los renderiza como texto, nunca con
+  `dangerouslySetInnerHTML`.
+- **Sin catálogos:** los códigos HTTP y las cuatro excepciones custom son contrato técnico
+  fijo, no datos de negocio configurables.
+- **Un solo punto de mapeo:** excepción → HTTP vive en `GlobalExceptionHandler`, nunca en un
+  Controller ni en un Service.
+- **Idioma:** los mensajes son inglés en el código (§5.1); traducirlos al usuario final es
+  responsabilidad del frontend, sin tocar el backend.
 
-- [x] No usa catálogos configurables — los códigos de error HTTP y las excepciones custom son parte fija del contrato técnico, no datos de negocio.
-- [x] Toda la lógica de mapeo excepción→HTTP vive en `GlobalExceptionHandler` (capa de infraestructura transversal), nunca en un Controller ni en un Service individual.
-- [x] Los mensajes de error son textos en inglés en el código (convención SPEC-000 5.1); su traducción/presentación final al usuario final es responsabilidad del frontend, que puede mapear mensajes conocidos a copys en español sin tocar el backend.
-- [x] No hay reglas específicas de PUCP en este spec: es 100% portable a otro cliente.
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-## 13. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] Spec tiene objetivo claro en una oración.
-- [x] La tabla de excepciones cubre todos los casos existentes en `GlobalExceptionHandler.java`.
-- [x] Hay al menos 5 criterios de aceptación verificables sin leer código (hay 7).
-- [x] Se contemplan flujos alternativos y edge cases (red caída, doble submit, 401 vs 403).
-- [x] Se especifica comportamiento para web y móvil, con énfasis en el caso de campo con mala conexión.
-
-### Después de recibir código de la IA
-
-- [ ] Toda excepción nueva de dominio extiende una de las cuatro custom, o se justifica una nueva y se agrega a este spec.
-- [ ] Ningún `try/catch` vacío en el código nuevo.
+- [ ] Toda excepción nueva de dominio extiende una de las cuatro custom, o se justifica y se
+      añade a este spec.
+- [ ] Ningún `try/catch` vacío.
 - [ ] Ningún mensaje de excepción interna llega al cliente sin pasar por `GlobalExceptionHandler`.
-- [ ] Los logs de nivel `warn`/`error` no contienen datos sensibles.
 - [ ] Los tests de la sección 10 pasan.
+

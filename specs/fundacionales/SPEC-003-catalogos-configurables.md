@@ -1,16 +1,11 @@
 # SPEC-003 — Catálogos configurables
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec fundacional, no deriva de una HU) |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (el sistema de catálogos sirve a web y móvil por igual) |
-| Prioridad | Alta |
 | Sprint | S0 (fundacional) |
 | Dependencias | SPEC-000 (arquitectura y convenciones), SPEC-002 (modelo de datos — consumidores de catálogo), SPEC-C02 (manejo de errores), SPEC-C03 (patrones de API) |
-| Fecha límite | Fin de Semana 1 |
 
 ---
 
@@ -20,12 +15,9 @@ Definir el contrato de API, el patrón de uso en backend y frontend, y las regla
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones) — sección 7, apartado SPEC-003
-> - SPEC-002 (modelo de datos) — qué entidades referencian qué `catalog_type`
-> - SPEC-C02 (manejo de errores)
-> - SPEC-C03 (patrones de API)
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** las tablas `catalog_types`/`catalog_items` ya existen (V001):
+> se documentan aquí, no se redefinen. Este spec **es** el mecanismo que sustituye a los enums (INV-2).
 
 **Este spec no crea las tablas `catalog_types` ni `catalog_items`.** Ya existen en `V001__create_catalog_tables.sql`, propiedad de este spec pero ya aplicada al repo. Este documento las describe, define su API de administración y consumo, y fija el patrón que toda entidad JPA debe seguir para referenciarlas correctamente.
 
@@ -649,51 +641,29 @@ No hay mockup de Figma para este spec fundacional; la pantalla de administració
 
 ---
 
-## 13. Seguridad
+## 13. Propio de este spec
 
-- [x] Validación en backend (Bean Validation en el DTO de entrada + reglas de negocio en `CatalogsService`), no solo en frontend.
-- [x] Endpoint requiere autenticación JWT: sí, todos. `GET .../items` exige solo sesión válida; el resto exige rol `ADMIN`.
-- [x] Roles/permisos necesarios: `ADMIN` para todo endpoint de escritura y para el detalle/listado de administración; cualquier rol autenticado para `GET /api/v1/catalogs/{typeCode}/items`.
-- [x] Datos sensibles que NO deben exponerse en response: ninguno — los catálogos son configuración de dominio, no datos personales. `metadata` sí debe revisarse caso por caso si en el futuro un catálogo guardara ahí algo sensible; hoy ningún catálogo definido lo hace.
-- [x] Prevención de inyección SQL: JPA/Hibernate con parámetros, sin queries concatenados; `typeCode` se compara siempre por igualdad exacta contra columna indexada, nunca interpolado en JPQL nativo.
-- [x] XSS: `label`, `name`, `description` son texto libre editado por un administrador; se sanitiza/escapa en el render del frontend igual que cualquier otro texto de usuario (SPEC-C01), no se confía en que "solo lo edita un admin" para omitir el escape.
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de los catálogos:
 
----
+- **Autorización:** `GET /api/v1/catalogs/{typeCode}/items` exige solo sesión válida; todo lo
+  demás (escritura, listado de administración) exige `ADMIN`.
+- **Sin datos sensibles:** los catálogos son configuración de dominio. Si un catálogo futuro
+  guardara algo sensible en `metadata`, hay que revisarlo caso por caso; hoy ninguno lo hace.
+- **`typeCode` se compara por igualdad exacta** contra columna indexada, nunca interpolado en
+  JPQL nativo.
+- **XSS:** `label`, `name` y `description` son texto libre editado por un administrador. Se
+  escapan en el render igual que cualquier texto de usuario: "solo lo edita un admin" no es
+  razón para omitir el escape.
+- **Punto de extensión:** el `label` de cada ítem ya es el mecanismo de externalización de
+  texto de dominio.
 
-## 14. Consideraciones de extensibilidad
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-- [x] ¿Usa catálogos configurables en vez de enums hardcodeados? Este spec **es** el mecanismo; no hay nada que enumerar aquí porque es el reemplazo del enum.
-- [x] ¿La lógica de negocio está en el Service, no en el Controller? Sí — la validación de pertenencia de tipo (§5.2) y las reglas de `is_system`/`is_active` viven en `CatalogsService` y en el servicio de cada módulo consumidor.
-- [x] ¿Los textos de UI son externalizables (i18n-ready)? El `label` de cada ítem ya es el mecanismo de externalización de texto de dominio; los textos fijos de la UI de administración (botones, títulos de columna) siguen el mismo esquema de i18n que el resto del frontend, fuera del alcance de este spec.
-- [x] ¿Las reglas de negocio específicas de PUCP están en configuración, no en código? Sí — ningún `code` de catálogo lleva "PUCP" ni un valor específico de campus hardcodeado en Java o TypeScript; los valores viven en filas de `catalog_items` sembradas por migración o cargadas por el administrador.
+- [ ] Ningún módulo consumidor declaró un `@Enumerated` ni una constante de tipo/estado propia
+      fuera de `catalog_items`.
+- [ ] Todo `@ManyToOne` a `CatalogItem` pasa por `CatalogsService.findByIdAndType()` con el
+      `typeCode` correcto de la sección 8 antes de persistir.
+- [ ] Los nueve catálogos pendientes no tienen ningún `INSERT` de ítems de ejemplo.
+- [ ] El paquete es `shared.catalog`, no `modules.catalog`.
+- [ ] Desactivación en vez de borrado, salvo el caso límite de §7.3.
 
----
-
-## 15. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] ¿El spec tiene objetivo claro y en una oración? Sí, sección 1.
-- [x] ¿Los contratos de API están definidos con tipos exactos? Sí, sección 4.
-- [x] ¿La migración SQL está definida? No aplica una migración nueva: las tablas ya existen (`V001`); se documentan en sección 3, no se redefinen.
-- [x] ¿Hay al menos 5 criterios de aceptación verificables? Sí, 7 en sección 10.
-- [x] ¿Se contemplan flujos alternativos y edge cases? Sí, secciones 9.3 y 9.4.
-- [x] ¿Se especifica comportamiento para web Y móvil? Sí, secciones 2.2, 2.3, 6, 11.
-- [ ] ¿Alguien más revisó y aprobó el spec? Pendiente de revisión por el equipo.
-
-### Después de recibir código de la IA
-
-- [ ] El código respeta la estructura de carpetas del proyecto (`shared/catalog/`, no `modules/catalog/`).
-- [ ] El paquete Java es `pe.edu.pucp.hesperides.shared.catalog.[capa]`.
-- [ ] Los componentes TypeScript están en `hooks/`, `components/forms/`, `app/(dashboard)/admin/catalogs/` según corresponda.
-- [ ] Ningún módulo consumidor (`incidents`, `interventions`, `contracts`, `admin`) declaró un `@Enumerated` o una constante de tipo/estado propia fuera de `catalog_items`.
-- [ ] Todo `@ManyToOne` a `CatalogItem` pasa por `CatalogsService.findByIdAndType()` antes de persistir, con el `typeCode` correcto de la tabla de la sección 8.
-- [ ] Los nueve catálogos pendientes no tienen ningún `INSERT` de ítems de ejemplo en ninguna migración nueva.
-- [ ] Los tests generados cubren todos los criterios de aceptación de la sección 10.
-- [ ] Todos los tests pasan (`mvn test` / `npm test`).
-- [ ] La funcionalidad se probó manualmente en web.
-- [ ] No hay datos hardcodeados (URLs, credenciales, nombres de PUCP en lógica).
-- [ ] Los mensajes de error son claros para el usuario final (especialmente el 409 de ítem protegido y el 422/400 de tipo incorrecto).
-- [ ] No hay `System.out.println`, `console.log` de depuración.
-- [ ] Se usó soft delete / desactivación (no `DELETE` físico) salvo el caso límite documentado en §7.3.
-- [ ] Se usaron catálogos configurables donde corresponde — este spec es la referencia obligatoria para cualquier otro spec que declare un tipo, estado o categoría nuevo.

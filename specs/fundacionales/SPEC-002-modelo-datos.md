@@ -1,16 +1,11 @@
 # SPEC-002 — Modelo de datos
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec fundacional, no deriva de una HU) |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (el modelo sirve a web y móvil por igual) |
-| Prioridad | Alta |
 | Sprint | S0 (fundacional) — entidades de Sprint 1 marcadas como tal |
 | Dependencias | SPEC-000 (arquitectura y convenciones), SPEC-001 (crea `users`), SPEC-003 (catálogos configurables) |
-| Fecha límite | Fin de Semana 1 |
 
 ---
 
@@ -20,12 +15,9 @@ Definir el esquema completo de base de datos de Hesperides —entidades, tipos S
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones) — secciones 5.4 y 7
-> - SPEC-001 (autenticación) — es quien crea la tabla `users`
-> - SPEC-003 (catálogos configurables) — el patrón `catalog_types` / `catalog_items`
-> - SPEC-C02 (manejo de errores) y SPEC-C03 (patrones de API) cuando se expongan endpoints
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** SPEC-003 (todo tipo/estado es FK a `catalog_items`) y
+> SPEC-004 (columnas de autoría). **§4.1 es obligatorio: toda entidad extiende `BaseEntity`.**
 
 **Este spec NO define endpoints ni pantallas.** Define el esquema. Los specs de feature (SPEC-1XX en adelante) son los que exponen estas tablas por API. La sección 3 de la plantilla se limita, por tanto, a los invariantes de contrato que toda API sobre estas tablas debe respetar.
 
@@ -1168,62 +1160,50 @@ No aplican a este spec: no hay componentes. Los tipos de `shared/types/models.ts
 
 ---
 
-## 9. Seguridad
+## 9. Propio de este spec
 
-- [x] **Validación en backend:** los `CHECK` de la BD son la última línea, no la única. Bean Validation en los DTO replica las reglas para dar mensajes útiles (SPEC-C02).
-- [x] **Autenticación:** toda tabla de este spec se expone solo tras JWT válido. Ningún endpoint es público en esta fase (el QR público de la fase 8 tendría su propia superficie de solo lectura).
-- [x] **Roles/permisos:** los define SPEC-001 por endpoint. El modelo aporta la trazabilidad: `registered_by_user_id`, `assigned_by_user_id`, `assigned_to_user_id`, `validated_by_user_id`, `uploaded_by_user_id`, `changed_by_user_id`, `verified_by_user_id`.
-- [x] **Datos sensibles que NO deben exponerse:** `users.password_hash` (SPEC-001) jamás sale en un DTO, ni siquiera anidado en el autor de una intervención — se expone `{ id, fullName }`. `storage_key` no se devuelve al cliente: se devuelve una URL prefirmada de vida corta. Exponer la clave permitiría enumerar el bucket.
-- [x] **Inyección SQL:** JPA con parámetros nombrados. Las consultas espaciales que necesiten `ST_*` van en `@Query` con parámetros, nunca concatenando coordenadas en un string.
-- [x] **XSS:** `description`, `notes`, `observations`, `execution_notes`, `resolution_notes` y `caption` son texto libre. Se sanean al renderizar en el frontend, no al guardar: guardar el original preserva el dato que el operario escribió.
-- [x] **Ficheros subidos:** `content_type` y `size_bytes` se validan **en el servidor** contra el fichero real, no contra lo que declare el cliente. El bucket es privado sin acceso público.
-- [x] **Coordenadas:** una intervención o incidencia expone dónde estuvo un operario y cuándo. `captured_location` es un dato de auditoría cuyo acceso debe restringirse a coordinador y administrador.
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio del modelo de datos:
 
----
+- **Los `CHECK` son la última línea, no la única.** Bean Validation en los DTO replica las
+  reglas para dar mensajes útiles (SPEC-C02). El reparto exacto BD/servicio está en §5.3.
+- **Nunca salen al cliente:** `users.password_hash`, ni siquiera anidado como autor de una
+  intervención (se expone `{id, fullName}`); y `storage_key`, que se sustituye por una URL
+  prefirmada de vida corta — exponer la clave permitiría enumerar el bucket.
+- **`captured_location`** revela dónde estuvo un operario y cuándo. Es dato de auditoría:
+  acceso restringido a coordinador y administrador.
+- **Ficheros subidos:** `content_type` y `size_bytes` se validan **en el servidor** contra el
+  fichero real, nunca contra lo que declare el cliente.
+- **Texto libre** (`description`, `notes`, `observations`, `execution_notes`,
+  `resolution_notes`, `caption`) se sanea al renderizar, no al guardar: el original preserva lo
+  que el operario escribió.
+- **Consultas espaciales:** `ST_*` en `@Query` con parámetros nombrados, nunca concatenando
+  coordenadas.
+- **Trazabilidad que aporta el modelo:** `registered_by_user_id`, `assigned_by_user_id`,
+  `assigned_to_user_id`, `validated_by_user_id`, `uploaded_by_user_id`, `changed_by_user_id`,
+  `verified_by_user_id`.
 
-## 10. Consideraciones de extensibilidad
+**Puntos de extensión.** El vivero (módulo 7) y el QR (módulo 8) entran por su propio spec sin
+modificar ninguna tabla de aquí; la única precondición del QR es que `green_elements.code` sea
+único entre vigentes. `species.attributes` (JSONB) absorbe los atributos que el cliente aún no
+ha definido: los que se confirmen y se usen para filtrar o reportar se promueven a columna
+propia en una `V1XX`. El JSONB no es el destino final de un atributo consolidado.
 
-- [x] **¿Usa catálogos configurables en vez de enums hardcodeados?** Sí, sin excepción. Cero `CREATE TYPE ... AS ENUM` y cero `@Enumerated`. Verificable por CA-13.
-- [x] **¿La lógica de negocio está en el Service?** Este spec no tiene lógica; la sección 5.3 delimita explícitamente qué corresponde a la BD y qué al servicio, para que ninguna quede sin dueño.
-- [x] **¿Los textos de UI son externalizables?** Los `label` de catálogo son datos, no código: el cliente los edita desde la UI de administración. Traducir el sistema es traducir filas.
-- [x] **¿Las reglas de PUCP están en configuración?** Sí. Ni un nombre de zona, ni una especie, ni una frecuencia del campus PUCP aparece en el DDL. Otra institución arranca el mismo esquema y carga sus propios datos. Es también la razón por la que las secciones pendientes del cliente se quedan vacías: llenarlas con datos de PUCP incumpliría este principio además de inventar.
-- [x] **Punto de extensión del vivero (módulo 7):** cuando se confirme, entra por su propio spec sin modificar ninguna tabla definida aquí.
-- [x] **Punto de extensión del QR (módulo 8):** `green_elements.code` único entre vigentes es la única precondición.
-- [x] **`species.attributes` (JSONB)** absorbe los atributos que el cliente aún no ha definido. Los que se confirmen y se usen para filtrar o reportar se promueven a columna propia en una migración `V1XX`; el JSONB no es el destino final de un atributo consolidado.
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
----
-
-## 11. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] ¿El spec tiene objetivo claro y en una oración?
-- [x] ¿Los contratos están definidos con tipos exactos? (Aquí: tipos SQL y nulabilidad de cada columna. Los endpoints los definen los SPEC-1XX sobre los invariantes de §3.)
-- [x] ¿La migración SQL está definida? — V003 a V010, ocho archivos.
-- [x] ¿Hay al menos 5 criterios de aceptación verificables? — 15, todos ejecutables desde `psql`.
-- [x] ¿Se contemplan flujos alternativos y edge cases? — §5.4.
-- [x] ¿Se especifica comportamiento para web Y móvil? — El modelo es común; §2.2 y §2.3.
-- [ ] ¿Alguien más revisó y aprobó el spec? — **pendiente de peer review.**
-
-### Después de recibir código de la IA
-
-- [ ] Los ocho archivos `V003`–`V010` están en `backend/src/main/resources/db/migration/`, uno por área.
-- [ ] `V001__create_catalog_tables.sql` **no fue modificado** (Flyway falla por checksum si se toca).
-- [ ] La imagen de `db` es `postgis/postgis:16-3.4` en `docker-compose.yml` **y** en `docker-compose.dev.yml`.
-- [ ] `hibernate-spatial` está en `backend/pom.xml` sin versión explícita (la gestiona el BOM de Spring Boot).
+- [ ] Los ocho archivos `V003`–`V010` están en `db/migration/`, uno por área, y
+      `V001__create_catalog_tables.sql` **no fue modificado** (Flyway falla por checksum).
+- [ ] La imagen de `db` es `postgis/postgis:16-3.4` en `docker-compose.yml` **y** en
+      `docker-compose.dev.yml`; `hibernate-spatial` está en el `pom` sin versión explícita.
 - [ ] `ddl-auto` sigue en `validate` en los tres `application*.yml`.
-- [ ] Las entidades JPA están en `modules/[modulo]/entity/` según el reparto de §2.1.
-- [ ] Los tipos geométricos en Java son `org.locationtech.jts.geom.Point` / `Polygon`; no hay clase `LatLng` propia.
-- [ ] No hay ningún `@Enumerated` ni `enum` de dominio: son FK a `CatalogItem`.
-- [ ] No hay ningún `@Column` de tipo `byte[]` para imágenes.
-- [ ] Toda entidad extiende `BaseEntity` (§4.1) y lleva `@SQLRestriction("deleted_at IS NULL")`. Ninguna entidad redeclara `id`, `createdAt`, `updatedAt` ni `deletedAt` por su cuenta.
-- [ ] `@EnableJpaAuditing` está activo en la configuración de Spring; sin él `createdAt`/`updatedAt` quedan nulos y el `INSERT` falla por `NOT NULL`.
+- [ ] Los tipos geométricos son `org.locationtech.jts.geom.Point`/`Polygon`; no hay `LatLng` propia.
+- [ ] Ningún `@Column` de tipo `byte[]` para imágenes.
+- [ ] Toda entidad extiende `BaseEntity` (§4.1) y lleva `@SQLRestriction("deleted_at IS NULL")`.
+- [ ] **`@EnableJpaAuditing` está activo:** sin él `createdAt`/`updatedAt` quedan nulos y el
+      `INSERT` falla por `NOT NULL`.
 - [ ] `shared/types/models.ts` refleja las entidades y extiende `AuditFields`.
-- [ ] `mvn test` pasa limpio, incluidos los tests de migración con Testcontainers.
 - [ ] `docker-compose down -v && docker-compose up --build` levanta desde cero sin error de Flyway.
-- [ ] Ninguna migración siembra zonas, especies, frecuencias ni parámetros: siguen pendientes del cliente.
-
----
+- [ ] Ninguna migración siembra zonas, especies, frecuencias ni parámetros: siguen pendientes
+      del cliente (ver Anexo).
 
 ## Anexo — Resumen de pendientes del cliente
 
