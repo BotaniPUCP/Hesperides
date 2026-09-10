@@ -1,16 +1,11 @@
 # SPEC-001 — Autenticación y autorización
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec fundacional, no deriva de una HU) |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (web y móvil comparten el mismo backend y los mismos endpoints) |
-| Prioridad | Alta |
 | Sprint | S0 (fundacional) |
 | Dependencias | SPEC-000 (arquitectura y convenciones), SPEC-002 (modelo de datos — consume `users`), SPEC-003 (catálogos configurables — este spec añade ítems a `ROLE`) |
-| Fecha límite | Fin de Semana 1 |
 
 ---
 
@@ -20,13 +15,10 @@ Permitir que un administrador, un coordinador o un operario de campo inicien ses
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones) — sección 7, apartado SPEC-001
-> - SPEC-002 (modelo de datos) — todas las tablas de dominio tienen FK a `users(id)`, que este spec crea
-> - SPEC-003 (catálogos configurables) — los roles son `catalog_items` del tipo `ROLE`, no un enum Java
-> - SPEC-C02 (manejo de errores) — el sobre `{ ok, message, data }` y las excepciones custom
-> - SPEC-C03 (patrones de API) — formato de endpoints y paginación
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** su **Anexo A gobierna la autorización de todo el proyecto**;
+> SPEC-003 (el rol es un `catalog_item` de tipo `ROLE`, nunca un enum) y el Anexo B (cadena de
+> filtros de Spring Security, CORS incluido).
 
 **Este spec posee la migración V002.** SPEC-002 la referencia como FK y da por hecho que la tabla `users` existe con exactamente la forma que aquí se define. Ningún otro spec crea ni altera `users`.
 
@@ -325,7 +317,7 @@ Authorization: Bearer {accessToken}
 
 ## 4. Migración de base de datos
 
-Este spec posee y crea **V002**. Rango fundacional `V001`–`V099` (SPEC-000 §5.4); V001 (catálogos) ya existe y no se toca.
+Este spec posee y crea **V002**. Rango fundacional `V001`–`V099` (REGLAS.md §5.4); V001 (catálogos) ya existe y no se toca.
 
 ### 4.1 V002 — Tabla de usuarios y refresh tokens
 
@@ -473,7 +465,7 @@ Ambos flujos comparten `AuthController` y `JwtTokenProvider`. Lo que cambia es *
 ### 7.2 Móvil (React Native)
 
 - Gestos soportados: tap en los campos y el botón; el teclado se cierra al tocar fuera del formulario.
-- Adaptaciones: mismo layout que web pero con `KeyboardAvoidingView` para que el teclado no tape el botón de submit. Sin `Card` con sombra compleja — se simplifica a un contenedor con padding, misma paleta de colores que web (SPEC-000 §5.3).
+- Adaptaciones: mismo layout que web pero con `KeyboardAvoidingView` para que el teclado no tape el botón de submit. Sin `Card` con sombra compleja — se simplifica a un contenedor con padding, misma paleta de colores que web (REGLAS.md §5.3).
 - Navegación: es la pantalla raíz del `AuthStack` cuando no hay tokens válidos en SecureStore; no tiene botón de "atrás". Al loguear, se reemplaza el stack completo por el navigator autenticado (no se apila encima, para que el botón físico de atrás de Android no regrese a login).
 - Orientación: solo portrait.
 
@@ -551,14 +543,19 @@ No hay mockup de Figma para este spec. El login es un formulario mínimo de dos 
 - Un usuario hace logout desde el header → es redirigido a /login y un intento posterior de volver atrás con el navegador no muestra contenido protegido
 ```
 
-## 9. Seguridad
+## 9. Propio de este spec
 
-- [x] **Validación en backend (Bean Validation), no solo en frontend:** `LoginRequest` usa `@NotBlank`, `@Email`, `@Size(min = 8)` en el DTO; el frontend valida en paralelo solo para UX inmediata.
-- [x] **Endpoint requiere autenticación JWT:** `POST /auth/login` → no (es el punto de entrada). `POST /auth/refresh` → no requiere `Authorization`, pero sí un refresh token válido (cookie o body). `POST /auth/logout` y `GET /auth/me` → sí, `Authorization: Bearer` obligatorio.
-- [x] **Roles/permisos necesarios:** ninguno de los cuatro endpoints de este spec exige un rol específico (login/refresh/logout/me son iguales para los cuatro roles); la matriz de permisos por módulo (más abajo) aplica a los endpoints de negocio de los demás specs, no a estos cuatro.
-- [x] **Datos sensibles que NO deben exponerse en response:** `password_hash` — nunca, bajo ninguna circunstancia, en ningún DTO, ni siquiera en respuestas de error o de auditoría. El `UserMapper` (Entity → DTO) no tiene ningún método que lo toque: la ausencia del campo en el DTO de respuesta lo hace estructuralmente imposible de serializar, no una omisión manual que alguien pueda olvidar. Tampoco se expone `token_hash` de `refresh_tokens`, ni el refresh token en texto plano se loguea nunca (ver más abajo).
-- [x] **Prevención de inyección SQL:** JPA con `UsersRepository.findByEmailAndDeletedAtIsNull(String email)` derivado o `@Query` parametrizado. Cero concatenación de strings.
-- [x] **XSS:** `firstName`/`lastName` son texto libre de entrada administrativa (los crea un administrador, no el propio usuario en un registro abierto), pero igual se sanean al renderizar en el frontend, nunca al guardar.
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de la autenticación:
+
+- **Autenticación por endpoint:** `POST /auth/login` es el punto de entrada (sin token).
+  `POST /auth/refresh` no lleva `Authorization`, pero sí un refresh token válido (cookie o
+  body). `POST /auth/logout` y `GET /auth/me` exigen `Authorization: Bearer`.
+- **Ningún rol específico** para estos cuatro endpoints: son iguales para los cuatro roles. La
+  matriz del Anexo A aplica a los endpoints de negocio de los demás specs.
+- **Nunca salen en una respuesta:** `password_hash` (§9.1), `token_hash` de `refresh_tokens`,
+  ni el refresh token en claro.
+- **`firstName`/`lastName`** son texto libre de entrada administrativa; se sanean al renderizar,
+  nunca al guardar.
 
 ### 9.1 Por qué `password_hash` nunca sale en una respuesta
 
@@ -590,44 +587,20 @@ Un hash de BCrypt filtrado no es información pública "de todos modos": permite
 - **El mensaje de bloqueo (429) es distinto del de credenciales inválidas (401)** deliberadamente: distinguir "estás bloqueado" de "credenciales incorrectas" no revela si el email existe (ambos 401 y 429 pueden ocurrir para un email inexistente si alguien machaca ese email en particular), y sí le da al usuario legítimo bloqueado una indicación útil de qué pasó y cuándo reintentar.
 - **No se bloquea la cuenta de forma permanente ni se notifica al usuario por correo:** no hay integración de correo en el alcance del proyecto (SPEC-000 §1). El bloqueo es temporal y autolimitado.
 
-## 10. Consideraciones de extensibilidad
+## 10. Checklist propio
 
-- [x] **¿Usa catálogos configurables en vez de enums hardcodeados?** Sí: el rol es `catalog_items` del tipo `ROLE` (SPEC-003), consumido por FK `role_item_id`. Añadir un cuarto rol en el futuro (p. ej. "supervisor externo") es una fila nueva en `catalog_items`, no un cambio de código ni una migración de esquema.
-- [x] **¿La lógica de negocio está en el Service, no en el Controller?** Sí: `AuthController` solo parsea el request, delega a `AuthService`, y traduce el resultado al sobre `ApiResponse`. Toda decisión (umbral de intentos, rotación, revocación en cascada) vive en `AuthServiceImpl`.
-- [x] **¿Los textos de UI son externalizables (i18n-ready)?** Los mensajes de error del backend (`"Invalid email or password"`, etc.) son claves de mensaje, no lógica; el frontend puede mapearlos a un catálogo de i18n sin tocar el backend. No se hardcodea español ni inglés en la lógica de negocio, solo en los `message` de las respuestas, que es donde corresponde.
-- [x] **¿Las reglas de negocio específicas de PUCP están en configuración, no en código?** Sí: no hay ninguna referencia a "PUCP", a un dominio de correo institucional, ni a un directorio LDAP en la lógica de autenticación. El sistema autentica contra su propia tabla `users`, algo que cualquier otro cliente institucional puede reutilizar sin modificar código, solo cargando sus propios usuarios.
+El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
-## 11. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] ¿El spec tiene objetivo claro y en una oración?
-- [x] ¿Los contratos de API están definidos con tipos exactos?
-- [x] ¿La migración SQL está definida?
-- [x] ¿Hay al menos 5 criterios de aceptación verificables? — 10.
-- [x] ¿Se contemplan flujos alternativos y edge cases?
-- [x] ¿Se especifica comportamiento para web Y móvil?
-- [ ] ¿Alguien más revisó y aprobó el spec? — pendiente de peer review.
-
-### Después de recibir código de la IA
-
-- [ ] El código respeta la estructura de carpetas del proyecto (`modules/auth/`, `shared/security/`).
-- [ ] El paquete Java es `pe.edu.pucp.hesperides.modules.auth.[capa]` y `pe.edu.pucp.hesperides.shared.security`.
-- [ ] Los componentes TypeScript están en la carpeta correcta (`components/forms/LoginForm.tsx`, `hooks/useAuth.ts`).
-- [ ] Los nombres de clases/componentes siguen las convenciones de SPEC-000 §5.2/§5.3.
-- [ ] La migración Flyway `V002__create_users.sql` tiene el número de versión correcto y no colisiona con V001 ni con las V003+ de SPEC-002.
-- [ ] No se instalaron dependencias no autorizadas fuera de `spring-boot-starter-security`, `jjwt-*` y `expo-secure-store`/Keychain.
-- [ ] Los tests generados cubren todos los criterios de aceptación de la sección 6.
-- [ ] Todos los tests pasan (`mvn test` / `npm test`).
-- [ ] La funcionalidad se probó manualmente en web: cookie `HttpOnly`+`Secure`+`SameSite=Strict` visible en DevTools, refresh encolado verificado con Network throttling.
-- [ ] La funcionalidad se probó manualmente en móvil (o simulador): tokens en SecureStore, no en AsyncStorage.
-- [ ] No hay datos hardcodeados (URLs, credenciales, nombres de PUCP en lógica).
-- [ ] Los mensajes de error son claros para el usuario final y no filtran si un email existe.
-- [ ] No hay `System.out.println`, `console.log` de depuración, y ningún log contiene contraseñas, hashes o tokens completos.
-- [ ] Se usó soft delete (no `DELETE`) en `users`; `refresh_tokens` se revoca (`revoked_at`), nunca se borra.
-- [ ] Se usaron catálogos configurables (`ROLE`) donde corresponde; no hay `enum RoleEnum` en el código Java.
-
----
+- [ ] `V002__create_users.sql` no colisiona con V001 ni con las V003+ de SPEC-002.
+- [ ] Sin dependencias fuera de `spring-boot-starter-security`, `jjwt-*` y
+      `expo-secure-store`/Keychain.
+- [ ] **Web:** cookie `HttpOnly`+`Secure`+`SameSite=Strict` visible en DevTools, y refresh
+      encolado verificado con Network throttling (Anexo C).
+- [ ] **Móvil:** tokens en SecureStore, nunca en AsyncStorage.
+- [ ] `users` usa soft delete; `refresh_tokens` se revoca (`revoked_at`), nunca se borra.
+- [ ] No hay `enum RoleEnum`: el rol es FK a `catalog_items` de tipo `ROLE`.
+- [ ] Los mensajes de error no filtran si un email existe.
+- [ ] Ningún log contiene contraseñas, hashes ni tokens completos (§9.2).
 
 ## Anexo A — Matriz de permisos por rol × módulo × acción
 
@@ -690,7 +663,7 @@ Esta matriz se traduce en Spring Security como expresiones sobre el `code` del r
 - `SecurityConfig` (`shared/security`) define una `SecurityFilterChain` con `sessionCreationPolicy(STATELESS)` — no hay `HttpSession` del lado del servidor; toda la autenticación vive en el JWT y en `refresh_tokens`.
 - `JwtAuthenticationFilter` extiende `OncePerRequestFilter`, se registra antes de `UsernamePasswordAuthenticationFilter`, y por cada request: extrae el `Authorization: Bearer`, valida firma y expiración con `JwtTokenProvider`, carga el `UserDetails` vía `CustomUserDetailsService.loadUserByUsername(email)` (que a su vez consulta `UsersRepository` y por tanto refleja `is_active` en tiempo real), y si todo es válido, puebla el `SecurityContextHolder` con una `Authentication` cuyas `authorities` son `[ROLE_<code>]` o el `code` plano según se use `hasRole` o `hasAuthority` (este spec usa `hasAuthority` con el `code` tal cual, sin prefijo `ROLE_`, para que coincida exactamente con `catalog_items.code`).
 - Rutas públicas (sin filtro de autenticación): `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `GET /api/v1/health` y **`OPTIONS` sobre `/api/**`** (el preflight de CORS, ver abajo). Todo lo demás bajo `/api/v1/**` exige un access token válido como mínimo; la autorización fina por rol la añade `@PreAuthorize` en cada controller según el Anexo A.
-- **CORS es parte de esta cadena, no un detalle de infraestructura.** `SecurityConfig` recibe el `CorsConfigurationSource` de `shared/security/CorsConfig.java` (SPEC-000 §5.2.2) y lo conecta con `.cors(cors -> cors.configurationSource(...))`. Dos razones por las que no es opcional:
+- **CORS es parte de esta cadena, no un detalle de infraestructura.** `SecurityConfig` recibe el `CorsConfigurationSource` de `shared/security/CorsConfig.java` (REGLAS.md §5.2.2) y lo conecta con `.cors(cors -> cors.configurationSource(...))`. Dos razones por las que no es opcional:
   1. **El preflight `OPTIONS` debe ser público.** El navegador lo envía antes de cada `POST` cross-origin y **no incluye credenciales por diseño**. Si la cadena lo exige, responde 401, el navegador aborta y la petición real nunca sale: el usuario ve un fallo de red aunque el backend esté perfectamente sano.
   2. **`allowCredentials` debe estar activo** o el navegador descarta la cookie `refresh_token` de §5.1 — el flujo web entero (incluido el refresh encolado del Anexo C) depende de que esa cookie viaje.
 

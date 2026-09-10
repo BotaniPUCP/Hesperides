@@ -1,16 +1,11 @@
 # SPEC-100 — Gestión de usuarios
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | 1.1 — Gestión de usuarios (CRUD): crear, editar, desactivar usuarios del sistema |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Web (móvil fuera de alcance, ver §2.3) |
-| Prioridad | Alta |
 | Sprint | S1 |
 | Dependencias | SPEC-000, SPEC-001 (posee `users`), SPEC-002, SPEC-003 (catálogo `ROLE`), SPEC-004 (auditoría), SPEC-C01, SPEC-C02, SPEC-C03 |
-| Fecha límite | Fin de Semana 3 |
 
 ---
 
@@ -20,17 +15,12 @@ Permitir que un administrador dé de alta, edite, desactive y reactive las cuent
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-001 (autenticación) — **posee la tabla `users` (V002)**; este spec la extiende con
->   un `ALTER TABLE`, nunca la vuelve a crear. Su Anexo A gobierna la autorización de cada
->   endpoint de aquí. Su §2.6 fija qué pasa con la sesión de un usuario desactivado.
-> - SPEC-003 (catálogos) — el rol es un `catalog_item` del tipo `ROLE`. Prohibido cualquier
->   `enum` de rol en Java.
-> - SPEC-004 (auditoría) — este módulo emite cinco acciones auditables (§9.3).
-> - SPEC-C01 (componentes UI), SPEC-C02 (errores), SPEC-C03 (patrones de API).
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** SPEC-001 **posee la tabla `users` (V002)** —este spec la
+> extiende con `ALTER TABLE`, nunca la recrea— y su Anexo A gobierna la autorización;
+> SPEC-003 (el rol es un `catalog_item` de tipo `ROLE`); SPEC-004 (cinco acciones auditables, §9.3).
 >
-> **Este spec enmienda tres specs ya cerrados** (§2.5). Leer esas enmiendas antes de asumir
+> **Este spec enmienda tres specs ya cerrados (§2.5).** Leer esas enmiendas antes de asumir
 > que "no hay servicios externos" o que "no hay envío de correo" siguen vigentes tal cual.
 
 ### 2.1 Módulo backend
@@ -966,25 +956,18 @@ fuera del sistema en cuanto expira su access token.
 
 ---
 
-## 9. Seguridad
+## 9. Propio de este spec
 
-- [x] Validación en backend (Bean Validation) además de en frontend. El frontend valida para dar
-      feedback inmediato; el backend valida porque es el único lugar donde la validación no se
-      puede saltar.
-- [x] Todos los endpoints exigen JWT válido. No hay ninguno público en este módulo.
-- [x] Roles necesarios: CUD solo ADMIN; lectura ADMIN y COORDINADOR (todos) y SUPERVISOR (su
-      cuadrilla); `POST /users/me/password` cualquier autenticado sobre su propia cuenta. Coincide
-      exactamente con el Anexo A de SPEC-001, sin reinterpretarlo.
-- [x] Datos que NO deben exponerse en ninguna respuesta: `password_hash`, la contraseña temporal
-      generada (existe únicamente en memoria y en el cuerpo del correo), y los `token_hash` de
-      `refresh_tokens`.
-- [x] Inyección SQL: todo el acceso a datos pasa por JPA y `Specification`; ninguna consulta se
-      arma concatenando cadenas. El `search` viaja como parámetro vinculado, nunca interpolado.
-- [x] XSS: nombres y correos son texto libre. React escapa por defecto en el renderizado; se
-      prohíbe `dangerouslySetInnerHTML` sobre cualquier dato de usuario. En el correo, el cuerpo
-      es texto plano, de modo que no hay contexto HTML donde inyectar.
-- [x] Acciones auditables: sí, cinco (§9.3).
-- [x] Qué se registra en logs y qué NO: §9.4.
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de la gestión de usuarios:
+
+- **Autorización:** CUD solo `ADMIN`; lectura `ADMIN` y `COORDINADOR` (todos) y `SUPERVISOR`
+  (su cuadrilla); `POST /users/me/password` cualquier autenticado sobre su propia cuenta.
+  Coincide con el Anexo A de SPEC-001, sin reinterpretarlo.
+- **Nunca salen en una respuesta:** `password_hash`, la contraseña temporal generada (vive solo
+  en memoria y en el cuerpo del correo) y los `token_hash` de `refresh_tokens`.
+- **El `search` viaja como parámetro vinculado** en la `Specification`, nunca interpolado.
+- **El correo es texto plano**, así que no hay contexto HTML donde inyectar. En la UI se prohíbe
+  `dangerouslySetInnerHTML` sobre cualquier dato de usuario.
 
 ### 9.1 Política de contraseñas
 
@@ -1052,65 +1035,34 @@ fila), los envíos de correo exitosos, y cualquier `GET`.
 
 ---
 
-## 10. Consideraciones de extensibilidad
+## 10. Extensibilidad y evolución prevista
 
-- [x] **Catálogos configurables en vez de enums:** el rol es un `catalog_item` de tipo `ROLE`. Si
-      la PUCP (u otro cliente) necesita un quinto rol, se crea desde `/admin/catalogs` y este
-      módulo lo ofrece en el select sin recompilar. Lo único que no se resuelve solo son los
-      permisos del rol nuevo, que viven en las expresiones `@PreAuthorize` de cada controller —
-      una limitación heredada del diseño de SPEC-001, no introducida aquí.
-- [x] **Lógica de negocio en el Service, no en el Controller:** el `UsersController` parsea,
-      valida el schema y delega. Las reglas del último ADMIN, la normalización del correo y la
-      orquestación del envío viven en `UsersServiceImpl`.
-- [x] **Textos de UI externalizables:** ningún literal de interfaz se escribe directamente en el
-      JSX; todos salen del módulo de textos, incluida la plantilla del correo, que debe poder
-      traducirse sin tocar el servicio que la envía.
-- [x] **Reglas específicas de PUCP en configuración, no en código:** no se valida que el correo
-      termine en `@pucp.edu.pe`. La unidad de áreas verdes emplea personal contratado que puede no
-      tener correo institucional, y codificar el dominio impediría reutilizar el sistema en otro
-      cliente. Si más adelante se quisiera restringir el dominio, sería un parámetro de
-      `system_parameters`, nunca una constante en el código.
-- **Evolución natural (no se implementa ahora):** sustituir la contraseña en el correo por un
-  enlace con token de un solo uso y expiración. Cuando se haga, `must_change_password` y
-  `credential_status` siguen sirviendo tal cual; lo único que cambia es qué viaja en el correo y
-  un endpoint público nuevo para canjear el token. El diseño de este spec no lo estorba.
+- **Un quinto rol** se crea desde `/admin/catalogs` y este módulo lo ofrece en el select sin
+  recompilar. Lo único que no se resuelve solo son sus permisos, que viven en las expresiones
+  `@PreAuthorize` de cada controller: limitación heredada del diseño de SPEC-001, no introducida
+  aquí.
+- **No se valida que el correo termine en `@pucp.edu.pe`.** La unidad emplea personal contratado
+  que puede no tener correo institucional, y codificar el dominio impediría reutilizar el sistema.
+  Si se quisiera restringir, sería un parámetro de `system_parameters`, nunca una constante.
+- **Evolución natural (no se implementa ahora):** sustituir la contraseña del correo por un
+  enlace con token de un solo uso y expiración. `must_change_password` y `credential_status`
+  siguen sirviendo tal cual; solo cambia qué viaja en el correo, más un endpoint público de
+  canje. El diseño actual no lo estorba.
 - **Evolución natural:** detección de rebotes diferidos procesando el buzón de `SMTP_FROM`. El
-  estado `PENDING_DELIVERY` ya existe para representar el resultado; solo haría falta quien lo
-  escriba de forma asíncrona.
+  estado `PENDING_DELIVERY` ya existe para representarlo; falta solo quien lo escriba de forma
+  asíncrona.
 
 ---
 
-## 11. Checklist de verificación (para el desarrollador)
+## 11. Checklist propio
 
-### Antes de pedir código a la IA
+El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
-- [x] ¿El spec tiene objetivo claro y en una oración? — §1
-- [x] ¿Los contratos de API están definidos con tipos exactos? — §3, nueve endpoints
-- [x] ¿La migración SQL está definida? — §4, V100 (`ALTER`, no `CREATE`)
-- [x] ¿Hay al menos 5 criterios de aceptación verificables? — §6, doce
-- [x] ¿Se contemplan flujos alternativos y edge cases? — §5.4, §5.5, §5.6
-- [x] ¿Se especifica comportamiento para web Y móvil? — §7.1 y §2.3 (móvil fuera de alcance, con
-      su justificación)
-- [ ] ¿Alguien más revisó y aprobó el spec?
-
-### Después de recibir código de la IA
-
-- [ ] El código respeta la estructura de carpetas del proyecto.
-- [ ] El paquete Java es `pe.edu.pucp.hesperides.modules.users.[capa]`.
-- [ ] Los componentes TypeScript están en `frontend/src/components/users/`.
-- [ ] Los nombres de clases y componentes siguen las convenciones.
-- [ ] La migración Flyway es `V100__add_credential_columns_to_users.sql` y usa `ALTER TABLE`.
-- [ ] No se instalaron dependencias no autorizadas (solo `spring-boot-starter-mail`).
-- [ ] Los tests generados cubren los doce criterios de aceptación.
-- [ ] Todos los tests pasan (`mvn test` / `npm test`).
-- [ ] La funcionalidad se probó manualmente en web, incluido el caso de SMTP caído.
-- [ ] No hay datos hardcodeados: ni el dominio `@pucp.edu.pe`, ni el host SMTP, ni la URL pública.
-- [ ] Los mensajes de error son claros para el usuario final.
-- [ ] No hay `System.out.println` ni `console.log` de depuración.
+- [ ] La migración es `V100__add_credential_columns_to_users.sql` y usa `ALTER TABLE`, no `CREATE`.
+- [ ] Sin dependencias nuevas más allá de `spring-boot-starter-mail`.
+- [ ] **El envío de correo ocurre fuera de la transacción del alta** (REGLAS §0.1).
+- [ ] Probado en web **incluido el caso de SMTP caído** (§5.3).
 - [ ] Se usó desactivación lógica (`is_active`), no `DELETE` físico ni `deleted_at`.
-- [ ] El rol se resuelve contra `catalog_items`; no hay ningún `enum` de rol ni `@Enumerated`
-      sobre el rol.
-- [ ] `User` extiende `BaseEntity` y no redeclara `id`, `createdAt`, `updatedAt` ni `deletedAt`.
-- [ ] La autorización de cada endpoint coincide con la matriz del Anexo A de SPEC-001.
-- [ ] Ninguna respuesta ni log contiene contraseñas, hashes ni tokens.
-- [ ] El envío de correo ocurre fuera de la transacción del alta.
+- [ ] Ni el dominio `@pucp.edu.pe`, ni el host SMTP, ni la URL pública están hardcodeados.
+- [ ] Los tests cubren los doce criterios de aceptación.
+

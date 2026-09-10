@@ -51,7 +51,7 @@ No aplica. Este spec es puramente de presentación.
 **Librerías que DEBE usar (móvil):**
 - React Native + TypeScript estricto.
 - `react-native-maps` para el mapa (proveedor de tiles OpenStreetMap, ver sección 6).
-- `Pressable` para todo elemento táctil. **Nunca `TouchableOpacity`** (SPEC-000 §7).
+- `Pressable` para todo elemento táctil. **Nunca `TouchableOpacity`** (REGLAS.md §5.3).
 - `StyleSheet.create` para estilos; nunca estilos inline en objetos literales recreados en cada render.
 
 **Librerías que NO debe usar:**
@@ -759,7 +759,7 @@ No es una frase genérica: son reglas verificables por componente.
 
 ## 9. Responsive
 
-Breakpoints (SPEC-000 §7, sección 7.1 de la plantilla): móvil **<640px**, tablet **640–1024px**, desktop **>1024px**.
+Breakpoints (`_plantilla.md` §7): móvil **<640px**, tablet **640–1024px**, desktop **>1024px**.
 
 - **Layout general:** una sola columna en móvil; `Card`s en grilla de 2 columnas en tablet; grilla de 3–4 columnas o layout de paneles (lista + mapa/detalle lado a lado) en desktop.
 - **`MapView`:** ocupa pantalla completa en móvil (controles de capas colapsados en un botón flotante que abre un panel); en desktop convive con un panel lateral de filtros/lista siempre visible.

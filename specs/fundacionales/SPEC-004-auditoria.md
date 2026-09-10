@@ -159,7 +159,7 @@ Verificado contra el repo: `backend/src/main/resources/db/migration/` solo conti
 -- V011__create_audit_log.sql
 -- Bitácora de acciones administrativas sensibles. Append-only por diseño
 -- (ver sección 6): no lleva updated_at ni deleted_at, a diferencia de toda
--- otra tabla del proyecto (excepción deliberada a SPEC-000 §5.4).
+-- otra tabla del proyecto (excepción deliberada a REGLAS.md §5.4).
 
 CREATE TABLE audit_log (
     id              BIGSERIAL PRIMARY KEY,
@@ -346,9 +346,9 @@ El `AuditingEntityListener` puebla columnas (`created_by_user_id`/`updated_by_us
 
 ---
 
-## 6. Inmutabilidad de `audit_log`: excepción deliberada a SPEC-000 §5.4
+## 6. Inmutabilidad de `audit_log`: excepción deliberada a REGLAS.md §5.4
 
-SPEC-000 §5.4 fija como convención global: *"Soft delete: `deleted_at TIMESTAMP NULL` (nunca DELETE físico)"* y, junto con SPEC-002 §4.1, que toda tabla lleva `created_at`, `updated_at` y `deleted_at`. **`audit_log` no lleva `updated_at` ni `deleted_at`, y no tiene UPDATE ni DELETE en su ciclo de vida — ni lógico ni físico.**
+REGLAS.md §5.4 fija como convención global: *"Soft delete: `deleted_at TIMESTAMP NULL` (nunca DELETE físico)"* y, junto con SPEC-002 §4.1, que toda tabla lleva `created_at`, `updated_at` y `deleted_at`. **`audit_log` no lleva `updated_at` ni `deleted_at`, y no tiene UPDATE ni DELETE en su ciclo de vida — ni lógico ni físico.**
 
 **Por qué se excepciona, explícitamente:**
 

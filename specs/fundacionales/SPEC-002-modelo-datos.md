@@ -36,7 +36,7 @@ Las entidades JPA se reparten por módulo siguiendo la estructura de `modules/` 
 | `incidents` | `Incident`, `IncidentStatusHistory`, `IncidentEvidence` | S2 |
 | `reports` | sin entidades propias (lee de las anteriores) | S3 |
 
-Repositorios: uno por entidad, en plural y con sufijo `Repository` (`GreenElementsRepository`, `ZonesRepository`, …), según SPEC-000 §5.2.
+Repositorios: uno por entidad, en plural y con sufijo `Repository` (`GreenElementsRepository`, `ZonesRepository`, …), según REGLAS.md §5.2.
 
 ### 2.2 Módulo frontend (web)
 
@@ -84,7 +84,7 @@ Este spec no expone endpoints propios. Fija los invariantes que toda API constru
 
 ### 4.0 Numeración y propiedad de migraciones
 
-Rango fundacional `V001`–`V099` (SPEC-000 §5.4). Reparto:
+Rango fundacional `V001`–`V099` (REGLAS.md §5.4). Reparto:
 
 | Versión | Archivo | Propietaria | Estado |
 |---|---|---|---|
@@ -1015,7 +1015,7 @@ El módulo 2 es un **mapa**, no una lista con coordenadas. Las consultas que el 
 
 #### 5.2.2 BIGSERIAL, no UUID
 
-El SPEC-000 §7 lo recomienda para on-premise y se mantiene tras el paso a AWS. Razones que siguen valiendo en la nube: los índices B-tree sobre enteros secuenciales no fragmentan como los UUID v4 aleatorios; las FK ocupan 8 bytes y no 16; y en depuración de campo un código de elemento legible pesa. El riesgo del BIGSERIAL —IDs adivinables— se cubre con autorización por rol en cada endpoint (SPEC-001), no ocultando el identificador. No se prevé fusionar bases de datos de instalaciones distintas, que es el caso donde el UUID gana de verdad.
+Se decidió para on-premise y se mantiene tras el paso a AWS. Razones que siguen valiendo en la nube: los índices B-tree sobre enteros secuenciales no fragmentan como los UUID v4 aleatorios; las FK ocupan 8 bytes y no 16; y en depuración de campo un código de elemento legible pesa. El riesgo del BIGSERIAL —IDs adivinables— se cubre con autorización por rol en cada endpoint (SPEC-001), no ocultando el identificador. No se prevé fusionar bases de datos de instalaciones distintas, que es el caso donde el UUID gana de verdad.
 
 #### 5.2.3 Cómo se modela el historial de intervenciones por elemento
 

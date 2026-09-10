@@ -1,5 +1,8 @@
 # Registro de specs
 
+> **Antes de generar código, leer [`REGLAS.md`](REGLAS.md):** contiene las
+> invariantes que aplican a todos los specs. Cada spec contiene solo lo propio suyo.
+
 | Spec ID  | Nombre                    | Estado         | Asignado a | Sprint | Fecha cierre |
 |----------|---------------------------|----------------|------------|--------|--------------|
 | SPEC-000 | Arquitectura general      | ✅ Completado  | —          | S0     | 2026-09-06   |
@@ -32,6 +35,7 @@ sorpresa que un principio fundacional cambió.
 | SPEC-001 Anexo B, §6 (CA-11 y CA-12), §8.2 | Corrección de CORS | CORS pasa a ser parte explícita de la cadena de seguridad, con dos criterios de aceptación verificables y cuatro tests de integración. CA-11 exige **comprobar el login en un navegador real**: `curl` y MockMvc no hacen preflight, así que no detectan este fallo. |
 | SPEC-C02 §6.0 (nueva) | Corrección de CORS | Se advierte que `ApiError.status === 0` no significa necesariamente "sin red": CORS mal configurado produce el mismo mensaje y es la causa más frecuente en desarrollo. Tabla para distinguir las cuatro causas. |
 | `_plantilla.md` §2.4 y checklist | Ambas | Todo spec de backend debe leer §5.2.1 antes de generar código, y el checklist exige verificación **en navegador real**, no solo `curl`. |
+| Todos los specs | Refactor a formato atómico | Las invariantes comunes salen a **`REGLAS.md`** (lectura obligatoria antes de generar código): las diez invariantes, las convenciones de SPEC-000 §5 —con §5.2.1 de Spring Boot 4 y §5.2.2 de CORS íntegras— y el checklist común. SPEC-000 pierde la copia de `_plantilla.md` y los resúmenes de los otros specs, que ya contradecían a SPEC-001. En cada spec, las secciones genéricas de Seguridad, Extensibilidad y Checklist se funden en una sola "Propio de este spec". **La numeración se conserva**: toda referencia `SPEC-XXX §N` sigue siendo válida, y `SPEC-000 §5.x` pasa a `REGLAS.md §5.x` con el mismo número. Ninguna decisión técnica, contrato ni criterio de aceptación cambió. |
 
 ---
 

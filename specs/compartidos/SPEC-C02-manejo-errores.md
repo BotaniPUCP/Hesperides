@@ -207,7 +207,7 @@ es la red:
 **El mensaje al usuario no cambia** —no tiene forma de actuar distinto y especular le daría
 información falsa—, pero **quien depura debe saber que este mensaje es ambiguo**. Ante un "sin
 conexión" con el backend sano, revisar CORS antes que la red: es el caso más común y el menos
-evidente (ver SPEC-000 §5.2.2).
+evidente (ver REGLAS.md §5.2.2).
 
 ### 6.1 Conectividad intermitente en campo (móvil) — tratamiento obligatorio
 
