@@ -50,7 +50,10 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_AUTH: ${SMTP_AUTH:-true}
       SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
-      SMTP_FROM: ${SMTP_FROM:-no-reply@hesperides.local}
+      # Sin valor por defecto: un remitente no verificado en Brevo no da error,
+      # responde 250 "queued" y descarta el correo despues. Mejor que el arranque
+      # falle que creer que la entrega funciona (SPEC-100 §5.3).
+      SMTP_FROM: ${SMTP_FROM:?SMTP_FROM es obligatorio y debe estar verificado en Brevo}
       APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:3000}
       # Not yet read by any Java code; scaffolding for when the backend calls the Flask data service.
       DATA_SERVICE_URL: ${DATA_SERVICE_URL:-http://data-service:5001}
