@@ -3,6 +3,7 @@ package pe.edu.pucp.hesperides.shared.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -72,6 +73,21 @@ public class GlobalExceptionHandler {
         log.warn("No handler found for {} {}", ex.getHttpMethod(), ex.getRequestURL());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error("Endpoint not found"));
+    }
+
+    /**
+     * La deniega @PreAuthorize y la traduce a 403 RestAccessDeniedHandler, que es
+     * parte de la cadena de seguridad. Sin este handler explícito caía en el
+     * genérico de abajo y salía como **500**: cualquier rol sin permiso recibía
+     * un error de servidor en vez de un "no tienes permiso".
+     *
+     * Se relanza en vez de responder aquí para no duplicar el mensaje en dos
+     * sitios: el handler de seguridad sigue siendo el único que lo construye.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public void handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Acceso denegado por rol insuficiente: {}", ex.getMessage());
+        throw ex;
     }
 
     @ExceptionHandler(Exception.class)
