@@ -1,4 +1,4 @@
-import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
+import { firstPasswordError } from '@/lib/password-policy';
 
 export interface UserFormValues {
   email: string;
@@ -42,10 +42,22 @@ export function validateUserForm(
   if (requirePassword) {
     if (values.initialPassword === '') {
       errors.initialPassword = 'La contraseña es obligatoria';
-    } else if (values.initialPassword.length < PASSWORD_MIN_LENGTH) {
-      errors.initialPassword = `Debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres`;
+    } else {
+      // La política entera, no solo la longitud: el backend rechaza con 400 una
+      // clave sin mayúscula o sin dígito, y ese viaje de red es evitable. Los
+      // datos del titular entran en la comprobación porque una contraseña que
+      // contiene su propio correo es de las primeras que prueba quien lo conoce.
+      errors.initialPassword = firstPasswordError(values.initialPassword, {
+        email: values.email.trim(),
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+      });
     }
   }
+
+  // Una clave sin errores deja la propiedad puesta en undefined, y eso haría que
+  // `Object.keys(errors).length > 0` bloqueara el envío de un formulario válido.
+  if (errors.initialPassword === undefined) delete errors.initialPassword;
 
   return errors;
 }

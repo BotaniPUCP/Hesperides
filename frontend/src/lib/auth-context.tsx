@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { apiClient, ApiError } from './api';
+import { apiClient, ApiError, setAccessToken } from './api';
 
 export interface SessionUser {
   id: number;
@@ -32,6 +32,13 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  /**
+   * Vuelve a leer /auth/me. Lo necesita el cambio obligatorio de contraseña:
+   * al terminar, `mustChangePassword` ya es false en el servidor pero la copia
+   * de esta sesión sigue en true, y RouteGuard devolvería a la persona a la
+   * misma pantalla que acaba de completar.
+   */
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -52,7 +59,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const payload = await apiClient.post<LoginPayload>('/auth/login', { email, password });
+
+    // El token va a memoria antes que el usuario: si se hiciera al revés, un
+    // render intermedio podría lanzar una petición sin credencial.
+    setAccessToken(payload.accessToken);
     setUser(payload.user);
+  }, []);
+
+  const refreshSession = useCallback(async () => {
+    // Un fallo aquí deja la sesión en null y el guard lleva a login: es lo
+    // correcto, porque si /auth/me no responde no hay forma de saber qué
+    // permisos tiene quien está delante.
+    const actual = await apiClient.get<SessionUser>('/auth/me').catch(() => null);
+    setUser(actual);
   }, []);
 
   const logout = useCallback(async () => {
@@ -63,11 +82,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // dejar al usuario "dentro" tras pulsar salir sería peor.
       if (!(error instanceof ApiError)) throw error;
     } finally {
+      // El token se borra pase lo que pase: dejarlo en memoria tras cerrar
+      // sesión permitiría seguir operando la API desde la misma pestaña.
+      setAccessToken(null);
       setUser(null);
     }
   }, []);
 
-  const value = useMemo(() => ({ user, isLoading, login, logout }), [user, isLoading, login, logout]);
+  const value = useMemo(
+    () => ({ user, isLoading, login, logout, refreshSession }),
+    [user, isLoading, login, logout, refreshSession],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

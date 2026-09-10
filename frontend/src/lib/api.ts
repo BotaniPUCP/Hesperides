@@ -16,6 +16,23 @@ export class ApiError extends Error {
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 /**
+ * El access token vive aquí, en memoria del módulo, y en ningún otro sitio:
+ * `localStorage` y `sessionStorage` están prohibidos para tokens porque
+ * cualquier XSS los leería (SPEC-000, SPEC-001 §2.4).
+ *
+ * Que se pierda al recargar la página no es un problema, es el diseño: la
+ * cookie httpOnly de refresh sobrevive a la recarga, y la primera petición que
+ * reciba un 401 la usa para reponer el token sin volver a pedir contraseña
+ * (SPEC-001 §5.1).
+ */
+let accessToken: string | null = null;
+
+/** La llama AuthContext al iniciar sesión y con null al cerrarla. */
+export function setAccessToken(token: string | null): void {
+  accessToken = token;
+}
+
+/**
  * Promesa compartida del refresh en curso. Si tres peticiones fallan con 401
  * a la vez, solo la primera dispara POST /auth/refresh y las otras dos esperan
  * a esa misma promesa. Sin esto, las dos rezagadas llegarían con un refresh
@@ -33,6 +50,11 @@ function refreshSession(): Promise<void> {
     })
       .then(async (response) => {
         if (!response.ok) throw new ApiError(response.status, 'Session expired');
+
+        // El token nuevo se guarda aquí y no en quien llamó: si no, el
+        // reintento de más abajo saldría con el token viejo y volvería a 401.
+        const envelope = (await response.json()) as ApiResponse<{ accessToken?: string }>;
+        accessToken = envelope.data?.accessToken ?? null;
       })
       .finally(() => {
         refreshPromise = null;
@@ -45,9 +67,17 @@ function refreshSession(): Promise<void> {
 const NO_REFRESH_PATHS = ['/auth/login', '/auth/refresh', '/auth/logout'];
 
 async function doFetch(method: HttpMethod, path: string, body?: unknown): Promise<Response> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+  // El backend lee el access token del header y nunca de la cookie
+  // (SPEC-001 §5.1): la cookie solo sirve para /auth/refresh y /auth/logout.
+  if (accessToken !== null) headers.Authorization = `Bearer ${accessToken}`;
+
   return fetch(`${API_BASE_URL}${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers,
+    // La cookie httpOnly de refresh viaja igual: es lo que permite recuperar la
+    // sesión tras recargar, cuando el token en memoria ya no está.
     credentials: 'include',
     body: body === undefined ? undefined : JSON.stringify(body),
   });

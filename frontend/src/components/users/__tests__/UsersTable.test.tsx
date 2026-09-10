@@ -101,6 +101,34 @@ describe('UsersTable', () => {
     expect(acciones.onResendCredentials).toHaveBeenCalledWith(expect.objectContaining({ id: 4 }));
   });
 
+  it('muestra el esqueleto de la tabla mientras carga, no un spinner suelto', () => {
+    // Un esqueleto con la forma de la tabla evita el salto de layout al llegar
+    // los datos (SPEC-100 §7.1).
+    montar([], { loading: true });
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByText(/no se encontraron usuarios/i)).not.toBeInTheDocument();
+  });
+
+  it('senala la entrega pendiente y no dice nada cuando ya se entrego', () => {
+    // Un badge verde en cada fila de una tabla donde casi todo esta entregado
+    // es ruido: lo excepcional destaca porque lo normal no ocupa espacio.
+    const { unmount } = montar([usuario({ credentialStatus: 'PENDING_DELIVERY' })]);
+    expect(screen.getByText(/entrega pendiente/i)).toBeInTheDocument();
+    unmount();
+
+    montar([usuario({ credentialStatus: 'DELIVERED' })]);
+    expect(screen.queryByText(/entrega pendiente/i)).not.toBeInTheDocument();
+  });
+
+  it('dice "Nunca" cuando la cuenta jamas se uso, en vez de dejar la celda vacia', () => {
+    // Una celda vacia se lee como un dato que aun no carga; "Nunca" es un hecho
+    // que el administrador necesita ver (probablemente nunca recibio el correo).
+    montar([usuario({ lastLogin: null })]);
+
+    expect(screen.getByText('Nunca')).toBeInTheDocument();
+  });
+
   it('muestra un vacio con sentido cuando no hay resultados', () => {
     montar([]);
 

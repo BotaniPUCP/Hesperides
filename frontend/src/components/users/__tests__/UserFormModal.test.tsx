@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { UserDetail } from '@shared/types';
 import { UserFormModal } from '../UserFormModal';
@@ -150,6 +150,10 @@ describe('UserFormModal en modo edicion', () => {
     await userEvent.click(screen.getByRole('button', { name: /guardar cambios/i }));
 
     expect(screen.getByRole('button', { name: /guardar cambios/i })).toBeDisabled();
-    resolver?.();
+
+    // Se resuelve dentro de act para que React procese el fin del guardado
+    // antes de que termine la prueba, en vez de avisarlo como actualizacion
+    // fuera de act.
+    await act(async () => resolver?.());
   });
 });
