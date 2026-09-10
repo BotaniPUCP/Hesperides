@@ -24,7 +24,7 @@ hesperides:
       allowed-origins: http://localhost:3000
   mail:
     from: no-reply@hesperides.test
-    app-public-url: http://localhost:3000
+    app-public-url: https://hesperides.test
 
 spring:
   jpa:

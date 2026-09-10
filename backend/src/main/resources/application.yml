@@ -68,4 +68,6 @@ hesperides:
     from: ${SMTP_FROM:no-reply@hesperides.local}
     # Nunca se arma esta URL con el header Host del request: quien controle ese
     # header haría que el correo apunte a un dominio suyo (SPEC-100 §4).
-    app-public-url: ${APP_PUBLIC_URL:http://localhost:3000}
+    # Sin valor por defecto: un default de desarrollo acabaria enviando correos
+    # que invitan a entrar en localhost, que no significa nada para quien lo recibe.
+    app-public-url: ${APP_PUBLIC_URL}
