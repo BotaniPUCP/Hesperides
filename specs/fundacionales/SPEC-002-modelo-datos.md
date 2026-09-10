@@ -813,191 +813,33 @@ CREATE INDEX idx_team_members_user ON team_members(user_id);
 
 ### 5.1 Diagrama ER
 
-Dos vistas para que se lea. Primero el núcleo (Sprint 1: administración + catastro), luego los módulos operativos.
+Las columnas están en el DDL de §4; repetirlas en un diagrama crea una segunda versión que
+envejece sola. Lo que importa es **cómo se relacionan**:
 
-**Núcleo — administración y catastro**
+```
+catalog_items ──< users, zones, species, green_elements, incidents, interventions, contracts
+                  (todo tipo, estado, rol y categoría es una fila de catálogo — INV-2)
 
-```mermaid
-erDiagram
-    catalog_types  ||--o{ catalog_items : "agrupa"
-    catalog_items  ||--o{ users         : "rol"
-    catalog_items  ||--o{ zones         : "tipo de zona"
-    catalog_items  ||--o{ species       : "tipo / origen"
-    catalog_items  ||--o{ green_elements: "tipo / condición"
+zones ──< zones                    jerarquía de zonas (el servicio impide ciclos, §5.4)
+zones ──< green_elements           una zona contiene elementos
+species ──< green_elements         una especie clasifica elementos
 
-    zones          ||--o{ zones          : "jerarquía"
-    zones          ||--o{ green_elements : "contiene"
-    species        ||--o{ green_elements : "clasifica"
-    users          ||--o{ green_elements : "registra"
-    green_elements ||--o{ green_element_attachments : "fotos de ficha"
+green_elements >──< interventions  N:M vía intervention_elements
+                                   (una salida de campo toca varios elementos)
+green_elements ──< incidents       una incidencia puede señalar un elemento…
+incidents ──> interventions        …y resolverse con una intervención
 
-    catalog_types {
-        bigint id PK
-        varchar code UK
-        varchar name
-        boolean is_system
-    }
-    catalog_items {
-        bigint id PK
-        bigint catalog_type_id FK
-        varchar code
-        varchar label
-        integer sort_order
-        boolean is_active
-        jsonb metadata
-    }
-    users {
-        bigint id PK
-        varchar email UK
-        bigint role_item_id FK
-        boolean is_active
-    }
-    zones {
-        bigint id PK
-        varchar code UK
-        varchar name
-        bigint parent_zone_id FK
-        bigint zone_type_item_id FK
-        geometry boundary "Polygon 4326"
-        numeric area_m2
-    }
-    species {
-        bigint id PK
-        varchar scientific_name UK
-        varchar common_name
-        bigint species_type_item_id FK
-        jsonb attributes
-    }
-    green_elements {
-        bigint id PK
-        varchar code UK
-        bigint zone_id FK
-        bigint element_type_item_id FK
-        bigint species_id FK
-        bigint condition_item_id FK
-        geometry location "Point 4326"
-        geometry area "Polygon 4326"
-        integer quantity
-        date planting_date
-    }
-    green_element_attachments {
-        bigint id PK
-        bigint green_element_id FK
-        varchar storage_key
-        varchar content_type
-        bigint size_bytes
-    }
+contracts ──< contract_services ──< contract_executions
+                                   lo pactado frente a lo realmente ejecutado
+
+teams ──< team_members ──> users   composición de cuadrillas (V012)
+
+*_evidences / *_attachments        guardan storage_key, nunca el binario (§5.2.4)
+*_status_history                   rastro de cambios de estado
 ```
 
-**Módulos operativos — intervenciones, contratos e incidencias**
-
-```mermaid
-erDiagram
-    green_elements ||--o{ intervention_elements : "historial"
-    interventions  ||--o{ intervention_elements : "afecta"
-    interventions  ||--o{ intervention_supplies : "consume"
-    interventions  ||--o{ intervention_evidences: "antes/después"
-    supplies       ||--o{ intervention_supplies : "insumo"
-    zones          ||--o{ interventions         : "se ejecuta en"
-    users          ||--o{ interventions         : "asigna / ejecuta / valida"
-
-    providers ||--o{ contracts           : "titular"
-    contracts ||--o{ contract_zones      : "cubre"
-    contracts ||--o{ contract_executions : "visitas reales"
-    contracts ||--o{ interventions       : "tercerizada (nullable)"
-    zones     ||--o{ contract_zones      : "alcance"
-
-    green_elements ||--o{ incidents               : "afectado"
-    incidents      ||--o{ incident_status_history : "bitácora"
-    incidents      ||--o{ incident_evidences      : "foto"
-    incidents      }o--|| interventions           : "deriva en"
-
-    interventions {
-        bigint id PK
-        varchar code UK
-        bigint zone_id FK
-        bigint intervention_type_item_id FK
-        bigint status_item_id FK
-        bigint contract_id FK "NULL = personal estable"
-        date scheduled_date
-        timestamp completed_at
-        timestamp validated_at
-        bigint assigned_to_user_id FK
-        bigint validated_by_user_id FK
-    }
-    intervention_elements {
-        bigint id PK
-        bigint intervention_id FK
-        bigint green_element_id FK
-    }
-    intervention_supplies {
-        bigint id PK
-        bigint intervention_id FK
-        bigint supply_id FK
-        numeric quantity
-    }
-    intervention_evidences {
-        bigint id PK
-        bigint intervention_id FK
-        bigint moment_item_id FK "BEFORE / AFTER"
-        varchar storage_key
-        geometry captured_location "Point 4326"
-    }
-    supplies {
-        bigint id PK
-        varchar code UK
-        varchar name
-        bigint unit_item_id FK
-    }
-    providers {
-        bigint id PK
-        varchar tax_id UK
-        varchar business_name
-    }
-    contracts {
-        bigint id PK
-        varchar contract_number UK
-        bigint provider_id FK
-        bigint agreed_frequency_item_id FK
-        date start_date
-        date end_date
-        bigint status_item_id FK
-    }
-    contract_zones {
-        bigint id PK
-        bigint contract_id FK
-        bigint zone_id FK
-    }
-    contract_executions {
-        bigint id PK
-        bigint contract_id FK
-        date execution_date
-        bigint status_item_id FK
-    }
-    incidents {
-        bigint id PK
-        varchar code UK
-        bigint incident_type_item_id FK
-        bigint status_item_id FK
-        bigint urgency_item_id FK
-        bigint green_element_id FK
-        geometry location "Point 4326"
-        bigint intervention_id FK
-        timestamp reported_at
-    }
-    incident_status_history {
-        bigint id PK
-        bigint incident_id FK
-        bigint from_status_item_id FK
-        bigint to_status_item_id FK
-        bigint changed_by_user_id FK
-    }
-    incident_evidences {
-        bigint id PK
-        bigint incident_id FK
-        varchar storage_key
-    }
-```
+El **historial de un elemento no es una tabla**: es la consulta
+`green_elements → intervention_elements → interventions` ordenada por fecha (§5.2.3).
 
 ### 5.2 Decisiones de diseño
 
@@ -1117,48 +959,39 @@ Lo único que este spec impone al frontend es el formato de intercambio de la ge
 
 ---
 
-## 8. Tests que la IA debe generar
+## 8. Tests
 
-### 8.1 Tests de migración (backend — `@SpringBootTest` con Testcontainers)
-
-```
-- El contenedor arranca con imagen postgis/postgis:16-3.4 y aplica V001..V010 sin error
-- SELECT PostGIS_Version() devuelve una versión no nula
-- geometry_columns reporta SRID 4326 en las 5 columnas geométricas
-- Insertar green_element sin location ni area → DataIntegrityViolationException
-- Insertar incident sin green_element_id ni location → DataIntegrityViolationException
-- Insertar contract con end_date < start_date → DataIntegrityViolationException
-- Insertar intervention_supply con quantity = 0 → DataIntegrityViolationException
-- Insertar intervention con validated_at pero sin validated_by_user_id → DataIntegrityViolationException
-- Insertar dos green_elements con el mismo code y ambos vigentes → DataIntegrityViolationException
-- Insertar dos green_elements con el mismo code, el primero con deleted_at → ambos se insertan
-```
-
-### 8.2 Tests de repositorio (backend — `@DataJpaTest`)
+Lo que debe quedar fijado:
 
 ```
-- GreenElementsRepository.save() con Point JTS → persiste y recupera con las mismas coordenadas y SRID 4326
-- GreenElementsRepository.save() con Polygon JTS → persiste y recupera el polígono cerrado
-- GreenElementsRepository.findByZoneId() ignora las filas con deleted_at no nulo
-- InterventionsRepository: el historial de un elemento devuelve las intervenciones en orden descendente por fecha
-- ZonesRepository: una zona con parent_zone_id resuelve su padre; una raíz devuelve null
-- CatalogItemsRepository.findByTypeCode('INTERVENTION_TYPE') devuelve las 6 filas semilla ordenadas por sort_order
+Migraciones
+- docker-compose down -v && up --build aplica V003-V010 desde cero sin error
+- la extensión PostGIS queda disponible antes de la primera tabla con geometría
+- reejecutar las migraciones no altera checksums (V001 y V002 no se tocan)
+
+Los CHECK que la BD hace cumplir (§5.3)
+- green_element sin punto ni polígono → falla
+- incidencia sin elemento ni coordenada → falla
+- contrato con end_date < start_date → falla
+- cantidad de insumo <= 0 → falla
+- intervención con validador pero sin fecha de validación → falla
+
+Soft delete e índices parciales
+- dar de baja un elemento y reutilizar su code en uno nuevo → permitido (§5.2.5)
+- el mismo code duplicado entre elementos vigentes → falla
+
+Geometría
+- las columnas son SRID 4326; ST_Area/ST_Distance sobre geography devuelven metros
+- los tipos en Java son Point y Polygon de JTS, no una clase propia
+
+Entidades
+- toda entidad extiende BaseEntity y no redeclara sus campos (INV-3)
+- @EnableJpaAuditing activo: sin él createdAt queda nulo y el INSERT falla
+- ningún @Enumerated ni enum de dominio: todo tipo o estado es FK a CatalogItem
+
+Datos semilla
+- las migraciones NO siembran zonas, especies ni frecuencias: siguen pendientes del cliente
 ```
-
-### 8.3 Tests de datos semilla
-
-```
-- El catálogo INCIDENT_STATUS contiene exactamente REPORTED, IN_REVIEW, IN_PROGRESS, RESOLVED en ese sort_order
-- El catálogo ROLE contiene ADMIN, COORDINADOR, SUPERVISOR y OPERARIO activos, y USER inactivo
-- Los catálogos pendientes del cliente existen como catalog_type y tienen cero catalog_items
-- Las tablas zones, species y system_parameters están vacías tras migrar desde cero
-```
-
-### 8.4 Tests frontend
-
-No aplican a este spec: no hay componentes. Los tipos de `shared/types/models.ts` se verifican por compilación de TypeScript (`npm run build` sin errores de tipo).
-
----
 
 ## 9. Propio de este spec
 

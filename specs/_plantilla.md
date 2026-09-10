@@ -11,6 +11,13 @@
 > **Lectura obligatoria:** `specs/REGLAS.md`.
 > **Específico de este spec:** [SPEC-XXX §N (qué aporta), ...]
 
+> **La regla de este spec: contiene lo que el código NO dice.**
+> Formas de request y response, props, DDL y listas de tests viven en el repositorio, que es
+> donde se compilan y se ejecutan. Aquí van las decisiones, las reglas de negocio y los
+> porqués: lo que nadie puede deducir leyendo la implementación.
+> Mientras la feature no esté implementada, este spec **sí** es la fuente de verdad y el
+> detalle se escribe literal. Al cerrarla, ese detalle se sustituye por un puntero al código.
+
 ---
 
 ## 1. Objetivo
@@ -52,36 +59,33 @@
 
 ## 3. Contratos de API
 
-> Todos los endpoints, con tipos exactos. El sobre `{ok, message, data}` es INV-1;
-> las envolturas 400/401/403 son las de SPEC-C02 §3 y no se repiten por endpoint.
+> **Ya implementado:** apuntar a los DTO (`modules/[modulo]/dto/`) y a `shared/types/`, y dejar
+> aquí solo la tabla de rutas y las decisiones de §3.1.
+> **Sin implementar:** escribir los cuerpos JSON literales — este spec es la fuente de verdad
+> hasta que exista el código. El sobre `{ok, message, data}` (INV-1) y las envolturas
+> 400/401/403 de SPEC-C02 nunca se repiten por endpoint.
 
-### [MÉTODO] /api/v1/[recurso]
+| Endpoint | Autorización | Qué resuelve |
+|---|---|---|
+| `[MÉTODO] /api/v1/[recurso]` | [roles, según Anexo A de SPEC-001] | [una línea] |
 
-**Qué hace:** [una línea] · **Autorización:** [roles, según Anexo A de SPEC-001]
+### 3.1 Decisiones que el código no explica
 
-**Request:**
-```json
-{ "campo1": "string (requerido, máx 100)", "campo2": "integer (1-100)" }
-```
-
-**Response 200/201:**
-```json
-{ "ok": true, "message": "...", "data": { "id": "long", "campo1": "string" } }
-```
-
-**Errores propios:** [código → cuándo. Solo los que no sean los genéricos de SPEC-C02.]
+> Por qué este verbo y no otro, por qué este código de error y no el evidente, qué defecto tiene
+> un parámetro y por qué. Si no hay ninguna decisión de este tipo, se borra la subsección.
 
 ## 4. Migración de base de datos
 
+> **Ya implementada:** nombrar el archivo (`V[N]__[descripcion].sql`) y explicar solo lo que el
+> DDL no dice: por qué ese default, por qué ese índice es parcial, por qué esa columna no es un
+> catálogo.
+> **Sin implementar:** el SQL literal va aquí.
+>
 > Rango: lo fija la spec que **posee** la tabla (fundacionales `V001`-`V099`, SPEC-1NN usa
 > `V1NN__`). Toda tabla lleva `created_at`, `updated_at`, `deleted_at` (INV-4) y su entidad
 > extiende `BaseEntity` (INV-3).
 >
 > **Si no necesita tablas nuevas, decirlo aquí y no inventar una migración.**
-
-```sql
--- V[N]__[descripcion].sql
-```
 
 ## 5. Comportamiento
 
@@ -115,29 +119,18 @@
 
 ## 8. Tests
 
-> Se escriben **antes** de la implementación. Formato: `caso → resultado esperado`.
-> El stack de test es el de `REGLAS.md`; no se repite aquí.
-
-### 8.1 Unitarios (backend)
-
-```
-- [Servicio].create() con datos válidos → entidad creada
-- [Servicio].getById() inexistente → NotFoundException
-```
-
-### 8.2 Integración (backend)
+> Se escriben **antes** de la implementación. Una vez escritos, la suite del repo es la lista
+> ejecutable y esta sección deja de enumerarlos.
+>
+> **No se listan los casos mecánicos** —sin token → 401, campo vacío → 400, rol insuficiente →
+> 403—: son invariantes de `REGLAS.md` y valen para todos los endpoints.
+>
+> **Sí se listan las reglas de negocio que un método no hace evidentes:** límites, idempotencia,
+> qué NO debe ocurrir, qué se revoca y qué sobrevive.
 
 ```
-- POST /api/v1/[recurso] válido → 201 + body correcto
-- POST sin token → 401
-- DELETE /{id} → 204 y deleted_at no nulo
-```
-
-### 8.3 Frontend
-
-```
-- [Componente] con datos → renderiza filas
-- [Componente] submit inválido → muestra validación, no llama API
+[Agrupar por regla, no por capa]
+- [caso concreto] → [resultado esperado]
 ```
 
 ## 9. Propio de este spec

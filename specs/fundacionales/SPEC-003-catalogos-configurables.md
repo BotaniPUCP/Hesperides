@@ -50,257 +50,60 @@ Definir el contrato de API, el patrón de uso en backend y frontend, y las regla
 
 ---
 
-## 3. Las tablas (ya existentes — documentación, no redefinición)
+## 3. Las tablas
 
-Implementadas en `backend/src/main/resources/db/migration/V001__create_catalog_tables.sql`. Este spec no las modifica; las documenta como contrato para quien las consuma.
+**El DDL está en `V001__create_catalog_tables.sql`** (`catalog_types` y `catalog_items`) y las
+entidades en `modules/catalogs/entity/`. Este spec no las redefine.
 
-```sql
-CREATE TABLE catalog_types (
-    id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    is_system BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
-);
+### 3.1 Lo que las columnas significan
 
-CREATE TABLE catalog_items (
-    id BIGSERIAL PRIMARY KEY,
-    catalog_type_id BIGINT NOT NULL REFERENCES catalog_types(id),
-    code VARCHAR(50) NOT NULL,
-    label VARCHAR(100) NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    metadata JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP,
-    UNIQUE (catalog_type_id, code)
-);
-
-CREATE INDEX idx_catalog_types_code ON catalog_types(code);
-CREATE INDEX idx_catalog_items_catalog_type_id ON catalog_items(catalog_type_id);
-```
-
-### 3.1 Significado de cada columna
-
-**`catalog_types`** — el "tipo enumerado": agrupa un conjunto cerrado de opciones (ROLE, INCIDENT_STATUS, …).
-
-| Columna | Significado |
+| Columna | Qué decide |
 |---|---|
-| `code` | Identificador estable en mayúsculas y guion bajo (`INCIDENT_STATUS`). Es lo que el backend usa en código y lo que aparece en la URL del endpoint de consumo. **Nunca cambia** una vez publicado: cambiarlo rompe a todo consumidor. |
-| `name` | Nombre legible del tipo, para la UI de administración ("Estados de incidencia"). |
-| `description` | Ayuda contextual para el administrador que edita este catálogo. |
-| `is_system` | **`TRUE` = protegido.** El tipo lo creó una migración fundacional porque el propio código del backend depende de sus `code` de ítems para tomar decisiones (ver §3.2). Un `catalog_type` con `is_system = TRUE` no puede eliminarse ni renombrarse (`code`) desde la UI de administración; sus ítems tampoco pueden eliminarse, aunque sí pueden agregarse ítems nuevos y editarse `label`/`sort_order`/`metadata` de los existentes. `FALSE` = el administrador tiene control total, incluyendo desactivar el tipo completo si ya no aplica al cliente. |
-| `deleted_at` | Soft delete del tipo completo. Solo aplicable a tipos con `is_system = FALSE` (ver CA-04). |
+| `catalog_types.code` | Identificador estable del tipo (`ROLE`, `INCIDENT_STATUS`…). Es lo que usa el código; **nunca el `id`** |
+| `catalog_items.code` | Identificador estable del ítem dentro de su tipo. Un `label` traducido no debe romper nada que dependa del `code` |
+| `catalog_items.label` | Texto que ve el usuario. Es el mecanismo de i18n del dominio: traducir el sistema es traducir filas |
+| `sort_order` | Orden en los desplegables, editable por el administrador |
+| `metadata` (JSONB) | Atributos que solo importan a un tipo concreto (p. ej. el color de un estado) |
+| `is_system` | Lo protege de borrado y renombrado: hay código que depende de ese `code` |
+| `is_active` | Lo oculta de formularios nuevos **sin** tocar los registros históricos que lo referencian |
 
-**`catalog_items`** — cada opción concreta dentro de un tipo (`ADMIN` dentro de `ROLE`).
+### 3.2 Por qué `is_system` e `is_active` son cosas distintas
 
-| Columna | Significado |
-|---|---|
-| `catalog_type_id` | A qué tipo pertenece. Es la FK que el patrón de validación de §5 protege. |
-| `code` | Identificador estable dentro del tipo (`ADMIN`, `REPORTED`). Único por tipo (constraint `UNIQUE(catalog_type_id, code)`), no global: `ACTIVE` puede existir como ítem de `CONTRACT_STATUS` y de `EXECUTION_STATUS` sin colisión. El backend compara por `code`, nunca por `label`, cuando necesita tomar una decisión de negocio (ver §5.2). |
-| `label` | Texto que ve el usuario final. Editable libremente incluso en ítems de sistema — es lo único que un cliente distinto a la PUCP normalmente querría cambiar ("Operario de campo" → "Jardinero", sin tocar el `code` del que depende la lógica). |
-| `sort_order` | Orden de presentación en desplegables. No implica jerarquía de negocio. |
-| `is_active` | Visibilidad para selección de **nuevos** registros. Ver regla completa en §7. |
-| `metadata` | JSONB de atributos extra específicos del ítem, cuando un catálogo necesita más que `code`/`label`. Ejemplos de uso futuro: un `URGENCY_LEVEL` con `{"colorHex": "#DC2626", "slaHours": 4}` para que la UI pinte una insignia y el backend calcule un SLA sin agregar columnas nuevas a `catalog_items` por cada catálogo con necesidades distintas. Es un escape hatch deliberado (mismo principio que `species.attributes` en SPEC-002): un atributo que se vuelve consultable o filtrable con frecuencia se promueve a columna propia en una tabla dedicada, no se le construye lógica de consulta encima del JSONB. |
-| `deleted_at` | Soft delete del ítem individual. |
+Responden a preguntas distintas. `is_system = TRUE` significa *"si borras esto, se rompe
+código"* — el `code` está escrito en una expresión `@PreAuthorize` o en una regla de negocio.
+`is_active = FALSE` significa *"ya no se usa a partir de hoy"*, una decisión del administrador
+que no puede reescribir el pasado: las intervenciones registradas el año pasado con ese estado
+siguen mostrándolo.
 
-### 3.2 Por qué existen `is_system` e `is_active` como conceptos distintos
-
-Son dos ejes independientes:
-
-- **`is_system`** protege la **estructura** (que el tipo y sus ítems de sistema existan con ese `code`) porque el backend tiene `if`/`switch` que compara contra esos códigos (p. ej., una transición de estado de intervención permitida solo si `status.code == "COMPLETED"`). Borrar o renombrar el código rompería el backend, no solo un reporte.
-- **`is_active`** protege el **histórico** (que un ítem usado en el pasado siga siendo válido para lo ya registrado) sin permitir que se seleccione en registros nuevos. No tiene relación con si el backend depende de su `code`.
-
-Un catálogo puede ser `is_system = FALSE` en su tipo y aun así tener una regla de negocio en el servicio que dependa de un `code` concreto de sus ítems (p. ej. `INTERVENTION_TYPE.PODA` podría disparar una validación de temporada en el futuro). `is_system` en el tipo no es garantía de que ningún ítem suyo importe al backend; es la señal de que **al menos uno** importa lo suficiente como para bloquear el borrado estructural completo. La tabla de la sección 7 indica, catálogo por catálogo, si hoy existe tal dependencia.
-
----
+Colapsarlas en un solo campo obliga a elegir entre romper el historial y dejar que alguien borre
+el rol `ADMIN`.
 
 ## 4. Contratos de API
 
-Todos los endpoints usan el sobre `{ ok, message, data }` de SPEC-C02 y HTTP status explícito. Los de administración exigen rol `ADMIN` (catálogo `ROLE`, ver SPEC-001).
+**Aún no implementados** (solo existen las entidades y `CatalogItemsRepository`): aquí este spec
+sí es la fuente de verdad. El sobre es INV-1 y los errores 401/403 son los de SPEC-C02; no se
+reproducen por endpoint.
 
-### GET /api/v1/catalogs/{typeCode}/items
+| Endpoint | Autorización | Qué hace |
+|---|---|---|
+| `GET /catalogs/{typeCode}/items` | Cualquier autenticado | Ítems **activos** de un tipo, ordenados por `sort_order`. Es el que consume `useCatalog` |
+| `GET /catalogs` | ADMIN | Lista los tipos |
+| `GET /catalogs/{typeCode}` | ADMIN | Detalle del tipo con **todos** sus ítems, activos o no |
+| `POST /catalogs/{typeCode}/items` | ADMIN | Crea un ítem |
+| `PUT /catalogs/{typeCode}/items/{itemId}` | ADMIN | Edita `label`, `sortOrder`, `metadata`. **Nunca el `code`** de un ítem `is_system` |
+| `PATCH .../deactivate` · `PATCH .../activate` | ADMIN | Alternan `is_active` |
 
-**Descripción:** lista los ítems activos y vigentes de un tipo de catálogo, para poblar un desplegable. Es el único endpoint de este spec pensado para consumo general (cualquier usuario autenticado, no solo administradores).
+**El `typeCode` va en la ruta y el `code` en el cuerpo; el `id` numérico no aparece en ninguna
+API pública.** Un `id` es un detalle de la base de datos: si mañana se resiembran los catálogos,
+los `id` cambian y el `code` no.
 
-**Headers:**
-```
-Authorization: Bearer {jwt_token}
-```
+**Intentar borrar o renombrar el `code` de un ítem `is_system` responde 409**, no 403: no es una
+cuestión de permisos —el ADMIN los tiene todos— sino de que la operación entra en conflicto con
+código que depende de ese valor.
 
-**Query params:**
-```
-includeInactive: boolean (opcional, default false) — solo honrado si el usuario tiene rol ADMIN; en cualquier otro caso se ignora y se fuerza false.
-```
-
-**Response 200:**
-```json
-{
-  "ok": true,
-  "message": "Catalog items retrieved successfully",
-  "data": [
-    { "id": 12, "code": "REPORTED", "label": "Reportada", "sortOrder": 1, "metadata": null },
-    { "id": 13, "code": "IN_REVIEW", "label": "En evaluación", "sortOrder": 2, "metadata": null }
-  ]
-}
-```
-
-Sin paginación: por diseño, un `catalog_type` es una lista corta (docenas de ítems como máximo) pensada para desplegables completos, no para tablas navegables. Si algún catálogo futuro creciera más allá de eso, deja de ser un catálogo configurable y pasa a ser una entidad de dominio con su propio spec.
-
-**Response 404 (tipo inexistente):**
-```json
-{
-  "ok": false,
-  "message": "Catalog type not found",
-  "data": null
-}
-```
-
-### GET /api/v1/catalogs
-
-**Descripción:** lista todos los `catalog_types` del sistema, para la pantalla de administración. Requiere rol `ADMIN`.
-
-**Response 200:**
-```json
-{
-  "ok": true,
-  "message": "Catalog types retrieved successfully",
-  "data": {
-    "content": [
-      { "id": 1, "code": "ROLE", "name": "Roles del sistema", "description": "Roles asignables a los usuarios", "isSystem": true, "itemCount": 3 }
-    ],
-    "page": { "number": 0, "size": 20, "totalElements": 17, "totalPages": 1 }
-  }
-}
-```
-
-Paginado según SPEC-C03 aun cuando hoy 17 filas caben en una sola página: es una lista administrativa que puede crecer al incorporar un nuevo cliente con sus propios catálogos.
-
-### GET /api/v1/catalogs/{typeCode}
-
-**Descripción:** detalle de un tipo, incluyendo **todos** sus ítems (activos e inactivos) para la pantalla de administración. Requiere rol `ADMIN`. Distinto del endpoint de consumo: este no filtra por `is_active`.
-
-**Response 200:**
-```json
-{
-  "ok": true,
-  "message": "Catalog type retrieved successfully",
-  "data": {
-    "id": 16,
-    "code": "INCIDENT_STATUS",
-    "name": "Estados de incidencia",
-    "description": "Flujo de atención de la incidencia",
-    "isSystem": true,
-    "items": [
-      { "id": 40, "code": "REPORTED", "label": "Reportada", "sortOrder": 1, "isActive": true, "metadata": null, "createdAt": "2026-01-10T00:00:00Z", "updatedAt": "2026-01-10T00:00:00Z" }
-    ]
-  }
-}
-```
-
-**Response 404:**
-```json
-{ "ok": false, "message": "Catalog type not found", "data": null }
-```
-
-### POST /api/v1/catalogs/{typeCode}/items
-
-**Descripción:** crea un ítem nuevo dentro de un tipo existente. Requiere rol `ADMIN`. No crea tipos: los `catalog_types` se crean por migración (nuevo dominio funcional) o, si el proyecto decide habilitarlo, por un endpoint separado fuera del alcance de este spec inicial.
-
-**Request body:**
-```json
-{
-  "code": "string (requerido, máx 50 chars, patrón ^[A-Z][A-Z0-9_]*$, único dentro del tipo)",
-  "label": "string (requerido, máx 100 chars)",
-  "sortOrder": "integer (opcional, default 0)",
-  "metadata": "object (opcional, JSON arbitrario)"
-}
-```
-
-**Response 201:**
-```json
-{
-  "ok": true,
-  "message": "Catalog item created successfully",
-  "data": { "id": 41, "code": "NEW_CODE", "label": "Nueva etiqueta", "sortOrder": 5, "isActive": true, "metadata": null }
-}
-```
-
-**Response 400 (validación o código duplicado):**
-```json
-{
-  "ok": false,
-  "message": "Validation failed",
-  "data": { "errors": [ { "field": "code", "message": "Ya existe un ítem con este código en el catálogo" } ] }
-}
-```
-
-### PUT /api/v1/catalogs/{typeCode}/items/{itemId}
-
-**Descripción:** edita `label`, `sortOrder` y `metadata` de un ítem. Requiere rol `ADMIN`. **`code` no es editable por este endpoint** en ítems de catálogos con `is_system = TRUE` (ver §3.2); en catálogos no-sistema, cambiar `code` está permitido pero se documenta como operación sensible porque puede desalinear lógica de negocio que ya lo referencie.
-
-**Request body:**
-```json
-{
-  "label": "string (requerido, máx 100 chars)",
-  "sortOrder": "integer (opcional)",
-  "metadata": "object (opcional, JSON arbitrario o null para limpiar)"
-}
-```
-
-**Response 200:** igual forma que el `data` de creación, con valores actualizados.
-
-**Response 404:**
-```json
-{ "ok": false, "message": "Catalog item not found", "data": null }
-```
-
-### PATCH /api/v1/catalogs/{typeCode}/items/{itemId}/deactivate
-
-**Descripción:** desactiva un ítem (`is_active = false`). Es la operación de "borrado" normal de un ítem (ver §7 — nunca DELETE físico ni soft delete vía `deleted_at` mientras el ítem siga siendo históricamente válido). Requiere rol `ADMIN`.
-
-**Response 200:**
-```json
-{
-  "ok": true,
-  "message": "Catalog item deactivated successfully",
-  "data": { "id": 41, "code": "NEW_CODE", "isActive": false }
-}
-```
-
-**Response 409 (ítem de sistema, tipo protegido para este código):**
-```json
-{
-  "ok": false,
-  "message": "This item is required by the system and cannot be deactivated",
-  "data": null
-}
-```
-
-Este 409 solo aplica a los ítems de sistema explícitamente protegidos (ver columna "Protegido" en la tabla de §7), no a todo ítem de un tipo `is_system = TRUE`: por ejemplo, dentro de `INCIDENT_STATUS` (tipo de sistema) sí se puede desactivar un estado agregado a futuro por el administrador, pero no los cuatro que sostienen el flujo `REPORTED → IN_REVIEW → IN_PROGRESS → RESOLVED`.
-
-### PATCH /api/v1/catalogs/{typeCode}/items/{itemId}/activate
-
-**Descripción:** reactiva un ítem previamente desactivado. Simétrico al anterior. Requiere rol `ADMIN`.
-
-**Response 200:** misma forma, `isActive: true`.
-
-### Envolturas comunes de error (401 / 403)
-
-Igual que en el resto del sistema (SPEC-C02):
-
-```json
-{ "ok": false, "message": "Invalid or expired token", "data": null }
-```
-```json
-{ "ok": false, "message": "Insufficient permissions for this action", "data": null }
-```
-
----
+**Pedir un ítem de un tipo al que no pertenece responde 422**, y ese es exactamente el fallo que
+§5.2 describe: sin la comprobación de pertenencia, una FK aceptaría un estado de incidencia como
+si fuera un rol.
 
 ## 5. Patrón de uso en backend
 
@@ -582,64 +385,28 @@ No hay mockup de Figma para este spec fundacional; la pantalla de administració
 
 ---
 
-## 12. Tests que la IA debe generar
+## 12. Tests
 
-### 12.1 Tests unitarios (backend — JUnit 5 + Mockito)
-
-```
-- CatalogsService.findByIdAndType() con id existente y typeCode correcto → retorna el CatalogItem
-- CatalogsService.findByIdAndType() con id existente pero typeCode distinto al del ítem → lanza BusinessRuleException
-- CatalogsService.findByIdAndType() con id inexistente → lanza ResourceNotFoundException
-- CatalogsService.findByIdAndType() con ítem existente pero is_active = false → lanza BusinessRuleException
-- CatalogsService.createItem() con code duplicado dentro del mismo tipo → lanza DuplicateResourceException
-- CatalogsService.createItem() con code que no matchea el patrón ^[A-Z][A-Z0-9_]*$ → falla validación
-- CatalogsService.deactivateItem() sobre un ítem marcado como protegido → lanza BusinessRuleException
-- CatalogsService.deactivateItem() sobre un ítem no protegido → is_active pasa a false, no se ejecuta DELETE
-- CatalogsService.activateItem() sobre un ítem previamente desactivado → is_active vuelve a true
-- CatalogsService.getItemsByType() sobre un tipo sin ítems (pendiente del cliente) → retorna lista vacía, no lanza excepción
-- CatalogsService.getItemsByType() con typeCode inexistente → lanza ResourceNotFoundException
-```
-
-### 12.2 Tests de integración (backend — @WebMvcTest o @SpringBootTest)
+Lo que debe quedar fijado:
 
 ```
-- GET /api/v1/catalogs/INCIDENT_STATUS/items → 200 + 4 ítems activos en el orden de sort_order
-- GET /api/v1/catalogs/{typeCode}/items con typeCode inexistente → 404
-- GET /api/v1/catalogs/{typeCode}/items sin token → 401
-- GET /api/v1/catalogs (listado de tipos) sin rol ADMIN → 403
-- GET /api/v1/catalogs/{typeCode} (detalle admin) con rol ADMIN → 200 + items incluye activos e inactivos
-- POST /api/v1/catalogs/{typeCode}/items con body válido y rol ADMIN → 201 + item creado
-- POST /api/v1/catalogs/{typeCode}/items con code duplicado → 400 + error de campo detallado
-- POST /api/v1/catalogs/{typeCode}/items sin rol ADMIN → 403
-- PUT /api/v1/catalogs/{typeCode}/items/{id} con label nuevo → 200 + label actualizado
-- PATCH /api/v1/catalogs/{typeCode}/items/{id}/deactivate sobre ítem protegido → 409
-- PATCH /api/v1/catalogs/{typeCode}/items/{id}/deactivate sobre ítem no protegido → 200 + isActive false
-- PATCH /api/v1/catalogs/{typeCode}/items/{id}/activate sobre ítem inactivo → 200 + isActive true
-- Un módulo consumidor (ej. incidents): POST /api/v1/incidents con statusId de un ítem de tipo ROLE → 422/400, incidencia no persistida
-```
+Pertenencia de tipo (el fallo de §5.2)
+- findByIdAndType() con un item de OTRO tipo → excepción, nunca lo persiste
+- guardar una entidad con un catalog_item del tipo equivocado → falla en el service, no en la BD
 
-### 12.3 Tests frontend (Jest + React Testing Library)
+Protección de is_system
+- borrar o renombrar el code de un item is_system → 409
+- editar su label o sort_order → 200: lo protegido es el code, no la etiqueta
 
-```
-- useCatalog("X") en el primer render dispara exactamente una petición GET
-- useCatalog("X") montado en dos componentes simultáneos dispara una sola petición (deduplicación)
-- useCatalog("X") remontado dentro del TTL no dispara una petición nueva y devuelve el valor cacheado
-- useCatalog("X") remontado después del TTL dispara revalidación en segundo plano sin mostrar loading si ya había datos cacheados
-- useCatalog("X") ante error de red expone `error` no nulo y `items` como arreglo vacío
-- refetch() ignora el TTL y fuerza una petición nueva
-- CatalogItemFormModal envía POST con datos válidos → llama a la API y cierra el modal en éxito
-- CatalogItemFormModal con code inválido (minúsculas) → muestra validación inline, no envía petición
-- CatalogItemTable no renderiza botón de desactivar para ítems marcados como protegidos
-```
+is_active
+- GET /items devuelve solo activos; el detalle de administración los devuelve todos
+- desactivar un item NO altera las filas históricas que lo referencian
 
-### 12.4 Tests E2E (si aplica)
-
+Contrato
+- el typeCode viaja en la ruta y el code en el cuerpo; ningún id numérico en la API
+- pedir un item de un tipo al que no pertenece → 422
+- useCatalog cachea por typeCode y no vuelve a pedir el mismo tipo dos veces
 ```
-- Un administrador entra a /admin/catalogs, abre INCIDENT_STATUS, agrega un ítem nuevo, y ese ítem aparece
-  poco después (tras refetch) en el desplegable de estado del formulario de registro de incidencias.
-```
-
----
 
 ## 13. Propio de este spec
 

@@ -391,102 +391,25 @@ Por la misma razón, la lista de campos auditables por entidad (qué campos SÍ 
 
 ## 8. Contratos de API
 
-### GET /api/v1/audit-log
+**Aún no implementados** (solo existe `LoggingAuditService`): este spec es la fuente de verdad.
+Sobre e errores según INV-1 y SPEC-C02.
 
-**Descripción:** lista paginada de la bitácora de auditoría, con filtros. Solo lectura — no existe `POST`/`PUT`/`DELETE` sobre este recurso (sección 6).
+| Endpoint | Autorización | Qué hace |
+|---|---|---|
+| `GET /audit-log` | **Solo ADMIN** | Listado paginado. Filtros: `action`, `entityType`, `entityId`, `userId`, `dateFrom`, `dateTo` |
+| `GET /audit-log/{id}` | **Solo ADMIN** | Una entrada con su `changes` completo |
 
-**Quién puede consultarla:** **solo ADMIN.** Decisión explícita: un coordinador planifica y valida trabajo de campo (Anexo A de SPEC-001) pero no administra usuarios, catálogos, contratos ni parámetros del sistema — y la mayoría de las acciones de la tabla 3.2 son exactamente esas. Dar acceso de lectura de auditoría a COORDINADOR expondría, por ejemplo, quién desactivó la cuenta de otro coordinador o los cambios de monto en contratos, información que la propia matriz de permisos de SPEC-001 ya reserva a ADMIN en su tabla de origen (`1.1 Usuarios` CUD y `system_parameters` CU son exclusivos de ADMIN, y solo ADMIN puede desactivar contratos y proveedores, aunque el coordinador sí los cree y edite). Conceder por la puerta de la auditoría una visibilidad que la matriz de permisos niega por la puerta del recurso original rompería esa matriz de facto. Si en el futuro el cliente pide que un coordinador vea auditoría acotada a su propio módulo (p. ej. solo `GREEN_ELEMENT_EDITED`/`ZONE_EDITED`, que sí son acciones que un coordinador ejecuta), es una ampliación explícita a decidir con el cliente, no un valor por defecto de este spec.
+**No existe `POST`, `PUT`, `PATCH` ni `DELETE`.** No es una omisión: el log se escribe desde los
+servicios de dominio vía `AuditService.record(...)`, nunca por HTTP. Un endpoint de escritura
+permitiría fabricar entradas y destruiría el valor probatorio de la tabla (§6).
 
-**Headers:**
-```
-Authorization: Bearer {jwt_token}
-```
+**Los filtros se validan en el backend antes de construir la `Specification`:** `action` contra
+`AuditActionCode`, `entityId` exige `entityType` (un id sin tipo no identifica nada), y
+`dateFrom <= dateTo`.
 
-**Query params (todos opcionales, combinables con AND implícito, según SPEC-C03 §6.1):**
-
-| Parámetro | Tipo | Ejemplo | Notas |
-|---|---|---|---|
-| `userId` | long | `?userId=12` | Quién ejecutó la acción. |
-| `action` | string | `?action=USER_DEACTIVATED` | Debe ser un valor válido de `AuditActionCode`; un valor no reconocido responde 400 (sección "flujos alternativos"). |
-| `entityType` | string | `?entityType=Contract` | Nombre lógico de entidad (sección 4.1). |
-| `entityId` | long | `?entityId=45` | Requiere `entityType` presente en el mismo request (ver validación abajo); combinados dan "todo lo que le pasó a esta fila". |
-| `dateFrom` | date | `?dateFrom=2026-03-01` | Inclusive, formato `YYYY-MM-DD` (SPEC-C03 §7.1). |
-| `dateTo` | date | `?dateTo=2026-03-31` | Inclusive. |
-| `page`, `size`, `sort` | — | `?page=0&size=20&sort=createdAt,desc` | Paginación estándar SPEC-C03 §5. Orden por defecto `createdAt,desc` (más reciente primero, como en cualquier listado del proyecto). |
-
-**Validación:** `entityId` sin `entityType` responde `400` (el filtro es ambiguo: un mismo `id` numérico existe en decenas de tablas distintas). `dateFrom` posterior a `dateTo` responde `400`.
-
-**Response 200:**
-```json
-{
-  "ok": true,
-  "message": "Audit log entries retrieved successfully",
-  "data": {
-    "content": [
-      {
-        "id": 5081,
-        "action": "USER_ROLE_CHANGED",
-        "entityType": "User",
-        "entityId": 45,
-        "user": { "id": 3, "fullName": "Ana Torres Quispe" },
-        "ipAddress": "10.0.4.22",
-        "changes": {
-          "roleItemId": { "before": 3, "after": 2 },
-          "roleCode": { "before": "OPERARIO", "after": "COORDINADOR" }
-        },
-        "createdAt": "2026-03-12T15:04:00Z"
-      }
-    ],
-    "page": {
-      "number": 0,
-      "size": 20,
-      "totalElements": 214,
-      "totalPages": 11
-    }
-  }
-}
-```
-
-Nótese `user` como objeto embebido `{ id, fullName }`, nunca el `id` pelado (mismo criterio que SPEC-002 INV-04 aplica a catálogos: aquí se extiende a la referencia de usuario, para que la UI no necesite una segunda llamada a `GET /users/{id}` solo para mostrar un nombre en la tabla de auditoría). `user` es `null` cuando `audit_log.user_id` es `NULL` (acción de sistema o pre-autenticación, secciones 4.1 y 5.2); el frontend lo muestra como "Sistema".
-
-**Response 400 (validación):**
-```json
-{
-  "ok": false,
-  "message": "Validation failed",
-  "data": {
-    "errors": [
-      { "field": "entityId", "message": "entityId requires entityType to be present" }
-    ]
-  }
-}
-```
-
-**Response 401 (no autenticado):**
-```json
-{ "ok": false, "message": "Invalid or expired token", "data": null }
-```
-
-**Response 403 (sin permisos — cualquier rol distinto de ADMIN):**
-```json
-{ "ok": false, "message": "Insufficient permissions for this action", "data": null }
-```
-
-Autorización: `@PreAuthorize("hasAuthority('ADMIN')")`, mismo mecanismo que el resto del proyecto (SPEC-001 Anexo A/B).
-
-### GET /api/v1/audit-log/{id}
-
-**Descripción:** detalle de una fila puntual (útil cuando la UI navega desde una notificación o un enlace directo). Mismo control de acceso (`ADMIN`).
-
-**Response 200:** mismo objeto que un elemento de `content` arriba, sin el sobre de paginación.
-
-**Response 404:** si el `id` no existe — `audit_log` no tiene soft delete (sección 6), así que 404 significa exclusivamente "nunca existió", nunca "fue borrado", a diferencia de cualquier otro recurso del sistema (INV-02 de SPEC-002 no aplica aquí porque no hay `deleted_at`).
-
-```json
-{ "ok": false, "message": "Audit log entry not found", "data": null }
-```
-
----
+**No hay endpoint que exponga una parte del log con menos permisos.** Un "ver mi propio
+historial" para no-ADMIN parece inofensivo, pero permite deducir la actividad de otros por
+diferencia.
 
 ## 9. Retención y volumen
 
@@ -578,53 +501,32 @@ No hay mockup de Figma para este módulo aún; la referencia es `DataTable` + fi
 
 ---
 
-## 13. Tests que la IA debe generar
+## 13. Tests
 
-### 13.1 Tests unitarios (backend — JUnit 5 + Mockito)
-
-```
-- AuditServiceImpl.record() con usuario autenticado en el SecurityContext → persiste audit_log con user_id correcto
-- AuditServiceImpl.record() sin usuario autenticado (SecurityContext vacío) → persiste audit_log con user_id NULL, sin lanzar excepción
-- AuditServiceImpl.record() con action inválido (fuera de AuditActionCode) → no compila / IllegalArgumentException en tiempo de construcción, no en runtime silencioso
-- SpringSecurityAuditorAware.getCurrentAuditor() con Authentication autenticada → devuelve Optional con el userId del principal
-- SpringSecurityAuditorAware.getCurrentAuditor() con SecurityContext vacío o AnonymousAuthenticationToken → devuelve Optional.empty(), nunca lanza
-- UsersServiceImpl.deactivate() → invoca AuditService.record(USER_DEACTIVATED, "User", id, diff) exactamente una vez
-- UsersServiceImpl.changeRole() → el diff registrado contiene roleItemId y roleCode antes/después, no el objeto User completo
-- CatalogsServiceImpl.updateItem() → el diff registrado contiene solo los campos modificados, no todos los campos del ítem
-```
-
-### 13.2 Tests de integración (backend — `@SpringBootTest` con Testcontainers)
+Lo que debe quedar fijado:
 
 ```
-- La migración V011 aplica limpiamente sobre una base con V001-V010 ya aplicadas
-- audit_log no tiene columnas updated_at ni deleted_at tras la migración
-- INSERT en audit_log funciona; UPDATE y DELETE sobre audit_log fallan cuando se ejecutan con el rol de aplicación con los GRANT/REVOKE de producción aplicados
-- PATCH /api/v1/users/{id}/deactivate autenticado como ADMIN → 200 y una fila nueva en audit_log con action=USER_DEACTIVATED
-- GET /api/v1/audit-log autenticado como COORDINADOR → 403
-- GET /api/v1/audit-log autenticado como ADMIN → 200 con Page<AuditLogEntryDto>
-- GET /api/v1/audit-log?entityId=1 (sin entityType) → 400
-- GET /api/v1/audit-log?action=NO_EXISTE → 400
-- PUT sobre un green_element existente cambiando solo condition_item_id → green_elements.updated_by_user_id se actualiza y green_elements.registered_by_user_id no cambia
-- Un contrato editado dos veces por usuarios distintos → contracts.updated_by_user_id refleja siempre al último editor, y existen dos filas independientes en audit_log con action=CONTRACT_EDITED
-```
+Inmutabilidad
+- un UPDATE o DELETE sobre audit_log falla (el REVOKE de §6 aplicado)
+- AuditLogController no expone POST, PUT, PATCH ni DELETE
+- audit_log NO tiene updated_at ni deleted_at, y no extiende BaseEntity
 
-### 13.3 Tests frontend (Jest + React Testing Library)
+Qué entra y qué no
+- una acción auditable escribe UNA fila con before y after del campo cambiado
+- una operación idempotente que no cambia nada NO escribe fila
+- ninguna fila contiene password_hash, token_hash ni un token completo
+- un GET nunca genera una fila
 
-```
-- AuditLogTable renderiza correctamente con datos de ejemplo (Page<AuditLogEntry>)
-- AuditLogTable muestra estado de carga mientras useAuditLog está pendiente
-- AuditLogTable muestra "No hay registros para estos filtros" con content: []
-- AuditLogFilters: seleccionar entityType sin entityId no dispara error; seleccionar entityId sin entityType deshabilita el submit o lo previene con validación inline
-- El enlace a /admin/audit-log no se renderiza en el menú para un usuario con rol distinto de ADMIN
-```
+Autoría
+- SpringSecurityAuditorAware con SecurityContext vacío → Optional.empty(),
+  nunca un usuario inventado ni una excepción
+- AuditActionCode se persiste como STRING; renumerar el enum no corrompe el histórico
 
-### 13.4 Tests E2E (si aplica)
-
+Acceso
+- GET /audit-log con cualquier rol distinto de ADMIN → 403
+- entityId sin entityType → 400
+- dateFrom posterior a dateTo → 400
 ```
-- Un ADMIN desactiva una cuenta de usuario, navega a /admin/audit-log, filtra por esa entidad y ve la fila con el cambio correcto antes/después
-```
-
----
 
 ## 14. Propio de este spec
 

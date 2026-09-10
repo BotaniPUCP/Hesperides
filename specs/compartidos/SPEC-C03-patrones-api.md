@@ -278,69 +278,31 @@ Idempotency-Key: {uuid-v4-generado-por-el-cliente}
 
 ## 11. Tests
 
-### 11.1 Tests unitarios backend (JUnit 5 + Mockito)
+**La forma de `Page<T>` está en [`shared/types/api.ts`](../../shared/types/api.ts)** y la suite
+la verifica. Lo que debe quedar fijado, porque son límites que un endpoint nuevo rompe sin
+darse cuenta:
 
 ```
-- [Recurso]Service.list() con page=0,size=20 → retorna Page con content.size() <= 20
-- [Recurso]Service.list() con size=500 → aplica el máximo de 100
-- [Recurso]Service.list() con filtro zoneId → todos los resultados tienen ese zoneId
-- [Recurso]Service.list() con filtro por bbox → delega en el repositorio con el
-  predicado ST_Intersects/ST_MakeEnvelope correcto
-- [Recurso]Service.list() con bbox y near simultáneos → lanza excepción de validación
-- [Recurso]Service.create() con Idempotency-Key ya usada y creación previa exitosa
-  → retorna el recurso existente sin crear uno nuevo
-- [Recurso]Service.create() con Idempotency-Key de una operación aún en curso
-  → lanza conflicto (409)
-```
+Paginación
+- listado sin params → size por defecto 20
+- size=500 → se recorta a 100, NO responde 400
+- sort respeta el campo y la dirección pedidos
 
-### 11.2 Tests de integración backend (`@WebMvcTest` / `@SpringBootTest`)
+Filtros geoespaciales
+- bbox y near juntos → 400: la combinación es ambigua
+- near sin radius → 400
+- los resultados de near caen dentro del radio; los de bbox dentro del rectángulo
+- las consultas usan SRID 4326 y funciones PostGIS, no distancia calculada a mano
 
-```
-- GET /api/v1/[recurso] sin params → 200, data.page.size === 20
-- GET /api/v1/[recurso]?page=0&size=20&sort=createdAt,desc → 200, orden descendente verificado
-- GET /api/v1/[recurso]?size=500 → 200, data.page.size === 100
-- GET /api/v1/[recurso]?zoneId=3 → 200, todos los items de data.content tienen zoneId=3
-- GET /api/v1/catalog-elements?bbox=... → 200, resultados dentro del rectángulo
-- GET /api/v1/catalog-elements?near=...&radius=50 → 200, resultados dentro del radio
-- GET /api/v1/catalog-elements?bbox=...&near=... → 400
-- POST /api/v1/[recurso] válido → 201 + header Location + body con el recurso creado
-- POST /api/v1/incidents con Idempotency-Key repetida → segunda llamada 200, no 201,
-  mismo id que la primera
-- POST /api/v1/incidents sin Idempotency-Key (en endpoint que la exige) → 400
-- DELETE /api/v1/[recurso]/{id} → 204 sin body; GET posterior → 404;
-  fila en BD sigue existiendo con deleted_at no nulo
-```
+Idempotencia
+- misma Idempotency-Key repetida → 200 con el MISMO id, no un 201 nuevo
+- Idempotency-Key de una operación aún en curso → 409
+- el cliente que reintenta tras un fallo de red reutiliza la clave del primer intento
 
-### 11.3 Tests del microservicio Flask (pytest)
-
-```
-- GET /api/v1/health → 200, mismo sobre {ok, message, data} que el backend
-  (test_health.py actualizado a la ruta con prefijo /api/v1)
-```
-
-### 11.4 Tests frontend (Jest + Testing Library)
-
-```
-- Helper de serialización de query params en lib/api.ts: genera correctamente
-  ?page=&size=&sort=&bbox=&near=&radius= combinados
-- Componente de listado: consume Page<T>.content y Page<T>.page.totalPages
-  para renderizar la tabla y el paginador
-- Componente de mapa: al mover/hacer zoom, dispara un GET con bbox actualizado
-- Formulario de creación con envío en curso: el botón de submit está disabled
-  hasta que la request resuelve
-- Reintento de un submit fallido por red: reutiliza el mismo Idempotency-Key
-  generado en el primer intento, no genera uno nuevo
-```
-
-### 11.5 Tests E2E (si aplica)
-
-```
-- Usuario filtra el catastro por zona y especie desde la UI → la URL de la API
-  refleja ambos filtros y la tabla muestra solo coincidencias
-- Usuario en el mapa hace zoom sobre una sección del campus → la lista de
-  elementos visibles se actualiza vía el filtro bbox
-- Usuario en móvil pierde conexión justo después de enviar una incidencia y
-  la reintenta al recuperar señal → solo se crea una incidencia, no dos
+Formato
+- las fechas viajan en ISO 8601 UTC; los campos en camelCase en JSON y snake_case en BD
+- DELETE → 204 sin body, y la fila sobrevive en BD con deleted_at no nulo
+- el microservicio Flask sirve /api/v1/health con el mismo prefijo que el backend (§4)
 ```
 
 ## 12. Propio de este spec

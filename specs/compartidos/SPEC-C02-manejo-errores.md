@@ -249,54 +249,17 @@ Los operarios registran incidencias e intervenciones desde el móvil en el campu
 
 ## 10. Tests
 
-### 10.1 Tests unitarios / de integración backend (JUnit 5 + `@WebMvcTest` o `@SpringBootTest`)
+**La suite está en `shared/exception/**Test.java` y `frontend/src/lib/__tests__/`.** Lo que debe
+quedar fijado:
 
 ```
-- GlobalExceptionHandler.handleResourceNotFound() → 404, ok:false, message del la excepción, data:null
-- GlobalExceptionHandler.handleDuplicate() → 409, ok:false, message de la excepción
-- GlobalExceptionHandler.handleBusinessRule() → 422, ok:false, message de la excepción
-- GlobalExceptionHandler.handleUnauthorized() → 401, ok:false, message de la excepción
-- GlobalExceptionHandler.handleValidation() con MethodArgumentNotValidException de 2 campos
-  → 400, ok:false, message:"Validation failed", data.errors con 2 entradas {field, message}
-- GlobalExceptionHandler.handleNoHandlerFound() → 404, ok:false, message:"Endpoint not found"
-- GlobalExceptionHandler.handleUnexpected() con una RuntimeException genérica
-  → 500, ok:false, message:"Unexpected server error" (nunca el mensaje real de la excepción)
-- Integración: GET a una ruta no registrada (ej. /api/v1/no-existe) → 404, no 500
-- Integración: POST con body vacío a un endpoint con @Valid → 400 con data.errors no vacío
-- Integración: ninguna respuesta de error contiene la cadena "Exception" ni una ruta de archivo
-  del proyecto (assert negativo sobre el body de la respuesta)
-```
-
-### 10.2 Tests del microservicio Flask (pytest)
-
-```
-- GET /health (o /api/v1/health, según la decisión de SPEC-C03) → 200,
-  cuerpo { ok: true, message, data: { status: "UP" } }, mismo sobre que el backend
-```
-
-### 10.3 Tests frontend (Jest + Testing Library)
-
-```
-- api.ts request() con fetch que rechaza (network error) → lanza ApiError con status 0
-  y message "Sin conexión. Verifique su red."
-- api.ts request() con response.ok:false y envelope.ok:false → lanza ApiError
-  con el status HTTP real y el message del envelope
-- api.ts request() con response 200 y envelope.ok:true → retorna envelope.data
-- Componente de formulario: al recibir ApiError con status 400 y data.errors,
-  muestra cada mensaje bajo su campo correspondiente
-- Componente de formulario: al recibir ApiError con status 0 (red), muestra el toast
-  de conexión y NO limpia los valores del formulario
-- Hook/contexto de auth: al recibir ApiError con status 401, dispara el flujo de
-  refresh; si el refresh falla, redirige a /login
-```
-
-### 10.4 Tests E2E (si aplica)
-
-```
-- Usuario intenta cerrar una intervención sin fotos adjuntas → la API responde 422
-  → la UI muestra el mensaje de regla de negocio sin recargar la página
-- Usuario pierde conexión a mitad de un registro de incidencia en móvil → la app
-  muestra el estado de "sin conexión" y permite reintentar sin perder lo ya escrito
+- cada excepción custom → su código HTTP de §4, sin excepciones
+- una excepción NO contemplada → 500 con mensaje genérico, nunca el mensaje interno
+- ninguna respuesta de error contiene stacktrace, nombre de clase ni ruta de archivo
+- el error de validación lleva data.errors[] con field y message por campo
+- el microservicio Flask devuelve el MISMO sobre que el backend (mismo test, dos servicios)
+- ApiError con status 0 no se rotula "sin red" sin descartar antes CORS (§6.0)
+- un 401 dispara el refresh encolado una sola vez, no una por petición en vuelo
 ```
 
 ## 11. Propio de este spec
