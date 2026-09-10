@@ -13,6 +13,12 @@ export interface SessionUser {
   role: { id: number; code: string; label: string };
   isActive: boolean;
   lastLogin: string | null;
+  /**
+   * El backend ya lo enviaba (SPEC-100 §5.2) y este tipo lo descartaba. Sin él
+   * el frontend no puede saber que la clave vigente es la temporal, y RouteGuard
+   * dejaría entrar a pantallas donde el backend responde 403 a todo.
+   */
+  mustChangePassword: boolean;
 }
 
 interface LoginPayload {

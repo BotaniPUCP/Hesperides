@@ -283,4 +283,25 @@ class UsersIntegrationTest {
                 .andExpect(jsonPath("$.data.content.length()").value(1))
                 .andExpect(jsonPath("$.data.content[0].email").value("supervisor@pucp.edu.pe"));
     }
+
+    @Test
+    @WithMockUser(username = "admin@pucp.edu.pe", authorities = "ADMIN")
+    void theListingPaginatesWithTheStableShapeTheFrontendConsumes() throws Exception {
+        // Spring Data serializa Page con totalElements y number en la raiz, una
+        // forma que su propia documentacion declara inestable entre versiones. El
+        // tipo Page<T> de shared/types declara {content, page:{...}}, asi que sin
+        // la propiedad que fija esta forma el frontend leeria undefined en el
+        // paginador y TypeScript no podria advertirlo: el tipo miente.
+        mockMvc.perform(get("/api/v1/users?size=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.page.size").value(1))
+                .andExpect(jsonPath("$.data.page.number").value(0))
+                .andExpect(jsonPath("$.data.page.totalElements").exists())
+                .andExpect(jsonPath("$.data.page.totalPages").exists())
+                // La forma plana no debe reaparecer: si vuelve, ambas coexisten y
+                // el frontend elegiria la equivocada sin fallar.
+                .andExpect(jsonPath("$.data.totalElements").doesNotExist())
+                .andExpect(jsonPath("$.data.pageable").doesNotExist());
+    }
 }

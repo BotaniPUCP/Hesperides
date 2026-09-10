@@ -39,6 +39,13 @@ spring:
   web:
     resources:
       add-mappings: false
+  data:
+    web:
+      pageable:
+        # Debe coincidir con application.yml de main: este archivo lo REEMPLAZA, y
+        # omitirla aqui haria que los tests validaran una forma de pagina distinta
+        # de la que sirve produccion.
+        serialization-mode: via-dto
   mail:
     # GreenMail escucha en 3025 por defecto (ServerSetupTest.SMTP). Los tests que
     # necesitan un puerto distinto lo sobreescriben con @DynamicPropertySource.

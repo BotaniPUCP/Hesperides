@@ -19,6 +19,15 @@ spring:
   web:
     resources:
       add-mappings: false
+  data:
+    web:
+      pageable:
+        # Serializa Page como {content, page:{number,size,totalElements,totalPages}}
+        # en vez de volcar los campos en la raiz junto a pageable y sort. Spring
+        # declara esa forma plana inestable entre versiones, y es la forma que el
+        # tipo Page<T> de shared/types ya describe: sin esto el tipo miente y el
+        # paginador del frontend lee undefined sin que TypeScript lo advierta.
+        serialization-mode: via-dto
   mail:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:587}
