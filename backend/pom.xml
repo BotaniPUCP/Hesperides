@@ -63,6 +63,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jackson</artifactId>
         </dependency>
+        <!-- Envio de credenciales (SPEC-100). Unica dependencia externa admitida
+             del proyecto (SPEC-000 §1): su caida nunca impide un alta. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -126,6 +132,14 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Servidor SMTP en memoria: permite comprobar que el correo sale de
+             verdad y que su cuerpo lleva la contrasena, sin enviar nada real. -->
+        <dependency>
+            <groupId>com.icegreen</groupId>
+            <artifactId>greenmail-junit5</artifactId>
+            <version>2.1.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -22,6 +22,9 @@ hesperides:
       window-minutes: 15
     cors:
       allowed-origins: http://localhost:3000
+  mail:
+    from: no-reply@hesperides.test
+    app-public-url: http://localhost:3000
 
 spring:
   jpa:
@@ -36,6 +39,14 @@ spring:
   web:
     resources:
       add-mappings: false
+  mail:
+    # GreenMail escucha en 3025 por defecto (ServerSetupTest.SMTP). Los tests que
+    # necesitan un puerto distinto lo sobreescriben con @DynamicPropertySource.
+    host: localhost
+    port: 3025
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
 
 logging:
   level:
