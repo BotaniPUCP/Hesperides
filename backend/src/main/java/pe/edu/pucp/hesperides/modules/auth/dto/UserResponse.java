@@ -15,5 +15,11 @@ public record UserResponse(
         String fullName,
         RoleResponse role,
         boolean isActive,
-        Instant lastLogin) {
+        Instant lastLogin,
+        /**
+         * Adición retrocompatible de SPEC-100 §5.2: el frontend la necesita para
+         * redirigir a /cambiar-password en cuanto la persona entra con la clave
+         * temporal. Ningún campo existente cambia de forma ni de significado.
+         */
+        boolean mustChangePassword) {
 }

@@ -122,7 +122,8 @@ public class AuthServiceImpl implements AuthService {
                 new RoleResponse(user.getRoleItem().getId(), user.getRoleItem().getCode(),
                         user.getRoleItem().getLabel()),
                 user.isActive(),
-                user.getLastLogin());
+                user.getLastLogin(),
+                user.isMustChangePassword());
     }
 
     private String normalize(String email) {

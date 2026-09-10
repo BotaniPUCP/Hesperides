@@ -10,6 +10,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import pe.edu.pucp.hesperides.modules.auth.dto.RoleResponse;
+import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
 import pe.edu.pucp.hesperides.modules.users.dto.CredentialDeliveryResponse;
 import pe.edu.pucp.hesperides.modules.users.dto.UserDetailResponse;
 import pe.edu.pucp.hesperides.modules.users.entity.CredentialStatus;
@@ -47,6 +48,11 @@ class UsersControllerTest {
     @MockitoBean private UsersService usersService;
     @MockitoBean private JwtTokenProvider jwtTokenProvider;
     @MockitoBean private CustomUserDetailsService customUserDetailsService;
+
+    // Lo exige PasswordChangeRequiredFilter, que SecurityConfig registra en la
+    // cadena: un slice de @WebMvcTest no carga repositorios.
+    @MockitoBean
+    private UsersRepository usersRepository;
 
     private UserDetailResponse sampleUser(CredentialStatus status) {
         return new UserDetailResponse(48L, "mgarcia@pucp.edu.pe", "María", "García", "María García",
