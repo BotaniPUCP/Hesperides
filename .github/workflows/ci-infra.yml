@@ -30,5 +30,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Las variables obligatorias del compose (${VAR:?}) abortan la validacion
+      # si faltan, que es lo que se quiere en un despliegue real. Aqui solo se
+      # comprueba que el YAML es valido, asi que se rellenan con valores
+      # ficticios: ninguno llega a usarse porque nada se levanta.
       - name: Validate Docker Compose configuration
+        env:
+          JWT_SECRET: clave-ficticia-solo-para-validar-el-yaml-en-ci
+          SMTP_FROM: ci@example.test
+          APP_PUBLIC_URL: https://ci.example.test
         run: docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet
