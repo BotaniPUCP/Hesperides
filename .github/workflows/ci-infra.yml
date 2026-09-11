@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Las variables obligatorias del compose (${VAR:?}) abortan la validacion
       # si faltan, que es lo que se quiere en un despliegue real. Aqui solo se
