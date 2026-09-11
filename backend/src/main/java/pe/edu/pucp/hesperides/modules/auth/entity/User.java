@@ -2,6 +2,8 @@ package pe.edu.pucp.hesperides.modules.auth.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -10,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
+import pe.edu.pucp.hesperides.modules.users.entity.CredentialStatus;
 import pe.edu.pucp.hesperides.shared.entity.BaseEntity;
 
 import java.time.Instant;
@@ -51,6 +54,26 @@ public class User extends BaseEntity {
 
     @Column(name = "last_login")
     private Instant lastLogin;
+
+    /**
+     * Estado de entrega de credenciales (SPEC-100 §2.6). STRING y nunca ORDINAL:
+     * así la columna es legible en una consulta SQL directa y un reordenamiento
+     * del enum no corrompe los datos existentes.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "credential_status", nullable = false, length = 20)
+    private CredentialStatus credentialStatus = CredentialStatus.DELIVERED;
+
+    /**
+     * TRUE mientras la contraseña vigente sea la temporal que asignó un
+     * administrador. Sin esta bandera, la clave que viajó por correo seguiría
+     * siendo válida indefinidamente (SPEC-100 §2.6).
+     */
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword = false;
+
+    @Column(name = "credentials_sent_at")
+    private Instant credentialsSentAt;
 
     /**
      * Se compone al vuelo en vez de guardarse: los reportes necesitan el

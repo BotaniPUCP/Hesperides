@@ -1,16 +1,11 @@
 # SPEC-002 — Modelo de datos
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec fundacional, no deriva de una HU) |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (el modelo sirve a web y móvil por igual) |
-| Prioridad | Alta |
 | Sprint | S0 (fundacional) — entidades de Sprint 1 marcadas como tal |
 | Dependencias | SPEC-000 (arquitectura y convenciones), SPEC-001 (crea `users`), SPEC-003 (catálogos configurables) |
-| Fecha límite | Fin de Semana 1 |
 
 ---
 
@@ -20,12 +15,9 @@ Definir el esquema completo de base de datos de Hesperides —entidades, tipos S
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones) — secciones 5.4 y 7
-> - SPEC-001 (autenticación) — es quien crea la tabla `users`
-> - SPEC-003 (catálogos configurables) — el patrón `catalog_types` / `catalog_items`
-> - SPEC-C02 (manejo de errores) y SPEC-C03 (patrones de API) cuando se expongan endpoints
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** SPEC-003 (todo tipo/estado es FK a `catalog_items`) y
+> SPEC-004 (columnas de autoría). **§4.1 es obligatorio: toda entidad extiende `BaseEntity`.**
 
 **Este spec NO define endpoints ni pantallas.** Define el esquema. Los specs de feature (SPEC-1XX en adelante) son los que exponen estas tablas por API. La sección 3 de la plantilla se limita, por tanto, a los invariantes de contrato que toda API sobre estas tablas debe respetar.
 
@@ -44,7 +36,7 @@ Las entidades JPA se reparten por módulo siguiendo la estructura de `modules/` 
 | `incidents` | `Incident`, `IncidentStatusHistory`, `IncidentEvidence` | S2 |
 | `reports` | sin entidades propias (lee de las anteriores) | S3 |
 
-Repositorios: uno por entidad, en plural y con sufijo `Repository` (`GreenElementsRepository`, `ZonesRepository`, …), según SPEC-000 §5.2.
+Repositorios: uno por entidad, en plural y con sufijo `Repository` (`GreenElementsRepository`, `ZonesRepository`, …), según REGLAS.md §5.2.
 
 ### 2.2 Módulo frontend (web)
 
@@ -92,7 +84,7 @@ Este spec no expone endpoints propios. Fija los invariantes que toda API constru
 
 ### 4.0 Numeración y propiedad de migraciones
 
-Rango fundacional `V001`–`V099` (SPEC-000 §5.4). Reparto:
+Rango fundacional `V001`–`V099` (REGLAS.md §5.4). Reparto:
 
 | Versión | Archivo | Propietaria | Estado |
 |---|---|---|---|
@@ -821,191 +813,33 @@ CREATE INDEX idx_team_members_user ON team_members(user_id);
 
 ### 5.1 Diagrama ER
 
-Dos vistas para que se lea. Primero el núcleo (Sprint 1: administración + catastro), luego los módulos operativos.
+Las columnas están en el DDL de §4; repetirlas en un diagrama crea una segunda versión que
+envejece sola. Lo que importa es **cómo se relacionan**:
 
-**Núcleo — administración y catastro**
+```
+catalog_items ──< users, zones, species, green_elements, incidents, interventions, contracts
+                  (todo tipo, estado, rol y categoría es una fila de catálogo — INV-2)
 
-```mermaid
-erDiagram
-    catalog_types  ||--o{ catalog_items : "agrupa"
-    catalog_items  ||--o{ users         : "rol"
-    catalog_items  ||--o{ zones         : "tipo de zona"
-    catalog_items  ||--o{ species       : "tipo / origen"
-    catalog_items  ||--o{ green_elements: "tipo / condición"
+zones ──< zones                    jerarquía de zonas (el servicio impide ciclos, §5.4)
+zones ──< green_elements           una zona contiene elementos
+species ──< green_elements         una especie clasifica elementos
 
-    zones          ||--o{ zones          : "jerarquía"
-    zones          ||--o{ green_elements : "contiene"
-    species        ||--o{ green_elements : "clasifica"
-    users          ||--o{ green_elements : "registra"
-    green_elements ||--o{ green_element_attachments : "fotos de ficha"
+green_elements >──< interventions  N:M vía intervention_elements
+                                   (una salida de campo toca varios elementos)
+green_elements ──< incidents       una incidencia puede señalar un elemento…
+incidents ──> interventions        …y resolverse con una intervención
 
-    catalog_types {
-        bigint id PK
-        varchar code UK
-        varchar name
-        boolean is_system
-    }
-    catalog_items {
-        bigint id PK
-        bigint catalog_type_id FK
-        varchar code
-        varchar label
-        integer sort_order
-        boolean is_active
-        jsonb metadata
-    }
-    users {
-        bigint id PK
-        varchar email UK
-        bigint role_item_id FK
-        boolean is_active
-    }
-    zones {
-        bigint id PK
-        varchar code UK
-        varchar name
-        bigint parent_zone_id FK
-        bigint zone_type_item_id FK
-        geometry boundary "Polygon 4326"
-        numeric area_m2
-    }
-    species {
-        bigint id PK
-        varchar scientific_name UK
-        varchar common_name
-        bigint species_type_item_id FK
-        jsonb attributes
-    }
-    green_elements {
-        bigint id PK
-        varchar code UK
-        bigint zone_id FK
-        bigint element_type_item_id FK
-        bigint species_id FK
-        bigint condition_item_id FK
-        geometry location "Point 4326"
-        geometry area "Polygon 4326"
-        integer quantity
-        date planting_date
-    }
-    green_element_attachments {
-        bigint id PK
-        bigint green_element_id FK
-        varchar storage_key
-        varchar content_type
-        bigint size_bytes
-    }
+contracts ──< contract_services ──< contract_executions
+                                   lo pactado frente a lo realmente ejecutado
+
+teams ──< team_members ──> users   composición de cuadrillas (V012)
+
+*_evidences / *_attachments        guardan storage_key, nunca el binario (§5.2.4)
+*_status_history                   rastro de cambios de estado
 ```
 
-**Módulos operativos — intervenciones, contratos e incidencias**
-
-```mermaid
-erDiagram
-    green_elements ||--o{ intervention_elements : "historial"
-    interventions  ||--o{ intervention_elements : "afecta"
-    interventions  ||--o{ intervention_supplies : "consume"
-    interventions  ||--o{ intervention_evidences: "antes/después"
-    supplies       ||--o{ intervention_supplies : "insumo"
-    zones          ||--o{ interventions         : "se ejecuta en"
-    users          ||--o{ interventions         : "asigna / ejecuta / valida"
-
-    providers ||--o{ contracts           : "titular"
-    contracts ||--o{ contract_zones      : "cubre"
-    contracts ||--o{ contract_executions : "visitas reales"
-    contracts ||--o{ interventions       : "tercerizada (nullable)"
-    zones     ||--o{ contract_zones      : "alcance"
-
-    green_elements ||--o{ incidents               : "afectado"
-    incidents      ||--o{ incident_status_history : "bitácora"
-    incidents      ||--o{ incident_evidences      : "foto"
-    incidents      }o--|| interventions           : "deriva en"
-
-    interventions {
-        bigint id PK
-        varchar code UK
-        bigint zone_id FK
-        bigint intervention_type_item_id FK
-        bigint status_item_id FK
-        bigint contract_id FK "NULL = personal estable"
-        date scheduled_date
-        timestamp completed_at
-        timestamp validated_at
-        bigint assigned_to_user_id FK
-        bigint validated_by_user_id FK
-    }
-    intervention_elements {
-        bigint id PK
-        bigint intervention_id FK
-        bigint green_element_id FK
-    }
-    intervention_supplies {
-        bigint id PK
-        bigint intervention_id FK
-        bigint supply_id FK
-        numeric quantity
-    }
-    intervention_evidences {
-        bigint id PK
-        bigint intervention_id FK
-        bigint moment_item_id FK "BEFORE / AFTER"
-        varchar storage_key
-        geometry captured_location "Point 4326"
-    }
-    supplies {
-        bigint id PK
-        varchar code UK
-        varchar name
-        bigint unit_item_id FK
-    }
-    providers {
-        bigint id PK
-        varchar tax_id UK
-        varchar business_name
-    }
-    contracts {
-        bigint id PK
-        varchar contract_number UK
-        bigint provider_id FK
-        bigint agreed_frequency_item_id FK
-        date start_date
-        date end_date
-        bigint status_item_id FK
-    }
-    contract_zones {
-        bigint id PK
-        bigint contract_id FK
-        bigint zone_id FK
-    }
-    contract_executions {
-        bigint id PK
-        bigint contract_id FK
-        date execution_date
-        bigint status_item_id FK
-    }
-    incidents {
-        bigint id PK
-        varchar code UK
-        bigint incident_type_item_id FK
-        bigint status_item_id FK
-        bigint urgency_item_id FK
-        bigint green_element_id FK
-        geometry location "Point 4326"
-        bigint intervention_id FK
-        timestamp reported_at
-    }
-    incident_status_history {
-        bigint id PK
-        bigint incident_id FK
-        bigint from_status_item_id FK
-        bigint to_status_item_id FK
-        bigint changed_by_user_id FK
-    }
-    incident_evidences {
-        bigint id PK
-        bigint incident_id FK
-        varchar storage_key
-    }
-```
+El **historial de un elemento no es una tabla**: es la consulta
+`green_elements → intervention_elements → interventions` ordenada por fecha (§5.2.3).
 
 ### 5.2 Decisiones de diseño
 
@@ -1023,7 +857,7 @@ El módulo 2 es un **mapa**, no una lista con coordenadas. Las consultas que el 
 
 #### 5.2.2 BIGSERIAL, no UUID
 
-El SPEC-000 §7 lo recomienda para on-premise y se mantiene tras el paso a AWS. Razones que siguen valiendo en la nube: los índices B-tree sobre enteros secuenciales no fragmentan como los UUID v4 aleatorios; las FK ocupan 8 bytes y no 16; y en depuración de campo un código de elemento legible pesa. El riesgo del BIGSERIAL —IDs adivinables— se cubre con autorización por rol en cada endpoint (SPEC-001), no ocultando el identificador. No se prevé fusionar bases de datos de instalaciones distintas, que es el caso donde el UUID gana de verdad.
+Se decidió para on-premise y se mantiene tras el paso a AWS. Razones que siguen valiendo en la nube: los índices B-tree sobre enteros secuenciales no fragmentan como los UUID v4 aleatorios; las FK ocupan 8 bytes y no 16; y en depuración de campo un código de elemento legible pesa. El riesgo del BIGSERIAL —IDs adivinables— se cubre con autorización por rol en cada endpoint (SPEC-001), no ocultando el identificador. No se prevé fusionar bases de datos de instalaciones distintas, que es el caso donde el UUID gana de verdad.
 
 #### 5.2.3 Cómo se modela el historial de intervenciones por elemento
 
@@ -1125,105 +959,84 @@ Lo único que este spec impone al frontend es el formato de intercambio de la ge
 
 ---
 
-## 8. Tests que la IA debe generar
+## 8. Tests
 
-### 8.1 Tests de migración (backend — `@SpringBootTest` con Testcontainers)
-
-```
-- El contenedor arranca con imagen postgis/postgis:16-3.4 y aplica V001..V010 sin error
-- SELECT PostGIS_Version() devuelve una versión no nula
-- geometry_columns reporta SRID 4326 en las 5 columnas geométricas
-- Insertar green_element sin location ni area → DataIntegrityViolationException
-- Insertar incident sin green_element_id ni location → DataIntegrityViolationException
-- Insertar contract con end_date < start_date → DataIntegrityViolationException
-- Insertar intervention_supply con quantity = 0 → DataIntegrityViolationException
-- Insertar intervention con validated_at pero sin validated_by_user_id → DataIntegrityViolationException
-- Insertar dos green_elements con el mismo code y ambos vigentes → DataIntegrityViolationException
-- Insertar dos green_elements con el mismo code, el primero con deleted_at → ambos se insertan
-```
-
-### 8.2 Tests de repositorio (backend — `@DataJpaTest`)
+Lo que debe quedar fijado:
 
 ```
-- GreenElementsRepository.save() con Point JTS → persiste y recupera con las mismas coordenadas y SRID 4326
-- GreenElementsRepository.save() con Polygon JTS → persiste y recupera el polígono cerrado
-- GreenElementsRepository.findByZoneId() ignora las filas con deleted_at no nulo
-- InterventionsRepository: el historial de un elemento devuelve las intervenciones en orden descendente por fecha
-- ZonesRepository: una zona con parent_zone_id resuelve su padre; una raíz devuelve null
-- CatalogItemsRepository.findByTypeCode('INTERVENTION_TYPE') devuelve las 6 filas semilla ordenadas por sort_order
+Migraciones
+- docker-compose down -v && up --build aplica V003-V010 desde cero sin error
+- la extensión PostGIS queda disponible antes de la primera tabla con geometría
+- reejecutar las migraciones no altera checksums (V001 y V002 no se tocan)
+
+Los CHECK que la BD hace cumplir (§5.3)
+- green_element sin punto ni polígono → falla
+- incidencia sin elemento ni coordenada → falla
+- contrato con end_date < start_date → falla
+- cantidad de insumo <= 0 → falla
+- intervención con validador pero sin fecha de validación → falla
+
+Soft delete e índices parciales
+- dar de baja un elemento y reutilizar su code en uno nuevo → permitido (§5.2.5)
+- el mismo code duplicado entre elementos vigentes → falla
+
+Geometría
+- las columnas son SRID 4326; ST_Area/ST_Distance sobre geography devuelven metros
+- los tipos en Java son Point y Polygon de JTS, no una clase propia
+
+Entidades
+- toda entidad extiende BaseEntity y no redeclara sus campos (INV-3)
+- @EnableJpaAuditing activo: sin él createdAt queda nulo y el INSERT falla
+- ningún @Enumerated ni enum de dominio: todo tipo o estado es FK a CatalogItem
+
+Datos semilla
+- las migraciones NO siembran zonas, especies ni frecuencias: siguen pendientes del cliente
 ```
 
-### 8.3 Tests de datos semilla
+## 9. Propio de este spec
 
-```
-- El catálogo INCIDENT_STATUS contiene exactamente REPORTED, IN_REVIEW, IN_PROGRESS, RESOLVED en ese sort_order
-- El catálogo ROLE contiene ADMIN, COORDINADOR, SUPERVISOR y OPERARIO activos, y USER inactivo
-- Los catálogos pendientes del cliente existen como catalog_type y tienen cero catalog_items
-- Las tablas zones, species y system_parameters están vacías tras migrar desde cero
-```
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio del modelo de datos:
 
-### 8.4 Tests frontend
+- **Los `CHECK` son la última línea, no la única.** Bean Validation en los DTO replica las
+  reglas para dar mensajes útiles (SPEC-C02). El reparto exacto BD/servicio está en §5.3.
+- **Nunca salen al cliente:** `users.password_hash`, ni siquiera anidado como autor de una
+  intervención (se expone `{id, fullName}`); y `storage_key`, que se sustituye por una URL
+  prefirmada de vida corta — exponer la clave permitiría enumerar el bucket.
+- **`captured_location`** revela dónde estuvo un operario y cuándo. Es dato de auditoría:
+  acceso restringido a coordinador y administrador.
+- **Ficheros subidos:** `content_type` y `size_bytes` se validan **en el servidor** contra el
+  fichero real, nunca contra lo que declare el cliente.
+- **Texto libre** (`description`, `notes`, `observations`, `execution_notes`,
+  `resolution_notes`, `caption`) se sanea al renderizar, no al guardar: el original preserva lo
+  que el operario escribió.
+- **Consultas espaciales:** `ST_*` en `@Query` con parámetros nombrados, nunca concatenando
+  coordenadas.
+- **Trazabilidad que aporta el modelo:** `registered_by_user_id`, `assigned_by_user_id`,
+  `assigned_to_user_id`, `validated_by_user_id`, `uploaded_by_user_id`, `changed_by_user_id`,
+  `verified_by_user_id`.
 
-No aplican a este spec: no hay componentes. Los tipos de `shared/types/models.ts` se verifican por compilación de TypeScript (`npm run build` sin errores de tipo).
+**Puntos de extensión.** El vivero (módulo 7) y el QR (módulo 8) entran por su propio spec sin
+modificar ninguna tabla de aquí; la única precondición del QR es que `green_elements.code` sea
+único entre vigentes. `species.attributes` (JSONB) absorbe los atributos que el cliente aún no
+ha definido: los que se confirmen y se usen para filtrar o reportar se promueven a columna
+propia en una `V1XX`. El JSONB no es el destino final de un atributo consolidado.
 
----
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-## 9. Seguridad
-
-- [x] **Validación en backend:** los `CHECK` de la BD son la última línea, no la única. Bean Validation en los DTO replica las reglas para dar mensajes útiles (SPEC-C02).
-- [x] **Autenticación:** toda tabla de este spec se expone solo tras JWT válido. Ningún endpoint es público en esta fase (el QR público de la fase 8 tendría su propia superficie de solo lectura).
-- [x] **Roles/permisos:** los define SPEC-001 por endpoint. El modelo aporta la trazabilidad: `registered_by_user_id`, `assigned_by_user_id`, `assigned_to_user_id`, `validated_by_user_id`, `uploaded_by_user_id`, `changed_by_user_id`, `verified_by_user_id`.
-- [x] **Datos sensibles que NO deben exponerse:** `users.password_hash` (SPEC-001) jamás sale en un DTO, ni siquiera anidado en el autor de una intervención — se expone `{ id, fullName }`. `storage_key` no se devuelve al cliente: se devuelve una URL prefirmada de vida corta. Exponer la clave permitiría enumerar el bucket.
-- [x] **Inyección SQL:** JPA con parámetros nombrados. Las consultas espaciales que necesiten `ST_*` van en `@Query` con parámetros, nunca concatenando coordenadas en un string.
-- [x] **XSS:** `description`, `notes`, `observations`, `execution_notes`, `resolution_notes` y `caption` son texto libre. Se sanean al renderizar en el frontend, no al guardar: guardar el original preserva el dato que el operario escribió.
-- [x] **Ficheros subidos:** `content_type` y `size_bytes` se validan **en el servidor** contra el fichero real, no contra lo que declare el cliente. El bucket es privado sin acceso público.
-- [x] **Coordenadas:** una intervención o incidencia expone dónde estuvo un operario y cuándo. `captured_location` es un dato de auditoría cuyo acceso debe restringirse a coordinador y administrador.
-
----
-
-## 10. Consideraciones de extensibilidad
-
-- [x] **¿Usa catálogos configurables en vez de enums hardcodeados?** Sí, sin excepción. Cero `CREATE TYPE ... AS ENUM` y cero `@Enumerated`. Verificable por CA-13.
-- [x] **¿La lógica de negocio está en el Service?** Este spec no tiene lógica; la sección 5.3 delimita explícitamente qué corresponde a la BD y qué al servicio, para que ninguna quede sin dueño.
-- [x] **¿Los textos de UI son externalizables?** Los `label` de catálogo son datos, no código: el cliente los edita desde la UI de administración. Traducir el sistema es traducir filas.
-- [x] **¿Las reglas de PUCP están en configuración?** Sí. Ni un nombre de zona, ni una especie, ni una frecuencia del campus PUCP aparece en el DDL. Otra institución arranca el mismo esquema y carga sus propios datos. Es también la razón por la que las secciones pendientes del cliente se quedan vacías: llenarlas con datos de PUCP incumpliría este principio además de inventar.
-- [x] **Punto de extensión del vivero (módulo 7):** cuando se confirme, entra por su propio spec sin modificar ninguna tabla definida aquí.
-- [x] **Punto de extensión del QR (módulo 8):** `green_elements.code` único entre vigentes es la única precondición.
-- [x] **`species.attributes` (JSONB)** absorbe los atributos que el cliente aún no ha definido. Los que se confirmen y se usen para filtrar o reportar se promueven a columna propia en una migración `V1XX`; el JSONB no es el destino final de un atributo consolidado.
-
----
-
-## 11. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] ¿El spec tiene objetivo claro y en una oración?
-- [x] ¿Los contratos están definidos con tipos exactos? (Aquí: tipos SQL y nulabilidad de cada columna. Los endpoints los definen los SPEC-1XX sobre los invariantes de §3.)
-- [x] ¿La migración SQL está definida? — V003 a V010, ocho archivos.
-- [x] ¿Hay al menos 5 criterios de aceptación verificables? — 15, todos ejecutables desde `psql`.
-- [x] ¿Se contemplan flujos alternativos y edge cases? — §5.4.
-- [x] ¿Se especifica comportamiento para web Y móvil? — El modelo es común; §2.2 y §2.3.
-- [ ] ¿Alguien más revisó y aprobó el spec? — **pendiente de peer review.**
-
-### Después de recibir código de la IA
-
-- [ ] Los ocho archivos `V003`–`V010` están en `backend/src/main/resources/db/migration/`, uno por área.
-- [ ] `V001__create_catalog_tables.sql` **no fue modificado** (Flyway falla por checksum si se toca).
-- [ ] La imagen de `db` es `postgis/postgis:16-3.4` en `docker-compose.yml` **y** en `docker-compose.dev.yml`.
-- [ ] `hibernate-spatial` está en `backend/pom.xml` sin versión explícita (la gestiona el BOM de Spring Boot).
+- [ ] Los ocho archivos `V003`–`V010` están en `db/migration/`, uno por área, y
+      `V001__create_catalog_tables.sql` **no fue modificado** (Flyway falla por checksum).
+- [ ] La imagen de `db` es `postgis/postgis:16-3.4` en `docker-compose.yml` **y** en
+      `docker-compose.dev.yml`; `hibernate-spatial` está en el `pom` sin versión explícita.
 - [ ] `ddl-auto` sigue en `validate` en los tres `application*.yml`.
-- [ ] Las entidades JPA están en `modules/[modulo]/entity/` según el reparto de §2.1.
-- [ ] Los tipos geométricos en Java son `org.locationtech.jts.geom.Point` / `Polygon`; no hay clase `LatLng` propia.
-- [ ] No hay ningún `@Enumerated` ni `enum` de dominio: son FK a `CatalogItem`.
-- [ ] No hay ningún `@Column` de tipo `byte[]` para imágenes.
-- [ ] Toda entidad extiende `BaseEntity` (§4.1) y lleva `@SQLRestriction("deleted_at IS NULL")`. Ninguna entidad redeclara `id`, `createdAt`, `updatedAt` ni `deletedAt` por su cuenta.
-- [ ] `@EnableJpaAuditing` está activo en la configuración de Spring; sin él `createdAt`/`updatedAt` quedan nulos y el `INSERT` falla por `NOT NULL`.
+- [ ] Los tipos geométricos son `org.locationtech.jts.geom.Point`/`Polygon`; no hay `LatLng` propia.
+- [ ] Ningún `@Column` de tipo `byte[]` para imágenes.
+- [ ] Toda entidad extiende `BaseEntity` (§4.1) y lleva `@SQLRestriction("deleted_at IS NULL")`.
+- [ ] **`@EnableJpaAuditing` está activo:** sin él `createdAt`/`updatedAt` quedan nulos y el
+      `INSERT` falla por `NOT NULL`.
 - [ ] `shared/types/models.ts` refleja las entidades y extiende `AuditFields`.
-- [ ] `mvn test` pasa limpio, incluidos los tests de migración con Testcontainers.
 - [ ] `docker-compose down -v && docker-compose up --build` levanta desde cero sin error de Flyway.
-- [ ] Ninguna migración siembra zonas, especies, frecuencias ni parámetros: siguen pendientes del cliente.
-
----
+- [ ] Ninguna migración siembra zonas, especies, frecuencias ni parámetros: siguen pendientes
+      del cliente (ver Anexo).
 
 ## Anexo — Resumen de pendientes del cliente
 

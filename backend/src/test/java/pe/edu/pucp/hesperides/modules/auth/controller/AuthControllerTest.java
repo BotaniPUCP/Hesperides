@@ -11,6 +11,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import pe.edu.pucp.hesperides.modules.auth.dto.LoginRequest;
 import pe.edu.pucp.hesperides.modules.auth.dto.RoleResponse;
+import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
 import pe.edu.pucp.hesperides.modules.auth.dto.UserResponse;
 import pe.edu.pucp.hesperides.modules.auth.service.AuthService;
 import pe.edu.pucp.hesperides.shared.exception.GlobalExceptionHandler;
@@ -44,9 +45,14 @@ class AuthControllerTest {
     @MockitoBean private JwtTokenProvider jwtTokenProvider;
     @MockitoBean private CustomUserDetailsService customUserDetailsService;
 
+    // Lo exige PasswordChangeRequiredFilter, que SecurityConfig registra en la
+    // cadena: un slice de @WebMvcTest no carga repositorios.
+    @MockitoBean
+    private UsersRepository usersRepository;
+
     private AuthService.LoginResult sampleResult() {
         UserResponse user = new UserResponse(1L, "ana@pucp.edu.pe", "Ana", "Torres", "Ana Torres",
-                new RoleResponse(2L, "COORDINADOR", "Coordinador"), true, null);
+                new RoleResponse(2L, "COORDINADOR", "Coordinador"), true, null, false);
         return new AuthService.LoginResult("access-token", "refresh-token", 1800L, user);
     }
 

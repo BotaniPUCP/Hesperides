@@ -1,320 +1,143 @@
 # SPEC-[NNN] — [Nombre descriptivo]
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | [ID en GitHub Projects] |
-| Autor del spec | [Nombre] |
+| Autor | [Nombre] |
 | Plataforma | Web / Móvil / Ambas |
-| Prioridad | Alta / Media / Baja |
 | Sprint | S1 / S2 / S3 |
 | Dependencias | SPEC-XXX, SPEC-YYY |
-| Fecha límite | YYYY-MM-DD |
+
+> **Lectura obligatoria:** `specs/REGLAS.md`.
+> **Específico de este spec:** [SPEC-XXX §N (qué aporta), ...]
+
+> **La regla de este spec: contiene lo que el código NO dice.**
+> Formas de request y response, props, DDL y listas de tests viven en el repositorio, que es
+> donde se compilan y se ejecutan. Aquí van las decisiones, las reglas de negocio y los
+> porqués: lo que nadie puede deducir leyendo la implementación.
+> Mientras la feature no esté implementada, este spec **sí** es la fuente de verdad y el
+> detalle se escribe literal. Al cerrarla, ese detalle se sustituye por un puntero al código.
 
 ---
 
 ## 1. Objetivo
 
-[Una oración clara: QUÉ hace esta funcionalidad y POR QUÉ existe.
-No cómo se implementa, sino qué problema resuelve para el usuario.]
+[Una oración: QUÉ hace y QUÉ problema resuelve. No cómo se implementa.]
 
-## 2. Contexto para la IA
+## 2. Contexto
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones)
-> - SPEC-001 (autenticación) — la matriz de permisos de su Anexo A gobierna
->   la autorización de TODOS los endpoints del proyecto
-> - SPEC-002 (modelo de datos) para las entidades involucradas, y su §4.1:
->   toda entidad extiende `BaseEntity`
-> - SPEC-003 (catálogos configurables) si la feature usa cualquier tipo, estado,
->   prioridad o categoría — son filas de `catalog_items`, nunca enums
-> - SPEC-004 (auditoría) si la feature crea, edita o desactiva algo
-> - SPEC-C01 (componentes UI) si la feature tiene interfaz
-> - SPEC-C02 (manejo de errores)
-> - SPEC-C03 (patrones de API)
->
-> Si el SPEC-000 contradice a un spec fundacional, **manda el fundacional**: el
-> SPEC-000 se escribió antes de conocer el dominio y algunas de sus directrices
-> quedaron genéricas.
-
-### 2.1 Módulo backend
+### 2.1 Backend
 
 - Paquete: `pe.edu.pucp.hesperides.modules.[modulo]`
-- Entidades JPA involucradas: [listar]
-- Repositorios necesarios: [listar]
+- Entidades: [listar, indicando qué spec las posee]
+- Repositorios: [listar]
 - Servicio: `[Nombre]Service` / `[Nombre]ServiceImpl`
-- Controller: `[Nombre]Controller`, ruta base: `/api/v1/[recurso]`
+- Controller: `[Nombre]Controller` → `/api/v1/[recurso]`
 
-### 2.2 Módulo frontend (web)
+### 2.2 Frontend web
 
-- Ruta: `/[seccion]/[pagina]` (Next.js App Router)
-- Componentes nuevos a crear: [listar con ubicación]
-- Componentes existentes a reutilizar: [listar]
-- Hook(s) necesario(s): [listar]
+- Rutas: `/[seccion]` (Next.js App Router)
+- Componentes nuevos: [ruta de archivo por componente]
+- Reutilizados de SPEC-C01: [listar; no se redefinen sus props]
+- Hooks: [listar]
 
-### 2.3 Módulo móvil
+### 2.3 Móvil
 
-- Pantalla: `[Nombre]Screen`
-- Ubicación en navegación: [Tab / Stack, dentro de qué navigator]
-- Diferencias con web: [listar o "Misma funcionalidad, adaptada a móvil"]
+[Pantalla y navegación, o "Fuera de alcance" + por qué.]
 
 ### 2.4 Restricciones técnicas
 
-- Librerías que DEBE usar: [listar]
-- Librerías que NO debe usar: [listar]
-- Patrón de catálogos aplicable: [si usa catálogos configurables, especificar cuáles]
+- DEBE usar: [librerías]
+- NO debe usar: [librerías] + motivo en media línea
+- Catálogos aplicables: [tipos] o "no aplica"
+
+### 2.5 Decisiones propias de este spec
+
+> Solo las **no derivables** de `REGLAS.md` ni de otro spec.
+> Formato: decisión · por qué en 1-2 líneas · alternativa descartada.
+> Si este spec enmienda uno cerrado, decirlo aquí y anotarlo en `REGISTRO.md`.
 
 ## 3. Contratos de API
 
-> Definir TODOS los endpoints de esta feature.
+> **Ya implementado:** apuntar a los DTO (`modules/[modulo]/dto/`) y a `shared/types/`, y dejar
+> aquí solo la tabla de rutas y las decisiones de §3.1.
+> **Sin implementar:** escribir los cuerpos JSON literales — este spec es la fuente de verdad
+> hasta que exista el código. El sobre `{ok, message, data}` (INV-1) y las envolturas
+> 400/401/403 de SPEC-C02 nunca se repiten por endpoint.
 
-### [MÉTODO] /api/v1/[recurso]
+| Endpoint | Autorización | Qué resuelve |
+|---|---|---|
+| `[MÉTODO] /api/v1/[recurso]` | [roles, según Anexo A de SPEC-001] | [una línea] |
 
-**Descripción:** [qué hace]
+### 3.1 Decisiones que el código no explica
 
-**Headers:**
-```
-Authorization: Bearer {jwt_token}
-Content-Type: application/json
-```
-
-**Request body:**
-```json
-{
-  "campo1": "string (requerido, máx 100 chars)",
-  "campo2": "integer (requerido, rango 1-100)",
-  "campo3": "string (opcional, formato ISO 8601)"
-}
-```
-
-**Response 200/201:**
-```json
-{
-  "ok": true,
-  "message": "Resource retrieved successfully",
-  "data": {
-    "id": "long",
-    "campo1": "string",
-    "campo2": "integer",
-    "createdAt": "ISO 8601",
-    "updatedAt": "ISO 8601"
-  }
-}
-```
-
-**Response 400 (validación):**
-```json
-{
-  "ok": false,
-  "message": "Validation failed",
-  "data": {
-    "errors": [
-      { "field": "campo1", "message": "No puede estar vacío" }
-    ]
-  }
-}
-```
-
-**Response 401 (no autenticado):**
-```json
-{
-  "ok": false,
-  "message": "Invalid or expired token",
-  "data": null
-}
-```
-
-**Response 403 (sin permisos):**
-```json
-{
-  "ok": false,
-  "message": "Insufficient permissions for this action",
-  "data": null
-}
-```
-
-[Repetir para cada endpoint de la feature]
+> Por qué este verbo y no otro, por qué este código de error y no el evidente, qué defecto tiene
+> un parámetro y por qué. Si no hay ninguna decisión de este tipo, se borra la subsección.
 
 ## 4. Migración de base de datos
 
-> Definir el script Flyway necesario para esta feature.
+> **Ya implementada:** nombrar el archivo (`V[N]__[descripcion].sql`) y explicar solo lo que el
+> DDL no dice: por qué ese default, por qué ese índice es parcial, por qué esa columna no es un
+> catálogo.
+> **Sin implementar:** el SQL literal va aquí.
 >
-> **Rango por spec propietaria:** los fundacionales ocupan `V001`–`V012`. Un
-> SPEC-1NN usa `V1NN__` en adelante. El rango lo fija la spec que **posee** la
-> tabla, no la primera que la consume.
+> Rango: lo fija la spec que **posee** la tabla (fundacionales `V001`-`V099`, SPEC-1NN usa
+> `V1NN__`). Toda tabla lleva `created_at`, `updated_at`, `deleted_at` (INV-4) y su entidad
+> extiende `BaseEntity` (INV-3).
 >
-> **Si tu feature no necesita tablas nuevas, dilo explícitamente y no inventes una
-> migración.** Muchas features operan sobre tablas que los fundacionales ya
-> crearon. Una migración duplicada rompe Flyway por conflicto de checksum.
->
-> Toda tabla nueva lleva `created_at`, `updated_at` y `deleted_at` (SPEC-000 §5.4),
-> y su entidad JPA extiende `BaseEntity` (SPEC-002 §4.1) en vez de redeclararlos.
+> **Si no necesita tablas nuevas, decirlo aquí y no inventar una migración.**
 
-```sql
--- V[N]__[descripcion].sql
--- Ejemplo:
+## 5. Comportamiento
 
-CREATE TABLE nombre_tabla (
-    id BIGSERIAL PRIMARY KEY,
-    campo1 VARCHAR(100) NOT NULL,
-    campo2 INTEGER NOT NULL CHECK (campo2 BETWEEN 1 AND 100),
-    campo3 TIMESTAMP,
-    catalog_type_id BIGINT REFERENCES catalog_items(id),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP
-);
+### 5.1 Flujo principal
 
-CREATE INDEX idx_nombre_tabla_campo1 ON nombre_tabla(campo1);
-```
-
-## 5. Comportamiento esperado
-
-### 5.1 Flujo principal (Happy Path)
-
-1. El usuario hace X.
-2. El sistema responde con Y.
-3. Se muestra Z.
+1. [Paso] → [respuesta del sistema]
 
 ### 5.2 Flujos alternativos
 
-- **Si el usuario no llena un campo obligatorio:** mostrar validación inline, no enviar request.
-- **Si hay error de red:** mostrar toast/alerta "Error de conexión. Intente de nuevo."
-- **Si la sesión expiró:** redirigir a login con mensaje.
-- **Si el recurso no existe (404):** mostrar pantalla de "no encontrado" con opción de volver.
+- **[Condición]:** [comportamiento]
 
-### 5.3 Casos límite (Edge Cases)
+### 5.3 Casos límite
 
-- ¿Qué pasa con datos vacíos?
-- ¿Qué pasa con volúmenes grandes? (paginación requerida si >20 items)
-- ¿Qué pasa con caracteres especiales o emojis?
-- ¿Qué pasa si el usuario hace doble clic? (debounce/disable en submit)
-- ¿Qué pasa si dos usuarios editan lo mismo simultáneamente?
+- **[Caso]:** [comportamiento]
 
-## 6. Criterios de aceptación (verificables por cualquiera)
+## 6. Criterios de aceptación
 
-> Cada criterio debe poder verificarse SIN leer el código fuente.
+> Verificables sin leer el código fuente. Mínimo 5.
 
-| # | Criterio | Método de verificación |
-|---|----------|----------------------|
-| CA-01 | [Descripción] | [Cómo verificar: qué hacer, qué esperar ver] |
-| CA-02 | [Descripción] | [Cómo verificar] |
-| CA-03 | [Descripción] | [Cómo verificar] |
-| CA-04 | [Descripción] | [Cómo verificar] |
-| CA-05 | [Descripción] | [Cómo verificar] |
+| # | Criterio | Cómo verificarlo |
+|---|----------|------------------|
+| CA-01 | [Descripción] | [Qué hacer, qué esperar ver] |
 
 ## 7. Especificación visual
 
-### 7.1 Web (Next.js)
+> Si no tiene interfaz: "No aplica".
 
-- Responsive breakpoints: móvil (<640px), tablet (640-1024px), desktop (>1024px)
-- Layout: [descripción o referencia a wireframe/Figma]
-- Estados de componentes: default, hover, active, disabled, error, loading
-- Feedback visual: [loading spinners, skeleton screens, toasts de éxito/error]
+- Layout y breakpoints: móvil (<640px), tablet (640-1024px), desktop (>1024px)
+- Estados: default, hover, disabled, error, loading
+- Móvil: [gestos, navegación, o "fuera de alcance"]
 
-### 7.2 Móvil (React Native)
+## 8. Tests
 
-- Gestos soportados: [tap, swipe, pull-to-refresh, long press]
-- Adaptaciones: [qué cambia respecto a web — layout, navegación, interacciones]
-- Navegación: [cómo se llega a esta pantalla, cómo se sale]
-- Orientación: solo portrait / ambas
-
-### 7.3 Referencia visual
-
-[Enlace a Figma/mockup, o descripción textual detallada si no hay diseño]
-
-## 8. Tests que la IA debe generar
-
-> REGLA: la IA genera tests ANTES de la implementación.
-
-### 8.1 Tests unitarios (backend — JUnit 5 + Mockito)
+> Se escriben **antes** de la implementación. Una vez escritos, la suite del repo es la lista
+> ejecutable y esta sección deja de enumerarlos.
+>
+> **No se listan los casos mecánicos** —sin token → 401, campo vacío → 400, rol insuficiente →
+> 403—: son invariantes de `REGLAS.md` y valen para todos los endpoints.
+>
+> **Sí se listan las reglas de negocio que un método no hace evidentes:** límites, idempotencia,
+> qué NO debe ocurrir, qué se revoca y qué sobrevive.
 
 ```
-- [NombreService].create() con datos válidos → retorna entidad creada
-- [NombreService].create() con datos duplicados → lanza DuplicateException
-- [NombreService].getById() con ID inexistente → lanza NotFoundException
-- [NombreService].update() con entidad eliminada (soft) → lanza NotFoundException
+[Agrupar por regla, no por capa]
+- [caso concreto] → [resultado esperado]
 ```
 
-### 8.2 Tests de integración (backend — @WebMvcTest o @SpringBootTest)
+## 9. Propio de este spec
 
-```
-- POST /api/v1/[recurso] con body válido → 201 + body correcto
-- POST /api/v1/[recurso] con body inválido → 400 + errores detallados
-- POST /api/v1/[recurso] sin token → 401
-- GET /api/v1/[recurso]/{id} existente → 200 + body correcto
-- GET /api/v1/[recurso]/{id} inexistente → 404
-- DELETE /api/v1/[recurso]/{id} → 204 (soft delete, verificar deleted_at)
-```
-
-### 8.3 Tests frontend (Jest + React Testing Library)
-
-```
-- [Componente] renderiza correctamente con datos
-- [Componente] muestra loading state
-- [Componente] muestra error state
-- [Componente] submit con datos válidos → llama API
-- [Componente] submit con datos inválidos → muestra validación
-```
-
-### 8.4 Tests E2E (si aplica)
-
-```
-- Usuario completa flujo desde [pantalla inicio] hasta [resultado esperado]
-```
-
-## 9. Seguridad
-
-- [ ] Validación en backend (Bean Validation), no solo en frontend.
-- [ ] Endpoint requiere autenticación JWT: sí / no.
-- [ ] Roles/permisos necesarios: [listar].
-- [ ] Datos sensibles que NO deben exponerse en response: [listar].
-- [ ] Prevención de inyección SQL: usa JPA, no queries concatenados.
-- [ ] XSS: sanitizar inputs de texto libre.
-- [ ] Acciones auditables: ¿esta feature crea, edita o desactiva algo que deba
-      dejar rastro en `audit_log` (SPEC-004 §3.2)? Si sí, listar cuáles.
-- [ ] Qué se registra en logs y qué NO (nunca contraseñas, hashes ni tokens).
-
-## 10. Consideraciones de extensibilidad
-
-- [ ] ¿Usa catálogos configurables en vez de enums hardcodeados?
-- [ ] ¿La lógica de negocio está en el Service, no en el Controller?
-- [ ] ¿Los textos de UI son externalizables (i18n-ready)?
-- [ ] ¿Las reglas de negocio específicas de PUCP están en configuración, no en código?
-
-## 11. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [ ] ¿El spec tiene objetivo claro y en una oración?
-- [ ] ¿Los contratos de API están definidos con tipos exactos?
-- [ ] ¿La migración SQL está definida?
-- [ ] ¿Hay al menos 5 criterios de aceptación verificables?
-- [ ] ¿Se contemplan flujos alternativos y edge cases?
-- [ ] ¿Se especifica comportamiento para web Y móvil?
-- [ ] ¿Alguien más revisó y aprobó el spec?
-
-### Después de recibir código de la IA
-
-- [ ] El código respeta la estructura de carpetas del proyecto.
-- [ ] El paquete Java es `pe.edu.pucp.hesperides.modules.[modulo].[capa]`.
-- [ ] Los componentes TypeScript están en la carpeta correcta.
-- [ ] Los nombres de clases/componentes siguen las convenciones.
-- [ ] La migración Flyway tiene número de versión correcto.
-- [ ] No se instalaron dependencias no autorizadas.
-- [ ] Los tests generados cubren todos los criterios de aceptación.
-- [ ] Todos los tests pasan (`mvn test` / `npm test`).
-- [ ] La funcionalidad se probó manualmente en web.
-- [ ] La funcionalidad se probó manualmente en móvil (o simulador).
-- [ ] No hay datos hardcodeados (URLs, credenciales, nombres de PUCP en lógica).
-- [ ] Los mensajes de error son claros para el usuario final.
-- [ ] No hay `System.out.println`, `console.log` de depuración.
-- [ ] Se usó soft delete (no DELETE físico).
-- [ ] Se usaron catálogos configurables donde corresponde; no hay ningún `enum`
-      de dominio ni `@Enumerated` en el código Java.
-- [ ] Toda entidad nueva extiende `BaseEntity` y no redeclara `id`, `createdAt`,
-      `updatedAt` ni `deletedAt`.
-- [ ] La autorización de cada endpoint coincide con la matriz del Anexo A de
-      SPEC-001, sin reinterpretarla.
+> Reglas de seguridad, extensibilidad o verificación que **no** están en `REGLAS.md`:
+> política de contraseñas, acciones auditables (SPEC-004 §3.2), campos que nunca salen en
+> una response, checklist específico.
+>
+> **Si no hay nada propio, se borra esta sección.** Las invariantes generales y el checklist
+> común ya están en `REGLAS.md` §0 y §6.

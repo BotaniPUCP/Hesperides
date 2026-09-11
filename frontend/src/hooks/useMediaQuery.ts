@@ -1,30 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 /**
  * Devuelve si la media query coincide, reaccionando a los cambios de tamaño.
  *
- * En el servidor `window` no existe: devuelve `false` y el valor real llega en
- * el primer efecto del cliente. Por eso los componentes que dependen de esto
- * deben renderizar la variante de escritorio primero, que es la que no rompe
- * si el hidratado corrige el valor un instante después.
+ * `matchMedia` es exactamente lo que `useSyncExternalStore` existe para leer:
+ * un dato que vive fuera de React y avisa cuando cambia. Suscribirse así, en
+ * vez de copiar el valor a un estado dentro de un efecto, evita el render
+ * intermedio con el valor equivocado —el salto de tarjetas a tabla que se veía
+ * al montar en un móvil— y deja de encadenar un render extra por cada consulta.
+ *
+ * En el servidor `window` no existe: se devuelve `false`, es decir la variante
+ * de escritorio, que es la que no rompe si el hidratado corrige el valor.
  */
+function hayMatchMedia(): boolean {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+}
+
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  const suscribir = useCallback(
+    (alCambiar: () => void) => {
+      if (!hayMatchMedia()) return () => {};
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return;
-    }
+      const mediaQuery = window.matchMedia(query);
+      mediaQuery.addEventListener('change', alCambiar);
+      return () => mediaQuery.removeEventListener('change', alCambiar);
+    },
+    [query],
+  );
 
-    const mediaQuery = window.matchMedia(query);
-    setMatches(mediaQuery.matches);
+  const leer = useCallback(() => (hayMatchMedia() ? window.matchMedia(query).matches : false), [
+    query,
+  ]);
 
-    const onChange = (event: MediaQueryListEvent) => setMatches(event.matches);
-    mediaQuery.addEventListener('change', onChange);
-    return () => mediaQuery.removeEventListener('change', onChange);
-  }, [query]);
-
-  return matches;
+  return useSyncExternalStore(suscribir, leer, () => false);
 }

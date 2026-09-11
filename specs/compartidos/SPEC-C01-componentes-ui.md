@@ -1,16 +1,11 @@
 # SPEC-C01 — Componentes UI compartidos
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec transversal, no deriva de una HU) |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (Web y Móvil) |
-| Prioridad | Alta |
 | Sprint | S0 (fundacional) |
 | Dependencias | SPEC-000 (arquitectura y convenciones), SPEC-002 (modelo de datos), SPEC-003 (catálogos configurables), SPEC-C02 (manejo de errores), SPEC-C03 (patrones de API) |
-| Fecha límite | Fin de Semana 1 |
 
 ---
 
@@ -20,13 +15,9 @@ Definir el catálogo único de componentes de interfaz —tokens de diseño, pro
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código de interfaz para cualquier feature, la IA debe leer obligatoriamente:
-> - Este spec completo, incluida la sección 9 (reglas para la IA)
-> - SPEC-000 (arquitectura y convenciones) — secciones 4, 5.3 y 7
-> - SPEC-002 (modelo de datos) — para saber qué campos y catálogos alimentan cada componente
-> - SPEC-003 (catálogos configurables) — el patrón `{ id, code, label }` que consumen `Select`, `Badge` y `StatusBadge`
-> - SPEC-C02 (manejo de errores) — para los estados de error de formularios y `Toast`
-> - SPEC-C03 (patrones de API) — para la forma de la respuesta paginada que consume `DataTable`
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** SPEC-003 §6.1 (`useCatalog`, del que dependen `Select`,
+> `StatusBadge` y `UrgencyBadge`) y SPEC-C02 §6 (estados de error que renderizan estos componentes).
 
 **Este spec no define ninguna pantalla ni flujo de negocio.** Es una biblioteca. Cada SPEC-1XX en adelante referencia estos componentes por nombre e indica cuáles reutiliza; no vuelve a definir sus props.
 
@@ -60,7 +51,7 @@ No aplica. Este spec es puramente de presentación.
 **Librerías que DEBE usar (móvil):**
 - React Native + TypeScript estricto.
 - `react-native-maps` para el mapa (proveedor de tiles OpenStreetMap, ver sección 6).
-- `Pressable` para todo elemento táctil. **Nunca `TouchableOpacity`** (SPEC-000 §7).
+- `Pressable` para todo elemento táctil. **Nunca `TouchableOpacity`** (REGLAS.md §5.3).
 - `StyleSheet.create` para estilos; nunca estilos inline en objetos literales recreados en cada render.
 
 **Librerías que NO debe usar:**
@@ -182,521 +173,42 @@ Se usa la escala nativa de Tailwind (múltiplos de 4px) sin extensión: `space-1
 | `shadow-sm` | sombra sutil | `Card` en reposo |
 | `shadow-lg` | sombra pronunciada | `Modal`, `Toast` (para separarse del fondo) |
 
-## 4. Catálogo de componentes web (Next.js + Tailwind)
-
-Convención de props en toda la tabla: `[Componente]Props` exportada desde el mismo archivo. Estados obligatorios a implementar por componente: `default`, `hover`, `active` (o `focus` cuando no aplica "active"), `disabled`, y `error`/`loading` donde el componente los admite.
-
-### 4.1 `Button`
-
-**Archivo:** `frontend/src/components/ui/Button.tsx`
-
-```typescript
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
-export type ButtonSize = 'sm' | 'md' | 'lg';
-
-export interface ButtonProps {
-  variant?: ButtonVariant;       // default: 'primary'
-  size?: ButtonSize;             // default: 'md'
-  children: React.ReactNode;
-  onClick?: () => void;
-  type?: 'button' | 'submit' | 'reset'; // default: 'button'
-  disabled?: boolean;            // default: false
-  loading?: boolean;             // default: false — muestra spinner y deshabilita el click
-  fullWidth?: boolean;           // default: false
-  leadingIcon?: React.ReactNode;
-  trailingIcon?: React.ReactNode;
-  'aria-label'?: string;         // requerido cuando children es solo un ícono
-}
-```
-
-**Variantes:** `primary` (fondo `brand-600`, texto blanco), `secondary` (fondo `neutral-0`, borde `neutral-200`, texto `neutral-900`), `danger` (fondo `action-danger`, texto blanco), `ghost` (sin fondo ni borde, texto `neutral-700`, fondo `neutral-50` en hover).
-
-**Tamaños:** `sm` (32px alto, `text-sm`), `md` (40px alto, `text-base`), `lg` (48px alto, `text-lg`).
-
-**Estados:** `default`; `hover` (oscurece el fondo un paso en la escala); `active` (oscurece dos pasos); `disabled` (opacidad 50%, `cursor-not-allowed`, sin handlers); `loading` (reemplaza contenido por spinner + texto opcional, `aria-busy="true"`, bloquea doble click).
-
-**Ejemplo de uso:**
-```tsx
-<Button variant="primary" size="md" onClick={handleSave} loading={isSaving}>
-  Guardar intervención
-</Button>
-```
-
-### 4.2 `Input`
-
-**Archivo:** `frontend/src/components/ui/Input.tsx`
-
-```typescript
-export interface InputProps {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'search'; // default: 'text'
-  placeholder?: string;
-  helperText?: string;
-  errorMessage?: string;         // si está presente, el input entra en estado error
-  disabled?: boolean;            // default: false
-  required?: boolean;            // default: false
-  maxLength?: number;
-  leadingIcon?: React.ReactNode;
-  onBlur?: () => void;
-}
-```
-
-**Estados:** `default`; `hover` (borde `neutral-500`, solo en dispositivos con puntero); `focus` (anillo `brand-600`, ver sección 5); `disabled` (fondo `neutral-50`, texto `neutral-500`, sin foco posible); `error` (borde y `helperText` en `action-danger`, ícono de alerta, `aria-invalid="true"`).
-
-**Ejemplo de uso:**
-```tsx
-<Input
-  id="incident-title"
-  label="Título de la incidencia"
-  value={title}
-  onChange={setTitle}
-  required
-  errorMessage={errors.title}
-  helperText="Describe brevemente el problema observado"
-/>
-```
-
-### 4.3 `Select`
-
-**Archivo:** `frontend/src/components/ui/Select.tsx`
-
-```typescript
-export interface SelectOption {
-  id: number;
-  code: string;
-  label: string;
-}
-
-export interface SelectProps {
-  id: string;
-  label: string;
-  value: string | null;          // compara por `code`, nunca por `id` (SPEC-002 INV-04)
-  onChange: (option: SelectOption | null) => void;
-  options: SelectOption[];
-  placeholder?: string;          // default: 'Seleccione una opción'
-  helperText?: string;
-  errorMessage?: string;
-  disabled?: boolean;
-  loading?: boolean;             // opciones cargándose desde /api/v1/catalogs/{typeCode}/items
-  required?: boolean;
-  clearable?: boolean;           // default: false
-  searchable?: boolean;          // default: false — habilita filtro por texto sobre `label`
-}
-```
-
-**Estados:** `default`, `hover`, `focus`, `disabled`, `error` (igual criterio que `Input`), `loading` (skeleton de una línea en vez de la lista desplegable, deshabilitado mientras carga).
-
-**Ejemplo de uso:**
-```tsx
-<Select
-  id="urgency"
-  label="Nivel de urgencia"
-  value={urgency}
-  onChange={(opt) => setUrgency(opt?.code ?? null)}
-  options={urgencyOptions}
-  required
-/>
-```
-
-### 4.4 `Modal`
-
-**Archivo:** `frontend/src/components/ui/Modal.tsx`
-
-```typescript
-export interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;      // normalmente un par de <Button>
-  size?: 'sm' | 'md' | 'lg' | 'fullscreen'; // default: 'md'; 'fullscreen' para móvil
-  closeOnOverlayClick?: boolean; // default: true
-  closeOnEsc?: boolean;          // default: true
-}
-```
-
-**Estados:** `default` (visible con overlay `neutral-900/50`); `disabled` no aplica al contenedor, sí a sus botones internos; foco atrapado dentro del modal mientras `isOpen` es `true` (ver sección 5).
-
-**Ejemplo de uso:**
-```tsx
-<Modal isOpen={showConfirm} onClose={closeConfirm} title="Confirmar cierre de incidencia"
-  footer={<><Button variant="secondary" onClick={closeConfirm}>Cancelar</Button>
-  <Button variant="primary" onClick={confirmClose}>Confirmar</Button></>}>
-  <p>Esta acción marcará la incidencia como Resuelta.</p>
-</Modal>
-```
-
-### 4.5 `Toast`
-
-**Archivo:** `frontend/src/components/ui/Toast.tsx` (renderizado por un `ToastProvider` en `frontend/src/components/ui/ToastProvider.tsx`, disparado con el hook `useToast`)
-
-```typescript
-export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
-
-export interface ToastOptions {
-  variant: ToastVariant;
-  title: string;
-  description?: string;
-  durationMs?: number;           // default: 5000; 0 = no se autocierra
-}
-
-export interface UseToastReturn {
-  showToast: (options: ToastOptions) => void;
-  dismissAll: () => void;
-}
-```
-
-**Variantes:** `success` (`success-600`), `error` (`action-danger`), `warning` (`warning-600`), `info` (`info-600`). Cada una con su ícono fijo (check, X, triángulo, i), nunca solo color (ver sección 5).
-
-**Ejemplo de uso:**
-```tsx
-const { showToast } = useToast();
-showToast({ variant: 'error', title: 'Sin conexión', description: 'Verifique su red e intente de nuevo.' });
-```
-
-### 4.6 `DataTable`
-
-**Archivo:** `frontend/src/components/ui/DataTable.tsx`
-
-```typescript
-export interface DataTableColumn<T> {
-  key: string;
-  header: string;
-  sortable?: boolean;            // default: false
-  render?: (row: T) => React.ReactNode; // override de celda (badges, acciones)
-  hideOnMobile?: boolean;        // default: false — ver sección 6 (responsive)
-}
-
-export interface DataTableSort {
-  key: string;
-  direction: 'asc' | 'desc';
-}
-
-export interface DataTableProps<T> {
-  columns: DataTableColumn<T>[];
-  rows: T[];
-  rowKey: (row: T) => string | number;
-  totalElements: number;
-  page: number;                  // 0-indexed, espeja SPEC-C03
-  pageSize: number;
-  onPageChange: (page: number) => void;
-  sort?: DataTableSort;
-  onSortChange?: (sort: DataTableSort) => void;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  loading?: boolean;
-  emptyState?: React.ReactNode;  // ver EmptyState en 4.10; si se omite usa el default
-  onRowClick?: (row: T) => void;
-}
-```
-
-**Estados:** `default`; `loading` (filas reemplazadas por `LoadingSkeleton` tipo tabla, controles de paginación deshabilitados); `error` no es un estado propio del componente — la página que lo usa muestra un `Toast` y le pasa `rows: []` con `emptyState` personalizado; vacío (`rows.length === 0` y no `loading`) renderiza `EmptyState`.
-
-**Ejemplo de uso:**
-```tsx
-<DataTable<GreenElementRow>
-  columns={[
-    { key: 'code', header: 'Código', sortable: true },
-    { key: 'name', header: 'Nombre', sortable: true },
-    { key: 'zone', header: 'Zona', hideOnMobile: true },
-    { key: 'status', header: 'Estado', render: (row) => <StatusBadge code={row.statusCode} label={row.statusLabel} /> },
-  ]}
-  rows={elements}
-  rowKey={(row) => row.id}
-  totalElements={totalElements}
-  page={page}
-  pageSize={20}
-  onPageChange={setPage}
-/>
-```
-
-### 4.7 `Card`
-
-**Archivo:** `frontend/src/components/ui/Card.tsx`
-
-```typescript
-export interface CardProps {
-  title?: string;
-  actions?: React.ReactNode;     // esquina superior derecha (ej. un <Button size="sm">)
-  children: React.ReactNode;
-  padded?: boolean;              // default: true
-  onClick?: () => void;          // si está presente, la Card es interactiva (hover + focus)
-}
-```
-
-**Estados:** `default` (`shadow-sm`); `hover` solo si `onClick` está definido (`shadow-lg`, cursor pointer); `focus` visible si es interactiva.
-
-**Ejemplo de uso:**
-```tsx
-<Card title="Intervenciones del período" actions={<Button size="sm" variant="ghost">Ver todas</Button>}>
-  <p className="text-2xl font-semibold">128</p>
-</Card>
-```
-
-### 4.8 `LoadingSkeleton`
-
-**Archivo:** `frontend/src/components/ui/LoadingSkeleton.tsx`
-
-```typescript
-export interface LoadingSkeletonProps {
-  variant?: 'text' | 'card' | 'table-row' | 'avatar' | 'map';
-  count?: number;                // default: 1 — repite el placeholder
-  className?: string;            // solo para dimensiones (alto/ancho), nunca layout (ver sección 9)
-}
-```
-
-**Estados:** un único estado visual (animación de pulso `neutral-200` ↔ `neutral-50`). No tiene `disabled` ni `error`: es en sí mismo un estado de carga de otro componente.
-
-**Ejemplo de uso:**
-```tsx
-{loading ? <LoadingSkeleton variant="table-row" count={5} /> : <DataTable ... />}
-```
-
-### 4.9 `Badge` y `StatusBadge` / `UrgencyBadge`
-
-**Archivo:** `frontend/src/components/ui/Badge.tsx` (genérico), `frontend/src/components/ui/StatusBadge.tsx`, `frontend/src/components/ui/UrgencyBadge.tsx`
-
-```typescript
-export interface BadgeProps {
-  label: string;
-  color?: 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info'; // default: 'neutral'
-}
-
-export interface StatusBadgeProps {
-  code: string;   // code de catalog_items, ej. 'IN_REVIEW'
-  label: string;  // label a mostrar, viene del catálogo (SPEC-002 INV-04)
-}
-
-export interface UrgencyBadgeProps {
-  code: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  label: string;
-}
-```
-
-`Badge` es de uso libre para cualquier feature. `StatusBadge` y `UrgencyBadge` son de uso **obligatorio** para pintar, respectivamente, cualquier estado de flujo (incidencia, intervención, contrato) y cualquier nivel de urgencia: resuelven el color internamente contra las tablas de la sección 3.1, ninguna feature decide su propio color.
-
-**Ejemplo de uso:**
-```tsx
-<StatusBadge code={incident.status.code} label={incident.status.label} />
-<UrgencyBadge code={incident.urgency.code} label={incident.urgency.label} />
-```
-
-### 4.10 `EmptyState`
-
-**Archivo:** `frontend/src/components/ui/EmptyState.tsx`
-
-No estaba en el catálogo del SPEC-000; lo exige el dominio porque casi todo listado (inventario, incidencias, contratos) puede legítimamente estar vacío ("sin incidencias abiertas" es información, no un error).
-
-```typescript
-export interface EmptyStateProps {
-  icon?: React.ReactNode;
-  title: string;
-  description?: string;
-  action?: { label: string; onClick: () => void }; // ej. "Registrar elemento"
-}
-```
-
-**Ejemplo de uso:**
-```tsx
-<EmptyState
-  title="Sin incidencias registradas"
-  description="No hay incidencias reportadas para los filtros seleccionados."
-  action={{ label: 'Registrar incidencia', onClick: openIncidentForm }}
-/>
-```
-
-### 4.11 `MapView`
-
-**Archivo:** `frontend/src/components/map/MapView.tsx` (más `MapLayerControl.tsx`, `MapMarker.tsx`, `MapPolygon.tsx` como subcomponentes en la misma carpeta)
-
-El mapa interactivo del campus es la pantalla central del producto (ver "por qué existe este spec"). Librería elegida: **Leaflet** (justificación completa en sección 6).
-
-```typescript
-export interface MapLayer {
-  id: string;
-  label: string;
-  visible: boolean;
-}
-
-export interface MapMarkerData {
-  id: string | number;
-  position: { lat: number; lng: number };
-  statusCode?: string;           // colorea el pin con la paleta de StatusBadge
-  urgencyCode?: string;          // colorea el pin con la paleta de UrgencyBadge (prioridad sobre statusCode si ambos existen)
-  icon?: 'tree' | 'garden' | 'lawn' | 'sports-field' | 'incident'; // ver GREEN_ELEMENT_TYPE
-  popupContent?: React.ReactNode;
-}
-
-export interface MapPolygonData {
-  id: string | number;
-  path: Array<{ lat: number; lng: number }>;
-  fillColor?: string;
-  label?: string;
-}
-
-export interface MapViewProps {
-  center: { lat: number; lng: number };
-  zoom?: number;                 // default: 17 (escala de campus)
-  layers?: MapLayer[];
-  onLayerToggle?: (layerId: string) => void;
-  markers?: MapMarkerData[];
-  polygons?: MapPolygonData[];
-  onMarkerClick?: (markerId: string | number) => void;
-  onMapClick?: (position: { lat: number; lng: number }) => void; // usado por LocationPicker
-  height?: string;               // default: '100%' — el contenedor padre define el alto
-  loading?: boolean;
-}
-```
-
-**Estados:** `default`; `loading` (skeleton `variant="map"` mientras cargan tiles o datos); interacción de capas vía `MapLayerControl` (checkbox por capa, no un componente nuevo de checkbox — reutiliza el input nativo estilado con Tailwind).
-
-**Conversión de coordenadas:** el componente recibe y emite `{ lat, lng }` (más natural para JS/Leaflet), pero el `lib/api.ts` es responsable de convertir a/desde el GeoJSON `{ type, coordinates: [lon, lat] }` que exige SPEC-002 INV-03 antes de tocar la red. `MapView` nunca ve GeoJSON crudo.
-
-**Ejemplo de uso:**
-```tsx
-<MapView
-  center={{ lat: CAMPUS_CENTER_LAT, lng: CAMPUS_CENTER_LNG }}
-  markers={elements.map(toMapMarker)}
-  layers={layers}
-  onLayerToggle={toggleLayer}
-  onMarkerClick={openElementSheet}
-/>
-```
-
-### 4.12 `LocationPicker`
-
-**Archivo:** `frontend/src/components/forms/LocationPicker.tsx`
-
-Necesario para los formularios de registro en campo (incidencia, elemento nuevo): capturar un punto sobre el mapa o desde el GPS del dispositivo.
-
-```typescript
-export interface LocationPickerProps {
-  value: { lat: number; lng: number } | null;
-  onChange: (position: { lat: number; lng: number }) => void;
-  helperText?: string;
-  errorMessage?: string;
-  disabled?: boolean;
-  allowCurrentLocation?: boolean; // default: true — botón "Usar mi ubicación" (Geolocation API)
-}
-```
-
-**Estados:** `default` (mapa con marcador si `value` no es `null`); `error` (borde `action-danger` en el contenedor y `errorMessage` debajo, igual criterio que `Input`); `disabled` (mapa no interactivo, botón de ubicación oculto); estado transitorio `locating` interno mientras se resuelve el GPS, con `LoadingSkeleton` sobre el botón.
-
-**Ejemplo de uso:**
-```tsx
-<LocationPicker value={position} onChange={setPosition} errorMessage={errors.location} />
-```
-
-### 4.13 `PhotoUpload`
-
-**Archivo:** `frontend/src/components/forms/PhotoUpload.tsx`
-
-Necesario para intervenciones (antes/después) e incidencias con evidencia. Ver sección 7 para el comportamiento específico bajo mala conexión.
-
-```typescript
-export type PhotoUploadStatus = 'idle' | 'uploading' | 'uploaded' | 'error';
-
-export interface PhotoUploadItem {
-  id: string;
-  previewUrl: string;            // object URL local, no la del storage
-  status: PhotoUploadStatus;
-  progress?: number;             // 0-100, solo relevante en 'uploading'
-  errorMessage?: string;
-}
-
-export interface PhotoUploadProps {
-  label: string;
-  items: PhotoUploadItem[];
-  onAdd: (files: File[]) => void;
-  onRemove: (id: string) => void;
-  onRetry: (id: string) => void;
-  maxFiles?: number;             // default: 5
-  maxSizeMb?: number;            // default: 10
-  disabled?: boolean;
-  helperText?: string;
-  errorMessage?: string;
-}
-```
-
-**Estados por ítem:** `idle` (recién agregado, en cola); `uploading` (barra de progreso, botón de cancelar); `uploaded` (check verde, miniatura definitiva); `error` (ícono de alerta, mensaje corto, botón "Reintentar" que llama a `onRetry`).
-
-**Ejemplo de uso:**
-```tsx
-<PhotoUpload
-  label="Fotos antes de la intervención"
-  items={beforePhotos}
-  onAdd={handleAddBeforePhotos}
-  onRemove={handleRemovePhoto}
-  onRetry={handleRetryUpload}
-/>
-```
-
-### 4.14 `BeforeAfterViewer`
-
-**Archivo:** `frontend/src/components/ui/BeforeAfterViewer.tsx`
-
-Visor de imágenes antes/después para la ficha de intervención, distinto de `PhotoUpload` (ese sube, este muestra evidencia ya subida y resuelta como URL prefirmada, SPEC-002 INV-06).
-
-```typescript
-export interface BeforeAfterImage {
-  id: string | number;
-  url: string;
-  caption?: string;
-  capturedAt?: string;           // ISO 8601
-}
-
-export interface BeforeAfterViewerProps {
-  beforeImages: BeforeAfterImage[];
-  afterImages: BeforeAfterImage[];
-  layout?: 'side-by-side' | 'slider'; // default: 'side-by-side'; 'slider' colapsa a 'side-by-side' en móvil <640px
-}
-```
-
-**Estados:** `default`; vacío por lado (sin fotos "antes" o sin fotos "después") muestra un placeholder de `EmptyState` compacto dentro de esa columna, no oculta la columna; clic en una imagen abre un `Modal` `size="lg"` con la imagen a tamaño completo y navegación entre las fotos de ese mismo lado.
-
-**Ejemplo de uso:**
-```tsx
-<BeforeAfterViewer beforeImages={intervention.beforePhotos} afterImages={intervention.afterPhotos} />
-```
-
-### 4.15 `DateRangePicker`
-
-**Archivo:** `frontend/src/components/forms/DateRangePicker.tsx`
-
-Necesario para el módulo de Reportes (filtro por período).
-
-```typescript
-export interface DateRange {
-  from: string | null;           // ISO 8601 (solo fecha: 'YYYY-MM-DD')
-  to: string | null;
-}
-
-export interface DateRangePreset {
-  label: string;                 // ej. 'Últimos 30 días'
-  range: DateRange;
-}
-
-export interface DateRangePickerProps {
-  label: string;
-  value: DateRange;
-  onChange: (range: DateRange) => void;
-  presets?: DateRangePreset[];   // atajos comunes; opcional, sin presets por defecto (evita fechas de negocio inventadas en este spec)
-  minDate?: string;
-  maxDate?: string;
-  errorMessage?: string;
-  disabled?: boolean;
-}
-```
-
-**Estados:** `default`, `focus` (calendario desplegado), `error` (`to < from`: borde y mensaje `action-danger`, `onChange` no se bloquea pero el consumidor no debe enviar el filtro mientras haya `errorMessage`), `disabled`.
-
-**Ejemplo de uso:**
-```tsx
-<DateRangePicker label="Período del reporte" value={range} onChange={setRange} errorMessage={errors.range} />
-```
+## 4. Catálogo de componentes web
+
+**Las props exactas de cada componente están en su archivo**, `frontend/src/components/ui/` y
+`components/map/`, exportadas desde `index.ts`. Una copia aquí solo puede desincronizarse: el
+`.tsx` lo verifica el compilador y este documento no.
+
+| Componente | Para qué existe | Lo que no se ve en las props |
+|---|---|---|
+| `Button` | Acción primaria, secundaria, destructiva o discreta | `loading` bloquea el doble click y marca `aria-busy`. `aria-label` es **obligatorio** si el contenido es solo un icono |
+| `Input` | Campo de texto con etiqueta | `errorMessage` presente ⇒ estado error y `aria-invalid`. El `hover` solo aplica en dispositivos con puntero |
+| `Select` | Elección de una opción | El que carga catálogos consume `useCatalog` (SPEC-003 §6.1); no hace fetch propio |
+| `Modal` | Diálogo y confirmación destructiva | Atrapa el foco y cierra con `Esc`. El texto nombra a la entidad afectada, no dice "¿Está seguro?" |
+| `Toast` | Feedback de resultado | Verde éxito, ámbar advertencia (p. ej. correo no entregado), rojo error |
+| `DataTable` | Listados paginados | Bajo 640px **no** hace scroll horizontal: colapsa a tarjetas (§9.1, `DataTableCards`) |
+| `Card` | Agrupación de contenido | — |
+| `LoadingSkeleton` | Carga inicial | Con la forma del contenido que viene, no un spinner: evita el salto de layout |
+| `Badge`, `StatusBadge`, `UrgencyBadge` | Estado y urgencia | Resuelven color por **`code` de catálogo**, nunca por el texto del `label` |
+| `EmptyState` | Sin resultados | "No hay nada todavía" y "tu filtro no encontró nada" son estados distintos, con acciones distintas |
+| `MapView` | Mapa base | URL de tiles por configuración, no literal (§6) |
+| `LocationPicker` | Elegir un punto | Pide el permiso de geolocalización con interacción explícita, nunca al montar |
+| `PhotoUpload` | Evidencia fotográfica | Recibe callbacks; no llama a la API por su cuenta |
+| `BeforeAfterViewer` | Comparar antes/después | Consume URLs prefirmadas de vida corta; no las cachea |
+| `DateRangePicker` | Rango de fechas | — |
+
+### 4.1 Reglas que gobiernan el catálogo
+
+**Ningún componente de aquí hace llamadas HTTP.** Reciben datos o callbacks del contenedor, que
+usa `lib/api.ts`. Así la autenticación y el manejo de errores quedan en un solo sitio.
+
+**Los colores salen de los tokens de §3**, nunca como hex sueltos dentro de un componente:
+cambiar de marca debe ser tocar `tailwind.config.ts` y `theme/colors.ts`, no buscar hex por todo
+el código.
+
+**Antes de crear un componente nuevo, §10.2 decide** si es transversal (va aquí) o propio de una
+feature (va en su carpeta). Un componente duplicado en dos features es el fallo que este catálogo
+existe para evitar.
 
 ## 5. Catálogo de componentes móvil (React Native)
 
@@ -768,7 +280,7 @@ No es una frase genérica: son reglas verificables por componente.
 
 ## 9. Responsive
 
-Breakpoints (SPEC-000 §7, sección 7.1 de la plantilla): móvil **<640px**, tablet **640–1024px**, desktop **>1024px**.
+Breakpoints (`_plantilla.md` §7): móvil **<640px**, tablet **640–1024px**, desktop **>1024px**.
 
 - **Layout general:** una sola columna en móvil; `Card`s en grilla de 2 columnas en tablet; grilla de 3–4 columnas o layout de paneles (lista + mapa/detalle lado a lado) en desktop.
 - **`MapView`:** ocupa pantalla completa en móvil (controles de capas colapsados en un botón flotante que abre un panel); en desktop convive con un panel lateral de filtros/lista siempre visible.
@@ -825,119 +337,67 @@ Un componente se queda **local a la feature** (en la carpeta de esa feature, no 
 | CA-06 | Todo campo de formulario (`Input`, `Select`, `LocationPicker`, `DateRangePicker`) muestra una etiqueta visible asociada, no solo un placeholder. | Inspeccionar visualmente cualquier formulario: cada campo debe tener un texto de etiqueta encima o al costado, visible incluso cuando el campo está vacío. |
 | CA-07 | Navegando solo con teclado (Tab, Shift+Tab, Enter, Esc), es posible abrir un `Modal`, interactuar con sus campos, y cerrarlo, sin usar el mouse. | En cualquier pantalla web con un `Modal` (ej. confirmación de acción), navegar únicamente con teclado desde que se abre hasta que se cierra; en ningún punto el foco debe "escaparse" fuera del modal ni perderse. |
 
-## 12. Tests que la IA debe generar
+## 12. Tests
 
-> REGLA: la IA genera tests ANTES de la implementación de cada componente. Estos tests son de **componente de biblioteca**: verifican contrato de props, variantes, estados y accesibilidad — no flujos de negocio (esos van en el spec de cada feature).
-
-### 12.1 Tests unitarios de componentes (Jest + React Testing Library — web)
-
-Patrón por componente (ejemplo con `Button`, se repite con la misma estructura para `Input`, `Select`, `Modal`, `Toast`, `DataTable`, `Card`, `LoadingSkeleton`, `Badge`/`StatusBadge`/`UrgencyBadge`, `EmptyState`, `MapView`, `LocationPicker`, `PhotoUpload`, `BeforeAfterViewer`, `DateRangePicker`):
-
-```
-- Button renderiza el texto/children recibido
-- Button aplica la clase/estilo correspondiente a cada variant (primary, secondary, danger, ghost)
-- Button aplica el alto correspondiente a cada size (sm, md, lg)
-- Button con disabled=true no dispara onClick al hacer click
-- Button con loading=true muestra el spinner, tiene aria-busy="true" y no dispara onClick
-- Button sin children de texto y sin aria-label falla la validación de accesibilidad (test de linting de a11y o assertion explícita)
-```
-
-Casos específicos adicionales por componente:
+**La suite está en `frontend/src/components/**/__tests__/`.** Los casos de renderizado básico
+—"muestra el label", "dispara onClick"— viven ahí y no se enumeran aquí. Lo que debe quedar
+fijado, porque es una garantía de accesibilidad o de comportamiento que se pierde en un
+refactor:
 
 ```
-- Input con errorMessage muestra el mensaje y aria-invalid="true"
-- Input con disabled=true no permite escribir
-- Select compara opciones por `code`, no por `id`, al invocar onChange
-- Select con loading=true muestra skeleton y no despliega opciones
-- Modal con isOpen=false no renderiza contenido en el DOM
-- Modal atrapa el foco: Tab dentro del modal no llega a elementos fuera de él
-- Modal cierra con Esc cuando closeOnEsc=true, no cierra cuando closeOnEsc=false
-- Toast variant="error" tiene role="alert"; variant="info" tiene role="status"
-- Toast se autocierra pasado durationMs; con durationMs=0 permanece visible
-- DataTable con rows=[] y loading=false renderiza EmptyState
-- DataTable con loading=true renderiza LoadingSkeleton y no la tabla
-- DataTable en viewport <640px renderiza tarjetas, no una tabla HTML (assertion sobre roles/estructura, no sobre CSS)
-- DataTable invoca onSortChange con la columna y dirección correctos al hacer click en un encabezado sortable
-- StatusBadge con code="RESOLVED" renderiza el color definido en la sección 3.1 (assertion sobre la clase/token, no un hex hardcodeado en el test)
-- StatusBadge con un code no mapeado cae en el color neutro por defecto sin lanzar excepción
-- UrgencyBadge con code="CRITICAL" renderiza el ícono de alerta además del color
-- PhotoUpload con un ítem en status="error" muestra el botón "Reintentar" y lo invoca con onRetry
-- PhotoUpload respeta maxFiles: onAdd no agrega más ítems de los permitidos
-- LocationPicker con errorMessage muestra el borde y mensaje de error
-- DateRangePicker con to anterior a from muestra errorMessage
-- BeforeAfterViewer con beforeImages=[] muestra EmptyState solo en esa columna, no oculta afterImages
-- MapView con loading=true muestra LoadingSkeleton variant="map" en vez del mapa
+Accesibilidad
+- Button con solo un icono y sin aria-label → el test falla (es un error, no un aviso)
+- Button loading → aria-busy=true y el segundo click NO dispara onClick
+- Input con errorMessage → aria-invalid=true y el mensaje queda asociado por aria-describedby
+- Modal → atrapa el foco, cierra con Esc y devuelve el foco al disparador
+- Navegación completa por teclado en un formulario y en un modal
+- jest-axe sin violaciones en Button, Input, Select, Modal y DataTable
+
+Responsive
+- DataTable bajo 640px → renderiza tarjetas, NO una tabla con scroll horizontal
+- Los componentes táctiles de pantallas de campo miden 44px o más
+
+Catálogos y color
+- StatusBadge y UrgencyBadge resuelven el color por `code`, no por `label`:
+  cambiar el label NO cambia el color
+- Todo color usado coincide con los hex de §3.1 (comparar el valor, no a simple vista)
+
+Aislamiento
+- Ningún componente del catálogo dispara fetch por su cuenta
+- EmptyState distingue "sin datos" de "sin resultados de búsqueda"
 ```
 
-### 12.2 Tests de integración de componentes compuestos
+## 13. Propio de este spec
 
-```
-- Un formulario de ejemplo que combina Input + Select + LocationPicker + PhotoUpload:
-  al enviar con campos requeridos vacíos, ningún campo dispara la llamada a la API
-  y cada campo vacío muestra su errorMessage correspondiente
-- Un DataTable conectado a un mock de API paginada: cambiar de página invoca
-  onPageChange con el número correcto y no dispara dos requests simultáneos
-  ante doble click en "Siguiente"
-```
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de los componentes:
 
-### 12.3 Tests de accesibilidad (jest-axe o equivalente)
+- **Ningún componente del catálogo hace llamadas HTTP.** `PhotoUpload`, `Select` (con carga de
+  catálogo) y `MapView` reciben datos o callbacks del contenedor, que usa `lib/api.ts` (§5.3).
+  Así la autenticación y el manejo de errores quedan en un solo sitio.
+- **`errorMessage` y `helperText` son texto plano.** `dangerouslySetInnerHTML` está prohibido en
+  todo componente de este catálogo.
+- **URLs prefirmadas de vida corta** en `BeforeAfterViewer` y en las miniaturas ya subidas de
+  `PhotoUpload` (SPEC-002 INV-06). Ningún componente las cachea más allá de su ciclo de vida.
+- **`LocationPicker` pide el permiso de geolocalización de forma explícita**, nunca al montar
+  sin interacción, y muestra `errorMessage` si se rechaza en vez de fallar en silencio.
 
-```
-- Cada componente de la sección 4, renderizado con props mínimas válidas,
-  no reporta violaciones de axe-core en su configuración por defecto
-- El par de colores de cada fila de las tablas de la sección 3.1
-  (estado e urgencia) cumple contraste AA (4.5:1) verificado con una utilidad
-  de cálculo de contraste sobre los valores hex documentados
-```
+**Extensibilidad.** `StatusBadge` y `UrgencyBadge` resuelven el color por `code` de catálogo,
+nunca por el texto del `label`: un cliente que traduzca los labels no rompe el mapeo. La paleta
+de §3 vive en `tailwind.config.ts` y `theme/colors.ts`, nunca como hex sueltos en un componente
+—cambiar de marca es tocar dos archivos, no buscar hex por todo el código—. La URL del
+proveedor de tiles de `MapView` es configuración, no literal.
 
-### 12.4 Tests de componentes móvil (Jest + React Native Testing Library)
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-```
-- Button (RN) usa Pressable, no TouchableOpacity (assertion sobre el tipo de elemento renderizado)
-- Button (RN) con disabled=true no dispara onPress
-- Select (RN) abre un Modal de pantalla completa al presionarlo
-- DataTable equivalente (lista de Card) en RN renderiza una Card por fila con
-  accessibilityRole="button" cuando la fila es presionable
-- Todo componente interactivo de la sección 5 expone accessibilityLabel
-```
+- [ ] La feature declara qué componentes de este catálogo reutiliza. Si necesita uno que no
+      existe y es transversal (§10.2), se añade aquí primero, no se improvisa en la feature.
+- [ ] Ningún componente nuevo duplica uno de `components/ui`, `forms` o `map`.
+- [ ] Sin reglas de layout en línea (`style={{ display: ... }}`) en componentes web.
+- [ ] Ninguna librería de UI, mapas o formularios fuera de las autorizadas en §2.4.
+- [ ] Todo color de estado o urgencia coincide con las tablas de §3.1 **comparando el hex**, no
+      a simple vista.
+- [ ] Los componentes táctiles de pantallas de campo miden 44px o más.
+- [ ] `DataTable` probado bajo 640px: se ve como tarjetas, no con scroll horizontal.
+- [ ] Navegación completa por teclado probada en al menos un formulario y un modal.
+- [ ] Los tests de §12 pasan (`npm test` en `frontend/` y en `mobile/`).
 
-### 12.5 Tests E2E (si aplica)
-
-```
-- No aplica a este spec: los flujos E2E completos (ej. "operario registra una
-  incidencia con foto desde el móvil") se definen y prueban en el spec de la
-  feature correspondiente, que ya asume estos componentes como bloques probados.
-```
-
-## 13. Seguridad
-
-- [ ] Ningún componente de este catálogo hace llamadas HTTP directas: `PhotoUpload`, `Select` (con carga de catálogo) y `MapView` reciben datos o callbacks desde el componente contenedor, que a su vez usa `lib/api.ts` (SPEC-000 §5.3). Esto mantiene la autenticación y el manejo de errores centralizados en un solo lugar.
-- [ ] `errorMessage` e `helperText` de todos los campos de formulario son texto plano; no se renderiza HTML no sanitizado (`dangerouslySetInnerHTML` prohibido en cualquier componente de este catálogo).
-- [ ] Las URLs que consume `BeforeAfterViewer` y las miniaturas de `PhotoUpload` ya subidas son URLs prefirmadas de vida corta (SPEC-002 INV-06); ningún componente cachea esa URL más allá del ciclo de vida del componente en memoria.
-- [ ] `LocationPicker` solicita el permiso de geolocalización de forma explícita (nunca automática al montar el componente sin interacción del usuario) y maneja el rechazo del permiso mostrando `errorMessage`, no fallando en silencio.
-
-## 14. Consideraciones de extensibilidad
-
-- [ ] `StatusBadge` y `UrgencyBadge` resuelven color por `code` de catálogo, no por texto de `label`: un nuevo cliente que traduzca los labels no rompe el mapeo de color.
-- [ ] La paleta de la sección 3 vive en `tailwind.config.ts` y `theme/colors.ts` (móvil), nunca repetida como valores hex sueltos dentro de un componente — cambiar la marca de un futuro cliente es cambiar estos dos archivos, no buscar hex en todo el código.
-- [ ] `MapView` recibe la URL del proveedor de tiles como configuración (variable de entorno), no hardcodeada, para poder cambiar de proveedor de tiles sin tocar el componente.
-- [ ] Los textos visibles de los componentes (`placeholder` por defecto de `Select`, mensajes de `EmptyState` por defecto) están centralizados y son reemplazables, no repetidos como literales en cada punto de uso.
-
-## 15. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [ ] ¿La feature que se va a construir referencia este spec y lista qué componentes de aquí va a reutilizar?
-- [ ] ¿Algún componente que la feature necesita no existe en este catálogo? Si es transversal (sección 10.2), se agrega aquí primero, no se improvisa en la feature.
-- [ ] ¿Se identificaron los `code` de catálogo (SPEC-003) que la feature va a mapear con `StatusBadge`/`UrgencyBadge`, y ya están cubiertos por las tablas de la sección 3.1?
-
-### Después de recibir código de la IA
-
-- [ ] Ningún componente nuevo duplica uno ya existente en `components/ui`, `forms` o `map`.
-- [ ] No hay `className` con reglas de layout en línea (`style={{ display: ... }}`) en componentes web.
-- [ ] No se instaló ninguna librería de componentes de UI, mapas o formularios fuera de las autorizadas en la sección 2.4.
-- [ ] Todo color de estado o urgencia usado coincide exactamente con las tablas de la sección 3.1 (comparar el hex, no "a simple vista").
-- [ ] Los componentes táctiles en pantallas de campo miden 44px o más.
-- [ ] `DataTable` se probó reduciendo el viewport a menos de 640px y se ve como tarjetas, no con scroll horizontal.
-- [ ] Los tests generados (sección 12) pasan (`npm test` en `frontend/` y en `mobile/`).
-- [ ] Se probó la navegación completa por teclado en al menos un formulario y un modal.

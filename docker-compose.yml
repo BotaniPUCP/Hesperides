@@ -40,6 +40,23 @@ services:
       # vez de firmar los JWT con una clave conocida (SPEC-001 §9).
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatorio, definelo en .env}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      # Relay SMTP de Brevo. Sin credenciales en el .env el envio falla y las
+      # altas quedan en PENDING_DELIVERY, que es el comportamiento que SPEC-100
+      # §5.3 exige: un correo que no sale no impide registrar a nadie.
+      SMTP_HOST: ${SMTP_HOST:-smtp-relay.brevo.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-true}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      # Sin valor por defecto: un remitente no verificado en Brevo no da error,
+      # responde 250 "queued" y descarta el correo despues. Mejor que el arranque
+      # falle que creer que la entrega funciona (SPEC-100 §5.3).
+      SMTP_FROM: ${SMTP_FROM:?SMTP_FROM es obligatorio y debe estar verificado en Brevo}
+      # Sin valor por defecto: un default de desarrollo enviaria correos que
+      # invitan a entrar en localhost, que no significa nada para quien lo recibe.
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:?APP_PUBLIC_URL es obligatorio, la URL publica del frontend}
       # Not yet read by any Java code; scaffolding for when the backend calls the Flask data service.
       DATA_SERVICE_URL: ${DATA_SERVICE_URL:-http://data-service:5001}
     ports:

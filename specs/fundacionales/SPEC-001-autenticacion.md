@@ -1,16 +1,11 @@
 # SPEC-001 — Autenticación y autorización
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec fundacional, no deriva de una HU) |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (web y móvil comparten el mismo backend y los mismos endpoints) |
-| Prioridad | Alta |
 | Sprint | S0 (fundacional) |
 | Dependencias | SPEC-000 (arquitectura y convenciones), SPEC-002 (modelo de datos — consume `users`), SPEC-003 (catálogos configurables — este spec añade ítems a `ROLE`) |
-| Fecha límite | Fin de Semana 1 |
 
 ---
 
@@ -20,13 +15,10 @@ Permitir que un administrador, un coordinador o un operario de campo inicien ses
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones) — sección 7, apartado SPEC-001
-> - SPEC-002 (modelo de datos) — todas las tablas de dominio tienen FK a `users(id)`, que este spec crea
-> - SPEC-003 (catálogos configurables) — los roles son `catalog_items` del tipo `ROLE`, no un enum Java
-> - SPEC-C02 (manejo de errores) — el sobre `{ ok, message, data }` y las excepciones custom
-> - SPEC-C03 (patrones de API) — formato de endpoints y paginación
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** su **Anexo A gobierna la autorización de todo el proyecto**;
+> SPEC-003 (el rol es un `catalog_item` de tipo `ROLE`, nunca un enum) y el Anexo B (cadena de
+> filtros de Spring Security, CORS incluido).
 
 **Este spec posee la migración V002.** SPEC-002 la referencia como FK y da por hecho que la tabla `users` existe con exactamente la forma que aquí se define. Ningún otro spec crea ni altera `users`.
 
@@ -108,288 +100,72 @@ Desactivar un usuario (`is_active = FALSE`) es la única forma de "borrarlo" (SP
 
 ## 3. Contratos de API
 
-Los cuatro endpoints son los únicos que este spec contractualiza en detalle. `POST/GET/PUT /api/v1/users` (CRUD 1.1) y `GET/POST /api/v1/roles` o el endpoint de catálogo `GET /api/v1/catalogs/ROLE/items` (1.2) se especifican en su propio SPEC-1XX de feature, y usan `UsersRepository` y el catálogo `ROLE` que este spec deja listos.
+**La forma de cada request y response está en `modules/auth/dto/`** (`LoginRequest`,
+`LoginResponse`, `UserResponse`, `RoleResponse`) y en
+[`shared/types/api.ts`](../../shared/types/api.ts). El envoltorio `{ok, message, data}` es INV-1.
+No se reproduce aquí.
 
-### POST /api/v1/auth/login
+Cuatro endpoints bajo `/api/v1/auth`, todos públicos salvo donde se indica:
 
-**Descripción:** Autentica con email y contraseña propios del sistema. Emite un access token y, según la plataforma, deja el refresh token en una cookie `httpOnly` (web) o lo devuelve en el cuerpo (móvil) para que el cliente lo guarde en SecureStore/Keychain.
+| Endpoint | Autenticación | Qué hace |
+|---|---|---|
+| `POST /auth/login` | Ninguna | Emite access token y refresh token |
+| `POST /auth/refresh` | Refresh token (cookie o body) | Renueva el access token y **rota** el refresh |
+| `POST /auth/logout` | `Bearer` | Revoca el refresh token de la sesión |
+| `GET /auth/me` | `Bearer` | Datos del usuario autenticado |
 
-**Headers:**
-```
-Content-Type: application/json
-X-Client-Type: web | mobile   (opcional; por defecto "web" — ver sección 5.1)
-```
+El CRUD de usuarios y el catálogo `ROLE` son de SPEC-100 y SPEC-003; este spec solo deja listos
+`UsersRepository` y el catálogo.
 
-**Request body:**
-```json
-{
-  "email": "string (requerido, formato email, máx 255 chars)",
-  "password": "string (requerido, mín 8 chars)"
-}
-```
+### 3.1 Decisiones que el código no explica
 
-**Response 200 (web — `X-Client-Type: web` o ausente):**
+**El refresh token viaja distinto según la plataforma**, y lo decide el header `X-Client-Type`
+(por defecto `web` si falta):
 
-Cookies de respuesta:
-```
-Set-Cookie: refresh_token=<jwt>; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth; Max-Age=604800
-```
+- **Web:** cookie `refresh_token`, `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth;
+  Max-Age=604800`. Nunca en el cuerpo — en `localStorage` sería legible por cualquier XSS.
+- **Móvil:** en el cuerpo, para guardarlo en SecureStore/Keychain. Una app nativa no tiene
+  cookies con las mismas garantías.
 
-```json
-{
-  "ok": true,
-  "message": "Login successful",
-  "data": {
-    "accessToken": "string (JWT)",
-    "expiresIn": 1800,
-    "user": {
-      "id": 1,
-      "email": "coordinador@hesperides.pucp.edu.pe",
-      "fullName": "Ana Torres",
-      "role": { "id": 5, "code": "COORDINADOR", "label": "Coordinador" }
-    }
-  }
-}
-```
+`Path=/api/v1/auth` limita el envío de la cookie a los endpoints que la necesitan. La protección
+CSRF se apoya en `SameSite=Strict`, no en tokens sincronizadores: la API es stateless y el resto
+de la autenticación viaja en el header `Authorization`.
 
-**Response 200 (móvil — `X-Client-Type: mobile`):**
-```json
-{
-  "ok": true,
-  "message": "Login successful",
-  "data": {
-    "accessToken": "string (JWT)",
-    "refreshToken": "string (JWT)",
-    "expiresIn": 1800,
-    "user": {
-      "id": 3,
-      "email": "operario1@hesperides.pucp.edu.pe",
-      "fullName": "Luis Vera",
-      "role": { "id": 6, "code": "OPERARIO", "label": "Operario de campo" }
-    }
-  }
-}
-```
+**Credenciales inválidas y usuario desactivado devuelven el mismo 401 con el mismo mensaje.**
+Distinguirlos revelaría qué correos existen en el sistema.
 
-**Response 401 (credenciales inválidas o usuario desactivado — mismo mensaje para ambos casos):**
-```json
-{
-  "ok": false,
-  "message": "Invalid email or password",
-  "data": null
-}
-```
+**El bloqueo por fuerza bruta responde 429, no 401** (§9.3): al usuario legítimo bloqueado hay
+que decirle qué pasó y cuándo reintentar. No filtra la existencia del correo, porque un 429
+también puede darse machacando un email inexistente.
 
-**Response 400 (validación):**
-```json
-{
-  "ok": false,
-  "message": "Validation failed",
-  "data": {
-    "errors": [
-      { "field": "email", "message": "Debe ser un correo válido" },
-      { "field": "password", "message": "No puede estar vacío" }
-    ]
-  }
-}
-```
-
-**Response 429 (bloqueo por fuerza bruta, ver sección 9):**
-```json
-{
-  "ok": false,
-  "message": "Too many failed attempts. Try again in 15 minutes.",
-  "data": null
-}
-```
-
----
-
-### POST /api/v1/auth/refresh
-
-**Descripción:** Cambia un refresh token vigente por un nuevo access token. En web, el refresh token viaja en la cookie `httpOnly` y no se toca en el body. En móvil, viaja explícito en el body porque no hay cookie.
-
-**Headers (web):**
-```
-Content-Type: application/json
-Cookie: refresh_token=<jwt>   (enviado automáticamente por el navegador, credentials: 'include')
-```
-
-**Request body (web):** vacío (`{}` o sin cuerpo).
-
-**Headers (móvil):**
-```
-Content-Type: application/json
-```
-
-**Request body (móvil):**
-```json
-{
-  "refreshToken": "string (requerido, JWT)"
-}
-```
-
-**Response 200 (ambas plataformas):**
-```json
-{
-  "ok": true,
-  "message": "Token refreshed successfully",
-  "data": {
-    "accessToken": "string (JWT)",
-    "expiresIn": 1800
-  }
-}
-```
-
-En web, además se reemplaza la cookie `refresh_token` (rotación, sección 4.2). En móvil, el body de la respuesta **no** incluye un refresh token nuevo salvo que la política de rotación esté activa (sección 4.2) — en ese caso se añade `"refreshToken": "string"` al `data` y el cliente móvil debe reemplazar el guardado en SecureStore.
-
-**Response 401 (refresh token ausente, expirado, revocado o de un usuario desactivado):**
-```json
-{
-  "ok": false,
-  "message": "Invalid or expired session. Please log in again.",
-  "data": null
-}
-```
-
----
-
-### POST /api/v1/auth/logout
-
-**Descripción:** Revoca el refresh token actual y limpia la cookie en web. Idempotente: llamar dos veces no es error.
-
-**Headers:**
-```
-Authorization: Bearer {accessToken}
-Content-Type: application/json
-Cookie: refresh_token=<jwt>   (web, automático)
-```
-
-**Request body (móvil, requerido; web, vacío):**
-```json
-{
-  "refreshToken": "string (requerido en móvil; ignorado en web, se usa la cookie)"
-}
-```
-
-**Response 204:** sin cuerpo. La cookie `refresh_token` se limpia con `Set-Cookie: refresh_token=; Max-Age=0` en web.
-
-**Response 401 (sin access token válido):**
-```json
-{
-  "ok": false,
-  "message": "Invalid or expired token",
-  "data": null
-}
-```
-
----
-
-### GET /api/v1/auth/me
-
-**Descripción:** Devuelve los datos del usuario autenticado a partir del access token. Lo usa el `AuthContext` del frontend al montar la app para saber si hay sesión vigente, y para repoblar el estado tras un refresh de página (la cookie sobrevive, el estado de React no).
-
-**Headers:**
-```
-Authorization: Bearer {accessToken}
-```
-
-**Request body:** ninguno.
-
-**Response 200:**
-```json
-{
-  "ok": true,
-  "message": "User retrieved successfully",
-  "data": {
-    "id": 1,
-    "email": "coordinador@hesperides.pucp.edu.pe",
-    "fullName": "Ana Torres",
-    "role": { "id": 5, "code": "COORDINADOR", "label": "Coordinador" },
-    "isActive": true,
-    "lastLogin": "2026-09-07T14:30:00Z"
-  }
-}
-```
-
-**Response 401 (sin token, expirado, o usuario desactivado desde el último request):**
-```json
-{
-  "ok": false,
-  "message": "Invalid or expired token",
-  "data": null
-}
-```
-
-> Ningún contrato de esta sección incluye `passwordHash` en ninguna respuesta, bajo ninguna condición (sección 9).
+**`refresh` rota el token:** el anterior queda revocado. Si llega un refresh ya usado, se
+revocan **todas** las sesiones del usuario — un token reutilizado significa que alguien tiene una
+copia.
 
 ## 4. Migración de base de datos
 
-Este spec posee y crea **V002**. Rango fundacional `V001`–`V099` (SPEC-000 §5.4); V001 (catálogos) ya existe y no se toca.
+**El DDL está en `V002__create_users.sql`** (tablas `users` y `refresh_tokens` con sus índices).
+Rango fundacional `V001`–`V099` (REGLAS.md §5.4); V001 (catálogos) no se toca. SPEC-100 extiende
+`users` con `V100`; SPEC-002 ocupa `V003`–`V010`.
 
-### 4.1 V002 — Tabla de usuarios y refresh tokens
+### 4.1 Por qué el esquema es así
 
-```sql
--- V002__create_users.sql
+**`refresh_tokens` existe porque un JWT firmado no se puede "borrar".** La capacidad de cerrar
+sesión de verdad —logout, desactivación de un usuario, rotación— vive en esta tabla, no en el
+token. Sin ella, "cerrar sesión" solo borraría el token del cliente y cualquiera con una copia
+seguiría entrando hasta que expirase.
 
-CREATE TABLE users (
-    id              BIGSERIAL PRIMARY KEY,
-    email           VARCHAR(255) NOT NULL,
-    password_hash   VARCHAR(255) NOT NULL,
-    first_name      VARCHAR(100) NOT NULL,
-    last_name       VARCHAR(100) NOT NULL,
-    role_item_id    BIGINT NOT NULL REFERENCES catalog_items(id),
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    last_login      TIMESTAMP,
-    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP
-);
+**El índice único de `email` es parcial (`WHERE deleted_at IS NULL`):** libera el correo si la
+cuenta se da de baja lógica y hay que reutilizarlo. Mismo patrón que SPEC-002 aplica en todas
+sus tablas (INV-4).
 
--- Único entre vigentes: libera el email si el usuario se da de baja lógica
--- y se necesita reutilizarlo (mismo patrón que SPEC-002 aplica en todas sus tablas).
-CREATE UNIQUE INDEX idx_users_email_active ON users(email) WHERE deleted_at IS NULL;
-CREATE INDEX idx_users_role_item_id ON users(role_item_id);
+**`client_type` es un `CHECK` de dos valores, no un catálogo:** es metadato del sistema, no un
+dato de negocio que el cliente amplíe desde la UI. Misma excepción consciente a INV-2 que
+`credential_status` en SPEC-100 §4.1.
 
--- Revocación de sesiones: un JWT firmado no se puede "borrar", así que la
--- capacidad de cerrar sesión de verdad (logout, desactivación de usuario,
--- rotación) vive en esta tabla, no en el token.
-CREATE TABLE refresh_tokens (
-    id              BIGSERIAL PRIMARY KEY,
-    user_id         BIGINT NOT NULL REFERENCES users(id),
-    token_hash      VARCHAR(255) NOT NULL,
-    issued_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at      TIMESTAMP NOT NULL,
-    revoked_at      TIMESTAMP,
-    replaced_by_id  BIGINT REFERENCES refresh_tokens(id),
-    client_type     VARCHAR(10) NOT NULL CHECK (client_type IN ('web', 'mobile')),
-    user_agent      VARCHAR(255),
-    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP
-);
-
-CREATE UNIQUE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
-CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
-CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
-```
-
-| Campo de `users` | Tipo | Nulo | Notas |
-|---|---|---|---|
-| `email` | VARCHAR(255) | No | Identificador de login. Único entre vigentes (índice parcial). |
-| `password_hash` | VARCHAR(255) | No | Salida de BCrypt (60 caracteres típicos; 255 deja margen). Nunca se lee fuera de `AuthService`/`CustomUserDetailsService`. |
-| `first_name`, `last_name` | VARCHAR(100) | No | Se separan, no un `full_name` único, porque los reportes de coordinación (módulo 6) y el formato de contrato tipo suelen requerir apellido solo. `fullName` en los DTO de respuesta se compone en el mapper. |
-| `role_item_id` | BIGINT | No | FK a `catalog_items(id)` del `catalog_type` `ROLE`. Nunca un enum Java (SPEC-000 §1, SPEC-003). |
-| `is_active` | BOOLEAN | No | Módulo 1.1: desactivar, no borrar. Controla login y, junto con `UserDetails.isEnabled()`, el acceso a cada request. |
-| `last_login` | TIMESTAMP | Sí | Se actualiza en cada login exitoso. `NULL` = el usuario nunca inició sesión (recién creado por el administrador). |
-
-| Campo de `refresh_tokens` | Tipo | Nulo | Notas |
-|---|---|---|---|
-| `token_hash` | VARCHAR(255) | No | **Hash SHA-256 del refresh token, no el token en texto plano.** Si la tabla se filtra, no expone tokens reutilizables — el mismo principio que `password_hash`. |
-| `expires_at` | TIMESTAMP | No | `issued_at` + 7 días. Se indexa para que el job de limpieza (fuera de alcance de este spec) pueda purgar filas vencidas. |
-| `revoked_at` | TIMESTAMP | Sí | `NULL` = vigente. Se setea en logout, en rotación (el token viejo queda revocado) y al desactivar un usuario (revocación masiva por `user_id`). |
-| `replaced_by_id` | BIGINT | Sí | Autorreferencia. Encadena la rotación: permite detectar reuso de un token ya rotado (sección 4.2) y auditar la cadena completa de una sesión. |
-| `client_type` | VARCHAR(10) | No | `'web'` o `'mobile'`. Determina si el token vive en cookie o en el body — informativo para auditoría, no cambia la validación. |
+**`replaced_by_id` encadena cada token con el que lo sustituyó.** Es lo que permite detectar el
+reuso descrito en §4.2: sin la cadena, un token viejo presentado por segunda vez sería
+indistinguible de uno inválido cualquiera.
 
 ### 4.2 Rotación de refresh tokens y detección de reuso
 
@@ -458,6 +234,8 @@ Ambos flujos comparten `AuthController` y `JwtTokenProvider`. Lo que cambia es *
 | CA-08 | Múltiples peticiones simultáneas con el access token vencido disparan un único refresh | En el cliente web, forzar 3 llamadas API concurrentes con un access token ya expirado → en la pestaña Network se observa **una sola** llamada a `POST /api/v1/auth/refresh`, seguida de las 3 peticiones originales reintentadas con el nuevo access token. |
 | CA-09 | Los intentos fallidos de login se limitan por email | Enviar 6 intentos de login fallidos seguidos para el mismo email en menos de 15 minutos → el sexto (o el que corresponda según el umbral fijado en sección 9) responde 429 con el mensaje de bloqueo, no 401. |
 | CA-10 | La migración V002 crea exactamente las tablas y columnas descritas | `docker-compose down -v && docker-compose up --build` levanta sin error. `\d users` en `psql` muestra las columnas `id, email, password_hash, first_name, last_name, role_item_id, is_active, last_login, created_at, updated_at, deleted_at`. `\d refresh_tokens` muestra `id, user_id, token_hash, issued_at, expires_at, revoked_at, replaced_by_id, client_type, user_agent, created_at, updated_at, deleted_at`. |
+| CA-11 | El login funciona **desde un navegador**, no solo por protocolo | Abrir `http://localhost:3000/login` en Chrome o Firefox e iniciar sesión con un usuario activo → entra al sistema. En la pestaña Network, la petición `OPTIONS` a `/api/v1/auth/login` responde **200** (no 401) con `Access-Control-Allow-Origin: http://localhost:3000` y `Access-Control-Allow-Credentials: true`. Este CA existe porque `curl` y MockMvc no hacen preflight: sin él, una suite entera en verde es compatible con un login que ningún navegador puede usar. |
+| CA-12 | Un origen no autorizado no puede llamar a la API | `curl -i -X OPTIONS http://localhost:8080/api/v1/auth/login -H "Origin: http://sitio-cualquiera.example" -H "Access-Control-Request-Method: POST"` → **403**, sin cabecera `Access-Control-Allow-Origin`. Repetir con `Origin: http://localhost:3000` → 200 con la cabecera presente. |
 
 ## 7. Especificación visual
 
@@ -471,7 +249,7 @@ Ambos flujos comparten `AuthController` y `JwtTokenProvider`. Lo que cambia es *
 ### 7.2 Móvil (React Native)
 
 - Gestos soportados: tap en los campos y el botón; el teclado se cierra al tocar fuera del formulario.
-- Adaptaciones: mismo layout que web pero con `KeyboardAvoidingView` para que el teclado no tape el botón de submit. Sin `Card` con sombra compleja — se simplifica a un contenedor con padding, misma paleta de colores que web (SPEC-000 §5.3).
+- Adaptaciones: mismo layout que web pero con `KeyboardAvoidingView` para que el teclado no tape el botón de submit. Sin `Card` con sombra compleja — se simplifica a un contenedor con padding, misma paleta de colores que web (REGLAS.md §5.3).
 - Navegación: es la pantalla raíz del `AuthStack` cuando no hay tokens válidos en SecureStore; no tiene botón de "atrás". Al loguear, se reemplaza el stack completo por el navigator autenticado (no se apila encima, para que el botón físico de atrás de Android no regrese a login).
 - Orientación: solo portrait.
 
@@ -479,80 +257,50 @@ Ambos flujos comparten `AuthController` y `JwtTokenProvider`. Lo que cambia es *
 
 No hay mockup de Figma para este spec. El login es un formulario mínimo de dos campos; cualquier desarrollador puede maquetarlo siguiendo los componentes base de SPEC-C01 sin ambigüedad adicional.
 
-## 8. Tests que la IA debe generar
+## 8. Tests
 
-### 8.1 Tests unitarios (backend — JUnit 5 + Mockito)
-
-```
-- AuthServiceImpl.login() con credenciales válidas y usuario activo → retorna accessToken + refreshToken, actualiza last_login
-- AuthServiceImpl.login() con contraseña incorrecta → lanza UnauthorizedException con mensaje genérico
-- AuthServiceImpl.login() con email inexistente → lanza UnauthorizedException con el mismo mensaje genérico que contraseña incorrecta (no debe distinguirse)
-- AuthServiceImpl.login() con usuario is_active = false → lanza UnauthorizedException con el mismo mensaje genérico
-- AuthServiceImpl.login() con más de N intentos fallidos recientes para el mismo email → lanza TooManyAttemptsException (o equivalente) antes de verificar la contraseña
-- AuthServiceImpl.refresh() con refresh token vigente y no revocado → retorna nuevo accessToken, rota el refresh token (revoked_at seteado en el viejo, fila nueva creada)
-- AuthServiceImpl.refresh() con refresh token expirado → lanza UnauthorizedException
-- AuthServiceImpl.refresh() con refresh token ya revocado (reuso) → lanza UnauthorizedException y revoca toda la cadena de refresh tokens del usuario
-- AuthServiceImpl.refresh() de un usuario desactivado después de emitido el token → lanza UnauthorizedException
-- AuthServiceImpl.logout() con refresh token vigente → lo marca revoked_at, responde sin error
-- AuthServiceImpl.logout() llamado dos veces con el mismo token → segunda llamada no lanza excepción (idempotente)
-- JwtTokenProvider.generateAccessToken() → el JWT resultante tiene claim "sub" = userId y expira en 30 minutos desde su emisión
-- JwtTokenProvider.validateToken() con token manipulado (firma inválida) → retorna false / lanza excepción de validación
-- JwtTokenProvider.validateToken() con token expirado → retorna false / lanza excepción de expiración
-- PasswordEncoder: dos hashes de la misma contraseña son distintos (salt aleatorio) y ambos matchean contra la contraseña original
-```
-
-### 8.2 Tests de integración (backend — `@SpringBootTest` / `@WebMvcTest`)
+**La suite está en el repo** (`modules/auth/**Test.java`, `frontend/src/**/__tests__/`) y es
+ejecutable. Los casos mecánicos —sin token → 401, campo vacío → 400— son invariantes de
+`REGLAS.md`. Lo que debe quedar fijado, porque es regla de seguridad y no se deduce de un método:
 
 ```
-- POST /api/v1/auth/login con credenciales válidas y sin X-Client-Type → 200, la respuesta trae Set-Cookie con HttpOnly y Secure, el body no contiene refreshToken
-- POST /api/v1/auth/login con credenciales válidas y X-Client-Type: mobile → 200, el body contiene refreshToken, no hay Set-Cookie
-- POST /api/v1/auth/login con body inválido (email mal formado, password vacío) → 400 con errores detallados por campo
-- POST /api/v1/auth/login con usuario desactivado → 401 con mensaje genérico
-- POST /api/v1/auth/refresh (web) sin cookie de refresh → 401
-- POST /api/v1/auth/refresh (web) con cookie válida → 200, nuevo accessToken, cookie de refresh rotada
-- POST /api/v1/auth/refresh (móvil) con refreshToken en el body inválido → 401
-- POST /api/v1/auth/refresh reusando un refresh token ya rotado → 401 y las demás sesiones del usuario quedan revocadas (verificar con una segunda llamada de refresh sobre una sesión distinta del mismo usuario → también 401)
-- POST /api/v1/auth/logout sin Authorization header → 401
-- POST /api/v1/auth/logout con token válido → 204, refresh token queda revocado en BD
-- GET /api/v1/auth/me sin token → 401
-- GET /api/v1/auth/me con token expirado → 401
-- GET /api/v1/auth/me con token válido → 200 + datos del usuario, sin passwordHash en ningún nivel del JSON
-- GET /api/v1/auth/me con token válido de usuario desactivado después de emitido el token → 401
-- Cualquier endpoint protegido con rol ADMIN llamado por un usuario OPERARIO → 403
-- Cualquier endpoint protegido con rol ADMIN llamado por un usuario ADMIN → 200 (o el código de éxito que corresponda)
-- 6 POST /api/v1/auth/login fallidos consecutivos para el mismo email en la ventana configurada → el que exceda el umbral responde 429
+No filtrar existencia de cuentas
+- credenciales inválidas y usuario desactivado → 401 idéntico, mismo mensaje
+- el 429 de bloqueo no revela si el correo existe
+
+Rotación y reuso
+- refresh válido → nuevo par, el anterior queda revocado
+- refresh YA USADO → revoca TODAS las sesiones del usuario, no solo esa
+- refresh de un usuario desactivado → 401 y revocación
+- logout revoca solo el token de esa sesión
+
+Transporte del token según plataforma
+- sin X-Client-Type → tratado como web: cookie, y refreshToken ausente del body
+- X-Client-Type: mobile → refreshToken en el body y ninguna cookie
+- la cookie lleva HttpOnly, Secure, SameSite=Strict y Path=/api/v1/auth
+
+Fuerza bruta
+- 5 fallos del mismo email en 15 min → 429
+- un login exitoso resetea el contador a cero
+
+CORS (no lo detectan MockMvc ni curl: exige navegador real, INV-10)
+- preflight OPTIONS a /api/** responde sin autenticación
+- origen no listado → el navegador bloquea la respuesta
 ```
 
-### 8.3 Tests frontend (Jest + React Testing Library)
+## 9. Propio de este spec
 
-```
-- LoginForm renderiza los campos email y password y el botón de submit
-- LoginForm muestra estado loading (botón disabled + spinner) mientras la petición está en curso
-- LoginForm muestra el mensaje de error inline cuando la API responde 401
-- LoginForm con datos válidos → llama apiClient.post('/auth/login', {...}) exactamente una vez
-- LoginForm con campos vacíos → muestra validación inline y no llama a la API
-- useAuth: tres llamadas concurrentes a apiClient con un 401 disparan una sola llamada real a /auth/refresh (mock de fetch contando invocaciones)
-- useAuth: tras un refresh exitoso, las peticiones en cola se reintentan con el nuevo access token
-- useAuth: tras un refresh fallido, se limpia el estado de sesión y se redirige a /login
-- AuthContext: al montar la app, llama GET /auth/me una vez para repoblar el usuario si hay cookie de sesión
-```
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de la autenticación:
 
-### 8.4 Tests E2E (si aplica)
-
-```
-- Un administrador abre /login, ingresa credenciales válidas, es redirigido al dashboard correspondiente a su rol, y ve su nombre en el header (dato de GET /auth/me)
-- Un usuario con sesión expirada intenta abrir una página protegida → es redirigido a /login con un mensaje de sesión expirada
-- Un usuario hace logout desde el header → es redirigido a /login y un intento posterior de volver atrás con el navegador no muestra contenido protegido
-```
-
-## 9. Seguridad
-
-- [x] **Validación en backend (Bean Validation), no solo en frontend:** `LoginRequest` usa `@NotBlank`, `@Email`, `@Size(min = 8)` en el DTO; el frontend valida en paralelo solo para UX inmediata.
-- [x] **Endpoint requiere autenticación JWT:** `POST /auth/login` → no (es el punto de entrada). `POST /auth/refresh` → no requiere `Authorization`, pero sí un refresh token válido (cookie o body). `POST /auth/logout` y `GET /auth/me` → sí, `Authorization: Bearer` obligatorio.
-- [x] **Roles/permisos necesarios:** ninguno de los cuatro endpoints de este spec exige un rol específico (login/refresh/logout/me son iguales para los cuatro roles); la matriz de permisos por módulo (más abajo) aplica a los endpoints de negocio de los demás specs, no a estos cuatro.
-- [x] **Datos sensibles que NO deben exponerse en response:** `password_hash` — nunca, bajo ninguna circunstancia, en ningún DTO, ni siquiera en respuestas de error o de auditoría. El `UserMapper` (Entity → DTO) no tiene ningún método que lo toque: la ausencia del campo en el DTO de respuesta lo hace estructuralmente imposible de serializar, no una omisión manual que alguien pueda olvidar. Tampoco se expone `token_hash` de `refresh_tokens`, ni el refresh token en texto plano se loguea nunca (ver más abajo).
-- [x] **Prevención de inyección SQL:** JPA con `UsersRepository.findByEmailAndDeletedAtIsNull(String email)` derivado o `@Query` parametrizado. Cero concatenación de strings.
-- [x] **XSS:** `firstName`/`lastName` son texto libre de entrada administrativa (los crea un administrador, no el propio usuario en un registro abierto), pero igual se sanean al renderizar en el frontend, nunca al guardar.
+- **Autenticación por endpoint:** `POST /auth/login` es el punto de entrada (sin token).
+  `POST /auth/refresh` no lleva `Authorization`, pero sí un refresh token válido (cookie o
+  body). `POST /auth/logout` y `GET /auth/me` exigen `Authorization: Bearer`.
+- **Ningún rol específico** para estos cuatro endpoints: son iguales para los cuatro roles. La
+  matriz del Anexo A aplica a los endpoints de negocio de los demás specs.
+- **Nunca salen en una respuesta:** `password_hash` (§9.1), `token_hash` de `refresh_tokens`,
+  ni el refresh token en claro.
+- **`firstName`/`lastName`** son texto libre de entrada administrativa; se sanean al renderizar,
+  nunca al guardar.
 
 ### 9.1 Por qué `password_hash` nunca sale en una respuesta
 
@@ -584,44 +332,20 @@ Un hash de BCrypt filtrado no es información pública "de todos modos": permite
 - **El mensaje de bloqueo (429) es distinto del de credenciales inválidas (401)** deliberadamente: distinguir "estás bloqueado" de "credenciales incorrectas" no revela si el email existe (ambos 401 y 429 pueden ocurrir para un email inexistente si alguien machaca ese email en particular), y sí le da al usuario legítimo bloqueado una indicación útil de qué pasó y cuándo reintentar.
 - **No se bloquea la cuenta de forma permanente ni se notifica al usuario por correo:** no hay integración de correo en el alcance del proyecto (SPEC-000 §1). El bloqueo es temporal y autolimitado.
 
-## 10. Consideraciones de extensibilidad
+## 10. Checklist propio
 
-- [x] **¿Usa catálogos configurables en vez de enums hardcodeados?** Sí: el rol es `catalog_items` del tipo `ROLE` (SPEC-003), consumido por FK `role_item_id`. Añadir un cuarto rol en el futuro (p. ej. "supervisor externo") es una fila nueva en `catalog_items`, no un cambio de código ni una migración de esquema.
-- [x] **¿La lógica de negocio está en el Service, no en el Controller?** Sí: `AuthController` solo parsea el request, delega a `AuthService`, y traduce el resultado al sobre `ApiResponse`. Toda decisión (umbral de intentos, rotación, revocación en cascada) vive en `AuthServiceImpl`.
-- [x] **¿Los textos de UI son externalizables (i18n-ready)?** Los mensajes de error del backend (`"Invalid email or password"`, etc.) son claves de mensaje, no lógica; el frontend puede mapearlos a un catálogo de i18n sin tocar el backend. No se hardcodea español ni inglés en la lógica de negocio, solo en los `message` de las respuestas, que es donde corresponde.
-- [x] **¿Las reglas de negocio específicas de PUCP están en configuración, no en código?** Sí: no hay ninguna referencia a "PUCP", a un dominio de correo institucional, ni a un directorio LDAP en la lógica de autenticación. El sistema autentica contra su propia tabla `users`, algo que cualquier otro cliente institucional puede reutilizar sin modificar código, solo cargando sus propios usuarios.
+El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
-## 11. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] ¿El spec tiene objetivo claro y en una oración?
-- [x] ¿Los contratos de API están definidos con tipos exactos?
-- [x] ¿La migración SQL está definida?
-- [x] ¿Hay al menos 5 criterios de aceptación verificables? — 10.
-- [x] ¿Se contemplan flujos alternativos y edge cases?
-- [x] ¿Se especifica comportamiento para web Y móvil?
-- [ ] ¿Alguien más revisó y aprobó el spec? — pendiente de peer review.
-
-### Después de recibir código de la IA
-
-- [ ] El código respeta la estructura de carpetas del proyecto (`modules/auth/`, `shared/security/`).
-- [ ] El paquete Java es `pe.edu.pucp.hesperides.modules.auth.[capa]` y `pe.edu.pucp.hesperides.shared.security`.
-- [ ] Los componentes TypeScript están en la carpeta correcta (`components/forms/LoginForm.tsx`, `hooks/useAuth.ts`).
-- [ ] Los nombres de clases/componentes siguen las convenciones de SPEC-000 §5.2/§5.3.
-- [ ] La migración Flyway `V002__create_users.sql` tiene el número de versión correcto y no colisiona con V001 ni con las V003+ de SPEC-002.
-- [ ] No se instalaron dependencias no autorizadas fuera de `spring-boot-starter-security`, `jjwt-*` y `expo-secure-store`/Keychain.
-- [ ] Los tests generados cubren todos los criterios de aceptación de la sección 6.
-- [ ] Todos los tests pasan (`mvn test` / `npm test`).
-- [ ] La funcionalidad se probó manualmente en web: cookie `HttpOnly`+`Secure`+`SameSite=Strict` visible en DevTools, refresh encolado verificado con Network throttling.
-- [ ] La funcionalidad se probó manualmente en móvil (o simulador): tokens en SecureStore, no en AsyncStorage.
-- [ ] No hay datos hardcodeados (URLs, credenciales, nombres de PUCP en lógica).
-- [ ] Los mensajes de error son claros para el usuario final y no filtran si un email existe.
-- [ ] No hay `System.out.println`, `console.log` de depuración, y ningún log contiene contraseñas, hashes o tokens completos.
-- [ ] Se usó soft delete (no `DELETE`) en `users`; `refresh_tokens` se revoca (`revoked_at`), nunca se borra.
-- [ ] Se usaron catálogos configurables (`ROLE`) donde corresponde; no hay `enum RoleEnum` en el código Java.
-
----
+- [ ] `V002__create_users.sql` no colisiona con V001 ni con las V003+ de SPEC-002.
+- [ ] Sin dependencias fuera de `spring-boot-starter-security`, `jjwt-*` y
+      `expo-secure-store`/Keychain.
+- [ ] **Web:** cookie `HttpOnly`+`Secure`+`SameSite=Strict` visible en DevTools, y refresh
+      encolado verificado con Network throttling (Anexo C).
+- [ ] **Móvil:** tokens en SecureStore, nunca en AsyncStorage.
+- [ ] `users` usa soft delete; `refresh_tokens` se revoca (`revoked_at`), nunca se borra.
+- [ ] No hay `enum RoleEnum`: el rol es FK a `catalog_items` de tipo `ROLE`.
+- [ ] Los mensajes de error no filtran si un email existe.
+- [ ] Ningún log contiene contraseñas, hashes ni tokens completos (§9.2).
 
 ## Anexo A — Matriz de permisos por rol × módulo × acción
 
@@ -683,7 +407,12 @@ Esta matriz se traduce en Spring Security como expresiones sobre el `code` del r
 
 - `SecurityConfig` (`shared/security`) define una `SecurityFilterChain` con `sessionCreationPolicy(STATELESS)` — no hay `HttpSession` del lado del servidor; toda la autenticación vive en el JWT y en `refresh_tokens`.
 - `JwtAuthenticationFilter` extiende `OncePerRequestFilter`, se registra antes de `UsernamePasswordAuthenticationFilter`, y por cada request: extrae el `Authorization: Bearer`, valida firma y expiración con `JwtTokenProvider`, carga el `UserDetails` vía `CustomUserDetailsService.loadUserByUsername(email)` (que a su vez consulta `UsersRepository` y por tanto refleja `is_active` en tiempo real), y si todo es válido, puebla el `SecurityContextHolder` con una `Authentication` cuyas `authorities` son `[ROLE_<code>]` o el `code` plano según se use `hasRole` o `hasAuthority` (este spec usa `hasAuthority` con el `code` tal cual, sin prefijo `ROLE_`, para que coincida exactamente con `catalog_items.code`).
-- Rutas públicas (sin filtro de autenticación): `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`. Todo lo demás bajo `/api/v1/**` exige un access token válido como mínimo; la autorización fina por rol la añade `@PreAuthorize` en cada controller según el Anexo A.
+- Rutas públicas (sin filtro de autenticación): `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `GET /api/v1/health` y **`OPTIONS` sobre `/api/**`** (el preflight de CORS, ver abajo). Todo lo demás bajo `/api/v1/**` exige un access token válido como mínimo; la autorización fina por rol la añade `@PreAuthorize` en cada controller según el Anexo A.
+- **CORS es parte de esta cadena, no un detalle de infraestructura.** `SecurityConfig` recibe el `CorsConfigurationSource` de `shared/security/CorsConfig.java` (REGLAS.md §5.2.2) y lo conecta con `.cors(cors -> cors.configurationSource(...))`. Dos razones por las que no es opcional:
+  1. **El preflight `OPTIONS` debe ser público.** El navegador lo envía antes de cada `POST` cross-origin y **no incluye credenciales por diseño**. Si la cadena lo exige, responde 401, el navegador aborta y la petición real nunca sale: el usuario ve un fallo de red aunque el backend esté perfectamente sano.
+  2. **`allowCredentials` debe estar activo** o el navegador descarta la cookie `refresh_token` de §5.1 — el flujo web entero (incluido el refresh encolado del Anexo C) depende de que esa cookie viaje.
+
+  Corolario de verificación: **los tests de MockMvc y las pruebas con `curl` no detectan un fallo de CORS**, porque ninguno hace preflight ni valida las cabeceras. Un CA que diga "el login funciona" solo está verificado de verdad si se comprobó en un navegador.
 - **Qué pasa cuando el access token expira:** el filtro detecta la excepción de expiración de JJWT, no puebla el `SecurityContextHolder`, y delega en un `AuthenticationEntryPoint` custom que responde directamente `401` con el sobre `{ ok: false, message: "Invalid or expired token", data: null }" — nunca deja que la petición llegue al controller ni que Spring Security devuelva su página de error HTML por defecto.
 - **Qué pasa cuando el rol no alcanza:** `@PreAuthorize` deniega antes de invocar el método del controller; un `AccessDeniedHandler` custom traduce eso a `403` con `{ ok: false, message: "Insufficient permissions for this action", data: null }`, igual que en la plantilla de contratos de API (sección 3 de `_plantilla.md`).
 - El cliente (web o móvil) es responsable de disparar el flujo de refresh ante ese 401 antes de asumir que la sesión terminó (sección 6); el backend no distingue "expiró" de "nunca existió" en el mensaje, por la misma razón de no filtrar información que en el login.

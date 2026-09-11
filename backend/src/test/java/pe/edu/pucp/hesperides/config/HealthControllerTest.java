@@ -6,6 +6,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
 import pe.edu.pucp.hesperides.shared.security.CustomUserDetailsService;
 import pe.edu.pucp.hesperides.shared.security.JwtTokenProvider;
 import pe.edu.pucp.hesperides.shared.security.RestAccessDeniedHandler;
@@ -37,6 +38,11 @@ class HealthControllerTest {
 
     @MockitoBean
     private CustomUserDetailsService customUserDetailsService;
+
+    // Lo exige PasswordChangeRequiredFilter, que SecurityConfig registra en la
+    // cadena: un slice de @WebMvcTest no carga repositorios.
+    @MockitoBean
+    private UsersRepository usersRepository;
 
     @Test
     void health_returns200WithSuccessEnvelope() throws Exception {

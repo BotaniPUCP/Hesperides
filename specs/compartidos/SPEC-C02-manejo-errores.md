@@ -1,16 +1,11 @@
 # SPEC-C02 — Manejo de errores
 
-## Metadatos
-
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | Transversal — sin HU propia, spec fundacional compartido |
-| Autor del spec | Equipo Hesperides |
 | Plataforma | Ambas (Web y Móvil) |
-| Prioridad | Alta |
 | Sprint | S0 |
-| Dependencias | SPEC-000 (arquitectura general, sección 7 — SPEC-C02) |
-| Fecha límite | 2026-09-07 |
+| Dependencias | `REGLAS.md` |
 
 ---
 
@@ -22,13 +17,9 @@ Este spec **documenta contrato ya implementado y en producción**, no propone un
 
 ## 2. Contexto para la IA
 
-> INSTRUCCIÓN: antes de generar código, la IA debe leer obligatoriamente:
-> - Este spec completo
-> - SPEC-000 (arquitectura y convenciones), sección 7 — SPEC-C02
-> - El código ya implementado en `backend/src/main/java/pe/edu/pucp/hesperides/shared/exception/`
-> - `frontend/src/lib/api.ts` (cliente HTTP web)
-> - `shared/types/api.ts` (contratos TypeScript del sobre de respuesta)
-> - `services/app/routes/health.py` (referencia de cómo el microservicio Python replica el sobre)
+> **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
+> **Específico de este spec:** código ya implementado en `shared/exception/`, `frontend/src/lib/api.ts`,
+> `shared/types/api.ts` y `services/app/routes/health.py` (el sobre replicado en Flask).
 
 ### 2.1 Módulo backend
 
@@ -198,7 +189,25 @@ Todo pasa por `frontend/src/lib/api.ts`. La función `request<T>` ya distingue d
 | `409` | Mostrar mensaje inline o modal indicando el conflicto (ej. "Ya existe un elemento con este código de inventario"), permitiendo corregir el campo sin perder el resto del formulario. |
 | `422` | Mostrar el `message` de la excepción de regla de negocio como error visible al usuario (no es un bug, es una regla del dominio que el usuario debe entender: ej. "No se puede cerrar la intervención sin evidencia fotográfica"). |
 | `500` | Toast genérico: "Error del servidor. Intente más tarde." Nunca mostrar `error.message` crudo del backend en este caso (el backend ya lo fija a `"Unexpected server error"`, pero el frontend tampoco debe intentar interpretarlo). |
-| Error de red (`ApiError.status === 0`, `fetch` lanzó) | Toast de conexión: "Sin conexión. Verifique su red." — **ver tratamiento especial en 6.1, crítico para el uso en campo.** |
+| Error de red (`ApiError.status === 0`, `fetch` lanzó) | Toast de conexión: "Sin conexión. Verifique su red." — **ver tratamiento especial en 6.1, crítico para el uso en campo, y la advertencia de 6.0 sobre falsos positivos.** |
+
+### 6.0 `status === 0` no siempre significa "sin red"
+
+`fetch` lanza —y por tanto se traduce a `status: 0`— ante **cualquier** fallo previo a recibir
+una respuesta HTTP, no solo ante la falta de conexión. En desarrollo, la causa más frecuente no
+es la red:
+
+| Causa real | Qué ve el usuario | Cómo distinguirla |
+|---|---|---|
+| **CORS mal configurado** (preflight `OPTIONS` con 401, falta `Allow-Origin`, falta `Allow-Credentials`) | "Sin conexión. Verifique su red." | La consola del navegador muestra un error de CORS explícito, y la pestaña Network un `OPTIONS` fallido **antes** de la petición real. El backend responde 200 por `curl` |
+| Backend caído o puerto equivocado | El mismo mensaje | `curl` al endpoint también falla |
+| `NEXT_PUBLIC_API_URL` apuntando a otro host | El mismo mensaje | La URL de la petición en Network no es la esperada |
+| Sin red de verdad | El mismo mensaje | Todo falla, incluido cargar la propia página |
+
+**El mensaje al usuario no cambia** —no tiene forma de actuar distinto y especular le daría
+información falsa—, pero **quien depura debe saber que este mensaje es ambiguo**. Ante un "sin
+conexión" con el backend sano, revisar CORS antes que la red: es el caso más común y el menos
+evidente (ver REGLAS.md §5.2.2).
 
 ### 6.1 Conectividad intermitente en campo (móvil) — tratamiento obligatorio
 
@@ -240,86 +249,39 @@ Los operarios registran incidencias e intervenciones desde el móvil en el campu
 
 ## 10. Tests
 
-### 10.1 Tests unitarios / de integración backend (JUnit 5 + `@WebMvcTest` o `@SpringBootTest`)
+**La suite está en `shared/exception/**Test.java` y `frontend/src/lib/__tests__/`.** Lo que debe
+quedar fijado:
 
 ```
-- GlobalExceptionHandler.handleResourceNotFound() → 404, ok:false, message del la excepción, data:null
-- GlobalExceptionHandler.handleDuplicate() → 409, ok:false, message de la excepción
-- GlobalExceptionHandler.handleBusinessRule() → 422, ok:false, message de la excepción
-- GlobalExceptionHandler.handleUnauthorized() → 401, ok:false, message de la excepción
-- GlobalExceptionHandler.handleValidation() con MethodArgumentNotValidException de 2 campos
-  → 400, ok:false, message:"Validation failed", data.errors con 2 entradas {field, message}
-- GlobalExceptionHandler.handleNoHandlerFound() → 404, ok:false, message:"Endpoint not found"
-- GlobalExceptionHandler.handleUnexpected() con una RuntimeException genérica
-  → 500, ok:false, message:"Unexpected server error" (nunca el mensaje real de la excepción)
-- Integración: GET a una ruta no registrada (ej. /api/v1/no-existe) → 404, no 500
-- Integración: POST con body vacío a un endpoint con @Valid → 400 con data.errors no vacío
-- Integración: ninguna respuesta de error contiene la cadena "Exception" ni una ruta de archivo
-  del proyecto (assert negativo sobre el body de la respuesta)
+- cada excepción custom → su código HTTP de §4, sin excepciones
+- una excepción NO contemplada → 500 con mensaje genérico, nunca el mensaje interno
+- ninguna respuesta de error contiene stacktrace, nombre de clase ni ruta de archivo
+- el error de validación lleva data.errors[] con field y message por campo
+- el microservicio Flask devuelve el MISMO sobre que el backend (mismo test, dos servicios)
+- ApiError con status 0 no se rotula "sin red" sin descartar antes CORS (§6.0)
+- un 401 dispara el refresh encolado una sola vez, no una por petición en vuelo
 ```
 
-### 10.2 Tests del microservicio Flask (pytest)
+## 11. Propio de este spec
 
-```
-- GET /health (o /api/v1/health, según la decisión de SPEC-C03) → 200,
-  cuerpo { ok: true, message, data: { status: "UP" } }, mismo sobre que el backend
-```
+Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio del manejo de errores:
 
-### 10.3 Tests frontend (Jest + Testing Library)
+- **Nunca salen al cliente:** stacktraces, nombres de clases internas, rutas de archivo del
+  servidor, valores de campos sensibles ecoados en mensajes de validación, tokens.
+- **XSS:** los `message` son texto plano. El frontend los renderiza como texto, nunca con
+  `dangerouslySetInnerHTML`.
+- **Sin catálogos:** los códigos HTTP y las cuatro excepciones custom son contrato técnico
+  fijo, no datos de negocio configurables.
+- **Un solo punto de mapeo:** excepción → HTTP vive en `GlobalExceptionHandler`, nunca en un
+  Controller ni en un Service.
+- **Idioma:** los mensajes son inglés en el código (§5.1); traducirlos al usuario final es
+  responsabilidad del frontend, sin tocar el backend.
 
-```
-- api.ts request() con fetch que rechaza (network error) → lanza ApiError con status 0
-  y message "Sin conexión. Verifique su red."
-- api.ts request() con response.ok:false y envelope.ok:false → lanza ApiError
-  con el status HTTP real y el message del envelope
-- api.ts request() con response 200 y envelope.ok:true → retorna envelope.data
-- Componente de formulario: al recibir ApiError con status 400 y data.errors,
-  muestra cada mensaje bajo su campo correspondiente
-- Componente de formulario: al recibir ApiError con status 0 (red), muestra el toast
-  de conexión y NO limpia los valores del formulario
-- Hook/contexto de auth: al recibir ApiError con status 401, dispara el flujo de
-  refresh; si el refresh falla, redirige a /login
-```
+**Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-### 10.4 Tests E2E (si aplica)
-
-```
-- Usuario intenta cerrar una intervención sin fotos adjuntas → la API responde 422
-  → la UI muestra el mensaje de regla de negocio sin recargar la página
-- Usuario pierde conexión a mitad de un registro de incidencia en móvil → la app
-  muestra el estado de "sin conexión" y permite reintentar sin perder lo ya escrito
-```
-
-## 11. Seguridad
-
-- [x] Validación en backend (Bean Validation) es la única fuente de verdad; la validación de frontend es solo UX, nunca sustituye la de backend.
-- [x] El manejo de errores no requiere autenticación en sí mismo, pero los códigos 401/403 sí dependen de JWT (SPEC-001).
-- [x] Roles/permisos: no aplica a este spec (lo hereda SPEC-001 para 403).
-- [x] Datos sensibles que NO deben exponerse en ninguna respuesta de error: stacktraces, nombres de clases internas, rutas de archivo del servidor, valores de campos sensibles ecoados en mensajes de validación, tokens.
-- [x] Prevención de inyección SQL: no aplica directamente a este spec (lo cubre JPA/Hibernate a nivel de repositorios).
-- [x] XSS: los `message` de error son texto plano; el frontend debe renderizarlos como texto, nunca con `dangerouslySetInnerHTML` o equivalente.
-
-## 12. Consideraciones de extensibilidad
-
-- [x] No usa catálogos configurables — los códigos de error HTTP y las excepciones custom son parte fija del contrato técnico, no datos de negocio.
-- [x] Toda la lógica de mapeo excepción→HTTP vive en `GlobalExceptionHandler` (capa de infraestructura transversal), nunca en un Controller ni en un Service individual.
-- [x] Los mensajes de error son textos en inglés en el código (convención SPEC-000 5.1); su traducción/presentación final al usuario final es responsabilidad del frontend, que puede mapear mensajes conocidos a copys en español sin tocar el backend.
-- [x] No hay reglas específicas de PUCP en este spec: es 100% portable a otro cliente.
-
-## 13. Checklist de verificación (para el desarrollador)
-
-### Antes de pedir código a la IA
-
-- [x] Spec tiene objetivo claro en una oración.
-- [x] La tabla de excepciones cubre todos los casos existentes en `GlobalExceptionHandler.java`.
-- [x] Hay al menos 5 criterios de aceptación verificables sin leer código (hay 7).
-- [x] Se contemplan flujos alternativos y edge cases (red caída, doble submit, 401 vs 403).
-- [x] Se especifica comportamiento para web y móvil, con énfasis en el caso de campo con mala conexión.
-
-### Después de recibir código de la IA
-
-- [ ] Toda excepción nueva de dominio extiende una de las cuatro custom, o se justifica una nueva y se agrega a este spec.
-- [ ] Ningún `try/catch` vacío en el código nuevo.
+- [ ] Toda excepción nueva de dominio extiende una de las cuatro custom, o se justifica y se
+      añade a este spec.
+- [ ] Ningún `try/catch` vacío.
 - [ ] Ningún mensaje de excepción interna llega al cliente sin pasar por `GlobalExceptionHandler`.
-- [ ] Los logs de nivel `warn`/`error` no contienen datos sensibles.
 - [ ] Los tests de la sección 10 pasan.
+
