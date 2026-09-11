@@ -1,0 +1,61 @@
+# Configuración exclusiva de tests. Existe para que las variables que en
+# producción son obligatorias (fail fast si faltan) tengan un valor conocido
+# aquí, sin debilitar esa exigencia en application.yml.
+#
+# La clave de abajo es de prueba y no protege nada: los tests no manejan datos
+# reales y cada ejecución levanta una base efímera con Testcontainers.
+
+# NOTA: este archivo REEMPLAZA a src/main/resources/application.yml, no lo
+# complementa. Por eso repite el bloque hesperides.security completo: omitir
+# una sola propiedad la deja sin resolver.
+
+hesperides:
+  security:
+    jwt:
+      secret: clave-de-prueba-suficientemente-larga-para-hs256-en-tests
+      access-token-validity-seconds: 1800
+      refresh-token-validity-days: 7
+    cookie:
+      secure: false
+    login:
+      max-attempts: 5
+      window-minutes: 15
+    cors:
+      allowed-origins: http://localhost:3000
+  mail:
+    from: no-reply@hesperides.test
+    app-public-url: https://hesperides.test
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+  data:
+    web:
+      pageable:
+        # Debe coincidir con application.yml de main: este archivo lo REEMPLAZA, y
+        # omitirla aqui haria que los tests validaran una forma de pagina distinta
+        # de la que sirve produccion.
+        serialization-mode: via-dto
+  mail:
+    # GreenMail escucha en 3025 por defecto (ServerSetupTest.SMTP). Los tests que
+    # necesitan un puerto distinto lo sobreescriben con @DynamicPropertySource.
+    host: localhost
+    port: 3025
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+
+logging:
+  level:
+    org.testcontainers: WARN
+    com.github.dockerjava: WARN

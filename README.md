@@ -5,7 +5,7 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 ## Descripción
 
 **Hesperides** es un proyecto de investigación que implementa una arquitectura distribuida en tres capas:
-- Backend REST escalable (Spring Boot, Java 17)
+- Backend REST escalable (Spring Boot 4.1, Java 26)
 - Frontend responsivo (Next.js, TypeScript/React)
 - Data service especializado (Python Flask)
 
@@ -14,7 +14,9 @@ El dominio funcional y las características específicas se definen en los specs
 ## Requisitos previos
 
 - **Docker** 24+ (compose incluido)
-- **JDK 17+** (se compila a Java 17; el entorno local tiene JDK 21)
+- **JDK 26** — obligatorio. El backend fija `<java.version>26</java.version>`; con un
+  JDK anterior `./mvnw test` falla con `release version 26 not supported`. Verifica tu
+  versión con `java -version` antes de empezar.
 - **Node.js** 20+
 - **Python** 3.11+
 - **Git**
@@ -46,7 +48,7 @@ Acceso local:
 
 | Servicio        | Puerto | Contenedor          | Descripción                          |
 |-----------------|--------|---------------------|--------------------------------------|
-| PostgreSQL      | 5432   | hesperides-db       | Base de datos relacional             |
+| PostgreSQL      | 5432   | hesperides-db       | Base de datos relacional con PostGIS |
 | Backend (API)   | 8080   | hesperides-backend  | Spring Boot, endpoints REST          |
 | Frontend (Web)  | 3000   | hesperides-frontend | Next.js, UI para navegador           |
 | Data Service    | 5001   | hesperides-data-service | Python Flask, procesamiento de datos |
@@ -110,7 +112,7 @@ Dos detalles del entorno que conviene conocer:
 │   ├── _plantilla.md           # Template para nuevos specs
 │   └── REGISTRO.md             # Seguimiento de specs
 │
-├── backend/                    # Spring Boot (Java 17)
+├── backend/                    # Spring Boot (Java 26)
 │   ├── src/
 │   ├── pom.xml
 │   └── .mvn/wrapper/           # Maven Wrapper
@@ -211,7 +213,7 @@ Los tests se ejecutan automáticamente en GitHub Actions:
 ### Producción (AWS)
 El despliegue a la nube está pendiente de licencias AWS. Cuando esté disponible:
 - **Compute**: EC2 para backend
-- **Data**: RDS PostgreSQL
+- **Data**: RDS PostgreSQL con la extensión PostGIS habilitada (el catastro usa columnas `GEOMETRY`)
 - **Storage**: S3 para archivos y reportes
 - **Monitoring**: CloudWatch
 
