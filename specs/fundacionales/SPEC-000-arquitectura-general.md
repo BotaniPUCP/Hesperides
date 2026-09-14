@@ -30,13 +30,14 @@ Este software se diseña para la PUCP pero debe ser adaptable a otros clientes s
 - **Catálogos configurables** en vez de datos hardcodeados (tipos, estados, roles, etiquetas).
 - **Separación estricta** entre lógica de negocio, presentación y configuración.
 - **Sin referencias hardcodeadas** a "PUCP" en lógica de negocio — usar configuración externalizada.
-- **Sin dependencia de servicios externos** (SaaS, APIs de terceros) en esta versión, **con una
-  única excepción: el envío de correo por SMTP** (ver nota abajo).
+- **Sin dependencia de servicios externos** (SaaS, APIs de terceros) en esta versión, **salvo tres
+  excepciones acotadas**: el envío de correo por **SMTP**, la publicación en el **mapa interactivo
+  del cliente** y el **servicio de mapas** que lo renderiza (ver nota abajo).
 
-> **Nota sobre SMTP** (enmienda de SPEC-100 §2.5). La excepción del SMTP, su justificación y
-> la condición que la acota —su caída nunca impide una operación de negocio— están en
-> [`REGLAS.md` §0.1](../REGLAS.md). Ninguna otra dependencia externa se admite sin enmendar
-> este documento.
+> **Nota sobre las excepciones** (enmiendas de SPEC-100 §2.5 y SPEC-005). Las tres excepciones,
+> su justificación y la condición que las acota —su caída nunca impide una operación de negocio—
+> están en [`REGLAS.md` §0.1](../REGLAS.md). Ninguna otra dependencia externa se admite sin
+> enmendar este documento.
 
 **Regla de oro:** si un spec no puede ser verificado por alguien que no domina la tecnología, el spec está incompleto.
 

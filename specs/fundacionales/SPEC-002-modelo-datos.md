@@ -227,7 +227,32 @@ CREATE INDEX idx_zones_boundary ON zones USING GIST(boundary);
 | `boundary` | GEOMETRY(Polygon, 4326) | Sí | Polígono del perímetro. Nulable porque una zona puede registrarse administrativamente antes de que se digitalice su contorno. |
 | `area_m2` | NUMERIC(12,2) | Sí | Área declarada. Se guarda además de calcularse de `boundary` porque el área oficial del cliente puede no coincidir con la digitalización, y manda la oficial. |
 
-> ⚠️ **Pendiente del cliente:** la **zonificación oficial del campus** — cuántos niveles tiene la jerarquía (¿sector / subsector / jardín?), el listado de zonas con sus códigos y nombres, y los polígonos de sus perímetros. Sin esto la tabla queda vacía. Los valores del catálogo `ZONE_TYPE` también dependen de esta entrega (§4.7).
+> ⚠️ **Pendiente del cliente (parcialmente resuelto — ver enmienda abajo):** los **polígonos** de
+> los perímetros y el mapeo de qué lugar pertenece a qué sector.
+
+> **Enmienda de SPEC-005 (2.ª entrevista).** La jerarquía **ya no es una incógnita**. La pregunta
+> original de este spec —«¿sector / subsector / jardín?»— tiene respuesta, y no es la que
+> suponíamos:
+>
+> ```
+> Sector de mantenimiento (3)   ← división operativa VIVA: organiza al personal y el riego
+>    └── Lugar / referente (74)  ← lo que se registra a diario (edificios, facultades, vías)
+>         └── Jardín (~100)      ← unidad del corte de césped, con código numérico y shape
+>
+> Cuartel forestal (17)          ← división histórica, EN DESUSO
+> ```
+>
+> **Los cuarteles forestales no son el eje de la zonificación.** El cliente los nombró en la 1.ª
+> entrevista, pero en la 2.ª aclaró que «se usa cada vez menos… no me da mucha información». Se
+> conservan **solo** para poder interpretar el inventario de especies antiguo, que se ubica por
+> cuartel y no tiene coordenadas.
+>
+> Los **3 sectores de mantenimiento** son la división real: fijos («sus zonas no varían»), de
+> ~4.5 + ~4.5 + ~3 ha, uno por capataz, y dibujados en el mapa interactivo del cliente. Son la
+> unidad del ciclo de riego. **Cuidado:** en el Excel la columna se llama «Sector de jefe de
+> grupo» y contiene nombres de personas — el sector es territorio, no persona.
+>
+> Detalle completo en SPEC-005 §4.4.1 y §4.4.2.
 
 ### 4.4 V005 — Especies
 
@@ -455,6 +480,39 @@ CREATE INDEX idx_intervention_evidences_moment
 `moment_item_id` apunta al catálogo `EVIDENCE_MOMENT` (`BEFORE` / `AFTER`). Es catálogo y no booleano `is_before` porque el cliente puede pedir mañana un momento "durante" sin migrar datos.
 
 `captured_location` guarda dónde se tomó la foto según el GPS del dispositivo, no dónde está el elemento. Sirve para contrastar que la evidencia se capturó en campo y no desde una oficina; es un dato de auditoría, no de catastro.
+
+> **Enmienda de SPEC-005 (2.ª entrevista) — el ciclo de subida diferida.**
+>
+> El §2.3 de este spec dice que «el cacheo offline es una decisión del spec de móvil». **Sigue
+> siendo cierto para la app, pero no para el servidor**: hay cobertura en el campus pero no llega
+> a todos los rincones, y el cliente exigió que **la foto se guarde siempre en el teléfono —con o
+> sin red— y se suba sola al reconectar**. Para el operario **nunca existe un «no se pudo
+> guardar»**.
+>
+> Eso obliga a una columna en `intervention_evidences`, porque el servidor necesita saber si una
+> evidencia **llegó** o **está anunciada pero pendiente**:
+>
+> ```sql
+> -- V0XX (rango de SPEC-005)
+> ALTER TABLE intervention_evidences
+>     ADD COLUMN uploaded_at TIMESTAMP,
+>     ADD COLUMN client_reference VARCHAR(100);
+>
+> CREATE INDEX idx_intervention_evidences_pending
+>     ON intervention_evidences(intervention_id) WHERE uploaded_at IS NULL;
+> ```
+>
+> `uploaded_at IS NULL` significa **«el dispositivo la tiene, la nube todavía no»**. Es el reflejo
+> en servidor del flag `subida_a_la_nube` del móvil (MOV-3), y lo que alimenta el **indicador de
+> pendientes** que impide a un capataz terminar su turno sin haber subido todo (MOV-5).
+>
+> `client_reference` es el identificador que el dispositivo asigna a la foto antes de que exista
+> en el servidor. **Sin él no hay idempotencia:** un reintento tras una subida a medias crearía
+> evidencias duplicadas.
+>
+> **Por qué `storage_key` no basta.** Es `NOT NULL`, así que exigiría inventar una clave de
+> almacenamiento para un archivo que aún no se ha subido. Distinguir «anunciada» de «recibida»
+> necesita su propia columna.
 
 > ⚠️ **Pendiente del cliente:** el **formato del reporte diario de intervenciones** y el **Excel de checklist de jardines**. Determinan si `execution_notes` (texto libre) basta o si hace falta una tabla de ítems de checklist con respuestas estructuradas. Estructura mínima definida; la ampliación queda a un SPEC-2XX.
 

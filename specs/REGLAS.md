@@ -35,14 +35,35 @@ Toda feature las cumple. No se re-justifican en cada spec.
 
 ### 0.1 Dependencias externas
 
-**Sin dependencia de servicios externos** (SaaS, APIs de terceros), **con una única excepción:
-el envío de correo por SMTP**. Un servidor SMTP es infraestructura estándar y sustituirlo es
-cambiar variables de entorno, no código.
+**Sin dependencia de servicios externos** (SaaS, APIs de terceros), **salvo tres excepciones
+acotadas**:
 
-**Condición que acota la excepción:** la indisponibilidad del SMTP **nunca puede impedir una
-operación de negocio**. Todo envío ocurre fuera de la transacción que persiste el cambio, y su
-fallo se registra como estado recuperable, jamás como error que revierta la operación.
-(SPEC-100 §5.3 es la aplicación concreta.)
+| # | Excepción | Por qué se admite | Spec que la introdujo |
+|---|---|---|---|
+| 1 | **Envío de correo por SMTP** | Es infraestructura estándar; sustituirla es cambiar variables de entorno, no código | SPEC-100 |
+| 2 | **Publicación en el mapa interactivo del cliente** (hoy GitHub) | El cliente **ya tiene** ese mapa y pidió que el sistema lo alimente. Es su herramienta, no una que elijamos nosotros | SPEC-005 |
+| 3 | **Servicio de mapas** para renderizar (hoy Google Maps) | No existe forma razonable de mostrar un catastro georreferenciado sin un proveedor de mapa base | SPEC-005 |
+
+**La condición que acota las tres es la misma:** su indisponibilidad **nunca puede impedir una
+operación de negocio**.
+
+- **SMTP:** todo envío ocurre fuera de la transacción que persiste el cambio, y su fallo se
+  registra como estado recuperable, jamás como error que revierta la operación.
+  (SPEC-100 §5.3 es la aplicación concreta.)
+- **Publicación en el mapa del cliente:** registrar una intervención **se completa siempre**,
+  aunque la publicación falle. La publicación es un paso posterior, reintentable y con estado
+  propio — nunca parte de la transacción que guarda la intervención. Si GitHub no responde, el
+  operario no se entera.
+- **Servicio de mapas:** si no carga, las pantallas que dependen de él se degradan a listas y
+  formularios. **Ninguna operación de registro o consulta puede exigir que el mapa haya
+  cargado.**
+
+**Regla de aislamiento.** Cada una de las tres se consume detrás de una abstracción propia, y
+**ningún servicio de dominio conoce al proveedor concreto**. Cambiar GitHub por otro destino, o
+Google Maps por otro proveedor, debe ser sustituir una implementación — no tocar la lógica de
+negocio. Es la misma razón por la que el SMTP nunca aparece en un service: **hoy el mapa del
+cliente vive en el repositorio personal de una locadora de servicios**, y esa dependencia puede
+desaparecer sin avisarnos.
 
 Ninguna otra dependencia externa está admitida sin enmendar el SPEC-000 y anotarlo en
 `REGISTRO.md`.
