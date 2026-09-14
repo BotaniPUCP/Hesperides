@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Verifica que Flyway aplica todas las migraciones y deja el esquema esperado. */
@@ -169,5 +170,201 @@ class MigrationSmokeTest {
         assertThatThrownBy(() -> jdbcTemplate.update(
                 "INSERT INTO team_members (team_id, user_id) VALUES (?, ?)", teamId, adminId))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    // ─── SPEC-005 §4.1-4.2 · Taxonomía de intervenciones ────────────────────
+
+    @Test
+    void catalogItemsAcceptsTwoLevelHierarchy() {
+        List<String> columns = jdbcTemplate.queryForList(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'catalog_items'",
+                String.class);
+        assertThat(columns).contains("parent_item_id");
+    }
+
+    @Test
+    void anItemCannotBeItsOwnParent() {
+        Long anyItemId = jdbcTemplate.queryForObject("""
+                SELECT ci.id FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'ROLE' AND ci.code = 'ADMIN'
+                """, Long.class);
+
+        assertThatThrownBy(() -> jdbcTemplate.update(
+                "UPDATE catalog_items SET parent_item_id = ? WHERE id = ?", anyItemId, anyItemId))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void theNineRealInterventionClassesAreSeeded() {
+        List<String> codes = jdbcTemplate.queryForList("""
+                SELECT ci.code FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_CLASS' AND ci.is_active = TRUE
+                ORDER BY ci.sort_order
+                """, String.class);
+
+        assertThat(codes).containsExactly(
+                "HABILITACION", "REHABILITACION", "MANTENIMIENTO", "PODA", "PROPAGACION",
+                "RIEGO", "FITOSANITARIO", "RESIDUOS", "INSPECCION");
+    }
+
+    @Test
+    void theFortyFiveRealInterventionTypesAreSeeded() {
+        Integer total = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_TYPE' AND ci.is_active = TRUE
+                """, Integer.class);
+
+        assertThat(total).isEqualTo(45);
+    }
+
+    @Test
+    void theInventedTypesFromSpec002WereNeverSeeded() {
+        // V010 no llegó a escribirse, así que DECORACION y REMOCION_TERRENO no
+        // existen en ningún estado. CA-03 de SPEC-005 pide que estén inactivos;
+        // no haberlos sembrado nunca satisface el fondo del criterio.
+        Integer invented = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_TYPE'
+                  AND ci.code IN ('DECORACION', 'REMOCION_TERRENO')
+                """, Integer.class);
+
+        assertThat(invented).isZero();
+    }
+
+    @Test
+    void everyInterventionTypeHangsFromAClass() {
+        Integer orphans = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_TYPE' AND ci.parent_item_id IS NULL
+                """, Integer.class);
+        assertThat(orphans).isZero();
+
+        // El padre siempre es una clase, nunca otro tipo: la jerarquía es de dos
+        // niveles y la base no puede expresar esa regla en un CHECK.
+        Integer wrongParentType = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM catalog_items hijo
+                JOIN catalog_types t_hijo  ON t_hijo.id  = hijo.catalog_type_id
+                JOIN catalog_items padre   ON padre.id   = hijo.parent_item_id
+                JOIN catalog_types t_padre ON t_padre.id = padre.catalog_type_id
+                WHERE t_hijo.code = 'INTERVENTION_TYPE'
+                  AND t_padre.code <> 'INTERVENTION_CLASS'
+                """, Integer.class);
+        assertThat(wrongParentType).isZero();
+    }
+
+    @Test
+    void canteoHangsFromMaintenance() {
+        String parentCode = jdbcTemplate.queryForObject("""
+                SELECT padre.code FROM catalog_items hijo
+                JOIN catalog_types ct    ON ct.id = hijo.catalog_type_id
+                JOIN catalog_items padre ON padre.id = hijo.parent_item_id
+                WHERE ct.code = 'INTERVENTION_TYPE' AND hijo.code = 'CANTEO'
+                """, String.class);
+
+        assertThat(parentCode).isEqualTo("MANTENIMIENTO");
+    }
+
+    @Test
+    void eachClassHasTheNumberOfTypesTheClientMaterialDeclares() {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
+                SELECT padre.code AS clase, COUNT(hijo.id) AS tipos
+                  FROM catalog_items padre
+                  JOIN catalog_types ct ON ct.id = padre.catalog_type_id
+                  LEFT JOIN catalog_items hijo ON hijo.parent_item_id = padre.id
+                 WHERE ct.code = 'INTERVENTION_CLASS'
+                 GROUP BY padre.code
+                """);
+
+        Map<String, Long> porClase = rows.stream().collect(java.util.stream.Collectors.toMap(
+                r -> (String) r.get("clase"), r -> (Long) r.get("tipos")));
+
+        assertThat(porClase).containsOnly(
+                entry("HABILITACION", 6L), entry("REHABILITACION", 7L),
+                entry("MANTENIMIENTO", 10L), entry("PODA", 4L),
+                entry("PROPAGACION", 10L), entry("RIEGO", 4L),
+                entry("RESIDUOS", 4L),
+                // P-10: el cliente aún no ha desglosado estas dos.
+                entry("FITOSANITARIO", 0L), entry("INSPECCION", 0L));
+    }
+
+    @Test
+    void fitosanitarioAndInspeccionStillHaveNoTypes() {
+        // Pendiente bloqueante P-10 de SPEC-005: FITOSANITARIO es una de las cuatro
+        // actividades prioritarias y no se puede registrar con detalle hasta que el
+        // cliente entregue su desglose. Cuando lo haga, este test falla y obliga a
+        // actualizarlo — que es exactamente el recordatorio que queremos.
+        List<String> huerfanas = jdbcTemplate.queryForList("""
+                SELECT padre.code FROM catalog_items padre
+                JOIN catalog_types ct ON ct.id = padre.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_CLASS'
+                  AND NOT EXISTS (SELECT 1 FROM catalog_items hijo
+                                   WHERE hijo.parent_item_id = padre.id)
+                """, String.class);
+
+        assertThat(huerfanas).containsExactlyInAnyOrder("FITOSANITARIO", "INSPECCION");
+    }
+
+    @Test
+    void theThreePriorityClassesAreFlagged() {
+        List<String> codes = jdbcTemplate.queryForList("""
+                SELECT code FROM catalog_items WHERE metadata->>'priority' = 'true'
+                """, String.class);
+
+        assertThat(codes).containsExactlyInAnyOrder("PODA", "MANTENIMIENTO", "FITOSANITARIO");
+    }
+
+    @Test
+    void theFlagDoesNotRestrictSelection() {
+        // CA-14: la prioridad ordena el trabajo del equipo, no limita al usuario.
+        // Una clase sin flag debe seguir activa y seleccionable.
+        Boolean riegoActivo = jdbcTemplate.queryForObject("""
+                SELECT ci.is_active FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_CLASS' AND ci.code = 'RIEGO'
+                """, Boolean.class);
+
+        assertThat(riegoActivo).isTrue();
+    }
+
+    @Test
+    void everyTypeCarriesHelpTextForTheFieldOperator() {
+        Integer sinDescripcion = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_TYPE'
+                  AND COALESCE(ci.metadata->>'description', '') = ''
+                """, Integer.class);
+
+        assertThat(sinDescripcion).isZero();
+    }
+
+    @Test
+    void theTwoDescriptionsConfirmedByTheClientAreVerbatim() {
+        // Las únicas dos que constan en material del cliente (docs/dominio/README.md
+        // §5.4). El resto son provisionales y se contrastarán con el Excel DAF-OSG.
+        String canteo = jdbcTemplate.queryForObject("""
+                SELECT ci.metadata->>'description' FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_TYPE' AND ci.code = 'CANTEO'
+                """, String.class);
+
+        assertThat(canteo).isEqualTo("Delimitar y perfilar los bordes de jardineras o macizos");
+    }
+
+    @Test
+    void flatCatalogsKeepWorkingWithoutAParent() {
+        // La jerarquía es opcional: un ROLE o un URGENCY_LEVEL no tiene padre.
+        Integer rolesConPadre = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'ROLE' AND ci.parent_item_id IS NOT NULL
+                """, Integer.class);
+
+        assertThat(rolesConPadre).isZero();
     }
 }
