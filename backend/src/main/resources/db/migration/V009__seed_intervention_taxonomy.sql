@@ -1,14 +1,14 @@
 -- Propiedad de SPEC-005 §4.2. Fuente: hoja `tipo de actividades` del Excel
 -- DAF-OSG 2025-2026.
 --
--- DIVERGENCIA DELIBERADA CON EL SPEC: SPEC-005 §4.2 asume que V010__seed_catalogs
--- ya creó el catalog_type INTERVENTION_TYPE con seis valores inventados por
--- SPEC-002, y abre con un UPDATE que los da de baja. V010 nunca llegó a
--- escribirse, así que aquí el catalog_type se crea y no hay nada que desactivar:
--- un UPDATE copiado del spec afectaría a cero filas y describiría mal la
--- historia. DECORACION y REMOCION_TERRENO simplemente no se siembran — no
--- existen en la operación real. El fondo de CA-03 (que no se ofrezcan) se
--- cumple; la forma (que existan con is_active = FALSE) no aplica sin V010.
+-- DIVERGENCIA DELIBERADA CON EL SPEC: SPEC-005 §4.2 asume que una migración
+-- previa de SPEC-002 ya creó el catalog_type INTERVENTION_TYPE con seis valores
+-- inventados, y abre con un UPDATE que los da de baja. Esa migración nunca
+-- llegó a escribirse, así que aquí el catalog_type se crea y no hay nada que
+-- desactivar: un UPDATE copiado del spec afectaría a cero filas y describiría
+-- mal la historia. DECORACION y REMOCION_TERRENO simplemente no se siembran —
+-- no existen en la operación real. El fondo de CA-03 (que no se ofrezcan) se
+-- cumple; la forma (que existan con is_active = FALSE) no aplica aquí.
 --
 -- DESCRIPCIONES PROVISIONALES: el Excel trae una descripción por tipo, pero no
 -- está en el repositorio. Solo `Canteo` y `Deshierbo` constan textuales en
@@ -25,7 +25,7 @@ INSERT INTO catalog_types (code, name, description, is_system) VALUES
 
 -- ── Las nueve clases ─────────────────────────────────────────────────────
 -- El grupo responsable que el cliente asigna a cada clase se guarda en
--- metadata: conecta con las cuadrillas de V012 y explica por qué FITOSANITARIO
+-- metadata: conecta con las cuadrillas de V005 y explica por qué FITOSANITARIO
 -- e INSPECCION llegan sin tipos (su detalle vive fuera de la hoja de jardineros).
 INSERT INTO catalog_items (catalog_type_id, code, label, sort_order, metadata) VALUES
     ((SELECT id FROM catalog_types WHERE code = 'INTERVENTION_CLASS'), 'HABILITACION',   'Habilitación de jardines',     1, '{"responsible_group": "jardineros"}'),

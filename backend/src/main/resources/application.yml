@@ -11,6 +11,11 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+    # out-of-order se queda en false (el valor por defecto) a proposito: la
+    # numeracion es cronologica (REGLAS.md §4), asi que una migracion nueva
+    # siempre va al final y nunca aterriza por debajo de lo ya aplicado. Si
+    # alguna vez hiciera falta activarlo, es senal de que alguien se salto la
+    # convencion y tomo un numero ya usado.
     locations: classpath:db/migration
   mvc:
     # Required so unmapped routes raise NoHandlerFoundException and reach the

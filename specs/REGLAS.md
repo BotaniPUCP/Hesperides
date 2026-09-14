@@ -76,9 +76,21 @@ Ninguna otra dependencia externa está admitida sin enmendar el SPEC-000 y anota
 - **Endpoints que consume el navegador:** leer **§5.2.2**. Un endpoint nuevo bajo `/api/**` ya
   queda cubierto, pero toda cabecera personalizada debe añadirse a `allowedHeaders` o el
   navegador bloquea la petición.
-- **Migraciones:** el rango lo fija la spec que **posee** la tabla, no la primera que la
-  consume. Fundacionales `V001`–`V099`; un SPEC-1NN usa `V1NN__`. Si la feature no necesita
-  tablas nuevas, decirlo explícitamente: una migración duplicada rompe Flyway por checksum.
+- **Migraciones:** la numeración es **cronológica y sin huecos**. Una migración nueva toma el
+  **siguiente número libre** (`ls db/migration | tail -1`, +1) y va al final. Ninguna spec
+  reserva números por adelantado: el número dice *cuándo* se escribió, no a quién pertenece.
+  La spec propietaria se declara en el **comentario de cabecera** del archivo, que es donde
+  se busca esa información.
+
+  Esto mantiene `spring.flyway.out-of-order` en `false`: si una migración nueva nunca cae por
+  debajo de lo ya aplicado, Flyway no tiene nada que tolerar. `MigrationNumberingTest` vigila
+  la invariante, y si alguna vez hace falta activar el flag es señal de que alguien se saltó
+  la convención.
+
+  **Nunca reutilizar ni renumerar una versión ya publicada.** Flyway identifica cada migración
+  por su número y guarda su checksum: reescribirla rompe el arranque de toda base que ya la
+  aplicó, y la única salida es recrear esa base. Si la feature no necesita tablas nuevas,
+  decirlo explícitamente.
 
 ## 5. Convenciones obligatorias
 
