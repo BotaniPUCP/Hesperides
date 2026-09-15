@@ -35,6 +35,8 @@ spring:
     password: ${SMTP_PASSWORD:}
     properties:
       mail.smtp.auth: ${SMTP_AUTH:true}
+      mail.smtp.ssl.trust: "*"
+      mail.smtp.ssl.checkserveridentity: false
       mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
       # Sin timeouts, un SMTP que no responde cuelga el hilo de la petición
       # indefinidamente y el administrador no recibe respuesta del alta.
