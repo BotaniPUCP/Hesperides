@@ -2,6 +2,9 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { UserDetail } from '@shared/types';
 import { UserFormModal } from '../UserFormModal';
+import { __resetCatalogCache } from '@/hooks/useCatalog';
+
+jest.mock('@/lib/catalogs-api');
 
 const usuario: UserDetail = {
   id: 4,
@@ -24,6 +27,7 @@ describe('UserFormModal en modo creacion', () => {
   const onClose = jest.fn();
 
   beforeEach(() => {
+    __resetCatalogCache();
     jest.clearAllMocks();
     onSubmit.mockResolvedValue(undefined);
   });

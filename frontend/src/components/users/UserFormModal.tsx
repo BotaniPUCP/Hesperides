@@ -6,7 +6,8 @@ import { Button, Input, Modal, Select } from '@/components/ui';
 import type { SelectOption } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { erroresDeCampo, mensajeDeApiError } from '@/lib/api-errors';
-import { ASSIGNABLE_ROLES } from '@/lib/constants';
+import { useCatalogOptions } from '@/hooks/useCatalog';
+import { CATALOG_ROLE } from '@/lib/constants';
 import { PasswordPolicyChecklist } from './PasswordPolicyChecklist';
 import { validateUserForm } from './userFormValidation';
 import type { UserFormErrors, UserFormValues } from './userFormValidation';
@@ -26,12 +27,6 @@ export interface UserFormModalProps {
   onClose: () => void;
   onSubmit: (payload: CreateUserPayload | UpdateUserPayload) => Promise<void>;
 }
-
-const ROLE_OPTIONS: SelectOption[] = ASSIGNABLE_ROLES.map((rol, indice) => ({
-  id: indice + 1,
-  code: rol.value,
-  label: rol.label,
-}));
 
 const VACIO: UserFormValues = {
   email: '',
@@ -63,6 +58,7 @@ function valoresDe(user: UserDetail | null): UserFormValues {
 
 export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModalProps) {
   const esAlta = user === null;
+  const { options: roleOptions, isLoading: cargandoRoles } = useCatalogOptions(CATALOG_ROLE);
   const [values, setValues] = useState<UserFormValues>(() => valoresDe(user));
   const [errors, setErrors] = useState<UserFormErrors>({});
   const [formError, setFormError] = useState<string>();
@@ -177,7 +173,8 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
           id="user-role"
           label="Rol"
           value={values.roleCode === '' ? null : values.roleCode}
-          options={ROLE_OPTIONS}
+          options={roleOptions}
+          loading={cargandoRoles}
           onChange={(option) => campo('roleCode')(option?.code ?? '')}
           errorMessage={errors.roleCode}
           placeholder="Seleccione un rol"

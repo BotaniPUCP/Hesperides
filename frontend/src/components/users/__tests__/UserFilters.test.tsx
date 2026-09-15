@@ -1,18 +1,27 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { UserFiltersBar } from '../UserFiltersBar';
+import { __resetCatalogCache } from '@/hooks/useCatalog';
+
+jest.mock('@/lib/catalogs-api');
 
 describe('UserFiltersBar', () => {
   const onChange = jest.fn();
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    __resetCatalogCache();
+  });
 
   it('propaga el rol elegido por su codigo, no por su etiqueta', async () => {
     // El backend filtra por catalog_items.code. Enviar "Operario de campo"
     // devolveria cero resultados sin dar error.
     render(<UserFiltersBar filters={{}} onChange={onChange} />);
 
-    await userEvent.selectOptions(screen.getByLabelText(/rol/i), 'OPERARIO');
+    // Los roles llegan del catalogo ROLE: mientras se piden, el Select muestra
+    // su esqueleto de carga y todavia no hay <select> al que apuntar.
+    const selectorDeRol = await screen.findByLabelText(/rol/i);
+    await userEvent.selectOptions(selectorDeRol, 'OPERARIO');
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ roleCode: 'OPERARIO' }));
   });

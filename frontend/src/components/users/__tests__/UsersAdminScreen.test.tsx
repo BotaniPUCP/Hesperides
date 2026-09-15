@@ -6,6 +6,10 @@ import { ToastProvider } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { usersApi } from '@/lib/users-api';
 
+import { __resetCatalogCache } from '@/hooks/useCatalog';
+
+jest.mock('@/lib/catalogs-api');
+
 jest.mock('@/lib/users-api', () => ({
   usersApi: {
     list: jest.fn(),
@@ -96,6 +100,7 @@ async function montarYEsperar() {
 
 describe('UsersAdminScreen', () => {
   beforeEach(() => {
+    __resetCatalogCache();
     jest.clearAllMocks();
     rolDeLaSesion = 'ADMIN';
     list.mockResolvedValue(pagina([usuario()]));

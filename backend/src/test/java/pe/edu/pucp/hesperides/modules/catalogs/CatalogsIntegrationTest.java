@@ -176,6 +176,36 @@ class CatalogsIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "OPERARIO")
+    void theItemShapeIsExactlyTheOneSharedTypesDeclares() throws Exception {
+        // shared/types/catalog.ts es espejo de este DTO. Si el backend anade o
+        // quita un campo sin actualizarlo, el tipo miente y TypeScript valida
+        // contra una ficcion: el fallo aparece en runtime, que es justo lo que el
+        // tipado debia evitar. Este test fija la forma en ambos sentidos.
+        mockMvc.perform(get("/api/v1/catalogs/INTERVENTION_TYPE/items"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].code").exists())
+                .andExpect(jsonPath("$.data[0].label").exists())
+                .andExpect(jsonPath("$.data[0].sortOrder").exists())
+                .andExpect(jsonPath("$.data[0].isActive").exists())
+                .andExpect(jsonPath("$.data[0].parentCode").exists())
+                // El id no debe reaparecer: el frontend guardaria una referencia
+                // que cambia en cada resiembra de catalogos.
+                .andExpect(jsonPath("$.data[0].id").doesNotExist());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void theTypeShapeIsExactlyTheOneSharedTypesDeclares() throws Exception {
+        mockMvc.perform(get("/api/v1/catalogs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].code").exists())
+                .andExpect(jsonPath("$.data[0].name").exists())
+                .andExpect(jsonPath("$.data[0].isSystem").exists())
+                .andExpect(jsonPath("$.data[0].id").doesNotExist());
+    }
+
+    @Test
     @WithMockUser(authorities = "ADMIN")
     void aParentFromTheSameCatalogIsRejected() throws Exception {
         // La jerarquía es de dos niveles entre tipos distintos: un padre del mismo

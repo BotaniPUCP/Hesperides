@@ -1,22 +1,19 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
 
 /**
- * Roles asignables desde la gestión de usuarios. Coinciden con catalog_items.code
- * del catálogo ROLE y con RoleCodes del backend.
- *
- * Están aquí y no pedidos a la API porque el endpoint de catálogos es de SPEC-003
- * y todavía no existe. Cuando exista, esta constante se reemplaza por esa llamada
- * y nada más cambia: los componentes ya consumen una lista de opciones.
- *
- * USER no aparece: es el rol base sembrado por la migración, no uno que un
- * administrador asigne.
+ * Codigos de catalogo que el frontend nombra explicitamente. No son la lista de
+ * valores —esa la sirve la API (SPEC-003)— sino las claves con las que se pide.
  */
-export const ASSIGNABLE_ROLES = [
-  { value: 'ADMIN', label: 'Administrador' },
-  { value: 'COORDINADOR', label: 'Coordinador' },
-  { value: 'SUPERVISOR', label: 'Supervisor' },
-  { value: 'OPERARIO', label: 'Operario de campo' },
-] as const;
+export const CATALOG_ROLE = 'ROLE';
+export const CATALOG_INTERVENTION_CLASS = 'INTERVENTION_CLASS';
+export const CATALOG_INTERVENTION_TYPE = 'INTERVENTION_TYPE';
+
+/**
+ * Vigencia del cache de catalogos (SPEC-003 §6.2). Cinco minutos evita pedir el
+ * mismo catalogo en cada formulario sin dejar la UI desactualizada por horas:
+ * un administrador edita items de vez en cuando, no cada minuto.
+ */
+export const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000;
 
 /** Tamaño de página del listado. Coincide con el @PageableDefault del backend. */
 export const USERS_PAGE_SIZE = 20;

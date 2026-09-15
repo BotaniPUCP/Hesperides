@@ -3,19 +3,14 @@
 import type { UserFilters } from '@shared/types';
 import { Button, Input, Select } from '@/components/ui';
 import type { SelectOption } from '@/components/ui';
-import { ASSIGNABLE_ROLES } from '@/lib/constants';
+import { useCatalogOptions } from '@/hooks/useCatalog';
+import { CATALOG_ROLE } from '@/lib/constants';
 
 export interface UserFiltersBarProps {
   filters: UserFilters;
   onChange: (filters: UserFilters) => void;
   disabled?: boolean;
 }
-
-const ROLE_OPTIONS: SelectOption[] = ASSIGNABLE_ROLES.map((rol, indice) => ({
-  id: indice + 1,
-  code: rol.value,
-  label: rol.label,
-}));
 
 /**
  * El estado se modela con tres opciones y no con un checkbox porque son tres
@@ -40,6 +35,10 @@ function isActiveToCode(isActive: boolean | undefined): string | null {
 }
 
 export function UserFiltersBar({ filters, onChange, disabled = false }: UserFiltersBarProps) {
+  // Los roles vienen del catalogo ROLE, no de una lista en codigo: si un
+  // administrador anade o retira uno, el filtro lo refleja sin desplegar.
+  const { options: roleOptions, isLoading: cargandoRoles } = useCatalogOptions(CATALOG_ROLE);
+
   // Se reconstruye el objeto entero en cada cambio para que una clave ausente
   // signifique "sin filtrar". Asignar undefined dejaría la clave presente y
   // buildQuery la tendría que volver a descartar.
@@ -72,7 +71,8 @@ export function UserFiltersBar({ filters, onChange, disabled = false }: UserFilt
           id="users-role"
           label="Rol"
           value={filters.roleCode ?? null}
-          options={ROLE_OPTIONS}
+          options={roleOptions}
+          loading={cargandoRoles}
           onChange={(option) => actualizar({ roleCode: option?.code ?? '' })}
           placeholder="Todos los roles"
           clearable
