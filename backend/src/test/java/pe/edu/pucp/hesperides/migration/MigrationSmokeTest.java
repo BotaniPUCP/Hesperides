@@ -43,7 +43,7 @@ class MigrationSmokeTest {
                 String.class);
 
         // Exacto y no "contiene": una columna que ningún spec declara es tan
-        // sospechosa como una que falta. Las tres últimas las añade V100
+        // sospechosa como una que falta. Las tres últimas las añade V006
         // (SPEC-100); las once primeras son de V002 (SPEC-001).
         assertThat(columns).containsExactlyInAnyOrder(
                 "id", "email", "password_hash", "first_name", "last_name",
@@ -103,7 +103,7 @@ class MigrationSmokeTest {
     }
 
     @Test
-    void genericUserRoleFromV001IsDeactivatedNotDeleted() {
+    void genericUserRoleFromTheFirstMigrationIsDeactivatedNotDeleted() {
         Boolean active = jdbcTemplate.queryForObject("""
                 SELECT ci.is_active FROM catalog_items ci
                 JOIN catalog_types ct ON ct.id = ci.catalog_type_id

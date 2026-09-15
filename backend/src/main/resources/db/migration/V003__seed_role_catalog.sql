@@ -1,6 +1,5 @@
--- Renumerada de V003 a V005: SPEC-002 §4 reserva V003 para PostGIS y V004 para
--- zonas. Esta migración es de SPEC-001 y había tomado ese hueco por error;
--- dejarla ahí habría roto Flyway al implementar el catastro.
+-- Propiedad de SPEC-001. La numeración es cronológica: esta migración va aquí
+-- porque se escribió después de V002, no porque ninguna spec reserve el número.
 --
 -- V001 sembró el catálogo ROLE con solo ADMIN y un USER genérico. El dominio
 -- real tiene cuatro roles (SPEC-001 Anexo A). No se edita V001: una migración
