@@ -75,6 +75,10 @@ export function useCatalog(typeCode: string): UseCatalogResult {
   const [errorPorCatalogo, setErrorPorCatalogo] = useState<{ typeCode: string; mensaje: string } | null>(null);
 
   useEffect(() => {
+    // typeCode vacio significa "todavia no se cual": lo usa quien solo necesita
+    // el catalogo bajo una condicion, y pedirlo daria un 404 seguro.
+    if (!typeCode) return;
+
     let vigente = true;
     const entrada = cache.get(typeCode);
 

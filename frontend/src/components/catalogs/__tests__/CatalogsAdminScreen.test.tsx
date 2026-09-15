@@ -67,6 +67,15 @@ describe('CatalogsAdminScreen', () => {
       { code: 'INTERVENTION_TYPE', name: 'Tipos de intervención', isSystem: false },
       { code: 'ZONE_TYPE', name: 'Tipos de zona', isSystem: false },
     ]);
+    api.activeItems.mockImplementation(async (typeCode: string) =>
+      typeCode === 'INTERVENTION_CLASS'
+        ? [
+            item('PODA', 'Poda'),
+            item('MANTENIMIENTO', 'Mantenimiento de jardines'),
+            item('FITOSANITARIO', 'Manejo fitosanitario'),
+          ]
+        : [],
+    );
     api.typeDetail.mockImplementation(async (typeCode: string) => {
       if (typeCode === 'ROLE') return ROLES;
       if (typeCode === 'INTERVENTION_TYPE') return TIPOS_INTERVENCION;
@@ -97,9 +106,10 @@ describe('CatalogsAdminScreen', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: /tipos de intervención/i }));
 
-    // Las clases encabezan grupos; los tipos cuelgan de ellas.
-    expect(await screen.findByText('PODA')).toBeInTheDocument();
-    expect(screen.getByText('MANTENIMIENTO')).toBeInTheDocument();
+    // Los grupos se encabezan con la etiqueta de la clase, no con su code: los
+    // items solo traen parentCode, asi que la etiqueta sale del catalogo padre.
+    expect(await screen.findByText('Poda')).toBeInTheDocument();
+    expect(screen.getByText('Mantenimiento de jardines')).toBeInTheDocument();
     expect(screen.getByText('Poda sanitaria')).toBeInTheDocument();
   });
 

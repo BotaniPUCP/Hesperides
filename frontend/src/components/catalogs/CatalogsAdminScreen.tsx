@@ -4,11 +4,13 @@ import { useMemo, useState } from 'react';
 import type { CatalogItem } from '@shared/types';
 import { Badge, Button, Card, EmptyState, LoadingSkeleton, useToast } from '@/components/ui';
 import type { SelectOption } from '@/components/ui';
+import { useCatalog } from '@/hooks/useCatalog';
 import {
   useCatalogDetail,
   useCatalogMutations,
   useCatalogTypes,
 } from '@/hooks/useCatalogAdmin';
+import { CATALOG_INTERVENTION_CLASS } from '@/lib/constants';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { CatalogItemFormModal } from './CatalogItemFormModal';
 import { CatalogItemsTable } from './CatalogItemsTable';
@@ -32,22 +34,32 @@ export function CatalogsAdminScreen() {
   const [enEdicion, setEnEdicion] = useState<CatalogItem | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
 
-  // Las clases disponibles como padre salen de los propios ítems: si el
-  // catálogo usa jerarquía, sus parentCode nombran las clases existentes.
+  // Los ítems solo traen el code de su clase, no su etiqueta. Pedir el catálogo
+  // padre es lo que permite encabezar cada grupo con "Poda" en vez de "PODA", y
+  // mostrar la descripción que el cliente escribió para cada clase.
+  const usaJerarquia = (detail?.items ?? []).some((item) => item.parentCode !== null);
+  const { items: clases } = useCatalog(usaJerarquia ? CATALOG_INTERVENTION_CLASS : '');
+
   const parentLabels = useMemo(() => {
     const mapa = new Map<string, string>();
+    for (const clase of clases) mapa.set(clase.code, clase.label);
+
+    // Una clase que ya no esté activa deja de venir del catálogo, pero sus tipos
+    // siguen aquí: sin este respaldo su grupo quedaría sin encabezado.
     for (const item of detail?.items ?? []) {
-      if (item.parentCode) mapa.set(item.parentCode, item.parentCode);
+      if (item.parentCode && !mapa.has(item.parentCode)) {
+        mapa.set(item.parentCode, item.parentCode);
+      }
     }
     return mapa;
-  }, [detail]);
+  }, [clases, detail]);
 
   const parentOptions: SelectOption[] = useMemo(
     () =>
-      [...parentLabels.keys()].map((code, indice) => ({
+      [...parentLabels.entries()].map(([code, label], indice) => ({
         id: indice + 1,
         code,
-        label: parentLabels.get(code) ?? code,
+        label,
       })),
     [parentLabels],
   );

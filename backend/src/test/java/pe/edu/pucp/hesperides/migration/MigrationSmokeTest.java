@@ -340,6 +340,50 @@ class MigrationSmokeTest {
     }
 
     @Test
+    void everyClassCarriesTheDescriptionTheClientWrote() {
+        // A diferencia de las de los tipos, estas nueve son textuales del Excel
+        // DAF-OSG: no hay ninguna redactada por nosotros.
+        Integer sinDescripcion = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_CLASS'
+                  AND COALESCE(ci.metadata->>'description', '') = ''
+                """, Integer.class);
+
+        assertThat(sinDescripcion).isZero();
+    }
+
+    @Test
+    void theClassDescriptionIsTheOneTheClientWrote() {
+        String fitosanitario = jdbcTemplate.queryForObject("""
+                SELECT ci.metadata->>'description' FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_CLASS' AND ci.code = 'FITOSANITARIO'
+                """, String.class);
+
+        assertThat(fitosanitario).isEqualTo("Prevención y control de plagas y enfermedades");
+    }
+
+    @Test
+    void addingTheDescriptionKeepsWhatTheClassAlreadyHad() {
+        // El merge de JSONB no debe pisar responsible_group ni priority: son el
+        // vinculo con las cuadrillas y el orden de construccion del equipo.
+        Map<String, Object> poda = jdbcTemplate.queryForMap("""
+                SELECT ci.metadata->>'description'       AS descripcion,
+                       ci.metadata->>'responsible_group' AS grupo,
+                       ci.metadata->>'priority'          AS prioridad
+                  FROM catalog_items ci
+                  JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                 WHERE ct.code = 'INTERVENTION_CLASS' AND ci.code = 'PODA'
+                """);
+
+        assertThat(poda.get("descripcion"))
+                .isEqualTo("Corte y manejo de árboles, arbustos y otras plantas");
+        assertThat(poda.get("grupo")).isEqualTo("jardineros");
+        assertThat(poda.get("prioridad")).isEqualTo("true");
+    }
+
+    @Test
     void theThreePriorityClassesAreFlagged() {
         List<String> codes = jdbcTemplate.queryForList("""
                 SELECT code FROM catalog_items WHERE metadata->>'priority' = 'true'
