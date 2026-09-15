@@ -210,14 +210,46 @@ class MigrationSmokeTest {
     }
 
     @Test
-    void theFortyFiveRealInterventionTypesAreSeeded() {
+    void everyInterventionTypeIsSeeded() {
+        // 45 confirmados por el Excel del cliente + 7 preliminares de las dos
+        // clases que el cliente aun no ha desglosado (V010).
         Integer total = jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM catalog_items ci
                 JOIN catalog_types ct ON ct.id = ci.catalog_type_id
                 WHERE ct.code = 'INTERVENTION_TYPE' AND ci.is_active = TRUE
                 """, Integer.class);
 
-        assertThat(total).isEqualTo(45);
+        assertThat(total).isEqualTo(52);
+    }
+
+    @Test
+    void theTypesConfirmedByTheClientAreExactlyFortyFive() {
+        // Los preliminares se distinguen por metadata->>'provisional'. Si el
+        // cliente entrega su desglose, los suyos entran sin ese flag y este
+        // conteo no cambia.
+        Integer confirmados = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'INTERVENTION_TYPE' AND ci.is_active = TRUE
+                  AND COALESCE(ci.metadata->>'provisional', 'false') <> 'true'
+                """, Integer.class);
+
+        assertThat(confirmados).isEqualTo(45);
+    }
+
+    @Test
+    void everyProvisionalTypeIsFlaggedAndBelongsToAnUndisclosedClass() {
+        // El flag es lo que hace barata la reversion: una sola consulta los
+        // encuentra a todos cuando llegue el dato real (P-10).
+        List<String> clases = jdbcTemplate.queryForList("""
+                SELECT DISTINCT padre.code FROM catalog_items hijo
+                JOIN catalog_types ct    ON ct.id = hijo.catalog_type_id
+                JOIN catalog_items padre ON padre.id = hijo.parent_item_id
+                WHERE ct.code = 'INTERVENTION_TYPE'
+                  AND hijo.metadata->>'provisional' = 'true'
+                """, String.class);
+
+        assertThat(clases).containsExactlyInAnyOrder("FITOSANITARIO", "INSPECCION");
     }
 
     @Test
@@ -288,16 +320,14 @@ class MigrationSmokeTest {
                 entry("MANTENIMIENTO", 10L), entry("PODA", 4L),
                 entry("PROPAGACION", 10L), entry("RIEGO", 4L),
                 entry("RESIDUOS", 4L),
-                // P-10: el cliente aún no ha desglosado estas dos.
-                entry("FITOSANITARIO", 0L), entry("INSPECCION", 0L));
+                // Preliminares de V010: el cliente aún no ha desglosado estas dos.
+                entry("FITOSANITARIO", 4L), entry("INSPECCION", 3L));
     }
 
     @Test
-    void fitosanitarioAndInspeccionStillHaveNoTypes() {
-        // Pendiente bloqueante P-10 de SPEC-005: FITOSANITARIO es una de las cuatro
-        // actividades prioritarias y no se puede registrar con detalle hasta que el
-        // cliente entregue su desglose. Cuando lo haga, este test falla y obliga a
-        // actualizarlo — que es exactamente el recordatorio que queremos.
+    void noClassIsLeftWithoutTypes() {
+        // Con los preliminares de V010, las nueve clases tienen al menos un tipo:
+        // el formulario ya no deja al operario sin opciones en ninguna.
         List<String> huerfanas = jdbcTemplate.queryForList("""
                 SELECT padre.code FROM catalog_items padre
                 JOIN catalog_types ct ON ct.id = padre.catalog_type_id
@@ -306,7 +336,7 @@ class MigrationSmokeTest {
                                    WHERE hijo.parent_item_id = padre.id)
                 """, String.class);
 
-        assertThat(huerfanas).containsExactlyInAnyOrder("FITOSANITARIO", "INSPECCION");
+        assertThat(huerfanas).isEmpty();
     }
 
     @Test
