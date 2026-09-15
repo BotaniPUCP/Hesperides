@@ -26,6 +26,14 @@ const MENSAJES: Record<string, string> = {
   'Current password is incorrect': 'La contraseña actual es incorrecta',
   'New password must be different from the current one':
     'La contraseña nueva debe ser distinta de la actual.',
+
+  // SPEC-003. Estos ya llegan en español desde el backend, pero pasan por el
+  // diccionario igual: es el unico sitio donde se decide que lee el usuario, y
+  // dejarlos fuera los haria caer en el mensaje generico.
+  'Este ítem es requerido por el sistema y no puede desactivarse':
+    'Ese ítem lo necesita el sistema para funcionar: no se puede desactivar.',
+  'El padre debe pertenecer a un catálogo distinto: la jerarquía es de dos niveles':
+    'La clase debe venir de otro catálogo: la jerarquía admite solo dos niveles.',
 };
 
 function traducir(message: string, porDefecto: string): string {
