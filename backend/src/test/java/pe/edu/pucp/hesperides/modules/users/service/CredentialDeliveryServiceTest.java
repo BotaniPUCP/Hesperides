@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
+import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
 
@@ -17,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class CredentialDeliveryServiceTest {
 
@@ -113,6 +117,24 @@ class CredentialDeliveryServiceTest {
 
         assertThat(greenMail.getReceivedMessages()[0].getFrom()[0].toString())
                 .isEqualTo("no-reply@hesperides.test");
+    }
+
+    @Test
+    void theSenderAddressComesFromTheSystemParameter() throws Exception {
+        SystemParameterReader reader = mock(SystemParameterReader.class);
+        when(reader.readString(SystemParameterCodes.MAIL_FROM, null))
+                .thenReturn("cambios@hesperides.pucp.edu.pe");
+        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        sender.setHost("localhost");
+        sender.setPort(greenMail.getSmtp().getPort());
+        CredentialDeliveryService dynamic = new CredentialDeliveryService(
+                sender, new CredentialEmailTemplate(), reader, "no-reply@hesperides.test",
+                "https://hesperides.test");
+
+        dynamic.deliver(user(), "ClaveTemp123");
+
+        assertThat(greenMail.getReceivedMessages()[0].getFrom()[0].toString())
+                .isEqualTo("cambios@hesperides.pucp.edu.pe");
     }
 
     @Test

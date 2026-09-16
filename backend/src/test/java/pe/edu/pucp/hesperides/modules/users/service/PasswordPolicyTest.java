@@ -1,10 +1,14 @@
 package pe.edu.pucp.hesperides.modules.users.service;
 
 import org.junit.jupiter.api.Test;
+import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
+import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class PasswordPolicyTest {
 
@@ -101,5 +105,22 @@ class PasswordPolicyTest {
         // El cambio de contrasena propia no siempre tiene el nombre a mano.
         assertThatCode(() -> policy.validate("Hesperides2026", null, null, null))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    void readsTheMinimumLengthFromTheSystemParameter() {
+        SystemParameterReader reader = mock(SystemParameterReader.class);
+        when(reader.readInt(SystemParameterCodes.PASSWORD_MIN_LENGTH,
+                PasswordPolicy.MIN_LENGTH)).thenReturn(12);
+        PasswordPolicy dynamic = new PasswordPolicy(reader);
+
+        // 12 caracteres con mayúscula, minúscula y dígito pasan el nuevo umbral.
+        assertThatCode(() -> dynamic.validate("Hesperides12", EMAIL, FIRST, LAST))
+                .doesNotThrowAnyException();
+
+        // 11 caracteres caen bajo el umbral configurado, no bajo la constante 10.
+        assertThatThrownBy(() -> dynamic.validate("Hesperides1", EMAIL, FIRST, LAST))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("12");
     }
 }

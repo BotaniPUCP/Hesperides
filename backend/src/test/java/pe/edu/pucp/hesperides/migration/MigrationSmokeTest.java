@@ -441,4 +441,55 @@ class MigrationSmokeTest {
 
         assertThat(rolesConPadre).isZero();
     }
+
+    // ─── V012 · Parámetros de sistema ─────────────────────────────────────
+
+    @Test
+    void systemParametersTableHasEveryColumnTheSpecDeclares() {
+        List<String> columns = jdbcTemplate.queryForList(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'system_parameters'",
+                String.class);
+
+        assertThat(columns).containsExactlyInAnyOrder(
+                "id", "code", "label", "value", "value_type", "description",
+                "is_editable", "created_at", "updated_at", "deleted_at");
+    }
+
+    @Test
+    void theFourOperationalParametersAreSeeded() {
+        List<String> codes = jdbcTemplate.queryForList(
+                "SELECT code FROM system_parameters WHERE deleted_at IS NULL ORDER BY code",
+                String.class);
+
+        assertThat(codes).containsExactly(
+                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS",
+                "MAIL_FROM", "PASSWORD_MIN_LENGTH");
+    }
+
+    @Test
+    void eachParameterMatchesTheTypeItClaims() {
+        Map<String, Object> row = jdbcTemplate.queryForMap(
+                "SELECT code, value, value_type FROM system_parameters "
+                        + "WHERE code = 'PASSWORD_MIN_LENGTH'");
+
+        assertThat(row.get("value")).isEqualTo("10");
+        assertThat(row.get("value_type")).isEqualTo("INTEGER");
+    }
+
+    @Test
+    void valueTypeRejectsAnyValueOutsideTheFiveSupported() {
+        assertThatThrownBy(() -> jdbcTemplate.execute("""
+                INSERT INTO system_parameters (code, label, value, value_type)
+                VALUES ('PARAM_INVENTADO', 'Parámetro inventado', 'x', 'TIPO_INVENTADO')
+                """))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void parametersAreOnlySeededOnce() {
+        Integer live = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
+                Integer.class);
+        assertThat(live).isEqualTo(4);
+    }
 }

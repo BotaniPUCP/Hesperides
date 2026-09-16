@@ -11,6 +11,10 @@ const ROLES_CON_ACCESO_A_USUARIOS = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
 function Inicio() {
   const { user, logout } = useAuth();
   const puedeVerUsuarios = ROLES_CON_ACCESO_A_USUARIOS.includes(user?.role.code ?? '');
+  // SPEC-003 §5.6: los parámetros son configuración global; SPEC-001 Anexo A
+  // los reserva a ADMIN. No se comparte la condición con usuarios a propósito:
+  // quien no es ADMIN no debe ver siquiera que esta pantalla existe.
+  const puedeVerParametros = user?.role.code === 'ADMIN';
 
   return (
     <main className="min-h-screen bg-neutral-50 p-4">
@@ -37,6 +41,20 @@ function Inicio() {
                 className="text-sm font-medium text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
               >
                 Gestión de usuarios
+              </Link>
+            </p>
+          )}
+
+          {/* Configuración global (SPEC-003 §5.6): solo ADMIN la abre (SPEC-001
+              Anexo A); no aparece para ningún otro rol ni siquiera deshabilitado,
+              porque su mera presencia les enseñaría qué gobierna la validación. */}
+          {puedeVerParametros && (
+            <p className="mt-2">
+              <Link
+                href="/admin/parametros"
+                className="text-sm font-medium text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+              >
+                Parámetros del sistema
               </Link>
             </p>
           )}

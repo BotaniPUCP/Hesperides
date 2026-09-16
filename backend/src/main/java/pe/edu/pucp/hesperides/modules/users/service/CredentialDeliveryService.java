@@ -3,12 +3,15 @@ package pe.edu.pucp.hesperides.modules.users.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
+import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
 
 import java.nio.charset.StandardCharsets;
@@ -36,16 +39,28 @@ public class CredentialDeliveryService {
 
     private final JavaMailSender mailSender;
     private final CredentialEmailTemplate emailTemplate;
+    private final SystemParameterReader parameters;
     private final String from;
     private final String appPublicUrl;
 
     public CredentialDeliveryService(
             JavaMailSender mailSender,
             CredentialEmailTemplate emailTemplate,
-            @Value("${hesperides.mail.from}") String from,
+            String from,
+            String appPublicUrl) {
+        this(mailSender, emailTemplate, null, from, appPublicUrl);
+    }
+
+    @Autowired
+    public CredentialDeliveryService(
+            JavaMailSender mailSender,
+            CredentialEmailTemplate emailTemplate,
+            SystemParameterReader parameters,
+            @Value("${hesperides.mail.from:no-reply@hesperides.local}") String from,
             @Value("${hesperides.mail.app-public-url}") String appPublicUrl) {
         this.mailSender = mailSender;
         this.emailTemplate = emailTemplate;
+        this.parameters = parameters;
         this.from = from;
         this.appPublicUrl = appPublicUrl;
     }
@@ -68,6 +83,20 @@ public class CredentialDeliveryService {
     }
 
     /**
+     * El remitente lo marca {@code system_parameters.MAIL_FROM}; cae al valor de
+     * entorno (SMTP_FROM) si el parámetro no existe o quedó vacío.
+     */
+    private String sender() {
+        if (parameters != null) {
+            String value = parameters.readString(SystemParameterCodes.MAIL_FROM, null);
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return from;
+    }
+
+    /**
      * Multipart alternativo: los clientes modernos muestran la versión maquetada
      * y los que bloquean HTML siguen leyendo la contraseña en texto plano, en vez
      * de recibir un correo vacío.
@@ -82,7 +111,7 @@ public class CredentialDeliveryService {
                 message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
                 StandardCharsets.UTF_8.name());
 
-        helper.setFrom(from);
+        helper.setFrom(sender());
         helper.setTo(user.getEmail());
         helper.setSubject(SUBJECT);
         helper.setText(
