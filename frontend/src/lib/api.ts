@@ -115,6 +115,10 @@ async function request<T>(method: HttpMethod, path: string, body?: unknown): Pro
     }
   }
 
+  if (response.status === 204) {
+    return null as T;
+  }
+
   const envelope = (await response.json()) as ApiResponse<T>;
 
   if (!response.ok || !envelope.ok) {
@@ -130,3 +134,4 @@ export const apiClient = {
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
 };
+

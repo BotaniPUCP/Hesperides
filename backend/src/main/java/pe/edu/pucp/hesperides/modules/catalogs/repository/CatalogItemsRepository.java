@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CatalogItemsRepository extends JpaRepository<CatalogItem, Long> {
@@ -18,4 +19,22 @@ public interface CatalogItemsRepository extends JpaRepository<CatalogItem, Long>
             + "WHERE ci.catalogType.code = 'ROLE' AND ci.code = :code "
             + "AND ci.active = TRUE AND ci.deletedAt IS NULL")
     Optional<CatalogItem> findActiveRoleByCode(@Param("code") String code);
+
+    @Query("SELECT ci FROM CatalogItem ci "
+            + "WHERE ci.catalogType.code = :typeCode AND ci.code = :itemCode "
+            + "AND ci.active = TRUE AND ci.deletedAt IS NULL")
+    Optional<CatalogItem> findActiveItemByTypeAndCode(@Param("typeCode") String typeCode, @Param("itemCode") String itemCode);
+
+    @Query("SELECT ci FROM CatalogItem ci "
+            + "LEFT JOIN FETCH ci.parentItem "
+            + "WHERE ci.catalogType.code IN ('INTERVENTION_CLASS', 'INTERVENTION_TYPE') "
+            + "AND ci.active = TRUE AND ci.deletedAt IS NULL "
+            + "ORDER BY ci.label ASC")
+    List<CatalogItem> findAvailableActivityTypes();
+
+    @Query("SELECT ci FROM CatalogItem ci "
+            + "WHERE ci.catalogType.code = 'FREQUENCY_RULE_TYPE' "
+            + "AND ci.active = TRUE AND ci.deletedAt IS NULL "
+            + "ORDER BY ci.sortOrder ASC")
+    List<CatalogItem> findFrequencyRuleTypes();
 }

@@ -8,9 +8,14 @@ import { useAuth } from '@/hooks/useAuth';
 /** Anexo A de SPEC-001: solo estos tres roles leen el listado de usuarios. */
 const ROLES_CON_ACCESO_A_USUARIOS = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
 
+/** SPEC-101: ADMIN y COORDINADOR configuran frecuencias; SUPERVISOR y OPERARIO las consultan. */
+const ROLES_CON_ACCESO_A_FRECUENCIAS = ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'];
+
 function Inicio() {
   const { user, logout } = useAuth();
-  const puedeVerUsuarios = ROLES_CON_ACCESO_A_USUARIOS.includes(user?.role.code ?? '');
+  const rol = user?.role.code ?? '';
+  const puedeVerUsuarios = ROLES_CON_ACCESO_A_USUARIOS.includes(rol);
+  const puedeVerFrecuencias = ROLES_CON_ACCESO_A_FRECUENCIAS.includes(rol);
 
   return (
     <main className="min-h-screen bg-neutral-50 p-4">
@@ -27,21 +32,38 @@ function Inicio() {
             Sesión iniciada como <strong>{user?.email}</strong> con el rol{' '}
             <strong>{user?.role.label}</strong>.
           </p>
-          {/* Se enlaza solo lo que ese rol puede abrir: un enlace que lleva a
-              una pantalla sin permisos es una promesa que la aplicación no
-              cumple. Quien lo impide de verdad sigue siendo el backend. */}
-          {puedeVerUsuarios && (
-            <p className="mt-4">
-              <Link
-                href="/admin/usuarios"
-                className="text-sm font-medium text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
-              >
-                Gestión de usuarios
-              </Link>
-            </p>
-          )}
 
-          <p className="mt-2 text-sm text-neutral-500">
+          <div className="mt-5 border-t border-neutral-100 pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 mb-3">
+              Módulos y funciones disponibles
+            </h3>
+            <ul className="space-y-2">
+              {puedeVerUsuarios && (
+                <li>
+                  <Link
+                    href="/admin/usuarios"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                  >
+                    <span>👥</span>
+                    <span>Gestión de usuarios</span>
+                  </Link>
+                </li>
+              )}
+              {puedeVerFrecuencias && (
+                <li>
+                  <Link
+                    href="/admin/frecuencias"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                  >
+                    <span>📅</span>
+                    <span>Frecuencias de mantenimiento (SPEC-101)</span>
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          <p className="mt-5 text-xs text-neutral-400">
             Los demás módulos de gestión aparecerán aquí conforme se implementen.
           </p>
         </Card>

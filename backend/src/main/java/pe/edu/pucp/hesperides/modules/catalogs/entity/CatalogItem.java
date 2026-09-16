@@ -27,6 +27,10 @@ public class CatalogItem extends BaseEntity {
     @JoinColumn(name = "catalog_type_id", nullable = false)
     private CatalogType catalogType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_item_id")
+    private CatalogItem parentItem;
+
     @Column(nullable = false, length = 50)
     private String code;
 

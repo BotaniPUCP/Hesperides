@@ -15,6 +15,7 @@
 | SPEC-C02 | Manejo de errores         | 👀 En revisión  | —          | S0     |              |
 | SPEC-C03 | Patrones de API           | 👀 En revisión  | —          | S0     |              |
 | SPEC-100 | Gestión de usuarios       | 👀 En revisión  | —          | S1     |              |
+| SPEC-101 | Frecuencias de mantenimiento | 🔄 En progreso  | —          | S1     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado
 
@@ -48,6 +49,7 @@ sorpresa que un principio fundacional cambió.
 | **SPEC-002 §4.6** | SPEC-005 | `intervention_evidences` gana `uploaded_at` (NULL = el dispositivo la tiene, la nube aún no) y `client_reference` (idempotencia en reintentos). Es el reflejo en servidor del flag de subida del móvil: hay cobertura en el campus pero no en todos los rincones, y para el operario **nunca existe un «no se pudo guardar»**. |
 | **SPEC-002 §4.6 (2)** | SPEC-005 | `interventions` gana `published_at`, `publication_attempts` y `publication_error`: la publicación en el mapa del cliente es asíncrona, falible y **fuera de la transacción** que guarda la intervención. |
 | Todos los specs | Refactor a formato atómico | Las invariantes comunes salen a **`REGLAS.md`** (lectura obligatoria antes de generar código): las diez invariantes, las convenciones de SPEC-000 §5 —con §5.2.1 de Spring Boot 4 y §5.2.2 de CORS íntegras— y el checklist común. SPEC-000 pierde la copia de `_plantilla.md` y los resúmenes de los otros specs, que ya contradecían a SPEC-001. En cada spec, las secciones genéricas de Seguridad, Extensibilidad y Checklist se funden en una sola "Propio de este spec". **La numeración se conserva**: toda referencia `SPEC-XXX §N` sigue siendo válida, y `SPEC-000 §5.x` pasa a `REGLAS.md §5.x` con el mismo número. Ninguna decisión técnica, contrato ni criterio de aceptación cambió. |
+| SPEC-002 §4.9 | SPEC-101 | La migración `V010` queda asignada a `V010__create_maintenance_frequencies.sql` siguiendo `REGLAS.md` §0.2 (numeración cronológica sin huecos). El sembrado de catálogos que SPEC-002 proyectaba para V010 ya fue absorbido íntegramente por `V009__seed_intervention_taxonomy.sql`. |
 
 ---
 
