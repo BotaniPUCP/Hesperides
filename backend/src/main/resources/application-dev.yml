@@ -1,6 +1,24 @@
 spring:
   jpa:
     show-sql: true
+  mail:
+    properties:
+      # Red de seguridad SOLO para desarrollo. Deliberadamente fuera de
+      # application.yml: alli la heredaria produccion, y sin validar el
+      # certificado la conexion sigue cifrada pero con quien sea que responda —
+      # justo por donde viajan las credenciales SMTP y las contrasenas
+      # temporales de los usuarios.
+      #
+      # Motivo: el nodo sudamericano de Brevo sirve un certificado cuyos nombres
+      # son smtp-relay-offshore-southamerica-east-v2.sendinblue.com y
+      # smtp-relay.sendinblue.com, sin incluir smtp-relay.brevo.com. Java valida
+      # el nombre y aborta el TLS contra el host nuevo.
+      #
+      # El arreglo real no es esto, es SMTP_HOST=smtp-relay.sendinblue.com en el
+      # .env, que ya funciona con validacion completa. Esto solo evita quedarse
+      # bloqueado en local si Brevo vuelve a cambiar sus certificados.
+      mail.smtp.ssl.trust: "*"
+      mail.smtp.ssl.checkserveridentity: false
 logging:
   level:
     pe.edu.pucp.hesperides: DEBUG
