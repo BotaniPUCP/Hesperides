@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequencyRequest;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
+import pe.edu.pucp.hesperides.modules.maintenance.dto.SeasonalIntervalPayload;
 import pe.edu.pucp.hesperides.modules.maintenance.service.MaintenanceFrequenciesService;
 import pe.edu.pucp.hesperides.shared.exception.GlobalExceptionHandler;
 import pe.edu.pucp.hesperides.shared.security.CorsConfig;
@@ -21,6 +22,7 @@ import pe.edu.pucp.hesperides.shared.security.RestAuthenticationEntryPoint;
 import pe.edu.pucp.hesperides.shared.security.SecurityConfig;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -51,6 +53,29 @@ class MaintenanceFrequencyControllerTest {
     @MockitoBean
     private UsersRepository usersRepository;
 
+    /**
+     * Un response de ejemplo. Centralizado porque el record lleva muchos campos y
+     * repetirlos en cada test convierte cualquier cambio de forma en una tarea de
+     * buscar y reemplazar.
+     */
+    private static MaintenanceFrequencyResponse dummyResponse() {
+        return new MaintenanceFrequencyResponse(
+                1L,
+                new MaintenanceFrequencyResponse.ActivityTypeSummary(10L, "CORTE_CESPED", "Corte de cesped", null),
+                "OUTSOURCED",
+                new MaintenanceFrequencyResponse.FrequencyRuleTypeSummary(101L, "INTERVAL_DAYS", "Intervalo por rango de dias"),
+                "CAMPUS_WIDE",
+                null,
+                21, 30, 45,
+                null, null, 3,
+                null, null,
+                List.of(new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35, 21)),
+                "Notas",
+                LocalDate.now(), null,
+                true, true,
+                Instant.now(), Instant.now());
+    }
+
     @Test
     void getAll_withoutToken_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/maintenance/frequencies"))
@@ -60,25 +85,7 @@ class MaintenanceFrequencyControllerTest {
     @Test
     @WithMockUser(authorities = "OPERARIO")
     void getAll_asOperario_returnsOk() throws Exception {
-        MaintenanceFrequencyResponse dummy = new MaintenanceFrequencyResponse(
-                1L,
-                new MaintenanceFrequencyResponse.ActivityTypeSummary(10L, "CORTE_CESPED", "Corte de césped", null),
-                "OUTSOURCED",
-                new MaintenanceFrequencyResponse.FrequencyRuleTypeSummary(101L, "INTERVAL_DAYS", "Intervalo por rango de días"),
-                "CAMPUS_WIDE",
-                null,
-                21,
-                30,
-                45,
-                null,
-                "Verano vs Invierno",
-                null,
-                3,
-                "Notas",
-                true,
-                Instant.now(),
-                Instant.now()
-        );
+        MaintenanceFrequencyResponse dummy = dummyResponse();
 
         when(frequenciesService.findAll(any(), any(), any())).thenReturn(List.of(dummy));
 
@@ -123,25 +130,7 @@ class MaintenanceFrequencyControllerTest {
                 }
                 """;
 
-        MaintenanceFrequencyResponse dummy = new MaintenanceFrequencyResponse(
-                1L,
-                new MaintenanceFrequencyResponse.ActivityTypeSummary(10L, "CORTE_CESPED", "Corte de césped", null),
-                "OUTSOURCED",
-                new MaintenanceFrequencyResponse.FrequencyRuleTypeSummary(101L, "INTERVAL_DAYS", "Intervalo por rango de días"),
-                "CAMPUS_WIDE",
-                null,
-                21,
-                30,
-                45,
-                null,
-                null,
-                null,
-                3,
-                null,
-                true,
-                Instant.now(),
-                Instant.now()
-        );
+        MaintenanceFrequencyResponse dummy = dummyResponse();
 
         when(frequenciesService.create(any(CreateMaintenanceFrequencyRequest.class))).thenReturn(dummy);
 

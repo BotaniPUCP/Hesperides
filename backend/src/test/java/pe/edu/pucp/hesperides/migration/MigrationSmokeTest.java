@@ -103,14 +103,17 @@ class MigrationSmokeTest {
     }
 
     @Test
-    void genericUserRoleFromTheFirstMigrationIsDeactivatedNotDeleted() {
-        Boolean active = jdbcTemplate.queryForObject("""
-                SELECT ci.is_active FROM catalog_items ci
+    void theRoleCatalogCarriesOnlyTheFourRealRoles() {
+        // El historial anterior sembraba un USER generico que una migracion
+        // posterior desactivaba. El baseline declara el estado final, asi que ese
+        // USER no llega a existir y no hay nada que desactivar.
+        Integer genericos = jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM catalog_items ci
                 JOIN catalog_types ct ON ct.id = ci.catalog_type_id
                 WHERE ct.code = 'ROLE' AND ci.code = 'USER'
-                """, Boolean.class);
+                """, Integer.class);
 
-        assertThat(active).isFalse();
+        assertThat(genericos).isZero();
     }
 
     @Test

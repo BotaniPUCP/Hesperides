@@ -2,6 +2,7 @@ package pe.edu.pucp.hesperides.modules.maintenance.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import pe.edu.pucp.hesperides.modules.maintenance.dto.ComplianceResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequencyRequest;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequencyRequest;
@@ -20,6 +22,7 @@ import pe.edu.pucp.hesperides.modules.maintenance.service.MaintenanceFrequencies
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -27,7 +30,10 @@ import java.util.List;
 @RequestMapping("/api/v1/maintenance/frequencies")
 public class MaintenanceFrequencyController {
 
+    /** Los cuatro roles leen: un operario consulta el ritmo de su trabajo. */
     private static final String READERS = "hasAnyAuthority('ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO')";
+
+    /** Configurar es de ADMIN y COORDINADOR: es decision de gestion, no de campo. */
     private static final String MANAGERS = "hasAnyAuthority('ADMIN', 'COORDINADOR')";
 
     private final MaintenanceFrequenciesService frequenciesService;
@@ -57,11 +63,37 @@ public class MaintenanceFrequencyController {
                 frequenciesService.getFrequencyRuleTypes()));
     }
 
+    /**
+     * Cumplimiento en un periodo. Devuelve un tramo por version de la regla, cada
+     * uno con el id de la configuracion que lo juzgo.
+     */
+    @GetMapping("/compliance")
+    @PreAuthorize(READERS)
+    public ResponseEntity<ApiResponse<List<ComplianceResponse>>> getCompliance(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) Long activityTypeItemId) {
+
+        List<ComplianceResponse> res = frequenciesService.evaluateCompliance(from, to, activityTypeItemId);
+        return ResponseEntity.ok(ApiResponse.ok("Cumplimiento evaluado exitosamente", res));
+    }
+
+    /** El historial de versiones: responde "por que este mes se juzgo asi". */
+    @GetMapping("/history/{activityTypeItemId}")
+    @PreAuthorize(READERS)
+    public ResponseEntity<ApiResponse<List<MaintenanceFrequencyResponse>>> getHistory(
+            @PathVariable Long activityTypeItemId,
+            @RequestParam(required = false) String regime) {
+
+        return ResponseEntity.ok(ApiResponse.ok("Historial de frecuencias obtenido exitosamente",
+                frequenciesService.findHistory(activityTypeItemId, regime)));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize(READERS)
     public ResponseEntity<ApiResponse<MaintenanceFrequencyResponse>> getById(@PathVariable Long id) {
-        MaintenanceFrequencyResponse res = frequenciesService.findById(id);
-        return ResponseEntity.ok(ApiResponse.ok("Frecuencia de mantenimiento obtenida exitosamente", res));
+        return ResponseEntity.ok(ApiResponse.ok("Frecuencia de mantenimiento obtenida exitosamente",
+                frequenciesService.findById(id)));
     }
 
     @PostMapping
@@ -74,6 +106,10 @@ public class MaintenanceFrequencyController {
                 .body(ApiResponse.ok("Frecuencia de mantenimiento creada exitosamente", created));
     }
 
+    /**
+     * Ojo: esto versiona. Devuelve la version nueva, cuyo id difiere del que se
+     * paso en la ruta cuando la anterior ya cubria dias pasados.
+     */
     @PutMapping("/{id}")
     @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<MaintenanceFrequencyResponse>> update(

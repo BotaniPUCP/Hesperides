@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -22,8 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Recorre los endpoints contra PostgreSQL real, sobre la taxonomía que siembran
- * V009 y V010. El mapeo JSONB de metadata y el LEFT JOIN FETCH de la jerarquía
+ * Recorre los endpoints contra PostgreSQL real, sobre la taxonomía que siembra
+ * el baseline. El mapeo JSONB de metadata y el LEFT JOIN FETCH de la jerarquía
  * solo se prueban aquí: con mocks ambos pasarían sin tocar la base.
  */
 @Testcontainers
@@ -44,6 +45,9 @@ class CatalogsIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     @WithMockUser(authorities = "OPERARIO")
@@ -116,14 +120,22 @@ class CatalogsIntegrationTest {
     @Test
     @WithMockUser(authorities = "ADMIN")
     void anAdminSeesInactiveItemsThatTheConsumptionEndpointHides() throws Exception {
-        // CA-04. El USER genérico de V001 quedó desactivado en V003.
+        // CA-04. Antes se apoyaba en el USER generico que V001 sembraba y V003
+        // desactivaba; el baseline ya no lo crea, asi que el caso se construye
+        // aqui y no depende de un vestigio del historial de migraciones.
+        jdbcTemplate.update("""
+                INSERT INTO catalog_items (catalog_type_id, code, label, sort_order, is_active)
+                VALUES ((SELECT id FROM catalog_types WHERE code = 'ROLE'),
+                        'ROL_RETIRADO', 'Rol retirado', 99, FALSE)
+                """);
+
         mockMvc.perform(get("/api/v1/catalogs/ROLE/items"))
-                .andExpect(jsonPath("$.data[?(@.code == 'USER')]", hasSize(0)));
+                .andExpect(jsonPath("$.data[?(@.code == 'ROL_RETIRADO')]", hasSize(0)));
 
         mockMvc.perform(get("/api/v1/catalogs/ROLE"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.items[?(@.code == 'USER')]", hasSize(1)))
-                .andExpect(jsonPath("$.data.items[?(@.code == 'USER')].isActive").value(false));
+                .andExpect(jsonPath("$.data.items[?(@.code == 'ROL_RETIRADO')]", hasSize(1)))
+                .andExpect(jsonPath("$.data.items[?(@.code == 'ROL_RETIRADO')].isActive").value(false));
     }
 
     @Test
