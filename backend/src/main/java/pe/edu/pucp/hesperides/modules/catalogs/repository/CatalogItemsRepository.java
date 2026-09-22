@@ -56,4 +56,29 @@ public interface CatalogItemsRepository extends JpaRepository<CatalogItem, Long>
     @Query("SELECT ci FROM CatalogItem ci JOIN FETCH ci.catalogType "
             + "WHERE ci.code = :code AND ci.deletedAt IS NULL")
     Optional<CatalogItem> findLiveByCode(@Param("code") String code);
+
+    /**
+     * Variante de findByTypeCodeAndCode que ademas exige is_active. La usa la
+     * configuracion de frecuencias: una regla nueva nunca debe apuntar a un
+     * item retirado, aunque las reglas ya existentes lo conserven.
+     */
+    @Query("SELECT ci FROM CatalogItem ci "
+            + "WHERE ci.catalogType.code = :typeCode AND ci.code = :itemCode "
+            + "AND ci.active = TRUE AND ci.deletedAt IS NULL")
+    Optional<CatalogItem> findActiveItemByTypeAndCode(@Param("typeCode") String typeCode, @Param("itemCode") String itemCode);
+
+    /** Clases y tipos de intervencion juntos: el selector de actividad los ofrece en una sola lista. */
+    @Query("SELECT ci FROM CatalogItem ci "
+            + "LEFT JOIN FETCH ci.parentItem "
+            + "WHERE ci.catalogType.code IN ('INTERVENTION_CLASS', 'INTERVENTION_TYPE') "
+            + "AND ci.active = TRUE AND ci.deletedAt IS NULL "
+            + "ORDER BY ci.label ASC")
+    List<CatalogItem> findAvailableActivityTypes();
+
+    /** Los tipos de regla de frecuencia que puebla el selector del formulario. */
+    @Query("SELECT ci FROM CatalogItem ci "
+            + "WHERE ci.catalogType.code = 'FREQUENCY_RULE_TYPE' "
+            + "AND ci.active = TRUE AND ci.deletedAt IS NULL "
+            + "ORDER BY ci.sortOrder ASC")
+    List<CatalogItem> findFrequencyRuleTypes();
 }
