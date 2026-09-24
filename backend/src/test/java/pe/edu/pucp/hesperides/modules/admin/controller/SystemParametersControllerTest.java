@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import pe.edu.pucp.hesperides.modules.admin.dto.PasswordPolicyResponse;
 import pe.edu.pucp.hesperides.modules.admin.dto.SystemParameterResponse;
 import pe.edu.pucp.hesperides.modules.admin.service.SystemParametersService;
 import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
@@ -78,6 +79,37 @@ class SystemParametersControllerTest {
                 .andExpect(jsonPath("$.message").value("Parámetros obtenidos"))
                 .andExpect(jsonPath("$.data[0].code").value("PASSWORD_MIN_LENGTH"))
                 .andExpect(jsonPath("$.data[0].value").value("10"));
+    }
+
+    // ---------- política de contraseña ----------
+
+    @Test
+    void passwordPolicyWithoutATokenIs401() throws Exception {
+        mockMvc.perform(get("/api/v1/system-parameters/password-policy"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "operario@pucp.edu.pe", authorities = "OPERARIO")
+    void anyAuthenticatedUserCanReadThePasswordPolicy() throws Exception {
+        when(systemParametersService.getPasswordPolicy())
+                .thenReturn(new PasswordPolicyResponse(10));
+
+        mockMvc.perform(get("/api/v1/system-parameters/password-policy"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Política de contraseña obtenida"))
+                .andExpect(jsonPath("$.data.minLength").value(10));
+    }
+
+    @Test
+    @WithMockUser(username = "operario@pucp.edu.pe", authorities = "OPERARIO")
+    void thePasswordPolicyCarriesTheConfiguredMinimumLength() throws Exception {
+        when(systemParametersService.getPasswordPolicy())
+                .thenReturn(new PasswordPolicyResponse(12));
+
+        mockMvc.perform(get("/api/v1/system-parameters/password-policy"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.minLength").value(12));
     }
 
     // ---------- escritura ----------

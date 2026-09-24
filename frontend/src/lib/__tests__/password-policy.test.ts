@@ -1,4 +1,4 @@
-import { firstPasswordError, isPasswordValid, unmetPasswordRules } from '../password-policy';
+import { buildPasswordRules, firstPasswordError, isPasswordValid, unmetPasswordRules } from '../password-policy';
 
 const DUENO = { email: 'ana.torres@pucp.edu.pe', firstName: 'Ana', lastName: 'Torres' };
 
@@ -6,6 +6,17 @@ describe('password-policy', () => {
   it('acepta una contrasena que cumple los seis requisitos', () => {
     expect(isPasswordValid('JardinSeguro7', DUENO)).toBe(true);
     expect(unmetPasswordRules('JardinSeguro7', DUENO)).toEqual([]);
+  });
+
+  it('respeta la longitud minima que llega del backend', () => {
+    // El checklist del alta pinta la cifra de PASSWORD_MIN_LENGTH, no una
+    // constante copiada: si el admin subio el minimo a 12, 10 caracteres no valen.
+    expect(isPasswordValid('Corta12345', DUENO, 12)).toBe(false);
+    expect(unmetPasswordRules('Corta12345', DUENO, 12).map((r) => r.id)).toContain('minLength');
+    expect(firstPasswordError('Corta12345', DUENO, 12)).toBe('Debe tener al menos 12 caracteres');
+    expect(buildPasswordRules(12).find((r) => r.id === 'minLength')?.label).toBe(
+      'Mínimo 12 caracteres',
+    );
   });
 
   it('exige minuscula, mayuscula y digito por separado', () => {

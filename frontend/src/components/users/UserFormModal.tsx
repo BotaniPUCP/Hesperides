@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CreateUserPayload, UpdateUserPayload, UserDetail } from '@shared/types';
 import { Button, Input, Modal, Select } from '@/components/ui';
 import type { SelectOption } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { erroresDeCampo, mensajeDeApiError } from '@/lib/api-errors';
 import { useCatalogOptions } from '@/hooks/useCatalog';
-import { CATALOG_ROLE } from '@/lib/constants';
+import { CATALOG_ROLE, PASSWORD_MIN_LENGTH } from '@/lib/constants';
+import { systemParametersApi } from '@/lib/system-parameters-api';
 import { PasswordPolicyChecklist } from './PasswordPolicyChecklist';
 import { validateUserForm } from './userFormValidation';
 import type { UserFormErrors, UserFormValues } from './userFormValidation';
@@ -63,6 +64,32 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
   const [errors, setErrors] = useState<UserFormErrors>({});
   const [formError, setFormError] = useState<string>();
   const [guardando, setGuardando] = useState(false);
+  // La longitud mínima la configura el admin en Parámetros del sistema; el
+  // default evita que la UI se quede sin cifra mientras carga o si la llamada
+  // falla (el backend sigue siendo quien valida de verdad).
+  const [minLength, setMinLength] = useState(PASSWORD_MIN_LENGTH);
+
+  /**
+   * Cada montaje es una apertura nueva (UsersAdminScreen remonta con `key`), y
+   * las pantallas que abren el alta son ADMIN, que siempre pueden leer el
+   * parámetro. Un fallo aquí no bloquea el formulario: se queda el default en
+   * vez de negarle el alta a alguien por un pista de UX que no llegó.
+   */
+  useEffect(() => {
+    if (!esAlta) return;
+    let activo = true;
+    systemParametersApi
+      .getPasswordPolicy()
+      .then((politica) => {
+        if (activo && politica?.minLength !== undefined) setMinLength(politica.minLength);
+      })
+      .catch(() => {
+        // Silencio intencional: la validación del servidor cubre cualquier error.
+      });
+    return () => {
+      activo = false;
+    };
+  }, [esAlta]);
 
   const campo = (clave: keyof UserFormValues) => (valor: string) => {
     setValues((previos) => ({ ...previos, [clave]: valor }));
@@ -101,7 +128,7 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
 
   const enviar = async () => {
     setFormError(undefined);
-    const encontrados = validateUserForm(values, esAlta);
+    const encontrados = validateUserForm(values, esAlta, minLength);
     setErrors(encontrados);
     if (Object.keys(encontrados).length > 0) return;
 
@@ -197,6 +224,7 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
                 para descubrir qué le faltaba a la contraseña (§5.1). */}
             <PasswordPolicyChecklist
               password={values.initialPassword}
+              minLength={minLength}
               owner={{
                 email: values.email.trim(),
                 firstName: values.firstName.trim(),

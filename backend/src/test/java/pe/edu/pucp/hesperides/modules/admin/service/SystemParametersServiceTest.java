@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import pe.edu.pucp.hesperides.modules.admin.dto.PasswordPolicyResponse;
 import pe.edu.pucp.hesperides.modules.admin.dto.SystemParameterResponse;
 import pe.edu.pucp.hesperides.modules.admin.entity.SystemParameter;
 import pe.edu.pucp.hesperides.modules.admin.repository.SystemParametersRepository;
@@ -30,6 +31,7 @@ class SystemParametersServiceTest {
 
     @Mock private SystemParametersRepository repository;
     @Mock private AuditService auditService;
+    @Mock private SystemParameterReader systemParameterReader;
 
     @InjectMocks private SystemParametersService service;
 
@@ -55,6 +57,26 @@ class SystemParametersServiceTest {
         assertThat(result.get(0).code()).isEqualTo("MAIL_FROM");
         assertThat(result.get(0).value()).isEqualTo("a@b.pe");
         assertThat(result.get(0).isEditable()).isTrue();
+    }
+
+    @Test
+    void getPasswordPolicyReturnsTheConfiguredMinimum() {
+        when(systemParameterReader.readInt("PASSWORD_MIN_LENGTH", 10)).thenReturn(12);
+
+        PasswordPolicyResponse result = service.getPasswordPolicy();
+
+        assertThat(result.minLength()).isEqualTo(12);
+    }
+
+    @Test
+    void getPasswordPolicyFallsBackToTheSeedWhenTheRowIsMissingOrMalformed() {
+        // readInt resuelve la ausencia y los valores no numéricos con el
+        // fallback: una fila borrada o mal escrita no debe tumbar el checklist.
+        when(systemParameterReader.readInt("PASSWORD_MIN_LENGTH", 10)).thenReturn(10);
+
+        PasswordPolicyResponse result = service.getPasswordPolicy();
+
+        assertThat(result.minLength()).isEqualTo(10);
     }
 
     // ---------- validaciones ----------

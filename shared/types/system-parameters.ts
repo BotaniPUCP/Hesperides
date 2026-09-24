@@ -24,6 +24,15 @@ export interface SystemParameter {
 }
 
 /**
+ * Respuesta de GET /system-parameters/password-policy: la única pieza de la
+ * política de contraseñas que el administrador edita. La consume el checklist
+ * en vivo del formulario de alta para no duplicar la cifra como constante.
+ */
+export interface PasswordPolicy {
+  minLength: number;
+}
+
+/**
  * Cuerpo de PUT /system-parameters. Actualización parcial: solo se mandan las
  * claves que van a cambiar, y el backend valida cada una según su valueType.
  */

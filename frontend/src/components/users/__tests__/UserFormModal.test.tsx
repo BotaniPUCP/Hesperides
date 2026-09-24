@@ -3,8 +3,10 @@ import userEvent from '@testing-library/user-event';
 import type { UserDetail } from '@shared/types';
 import { UserFormModal } from '../UserFormModal';
 import { __resetCatalogCache } from '@/hooks/useCatalog';
+import { systemParametersApi } from '@/lib/system-parameters-api';
 
 jest.mock('@/lib/catalogs-api');
+jest.mock('@/lib/system-parameters-api');
 
 const usuario: UserDetail = {
   id: 4,
@@ -84,6 +86,27 @@ describe('UserFormModal en modo creacion', () => {
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(screen.getByText(/al menos 10 caracteres/i)).toBeInTheDocument();
+  });
+
+  it('pide la longitud minima al backend y la aplica al checklist y a la validacion', async () => {
+    // EL admin cambio PASSWORD_MIN_LENGTH a 12 en Parámetros del sistema; el
+    // formulario debe reflejarlo en vivo, no la constante vieja.
+    (systemParametersApi.getPasswordPolicy as jest.Mock).mockResolvedValue({ minLength: 12 });
+
+    abrir();
+
+    await waitFor(() => expect(screen.getByText(/mínimo 12 caracteres/i)).toBeInTheDocument());
+
+    await userEvent.type(screen.getByLabelText(/^correo/i), 'nuevo@pucp.edu.pe');
+    await userEvent.type(screen.getByLabelText(/nombres/i), 'Luis');
+    await userEvent.type(screen.getByLabelText(/apellidos/i), 'Quispe');
+    await userEvent.selectOptions(screen.getByLabelText(/rol/i), 'OPERARIO');
+    // Diez caracteres cumplen la politica vieja, no la de 12.
+    await userEvent.type(screen.getByLabelText(/contraseña inicial/i), 'Corta12345');
+    await userEvent.click(screen.getByRole('button', { name: /crear usuario/i }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText(/al menos 12 caracteres/i)).toBeInTheDocument();
   });
 
   it('rechaza un correo mal formado sin llamar al backend', async () => {

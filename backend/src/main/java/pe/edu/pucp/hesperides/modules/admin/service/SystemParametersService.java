@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
+import pe.edu.pucp.hesperides.modules.admin.dto.PasswordPolicyResponse;
 import pe.edu.pucp.hesperides.modules.admin.dto.SystemParameterResponse;
 import pe.edu.pucp.hesperides.modules.admin.entity.SystemParameter;
 import pe.edu.pucp.hesperides.modules.admin.repository.SystemParametersRepository;
@@ -38,17 +39,40 @@ public class SystemParametersService {
     private static final BigDecimal MAX_CAMPUS_HECTARES = new BigDecimal("100000");
     private static final int MAX_MAIL_FROM_LENGTH = 255;
 
+    /**
+     * Fallback de la longitud mínima cuando la fila falta o está mal escrita.
+     * Coincide con el valor sembrado en V012: quien borró la fila o la dejó con
+     * un texto no numérico no debe derribar el checklist del frontend, pero sí
+     * quedarse con la política con la que arrancó el sistema.
+     */
+    private static final int PASSWORD_MIN_LENGTH_DEFAULT = 10;
+
     private static final Pattern MAIL_FROM =
             Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
     private final SystemParametersRepository repository;
     private final AuditService auditService;
+    private final SystemParameterReader systemParameterReader;
 
     @Transactional(readOnly = true)
     public List<SystemParameterResponse> findAll() {
         return repository.findAllLive().stream()
                 .map(SystemParameterResponse::from)
                 .toList();
+    }
+
+    /**
+     * La pieza de la política visible en vivo: solo la longitud mínima se edita
+     * ({@code PASSWORD_MIN_LENGTH}); los demás requisitos son reglas fijas de
+     * SPEC-100 §9.1 que el frontend ya conoce. A diferencia de {@link
+     * #findAll()}, este endpoint no es solo ADMIN: cualquier usuario autenticado
+     * necesita la pista para cumplir la política, no para administrarla.
+     */
+    @Transactional(readOnly = true)
+    public PasswordPolicyResponse getPasswordPolicy() {
+        int minLength = systemParameterReader.readInt(
+                SystemParameterCodes.PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH_DEFAULT);
+        return new PasswordPolicyResponse(minLength);
     }
 
     /**
