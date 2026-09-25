@@ -1,14 +1,22 @@
 package pe.edu.pucp.hesperides.modules.users.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
+import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 
 import java.util.Locale;
 
 /**
- * Valida la política de SPEC-100 §9.1. Sin I/O ni dependencias: la misma regla
- * aplica a la contraseña inicial que escribe el administrador, a la temporal que
- * genera el sistema y a la que elige la persona.
+ * Valida la política de SPEC-100 §9.1 (sin I/O aparte de la lectura tipada del
+ * parámetro de sistema): la misma regla aplica a la contraseña inicial que
+ * escribe el administrador, a la temporal que genera el sistema y a la que elige
+ * la persona.
+ *
+ * La longitud mínima la da {@code system_parameters.PASSWORD_MIN_LENGTH}; el
+ * constructor sin argumentos —usado por los test de unidad— conserva la
+ * constante como defecto para no atar los tests a la base de datos.
  *
  * Lanza en vez de devolver boolean para que el motivo exacto viaje con el error:
  * con un boolean, cada llamador inventaría su propio mensaje y acabarían siendo
@@ -32,13 +40,25 @@ public class PasswordPolicy {
      */
     private static final int MIN_PERSONAL_FRAGMENT = 3;
 
+    private final SystemParameterReader parameters;
+
+    public PasswordPolicy() {
+        this(null);
+    }
+
+    @Autowired
+    public PasswordPolicy(SystemParameterReader parameters) {
+        this.parameters = parameters;
+    }
+
     public void validate(String password, String email, String firstName, String lastName) {
         if (password == null || password.isBlank()) {
             throw new ValidationException("La contraseña es obligatoria");
         }
-        if (password.length() < MIN_LENGTH) {
+        int minimumLength = minimumLength();
+        if (password.length() < minimumLength) {
             throw new ValidationException(
-                    "La contraseña debe tener al menos " + MIN_LENGTH + " caracteres");
+                    "La contraseña debe tener al menos " + minimumLength + " caracteres");
         }
         if (password.length() > MAX_LENGTH) {
             throw new ValidationException(
@@ -54,6 +74,12 @@ public class PasswordPolicy {
             throw new ValidationException("La contraseña debe incluir al menos un dígito");
         }
         rejectPersonalData(password, email, firstName, lastName);
+    }
+
+    /** Sin parámetros en los tests de unidad; con el bean de Spring, desde la base. */
+    private int minimumLength() {
+        return parameters == null ? MIN_LENGTH
+                : parameters.readInt(SystemParameterCodes.PASSWORD_MIN_LENGTH, MIN_LENGTH);
     }
 
     /**

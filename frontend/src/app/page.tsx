@@ -16,6 +16,10 @@ function Inicio() {
   const rol = user?.role.code ?? '';
   const puedeVerUsuarios = ROLES_CON_ACCESO_A_USUARIOS.includes(rol);
   const puedeVerFrecuencias = ROLES_CON_ACCESO_A_FRECUENCIAS.includes(rol);
+  // SPEC-003 §5.6: los parámetros son configuración global y SPEC-001 Anexo A
+  // los reserva a ADMIN. La condición no se comparte con los otros módulos a
+  // propósito: quien no es ADMIN no debe ver siquiera que la pantalla existe.
+  const puedeVerParametros = rol === 'ADMIN';
 
   return (
     <main className="min-h-screen bg-neutral-50 p-4">
@@ -57,6 +61,19 @@ function Inicio() {
                   >
                     <span>📅</span>
                     <span>Frecuencias de mantenimiento (SPEC-101)</span>
+                  </Link>
+                </li>
+              )}
+              {/* Solo ADMIN: no aparece para otros roles ni deshabilitado, porque
+                  su mera presencia enseñaría qué gobierna la validación. */}
+              {puedeVerParametros && (
+                <li>
+                  <Link
+                    href="/admin/parametros"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                  >
+                    <span>⚙️</span>
+                    <span>Parámetros del sistema</span>
                   </Link>
                 </li>
               )}

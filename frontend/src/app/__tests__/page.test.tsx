@@ -57,6 +57,30 @@ describe('HomePage', () => {
     );
   });
 
+  it('enlaza los parametros del sistema solo cuando es ADMIN', () => {
+    render(<HomePage />);
+
+    expect(screen.getByRole('link', { name: /parámetros del sistema/i })).toHaveAttribute(
+      'href',
+      '/admin/parametros',
+    );
+  });
+
+  it('no enseña los parámetros a un OPERARIO: son config global que solo ADMIN gobierna', () => {
+    // SPEC-001 Anexo A / SPEC-003 §5.6: mostrarle estos enlaces a quien no los
+    // podrá abrir es prometerle algo que el backend no cumple; peor aún, le
+    // enseña qué valores globales existen y podrían gobernar su propio rol.
+    mockAuth.user = {
+      email: 'operario@pucp.edu.pe',
+      fullName: 'Luis Quispe',
+      role: { code: 'OPERARIO', label: 'Operario de campo' },
+    };
+
+    render(<HomePage />);
+
+    expect(screen.queryByRole('link', { name: /parámetros del sistema/i })).not.toBeInTheDocument();
+  });
+
   it('no enlaza usuarios a un OPERARIO, que no tiene ninguna accion sobre el modulo', () => {
     // Anexo A de SPEC-001: el operario no lee ni escribe usuarios. Ofrecerle el
     // enlace seria mandarlo a una pantalla que solo puede negarle el paso.
