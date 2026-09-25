@@ -38,27 +38,40 @@ export function MaintenanceFrequenciesScreen() {
   const [editingFrequency, setEditingFrequency] = useState<MaintenanceFrequency | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const loadData = async () => {
+  const [reloadToken, setReloadToken] = useState(0);
+
+  // Recargar solo mueve el token: quien pide los datos es el efecto, y el
+  // estado se toca en los callbacks de la promesa, nunca en su cuerpo.
+  const loadData = () => {
     setLoading(true);
-    try {
-      const [freqRes, actRes, ruleRes] = await Promise.all([
-        maintenanceApi.list().catch(() => []),
-        maintenanceApi.getActivityTypes().catch(() => []),
-        maintenanceApi.getRuleTypes().catch(() => []),
-      ]);
-      setFrequencies(Array.isArray(freqRes) ? freqRes : []);
-      setActivities(Array.isArray(actRes) ? actRes : []);
-      setRuleTypes(Array.isArray(ruleRes) ? ruleRes : []);
-    } catch {
-      setFeedback({ type: 'error', message: 'Error al cargar las frecuencias de mantenimiento' });
-    } finally {
-      setLoading(false);
-    }
+    setReloadToken((token) => token + 1);
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    let vigente = true;
+
+    Promise.all([
+      maintenanceApi.list().catch(() => []),
+      maintenanceApi.getActivityTypes().catch(() => []),
+      maintenanceApi.getRuleTypes().catch(() => []),
+    ])
+      .then(([freqRes, actRes, ruleRes]) => {
+        if (!vigente) return;
+        setFrequencies(Array.isArray(freqRes) ? freqRes : []);
+        setActivities(Array.isArray(actRes) ? actRes : []);
+        setRuleTypes(Array.isArray(ruleRes) ? ruleRes : []);
+      })
+      .catch(() => {
+        if (vigente) setFeedback({ type: 'error', message: 'Error al cargar las frecuencias de mantenimiento' });
+      })
+      .finally(() => {
+        if (vigente) setLoading(false);
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, [reloadToken]);
 
   const filteredFrequencies = useMemo(() => {
     const term = filters.search.trim().toLowerCase();

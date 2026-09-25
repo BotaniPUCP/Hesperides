@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SystemParameter } from '@shared/types';
 import { Button, Card, useToast } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
@@ -25,26 +25,39 @@ export function SystemParametersAdminScreen() {
   const [sucia, setSucia] = useState<Record<string, string>>({});
   const { showToast } = useToast();
 
-  const refrescar = useCallback(async () => {
+  const [reloadToken, setReloadToken] = useState(0);
+
+  // Refrescar solo mueve el token: quien pide los datos es el efecto, y el
+  // estado se toca en los callbacks de la promesa, nunca en su cuerpo.
+  function refrescar() {
     setCargando(true);
     setErrorMessage(null);
-    try {
-      const listado = await systemParametersApi.getAll();
-      setParametros(listado);
-      setSucia({});
-    } catch (error: unknown) {
-      setErrorMessage(mensajeDeApiError(error));
-    } finally {
-      setCargando(false);
-    }
-  }, []);
+    setReloadToken((token) => token + 1);
+  }
 
-  const refresh = refrescar;
   const hayCambios = Object.keys(sucia).length > 0;
 
   useEffect(() => {
-    void refrescar();
-  }, [refrescar]);
+    let vigente = true;
+
+    systemParametersApi
+      .getAll()
+      .then((listado) => {
+        if (!vigente) return;
+        setParametros(listado);
+        setSucia({});
+      })
+      .catch((error: unknown) => {
+        if (vigente) setErrorMessage(mensajeDeApiError(error));
+      })
+      .finally(() => {
+        if (vigente) setCargando(false);
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, [reloadToken]);
 
   function cambiarValor(codigo: string, valor: string) {
     setSucia((previas) => ({ ...previas, [codigo]: valor }));
@@ -77,7 +90,7 @@ export function SystemParametersAdminScreen() {
       <Card>
         <p role="alert" className="text-sm text-red-700">{errorMessage}</p>
         <div className="mt-3">
-          <Button variant="secondary" onClick={() => void refrescar()}>Reintentar</Button>
+          <Button variant="secondary" onClick={refrescar}>Reintentar</Button>
         </div>
       </Card>
     );
