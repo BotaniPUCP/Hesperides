@@ -17,6 +17,7 @@ import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Lee y actualiza parámetros generales (SPEC-001 Anexo A: solo ADMIN). La
@@ -25,28 +26,17 @@ import java.util.Map;
  * parámetro conoce: la longitud mínima de contraseña se fija entre 12 y 25, y los
  * intentos de acceso entre 1 y 50.
  *
- * <p>El remitente de correo NO está aquí y no debe volver: solo es válido si el
- * proveedor lo tiene verificado, algo que esta aplicación no puede comprobar.
- * Vive en {@code SMTP_FROM}, con el resto de la configuración del proveedor.
+ * <p>El remitente de correo NO está en la tabla y no debe volver: solo es válido
+ * si el proveedor lo tiene verificado, algo que esta aplicación no puede
+ * comprobar. Vive en {@code SMTP_FROM}; el listado lo muestra como restringido
+ * a través de {@link RestrictedParameters}, que lo lee de ahí.
  */
 @Service
 @RequiredArgsConstructor
 public class SystemParametersService {
 
-    /**
-     * Rango que el administrador puede fijar como longitud mínima: 12 a 25.
-     *
-     * <p>El techo NO es el límite técnico. BCrypt trunca a 72 bytes, y dejar que
-     * el mínimo llegara hasta ahí producía una política imposible de cumplir: con
-     * mínimo 72 y máximo 72, la única contraseña válida tendría exactamente esa
-     * longitud. Se vio en la práctica al probar la pantalla.
-     *
-     * <p>25 es una decisión de producto, no una constante derivada: por encima de
-     * eso la política deja de ser exigente y empieza a ser inusable, y la gente
-     * termina apuntando la contraseña en un papel.
-     */
-    private static final int PASSWORD_MIN_LENGTH_FLOOR = 12;
-    private static final int PASSWORD_MIN_LENGTH_CEILING = 25;
+    private static final int PASSWORD_MIN_LENGTH_FLOOR = PasswordMinLengthRange.FLOOR;
+    private static final int PASSWORD_MIN_LENGTH_CEILING = PasswordMinLengthRange.CEILING;
 
     private static final int MAX_LOGIN_ATTEMPTS = 50;
     private static final BigDecimal MAX_CAMPUS_HECTARES = new BigDecimal("100000");
@@ -63,11 +53,14 @@ public class SystemParametersService {
     private final SystemParametersRepository repository;
     private final AuditService auditService;
     private final SystemParameterReader systemParameterReader;
+    private final RestrictedParameters restrictedParameters;
 
+    /** Primero los editables, que son los que el administrador viene a cambiar. */
     @Transactional(readOnly = true)
     public List<SystemParameterResponse> findAll() {
-        return repository.findAllLive().stream()
-                .map(SystemParameterResponse::from)
+        return Stream.concat(
+                        repository.findAllLive().stream().map(SystemParameterResponse::from),
+                        restrictedParameters.all().stream())
                 .toList();
     }
 
@@ -100,11 +93,15 @@ public class SystemParametersService {
         }
 
         for (Map.Entry<String, String> entry : values.entrySet()) {
+            // Un restringido no está en la tabla: sin esta guarda respondería 404
+            // "no existe" sobre algo que la pantalla acaba de mostrar.
+            if (restrictedParameters.contains(entry.getKey())) {
+                throw notEditable(entry.getKey());
+            }
             SystemParameter parameter = require(entry.getKey());
 
             if (!parameter.isEditable()) {
-                throw new ValidationException(
-                        "El parámetro " + entry.getKey() + " no es editable");
+                throw notEditable(entry.getKey());
             }
 
             String before = parameter.getValue();
@@ -207,6 +204,10 @@ public class SystemParametersService {
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    private ValidationException notEditable(String code) {
+        return new ValidationException("El parámetro " + code + " no es editable");
     }
 
     private SystemParameter require(String code) {
