@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type {
   CreateMaintenanceFrequencyRequest,
   FrequencyRuleTypeCode,
@@ -51,16 +51,47 @@ const EMPTY_FIELDS: RuleFieldsState = {
   coverageDays: '',
 };
 
-export function FrequencyFormModal({
+const optionalText = (value: number | null | undefined) => (value != null ? String(value) : '');
+
+function fieldsFrom(f: MaintenanceFrequency): RuleFieldsState {
+  const window = ANNUAL_WINDOWS.find(
+    (w) => w.startMonth === f.seasonStartMonth && w.endMonth === f.seasonEndMonth
+  );
+  return {
+    // Las estaciones se leen tal cual: ya no hay que adivinarlas desde el
+    // rango general, que era lo que perdía el detalle al editar.
+    bySeasons: f.seasons.length > 0,
+    seasonRows: f.seasons.map(toRow),
+    minDays: optionalText(f.minDaysInterval),
+    maxDays: optionalText(f.maxDaysInterval),
+    targetDays: optionalText(f.targetDaysInterval),
+    annualCount: optionalText(f.annualTargetCount),
+    windowPreset: window?.value ?? ANNUAL_WINDOWS[0].value,
+    coverageDays: optionalText(f.coverageTargetDays),
+  };
+}
+
+/**
+ * El formulario solo existe mientras el modal está abierto, y con una key por
+ * frecuencia: así cada apertura nace con su estado inicial, sin un efecto que
+ * lo resetee a golpe de setState (react-hooks/set-state-in-effect).
+ */
+export function FrequencyFormModal(props: Props) {
+  if (!props.isOpen) return null;
+  return <FrequencyForm key={props.frequencyToEdit?.id ?? 'nueva'} {...props} />;
+}
+
+function FrequencyForm({
   isOpen, onClose, frequencyToEdit, activities, ruleTypes, onSubmit,
 }: Props) {
-  const [activityTypeItemId, setActivityTypeItemId] = useState(0);
-  const [regime, setRegime] = useState<MaintenanceRegime>('IN_HOUSE');
-  const [ruleTypeCode, setRuleTypeCode] = useState<FrequencyRuleTypeCode>('INTERVAL_DAYS');
-  const [scope, setScope] = useState<MaintenanceScope>('CAMPUS_WIDE');
-  const [fields, setFields] = useState<RuleFieldsState>(EMPTY_FIELDS);
-  const [estimatedDuration, setEstimatedDuration] = useState('');
-  const [notes, setNotes] = useState('');
+  const f = frequencyToEdit;
+  const [activityTypeItemId, setActivityTypeItemId] = useState(f ? f.activityType.id : activities[0]?.id ?? 0);
+  const [regime, setRegime] = useState<MaintenanceRegime>(f ? f.regime : 'IN_HOUSE');
+  const [ruleTypeCode, setRuleTypeCode] = useState<FrequencyRuleTypeCode>(f ? f.frequencyRuleType.code : 'INTERVAL_DAYS');
+  const [scope, setScope] = useState<MaintenanceScope>(f ? f.scope : 'CAMPUS_WIDE');
+  const [fields, setFields] = useState<RuleFieldsState>(() => (f ? fieldsFrom(f) : EMPTY_FIELDS));
+  const [estimatedDuration, setEstimatedDuration] = useState(optionalText(f?.estimatedDurationDays));
+  const [notes, setNotes] = useState(f?.notes ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,47 +106,6 @@ export function FrequencyFormModal({
     }
     return groups;
   }, [activities]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setError(null);
-
-    if (!frequencyToEdit) {
-      setActivityTypeItemId(activities[0]?.id ?? 0);
-      setRegime('IN_HOUSE');
-      setRuleTypeCode('INTERVAL_DAYS');
-      setScope('CAMPUS_WIDE');
-      setFields(EMPTY_FIELDS);
-      setEstimatedDuration('');
-      setNotes('');
-      return;
-    }
-
-    const f = frequencyToEdit;
-    setActivityTypeItemId(f.activityType.id);
-    setRegime(f.regime);
-    setRuleTypeCode(f.frequencyRuleType.code);
-    setScope(f.scope);
-    setEstimatedDuration(f.estimatedDurationDays != null ? String(f.estimatedDurationDays) : '');
-    setNotes(f.notes ?? '');
-
-    const window = ANNUAL_WINDOWS.find(
-      (w) => w.startMonth === f.seasonStartMonth && w.endMonth === f.seasonEndMonth
-    );
-    setFields({
-      // Las estaciones se leen tal cual: ya no hay que adivinarlas desde el
-      // rango general, que era lo que perdía el detalle al editar.
-      bySeasons: f.seasons.length > 0,
-      seasonRows: f.seasons.map(toRow),
-      minDays: f.minDaysInterval != null ? String(f.minDaysInterval) : '',
-      maxDays: f.maxDaysInterval != null ? String(f.maxDaysInterval) : '',
-      targetDays: f.targetDaysInterval != null ? String(f.targetDaysInterval) : '',
-      annualCount: f.annualTargetCount != null ? String(f.annualTargetCount) : '',
-      windowPreset: window?.value ?? ANNUAL_WINDOWS[0].value,
-      coverageDays: f.coverageTargetDays != null ? String(f.coverageTargetDays) : '',
-    });
-  }, [frequencyToEdit, isOpen, activities]);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

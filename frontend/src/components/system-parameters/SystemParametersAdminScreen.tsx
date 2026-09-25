@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { SystemParameter } from '@shared/types';
 import { Button, Card, useToast } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { systemParametersApi } from '@/lib/system-parameters-api';
+import { CampoValor } from './CampoValor';
 
 /**
  * Pantalla "Parámetros del sistema" (SPEC-003 §5.6). Solo ADMIN (SPEC-001
@@ -13,9 +14,9 @@ import { systemParametersApi } from '@/lib/system-parameters-api';
  * valores tal cual los guarda el sistema. El RouteGuard ya filtró (403/redirect
  * si no eres ADMIN); aquí solo se cargan, se editan por valueType y se guardan.
  *
- * Convención del contrato: «value» viaja como string ($«strings») y
- * «valueType» dice cómo hay que pintarlo: BOOLEAN → desplegable Sí/No,
- * INTEGER/DECIMAL → input numérico, STRING → texto.
+ * Convención del contrato: «value» viaja como string y «valueType» dice cómo
+ * hay que pintarlo (ver CampoValor). El backend lista primero los editables y
+ * después los restringidos (`isEditable: false`), que llegan bloqueados.
  */
 export function SystemParametersAdminScreen() {
   const [parametros, setParametros] = useState<SystemParameter[] | null>(null);
@@ -25,26 +26,39 @@ export function SystemParametersAdminScreen() {
   const [sucia, setSucia] = useState<Record<string, string>>({});
   const { showToast } = useToast();
 
-  const refrescar = useCallback(async () => {
+  const [reloadToken, setReloadToken] = useState(0);
+
+  // Refrescar solo mueve el token: quien pide los datos es el efecto, y el
+  // estado se toca en los callbacks de la promesa, nunca en su cuerpo.
+  function refrescar() {
     setCargando(true);
     setErrorMessage(null);
-    try {
-      const listado = await systemParametersApi.getAll();
-      setParametros(listado);
-      setSucia({});
-    } catch (error: unknown) {
-      setErrorMessage(mensajeDeApiError(error));
-    } finally {
-      setCargando(false);
-    }
-  }, []);
+    setReloadToken((token) => token + 1);
+  }
 
-  const refresh = refrescar;
   const hayCambios = Object.keys(sucia).length > 0;
 
   useEffect(() => {
-    void refrescar();
-  }, [refrescar]);
+    let vigente = true;
+
+    systemParametersApi
+      .getAll()
+      .then((listado) => {
+        if (!vigente) return;
+        setParametros(listado);
+        setSucia({});
+      })
+      .catch((error: unknown) => {
+        if (vigente) setErrorMessage(mensajeDeApiError(error));
+      })
+      .finally(() => {
+        if (vigente) setCargando(false);
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, [reloadToken]);
 
   function cambiarValor(codigo: string, valor: string) {
     setSucia((previas) => ({ ...previas, [codigo]: valor }));
@@ -77,7 +91,7 @@ export function SystemParametersAdminScreen() {
       <Card>
         <p role="alert" className="text-sm text-red-700">{errorMessage}</p>
         <div className="mt-3">
-          <Button variant="secondary" onClick={() => void refrescar()}>Reintentar</Button>
+          <Button variant="secondary" onClick={refrescar}>Reintentar</Button>
         </div>
       </Card>
     );
@@ -112,7 +126,6 @@ export function SystemParametersAdminScreen() {
                 <CampoValor
                   parametro={parametro}
                   valor={valorActual}
-                  editable={parametro.isEditable}
                   onChange={parametro.isEditable ? (valor) => cambiarValor(parametro.code, valor) : undefined}
                 />
               </li>
@@ -127,47 +140,5 @@ export function SystemParametersAdminScreen() {
         </div>
       </Card>
     </div>
-  );
-}
-
-interface CampoValorProps {
-  parametro: SystemParameter;
-  valor: string;
-  editable?: boolean;
-  onChange?: (valor: string) => void;
-}
-
-function CampoValor({ parametro, valor, editable = false, onChange }: CampoValorProps) {
-  const etiqueta = `Valor de ${parametro.label}`;
-  const inputClass =
-    'h-8 w-44 rounded border border-neutral-200 bg-white px-2 text-sm text-neutral-900 ' +
-    'disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
-
-  if (parametro.valueType === 'BOOLEAN') {
-    return (
-      <select
-        aria-label={etiqueta}
-        value={valor}
-        onChange={(evento) => onChange?.(evento.target.value)}
-        disabled={!editable}
-        className={inputClass}
-      >
-        <option value="true">Sí</option>
-        <option value="false">No</option>
-      </select>
-    );
-  }
-
-  const esNumerico = parametro.valueType === 'INTEGER' || parametro.valueType === 'DECIMAL';
-
-  return (
-    <input
-      aria-label={etiqueta}
-      type={esNumerico ? 'number' : 'text'}
-      value={valor}
-      onChange={(evento) => onChange?.(evento.target.value)}
-      disabled={!editable}
-      className={inputClass}
-    />
   );
 }

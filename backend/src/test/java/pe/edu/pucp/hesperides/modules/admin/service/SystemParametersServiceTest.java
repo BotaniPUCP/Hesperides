@@ -32,6 +32,7 @@ class SystemParametersServiceTest {
     @Mock private SystemParametersRepository repository;
     @Mock private AuditService auditService;
     @Mock private SystemParameterReader systemParameterReader;
+    @Mock private RestrictedParameters restrictedParameters;
 
     @InjectMocks private SystemParametersService service;
 
@@ -58,6 +59,20 @@ class SystemParametersServiceTest {
         assertThat(result.get(0).code()).isEqualTo("CAMPUS_TOTAL_HECTARES");
         assertThat(result.get(0).value()).isEqualTo("41");
         assertThat(result.get(0).isEditable()).isTrue();
+    }
+
+    @Test
+    void findAllAppendsTheRestrictedParametersAfterTheEditableOnes() {
+        SystemParameterResponse sender = new SystemParameterResponse(
+                "SMTP_FROM", "Correo remitente", "soporte@pucp.edu.pe", "STRING", "desc", false);
+        when(repository.findAllLive()).thenReturn(
+                List.of(parameter("CAMPUS_TOTAL_HECTARES", "41", "DECIMAL")));
+        when(restrictedParameters.all()).thenReturn(List.of(sender));
+
+        List<SystemParameterResponse> result = service.findAll();
+
+        assertThat(result).extracting(SystemParameterResponse::code)
+                .containsExactly("CAMPUS_TOTAL_HECTARES", "SMTP_FROM");
     }
 
     @Test
@@ -105,6 +120,20 @@ class SystemParametersServiceTest {
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("no es editable");
 
+        verify(auditService, never()).record(any(), any(), any(), any());
+    }
+
+    @Test
+    void aRestrictedParameterIsRejectedWithoutTouchingTheTable() {
+        // No vive en la tabla: sin este rechazo explícito respondería 404
+        // "no existe", que contradice lo que la pantalla le acaba de mostrar.
+        when(restrictedParameters.contains("SMTP_FROM")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.update(Map.of("SMTP_FROM", "otro@pucp.edu.pe")))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("no es editable");
+
+        verify(repository, never()).findByCode(any());
         verify(auditService, never()).record(any(), any(), any(), any());
     }
 
