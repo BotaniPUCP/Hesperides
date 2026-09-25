@@ -16,39 +16,48 @@ import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Lee y actualiza parámetros generales (SPEC-001 Anexo A: solo ADMIN). La
  * escritura valida contra el {@code value_type} de cada fila —Bean Validation no
  * puede, porque el tipo vive en la base— y aplica los rangos de negocio que cada
- * parámetro conoce (la clave no puede bajar de 8 porque es un límite de
- * seguridad; tampoco superar los 72 bytes que BCrypt trunca).
+ * parámetro conoce: la longitud mínima de contraseña se fija entre 12 y 25, y los
+ * intentos de acceso entre 1 y 50.
+ *
+ * <p>El remitente de correo NO está aquí y no debe volver: solo es válido si el
+ * proveedor lo tiene verificado, algo que esta aplicación no puede comprobar.
+ * Vive en {@code SMTP_FROM}, con el resto de la configuración del proveedor.
  */
 @Service
 @RequiredArgsConstructor
 public class SystemParametersService {
 
     /**
-     * BCrypt trunca en silencio a 72 bytes (PasswordPolicy.MAX_LENGTH): permitir
-     * una longitud mínima mayor al máximo real produciría una política imposible.
+     * Rango que el administrador puede fijar como longitud mínima: 12 a 25.
+     *
+     * <p>El techo NO es el límite técnico. BCrypt trunca a 72 bytes, y dejar que
+     * el mínimo llegara hasta ahí producía una política imposible de cumplir: con
+     * mínimo 72 y máximo 72, la única contraseña válida tendría exactamente esa
+     * longitud. Se vio en la práctica al probar la pantalla.
+     *
+     * <p>25 es una decisión de producto, no una constante derivada: por encima de
+     * eso la política deja de ser exigente y empieza a ser inusable, y la gente
+     * termina apuntando la contraseña en un papel.
      */
-    private static final int PASSWORD_MIN_LENGTH_FLOOR = 8;
-    private static final int PASSWORD_MAX_LENGTH = 72;
+    private static final int PASSWORD_MIN_LENGTH_FLOOR = 12;
+    private static final int PASSWORD_MIN_LENGTH_CEILING = 25;
+
     private static final int MAX_LOGIN_ATTEMPTS = 50;
     private static final BigDecimal MAX_CAMPUS_HECTARES = new BigDecimal("100000");
-    private static final int MAX_MAIL_FROM_LENGTH = 255;
 
     /**
      * Fallback de la longitud mínima cuando la fila falta o está mal escrita.
-     * Coincide con el valor sembrado en V012: quien borró la fila o la dejó con
+     * Coincide con el piso configurable: quien borró la fila o la dejó con
      * un texto no numérico no debe derribar el checklist del frontend, pero sí
      * quedarse con la política con la que arrancó el sistema.
      */
-    private static final int PASSWORD_MIN_LENGTH_DEFAULT = 10;
+    private static final int PASSWORD_MIN_LENGTH_DEFAULT = PASSWORD_MIN_LENGTH_FLOOR;
 
-    private static final Pattern MAIL_FROM =
-            Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
     private final SystemParametersRepository repository;
     private final AuditService auditService;
@@ -138,10 +147,10 @@ public class SystemParametersService {
         }
 
         if (code.equals(SystemParameterCodes.PASSWORD_MIN_LENGTH)
-                && (value < PASSWORD_MIN_LENGTH_FLOOR || value > PASSWORD_MAX_LENGTH)) {
+                && (value < PASSWORD_MIN_LENGTH_FLOOR || value > PASSWORD_MIN_LENGTH_CEILING)) {
             throw new ValidationException(
                     "La longitud mínima de contraseña debe estar entre "
-                            + PASSWORD_MIN_LENGTH_FLOOR + " y " + PASSWORD_MAX_LENGTH);
+                            + PASSWORD_MIN_LENGTH_FLOOR + " y " + PASSWORD_MIN_LENGTH_CEILING);
         }
         if (code.equals(SystemParameterCodes.LOGIN_MAX_ATTEMPTS)
                 && (value < 1 || value > MAX_LOGIN_ATTEMPTS)) {
@@ -166,13 +175,17 @@ public class SystemParametersService {
         return value.stripTrailingZeros().toPlainString();
     }
 
+    /**
+     * Hoy ningún parámetro de texto tiene reglas propias, pero el tipo STRING
+     * sigue soportado: el sitio donde añadirlas es este.
+     *
+     * <p>Aquí vivía la validación de {@code MAIL_FROM}, y se quitó junto al
+     * parámetro. Era el caso que enseñó el límite de validar texto: el regex
+     * aceptaba cualquier «algo@algo.algo», así que pasaban tanto un dominio
+     * inexistente como un buzón que nadie lee. Un remitente solo vale si el
+     * proveedor lo tiene verificado, y eso no se deduce de su forma.
+     */
     private String validateString(String code, String raw) {
-        if (code.equals(SystemParameterCodes.MAIL_FROM)) {
-            if (raw.length() > MAX_MAIL_FROM_LENGTH || !MAIL_FROM.matcher(raw).matches()) {
-                throw new ValidationException(
-                        "El correo remitente debe ser una dirección de correo válida");
-            }
-        }
         return raw;
     }
 

@@ -459,14 +459,16 @@ class MigrationSmokeTest {
     }
 
     @Test
-    void theFourOperationalParametersAreSeeded() {
+    void theOperationalParametersAreSeeded() {
         List<String> codes = jdbcTemplate.queryForList(
                 "SELECT code FROM system_parameters WHERE deleted_at IS NULL ORDER BY code",
                 String.class);
 
+        // MAIL_FROM no esta y no debe volver: un remitente solo vale si el
+        // proveedor lo tiene verificado, y esta aplicacion no puede comprobarlo.
+        // Vive en SMTP_FROM, con el resto de la configuracion del proveedor.
         assertThat(codes).containsExactly(
-                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS",
-                "MAIL_FROM", "PASSWORD_MIN_LENGTH");
+                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH");
     }
 
     @Test
@@ -475,7 +477,9 @@ class MigrationSmokeTest {
                 "SELECT code, value, value_type FROM system_parameters "
                         + "WHERE code = 'PASSWORD_MIN_LENGTH'");
 
-        assertThat(row.get("value")).isEqualTo("10");
+        // 12 es el piso que el administrador puede fijar: la fila sembrada no debe
+        // nacer por debajo del rango que su propia pantalla acepta.
+        assertThat(row.get("value")).isEqualTo("12");
         assertThat(row.get("value_type")).isEqualTo("INTEGER");
     }
 
@@ -493,6 +497,6 @@ class MigrationSmokeTest {
         Integer live = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
                 Integer.class);
-        assertThat(live).isEqualTo(4);
+        assertThat(live).isEqualTo(3);
     }
 }

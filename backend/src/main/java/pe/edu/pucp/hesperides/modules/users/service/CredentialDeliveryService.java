@@ -3,15 +3,12 @@ package pe.edu.pucp.hesperides.modules.users.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
-import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
 
 import java.nio.charset.StandardCharsets;
@@ -39,28 +36,24 @@ public class CredentialDeliveryService {
 
     private final JavaMailSender mailSender;
     private final CredentialEmailTemplate emailTemplate;
-    private final SystemParameterReader parameters;
     private final String from;
     private final String appPublicUrl;
 
+    /**
+     * El remitente viene de {@code SMTP_FROM}, junto al host y las credenciales
+     * del mismo proveedor. <strong>No es un parámetro de sistema</strong> y no se
+     * edita desde la aplicación: un remitente solo funciona si está verificado en
+     * el proveedor, y eso no lo decide este código. Uno sin verificar recibe
+     * «250 OK» y se descarta en silencio, así que una pantalla que lo ofreciera
+     * prometería un control que la aplicación no tiene.
+     */
     public CredentialDeliveryService(
             JavaMailSender mailSender,
             CredentialEmailTemplate emailTemplate,
-            String from,
-            String appPublicUrl) {
-        this(mailSender, emailTemplate, null, from, appPublicUrl);
-    }
-
-    @Autowired
-    public CredentialDeliveryService(
-            JavaMailSender mailSender,
-            CredentialEmailTemplate emailTemplate,
-            SystemParameterReader parameters,
             @Value("${hesperides.mail.from:no-reply@hesperides.local}") String from,
             @Value("${hesperides.mail.app-public-url}") String appPublicUrl) {
         this.mailSender = mailSender;
         this.emailTemplate = emailTemplate;
-        this.parameters = parameters;
         this.from = from;
         this.appPublicUrl = appPublicUrl;
     }
@@ -72,7 +65,11 @@ public class CredentialDeliveryService {
     public boolean deliver(User user, String rawPassword) {
         try {
             mailSender.send(compose(user, rawPassword));
-            log.info("Credenciales enviadas a userId={}", user.getId());
+            // El remitente va en el log a propósito: un SMTP que acepta el mensaje
+            // devuelve «250 OK» aunque después lo descarte por remitente no
+            // verificado. Cuando un correo no llega y aquí dice «enviadas», este
+            // dato es lo único que señala por dónde buscar.
+            log.info("Credenciales enviadas a userId={} desde remitente={}", user.getId(), from);
             return true;
         } catch (MailException | MessagingException ex) {
             // Solo el motivo técnico: el cuerpo del mensaje lleva la contraseña
@@ -80,20 +77,6 @@ public class CredentialDeliveryService {
             log.warn("Fallo al enviar credenciales a userId={}: {}", user.getId(), ex.getMessage());
             return false;
         }
-    }
-
-    /**
-     * El remitente lo marca {@code system_parameters.MAIL_FROM}; cae al valor de
-     * entorno (SMTP_FROM) si el parámetro no existe o quedó vacío.
-     */
-    private String sender() {
-        if (parameters != null) {
-            String value = parameters.readString(SystemParameterCodes.MAIL_FROM, null);
-            if (value != null && !value.isBlank()) {
-                return value;
-            }
-        }
-        return from;
     }
 
     /**
@@ -111,7 +94,7 @@ public class CredentialDeliveryService {
                 message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
                 StandardCharsets.UTF_8.name());
 
-        helper.setFrom(sender());
+        helper.setFrom(from);
         helper.setTo(user.getEmail());
         helper.setSubject(SUBJECT);
         helper.setText(

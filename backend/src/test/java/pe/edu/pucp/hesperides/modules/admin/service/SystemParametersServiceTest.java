@@ -49,34 +49,35 @@ class SystemParametersServiceTest {
 
     @Test
     void findAllMapsTheLiveRows() {
-        when(repository.findAllLive()).thenReturn(List.of(parameter("MAIL_FROM", "a@b.pe", "STRING")));
+        when(repository.findAllLive()).thenReturn(
+                List.of(parameter("CAMPUS_TOTAL_HECTARES", "41", "DECIMAL")));
 
         List<SystemParameterResponse> result = service.findAll();
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).code()).isEqualTo("MAIL_FROM");
-        assertThat(result.get(0).value()).isEqualTo("a@b.pe");
+        assertThat(result.get(0).code()).isEqualTo("CAMPUS_TOTAL_HECTARES");
+        assertThat(result.get(0).value()).isEqualTo("41");
         assertThat(result.get(0).isEditable()).isTrue();
     }
 
     @Test
     void getPasswordPolicyReturnsTheConfiguredMinimum() {
-        when(systemParameterReader.readInt("PASSWORD_MIN_LENGTH", 10)).thenReturn(12);
+        when(systemParameterReader.readInt("PASSWORD_MIN_LENGTH", 12)).thenReturn(20);
 
         PasswordPolicyResponse result = service.getPasswordPolicy();
 
-        assertThat(result.minLength()).isEqualTo(12);
+        assertThat(result.minLength()).isEqualTo(20);
     }
 
     @Test
     void getPasswordPolicyFallsBackToTheSeedWhenTheRowIsMissingOrMalformed() {
         // readInt resuelve la ausencia y los valores no numéricos con el
         // fallback: una fila borrada o mal escrita no debe tumbar el checklist.
-        when(systemParameterReader.readInt("PASSWORD_MIN_LENGTH", 10)).thenReturn(10);
+        when(systemParameterReader.readInt("PASSWORD_MIN_LENGTH", 12)).thenReturn(12);
 
         PasswordPolicyResponse result = service.getPasswordPolicy();
 
-        assertThat(result.minLength()).isEqualTo(10);
+        assertThat(result.minLength()).isEqualTo(12);
     }
 
     // ---------- validaciones ----------
@@ -109,10 +110,10 @@ class SystemParametersServiceTest {
 
     @Test
     void aBlankValueIsRejected() {
-        when(repository.findByCode("MAIL_FROM")).thenReturn(
-                Optional.of(parameter("MAIL_FROM", "a@b.pe", "STRING")));
+        when(repository.findByCode("CAMPUS_TOTAL_HECTARES")).thenReturn(
+                Optional.of(parameter("CAMPUS_TOTAL_HECTARES", "41", "DECIMAL")));
 
-        assertThatThrownBy(() -> service.update(Map.of("MAIL_FROM", "  ")))
+        assertThatThrownBy(() -> service.update(Map.of("CAMPUS_TOTAL_HECTARES", "  ")))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("no puede estar vacío");
     }
@@ -128,22 +129,35 @@ class SystemParametersServiceTest {
     }
 
     @Test
-    void thePasswordMinimumCannotDropBelowEight() {
+    void thePasswordMinimumCannotDropBelowTheFloor() {
         when(repository.findByCode("PASSWORD_MIN_LENGTH")).thenReturn(
                 Optional.of(parameter("PASSWORD_MIN_LENGTH", "10", "INTEGER")));
 
         assertThatThrownBy(() -> service.update(Map.of("PASSWORD_MIN_LENGTH", "4")))
                 .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("entre 8 y 72");
+                .hasMessageContaining("entre 12 y 25");
     }
 
     @Test
-    void thePasswordMinimumCannotExceedTheBcryptLimit() {
+    void thePasswordMinimumCannotExceedTheCeiling() {
         when(repository.findByCode("PASSWORD_MIN_LENGTH")).thenReturn(
-                Optional.of(parameter("PASSWORD_MIN_LENGTH", "10", "INTEGER")));
+                Optional.of(parameter("PASSWORD_MIN_LENGTH", "12", "INTEGER")));
 
         assertThatThrownBy(() -> service.update(Map.of("PASSWORD_MIN_LENGTH", "80")))
                 .isInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void thePasswordMinimumCannotReachTheBcryptLimit() {
+        // El caso que se colo al probar la pantalla: 72 pasaba la validacion por
+        // ser el maximo tecnico de BCrypt, y dejaba una politica imposible de
+        // cumplir -- minimo 72 y maximo 72 admiten una sola longitud.
+        when(repository.findByCode("PASSWORD_MIN_LENGTH")).thenReturn(
+                Optional.of(parameter("PASSWORD_MIN_LENGTH", "12", "INTEGER")));
+
+        assertThatThrownBy(() -> service.update(Map.of("PASSWORD_MIN_LENGTH", "72")))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("entre 12 y 25");
     }
 
     @Test
@@ -156,16 +170,6 @@ class SystemParametersServiceTest {
 
         assertThatThrownBy(() -> service.update(Map.of("LOGIN_MAX_ATTEMPTS", "500")))
                 .isInstanceOf(ValidationException.class);
-    }
-
-    @Test
-    void aMalformedSenderEmailIsRejected() {
-        when(repository.findByCode("MAIL_FROM")).thenReturn(
-                Optional.of(parameter("MAIL_FROM", "a@b.pe", "STRING")));
-
-        assertThatThrownBy(() -> service.update(Map.of("MAIL_FROM", "no-es-un-correo")))
-                .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("dirección de correo válida");
     }
 
     @Test
@@ -216,9 +220,9 @@ class SystemParametersServiceTest {
         when(repository.save(passwordLength)).thenReturn(passwordLength);
         when(repository.findAllLive()).thenReturn(List.of(passwordLength));
 
-        service.update(Map.of("PASSWORD_MIN_LENGTH", "010"));
+        service.update(Map.of("PASSWORD_MIN_LENGTH", "014"));
 
-        assertThat(passwordLength.getValue()).isEqualTo("10");
+        assertThat(passwordLength.getValue()).isEqualTo("14");
     }
 
     @Test
@@ -228,22 +232,25 @@ class SystemParametersServiceTest {
         when(repository.save(passwordLength)).thenReturn(passwordLength);
         when(repository.findAllLive()).thenReturn(List.of(passwordLength));
 
-        service.update(Map.of("PASSWORD_MIN_LENGTH", "11"));
+        service.update(Map.of("PASSWORD_MIN_LENGTH", "13"));
 
-        assertThat(passwordLength.getValue()).isEqualTo("11");
+        assertThat(passwordLength.getValue()).isEqualTo("13");
         verify(auditService).record(eq(AuditActionCode.SYSTEM_PARAMETER_CHANGED),
                 eq("SystemParameter"), any(), any());
     }
 
     @Test
-    void theSenderEmailSurvivesAsIs() {
-        SystemParameter mailFrom = parameter("MAIL_FROM", "a@b.pe", "STRING");
-        when(repository.findByCode("MAIL_FROM")).thenReturn(Optional.of(mailFrom));
-        when(repository.save(mailFrom)).thenReturn(mailFrom);
-        when(repository.findAllLive()).thenReturn(List.of(mailFrom));
+    void aDecimalValueIsStoredInItsCanonicalForm() {
+        SystemParameter hectares = parameter("CAMPUS_TOTAL_HECTARES", "41", "DECIMAL");
+        when(repository.findByCode("CAMPUS_TOTAL_HECTARES")).thenReturn(Optional.of(hectares));
+        when(repository.save(hectares)).thenReturn(hectares);
+        when(repository.findAllLive()).thenReturn(List.of(hectares));
 
-        service.update(Map.of("MAIL_FROM", "nuevo@hesperides.pucp.edu.pe"));
+        service.update(Map.of("CAMPUS_TOTAL_HECTARES", "42.50"));
 
-        assertThat(mailFrom.getValue()).isEqualTo("nuevo@hesperides.pucp.edu.pe");
+        // Los ceros a la derecha se descartan: "42.50" y "42.5" son el mismo dato
+        // y guardar ambos haria que el historial de auditoria mostrara un cambio
+        // donde no hubo ninguno.
+        assertThat(hectares.getValue()).isEqualTo("42.5");
     }
 }

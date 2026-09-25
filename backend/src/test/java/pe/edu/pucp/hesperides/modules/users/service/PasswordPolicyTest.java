@@ -28,10 +28,13 @@ class PasswordPolicyTest {
     }
 
     @Test
-    void rejectsAPasswordShorterThanTenCharacters() {
+    void rejectsAPasswordShorterThanTheMinimum() {
+        // Se compara contra la constante y no contra un literal: el minimo es
+        // configurable, y un test que fije el numero a mano hay que recordar
+        // actualizarlo cada vez que el equipo cambie la politica.
         assertThatThrownBy(() -> validate("Corta123"))
                 .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("10");
+                .hasMessageContaining(String.valueOf(PasswordPolicy.MIN_LENGTH));
     }
 
     @Test

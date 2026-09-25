@@ -10,8 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
-import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
 
@@ -120,21 +118,22 @@ class CredentialDeliveryServiceTest {
     }
 
     @Test
-    void theSenderAddressComesFromTheSystemParameter() throws Exception {
-        SystemParameterReader reader = mock(SystemParameterReader.class);
-        when(reader.readString(SystemParameterCodes.MAIL_FROM, null))
-                .thenReturn("cambios@hesperides.pucp.edu.pe");
+    void theSenderAddressComesOnlyFromTheEnvironment() throws Exception {
+        // El remitente se podia cambiar desde system_parameters y se quito: uno no
+        // verificado en el proveedor recibe «250 OK» y se descarta en silencio, asi
+        // que la aplicacion no puede ofrecer ese control. El unico origen es
+        // SMTP_FROM, inyectado por constructor.
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
         sender.setHost("localhost");
         sender.setPort(greenMail.getSmtp().getPort());
-        CredentialDeliveryService dynamic = new CredentialDeliveryService(
-                sender, new CredentialEmailTemplate(), reader, "no-reply@hesperides.test",
+        CredentialDeliveryService otroEntorno = new CredentialDeliveryService(
+                sender, new CredentialEmailTemplate(), "otro-entorno@hesperides.test",
                 "https://hesperides.test");
 
-        dynamic.deliver(user(), "ClaveTemp123");
+        otroEntorno.deliver(user(), "ClaveTemp123");
 
         assertThat(greenMail.getReceivedMessages()[0].getFrom()[0].toString())
-                .isEqualTo("cambios@hesperides.pucp.edu.pe");
+                .isEqualTo("otro-entorno@hesperides.test");
     }
 
     @Test

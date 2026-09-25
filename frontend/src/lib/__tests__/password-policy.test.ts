@@ -1,4 +1,5 @@
 import { buildPasswordRules, firstPasswordError, isPasswordValid, unmetPasswordRules } from '../password-policy';
+import { PASSWORD_MIN_LENGTH } from '../constants';
 
 const DUENO = { email: 'ana.torres@pucp.edu.pe', firstName: 'Ana', lastName: 'Torres' };
 
@@ -53,7 +54,11 @@ describe('password-policy', () => {
 
   it('devuelve un solo mensaje de error, no los seis', () => {
     // Un campo con seis lineas rojas debajo no se lee, se ignora.
-    expect(firstPasswordError('corta')).toBe('Debe tener al menos 10 caracteres');
+    // La cifra sale de la constante, no de un literal: el minimo es configurable
+    // y escribirlo a mano obliga a recordar este test en cada cambio de politica.
+    expect(firstPasswordError('corta')).toBe(
+      `Debe tener al menos ${PASSWORD_MIN_LENGTH} caracteres`
+    );
     expect(firstPasswordError('JardinSeguro7')).toBeUndefined();
   });
 });

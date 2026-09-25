@@ -25,7 +25,13 @@ import java.util.Locale;
 @Component
 public class PasswordPolicy {
 
-    public static final int MIN_LENGTH = 10;
+    /**
+     * El suelo cuando la fila de {@code PASSWORD_MIN_LENGTH} falta o está mal
+     * escrita. Coincide con el piso que el administrador puede fijar (12): si la
+     * base falla, la política no debe quedar más laxa de lo que la pantalla
+     * permitiría configurar.
+     */
+    public static final int MIN_LENGTH = 12;
 
     /**
      * 72 bytes es el límite real de BCrypt: más allá trunca en silencio, y una
