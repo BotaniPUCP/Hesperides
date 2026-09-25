@@ -93,23 +93,27 @@ class SystemParametersControllerTest {
     @WithMockUser(username = "operario@pucp.edu.pe", authorities = "OPERARIO")
     void anyAuthenticatedUserCanReadThePasswordPolicy() throws Exception {
         when(systemParametersService.getPasswordPolicy())
-                .thenReturn(new PasswordPolicyResponse(10));
+                .thenReturn(new PasswordPolicyResponse(12, 72));
 
         mockMvc.perform(get("/api/v1/system-parameters/password-policy"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Política de contraseña obtenida"))
-                .andExpect(jsonPath("$.data.minLength").value(10));
+                .andExpect(jsonPath("$.data.minLength").value(12));
     }
 
     @Test
     @WithMockUser(username = "operario@pucp.edu.pe", authorities = "OPERARIO")
-    void thePasswordPolicyCarriesTheConfiguredMinimumLength() throws Exception {
+    void thePasswordPolicyCarriesBothLengths() throws Exception {
+        // El maximo viaja junto al minimo para que el checklist no lo repita en
+        // una constante propia: dos copias de la misma regla acaban divergiendo,
+        // y la pantalla llego a anunciar un tope que nadie habia comprobado.
         when(systemParametersService.getPasswordPolicy())
-                .thenReturn(new PasswordPolicyResponse(12));
+                .thenReturn(new PasswordPolicyResponse(20, 72));
 
         mockMvc.perform(get("/api/v1/system-parameters/password-policy"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.minLength").value(12));
+                .andExpect(jsonPath("$.data.minLength").value(20))
+                .andExpect(jsonPath("$.data.maxLength").value(72));
     }
 
     // ---------- escritura ----------

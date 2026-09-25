@@ -8,6 +8,7 @@ import pe.edu.pucp.hesperides.modules.admin.dto.PasswordPolicyResponse;
 import pe.edu.pucp.hesperides.modules.admin.dto.SystemParameterResponse;
 import pe.edu.pucp.hesperides.modules.admin.entity.SystemParameter;
 import pe.edu.pucp.hesperides.modules.admin.repository.SystemParametersRepository;
+import pe.edu.pucp.hesperides.modules.users.service.PasswordPolicy;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
@@ -81,7 +82,10 @@ public class SystemParametersService {
     public PasswordPolicyResponse getPasswordPolicy() {
         int minLength = systemParameterReader.readInt(
                 SystemParameterCodes.PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH_DEFAULT);
-        return new PasswordPolicyResponse(minLength);
+        // El máximo sale de PasswordPolicy, que es quien lo aplica al validar. Se
+        // sirve en vez de dejar que el frontend lo repita: una constante copiada
+        // en dos capas acaba desincronizándose sin que nadie lo note.
+        return new PasswordPolicyResponse(minLength, PasswordPolicy.MAX_LENGTH);
     }
 
     /**

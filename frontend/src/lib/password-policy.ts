@@ -51,16 +51,21 @@ function containsOwnerData(password: string, owner: PasswordOwner): boolean {
 }
 
 /**
- * Construye la lista de reglas para una longitud mínima dada. El umbral no vive
- * en la lista estática porque lo configura el administrador vía el parámetro
- * {@code PASSWORD_MIN_LENGTH}: el checklist debe pintar la cifra que se sirvió
- * en vivo, no una copiada en código.
+ * Construye la lista de reglas para las longitudes que rigen ahora.
+ *
+ * Ninguna de las dos cifras se escribe aquí: el mínimo lo configura el
+ * administrador y el máximo lo fija el backend, así que el checklist pinta lo que
+ * se sirvió en vivo. Los valores por defecto solo cubren a quien no trae la
+ * política del servidor (el cambio de la propia contraseña).
  */
-export function buildPasswordRules(minLength: number): PasswordRule[] {
+export function buildPasswordRules(
+  minLength: number,
+  maxLength: number = PASSWORD_MAX_LENGTH,
+): PasswordRule[] {
   return [
     {
       id: 'minLength',
-      // "Mínimo 10" y no "al menos 10": el mensaje de error usa esa otra
+      // "Mínimo 12" y no "al menos 12": el mensaje de error usa esa otra
       // redacción y verlas idénticas dos veces en la misma pantalla confunde.
       label: `Mínimo ${minLength} caracteres`,
       message: `Debe tener al menos ${minLength} caracteres`,
@@ -70,9 +75,9 @@ export function buildPasswordRules(minLength: number): PasswordRule[] {
       // El tope no es un capricho: BCrypt trunca en silencio a partir de 72 bytes
       // y una contraseña recortada sin aviso es peor que una corta.
       id: 'maxLength',
-      label: `Máximo ${PASSWORD_MAX_LENGTH} caracteres`,
-      message: `No puede superar los ${PASSWORD_MAX_LENGTH} caracteres`,
-      isMet: (password) => password.length <= PASSWORD_MAX_LENGTH,
+      label: `Máximo ${maxLength} caracteres`,
+      message: `No puede superar los ${maxLength} caracteres`,
+      isMet: (password) => password.length <= maxLength,
     },
     {
       id: 'lowercase',
@@ -113,8 +118,9 @@ export function unmetPasswordRules(
   password: string,
   owner: PasswordOwner = {},
   minLength = PASSWORD_MIN_LENGTH,
+  maxLength = PASSWORD_MAX_LENGTH,
 ): PasswordRule[] {
-  return buildPasswordRules(minLength).filter((rule) => !rule.isMet(password, owner));
+  return buildPasswordRules(minLength, maxLength).filter((rule) => !rule.isMet(password, owner));
 }
 
 /**
@@ -125,14 +131,16 @@ export function firstPasswordError(
   password: string,
   owner: PasswordOwner = {},
   minLength = PASSWORD_MIN_LENGTH,
+  maxLength = PASSWORD_MAX_LENGTH,
 ): string | undefined {
-  return unmetPasswordRules(password, owner, minLength)[0]?.message;
+  return unmetPasswordRules(password, owner, minLength, maxLength)[0]?.message;
 }
 
 export function isPasswordValid(
   password: string,
   owner: PasswordOwner = {},
   minLength = PASSWORD_MIN_LENGTH,
+  maxLength = PASSWORD_MAX_LENGTH,
 ): boolean {
-  return unmetPasswordRules(password, owner, minLength).length === 0;
+  return unmetPasswordRules(password, owner, minLength, maxLength).length === 0;
 }

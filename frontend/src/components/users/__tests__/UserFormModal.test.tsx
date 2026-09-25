@@ -85,28 +85,34 @@ describe('UserFormModal en modo creacion', () => {
     await userEvent.click(screen.getByRole('button', { name: /crear usuario/i }));
 
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByText(/al menos 10 caracteres/i)).toBeInTheDocument();
+    // 12 es el minimo que sirve la politica, no una constante escrita aqui.
+    expect(screen.getByText(/al menos 12 caracteres/i)).toBeInTheDocument();
   });
 
-  it('pide la longitud minima al backend y la aplica al checklist y a la validacion', async () => {
-    // EL admin cambio PASSWORD_MIN_LENGTH a 12 en Parámetros del sistema; el
-    // formulario debe reflejarlo en vivo, no la constante vieja.
-    (systemParametersApi.getPasswordPolicy as jest.Mock).mockResolvedValue({ minLength: 12 });
+  it('pide las longitudes al backend y las aplica al checklist y a la validacion', async () => {
+    // El admin subio PASSWORD_MIN_LENGTH a 20 en Parametros del sistema; el
+    // formulario debe reflejarlo en vivo, no quedarse con el default.
+    (systemParametersApi.getPasswordPolicy as jest.Mock).mockResolvedValue({
+      minLength: 20,
+      maxLength: 72,
+    });
 
     abrir();
 
-    await waitFor(() => expect(screen.getByText(/mínimo 12 caracteres/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/mínimo 20 caracteres/i)).toBeInTheDocument());
+    // El maximo tambien sale de la politica servida, no de una copia local.
+    expect(screen.getByText(/máximo 72 caracteres/i)).toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText(/^correo/i), 'nuevo@pucp.edu.pe');
     await userEvent.type(screen.getByLabelText(/nombres/i), 'Luis');
     await userEvent.type(screen.getByLabelText(/apellidos/i), 'Quispe');
     await userEvent.selectOptions(screen.getByLabelText(/rol/i), 'OPERARIO');
-    // Diez caracteres cumplen la politica vieja, no la de 12.
-    await userEvent.type(screen.getByLabelText(/contraseña inicial/i), 'Corta12345');
+    // Trece caracteres cumplen el default de 12, no la politica de 20.
+    await userEvent.type(screen.getByLabelText(/contraseña inicial/i), 'Corta12345678');
     await userEvent.click(screen.getByRole('button', { name: /crear usuario/i }));
 
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByText(/al menos 12 caracteres/i)).toBeInTheDocument();
+    expect(screen.getByText(/al menos 20 caracteres/i)).toBeInTheDocument();
   });
 
   it('rechaza un correo mal formado sin llamar al backend', async () => {

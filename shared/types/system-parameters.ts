@@ -24,12 +24,17 @@ export interface SystemParameter {
 }
 
 /**
- * Respuesta de GET /system-parameters/password-policy: la única pieza de la
- * política de contraseñas que el administrador edita. La consume el checklist
- * en vivo del formulario de alta para no duplicar la cifra como constante.
+ * Respuesta de GET /system-parameters/password-policy, que el checklist en vivo
+ * del formulario de alta consume para no duplicar las cifras como constantes.
+ *
+ * Las dos longitudes vienen del servidor aunque solo el mínimo sea configurable:
+ * el máximo es el límite de BCrypt, y tenerlo repetido aquí ya hizo que el
+ * checklist anunciara un tope sin garantía de coincidir con el que valida el
+ * backend.
  */
 export interface PasswordPolicy {
   minLength: number;
+  maxLength: number;
 }
 
 /**

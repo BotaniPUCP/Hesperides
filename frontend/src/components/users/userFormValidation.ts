@@ -1,5 +1,5 @@
 import { firstPasswordError } from '@/lib/password-policy';
-import { PASSWORD_MIN_LENGTH } from '@/lib/constants';
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@/lib/constants';
 
 export interface UserFormValues {
   email: string;
@@ -23,13 +23,15 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  *
  * `requirePassword` es false al editar, porque en ese modo el campo no existe
  * (SPEC-100 §2.7: la contraseña de otra persona no se fija, se regenera).
- * `minLength` viene del parámetro PASSWORD_MIN_LENGTH; si aún no llegó, vale el
- * default.
+ * Las dos longitudes las sirve el backend —el mínimo desde el parámetro
+ * PASSWORD_MIN_LENGTH y el máximo como límite de BCrypt—; si aún no llegaron,
+ * valen los defaults.
  */
 export function validateUserForm(
   values: UserFormValues,
   requirePassword: boolean,
   minLength = PASSWORD_MIN_LENGTH,
+  maxLength = PASSWORD_MAX_LENGTH,
 ): UserFormErrors {
   const errors: UserFormErrors = {};
 
@@ -55,7 +57,7 @@ export function validateUserForm(
         email: values.email.trim(),
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
-      }, minLength);
+      }, minLength, maxLength);
     }
   }
 

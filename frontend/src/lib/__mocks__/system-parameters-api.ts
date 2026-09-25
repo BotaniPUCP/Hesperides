@@ -17,6 +17,6 @@ export const PARAMETROS_DE_PRUEBA: SystemParameter[] = [
 
 export const systemParametersApi = {
   getAll: jest.fn(async () => PARAMETROS_DE_PRUEBA),
-  getPasswordPolicy: jest.fn(async () => ({ minLength: 10 })),
+  getPasswordPolicy: jest.fn(async () => ({ minLength: 12, maxLength: 72 })),
   update: jest.fn(),
 };

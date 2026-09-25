@@ -7,7 +7,7 @@ import type { SelectOption } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { erroresDeCampo, mensajeDeApiError } from '@/lib/api-errors';
 import { useCatalogOptions } from '@/hooks/useCatalog';
-import { CATALOG_ROLE, PASSWORD_MIN_LENGTH } from '@/lib/constants';
+import { CATALOG_ROLE, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@/lib/constants';
 import { systemParametersApi } from '@/lib/system-parameters-api';
 import { PasswordPolicyChecklist } from './PasswordPolicyChecklist';
 import { validateUserForm } from './userFormValidation';
@@ -64,10 +64,12 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
   const [errors, setErrors] = useState<UserFormErrors>({});
   const [formError, setFormError] = useState<string>();
   const [guardando, setGuardando] = useState(false);
-  // La longitud mínima la configura el admin en Parámetros del sistema; el
-  // default evita que la UI se quede sin cifra mientras carga o si la llamada
-  // falla (el backend sigue siendo quien valida de verdad).
+  // Las dos longitudes las sirve el backend: el minimo lo configura el admin en
+  // Parametros del sistema y el maximo es el limite de BCrypt. Los defaults
+  // evitan que la UI se quede sin cifras mientras carga o si la llamada falla
+  // (el backend sigue siendo quien valida de verdad).
   const [minLength, setMinLength] = useState(PASSWORD_MIN_LENGTH);
+  const [maxLength, setMaxLength] = useState(PASSWORD_MAX_LENGTH);
 
   /**
    * Cada montaje es una apertura nueva (UsersAdminScreen remonta con `key`), y
@@ -81,7 +83,9 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
     systemParametersApi
       .getPasswordPolicy()
       .then((politica) => {
-        if (activo && politica?.minLength !== undefined) setMinLength(politica.minLength);
+        if (!activo) return;
+        if (politica?.minLength !== undefined) setMinLength(politica.minLength);
+        if (politica?.maxLength !== undefined) setMaxLength(politica.maxLength);
       })
       .catch(() => {
         // Silencio intencional: la validación del servidor cubre cualquier error.
@@ -128,7 +132,7 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
 
   const enviar = async () => {
     setFormError(undefined);
-    const encontrados = validateUserForm(values, esAlta, minLength);
+    const encontrados = validateUserForm(values, esAlta, minLength, maxLength);
     setErrors(encontrados);
     if (Object.keys(encontrados).length > 0) return;
 
@@ -225,6 +229,7 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
             <PasswordPolicyChecklist
               password={values.initialPassword}
               minLength={minLength}
+              maxLength={maxLength}
               owner={{
                 email: values.email.trim(),
                 firstName: values.firstName.trim(),
