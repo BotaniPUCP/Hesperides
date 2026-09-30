@@ -14,6 +14,8 @@ export interface DataTableColumn<T> {
   sortable?: boolean;
   render?: (row: T) => ReactNode;
   hideOnMobile?: boolean;
+  className?: string;
+  headerClassName?: string;
 }
 
 export interface DataTableSort {
@@ -115,7 +117,11 @@ export function DataTable<T>({
                   <th
                     key={column.key}
                     scope="col"
-                    className="px-4 py-3 text-left text-sm font-semibold text-neutral-700"
+                    className={cn(
+                      'px-4 py-3 text-left text-sm font-semibold text-neutral-700',
+                      column.className,
+                      column.headerClassName,
+                    )}
                   >
                     {column.sortable && onSortChange ? (
                       <button
@@ -146,7 +152,10 @@ export function DataTable<T>({
                   )}
                 >
                   {columns.map((column) => (
-                    <td key={column.key} className="px-4 py-3 text-sm text-neutral-700">
+                    <td
+                      key={column.key}
+                      className={cn('px-4 py-3 text-sm text-neutral-700', column.className)}
+                    >
                       {cellValue(row, column)}
                     </td>
                   ))}

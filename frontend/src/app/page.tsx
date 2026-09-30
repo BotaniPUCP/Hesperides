@@ -30,16 +30,26 @@ function Inicio() {
           {/* Se enlaza solo lo que ese rol puede abrir: un enlace que lleva a
               una pantalla sin permisos es una promesa que la aplicación no
               cumple. Quien lo impide de verdad sigue siendo el backend. */}
-          {puedeVerUsuarios && (
-            <p className="mt-4">
+          <div className="mt-4 flex flex-col gap-2">
+            {puedeVerUsuarios && (
+              <p>
+                <Link
+                  href="/admin/usuarios"
+                  className="text-sm font-medium text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                >
+                  Gestión de usuarios →
+                </Link>
+              </p>
+            )}
+            <p>
               <Link
-                href="/admin/usuarios"
-                className="text-sm font-medium text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                href="/inventario-verde"
+                className="text-sm font-medium text-primary-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-700"
               >
-                Gestión de usuarios
+                Inventario Verde (Especies y Ejemplares) →
               </Link>
             </p>
-          )}
+          </div>
 
           <p className="mt-2 text-sm text-neutral-500">
             Los demás módulos de gestión aparecerán aquí conforme se implementen.
