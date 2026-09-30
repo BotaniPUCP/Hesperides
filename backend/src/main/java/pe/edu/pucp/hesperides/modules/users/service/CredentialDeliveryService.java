@@ -39,10 +39,18 @@ public class CredentialDeliveryService {
     private final String from;
     private final String appPublicUrl;
 
+    /**
+     * El remitente viene de {@code SMTP_FROM}, junto al host y las credenciales
+     * del mismo proveedor. <strong>No es un parámetro de sistema</strong> y no se
+     * edita desde la aplicación: un remitente solo funciona si está verificado en
+     * el proveedor, y eso no lo decide este código. Uno sin verificar recibe
+     * «250 OK» y se descarta en silencio, así que una pantalla que lo ofreciera
+     * prometería un control que la aplicación no tiene.
+     */
     public CredentialDeliveryService(
             JavaMailSender mailSender,
             CredentialEmailTemplate emailTemplate,
-            @Value("${hesperides.mail.from}") String from,
+            @Value("${hesperides.mail.from:no-reply@hesperides.local}") String from,
             @Value("${hesperides.mail.app-public-url}") String appPublicUrl) {
         this.mailSender = mailSender;
         this.emailTemplate = emailTemplate;
@@ -57,7 +65,11 @@ public class CredentialDeliveryService {
     public boolean deliver(User user, String rawPassword) {
         try {
             mailSender.send(compose(user, rawPassword));
-            log.info("Credenciales enviadas a userId={}", user.getId());
+            // El remitente va en el log a propósito: un SMTP que acepta el mensaje
+            // devuelve «250 OK» aunque después lo descarte por remitente no
+            // verificado. Cuando un correo no llega y aquí dice «enviadas», este
+            // dato es lo único que señala por dónde buscar.
+            log.info("Credenciales enviadas a userId={} desde remitente={}", user.getId(), from);
             return true;
         } catch (MailException | MessagingException ex) {
             // Solo el motivo técnico: el cuerpo del mensaje lleva la contraseña

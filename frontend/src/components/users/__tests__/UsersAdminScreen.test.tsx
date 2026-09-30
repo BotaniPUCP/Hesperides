@@ -9,6 +9,7 @@ import { usersApi } from '@/lib/users-api';
 import { __resetCatalogCache } from '@/hooks/useCatalog';
 
 jest.mock('@/lib/catalogs-api');
+jest.mock('@/lib/system-parameters-api');
 
 jest.mock('@/lib/users-api', () => ({
   usersApi: {

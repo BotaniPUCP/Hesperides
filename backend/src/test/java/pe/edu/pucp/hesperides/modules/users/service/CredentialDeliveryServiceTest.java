@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class CredentialDeliveryServiceTest {
 
@@ -113,6 +115,25 @@ class CredentialDeliveryServiceTest {
 
         assertThat(greenMail.getReceivedMessages()[0].getFrom()[0].toString())
                 .isEqualTo("no-reply@hesperides.test");
+    }
+
+    @Test
+    void theSenderAddressComesOnlyFromTheEnvironment() throws Exception {
+        // El remitente se podia cambiar desde system_parameters y se quito: uno no
+        // verificado en el proveedor recibe «250 OK» y se descarta en silencio, asi
+        // que la aplicacion no puede ofrecer ese control. El unico origen es
+        // SMTP_FROM, inyectado por constructor.
+        JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        sender.setHost("localhost");
+        sender.setPort(greenMail.getSmtp().getPort());
+        CredentialDeliveryService otroEntorno = new CredentialDeliveryService(
+                sender, new CredentialEmailTemplate(), "otro-entorno@hesperides.test",
+                "https://hesperides.test");
+
+        otroEntorno.deliver(user(), "ClaveTemp123");
+
+        assertThat(greenMail.getReceivedMessages()[0].getFrom()[0].toString())
+                .isEqualTo("otro-entorno@hesperides.test");
     }
 
     @Test

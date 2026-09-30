@@ -18,8 +18,14 @@ export const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000;
 /** Tamaño de página del listado. Coincide con el @PageableDefault del backend. */
 export const USERS_PAGE_SIZE = 20;
 
-/** Mínimo de la política de contraseñas (SPEC-100 §9.1), replicado para validar antes de enviar. */
-export const PASSWORD_MIN_LENGTH = 10;
+/**
+ * Mínimo de la política de contraseñas (SPEC-100 §9.1), replicado para validar
+ * antes de enviar. Es solo el valor de arranque: la pantalla pide el vigente a
+ * `/system-parameters/password-policy`, que el administrador fija entre 12 y 25.
+ * Coincide con el piso del backend para que un fallo de red no deje el checklist
+ * más laxo de lo que el servidor acepta.
+ */
+export const PASSWORD_MIN_LENGTH = 12;
 
 /**
  * Tope de la política (SPEC-100 §9.1). Es el límite real de BCrypt: más allá de

@@ -1,12 +1,22 @@
 'use client';
 
 import { cn } from '@/lib/cn';
-import { PASSWORD_RULES } from '@/lib/password-policy';
+import { buildPasswordRules } from '@/lib/password-policy';
 import type { PasswordOwner } from '@/lib/password-policy';
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@/lib/constants';
 
 export interface PasswordPolicyChecklistProps {
   password: string;
   owner?: PasswordOwner;
+  /**
+   * Longitudes que se pintan. El alta las trae del backend
+   * (GET /system-parameters/password-policy); si no llegan, valen los defaults.
+   * El máximo también viaja desde allí: tenerlo solo en una constante local hacía
+   * que el checklist anunciara un tope sin garantía de coincidir con el que
+   * valida el servidor.
+   */
+  minLength?: number;
+  maxLength?: number;
 }
 
 /**
@@ -17,10 +27,15 @@ export interface PasswordPolicyChecklistProps {
  * alternativa —enseñar solo los incumplidos— hace que la lista salte y encoja
  * con cada tecla, y quien la mira no llega a saber cuántos requisitos había.
  */
-export function PasswordPolicyChecklist({ password, owner = {} }: PasswordPolicyChecklistProps) {
+export function PasswordPolicyChecklist({
+  password,
+  owner = {},
+  minLength = PASSWORD_MIN_LENGTH,
+  maxLength = PASSWORD_MAX_LENGTH,
+}: PasswordPolicyChecklistProps) {
   return (
     <ul className="flex flex-col gap-1" aria-label="Requisitos de la contraseña">
-      {PASSWORD_RULES.map((rule) => {
+      {buildPasswordRules(minLength, maxLength).map((rule) => {
         const cumplido = rule.isMet(password, owner);
 
         return (

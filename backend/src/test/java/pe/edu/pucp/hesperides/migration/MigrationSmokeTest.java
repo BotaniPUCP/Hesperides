@@ -103,14 +103,17 @@ class MigrationSmokeTest {
     }
 
     @Test
-    void genericUserRoleFromTheFirstMigrationIsDeactivatedNotDeleted() {
-        Boolean active = jdbcTemplate.queryForObject("""
-                SELECT ci.is_active FROM catalog_items ci
+    void theRoleCatalogCarriesOnlyTheFourRealRoles() {
+        // El historial anterior sembraba un USER generico que una migracion
+        // posterior desactivaba. El baseline declara el estado final, asi que ese
+        // USER no llega a existir y no hay nada que desactivar.
+        Integer genericos = jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM catalog_items ci
                 JOIN catalog_types ct ON ct.id = ci.catalog_type_id
                 WHERE ct.code = 'ROLE' AND ci.code = 'USER'
-                """, Boolean.class);
+                """, Integer.class);
 
-        assertThat(active).isFalse();
+        assertThat(genericos).isZero();
     }
 
     @Test
@@ -440,5 +443,60 @@ class MigrationSmokeTest {
                 """, Integer.class);
 
         assertThat(rolesConPadre).isZero();
+    }
+
+    // ─── V012 · Parámetros de sistema ─────────────────────────────────────
+
+    @Test
+    void systemParametersTableHasEveryColumnTheSpecDeclares() {
+        List<String> columns = jdbcTemplate.queryForList(
+                "SELECT column_name FROM information_schema.columns WHERE table_name = 'system_parameters'",
+                String.class);
+
+        assertThat(columns).containsExactlyInAnyOrder(
+                "id", "code", "label", "value", "value_type", "description",
+                "is_editable", "created_at", "updated_at", "deleted_at");
+    }
+
+    @Test
+    void theOperationalParametersAreSeeded() {
+        List<String> codes = jdbcTemplate.queryForList(
+                "SELECT code FROM system_parameters WHERE deleted_at IS NULL ORDER BY code",
+                String.class);
+
+        // MAIL_FROM no esta y no debe volver: un remitente solo vale si el
+        // proveedor lo tiene verificado, y esta aplicacion no puede comprobarlo.
+        // Vive en SMTP_FROM, con el resto de la configuracion del proveedor.
+        assertThat(codes).containsExactly(
+                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH");
+    }
+
+    @Test
+    void eachParameterMatchesTheTypeItClaims() {
+        Map<String, Object> row = jdbcTemplate.queryForMap(
+                "SELECT code, value, value_type FROM system_parameters "
+                        + "WHERE code = 'PASSWORD_MIN_LENGTH'");
+
+        // 12 es el piso que el administrador puede fijar: la fila sembrada no debe
+        // nacer por debajo del rango que su propia pantalla acepta.
+        assertThat(row.get("value")).isEqualTo("12");
+        assertThat(row.get("value_type")).isEqualTo("INTEGER");
+    }
+
+    @Test
+    void valueTypeRejectsAnyValueOutsideTheFiveSupported() {
+        assertThatThrownBy(() -> jdbcTemplate.execute("""
+                INSERT INTO system_parameters (code, label, value, value_type)
+                VALUES ('PARAM_INVENTADO', 'Parámetro inventado', 'x', 'TIPO_INVENTADO')
+                """))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void parametersAreOnlySeededOnce() {
+        Integer live = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
+                Integer.class);
+        assertThat(live).isEqualTo(3);
     }
 }

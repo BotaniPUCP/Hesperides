@@ -13,5 +13,7 @@ public enum AuditActionCode {
     USER_DEACTIVATED,
     USER_REACTIVATED,
     /** Añadida por SPEC-100 §9.3: explica meses después por qué alguien nunca pudo entrar. */
-    USER_CREDENTIALS_DELIVERY_FAILED
+    USER_CREDENTIALS_DELIVERY_FAILED,
+    /** Añadida por el módulo de administración: quién cambió un parámetro general y de qué a qué. */
+    SYSTEM_PARAMETER_CHANGED
 }
