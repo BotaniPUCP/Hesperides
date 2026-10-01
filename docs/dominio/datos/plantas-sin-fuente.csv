@@ -1,0 +1,129 @@
+id_prototipo,codigo,tipo,nombre_comun,nombre_cientifico,ubicacion,latitud,longitud,dentro_del_campus,codigo_en_catastro,fuente_mas_cercana,especie_en_esa_fuente,distancia_m,altura_m,radio_copa_m,foto
+84,c5,Arbusto,Cafeto,Coffea arabica,Biblioteca Central,-12.0693257,-77.0802627,sí,"sí, N° 84",catastro N° 85,Coffea arabica,0.73,,,https://drive.google.com/file/d/1I7qCjxd9U6mt0qMH2DDTBflVrnoWsA4B/view?usp=drivesdk
+95,c16,Arbusto,Cafeto,Coffea arabica,Biblioteca Central,-12.0692977,-77.0801589,sí,"sí, N° 95",catastro N° 94,Coffea arabica,1.4,,,https://drive.google.com/file/d/1Qw-7y-YTf6R6DLmh6YNM5yzOF0qvIRnF/view?usp=drivesdk
+98,c19,Arbusto,Cafeto,Coffea arabica,Biblioteca Central,-12.0692986,-77.080113,sí,"sí, N° 98",cafetos N° 18,Coffea arabica,0.66,,,https://drive.google.com/file/d/1O-4NhDivtgUAwgnsNc9tRK4HrkZ2cNsy/view?usp=drivesdk
+1080,JC-30,Arbusto,Adelfa,Nerium oleander,Jardin Central,-12.0689911,-77.0796683,sí,no,catastro N° 805,Tipuana tipu,39.92,,,
+1081,JC-31,Arbusto,Adelfa,Nerium oleander,Jardin Central,-12.0690644,-77.0796748,sí,no,cafetos N° 25,Coffea arabica,46.14,,,
+495,Gh-pal40,Palmera,Palmera Real,Roystonea regia,Gastronomía,-12.0708324,-77.0816829,sí,"sí, N° 495",catastro N° 495,Roystonea regia,2.26,,,https://drive.google.com/file/d/1wrVd-jzinWY9icPUS4k4tBy2XYxCftVX/view?usp=drivesdk
+1060,JC-10,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688012,-77.0795498,sí,no,palmeras N° 20,Roystonea regia,16.47,,,
+1061,JC-11,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688048,-77.0794846,sí,no,palmeras N° 20,Roystonea regia,15.84,,,
+1062,JC-12,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.068813,-77.0794268,sí,no,palmeras N° 20,Roystonea regia,18.32,,,
+1063,JC-13,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688184,-77.0793624,sí,no,palmeras N° 20,Roystonea regia,22.59,,,
+1064,JC-14,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.068822,-77.0793101,sí,no,catastro N° 21,Syagrus romanzoffiana,24.76,,,
+1065,JC-15,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688265,-77.0792715,sí,no,catastro N° 21,Syagrus romanzoffiana,22.78,,,
+1066,JC-16,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688274,-77.0792348,sí,no,catastro N° 21,Syagrus romanzoffiana,21.17,,,
+1067,JC-17,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688302,-77.0791989,sí,no,catastro N° 21,Syagrus romanzoffiana,20.44,,,
+1068,JC-18,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688374,-77.0791539,sí,no,catastro N° 21,Syagrus romanzoffiana,20.99,,,
+1069,JC-19,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688428,-77.0790915,sí,no,palmeras N° 22,Syagrus romanzoffiana,17.71,,,
+1070,JC-20,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.06885,-77.0790363,sí,no,palmeras N° 22,Syagrus romanzoffiana,15.9,,,
+1071,JC-21,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688546,-77.0789849,sí,no,palmeras N° 22,Syagrus romanzoffiana,15.95,,,
+1072,JC-22,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688582,-77.0789463,sí,no,palmeras N° 22,Syagrus romanzoffiana,17.26,,,
+1073,JC-23,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688609,-77.0789068,sí,no,palmeras N° 22,Syagrus romanzoffiana,19.38,,,
+1074,JC-24,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.0688645,-77.0788701,sí,no,palmeras N° 22,Syagrus romanzoffiana,22.03,,,
+1075,JC-25,Palmera,Palmera Real,Roystonea regia,Jardin Central,-12.068869,-77.0788361,sí,no,palmeras N° 22,Syagrus romanzoffiana,24.9,,,
+1039,univ-67,Palmera,Palmera Real,Roystonea regia,Universitaria,-12.0686656,-77.0783942,sí,no,catastro N° 410,Caesalpinia spinosa (Molina) Kuntze,25.29,,,https://drive.google.com/file/d/1FRA0jnpRsHBcjOj9QVjh56SQ6rhO22WB/view?usp=drivesdk
+1041,univ-69,Palmera,Palmera Real,Roystonea regia,Universitaria,-12.0684829,-77.0782647,sí,no,catastro N° 410,Caesalpinia spinosa (Molina) Kuntze,4.18,,,https://drive.google.com/file/d/1otgbpOrAO3JOAyfFoa7IagNbuWmcOCBp/view?usp=drivesdk
+1043,univ-71,Palmera,Palmera Real,Roystonea regia,Universitaria,-12.0684277,-77.078228,sí,no,catastro N° 418,Caesalpinia spinosa (Molina) Kuntze,3.24,,,https://drive.google.com/file/d/1Q5r00JtXkC9hZtymEOkvCDgGrDRMwNNC/view?usp=drivesdk
+1044,univ-72,Palmera,Palmera Real,Roystonea regia,Universitaria,-12.0683825,-77.0782004,sí,no,catastro N° 406,Agave americana,4.93,,,https://drive.google.com/file/d/1aTO8uyPX6Nm04PlANaNWCE91Y2k9o_Uq/view?usp=drivesdk
+1046,univ-74,Palmera,Palmera Real,Roystonea regia,Universitaria,-12.0682875,-77.0781535,sí,no,catastro N° 422,Caesalpinia spinosa (Molina) Kuntze,7.22,,,https://drive.google.com/file/d/19fbHO6uXcvdDo15kSSBpVp9xLR68L9jq/view?usp=drivesdk
+1050,univ-78,Palmera,Palmera Real,Roystonea regia,Universitaria,-12.0680958,-77.0781039,sí,no,catastro N° 393,Hibiscus tiliaceus,13.07,,,https://drive.google.com/file/d/1ytgSHuDlt-dvMYCKLeqLCObxrf5EP83t/view?usp=drivesdk
+968,univ-6,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0723256,-77.0789702,sí,no,catastro N° 139,Delonix regia,50.92,,,https://drive.google.com/file/d/14cn8Nb5WODE8LznnuCMI9qSgAQ6G2Hj5/view?usp=drivesdk
+969,univ-7,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0722568,-77.0789527,sí,no,catastro N° 139,Delonix regia,47.66,,,https://drive.google.com/file/d/1-S-WC_wQQ-OQ0ofxdub36gJNoGqtxRtf/view?usp=drivesdk
+970,univ-8,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0721989,-77.0789399,sí,no,catastro N° 139,Delonix regia,45.59,,,https://drive.google.com/file/d/1Fi1azK-3uMxlqln_r4yKA954E08sAne2/view?usp=drivesdk
+986,univ-24,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0715008,-77.0788728,sí,no,catastro N° 150,Cocos nucifera,30.52,,,https://drive.google.com/file/d/1obgBQJgI_yss1z-FUeQ8xbUK3WlOTqOE/view?usp=drivesdk
+987,univ-25,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0714266,-77.078848,sí,no,catastro N° 150,Cocos nucifera,24.45,,,https://drive.google.com/file/d/1mAiBiu8mlf7wAJKQ81dp2k6vlTpDyv42/view?usp=drivesdk
+988,univ-26,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0713534,-77.078837,sí,no,catastro N° 150,Cocos nucifera,19.19,,,https://drive.google.com/file/d/1rWouaB268HTNOnePROsakW7XoG0HmjL7/view?usp=drivesdk
+989,univ-27,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0712991,-77.0788241,sí,no,catastro N° 150,Cocos nucifera,17.36,,,https://drive.google.com/file/d/1ibr8_Kxv8qFj8HR4eGEfNyGovqhQmSff/view?usp=drivesdk
+990,univ-28,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0712512,-77.078815,sí,no,catastro N° 150,Cocos nucifera,17.23,,,https://drive.google.com/file/d/17mafiwxyCELFabjTy45q70P8FttyB9W4/view?usp=drivesdk
+991,univ-29,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0711906,-77.0787993,sí,no,catastro N° 150,Cocos nucifera,19.78,,,https://drive.google.com/file/d/1QbK2q7sYaecPtO3Pr1mkCoo_oTo72mtT/view?usp=drivesdk
+992,univ-30,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0711309,-77.0787856,sí,no,catastro N° 150,Cocos nucifera,23.88,,,https://drive.google.com/file/d/12tmMHIPOFYDH2fu70fIVQfX6zaNRDm32/view?usp=drivesdk
+993,univ-31,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0710893,-77.0787773,sí,no,catastro N° 150,Cocos nucifera,27.26,,,https://drive.google.com/file/d/16MlyLvi5hX2UlJoYCKQaOcYuqaD8nD5D/view?usp=drivesdk
+994,univ-32,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0710278,-77.0787681,sí,no,catastro N° 150,Cocos nucifera,32.62,,,https://drive.google.com/file/d/1ov8QrBuOVeUJxU6h98JYKj_0ZpeWs64Y/view?usp=drivesdk
+995,univ-33,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0709916,-77.0787589,sí,no,catastro N° 150,Cocos nucifera,36.28,,,https://drive.google.com/file/d/1xJ_Inz38RKnQYkPS8QpisK6_PBsZHBRS/view?usp=drivesdk
+996,univ-34,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0709419,-77.0787451,sí,no,catastro N° 150,Cocos nucifera,41.52,,,https://drive.google.com/file/d/1E6gV7DLNTcypGosWF63BNITFXoFBy28V/view?usp=drivesdk
+997,univ-35,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.070903,-77.0787378,sí,no,catastro N° 150,Cocos nucifera,45.49,,,https://drive.google.com/file/d/18wSnu1gC0fEIJzVtsQpNbYcPEd9uz9z6/view?usp=drivesdk
+998,univ-36,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0708532,-77.0787249,sí,no,catastro N° 150,Cocos nucifera,50.86,,,https://drive.google.com/file/d/1VejqM3Ys8fgqJ6nNB-otpXOMU301_Ivf/view?usp=drivesdk
+999,univ-37,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.070808,-77.0787157,sí,no,catastro N° 150,Cocos nucifera,55.66,,,https://drive.google.com/file/d/1J5R1yK-IC30mWSPJsR2F2AC9pXP0Jlc3/view?usp=drivesdk
+1011,univ-49,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0701569,-77.0785688,sí,no,catastro N° 150,Cocos nucifera,127.9,,,https://drive.google.com/file/d/1kptSwEe5eGtB1gdilkkaOMbIuShq66W0/view?usp=drivesdk
+1012,univ-50,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0701225,-77.0785697,sí,no,catastro N° 150,Cocos nucifera,131.45,,,https://drive.google.com/file/d/1gzcM2-hwIk02Wut2aQHigfwbY8g5fuDa/view?usp=drivesdk
+1013,univ-51,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0700872,-77.0785688,sí,no,catastro N° 150,Cocos nucifera,135.16,,,https://drive.google.com/file/d/1px6syoLHfbDJC9KMl3rsWvHNcMHW1MN-/view?usp=drivesdk
+1014,univ-52,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0700221,-77.0785734,sí,no,catastro N° 150,Cocos nucifera,141.83,,,https://drive.google.com/file/d/1U2cLP0xg0WisZFRgicO7b0TfQI_gbeou/view?usp=drivesdk
+1015,univ-53,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0699651,-77.0785743,sí,no,palmeras N° 22,Syagrus romanzoffiana,146.18,,,https://drive.google.com/file/d/1-fJ__JA3Lpzp3ZPfjQN_2LsHRmr27jNm/view?usp=drivesdk
+1016,univ-54,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0699163,-77.0785752,sí,no,palmeras N° 22,Syagrus romanzoffiana,141.03,,,https://drive.google.com/file/d/1Xuyv4s3Hz7Ett36EcYpNB74wNuL7zJbZ/view?usp=drivesdk
+1017,univ-55,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0698801,-77.0785807,sí,no,palmeras N° 22,Syagrus romanzoffiana,137.06,,,https://drive.google.com/file/d/1NiWavGJL2xP-mglSjRUSEOTKXbUXFGJ_/view?usp=drivesdk
+1018,univ-56,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0698367,-77.0785789,sí,no,palmeras N° 22,Syagrus romanzoffiana,132.61,,,https://drive.google.com/file/d/1JWjPxnYty3SSZ0gaKcTKLGjSUv3ELvGI/view?usp=drivesdk
+1019,univ-57,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0697906,-77.0785779,sí,no,palmeras N° 22,Syagrus romanzoffiana,127.87,,,https://drive.google.com/file/d/1uOHDQV3la1JZYk1W4raIoGh1Lix4bPuE/view?usp=drivesdk
+1020,univ-58,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0697499,-77.0785825,sí,no,palmeras N° 22,Syagrus romanzoffiana,123.5,,,https://drive.google.com/file/d/1ApGuKGkGnKdxaDzlbZf1eJgO1RhbmbJB/view?usp=drivesdk
+1021,univ-59,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0697038,-77.0785825,sí,no,palmeras N° 22,Syagrus romanzoffiana,118.77,,,https://drive.google.com/file/d/13uLO3UGvcNQxwb66zFEG2OQBAn4bSD8F/view?usp=drivesdk
+1022,univ-60,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0695464,-77.0785862,sí,no,palmeras N° 22,Syagrus romanzoffiana,102.72,,,https://drive.google.com/file/d/1PhIhkYNNdC_QO1ewSeTOQf4Fa6_GV3W6/view?usp=drivesdk
+1023,univ-61,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.069512,-77.0785881,sí,no,palmeras N° 22,Syagrus romanzoffiana,99.23,,,https://drive.google.com/file/d/1KW949L3wFwAJ4R7bXtARIQl9fxMKeNmD/view?usp=drivesdk
+1024,univ-62,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0694623,-77.0785936,sí,no,palmeras N° 22,Syagrus romanzoffiana,94.07,,,https://drive.google.com/file/d/1B5pRvfVn66NTKXgaXdbSKgx9rOp-0-Yz/view?usp=drivesdk
+1025,univ-63,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0694153,-77.0785945,sí,no,palmeras N° 22,Syagrus romanzoffiana,89.46,,,https://drive.google.com/file/d/1hWJb435TRY-UUPRr7z-suh-G-w7OtTQL/view?usp=drivesdk
+1026,univ-64,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0693493,-77.0785936,sí,no,palmeras N° 22,Syagrus romanzoffiana,83.24,,,https://drive.google.com/file/d/1YRHtjuuheJiYMa4SkA_9e48_RCXqi3G5/view?usp=drivesdk
+1027,univ-65,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0693185,-77.0785963,sí,no,palmeras N° 22,Syagrus romanzoffiana,80.21,,,https://drive.google.com/file/d/1pz_UA62HcB6QjAFaJsuw_hotTg8XPbAH/view?usp=drivesdk
+1028,univ-66,Árbol,Braquiquito,Brachychiton populneus,Universitaria,-12.0692615,-77.0785936,sí,no,palmeras N° 22,Syagrus romanzoffiana,75.19,,,https://drive.google.com/file/d/15A0E4s-Kw6PJUtEzXV_Hm0XPWNcDJ7Gd/view?usp=drivesdk
+1051,JC-1,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0688419,-77.0786661,sí,no,palmeras N° 22,Syagrus romanzoffiana,39.02,,,
+1052,JC-2,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0688356,-77.0787672,sí,no,palmeras N° 22,Syagrus romanzoffiana,28.75,,,
+1053,JC-3,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0688229,-77.0788774,sí,no,palmeras N° 22,Syagrus romanzoffiana,18.12,,,
+1054,JC-4,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0688121,-77.0789775,sí,no,palmeras N° 22,Syagrus romanzoffiana,11.42,,,
+1055,JC-5,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0688021,-77.0790832,sí,no,palmeras N° 22,Syagrus romanzoffiana,13.62,,,
+1056,JC-6,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0687867,-77.0791879,sí,no,catastro N° 21,Syagrus romanzoffiana,15.51,,,
+1057,JC-7,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0687804,-77.0792981,sí,no,catastro N° 21,Syagrus romanzoffiana,20.45,,,
+1058,JC-8,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0687732,-77.0794148,sí,no,palmeras N° 20,Roystonea regia,15.14,,,
+1059,JC-9,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0687668,-77.0795131,sí,no,palmeras N° 20,Roystonea regia,11.74,,,
+1076,JC-26,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0688736,-77.0788012,sí,no,palmeras N° 22,Syagrus romanzoffiana,28.05,,,
+1077,JC-27,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.068879,-77.0787699,sí,no,palmeras N° 22,Syagrus romanzoffiana,31.09,,,
+1078,JC-28,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0688202,-77.0796527,sí,no,catastro N° 805,Tipuana tipu,22.04,,,
+1079,JC-29,Árbol,Cedro rojo,Cedrela odorata L.,Jardin Central,-12.0689034,-77.0796582,sí,no,catastro N° 805,Tipuana tipu,30.63,,,
+971,univ-9,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0721799,-77.0790216,sí,no,catastro N° 139,Delonix regia,36.77,,,https://drive.google.com/file/d/11P_ifPs7fKeyVNQRfuHBJq6BPpiSSZXQ/view?usp=drivesdk
+972,univ-10,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0721483,-77.0790134,sí,no,catastro N° 139,Delonix regia,35.96,,,https://drive.google.com/file/d/1HubjkSLaZDaYxTUmdV8lZVXPOxSynQW6/view?usp=drivesdk
+973,univ-11,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0721157,-77.0790051,sí,no,catastro N° 139,Delonix regia,35.46,,,https://drive.google.com/file/d/18Bo8n_zUUAMn9ujLCy0SXaM7g3suG9tg/view?usp=drivesdk
+974,univ-12,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0720787,-77.0789932,sí,no,catastro N° 139,Delonix regia,35.64,,,https://drive.google.com/file/d/1dJ0cvb1tWXoAHEb5lRcGvgI9EOxTWVB0/view?usp=drivesdk
+975,univ-13,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.072038,-77.0789913,sí,no,catastro N° 139,Delonix regia,35.2,,,https://drive.google.com/file/d/1WkoCsGxgv5qulCOdGApra75MHKxZAdp0/view?usp=drivesdk
+976,univ-14,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0719936,-77.0789803,sí,no,catastro N° 139,Delonix regia,36.36,,,https://drive.google.com/file/d/1JyY8y19amsc_YdM4luZK0nOEXJ2SuuMD/view?usp=drivesdk
+977,univ-15,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.071943,-77.0789711,sí,no,catastro N° 140,Schinus molle,34.26,,,https://drive.google.com/file/d/11O6mBx9INGNFBTfhdh5RUATWZ6Q6cPQb/view?usp=drivesdk
+978,univ-16,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0718933,-77.0789537,sí,no,catastro N° 140,Schinus molle,32.55,,,https://drive.google.com/file/d/1j7vtT2q9u-3a0nfAITnKQ9eblyusUIL5/view?usp=drivesdk
+979,univ-17,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0718327,-77.0789454,sí,no,catastro N° 140,Schinus molle,30.47,,,https://drive.google.com/file/d/1VtKdbZFPFxxrwNYNVc1zS3NMhL6KXBLo/view?usp=drivesdk
+980,univ-18,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0717929,-77.0789362,sí,no,catastro N° 140,Schinus molle,30.27,,,https://drive.google.com/file/d/1BafTphcNVo0gLnESzovM5EBdy8U5CSIB/view?usp=drivesdk
+981,univ-19,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0717332,-77.0789243,sí,no,catastro N° 140,Schinus molle,31.02,,,https://drive.google.com/file/d/1Jl4v1pZg152L3_rLjw55-bwESntNnORs/view?usp=drivesdk
+982,univ-20,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0716898,-77.078916,sí,no,catastro N° 140,Schinus molle,32.39,,,https://drive.google.com/file/d/1qc2Oc2gk7IQuw4V0U4EnONGPAn8mJ6si/view?usp=drivesdk
+983,univ-21,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0716283,-77.0788995,sí,no,catastro N° 140,Schinus molle,35.91,,,https://drive.google.com/file/d/1VMeq_cuRvPCZJsrWwW9F4eKjPb1QIwhe/view?usp=drivesdk
+984,univ-22,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0715876,-77.0788884,sí,no,catastro N° 140,Schinus molle,38.77,,,https://drive.google.com/file/d/1tMrSx7OAL3XW394CssdeYz4Dy8VeNorM/view?usp=drivesdk
+985,univ-23,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0715487,-77.0788783,sí,no,catastro N° 150,Cocos nucifera,35.34,,,https://drive.google.com/file/d/1RXXz-fmzpmYYmWfP5ex5Asrg698kZkF1/view?usp=drivesdk
+1000,univ-38,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0707257,-77.0786928,sí,no,catastro N° 150,Cocos nucifera,64.82,,,https://drive.google.com/file/d/1pbeR3m3_V7gfufXfIzVSqpqYKsyjPEhz/view?usp=drivesdk
+1001,univ-39,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0706977,-77.0786919,sí,no,catastro N° 150,Cocos nucifera,67.62,,,https://drive.google.com/file/d/1y0uZMug02UnTru4hKZBnR-D5SMnBeOLM/view?usp=drivesdk
+1002,univ-40,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0706497,-77.0786799,sí,no,catastro N° 150,Cocos nucifera,72.94,,,https://drive.google.com/file/d/1ooPFOCb4ArALRWUqgcEXOsSnSK5KNk9w/view?usp=drivesdk
+1003,univ-41,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0706226,-77.0786753,sí,no,catastro N° 150,Cocos nucifera,75.87,,,https://drive.google.com/file/d/1h97GqoLyhYkikww47UxPK4EexUnlv6pa/view?usp=drivesdk
+1004,univ-42,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0705937,-77.0786671,sí,no,catastro N° 150,Cocos nucifera,79.15,,,https://drive.google.com/file/d/1Ymv4LbS4lyN_Vw1Io5pLRxSnoCgPwBC8/view?usp=drivesdk
+1005,univ-43,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0703368,-77.0786101,sí,no,catastro N° 150,Cocos nucifera,107.7,,,https://drive.google.com/file/d/1LBJCACOjerxp0KdpJaoCUJOnNL58zu2w/view?usp=drivesdk
+1006,univ-44,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0702609,-77.0785954,sí,no,catastro N° 150,Cocos nucifera,116.12,,,https://drive.google.com/file/d/1fsd0cB7aL7cflk5S2zVCCnhRfSC1IvF0/view?usp=drivesdk
+1007,univ-45,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0705295,-77.0786524,sí,no,catastro N° 150,Cocos nucifera,86.27,,,https://drive.google.com/file/d/1uj7cT3Ye_vrnpDBEZRZWnpapryaDCT5c/view?usp=drivesdk
+1008,univ-46,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0704725,-77.0786413,sí,no,catastro N° 150,Cocos nucifera,92.53,,,https://drive.google.com/file/d/1bLM5bnwi1WArDRHHJ-MnzFx2-LdhY73c/view?usp=drivesdk
+1009,univ-47,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.0704354,-77.0786321,sí,no,catastro N° 150,Cocos nucifera,96.7,,,https://drive.google.com/file/d/10UeAl4UISelJz234xakdBYKj7D5ba6cA/view?usp=drivesdk
+1010,univ-48,Árbol,Palo borracho (Ceiba),Ceiba speciosa,Universitaria,-12.070392,-77.0786266,sí,no,catastro N° 150,Cocos nucifera,101.37,,,https://drive.google.com/file/d/1wGXC3zJJS_CgtgbYzyJCOOy_L58NEZbm/view?usp=drivesdk
+883,Po97,Árbol,Ponciana,Delonix regia,Rivaguero,-12.0688808,-77.0814918,sí,"sí, N° 883",catastro N° 884,Delonix regia,3.14,,,https://drive.google.com/file/d/1WI7SpbCKfTkEiK9w4aBFagk6gnbiDnZx/view?usp=drivesdk
+884,Po98,Árbol,Ponciana,Delonix regia,Rivaguero,-12.068832,-77.0814771,sí,"sí, N° 884",catastro N° 884,Delonix regia,4.66,,,https://drive.google.com/file/d/1No-NWRvHMmAFZ4SX2TrOhdM2DUr9qW17/view?usp=drivesdk
+885,Po99,Árbol,Ponciana,Delonix regia,Rivaguero,-12.0687741,-77.081467,sí,"sí, N° 885",catastro N° 885,Delonix regia,4.33,,,https://drive.google.com/file/d/1zbff5eVXPdHHlh_xMO6ME5ZlWMsdR0Ni/view?usp=drivesdk
+886,Po100,Árbol,Ponciana,Delonix regia,Rivaguero,-12.0687171,-77.0814532,sí,"sí, N° 886",catastro N° 886,Delonix regia,2.82,,,https://drive.google.com/file/d/1sAqzMdvZk9S0SMK4ZTDo9yVp68HYnrzJ/view?usp=drivesdk
+887,Po101,Árbol,Ponciana,Delonix regia,Rivaguero,-12.0686692,-77.0814385,sí,"sí, N° 887",catastro N° 887,Delonix regia,0.97,,,https://drive.google.com/file/d/1JUxUtKS0JDSkbZyipKrGPLGIhYpNWIDQ/view?usp=drivesdk
+1040,univ-68,Árbol,Eucalipto plateado,Eucalyptus cinerea,Universitaria,-12.0686185,-77.0783602,sí,no,catastro N° 410,Caesalpinia spinosa (Molina) Kuntze,19.04,,,https://drive.google.com/file/d/1XeqU3Wi7SKyRAukRPb1f57mslcJtYBiY/view?usp=drivesdk
+1042,univ-70,Árbol,Eucalipto plateado,Eucalyptus cinerea,Universitaria,-12.068463,-77.0782537,sí,no,catastro N° 413,Agave americana,3.49,,,https://drive.google.com/file/d/1VkGOeoRpDD3aBlo3l9NFsW8NSIzmg5Vj/view?usp=drivesdk
+1045,univ-73,Árbol,Eucalipto plateado,Eucalyptus cinerea,Universitaria,-12.0683472,-77.0781829,sí,no,catastro N° 406,Agave americana,6.1,,,https://drive.google.com/file/d/1yDW_vbR3oTia4X0EmL9GKnP6S3h_5u_W/view?usp=drivesdk
+1047,univ-75,Árbol,Eucalipto plateado,Eucalyptus cinerea,Universitaria,-12.0682414,-77.0781388,sí,no,catastro N° 424,Agave americana,7.85,,,https://drive.google.com/file/d/1l7VHwPAnf28vIX2Y19z5oxqOEwMfZ6C0/view?usp=drivesdk
+1048,univ-76,Árbol,Eucalipto plateado,Eucalyptus cinerea,Universitaria,-12.0681962,-77.0781278,sí,no,catastro N° 135,Laurus nobilis.,8.32,,,https://drive.google.com/file/d/1nXxEmKeowjqFCNLdYkKT4ZlXjMIg_fEN/view?usp=drivesdk
+1049,univ-77,Árbol,Eucalipto plateado,Eucalyptus cinerea,Universitaria,-12.0681573,-77.0781177,sí,no,catastro N° 135,Laurus nobilis.,10.9,,,https://drive.google.com/file/d/1bmj_VWY4X1TYmrrImzaxtb_6lgpaoAnz/view?usp=drivesdk
+963,univ-1,Árbol,Jacarandá,Jacaranda mimosifolia.,Universitaria,-12.0725616,-77.0790198,sí,no,catastro N° 139,Delonix regia,68.58,,,https://drive.google.com/file/d/1Prg00FiqNbm6J2S1NhIPuybiylC31-Ec/view?usp=drivesdk
+964,univ-2,Árbol,Jacarandá,Jacaranda mimosifolia.,Universitaria,-12.0725209,-77.0790189,sí,no,catastro N° 139,Delonix regia,64.69,,,https://drive.google.com/file/d/181bx68-bOMIXtqKnsH993775JJKQR914/view?usp=drivesdk
+965,univ-3,Árbol,Jacarandá,Jacaranda mimosifolia.,Universitaria,-12.072492,-77.0790161,sí,no,catastro N° 139,Delonix regia,62.09,,,https://drive.google.com/file/d/1ZvL-prjcW7XtxQpGqeiNq_Nfeh7HCNYA/view?usp=drivesdk
+966,univ-4,Árbol,Jacarandá,Jacaranda mimosifolia.,Universitaria,-12.0724386,-77.0789978,sí,no,catastro N° 139,Delonix regia,58.29,,,https://drive.google.com/file/d/1Gyp1KyD6IIL_9n0sjMz5zfbC_07mEbM1/view?usp=drivesdk
+967,univ-5,Árbol,Jacarandá,Jacaranda mimosifolia.,Universitaria,-12.0723843,-77.0789895,sí,no,catastro N° 139,Delonix regia,54.15,,,https://drive.google.com/file/d/1-gvxSPWFj_wOWhG2Umh9BTWI8B2G3zjr/view?usp=drivesdk
+1029,Min1,Árbol,Sakura,Prunus serrulata,Minas,-12.0719186,-77.0816994,sí,no,catastro N° 586,Hyophorbe lagenicaulis,57.38,,,
+1030,Min2,Árbol,Sakura,Prunus serrulata,Minas,-12.071952,-77.0817058,sí,no,catastro N° 149,Inga feuilleei,58.34,,,
+1031,Min3,Árbol,Sakura,Prunus serrulata,Minas,-12.0719918,-77.0817187,sí,no,catastro N° 149,Inga feuilleei,54.08,,,
+1032,Min4,Árbol,Sakura,Prunus serrulata,Minas,-12.0720298,-77.0817334,sí,no,catastro N° 149,Inga feuilleei,50.1,,,
+1033,Min5,Árbol,Sakura,Prunus serrulata,Minas,-12.0720759,-77.0817463,sí,no,catastro N° 149,Inga feuilleei,45.3,,,
+1034,Min6,Árbol,Sakura,Prunus serrulata,Minas,-12.0721374,-77.08176,sí,no,catastro N° 149,Inga feuilleei,38.99,,,
+1035,Min7,Árbol,Sakura,Prunus serrulata,Minas,-12.0721374,-77.08176,sí,no,catastro N° 149,Inga feuilleei,38.99,,,
+1036,Min8,Árbol,Sakura,Prunus serrulata,Minas,-12.0721971,-77.0817766,sí,no,catastro N° 149,Inga feuilleei,33.25,,,
+1037,Min9,Árbol,Sakura,Prunus serrulata,Minas,-12.0722423,-77.0817904,sí,no,catastro N° 149,Inga feuilleei,29.27,,,
+1038,Min10,Árbol,Sakura,Prunus serrulata,Minas,-12.0723002,-77.081806,sí,no,catastro N° 149,Inga feuilleei,24.73,,,

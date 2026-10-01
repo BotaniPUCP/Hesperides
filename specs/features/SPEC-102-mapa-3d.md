@@ -140,8 +140,13 @@ coordenada exacta. La carga une, por coordenada exacta (< 0.2 m):
 | `mediciones forestales - palmeras.csv` | 76 | **Altura, fuste, DAP y radio de copa exactos** → `data_source = MEASURED` |
 | `mediciones forestales - Cafetos.csv` | 55 | Cafetos de Biblioteca Central y Arqueología |
 
-Las ~125 plantas del HTML que no aparecen en ninguno de los tres archivos **no se cargan**: se
-listan para revisión. Las 77 «plantas sin especie» que habían llegado con la tabla de referencias
+Las **128 plantas** del HTML que no aparecen en ninguno de los tres archivos (100 árboles, 23
+palmeras y 5 arbustos, todas dentro del campus y con especie) **no se cargan**: están listadas para
+revisión en [`plantas-sin-fuente.csv`](../../docs/dominio/datos/plantas-sin-fuente.csv), con su
+fuente más cercana y la distancia. 109 se concentran en Universitaria (78) y Jardín Central (31); 9
+tienen su código en el catastro a 1–4 m, probablemente la misma planta medida otra vez. Tres filas
+de las mediciones tienen la longitud mal escrita (`-7,708…` por `-77,08…`: palmera 52 y cafetos 3 y
+24) y se corrigen en la fuente antes de cargar. Las 77 «plantas sin especie» que habían llegado con la tabla de referencias
 **son estas mismas**: 75 tienen coordenada idéntica a una planta de estas fuentes. Se descartan como
 duplicados.
 
@@ -396,7 +401,7 @@ Frontend (Jest, visor simulado)
 | P-01 | Modelos de los 5 equipos Android y si el mapa debe abrir sin señal | CA-09 |
 | P-02 | Planos de edificios de la PUCP (≈ 1 semana) | Retirar la atribución de OpenStreetMap |
 | P-03 | Fuente de los 67 bebederos | Su capa |
-| P-04 | Revisión de las ~125 plantas del HTML sin fuente | Su carga |
+| P-04 | Revisión de las 128 plantas del HTML sin fuente (`docs/dominio/datos/plantas-sin-fuente.csv`) | Su carga |
 
 **Origen de los datos de carga:** `Documentos_Port/internos` (GeoJSON de áreas verdes, reserva,
 xerofíticas, zonas de supervisión, fauna, puertas y estacionamientos; CSV de tachos y mediciones),
