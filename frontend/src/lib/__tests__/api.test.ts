@@ -46,6 +46,58 @@ describe('apiClient', () => {
     });
   });
 
+  describe('getIfChanged', () => {
+    it('manda la etiqueta guardada en If-None-Match', async () => {
+      const fetchMock = jest.fn().mockResolvedValue({
+        ...okResponse(),
+        headers: { get: () => '"8"' },
+      });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      await apiClient.getIfChanged('/map/layers', '"7"');
+
+      expect(cabecerasDelUltimoFetch(fetchMock)['If-None-Match']).toBe('"7"');
+    });
+
+    it('ante un 304 avisa que no hubo cambios, sin leer cuerpo', async () => {
+      // El 304 no trae cuerpo: intentar leer el sobre JSON fallaría.
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 304,
+        headers: { get: () => '"7"' },
+        json: async () => {
+          throw new Error('un 304 no tiene cuerpo');
+        },
+      }) as unknown as typeof fetch;
+
+      await expect(apiClient.getIfChanged('/map/layers', '"7"')).resolves.toEqual({ changed: false });
+    });
+
+    it('con datos nuevos devuelve los datos y la etiqueta nueva', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: { get: (h: string) => (h.toLowerCase() === 'etag' ? '"8"' : null) },
+        json: async () => ({ ok: true, message: '', data: { version: 8 } }),
+      }) as unknown as typeof fetch;
+
+      await expect(apiClient.getIfChanged('/map/layers', '"7"')).resolves.toEqual({
+        changed: true,
+        data: { version: 8 },
+        etag: '"8"',
+      });
+    });
+
+    it('sin etiqueta guardada no manda If-None-Match', async () => {
+      const fetchMock = jest.fn().mockResolvedValue({ ...okResponse(), headers: { get: () => null } });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      await apiClient.getIfChanged('/map/layers', null);
+
+      expect(cabecerasDelUltimoFetch(fetchMock)['If-None-Match']).toBeUndefined();
+    });
+  });
+
   it('manda el access token como Authorization: Bearer', async () => {
     // El backend lo lee del header y nunca de la cookie (SPEC-001 §5.1). Sin
     // esto toda ruta de negocio responde 401 y la sesion no sirve de nada.
