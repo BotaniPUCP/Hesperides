@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.shared.security;
 
+import pe.edu.pucp.hesperides.support.TestDatabase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +13,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -33,7 +35,7 @@ class CorsConfigTest {
     private static final String WEB_ORIGIN = "http://localhost:3000";
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -85,6 +87,33 @@ class CorsConfigTest {
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "authorization"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void preflightAllowsTheConditionalGetOfTheMapLayers() throws Exception {
+        // El visor pregunta por las capas con la etiqueta de su copia local
+        // (SPEC-102 §5.1). Si el preflight no admite If-None-Match, la
+        // petición no sale y el visor se queda para siempre con la copia vieja.
+        mockMvc.perform(options("/api/v1/map/layers")
+                        .header(HttpHeaders.ORIGIN, WEB_ORIGIN)
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "authorization,if-none-match"))
+                .andExpect(status().isOk())
+                // Spring responde con el subconjunto permitido y el navegador
+                // rechaza la petición si falta alguna de las que pidió.
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+                        containsStringIgnoringCase("if-none-match")));
+    }
+
+    @Test
+    void responsesExposeTheEtagToTheBrowser() throws Exception {
+        // Sin exponerla, fetch() devuelve null al leer ETag desde otro origen
+        // y la copia local se guarda sin etiqueta: cada apertura lo descarga todo.
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .header(HttpHeaders.ORIGIN, WEB_ORIGIN)
+                        .contentType("application/json")
+                        .content("{\"email\":\"admin@pucp.edu.pe\",\"password\":\"Hesperides2026\"}"))
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "ETag"));
     }
 
     @Test

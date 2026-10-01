@@ -1,4 +1,4 @@
-import { NAVIGATION, isActivePath, visibleNavigation } from '../navigation';
+import { NAVIGATION, isActivePath, visibleDirectLinks, visibleNavigation } from '../navigation';
 
 describe('isActivePath', () => {
   it('marca activa la ruta exacta', () => {
@@ -44,8 +44,19 @@ describe('visibleNavigation', () => {
     expect(hrefsDe('SUPERVISOR')).toEqual(['/admin/usuarios', '/admin/frecuencias']);
   });
 
-  it('a un OPERARIO solo le muestra frecuencias, que puede consultar', () => {
+  it('a un OPERARIO le muestra frecuencias, que puede consultar', () => {
     expect(hrefsDe('OPERARIO')).toEqual(['/admin/frecuencias']);
+  });
+
+  it('el mapa y el inventario verde son enlaces directos para los cuatro roles, no grupos', () => {
+    for (const rol of ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO']) {
+      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/mapa', '/inventario-verde']);
+    }
+    expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual(['Administración']);
+  });
+
+  it('un rol desconocido no ve enlaces directos', () => {
+    expect(visibleDirectLinks('DESCONOCIDO')).toEqual([]);
   });
 
   it('omite un grupo cuando el rol no puede ver ninguno de sus ítems', () => {

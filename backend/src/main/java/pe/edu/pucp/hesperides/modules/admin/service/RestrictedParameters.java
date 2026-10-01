@@ -1,11 +1,14 @@
 package pe.edu.pucp.hesperides.modules.admin.service;
 
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import pe.edu.pucp.hesperides.engine.proximity.ProximityThresholds;
 import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
 import pe.edu.pucp.hesperides.modules.admin.dto.SystemParameterResponse;
 import pe.edu.pucp.hesperides.modules.users.service.PasswordPolicy;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,6 +30,7 @@ public class RestrictedParameters {
     private static final long SECONDS_PER_MINUTE = 60;
     private static final String STRING = "STRING";
     private static final String INTEGER = "INTEGER";
+    private static final String DECIMAL = "DECIMAL";
 
     private final List<SystemParameterResponse> parameters;
 
@@ -58,7 +62,16 @@ public class RestrictedParameters {
                         "Tiempo de vigencia de cada acceso antes de renovarse automáticamente"),
                 locked(SystemParameterCodes.SESSION_MAX_RENEWAL_DAYS, "Duración máxima de sesión renovada (días)",
                         String.valueOf(refreshTokenDays), INTEGER,
-                        "Pasado este plazo, el usuario debe volver a iniciar sesión"));
+                        "Pasado este plazo, el usuario debe volver a iniciar sesión"),
+                locked(SystemParameterCodes.PROXIMITY_INSIDE_M, "Distancia para estar dentro de un edificio (m)",
+                        metres(ProximityThresholds.INSIDE_M), DECIMAL,
+                        "Un punto a menos de esta distancia de un edificio se describe como dentro de él"),
+                locked(SystemParameterCodes.PROXIMITY_ADJACENT_M, "Separación máxima jardín-edificio contiguo (m)",
+                        metres(ProximityThresholds.ADJACENT_M), DECIMAL,
+                        "Distancia entre bordes para considerar que un edificio es contiguo a una sección"),
+                locked(SystemParameterCodes.PROXIMITY_NAME_M, "Distancia máxima de una referencia que nombra un edificio (m)",
+                        metres(ProximityThresholds.NAME_M), DECIMAL,
+                        "Un edificio sin nombre toma el de la referencia más cercana dentro de esta distancia"));
     }
 
     public List<SystemParameterResponse> all() {
@@ -67,6 +80,11 @@ public class RestrictedParameters {
 
     public boolean contains(String code) {
         return parameters.stream().anyMatch(parameter -> Objects.equals(parameter.code(), code));
+    }
+
+    /** 3.0 se muestra «3» y 0.5 se muestra «0.5»: sin ceros que no aportan. */
+    private static String metres(double value) {
+        return BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
     }
 
     private static SystemParameterResponse locked(

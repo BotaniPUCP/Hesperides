@@ -42,6 +42,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
                         .requestMatchers("/api/v1/health").permitAll()
+                        // IMPORTANTE: excepción temporal. El inventario verde es
+                        // de lectura pública por decisión del 1 oct 2026 y expone
+                        // la ubicación y la foto de cada planta. Se retira al
+                        // definir qué ve el público (docs/inventario-verde/README.md).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/green-inventory/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(authenticationEntryPoint)

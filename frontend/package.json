@@ -15,7 +15,8 @@
     "date-fns": "^4.1.0",
     "next": "16.3.4",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "three": "0.147.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "6.4.8",
@@ -25,6 +26,7 @@
     "@types/node": "20.14.15",
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
+    "@types/three": "0.147.0",
     "autoprefixer": "10.4.19",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.4",

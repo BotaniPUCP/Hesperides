@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.auth.repository;
 
+import pe.edu.pucp.hesperides.support.TestDatabase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UsersRepositoryTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
 
     @DynamicPropertySource
     static void datasourceProperties(DynamicPropertyRegistry registry) {

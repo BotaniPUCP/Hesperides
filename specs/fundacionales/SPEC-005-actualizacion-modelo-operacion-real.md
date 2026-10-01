@@ -299,7 +299,7 @@ rutinario del que responde a un hallazgo.
 
 > **Renumerado (1 oct 2026).** La numeración es cronológica: §4.1 y §4.2 se implementaron como
 > `V008`–`V011` y hoy viven en el baseline `V001` (commit `638aca0`). El resto va después de las
-> tablas de SPEC-002 (`V004`–`V011`) y de la bitácora de SPEC-004 (`V012`), porque altera tablas
+> tablas de SPEC-002 (`V015`–`V018`) y de la bitácora de SPEC-004 (`V019`), porque altera tablas
 > que esas migraciones crean. Fuente única: el **mapa de migraciones** de
 > [`REGISTRO.md`](../REGISTRO.md#mapa-de-migraciones).
 
@@ -307,14 +307,14 @@ rutinario del que responde a un hallazgo.
 |---|---|---|
 | §4.1 Jerarquía en catálogos | Baseline `V001` (antes `V008`) | ✅ Aplicada |
 | §4.2 Taxonomía real | Baseline `V001` (antes `V009`, `V010` con los tipos provisionales de P-10 y `V011` con las descripciones de clase) | ✅ Aplicada |
-| §4.3 Cantidades, origen e incidencia externa | `V013` | Pendiente |
-| §4.4 Zonas reales del campus | `V014` | Pendiente |
-| §4.4.6 Capa de zonas de supervisión | `V015` | Pendiente |
-| §4.4.7 Referencias | `V016` | Pendiente |
-| §4.5 Catálogos que la entrega permite cerrar | `V017` | Pendiente |
-| §4.6 Evidencia sin momento declarado | `V018` | Pendiente |
-| §4.7 Código heredado del arbolado | `V019` | Pendiente |
-| §4.8 Subida diferida y publicación en el mapa | `V020` | Pendiente |
+| §4.3 Cantidades, origen e incidencia externa | `V020` | Pendiente |
+| §4.4 Zonas reales del campus | `V005` (tablas) y `V011` (semilla), con SPEC-102 | ✅ Aplicada |
+| §4.4.6 Capa de zonas de supervisión | `V006`, con SPEC-102 | ✅ Aplicada |
+| §4.4.7 Referencias | `V007`, con SPEC-102 | ✅ Aplicada |
+| §4.5 Catálogos que la entrega permite cerrar | `V021` | Pendiente |
+| §4.6 Evidencia sin momento declarado | `V022` | Pendiente |
+| §4.7 Código heredado del arbolado | `V013`, con el inventario verde | ✅ Aplicada |
+| §4.8 Subida diferida y publicación en el mapa | `V023` | Pendiente |
 
 Reescribir una migración aplicada rompe Flyway por checksum: todo lo que este spec corrija de lo
 ya aplicado se hace con `UPDATE`/`INSERT` en migraciones nuevas.
@@ -428,13 +428,13 @@ jardineras o macizos»). Se cargan en `catalog_items.metadata` como `{"descripti
 texto de ayuda para el operario en el formulario, no un campo consultable, y `metadata` (JSONB)
 ya existe en la tabla desde `V001` para exactamente esto.
 
-### 4.3 V013 — Cantidades, origen e incidencia externa
+### 4.3 V020 — Cantidades, origen e incidencia externa
 
 La hoja `Podas arbpalm` revela tres conceptos que el modelo no tiene y que son los que el cliente
 usa para medir cumplimiento.
 
 ```sql
--- V013__add_execution_tracking_to_interventions.sql
+-- V020__add_execution_tracking_to_interventions.sql
 
 ALTER TABLE interventions
     ADD COLUMN intervention_class_item_id BIGINT REFERENCES catalog_items(id),
@@ -504,7 +504,7 @@ CREATE INDEX idx_incidents_external ON incidents(external_code)
 planificado dependerá de esos dos `code`. `INCIDENT_SOURCE` no lo es: el cliente puede añadir
 «Comunidad universitaria» mañana sin que nada en el backend dependa de ello.
 
-### 4.4 V014 — Zonas reales del campus
+### 4.4 V005 — Zonas reales del campus
 
 > **Reescrita el 29 sep 2026, dos veces.** La primera versión sembraba 17 cuarteles forestales como
 > nivel padre de los lugares; el sistema ya no usa cuarteles. La segunda tomaba como secciones los
@@ -513,7 +513,7 @@ planificado dependerá de esos dos `code`. `INCIDENT_SOURCE` no lo es: el client
 > tabla oficial de 411 (§4.4.4). La historia está en §4.4.2.
 
 ```sql
--- V014__seed_campus_zones.sql
+-- V011__seed_map_data.sql
 -- Fuente: mapa interactivo del cliente (v32), capa de áreas verdes (§4.4.3).
 
 -- Tipo de uso de cada sección (C-12, REQ 2.14). Los seis valores son los del
@@ -779,7 +779,7 @@ que no pueden ser padre ni hijo de un sector.
 | Zona 3 | 11.20 ha |
 | Zona 4 | 11.87 ha |
 
-Se cargan en una tabla propia (`V015`, §4.4.6). **La zona de cada sección no se guarda: se calcula
+Se cargan en una tabla propia (`V006`, §4.4.6). **La zona de cada sección no se guarda: se calcula
 por posición** (la zona que contiene la mayor parte de su superficie). Guardarla duplicaría un dato
 que la geometría ya responde y que se desincronizaría al redibujar una zona.
 
@@ -796,10 +796,10 @@ dice, así que **por ahora el supervisor de las cuatro zonas es el coordinador**
   que ya ve todo el campus. Si mañana lo es otra persona con alcance limitado, ese alcance se
   especifica entonces; este spec no lo inventa.
 
-#### 4.4.6 V015 — Capa de zonas de supervisión
+#### 4.4.6 V006 — Capa de zonas de supervisión
 
 ```sql
--- V015__create_supervision_zones.sql
+-- V006__create_supervision_zones.sql
 -- Capa territorial del cliente, independiente de la jerarquía de zonas (§4.4.5).
 
 CREATE TABLE supervision_zones (
@@ -855,10 +855,10 @@ es quien hoy tiene esa responsabilidad.
 `boundary` también es `NOT NULL`, a diferencia de `zones`: una zona de supervisión **es** su
 polígono; sin él no significa nada.
 
-#### 4.4.7 V016 — Referencias
+#### 4.4.7 V007 — Referencias
 
 ```sql
--- V016__create_place_references.sql
+-- V007__create_place_references.sql
 -- Puntos con nombre para buscar en el mapa e importar ubicaciones (§4.4.4).
 -- No forman parte de la jerarquía de zonas.
 
@@ -921,10 +921,10 @@ CREATE INDEX idx_place_reference_aliases_reference ON place_reference_aliases(re
 - **Ciclos en la jerarquía** (A padre de B, B padre de A): el `CHECK` solo impide el caso de una
   referencia que sea su propio padre. El resto lo valida el servicio, como en `zones`.
 
-### 4.5 V017 — Catálogos que la entrega permite cerrar
+### 4.5 V021 — Catálogos que la entrega permite cerrar
 
 ```sql
--- V017__seed_confirmed_catalogs.sql
+-- V021__seed_confirmed_catalogs.sql
 
 -- SPECIES_TYPE — hoja `tipologia de flora`, los 9 valores del cliente.
 INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
@@ -958,10 +958,10 @@ usa en su operación.
 **`SPECIES_ORIGIN` sigue vacío.** El Excel no dice si una especie es nativa o introducida, y
 deducirlo del nombre científico sería inventar un dato botánico que terminaría en un reporte.
 
-### 4.6 V018 — Evidencia sin momento declarado
+### 4.6 V022 — Evidencia sin momento declarado
 
 ```sql
--- V018__add_unspecified_evidence_moment.sql
+-- V022__add_unspecified_evidence_moment.sql
 
 INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
     ((SELECT id FROM catalog_types WHERE code='EVIDENCE_MOMENT'), 'UNSPECIFIED', 'Sin especificar', 3);
@@ -976,10 +976,10 @@ para comparar estado previo y posterior. **Las intervenciones nuevas capturadas 
 no pueden usarlo** — esa restricción la impone el servicio (§5.3), no la base, porque la misma
 tabla acepta ambos orígenes.
 
-### 4.7 V019 — Código heredado del arbolado
+### 4.7 V013 — Código heredado del arbolado
 
 ```sql
--- V019__add_legacy_code_to_green_elements.sql
+-- Absorbida en V013__create_green_elements.sql (inventario verde): la columna nace con la tabla.
 -- Fuente: entrevista. Las placas de aluminio de un inventario forestal antiguo (D-08).
 
 ALTER TABLE green_elements
@@ -1000,12 +1000,12 @@ antiguo o con la placa perdida.
 
 ---
 
-### 4.8 V020 — Subida diferida de evidencia y publicación en el mapa
+### 4.8 V023 — Subida diferida de evidencia y publicación en el mapa
 
 Dos capacidades que la 2.ª entrevista convirtió en requisito y que el esquema no contemplaba.
 
 ```sql
--- V020__add_deferred_upload_and_map_publication.sql
+-- V023__add_deferred_upload_and_map_publication.sql
 
 -- 1. Evidencia anunciada por el dispositivo pero aún no recibida (enmienda a SPEC-002 §4.6).
 ALTER TABLE intervention_evidences

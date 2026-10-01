@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { HOME_ITEM, isActivePath, visibleNavigation } from '@/lib/navigation';
+import { HOME_ITEM, isActivePath, visibleDirectLinks, visibleNavigation } from '@/lib/navigation';
 import { SidebarGroup } from './SidebarGroup';
 import { SidebarLink } from './SidebarLink';
 
@@ -15,7 +15,9 @@ export interface SidebarProps {
 export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const grupos = visibleNavigation(user?.role.code ?? '');
+  const rol = user?.role.code ?? '';
+  const enlaces = visibleDirectLinks(rol);
+  const grupos = visibleNavigation(rol);
 
   return (
     <div className="flex h-full flex-col bg-neutral-0">
@@ -31,6 +33,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           active={isActivePath(pathname, HOME_ITEM.href)}
           onNavigate={onNavigate}
         />
+        {enlaces.map((enlace) => (
+          <SidebarLink
+            key={enlace.href}
+            href={enlace.href}
+            label={enlace.label}
+            icon={enlace.icon}
+            active={isActivePath(pathname, enlace.href)}
+            onNavigate={onNavigate}
+          />
+        ))}
         {grupos.map((grupo) => (
           <SidebarGroup key={grupo.id} group={grupo} pathname={pathname} onNavigate={onNavigate} />
         ))}
