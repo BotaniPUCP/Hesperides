@@ -186,7 +186,7 @@ M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3
 | 1.3 | Autenticación y login | `HAB` | 1 | — | ✅ | 100% | Implementado (SPEC-001) |
 | 1.4 | Catálogo de tipos de intervención | `HAB` | 1 | — | ✅ | 100% | 9 clases → 45 tipos. Fitosanitario e Inspección con tipos provisionales (P-10) |
 | 1.5 | Catálogo de especies | `HAB` | 1 | — | ✅ | 0% | 🔒 → ✅ **91 especies** del inventario forestal entregado (21 sep). Se siembra en 2.13 |
-| 1.6 | Catálogo de zonas del campus | `HAB` | 1 | — | 🔶 | 0% | **Sector (5) → sección (519) → subsección.** Todo sale del mapa v32. Más **411 referencias** oficiales para buscar. Ver nota |
+| 1.6 | Catálogo de zonas del campus | `HAB` | 1 | — | 🔶 | 40% | **Sector (5) → sección (521 + 10 xerofíticas) → subsección.** Cargado con SPEC-102; falta la pantalla de administración. Todo sale del mapa v32. Más **411 referencias** oficiales para buscar. Ver nota |
 | 1.7 | Configuración de frecuencias de mantenimiento | Media | 2 | D2 | ✅ | 20% | Especificado en SPEC-006 |
 | 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 0% | Incluye la **lista de feriados** que usa 5.11 |
 | 1.9 | Gestión de cuadrillas y asignación a sectores | **Alta** | 3 | D5 D7 | 🔶 | 0% | 3 sectores verdes (9+9+7 personas), un capataz cada uno; Polideportivo y Bosque húmedo sin cuadrilla propia. La asignación de secciones **tiene vigencia**. Falta P-15 |
@@ -241,11 +241,11 @@ obligó a cortar más seguido. **El sistema no puede asumir periodicidad constan
 
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
-| 2.1 | Mapa interactivo del campus | Media | 2 | D1 D6 | ✅ | 0% | 🔶 → ✅ **Mapa propio** para registro, filtros y mapa de calor |
+| 2.1 | Mapa interactivo del campus | Media | 2 | D1 D6 | ✅ | 60% | 🔶 → ✅ **Mapa propio** para registro, filtros y mapa de calor. Visor 3D web en `/mapa` (SPEC-102); falta validarlo en Android |
 | 2.2 | Registro de elementos verdes en mapa | **Alta** | 3 | D3 | ✅ | 0% | Incluye la **clase de altura**: < 5 m o ≥ 5 m. Ver nota |
 | 2.3 | Ficha de cada elemento verde | Media | 2 | D3 | ✅ | 0% | 🔒 → ✅ Se infiere de `catastro campus.xlsx`. Ver nota |
-| 2.4 | Filtros y búsqueda en mapa | Media | 2 | D6 | ✅ | 0% | Por sector y por sección, con nombres reconocibles |
-| 2.5 | Carga de capas/sectores del campus | Media | 2 | D1 | ✅ | 0% | 🔒 → ✅ El mapa v32 trae las **521 áreas verdes** (secciones) con su responsable y las 4 zonas de supervisión |
+| 2.4 | Filtros y búsqueda en mapa | Media | 2 | D6 | ✅ | 30% | Por sector y por sección, con nombres reconocibles. Buscador y colores por sector hechos; faltan los filtros por periodo, clase y responsable |
+| 2.5 | Carga de capas/sectores del campus | Media | 2 | D1 | ✅ | 90% | 🔒 → ✅ El mapa v32 trae las **521 áreas verdes** (secciones) con su responsable y las 4 zonas de supervisión |
 | 2.6 | Registro de campos deportivos | Baja | 1 | D3 | ✅ | 0% | Solo como superficie; su riego no es de la sección |
 | 2.7 | Historial por elemento | Media | 2 | D7 | ✅ | 0% | |
 | 2.8 | Integración con el mapa interactivo existente | **Alta** | 3 | D1 | ⏭️ | 0% | 🔒 → ⏭️ **Fuera del proyecto:** sería un proyecto aparte |

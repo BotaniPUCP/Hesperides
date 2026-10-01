@@ -51,14 +51,16 @@ referencia visual; no se vuelve a regenerar fuera.
 
 ### 2.2 Frontend web
 
-- Ruta: `/mapa`, dentro de `app/(dashboard)/`, con su ítem en el sidebar (nuevo grupo «Mapa»).
-- Componentes: `components/map3d/` (§7.1). Three.js como dependencia npm (`three`), cargado solo en
-  el cliente (`dynamic(..., { ssr: false })`).
-- Caché de capas en IndexedDB, con la versión de datos como clave (§5.2).
+- Rutas: `/mapa`, dentro de `app/(dashboard)/`, con su ítem en el sidebar (nuevo grupo «Mapa»), y
+  `/embed/mapa`, solo el mapa y sin sidebar, para el `WebView` de Android (§2.3).
+- Componentes: `components/map3d/` (§7.1). Three.js como dependencia npm (`three@0.147.0`, la r147
+  del prototipo: la iluminación y el espacio de color cambian en versiones posteriores). El visor
+  se importa dentro de un efecto, así que three solo se descarga en el cliente y en esta pantalla.
+- Caché de capas en IndexedDB, con la etiqueta (ETag) de la versión de datos (§5.1).
 
 ### 2.3 Móvil
 
-**La app Android muestra el mismo visor**, dentro de un `WebView` que abre `/mapa?embed=1` (sin
+**La app Android muestra el mismo visor**, dentro de un `WebView` que abre `/embed/mapa` (sin
 sidebar). Un solo visor para web y móvil: las versiones del mapa evolucionan en un solo lugar.
 El `WebView` de Android soporta WebGL.
 
@@ -75,7 +77,9 @@ pero son dos visores que mantener.
 - **NO debe usar:** coordenadas proyectadas guardadas en la base (el plano local es solo del visor),
   `mapbox-gl`, `@react-google-maps/api` ni ninguna API key de mapas.
 - Catálogos: `BUILDING_CATEGORY` (nuevo, 12), `FEATURE_TYPE` (nuevo), `RESERVATION_OWNER` (nuevo),
-  `ZONE_TYPE`, `USE_TYPE`, `REFERENCE_CATEGORY`.
+  `LANDSCAPE_TYPE` (nuevo: área verde o xerofítica), `IRRIGATION_CURRENT` e `IRRIGATION_PROJECT`
+  (nuevos: riego actual y proyecto de riego de cada sección, los modos «Riego» y «Proyecto» del
+  visor), `ZONE_TYPE`, `USE_TYPE`, `REFERENCE_CATEGORY`.
 
 ### 2.5 Decisiones propias de este spec
 
@@ -106,9 +110,11 @@ Nombre del edificio: su término del vocabulario → su nombre en OpenStreetMap 
 ≤ 10 m (excluye las categorías Área verde, Camino, Entrada, Estacionamiento y Externo) → «Edificio
 sin nombre, junto a {edificio con nombre más cercano}».
 
-**Los tres umbrales son fijos**: se guardan como parámetros del sistema **de solo lectura**
-(`PROXIMITY_INSIDE_M = 0.5`, `PROXIMITY_ADJACENT_M = 3`, `PROXIMITY_NAME_M = 10`), visibles en la
-pantalla de parámetros con el mecanismo de parámetros restringidos ya existente.
+**Los tres umbrales son fijos**: son constantes del Engine (`ProximityThresholds`:
+`PROXIMITY_INSIDE_M = 0.5`, `PROXIMITY_ADJACENT_M = 3`, `PROXIMITY_NAME_M = 10`), visibles en la
+pantalla de parámetros como **parámetros restringidos**, el mecanismo ya existente para valores que
+se muestran pero no se editan. No se guardan en la base: un valor en una tabla invitaría a
+cambiarlo, y cambiarlo haría irreproducibles las descripciones ya congeladas (D-05).
 
 **D-05 · La descripción se congela en la incidencia.** Al registrarla, el servidor calcula la
 descripción y guarda el texto, la sección y el edificio. Si mañana se renombra un edificio, la
@@ -123,7 +129,8 @@ GeoJSON de origen tienen coordenadas reales; cargarlos en PostGIS y proyectar en
 **una sola función** (`projection.ts`, plano tangente local con los radios de WGS 84 en el origen)
 elimina el problema.
 
-**D-07 · El catastro se arma desde sus tres archivos, no desde la capa del HTML.** La capa de
+**D-07 · El catastro se arma desde sus tres archivos, no desde la capa del HTML.**
+*(Diferido: la vegetación entra con el catastro, C-10. Esta primera entrega no dibuja plantas.)* La capa de
 vegetación del HTML (1081 plantas) mezcla fuentes y solo 941 plantas coinciden con el catastro por
 coordenada exacta. La carga une, por coordenada exacta (< 0.2 m):
 
@@ -152,10 +159,15 @@ altura ilustrativa nunca se guarda ni la consume ninguna regla** (C-09: la altur
 | `GET /api/v1/map/layers` | Cualquier rol con sesión | Todas las capas, con su versión. `If-None-Match` → `304` si no cambió |
 | `POST /api/v1/map/describe` | Cualquier rol con sesión | Describe un punto `{lat, lon}`: sección, edificio y texto (D-04) |
 
-`GET /layers` responde, dentro del sobre estándar, un objeto con `version` y una
-`FeatureCollection` GeoJSON (WGS 84) por capa: `sectors`, `sections`, `subsections`,
-`supervisionZones`, `references`, `buildings`, `greenElements`, `features` (mobiliario) y
-`campusBoundary`.
+`GET /layers` responde, dentro del sobre estándar, un objeto con `version`, `origin` (el origen
+del plano local), `attributionRequired` (verdadero mientras haya edificios de OpenStreetMap) y
+`layers`, con una `FeatureCollection` GeoJSON (WGS 84) por capa: `sectors`, `sections`,
+`subsections`, `supervisionZones`, `references`, `buildings` y `features`. El límite del campus es
+un `feature` de tipo `CAMPUS_BOUNDARY`. La capa de vegetación llegará con el catastro (D-07).
+
+La etiqueta va en la cabecera `ETag` (`"<versión>"`). Como el frontend vive en otro origen, CORS
+admite `If-None-Match` en el preflight y **expone** `ETag`: sin lo segundo el navegador devuelve
+`null` al leerla y cada apertura lo descargaría todo.
 
 ### 3.1 Decisiones que el código no explica
 
@@ -173,16 +185,23 @@ altura ilustrativa nunca se guarda ni la consume ninguna regla** (C-09: la altur
 
 ## 4. Migración de base de datos
 
-Las tablas de zonas, referencias, zonas de supervisión y elementos verdes ya están diseñadas
-(SPEC-002, SPEC-005). Este spec añade:
+Las zonas, referencias y zonas de supervisión estaban diseñadas en SPEC-002 y SPEC-005 pero no
+creadas; el mapa fue lo primero que las necesitó, así que se crean aquí, con la numeración
+cronológica del [mapa de migraciones](../REGISTRO.md#mapa-de-migraciones):
 
-| Versión | Archivo | Qué hace |
-|---|---|---|
-| V021 | `V021__create_campus_buildings.sql` | Edificios (contorno, altura, pisos, fuente, categoría) y sus alias |
-| V022 | `V022__create_campus_features.sql` | Mobiliario y elementos puntuales |
-| V023 | `V023__extend_zones_for_map.sql` | Reserva en secciones, xerofíticas, subsecciones de Jardín Frutas |
-| V024 | `V024__add_location_description_to_incidents.sql` | Descripción congelada en la incidencia |
-| V025 | `V025__seed_map_parameters.sql` | Los tres umbrales de solo lectura y la versión de datos |
+| Versión | Qué hace |
+|---|---|
+| V004 | Extensión PostGIS |
+| V005 | Sectores, secciones y subsecciones con su contorno; reserva, tipo de paisaje y riego |
+| V006 | Zonas de supervisión, cada una con su supervisor |
+| V007 | Referencias, alias y `REFERENCE_CATEGORY` |
+| V008 | Edificios (contorno, altura, pisos, fuente, categoría) y sus alias |
+| V009 | Mobiliario y elementos puntuales |
+| V010 | La versión de datos y los triggers que la incrementan |
+| V011 | La semilla, generada por `scripts/mapa/generar_semilla_mapa.py` desde `docs/dominio/datos/fuentes-mapa/` |
+
+La descripción congelada en la incidencia (§4.4) queda reservada como `V024`, después de la
+migración que crea `incidents`.
 
 ### 4.1 Edificios
 
@@ -272,8 +291,8 @@ calculados por el servidor al registrar (D-05).
 
 ### 5.2 Flujos alternativos
 
-- **Sin WebGL:** la pantalla muestra listas (secciones, referencias, edificios) con el mismo
-  buscador. Ninguna operación de negocio depende de que el 3D cargue (REGLAS §0.1).
+- **Sin WebGL:** la pantalla muestra las áreas verdes agrupadas por sector y el mismo buscador;
+  elegir una abre su ficha. Ninguna operación de negocio depende de que el 3D cargue (REGLAS §0.1).
 - **Sin red y con caché:** dibuja con la caché y avisa que puede estar desactualizada.
 - **Sin red y sin caché:** mensaje claro; sin mapa.
 
@@ -307,7 +326,11 @@ calculados por el servidor al registrar (D-05).
 
 La del prototipo v39: misma escena, colores, día/noche, leyenda y buscador. Cambios:
 
-- Ocupa el área de contenido del `AppShell`; en `?embed=1` ocupa toda la pantalla.
+- Ocupa el área de contenido del `AppShell`; en `/embed/mapa` ocupa toda la pantalla.
+- El buscador agrupa los puntos de un mismo lugar (la lista oficial marca Tinkuy con once) y
+  distingue los homónimos por su lugar padre («Cuarto piso · Pabellón Z»).
+- No se dibuja la línea discontinua al edificio más cercano del prototipo: la ficha del punto ya da
+  el texto oficial de `/describe`.
 - La atribución de OpenStreetMap va en la esquina inferior, siempre visible.
 
 ### 7.1 Módulos de `components/map3d/`
@@ -315,13 +338,12 @@ La del prototipo v39: misma escena, colores, día/noche, leyenda y buscador. Cam
 | Módulo | Responsabilidad |
 |---|---|
 | `projection.ts` | WGS 84 ↔ plano local. **Única** conversión del sistema |
-| `scene/` | Renderer, cámara, controles, luces, cielo, día/noche |
-| `layers/` | Un constructor por capa: secciones, edificios, vegetación, mobiliario, zonas |
-| `picking.ts` | Clic y hover sobre la escena |
-| `labels.ts` | Etiquetas en pantalla |
-| `search/` | Índice y buscador (referencias, alias, edificios, secciones) |
-| `useMapLayers.ts` | Descarga, caché e invalidación por versión |
-| `Map3D.tsx` | Componente React que monta el visor y expone la selección |
+| `sceneData.ts` | Reparte la respuesta de la API en las capas del visor, ya proyectadas |
+| `modes.ts`, `infoCard.ts`, `searchIndex.ts` | Colores por modo, contenido de la ficha, índice del buscador. Puros |
+| `viewer/` | three.js: escenario, luces, capas, mobiliario, cámara, selección, etiquetas. `createViewer` las compone |
+| `layerCache.ts` | Copia local en IndexedDB |
+| `hooks/useMapLayers.ts` | Descarga condicional y copia local |
+| `MapScreen.tsx` y sus paneles | La pantalla: buscador, barra, leyenda, capas, ficha, atribución, listas sin WebGL |
 
 ---
 
@@ -340,12 +362,17 @@ Proyección (TS)
 - ida y vuelta WGS 84 → plano → WGS 84 con error < 1 cm en todo el campus
 
 Carga de datos
-- 521 secciones + 10 xerofíticas; 20 secciones reservables; 2 subsecciones en AV-0151
-- catastro: unión por coordenada; palmeras medidas con data_source MEASURED
-- ninguna planta del HTML sin fuente queda cargada
+- 5 sectores; 521 secciones + 10 xerofíticas; 18 secciones reservables y 2 subsecciones (AV-0151)
+- 4 zonas de supervisión; 411 referencias; 417 edificios (162 del campus); 227 elementos
+- catastro (diferido, D-07): unión por coordenada; palmeras medidas con data_source MEASURED
 
 API
 - 304 con la versión vigente; 200 tras una escritura
+- CORS: el preflight admite If-None-Match y la respuesta expone ETag
+
+Frontend (Jest, visor simulado)
+- copia local: 304 usa la copia; 200 la reemplaza; sin red usa la copia y avisa
+- buscar, clic en la maqueta, clic en el suelo, modos, capas, sin WebGL, atribución
 ```
 
 ---

@@ -17,7 +17,7 @@
 | SPEC-C03 | Patrones de API           | 👀 En revisión  | —          | S0     |              |
 | SPEC-100 | Gestión de usuarios       | 👀 En revisión  | —          | S1     |              |
 | SPEC-101 | Frecuencias de mantenimiento | 🔄 En progreso  | —          | S1     |              |
-| SPEC-102 | Mapa 3D del campus | 📝 En spec | —    | S2     |              |
+| SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -57,6 +57,7 @@ sorpresa que un principio fundacional cambió.
 | **SPEC-002 §4.3 (DDL)** | Decisión del equipo (29 sep 2026) | `zones.boundary` pasa de `Polygon` a **`MultiPolygon`**: un sector es la suma de las áreas verdes de un capataz, repartidas por el campus, no un área continua. La tabla no existe todavía, así que es un cambio de diseño, no una migración. `ZONE_TYPE` queda definido: `SECTOR`, `SECTION`, `SUBSECTION`. **Los cuarteles forestales salen del modelo.** `zones` gana `map_code` y `use_type_item_id`, y entra la tabla `supervision_zones` (V015), fuera de la jerarquía, con un supervisor por zona. **Quién mantiene un sector no es atributo del sector** (no es exclusivo: los árboles de más de 5 m de un sector verde los poda un tercero): lo dice la cuadrilla asignada y, trabajo a trabajo, quién lo ejecutó. |
 | **SPEC-003 §8** | SPEC-005 (29-30 sep 2026) | Entran `USE_TYPE` (los seis tipos de uso del mapa del cliente) y `REFERENCE_CATEGORY` (las 24 categorías de la tabla oficial de referencias). |
 | **SPEC-002 §4.0 · SPEC-004 §4.0 · SPEC-005 §4 · SPEC-006 §4 · REGLAS §5.4** | Renumeración de migraciones (29 sep 2026) | Los números reservados por cada spec (`V003`–`V010`, `V011`, `V013`–`V020`, `V012`) chocaban con las migraciones que sí se aplicaron. Se adopta la **numeración cronológica** y el mapa de migraciones de abajo pasa a ser la fuente única. REGLAS §5.4 deja los rangos por spec. |
+| **Mapa de migraciones · SPEC-002 §4.0 · SPEC-003 §8 · SPEC-004 §4.0 · SPEC-005 §4** | SPEC-102 (1 oct 2026) | El mapa necesitó primero PostGIS, zonas, zonas de supervisión y referencias, y aplicó **`V004`–`V011`**. Lo que reservaban SPEC-005 §4.4, §4.4.6 y §4.4.7 (`V014`–`V016`) quedó dentro de esas migraciones; las demás reservas pendientes se corren a **`V012`–`V024`**. Los umbrales de cercanía no se guardan en la base: son constantes del Engine mostradas como parámetros restringidos (SPEC-102 D-04). |
 | **Mapa de migraciones · SPEC-001 · SPEC-002 §4.0 · SPEC-003 · SPEC-004 §4.0 · SPEC-005 §4 · SPEC-100 · SPEC-101** | Realineamiento al baseline (1 oct 2026) | El commit `638aca0` consolidó V001–V011 en `V001__baseline_schema.sql`, y quedaron aplicadas `V002` (frecuencias, SPEC-101) y `V003` (parámetros del sistema). Las reservas pendientes se corren de `V012`–`V028` a **`V004`–`V020`**; las citas a archivos que ya no existen (`V003__seed_role_catalog`, `V009__seed_intervention_taxonomy`…) apuntan al baseline. **SPEC-006 queda superado por SPEC-101**, que ya implementó la misma tabla. |
 | **SPEC-C01 §6** | SPEC-102 (1 oct 2026) | **Leaflet sale: el mapa del sistema es el visor 3D** (Three.js), en web y en la app Android dentro de un `WebView`. Sigue sin servicios externos ni API keys. Los edificios vienen de OpenStreetMap con atribución visible hasta que lleguen los planos de la PUCP. |
 | **SPEC-005 §4.4** | SPEC-102 | Las 10 áreas xerofíticas entran como secciones sin sector; 20 secciones se marcan reservables (dueño `DAF` o `UNIDADES`); «Jardín Frutas» y «Jardín Frutas-Lado FCCSS» son subsecciones de `AV-0151`. Las 77 «plantas sin especie» se descartan: son duplicados de plantas del catastro y de las mediciones. |
@@ -117,33 +118,32 @@ su spec, en el mismo commit. Una migración aplicada nunca cambia de número ni 
 | V001 | `V001__baseline_schema.sql` | SPEC-001, SPEC-002 §4.10, SPEC-003, SPEC-005 §4.1-4.2, SPEC-100 | `unaccent`, catálogos con jerarquía, roles, usuarios y sesiones con entrega de credenciales, admin inicial, cuadrillas, taxonomía de intervenciones (9 clases, 45 tipos, tipos provisionales de P-10) |
 | V002 | `V002__create_maintenance_frequencies.sql` | SPEC-101 | Frecuencias de mantenimiento y sus estaciones |
 | V003 | `V003__create_system_parameters.sql` | SPEC-002 §4.9 | La tabla `system_parameters` y sus parámetros |
+| V004 | `V004__enable_postgis.sql` | SPEC-002 §4.2 · SPEC-102 | Extensión PostGIS |
+| V005 | `V005__create_zones.sql` | SPEC-002 §4.3 · SPEC-005 §4.4 · SPEC-102 §4.3 | Sectores, secciones y subsecciones con contorno; reserva, tipo de paisaje y riego |
+| V006 | `V006__create_supervision_zones.sql` | SPEC-005 §4.4.6 | Zonas de supervisión con su supervisor |
+| V007 | `V007__create_place_references.sql` | SPEC-005 §4.4.7 | Referencias, alias y `REFERENCE_CATEGORY` |
+| V008 | `V008__create_campus_buildings.sql` | SPEC-102 §4.1 | Edificios y sus alias |
+| V009 | `V009__create_campus_features.sql` | SPEC-102 §4.2 | Mobiliario y elementos puntuales |
+| V010 | `V010__create_map_data_version.sql` | SPEC-102 §3.1 | Versión de datos del mapa y sus triggers |
+| V011 | `V011__seed_map_data.sql` | SPEC-102 · SPEC-005 §4.4 | Semilla del mapa: 5 sectores, 531 secciones, 4 zonas de supervisión, 411 referencias, 417 edificios, 227 elementos |
 
 ### Pendientes (número reservado)
 
 | Versión | Archivo | Propietaria | Depende de |
 |---|---|---|---|
-| V004 | `V004__enable_postgis.sql` | SPEC-002 §4.2 | Imagen `postgis/postgis` en el servicio `db` |
-| V005 | `V005__create_zones.sql` | SPEC-002 §4.3 | V004 |
-| V006 | `V006__create_species.sql` | SPEC-002 §4.4 | — |
-| V007 | `V007__create_green_elements.sql` | SPEC-002 §4.5 | V004, V005, V006 |
-| V008 | `V008__create_interventions.sql` | SPEC-002 §4.6 | V007 |
-| V009 | `V009__create_contracts.sql` | SPEC-002 §4.7 | V008 |
-| V010 | `V010__create_incidents.sql` | SPEC-002 §4.8 | V007, V008 |
-| V011 | `V011__seed_catalogs.sql` | SPEC-002 §4.9 | Sin `ROLE`, `INTERVENTION_TYPE` ni `system_parameters`: ya están en V001 y V003 |
-| V012 | `V012__create_audit_log.sql` | SPEC-004 §4 | V005–V011 (añade columnas de autoría a sus tablas) |
-| V013 | `V013__add_execution_tracking_to_interventions.sql` | SPEC-005 §4.3 | V008 |
-| V014 | `V014__seed_campus_zones.sql` | SPEC-005 §4.4 | V005, V011 (`ZONE_TYPE`) |
-| V015 | `V015__create_supervision_zones.sql` | SPEC-005 §4.4.6 | V004, V001 (necesita un usuario `COORDINADOR` o `ADMIN` activo) |
-| V016 | `V016__create_place_references.sql` | SPEC-005 §4.4.7 | V004 |
-| V017 | `V017__seed_confirmed_catalogs.sql` | SPEC-005 §4.5 | V011 |
-| V018 | `V018__add_unspecified_evidence_moment.sql` | SPEC-005 §4.6 | V008, V011 |
-| V019 | `V019__add_legacy_code_to_green_elements.sql` | SPEC-005 §4.7 | V007 |
-| V020 | `V020__add_deferred_upload_and_map_publication.sql` | SPEC-005 §4.8 | V008 |
-| V021 | `V021__create_campus_buildings.sql` | SPEC-102 §4.1 | V004 |
-| V022 | `V022__create_campus_features.sql` | SPEC-102 §4.2 | V004 |
-| V023 | `V023__extend_zones_for_map.sql` | SPEC-102 §4.3 | V014 |
-| V024 | `V024__add_location_description_to_incidents.sql` | SPEC-102 §4.4 | V010, V021 |
-| V025 | `V025__seed_map_parameters.sql` | SPEC-102 D-04 | V003 |
+| V012 | `V012__create_species.sql` | SPEC-002 §4.4 | — |
+| V013 | `V013__create_green_elements.sql` | SPEC-002 §4.5 | V004, V005, V012 |
+| V014 | `V014__create_interventions.sql` | SPEC-002 §4.6 | V013 |
+| V015 | `V015__create_contracts.sql` | SPEC-002 §4.7 | V014 |
+| V016 | `V016__create_incidents.sql` | SPEC-002 §4.8 | V013, V014 |
+| V017 | `V017__seed_catalogs.sql` | SPEC-002 §4.9 | Sin `ROLE`, `INTERVENTION_TYPE`, `ZONE_TYPE`, `USE_TYPE` ni `system_parameters`: ya están en V001, V003 y V005 |
+| V018 | `V018__create_audit_log.sql` | SPEC-004 §4 | V005, V012–V017 (añade columnas de autoría a sus tablas) |
+| V019 | `V019__add_execution_tracking_to_interventions.sql` | SPEC-005 §4.3 | V014 |
+| V020 | `V020__seed_confirmed_catalogs.sql` | SPEC-005 §4.5 | V017 |
+| V021 | `V021__add_unspecified_evidence_moment.sql` | SPEC-005 §4.6 | V014, V017 |
+| V022 | `V022__add_legacy_code_to_green_elements.sql` | SPEC-005 §4.7 | V013 |
+| V023 | `V023__add_deferred_upload_and_map_publication.sql` | SPEC-005 §4.8 | V014 |
+| V024 | `V024__add_location_description_to_incidents.sql` | SPEC-102 §4.4 | V016, V008 |
 
 `maintenance_frequencies` no figura entre las pendientes: ya existe como **V002** (SPEC-101).
 SPEC-006, que la diseñaba aparte, quedó superado.

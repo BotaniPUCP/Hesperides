@@ -222,10 +222,14 @@ Lo que queda fuera, y por qué, está en
 **quiero** administrar la jerarquía territorial del campus
 **para que** cada intervención se registre contra una sección que el personal reconozca.
 
+> **Avance (1 oct 2026):** la carga ya está hecha, con el mapa 3D (SPEC-102, `V005`–`V011`):
+> 5 sectores, 521 secciones más 10 xerofíticas sin sector, las 4 zonas de supervisión y las 411
+> referencias, visibles en `/mapa`. Falta la pantalla para administrarlas.
+
 **Criterios de aceptación**
 - La jerarquía es **sector → sección → subsección (opcional)**, con `parent_zone_id`. **Solo se usan esas tres palabras:** no hay cuarteles forestales.
 - Los **5 sectores** están sembrados: **Sector verde 01, 02 y 03**, **Sector Polideportivo** y **Sector Bosque húmedo**. Quién los mantiene no es un atributo del sector: lo dice la cuadrilla asignada (A-07), y cada trabajo dice quién lo ejecutó.
-- Las **519 secciones** son las áreas verdes del mapa v32 del cliente, con su polígono, superficie, tipo de uso y sector.
+- Las **521 secciones** son las áreas verdes del mapa del cliente, con su polígono, superficie, tipo de uso y sector. Las 10 áreas xerofíticas son secciones aparte, sin sector.
 - Una subsección es una división interna de una sección; la crea el `ADMIN` si hace falta.
 - Las **4 zonas de supervisión** están cargadas en una capa aparte, **cada una con su supervisor** (por defecto, el coordinador). La zona de una sección se calcula por posición.
 - Una zona nunca se borra: se desactiva.
@@ -1166,7 +1170,7 @@ queda en [`integracion-mapa-interactivo.md`](dominio/integracion-mapa-interactiv
 El inventario forestal entregado trae **91 especies** con nombre común y científico, y **6 formas
 biológicas**. Ya no hay que esperar: la siembra del catálogo es parte de C-10 (S2).
 
-### W-03 · Carga de capas y sectores del campus `REQ 2.5` Media `D1` ✅ **DESBLOQUEADA** → se carga en A-04
+### W-03 · Carga de capas y sectores del campus `REQ 2.5` Media `D1` ✅ **CARGADA** con SPEC-102 (1 oct 2026)
 **Llegó el mapa v32 del cliente** (29 sep): 521 áreas verdes, cada una con su responsable, y las 4
 zonas de supervisión. La carga es la semilla de A-04 (SPEC-005 §4.4).
 

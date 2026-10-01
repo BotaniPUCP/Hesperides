@@ -61,7 +61,7 @@ Mismos tipos vía `shared/types/`. El móvil consume las mismas tablas por la mi
 - Ningún `@Enumerated` de Java para tipos, estados, prioridades o categorías. Van a `catalog_items` por FK (SPEC-003).
 - Ningún cliente de S3 en las entidades. La tabla guarda una clave de objeto, no el binario ni la URL firmada (ver §5.4).
 
-**Patrón de catálogos aplicable:** todos los `catalog_types` sembrados en V011 (§4.9). Cualquier FK cuyo nombre termine en `_item_id` apunta a `catalog_items(id)`.
+**Patrón de catálogos aplicable:** todos los `catalog_types` sembrados en V017 (§4.9). Cualquier FK cuyo nombre termine en `_item_id` apunta a `catalog_items(id)`.
 
 ---
 
@@ -88,23 +88,26 @@ Este spec no expone endpoints propios. Fija los invariantes que toda API constru
 > implementado vive en el baseline `V001` (commit `638aca0`) y en `V002`–`V003`; lo pendiente se
 > reserva desde `V004`. La fuente única de la numeración es el **mapa de migraciones** de
 > [`REGISTRO.md`](../REGISTRO.md#mapa-de-migraciones).
+>
+> **Renumerado otra vez (1 oct 2026).** El mapa 3D (SPEC-102) necesitó primero zonas y
+> PostGIS, y aplicó `V004`–`V011`. Las tablas restantes de este spec pasan a `V012`–`V017`.
 
 | Versión | Archivo | Propietaria | Estado |
 |---|---|---|---|
 | V001 | `V001__baseline_schema.sql` | Varios | ✅ Aplicada. Contiene los catálogos (SPEC-003), `users` (SPEC-001; aquí solo se referencia como FK) y las cuadrillas de §4.10 |
 | V003 | `V003__create_system_parameters.sql` | SPEC-002 §4.9 | ✅ Aplicada. La tabla `system_parameters` de §4.9 |
-| V004 | `V004__enable_postgis.sql` | SPEC-002 | Definida abajo |
-| V005 | `V005__create_zones.sql` | SPEC-002 | Definida abajo |
-| V006 | `V006__create_species.sql` | SPEC-002 | Definida abajo |
-| V007 | `V007__create_green_elements.sql` | SPEC-002 | Definida abajo |
-| V008 | `V008__create_interventions.sql` | SPEC-002 | Definida abajo |
-| V009 | `V009__create_contracts.sql` | SPEC-002 | Definida abajo |
-| V010 | `V010__create_incidents.sql` | SPEC-002 | Definida abajo |
-| V011 | `V011__seed_catalogs.sql` | SPEC-002 | Definida abajo. **Sin** `ROLE`, `INTERVENTION_TYPE` ni `system_parameters`: ya están en V001 y V003 |
+| V004 | `V004__enable_postgis.sql` | SPEC-002 | ✅ Aplicada con SPEC-102 |
+| V005 | `V005__create_zones.sql` | SPEC-002 | ✅ Aplicada con SPEC-102, que añade contorno, reserva, tipo de paisaje y riego |
+| V012 | `V006__create_species.sql` | SPEC-002 | Definida abajo |
+| V013 | `V007__create_green_elements.sql` | SPEC-002 | Definida abajo |
+| V014 | `V008__create_interventions.sql` | SPEC-002 | Definida abajo |
+| V015 | `V009__create_contracts.sql` | SPEC-002 | Definida abajo |
+| V016 | `V010__create_incidents.sql` | SPEC-002 | Definida abajo |
+| V017 | `V011__seed_catalogs.sql` | SPEC-002 | Definida abajo. **Sin** `ROLE`, `INTERVENTION_TYPE` ni `system_parameters`: ya están en V001 y V003 |
 
-> **Orden de aplicación:** V004 debe correr antes que V005 y V007, porque `zones` y `green_elements` usan tipos `GEOMETRY` que solo existen tras `CREATE EXTENSION postgis`. Flyway lo garantiza por número de versión.
+> **Orden de aplicación:** V004 debe correr antes que V005 y V013, porque `zones` y `green_elements` usan tipos `GEOMETRY` que solo existen tras `CREATE EXTENSION postgis`. Flyway lo garantiza por número de versión.
 
-> ⚠️ **Pendiente del cliente — dato semilla, no estructura.** Las migraciones de abajo crean tablas vacías salvo los catálogos de V011. Las filas reales de `zones` y `species` entran por migraciones posteriores: las zonas por `V014` (SPEC-005 §4.4) y las especies cuando se implemente 2.13. **No** se siembran valores de ejemplo: un dato inventado en la tabla es indistinguible de un dato real para el equipo.
+> ⚠️ **Pendiente del cliente — dato semilla, no estructura.** Las migraciones de abajo crean tablas vacías salvo los catálogos de V017. Las filas reales de `zones` y `species` entran por migraciones posteriores: las zonas por `V014` (SPEC-005 §4.4) y las especies cuando se implemente 2.13. **No** se siembran valores de ejemplo: un dato inventado en la tabla es indistinguible de un dato real para el equipo.
 
 ### 4.1 Convenciones aplicadas a toda tabla de este spec
 
@@ -252,7 +255,7 @@ CREATE INDEX idx_zones_boundary ON zones USING GIST(boundary);
 >
 > Detalle completo en SPEC-005 §4.4.
 
-### 4.4 V006 — Especies
+### 4.4 V012 — Especies
 
 ```sql
 -- V006__create_species.sql
@@ -290,7 +293,7 @@ CREATE INDEX idx_species_common_name ON species(common_name);
 
 > ⚠️ **Pendiente del cliente:** el **listado real de especies presentes en el campus y el conjunto de atributos que el cliente necesita registrar por especie** (¿altura esperada?, ¿requerimiento hídrico?, ¿época de floración?, ¿tolerancia a poda?). Mientras no llegue, la tabla queda vacía y `attributes` absorbe lo que aparezca. **No** se siembra ninguna especie de ejemplo: una lista inventada en la base es indistinguible de la lista oficial para quien la consulte después.
 
-### 4.5 V007 — Catastro verde georreferenciado (núcleo del Sprint 1)
+### 4.5 V013 — Catastro verde georreferenciado (núcleo del Sprint 1)
 
 ```sql
 -- V007__create_green_elements.sql
@@ -364,7 +367,7 @@ CREATE INDEX idx_green_element_attachments_element
 
 **Por qué `location` y `area` son dos columnas y no una `GEOMETRY(Geometry, 4326)` genérica:** con dos columnas tipadas, PostGIS valida el tipo geométrico al insertar y el índice GIST de cada una es específico. Una columna genérica aceptaría una `LineString` por error y obligaría a filtrar por `ST_GeometryType` en cada consulta. El `CHECK` garantiza que al menos una está poblada; ambas pobladas es válido y útil (un árbol singular con su copa proyectada).
 
-### 4.6 V008 — Intervenciones de personal estable
+### 4.6 V014 — Intervenciones de personal estable
 
 ```sql
 -- V008__create_interventions.sql
@@ -390,7 +393,7 @@ CREATE TABLE interventions (
     zone_id                   BIGINT NOT NULL REFERENCES zones(id),
     intervention_type_item_id BIGINT NOT NULL REFERENCES catalog_items(id),
     status_item_id            BIGINT NOT NULL REFERENCES catalog_items(id),
-    contract_id               BIGINT,  -- FK añadida en V009 (dependencia circular)
+    contract_id               BIGINT,  -- FK añadida en V015 (dependencia circular)
     scheduled_date            DATE NOT NULL,
     started_at                TIMESTAMP,
     completed_at              TIMESTAMP,
@@ -516,7 +519,7 @@ CREATE INDEX idx_intervention_evidences_moment
 
 > ⚠️ **Pendiente del cliente:** las **frecuencias de mantenimiento por tipo de intervención y tipo de elemento**. No se modela aún una tabla `maintenance_frequencies` porque no se sabe si la frecuencia se define por zona, por tipo de elemento, por especie, o por combinación. Modelarla a ciegas obligaría a rehacerla. Los valores del catálogo `FREQUENCY` (§4.7) dependen de la misma entrega.
 
-### 4.7 V009 — Contratos y servicios tercerizados
+### 4.7 V015 — Contratos y servicios tercerizados
 
 ```sql
 -- V009__create_contracts.sql
@@ -595,7 +598,7 @@ CREATE TABLE contract_executions (
 CREATE INDEX idx_contract_executions_contract ON contract_executions(contract_id);
 CREATE INDEX idx_contract_executions_date ON contract_executions(execution_date);
 
--- Cierra la referencia diferida de V008: una intervención puede haberse
+-- Cierra la referencia diferida de V014: una intervención puede haberse
 -- ejecutado bajo un contrato tercerizado en vez de por personal estable.
 ALTER TABLE interventions
     ADD CONSTRAINT fk_interventions_contract
@@ -608,7 +611,7 @@ CREATE INDEX idx_interventions_contract_id ON interventions(contract_id);
 
 > ⚠️ **Pendiente del cliente:** un **contrato tipo** real. Determina si `scope_description` en texto libre basta o si el alcance necesita ítems estructurados (metas por zona, penalidades, entregables con fecha), y si `amount` / `currency_code` son campos que el cliente realmente quiere en el sistema o los lleva por otra vía administrativa. Estructura mínima definida; se amplía cuando llegue el documento.
 
-### 4.8 V010 — Incidencias
+### 4.8 V016 — Incidencias
 
 ```sql
 -- V010__create_incidents.sql
@@ -684,7 +687,7 @@ CREATE INDEX idx_incident_evidences_incident ON incident_evidences(incident_id);
 
 `incidents.intervention_id` cierra el ciclo: una incidencia atendida genera una intervención, y esa intervención queda en el historial del elemento como cualquier otra. `from_status_item_id` nulable porque la primera fila del historial (creación en estado `REPORTED`) no viene de ningún estado previo.
 
-### 4.9 V011 — Catálogos semilla
+### 4.9 V017 — Catálogos semilla
 
 > ⚠️ **Al implementar, omitir tres bloques de este SQL.** Los roles reales y la taxonomía de
 > intervenciones —con su `catalog_type`— ya están en el baseline `V001` (SPEC-001, SPEC-005 §4.2),
@@ -994,7 +997,7 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 
 | # | Criterio | Método de verificación |
 |---|----------|----------------------|
-| CA-01 | Las migraciones corren limpias desde cero | `docker-compose down -v && docker-compose up --build`. El backend arranca sin error. `SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;` devuelve V001–V011 con `success = t` en todas. |
+| CA-01 | Las migraciones corren limpias desde cero | `docker-compose down -v && docker-compose up --build`. El backend arranca sin error. `SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;` devuelve V001–V017 con `success = t` en todas. |
 | CA-02 | PostGIS está instalado y operativo | `SELECT PostGIS_Version();` devuelve una versión 3.4.x. `SELECT extname FROM pg_extension WHERE extname='postgis';` devuelve una fila. |
 | CA-03 | Existen las 20 tablas de dominio (17 de este spec + `catalog_types`/`catalog_items` y `users` del baseline V001) | `SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('catalog_types','catalog_items','users','zones','species','green_elements','green_element_attachments','supplies','interventions','intervention_elements','intervention_supplies','intervention_evidences','providers','contracts','contract_zones','contract_executions','incidents','incident_status_history','incident_evidences','system_parameters');` devuelve **20**. |
 | CA-04 | Toda tabla de dominio cumple la convención de auditoría | `SELECT table_name FROM information_schema.tables t WHERE table_schema='public' AND table_name NOT LIKE 'flyway%' AND table_name NOT LIKE 'spatial_ref_sys' AND NOT EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name=t.table_name AND c.column_name='deleted_at');` devuelve **0 filas**. Repetir cambiando `deleted_at` por `created_at` y `updated_at`. |
@@ -1026,7 +1029,7 @@ Lo que debe quedar fijado:
 
 ```
 Migraciones
-- docker-compose down -v && up --build aplica V004-V011 desde cero sin error
+- docker-compose down -v && up --build aplica V004-V017 desde cero sin error
 - la extensión PostGIS queda disponible antes de la primera tabla con geometría
 - reejecutar las migraciones no altera checksums (V001–V003 no se tocan)
 
@@ -1084,7 +1087,7 @@ propia en una `V1XX`. El JSONB no es el destino final de un atributo consolidado
 
 **Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-- [ ] Los ocho archivos `V004`–`V011` están en `db/migration/`, uno por área, y
+- [ ] Los ocho archivos `V004`, `V005` y `V012`–`V017` están en `db/migration/`, uno por área, y
       `V001__baseline_schema.sql` **no fue modificado** (Flyway falla por checksum).
 - [ ] La imagen de `db` es `postgis/postgis:16-3.4` en `docker-compose.yml` **y** en
       `docker-compose.dev.yml`; `hibernate-spatial` está en el `pom` sin versión explícita.

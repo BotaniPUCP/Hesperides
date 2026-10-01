@@ -45,7 +45,7 @@ No aplica. Este spec es puramente de presentación.
 **Librerías que DEBE usar (web):**
 - React 19 + Next.js 16 (App Router), TypeScript estricto.
 - Tailwind CSS (utility-first) para todo estilo de layout y superficie.
-- `Leaflet` + `react-leaflet` para el mapa interactivo (justificación en sección 6).
+- ~~`Leaflet` + `react-leaflet`~~ → el visor 3D de `components/map3d/` (Three.js) para el mapa interactivo (sección 6, enmendada por SPEC-102).
 - `date-fns` para formateo y cálculo de fechas (ya ligero, sin dependencias de red).
 
 **Librerías que DEBE usar (móvil):**
@@ -274,6 +274,12 @@ Mismas props que sus contrapartes web (secciones 4.12–4.15). Diferencias de im
 - `DateRangePicker` en móvil abre un `Modal` `fullscreen` con dos calendarios apilados en vez de un popover, porque un popover angosto no es táctilmente usable en campo.
 
 ## 6. Decisión: librería de mapas
+
+> **Enmienda de SPEC-102 (1 oct 2026):** Leaflet sale. El mapa del sistema es el **visor 3D**
+> de `components/map3d/` (Three.js), en web y, dentro de un `WebView` en `/embed/mapa`, en la
+> app Android. Se mantiene el principio de esta sección: sin servicios externos, teselas ni API
+> keys. Los edificios vienen de OpenStreetMap con atribución visible hasta que lleguen los
+> planos de la PUCP. Lo que sigue es el razonamiento original, conservado como historia.
 
 **Elegida: Leaflet (`leaflet` + `react-leaflet`) en web, `react-native-maps` con proveedor por defecto (tiles OpenStreetMap) en móvil.**
 
