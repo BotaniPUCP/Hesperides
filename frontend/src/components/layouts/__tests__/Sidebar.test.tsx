@@ -35,6 +35,20 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /inicio/i })).toHaveAttribute('href', '/');
   });
 
+  it('enlaza el mapa directamente, sin un desplegable de un solo ítem', () => {
+    render(<Sidebar />);
+
+    expect(screen.getByRole('link', { name: /mapa/i })).toHaveAttribute('href', '/mapa');
+    expect(screen.queryByRole('button', { name: /mapa/i })).not.toBeInTheDocument();
+  });
+
+  it('marca el mapa como página activa', () => {
+    mockPathname = '/mapa';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('link', { name: /mapa/i })).toHaveAttribute('aria-current', 'page');
+  });
+
   it('muestra el grupo Administración como un desplegable, cerrado fuera de sus rutas', () => {
     render(<Sidebar />);
 

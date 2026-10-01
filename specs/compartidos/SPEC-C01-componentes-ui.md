@@ -223,7 +223,7 @@ la segunda no debe ofrecer navegación mientras la contraseña temporal siga vig
 | Componente (`components/layouts/`) | Para qué existe | Lo que no se ve en las props |
 |---|---|---|
 | `AppShell` | Sidebar más contenido | Qué variante se ve lo decide el CSS (`md:`), no un `matchMedia`: no hay un primer render con la variante equivocada |
-| `Sidebar` | Inicio, módulos y el pie con usuario y «Cerrar sesión» | Avisa al navegar (`onNavigate`) para que el panel móvil se cierre |
+| `Sidebar` | Inicio, enlaces directos (Mapa), módulos y el pie con usuario y «Cerrar sesión» | Avisa al navegar (`onNavigate`) para que el panel móvil se cierre |
 | `SidebarGroup` | Módulo desplegable | Botón con `aria-expanded`. Arranca abierto **solo** si contiene la página activa |
 | `SidebarLink` | Enlace a una pantalla | La activa se anuncia con `aria-current="page"` y el token `brand-50`, no solo con color |
 

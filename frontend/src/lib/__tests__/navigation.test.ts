@@ -1,4 +1,4 @@
-import { NAVIGATION, isActivePath, visibleNavigation } from '../navigation';
+import { NAVIGATION, isActivePath, visibleDirectLinks, visibleNavigation } from '../navigation';
 
 describe('isActivePath', () => {
   it('marca activa la ruta exacta', () => {
@@ -25,9 +25,8 @@ function hrefsDe(rol: string): string[] {
 }
 
 describe('visibleNavigation', () => {
-  it('a un ADMIN le muestra el mapa y las cuatro pantallas de administración', () => {
+  it('a un ADMIN le muestra las cuatro pantallas de administración', () => {
     expect(hrefsDe('ADMIN')).toEqual([
-      '/mapa',
       '/admin/usuarios',
       '/admin/catalogos',
       '/admin/frecuencias',
@@ -38,21 +37,26 @@ describe('visibleNavigation', () => {
   it('a un COORDINADOR no le muestra catálogos ni parámetros, que son solo de ADMIN', () => {
     // SPEC-003 §4 y §5.6: el backend responde 403 al resto. Mostrar el enlace
     // sería mandarlo a una pantalla que solo puede negarle el paso.
-    expect(hrefsDe('COORDINADOR')).toEqual(['/mapa', '/admin/usuarios', '/admin/frecuencias']);
+    expect(hrefsDe('COORDINADOR')).toEqual(['/admin/usuarios', '/admin/frecuencias']);
   });
 
   it('a un SUPERVISOR le muestra usuarios (su cuadrilla) y frecuencias', () => {
-    expect(hrefsDe('SUPERVISOR')).toEqual(['/mapa', '/admin/usuarios', '/admin/frecuencias']);
+    expect(hrefsDe('SUPERVISOR')).toEqual(['/admin/usuarios', '/admin/frecuencias']);
   });
 
-  it('a un OPERARIO le muestra el mapa y frecuencias, que puede consultar', () => {
-    expect(hrefsDe('OPERARIO')).toEqual(['/mapa', '/admin/frecuencias']);
+  it('a un OPERARIO le muestra frecuencias, que puede consultar', () => {
+    expect(hrefsDe('OPERARIO')).toEqual(['/admin/frecuencias']);
   });
 
-  it('el mapa es su propio módulo, no un ítem de Administración', () => {
-    // SPEC-C01 §4.2: un grupo por módulo del dominio.
-    const grupos = visibleNavigation('OPERARIO').map((g) => g.label);
-    expect(grupos).toEqual(['Mapa', 'Administración']);
+  it('el mapa es un enlace directo para los cuatro roles, no un grupo', () => {
+    for (const rol of ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO']) {
+      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/mapa']);
+    }
+    expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual(['Administración']);
+  });
+
+  it('un rol desconocido no ve enlaces directos', () => {
+    expect(visibleDirectLinks('DESCONOCIDO')).toEqual([]);
   });
 
   it('omite un grupo cuando el rol no puede ver ninguno de sus ítems', () => {

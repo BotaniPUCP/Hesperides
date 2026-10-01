@@ -29,21 +29,16 @@ export interface NavGroup {
 
 export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
 
+/**
+ * Pantallas que van sueltas bajo Inicio: un desplegable con un solo ítem obliga
+ * a un clic de más para llegar a lo que más se usa.
+ */
+export const DIRECT_LINKS: readonly NavItem[] = [
+  // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
+  { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+];
+
 export const NAVIGATION: readonly NavGroup[] = [
-  {
-    id: 'mapa',
-    label: 'Mapa',
-    icon: '🗺️',
-    items: [
-      // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
-      {
-        label: 'Mapa del campus',
-        href: '/mapa',
-        icon: '🌳',
-        roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'],
-      },
-    ],
-  },
   {
     id: 'administracion',
     label: 'Administración',
@@ -71,6 +66,11 @@ export const NAVIGATION: readonly NavGroup[] = [
     ],
   },
 ];
+
+/** Enlaces directos que el rol puede abrir. */
+export function visibleDirectLinks(roleCode: string): NavItem[] {
+  return DIRECT_LINKS.filter((item) => item.roles.includes(roleCode));
+}
 
 /** Grupos con solo los ítems que el rol puede abrir; los grupos vacíos se omiten. */
 export function visibleNavigation(roleCode: string): NavGroup[] {

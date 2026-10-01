@@ -51,7 +51,7 @@ referencia visual; no se vuelve a regenerar fuera.
 
 ### 2.2 Frontend web
 
-- Rutas: `/mapa`, dentro de `app/(dashboard)/`, con su ítem en el sidebar (nuevo grupo «Mapa»), y
+- Rutas: `/mapa`, dentro de `app/(dashboard)/`, con un enlace directo «Mapa» en el sidebar, bajo Inicio, y
   `/embed/mapa`, solo el mapa y sin sidebar, para el `WebView` de Android (§2.3).
 - Componentes: `components/map3d/` (§7.1). Three.js como dependencia npm (`three@0.147.0`, la r147
   del prototipo: la iluminación y el espacio de color cambian en versiones posteriores). El visor
