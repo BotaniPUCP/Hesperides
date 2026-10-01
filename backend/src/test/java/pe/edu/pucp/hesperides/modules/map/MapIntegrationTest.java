@@ -65,6 +65,7 @@ class MapIntegrationTest {
                 .andExpect(jsonPath("$.data.layers.references.features", hasSize(411)))
                 .andExpect(jsonPath("$.data.layers.buildings.features", hasSize(417)))
                 .andExpect(jsonPath("$.data.layers.features.features", hasSize(227)))
+                .andExpect(jsonPath("$.data.layers.vegetation.features", hasSize(965)))
                 .andExpect(jsonPath("$.data.attributionRequired").value(true))
                 .andExpect(jsonPath("$.data.origin.lat").exists());
     }
@@ -81,6 +82,23 @@ class MapIntegrationTest {
                 .andExpect(jsonPath(av + ".irrigationCurrent").value("Riego por aspersión"))
                 .andExpect(jsonPath(av + ".irrigationProject").value("Cuenta con aspersión"))
                 .andExpect(jsonPath(xe + ".landscapeType").value("XEROPHYTIC"));
+    }
+
+    @Test
+    @WithMockUser(authorities = "OPERARIO")
+    void plantsCarryTheirSpeciesAndOnlyMeasuredHeights() throws Exception {
+        // El visor dibuja la altura medida si existe; si no, una ilustrativa que
+        // nunca viaja desde la base (C-08).
+        String measured = "$.data.layers.vegetation.features[?(@.properties.code == 'EV-000001')].properties";
+        String unknown = "$.data.layers.vegetation.features[?(@.properties.code == 'EV-000458')].properties";
+        mockMvc.perform(get("/api/v1/map/layers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(measured + ".speciesSlug").value("roystonea-regia"))
+                .andExpect(jsonPath(measured + ".commonName").value("Palmera real"))
+                .andExpect(jsonPath(measured + ".typeCode").value("PALM"))
+                .andExpect(jsonPath(measured + ".heightM").value(7.5))
+                .andExpect(jsonPath(measured + ".crownRadiusM").value(3.4))
+                .andExpect(jsonPath(unknown + ".heightM").value(org.hamcrest.Matchers.contains((Object) null)));
     }
 
     @Test

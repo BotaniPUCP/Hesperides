@@ -27,7 +27,8 @@ function entry(title: string, subtitle: string, terms: string, layer: LayerId, i
 type IndexSource = Pick<
   SceneData,
   'campusBuildings' | 'greenAreas' | 'xerophytic' | 'reserve' | 'supervision' | 'gates' | 'bins' | 'references' | 'sectorNameByCode'
->;
+> &
+  Partial<Pick<SceneData, 'vegetation'>>;
 
 export function buildSearchIndex(data: IndexSource): SearchEntry[] {
   const out: SearchEntry[] = [];
@@ -46,6 +47,11 @@ export function buildSearchIndex(data: IndexSource): SearchEntry[] {
   data.gates.forEach((g, i) => out.push(entry(g.props.name ?? 'Puerta', 'Puerta de acceso', g.props.code ?? '', 'gates', i)));
   data.bins.forEach((b, i) => out.push(entry('Tacho', b.props.name ?? '', b.props.code ?? '', 'bins', i)));
   out.push(...referenceEntries(data.references));
+  // Una planta se busca solo por su código: por especie saldrían cientos de
+  // resultados iguales que taparían los lugares (para eso está el inventario).
+  (data.vegetation ?? []).forEach((v, i) =>
+    out.push({ ...entry(v.props.code, v.props.commonName ?? v.props.scientificName, '', 'vegetation', i), key: normalize(v.props.code) }),
+  );
   return out;
 }
 

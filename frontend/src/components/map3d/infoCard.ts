@@ -7,6 +7,8 @@ export interface InfoCard {
   title: string;
   rows: [string, string][];
   note?: string;
+  /** A otra pantalla con el detalle completo. */
+  link?: { href: string; label: string };
 }
 
 /** Altura que el visor usa cuando OpenStreetMap no registra la del edificio. */
@@ -67,6 +69,22 @@ function featureCard(data: SceneData, target: Target, kind: string): InfoCard {
   ]);
 }
 
+/** Solo se muestran medidas tomadas: la maqueta dibuja las demás con una altura ilustrativa (C-08). */
+function plantCard(data: SceneData, target: Target): InfoCard {
+  const p = data.vegetation[target.index].props;
+  const measured = p.heightM !== null;
+  return {
+    ...card(p.typeLabel, p.commonName ?? p.scientificName, [
+      ['Código', p.code],
+      ['Nombre científico', p.scientificName],
+      ['Agrupación', p.quantity > 1 ? `${p.quantity} plantas` : null],
+      ['Altura', measured ? `${p.heightM} m (medida)` : null],
+      ['Radio de copa', p.crownRadiusM === null ? null : `${p.crownRadiusM} m (medido)`],
+    ], measured ? undefined : 'Nadie ha medido esta planta: su altura y su copa en la maqueta son ilustrativas, según la especie.'),
+    link: { href: `/inventario-verde/especies/${p.speciesSlug}/ejemplares/${p.code}`, label: 'Ver ficha en el inventario' },
+  };
+}
+
 export function infoFor(data: SceneData, target: Target): InfoCard {
   switch (target.layer) {
     case 'greenAreas':
@@ -96,5 +114,7 @@ export function infoFor(data: SceneData, target: Target): InfoCard {
       return featureCard(data, target, 'Puerta de acceso');
     case 'fauna':
       return featureCard(data, target, 'Avistamiento de fauna');
+    case 'vegetation':
+      return plantCard(data, target);
   }
 }

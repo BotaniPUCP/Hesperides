@@ -130,7 +130,7 @@ GeoJSON de origen tienen coordenadas reales; cargarlos en PostGIS y proyectar en
 elimina el problema.
 
 **D-07 · El catastro se arma desde sus tres archivos, no desde la capa del HTML.**
-*(El catastro ya está en la base: `V012`–`V014`, ver `docs/inventario-verde/README.md`. Falta dibujarlo en el mapa.)* La capa de
+*(Implementado: el catastro está en la base, `V012`–`V014`, ver `docs/inventario-verde/README.md`, y el mapa lo dibuja en la capa `vegetation`. Las alturas medidas viajan desde la base; las ilustrativas las calcula el visor, `plantShape.ts`, y nunca se guardan.)* La capa de
 vegetación del HTML (1081 plantas) mezcla fuentes y solo 941 plantas coinciden con el catastro por
 coordenada exacta. La carga une, por coordenada exacta (< 0.2 m):
 
@@ -168,7 +168,7 @@ altura ilustrativa nunca se guarda ni la consume ninguna regla** (C-09: la altur
 del plano local), `attributionRequired` (verdadero mientras haya edificios de OpenStreetMap) y
 `layers`, con una `FeatureCollection` GeoJSON (WGS 84) por capa: `sectors`, `sections`,
 `subsections`, `supervisionZones`, `references`, `buildings` y `features`. El límite del campus es
-un `feature` de tipo `CAMPUS_BOUNDARY`. La capa de vegetación llegará con el catastro (D-07).
+un `feature` de tipo `CAMPUS_BOUNDARY`. `vegetation` trae los ejemplares del inventario verde con su especie y solo las medidas tomadas (D-07).
 
 La etiqueta va en la cabecera `ETag` (`"<versión>"`). Como el frontend vive en otro origen, CORS
 admite `If-None-Match` en el preflight y **expone** `ETag`: sin lo segundo el navegador devuelve

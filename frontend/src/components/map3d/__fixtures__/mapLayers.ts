@@ -78,5 +78,14 @@ export const sampleLayers: MapLayersResponse = {
         feature('RISKY_SIDEWALK', square()),
       ],
     },
+    vegetation: {
+      type: 'FeatureCollection',
+      features: [
+        { type: 'Feature', geometry: point, properties: { code: 'EV-000001', speciesSlug: 'roystonea-regia', commonName: 'Palmera real',
+          scientificName: 'Roystonea regia', typeCode: 'PALM', typeLabel: 'Palmera', quantity: 1, heightM: 7.5, crownRadiusM: 3.4 } },
+        { type: 'Feature', geometry: point, properties: { code: 'EV-000400', speciesSlug: 'delonix-regia', commonName: 'Ponciana',
+          scientificName: 'Delonix regia', typeCode: 'TREE', typeLabel: 'Árbol', quantity: 1, heightM: null, crownRadiusM: null } },
+      ],
+    },
   },
 };

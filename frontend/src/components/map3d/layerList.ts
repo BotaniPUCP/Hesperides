@@ -11,6 +11,7 @@ export interface LayerToggle {
 export const LAYER_TOGGLES: LayerToggle[] = [
   { id: 'greenAreas', label: 'Áreas verdes', initiallyVisible: true },
   { id: 'xerophytic', label: 'Jardines xerofíticos', initiallyVisible: true },
+  { id: 'vegetation', label: 'Árboles y plantas', initiallyVisible: true },
   { id: 'campusBuildings', label: 'Edificios del campus', initiallyVisible: true },
   { id: 'contextBuildings', label: 'Edificios del entorno', initiallyVisible: true },
   { id: 'gates', label: 'Puertas', initiallyVisible: true },

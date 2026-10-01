@@ -51,6 +51,7 @@ public class MapLayersServiceImpl implements MapLayersService {
                 + ",\"supervisionZones\":" + repository.supervisionZones()
                 + ",\"references\":" + repository.references()
                 + ",\"buildings\":" + repository.buildings()
-                + ",\"features\":" + repository.features() + "}";
+                + ",\"features\":" + repository.features()
+                + ",\"vegetation\":" + repository.vegetation() + "}";
     }
 }

@@ -84,6 +84,23 @@ describe('MapScreen', () => {
     expect(screen.queryByRole('region', { name: 'AV-0001' })).not.toBeInTheDocument();
   });
 
+  it('elegir una planta abre su ficha con el enlace a su ficha del inventario', async () => {
+    await renderLoaded();
+    act(() => callbacks.onSelect({ layer: 'vegetation', index: 0 }));
+
+    const card = screen.getByRole('region', { name: 'Palmera real' });
+    expect(within(card).getByText('7.5 m (medida)')).toBeInTheDocument();
+    expect(within(card).getByRole('link', { name: /Ver ficha en el inventario/ })).toHaveAttribute(
+      'href',
+      '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001',
+    );
+  });
+
+  it('la capa de árboles empieza encendida', async () => {
+    await renderLoaded();
+    expect(viewer.setLayerVisible).not.toHaveBeenCalledWith('vegetation', false);
+  });
+
   it('un clic en el suelo describe el punto con el texto del servidor', async () => {
     mockedDescribe.mockResolvedValue({
       sectionCode: 'AV-0001', sectionName: 'Jardín', buildingName: 'Pabellón Z', relation: 'INSIDE', distanceM: 0,

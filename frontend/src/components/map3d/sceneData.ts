@@ -6,6 +6,7 @@ import type {
   MapLayersResponse,
   ReferenceProperties,
   SupervisionZoneProperties,
+  VegetationProperties,
   ZoneProperties,
 } from '@shared/types';
 import { LocalPlane } from './projection';
@@ -41,6 +42,7 @@ export interface SceneData {
   gates: ScenePoint<CampusFeatureProperties>[];
   fauna: ScenePoint<CampusFeatureProperties>[];
   references: ScenePoint<ReferenceProperties>[];
+  vegetation: ScenePoint<VegetationProperties>[];
   sectorNameByCode: Record<string, string>;
 }
 
@@ -108,6 +110,7 @@ export function toSceneData(response: MapLayersResponse): SceneData {
     gates: ofType('GATE').map(pt),
     fauna: ofType('FAUNA').map(pt),
     references: layers.references.features.map(pt),
+    vegetation: layers.vegetation.features.map(pt),
     sectorNameByCode: Object.fromEntries(layers.sectors.features.map((s) => [s.properties.code, s.properties.name])),
   };
 }

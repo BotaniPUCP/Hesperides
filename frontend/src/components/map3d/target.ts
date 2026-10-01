@@ -14,7 +14,7 @@ export type PolyLayerId =
   | 'parking'
   | 'sidewalks';
 
-export type PointLayerId = 'bins' | 'gates' | 'fauna' | 'references';
+export type PointLayerId = 'bins' | 'gates' | 'fauna' | 'references' | 'vegetation';
 
 export type LayerId = PolyLayerId | PointLayerId;
 
