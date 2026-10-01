@@ -543,6 +543,12 @@ Lo que queda fuera, y por qué, está en
 **quiero** cargar el levantamiento de campo que ya existe
 **para que** el catastro arranque con datos reales y no con semilla inventada.
 
+> **Avance (1 oct 2026):** cargado en `V012`–`V014` y consultable en el inventario verde
+> (`/inventario-verde`): 90 especies, **965 ejemplares** que suman 985 plantas, y 76 palmeras con
+> medidas reales (`MEASURED`). Las 5 palmeras que el catastro agrupaba se cargan una por una y las
+> 10 matas de Pita como agrupación. Decisiones y datos por validar en `docs/inventario-verde/README.md`.
+> Falta dibujar la vegetación en el mapa.
+
 **Criterios de aceptación**
 - Importa los **962 registros** del archivo `catastro campus.xlsx` (hoja `catastro`).
 - Mapea: ubicación, referencia, latitud, longitud, nombre común, nombre científico, forma biológica, cantidad y foto.

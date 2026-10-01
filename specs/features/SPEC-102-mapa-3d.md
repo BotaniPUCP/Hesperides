@@ -130,7 +130,7 @@ GeoJSON de origen tienen coordenadas reales; cargarlos en PostGIS y proyectar en
 elimina el problema.
 
 **D-07 · El catastro se arma desde sus tres archivos, no desde la capa del HTML.**
-*(Diferido: la vegetación entra con el catastro, C-10. Esta primera entrega no dibuja plantas.)* La capa de
+*(El catastro ya está en la base: `V012`–`V014`, ver `docs/inventario-verde/README.md`. Falta dibujarlo en el mapa.)* La capa de
 vegetación del HTML (1081 plantas) mezcla fuentes y solo 941 plantas coinciden con el catastro por
 coordenada exacta. La carga une, por coordenada exacta (< 0.2 m):
 

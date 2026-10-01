@@ -152,17 +152,17 @@ La línea que separa ambos destinos: **`audit_log` es para reconstruir una decis
 Este spec es fundacional (trazabilidad transversal, no una HU de feature) y usa:
 
 ```
-V012__create_audit_log.sql
+V019__create_audit_log.sql
 ```
 
-**Va después de `V017`, no antes:** §4.2 añade `created_by_user_id`/`updated_by_user_id` a tablas
-que crean `V005` y `V012`–`V016` (SPEC-002). Si corriera antes, el `ALTER TABLE` fallaría sobre tablas
+**Va después de `V018`, no antes:** §4.2 añade `created_by_user_id`/`updated_by_user_id` a tablas
+que crean `V005`, `V012`, `V013` y `V015`–`V017` (SPEC-002). Si corriera antes, el `ALTER TABLE` fallaría sobre tablas
 inexistentes. Mientras tanto, `LoggingAuditService` registra las acciones en el log de la aplicación.
 
-### 4.1 V018 — Tabla `audit_log`
+### 4.1 V019 — Tabla `audit_log`
 
 ```sql
--- V012__create_audit_log.sql
+-- V019__create_audit_log.sql
 -- Bitácora de acciones administrativas sensibles. Append-only por diseño
 -- (ver sección 6): no lleva updated_at ni deleted_at, a diferencia de toda
 -- otra tabla del proyecto (excepción deliberada a REGLAS.md §5.4).
@@ -200,7 +200,7 @@ CREATE INDEX idx_audit_log_created_at ON audit_log(created_at DESC);
 
 **Por qué no hay `entity_id` tipado por tabla con FK real:** a diferencia de `green_element_attachments` o `intervention_evidences` (SPEC-002 §5.2.4), donde el dominio fuerza una FK real porque la integridad referencial es crítica para el reporte de cumplimiento, `audit_log` registra acciones sobre **más de diez tipos de entidad distintos** (`User`, `CatalogItem`, `GreenElement`, `Zone`, `Contract`, `SystemParameter`…). Una FK real exigiría una columna nulable por cada tipo de entidad posible (`user_id_ref`, `green_element_id_ref`, `contract_id_ref`, …) que crece con cada módulo nuevo, o una tabla de auditoría por módulo, que fragmenta la vista unificada que el cliente pidió explícitamente ("trazabilidad completa"). Se acepta la falta de integridad referencial declarativa en `entity_id` porque `audit_log` es un registro histórico de solo lectura, no una tabla operativa: una fila que sobrevive a la fila que describe (por ejemplo, si algún día se permitiera un borrado físico de emergencia en otra tabla) sigue siendo información válida — "esto pasó en tal fecha" no deja de ser cierto porque la entidad ya no exista. Es la misma familia de decisión que la tabla polimórfica que SPEC-002 §5.2.4 rechazó para evidencia fotográfica, pero aquí el cálculo es el opuesto: allí una foto huérfana es el error que el sistema existe para evitar; aquí una fila de auditoría que sobrevive a su entidad es exactamente el objetivo (el registro no debe depender de que el dato auditado siga vivo).
 
-### 4.2 V018 (continuación) — columnas `created_by_user_id` / `updated_by_user_id`
+### 4.2 V019 (continuación) — columnas `created_by_user_id` / `updated_by_user_id`
 
 **Criterio para decidir qué tabla las recibe:** se añaden solo donde **(a)** la tabla es editable después de su creación por más de un tipo de usuario a lo largo del tiempo, **y (b)** no tiene ya una columna de autoría específica que cubra la misma pregunta con más precisión. Se excluyen explícitamente las tablas append-only (nunca se "edita" una fila, solo se inserta la siguiente) y las que ya tienen su propia columna de autoría por acción de negocio.
 
@@ -222,7 +222,7 @@ CREATE INDEX idx_audit_log_created_at ON audit_log(created_at DESC);
 | `users`, `refresh_tokens` | **No** | `users` se audita por acción específica (`USER_CREATED`, `USER_DEACTIVATED`, `USER_ROLE_CHANGED`) en `audit_log`, más preciso que un `updated_by_user_id` genérico que no diría *qué* cambió. `refresh_tokens` es append-only por rotación (SPEC-001 §4.2). |
 
 ```sql
--- Continuación de V012__create_audit_log.sql
+-- Continuación de V019__create_audit_log.sql
 
 ALTER TABLE zones
     ADD COLUMN created_by_user_id BIGINT REFERENCES users(id),
@@ -334,7 +334,7 @@ public class AuditingJpaConfig {
 
 El prompt del cliente exige trazabilidad, no una excepción a mitad de una migración de datos o de un job programado. `SpringSecurityAuditorAware.getCurrentAuditor()` **nunca lanza** ni devuelve `Optional.empty()` (que forzaría `created_by_user_id NULL` en una inserción nueva, perdiendo la distinción entre "sin usuario porque el sistema lo hizo" y "sin usuario porque la fila es anterior a esta migración"). En su lugar, resuelve a un **usuario de sistema reservado**:
 
-- Se siembra en la misma migración `V018` una fila en `users` con `id` conocido (o, más robusto: un valor constante `0` que **no** es una fila real de `users`, ver alternativa abajo) representando "Sistema / proceso automático". Esta spec elige la segunda opción — **`SYSTEM_AUDITOR_ID = 0` sin fila real en `users`** — para no ensuciar la tabla de usuarios reales (que además tiene índice único de `email` y necesitaría un email de relleno) ni exponer una cuenta de sistema en el listado de usuarios de administración (Anexo A de SPEC-001, módulo 1.1).
+- Se siembra en la misma migración `V019` una fila en `users` con `id` conocido (o, más robusto: un valor constante `0` que **no** es una fila real de `users`, ver alternativa abajo) representando "Sistema / proceso automático". Esta spec elige la segunda opción — **`SYSTEM_AUDITOR_ID = 0` sin fila real en `users`** — para no ensuciar la tabla de usuarios reales (que además tiene índice único de `email` y necesitaría un email de relleno) ni exponer una cuenta de sistema en el listado de usuarios de administración (Anexo A de SPEC-001, módulo 1.1).
 - Esto exige que `created_by_user_id`/`updated_by_user_id`, y `audit_log.user_id`, **no** tengan la FK como `NOT NULL` combinada con una restricción que impida `0` — de hecho ya son nulables (sección 4.2), así que la implementación real preferida es: `AuditorAware` devuelve `Optional.empty()` cuando no hay usuario, y la columna queda `NULL`, **excepto** que el propio código de arranque (migraciones de datos, jobs) que sabe que corre sin contexto de seguridad puede, si necesita dejar constancia explícita de que "el sistema" hizo el cambio (no una ausencia de dato), envolver la operación en un `Authentication` de sistema sintético antes de guardar. Se documenta así porque un valor mágico `0` referenciando una fila inexistente rompería la FK `REFERENCES users(id)`; la alternativa más simple y consistente con el resto del esquema (columnas de autoría nulables en toda tabla de SPEC-002 cuando el actor puede no existir, ver `incident_status_history.from_status_item_id`) es:
 
 **Regla final:** `AuditorAware<Long>.getCurrentAuditor()` devuelve `Optional.empty()` cuando no hay `Authentication` válida en el `SecurityContextHolder` (migración, job programado, arranque de la aplicación). Spring Data JPA Auditing, al recibir `Optional.empty()`, simplemente **no puebla** `@CreatedBy`/`@LastModifiedBy` — dejando la columna `NULL`, tal como ya está prevista (`created_by_user_id BIGINT` nulable, sin `NOT NULL`, sección 4.2). No hay excepción, no hay abort de la migración, no hay valor inventado: **`NULL` en `created_by_user_id` significa "el sistema, no una persona"**, exactamente el mismo lenguaje que ya usa el esquema para "sin autor humano" (p. ej. `zones.boundary NULL` = "aún no digitalizado", SPEC-002 §4.3). Un `audit_log.user_id NULL` se interpreta igual (sección 4.1, ya documentado ahí para `LOGIN_FAILED_LOCKOUT`).
@@ -473,7 +473,7 @@ El riesgo real no es el volumen agregado proyectado arriba, sino que la sección
 
 | # | Criterio | Método de verificación |
 |---|----------|----------------------|
-| CA-01 | La migración V018 corre limpia y no colisiona con V001-V017 | `SELECT version, description, success FROM flyway_schema_history WHERE version = '018';` devuelve una fila con `success = t`. `SELECT count(*) FROM flyway_schema_history WHERE version = '012';` devuelve exactamente **1**. |
+| CA-01 | La migración V019 corre limpia y no colisiona con V001-V018 | `SELECT version, description, success FROM flyway_schema_history WHERE version = '019';` devuelve una fila con `success = t`. `SELECT count(*) FROM flyway_schema_history WHERE version = '012';` devuelve exactamente **1**. |
 | CA-02 | `audit_log` existe y es append-only por esquema (sin `updated_at`/`deleted_at`) | `SELECT column_name FROM information_schema.columns WHERE table_name = 'audit_log' ORDER BY column_name;` devuelve exactamente `action, changes, created_at, entity_id, entity_type, id, ip_address, user_id` — **sin** `updated_at` ni `deleted_at`. |
 | CA-03 | Las columnas de autoría genérica existen solo donde corresponde | `SELECT table_name, column_name FROM information_schema.columns WHERE column_name IN ('created_by_user_id','updated_by_user_id') ORDER BY 1,2;` devuelve exactamente: `contracts.updated_by_user_id`, `green_elements.updated_by_user_id`, `providers.created_by_user_id`, `providers.updated_by_user_id`, `species.created_by_user_id`, `species.updated_by_user_id`, `supplies.created_by_user_id`, `supplies.updated_by_user_id`, `system_parameters.updated_by_user_id`, `zones.created_by_user_id`, `zones.updated_by_user_id` — **11 filas**, ninguna en `interventions`, `incidents`, `users`, `catalog_items` ni en las tablas de evidencia/adjuntos. |
 | CA-04 | Desactivar un usuario genera exactamente una fila en `audit_log` con el diff correcto | Ejecutar `PATCH /api/v1/users/{id}/deactivate` (o el endpoint equivalente de SPEC-1XX de usuarios) autenticado como ADMIN. Luego `SELECT action, entity_type, entity_id, changes FROM audit_log WHERE action = 'USER_DEACTIVATED' AND entity_id = {id} ORDER BY created_at DESC LIMIT 1;` devuelve una fila con `changes` conteniendo `{"isActive": {"before": true, "after": false}}`. |
