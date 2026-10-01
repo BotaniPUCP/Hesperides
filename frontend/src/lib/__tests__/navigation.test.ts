@@ -25,8 +25,9 @@ function hrefsDe(rol: string): string[] {
 }
 
 describe('visibleNavigation', () => {
-  it('a un ADMIN le muestra las cuatro pantallas de administración', () => {
+  it('a un ADMIN le muestra el mapa y las cuatro pantallas de administración', () => {
     expect(hrefsDe('ADMIN')).toEqual([
+      '/mapa',
       '/admin/usuarios',
       '/admin/catalogos',
       '/admin/frecuencias',
@@ -37,15 +38,21 @@ describe('visibleNavigation', () => {
   it('a un COORDINADOR no le muestra catálogos ni parámetros, que son solo de ADMIN', () => {
     // SPEC-003 §4 y §5.6: el backend responde 403 al resto. Mostrar el enlace
     // sería mandarlo a una pantalla que solo puede negarle el paso.
-    expect(hrefsDe('COORDINADOR')).toEqual(['/admin/usuarios', '/admin/frecuencias']);
+    expect(hrefsDe('COORDINADOR')).toEqual(['/mapa', '/admin/usuarios', '/admin/frecuencias']);
   });
 
   it('a un SUPERVISOR le muestra usuarios (su cuadrilla) y frecuencias', () => {
-    expect(hrefsDe('SUPERVISOR')).toEqual(['/admin/usuarios', '/admin/frecuencias']);
+    expect(hrefsDe('SUPERVISOR')).toEqual(['/mapa', '/admin/usuarios', '/admin/frecuencias']);
   });
 
-  it('a un OPERARIO solo le muestra frecuencias, que puede consultar', () => {
-    expect(hrefsDe('OPERARIO')).toEqual(['/admin/frecuencias']);
+  it('a un OPERARIO le muestra el mapa y frecuencias, que puede consultar', () => {
+    expect(hrefsDe('OPERARIO')).toEqual(['/mapa', '/admin/frecuencias']);
+  });
+
+  it('el mapa es su propio módulo, no un ítem de Administración', () => {
+    // SPEC-C01 §4.2: un grupo por módulo del dominio.
+    const grupos = visibleNavigation('OPERARIO').map((g) => g.label);
+    expect(grupos).toEqual(['Mapa', 'Administración']);
   });
 
   it('omite un grupo cuando el rol no puede ver ninguno de sus ítems', () => {

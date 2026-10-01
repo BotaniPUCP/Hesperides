@@ -31,6 +31,20 @@ export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
 
 export const NAVIGATION: readonly NavGroup[] = [
   {
+    id: 'mapa',
+    label: 'Mapa',
+    icon: '🗺️',
+    items: [
+      // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
+      {
+        label: 'Mapa del campus',
+        href: '/mapa',
+        icon: '🌳',
+        roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'],
+      },
+    ],
+  },
+  {
     id: 'administracion',
     label: 'Administración',
     icon: '🛠️',
