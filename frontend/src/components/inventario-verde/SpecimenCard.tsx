@@ -2,19 +2,20 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { Specimen } from '@shared/types';
+import type { Species, Specimen } from '@shared/types';
 import { Card, ImagePlaceholder } from '@/components/ui';
 
 export interface SpecimenCardProps {
   specimen: Specimen;
+  species: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'>;
 }
 
-export function SpecimenCard({ specimen }: SpecimenCardProps) {
+export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
   const [imageError, setImageError] = useState(false);
 
   return (
     <Link
-      href={`/inventario-verde/especies/${specimen.speciesId}/ejemplares/${specimen.id}`}
+      href={`/inventario-verde/especies/${species.slug}/ejemplares/${specimen.code}`}
       className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 rounded-xl transition-transform duration-150 hover:-translate-y-0.5"
     >
       <Card
@@ -23,11 +24,11 @@ export function SpecimenCard({ specimen }: SpecimenCardProps) {
       >
         {/* Foto o placeholder */}
         <div className="relative h-36 w-full overflow-hidden bg-neutral-100 flex-shrink-0">
-          {specimen.photoUrl && !imageError ? (
+          {specimen.thumbnailUrl && !imageError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={specimen.photoUrl}
-              alt={`Ejemplar ${specimen.reference}`}
+              src={specimen.thumbnailUrl}
+              alt={`Ejemplar ${specimen.code}`}
               loading="lazy"
               decoding="async"
               onError={() => setImageError(true)}
@@ -35,8 +36,8 @@ export function SpecimenCard({ specimen }: SpecimenCardProps) {
             />
           ) : (
             <ImagePlaceholder
-              type={specimen.vegetationTypeCode}
-              label={specimen.reference}
+              type={species.vegetationTypeCode}
+              label={specimen.code}
               size="full"
               className="rounded-none border-none"
             />
@@ -45,7 +46,7 @@ export function SpecimenCard({ specimen }: SpecimenCardProps) {
           {/* Badge de referencia */}
           <div className="absolute top-2 left-2">
             <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-900/80 backdrop-blur-sm text-neutral-0 text-xs font-mono font-bold tracking-tight">
-              {specimen.reference}
+              {specimen.code}
             </span>
           </div>
 
@@ -58,10 +59,10 @@ export function SpecimenCard({ specimen }: SpecimenCardProps) {
           )}
 
           {/* Indicador de fotografía provisional de especie */}
-          {specimen.photoUrl && !imageError && (
+          {specimen.thumbnailUrl && !imageError && (
             <div className="absolute bottom-2 left-2">
               <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[9px] font-medium text-white/90">
-                Foto referencial
+                Foto del ejemplar
               </span>
             </div>
           )}
@@ -90,7 +91,7 @@ export function SpecimenCard({ specimen }: SpecimenCardProps) {
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span className="line-clamp-1">{specimen.location}</span>
+              <span className="line-clamp-1">{specimen.sourceLocation}</span>
             </div>
 
             {specimen.latitude !== null && specimen.longitude !== null && (
@@ -99,9 +100,9 @@ export function SpecimenCard({ specimen }: SpecimenCardProps) {
               </p>
             )}
 
-            {specimen.observations && (
+            {specimen.notes && (
               <p className="text-[11px] text-neutral-500 line-clamp-1 mt-1 pl-5 italic">
-                {specimen.observations}
+                {specimen.notes}
               </p>
             )}
           </div>

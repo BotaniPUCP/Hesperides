@@ -1,11 +1,12 @@
 'use client';
 
-import type { Specimen } from '@shared/types';
+import type { Species, Specimen } from '@shared/types';
 import { EmptyState, LoadingSkeleton, Button } from '@/components/ui';
 import { SpecimenCard } from './SpecimenCard';
 
 export interface SpecimenGridProps {
   specimens: Specimen[];
+  species: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'>;
   loading?: boolean;
   page: number;
   totalPages: number;
@@ -17,6 +18,7 @@ export interface SpecimenGridProps {
 
 export function SpecimenGrid({
   specimens,
+  species,
   loading = false,
   page,
   totalPages,
@@ -59,7 +61,7 @@ export function SpecimenGrid({
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {specimens.map((specimen) => (
-          <SpecimenCard key={specimen.id} specimen={specimen} />
+          <SpecimenCard key={specimen.code} specimen={specimen} species={species} />
         ))}
       </div>
 

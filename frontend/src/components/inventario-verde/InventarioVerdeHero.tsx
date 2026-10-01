@@ -30,9 +30,9 @@ export function InventarioVerdeHero({ searchValue, onSearchChange }: InventarioV
         {/* Badge institucional compacto */}
         <div className="inline-flex flex-wrap items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-900/70 border border-brand-700/70 text-brand-100 text-[11px] font-medium mb-2 backdrop-blur-xs">
           <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
-          <span className="font-semibold text-neutral-0">Inventario Botánico Oficial PUCP</span>
+          <span className="font-semibold text-neutral-0">Catastro del campus PUCP</span>
           <span className="text-brand-300/60">›</span>
-          <span className="text-brand-100">Fotografías provisionales de referencia</span>
+          <span className="text-brand-100">Fotos tomadas en campo</span>
         </div>
 
         {/* Título optimizado */}

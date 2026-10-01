@@ -1,70 +1,91 @@
-import type { AuditFields } from './models';
-
 /**
- * Representa un tipo de vegetación (formas biológicas) proveniente del catálogo SPECIES_TYPE.
+ * Inventario verde: especies del catastro y sus ejemplares, tal como los
+ * entrega /api/v1/green-inventory (docs/inventario-verde/README.md).
  */
+
+/** Un tipo de vegetación del catálogo SPECIES_TYPE con su número de ejemplares. */
 export interface VegetationType {
   code: string;
   label: string;
-  count?: number;
+  count: number;
 }
 
-/**
- * Representa una especie botánica en el catálogo.
- * Alineado con la entidad `species` de SPEC-002.
- */
+export interface InventorySummary {
+  totalSpecies: number;
+  totalSpecimens: number;
+  /** Los nueve tipos, aunque alguno tenga cero ejemplares. */
+  vegetationTypes: VegetationType[];
+}
+
+/** Una especie. `slug` la identifica en la dirección de su ficha. */
 export interface Species {
-  id: number;
+  slug: string;
   scientificName: string;
   commonName: string;
+  /** Otros nombres coloquiales («Palmera bruja»). */
+  otherNames: string[];
+  family: string | null;
   vegetationTypeCode: string;
   vegetationTypeName: string;
   specimenCount: number;
-  imageUrl?: string | null;
-  family?: string | null;
-  description?: string | null;
+  /** Miniatura de la foto de uno de sus ejemplares. */
+  imageUrl: string | null;
 }
 
 /**
- * Representa un ejemplar individual de vegetación en el campus.
- * Alineado con la entidad `green_elements` de SPEC-002.
+ * Un ejemplar en un listado. `code` es el código propio (EV-000123);
+ * `sourceReference` y `sourceLocation`, los de la fuente (el catastro).
  */
 export interface Specimen {
-  id: number;
-  speciesId: number;
-  code: string | null;
-  reference: string;
-  location: string;
+  code: string;
+  sourceReference: string | null;
+  sourceLocation: string | null;
   latitude: number | null;
   longitude: number | null;
+  /** Enlace original de la foto (Drive). */
   photoUrl: string | null;
-  observations: string | null;
+  /** Miniatura que se puede mostrar como imagen. */
+  thumbnailUrl: string | null;
+  /** Mayor que 1 en una agrupación (una mata de Pita). */
   quantity: number;
-  speciesCommonName?: string;
-  speciesScientificName?: string;
-  vegetationTypeName?: string;
-  vegetationTypeCode?: string;
+  notes: string | null;
 }
 
-/**
- * Filtros para el catálogo de especies.
- */
+/** Procedencia de las medidas (C-08). Solo MEASURED vale para decidir quién poda. */
+export type MeasurementSource = 'MEASURED' | 'GENERIC' | 'UNKNOWN';
+
+export interface SpecimenDetail extends Specimen {
+  legacyCode: string | null;
+  elementTypeCode: string;
+  elementTypeName: string;
+  heightM: number | null;
+  trunkHeightM: number | null;
+  dbhCm: number | null;
+  crownRadiusM: number | null;
+  isBanded: boolean | null;
+  dataSource: MeasurementSource;
+  /** Calculada por posición; nula si el ejemplar está fuera de toda sección. */
+  section: { code: string; name: string } | null;
+  species: Species;
+}
+
+export interface LocationCount {
+  location: string;
+  count: number;
+}
+
 export interface SpeciesFilters {
   search?: string;
   vegetationType?: string;
 }
 
-/**
- * Filtros y ordenamiento para los ejemplares de una especie.
- */
+export type SpecimenSortKey = 'reference' | 'code' | 'location';
+
 export interface SpecimenFilters {
   search?: string;
   location?: string;
-  sortBy?: 'code' | 'location' | 'reference';
+  sortBy?: SpecimenSortKey;
   sortDirection?: 'asc' | 'desc';
 }
 
-/**
- * Modo de visualización en la pantalla de ejemplares.
- */
 export type SpecimenViewMode = 'cards' | 'table';

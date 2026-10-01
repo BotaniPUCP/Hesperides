@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Specimen } from '@shared/types';
+import type { Species, Specimen } from '@shared/types';
 import { ImagePlaceholder } from '@/components/ui';
 
 export interface SpecimenPhotoModalProps {
   specimen: Specimen | null;
+  species: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'>;
   onClose: () => void;
 }
 
@@ -13,7 +14,7 @@ export interface SpecimenPhotoModalProps {
  * Visor Lightbox enfocado exclusivamente en la visualización de la fotografía del ejemplar.
  * No repite la ficha técnica ni los datos que ya están en la tabla.
  */
-export function SpecimenPhotoModal({ specimen, onClose }: SpecimenPhotoModalProps) {
+export function SpecimenPhotoModal({ specimen, species, onClose }: SpecimenPhotoModalProps) {
   const [imgError, setImgError] = useState(false);
 
   // Cerrar al presionar Escape
@@ -60,11 +61,11 @@ export function SpecimenPhotoModal({ specimen, onClose }: SpecimenPhotoModalProp
             className="font-medium text-sm sm:text-base text-neutral-900 truncate pr-3"
             id="lightbox-title"
           >
-            <span className="font-mono font-bold text-neutral-900">{specimen.reference}</span>
-            {specimen.speciesCommonName && (
+            <span className="font-mono font-bold text-neutral-900">{specimen.code}</span>
+            {species.commonName && (
               <>
                 <span className="text-neutral-400 mx-2 select-none">·</span>
-                <span className="text-neutral-700">{specimen.speciesCommonName}</span>
+                <span className="text-neutral-700">{species.commonName}</span>
               </>
             )}
           </h3>
@@ -94,18 +95,18 @@ export function SpecimenPhotoModal({ specimen, onClose }: SpecimenPhotoModalProp
 
         {/* Contenedor principal de la fotografía: centrada, márgenes cómodos, object-contain, fondo claro */}
         <div className="relative bg-neutral-50/50 flex items-center justify-center min-h-[260px] max-h-[65vh] p-4 sm:p-6">
-          {specimen.photoUrl && !imgError ? (
+          {specimen.thumbnailUrl && !imgError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={specimen.photoUrl}
-              alt={`${specimen.reference}${specimen.speciesCommonName ? ` · ${specimen.speciesCommonName}` : ''}`}
+              src={specimen.thumbnailUrl}
+              alt={`${specimen.code}${species.commonName ? ` · ${species.commonName}` : ''}`}
               onError={() => setImgError(true)}
               className="max-h-[56vh] w-auto max-w-full object-contain mx-auto rounded-lg shadow-xs"
             />
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-neutral-500 text-center">
               <ImagePlaceholder
-                type={specimen.vegetationTypeCode}
+                type={species.vegetationTypeCode}
                 size="lg"
                 label=""
               />

@@ -1,36 +1,38 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { InventarioVerdeScreen } from '../InventarioVerdeScreen';
+import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { page, palmeraReal, palmeraReina, summary } from '../__fixtures__/inventario';
+
+jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { summary: jest.fn(), species: jest.fn() } }));
+
+const api = inventarioVerdeApi as jest.Mocked<typeof inventarioVerdeApi>;
+
+beforeEach(() => {
+  api.summary.mockResolvedValue(summary);
+  api.species.mockImplementation(async ({ search }) =>
+    page(search ? [palmeraReina] : [palmeraReal, palmeraReina]),
+  );
+});
+
+afterEach(() => jest.resetAllMocks());
 
 describe('InventarioVerdeScreen', () => {
-  it('renderiza el título, las estadísticas y la barra de búsqueda', async () => {
+  it('muestra los totales del backend y las especies', async () => {
     render(<InventarioVerdeScreen />);
 
     expect(screen.getByRole('heading', { name: 'Inventario de Especies' })).toBeInTheDocument();
-    expect(screen.getByText('Especies Registradas')).toBeInTheDocument();
-    expect(screen.getByText('Ejemplares Censados')).toBeInTheDocument();
-    expect(screen.getByText('Tipos de Vegetación')).toBeInTheDocument();
-    expect(screen.getByText('Filtrar por tipo de vegetación')).toBeInTheDocument();
-    expect(screen.queryByText(/porte botánico/i)).not.toBeInTheDocument();
-
-    // Esperar a que se carguen las especies iniciales del mock
-    await waitFor(() => {
-      expect(screen.getByText('Palmera Real')).toBeInTheDocument();
-    });
+    expect((await screen.findAllByText('965')).length).toBeGreaterThan(0);
+    expect(await screen.findByText('Palmera real')).toBeInTheDocument();
   });
 
-  it('permite filtrar por término de búsqueda', async () => {
+  it('busca en el backend, también por los otros nombres', async () => {
     render(<InventarioVerdeScreen />);
 
-    const searchInput = screen.getByPlaceholderText(/Buscar por nombre común/i);
-    await userEvent.type(searchInput, 'Ponciana');
+    await userEvent.type(screen.getByPlaceholderText(/Buscar por nombre común/i), 'bruja');
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Ponciana')).toBeInTheDocument();
-        expect(screen.queryByText('Palmera Real')).not.toBeInTheDocument();
-      },
-      { timeout: 2500 }
-    );
+    await waitFor(() => expect(api.species).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'bruja', page: 0 })));
+    await waitFor(() => expect(screen.queryByText('Palmera real')).not.toBeInTheDocument());
+    expect(screen.getByText('Palmera reina')).toBeInTheDocument();
   });
 });

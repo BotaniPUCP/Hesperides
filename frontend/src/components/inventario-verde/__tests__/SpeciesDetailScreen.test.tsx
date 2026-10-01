@@ -1,42 +1,49 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { SpeciesDetailScreen } from '../SpeciesDetailScreen';
+import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { ApiError } from '@/lib/api';
+import { p01, page, palmeraReina } from '../__fixtures__/inventario';
 
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-  }),
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock('@/lib/inventario-verde-api', () => ({
+  inventarioVerdeApi: { speciesBySlug: jest.fn(), specimens: jest.fn(), locations: jest.fn() },
 }));
 
+const api = inventarioVerdeApi as jest.Mocked<typeof inventarioVerdeApi>;
+
+afterEach(() => jest.resetAllMocks());
+
 describe('SpeciesDetailScreen', () => {
-  it('renderiza la información de la especie y la tabla de consulta de ejemplares directamente', async () => {
-    // Especie 1 es Palmera Real
-    render(<SpeciesDetailScreen speciesId={1} />);
+  it('muestra la especie, sus otros nombres y la tabla de ejemplares', async () => {
+    api.speciesBySlug.mockResolvedValue(palmeraReina);
+    api.specimens.mockResolvedValue(page([p01], 1));
+    api.locations.mockResolvedValue([{ location: 'Educación', count: 1 }]);
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Palmera Real' })).toBeInTheDocument();
-    });
+    render(<SpeciesDetailScreen slug="syagrus-romanzoffiana" />);
 
-    // NO debe existir selector ni toggle de Cuadrícula / Tabla
-    expect(screen.queryByRole('button', { name: /Cuadrícula/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Tabla/i })).not.toBeInTheDocument();
-
-    // La tabla de consulta de ejemplares debe renderizarse directamente con sus columnas esenciales
-    await waitFor(() => {
-      expect(screen.getByText('Foto')).toBeInTheDocument();
-      expect(screen.getByText('Referencia / Código')).toBeInTheDocument();
-      expect(screen.getByText('Sector / Ubicación')).toBeInTheDocument();
-      expect(screen.getByText('Coordenadas (GPS)')).toBeInTheDocument();
-    });
-
-    // La columna redundante de acciones "Ver ficha" ha sido retirada del flujo
-    expect(screen.queryByRole('button', { name: 'Ver ficha' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Palmera reina' })).toBeInTheDocument();
+    expect(screen.getByText('Palmera bruja')).toBeInTheDocument();
+    expect(await screen.findByText('EV-000001')).toBeInTheDocument();
+    expect(api.speciesBySlug).toHaveBeenCalledWith('syagrus-romanzoffiana');
   });
 
-  it('muestra estado vacío si la especie no existe', async () => {
-    render(<SpeciesDetailScreen speciesId={9999} />);
+  it('muestra «no encontrada» si la especie no existe', async () => {
+    api.speciesBySlug.mockRejectedValue(new ApiError(404, 'Species not found'));
+    api.specimens.mockRejectedValue(new ApiError(404, 'Species not found'));
+    api.locations.mockRejectedValue(new ApiError(404, 'Species not found'));
 
-    await waitFor(() => {
-      expect(screen.getByText('Especie no encontrada')).toBeInTheDocument();
-    });
+    render(<SpeciesDetailScreen slug="no-existe" />);
+
+    await waitFor(() => expect(screen.getByText('Especie no encontrada')).toBeInTheDocument());
+  });
+
+  it('dice que no se pudo cargar si falla la red', async () => {
+    api.speciesBySlug.mockRejectedValue(new ApiError(0, 'Sin conexión. Verifique su red.'));
+    api.specimens.mockResolvedValue(page([]));
+    api.locations.mockResolvedValue([]);
+
+    render(<SpeciesDetailScreen slug="roystonea-regia" />);
+
+    expect(await screen.findByText('No se pudo cargar la especie')).toBeInTheDocument();
   });
 });

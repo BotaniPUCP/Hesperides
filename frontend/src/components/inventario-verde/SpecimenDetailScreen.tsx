@@ -3,16 +3,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
-import { useInventarioVerdeSpecimenById } from '@/hooks/useInventarioVerde';
+import { useInventarioVerdeSpecimenByCode } from '@/hooks/useInventarioVerde';
 import { SpecimenInfo } from './SpecimenInfo';
 
 export interface SpecimenDetailScreenProps {
-  specimenId: string | number;
+  code: string;
 }
 
-export function SpecimenDetailScreen({ specimenId }: SpecimenDetailScreenProps) {
+export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   const router = useRouter();
-  const { specimen, species, loading } = useInventarioVerdeSpecimenById(specimenId);
+  const { specimen, species, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code);
 
   if (loading) {
     return (
@@ -33,8 +33,8 @@ export function SpecimenDetailScreen({ specimenId }: SpecimenDetailScreenProps) 
           ]}
         />
         <EmptyState
-          title="Ejemplar no encontrado"
-          description="El ejemplar solicitado no se encuentra en el inventario o fue dado de baja."
+          title={errorMessage ? 'No se pudo cargar el ejemplar' : 'Ejemplar no encontrado'}
+          description={errorMessage ?? 'El ejemplar solicitado no está en el inventario o fue dado de baja.'}
           action={{
             label: 'Volver al catálogo principal',
             onClick: () => router.push('/inventario-verde'),
@@ -48,9 +48,9 @@ export function SpecimenDetailScreen({ specimenId }: SpecimenDetailScreenProps) 
     { label: 'Inventario Verde', href: '/inventario-verde' },
     {
       label: species?.commonName || 'Especies',
-      href: species ? `/inventario-verde/especies/${species.id}` : '/inventario-verde',
+      href: species ? `/inventario-verde/especies/${species.slug}` : '/inventario-verde',
     },
-    { label: `Ejemplar ${specimen.reference}` },
+    { label: `Ejemplar ${specimen.code}` },
   ];
 
   return (
@@ -59,7 +59,7 @@ export function SpecimenDetailScreen({ specimenId }: SpecimenDetailScreenProps) 
         <Breadcrumb items={breadcrumbItems} />
         <div>
           <Link
-            href={species ? `/inventario-verde/especies/${species.id}` : '/inventario-verde'}
+            href={species ? `/inventario-verde/especies/${species.slug}` : '/inventario-verde'}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-900 hover:underline transition-colors"
           >
             ← Volver a los ejemplares de {species?.commonName || 'la especie'}
@@ -67,7 +67,7 @@ export function SpecimenDetailScreen({ specimenId }: SpecimenDetailScreenProps) 
         </div>
       </div>
 
-      <SpecimenInfo specimen={specimen} species={species} />
+      <SpecimenInfo specimen={specimen} />
     </div>
   );
 }

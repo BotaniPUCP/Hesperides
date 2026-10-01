@@ -4,16 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useInventarioVerdeSpeciesById, useInventarioVerdeSpecimens } from '@/hooks/useInventarioVerde';
+import { useInventarioVerdeSpeciesBySlug, useInventarioVerdeSpecimens } from '@/hooks/useInventarioVerde';
 import { SpeciesInfo } from './SpeciesInfo';
 import { SpecimenFiltersBar } from './SpecimenFiltersBar';
 import { SpecimenTable } from './SpecimenTable';
 
 export interface SpeciesDetailScreenProps {
-  speciesId: string | number;
+  slug: string;
 }
 
-export function SpeciesDetailScreen({ speciesId }: SpeciesDetailScreenProps) {
+export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   const router = useRouter();
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebouncedValue(searchInput, 300);
@@ -25,7 +25,7 @@ export function SpeciesDetailScreen({ speciesId }: SpeciesDetailScreenProps) {
   // Consulta de ejemplares: paginación de 20 ejemplares por página
   const pageSize = 20;
 
-  const { species, loading: speciesLoading } = useInventarioVerdeSpeciesById(speciesId);
+  const { species, loading: speciesLoading, errorMessage } = useInventarioVerdeSpeciesBySlug(slug);
 
   const {
     specimens,
@@ -34,7 +34,7 @@ export function SpeciesDetailScreen({ speciesId }: SpeciesDetailScreenProps) {
     currentPage,
     availableLocations,
     loading: specimensLoading,
-  } = useInventarioVerdeSpecimens(speciesId, {
+  } = useInventarioVerdeSpecimens(slug, {
     search: debouncedSearch,
     location: selectedLocation,
     sortBy,
@@ -72,8 +72,8 @@ export function SpeciesDetailScreen({ speciesId }: SpeciesDetailScreenProps) {
           ]}
         />
         <EmptyState
-          title="Especie no encontrada"
-          description="La especie solicitada no se encuentra registrada en el inventario o el identificador es inválido."
+          title={errorMessage ? 'No se pudo cargar la especie' : 'Especie no encontrada'}
+          description={errorMessage ?? 'La especie solicitada no está registrada en el inventario.'}
           action={{
             label: 'Volver al catálogo',
             onClick: () => router.push('/inventario-verde'),
@@ -112,6 +112,7 @@ export function SpeciesDetailScreen({ speciesId }: SpeciesDetailScreenProps) {
 
         <SpecimenTable
           specimens={specimens}
+          species={species}
           totalElements={totalElements}
           page={currentPage}
           pageSize={pageSize}

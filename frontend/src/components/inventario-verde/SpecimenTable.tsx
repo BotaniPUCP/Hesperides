@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import type { Specimen } from '@shared/types';
+import { useRouter } from 'next/navigation';
+import type { Species, Specimen } from '@shared/types';
 import { DataTable, type DataTableColumn, type DataTableSort, ImagePlaceholder } from '@/components/ui';
 import { SpecimenPhotoModal } from './SpecimenPhotoModal';
 
 export interface SpecimenTableProps {
   specimens: Specimen[];
+  species: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'>;
   totalElements: number;
   page: number;
   pageSize: number;
@@ -18,18 +20,13 @@ export interface SpecimenTableProps {
   loading?: boolean;
 }
 
-function cleanSpecimenCode(code: string | null | undefined): string | null {
-  if (!code) return null;
-  const trimmed = code.trim();
-  if (trimmed === '' || trimmed.toLowerCase() === 'null' || trimmed.toLowerCase() === 'nan') return null;
-  return trimmed.endsWith('.0') ? trimmed.slice(0, -2) : trimmed;
-}
-
 function ThumbnailCell({
   specimen,
+  typeCode,
   onPhotoClick,
 }: {
   specimen: Specimen;
+  typeCode: string;
   onPhotoClick: (specimen: Specimen) => void;
 }) {
   const [error, setError] = useState(false);
@@ -41,22 +38,22 @@ function ThumbnailCell({
         e.stopPropagation();
         onPhotoClick(specimen);
       }}
-      title={`Ampliar fotografía de ${specimen.reference}`}
-      aria-label={`Ver fotografía ampliada de ${specimen.reference}`}
+      title={`Ampliar fotografía de ${specimen.code}`}
+      aria-label={`Ver fotografía ampliada de ${specimen.code}`}
       className="group relative h-9 w-9 rounded-md overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90 hover:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600 transition-all cursor-pointer"
     >
-      {specimen.photoUrl && !error ? (
+      {specimen.thumbnailUrl && !error ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={specimen.photoUrl}
-          alt={specimen.reference}
+          src={specimen.thumbnailUrl}
+          alt={specimen.code}
           loading="lazy"
           onError={() => setError(true)}
           className="h-full w-full object-cover transition-transform duration-150 group-hover:scale-105"
         />
       ) : (
         <ImagePlaceholder
-          type={specimen.vegetationTypeCode}
+          type={typeCode}
           size="sm"
           className="h-full w-full rounded-none border-none p-0.5"
           label=""
@@ -73,6 +70,7 @@ function ThumbnailCell({
 
 export function SpecimenTable({
   specimens,
+  species,
   totalElements,
   page,
   pageSize,
@@ -83,6 +81,7 @@ export function SpecimenTable({
   onViewOnMap,
   loading = false,
 }: SpecimenTableProps) {
+  const router = useRouter();
   const [selectedPhotoSpecimen, setSelectedPhotoSpecimen] = useState<Specimen | null>(null);
 
   function handleMapAction(specimen: Specimen) {
@@ -99,44 +98,33 @@ export function SpecimenTable({
       className: 'w-16 sm:w-20 text-center',
       headerClassName: 'w-16 sm:w-20 text-center',
       render: (row) => (
-        <ThumbnailCell specimen={row} onPhotoClick={setSelectedPhotoSpecimen} />
+        <ThumbnailCell specimen={row} typeCode={species.vegetationTypeCode} onPhotoClick={setSelectedPhotoSpecimen} />
       ),
     },
     {
       key: 'reference',
-      header: 'Referencia / Código',
+      header: 'Código / Referencia',
       sortable: true,
       className: 'w-[28%] min-w-[150px]',
       headerClassName: 'w-[28%]',
-      render: (row) => {
-        const codeDisplay = cleanSpecimenCode(row.code);
-        return (
-          <div className="flex flex-col items-start gap-0.5 py-0.5">
-            <span className="font-mono font-bold text-neutral-900 text-xs">
-              {row.reference}
-            </span>
-            {codeDisplay ? (
-              <span className="text-[11px] font-mono text-neutral-500 font-medium">
-                Cód. {codeDisplay}
-              </span>
-            ) : (
-              <span className="text-[11px] text-neutral-400 font-normal">
-                Sin código
-              </span>
-            )}
-          </div>
-        );
-      },
+      render: (row) => (
+        <div className="flex flex-col items-start gap-0.5 py-0.5">
+          <span className="font-mono font-bold text-neutral-900 text-xs">{row.code}</span>
+          {row.sourceReference && (
+            <span className="text-[11px] font-mono text-neutral-500 font-medium">Ref. {row.sourceReference}</span>
+          )}
+        </div>
+      ),
     },
     {
       key: 'location',
-      header: 'Sector / Ubicación',
+      header: 'Ubicación (catastro)',
       sortable: true,
       className: 'w-[36%] min-w-[180px]',
       headerClassName: 'w-[36%]',
       render: (row) => (
         <span className="text-xs font-medium text-neutral-800">
-          {row.location}
+          {row.sourceLocation}
         </span>
       ),
     },
@@ -171,16 +159,16 @@ export function SpecimenTable({
 
         return (
           <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-            {/* Botón "Ver en mapa" visible permanentemente en escritorio (variante secondary/ghost de SPEC-C01) */}
-            {hasCoords ? (
+            {/* Solo si la pantalla sabe llevar al mapa: un botón que no hace nada promete algo falso. */}
+            {!onViewOnMap ? null : hasCoords ? (
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMapAction(row);
                 }}
-                title={`Ver ubicación de ${row.reference} en el mapa`}
-                aria-label={`Ver ubicación de ${row.reference} en el mapa`}
+                title={`Ver ubicación de ${row.code} en el mapa`}
+                aria-label={`Ver ubicación de ${row.code} en el mapa`}
                 className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs font-medium text-brand-800 bg-brand-50/70 hover:bg-brand-100 hover:text-brand-900 hover:border-brand-300 border border-brand-200/80 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1"
               >
                 <svg
@@ -210,12 +198,12 @@ export function SpecimenTable({
             )}
 
             {/* Indicador discreto de observación: SOLO visible si el ejemplar tiene observación */}
-            {row.observations && (
+            {row.notes && (
               <div className="relative group/obs inline-flex items-center">
                 <span
                   tabIndex={0}
                   role="note"
-                  aria-label={`Observación: ${row.observations}`}
+                  aria-label={`Observación: ${row.notes}`}
                   className="inline-flex items-center justify-center h-7 w-7 rounded-md bg-amber-50 text-amber-800 border border-amber-200/90 hover:bg-amber-100 transition-colors cursor-help focus:outline-none focus:ring-1 focus:ring-amber-500"
                 >
                   <svg
@@ -240,7 +228,7 @@ export function SpecimenTable({
                     <span className="font-semibold text-amber-300 block text-[10px] uppercase tracking-wider mb-0.5">
                       Observación
                     </span>
-                    <span className="break-words">{row.observations}</span>
+                    <span className="break-words">{row.notes}</span>
                   </div>
                   <div className="w-2 h-2 bg-neutral-900 rotate-45 mr-2.5 -mt-1 border-r border-b border-neutral-700" />
                 </div>
@@ -257,7 +245,8 @@ export function SpecimenTable({
       <DataTable<Specimen>
         columns={columns}
         rows={specimens}
-        rowKey={(row) => row.id}
+        rowKey={(row) => row.code}
+        onRowClick={(row) => router.push(`/inventario-verde/especies/${species.slug}/ejemplares/${row.code}`)}
         totalElements={totalElements}
         page={page}
         pageSize={pageSize}
@@ -270,6 +259,7 @@ export function SpecimenTable({
       {/* Visor lightbox enfocado exclusivamente en la fotografía */}
       <SpecimenPhotoModal
         specimen={selectedPhotoSpecimen}
+        species={species}
         onClose={() => setSelectedPhotoSpecimen(null)}
       />
     </>

@@ -1,7 +1,7 @@
 import { SpecimenDetailScreen } from '@/components/inventario-verde/SpecimenDetailScreen';
 
 interface PageProps {
-  params: Promise<{ id: string; ejemplarId: string }>;
+  params: Promise<{ slug: string; codigo: string }>;
 }
 
 export const metadata = {
@@ -10,12 +10,12 @@ export const metadata = {
 };
 
 export default async function SpecimenDetailPage({ params }: PageProps) {
-  const { ejemplarId } = await params;
+  const { codigo } = await params;
 
   return (
     <main className="min-h-screen bg-neutral-50 p-4 md:p-6 lg:p-8">
       <div className="mx-auto max-w-6xl">
-        <SpecimenDetailScreen specimenId={ejemplarId} />
+        <SpecimenDetailScreen code={codigo} />
       </div>
     </main>
   );

@@ -38,12 +38,13 @@ export function SpeciesInfo({ species }: SpeciesInfoProps) {
             />
           )}
 
-          {/* Etiqueta discreta de fotografía de referencia */}
+          {species.imageUrl && !imageError && (
           <div className="absolute bottom-1.5 left-1.5 right-1.5">
             <span className="block text-center truncate px-1.5 py-0.5 rounded bg-neutral-900/80 backdrop-blur-xs text-[10px] font-medium text-neutral-0">
-              Fotografía de referencia
+              Foto de un ejemplar
             </span>
           </div>
+          )}
         </div>
 
         {/* Información taxonómica estructurada */}
@@ -79,10 +80,11 @@ export function SpeciesInfo({ species }: SpeciesInfoProps) {
               </span>
             </div>
 
-            {/* Descripción breve */}
-            <p className="text-xs sm:text-sm text-neutral-600 mt-1.5 line-clamp-2 leading-relaxed">
-              {species.description || `Especie botánica registrada en el campus PUCP dentro del inventario de ${species.vegetationTypeName.toLowerCase()}s.`}
-            </p>
+            {species.otherNames.length > 0 && (
+              <p className="text-xs sm:text-sm text-neutral-600 mt-1.5 leading-relaxed">
+                También se le dice: <span className="font-medium">{species.otherNames.join(', ')}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>

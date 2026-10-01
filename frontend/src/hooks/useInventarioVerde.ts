@@ -1,22 +1,78 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
-import type {
-  Species,
-  Specimen,
-  VegetationType,
-  SpeciesFilters,
-  SpecimenFilters,
-} from '@shared/types';
-import {
-  MOCK_SPECIES,
-  MOCK_SPECIMENS,
-  MOCK_VEGETATION_TYPES,
-} from '@/lib/mock/inventario-verde-data';
+import { useEffect, useState } from 'react';
+import type { LocationCount, Species, SpeciesFilters, SpecimenFilters, Specimen } from '@shared/types';
+import { ApiError } from '@/lib/api';
+import { mensajeDeApiError } from '@/lib/api-errors';
+import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+
+interface RequestState<T> {
+  key: string;
+  data: T | null;
+  errorMessage: string | null;
+  notFound: boolean;
+}
+
+/**
+ * Una consulta al backend que se repite cuando cambia `key`. Guardar la clave
+ * junto a la respuesta es lo que evita mostrar por un render los datos del
+ * filtro anterior, y descartar las respuestas que llegan tarde.
+ */
+function useRequest<T>(key: string | null, load: () => Promise<T>) {
+  const [state, setState] = useState<RequestState<T> | null>(null);
+
+  useEffect(() => {
+    if (key === null) return;
+    let current = true;
+    load()
+      .then((data) => current && setState({ key, data, errorMessage: null, notFound: false }))
+      .catch((error: unknown) => {
+        if (!current) return;
+        const notFound = error instanceof ApiError && error.status === 404;
+        setState({ key, data: null, errorMessage: notFound ? null : mensajeDeApiError(error), notFound });
+      });
+    return () => {
+      current = false;
+    };
+    // `load` cambia en cada render; la clave resume todo lo que la consulta usa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  const fresh = state?.key === key ? state : null;
+  return {
+    data: fresh?.data ?? null,
+    loading: key !== null && fresh === null,
+    errorMessage: fresh?.errorMessage ?? null,
+    notFound: fresh?.notFound ?? false,
+  };
+}
 
 export interface UseInventarioVerdeSpeciesParams extends SpeciesFilters {
   page?: number;
   pageSize?: number;
+}
+
+export function useInventarioVerdeSpecies(params: UseInventarioVerdeSpeciesParams = {}) {
+  const { search = '', vegetationType, page = 0, pageSize = 24 } = params;
+  const request = { search, vegetationType, page, size: pageSize };
+  const { data, loading, errorMessage } = useRequest(JSON.stringify(request), () =>
+    inventarioVerdeApi.species(request),
+  );
+  return {
+    species: data?.content ?? [],
+    totalElements: data?.page.totalElements ?? 0,
+    totalPages: Math.max(data?.page.totalPages ?? 1, 1),
+    currentPage: data?.page.number ?? page,
+    loading,
+    errorMessage,
+  };
+}
+
+export function useInventarioVerdeSpeciesBySlug(slug: string | null | undefined) {
+  const { data, loading, errorMessage, notFound } = useRequest(slug || null, () =>
+    inventarioVerdeApi.speciesBySlug(slug as string),
+  );
+  return { species: data as Species | null, loading, errorMessage, notFound };
 }
 
 export interface UseInventarioVerdeSpecimensParams extends SpecimenFilters {
@@ -24,217 +80,45 @@ export interface UseInventarioVerdeSpecimensParams extends SpecimenFilters {
   pageSize?: number;
 }
 
-/**
- * Hook para consultar especies del catálogo con filtros y paginación.
- */
-export function useInventarioVerdeSpecies(params: UseInventarioVerdeSpeciesParams = {}) {
-  const { search = '', vegetationType, page = 0, pageSize = 24 } = params;
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simular latencia de red controlada para mostrar LoadingSkeleton adecuadamente
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [search, vegetationType, page, pageSize]);
-
-  const filtered = useMemo(() => {
-    let result = [...MOCK_SPECIES];
-
-    if (vegetationType && vegetationType !== 'ALL') {
-      result = result.filter((sp) => sp.vegetationTypeCode === vegetationType);
-    }
-
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      result = result.filter(
-        (sp) =>
-          sp.commonName.toLowerCase().includes(q) ||
-          sp.scientificName.toLowerCase().includes(q) ||
-          (sp.family && sp.family.toLowerCase().includes(q))
-      );
-    }
-
-    return result;
-  }, [search, vegetationType]);
-
-  const totalElements = filtered.length;
-  const totalPages = Math.ceil(totalElements / pageSize) || 1;
-  const currentPage = Math.max(0, Math.min(page, totalPages - 1));
-
-  const paginatedSpecies = useMemo(() => {
-    const start = currentPage * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, currentPage, pageSize]);
-
-  return {
-    species: paginatedSpecies,
-    totalElements,
-    totalPages,
-    currentPage,
-    loading,
-  };
-}
-
-/**
- * Hook para consultar el detalle de una especie individual por su ID.
- */
-export function useInventarioVerdeSpeciesById(id: number | string | null | undefined) {
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 100);
-    return () => clearTimeout(timer);
-  }, [numericId]);
-
-  const species = useMemo(() => {
-    if (!numericId || isNaN(numericId)) return null;
-    return MOCK_SPECIES.find((s) => s.id === numericId) ?? null;
-  }, [numericId]);
-
-  return { species, loading };
-}
-
-/**
- * Hook para consultar ejemplares pertenecientes a una especie con búsqueda,
- * filtrado por sector/ubicación, ordenamiento y paginación.
- */
 export function useInventarioVerdeSpecimens(
-  speciesId: number | string | null | undefined,
-  params: UseInventarioVerdeSpecimensParams = {}
+  slug: string | null | undefined,
+  params: UseInventarioVerdeSpecimensParams = {},
 ) {
-  const numericId = typeof speciesId === 'string' ? parseInt(speciesId, 10) : speciesId;
-  const {
-    search = '',
-    location = 'ALL',
-    sortBy = 'reference',
-    sortDirection = 'asc',
-    page = 0,
-    pageSize = 12,
-  } = params;
-
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 150);
-    return () => clearTimeout(timer);
-  }, [numericId, search, location, sortBy, sortDirection, page, pageSize]);
-
-  // Lista base de todos los ejemplares de esta especie
-  const speciesSpecimens = useMemo(() => {
-    if (!numericId || isNaN(numericId)) return [];
-    return MOCK_SPECIMENS.filter((spec) => spec.speciesId === numericId);
-  }, [numericId]);
-
-  // Extraer las ubicaciones disponibles para esta especie con su respectivo conteo
-  const availableLocations = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const s of speciesSpecimens) {
-      if (s.location) {
-        map.set(s.location, (map.get(s.location) ?? 0) + 1);
-      }
-    }
-    return Array.from(map.entries())
-      .map(([loc, count]) => ({ location: loc, count }))
-      .sort((a, b) => a.location.localeCompare(b.location));
-  }, [speciesSpecimens]);
-
-  // Filtrado y ordenamiento
-  const filtered = useMemo(() => {
-    let result = [...speciesSpecimens];
-
-    if (location && location !== 'ALL') {
-      result = result.filter((s) => s.location === location);
-    }
-
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      result = result.filter(
-        (s) =>
-          s.reference.toLowerCase().includes(q) ||
-          (s.code && s.code.toLowerCase().includes(q)) ||
-          s.location.toLowerCase().includes(q) ||
-          (s.observations && s.observations.toLowerCase().includes(q))
-      );
-    }
-
-    // Ordenamiento
-    result.sort((a, b) => {
-      let comparison = 0;
-      if (sortBy === 'code') {
-        const valA = a.code || a.reference;
-        const valB = b.code || b.reference;
-        comparison = valA.localeCompare(valB, undefined, { numeric: true });
-      } else if (sortBy === 'location') {
-        comparison = a.location.localeCompare(b.location);
-      } else {
-        // Por referencia
-        comparison = a.reference.localeCompare(b.reference, undefined, { numeric: true });
-      }
-      return sortDirection === 'desc' ? -comparison : comparison;
-    });
-
-    return result;
-  }, [speciesSpecimens, location, search, sortBy, sortDirection]);
-
-  const totalElements = filtered.length;
-  const totalPages = Math.ceil(totalElements / pageSize) || 1;
-  const currentPage = Math.max(0, Math.min(page, totalPages - 1));
-
-  const paginatedSpecimens = useMemo(() => {
-    const start = currentPage * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, currentPage, pageSize]);
-
+  const { search = '', location = 'ALL', sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12 } =
+    params;
+  const request = { search, location, sortBy, sortDirection, page, size: pageSize };
+  const specimens = useRequest(slug ? `${slug}:${JSON.stringify(request)}` : null, () =>
+    inventarioVerdeApi.specimens(slug as string, request),
+  );
+  const locations = useRequest(slug || null, () => inventarioVerdeApi.locations(slug as string));
+  const total = specimens.data?.page.totalElements ?? 0;
   return {
-    specimens: paginatedSpecimens,
-    allFilteredCount: totalElements,
-    totalElements,
-    totalPages,
-    currentPage,
-    availableLocations,
-    loading,
+    specimens: (specimens.data?.content ?? []) as Specimen[],
+    allFilteredCount: total,
+    totalElements: total,
+    totalPages: Math.max(specimens.data?.page.totalPages ?? 1, 1),
+    currentPage: specimens.data?.page.number ?? page,
+    availableLocations: (locations.data ?? []) as LocationCount[],
+    loading: specimens.loading,
+    errorMessage: specimens.errorMessage,
   };
 }
 
-/**
- * Hook para consultar un ejemplar específico por su ID.
- */
-export function useInventarioVerdeSpecimenById(specimenId: number | string | null | undefined) {
-  const numericId = typeof specimenId === 'string' ? parseInt(specimenId, 10) : specimenId;
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 100);
-    return () => clearTimeout(timer);
-  }, [numericId]);
-
-  const specimen = useMemo(() => {
-    if (!numericId || isNaN(numericId)) return null;
-    return MOCK_SPECIMENS.find((s) => s.id === numericId) ?? null;
-  }, [numericId]);
-
-  const species = useMemo(() => {
-    if (!specimen) return null;
-    return MOCK_SPECIES.find((sp) => sp.id === specimen.speciesId) ?? null;
-  }, [specimen]);
-
-  return { specimen, species, loading };
+export function useInventarioVerdeSpecimenByCode(code: string | null | undefined) {
+  const { data, loading, errorMessage, notFound } = useRequest(code || null, () =>
+    inventarioVerdeApi.specimen(code as string),
+  );
+  return { specimen: data, species: data?.species ?? null, loading, errorMessage, notFound };
 }
 
-/**
- * Hook para estadísticas y tipos de vegetación.
- */
+/** Totales y tipos de vegetación. El filtro solo ofrece los tipos con ejemplares (README, D-1). */
 export function useInventarioVerdeStats() {
-  const totalSpecies = MOCK_SPECIES.length;
-  const totalSpecimens = MOCK_SPECIMENS.length;
-  const vegetationTypes = MOCK_VEGETATION_TYPES;
-
+  const { data, loading, errorMessage } = useRequest('summary', () => inventarioVerdeApi.summary());
   return {
-    totalSpecies,
-    totalSpecimens,
-    vegetationTypes,
+    totalSpecies: data?.totalSpecies ?? 0,
+    totalSpecimens: data?.totalSpecimens ?? 0,
+    vegetationTypes: (data?.vegetationTypes ?? []).filter((t) => t.count > 0),
+    loading,
+    errorMessage,
   };
 }

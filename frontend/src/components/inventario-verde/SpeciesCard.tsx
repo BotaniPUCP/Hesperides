@@ -30,7 +30,7 @@ export function SpeciesCard({ species }: SpeciesCardProps) {
 
   return (
     <Link
-      href={`/inventario-verde/especies/${species.id}`}
+      href={`/inventario-verde/especies/${species.slug}`}
       className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 rounded-xl transition-transform duration-200 hover:-translate-y-1"
     >
       <Card
@@ -70,7 +70,7 @@ export function SpeciesCard({ species }: SpeciesCardProps) {
           {species.imageUrl && !imageError && (
             <div className="absolute bottom-2 left-2">
               <span className="inline-flex items-center px-2 py-0.5 rounded bg-neutral-900/80 backdrop-blur-sm text-[11px] font-medium text-neutral-0">
-                Fotografía referencial
+                Foto de un ejemplar
               </span>
             </div>
           )}

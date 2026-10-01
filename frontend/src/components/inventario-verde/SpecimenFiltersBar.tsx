@@ -32,7 +32,7 @@ export function SpecimenFiltersBar({
   totalFilteredCount,
 }: SpecimenFiltersBarProps) {
   const locationOptions = [
-    { id: 0, code: 'ALL', label: 'Todos los sectores' },
+    { id: 0, code: 'ALL', label: 'Todas las ubicaciones' },
     ...availableLocations.map((l, index) => ({
       id: index + 1,
       code: l.location,
@@ -43,8 +43,8 @@ export function SpecimenFiltersBar({
   const sortOptions = [
     { id: 1, code: 'reference:asc', label: 'Referencia (A - Z)' },
     { id: 2, code: 'reference:desc', label: 'Referencia (Z - A)' },
-    { id: 3, code: 'code:asc', label: 'Código de inventario' },
-    { id: 4, code: 'location:asc', label: 'Sector (A - Z)' },
+    { id: 3, code: 'code:asc', label: 'Código (EV)' },
+    { id: 4, code: 'location:asc', label: 'Ubicación (A - Z)' },
   ];
 
   function handleSortSelect(val: string) {
@@ -64,7 +64,7 @@ export function SpecimenFiltersBar({
             type="search"
             value={searchValue}
             onChange={onSearchChange}
-            placeholder="Buscar por referencia (ej. p01), código o sector..."
+            placeholder="Buscar por código, referencia (ej. p01) o ubicación..."
             leadingIcon={
               <svg
                 className="h-4 w-4 text-neutral-400"
@@ -86,7 +86,7 @@ export function SpecimenFiltersBar({
 
         {/* Filtros selectores compactos */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Selector de sector */}
+          {/* Selector de ubicación del catastro */}
           <div className="w-48 sm:w-52">
             <Select
               id="specimen-location-filter"
@@ -123,7 +123,7 @@ export function SpecimenFiltersBar({
             onClick={() => onLocationChange('ALL')}
             className="text-xs text-brand-700 hover:text-brand-900 hover:underline font-medium"
           >
-            Quitar filtro de sector
+            Quitar filtro de ubicación
           </button>
         )}
       </div>

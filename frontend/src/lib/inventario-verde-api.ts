@@ -1,112 +1,67 @@
 import type {
-  ApiResponse,
+  InventorySummary,
+  LocationCount,
   Page,
   Species,
+  SpecimenDetail,
   Specimen,
-  VegetationType,
+  SpecimenSortKey,
 } from '@shared/types';
 import { apiClient } from './api';
 
-export interface GetSpeciesParams {
+export interface SpeciesParams {
   search?: string;
   vegetationType?: string;
-  page?: number;
-  size?: number;
+  page: number;
+  size: number;
 }
 
-export interface GetSpecimensParams {
+export interface SpecimenParams {
   search?: string;
   location?: string;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  page?: number;
-  size?: number;
+  sortBy: SpecimenSortKey;
+  sortDirection: 'asc' | 'desc';
+  page: number;
+  size: number;
 }
 
-export interface InventarioStatsDto {
-  totalSpecies: number;
-  totalSpecimens: number;
-  vegetationTypes: VegetationType[];
+/** Arma el query string sin los filtros vacíos: el backend los toma como «todos». */
+function query(params: Record<string, string | number | undefined>): string {
+  const q = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') q.set(key, String(value));
+  }
+  return q.toString();
 }
 
-/**
- * Cliente de API para el módulo de Inventario Verde.
- * Consume los endpoints correspondientes en Spring Boot (:8080).
- */
+const ALL = 'ALL';
+const unlessAll = (value?: string) => (value && value !== ALL ? value : undefined);
+const segment = encodeURIComponent;
+
+/** Los endpoints del inventario verde. Son públicos por ahora (README del inventario). */
 export const inventarioVerdeApi = {
-  /**
-   * Obtiene listado paginado de especies del catálogo.
-   */
-  async getSpecies(params: GetSpeciesParams = {}): Promise<Page<Species>> {
-    const query = new URLSearchParams();
-    if (params.search) query.set('search', params.search);
-    if (params.vegetationType && params.vegetationType !== 'ALL') {
-      query.set('vegetationType', params.vegetationType);
-    }
-    if (params.page !== undefined) query.set('page', String(params.page));
-    if (params.size !== undefined) query.set('size', String(params.size));
+  summary: () => apiClient.get<InventorySummary>('/green-inventory/summary'),
 
-    const response = await apiClient.get<ApiResponse<Page<Species>>>(
-      `/api/v1/inventario-verde/species?${query.toString()}`
-    );
-    if (!response.data) throw new Error(response.message || 'Error al obtener especies');
-    return response.data;
-  },
+  species: (p: SpeciesParams) =>
+    apiClient.get<Page<Species>>(
+      `/green-inventory/species?${query({ search: p.search?.trim(), vegetationType: unlessAll(p.vegetationType), page: p.page, size: p.size })}`,
+    ),
 
-  /**
-   * Obtiene una especie por su ID.
-   */
-  async getSpeciesById(id: number): Promise<Species> {
-    const response = await apiClient.get<ApiResponse<Species>>(
-      `/api/v1/inventario-verde/species/${id}`
-    );
-    if (!response.data) throw new Error(response.message || 'Especie no encontrada');
-    return response.data;
-  },
+  speciesBySlug: (slug: string) => apiClient.get<Species>(`/green-inventory/species/${segment(slug)}`),
 
-  /**
-   * Obtiene los ejemplares censados de una especie.
-   */
-  async getSpecimens(
-    speciesId: number,
-    params: GetSpecimensParams = {}
-  ): Promise<Page<Specimen>> {
-    const query = new URLSearchParams();
-    if (params.search) query.set('search', params.search);
-    if (params.location && params.location !== 'ALL') {
-      query.set('location', params.location);
-    }
-    if (params.sortBy) query.set('sortBy', params.sortBy);
-    if (params.sortDirection) query.set('sortDirection', params.sortDirection);
-    if (params.page !== undefined) query.set('page', String(params.page));
-    if (params.size !== undefined) query.set('size', String(params.size));
+  specimens: (slug: string, p: SpecimenParams) =>
+    apiClient.get<Page<Specimen>>(
+      `/green-inventory/species/${segment(slug)}/specimens?${query({
+        search: p.search?.trim(),
+        location: unlessAll(p.location),
+        sort: p.sortBy,
+        direction: p.sortDirection,
+        page: p.page,
+        size: p.size,
+      })}`,
+    ),
 
-    const response = await apiClient.get<ApiResponse<Page<Specimen>>>(
-      `/api/v1/inventario-verde/species/${speciesId}/specimens?${query.toString()}`
-    );
-    if (!response.data) throw new Error(response.message || 'Error al obtener ejemplares');
-    return response.data;
-  },
+  locations: (slug: string) => apiClient.get<LocationCount[]>(`/green-inventory/species/${segment(slug)}/locations`),
 
-  /**
-   * Obtiene un ejemplar por su ID.
-   */
-  async getSpecimenById(specimenId: number): Promise<Specimen> {
-    const response = await apiClient.get<ApiResponse<Specimen>>(
-      `/api/v1/inventario-verde/specimens/${specimenId}`
-    );
-    if (!response.data) throw new Error(response.message || 'Ejemplar no encontrado');
-    return response.data;
-  },
-
-  /**
-   * Obtiene resumen estadístico del inventario verde.
-   */
-  async getStats(): Promise<InventarioStatsDto> {
-    const response = await apiClient.get<ApiResponse<InventarioStatsDto>>(
-      '/api/v1/inventario-verde/stats'
-    );
-    if (!response.data) throw new Error(response.message || 'Error al obtener estadísticas');
-    return response.data;
-  },
+  specimen: (code: string) => apiClient.get<SpecimenDetail>(`/green-inventory/specimens/${segment(code)}`),
 };
