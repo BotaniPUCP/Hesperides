@@ -9,9 +9,10 @@ export interface CardProps {
   children: ReactNode;
   padded?: boolean;
   onClick?: () => void;
+  className?: string;
 }
 
-export function Card({ title, actions, children, padded = true, onClick }: CardProps) {
+export function Card({ title, actions, children, padded = true, onClick, className }: CardProps) {
   const interactive = Boolean(onClick);
 
   return (
@@ -37,6 +38,7 @@ export function Card({ title, actions, children, padded = true, onClick }: CardP
         interactive &&
           'cursor-pointer transition-shadow hover:shadow-lg focus-visible:outline-none ' +
             'focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2',
+        className,
       )}
     >
       {(title || actions) && (
