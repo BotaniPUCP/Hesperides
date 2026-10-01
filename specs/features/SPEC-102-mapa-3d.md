@@ -320,6 +320,16 @@ calculados por el servidor al registrar (D-05).
 | CA-09 | Corre en Android | El visor abre en el `WebView` de los equipos de la sección con fluidez aceptable *(pendiente de los modelos)* |
 | CA-10 | Verificado en navegador real (INV-10) | Abrir `/mapa` en Chrome, buscar un edificio y hacer clic en un punto |
 
+**Verificación (1 oct 2026).** CA-01, CA-02, CA-07 y CA-10 en Chrome contra los contenedores; CA-03
+en `MapIntegrationTest`; CA-08 en Chrome con WebGL desactivado. **CA-04:** 30 puntos (10 en
+jardines, 10 junto a bordes de edificios, 10 al azar) calculados con el propio código del v39 y
+convertidos con `projection.ts` (calibración: ≤ 0.2 m en 40 edificios). **29 coinciden.** El otro
+es el mismo edificio, nombrado distinto por D-06: una referencia «Pabellón V» queda a 9.5 m con las
+coordenadas reales y fuera de los 10 m con las desplazadas del prototipo. La comparación detectó
+una divergencia de criterio, ya corregida: el vecino de «Edificio sin nombre, junto a X» se mide
+desde el punto del edificio más cercano al clic, y cuenta el vecino nombrado por una referencia.
+CA-05 espera a `incidents`; CA-06 queda cubierto por la proyección única; CA-09 espera a P-01.
+
 ---
 
 ## 7. Especificación visual
