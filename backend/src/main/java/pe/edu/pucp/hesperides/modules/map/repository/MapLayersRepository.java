@@ -61,4 +61,8 @@ public class MapLayersRepository {
     public String features() {
         return jdbcTemplate.queryForObject(MapLayerQueries.FEATURES, String.class);
     }
+
+    public String vegetation() {
+        return jdbcTemplate.queryForObject(MapLayerQueries.VEGETATION, String.class);
+    }
 }

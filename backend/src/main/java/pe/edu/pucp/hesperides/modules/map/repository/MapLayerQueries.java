@@ -68,6 +68,18 @@ final class MapLayerQueries {
             + "FROM campus_features f JOIN catalog_items t ON t.id = f.feature_type_item_id "
             + "WHERE f.deleted_at IS NULL AND f.is_active";
 
+    /** Solo medidas tomadas: una altura sin medir no sale de la base (C-08). */
+    static final String VEGETATION = COLLECTION_OPEN
+            + feature("e.location", "'code', e.code, 'speciesSlug', s.slug, 'commonName', s.common_name, "
+                    + "'scientificName', s.scientific_name, 'typeCode', t.code, 'typeLabel', t.label, "
+                    + "'quantity', e.quantity, "
+                    + "'heightM', CASE WHEN e.data_source = 'MEASURED' THEN e.height_m END, "
+                    + "'crownRadiusM', CASE WHEN e.data_source = 'MEASURED' THEN e.crown_radius_m END", "e.code")
+            + COLLECTION_CLOSE
+            + "FROM green_elements e JOIN species s ON s.id = e.species_id "
+            + "JOIN catalog_items t ON t.id = s.species_type_item_id "
+            + "WHERE e.deleted_at IS NULL AND e.is_active AND e.location IS NOT NULL";
+
     static final String VERSION = "SELECT version FROM map_data_version WHERE id = 1";
 
     static final String ATTRIBUTION_REQUIRED =
