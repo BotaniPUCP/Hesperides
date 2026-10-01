@@ -8,9 +8,10 @@
 > la **1.ª entrevista**, la **2.ª entrevista** y un **Excel operativo** que nos entregó.
 > Cuando algo no lo sabemos, lo decimos. Cuando dos fuentes se contradicen, también.
 >
-> **Última actualización:** tras la 2.ª entrevista. Esa reunión **corrigió** dos cosas que
-> dábamos por buenas — el papel de los cuarteles forestales (§5.3) y qué significa «sector»
-> (§5.1) — y reveló que el cliente **ya tiene un mapa interactivo funcionando** (§8.9).
+> **Última actualización:** 29 sep 2026. La 2.ª entrevista **corrigió** dos cosas que dábamos
+> por buenas — el papel de los cuarteles forestales (§5.3) y qué significa «sector» (§5.1) — y
+> reveló que el cliente **ya tiene un mapa interactivo funcionando** (§8.9). Tras la 3.ª, el
+> equipo fijó el vocabulario del sistema: **sector → sección → subsección**, sin cuarteles.
 
 ---
 
@@ -166,55 +167,71 @@ población**.
 
 Estas palabras aparecen en todas las conversaciones. Usar las suyas evita malentendidos.
 
-### 5.0 Cómo se divide el campus (hay cuatro formas, no una)
+### 5.0 Cómo se divide el campus
 
-Esta es la parte que más cuesta entender al llegar. El campus **no tiene una sola división**:
-conviven cuatro, y cada una sirve para algo distinto.
+Esta es la parte que más cuesta entender al llegar. El cliente usa varias divisiones del campus;
+**el sistema usa solo tres palabras** (decisión del 29 sep 2026):
 
 ```
-Sector de mantenimiento (3)      ← la división operativa VIVA
-   └── Lugar / referente (74)     ← lo que se registra a diario
-        └── Jardín (~100)         ← unidad de trabajo del corte de césped
-
-Cuartel forestal (17)             ← división histórica, EN DESUSO
+Sector (5)                  ← 3 verdes (capataces) + Polideportivo + Bosque húmedo
+   └── Sección (519)        ← cada área verde del mapa del cliente: un polígono independiente
+        └── Subsección      ← opcional: división interna de una sección
 ```
 
-| División | Cuántos | ¿Se usa hoy? | Para qué sirve |
+| División | Cuántas | En el sistema | Para qué sirve |
 |---|---|---|---|
-| **Sector de mantenimiento** | 3 | ✅ Sí, a diario | Organiza al personal y **el ciclo de riego** |
-| **Lugar / referente** | 74 | ✅ Sí, a diario | Es lo que se anota al registrar una actividad |
-| **Jardín** | ~100 | ✅ Sí | Unidad de control del corte de césped. Tiene código numérico |
-| **Cuartel forestal** | 17 | ⚠️ Casi no | Solo sobrevive en el inventario de especies antiguo |
+| **Sector** | 5 | ✅ Sí | Quién mantiene qué. Los 3 verdes organizan al personal y **el ciclo de riego** |
+| **Sección** | 519 | ✅ Sí | Cada área verde del mapa del cliente |
+| **Subsección** | Opcional | ✅ Sí | División interna de una sección, si hace falta |
+| Referencia | 411 | ✅ Sí, fuera de la jerarquía | Puntos con nombre: el vocabulario del día a día (§5.2) |
+| Zona de supervisión | 4 | ✅ Sí, como capa aparte | Divide el campus en 4 y corta a los sectores. Cada una tiene supervisor; por ahora, el coordinador |
+| Jardín del corte de césped | ~100 | ⏭️ Fase futura | Unidad de control del corte de césped |
+| Cuartel forestal | 17 | ❌ No | División histórica en desuso (§5.3) |
 
-### 5.1 Sector de mantenimiento — la división que sí importa
+### 5.1 Sector — quién mantiene qué
 
-**Tres sectores fijos**, uno por capataz. Robert fue explícito: **«sus zonas no varían»**. Están
-dibujados en el mapa interactivo.
+En el mapa interactivo (v32) los sectores no son polígonos propios: **cada área verde lleva el
+nombre de quien la atiende**, y el sector es la unión de esas áreas (SPEC-005 §4.4.3).
 
-| Sector | Superficie | Personal |
+| Sector | Superficie | Quién lo mantiene |
 |---|---|---|
-| Sector 1 | ~4.5 ha | 9 personas |
-| Sector 2 | ~4.5 ha | 9 personas |
-| Sector 3 | ~3 ha | 7 personas |
+| **Sector verde 01** | 4.55 ha | Capataz y cuadrilla de 9 personas |
+| **Sector verde 02** | 4.06 ha | Capataz y cuadrilla de 9 personas |
+| **Sector verde 03** | 3.26 ha | Capataz y cuadrilla de 7 personas |
+| **Sector Polideportivo** | 2.08 ha | Servicio tercerizado por tres años, con un ingeniero agrónomo de campo y seis personas para el césped |
+| **Sector Bosque húmedo** | 1.11 ha | Nadie de forma fija: se contrata a demanda (p. ej., una poda excepcional) |
 
-Cada persona cubre **~5.000 m² (media hectárea)**. Los sectores son la unidad con la que se
-organiza el riego (§6.1).
+Los sectores verdes son fijos: Robert dijo **«sus zonas no varían»**, y en la 3.ª entrevista matizó
+que cambian poco, con las obras. Se numeran por superficie. Cada persona cubre **~5.000 m² (media
+hectárea)**, y son la unidad con la que se organiza el riego (§6.1).
+
+El **Bosque húmedo** tiene como finalidad principal albergar fauna: especies reconocidas por
+SERFOR (venados, tortugas terrestres, pavo real, alpaca) y fauna silvestre (aves, ardillas, loros,
+cernícalos, gavilanes). El zoocriadero está fuera de alcance.
 
 > ⚠️ **Cuidado con el nombre.** En el Excel la columna se llama «Sector de jefe de grupo» y
 > contiene nombres de personas (Andrés, Óscar, Alfonso). **El sector es territorio, no persona** —
-> el capataz lo etiqueta, pero puede cambiar mientras el sector permanece. Nunca hay que crear una
-> zona del campus llamada «Alfonso».
+> el capataz puede cambiar mientras el sector permanece. Nunca hay que crear una zona del campus
+> llamada «Alfonso».
 
-### 5.2 Lugar o referente — el vocabulario del día a día
+### 5.2 Referencia — el vocabulario del día a día
 
 Lo que Robert usa al hablar: **edificios y facultades** («Jardines de Ingeniería Civil»), **vías**
 (el Tontódromo, que atraviesa varias facultades) y **jardines emblemáticos** (Comedor Central,
 Arte Antiguo, Patio Central).
 
-Son los 75 lugares con coordenadas del Excel. Robert dijo que **le gustaría usar términos aún más
-reconocibles**: es el vocabulario que orienta de verdad a quien trabaja en el campus.
+En el sistema son **referencias**: puntos con nombre —edificio, piso, oficina, estacionamiento,
+puerta— que sirven para **buscar en el mapa e importar ubicaciones**. No son secciones: un lugar
+abarca varias áreas verdes. Un mismo lugar puede tener varios nombres y un piso cuelga de su
+edificio. La tabla oficial inicial tiene 411 referencias (`docs/dominio/datos/`, SPEC-005 §4.4.4).
+Robert dijo que **le gustaría usar términos aún más reconocibles**: es el vocabulario que orienta
+de verdad a quien trabaja en el campus.
 
-### 5.3 Cuartel forestal — vocabulario heredado, casi muerto
+### 5.3 Cuartel forestal — fuera del sistema
+
+> **Decisión del 29 sep 2026: el sistema no usa cuarteles forestales.** No son un nivel de la
+> jerarquía de zonas ni se siembran. Esta sección queda como contexto: explica por qué alguien
+> del cliente puede nombrarlos.
 
 **La división histórica.** Hay **18 denominados**; el **cuartel 7 desapareció** cuando se puso en
 valor la Huaca — era el área verde que bordeaba el camino Inca entre Electrónica y Minas.
@@ -228,9 +245,9 @@ Pero Robert **casi no los usa**:
 Eso explica por qué de 283 registros del Excel **solo 2 mencionan un cuartel**. No es un dato que
 falte: es un vocabulario que se está abandonando.
 
-> **Dónde sí siguen vivos:** en el **inventario de especies**, donde cada planta está referenciada
-> como «cuartel 1… cuartel 18» y **no tiene coordenadas**. Ahí el cuartel es la única ubicación
-> disponible. Por eso hay que conservarlos: sin ellos no se puede leer ese inventario.
+> **Dónde siguen vivos:** en el **inventario de especies antiguo**, donde cada planta está
+> referenciada como «cuartel 1… cuartel 18» y **no tiene coordenadas**. Ese inventario no se
+> importa por cuartel: el que entra es el georreferenciado de `catastro campus.xlsx` (2.13).
 
 ### 5.4 Otros términos
 
@@ -534,8 +551,9 @@ Catastro de áreas verdes      →  tiene superficies, está desfasado
                           Hay que unirlos en uno solo
 ```
 
-El puente entre el inventario botánico y el georreferenciado **es el cuartel** — por eso, aunque
-esté en desuso operativo, hay que conservarlo (§5.3).
+El único puente entre el inventario botánico y el georreferenciado era el cuartel. Como el
+sistema no usa cuarteles (§5.3), el inventario sin coordenadas no se fusiona: la fuente es el
+inventario georreferenciado de `catastro campus.xlsx`.
 
 ### 9.2 La ortofoto con dron
 
@@ -663,7 +681,6 @@ Robert **se comprometió a compartir** los tres primeros en la segunda entrevist
 |---|---|---|
 | **Inventario de especies** | ✅ Prometido | Datos botánicos: especie, familia, altura, diámetro de copa, fuste. **Sin coordenadas** — se ubica por cuartel |
 | **Shapes de los ~100 jardines** | ✅ Prometido | Tienen **código numérico y coordenadas**. Es la unidad de control del corte de césped |
-| **Capas de cuarteles** | ✅ Prometido («creo que sí lo tengo en algún lugar») | Permite interpretar el inventario de especies |
 | **Reportes de tercerizados** | 🔄 Los está compilando | Estaba terminando de reunirlos cuando hablamos |
 | **Matriz de incidencia** | ❓ Sin confirmar | Definiría los tipos de incidencia |
 | **Un contrato tipo** | ❓ Sin confirmar | Todo lo tercerizado |
@@ -690,7 +707,7 @@ Robert **se comprometió a compartir** los tres primeros en la segunda entrevist
 | Qué es «sector» | Tres significados en la misma hoja | ✅ **Resuelto** — son 3 sectores de mantenimiento reales y fijos |
 | Cobertura | El Excel solo cubre personal estable | ✅ **Resuelto** — cubre media operación |
 | Taxonomía | «Cuatro actividades» vs. 9 clases | ✅ **Resuelto** — las 4 son ejes gruesos; se mantienen las 9 |
-| Mapeo lugar → cuartel | Solo 2 de 283 filas lo mencionan | ⚠️ **Abierto, pero baja prioridad** — ya no bloquea reportes operativos, solo la lectura del inventario antiguo |
+| Mapeo lugar → cuartel | Solo 2 de 283 filas lo mencionan | ❌ **Descartado** (29 sep) — el sistema no usa cuarteles |
 
 ### 11.4 Un límite de alcance que conviene tener claro
 
@@ -717,12 +734,11 @@ Para tener sentido de escala:
 | Antigüedad del campus | **109 años** |
 | **Árboles en el campus** | **~3.500** |
 | **Árboles ya capturados con coordenadas** | **~1.000** (30-35%) |
-| Sectores de mantenimiento | **3** (~4.5 + ~4.5 + ~3 ha) |
+| Sectores | **5**: 3 verdes (4.55 + 4.06 + 3.26 ha), Polideportivo (2.08 ha) y Bosque húmedo (1.11 ha) |
 | **Personal de campo** | **~25** jardineros (9 + 9 + 7) + 3 capataces |
 | Cobertura por persona | **~5.000 m²** |
-| Lugares con coordenadas | **75** |
+| Secciones (áreas verdes del mapa) | **519** · referencias: **411** |
 | Jardines en la ruta de corte | **~100** (con código numérico y shape) |
-| Cuarteles forestales | **17** vigentes (de 18) — **en desuso** |
 | Árboles en la poda anual | **215-230** |
 | Controles fitosanitarios al año | **4** mínimo (uno estacional) |
 | Actividades registradas en 2026 | **283** (enero-agosto) |
@@ -756,8 +772,8 @@ Cosas que ya nos pasaron o estuvimos a punto de hacer:
 1. **Tratar el Excel como si fuera el sistema a replicar.** Es el síntoma del problema, no el
    modelo. Pero tampoco es basura: contiene la taxonomía real y las coordenadas reales.
 2. **Creer que los cuarteles forestales son la zonificación oficial.** Lo parecían en la primera
-   entrevista; en la segunda Robert aclaró que **casi no los usa**. La división viva son los
-   **3 sectores de mantenimiento** y los **referentes** (edificios, facultades, vías).
+   entrevista; en la segunda Robert aclaró que **casi no los usa**, y el sistema no los usa. La
+   división es **sector → sección → subsección**.
 3. **Confundir el sector con la persona que lo dirige.** El sector es territorio fijo; el capataz
    solo lo etiqueta. Nunca crear una zona llamada «Alfonso».
 4. **Asumir que el Excel cubre toda la operación.** Le falta la mitad tercerizada.

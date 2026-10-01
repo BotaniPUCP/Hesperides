@@ -26,7 +26,7 @@ Permitir que un administrador dé de alta, edite, desactive y reactive las cuent
 ### 2.1 Dónde vive el código
 
 - **Backend:** `modules/users/` (controller, dto, entity, repository, service). La tabla `users`
-  y `RefreshToken` son de SPEC-001; `TeamMember` de SPEC-002 V012; el rol es un `CatalogItem`
+  y `RefreshToken` son de SPEC-001; `TeamMember` de SPEC-002 V005; el rol es un `CatalogItem`
   de SPEC-003.
 - **Frontend:** `frontend/src/app/admin/usuarios/`, `frontend/src/app/cambiar-password/` y
   `frontend/src/components/users/`.
@@ -187,8 +187,8 @@ de refresh de SPEC-001 Anexo C sin motivo.
 
 ## 4. Migración de base de datos
 
-**El DDL está en `backend/src/main/resources/db/migration/`:** `V100__add_credential_columns_to_users.sql`
-(las tres columnas y sus dos índices parciales) y `V101__enable_unaccent.sql` (extensión que usa
+**El DDL está en `backend/src/main/resources/db/migration/`:** `V006__add_credential_columns_to_users.sql`
+(las tres columnas y sus dos índices parciales) y `V007__enable_unaccent.sql` (extensión que usa
 la búsqueda insensible a acentos del listado).
 
 La tabla `users` **ya existe**: la crea `V002`, propiedad de SPEC-001. Este spec solo la extiende
@@ -430,7 +430,7 @@ son los únicos que ninguna suite puede dar por buenos.
 | CA-09 | **[manual]** El formulario de edición no tiene campo de contraseña, y un `password` inyectado en el body de `PUT` no la cambia |
 | CA-10 | Las cinco acciones dejan rastro en `audit_log` con su `before`/`after`. Desactivar dos veces deja **una** sola fila |
 | CA-11 | **[manual]** Cambiar la propia contraseña expulsa las demás sesiones y mantiene la actual |
-| CA-12 | `docker-compose down -v && up --build` aplica V100 y V101 sin error de checksum; un `INSERT` con `credential_status = 'OTRO'` falla por el CHECK |
+| CA-12 | `docker-compose down -v && up --build` aplica V006 y V007 sin error de checksum; un `INSERT` con `credential_status = 'OTRO'` falla por el CHECK |
 
 ## 7. Especificación visual
 
@@ -619,7 +619,7 @@ fila), los envíos de correo exitosos, y cualquier `GET`.
 
 El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
-- [ ] La migración es `V100__add_credential_columns_to_users.sql` y usa `ALTER TABLE`, no `CREATE`.
+- [ ] La migración es `V006__add_credential_columns_to_users.sql` y usa `ALTER TABLE`, no `CREATE`.
 - [ ] Sin dependencias nuevas más allá de `spring-boot-starter-mail`.
 - [ ] **El envío de correo ocurre fuera de la transacción del alta** (REGLAS §0.1).
 - [ ] Probado en web **incluido el caso de SMTP caído** (§5.3).

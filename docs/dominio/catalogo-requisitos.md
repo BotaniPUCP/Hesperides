@@ -1,16 +1,19 @@
 # Catálogo de requisitos
 
-> **Actualizado tras la 2.ª entrevista.** Esta versión revisa la lista preparada después de esa
-> reunión, contrastándola con lo que el cliente dijo y con el Excel operativo.
+> **Actualizado tras la 3.ª entrevista (29 de septiembre de 2026)**, con las tres entrevistas al
+> cliente como fuente. Lo que queda fuera de la primera versión, y por qué, está en
+> [`fuera-de-alcance.md`](fuera-de-alcance.md).
 >
 > **Leyenda de cambios:** 🆕 nuevo · ⬆️ sube prioridad · ⬇️ baja prioridad.
 >
 > **Columna «¿Se puede?»** — si tenemos información suficiente para construirlo hoy:
 > **✅ Sí** · **🔶 Parcial** (se puede empezar, falta un dato para terminarlo) ·
-> **🔒 No** (bloqueado hasta que llegue algo del cliente).
+> **🔒 No** (bloqueado hasta que llegue algo del cliente) · **⏭️ Futuro** (fuera de la primera
+> versión; se conserva para no perder su contexto).
 >
 > **Prioridad** es importancia para el cliente, **no** orden de construcción. Un requisito de
-> prioridad Alta puede estar bloqueado y no poder empezarse.
+> prioridad Alta puede estar bloqueado y no poder empezarse. **Peso** es su traducción numérica
+> (Alta 3 · Media 2 · Baja 1 · `HAB` 1). **Avance** es el porcentaje construido.
 
 ---
 
@@ -35,148 +38,198 @@ Requisitos que **el cliente nunca pidió** pero sin los cuales nada funciona: au
 usuarios, roles, catálogos base. **No son dolores y no compiten con ellos.** Se marcan `HAB` para
 que la etiqueta «Alta» quede reservada a lo que de verdad duele.
 
-> **Por qué separarlos.** Antes de esta revisión, el 44% de los requisitos era Alta —login y
-> gestión de usuarios incluidos—. Cuando casi la mitad es prioritaria, la etiqueta deja de
-> informar y, al recortar alcance, no hay criterio para decidir qué cae.
+---
+
+## Quién usa el sistema
+
+La primera versión es **solo para la sección**, y dentro de ella solo para quienes reportan y
+deciden:
+
+| Rol (catálogo `ROLE`) | Quién es | Cuentas |
+|---|---|---|
+| `ADMIN` | El **jefe de sección**. **Incluye todos los permisos de `COORDINADOR`**: una sola cuenta, sin cambiar de rol | 1 |
+| `COORDINADOR` | Jefatura de la sección. Planifica, consulta reportes, valida | Se conserva para una segunda persona de jefatura |
+| `SUPERVISOR` | **Capataz** / jefe de grupo. Registra intervenciones, incidencias y riego de su sector | 3 |
+| `OPERARIO` | Jardinero. **Se conserva por formalidad**, sin cuentas en esta versión | 0 |
+
+> **Por qué `ADMIN` incluye a `COORDINADOR` en vez de admitir varios roles por usuario:** el modelo
+> ya implementado guarda **un rol por usuario** (`users.role_item_id`, un solo `role` en el JWT).
+> Hacer de `ADMIN` un superconjunto resuelve el caso real sin tocar SPEC-001 ni SPEC-100.
+
+**No tienen cuenta:** los ~26 operarios, el ingeniero de campo, las asistentes, los practicantes,
+los proveedores tercerizados y las unidades que piden atenciones. Ver
+[`fuera-de-alcance.md`](fuera-de-alcance.md) §1.3 y §1.5.
 
 ---
 
-## Resumen de los cambios
+## Resumen
 
 | | Cantidad |
 |---|---|
-| Requisitos en la lista original | 45 |
-| **Requisitos nuevos** | **20** |
-| **Total** | **72** |
+| Requisitos en la versión anterior | 72 |
+| **Requisitos nuevos** | **5** (1.12 · 2.13 · 2.14 · 3.12 · 5.11) |
+| **Total** | **77** |
+| Pasan a **fase futura** (⏭️) | **13** |
+| **En alcance de la primera versión** | **64** |
 
-**Prioridades tras la recalibración contra los dolores:**
+**Prioridades de los 64 en alcance:**
 
-| Prioridad | Cantidad | |
-|---|---|---|
-| **Alta** | **22** (30%) | Antes eran 32 (44%) |
-| Media | 31 | |
-| Baja | 10 | |
-| `HAB` habilitador | 9 | No compiten con los dolores |
+| Prioridad | Cantidad |
+|---|---|
+| **Alta** | **17** (27%) |
+| Media | 30 |
+| Baja | 8 |
+| `HAB` habilitador | 9 |
 
-**Distribución por módulo:** M1 11 · M2 12 · M3 11 · M4 10 · M5 10 · M6 10 · M7 5 · M8 3
-
-El **vivero queda fuera de la fase 1** (decisión del equipo). Por eso M8 conserva su número
-original de QR y no hizo falta renumerar nada.
+**Distribución por módulo (en alcance / total):** M1 12/12 · M2 12/14 · M3 12/12 · M4 1/10 ·
+M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3
 
 ### Qué se puede construir hoy
 
-| Estado | Cantidad | |
+| Estado | Cantidad (sobre 64) | |
 |---|---|---|
-| **✅ Se puede** | **39** (54%) | Información suficiente |
-| **🔶 Parcial** | **16** (22%) | Se puede empezar; falta un dato para cerrarlo |
-| **🔒 Bloqueado** | **17** (24%) | Necesita algo del cliente |
+| **✅ Se puede** | **56** (88%) | Información suficiente |
+| **🔶 Parcial** | **7** (11%) | Se puede empezar; falta un dato para cerrarlo |
+| **🔒 Bloqueado** | **1** (2%) | Necesita algo del cliente |
 
-**De los 20 requisitos Alta, 12 están listos y 8 no.** Esos 8 son los que conviene desatascar:
+**De los 17 requisitos Alta, 14 están listos y 3 no:**
 
 | | Requisito | Qué falta |
 |---|---|---|
-| 🔒 | **2.8** Integración con el mapa | Acceso al repositorio y saber de dónde lee |
-| 🔒 | **4.3** Seguimiento del servicio tercerizado | Un reporte de cierre del proveedor |
-| 🔒 | **4.6** Checklist de cumplimiento | El inventario de ~100 jardines (prometido) |
-| 🔶 | **1.9** Cuadrillas y sectores | Los límites de los 3 sectores |
-| 🔶 | **2.9** Código nuevo de arbolado | El criterio del código |
-| 🔶 | **4.5** Frecuencia pactada vs. real | Si las frecuencias están en el contrato |
-| 🔶 | **6.8** Cobertura mensual | Qué cuenta como «zona cubierta» |
-| 🔶 | **7.2** Cobertura de riego | Qué cuenta como «zona regada» |
-
-> **Un patrón:** los tres bloqueos duros son de **M4 (tercerizados)** y del **mapa**. El trabajo
-> del personal estable —M3, M7— está casi todo en verde, porque de eso sí tenemos datos.
+| 🔶 | **1.9** Cuadrillas y sectores | Qué sector atiende «Jardín Rosales», la única sección sin responsable (P-15) |
+| 🔶 | **6.8** Cobertura mensual | Que el cliente valide nuestra regla de «lugar cubierto» |
+| 🔶 | **7.2** Cobertura de riego | Que el cliente valide nuestra regla de «lugar regado» |
 
 ### Qué desbloquea más cosas
 
 | Lo que falta | Desbloquea |
 |---|---|
-| **Acceso al repositorio del mapa** | 2.8 — y decide 2.1 y 6.9 |
-| **Inventario de especies** | 1.5 · 2.11 · 8.2 |
-| **Los shapes** (sectores, jardines, cuarteles) | 1.6 · 1.9 · 2.5 · 4.6 · 7.3 |
-| **Un contrato + un reporte de proveedor** | 4.1 · 4.3 · 4.5 · 4.9 |
-| **Los formatos de reporte** | 6.2 · 6.3 · 6.4 |
-| **El «Excel forestal»** | 2.3 |
-| **La matriz de incidencia** | 5.7 |
+| **Detallar el algoritmo de cercanía** que describe dónde ocurrió una incidencia | 5.1 · 3.4 |
+| **Validar las reglas de cobertura** — lugar cubierto y lugar regado | 6.8 · 7.2 |
+| **Validar la propuesta de reportes** | 6.2 · 6.3 · 6.4 |
+| **La lista de zonas con más de una pasada** | 7.3 |
 
-**Los shapes son el mayor multiplicador**: desbloquean cinco requisitos, dos de ellos Alta.
+> **El cliente ya casi no bloquea nada.** Lo que queda son definiciones que **proponemos
+> nosotros** y el cliente valida, no archivos que haya que esperar.
 
 ### Cada dolor tiene requisitos Alta que lo atacan
 
 | Dolor | Requisitos Alta |
 |---|---|
-| **D1** Información dispersa y manual | 2.1 · 2.8 · 3.4 · 3.7 · 6.1 |
-| **D2** Tercerizado opaco | 4.3 · 4.5 · 4.6 · 6.10 |
-| **D3** No hay catastro | 2.2 · 2.9 · 2.12 |
+| **D1** Información dispersa y manual | 3.4 · 3.7 · 6.1 |
+| **D2** Tercerizado opaco | 6.10 |
+| **D3** No hay catastro | 2.2 · 2.9 · 2.12 · 2.13 |
 | **D4** Reporte verbal con intermediario | 3.1 · 3.3 · 3.5 |
-| **D5** Cuesta demostrar cobertura | 1.9 · 4.5 · 6.1 · 6.8 · 6.10 · 7.1 · 7.2 |
-| **D6** No se puede equilibrar el mantenimiento | 2.1 · 3.4 · 6.9 |
+| **D5** Cuesta demostrar cobertura | 1.9 · 6.1 · 6.8 · 6.10 · 7.1 · 7.2 |
+| **D6** No se puede equilibrar el mantenimiento | 3.4 |
 | **D7** Procesos sin formalizar | 1.9 · 3.1 · 3.7 · 5.1 · 5.3 |
 
-**Ningún dolor quedó sin cobertura.** El más atendido es D5 (cobertura), que es coherente: es la
-métrica con la que Robert rinde cuentas a OSG.
+> ⚠️ **D2 queda casi sin atender en esta versión, y es a propósito.** Al pasar el seguimiento de
+> los servicios tercerizados a fase futura, solo 6.10 lo toca. No es un olvido: **no tenemos
+> información del proceso tercerizado** (ni un contrato ni un informe de proveedor), y construir
+> sobre suposiciones sería peor que esperar. D6 conserva además 6.9, de prioridad Media.
+>
+> ⚠️ **D1 pierde su requisito central.** Sin la integración con el mapa del cliente (2.8), Carolina
+> seguirá alimentándolo a mano. D1 se ataca desde el registro en campo (3.4, 3.7) y el tablero
+> (6.1): la información deja de estar dispersa, pero su mapa no se actualiza solo.
 
-### Qué cambió en la recalibración
+---
 
-**Subieron a Alta** — atacaban un dolor central y estaban infravalorados:
+## Cambios de esta versión *(25 sep 2026)*
 
-| Requisito | Por qué |
+| Decisión | Efecto en el catálogo |
 |---|---|
-| **3.4** Marcado de zona en mapa | Es lo que **automatiza el trabajo manual de Carolina** (D1) |
-| **4.5** Frecuencia pactada vs. real | La forma concreta de controlar al tercero (D2) |
-| **6.10** Cumplimiento de frecuencias | Métrica que Robert ya reporta (D2, D5) |
+| **Usuarios: solo el jefe de sección y los 3 capataces** | 1.2 fija que `ADMIN` incluye a `COORDINADOR`; `OPERARIO` se conserva sin cuentas |
+| **Servicios tercerizados: solo los datos básicos del proveedor** | **4.2 se queda.** 4.1 y 4.3-4.10 pasan a ⏭️, y con ellos **6.7** |
+| **Sin integración con Centuria** | **5.8 se reformula:** una marca de origen, no el código externo. **5.10** pasa a ⏭️ |
+| **Incidencias con modelo propio, al estilo TI** | **5.7 se desbloquea** (lista propia, sin la matriz del cliente). 5.1 y 5.3 incorporan urgencia y el estado «en proceso» |
+| **Ficha técnica de poda** | 🆕 **3.12** |
+| **Maquinaria de corte solo en domingos y feriados** | 🆕 **5.11** |
+| **Mapa de calor en nuestro modelado** | **6.9** 🔶 → ✅. **2.1** 🔶 → ✅: el sistema tiene su propio mapa para las vistas internas |
+| **Jardines a fase futura** (21 sep) | La jerarquía de 1.6 queda en **sector → lugar** |
+| **Inventario forestal entregado** (21 sep) | **1.5** 🔒 → ✅ (91 especies) · 🆕 **2.13** importarlo · **2.3** 🔒 → 🔶 · **2.11** ⬆️ Alta |
+| **QR: dentro, pero es lo último** | M8 conserva sus requisitos y se construye al final |
 
-**Bajaron de Alta** — no respondían a un dolor, o el proceso actual ya funciona:
+**Tras la 3.ª entrevista (29 sep):**
 
-| Requisito | Por qué |
+| Decisión | Efecto en el catálogo |
 |---|---|
-| **4.1** Registro de contratos | Los gestiona **Logística**, no la sección |
-| **4.4** Informe final del proveedor | Es lo que **ya reciben**; digitalizarlo no cambia el proceso |
-| **6.2** Reporte operativo | **No hemos visto el formato**. Vuelve a Alta cuando llegue |
-| **2.3** Ficha de elemento verde | Igual: falta el «Excel forestal» que define los campos |
-| **3.2** Asignación de tareas | La orden verbal **funciona**; formalizarla no es el dolor |
-| **3.6** Cierre y validación | El Excel tiene el **81% sin estado**: hoy no se usa |
-| **3.9** Actividades largas | Real, pero no es un dolor declarado |
-| **5.2** Asignación de incidencia | Regla simple por tamaño del árbol; ya funciona |
-| **5.8** Códigos externos | Almacenar un código no resuelve un dolor por sí solo |
-| **4.8** Orden de compra | Dato externo de referencia |
+| **Tipo de uso por sección**, con los seis tipos del mapa del cliente | 🆕 **2.14** |
+| **Eventos del campus:** periodos bloqueantes y de préstamo | 🆕 **1.12** |
+| **La jerarquía es sector → sección → subsección** | 1.6 renombra «lugar» como **sección** y admite subsecciones |
+| **Los sectores cambian poco, pero cambian** (obras) | 1.9: la asignación sección → sector tiene vigencia |
+| **Incidencias: solo «En proceso» y «Cerrada»** | 5.3 sin estados intermedios |
+| **Plazos por urgencia; con tercero, el pactado** | **5.6** 🔶 → ✅ |
+| **La maquinaria también trabaja sábados** | 5.11 amplía los días válidos; los eventos bloqueantes solo avisan |
 
-**Pasaron a `HAB`** — el cliente nunca los pidió, pero sin ellos nada funciona: 1.1 usuarios ·
-1.2 roles · 1.3 login · 1.4, 1.5, 1.6, 1.10, 1.11 catálogos base · 5.7 tipos de incidencia.
+**Segunda revisión de pendientes (25 sep):**
 
-**Los tres cambios de fondo respecto a la lista original:**
-
-1. **Falta la gestión de cuadrillas.** Los 3 sectores fijos con sus capataces son la base del
-   trabajo diario y del ciclo de riego, y no había ningún requisito que los cubriera (M1.9).
-2. **Falta el ciclo de riego.** Robert lo llama **la métrica principal** de la sección. Entra
-   como **M7**.
-3. **Falta la integración con el mapa interactivo existente.** No parten de cero: Robert pidió
-   *«una aplicación que pueda enlazarse a este insumo»* (2.8).
+| Decisión | Efecto en el catálogo |
+|---|---|
+| **Sin integración con el mapa del cliente.** Sería otro proyecto | **2.8** 🔒 → ⏭️ |
+| **Basta saber si un árbol mide menos o más de 5 m** | **2.11** 🔒 → ⏭️: el inventario botánico ya no hace falta. La clase de altura se registra en campo (2.2) |
+| **La ficha se infiere de `catastro campus.xlsx`** | **2.3** 🔶 → ✅ |
+| **El equipo define el criterio del código** | **2.9** 🔶 → ✅ · **8.1** 🔶 → ✅ |
+| **Valida el jefe de sección; el capataz no valida** | **3.6** 🔶 → ✅ |
+| **Proveedores con datos de prueba** | **4.2** 🔶 → ✅ |
+| **Reportes: propuesta propia** | **6.2 · 6.3 · 6.4** 🔒 → 🔶 |
+| **El equipo diseña QR, ficha pública y etiqueta** | **8.2** 🔶 → ✅ · **8.3** 🔒 → ✅ |
 
 ---
 
 ## M1 · Administración y Configuración
 
-| ID | Requisito | Prioridad | Dolor | ¿Se puede? | Nota |
-|---|---|---|---|---|---|
-| 1.1 | Gestión de usuarios (CRUD) | `HAB` | — | ✅ | Ya especificado en SPEC-100 |
-| 1.2 | Gestión de roles y permisos | `HAB` | — | ✅ | |
-| 1.3 | Autenticación y login | `HAB` | — | ✅ | Ya implementado (SPEC-001) |
-| 1.4 | Catálogo de tipos de intervención | `HAB` | — | ✅ | 9 clases → 45 tipos, del Excel. 2 clases sin tipos (P-10) |
-| 1.5 | Catálogo de especies | `HAB` | — | 🔒 | Falta el **inventario de especies**. Prometido, no entregado |
-| 1.6 | Catálogo de zonas del campus | `HAB` | — | 🔶 | Tenemos 74 lugares. Faltan los **3 sectores** y los ~100 jardines |
-| 1.7 | Configuración de frecuencias de mantenimiento | Media | D2 | ✅ | Robert dio todas las frecuencias en la 2.ª entrevista |
-| 1.8 | Parámetros generales del sistema | Baja | — | ✅ | |
-| **1.9** | **Gestión de cuadrillas y asignación a sectores** | **Alta** | **D5 D7** | 🔶 | 🆕 Sabemos que son 3 sectores (9+9+7 personas). **Faltan los límites** |
-| **1.10** | **Catálogo de insumos y materiales** | `HAB` | — | ✅ | 🆕 Lista extraída del Excel |
-| **1.11** | **Catálogo de unidades de medida** | `HAB` | — | ✅ | 🆕 und · m · m² · m³ |
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| 1.1 | Gestión de usuarios (CRUD) | `HAB` | 1 | — | ✅ | 100% | Especificado en SPEC-100 |
+| 1.2 | Gestión de roles y permisos | `HAB` | 1 | — | ✅ | 100% | **`ADMIN` incluye todos los permisos de `COORDINADOR`**. `OPERARIO` sin cuentas |
+| 1.3 | Autenticación y login | `HAB` | 1 | — | ✅ | 100% | Implementado (SPEC-001) |
+| 1.4 | Catálogo de tipos de intervención | `HAB` | 1 | — | ✅ | 100% | 9 clases → 45 tipos. Fitosanitario e Inspección con tipos provisionales (P-10) |
+| 1.5 | Catálogo de especies | `HAB` | 1 | — | ✅ | 0% | 🔒 → ✅ **91 especies** del inventario forestal entregado (21 sep). Se siembra en 2.13 |
+| 1.6 | Catálogo de zonas del campus | `HAB` | 1 | — | 🔶 | 0% | **Sector (5) → sección (519) → subsección.** Todo sale del mapa v32. Más **411 referencias** oficiales para buscar. Ver nota |
+| 1.7 | Configuración de frecuencias de mantenimiento | Media | 2 | D2 | ✅ | 20% | Especificado en SPEC-006 |
+| 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 0% | Incluye la **lista de feriados** que usa 5.11 |
+| 1.9 | Gestión de cuadrillas y asignación a sectores | **Alta** | 3 | D5 D7 | 🔶 | 0% | 3 sectores verdes (9+9+7 personas), un capataz cada uno; Polideportivo y Bosque húmedo sin cuadrilla propia. La asignación de secciones **tiene vigencia**. Falta P-15 |
+| 1.10 | Catálogo de insumos y materiales | `HAB` | 1 | — | ✅ | 0% | Lista extraída del Excel |
+| 1.11 | Catálogo de unidades de medida | `HAB` | 1 | — | ✅ | 0% | und · m · m² · m³ |
+| **1.12** | **Eventos del campus** | Media | 2 | D5 D7 | ✅ | 0% | 🆕 Periodos bloqueantes y de préstamo, sobre el campus, un sector o una sección. Ver nota |
 
 **Sobre 1.4 — la taxonomía es de dos niveles.** El Excel define **9 clases** (Habilitación,
 Rehabilitación, Mantenimiento, Poda, Propagación, Riego, Manejo fitosanitario, Residuos,
-Inspección) y **45 tipos** colgando de ellas. Dos clases están declaradas **sin tipos**:
-Manejo fitosanitario e Inspección y monitoreo.
+Inspección) y **45 tipos** colgando de ellas. Manejo fitosanitario e Inspección y monitoreo
+llegaron **sin tipos**; tienen tipos provisionales (V010) hasta que el cliente los confirme.
 
-**Sobre 1.6 — «zonas/sectores» son cosas distintas.** Ver la nota de M2.5.
+**Sobre 1.6 — sector, sección y subsección.** **Solo se usan esas tres palabras** (29 sep): los
+cuarteles forestales no entran al modelo.
+
+- Una **sección** es un **área verde** del mapa del cliente: un polígono independiente. Hay 519.
+- Un **sector** es un conjunto de secciones. Hay 5: **Sector verde 01, 02 y 03** (los de los
+  capataces, numerados por superficie), **Sector Polideportivo** (lo mantiene un tercero por
+  contrato) y **Sector Bosque húmedo** (sin personal asignado, se atiende a demanda).
+- Una **subsección** es una división interna de una sección, solo si hace falta.
+
+Los «lugares» del Excel dejan de ser secciones y pasan a ser **referencias**: una tabla oficial de
+411 puntos con nombre, que sirven para buscar en el mapa e importar ubicaciones (SPEC-005 §4.4.4).
+
+**Sobre 1.9 — los sectores cambian poco, pero cambian.** *«Probablemente lo modifiquemos en algunos
+meses por un tema de ejecuciones de obra… pequeñas modificaciones»* (3.ª entrevista). Cada sección
+pertenece a un sector **desde una fecha**. Si una sección pasa a otro capataz, la cobertura de los
+meses anteriores se sigue contando en el sector que la tenía entonces.
+
+**Sobre 1.12 — los eventos del campus.** Un evento es un periodo que afecta al trabajo de campo:
+
+| Campo | Qué guarda |
+|---|---|
+| Tipo | **Bloqueante** (examen de admisión, fin de ciclo, jueves cultural) o **préstamo** (una unidad usa el jardín para una actividad) |
+| Nombre | «Examen de admisión 2027-1», «Préstamo para feria de Letras» |
+| Fechas | Inicio y fin; con **recurrencia** opcional (cada jueves, cada semestre) |
+| Ámbito | **Todo el campus**, un **sector** o una **sección** |
+
+- **Un evento bloqueante solo avisa:** quien programa trabajo en ese ámbito y esas fechas ve el
+  aviso, pero puede seguir.
+- **Un préstamo marca la sección** mientras dura. Al terminar, la sección aparece como **«requiere
+  recuperación»**: OSG presta unos 12 jardines de forma recurrente y *«esos espacios nos demandan
+  mucho tiempo para recuperarlos»*.
 
 **Sobre 1.7 — las frecuencias no son fijas.** Césped 30-45 días *según estación*; fitosanitario
 4 al año *mínimo, más si el clima lo exige*; poda mayor 1 al año. En 2026, un «verano eterno»
@@ -186,76 +239,113 @@ obligó a cortar más seguido. **El sistema no puede asumir periodicidad constan
 
 ## M2 · Catastro Verde
 
-| ID | Requisito | Prioridad | Dolor | ¿Se puede? | Nota |
-|---|---|---|---|---|---|
-| 2.1 | Mapa interactivo del campus | Media ⬇️ | D1 D6 | 🔶 | ⬇️ **Ya existe el suyo.** Depende de C4: ¿mapa propio o solo alimentamos el suyo? |
-| 2.2 | Registro de elementos verdes en mapa | **Alta** | D3 | ✅ | |
-| 2.3 | Ficha de cada elemento verde | Media | D3 | 🔒 | Falta el **«Excel forestal»** que define los campos |
-| 2.4 | Filtros y búsqueda en mapa | Media | D6 | ✅ | |
-| 2.5 | Carga de capas/sectores del campus | Media | D1 | 🔒 | Faltan los **shapes**: sectores, jardines, cuarteles |
-| 2.6 | Registro de campos deportivos | Baja | D3 | ✅ | |
-| 2.7 | Historial por elemento | Media | D7 | ✅ | |
-| **2.8** | **Integración con el mapa interactivo existente** | **Alta** | **D1** | 🔒 | 🆕 **El requisito clave.** Falta acceso al repositorio y saber de dónde lee |
-| **2.9** | **Código de identificación nuevo para arbolado** | **Alta** | D3 | 🔶 | 🆕 Sabemos que hay que recodificar. **Falta el criterio** del código |
-| **2.10** | **Conservar el código heredado como referencia** | **Media** | D3 | ✅ | 🆕 Sin índice único: hay códigos duplicados y reasignados |
-| **2.11** | **Importar el inventario de especies sin coordenadas** | **Media** | D3 | 🔒 | 🆕 Falta el archivo |
-| **2.12** | **Registro progresivo del catastro** | **Alta** | D3 | ✅ | 🆕 Debe funcionar con el catastro al 30% |
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| 2.1 | Mapa interactivo del campus | Media | 2 | D1 D6 | ✅ | 0% | 🔶 → ✅ **Mapa propio** para registro, filtros y mapa de calor |
+| 2.2 | Registro de elementos verdes en mapa | **Alta** | 3 | D3 | ✅ | 0% | Incluye la **clase de altura**: < 5 m o ≥ 5 m. Ver nota |
+| 2.3 | Ficha de cada elemento verde | Media | 2 | D3 | ✅ | 0% | 🔒 → ✅ Se infiere de `catastro campus.xlsx`. Ver nota |
+| 2.4 | Filtros y búsqueda en mapa | Media | 2 | D6 | ✅ | 0% | Por sector y por sección, con nombres reconocibles |
+| 2.5 | Carga de capas/sectores del campus | Media | 2 | D1 | ✅ | 0% | 🔒 → ✅ El mapa v32 trae las **521 áreas verdes** (secciones) con su responsable y las 4 zonas de supervisión |
+| 2.6 | Registro de campos deportivos | Baja | 1 | D3 | ✅ | 0% | Solo como superficie; su riego no es de la sección |
+| 2.7 | Historial por elemento | Media | 2 | D7 | ✅ | 0% | |
+| 2.8 | Integración con el mapa interactivo existente | **Alta** | 3 | D1 | ⏭️ | 0% | 🔒 → ⏭️ **Fuera del proyecto:** sería un proyecto aparte |
+| 2.9 | Código de identificación nuevo para arbolado | **Alta** | 3 | D3 | ✅ | 0% | 🔶 → ✅ **El criterio lo define el equipo** |
+| 2.10 | Conservar el código heredado como referencia | Media | 2 | D3 | ✅ | 0% | Sin índice único: hay códigos duplicados y reasignados |
+| 2.11 | Importar el inventario botánico sin coordenadas | **Alta** | 3 | D3 | ⏭️ | 0% | 🔒 → ⏭️ **Ya no hace falta:** para decidir quién poda basta la clase de altura (2.2) |
+| 2.12 | Registro progresivo del catastro | **Alta** | 3 | D3 | ✅ | 0% | Debe funcionar con el catastro al 30% |
+| **2.13** | **Importar el inventario forestal georreferenciado** | **Alta** | 3 | D3 | ✅ | 0% | 🆕 `catastro campus.xlsx`: **962 registros**, 91 especies, 6 formas biológicas |
+| **2.14** | **Tipo de uso de cada sección** | Media | 2 | D6 | ✅ | 0% | 🆕 Los seis tipos del mapa del cliente. Ver nota |
 
-### Sobre 2.8 — la integración con el mapa que ya existe
+### Sobre 2.1 y 2.8 — un mapa propio, sin integración
 
-El cliente **ya tiene un mapa funcionando**: `clluncor-lang.github.io/mapa-web-6`. Es **GitHub
-Pages + Google Maps API**, en el repositorio personal de Carolina, y lo comparten las **tres
-secciones de OSG**.
+El cliente **ya tiene un mapa funcionando** (GitHub Pages + Google Maps, en el repositorio
+personal de Carolina) que comparten las **tres secciones de OSG**. **Este proyecto no se integra
+con él** (2.8 ⏭️): alimentarlo automáticamente sería un proyecto aparte. El análisis de lo que
+haría falta queda en [`integracion-mapa-interactivo.md`](integracion-mapa-interactivo.md).
 
-**Su interfaz ya tiene lo que nosotros habíamos planeado construir:**
+Hesperides tiene **su propio mapa** (2.1) para marcar la zona intervenida, filtrar y ver el mapa de
+calor (2.4 · 3.4 · 6.9).
 
-| Lo que ya tiene | Requisito nuestro |
+### Sobre 2.2 y 2.11 — la clase de altura en vez de la medida exacta
+
+La altura importa por **una sola decisión**: quién poda. **< 5 m** lo hace el personal estable;
+**≥ 5 m** va a un tercero. Para eso no hace falta la altura exacta ni el inventario botánico: basta
+la **clase de altura**, que el capataz registra en campo al capturar o intervenir un ejemplar.
+
+Mientras nadie la registre, el ejemplar queda **«sin clasificar»**, y el sistema pide verificarlo
+antes de proponer quién lo atiende. Nunca se asume la clase por la especie.
+
+> **Un atajo que conviene pedir:** el levantamiento actual incluye evaluación dasométrica
+> (diámetro a la altura del pecho y **altura estimada**), pero lo que nos compartieron no la trae:
+> la tiene la ingeniera a cargo (3.ª entrevista). Si la comparte, la clase se deriva de ese dato y
+> no hay que clasificar en campo los 817 ejemplares.
+
+### Sobre 2.3 — qué lleva la ficha
+
+`catastro campus.xlsx` no es un formato de captura con estado de salud, pero sí fija la mayor parte
+de la ficha. El resto lo proponemos nosotros:
+
+| Campo | De dónde sale |
 |---|---|
-| Checkbox «Ver Mapa de Calor» | **6.9** — ya construido |
-| Filtros de Mes, Clase, Tipo, Responsable | Parte de **2.4** y **6.6** |
-| Buscador de facultad/lugar | Parte de **2.4** |
-| Capas: Gestión, Zonas, Plan, Vivero | Parte de **2.5** |
+| Ubicación, referencia, latitud, longitud | `catastro campus.xlsx` |
+| Nombre común, nombre científico, forma biológica | `catastro campus.xlsx` |
+| Cantidad (matas agrupadas) y foto | `catastro campus.xlsx` |
+| Código heredado | `catastro campus.xlsx` (columna `Código`, solo los 46 valores reales) |
+| **Código nuevo** | Propuesta del equipo (2.9) |
+| **Clase de altura** (< 5 m / ≥ 5 m / sin clasificar) | Propuesta del equipo (2.2) |
+| **Estado sanitario** (bueno / regular / malo) | Propuesta del equipo. Robert lo nombró como criterio de valoración |
+| **Historial de intervenciones** | Del sistema (2.7) |
 
-> **El dolor no es la falta de mapa — es que Carolina lo alimenta a mano cada semana.**
-> Robert pidió *«una aplicación que pueda enlazarse a este insumo»*, no uno nuevo.
+### Sobre 2.5 — cómo se divide el campus
 
-**Por eso 2.1 y 6.9 bajaron de Alta a Media:** duplicar lo que ya funciona no resuelve ningún
-dolor. Si el cliente decide seguir con su mapa, nuestro trabajo es **alimentarlo**; si decide
-migrar al nuestro, vuelven a subir.
-
-**Está bloqueado (🔒)** hasta tener acceso al repositorio y saber de dónde lee los datos. Las
-preguntas concretas están en
-[`integracion-mapa-interactivo.md`](integracion-mapa-interactivo.md).
-
-### Sobre 2.5 — el campus tiene cuatro divisiones, no una
-
-| División | Cuántas | ¿Viva? | Para qué |
+| División | Cuántas | ¿En alcance? | Para qué |
 |---|---|---|---|
-| **Sector de mantenimiento** | 3 | ✅ Sí | Organiza personal y **el ciclo de riego** |
-| **Lugar / referente** | 74 | ✅ Sí | Lo que se anota al registrar una actividad |
-| **Jardín** | ~100 | ✅ Sí | Unidad del corte de césped. Tiene código y shape |
-| **Cuartel forestal** | 17 | ⚠️ En desuso | Solo para leer el inventario de especies antiguo |
+| **Sector** | 5 | ✅ Sí | 3 verdes organizan personal y **el ciclo de riego**; Polideportivo y Bosque húmedo no son de los capataces |
+| **Sección** | 519 | ✅ Sí | Cada área verde del mapa del cliente |
+| **Subsección** | Opcional | ✅ Sí | División interna de una sección |
+| **Referencia** | 411 | ✅ Sí | Puntos con nombre (edificio, piso, oficina, puerta…) para buscar e importar ubicaciones. No es un nivel de la jerarquía |
+| **Zona de supervisión** | 4 | ✅ Sí, como capa aparte | Divide el campus en 4 y corta a los sectores. Cada una tiene supervisor; por ahora, el coordinador (P-16) |
 
-Robert casi no usa los cuarteles: *«es más fácil referenciar Jardines de Ingeniería Civil que
-cuartel 11»*. Usa **referentes** — edificios, facultades, vías, jardines emblemáticos.
+Robert se orienta por **referentes** — edificios, facultades, vías, jardines emblemáticos —, que
+son las referencias. Los **cuarteles forestales no se usan** (29 sep): en la 3.ª entrevista los
+llamó *«básicamente data histórica»*.
+
+### Sobre 2.14 — el tipo de uso
+
+Cada sección tiene un tipo de uso, tomado de la capa del mapa del cliente. Robert lo usa para
+decidir cómo gestionar los recursos: *«cómo lo vas usando y a su vez cómo también vamos gestionando
+los recursos para su recuperación»*.
+
+| Tipo de uso | Qué lo caracteriza (3.ª entrevista) |
+|---|---|
+| **Uso administrativo** | — |
+| **Manejo sostenible, ahorro de agua** | Especies de bajo consumo: xerofíticas, jardines mediterráneos |
+| **Recreativo y descanso** | El que más mano de obra demanda; los jueves culturales lo degradan |
+| **Deportivo** | Concesionado a un tercero por tres años |
+| **Institucional** | Valor de paisaje, bajo impacto: fotos de graduación, momentos especiales |
+| **Conservación** | — |
+
+Es un catálogo configurable (`USE_TYPE`): otro cliente puede tener otros tipos. Permite ver la
+cobertura y el mapa de calor **por tipo de uso**, y prepara la rehabilitación futura.
 
 ---
 
 ## M3 · Intervenciones — Personal Estable
 
-| ID | Requisito | Prioridad | Dolor | ¿Se puede? | Nota |
-|---|---|---|---|---|---|
-| 3.1 | Registro de actividad diaria | **Alta** | D4 D7 | ✅ | Conocemos el formato: 283 registros analizados |
-| 3.2 | Asignación de tareas a personal | Media | D7 | ✅ | Hoy la orden es verbal y funciona |
-| 3.3 | Registro de evidencia fotográfica | **Alta** | D4 | ✅ | 218 de 280 filas tienen foto |
-| 3.4 | Marcado de zona intervenida en mapa | **Alta** | **D1 D6** | ✅ | Automatiza el trabajo manual de Carolina |
-| 3.5 | Registro de insumos y materiales | **Alta** | **D4** | ✅ | Pedido textual de Robert. Ver nota |
-| 3.6 | Cierre y validación de actividad | Media | D7 | 🔶 | Sabemos que hoy no se usa (81% sin estado). **Falta quién valida** |
-| 3.7 | Vista de actividades del día/semana | **Alta** | D1 D7 | ✅ | |
-| 3.8 | Registro de actividades diversas | Media | D7 | ✅ | Las 9 clases completas |
-| **3.9** | **Actividades de larga duración con avances parciales** | **Media** | D7 | ✅ | 🆕 Confirmado en la 2.ª entrevista (ejemplo de 2 meses) |
-| **3.10** | **Registro de una actividad sobre varias zonas** | **Media** | D6 | ✅ | 🆕 Hay casos reales en el Excel |
-| **3.11** | **Cantidad pedida vs. ejecutada** | **Media** | D2 | ✅ | 🆕 Robert explicó cuándo aplica: solo poda a demanda |
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| 3.1 | Registro de actividad diaria | **Alta** | 3 | D4 D7 | ✅ | 0% | **La registra el capataz.** 283 registros analizados |
+| 3.2 | Asignación de tareas a personal | Media | 2 | D7 | ✅ | 0% | Hoy la orden es verbal y funciona |
+| 3.3 | Registro de evidencia fotográfica | **Alta** | 3 | D4 | ✅ | 0% | 218 de 280 filas tienen foto |
+| 3.4 | Marcado de zona intervenida en mapa | **Alta** | 3 | D1 D6 | ✅ | 0% | Automatiza el trabajo manual de Carolina |
+| 3.5 | Registro de insumos y materiales | **Alta** | 3 | D4 | ✅ | 0% | Pedido textual de Robert. Ver nota |
+| 3.6 | Cierre y validación de actividad | Media | 2 | D7 | ✅ | 0% | 🔶 → ✅ **Valida el jefe de sección (`COORDINADOR` o `ADMIN`). El capataz registra, no valida** |
+| 3.7 | Vista de actividades del día/semana | **Alta** | 3 | D1 D7 | ✅ | 0% | |
+| 3.8 | Registro de actividades diversas | Media | 2 | D7 | ✅ | 0% | Las 9 clases completas |
+| 3.9 | Actividades de larga duración con avances parciales | Media | 2 | D7 | ✅ | 0% | Confirmado en la 2.ª entrevista (ejemplo de 2 meses) |
+| 3.10 | Registro de una actividad sobre varias zonas | Media | 2 | D6 | ✅ | 0% | Hay casos reales en el Excel |
+| 3.11 | Cantidad pedida vs. ejecutada | Media | 2 | D2 | ✅ | 0% | Solo poda a demanda |
+| **3.12** | **Ficha técnica de poda** | Media | 2 | D7 | ✅ | 0% | 🆕 **Solo cuando se usa escalera.** Ver nota |
 
 ### Sobre 3.5 — es un pedido textual del cliente
 
@@ -281,76 +371,145 @@ Durante un trabajo así se cruzan varias actividades y los capataces **sí hacen
 intermedios**. Otras intervenciones empiezan y acaban el mismo día. El sistema debe soportar
 ambas.
 
+### Sobre 3.12 — la ficha técnica de poda
+
+La poda tiene **tres regímenes**, y la ficha solo existe en uno:
+
+| Régimen | Quién | ¿Ficha técnica? |
+|---|---|---|
+| **A ras de suelo**, con tijera telescópica (hasta ~4 m) | Personal estable | **No.** Es de menor riesgo y no se registra |
+| **Con escalera** (8-10 pasos), árbol **< 5 m** | Personal estable | **Sí**, con prevencionista presente |
+| **Árbol > 5 m** | Tercerizado | Otro régimen: grúa, motosierra y prevencionista del proveedor |
+
+**Qué registra la ficha** (entrevista 2): herramientas utilizadas (de la lista de herramientas
+que Robert compartirá tras la 3.ª entrevista), personal que ejecuta y
+**prevencionista presente**, que puede ser de la PUCP o del servicio tercerizado EULEN. La
+llenan los capataces con ayuda de las ingenieras de la sección o del propio prevencionista.
+
+> **Por qué importa:** *«te caes de 2 metros y medio, 3 metros y medio, la posibilidad de que te
+> fractures el cuello…»*. La ficha es la **trazabilidad de seguridad** del trabajo en altura del
+> personal propio.
+
 ---
 
 ## M4 · Contratos y Servicios Tercerizados
 
-| ID | Requisito | Prioridad | Dolor | ¿Se puede? | Nota |
-|---|---|---|---|---|---|
-| 4.1 | Registro de contratos/servicios | Media | D2 | 🔒 | **No hemos visto un contrato tipo** |
-| 4.2 | Registro de proveedor | Media | D2 | 🔶 | Sabemos que son 2 empresas relacionadas. Faltan datos |
-| 4.3 | Seguimiento de ejecución del servicio | **Alta** | **D2** | 🔒 | Falta ver un **reporte de cierre** del proveedor |
-| 4.4 | Carga de informe final del proveedor | Media | D2 | 🔶 | Robert los está compilando |
-| 4.5 | Comparativo frecuencia pactada vs. real | **Alta** | **D2 D5** | 🔶 | Tenemos las frecuencias reales. **Falta si están en contrato** |
-| 4.6 | Checklist de cumplimiento por servicio | **Alta** | **D2** | 🔒 | Falta el **inventario de ~100 jardines**. Prometido |
-| 4.7 | Calendario de servicios programados | Media | D2 | ✅ | Frecuencias conocidas |
-| **4.8** | **Registro de la orden de compra** | **Baja** | D2 | 🔶 | 🆕 Sabemos el flujo; falta el formato del documento |
-| **4.9** | **Conformidad del servicio** | **Media** | D2 | 🔶 | 🆕 Falta saber qué revisa antes de aprobar |
-| **4.10** | **Rendimiento del proveedor** | **Baja** | D2 | 🔒 | 🆕 **El proveedor no entrega ese dato hoy** |
+> **En esta versión solo se registran los datos básicos del proveedor (4.2).** Todo el seguimiento
+> de los servicios pasa a fase futura porque **no tenemos información de ello**: no hemos visto un
+> contrato tipo, un informe de proveedor ni qué revisa la sección antes de dar conformidad. Ver
+> [`fuera-de-alcance.md`](fuera-de-alcance.md) §1.2.
 
-**Sobre 4.6 — el checklist ya existe en papel.** Es el **inventario de ~100 jardines** que se
-marcan durante el corte de césped. Robert prometió compartir los shapes. Sin esa lista, este
-requisito no se puede construir.
-
-**Sobre 4.10 — es el dolor declarado, pero no hay dato.** Robert quiere «transparentar» el
-rendimiento del tercero (le llama la atención que poden 10-15 árboles/día cuando una cuadrilla
-meticulosa hace 1-2). **Pero el proveedor hoy no entrega ese dato.** Construir la pantalla antes
-de que exista el acuerdo sería hacer una tabla que nadie puede llenar — de ahí la prioridad Baja
-pese a ser un dolor real.
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| 4.1 | Registro de contratos/servicios | Media | 2 | D2 | ⏭️ | 0% | No hemos visto un contrato tipo |
+| 4.2 | Registro de proveedor | Media | 2 | D2 | ✅ | 0% | 🔶 → ✅ **Solo datos básicos**, sembrados con **datos de prueba** |
+| 4.3 | Seguimiento de ejecución del servicio | **Alta** | 3 | D2 | ⏭️ | 0% | Falta un reporte de cierre del proveedor |
+| 4.4 | Carga de informe final del proveedor | Media | 2 | D2 | ⏭️ | 0% | Robert los está compilando |
+| 4.5 | Comparativo frecuencia pactada vs. real | **Alta** | 3 | D2 D5 | ⏭️ | 0% | Falta si las frecuencias están en el contrato |
+| 4.6 | Checklist de cumplimiento por servicio | **Alta** | 3 | D2 | ⏭️ | 0% | Depende del inventario de ~100 jardines, también futuro |
+| 4.7 | Calendario de servicios programados | Media | 2 | D2 | ⏭️ | 0% | Es seguimiento del servicio |
+| 4.8 | Registro de la orden de compra | Baja | 1 | D2 | ⏭️ | 0% | La tramita Logística |
+| 4.9 | Conformidad del servicio | Media | 2 | D2 | ⏭️ | 0% | Falta qué revisa antes de aprobar |
+| 4.10 | Rendimiento del proveedor | Baja | 1 | D2 | ⏭️ | 0% | El proveedor no entrega ese dato hoy |
 
 ---
 
 ## M5 · Gestión de Incidencias
 
-| ID | Requisito | Prioridad | Dolor | ¿Se puede? | Nota |
-|---|---|---|---|---|---|
-| 5.1 | Registro de incidencia | **Alta** | D7 | ✅ | |
-| 5.2 | Asignación de incidencia | Media | D7 | ✅ | Regla clara: <5 m estable, >5 m tercero |
-| 5.3 | Seguimiento de estado | **Alta** | D7 | ✅ | Tiempos conocidos: 3-5 días vs. +1 semana |
-| 5.4 | Vinculación con el catastro | Media | D3 D7 | ✅ | |
-| 5.5 | Historial de incidencias | Media | D7 | ✅ | |
-| 5.6 | Notificaciones de incidencias urgentes | Media | D7 | 🔶 | **Falta si hay tiempos de respuesta comprometidos** |
-| 5.7 | Catálogo de tipos de incidencia | `HAB` | — | 🔒 | Falta la **«matriz de incidencia»** |
-| **5.8** | **Códigos de sistemas externos (OSG y Centuria)** | **Media** | D1 | ✅ | 🆕 Solo se almacenan y muestran, nunca se generan |
-| **5.9** | **Distinguir hallazgo de mantenimiento rutinario** | **Media** | D7 | ✅ | 🆕 El Excel ya lo distingue |
-| **5.10** | **Avisar a la unidad solicitante al cerrar** | **Media** | D7 | 🔶 | 🆕 Falta saber **por qué canal** avisan hoy |
+> **Modelo propio, al estilo de la gestión de incidencias de TI.** No replicamos la matriz del
+> cliente (es confidencial y no la necesitamos): proponemos nuestro flujo de registro, urgencia,
+> estados y cierre. **Las incidencias las registra el capataz.**
 
-### Sobre 5.8 — hay dos sistemas de códigos, no uno
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| 5.1 | Registro de incidencia | **Alta** | 3 | D7 | ✅ | 0% | La registra el capataz, con **urgencia** alta / media / baja. Ver nota |
+| 5.2 | Asignación de incidencia | Media | 2 | D7 | ✅ | 0% | Regla: < 5 m personal estable, > 5 m tercero |
+| 5.3 | Seguimiento de estado | **Alta** | 3 | D7 | ✅ | 0% | **Reportada → En proceso → Cerrada.** Ver nota |
+| 5.4 | Vinculación con el catastro | Media | 2 | D3 D7 | ✅ | 0% | Opcional: una incidencia puede ir sobre una zona |
+| 5.5 | Historial de incidencias | Media | 2 | D7 | ✅ | 0% | |
+| 5.6 | Notificaciones de incidencias urgentes | Media | 2 | D7 | ✅ | 0% | 🔶 → ✅ **Plazo por urgencia**; con tercero, el pactado. Ver nota |
+| 5.7 | Catálogo de tipos de incidencia | `HAB` | 1 | — | ✅ | 0% | 🔒 → ✅ **Lista propia**. El cliente compartirá los encabezados de su matriz para contrastarla |
+| 5.8 | Marca de origen Centuria | Baja ⬇️ | 1 | D1 | ✅ | 0% | **Reformulado:** una marca de que la solicitud llegó por Centuria. Ver nota |
+| 5.9 | Distinguir hallazgo de mantenimiento rutinario | Media | 2 | D7 | ✅ | 0% | El Excel ya lo distingue |
+| 5.10 | Avisar a la unidad solicitante al cerrar | Media | 2 | D7 | ⏭️ | 0% | Las unidades no son usuarias y su canal es Centuria |
+| **5.11** | **Maquinaria de corte solo en sábados, domingos y feriados** | Media | 2 | D7 | ✅ | 0% | 🆕 Ver nota |
 
-| Código | Origen | Qué tipo de atención |
-|---|---|---|
-| **`OSG-####`** | Matriz de incidentes de la **Sección de Supervisión de Campus** | Atenciones menores, casi siempre de **transitabilidad**. Se resuelven en minutos u horas |
-| **Centuria** | **Plataforma de la universidad** — cualquier unidad puede pedir | Pedidos a demanda, sobre todo **arbolado interior** de edificios |
+### Sobre 5.1 — la urgencia depende de dónde está el problema
 
-El sistema **almacena y muestra** estos códigos; **nunca los genera**. Son propiedad de otros
-sistemas.
+La urgencia **no** la decide el tamaño del árbol sino **el riesgo según la ubicación**
+(entrevista 2):
+
+- **Riesgo bajo:** la mayoría de las atenciones `OSG-####` — ramas sobrecrecidas, obstrucciones
+  menores. También un árbol grande **en una jardinera retirada**, aunque entre a un tercer piso.
+- **Riesgo alto:** el mismo árbol **sobre una vía de alto tránsito** (el Pontódromo, por ejemplo),
+  donde una inflorescencia de 5-6 kg puede caer desde 8-10 m. *«Esto se tiene que atender en el
+  menor tiempo posible»*.
+
+### Sobre 5.3 — los estados
+
+Por ahora una incidencia tiene **tres estados: Reportada, En proceso y Cerrada.** Las esperas de
+una incidencia derivada a un tercero (validación de la dirección, orden de compra, subsanación) no
+tienen estado propio: la incidencia sigue **en proceso** y el detalle va en comentarios.
+
+### Sobre 5.3 — el estado «en proceso»
+
+Cuando una incidencia **supera la capacidad del personal estable** (> 5 m, o necesita grúa), no
+se cierra ni se abandona: queda **en proceso** mientras Logística tramita la orden de compra, el
+proveedor cotiza y se programa el servicio. *«Se mantiene en proceso hasta que se cumpla la orden
+de compra, se brinda la atención y ahí se cierra.»*
+
+| Quién atiende | Tiempo de referencia |
+|---|---|
+| Personal estable | **3-5 días** |
+| Tercero | **Más de una semana**; a veces un mes |
+
+### Sobre 5.6 — los plazos
+
+El plazo es el tiempo máximo entre que se registra una incidencia y que se atiende. Sirve para
+**avisar antes de que venza** y para medir en el reporte mensual **cuántas se atendieron en plazo**.
+
+| Quién atiende | Plazo |
+|---|---|
+| **Personal estable** | Según la **urgencia**, configurable. Referencia del cliente: *«por lo general un día, máximo 48 horas»* |
+| **Tercero** | El **pactado previamente** con el proveedor, registrado al derivar la incidencia |
+
+> Valores iniciales propuestos, a confirmar con el cliente: **alta 24 h · media 48 h · baja 72 h**.
+
+### Sobre 5.8 — una marca, no una integración
+
+**No hay integración con Centuria** (no tenemos acceso). Si a alguien le llega una solicitud por
+Centuria, **puede** registrarla a mano como incidencia y **marcarla como originada en Centuria**.
+Es opcional. El origen se registra con el catálogo `INCIDENT_SOURCE`.
+
+> Así, cuando llegue la integración (fase futura), las incidencias históricas de Centuria ya
+> estarán identificadas.
+
+### Sobre 5.11 — la regla de la maquinaria de corte
+
+La maquinaria de corte (motosierra, podadora de altura) **solo se programa en sábados, domingos y
+feriados**: *«imagínate, estás haciendo tu clase… y suena una motosierra al costado»*. Aplica
+cuando una incidencia se deriva a un tercero y se le asigna fecha de atención: el sistema **no
+admite** un día de lunes a viernes que no sea feriado. Los feriados vienen de 1.8.
+
+Además, si la fecha cae en un **evento bloqueante** (1.12) del mismo ámbito —un examen de admisión,
+un fin de ciclo—, el sistema **avisa**, pero no impide.
 
 ---
 
 ## M6 · Reportes y Analítica
 
-| ID | Requisito | Prioridad | Dolor | ¿Se puede? | Nota |
-|---|---|---|---|---|---|
-| 6.1 | Dashboard general | **Alta** | D1 D5 | ✅ | Con las métricas de 6.8 y 6.10 |
-| 6.2 | Reporte básico (operativo) | Media | D1 | 🔒 | **No hemos visto el formato** |
-| 6.3 | Reporte intermedio (coordinación) | Media | D1 | 🔒 | Ídem |
-| 6.4 | Reporte avanzado (dirección) | Media | D1 | 🔒 | Falta el **documento de gestión** que entrega a OSG |
-| 6.5 | Exportación de reportes (PDF/Excel) | Media | D1 | ✅ | |
-| 6.6 | Filtros por zona, período, tipo | Media | D6 | ✅ | |
-| 6.7 | Indicadores de rendimiento | Baja | D2 | 🔒 | Depende de 4.10 |
-| **6.8** | **Cobertura mensual del 100% de las 15.6 ha** | **Alta** | **D5** | 🔶 | 🆕 Meta clara. **Falta qué cuenta como zona cubierta** |
-| **6.9** | **Mapa de calor de intervenciones por zona** | Media ⬇️ | **D6** | 🔶 | 🆕 ⬇️ **Ya existe en su mapa.** Depende de C4 |
-| **6.10** | **Cumplimiento de frecuencias por servicio** | **Alta** | **D2 D5** | ✅ | 🆕 Frecuencias conocidas |
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| 6.1 | Dashboard general | **Alta** | 3 | D1 D5 | ✅ | 0% | Con las métricas de 6.8 y 6.10 |
+| 6.2 | Reporte básico (operativo) | Media | 2 | D1 | 🔶 | 0% | 🔒 → 🔶 **Propuesta propia**, pendiente de validar con el cliente |
+| 6.3 | Reporte intermedio (coordinación) | Media | 2 | D1 | 🔶 | 0% | 🔒 → 🔶 Ídem |
+| 6.4 | Reporte avanzado (dirección) | Media | 2 | D1 | 🔶 | 0% | 🔒 → 🔶 Ídem |
+| 6.5 | Exportación de reportes (PDF/Excel) | Media | 2 | D1 | ✅ | 0% | |
+| 6.6 | Filtros por zona, período, tipo | Media | 2 | D6 | ✅ | 0% | |
+| 6.7 | Indicadores de rendimiento | Baja | 1 | D2 | ⏭️ | 0% | Depende de 4.10 |
+| 6.8 | Cobertura mensual del 100% de las 15.6 ha | **Alta** | 3 | D5 | 🔶 | 0% | Falta qué cuenta como zona cubierta |
+| 6.9 | Mapa de calor de intervenciones por zona | Media | 2 | D6 | ✅ | 0% | 🔶 → ✅ **Entra en nuestro modelado**, sobre el mapa propio (2.1) |
+| 6.10 | Cumplimiento de frecuencias por servicio | **Alta** | 3 | D2 D5 | ✅ | 0% | Frecuencias de SPEC-006 |
 
 ### Sobre 6.8 y 6.9 — son las métricas que el cliente ya usa
 
@@ -365,28 +524,28 @@ Y sobre el mapa de calor, describió exactamente para qué usa el mapa interacti
 > o menor número de intervenciones… y algunos donde se le puede programar mayores atenciones, para
 > tener un equilibrio de mantenimiento regular.»
 
-**6.9 no es un extra de analítica: es la función principal de la herramienta que ya usan.**
+**6.9 no es un extra de analítica: es la función principal de la herramienta que ya usan.** Por
+eso lo incluimos en nuestro modelado aunque su mapa ya lo tenga.
 
 ---
 
-## M7 · Riego 🆕
+## M7 · Riego
 
-> **Módulo confirmado por el equipo.** Es el proceso **mejor estructurado** del cliente: tiene
-> turnos, solapamientos, ventana horaria y una métrica de cobertura. Robert lo llama **la métrica
-> principal** de la sección.
+> Es el proceso **mejor estructurado** del cliente: tiene turnos, solapamientos, ventana horaria y
+> una métrica de cobertura. Robert lo llama **la métrica principal** de la sección.
 >
 > **Por qué módulo propio y no una actividad de M3:** el riego es la única clase de actividad que
 > tiene **planificación previa** (un turno semanal por sector), **una meta de cobertura** (100% en
 > 15 días) y **una ventana horaria**. Las demás actividades se registran cuando ocurren; el riego
-> se **programa y se verifica contra un plan**. Esa diferencia justifica el módulo.
+> se **programa y se verifica contra un plan**.
 
-| ID | Requisito | Prioridad | Dolor | ¿Se puede? | Nota |
-|---|---|---|---|---|---|
-| **7.1** | **Registro del turno de riego por sector** | **Alta** | **D5** | ✅ | Ciclo bien explicado en la 2.ª entrevista |
-| **7.2** | **Cobertura del campus en la ventana de 15 días** | **Alta** | **D5** | 🔶 | **Falta qué cuenta como «zona regada»** |
-| **7.3** | **Zonas que requieren más de una pasada** | **Media** | D5 | 🔒 | **Falta la lista** de esas zonas |
-| **7.4** | **Control de la ventana horaria** | **Baja** | — | ✅ | 6:30-7:00 a 11:30 |
-| **7.5** | **Registro de horas de bomba** | **Baja** | — | ✅ | 5.5 h verano · 3 h invierno |
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| 7.1 | Registro del turno de riego por sector | **Alta** | 3 | D5 | ✅ | 0% | Ciclo bien explicado en la 2.ª entrevista |
+| 7.2 | Cobertura del campus en la ventana de 15 días | **Alta** | 3 | D5 | 🔶 | 0% | Falta qué cuenta como «zona regada» |
+| 7.3 | Zonas que requieren más de una pasada | Media | 2 | D5 | 🔒 | 0% | Falta la lista de esas zonas |
+| 7.4 | Control de la ventana horaria | Baja | 1 | — | ✅ | 0% | 6:30-7:00 a 11:30 |
+| 7.5 | Registro de horas de bomba | Baja | 1 | — | ✅ | 0% | 5.5 h verano · 3 h invierno |
 
 ### Cómo funciona el ciclo
 
@@ -405,21 +564,18 @@ riego es manual pero funciona como un sistema automatizado por sectores.
 **La ventana horaria tiene una razón que no es agronómica:** después de las 11:30 no se riega para
 que al mediodía las áreas verdes estén **disponibles para los estudiantes**.
 
-> **Nota de alcance:** hay proyectos de Infraestructura para pasar a **riego automatizado**
-> (electroválvulas, pop-up) en 1-3 años. Eso está **fuera de nuestro alcance**, pero conviene no
-> diseñar nada que lo impida.
-
 ---
 
 ## M8 · Información Pública (QR)
 
-> Conserva su número original: al quedar el vivero fuera de la fase 1, no hizo falta renumerar.
+> **Dentro del alcance, pero es la última prioridad:** se construye cuando todo lo demás esté
+> terminado.
 
-| ID | Requisito | Prioridad | Dolor | ¿Se puede? | Nota |
-|---|---|---|---|---|---|
-| 8.1 | Generación de código QR por elemento | Baja | D3 | 🔶 | Depende de 2.9 (el código nuevo) |
-| 8.2 | Página pública de ficha de especie | Baja | — | 🔒 | Falta el inventario de especies |
-| 8.3 | Diseño de etiqueta imprimible | Baja | D3 | 🔒 | **Falta si hay presupuesto** para etiquetas físicas |
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| 8.1 | Generación de código QR por elemento | Baja | 1 | D3 | ✅ | 0% | 🔶 → ✅ Lo diseña el equipo, sobre el código de 2.9 |
+| 8.2 | Página pública de ficha de especie | Baja | 1 | — | ✅ | 0% | 🔒 → ✅ Con los datos de 2.3 |
+| 8.3 | Diseño de etiqueta imprimible | Baja | 1 | D3 | ✅ | 0% | 🔒 → ✅ La diseña el equipo; imprimirla es decisión del cliente |
 
 **Sobre 8.3 — hay un antecedente que conviene tener presente.** Las placas de aluminio del
 inventario antiguo fracasaron: se perdieron, quedaron en ejemplares muertos y **se reasignaron a
@@ -428,67 +584,26 @@ nueva hereda ese riesgo.
 
 ---
 
-## Fuera de la fase 1
+## Fuera de alcance
 
-Lo que **existe en el dominio pero no se construye ahora**. Se documenta para que nadie lo
-reintroduzca por descuido ni lo dé por olvidado.
-
-### Vivero — decisión del equipo
-
-**No entra en la fase 1.** Robert lo mencionó ligado al mantenimiento —para rehabilitar un jardín
-se saca stock de plantas del vivero— pero queda fuera del alcance.
-
-Lo que quedaría para una fase posterior: stock de plantas disponibles, registro de propagación
-(por división de matas y esquejes) y salida de plantas hacia una intervención.
-
-> **Lo que sí hay que respetar ahora:** la clase de actividad **«Propagación y plantación»
-> permanece** en la taxonomía de M1.4, con sus 10 tipos. El personal estable registra propagación
-> **en campo**, no solo en vivero — de hecho es la segunda clase más usada del Excel, con 36 de
-> los 171 registros. Dejar el vivero fuera **no** significa quitar esos tipos de actividad.
->
-> Si una intervención consume plantas, se registra como insumo (M3.5), sin rastrear de dónde
-> salieron.
-
-### Zoocriadero
-
-Fuera. Es **fauna**, no flora: venados, tortugas motelo, pavos reales y una alpaca, con reporte
-anual al Ente Técnico Forestal. Dominio y normativa distintos.
-
-### Riego automatizado
-
-Fuera, pero por otra razón: **no depende de nosotros**. Infraestructura tiene proyectos para pasar
-a electroválvulas y pop-up en 1-3 años. Conviene no diseñar nada que lo impida, pero el sistema
-modela el riego manual actual (M7).
-
-### Locales periféricos
-
-Fuera del mínimo. Son solo dos —Codesido (Pueblo Libre) y Chorrillos— con atención **trimestral**,
-4 veces al año. Robert fue claro: *«la mayor dinámica de atención y recursos es el campus»*.
-
-### Rendimiento del proveedor
-
-En el catálogo como 4.10 con prioridad Baja, no fuera del todo — pero conviene recordar por qué no
-es Alta pese a ser un dolor real: **el proveedor hoy no entrega ese dato**.
+Lo que existe en el dominio pero no se construye en esta versión está en
+[`fuera-de-alcance.md`](fuera-de-alcance.md), separado en **fase futura** (jardines, seguimiento de
+tercerizados, Centuria, operarios como usuarios, vivero, zoocriadero…) y **no se planea incluir**
+(periféricos, áreas fuera de los muros, riego automatizado…).
 
 ---
 
 ## Lo que bloquea qué
 
-Requisitos de prioridad Alta que **no se pueden empezar** hasta que llegue información:
+**Ningún requisito Alta está bloqueado (🔒).** El único bloqueado es de prioridad Media
+(2.5 pasó a ✅ el 29 sep, al llegar el mapa v32):
 
-| Requisito | Qué falta | Estado |
-|---|---|---|
-| 2.3 Ficha de elemento verde | El «Excel forestal» con los campos | ❓ Sin confirmar |
-| 2.8 Integración con el mapa | Verlo funcionando | 🔄 No cargó en la reunión |
-| 4.6 Checklist de servicio | El inventario de ~100 jardines | ✅ Prometido |
-| 6.2 Reporte operativo | El formato real que entrega a OSG | ❓ Sin confirmar |
-| 1.4 (parcial) Tipos de fitosanitario | Los tipos de esa clase | ❓ Sin confirmar |
+| Requisito | Qué falta |
+|---|---|
+| 7.3 Zonas con más de una pasada | La lista de esas zonas |
 
-**Prometidos en la 2.ª entrevista:** inventario de especies · shapes de los ~100 jardines · capas
-de cuarteles · reportes de tercerizados (los está compilando).
-
-**No se compartirá:** la matriz de control de incidentes — es sensible y se maneja con la
-jefatura. Robert puede comentarla, no entregarla.
+**No se compartirá, y no hace falta:** la matriz de control de incidentes. Es sensible y se maneja
+con la jefatura. El módulo de incidencias usa un modelo propio (M5).
 
 ---
 
@@ -496,14 +611,26 @@ jefatura. Robert puede comentarla, no entregarla.
 
 | Decisión | Resultado |
 |---|---|
-| **¿El vivero entra en la fase 1?** | **No.** Decisión del equipo. La clase de actividad «Propagación y plantación» **sí permanece** — el personal estable propaga en campo, no solo en vivero |
-| **¿Renumerar el módulo de QR?** | **No hizo falta.** Al salir el vivero, QR conserva su M8 original |
-| **¿Riego es módulo propio?** | **Sí, M7.** Es la única actividad que se **planifica y verifica contra un plan**, no solo se registra |
-| **¿Módulo de residuos vegetales?** | **No.** 10 registros de un solo tipo; los otros 3 tipos nunca se usaron. Queda cubierto dentro de M3 |
-| **¿App móvil?** | **Sí, como canal (no módulo)**, para 3.3, 3.5 y 2.2. **Android**, app instalada, datos no son problema. La foto se guarda siempre en el teléfono con un flag `subida_a_la_nube`; al reconectar la app sube las pendientes. Nunca hay un «no se pudo guardar» |
+| **¿Quién usa el sistema?** | **El jefe de sección (`ADMIN`, que incluye a `COORDINADOR`) y los 3 capataces.** Nadie más tiene cuenta |
+| **¿Servicios tercerizados?** | **Solo los datos básicos del proveedor.** El seguimiento pasa a fase futura: no tenemos información de ello |
+| **¿Integración con Centuria?** | **No en esta versión.** Se puede marcar a mano que una incidencia vino de Centuria |
+| **¿Incidencias?** | **Sí, con modelo propio** al estilo de la gestión de incidencias de TI. Las registra el capataz |
+| **¿Mapa de calor?** | **Sí, en nuestro modelado**, sobre el mapa propio |
+| **¿El vivero entra?** | **No, pasa a fase futura.** La clase «Propagación y plantación» **sí permanece**: el personal estable propaga en campo |
+| **¿El zoocriadero entra?** | **No, pasa a fase futura** |
+| **¿Los periféricos entran?** | **No, y no se planea** |
+| **¿Riego es módulo propio?** | **Sí, M7.** Es la única actividad que se **planifica y verifica contra un plan** |
+| **¿Módulo de residuos vegetales?** | **No.** 10 registros de un solo tipo. Queda cubierto dentro de M3 |
+| **¿App móvil?** | **Sí, como canal (no módulo)**, para 3.3, 3.5 y 2.2. **Android**, app instalada. La foto se guarda siempre en el teléfono con un flag `subida_a_la_nube`; al reconectar la app sube las pendientes. Nunca hay un «no se pudo guardar» |
 | **¿Cómo se garantiza que las fotos suban?** | **Indicador de pendientes encendido por defecto**, verde solo cuando todas están en la nube. Nadie debe terminar el turno en rojo |
 | **¿Gestión de almacenamiento?** | **No.** Si no hay espacio, un mensaje y nada más |
-| **¿Mapa propio o integración?** | **Integración** con el mapa que ya usan (2.8). Lo que falta saber está en [`integracion-mapa-interactivo.md`](integracion-mapa-interactivo.md) |
+| **¿Mapa propio o integración?** | **Mapa propio (2.1).** La integración con el mapa del cliente (2.8) queda fuera: sería otro proyecto |
+| **¿Hace falta la altura exacta de cada árbol?** | **No.** Basta la clase: < 5 m o ≥ 5 m |
+| **¿Tipo de uso?** | **Sí (2.14)**, con los seis tipos del mapa del cliente |
+| **¿Eventos del campus?** | **Sí (1.12):** bloqueantes y de préstamo, sobre el campus, un sector o una sección. Los bloqueantes **solo avisan** |
+| **¿Estados de una incidencia?** | **Reportada, En proceso y Cerrada.** Sin estados intermedios por ahora |
+| **¿Plazos de atención?** | **Por urgencia** para el personal estable; **el pactado** para el tercero |
+| **¿Quién valida una intervención?** | **El jefe de sección** (`COORDINADOR`, y por tanto `ADMIN`). **El capataz no valida**: registra |
 
 ---
 
@@ -727,13 +854,32 @@ consideran un problema.
 
 ---
 
-## Para la 3.ª entrevista
+## Pendientes con el cliente
 
-Preguntas que salieron de este análisis:
+> La 3.ª entrevista ya ocurrió. Lo que sigue abierto se lleva a la **reunión con los tres
+> capataces** y a la **reunión presencial** con el jefe de sección.
 
-1. **¿Se mide el residuo de la poda mayor?** Son 215-230 árboles al año. Si alguien reporta un
-   volumen, la conclusión sobre el módulo de residuos cambia.
-2. **¿El traslado de material recuperado** (grass, confitillo entre zonas) **es algo que quiere
-   controlar**, o es una anotación informal?
-3. **¿Quién valida que el trabajo del día quedó registrado?** Hoy Robert, Carolina y Fabiola
-   vuelcan al Excel. Con la app registrando en campo, ese control cambia de manos.
+**Preguntas:**
+
+1. **¿Cómo quiere ver la distribución del personal por actividad?** En la 1.ª entrevista Robert
+   dijo que le interesa *«cómo está dispuesto el personal y cuántas personas se usan para
+   desarrollar cada actividad»*. Hay que precisar si basta con **cuántas personas** o quiere saber
+   **quiénes**, si lo necesita **en el momento** o **después**, y cuánto esfuerzo extra acepta
+   pedirle al capataz.
+2. **¿Acepta nuestras reglas de sección cubierta y sección regada?** (6.8, 7.2)
+3. **¿Le sirve la propuesta de reportes?** (6.2, 6.3, 6.4)
+4. **¿Confirma los plazos por urgencia** (24, 48 y 72 horas)? (5.6)
+5. **¿Se mide el residuo de la poda mayor?** Si alguien reporta un volumen, cambia la decisión de
+   no tener un módulo de residuos.
+6. **¿El traslado de material recuperado** (grass, confitillo) es algo que quiere controlar?
+
+**Material comprometido en la 3.ª entrevista:**
+
+| Qué | Para qué |
+|---|---|
+| Formato de reserva de jardines | 1.12 (préstamos) |
+| Encabezados de la matriz de incidencias | 5.7 |
+| Formato del informe del tercero | Fase futura (seguimiento de tercerizados) |
+| Shape y lista de jardines, con los que se prestan | 1.12 y fase futura (jardines) |
+| Lista de herramientas | 3.12 (ficha técnica de poda) |
+| **Altura estimada** del levantamiento, si la ingeniera la comparte | 2.2 (clase de altura) |

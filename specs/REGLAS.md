@@ -204,7 +204,7 @@ Reglas obligatorias (implementadas en `shared/security/CorsConfig.java`):
 | Foreign keys | `[tabla_singular]_id`: `user_id`, `course_id` |
 | Índices | `idx_[tabla]_[columnas]`: `idx_users_email` |
 | Migraciones | Flyway, archivos `V[N]__[description].sql` en `resources/db/migration/` |
-| Rango de migraciones | Por spec propietaria: fundacionales `V001`-`V099`; un SPEC-1NN usa `V1NN__`. El rango lo fija la spec que **posee** la tabla, no la primera que la consume |
+| Numeración de migraciones | **Cronológica**: cada migración nueva toma el siguiente número libre (`V012`, `V013`…), sin rangos por spec. El número no indica propietaria: la propietaria va en el comentario de cabecera del archivo. Fuente única de qué número tiene cada migración, aplicada o pendiente: el [mapa de migraciones](REGISTRO.md#mapa-de-migraciones). Quien implementa una migración pendiente en otro orden la renumera allí y en su spec |
 | Datos de catálogos | Tablas de catálogo con `code`, `label`, `is_active`, `sort_order` |
 
 ### 5.5 Convenciones Docker

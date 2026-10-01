@@ -62,7 +62,7 @@ Permitir que un administrador, un coordinador o un operario de campo inicien ses
 - Ningún `@Enumerated` de Java para roles ni un `enum RoleEnum`. El rol es una FK a `catalog_items`.
 - Ninguna librería de sesión basada en estado del lado del servidor (Spring Session, Redis de sesión): la autenticación es JWT stateless, con revocación vía tabla de refresh tokens (sección 4).
 
-**Patrón de catálogos aplicable:** `ROLE` (`catalog_type`, sembrado en V001, completado en V002 de SPEC-002 con `COORDINADOR`, `SUPERVISOR` y `OPERARIO`, y con `USER` desactivado). Este spec no vuelve a sembrar `ROLE`: ya está resuelto por SPEC-002 V010. Este spec solo lo consume por FK.
+**Patrón de catálogos aplicable:** `ROLE` (`catalog_type`, sembrado en V001 y completado en `V003__seed_role_catalog.sql` con `COORDINADOR`, `SUPERVISOR` y `OPERARIO`). Este spec solo lo consume por FK.
 
 ### 2.5 Decisión: alta de cuentas cerrada, sin autorregistro
 
@@ -145,8 +145,8 @@ copia.
 ## 4. Migración de base de datos
 
 **El DDL está en `V002__create_users.sql`** (tablas `users` y `refresh_tokens` con sus índices).
-Rango fundacional `V001`–`V099` (REGLAS.md §5.4); V001 (catálogos) no se toca. SPEC-100 extiende
-`users` con `V100`; SPEC-002 ocupa `V003`–`V010`.
+Numeración cronológica; fuente única: el mapa de migraciones de [`REGISTRO.md`](../REGISTRO.md#mapa-de-migraciones). V001 (catálogos) no se toca. SPEC-100 extiende
+`users` con `V006`; las tablas de SPEC-002 ocupan `V012`–`V019`.
 
 ### 4.1 Por qué el esquema es así
 
@@ -336,7 +336,7 @@ Un hash de BCrypt filtrado no es información pública "de todos modos": permite
 
 El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
-- [ ] `V002__create_users.sql` no colisiona con V001 ni con las V003+ de SPEC-002.
+- [ ] `V002__create_users.sql` no colisiona con V001 ni con ninguna otra migración del mapa de `REGISTRO.md`.
 - [ ] Sin dependencias fuera de `spring-boot-starter-security`, `jjwt-*` y
       `expo-secure-store`/Keychain.
 - [ ] **Web:** cookie `HttpOnly`+`Secure`+`SameSite=Strict` visible en DevTools, y refresh
@@ -392,7 +392,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 3. El coordinador crea y actualiza contratos y proveedores porque es quien gestiona la relación operativa con los tercerizados y da seguimiento al cumplimiento. Lo que no puede es desactivar un proveedor o un contrato: dar de baja una relación comercial tiene implicaciones administrativas y queda en ADMIN.
 4. Un supervisor no valida su propia ejecución: si él mismo registró la intervención, la validación corresponde al coordinador. La regla concreta ("quien ejecuta no valida") la implementa el SPEC-1XX de intervenciones sobre `validated_by_user_id`, que no puede coincidir con quien registró la ejecución.
 
-**Cómo se resuelve "solo su cuadrilla":** el alcance del supervisor y del operario se calcula contra las tablas `teams`/`team_members` de SPEC-002 (V012), no contra un campo del JWT. El servicio filtra por las cuadrillas vigentes del usuario (`team_members.left_at IS NULL`), de modo que reasignar a alguien de equipo cambia su alcance en el siguiente request, sin esperar a que expire su token.
+**Cómo se resuelve "solo su cuadrilla":** el alcance del supervisor y del operario se calcula contra las tablas `teams`/`team_members` de SPEC-002 (V005), no contra un campo del JWT. El servicio filtra por las cuadrillas vigentes del usuario (`team_members.left_at IS NULL`), de modo que reasignar a alguien de equipo cambia su alcance en el siguiente request, sin esperar a que expire su token.
 
 Esta matriz se traduce en Spring Security como expresiones sobre el `code` del rol (leído del `UserDetails`, nunca hardcodeado como cadena mágica repetida — se centraliza en constantes de `shared/security`, p. ej. `RoleCodes.ADMIN = "ADMIN"`), por ejemplo:
 
