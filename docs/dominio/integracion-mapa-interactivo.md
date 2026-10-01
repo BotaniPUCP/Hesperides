@@ -42,7 +42,7 @@ El panel «Filtros de Actividades» revela el modelo de datos que ya maneja:
 | Filtro **Clase de Actividad** | Las 9 clases del Excel están ahí |
 | Filtro **Tipo de Actividad** | Los 45 tipos también |
 | Filtro **Responsable / Cuadrilla** | Alfonso, Óscar, Andrés |
-| Buscador «facultad, especialidad o lugar» | Usa los referentes, no los cuarteles |
+| Buscador «facultad, especialidad o lugar» | Usa los referentes: en nuestro modelo, las secciones |
 | Capas laterales | Gestión · **Zonas de…** · Plan de… · **Vivero** |
 
 > **Este mapa ya consume el Excel casi tal cual.** Sus filtros son exactamente las columnas que

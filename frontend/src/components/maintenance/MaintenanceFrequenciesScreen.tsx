@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import type {
   CreateMaintenanceFrequencyRequest,
   MaintenanceFrequency,
@@ -140,12 +139,6 @@ export function MaintenanceFrequenciesScreen() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="rounded-md px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 transition-colors"
-          >
-            ← Volver al inicio
-          </Link>
           {canManage && (
             <Button variant="primary" onClick={handleOpenCreate}>
               + Nueva frecuencia

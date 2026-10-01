@@ -276,7 +276,7 @@ sino lookups de catálogo para poblar los selectores del formulario. Su autoriza
 
 ## 4. Migración de base de datos
 
-**El DDL está en `backend/src/main/resources/db/migration/V010__create_maintenance_frequencies.sql`.**
+**El DDL está en `backend/src/main/resources/db/migration/V002__create_maintenance_frequencies.sql`.** *(Era `V010`; el baseline del commit `638aca0` la renumeró a `V002`.)*
 
 Esta migración:
 1. Inserta el catálogo `FREQUENCY_RULE_TYPE` con 5 ítems en `catalog_types` y `catalog_items`.

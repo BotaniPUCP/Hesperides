@@ -16,10 +16,10 @@ Definir el contrato de API, el patrón de uso en backend y frontend, y las regla
 ## 2. Contexto para la IA
 
 > **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
-> **Específico de este spec:** las tablas `catalog_types`/`catalog_items` ya existen (V001):
+> **Específico de este spec:** las tablas `catalog_types`/`catalog_items` ya existen (baseline V001):
 > se documentan aquí, no se redefinen. Este spec **es** el mecanismo que sustituye a los enums (INV-2).
 
-**Este spec no crea las tablas `catalog_types` ni `catalog_items`.** Ya existen en `V001__create_catalog_tables.sql`, propiedad de este spec pero ya aplicada al repo. Este documento las describe, define su API de administración y consumo, y fija el patrón que toda entidad JPA debe seguir para referenciarlas correctamente.
+**Este spec no crea las tablas `catalog_types` ni `catalog_items`.** Ya existen en el baseline `V001__baseline_schema.sql` (originalmente `V001__create_catalog_tables.sql`), propiedad de este spec pero ya aplicada al repo. Este documento las describe, define su API de administración y consumo, y fija el patrón que toda entidad JPA debe seguir para referenciarlas correctamente.
 
 ### 2.1 Módulo backend
 
@@ -52,7 +52,7 @@ Definir el contrato de API, el patrón de uso en backend y frontend, y las regla
 
 ## 3. Las tablas
 
-**El DDL está en `V001__create_catalog_tables.sql`** (`catalog_types` y `catalog_items`) y las
+**El DDL está en el baseline `V001__baseline_schema.sql`** (`catalog_types` y `catalog_items`) y las
 entidades en `modules/catalogs/entity/`. Este spec no las redefine.
 
 ### 3.1 Lo que las columnas significan
@@ -286,12 +286,14 @@ Un ítem puede eliminarse (borrado físico, sin dejar rastro) únicamente cuando
 
 ## 8. Catálogos del sistema
 
-Fuente: `catalog_types` sembrados por `V001__create_catalog_tables.sql` (SPEC-003, `ROLE`) y `V010__seed_catalogs.sql` (SPEC-002, el resto). Esta tabla es el inventario completo — cualquier `catalog_type` nuevo que un spec de feature necesite se agrega aquí como actualización de este documento, no se inventa suelto en el spec de la feature.
+Fuente: `catalog_types` sembrados por el baseline `V001__baseline_schema.sql` (`ROLE`, `INTERVENTION_CLASS`, `INTERVENTION_TYPE`), por `V002` (SPEC-101, los de frecuencias) y por `V011__seed_catalogs.sql` (SPEC-002, pendiente, el resto). Esta tabla es el inventario completo — cualquier `catalog_type` nuevo que un spec de feature necesite se agrega aquí como actualización de este documento, no se inventa suelto en el spec de la feature.
 
 | Code | Para qué sirve | Quién lo consume | `is_system` | Ítems protegidos | Valores |
 |---|---|---|---|---|---|
 | `ROLE` | Rol del usuario en el sistema | `users.role_item_id` (SPEC-001) | TRUE | `ADMIN`, `COORDINADOR`, `SUPERVISOR`, `OPERARIO` | **Definido**: Administrador, Coordinador, Supervisor de cuadrilla, Operario de campo (`USER` genérico de V001 queda desactivado) |
-| `ZONE_TYPE` | Nivel de la jerarquía de zonificación (sector, subsector, jardín…) | `zones.zone_type_item_id` | FALSE | — | **Pendiente del cliente** |
+| `ZONE_TYPE` | Nivel de la jerarquía de zonificación | `zones.zone_type_item_id` | FALSE | `SECTOR`, `SECTION`, `SUBSECTION` | **Definido** (29 sep 2026): Sector, Sección, Subsección. Los siembra `V014` (SPEC-005 §4.4); hasta entonces la lista está vacía y CA-02 sigue valiendo |
+| `USE_TYPE` | Tipo de uso y demanda de la sección | `zones.use_type_item_id` | FALSE | `ADMINISTRATIVE`, `SUSTAINABLE`, `RECREATIONAL`, `SPORTS`, `INSTITUTIONAL`, `CONSERVATION` | **Definido**: los seis tipos del mapa del cliente (C-12, `REQ 2.14`). Lo siembra `V014` |
+| `REFERENCE_CATEGORY` | Tipo de lugar al que alude una referencia | `place_references.category_item_id` | FALSE | Las 24 de la tabla oficial (Facultades, Piso, Estacionamiento, Entrada…) | **Definido** (30 sep 2026). Lo siembra `V016` (SPEC-005 §4.4.7) |
 | `SPECIES_TYPE` | Porte/clasificación de la especie (árbol, arbusto, herbácea, césped…) | `species.species_type_item_id` | FALSE | — | **Pendiente del cliente** |
 | `SPECIES_ORIGIN` | Procedencia de la especie (nativa, introducida…) | `species.origin_item_id` | FALSE | — | **Pendiente del cliente** |
 | `GREEN_ELEMENT_TYPE` | Clase de elemento del catastro (árbol, jardín, césped, campo deportivo) | `green_elements.element_type_item_id` | FALSE | — | **Definido** (derivado del alcance del catastro): Árbol, Jardín, Césped, Campo deportivo |

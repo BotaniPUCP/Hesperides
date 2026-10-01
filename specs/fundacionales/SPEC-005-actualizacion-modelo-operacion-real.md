@@ -23,8 +23,8 @@
 Alinear el modelo de datos con la operación real del cliente —contrastando el Excel
 «Recuperación y mantenimiento de Áreas Verdes 2025-2026» del área **DAF-OSG** con la **primera
 entrevista a Robert Sánchez**, jefe de la Sección de Áreas Verdes y Medio Ambiente— corrigiendo
-la taxonomía de intervenciones, incorporando la zonificación oficial (los **cuarteles
-forestales**), el registro de cantidades y el origen del trabajo, y sembrando los catálogos que
+la taxonomía de intervenciones, incorporando la zonificación real (**sector → sección →
+subsección**), el registro de cantidades y el origen del trabajo, y sembrando los catálogos que
 ambas fuentes permiten cerrar.
 
 ## 2. Contexto
@@ -52,7 +52,7 @@ complementan: la entrevista da el marco y el Excel lo puebla. Donde una calla, l
 
 | Tema | Excel | Entrevista | Resolución |
 |---|---|---|---|
-| **Zonificación** | 75 «lugares» planos con lat/long | **18 cuarteles forestales** (17 vigentes; el 7 desapareció al poner en valor la Huaca), que **engloban todo el campus** | **Decidido:** no es contradicción real sino dos niveles. Cuartel = padre, lugar = hijo (§4.4). Lo confirma el propio Excel: «cuartel 16, **sector** Arqueología» |
+| **Zonificación** | 75 «lugares» planos con lat/long | **18 cuarteles forestales** (17 vigentes), que **engloban todo el campus** | **Decidido (29 sep 2026):** los cuarteles quedan fuera del modelo. La jerarquía es **sector → sección → subsección**, y los «lugares» son las secciones (§4.4) |
 | **Alcance** | Solo personal estable | **Dos mundos**: estable y tercerizado | **Decidido:** el Excel cubre media operación, no la contradice (§2.0.2) |
 | **Estados** | `Abierto` / `Cerrado` | Quiere seguimiento y trazabilidad que hoy no tiene | **Decidido:** se conserva el ciclo completo (D-03) |
 | **Taxonomía de actividades** | 9 clases / 45 tipos, granularidad fina | «cuatro actividades»: poda, control fitosanitario, corte de césped, mantenimiento de jardines | **Decidido** (confirmado por el cliente): las cuatro son las **prioritarias**, no un catálogo rival. Se marcan como tales; las demás se construyen después (§2.0.3) |
@@ -146,7 +146,7 @@ llegarán por el contrato, no por esta taxonomía.
 | Hoja | Visible | Qué es | Qué aporta |
 |---|---|---|---|
 | `tipo de actividades` | Sí | **Catálogo maestro** de clases y tipos de actividad | La taxonomía real de intervenciones (§4.2) |
-| `lugares` | Sí | 75 lugares del campus con lat/long | El nivel hijo de `zones` (§4.4) |
+| `lugares` | Sí | 75 lugares del campus con lat/long | Las **secciones** de `zones` (§4.4) |
 | `tipologia de flora` | Sí | 9 tipos de vegetación | Los ítems de `SPECIES_TYPE` (§4.5) |
 | `2026` | Sí | 283 registros de intervención del año en curso | El formato real del registro diario (§3.1) |
 | `Podas arbpalm` | Sí | 25 podas con código OSG, cantidades y ficha técnica | Cantidades, origen e incidencia externa (§4.3) |
@@ -162,7 +162,6 @@ catastro y de los reportes:
 
 - **41 hectáreas** de campus, de las cuales **15.6 ha son áreas verdes**.
 - **~100 jardines** en la ruta de corte de césped.
-- **17 cuarteles forestales** vigentes de 18 históricos.
 - **30% del catastro de arbolado digitalizado** — el catastro está en construcción, no existe
   completo. Es exactamente lo que el Sprint 1 viene a resolver.
 - **3 sectores de riego**; el campus completo debe regarse en **15 días**.
@@ -229,19 +228,20 @@ login.
 fue inventado por SPEC-002. Se desactiva (`is_active = FALSE`) en lugar de borrarse, conforme a
 SPEC-003 §7.1.
 
-**D-05 · Los 75 lugares entran como `zones` con punto, no con polígono.** El cliente entregó
-coordenadas puntuales. `boundary` sigue nulo y P-01 **no queda cerrado**, solo desbloqueado: se
-puede asignar un elemento a una zona real, pero no calcular superficies ni pintar áreas en mapa.
-Decir que P-01 está resuelto sería falso.
+**D-05 · Las secciones son las áreas verdes del mapa del cliente, con su polígono.** *(Reescrita
+el 29 sep 2026; antes eran los 74 «lugares» del Excel, con punto y sin polígono.)* El mapa v32
+entrega 519 áreas verdes con geometría, superficie y capataz: cada una es una sección con
+`boundary` real. **P-01 queda cerrado**: ya se pueden calcular superficies y pintar áreas en el
+mapa. Los 74 lugares pasan a ser referencias (§4.4.4).
 
-**D-07 · La jerarquía de zonas es cuartel forestal → lugar, con dos niveles.**
-Robert nombra los **cuarteles forestales** como la zonificación histórica que «engloba todo el
-campus»: 18 denominados, 17 vigentes. El Excel lo confirma sin saberlo, en comentarios de texto
-libre («Canteo y deshierbo en el **cuartel 16, sector Arqueología**», «Canteo jardines de
-tesorería **(Cuartel 1)**»). Ese comentario es la prueba de que lugar y cuartel no compiten: son
-padre e hijo. `parent_zone_id` —que SPEC-002 ya previó— pasa de hipótesis a uso concreto.
-*Alternativa descartada:* dejar los 75 lugares planos, que impediría cualquier reporte agregado
-por sector y desperdiciaría el vocabulario oficial del cliente.
+**D-07 · La jerarquía de zonas es sector → sección → subsección.** *(Reescrita el 29 sep 2026;
+la versión original ponía los cuarteles forestales como nivel padre, §4.4.2.)*
+Los **5 sectores** —3 verdes, de los capataces, más Polideportivo y Bosque húmedo— organizan al
+personal y el riego; las **519 secciones** son las áreas verdes del mapa del cliente; las
+**subsecciones**, opcionales, son divisiones internas de una sección. `parent_zone_id` —que SPEC-002 ya previó— pasa de hipótesis a uso concreto. Solo se
+usan esas tres palabras: ni «cuartel», ni «lugar», ni «jardín» como nivel de la jerarquía.
+*Alternativa descartada:* dejar las secciones planas, que impediría cualquier reporte agregado
+por sector.
 
 **D-08 · El código de árbol se modela como campo propio, no se reutiliza el `code` del elemento.**
 Robert describe placas de aluminio con códigos de un inventario antiguo que ya no es fiable: hay
@@ -297,14 +297,32 @@ rutinario del que responde a un hallazgo.
 
 ## 4. Migración de base de datos
 
-Rango `V013`–`V018`. Las migraciones `V001`–`V012` ya están escritas o definidas por SPEC-002 y
-**no se tocan**: reescribir una migración aplicada rompe Flyway por checksum. Todo lo que este
-spec corrige de `V010` se hace con `UPDATE`/`INSERT` en migraciones nuevas.
+> **Renumerado (1 oct 2026).** La numeración es cronológica: §4.1 y §4.2 se implementaron como
+> `V008`–`V011` y hoy viven en el baseline `V001` (commit `638aca0`). El resto va después de las
+> tablas de SPEC-002 (`V004`–`V011`) y de la bitácora de SPEC-004 (`V012`), porque altera tablas
+> que esas migraciones crean. Fuente única: el **mapa de migraciones** de
+> [`REGISTRO.md`](../REGISTRO.md#mapa-de-migraciones).
 
-### 4.1 V013 — Jerarquía en catálogos
+| Sección | Migración | Estado |
+|---|---|---|
+| §4.1 Jerarquía en catálogos | Baseline `V001` (antes `V008`) | ✅ Aplicada |
+| §4.2 Taxonomía real | Baseline `V001` (antes `V009`, `V010` con los tipos provisionales de P-10 y `V011` con las descripciones de clase) | ✅ Aplicada |
+| §4.3 Cantidades, origen e incidencia externa | `V013` | Pendiente |
+| §4.4 Zonas reales del campus | `V014` | Pendiente |
+| §4.4.6 Capa de zonas de supervisión | `V015` | Pendiente |
+| §4.4.7 Referencias | `V016` | Pendiente |
+| §4.5 Catálogos que la entrega permite cerrar | `V017` | Pendiente |
+| §4.6 Evidencia sin momento declarado | `V018` | Pendiente |
+| §4.7 Código heredado del arbolado | `V019` | Pendiente |
+| §4.8 Subida diferida y publicación en el mapa | `V020` | Pendiente |
+
+Reescribir una migración aplicada rompe Flyway por checksum: todo lo que este spec corrija de lo
+ya aplicado se hace con `UPDATE`/`INSERT` en migraciones nuevas.
+
+### 4.1 Jerarquía en catálogos (✅ aplicada, en el baseline V001)
 
 ```sql
--- V013__add_hierarchy_to_catalog_items.sql
+-- Hoy en V001__baseline_schema.sql (antes V008__add_hierarchy_to_catalog_items.sql).
 -- Habilita catálogos de dos niveles (SPEC-005 D-01). Enmienda SPEC-003 §3.
 
 ALTER TABLE catalog_items
@@ -327,15 +345,20 @@ y solo la usa quien la necesita.
 `catalog_type` distintos y relacionados (`INTERVENTION_CLASS` → `INTERVENTION_TYPE`). Un CHECK no
 puede consultar otra fila de la misma tabla. Va como validación de servicio y como test (§8).
 
-### 4.2 V014 — Taxonomía real de intervenciones
+### 4.2 Taxonomía real de intervenciones (✅ aplicada, en el baseline V001)
 
-Este es el cambio de mayor impacto del spec. El catálogo `INTERVENTION_TYPE` sembrado en `V010`
+> **Divergencia en la implementación.** El SQL de abajo asume que el `V010__seed_catalogs` de
+> SPEC-002 ya había sembrado seis tipos inventados. Esa migración nunca se escribió, así que
+> la implementación crea el `catalog_type` y no desactiva nada: `DECORACION` y
+> `REMOCION_TERRENO` simplemente no se siembran. Ver la sección de taxonomía del baseline `V001`.
+
+Este es el cambio de mayor impacto del spec. El catálogo `INTERVENTION_TYPE` que diseñó SPEC-002
 es **inventado**: SPEC-002 lo derivó sin material del cliente. De sus seis valores, solo dos
 sobreviven al contraste con la taxonomía real, y `DECORACION` y `REMOCION_TERRENO` no existen en
 la operación.
 
 ```sql
--- V014__seed_intervention_taxonomy.sql
+-- Hoy en V001__baseline_schema.sql (antes V009__seed_intervention_taxonomy.sql).
 -- Fuente: hoja `tipo de actividades` del Excel DAF-OSG 2025-2026.
 
 INSERT INTO catalog_types (code, name, description, is_system) VALUES
@@ -349,7 +372,7 @@ UPDATE catalog_items SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP
 ```
 
 **Las nueve clases** (hoja `tipo de actividades`, columna maestra). Cada una trae el grupo
-responsable que el cliente le asigna, dato que conecta con las cuadrillas de `V012`:
+responsable que el cliente le asigna, dato que conecta con las cuadrillas (`teams`, baseline `V001`):
 
 | # | `code` | Label | Grupo responsable según el cliente |
 |---|---|---|---|
@@ -405,13 +428,13 @@ jardineras o macizos»). Se cargan en `catalog_items.metadata` como `{"descripti
 texto de ayuda para el operario en el formulario, no un campo consultable, y `metadata` (JSONB)
 ya existe en la tabla desde `V001` para exactamente esto.
 
-### 4.3 V015 — Cantidades, origen e incidencia externa
+### 4.3 V013 — Cantidades, origen e incidencia externa
 
 La hoja `Podas arbpalm` revela tres conceptos que el modelo no tiene y que son los que el cliente
 usa para medir cumplimiento.
 
 ```sql
--- V015__add_execution_tracking_to_interventions.sql
+-- V013__add_execution_tracking_to_interventions.sql
 
 ALTER TABLE interventions
     ADD COLUMN intervention_class_item_id BIGINT REFERENCES catalog_items(id),
@@ -481,130 +504,422 @@ CREATE INDEX idx_incidents_external ON incidents(external_code)
 planificado dependerá de esos dos `code`. `INCIDENT_SOURCE` no lo es: el cliente puede añadir
 «Comunidad universitaria» mañana sin que nada en el backend dependa de ello.
 
-### 4.4 V016 — Zonas reales del campus
+### 4.4 V014 — Zonas reales del campus
+
+> **Reescrita el 29 sep 2026, dos veces.** La primera versión sembraba 17 cuarteles forestales como
+> nivel padre de los lugares; el sistema ya no usa cuarteles. La segunda tomaba como secciones los
+> 74 «lugares» del Excel; el equipo decidió que **las secciones son las áreas verdes del mapa del
+> cliente**, porque son polígonos independientes. Los lugares pasan a ser **referencias**, con una
+> tabla oficial de 411 (§4.4.4). La historia está en §4.4.2.
 
 ```sql
--- V016__seed_campus_zones.sql
--- Fuentes: entrevista (cuarteles forestales) + hoja `lugares` (75 filas → 74 lugares, §5.4).
+-- V014__seed_campus_zones.sql
+-- Fuente: mapa interactivo del cliente (v32), capa de áreas verdes (§4.4.3).
+
+-- Tipo de uso de cada sección (C-12, REQ 2.14). Los seis valores son los del
+-- campo `uso` del mapa del cliente, sin reinterpretar.
+INSERT INTO catalog_types (code, name, description, is_system) VALUES
+    ('USE_TYPE', 'Tipos de uso', 'Uso y demanda del área verde', FALSE);
+
+INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
+    ((SELECT id FROM catalog_types WHERE code='USE_TYPE'), 'ADMINISTRATIVE', 'Áreas de uso administrativo', 1),
+    ((SELECT id FROM catalog_types WHERE code='USE_TYPE'), 'SUSTAINABLE',    'Áreas de manejo sostenible y reducción de consumo de agua', 2),
+    ((SELECT id FROM catalog_types WHERE code='USE_TYPE'), 'RECREATIONAL',   'Áreas de uso recreativo/descanso', 3),
+    ((SELECT id FROM catalog_types WHERE code='USE_TYPE'), 'SPORTS',         'Áreas deportivas y recreación activa', 4),
+    ((SELECT id FROM catalog_types WHERE code='USE_TYPE'), 'INSTITUTIONAL',  'Uso institucional', 5),
+    ((SELECT id FROM catalog_types WHERE code='USE_TYPE'), 'CONSERVATION',   'Áreas de conservación', 6);
+
+INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
+    ((SELECT id FROM catalog_types WHERE code='ZONE_TYPE'), 'SECTOR',     'Sector',     1),
+    ((SELECT id FROM catalog_types WHERE code='ZONE_TYPE'), 'SECTION',    'Sección',    2),
+    ((SELECT id FROM catalog_types WHERE code='ZONE_TYPE'), 'SUBSECTION', 'Subsección', 3);
 
 ALTER TABLE zones
-    ADD COLUMN centroid GEOMETRY(Point, 4326);
+    ADD COLUMN map_code          VARCHAR(10),
+    ADD COLUMN use_type_item_id  BIGINT REFERENCES catalog_items(id);
 
-CREATE INDEX idx_zones_centroid ON zones USING GIST(centroid);
+CREATE INDEX idx_zones_map_code ON zones(map_code);
 
--- Dos niveles reales, no inventados: el vocabulario es del cliente (D-07).
-INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
-    ((SELECT id FROM catalog_types WHERE code='ZONE_TYPE'), 'FOREST_QUARTER',  'Cuartel forestal', 1),
-    ((SELECT id FROM catalog_types WHERE code='ZONE_TYPE'), 'CAMPUS_LOCATION', 'Lugar del campus', 2);
+-- Los 5 sectores. boundary = unión de sus secciones; area_m2 = suma del área
+-- que declara el mapa para esas secciones. Quién los mantiene NO es un atributo
+-- del sector: lo dice qué cuadrilla tiene asignada (teams.zone_id, §4.4.1).
+INSERT INTO zones (code, name, zone_type_item_id, description, boundary, area_m2) VALUES
+    ('SEC-VERDE-01',   'Sector verde 01',      <SECTOR>, NULL, <unión>, 45501.00),
+    ('SEC-VERDE-02',   'Sector verde 02',      <SECTOR>, NULL, <unión>, 40603.00),
+    ('SEC-VERDE-03',   'Sector verde 03',      <SECTOR>, NULL, <unión>, 32578.00),
+    ('SEC-POLIDEPORT', 'Sector Polideportivo', <SECTOR>,
+        'Mantenimiento contratado por tres años con un tercero', <unión>, 20767.00),
+    ('SEC-BOSQUE-HUM', 'Sector Bosque húmedo', <SECTOR>,
+        'Sin personal asignado; se atiende a demanda. Alberga fauna', <unión>, 11147.00);
 
--- Los 17 cuarteles vigentes. Sin punto ni polígono: el cliente solo dio la numeración.
--- El 7 existió y desapareció al poner en valor la Huaca; no se siembra.
-INSERT INTO zones (code, name, zone_type_item_id) VALUES
-    ('CF-01', 'Cuartel forestal 1',  (SELECT id FROM catalog_items WHERE code='FOREST_QUARTER')),
-    -- … CF-02 … CF-06, CF-08 … CF-18 (17 filas; el 7 se omite deliberadamente)
-    ('CF-18', 'Cuartel forestal 18', (SELECT id FROM catalog_items WHERE code='FOREST_QUARTER'));
+-- Las 519 secciones: una por área verde con geometría (§4.4.3).
+INSERT INTO zones (code, name, zone_type_item_id, parent_zone_id, boundary, area_m2,
+                   map_code, use_type_item_id) VALUES
+    ('AV-0001', 'Bosque Húmedo', <SECTION>, <SEC-BOSQUE-HUM>, <polígono>, 11147.35,
+        'G 13', <USE_TYPE de «Uso Institucional»>),
+    -- … 519 filas
+    ;
 ```
 
-`centroid` es **nueva** y no sustituye a `boundary`. Son datos distintos: el punto es lo que el
-cliente entregó y sirve para ubicar en mapa; el polígono sigue pendiente y es lo que permitirá
-calcular superficies. Guardar el punto en `boundary` obligaría a inventar un polígono falso.
+Los `<…>` se resuelven con `SELECT id` como en el resto de migraciones; se abrevian aquí para que
+se lea la estructura. Las 519 filas las genera un script a partir del JSON del mapa, que se
+versiona junto a la migración.
 
-**El cuartel 7 no se siembra.** Desapareció cuando se puso en valor la Huaca: era el área verde
-que bordeaba el camino Inca entre Electrónica y Minas. Sembrarlo desactivado sugeriría que puede
-reactivarse; omitirlo y documentarlo aquí es más honesto. Por eso hay **17 zonas de cuartel con
-numeración hasta 18** — una discontinuidad deliberada que alguien encontrará raro dentro de un
-año, y esta es la nota que se lo explica.
+**Los 5 sectores y de dónde sale cada uno:**
 
-Las 74 zonas, con el punto que trae el Excel (muestra; la lista completa va en el `INSERT` de la
-migración): Apoyo Rural, Área Deportes, Arqueología, Arquitectura, Arte Antiguo, Arte Nuevo, Arte
-y Diseño, Azotea EEGGLL, Cactario, CCSS, Centenario, CEPREPUC, CETAM, Ciencias Contables, Comedor
-Central, Comedor de Letras, Derecho, Dinthilac, DIODO, Educación, EEGGLL, Estacionamiento,
-Estudios Generales Ciencias, Fares,
-Física, Gelarti, Huaca, Industrial, Ingeniería, Ing. Civil, INRAS, Jardín Central, Jardín Entrada
-Principal, Jardín Lateral McGregor, Letras y Ciencias Humanas, Mac Gregor, Matemáticas, Minas,
-OCAI, Pabellón Z, Playa Estacionamiento Studio TV, Polideportivo, Psicología, Puerta Principal,
-Puerta Riva-Agüero, Química, Riva-Agüero, Sala Cuna, Servicio Médico, Tinkuy, Cedares, Biblioteca
-Central, CIA, Biblioteca de Teología, Juan Valdez, Hallazgos, Estudio TV2, Mecánica, DAF, Bosque
-Seco, Punto de Acopio, Gastronomía, Pista de Salud, Humanidades, Huaca 64, Bosque Húmedo, CAPU,
-Vivero, Edificio Administrativo, Laboratorios, DAES, Aulario, Becas, El Puesto.
+| Sector | Valor `jefe` en el mapa | Secciones | Superficie | Mantenimiento rutinario |
+|---|---|---|---|---|
+| **Sector verde 01** | `Alfonso` | 164 | 4.55 ha | Cuadrilla de un capataz |
+| **Sector verde 02** | `Óscar` | 247 | 4.06 ha | Cuadrilla de un capataz |
+| **Sector verde 03** | `Andrés` | 104 | 3.26 ha | Cuadrilla de un capataz |
+| **Sector Polideportivo** | `campo depo` | 2 | 2.08 ha | Tercero por contrato |
+| **Sector Bosque húmedo** | `Bosque húme` | 1 | 1.11 ha | Nadie de forma fija |
+| *(sin sector)* | vacío | 1 | 0.50 ha | — |
 
-Todas traen coordenadas; ninguna fila queda sin ubicar. Se siembran con
-`zone_type_item_id = CAMPUS_LOCATION` y **`parent_zone_id` nulo**.
+La numeración de los sectores verdes sigue la superficie, de mayor a menor. El nombre del capataz
+no aparece en ningún sector: **el sector es territorio, no persona**; quién lo dirige lo dice la
+cuadrilla (`teams`), que puede cambiar sin tocar la zona.
 
-**Por qué el padre queda nulo pese a existir los cuarteles:** el cliente dio la *numeración* de
-los cuarteles, no el *mapeo* de qué lugar cae en cuál. Solo dos filas del Excel lo insinúan
-(Arqueología → cuartel 16; Tesorería → cuartel 1), y con dos casos no se deduce el resto.
-Asignar los 74 lugares a ojo produciría un dato falso en un reporte por sector. La estructura
-queda lista; el mapeo lo llena el cliente o se deriva espacialmente cuando haya polígonos.
+**Por qué cinco sectores y no tres.** Los sectores verdes son los de los capataces. Los otros dos
+cubren áreas que ellos no mantienen (3.ª entrevista):
 
-> ⚠️ **Pendiente del cliente (P-01, sigue abierto pero ya no bloquea):** los **polígonos** de cada
-> zona y, sobre todo, **qué lugar pertenece a qué cuartel**. Con los puntos ya se puede asignar un
-> elemento a una zona real y arrancar el catastro del Sprint 1; sin el mapeo no hay reportes
-> agregados por cuartel, que es la unidad con la que el cliente razona históricamente.
+- **Polideportivo.** Lo mantiene un servicio tercerizado por tres años, elegido en un proceso de
+  selección, con un ingeniero agrónomo de campo y seis personas dedicadas al césped. Encaja con lo
+  ya decidido: el riego de los campos deportivos no es de la sección.
+- **Bosque húmedo.** No tiene personal asignado y **no** es un caso como el Polideportivo: se
+  atiende a demanda, contratando el servicio cuando hace falta (por ejemplo, una poda
+  excepcional). Su finalidad principal es albergar fauna: especies reconocidas por SERFOR
+  (venados, tortugas terrestres, pavo real, alpaca) y fauna silvestre (aves, ardillas, loros,
+  cernícalos, gavilanes). El zoocriadero sigue fuera de alcance (`fuera-de-alcance.md`).
 
-#### 4.4.1 «Sector» significa tres cosas distintas (P-13b, resuelto en la 2.ª entrevista)
+**Quién mantiene un sector no es un atributo del sector.** Una primera versión de este spec
+añadía una «modalidad de atención» exclusiva por sector (personal estable, tercerizado o a
+demanda). Se descartó porque **no es exclusiva**: en un sector verde, los árboles de más de 5 m
+los poda un tercero (E-03), y en el Bosque húmedo se contrata un servicio puntual cuando hace
+falta. Una etiqueta por sector mentiría en cuanto un sector mezcla modalidades, que es lo normal.
+
+La pregunta real se separa en dos, y cada una ya tiene dónde vivir:
+
+| Pregunta | Dónde se responde | Por qué ahí |
+|---|---|---|
+| ¿Quién hace el **mantenimiento rutinario** del sector? | La cuadrilla asignada: `teams.zone_id` (baseline V001, A-07). Un sector sin cuadrilla no lo mantiene el personal estable | Es un dato de organización, con vigencia (1.9), no del territorio |
+| ¿Quién ejecutó **este trabajo**? | El propio trabajo: una intervención del personal estable, o una incidencia derivada a un tercero (E-02, E-03) | Varía trabajo a trabajo dentro del mismo sector |
+
+Con eso se cubren los dos usos para los que se había propuesto la modalidad:
+
+- **El alcance del `SUPERVISOR`** es el sector de su cuadrilla (A-07).
+- **Los indicadores de cobertura** (D-02, F-02) miden a cada cuadrilla sobre su sector. El
+  Polideportivo y el Bosque húmedo no tienen cuadrilla, así que no cuentan contra ningún capataz.
+  Si entran en la meta de 15.6 ha lo decide el cliente: con ellos, la meta incluye 3.19 ha que la
+  sección no mantiene de forma rutinaria.
+
+La diferencia entre «contratado» y «a demanda» queda en `description`, como información. Cuando el
+seguimiento de tercerizados entre al alcance, el contrato del Polideportivo se liga al sector por
+`contract_zones` (SPEC-002 §4.7), que ya existe para eso.
+
+**`AV-0011` «Jardín Rosales»** (`B 10`, 0.5 ha, exterior de Artes Escénicas) no tiene capataz en
+el mapa. Se siembra como sección **sin sector** (`parent_zone_id` nulo) y queda fuera de los
+indicadores por sector hasta que el cliente diga quién la atiende (P-15).
+
+**Las secciones.** Cada área verde del mapa es un polígono independiente, y eso es una sección:
+
+- `code` = `feature_id` del mapa (`AV-0001`…). Es único y estable.
+- `name` = `nombre` si lo tiene (20 áreas, p. ej. «Jardín Tinkuy»); si no, `codigo`; si tampoco, el
+  `feature_id`. El nombre reconocible vendrá del sistema de referencias (§4.4.4).
+- `map_code` = `codigo` del mapa (`C 1`, `G 13`…), que tienen 187 áreas. **No es único**: 9
+  códigos se repiten (§4.4.3), por eso va en columna propia sin índice único y no en `code`.
+- `use_type_item_id` = el `uso` del mapa, que trae exactamente los **seis tipos de uso** del
+  cliente. Cubre C-12 (`REQ 2.14`) y requiere el catálogo `USE_TYPE` de esa historia.
+- `boundary` = el polígono del área verde; 27 áreas son multipolígonos. `area_m2` = el área que
+  declara el mapa.
+
+**Las subsecciones no se siembran.** Una subsección es una división interna de una sección, y solo
+se crea si hace falta; la da de alta el `ADMIN`.
+
+**Ya no hace falta `centroid`.** La versión anterior lo añadía porque las secciones eran puntos;
+ahora tienen polígono y el punto se calcula (`ST_PointOnSurface`). Los puntos de los 74 lugares
+pertenecen al sistema de referencias.
+
+**La asignación sección → sector no guarda historia.** `parent_zone_id` dice el sector vigente,
+pero el requisito 1.9 exige vigencia porque los sectores cambian con las obras. Esa historia la
+modela el spec de A-07 / 1.9; esta semilla solo carga el estado actual.
+
+#### 4.4.1 «Sector» significaba tres cosas distintas (P-13b, resuelto en la 2.ª entrevista)
 
 «Sector» aparece 9 veces en el Excel y **no siempre quiere decir lo mismo**:
 
-| Sentido | Ejemplo literal | Qué resultó ser |
+| Sentido en el Excel | Ejemplo literal | Qué es en el modelo |
 |---|---|---|
-| **Sinónimo de lugar** | «Deshierbo y canteo, **sector Tinkuy**» · «Canteo y barrido, **sector OCAI**» | No es un nivel nuevo. Es la misma zona que ya tenemos como `CAMPUS_LOCATION` |
-| **Subdivisión de un cuartel** | «Canteo y deshierbo en el **cuartel 16, sector Arqueología**» | Uso informal. No es un nivel jerárquico |
-| **Sector de riego / de capataz** | Columna «**Sector de jefe de grupo**», con valores Andrés / Óscar / Alfonso | **Es un nivel real, pero de operación, no de geografía botánica** (ver abajo) |
+| **Sinónimo de lugar** | «Deshierbo y canteo, **sector Tinkuy**» · «Canteo y barrido, **sector OCAI**» | Una **referencia** (§4.4.4). No es un nivel |
+| **Uso informal** | «Canteo y deshierbo en el **cuartel 16, sector Arqueología**» | Una **referencia** (Arqueología). La mención al cuartel se ignora |
+| **Sector de capataz** | Columna «**Sector de jefe de grupo**», con valores Andrés / Óscar / Alfonso | Un **sector verde** |
 
-**Lo que la segunda entrevista corrigió.** Yo había supuesto que el tercer sentido era «solo»
-organización de personal y que importarlo como zona crearía zonas fantasma con nombre de persona.
-**Era una lectura incompleta.** Robert explicó que los tres sectores son una **división
-geográfica real y estable del campus**:
-
-- Son **3 sectores fijos**, uno por capataz, y **«sus zonas no varían»**.
-- Están **dibujados en el mapa interactivo**: «el mapa interactivo define sectores».
-- Tienen superficie asignada: **~4.5 ha** los dos grandes, **~3 ha** el tercero.
-- Son la unidad con la que se organiza **el ciclo de riego** (§5.6).
-
-O sea: el nombre del capataz **etiqueta** el sector, pero el sector es territorio, no persona. La
-advertencia original sigue siendo válida en su conclusión práctica —no se debe crear una zona
-llamada «Alfonso»— pero por una razón distinta de la que escribí: **el sector existe como zona;
-lo que no debe usarse es el nombre de la persona como su identidad**, porque el capataz puede
-cambiar y el sector permanece.
-
-**Consecuencia: la jerarquía real tiene tres niveles operativos y uno histórico en desuso.**
+**La jerarquía queda así:**
 
 ```
-Sector de mantenimiento (3)   ← división operativa viva, del mapa interactivo
-   └── Lugar / referente (74)  ← lo que el Excel registra a diario
-        └── Jardín (~100)      ← con código numérico y shape propio (pendiente)
-
-Cuartel forestal (17)          ← división histórica, EN DESUSO (§4.4.2)
+Sector (5)                   ← 3 verdes (capataces) + Polideportivo + Bosque húmedo
+   └── Sección (519)         ← cada área verde del mapa: un polígono independiente
+        └── Subsección       ← opcional: división interna de una sección
 ```
 
-**Qué se hizo:** se mantiene la siembra de dos niveles de este spec, y se añade el sector como
-tercer nivel cuando el cliente entregue los límites (los tiene en el mapa interactivo). La
-autorreferencia de `zones` lo admite sin cambio de esquema.
+La autorreferencia de `zones` la admite sin cambio de esquema. Solo exige que `boundary` sea
+`MultiPolygon` (enmienda a SPEC-002 §4.3): un sector es la suma de sus secciones, y 27 secciones ya
+son multipolígonos.
 
-#### 4.4.2 Los cuarteles forestales están en desuso (corrige D-07)
+#### 4.4.2 Cómo se llegó aquí (corrige D-07)
 
-**Este spec sobrevaloró los cuarteles.** D-07 los definió como «la zonificación oficial» y el nivel
-padre de la jerarquía. La segunda entrevista lo desmiente en boca del propio cliente:
+1. **Primera versión:** cuartel forestal → lugar. Los cuarteles resultaron en desuso («se usa
+   cada vez menos… no me da mucha información», 2.ª entrevista) y el 29 sep 2026 el equipo decidió
+   **no usarlos**: no son tipo de `ZONE_TYPE`, no se siembran y no hay mapeo a cuarteles (P-13a
+   descartada). El inventario de especies antiguo, que solo se ubica por cuartel, no se importa por
+   cuartel; el que entra es el georreferenciado de `catastro campus.xlsx` (2.13).
+2. **Segunda versión:** sector → lugar (74) → subsección. Los lugares son puntos, y un lugar
+   abarca varias áreas verdes que pueden ser de capataces distintos. Asignarlos a un sector exigía
+   una heurística espacial nuestra.
+3. **Versión vigente:** sector → sección (área verde) → subsección. El sector de cada sección lo
+   dice el propio mapa del cliente, sin heurística.
 
-> «Personalmente yo no lo uso siempre… se usa cada vez menos. Es más fácil referenciar Jardines de
-> Ingeniería Civil que referenciarte cuartel 11. No me da mucha información.»
+#### 4.4.3 Qué trae el mapa interactivo del cliente (v32, «jefes y supervisión»)
 
-Lo que Robert usa a diario son **referentes reconocibles**: edificios, facultades, vías («el
-Tontódromo, que atraviesa un montón de facultades») y jardines emblemáticos (Comedor Central, Arte
-Antiguo, Patio Central). Dijo explícitamente que **le gustaría usar términos más reconocibles**.
+Revisado el 29 sep 2026. Es un HTML autocontenido con los datos embebidos en JSON: coordenadas
+enteras en **decímetros** sobre un plano local cuyo origen es `(-77.080157, -12.069676)`. La
+reproyección a WGS 84 es directa, y el área que calcula coincide en un 0.1 % con la que el propio
+archivo declara.
 
-Eso explica por fin por qué solo 2 de 283 filas mencionan un cuartel: **no es un dato que falte,
-es un vocabulario que se está abandonando.**
+| Capa | Elementos | Destino |
+|---|---|---|
+| `verdes` | 521 áreas verdes, 15.56 ha | **Secciones** (§4.4). `jefe` da el sector; `uso`, el tipo de uso |
+| `supervision` | 4 polígonos, `Zona1`…`Zona4`, 40.3 ha | **Capa aparte** (§4.4.5) |
+| `campus` | Perímetro del campus, 41.9 ha | Límite para validar coordenadas |
 
-**Dónde los cuarteles sí siguen vivos:** en el **inventario de especies**, donde cada planta está
-referenciada como «cuartel 1… cuartel 18» y **no tiene coordenadas**. Ahí el cuartel es la única
-ubicación disponible, y por eso hay que conservarlo.
+**Calidad del dato:**
 
-**Corrección a D-07:** los cuarteles **se siguen sembrando**, pero como **vocabulario heredado
-para poder interpretar el inventario antiguo**, no como el eje de la zonificación. El eje
-operativo son los sectores y los referentes. El mapeo lugar → cuartel (P-13a) **baja de
-prioridad**: ya no bloquea los reportes operativos, solo la lectura del inventario histórico.
+| Hallazgo | Magnitud | Tratamiento |
+|---|---|---|
+| Valores de `jefe` truncados (`campo depo`, `Bosque húme`) | 3 áreas | Delata un *shapefile* de origen: el formato DBF corta el texto al ancho del campo. **No afecta la carga**: `jefe` se traduce a sector con una tabla fija y el nombre visible lo pone el sistema. Los demás campos llegan completos (`nombre` hasta 30 caracteres, `referencia` hasta 41, `uso` hasta 57) |
+| Áreas verdes sin geometría | 2 (`AV-0173`, `AV-0411`), 0.9 m² | No se siembran: 521 − 2 = **519 secciones** |
+| Área verde sin capataz | 1 (`AV-0011`, Jardín Rosales), 0.5 ha | Sección sin sector (P-15) |
+| Códigos de mapa repetidos (`B 6`, `B 13`, `C 31`, `C 42`, `D 8`, `D 14`, `D 18`, `D 20`, `F 26`) | 9 códigos | Van a `map_code`, sin unicidad. El identificador es `feature_id` |
+
+#### 4.4.4 Referencias: el vocabulario con el que el personal se orienta
+
+El personal se orienta por **referentes** —edificios, pisos, oficinas, estacionamientos, puertas:
+«Jardines de Ingeniería Civil»—, no por códigos de sección. Una **referencia** es un punto con nombre.
+**No es un nivel de la jerarquía de zonas**: no contiene secciones ni pertenece a un sector.
+
+**Para qué sirven** (decisión del 30 sep 2026):
+
+| Uso | Cómo |
+|---|---|
+| **Buscar en el mapa** | Se busca por nombre o alias, sin tildes ni mayúsculas (`unaccent`, baseline V001), y el mapa se centra en el punto |
+| **Importar ubicaciones** | Una fila con nombre de lugar (el Excel histórico, una lista nueva) se traduce a un punto buscando la referencia por nombre o alias |
+
+**Lo que no hacen:** describir dónde ocurrió una incidencia o una intervención. Eso se **calcula** a
+partir de su ubicación con un algoritmo de cercanía que el equipo detallará; por eso
+`interventions` e `incidents` **no** guardan una FK a referencias.
+
+> ⚠️ **Pendiente del equipo:** el algoritmo de cercanía que describe la ubicación de una
+> incidencia o intervención.
+
+**Los nombres pueden repetirse, y está bien.** A un mismo edificio se le llama de varias formas
+(«Dinthilac», «Edificio Dintilhac», «Complejo Dintilhac»), y un mismo nombre puede tener varios
+puntos («Pabellón Z» marca 12 accesos). Por eso `name` no tiene índice único: el identificador es
+`code`.
+
+**Jerarquía entre referencias.** Un piso pertenece a un edificio y una oficina a un piso: una
+referencia puede tener una **referencia padre** (`parent_reference_id`). La carga inicial la usa en
+los 25 pisos que llegaron sin edificio («Cuarto piso»), asignándoles **el edificio más cercano**
+entre las categorías Edificio, Pabellones y Unidades académicas y Facultades. 24 quedan sin
+ambigüedad; uno («Tercer piso», a 21 m de Humanidades y a 24 m de Pabellón L) va al más cercano y
+queda marcado para revisión en la nota del archivo.
+
+**Alias.** Otra forma de llamar a una referencia que **no** es un punto propio: «hallazgos» lleva a
+«Oficina de hallazgos», que es el nombre oficial. Un alias se encuentra al buscar e importar, pero
+no se dibuja en el mapa. Se diferencia de un nombre repetido en que no tiene coordenadas: describe
+un lugar, no lo ubica.
+
+**Categorías.** Las 24 de la tabla del cliente son las oficiales (Facultades, Piso, Estacionamiento,
+Entrada…) y van al catálogo configurable `REFERENCE_CATEGORY`: el `ADMIN` puede añadir o renombrar
+sin despliegue.
+
+**La carga oficial inicial.** Parte de la tabla de 499 lugares que entregó el equipo el 30 sep 2026,
+con estas correcciones:
+
+| Corrección | Filas | Detalle |
+|---|---|---|
+| Coordenadas normalizadas | 499 | Llegaron en cuatro formatos (`-120675311`, `-12066587`, `-1.206.852`, `-120.669`). Regla única: quitar separadores y poner el decimal tras los dos primeros dígitos. 29 filas solo traen 4-5 decimales (precisión de 1-10 m) |
+| Fuera del campus, eliminadas | 11 | Open PUCP, Puerta Urubamba, IEEE UFFC, dos paradas de BUS PUCP, Centro de Arbitraje, PUCP NSE4, Instituto Confucio, Híkary, Palmetto Hotel y Cancha de frontón |
+| Entrada principal corregida | 1 | La fila «PUCP» estaba a 1.8 km del campus. Pasa a llamarse **Entrada principal** y toma el punto de «Puerta principal» |
+| Plantas, movidas al catastro | 77 | Los puntos en serie de «Mecánica» (34), «Biblioteca Central» (25) y «Arqueología» (18) no son lugares. **No siguen la forma de ningún polígono**: si fueran contornos, casi todos estarían a menos de 1 m del borde de un mismo polígono, y lo están 7 de 34, 7 de 25 y 0 de 18, repartidos entre varios polígonos. Son plantas individuales sin especie. **Por ahora no se cargan ni se muestran** (decisión del 30 sep 2026); se conservan en su archivo hasta decidir qué hacer con ellas |
+| Pisos con edificio padre | 25 | Por cercanía, ver arriba |
+| Alias | 1 | `hallazgos` → Oficina de hallazgos |
+
+Resultado: **411 referencias** en 24 categorías y 270 nombres distintos. Los archivos versionados son
+la fuente de la migración:
+
+- [`docs/dominio/datos/referencias-oficiales.csv`](../../docs/dominio/datos/referencias-oficiales.csv)
+- [`docs/dominio/datos/referencias-alias.csv`](../../docs/dominio/datos/referencias-alias.csv)
+- [`docs/dominio/datos/plantas-sin-especie.csv`](../../docs/dominio/datos/plantas-sin-especie.csv) — **no se carga**: queda como registro hasta decidir su tratamiento
+
+**El Excel histórico contra las referencias.** De sus 75 lugares distintos, 73 coinciden por nombre
+exacto y `hallazgos` entra por alias. **`Universitaria` no está entre las referencias**: las filas
+históricas que la usan **no se importan**.
+
+#### 4.4.5 Zonas de supervisión: capa aparte
+
+El mapa del cliente trae **4 zonas de supervisión** (`Zona1`…`Zona4`): multipolígonos que cubren
+juntos 40.3 ha, casi todo el campus, edificios incluidos. **No son áreas verdes ni un nivel de la
+jerarquía**: cortan a los sectores (el Sector verde 02 tiene secciones en las cuatro zonas), así
+que no pueden ser padre ni hijo de un sector.
+
+| Zona | Superficie |
+|---|---|
+| Zona 1 | 9.12 ha |
+| Zona 2 | 8.09 ha |
+| Zona 3 | 11.20 ha |
+| Zona 4 | 11.87 ha |
+
+Se cargan en una tabla propia (`V015`, §4.4.6). **La zona de cada sección no se guarda: se calcula
+por posición** (la zona que contiene la mayor parte de su superficie). Guardarla duplicaría un dato
+que la geometría ya responde y que se desincronizaría al redibujar una zona.
+
+**Cada zona tiene un supervisor**, que es un usuario del sistema. El archivo del cliente no lo
+dice, así que **por ahora el supervisor de las cuatro zonas es el coordinador** (decisión del 29 sep
+2026). Quién será el supervisor real de cada una queda como pregunta al cliente (P-16).
+
+- **Qué usuarios pueden supervisar una zona:** los de rol `COORDINADOR`, y por tanto también
+  `ADMIN`, que incluye sus permisos (A-02). No los `SUPERVISOR`: ese rol es el del **capataz**, y
+  supervisa una cuadrilla, no una zona. El nombre coincide y es fácil confundirlos.
+- **Si se desactiva el usuario que supervisa una zona,** la zona vuelve al supervisor por defecto
+  en la misma transacción. Una zona nunca queda sin supervisor.
+- **Supervisar una zona no restringe lo que se ve.** Hoy el supervisor de zona es el coordinador,
+  que ya ve todo el campus. Si mañana lo es otra persona con alcance limitado, ese alcance se
+  especifica entonces; este spec no lo inventa.
+
+#### 4.4.6 V015 — Capa de zonas de supervisión
+
+```sql
+-- V015__create_supervision_zones.sql
+-- Capa territorial del cliente, independiente de la jerarquía de zonas (§4.4.5).
+
+CREATE TABLE supervision_zones (
+    id                 BIGSERIAL PRIMARY KEY,
+    code               VARCHAR(30)  NOT NULL,
+    name               VARCHAR(150) NOT NULL,
+    supervisor_user_id BIGINT NOT NULL REFERENCES users(id),
+    boundary           GEOMETRY(MultiPolygon, 4326) NOT NULL,
+    area_m2     NUMERIC(12, 2) CHECK (area_m2 IS NULL OR area_m2 >= 0),
+    is_active   BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at  TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_supervision_zones_code_active
+    ON supervision_zones(code) WHERE deleted_at IS NULL;
+CREATE INDEX idx_supervision_zones_boundary ON supervision_zones USING GIST(boundary);
+CREATE INDEX idx_supervision_zones_supervisor ON supervision_zones(supervisor_user_id);
+
+-- Supervisor por defecto: el coordinador. Si la base aún no tiene ningún
+-- COORDINADOR activo (una instalación nueva solo trae el admin del baseline V001), cae en
+-- el ADMIN, que incluye los permisos de COORDINADOR (A-02). Si no hay ninguno de
+-- los dos, el NOT NULL detiene la migración: es preferible a una zona sin dueño.
+WITH default_supervisor AS (
+    SELECT u.id
+      FROM users u
+      JOIN catalog_items r ON r.id = u.role_item_id
+     WHERE u.is_active AND u.deleted_at IS NULL
+       AND r.code IN ('COORDINADOR', 'ADMIN')
+     ORDER BY (r.code = 'COORDINADOR') DESC, u.id
+     LIMIT 1
+)
+INSERT INTO supervision_zones (code, name, supervisor_user_id, boundary, area_m2)
+SELECT v.code, v.name, ds.id, v.boundary, v.area_m2
+  FROM default_supervisor ds, (VALUES
+    ('ZS-1', 'Zona de supervisión 1', <multipolígono>,  91242.75),
+    ('ZS-2', 'Zona de supervisión 2', <multipolígono>,  80863.43),
+    ('ZS-3', 'Zona de supervisión 3', <multipolígono>, 112022.74),
+    ('ZS-4', 'Zona de supervisión 4', <multipolígono>, 118736.06)
+  ) AS v(code, name, boundary, area_m2);
+```
+
+**`supervisor_user_id` es `NOT NULL`:** el equipo decidió que toda zona tiene supervisor. Qué
+usuario puede serlo (rol `COORDINADOR` o `ADMIN`, activo) lo valida el servicio: un `CHECK` no puede
+consultar el rol, que vive en otra tabla.
+
+**Por qué la semilla cae en el `ADMIN`:** en una instalación nueva solo existe la cuenta inicial del baseline `V001`.
+Cuando el `ADMIN` cree la cuenta del coordinador, reasigna las zonas desde la pantalla de
+administración. Si la reasignación no se hace, el supervisor sigue siendo el jefe de sección, que
+es quien hoy tiene esa responsabilidad.
+
+`boundary` también es `NOT NULL`, a diferencia de `zones`: una zona de supervisión **es** su
+polígono; sin él no significa nada.
+
+#### 4.4.7 V016 — Referencias
+
+```sql
+-- V016__create_place_references.sql
+-- Puntos con nombre para buscar en el mapa e importar ubicaciones (§4.4.4).
+-- No forman parte de la jerarquía de zonas.
+
+INSERT INTO catalog_types (code, name, description, is_system) VALUES
+    ('REFERENCE_CATEGORY', 'Categorías de referencia',
+     'Tipo de lugar al que alude una referencia', FALSE);
+
+-- Las 24 categorías de la tabla oficial, con su texto original como label.
+INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
+    ((SELECT id FROM catalog_types WHERE code='REFERENCE_CATEGORY'), 'FACULTY', 'Facultades', 1),
+    -- … 24 filas
+    ;
+
+CREATE TABLE place_references (
+    id                   BIGSERIAL PRIMARY KEY,
+    code                 VARCHAR(20)  NOT NULL,
+    name                 VARCHAR(200) NOT NULL,
+    category_item_id     BIGINT NOT NULL REFERENCES catalog_items(id),
+    parent_reference_id  BIGINT REFERENCES place_references(id),
+    location             GEOMETRY(Point, 4326) NOT NULL,
+    notes                TEXT,
+    is_active            BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at           TIMESTAMP,
+
+    CONSTRAINT chk_place_references_not_self_parent
+        CHECK (parent_reference_id IS NULL OR parent_reference_id <> id)
+);
+
+-- name NO es único: un lugar tiene varios nombres y un nombre, varios puntos.
+CREATE UNIQUE INDEX idx_place_references_code_active
+    ON place_references(code) WHERE deleted_at IS NULL;
+CREATE INDEX idx_place_references_parent   ON place_references(parent_reference_id);
+CREATE INDEX idx_place_references_category ON place_references(category_item_id);
+CREATE INDEX idx_place_references_location ON place_references USING GIST(location);
+
+CREATE TABLE place_reference_aliases (
+    id            BIGSERIAL PRIMARY KEY,
+    reference_id  BIGINT NOT NULL REFERENCES place_references(id),
+    alias         VARCHAR(200) NOT NULL,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at    TIMESTAMP
+);
+
+CREATE INDEX idx_place_reference_aliases_reference ON place_reference_aliases(reference_id);
+
+-- Carga oficial inicial: 411 referencias y 1 alias, generados desde
+-- docs/dominio/datos/referencias-*.csv.
+```
+
+**Lo que el DDL no dice:**
+
+- **`location` es `NOT NULL`.** Una referencia sin punto no sirve para buscar en el mapa ni para
+  importar una ubicación. Lo que no tiene punto es un alias.
+- **Sin índice de texto sobre `name`.** Con ~400 filas, `unaccent(name) ILIKE unaccent(:q)` se
+  resuelve sin índice. `unaccent` no es `IMMUTABLE` y no admite un índice de expresión directo; si el
+  volumen crece, se añade una columna normalizada.
+- **Ciclos en la jerarquía** (A padre de B, B padre de A): el `CHECK` solo impide el caso de una
+  referencia que sea su propio padre. El resto lo valida el servicio, como en `zones`.
 
 ### 4.5 V017 — Catálogos que la entrega permite cerrar
 
@@ -789,7 +1104,7 @@ una implementación, no rehacer el módulo de intervenciones.
 El Excel es un sistema vivo, no un dataset limpio. Lo que hay que resolver antes de importar:
 
 - **Un duplicado exacto en `lugares`:** `Servicio médico` y `Servicio Médico`, idénticas
-  coordenadas. Se funden en una: 75 filas → **74 zonas**.
+  coordenadas. Al importar, ambas resuelven a la misma referencia oficial (§4.4.4).
 - **25 lugares usados en los registros que no están en el catálogo.** Son de tres clases, y cada
   una se trata distinto:
   - *Alias y erratas* (`civil` → Ing. Civil, `Z` → Pabellón Z, `entrada prinsipal` → Puerta
@@ -848,7 +1163,7 @@ De `Podas arbpalm`, con el par nombre común / científico que pide la tabla `sp
 | CA-02 | La taxonomía real está sembrada completa | `SELECT count(*)` sobre `INTERVENTION_CLASS` devuelve **9**; sobre los `INTERVENTION_TYPE` activos devuelve **45** |
 | CA-03 | Los tipos inventados ya no se ofrecen | Consultar `INTERVENTION_TYPE` activos: `DECORACION` y `REMOCION_TERRENO` no aparecen, pero **siguen existiendo** con `is_active = FALSE` |
 | CA-04 | Cada tipo cuelga de su clase | `Canteo` tiene como padre `MANTENIMIENTO`; ningún tipo activo tiene `parent_item_id` nulo |
-| CA-05 | Las zonas están cargadas en dos niveles | `zones` con tipo `CAMPUS_LOCATION` devuelve **74**, ninguna con `centroid` nulo y `Servicio Médico` una sola vez; con tipo `FOREST_QUARTER` devuelve **17**, y no existe ningún `CF-07` |
+| CA-05 | Las zonas están cargadas en sectores y secciones | `zones` con tipo `SECTOR` devuelve **5**. Con tipo `SECTION` devuelve **519**, todas con `boundary` y `area_m2`, y solo `AV-0011` con `parent_zone_id` nulo. Con tipo `SUBSECTION` devuelve **0**. `place_references` devuelve **411** (25 con referencia padre) y `place_reference_aliases`, **1**. `supervision_zones` devuelve **4**, todas con `supervisor_user_id` de un usuario `COORDINADOR` o, si no existe ninguno, `ADMIN`. `ZONE_TYPE` no tiene ningún ítem de cuartel |
 | CA-12 | El código heredado admite duplicados | Insertar dos `green_elements` con el mismo `legacy_code` → ambos se guardan (es el caso real de las placas recicladas) |
 | CA-13 | Las clases prioritarias están marcadas | `SELECT code FROM catalog_items WHERE metadata->>'priority' = 'true'` devuelve exactamente `PODA`, `MANTENIMIENTO` y `FITOSANITARIO` |
 | CA-14 | El flag de prioridad no altera el comportamiento | Una clase sin el flag se puede seleccionar y registrar igual que una marcada: la prioridad ordena el trabajo del equipo, no restringe al usuario |
@@ -879,7 +1194,7 @@ Taxonomía de intervenciones
 - 9 clases activas, 45 tipos activos
 - tipo cuya clase no coincide con la enviada → rechazado
 - clase FITOSANITARIO sin tipo → intervención se guarda
-- tipos desactivados por V014 no aparecen en el listado activo pero siguen consultables por id
+- DECORACION y REMOCION_TERRENO no se ofrecen (el baseline no los siembra; ver la divergencia de §4.2)
 
 Cantidades
 - executed_quantity sin unit_item_id → rechazado por la base
@@ -891,10 +1206,24 @@ Evidencia
 - UNSPECIFIED rechazado por el servicio en captura nueva
 
 Zonas
-- 74 lugares, todos con centroid
-- 17 cuarteles forestales; CF-07 no existe
-- boundary sigue nulo en todas (no se inventó polígono)
-- parent_zone_id nulo en los 74 lugares (no se inventó el mapeo a cuartel)
+- 5 sectores, con boundary MultiPolygon igual a la unión de sus secciones
+- 519 secciones; AV-0173 y AV-0411 (sin geometría) no se siembran
+- AV-0011 sin sector; ninguna otra sección con parent_zone_id nulo
+- valores truncados del mapa (`campo depo`, `Bosque húme`) se traducen al sector correcto
+- secciones con map_code repetido (`B 6`, `C 31`…) se siembran sin error
+- supervisor de zona con rol SUPERVISOR (capataz) → rechazado por el servicio
+- desactivar al usuario que supervisa una zona → la zona vuelve al supervisor por defecto
+- base sin COORDINADOR → las zonas quedan supervisadas por el ADMIN inicial del baseline V001
+- la zona de supervisión de una sección se calcula por posición, no se guarda
+
+Referencias
+- buscar «hallazgos» devuelve Oficina de hallazgos (alias)
+- buscar «dinthilac» sin tilde ni mayúscula devuelve las referencias con ese nombre
+- dos referencias con el mismo nombre y distinto punto se guardan sin error
+- referencia sin location → rechazada por la BD
+- referencia padre de sí misma → rechazada por chk_place_references_not_self_parent
+- ciclo A → B → A → rechazado por el servicio
+- importar una fila histórica con «Universitaria» → se descarta y se informa, no falla la importación
 
 Código heredado del arbolado
 - dos elementos con el mismo legacy_code → ambos se guardan
@@ -911,14 +1240,14 @@ Se anotan en `REGISTRO.md` conforme a la sección «Enmiendas a specs cerrados»
 | Spec enmendado | Qué cambia |
 |---|---|
 | SPEC-002 §4.9 | `INTERVENTION_TYPE` deja de ser una lista plana inventada de 6 valores. `URGENCY_LEVEL` pierde `CRITICAL`. |
-| SPEC-002 §4.3 | `zones` gana `centroid`; se siembran **17 cuarteles forestales + 74 lugares**. La jerarquía `parent_zone_id` pasa de hipótesis a uso real. P-01 de *bloqueante* a *parcial*. |
+| SPEC-002 §4.3 | `zones` gana `map_code` y `use_type_item_id`; se siembran **5 sectores + 519 secciones** del mapa del cliente. La jerarquía `parent_zone_id` pasa de hipótesis a uso real. **P-01 se cierra.** Entra la tabla `supervision_zones`, fuera de la jerarquía y con un supervisor por zona. |
 | SPEC-002 §4.5 | `green_elements` gana `legacy_code` con índice **no único**, para las placas del inventario forestal antiguo (D-08). |
 | SPEC-002 §4.6 | `interventions` gana cantidades, origen, código externo y ficha técnica. |
 | SPEC-002 Anexo | P-01, P-02, P-04 y P-08 avanzan; entra **P-10** (tipos de `FITOSANITARIO` e `INSPECCION`). |
 | SPEC-003 §3 | `catalog_items` gana `parent_item_id`: los catálogos pueden ser jerárquicos. |
 | SPEC-003 §8 | Entran `INTERVENTION_CLASS`, `INTERVENTION_ORIGIN`, `INCIDENT_SOURCE`. Se actualizan los valores de `INTERVENTION_TYPE`, `SPECIES_TYPE`, `MEASUREMENT_UNIT`, `EVIDENCE_MOMENT`, `URGENCY_LEVEL`, `ZONE_TYPE`. |
 | **SPEC-000 §1 · REGLAS §0.1** | «Sin dependencia de servicios externos» pasa de **una** excepción (SMTP) a **tres**: se añaden la **publicación en el mapa del cliente** y el **servicio de mapas**. Misma condición acotante para las tres: su caída nunca impide una operación de negocio. |
-| **SPEC-002 §4.3** | La jerarquía de zonas deja de ser una incógnita: **sector → lugar → jardín**, con los cuarteles como vocabulario heredado en desuso. |
+| **SPEC-002 §4.3** | La jerarquía de zonas deja de ser una incógnita: **sector → sección → subsección**. Los cuarteles forestales quedan fuera del modelo. `boundary` pasa a `MultiPolygon`. |
 | **SPEC-002 §4.6** | `intervention_evidences` gana `uploaded_at` y `client_reference` para el ciclo de subida diferida del móvil. |
 
 ### 9.2 Fuera de alcance, con su motivo
@@ -961,12 +1290,14 @@ cliente no se resuelve pidiendo un archivo, sino haciendo que el cliente elija. 
 
 #### A. Contradicciones entre las dos fuentes
 
-**P-11 y P-12 quedaron resueltas** y se documentan en §2.0.3 y §2.0.4. Queda una abierta:
+**P-11 y P-12 quedaron resueltas** y se documentan en §2.0.3 y §2.0.4. Estado de las demás y preguntas nuevas del mapa del cliente (29 sep 2026):
 
 | # | La contradicción | Por qué no la decidimos nosotros |
 |---|---|---|
-| **P-13a** | El Excel numera cuarteles en comentarios sueltos («cuartel 16, sector Arqueología»); Robert dice que los cuarteles **engloban todo el campus**. | Falta el **mapeo lugar → cuartel** completo. Solo **2 de 283 filas** mencionan un cuartel, y con dos casos no hay patrón: ni numérico ni geográfico. Inventarlo produciría un reporte por cuartel de apariencia oficial y contenido falso — peor que no tenerlo, porque un campo vacío se ve vacío y uno mal llenado se ve correcto. |
-| **P-13b** | La palabra **«sector»** se usa en el Excel con **tres sentidos distintos**. | Si «sector» es un nivel real entre cuartel y lugar, la jerarquía **no es de dos niveles sino de tres**, y `parent_zone_id` necesita otro escalón. No se puede decidir sin desambiguar (§4.4.1). |
+| ~~**P-13a**~~ | **Descartada (29 sep 2026):** el sistema no usa cuarteles (§4.4.2). Se conserva el razonamiento original. | Faltaba el **mapeo lugar → cuartel** completo. Solo **2 de 283 filas** mencionan un cuartel, y con dos casos no hay patrón: ni numérico ni geográfico. Inventarlo produciría un reporte por cuartel de apariencia oficial y contenido falso — peor que no tenerlo, porque un campo vacío se ve vacío y uno mal llenado se ve correcto. |
+| ~~**P-13b**~~ | **Resuelta en la 2.ª entrevista:** la palabra «sector» tenía tres sentidos en el Excel. | El sector es el nivel raíz de la jerarquía (§4.4.1). |
+| **P-15** | `AV-0011` «Jardín Rosales» (`B 10`, 0.5 ha, exterior de Artes Escénicas) **no tiene capataz** en el mapa. | Qué sector lo atiende. Hasta entonces es una sección sin sector (§4.4). |
+| **P-16** | El mapa trae **4 zonas de supervisión**, pero no dice quién supervisa cada una. | Quién será el supervisor real de cada zona y si los capataces le reportan. Mientras tanto, las cuatro las supervisa el coordinador (§4.4.5). |
 
 **Resueltas, para dejar constancia:**
 
@@ -982,7 +1313,7 @@ cliente no se resuelve pidiendo un archivo, sino haciendo que el cliente elija. 
 | **P-10** | Tipos de actividad de **`Manejo fitosanitario`** e **`Inspección y monitoreo`** | **Lo más urgente de este bloque:** `FITOSANITARIO` es una de las **cuatro prioritarias** y no se puede detallar sin esto (§2.0.3) |
 | P-02 | La hoja **«lista de especies»**, referenciada en el Excel pero ausente | Cierra `SPECIES_TYPE` y puebla `species` |
 | P-08 | La **«matriz de incidencia»**, también referenciada y ausente | Cierra `INCIDENT_TYPE` |
-| P-01 | **Polígonos** de zonas y el mapeo a cuarteles | Superficies y reportes por sector |
+| ~~P-01~~ | ~~Polígonos de las zonas~~ | ✅ **Cerrada (29 sep 2026)** con el mapa v32 (§4.4) |
 | — | Los **10 lugares no catalogados** de §5.4 | Si son zonas reales o alias |
 | — | El **inventario de ~100 jardines** de la ruta de corte de césped | Es la lista con la que se controla el servicio tercerizado |
 | — | El **formato de catastro forestal** («Excel forestal» que ya diseñaron) | Define los atributos de `green_elements`; hoy es una conjetura |

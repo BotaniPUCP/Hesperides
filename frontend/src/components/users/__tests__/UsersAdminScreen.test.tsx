@@ -115,6 +115,12 @@ describe('UsersAdminScreen', () => {
     expect(list).toHaveBeenCalledWith(expect.objectContaining({ isActive: true }), 0);
   });
 
+  it('no repite un enlace de vuelta al inicio: esa navegación la da el sidebar', async () => {
+    await montarYEsperar();
+
+    expect(screen.queryByRole('link', { name: /volver al inicio/i })).not.toBeInTheDocument();
+  });
+
   it('consulta una sola vez tras dejar de escribir, no una por letra', async () => {
     jest.useFakeTimers();
     const usuarioDePrueba = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });

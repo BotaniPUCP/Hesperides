@@ -184,13 +184,13 @@ Hesperides/
 │   └── src/
 │       ├── app/                     ← App Router (Next.js 16+)
 │       │   ├── (auth)/              ← Grupo de rutas de autenticación
-│       │   ├── (dashboard)/         ← Grupo de rutas autenticadas
+│       │   ├── (dashboard)/         ← Grupo de rutas autenticadas: su layout aplica guard y sidebar
 │       │   ├── layout.tsx
 │       │   └── page.tsx
 │       ├── components/
 │       │   ├── ui/                  ← Componentes base (Button, Input, Modal, etc.)
 │       │   ├── forms/               ← Componentes de formulario reutilizables
-│       │   └── layouts/             ← Layouts compartidos
+│       │   └── layouts/             ← Armazón de página: AppShell y Sidebar (SPEC-C01 §4.2)
 │       ├── hooks/                   ← Custom hooks
 │       ├── lib/
 │       │   ├── api.ts               ← Cliente HTTP (fetch wrapper tipado)

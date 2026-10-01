@@ -210,6 +210,40 @@ el código.
 feature (va en su carpeta). Un componente duplicado en dos features es el fallo que este catálogo
 existe para evitar.
 
+### 4.2 Armazón de página y navegación
+
+> **Añadido el 1 oct 2026.** Hasta entonces la navegación era una lista de enlaces en la página de
+> inicio, y cada pantalla repetía su `RouteGuard` y su botón «Volver al inicio».
+
+Toda pantalla con sesión vive en el grupo de rutas `app/(dashboard)/` (SPEC-000 §4). Su
+`layout.tsx` aplica `RouteGuard` y `AppShell` **una sola vez**; las páginas solo aportan su
+contenido. `/login` y `/cambiar-password` quedan fuera: la primera es para quien no tiene sesión y
+la segunda no debe ofrecer navegación mientras la contraseña temporal siga vigente.
+
+| Componente (`components/layouts/`) | Para qué existe | Lo que no se ve en las props |
+|---|---|---|
+| `AppShell` | Sidebar más contenido | Qué variante se ve lo decide el CSS (`md:`), no un `matchMedia`: no hay un primer render con la variante equivocada |
+| `Sidebar` | Inicio, módulos y el pie con usuario y «Cerrar sesión» | Avisa al navegar (`onNavigate`) para que el panel móvil se cierre |
+| `SidebarGroup` | Módulo desplegable | Botón con `aria-expanded`. Arranca abierto **solo** si contiene la página activa |
+| `SidebarLink` | Enlace a una pantalla | La activa se anuncia con `aria-current="page"` y el token `brand-50`, no solo con color |
+
+**La estructura es un dato, no JSX:** `lib/navigation.ts` define los grupos y sus ítems, cada uno
+con los roles que pueden verlo, y `visibleNavigation(rol)` filtra. Añadir una pantalla es añadir
+una entrada. Reglas:
+
+- **Un grupo por módulo del dominio** (M1 Configuración → «Administración», M2 Catastro, M3
+  Intervenciones, M5 Incidencias, M6 Reportes, M7 Riego…), no un único grupo que lo agrupe todo.
+  Un módulo nuevo entra como su propio grupo: así la configuración no se mezcla con el trabajo
+  diario.
+- **Un ítem solo aparece si el rol puede abrir la pantalla**, y un grupo solo aparece si tiene al
+  menos un ítem visible. Las reglas replican las del backend (SPEC-001 Anexo A); ocultar un enlace
+  no es una medida de seguridad, la pantalla y la API siguen validando.
+- **El sidebar es la única navegación entre módulos.** Ninguna pantalla repite un «Volver al
+  inicio» ni una lista de enlaces: dos listas divergen.
+
+Hoy el único grupo es **Administración**: Usuarios, Catálogos, Frecuencias de mantenimiento y
+Parámetros del sistema.
+
 ## 5. Catálogo de componentes móvil (React Native)
 
 Mismos nombres, mismas props de datos que su contraparte web (secciones 4.1–4.10; `MapView`, `LocationPicker`, `PhotoUpload`, `BeforeAfterViewer` y `DateRangePicker` se detallan aparte por sus diferencias de plataforma). Toda prop de presentación web (`className`) se sustituye por `style?: StyleProp<ViewStyle>`.
@@ -283,6 +317,9 @@ No es una frase genérica: son reglas verificables por componente.
 Breakpoints (`_plantilla.md` §7): móvil **<640px**, tablet **640–1024px**, desktop **>1024px**.
 
 - **Layout general:** una sola columna en móvil; `Card`s en grilla de 2 columnas en tablet; grilla de 3–4 columnas o layout de paneles (lista + mapa/detalle lado a lado) en desktop.
+- **Sidebar:** fijo a la izquierda (`w-64`) desde `md`. En pantallas menores se esconde tras un
+  botón ☰ en una barra superior y se abre como panel (`role="dialog"`), que se cierra al navegar,
+  con `Esc` o tocando fuera.
 - **`MapView`:** ocupa pantalla completa en móvil (controles de capas colapsados en un botón flotante que abre un panel); en desktop convive con un panel lateral de filtros/lista siempre visible.
 - **`Modal`:** `size="fullscreen"` se activa automáticamente en <640px sin importar el `size` solicitado, salvo que el `size` pedido ya sea `sm` y el contenido quepa (criterio del componente, no de cada feature).
 

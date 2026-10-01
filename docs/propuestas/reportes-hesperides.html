@@ -1,0 +1,548 @@
+<title>Reportes de Hesperides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-2: #f1f5f9;
+    --line: #e2e8f0;
+    --ink: #0f172a;
+    --ink-2: #334155;
+    --muted: #64748b;
+    --brand: #15803d;
+    --brand-strong: #14532d;
+    --brand-soft: #dcfce7;
+    --ok-bg: #dcfce7;  --ok-fg: #166534;
+    --warn-bg: #fef3c7; --warn-fg: #92400e;
+    --high-bg: #ffedd5; --high-fg: #9a3412;
+    --bad-bg: #fee2e2;  --bad-fg: #991b1b;
+    --info-bg: #e0f2fe; --info-fg: #075985;
+    --neutral-bg: #f1f5f9; --neutral-fg: #334155;
+    --bar-track: #e2e8f0;
+    --shadow: 0 1px 2px rgba(15, 23, 42, .06), 0 8px 24px rgba(15, 23, 42, .06);
+    --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+  h1, h2, h3, h4 { margin: 0; text-wrap: balance; color: var(--ink); }
+  p { margin: 0; }
+  .num, td.n, .kpi-value { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--brand);
+  }
+
+  /* Intro */
+  .intro { display: flex; flex-direction: column; gap: 16px; max-width: 68ch; }
+  .intro h1 { font-size: clamp(28px, 4.5vw, 40px); line-height: 1.15; font-weight: 700; letter-spacing: -.01em; }
+  .intro p { color: var(--ink-2); font-size: 16px; }
+  .sample-note {
+    display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+    background: var(--warn-bg); color: var(--warn-fg);
+    font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 999px;
+  }
+
+  /* Ladder */
+  .ladder { display: flex; flex-direction: column; gap: 16px; }
+  .ladder-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .rung {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px; display: flex; flex-direction: column; gap: 10px;
+    text-decoration: none; color: inherit;
+  }
+  .rung:hover { border-color: var(--brand); }
+  .rung:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .rung .level { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .rung h3 { font-size: 18px; }
+  .rung dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13.5px; }
+  .rung dt { color: var(--muted); }
+  .rung dd { margin: 0; color: var(--ink-2); }
+  .rung .question { font-size: 14px; color: var(--ink); border-top: 1px solid var(--line); padding-top: 10px; font-style: italic; }
+
+  /* Report section */
+  .report { display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 16px; }
+  .report-head { display: flex; flex-direction: column; gap: 8px; max-width: 70ch; }
+  .report-head h2 { font-size: 26px; line-height: 1.2; }
+  .report-head p { color: var(--ink-2); }
+
+  .sheet {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+    box-shadow: var(--shadow);
+    padding: 28px; display: flex; flex-direction: column; gap: 24px;
+  }
+  .sheet-top {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px;
+    border-bottom: 2px solid var(--brand); padding-bottom: 14px;
+  }
+  .sheet-top .t { display: flex; flex-direction: column; gap: 2px; }
+  .sheet-top .t strong { font-size: 18px; }
+  .sheet-top .t span { color: var(--muted); font-size: 13px; }
+  .sheet-meta { display: grid; grid-template-columns: auto auto; gap: 2px 14px; font-size: 13px; align-self: center; }
+  .sheet-meta dt { color: var(--muted); }
+  .sheet-meta dd { margin: 0; font-weight: 500; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi { background: var(--surface-2); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
+  .kpi .kpi-label { font-size: 12.5px; color: var(--muted); }
+  .kpi .kpi-value { font-size: 26px; font-weight: 500; line-height: 1.1; color: var(--ink); }
+  .kpi .kpi-sub { font-size: 12.5px; color: var(--ink-2); }
+
+  .block { display: flex; flex-direction: column; gap: 10px; }
+  .block h4 { font-size: 14px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  .tbl-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12.5px; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--ink); vertical-align: top; }
+  td.n, th.n { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+
+  .pill { display: inline-block; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .p-ok { background: var(--ok-bg); color: var(--ok-fg); }
+  .p-warn { background: var(--warn-bg); color: var(--warn-fg); }
+  .p-high { background: var(--high-bg); color: var(--high-fg); }
+  .p-bad { background: var(--bad-bg); color: var(--bad-fg); }
+  .p-info { background: var(--info-bg); color: var(--info-fg); }
+  .p-neutral { background: var(--neutral-bg); color: var(--neutral-fg); }
+
+  .bars { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: grid; grid-template-columns: 80px 1fr 96px; gap: 12px; align-items: center; font-size: 14px; }
+  .bar-track { height: 12px; background: var(--bar-track); border-radius: 6px; position: relative; overflow: hidden; }
+  .bar-fill { position: absolute; inset: 0 auto 0 0; background: var(--brand); border-radius: 6px; }
+  .bar-row .num { text-align: right; color: var(--ink-2); font-size: 13px; }
+  .goal-note { font-size: 12.5px; color: var(--muted); }
+
+  .missing { font-size: 13.5px; color: var(--ink-2); background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+  .missing strong { color: var(--ink); }
+
+  /* Direction sheet */
+  .indicators { display: flex; flex-direction: column; }
+  .ind {
+    display: grid; grid-template-columns: 1fr 150px 130px 110px; gap: 16px; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .ind:last-child { border-bottom: none; }
+  .ind .name { display: flex; flex-direction: column; gap: 2px; }
+  .ind .name strong { font-size: 15px; font-weight: 600; }
+  .ind .name span { font-size: 12.5px; color: var(--muted); }
+  .ind .value { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 500; }
+  .ind .goal { font-size: 13px; color: var(--ink-2); }
+  .trend { font-family: var(--mono); font-size: 13px; }
+  .trend.up { color: var(--ok-fg); }
+  .trend.flat { color: var(--muted); }
+
+  .spark-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .spark { width: 100%; max-width: 100%; height: auto; }
+  .spark .area { fill: var(--brand-soft); }
+  .spark .line { fill: none; stroke: var(--brand); stroke-width: 2; }
+  .spark .dot { fill: var(--brand); }
+  .spark .grid { stroke: var(--line); stroke-width: 1; }
+  .spark text { fill: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .spark .goal-line { stroke: var(--muted); stroke-dasharray: 4 4; stroke-width: 1; }
+
+  .obs { border: 1px dashed var(--line); border-radius: 8px; padding: 14px; font-size: 14px; color: var(--ink-2); display: flex; flex-direction: column; gap: 6px; }
+  .obs .lbl { font-size: 12.5px; color: var(--muted); }
+
+  /* Questions */
+  .ask { display: flex; flex-direction: column; gap: 10px; border-left: 3px solid var(--brand); padding-left: 16px; max-width: 72ch; }
+  .ask h4 { font-size: 15px; }
+  .ask ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--ink-2); }
+
+  /* Closing */
+  .closing { display: flex; flex-direction: column; gap: 16px; max-width: 72ch; }
+  .closing h2 { font-size: 24px; }
+  .closing ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; color: var(--ink-2); }
+  footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+  @media (max-width: 820px) {
+    .ladder-grid { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .two { grid-template-columns: 1fr; }
+    .ind { grid-template-columns: 1fr auto; gap: 6px 16px; }
+    .ind .goal, .ind .trend { grid-column: span 1; }
+  }
+  @media (max-width: 480px) {
+    .sheet { padding: 18px; }
+    .kpi .kpi-value { font-size: 22px; }
+    .bar-row { grid-template-columns: 64px 1fr 80px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .rung { transition: border-color .15s ease; }
+  }
+</style>
+
+<main class="page">
+
+  <header class="intro">
+    <span class="eyebrow">Propuesta para la Sección de Áreas Verdes y Medio Ambiente</span>
+    <h1>Tres reportes que Hesperides generaría solo</h1>
+    <p>Hoy cada reporte se arma a mano a partir de varios Excel. Proponemos que el sistema los produzca a partir de lo que los capataces registran en campo, en tres niveles: uno para cada capataz, uno para la jefatura y uno de una página para la Oficina de Servicios Generales.</p>
+    <p>Queremos saber si estos tres le sirven, qué les falta y qué les sobra. Al final de la página están las preguntas concretas.</p>
+    <span class="sample-note">Todas las cifras, lugares e incidencias de esta página son de ejemplo</span>
+  </header>
+
+  <section class="ladder" aria-labelledby="ladder-title">
+    <h2 id="ladder-title" class="eyebrow">Los tres niveles</h2>
+    <div class="ladder-grid">
+      <a class="rung" href="#operativo">
+        <span class="level">Nivel 1 · Operativo</span>
+        <h3>Reporte del sector</h3>
+        <dl>
+          <dt>Para</dt><dd>Cada capataz</dd>
+          <dt>Cada</dt><dd>Semana</dd>
+          <dt>Alcance</dt><dd>Su sector</dd>
+        </dl>
+        <p class="question">«¿Qué hizo mi cuadrilla esta semana y qué me queda pendiente?»</p>
+      </a>
+      <a class="rung" href="#coordinacion">
+        <span class="level">Nivel 2 · Coordinación</span>
+        <h3>Reporte mensual de la sección</h3>
+        <dl>
+          <dt>Para</dt><dd>Jefe de sección</dd>
+          <dt>Cada</dt><dd>Mes</dd>
+          <dt>Alcance</dt><dd>Todo el campus</dd>
+        </dl>
+        <p class="question">«¿Estamos cumpliendo la cobertura y las frecuencias, y dónde falta atención?»</p>
+      </a>
+      <a class="rung" href="#direccion">
+        <span class="level">Nivel 3 · Dirección</span>
+        <h3>Resumen para OSG</h3>
+        <dl>
+          <dt>Para</dt><dd>Oficina de Servicios Generales</dd>
+          <dt>Cada</dt><dd>Mes</dd>
+          <dt>Alcance</dt><dd>Una página</dd>
+        </dl>
+        <p class="question">«¿Cumple la sección sus metas, y va mejor o peor que el mes pasado?»</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ NIVEL 1 ============ -->
+  <section class="report" id="operativo" aria-labelledby="op-title">
+    <div class="report-head">
+      <span class="eyebrow">Nivel 1 · Operativo</span>
+      <h2 id="op-title">Reporte semanal del sector</h2>
+      <p>Lo recibe cada capataz al cerrar la semana. Le muestra lo que su cuadrilla registró, cómo le fue con el turno de riego y qué incidencias de su sector siguen abiertas. También sirve para su reunión semanal con la jefatura.</p>
+    </div>
+
+    <article class="sheet" aria-label="Ejemplo de reporte semanal del sector 2">
+      <div class="sheet-top">
+        <div class="t">
+          <strong>Sector 2 · Semana del 22 al 27 de septiembre de 2026</strong>
+          <span>Reporte operativo semanal</span>
+        </div>
+        <dl class="sheet-meta">
+          <dt>Capataz</dt><dd>Capataz del sector 2</dd>
+          <dt>Cuadrilla</dt><dd>9 personas</dd>
+        </dl>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><span class="kpi-label">Intervenciones registradas</span><span class="kpi-value">14</span><span class="kpi-sub">3 más que la semana anterior</span></div>
+        <div class="kpi"><span class="kpi-label">Lugares atendidos</span><span class="kpi-value">9 / 26</span><span class="kpi-sub">del sector</span></div>
+        <div class="kpi"><span class="kpi-label">Riego del turno</span><span class="kpi-value">23 / 26</span><span class="kpi-sub">lugares regados</span></div>
+        <div class="kpi"><span class="kpi-label">Fotos sin subir</span><span class="kpi-value">0</span><span class="kpi-sub"><span class="pill p-ok">Todo en la nube</span></span></div>
+      </div>
+
+      <div class="two">
+        <div class="block">
+          <h4>Intervenciones por tipo</h4>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Tipo</th><th>Lugares</th><th class="n">Registros</th></tr></thead>
+              <tbody>
+                <tr><td>Limpieza y deshierbo</td><td>Comedor Central, Arte Antiguo</td><td class="n">5</td></tr>
+                <tr><td>Poda menor</td><td>Jardines de Ing. Civil</td><td class="n">4</td></tr>
+                <tr><td>Perfilado de bordes</td><td>Pontódromo</td><td class="n">2</td></tr>
+                <tr><td>Resiembra de césped</td><td>Pabellón V</td><td class="n">2</td></tr>
+                <tr><td>Propagación por esqueje</td><td>Jardines de Ing. Civil</td><td class="n">1</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="block">
+          <h4>Insumos consumidos</h4>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Insumo</th><th class="n">Cantidad</th><th>Unidad</th></tr></thead>
+              <tbody>
+                <tr><td>Confitillo</td><td class="n">20</td><td>sacos</td></tr>
+                <tr><td>Arena de río</td><td class="n">5</td><td>sacos</td></tr>
+                <tr><td>Abono orgánico</td><td class="n">3</td><td>sacos</td></tr>
+                <tr><td>Esquejes</td><td class="n">1 000</td><td>und</td></tr>
+                <tr><td>Champa de césped</td><td class="n">12</td><td>m²</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="missing"><strong>Riego:</strong> quedaron sin regar en el turno <strong>Losa deportiva de Minas</strong>, <strong>Espalda de Mac Gregor</strong> y <strong>Jardín de Física</strong>. Se marcan para el siguiente ciclo.</div>
+
+      <div class="block">
+        <h4>Incidencias abiertas del sector</h4>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Incidencia</th><th>Lugar</th><th>Urgencia</th><th>Estado</th><th class="n">Días abierta</th></tr></thead>
+            <tbody>
+              <tr><td>Rama sobre vía peatonal</td><td>Pontódromo</td><td><span class="pill p-high">Alta</span></td><td><span class="pill p-info">En proceso · espera tercero</span></td><td class="n">3</td></tr>
+              <tr><td>Planta muerta en jardinera</td><td>Comedor Central</td><td><span class="pill p-warn">Media</span></td><td><span class="pill p-neutral">Reportada</span></td><td class="n">2</td></tr>
+              <tr><td>Rama que entra a ventana</td><td>Jardines de Ing. Civil</td><td><span class="pill p-neutral">Baja</span></td><td><span class="pill p-neutral">Reportada</span></td><td class="n">6</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ NIVEL 2 ============ -->
+  <section class="report" id="coordinacion" aria-labelledby="co-title">
+    <div class="report-head">
+      <span class="eyebrow">Nivel 2 · Coordinación</span>
+      <h2 id="co-title">Reporte mensual de la sección</h2>
+      <p>Para la jefatura. Reúne a los tres sectores y responde si se está cumpliendo la meta de cobertura, si alguna frecuencia de mantenimiento está vencida y cómo se están atendiendo las incidencias.</p>
+    </div>
+
+    <article class="sheet" aria-label="Ejemplo de reporte mensual de septiembre">
+      <div class="sheet-top">
+        <div class="t">
+          <strong>Septiembre de 2026 · Campus completo</strong>
+          <span>Reporte mensual de coordinación</span>
+        </div>
+        <dl class="sheet-meta">
+          <dt>Sectores</dt><dd>3</dd>
+          <dt>Lugares</dt><dd>74</dd>
+        </dl>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><span class="kpi-label">Cobertura del mes</span><span class="kpi-value">81 %</span><span class="kpi-sub">60 de 74 lugares · meta 100 %</span></div>
+        <div class="kpi"><span class="kpi-label">Ciclos de riego completos</span><span class="kpi-value">2 / 2</span><span class="kpi-sub">de 15 días cada uno</span></div>
+        <div class="kpi"><span class="kpi-label">Incidencias cerradas</span><span class="kpi-value">18</span><span class="kpi-sub">5 siguen abiertas</span></div>
+        <div class="kpi"><span class="kpi-label">Atendidas en plazo</span><span class="kpi-value">91 %</span><span class="kpi-sub">21 de 23</span></div>
+      </div>
+
+      <div class="two">
+        <div class="block">
+          <h4>Cobertura por sector</h4>
+          <div class="bars" role="list">
+            <div class="bar-row" role="listitem"><span>Sector 1</span><div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:88%"></div></div><span class="num">23 / 26 · 88 %</span></div>
+            <div class="bar-row" role="listitem"><span>Sector 2</span><div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:77%"></div></div><span class="num">20 / 26 · 77 %</span></div>
+            <div class="bar-row" role="listitem"><span>Sector 3</span><div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:77%"></div></div><span class="num">17 / 22 · 77 %</span></div>
+          </div>
+          <p class="goal-note">Un lugar cuenta como cubierto si tuvo al menos una intervención de mantenimiento cerrada en el mes.</p>
+        </div>
+        <div class="block">
+          <h4>Cumplimiento de frecuencias</h4>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Actividad</th><th>Frecuencia</th><th>Última</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td>Corte de césped</td><td>30 a 45 días</td><td class="num">12 sep</td><td><span class="pill p-ok">Al día</span></td></tr>
+                <tr><td>Riego del campus</td><td>15 días</td><td class="num">26 sep</td><td><span class="pill p-ok">Al día</span></td></tr>
+                <tr><td>Control fitosanitario</td><td>4 al año, mínimo</td><td class="num">3 de 4</td><td><span class="pill p-warn">Falta 1 antes de dic</span></td></tr>
+                <tr><td>Poda mayor</td><td>1 al año</td><td>dic–ene</td><td><span class="pill p-neutral">Programada</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h4>Incidencias por urgencia</h4>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Urgencia</th><th class="n">Registradas</th><th class="n">Plazo</th><th class="n">Tiempo medio de atención</th><th class="n">Fuera de plazo</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pill p-high">Alta</span></td><td class="n">4</td><td class="n">1 día</td><td class="n">0,8 días</td><td class="n">0</td></tr>
+              <tr><td><span class="pill p-warn">Media</span></td><td class="n">11</td><td class="n">2 días</td><td class="n">1,4 días</td><td class="n">1</td></tr>
+              <tr><td><span class="pill p-neutral">Baja</span></td><td class="n">8</td><td class="n">3 días</td><td class="n">2,1 días</td><td class="n">1</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="goal-note">Plazos para el personal estable. Una incidencia derivada a un tercero se mide contra el plazo pactado con él.</p>
+      </div>
+
+      <div class="two">
+        <div class="block">
+          <h4>Lugares más atendidos</h4>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Lugar</th><th class="n">Intervenciones</th></tr></thead>
+              <tbody>
+                <tr><td>Comedor Central</td><td class="n">14</td></tr>
+                <tr><td>Arte Antiguo</td><td class="n">11</td></tr>
+                <tr><td>Pontódromo</td><td class="n">10</td></tr>
+                <tr><td>Jardines de Ing. Civil</td><td class="n">9</td></tr>
+                <tr><td>Pabellón V</td><td class="n">8</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="block">
+          <h4>Lugares sin atención este mes</h4>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Lugar</th><th>Sector</th><th class="n">Última vez</th></tr></thead>
+              <tbody>
+                <tr><td>Jardín de Física</td><td>2</td><td class="n">hace 41 días</td></tr>
+                <tr><td>Losa deportiva de Minas</td><td>2</td><td class="n">hace 38 días</td></tr>
+                <tr><td>Jardín xerofítico del Aulario</td><td>3</td><td class="n">hace 35 días</td></tr>
+                <tr><td>Espalda de Mac Gregor</td><td>1</td><td class="n">hace 33 días</td></tr>
+                <tr><td colspan="3" style="color:var(--muted)">y 10 lugares más</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <p class="goal-note">En el sistema, estas dos listas se ven también como mapa de calor del campus.</p>
+    </article>
+  </section>
+
+  <!-- ============ NIVEL 3 ============ -->
+  <section class="report" id="direccion" aria-labelledby="di-title">
+    <div class="report-head">
+      <span class="eyebrow">Nivel 3 · Dirección</span>
+      <h2 id="di-title">Resumen mensual para OSG</h2>
+      <p>Una sola página con las metas que la sección ya reporta hacia arriba, cada una contra su objetivo y comparada con el mes anterior. Incluye un espacio para que la jefatura escriba sus observaciones antes de enviarlo.</p>
+    </div>
+
+    <article class="sheet" aria-label="Ejemplo de resumen para OSG de septiembre">
+      <div class="sheet-top">
+        <div class="t">
+          <strong>Sección de Áreas Verdes · Septiembre de 2026</strong>
+          <span>Resumen de gestión para la Oficina de Servicios Generales</span>
+        </div>
+        <dl class="sheet-meta">
+          <dt>Áreas verdes</dt><dd>15,6 ha</dd>
+          <dt>Personal</dt><dd>3 cuadrillas</dd>
+        </dl>
+      </div>
+
+      <div class="indicators">
+        <div class="ind">
+          <div class="name"><strong>Cobertura de las áreas verdes</strong><span>Lugares con mantenimiento en el mes</span></div>
+          <span class="value">81 %</span>
+          <span class="goal">Meta: 100 %</span>
+          <span class="trend up">▲ 6 pts</span>
+        </div>
+        <div class="ind">
+          <div class="name"><strong>Ciclos de riego completos</strong><span>Todo el campus cada 15 días</span></div>
+          <span class="value">2 / 2</span>
+          <span class="goal">Meta: 2 al mes</span>
+          <span class="trend flat">= igual</span>
+        </div>
+        <div class="ind">
+          <div class="name"><strong>Controles fitosanitarios del año</strong><span>Aplicación en todo el campus</span></div>
+          <span class="value">3 / 4</span>
+          <span class="goal">Meta: 4 al año</span>
+          <span class="trend flat">= igual</span>
+        </div>
+        <div class="ind">
+          <div class="name"><strong>Poda mayor</strong><span>Árboles de gran envergadura</span></div>
+          <span class="value">0 / 215</span>
+          <span class="goal">Programada: dic–ene</span>
+          <span class="trend flat">—</span>
+        </div>
+        <div class="ind">
+          <div class="name"><strong>Incidencias de riesgo alto atendidas en plazo</strong><span>Plazo de 1 día</span></div>
+          <span class="value">100 %</span>
+          <span class="goal">4 de 4</span>
+          <span class="trend up">▲ 25 pts</span>
+        </div>
+        <div class="ind">
+          <div class="name"><strong>Avance del catastro de arbolado</strong><span>Ejemplares ubicados en el mapa</span></div>
+          <span class="value">1 012</span>
+          <span class="goal">de ~3 500 · 29 %</span>
+          <span class="trend up">▲ 27</span>
+        </div>
+      </div>
+
+      <div class="spark-wrap">
+        <h4 class="block" style="font-size:14px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em">Cobertura mensual, últimos seis meses</h4>
+        <svg class="spark" viewBox="0 0 600 170" role="img" aria-label="Cobertura mensual: abril 70 %, mayo 72 %, junio 74 %, julio 75 %, agosto 75 %, septiembre 81 %. Meta 100 %.">
+          <!-- Escala: y = 150 - (v - 60) * 3.2 ; de 60 % (y=150) a 100 % (y=22) -->
+          <line class="grid" x1="40" y1="150" x2="580" y2="150"/>
+          <line class="grid" x1="40" y1="86" x2="580" y2="86"/>
+          <line class="goal-line" x1="40" y1="22" x2="580" y2="22"/>
+          <text x="34" y="154" text-anchor="end">60 %</text>
+          <text x="34" y="90" text-anchor="end">80 %</text>
+          <text x="34" y="26" text-anchor="end">100 %</text>
+          <path class="area" d="M60,118 L160,111.6 L260,105.2 L360,102 L460,102 L560,82.8 L560,150 L60,150 Z"/>
+          <path class="line" d="M60,118 L160,111.6 L260,105.2 L360,102 L460,102 L560,82.8"/>
+          <circle class="dot" cx="560" cy="82.8" r="4.5"/>
+          <text x="560" y="72" text-anchor="middle">81 %</text>
+          <text x="60" y="166" text-anchor="middle">abr</text>
+          <text x="160" y="166" text-anchor="middle">may</text>
+          <text x="260" y="166" text-anchor="middle">jun</text>
+          <text x="360" y="166" text-anchor="middle">jul</text>
+          <text x="460" y="166" text-anchor="middle">ago</text>
+          <text x="560" y="166" text-anchor="middle">sep</text>
+        </svg>
+      </div>
+
+      <div class="obs">
+        <span class="lbl">Observaciones de la jefatura</span>
+        <p>Septiembre sube 6 puntos de cobertura. Los lugares sin atención se concentran en el sector 2 por el trabajo de la nueva área verde junto a las losas de Minas. El cuarto control fitosanitario se programará en noviembre por las temperaturas altas.</p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ PREGUNTAS ============ -->
+  <section class="closing" aria-labelledby="ask-title">
+    <span class="eyebrow">Lo que necesitamos de usted</span>
+    <h2 id="ask-title">Preguntas para validar la propuesta</h2>
+
+    <div class="ask">
+      <h4>Sobre el reporte semanal del sector</h4>
+      <ol>
+        <li>¿La semana es el periodo correcto, o los capataces necesitan verlo a diario?</li>
+        <li>¿Le interesa ver también cuántas personas de la cuadrilla trabajaron en cada intervención?</li>
+      </ol>
+    </div>
+    <div class="ask">
+      <h4>Sobre el reporte mensual de la sección</h4>
+      <ol>
+        <li>¿Está de acuerdo con que un lugar cuente como «cubierto» si tuvo al menos una intervención de mantenimiento en el mes?</li>
+        <li>¿Los plazos por urgencia (1, 2 y 3 días) se ajustan a lo que usted espera? Los tomamos de lo que nos dijo: los casos simples se resuelven en un día, máximo 48 horas.</li>
+        <li>¿Qué otro dato revisa cada mes que no aparezca aquí?</li>
+      </ol>
+    </div>
+    <div class="ask">
+      <h4>Sobre el resumen para OSG</h4>
+      <ol>
+        <li>¿Son estos los indicadores que OSG le pide? ¿Falta o sobra alguno?</li>
+        <li>¿Lo entrega cada mes o en otro periodo?</li>
+        <li>Si puede compartirnos el documento de gestión que entrega hoy, lo usamos para ajustar este formato.</li>
+      </ol>
+    </div>
+
+    <ul>
+      <li>Los tres reportes se podrán descargar en PDF y en Excel, con los filtros aplicados.</li>
+      <li>Ninguno exige trabajo adicional: se arman con lo que los capataces ya registran en campo.</li>
+    </ul>
+  </section>
+
+  <footer>Propuesta del equipo de desarrollo de Hesperides · septiembre de 2026 · Todas las cifras son de ejemplo.</footer>
+</main>

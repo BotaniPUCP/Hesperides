@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { RouteGuard } from '@/components/auth/RouteGuard';
 import { SystemParametersAdminScreen } from '@/components/system-parameters/SystemParametersAdminScreen';
 
 export const metadata: Metadata = {
@@ -13,12 +12,8 @@ export const metadata: Metadata = {
  */
 export default function ParametrosPage() {
   return (
-    <RouteGuard>
-      <main className="min-h-screen bg-neutral-50 p-4 md:p-6">
-        <div className="mx-auto max-w-5xl">
-          <SystemParametersAdminScreen />
-        </div>
-      </main>
-    </RouteGuard>
+    <div className="mx-auto max-w-5xl">
+      <SystemParametersAdminScreen />
+    </div>
   );
 }
