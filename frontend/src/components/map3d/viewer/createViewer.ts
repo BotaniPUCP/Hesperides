@@ -14,6 +14,7 @@ import { bindPointer } from './pointerInput';
 import { createSceneLayers, type PaintState } from './sceneLayers';
 import { createRenderer, createStage } from './stage';
 import { createTextures } from './textures';
+import { createVegetationLayer } from './vegetation';
 import { WORLD_LIFT, type PolyLayer } from './polyLayer';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
@@ -63,8 +64,9 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       model: (i) => (FAUNA_BIRD.test(data.fauna[i].props.name ?? '') ? 'bird' : 'animal'), rotation: (i) => (i * 2.39) % 6.28, scaleRange: [2.4, 9], color: '#AD95D2',
     }),
   };
-  const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points };
-  const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...Object.values(points).flatMap((l) => l.meshes)];
+  const vegetation = createVegetationLayer(scene, data.vegetation);
+  const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points, vegetation };
+  const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
   const pin = createPin(scene);
   const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta);

@@ -39,6 +39,11 @@ export function MapInfoCard({ content, onClose }: MapInfoCardProps) {
             ))}
           </dl>
           {content.card.note && <p className="mt-2 text-xs text-neutral-500">{content.card.note}</p>}
+          {content.card.link && (
+            <a href={content.card.link.href} className="mt-2 inline-block text-xs font-medium text-brand-700 hover:underline">
+              {content.card.link.label} →
+            </a>
+          )}
         </>
       ) : (
         <div className="space-y-1 text-xs">

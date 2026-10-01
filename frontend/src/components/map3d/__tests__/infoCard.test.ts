@@ -14,9 +14,34 @@ const data = {
     g: [], props: { id: 9, name: 'Tinkuy', inferredName: true, category: 'Servicios y bienestar', campus: true, heightM: null, levels: 2, source: 'OSM', aliases: null },
   }],
   references: [{ p: [0, 0], props: { code: 'REF-0081', name: 'Tinkuy', category: 'Servicios PUCP', parentCode: null, aliases: ['Comedor Tinkuy'] } }],
+  vegetation: [
+    { p: [0, 0], props: { code: 'EV-000001', speciesSlug: 'roystonea-regia', commonName: 'Palmera real', scientificName: 'Roystonea regia',
+      typeCode: 'PALM', typeLabel: 'Palmera', quantity: 1, heightM: 7.5, crownRadiusM: 3.4 } },
+    { p: [0, 0], props: { code: 'EV-000400', speciesSlug: 'agave-americana', commonName: 'Pita', scientificName: 'Agave americana',
+      typeCode: 'SHRUB', typeLabel: 'Arbusto', quantity: 3, heightM: null, crownRadiusM: null } },
+  ],
 } as unknown as SceneData;
 
 describe('infoFor', () => {
+  it('una planta medida muestra sus medidas y enlaza a su ficha del inventario', () => {
+    const info = infoFor(data, { layer: 'vegetation', index: 0 });
+
+    expect(info.kind).toBe('Palmera');
+    expect(info.title).toBe('Palmera real');
+    expect(info.rows).toContainEqual(['Código', 'EV-000001']);
+    expect(info.rows).toContainEqual(['Altura', '7.5 m (medida)']);
+    expect(info.note).toBeUndefined();
+    expect(info.link).toEqual({ href: '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001', label: 'Ver ficha en el inventario' });
+  });
+
+  it('una planta sin medir avisa que su tamaño en la maqueta es ilustrativo', () => {
+    const info = infoFor(data, { layer: 'vegetation', index: 1 });
+
+    expect(info.rows.find(([k]) => k === 'Altura')).toBeUndefined();
+    expect(info.rows).toContainEqual(['Agrupación', '3 plantas']);
+    expect(info.note).toMatch(/ilustrativ/);
+  });
+
   it('una sección muestra su sector por nombre, no por código', () => {
     const info = infoFor(data, { layer: 'greenAreas', index: 0 });
 

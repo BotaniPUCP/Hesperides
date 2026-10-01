@@ -71,6 +71,21 @@ export interface CampusFeatureProperties {
   attributes: Record<string, unknown> | null;
 }
 
+/** Un ejemplar del inventario verde. Las medidas solo vienen si alguien las tomó (C-08). */
+export interface VegetationProperties {
+  /** Código propio del ejemplar (EV-000123). */
+  code: string;
+  speciesSlug: string;
+  commonName: string | null;
+  scientificName: string;
+  /** Código de SPECIES_TYPE: TREE, PALM, SHRUB, HERB, CLIMBER, SUCCULENT… */
+  typeCode: string;
+  typeLabel: string;
+  quantity: number;
+  heightM: number | null;
+  crownRadiusM: number | null;
+}
+
 export interface MapLayers {
   sectors: FeatureCollection<ZoneProperties>;
   sections: FeatureCollection<ZoneProperties>;
@@ -79,6 +94,7 @@ export interface MapLayers {
   references: FeatureCollection<ReferenceProperties>;
   buildings: FeatureCollection<BuildingProperties>;
   features: FeatureCollection<CampusFeatureProperties>;
+  vegetation: FeatureCollection<VegetationProperties>;
 }
 
 export interface MapLayersResponse {

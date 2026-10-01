@@ -91,6 +91,18 @@ describe('buildSearchIndex', () => {
     expect(search(index, 'cuarto pabellon h')[0].target).toEqual({ layer: 'references', index: 3 });
   });
 
+  it('encuentra una planta por su código, pero no la mezcla con las búsquedas por nombre', () => {
+    const index = buildSearchIndex({
+      campusBuildings: [], greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], references: [],
+      sectorNameByCode: {},
+      vegetation: [{ p: [0, 0], props: { code: 'EV-000123', speciesSlug: 'delonix-regia', commonName: 'Ponciana',
+        scientificName: 'Delonix regia', typeCode: 'TREE', typeLabel: 'Árbol', quantity: 1, heightM: null, crownRadiusM: null } }],
+    });
+
+    expect(search(index, 'ev-000123')[0]).toMatchObject({ title: 'EV-000123', subtitle: 'Ponciana', target: { layer: 'vegetation', index: 0 } });
+    expect(search(index, 'ponciana')).toEqual([]);
+  });
+
   it('no indexa edificios sin nombre: no se pueden buscar', () => {
     const index = buildSearchIndex({
       campusBuildings: [{ g: [], props: { id: 1, name: null, inferredName: false, category: null, campus: true, heightM: 8, levels: null, source: 'OSM', aliases: null } }],
