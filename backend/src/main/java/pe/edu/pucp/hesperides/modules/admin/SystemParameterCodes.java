@@ -31,4 +31,7 @@ public final class SystemParameterCodes {
     public static final String LOGIN_LOCK_WINDOW_MINUTES = "LOGIN_LOCK_WINDOW_MINUTES";
     public static final String SESSION_DURATION_MINUTES = "SESSION_DURATION_MINUTES";
     public static final String SESSION_MAX_RENEWAL_DAYS = "SESSION_MAX_RENEWAL_DAYS";
+    public static final String PROXIMITY_INSIDE_M = "PROXIMITY_INSIDE_M";
+    public static final String PROXIMITY_ADJACENT_M = "PROXIMITY_ADJACENT_M";
+    public static final String PROXIMITY_NAME_M = "PROXIMITY_NAME_M";
 }

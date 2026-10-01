@@ -48,10 +48,20 @@ class RestrictedParametersTest {
     }
 
     @Test
+    void exposesTheProximityThresholdsFromTheEngineThatAppliesThem() {
+        // SPEC-102 D-04: fijos, visibles y no editables.
+        Map<String, String> values = valuesByCode();
+
+        assertThat(values).containsEntry("PROXIMITY_INSIDE_M", "0.5")
+                .containsEntry("PROXIMITY_ADJACENT_M", "3")
+                .containsEntry("PROXIMITY_NAME_M", "10");
+    }
+
+    @Test
     void everyEntryIsLockedAndFullyDescribed() {
         List<SystemParameterResponse> all = restricted.all();
 
-        assertThat(all).hasSize(8).allSatisfy(parameter -> {
+        assertThat(all).hasSize(11).allSatisfy(parameter -> {
             assertThat(parameter.isEditable()).isFalse();
             assertThat(parameter.label()).isNotBlank();
             assertThat(parameter.description()).isNotBlank();
