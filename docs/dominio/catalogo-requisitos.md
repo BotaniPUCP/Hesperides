@@ -253,7 +253,7 @@ obligó a cortar más seguido. **El sistema no puede asumir periodicidad constan
 | 2.10 | Conservar el código heredado como referencia | Media | 2 | D3 | ✅ | 100% | Sin índice único: hay códigos duplicados y reasignados. `legacy_code` cargado: 46 placas del catastro |
 | 2.11 | Importar el inventario botánico sin coordenadas | **Alta** | 3 | D3 | ⏭️ | 0% | 🔒 → ⏭️ **Ya no hace falta:** para decidir quién poda basta la clase de altura (2.2) |
 | 2.12 | Registro progresivo del catastro | **Alta** | 3 | D3 | ✅ | 0% | Debe funcionar con el catastro al 30% |
-| **2.13** | **Importar el inventario forestal georreferenciado** | **Alta** | 3 | D3 | ✅ | 90% | 🆕 `catastro campus.xlsx`: **962 registros**, 91 especies, 6 formas biológicas. **Importado** (`V014`): 965 ejemplares, 90 especies limpias, 76 palmeras medidas. Falta dibujarlo en el mapa |
+| **2.13** | **Importar el inventario forestal georreferenciado** | **Alta** | 3 | D3 | ✅ | 100% | 🆕 `catastro campus.xlsx`: **962 registros**, 91 especies, 6 formas biológicas. **Importado** (`V014`): 965 ejemplares, 90 especies limpias, 76 palmeras medidas. Visible en el inventario verde y en el mapa |
 | **2.14** | **Tipo de uso de cada sección** | Media | 2 | D6 | ✅ | 0% | 🆕 Los seis tipos del mapa del cliente. Ver nota |
 
 ### Sobre 2.1 y 2.8 — un mapa propio, sin integración

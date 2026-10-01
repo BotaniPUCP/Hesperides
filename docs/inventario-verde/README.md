@@ -46,6 +46,7 @@ de semilla a partir de estos archivos. Para corregir un dato se corrige la fuent
 | D-10 | **Direcciones legibles**: `/inventario-verde/especies/roystonea-regia` y `…/ejemplares/EV-000123` | El nombre científico ya es único y el código no cambia; los ids numéricos cambian en cada recarga de la base |
 | D-11 | **Tipo de elemento** (`GREEN_ELEMENT_TYPE`): `INDIVIDUAL` (ejemplar) y `GROUP` (agrupación) | El catálogo previsto (árbol, jardín, césped, campo) quedó superado: los jardines son secciones (SPEC-005 §4.4) y el porte lo da el tipo de vegetación de la especie |
 | D-12 | **Quién registró**: los ejemplares cargados figuran como registrados por el administrador inicial | Aún no existe un usuario «Sistema» (SPEC-004) |
+| D-14 | **En el mapa, una planta sin medir se dibuja con la altura típica de su especie**, con una variación estable por ejemplar, y su ficha lo dice | Es una ayuda visual: la calcula el visor y nunca se guarda ni la consume ninguna regla (C-08). Una planta se busca en el mapa solo por su código `EV-…`; por especie está el inventario |
 | D-13 | **Las 128 plantas del prototipo sin fuente no se cargan** | Están en `docs/dominio/datos/plantas-sin-fuente.csv` para revisión (SPEC-102 P-04) |
 
 ## 3. Limpieza de nombres científicos

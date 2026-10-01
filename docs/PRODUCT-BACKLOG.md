@@ -547,7 +547,7 @@ Lo que queda fuera, y por qué, está en
 > (`/inventario-verde`): 90 especies, **965 ejemplares** que suman 985 plantas, y 76 palmeras con
 > medidas reales (`MEASURED`). Las 5 palmeras que el catastro agrupaba se cargan una por una y las
 > 10 matas de Pita como agrupación. Decisiones y datos por validar en `docs/inventario-verde/README.md`.
-> Falta dibujar la vegetación en el mapa.
+> El mapa la dibuja con las formas del prototipo; buscar `EV-000123` lleva a la planta.
 
 **Criterios de aceptación**
 - Importa los **962 registros** del archivo `catastro campus.xlsx` (hoja `catastro`).
