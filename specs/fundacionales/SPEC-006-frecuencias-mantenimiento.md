@@ -1,5 +1,10 @@
 # SPEC-006 — Frecuencias de mantenimiento
 
+> ⛔ **Superado por [SPEC-101](../features/SPEC-101-frecuencias-mantenimiento.md)** (decisión del
+> 1 oct 2026). SPEC-101 implementó `maintenance_frequencies` como `V002`, con un diseño que fusiona
+> el modelo multipatrón con la vigencia temporal de este spec. Este documento se conserva como
+> registro de las decisiones que lo motivaron; **no debe implementarse**.
+
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | A-06 (`docs/PRODUCT-BACKLOG.md`) |
@@ -259,7 +264,7 @@ Es Fail Fast aplicado a la configuración: el dato dice la verdad en vez de call
 
 ## 4. Migración de base de datos
 
-Archivo: **`V029__create_maintenance_frequencies.sql`**. Reservaba `V012`, pero la numeración es cronológica y este spec es del sprint S3: las migraciones pendientes de SPEC-002, 004 y 005 van antes. Su única dependencia real es `V009` (el `catalog_type` `INTERVENTION_TYPE`), ya aplicada; si se implementa antes que las otras, toma el siguiente número libre y se actualiza el mapa de migraciones de [`REGISTRO.md`](../REGISTRO.md#mapa-de-migraciones).
+Archivo: no aplica. La tabla existe como `V002__create_maintenance_frequencies.sql` (SPEC-101).
 
 ```sql
 -- Propiedad de SPEC-006. Cierra el pendiente P-03 de SPEC-002 §4.6.

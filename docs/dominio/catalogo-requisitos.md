@@ -197,7 +197,7 @@ M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3
 **Sobre 1.4 — la taxonomía es de dos niveles.** El Excel define **9 clases** (Habilitación,
 Rehabilitación, Mantenimiento, Poda, Propagación, Riego, Manejo fitosanitario, Residuos,
 Inspección) y **45 tipos** colgando de ellas. Manejo fitosanitario e Inspección y monitoreo
-llegaron **sin tipos**; tienen tipos provisionales (V010) hasta que el cliente los confirme.
+llegaron **sin tipos**; tienen tipos provisionales (en el baseline `V001`) hasta que el cliente los confirme.
 
 **Sobre 1.6 — sector, sección y subsección.** **Solo se usan esas tres palabras** (29 sep): los
 cuarteles forestales no entran al modelo.

@@ -16,7 +16,7 @@ Permitir que un administrador dé de alta, edite, desactive y reactive las cuent
 ## 2. Contexto para la IA
 
 > **Lectura obligatoria:** [`specs/REGLAS.md`](../REGLAS.md).
-> **Específico de este spec:** SPEC-001 **posee la tabla `users` (V002)** —este spec la
+> **Específico de este spec:** SPEC-001 **posee la tabla `users` (baseline V001)** —este spec la
 > extiende con `ALTER TABLE`, nunca la recrea— y su Anexo A gobierna la autorización;
 > SPEC-003 (el rol es un `catalog_item` de tipo `ROLE`); SPEC-004 (cinco acciones auditables, §9.3).
 >
@@ -26,7 +26,7 @@ Permitir que un administrador dé de alta, edite, desactive y reactive las cuent
 ### 2.1 Dónde vive el código
 
 - **Backend:** `modules/users/` (controller, dto, entity, repository, service). La tabla `users`
-  y `RefreshToken` son de SPEC-001; `TeamMember` de SPEC-002 V005; el rol es un `CatalogItem`
+  y `RefreshToken` son de SPEC-001; `TeamMember` de SPEC-002 (baseline V001); el rol es un `CatalogItem`
   de SPEC-003.
 - **Frontend:** `frontend/src/app/admin/usuarios/`, `frontend/src/app/cambiar-password/` y
   `frontend/src/components/users/`.
@@ -87,7 +87,7 @@ solo campo. Colapsarlas es el error clásico de este módulo:
 
 | Columna | Pregunta que responde | Quién la cambia |
 |---|---|---|
-| `is_active` (ya existe, V002) | ¿Esta persona sigue trabajando aquí? | ADMIN, con `deactivate` / `reactivate` |
+| `is_active` (ya existe, V001) | ¿Esta persona sigue trabajando aquí? | ADMIN, con `deactivate` / `reactivate` |
 | `credential_status` (nuevo) | ¿Llegó a recibir sus credenciales? | El sistema, según el resultado del envío SMTP; el ADMIN al reenviar o al marcar entrega manual |
 | `must_change_password` (nuevo) | ¿La contraseña que tiene es la temporal que le asignaron? | El sistema: `TRUE` al crear y al reenviar credenciales, `FALSE` cuando la persona fija la suya |
 
@@ -187,11 +187,11 @@ de refresh de SPEC-001 Anexo C sin motivo.
 
 ## 4. Migración de base de datos
 
-**El DDL está en `backend/src/main/resources/db/migration/`:** `V006__add_credential_columns_to_users.sql`
+**El DDL está en el baseline `V001__baseline_schema.sql`**, que consolidó las originales `V006__add_credential_columns_to_users.sql`
 (las tres columnas y sus dos índices parciales) y `V007__enable_unaccent.sql` (extensión que usa
 la búsqueda insensible a acentos del listado).
 
-La tabla `users` **ya existe**: la crea `V002`, propiedad de SPEC-001. Este spec solo la extiende
+La tabla `users` **ya existe**: la crea el baseline `V001`, en la sección de SPEC-001. Este spec solo la extiende
 con `ALTER TABLE`; duplicar el `CREATE` rompería Flyway por checksum.
 
 ### 4.1 Decisiones que el DDL no explica
@@ -353,7 +353,7 @@ evolución natural si el cliente lo pide.
   afectado** y se ejecuta dentro de la misma transacción, con bloqueo pesimista sobre las filas
   contadas, para que dos ADMIN desactivándose simultáneamente no dejen cero (§5.6).
 - **Doble clic en Crear:** el botón se deshabilita al primer clic. Además, el índice único parcial
-  `idx_users_email_active` de V002 hace que la segunda inserción falle en la base de datos, y el
+  `idx_users_email_active` del baseline V001 hace que la segunda inserción falle en la base de datos, y el
   servicio la traduce a 409. No se usa `Idempotency-Key` (SPEC-C03 §9.2): ese mecanismo está
   pensado para formularios de campo con conexión intermitente; el alta de usuarios ocurre desde
   un escritorio y ya tiene una clave natural de deduplicación —el correo— que el mecanismo
@@ -430,7 +430,7 @@ son los únicos que ninguna suite puede dar por buenos.
 | CA-09 | **[manual]** El formulario de edición no tiene campo de contraseña, y un `password` inyectado en el body de `PUT` no la cambia |
 | CA-10 | Las cinco acciones dejan rastro en `audit_log` con su `before`/`after`. Desactivar dos veces deja **una** sola fila |
 | CA-11 | **[manual]** Cambiar la propia contraseña expulsa las demás sesiones y mantiene la actual |
-| CA-12 | `docker-compose down -v && up --build` aplica V006 y V007 sin error de checksum; un `INSERT` con `credential_status = 'OTRO'` falla por el CHECK |
+| CA-12 | `docker-compose down -v && up --build` aplica el baseline V001 sin error de checksum; un `INSERT` con `credential_status = 'OTRO'` falla por el CHECK |
 
 ## 7. Especificación visual
 
@@ -619,7 +619,7 @@ fila), los envíos de correo exitosos, y cualquier `GET`.
 
 El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
-- [ ] La migración es `V006__add_credential_columns_to_users.sql` y usa `ALTER TABLE`, no `CREATE`.
+- [ ] Las columnas de credenciales están en la sección de usuarios del baseline `V001` (antes `V006`).
 - [ ] Sin dependencias nuevas más allá de `spring-boot-starter-mail`.
 - [ ] **El envío de correo ocurre fuera de la transacción del alta** (REGLAS §0.1).
 - [ ] Probado en web **incluido el caso de SMTP caído** (§5.3).
