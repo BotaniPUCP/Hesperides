@@ -17,6 +17,7 @@
 | SPEC-C03 | Patrones de API           | 👀 En revisión  | —          | S0     |              |
 | SPEC-100 | Gestión de usuarios       | 👀 En revisión  | —          | S1     |              |
 | SPEC-101 | Frecuencias de mantenimiento | 🔄 En progreso  | —          | S1     |              |
+| SPEC-102 | Mapa 3D del campus | 📝 En spec | —    | S2     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -57,6 +58,9 @@ sorpresa que un principio fundacional cambió.
 | **SPEC-003 §8** | SPEC-005 (29-30 sep 2026) | Entran `USE_TYPE` (los seis tipos de uso del mapa del cliente) y `REFERENCE_CATEGORY` (las 24 categorías de la tabla oficial de referencias). |
 | **SPEC-002 §4.0 · SPEC-004 §4.0 · SPEC-005 §4 · SPEC-006 §4 · REGLAS §5.4** | Renumeración de migraciones (29 sep 2026) | Los números reservados por cada spec (`V003`–`V010`, `V011`, `V013`–`V020`, `V012`) chocaban con las migraciones que sí se aplicaron. Se adopta la **numeración cronológica** y el mapa de migraciones de abajo pasa a ser la fuente única. REGLAS §5.4 deja los rangos por spec. |
 | **Mapa de migraciones · SPEC-001 · SPEC-002 §4.0 · SPEC-003 · SPEC-004 §4.0 · SPEC-005 §4 · SPEC-100 · SPEC-101** | Realineamiento al baseline (1 oct 2026) | El commit `638aca0` consolidó V001–V011 en `V001__baseline_schema.sql`, y quedaron aplicadas `V002` (frecuencias, SPEC-101) y `V003` (parámetros del sistema). Las reservas pendientes se corren de `V012`–`V028` a **`V004`–`V020`**; las citas a archivos que ya no existen (`V003__seed_role_catalog`, `V009__seed_intervention_taxonomy`…) apuntan al baseline. **SPEC-006 queda superado por SPEC-101**, que ya implementó la misma tabla. |
+| **SPEC-C01 §6** | SPEC-102 (1 oct 2026) | **Leaflet sale: el mapa del sistema es el visor 3D** (Three.js), en web y en la app Android dentro de un `WebView`. Sigue sin servicios externos ni API keys. Los edificios vienen de OpenStreetMap con atribución visible hasta que lleguen los planos de la PUCP. |
+| **SPEC-005 §4.4** | SPEC-102 | Las 10 áreas xerofíticas entran como secciones sin sector; 20 secciones se marcan reservables (dueño `DAF` o `UNIDADES`); «Jardín Frutas» y «Jardín Frutas-Lado FCCSS» son subsecciones de `AV-0151`. Las 77 «plantas sin especie» se descartan: son duplicados de plantas del catastro y de las mediciones. |
+| **SPEC-002 §4.8** | SPEC-102 | `incidents` gana `location_description`, `described_section_id` y `described_building_id`: la descripción de la ubicación se calcula en el servidor al registrar y queda congelada. |
 | **SPEC-C01 §4.2 (nueva) y §9** | Sidebar de navegación (1 oct 2026) | La navegación pasa de una lista de enlaces en el inicio a un **sidebar** con módulos desplegables, **un grupo por módulo del dominio** (hoy solo «Administración»). La estructura vive en `lib/navigation.ts` con los roles por ítem; las pantallas con sesión se mueven al grupo `app/(dashboard)/`, que aplica guard y sidebar una sola vez. Se retiran los «Volver al inicio». Catálogos, que no tenía enlace, queda accesible desde el sidebar para `ADMIN`. |
 | Todos los specs | Refactor a formato atómico | Las invariantes comunes salen a **`REGLAS.md`** (lectura obligatoria antes de generar código): las diez invariantes, las convenciones de SPEC-000 §5 —con §5.2.1 de Spring Boot 4 y §5.2.2 de CORS íntegras— y el checklist común. SPEC-000 pierde la copia de `_plantilla.md` y los resúmenes de los otros specs, que ya contradecían a SPEC-001. En cada spec, las secciones genéricas de Seguridad, Extensibilidad y Checklist se funden en una sola "Propio de este spec". **La numeración se conserva**: toda referencia `SPEC-XXX §N` sigue siendo válida, y `SPEC-000 §5.x` pasa a `REGLAS.md §5.x` con el mismo número. Ninguna decisión técnica, contrato ni criterio de aceptación cambió. |
 | SPEC-002 §4.9 | SPEC-101 | La migración `V010` queda asignada a `V010__create_maintenance_frequencies.sql` siguiendo `REGLAS.md` §0.2 (numeración cronológica sin huecos). El sembrado de catálogos que SPEC-002 proyectaba para V010 ya fue absorbido íntegramente por `V009__seed_intervention_taxonomy.sql`. |
@@ -135,6 +139,11 @@ su spec, en el mismo commit. Una migración aplicada nunca cambia de número ni 
 | V018 | `V018__add_unspecified_evidence_moment.sql` | SPEC-005 §4.6 | V008, V011 |
 | V019 | `V019__add_legacy_code_to_green_elements.sql` | SPEC-005 §4.7 | V007 |
 | V020 | `V020__add_deferred_upload_and_map_publication.sql` | SPEC-005 §4.8 | V008 |
+| V021 | `V021__create_campus_buildings.sql` | SPEC-102 §4.1 | V004 |
+| V022 | `V022__create_campus_features.sql` | SPEC-102 §4.2 | V004 |
+| V023 | `V023__extend_zones_for_map.sql` | SPEC-102 §4.3 | V014 |
+| V024 | `V024__add_location_description_to_incidents.sql` | SPEC-102 §4.4 | V010, V021 |
+| V025 | `V025__seed_map_parameters.sql` | SPEC-102 D-04 | V003 |
 
 `maintenance_frequencies` no figura entre las pendientes: ya existe como **V002** (SPEC-101).
 SPEC-006, que la diseñaba aparte, quedó superado.
