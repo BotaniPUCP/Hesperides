@@ -61,7 +61,7 @@ function referenceEntries(references: IndexSource['references']): SearchEntry[] 
   references.forEach((r, i) => {
     const parent = r.props.parentCode ? nameByCode.get(r.props.parentCode) : undefined;
     const subtitle = parent ? `${r.props.category} · ${parent}` : r.props.category;
-    const place = `${r.props.name}|${subtitle}`;
+    const place = normalize(`${r.props.name}|${subtitle}`);
     if (seen.has(place)) return;
     seen.add(place);
     out.push(entry(r.props.name, subtitle, (r.props.aliases ?? []).join(' '), 'references', i, 2));

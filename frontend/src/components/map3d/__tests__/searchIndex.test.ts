@@ -70,6 +70,12 @@ describe('buildSearchIndex', () => {
     expect(found[0].target).toEqual({ layer: 'references', index: 0 });
   });
 
+  it('agrupa también los que la lista escribe con otras mayúsculas o tildes', () => {
+    const index = onlyRefs([ref('REF-1', 'Biblioteca de Teología'), ref('REF-2', 'Biblioteca de teologia')]);
+
+    expect(search(index, 'teologia')).toHaveLength(1);
+  });
+
   it('nombra el lugar padre para distinguir referencias homónimas', () => {
     const index = onlyRefs([
       ref('REF-1', 'Pabellón Z'),
