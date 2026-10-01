@@ -26,6 +26,11 @@ USOS = {
 
 DUENOS = {"DAF": "DAF", "Unidades": "UNIDADES"}
 
+RIEGO_ACTUAL = {"Sin riego tecnificado": "NONE", "Riego por aspersión": "SPRINKLER", "Riego por goteo": "DRIP"}
+
+PROYECTO_RIEGO = {"Por validar con unidad": "TO_VALIDATE", "Falta aspersión": "NEEDS_SPRINKLER",
+                  "Goteo": "DRIP", "Cuenta con aspersión": "HAS_SPRINKLER"}
+
 
 def sectores():
     filas = [f"({q(c)}, {q(n)}, {q(d)}, {item('ZONE_TYPE', 'SECTOR')})" for c, n, _, d in SECTORES]
@@ -37,11 +42,24 @@ def _jefes():
         return {fila["feature_id"]: fila["jefe"] for fila in csv.DictReader(archivo)}
 
 
-def _fila_seccion(codigo, nombre, sector, geometria, area, mapa, uso):
+def _catalogo(tipo, valores, texto, codigo):
+    """Ítem de catálogo para un texto de la fuente; un texto desconocido detiene todo."""
+    if texto is None:
+        return "NULL"
+    if texto not in valores:
+        fallar(f"{codigo}: valor desconocido para {tipo}: {texto!r}")
+    return item(tipo, valores[texto])
+
+
+def _fila_seccion(codigo, nombre, sector, f, mapa, uso, paisaje):
+    p = f["properties"]
     padre = f"(SELECT id FROM zones WHERE code = '{sector}')" if sector else "NULL"
     uso_sql = item("USE_TYPE", uso) if uso else "NULL"
+    riego = _catalogo("IRRIGATION_CURRENT", RIEGO_ACTUAL, p.get("Riego act"), codigo)
+    proyecto = _catalogo("IRRIGATION_PROJECT", PROYECTO_RIEGO, p.get("Proy riego"), codigo)
     return (f"({q(codigo)}, {q(nombre)}, {padre}, {item('ZONE_TYPE', 'SECTION')}, "
-            f"{multipoligono(geometria)}, {area}, {q(mapa)}, {uso_sql})")
+            f"{multipoligono(f['geometry'])}, {p['Área']}, {q(mapa)}, {uso_sql}, "
+            f"{item('LANDSCAPE_TYPE', paisaje)}, {riego}, {proyecto})")
 
 
 def secciones():
@@ -53,14 +71,15 @@ def secciones():
         if p["Uso"] not in USOS:
             fallar(f"{codigo}: uso desconocido {p['Uso']!r}")
         filas.append(_fila_seccion(codigo, p["Nombre"] or p["código"] or codigo,
-                                   sector_de.get(jefes.get(codigo, "")), f["geometry"],
-                                   p["Área"], p["código"], USOS[p["Uso"]]))
+                                   sector_de.get(jefes.get(codigo, "")), f, p["código"],
+                                   USOS[p["Uso"]], "GREEN_AREA"))
     for i, f in enumerate(leer_geojson("xerofitica.geojson"), start=1):
         p = f["properties"]
         filas.append(_fila_seccion(f"XE-{i:04d}", p["Nombre"] or f"Área xerofítica {i}", None,
-                                   f["geometry"], p["Área"], None, None))
+                                   f, None, None, "XEROPHYTIC"))
     return valores("INSERT INTO zones (code, name, parent_zone_id, zone_type_item_id, boundary, "
-                   "area_m2, map_code, use_type_item_id)", filas)
+                   "area_m2, map_code, use_type_item_id, landscape_type_item_id, "
+                   "irrigation_current_item_id, irrigation_project_item_id)", filas)
 
 
 def unir_sectores():

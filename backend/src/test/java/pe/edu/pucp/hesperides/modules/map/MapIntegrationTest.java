@@ -71,6 +71,20 @@ class MapIntegrationTest {
 
     @Test
     @WithMockUser(authorities = "OPERARIO")
+    void sectionsCarryTheirLandscapeTypeAndIrrigation() throws Exception {
+        // El visor colorea por riego y separa los jardines xerofíticos con estos campos.
+        String av = "$.data.layers.sections.features[?(@.properties.code == 'AV-0001')].properties";
+        String xe = "$.data.layers.sections.features[?(@.properties.code == 'XE-0001')].properties";
+        mockMvc.perform(get("/api/v1/map/layers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(av + ".landscapeType").value("GREEN_AREA"))
+                .andExpect(jsonPath(av + ".irrigationCurrent").value("Riego por aspersión"))
+                .andExpect(jsonPath(av + ".irrigationProject").value("Cuenta con aspersión"))
+                .andExpect(jsonPath(xe + ".landscapeType").value("XEROPHYTIC"));
+    }
+
+    @Test
+    @WithMockUser(authorities = "OPERARIO")
     void aCachedCopyWithTheCurrentVersionGetsA304() throws Exception {
         String etag = mockMvc.perform(get("/api/v1/map/layers"))
                 .andExpect(status().isOk())

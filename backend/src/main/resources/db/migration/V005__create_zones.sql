@@ -8,7 +8,10 @@
 INSERT INTO catalog_types (code, name, description, is_system) VALUES
     ('ZONE_TYPE', 'Tipos de zona', 'Niveles de la jerarquia del campus', FALSE),
     ('USE_TYPE', 'Tipos de uso', 'Uso y demanda del area verde', FALSE),
-    ('RESERVATION_OWNER', 'Duenos de jardines reservables', 'Quien presta un jardin reservable', FALSE);
+    ('RESERVATION_OWNER', 'Duenos de jardines reservables', 'Quien presta un jardin reservable', FALSE),
+    ('LANDSCAPE_TYPE', 'Tipos de area verde', 'Si la seccion es un area verde o un jardin xerofitico', FALSE),
+    ('IRRIGATION_CURRENT', 'Riego actual', 'Como se riega hoy la seccion', FALSE),
+    ('IRRIGATION_PROJECT', 'Proyecto de riego', 'Que riego se planea para la seccion', FALSE);
 
 INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
     ((SELECT id FROM catalog_types WHERE code = 'ZONE_TYPE'), 'SECTOR',     'Sector',     1),
@@ -22,7 +25,17 @@ INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
     ((SELECT id FROM catalog_types WHERE code = 'USE_TYPE'), 'INSTITUTIONAL',  'Uso institucional', 5),
     ((SELECT id FROM catalog_types WHERE code = 'USE_TYPE'), 'CONSERVATION',   'Áreas de conservación', 6),
     ((SELECT id FROM catalog_types WHERE code = 'RESERVATION_OWNER'), 'DAF',      'DAF',      1),
-    ((SELECT id FROM catalog_types WHERE code = 'RESERVATION_OWNER'), 'UNIDADES', 'Unidades', 2);
+    ((SELECT id FROM catalog_types WHERE code = 'RESERVATION_OWNER'), 'UNIDADES', 'Unidades', 2),
+    ((SELECT id FROM catalog_types WHERE code = 'LANDSCAPE_TYPE'), 'GREEN_AREA', 'Área verde',        1),
+    ((SELECT id FROM catalog_types WHERE code = 'LANDSCAPE_TYPE'), 'XEROPHYTIC', 'Jardín xerofítico', 2),
+    -- Valores del mapa del cliente (campos `Riego act` y `Proy riego`).
+    ((SELECT id FROM catalog_types WHERE code = 'IRRIGATION_CURRENT'), 'NONE',      'Sin riego tecnificado', 1),
+    ((SELECT id FROM catalog_types WHERE code = 'IRRIGATION_CURRENT'), 'SPRINKLER', 'Riego por aspersión',   2),
+    ((SELECT id FROM catalog_types WHERE code = 'IRRIGATION_CURRENT'), 'DRIP',      'Riego por goteo',       3),
+    ((SELECT id FROM catalog_types WHERE code = 'IRRIGATION_PROJECT'), 'TO_VALIDATE',     'Por validar con unidad', 1),
+    ((SELECT id FROM catalog_types WHERE code = 'IRRIGATION_PROJECT'), 'NEEDS_SPRINKLER', 'Falta aspersión',        2),
+    ((SELECT id FROM catalog_types WHERE code = 'IRRIGATION_PROJECT'), 'DRIP',            'Goteo',                  3),
+    ((SELECT id FROM catalog_types WHERE code = 'IRRIGATION_PROJECT'), 'HAS_SPRINKLER',   'Cuenta con aspersión',   4);
 
 CREATE TABLE zones (
     id                        BIGSERIAL PRIMARY KEY,
@@ -39,6 +52,10 @@ CREATE TABLE zones (
     -- repetidos, por eso no va en `code`.
     map_code                  VARCHAR(10),
     use_type_item_id          BIGINT REFERENCES catalog_items(id),
+    -- Solo en secciones y subsecciones: un sector no tiene tipo de area ni riego.
+    landscape_type_item_id    BIGINT REFERENCES catalog_items(id),
+    irrigation_current_item_id BIGINT REFERENCES catalog_items(id),
+    irrigation_project_item_id BIGINT REFERENCES catalog_items(id),
     is_reservable             BOOLEAN NOT NULL DEFAULT FALSE,
     reservation_owner_item_id BIGINT REFERENCES catalog_items(id),
     is_active                 BOOLEAN   NOT NULL DEFAULT TRUE,

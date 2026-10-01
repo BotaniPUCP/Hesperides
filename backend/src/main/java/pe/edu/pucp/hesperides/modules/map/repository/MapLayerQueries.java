@@ -23,13 +23,17 @@ final class MapLayerQueries {
     static final String ZONES = COLLECTION_OPEN
             + feature("z.boundary", "'code', z.code, 'name', z.name, 'description', z.description, "
                     + "'parentCode', p.code, 'mapCode', z.map_code, 'useType', u.label, "
-                    + "'reservable', z.is_reservable, 'reservationOwner', o.label, 'areaM2', z.area_m2", "z.code")
+                    + "'reservable', z.is_reservable, 'reservationOwner', o.label, 'areaM2', z.area_m2, "
+                    + "'landscapeType', l.code, 'irrigationCurrent', ic.label, 'irrigationProject', ip.label", "z.code")
             + COLLECTION_CLOSE
             + "FROM zones z "
             + "JOIN catalog_items t ON t.id = z.zone_type_item_id AND t.code = ? "
             + "LEFT JOIN zones p ON p.id = z.parent_zone_id "
             + "LEFT JOIN catalog_items u ON u.id = z.use_type_item_id "
             + "LEFT JOIN catalog_items o ON o.id = z.reservation_owner_item_id "
+            + "LEFT JOIN catalog_items l ON l.id = z.landscape_type_item_id "
+            + "LEFT JOIN catalog_items ic ON ic.id = z.irrigation_current_item_id "
+            + "LEFT JOIN catalog_items ip ON ip.id = z.irrigation_project_item_id "
             + "WHERE z.deleted_at IS NULL AND z.is_active AND z.boundary IS NOT NULL";
 
     static final String SUPERVISION_ZONES = COLLECTION_OPEN
