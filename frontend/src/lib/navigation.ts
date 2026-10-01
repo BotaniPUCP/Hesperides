@@ -36,6 +36,8 @@ export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
 export const DIRECT_LINKS: readonly NavItem[] = [
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+  // Público incluso sin sesión (docs/inventario-verde/README.md); aquí, para quien ya entró.
+  { label: 'Inventario verde', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
