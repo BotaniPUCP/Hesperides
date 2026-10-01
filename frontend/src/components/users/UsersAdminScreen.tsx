@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import type { CreateUserPayload, UpdateUserPayload, UserDetail, UserFilters } from '@shared/types';
 import { Button, EmptyState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -130,12 +129,6 @@ function PanelDeUsuarios({ canManage }: { canManage: boolean }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            className="rounded-md px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
-          >
-            Volver al inicio
-          </Link>
           {canManage && <Button onClick={abrirAlta}>Nuevo usuario</Button>}
         </div>
       </header>
