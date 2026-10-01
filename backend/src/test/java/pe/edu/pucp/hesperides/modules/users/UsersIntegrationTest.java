@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.users;
 
+import pe.edu.pucp.hesperides.support.TestDatabase;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
@@ -43,7 +44,7 @@ class UsersIntegrationTest {
     static GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP);
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

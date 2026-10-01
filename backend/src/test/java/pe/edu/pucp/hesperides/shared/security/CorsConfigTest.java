@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.shared.security;
 
+import pe.edu.pucp.hesperides.support.TestDatabase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,7 +34,7 @@ class CorsConfigTest {
     private static final String WEB_ORIGIN = "http://localhost:3000";
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

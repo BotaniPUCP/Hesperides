@@ -1,0 +1,732 @@
+{
+ "origen": "Prototipo Campus_PUCP_3D_v39_edificio_contiguo.html",
+ "vocabulario": {
+  "relation/5760591": "CEPREPUC",
+  "relation/7127770": "Comedor Central",
+  "relation/7127771": "Matemáticas",
+  "relation/14279630": "Estudios Generales Ciencias",
+  "relation/14279631": "Química",
+  "relation/14909406": "Facultad de Arquitectura y Urbanismo",
+  "relation/16264369": "Facultad de Derecho",
+  "relation/16264370": "Estudios Generales Letras",
+  "relation/16264372": "Facultad de Letras y Ciencias Humanas",
+  "relation/16264373": "Tesorería General",
+  "relation/16264374": "Pabellón Z",
+  "relation/19370735": "Polideportivo",
+  "way/154553040": "CIGA",
+  "way/157957228": "Facultad de Ciencias Sociales",
+  "way/157957230": "Departamento Académico de Ciencias Sociales",
+  "way/157964496": "Auditorio de Derecho",
+  "way/157964892": "Biblioteca Central",
+  "way/183922762": "CIA (Complejo de Innovación Académica)",
+  "way/183922763": "Facultad de Ciencias e Ingeniería",
+  "way/183922766": "Física",
+  "way/183925517": "Facultad de Ciencias Contables",
+  "way/294597757": "Pabellón V",
+  "way/294597760": "Departamento de Arquitectura",
+  "way/294597765": "Sección Ingeniería de Minas",
+  "way/294599426": "Estudio de TV 2",
+  "way/294599429": "Facultad de Psicología",
+  "way/294600395": "Facultad de Ciencias y Artes de la Comunicación",
+  "way/294600409": "Facultad de Educación",
+  "way/294600601": "Aulario (Pabellón A)",
+  "way/294601888": "Tinkuy",
+  "way/304722759": "Comedor de Letras",
+  "way/332988008": "Pabellón O",
+  "way/387031741": "Edificio Administrativo",
+  "way/387031755": "Sección Ingeniería Civil",
+  "way/387031757": "CISE",
+  "way/387031758": "Facultad de Educación",
+  "way/387071632": "Arqueología",
+  "way/448593333": "McGregor",
+  "way/1204040921": "McGregor",
+  "way/1204040922": "McGregor",
+  "way/449759519": "Juan Valdez",
+  "way/450284425": "Sección Ingeniería Industrial",
+  "way/450284459": "CETAM",
+  "way/450286156": "Sala Cuna",
+  "way/450286308": "Facultad de Gestión y Alta Dirección",
+  "way/453184570": "Escuela de Gobierno y Políticas Públicas",
+  "way/453185861": "Pabellón G",
+  "way/467115684": "Facultad de Ciencias Sociales",
+  "way/615391653": "INRAS (Instituto de Radioastronomía)",
+  "way/1017191642": "Gelarti",
+  "way/1110929680": "Facultad de Gastronomía, Hotelería y Turismo",
+  "way/1110929704": "Sección Ingeniería Mecánica",
+  "way/1204040939": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040940": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040941": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040942": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040943": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040944": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040945": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040946": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040947": "Facultad de Artes Escénicas (FARES)",
+  "way/1204040948": "Facultad de Artes Escénicas (FARES)",
+  "way/183924285": {
+   "t": "Laboratorio de Mecánica",
+   "inf": true
+  },
+  "way/294600397": {
+   "t": "Facultad de Letras y Ciencias Humanas",
+   "inf": true
+  },
+  "way/294600401": {
+   "t": "Arte Nuevo",
+   "inf": true
+  },
+  "way/1204040932": {
+   "t": "Arte Nuevo",
+   "inf": true
+  },
+  "way/1204040933": {
+   "t": "Arte Nuevo",
+   "inf": true
+  },
+  "way/1204040934": {
+   "t": "Arte Nuevo",
+   "inf": true
+  },
+  "way/294601876": {
+   "t": "Gimnasio",
+   "inf": true
+  },
+  "way/615384726": {
+   "t": "Aulas móviles",
+   "inf": true
+  },
+  "way/1110929670": {
+   "t": "Comedor de Arte Antiguo",
+   "inf": true
+  },
+  "way/1204040905": {
+   "t": "Arte Antiguo",
+   "inf": true
+  },
+  "way/1204040906": {
+   "t": "Arte Antiguo",
+   "inf": true
+  },
+  "way/1204040911": {
+   "t": "Arte Antiguo",
+   "inf": true
+  }
+ },
+ "categorias": {
+  "Facultades y Estudios Generales": [
+   "Estudios Generales Letras",
+   "Estudios Generales Ciencias",
+   "Facultad de Arquitectura y Urbanismo",
+   "Facultad de Arte y Diseño",
+   "Arte Nuevo",
+   "Arte Antiguo",
+   "Facultad de Artes Escénicas (FARES)",
+   "Facultad de Ciencias y Artes de la Comunicación",
+   "Facultad de Derecho",
+   "Facultad de Educación",
+   "Facultad de Gastronomía, Hotelería y Turismo",
+   "Facultad de Gestión y Alta Dirección",
+   "Escuela de Gobierno y Políticas Públicas",
+   "Facultad de Letras y Ciencias Humanas",
+   "Facultad de Psicología",
+   "Facultad de Ciencias Sociales",
+   "Facultad de Ciencias e Ingeniería",
+   "Facultad de Ciencias Contables",
+   "CEPREPUC"
+  ],
+  "Pabellones y aulas": [
+   "Pabellón D",
+   "Pabellón G",
+   "Pabellón H",
+   "Pabellón I",
+   "Pabellón J",
+   "Pabellón L",
+   "Pabellón M",
+   "Pabellón N",
+   "Pabellón R",
+   "Pabellón T",
+   "Pabellón V",
+   "Pabellón Y",
+   "Pabellón Z",
+   "Pabellón K (Mecatrónica)",
+   "Pabellón O",
+   "Aulario (Pabellón A)",
+   "Aulas móviles",
+   "McGregor",
+   "Complejo Dintilhac",
+   "CIA (Complejo de Innovación Académica)"
+  ],
+  "Departamentos y secciones": [
+   "Departamento Académico de Arte y Diseño",
+   "Departamento Académico de Ciencias Contables",
+   "Departamento Académico de Ciencias Sociales",
+   "Departamento Académico de Derecho",
+   "Departamento de Arquitectura",
+   "Departamento de Ciencias",
+   "Departamento de Comunicaciones",
+   "Departamento de Economía",
+   "Sección Ingeniería Mecánica",
+   "Sección Ingeniería Civil",
+   "Sección Ingeniería Industrial",
+   "Sección Ingeniería de Minas",
+   "Química",
+   "Física",
+   "Matemáticas",
+   "Arqueología",
+   "Especialidad de Grabado",
+   "Especialidad de Trabajo Social"
+  ],
+  "Bibliotecas y auditorios": [
+   "Biblioteca Central",
+   "Biblioteca de Teología",
+   "BCIA",
+   "Auditorio de Derecho",
+   "Auditorio de Estudios Generales Letras",
+   "Auditorio de Física",
+   "Auditorio de Humanidades"
+  ],
+  "Laboratorios, centros e institutos": [
+   "Laboratorio de Mecánica",
+   "Laboratorio de Energía",
+   "Laboratorio de Polímeros y Bionanomateriales",
+   "Laboratorios de Arqueología",
+   "LEEX (Aulas Informáticas de Educación)",
+   "Labcert",
+   "CITEmateriales",
+   "CAM (Centro de Caracterización de Materiales)",
+   "CETAM",
+   "INRAS (Instituto de Radioastronomía)",
+   "INGESOLD",
+   "Instituto Confucio",
+   "IDU (Instituto de Docencia Universitaria)",
+   "CISEPA",
+   "CICAJ",
+   "Centro de Arbitraje",
+   "CISE",
+   "CIGA",
+   "Centro de Innovación y Desarrollo Emprendedor",
+   "Estudio de TV 2",
+   "Grupo de Apoyo al Sector Rural"
+  ],
+  "Administración y oficinas": [
+   "Edificio Administrativo",
+   "DAF",
+   "DAES (Dirección de Asuntos Estudiantiles)",
+   "DARS",
+   "DAPE",
+   "Dirección Académica del Profesorado",
+   "DTI (Tecnologías de Información)",
+   "Oficina de Transformación Digital",
+   "Oficina de Becas",
+   "Oficina de Apoyo y Promoción Social",
+   "Oficina de Seguros",
+   "OCAI",
+   "Tesorería General",
+   "Educación Continua",
+   "INFOPUCP",
+   "Open PUCP"
+  ],
+  "Servicios y bienestar": [
+   "Servicio de Salud",
+   "Oficina de Bienestar Psicológico",
+   "Sala Cuna",
+   "Ludoteca",
+   "Librería PUCP",
+   "Banco de Libros",
+   "BBVA (agencia)",
+   "Mesas de estudio",
+   "CAPU (Asesoría Pastoral)",
+   "Punto de Acopio"
+  ],
+  "Comedores y cafeterías": [
+   "Comedor Central",
+   "Comedor de Letras",
+   "Comedor de Arte Antiguo",
+   "Tinkuy",
+   "Patio de comidas",
+   "Juan Valdez",
+   "Gelarti",
+   "El Puesto",
+   "Kiosco de Letras",
+   "Quiosco de Arte Antiguo"
+  ],
+  "Deportes": [
+   "Polideportivo",
+   "Gimnasio",
+   "Área de Deportes",
+   "Cancha 1",
+   "Cancha 2",
+   "Cancha de vóley",
+   "Cancha de frontón",
+   "Cancha de fútbol",
+   "Cancha de Minas",
+   "Losas deportivas",
+   "Pista de Salud"
+  ],
+  "Áreas verdes, plazas y patrimonio": [
+   "Jardín Central",
+   "Jardín de frutas",
+   "Jardín de la entrada principal",
+   "Jardín lateral McGregor",
+   "Pastitos de Arqui",
+   "Bosque Seco",
+   "Bosque Húmedo",
+   "Cactario",
+   "Vivero",
+   "Rotonda de Letras",
+   "Rotángono (patio de CCSS)",
+   "Plaza de Estudios Generales Ciencias",
+   "Plazoleta del CEPREPUC",
+   "Explanada del Puesto",
+   "Tontódromo",
+   "Huaca",
+   "Camino Inca"
+  ],
+  "Accesos, estacionamientos y transporte": [
+   "Puerta principal",
+   "Puerta 6 (Urubamba)",
+   "Puerta 7 (Riva-Agüero)",
+   "Puerta Unión",
+   "Estacionamiento D",
+   "Estacionamiento J",
+   "Estacionamiento K",
+   "Estacionamiento M",
+   "Estacionamiento L",
+   "Estacionamiento de Arte Nuevo",
+   "Estacionamiento Espacios Culturales",
+   "Bicicletas EEGG Ciencias",
+   "Bicicletas EEGG Letras",
+   "Estacionamiento (sin letra)",
+   "Bus PUCP - Rotonda",
+   "Bus PUCP - Ruta A"
+  ],
+  "Organizaciones estudiantiles y grupos": [
+   "Federación de Estudiantes (FEPUC)",
+   "Centro Federado de EEGG Letras",
+   "Tuna PUCP",
+   "Coro PUCP (caseta)",
+   "IEEE UFFC PUCP",
+   "SEDIPRO",
+   "PULSO PUCP",
+   "Asociación de Egresados y Graduados"
+  ]
+ },
+ "alias": {
+  "Arte Antiguo": [
+   "Arte antiguo",
+   "Pasadizo Arte antiguo"
+  ],
+  "CEPREPUC": [
+   "Centro Preuniversitario de la Pontificia Universidad Católica del Perú",
+   "Cepre PUCP"
+  ],
+  "Escuela de Gobierno y Políticas Públicas": [
+   "Escuela de Gobierno y Políticas Públicas PUCP"
+  ],
+  "Estudios Generales Ciencias": [
+   "EE.GG.CC",
+   "Pabellón E"
+  ],
+  "Estudios Generales Letras": [
+   "Azotea EEGGLL",
+   "EEGGLL (Estudios generales Letras)",
+   "Letras"
+  ],
+  "Facultad de Arquitectura y Urbanismo": [
+   "Arquitectura",
+   "Facultad de Arquitectura y Urbanismo PUCP"
+  ],
+  "Facultad de Arte y Diseño": [
+   "Arte y Diseño",
+   "Facultad de Arte y Diseño - PUCP"
+  ],
+  "Facultad de Artes Escénicas (FARES)": [
+   "Facultad de artes escénicas (antiguo) - cerca de estudio TV",
+   "Facultad de Artes Escénicas - PUCP",
+   "FARES",
+   "Fares"
+  ],
+  "Facultad de Ciencias Contables": [
+   "Ciencias contables"
+  ],
+  "Facultad de Ciencias e Ingeniería": [
+   "Ciencias e ingeniería",
+   "ingenieria"
+  ],
+  "Facultad de Ciencias Sociales": [
+   "CCSS",
+   "Sociales"
+  ],
+  "Facultad de Ciencias y Artes de la Comunicación": [
+   "Facultad de ciencias de la comunicacion",
+   "Facultad de ciencias y artes de la comunicación",
+   "Facultad de Ciencias y Artes de la Comunicación - PUCP"
+  ],
+  "Facultad de Derecho": [
+   "Derecho",
+   "Facultad de Derecho de la Pontificia Universidad Católica del Perú"
+  ],
+  "Facultad de Educación": [
+   "Educación"
+  ],
+  "Facultad de Gastronomía, Hotelería y Turismo": [
+   "Facultad de Gastronomía, Hotelería y Turismo PUCP",
+   "Gastronomía"
+  ],
+  "Facultad de Gestión y Alta Dirección": [
+   "Facultad de Gestión y Alta Dirección - PUCP"
+  ],
+  "Facultad de Letras y Ciencias Humanas": [
+   "Humanidades",
+   "Letras y Ciencias Humanas"
+  ],
+  "Facultad de Psicología": [
+   "Facultad de psicología Pabellón S",
+   "Facultad de Psicología PUCP",
+   "Psicología",
+   "Sección Psicología"
+  ],
+  "Aulario (Pabellón A)": [
+   "Aulario"
+  ],
+  "Aulas móviles": [
+   "Aulas móviles B",
+   "Aulas Móviles PUCP",
+   "Dentro de aulas móviles B"
+  ],
+  "CIA (Complejo de Innovación Académica)": [
+   "CIA"
+  ],
+  "Complejo Dintilhac": [
+   "Dinthilac",
+   "Edificio Dintilhac"
+  ],
+  "McGregor": [
+   "Mac Gregor",
+   "MacGregor"
+  ],
+  "Pabellón K (Mecatrónica)": [
+   "PABELLÓN K (Sec. Mecatrónica PUCP)"
+  ],
+  "Pabellón O": [
+   "Pabellón O - PUCP",
+   "Pabellón O/ Pabellón V"
+  ],
+  "Departamento Académico de Ciencias Contables": [
+   "Departamento Académico de Ciencias Contables PUCP"
+  ],
+  "Departamento Académico de Ciencias Sociales": [
+   "Departamento Académico de Ciencias Sociales PUCP"
+  ],
+  "Departamento de Arquitectura": [
+   "Departamento de Arquitectura - PUCP"
+  ],
+  "Departamento de Comunicaciones": [
+   "Departamento de Comunicaciones PUCP"
+  ],
+  "Especialidad de Grabado": [
+   "Especialidad de Grabado PUCP"
+  ],
+  "Especialidad de Trabajo Social": [
+   "Especialidad de Trabajo Social PUCP"
+  ],
+  "Física": [
+   "Facultad de Física PUCP"
+  ],
+  "Sección Ingeniería Civil": [
+   "Civil",
+   "Ing CIVIL"
+  ],
+  "Sección Ingeniería de Minas": [
+   "Ingenieria de minas",
+   "Minas"
+  ],
+  "Sección Ingeniería Industrial": [
+   "Industrial"
+  ],
+  "Sección Ingeniería Mecánica": [
+   "Mecánica"
+  ],
+  "Auditorio de Estudios Generales Letras": [
+   "Auditorio de Estudios Generales Letras PUCP"
+  ],
+  "Auditorio de Física": [
+   "Auditorio de Física de la PUCP"
+  ],
+  "Biblioteca Central": [
+   "Biblioteca al costado del capu",
+   "Biblioteca Central PUCP",
+   "Entrada de la Biblioteca Central",
+   "Sala de Usos Múltiples, Biblioteca Central PUCP (1er piso)"
+  ],
+  "Biblioteca de Teología": [
+   "Biblioteca de teología"
+  ],
+  "CAM (Centro de Caracterización de Materiales)": [
+   "Centro de Caracterización de Materiales (CAM-PUCP)"
+  ],
+  "Centro de Arbitraje": [
+   "Centro de Arbitraje y Resolución de Conflictos - PUCP"
+  ],
+  "CICAJ": [
+   "Centro de Investigación, Capacitación y Asesoría Jurídica (CICAJ)"
+  ],
+  "CIGA": [
+   "CIGA - PUCP"
+  ],
+  "CISE": [
+   "Centros de Investigaciones y Servicios Educativos - PUCP"
+  ],
+  "CISEPA": [
+   "CISEPA - Centro de Investigaciones Sociológicas, Económicas, Políticas y Antropológicas"
+  ],
+  "CITEmateriales": [
+   "CITEmateriales PUCP"
+  ],
+  "Estudio de TV 2": [
+   "Estudio tv2"
+  ],
+  "Grupo de Apoyo al Sector Rural": [
+   "Apoyo al Sector Rural",
+   "Apoyo Rural",
+   "GRUPO PUCP"
+  ],
+  "IDU (Instituto de Docencia Universitaria)": [
+   "Instituto de Docencia Universitaria (IDU)-PUCP"
+  ],
+  "INRAS (Instituto de Radioastronomía)": [
+   "INRAS",
+   "Instituto de Radioastronomía - PUCP"
+  ],
+  "Instituto Confucio": [
+   "Instituto Confucio PUCP"
+  ],
+  "Labcert": [
+   "Labcert PUCP"
+  ],
+  "Laboratorio de Polímeros y Bionanomateriales": [
+   "Laboratorio de Polímeros y Bionanomateriales - PUCP"
+  ],
+  "Laboratorios de Arqueología": [
+   "Laboratorios de Arqueología PUCP"
+  ],
+  "LEEX (Aulas Informáticas de Educación)": [
+   "LEEX-PUCP Aulas Informáticas de Educación"
+  ],
+  "DAES (Dirección de Asuntos Estudiantiles)": [
+   "DAES",
+   "Dirección de Asuntos Estudiantiles"
+  ],
+  "DAF": [
+   "Oficina de la daf"
+  ],
+  "DAPE": [
+   "Dirección Académica de Planeamiento y Evaluación - DAPE"
+  ],
+  "DARS": [
+   "DARS - Dirección Académica de Responsabilidad Social"
+  ],
+  "Dirección Académica del Profesorado": [
+   "Dirección Académica del Profesorado PUCP"
+  ],
+  "DTI (Tecnologías de Información)": [
+   "Dirección de Tecnologías de Información - PUCP"
+  ],
+  "Educación Continua": [
+   "Educación Continua PUCP"
+  ],
+  "Oficina de Becas": [
+   "Becas"
+  ],
+  "Oficina de Seguros": [
+   "Oficina de Seguros PUCP"
+  ],
+  "Oficina de Transformación Digital": [
+   "Oficina de Transformación Digital PUCP"
+  ],
+  "Tesorería General": [
+   "Tesoreria general"
+  ],
+  "Banco de Libros": [
+   "Banco de Libros PUCP"
+  ],
+  "BBVA (agencia)": [
+   "BBVA - Pontificia Universidad Católica"
+  ],
+  "CAPU (Asesoría Pastoral)": [
+   "CAPU",
+   "CAPU PUCP",
+   "WWJ9+5XJ Centro de Asesoría Pastoral Universitaria"
+  ],
+  "Ludoteca": [
+   "Ludoteca PUCP"
+  ],
+  "Mesas de estudio": [
+   "Mesas de estudio PUCP"
+  ],
+  "Sala Cuna": [
+   "Sala cuna",
+   "Sala Cuna PUCP"
+  ],
+  "Servicio de Salud": [
+   "Servicio de salud",
+   "Servicio médico",
+   "Tópico - Servicio de Salud"
+  ],
+  "Comedor Central": [
+   "Comedor central - costado auditorio derecho",
+   "Entrada de comedor central"
+  ],
+  "Comedor de Arte Antiguo": [
+   "Comedor de Arte",
+   "Comedor de arte antiguo"
+  ],
+  "Comedor de Letras": [
+   "Comedor de letras"
+  ],
+  "El Puesto": [
+   "El puesto"
+  ],
+  "Juan Valdez": [
+   "Juan valdez",
+   "Juan Valdez - PUCP"
+  ],
+  "Cancha 1": [
+   "Cancha 1 - campos deportivos"
+  ],
+  "Cancha 2": [
+   "Cancha 2 - campos deportivos"
+  ],
+  "Cancha de frontón": [
+   "Cancha de frontón PUCP"
+  ],
+  "Cancha de fútbol": [
+   "Cancha de Fútbol de la PUCP"
+  ],
+  "Cancha de Minas": [
+   "Cancha de Ing. de Minas"
+  ],
+  "Cancha de vóley": [
+   "Cancha de voley - campos deportivos"
+  ],
+  "Gimnasio": [
+   "Gimnasio PUCP"
+  ],
+  "Polideportivo": [
+   "Coliseo Polideportivo",
+   "Coliseo Polideportivo - PUCP",
+   "Explanada del Polideportivo",
+   "Polideportivo (frente a Letras)",
+   "Polideportivo - puerta oeste"
+  ],
+  "Área de Deportes": [
+   "Deportes",
+   "Área Deportes"
+  ],
+  "Bosque Húmedo": [
+   "Bosque húmedo"
+  ],
+  "Explanada del Puesto": [
+   "Explanada del puesto"
+  ],
+  "Huaca": [
+   "Finalización de la huaca en Rivaguero",
+   "Huaca 64"
+  ],
+  "Jardín Central": [
+   "Jardin Central",
+   "Jardín central",
+   "Jardín Central PUCP"
+  ],
+  "Jardín de la entrada principal": [
+   "Jardin entrada principal"
+  ],
+  "Jardín lateral McGregor": [
+   "Jardin Lateral McGregor"
+  ],
+  "Plazoleta del CEPREPUC": [
+   "Plazoleta del CEPREPUCP"
+  ],
+  "Rotonda de Letras": [
+   "Rotonda Letras"
+  ],
+  "Rotángono (patio de CCSS)": [
+   "Rotángono - Patio de CCSS"
+  ],
+  "Tontódromo": [
+   "Tontodromo - hallazgos",
+   "Tontodromo – educación"
+  ],
+  "Vivero": [
+   "Vivero PUCP"
+  ],
+  "Bicicletas EEGG Ciencias": [
+   "Estacionamiento de bicicletas Estudios Generales Ciencias - PUCP"
+  ],
+  "Bicicletas EEGG Letras": [
+   "Estacionamiento de bicicletas Estudios Generales Letras - PUCP"
+  ],
+  "Bus PUCP - Rotonda": [
+   "BUS PUCP - Rotonda"
+  ],
+  "Bus PUCP - Ruta A": [
+   "BUS PUCP - Universitaria - Ruta A"
+  ],
+  "Estacionamiento (sin letra)": [
+   "Estacionamiento"
+  ],
+  "Estacionamiento D": [
+   "Estacionamiento D, por cactario",
+   "Estacionamiento D. (PUCP)"
+  ],
+  "Estacionamiento Espacios Culturales": [
+   "Estacionamiento Espacios culturales - atrás de polideportivo"
+  ],
+  "Estacionamiento J": [
+   "Estacionamiento J. (PUCP)"
+  ],
+  "Estacionamiento K": [
+   "Estacionamiento K. (PUCP)"
+  ],
+  "Estacionamiento L": [
+   "Estacionamiento L, fentre a Studio Tv",
+   "Estacionamiento L. (PUCP)",
+   "playa estacionamiento studio TV"
+  ],
+  "Estacionamiento M": [
+   "Estacionamiento M. (PUCP)"
+  ],
+  "Puerta 6 (Urubamba)": [
+   "Puerta 6 Urubamba",
+   "Puerta Urubamba - PUCP"
+  ],
+  "Puerta 7 (Riva-Agüero)": [
+   "Puerta 7 - Rivaguero",
+   "Puerta N.° 7 - Riva Agüero - PUCP",
+   "Puerta Rivaguero",
+   "Rivaguero"
+  ],
+  "Puerta principal": [
+   "Puerta principal, Estacionamiento B",
+   "puerta principal."
+  ],
+  "Puerta Unión": [
+   "Puerta unión"
+  ],
+  "Asociación de Egresados y Graduados": [
+   "Asociación de Egresados y Graduados PUCP"
+  ],
+  "Centro Federado de EEGG Letras": [
+   "Centro Federado de Estudios Generales Letras"
+  ],
+  "Coro PUCP (caseta)": [
+   "Caseta de Coro PUCP"
+  ],
+  "Federación de Estudiantes (FEPUC)": [
+   "Federación de Estudiantes de la PUCP"
+  ],
+  "SEDIPRO": [
+   "SEDIPRO PUCP"
+  ]
+ }
+}
