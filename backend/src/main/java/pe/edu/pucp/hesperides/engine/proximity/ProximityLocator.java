@@ -26,7 +26,8 @@ public final class ProximityLocator {
         if (chosen == null) {
             return new LocationDescription(section, null, null, null, 0, LocationText.sectionOnly(section));
         }
-        String name = BuildingNamer.nameOf(chosen.building(), buildings, places, thresholds.nameM());
+        PlanarPoint anchor = PlanarGeometry.closestPoint(chosen.building().footprint(), point);
+        String name = BuildingNamer.nameOf(chosen.building(), anchor, buildings, places, thresholds.nameM());
         String text = LocationText.of(section, name, chosen.relation(), chosen.distance());
         return new LocationDescription(section, chosen.building(), name, chosen.relation(), chosen.distance(), text);
     }

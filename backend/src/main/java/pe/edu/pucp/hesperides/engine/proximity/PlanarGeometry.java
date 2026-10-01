@@ -34,6 +34,29 @@ final class PlanarGeometry {
         return best;
     }
 
+    /** El punto de la figura más cercano a {@code p}; el propio {@code p} si está dentro. */
+    static PlanarPoint closestPoint(PlanarShape shape, PlanarPoint p) {
+        if (contains(shape, p)) {
+            return p;
+        }
+        PlanarPoint best = p;
+        double bestDistance = Double.POSITIVE_INFINITY;
+        for (PlanarPolygon polygon : shape.polygons()) {
+            for (double[] ring : polygon.rings()) {
+                int n = ring.length / 2;
+                for (int i = 0, j = n - 1; i < n; j = i++) {
+                    PlanarPoint q = projectOnSegment(p, ring[2 * j], ring[2 * j + 1], ring[2 * i], ring[2 * i + 1]);
+                    double d = Math.hypot(p.x() - q.x(), p.y() - q.y());
+                    if (d < bestDistance) {
+                        bestDistance = d;
+                        best = q;
+                    }
+                }
+            }
+        }
+        return best;
+    }
+
     /** Separación mínima borde a borde; 0 si se tocan o se solapan. */
     static double gap(PlanarShape a, PlanarShape b) {
         if (anyVertexInside(a, b) || anyVertexInside(b, a)) {
@@ -77,11 +100,16 @@ final class PlanarGeometry {
     }
 
     private static double segmentDistance(PlanarPoint p, double ax, double ay, double bx, double by) {
+        PlanarPoint q = projectOnSegment(p, ax, ay, bx, by);
+        return Math.hypot(p.x() - q.x(), p.y() - q.y());
+    }
+
+    private static PlanarPoint projectOnSegment(PlanarPoint p, double ax, double ay, double bx, double by) {
         double dx = bx - ax;
         double dy = by - ay;
         double lengthSq = dx * dx + dy * dy;
         double t = lengthSq == 0 ? 0 : Math.max(0, Math.min(1, ((p.x() - ax) * dx + (p.y() - ay) * dy) / lengthSq));
-        return Math.hypot(p.x() - (ax + t * dx), p.y() - (ay + t * dy));
+        return new PlanarPoint(ax + t * dx, ay + t * dy);
     }
 
     private static boolean anyVertexInside(PlanarShape vertices, PlanarShape area) {

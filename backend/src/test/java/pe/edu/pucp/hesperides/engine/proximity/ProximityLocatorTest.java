@@ -22,6 +22,11 @@ class ProximityLocatorTest {
         return new PlanarShape(List.of(new PlanarPolygon(List.of(anillo))));
     }
 
+    private static PlanarShape rectangulo(double x, double y, double ancho, double alto) {
+        double[] anillo = {x, y, x + ancho, y, x + ancho, y + alto, x, y + alto};
+        return new PlanarShape(List.of(new PlanarPolygon(List.of(anillo))));
+    }
+
     private static BuildingCandidate edificio(long id, String nombre, double x, double y) {
         return new BuildingCandidate(id, nombre, cuadrado(x, y, 10));
     }
@@ -138,6 +143,30 @@ class ProximityLocatorTest {
                     List.of(new NamedPoint("Lejos", new PlanarPoint(200, 200))));
 
             assertThat(resultado.buildingName()).isEqualTo("Edificio sin nombre, junto a Química");
+        }
+
+        @Test
+        @DisplayName("«junto a» se mide desde el lado del edificio sin nombre donde está el punto")
+        void juntoADesdeElPunto() {
+            // Edificio sin nombre largo (x 0-60). Física queda a 1 m de su extremo
+            // izquierdo y Química a 4 m del derecho. El punto está en el extremo
+            // derecho: el prototipo nombra al vecino de ese lado, no al más
+            // cercano al edificio entero.
+            var largo = new BuildingCandidate(1, null, rectangulo(0, 0, 60, 10));
+            var resultado = describir(59, 5, List.of(),
+                    List.of(largo, edificio(2, "Física", -11, 0), edificio(3, "Química", 64, 0)), List.of());
+
+            assertThat(resultado.buildingName()).isEqualTo("Edificio sin nombre, junto a Química");
+        }
+
+        @Test
+        @DisplayName("«junto a» admite un vecino que toma su nombre de una referencia")
+        void juntoAUnNombradoPorReferencia() {
+            var resultado = describir(5, 5, List.of(),
+                    List.of(edificio(1, null, 0, 0), edificio(2, null, 20, 0), edificio(3, "Química", 60, 0)),
+                    List.of(new NamedPoint("Tinkuy", new PlanarPoint(25, 5))));
+
+            assertThat(resultado.buildingName()).isEqualTo("Edificio sin nombre, junto a Tinkuy");
         }
     }
 
