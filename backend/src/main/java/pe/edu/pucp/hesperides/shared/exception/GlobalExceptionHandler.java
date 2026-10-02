@@ -32,6 +32,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(PossibleDuplicateException.class)
+    public ResponseEntity<ApiResponse<PossibleDuplicateException.Match>> handlePossibleDuplicate(
+            PossibleDuplicateException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.errorWithData(ex.getMessage(), ex.getMatch()));
+    }
+
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessRule(BusinessRuleException ex) {
         log.warn("Business rule violated: {}", ex.getMessage());

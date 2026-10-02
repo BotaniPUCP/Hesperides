@@ -80,7 +80,8 @@ public class SpecimenWriter {
                 measuredBy, id, Date.valueOf(m.date()));
     }
 
-    private void assess(long id, Assessment a, Long assessedBy, Long batchId) {
+    /** Añade una evaluación al historial (SPEC-103 D-06): nunca reemplaza las anteriores. */
+    public void assess(long id, Assessment a, Long assessedBy, Long batchId) {
         jdbc.update("""
                 INSERT INTO green_element_assessments (green_element_id, assessed_on, assessed_by_user_id, has_disease,
                     has_pests, has_mechanical_damage, is_leaning, has_dead_branches, has_cavities_or_rot,

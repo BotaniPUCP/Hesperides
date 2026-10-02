@@ -22,10 +22,7 @@ import pe.edu.pucp.hesperides.modules.imports.service.CsvTemplates;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenExportService;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenImportService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
-import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 
 /** Carga de catastro por CSV en dos pasos: vista previa y confirmación (SPEC-103 §5.2). */
@@ -44,9 +41,9 @@ public class ImportController {
     public ResponseEntity<ApiResponse<ImportPreviewResponse>> preview(
             @RequestPart("file") MultipartFile csv, @RequestPart(value = "photos", required = false) MultipartFile zip,
             @AuthenticationPrincipal UserDetails principal) {
-        byte[] photos = zip == null || zip.isEmpty() ? null : bytes(zip);
+        byte[] photos = UploadedFiles.optional(zip);
         return ResponseEntity.ok(ApiResponse.ok("Preview ready",
-                specimens.preview(bytes(csv), csv.getOriginalFilename(), photos, principal.getUsername())));
+                specimens.preview(UploadedFiles.required(csv), csv.getOriginalFilename(), photos, principal.getUsername())));
     }
 
     @PostMapping("/api/v1/imports/{batchId}/confirm")
@@ -76,16 +73,5 @@ public class ImportController {
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(fileName).build().toString())
                 .body(content);
-    }
-
-    private static byte[] bytes(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new ValidationException("The file is empty");
-        }
-        try {
-            return file.getBytes();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Could not read the uploaded file", e);
-        }
     }
 }
