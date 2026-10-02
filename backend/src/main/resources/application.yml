@@ -17,6 +17,12 @@ spring:
     # alguna vez hiciera falta activarlo, es senal de que alguien se salto la
     # convencion y tomo un numero ya usado.
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      # Una carga de catastro trae el CSV y un ZIP de fotos (SPEC-103 §3.1). Las
+      # fotos ya vienen comprimidas, así que el ZIP pesa casi lo mismo que ellas.
+      max-file-size: 150MB
+      max-request-size: 160MB
   mvc:
     # Required so unmapped routes raise NoHandlerFoundException and reach the
     # global handler as 404 instead of falling through to a generic 500.

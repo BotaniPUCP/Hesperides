@@ -35,12 +35,12 @@ public class PhotoDownloader {
             .build();
 
     /** Un enlace «ver» de Drive no devuelve la imagen: se pide su versión imagen. */
-    static String downloadUrl(String link) {
+    public static String downloadUrl(String link) {
         Matcher m = DRIVE_ID.matcher(link);
         return m.find() ? "https://drive.google.com/thumbnail?id=" + m.group(1) + "&sz=w1600" : link;
     }
 
-    static boolean isAllowedHost(String url) {
+    public static boolean isAllowedHost(String url) {
         try {
             URI uri = URI.create(url);
             return "https".equals(uri.getScheme()) && uri.getHost() != null && ALLOWED_HOSTS.contains(uri.getHost());

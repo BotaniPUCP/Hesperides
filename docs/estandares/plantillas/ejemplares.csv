@@ -1,0 +1,2 @@
+codigo;nombre_cientifico;latitud;longitud;cantidad;referencia_catastro;placa_antigua;ubicacion_catastro;fecha_medicion;altura_m;altura_fuste_m;dap_cm;radio_copa_m;zunchado;fecha_evaluacion;enfermedades;plagas;danos_mecanicos;inclinacion;ramas_secas;cavidades;raices_expuestas;interferencia;manejo_recomendado;observacion_evaluacion;foto;observaciones
+;Schinus molle;-12.069520;-77.080110;1;;;;2026-03-15;6.5;2.1;38.0;3.0;no;2026-03-15;no;no;no;no;si;no;no;no;Poda de ramas secas;Ramas secas en el lado norte de la copa;molle-01.jpg;Ejemplo: borra esta fila antes de cargar
