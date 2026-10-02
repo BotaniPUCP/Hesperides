@@ -30,6 +30,11 @@ conexión, la información que se **agregó** a las fuentes del cliente y lo que
 La carga no se escribe a mano: `scripts/catastro/generar_semilla_catastro.py` produce la migración
 de semilla a partir de estos archivos. Para corregir un dato se corrige la fuente y se regenera.
 
+El mismo script escribe **`docs/dominio/datos/ejemplares.csv`**: los 965 ejemplares unificados tal
+como quedan en la base, con su código `EV`, la especie limpia, la familia, la ubicación del catastro,
+las medidas (solo en los medidos) y la foto. Sale de la misma lista y en el mismo orden que la carga,
+así que nunca se desalinea de ella. Es una salida, no una fuente: no se edita a mano.
+
 ## 2. Decisiones sobre los ejemplares
 
 | # | Decisión | Por qué |
