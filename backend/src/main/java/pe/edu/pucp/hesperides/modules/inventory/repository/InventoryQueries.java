@@ -21,7 +21,8 @@ final class InventoryQueries {
                      ORDER BY e.data_source = 'MEASURED' DESC, e.code LIMIT 1) AS photo_url,
                    (SELECT string_agg(n.name, '|' ORDER BY n.name) FROM species_common_names n
                      WHERE n.species_id = s.id AND n.deleted_at IS NULL) AS other_names,
-                   (SELECT sp.id FROM species_photos sp WHERE sp.species_id = s.id AND sp.deleted_at IS NULL) AS species_photo_id,
+                   (SELECT sp.id FROM species_photos sp WHERE sp.species_id = s.id AND sp.deleted_at IS NULL
+                     ORDER BY sp.sort_order LIMIT 1) AS species_photo_id,
                    (SELECT a.id FROM green_element_attachments a JOIN green_elements e ON e.id = a.green_element_id
                      WHERE e.species_id = s.id AND %1$s AND a.deleted_at IS NULL
                      ORDER BY e.data_source = 'MEASURED' DESC, e.code, a.id DESC LIMIT 1) AS specimen_photo_id

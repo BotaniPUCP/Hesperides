@@ -41,7 +41,11 @@ function query(params: Record<string, string | number | undefined>): string {
  * la dirección entera para las primeras.
  */
 const media = (url: string | null) => (url && url.startsWith('/') ? `${API_BASE_URL}${url}` : url);
-const withSpeciesMedia = (s: Species): Species => ({ ...s, imageUrl: media(s.imageUrl) });
+const withSpeciesMedia = (s: Species): Species => ({
+  ...s,
+  imageUrl: media(s.imageUrl),
+  photos: (s.photos ?? []).map((p) => ({ ...p, thumbnailUrl: media(p.thumbnailUrl) ?? p.thumbnailUrl, imageUrl: media(p.imageUrl) ?? p.imageUrl })),
+});
 const withSpecimenMedia = <T extends Specimen>(s: T): T => ({ ...s, imageUrl: media(s.imageUrl), thumbnailUrl: media(s.thumbnailUrl) });
 const mapPage = <T,>(p: Page<T>, f: (t: T) => T): Page<T> => ({ ...p, content: p.content.map(f) });
 

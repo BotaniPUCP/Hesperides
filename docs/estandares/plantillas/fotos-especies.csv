@@ -1,2 +1,3 @@
-nombre_cientifico;foto
-Schinus molle;molle.jpg
+nombre_cientifico;foto;orden;autor;licencia;fuente
+Schinus molle;molle-1.jpg;1;Nombre del autor;CC BY-SA 4.0;https://commons.wikimedia.org/wiki/File:Ejemplo.jpg
+Schinus molle;molle-2.jpg;2;;;

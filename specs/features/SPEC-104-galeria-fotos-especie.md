@@ -40,11 +40,17 @@ servidor on-premise de 2 GB.
 
 - Rutas sin cambio: `/inventario-verde` (listado) y `/inventario-verde/especies/[slug]` (ficha).
 - Componente nuevo: `components/inventario-verde/SpeciesPhotoViewer.tsx` (visor a pantalla completa).
-- Componentes modificados: `SpeciesInfo.tsx` (contador «1/3», abre el visor, etiqueta según origen),
-  `catastro/importar/SelectorDeArchivos.tsx`, `catastro/registrar/RegistroPlantaForm.tsx`,
-  `catastro/registrar/RegistroComponenteForm.tsx` y el formulario de foto de especie (aviso de límite
-  y comprobación previa).
+- Componentes nuevos (además del visor): `inventario-verde/SpeciesCover.tsx` (la foto de la ficha con
+  su contador «1/3» y su etiqueta) y `forms/CampoArchivo.tsx` (selector que avisa el límite y rechaza
+  lo que no cabe).
+- Componentes modificados: `SpeciesInfo.tsx` y `SpeciesCard.tsx` (etiqueta según origen),
+  `catastro/importar/SelectorDeArchivos.tsx`, `VistaPrevia.tsx` (conjuntos por especie),
+  `catastro/registrar/RegistroPlantaForm.tsx` y `RegistroComponenteForm.tsx`.
 - Constantes de límites: `lib/upload-limits.ts`.
+
+> *(Al implementar, 2 oct 2026.)* El formulario de foto de especie **no tiene pantalla**: el endpoint
+> existe desde SPEC-103 pero ninguna interfaz lo llama. Los puntos de subida con aviso son, por tanto,
+> **tres**. La pantalla de foto de especie queda fuera de este spec.
 
 ### 2.3 Móvil
 
@@ -80,7 +86,9 @@ la foto en el visor. · 205 de las 230 fotos iniciales son CC BY o CC BY-SA, lic
 a atribuir. · Descartado: créditos en una página aparte (no cumple la atribución junto a la obra).
 
 **D-05 · Carga inicial desde una bandeja del servidor, una foto a la vez.** Las fotos se dejan en
-`inbox/species-photos/` con su CSV de créditos y un ADMIN lanza la carga. · No pasa por los límites
+`inbox/species-photos/` con un `fotos-especies.csv` —**el mismo estándar** que la importación web, con
+orden y créditos— y un ADMIN lanza la carga. La bandeja y la importación leen las filas con el mismo
+código. · No pasa por los límites
 de subida web (la carpeta pesa ~800 MB) y nunca tiene más de una foto en memoria. · Descartado:
 cargarlas en 6-7 tandas por la pantalla de importación (manual, y repetido en cada instalación).
 
@@ -205,15 +213,17 @@ no muestra la licencia.
 ### 5.1 Carga inicial
 
 1. Se reducen las 2 fotos de *Thrinax radiata* (D-11).
-2. Se mueven las 230 fotos y `selecciones.csv` a `inbox/species-photos/` (carpeta del repo ignorada
-   por git, montada en el backend en `/data/inbox`).
-3. `selecciones.csv` se versiona como `docs/dominio/datos/fotos-especies-creditos.csv`: es la fuente
-   de los créditos.
+2. `selecciones.csv` (la selección de Wikimedia Commons) se convierte al estándar
+   `fotos-especies.csv` y se versiona como `docs/dominio/datos/fotos-especies-creditos.csv`: es la
+   fuente de los créditos.
+3. Se mueven las 230 fotos a `inbox/species-photos/` (carpeta del repo ignorada por git, montada en el
+   backend en `/data/inbox`) con una copia de ese CSV llamada `fotos-especies.csv`.
 4. Un ADMIN ejecuta `POST /species-photos/load-inbox`.
-5. El servicio lee `selecciones.csv`, agrupa por `slug` y, especie por especie, procesa cada foto
-   (≤ 25 MB) con `PhotoStore`. Si todas se guardaron, reemplaza el conjunto de la especie en una
-   transacción y borra sus originales de la bandeja.
-6. Responde con lo cargado y lo fallido. La bandeja queda vacía salvo los fallidos.
+5. El servicio lee el CSV, agrupa por especie y, especie por especie, procesa cada foto (≤ 25 MB) con
+   `PhotoStore`. Si todas se guardaron, reemplaza el conjunto de la especie en una transacción y borra
+   sus originales de la bandeja. Una especie cuyos archivos ya no están se salta: se cargó antes.
+6. Responde con lo cargado y lo fallido. Cuando no queda ninguna foto, borra también el CSV: la
+   bandeja queda vacía.
 
 ### 5.2 Visor de la ficha
 
@@ -260,9 +270,10 @@ no muestra la licencia.
 
 - **Ficha:** la miniatura actual (128 px) gana un indicador «1/3» abajo a la derecha y cursor de
   zoom. Sin cambios de layout.
-- **Visor:** fondo `neutral-900/90`, foto centrada a `max-h-[80vh]`, flechas a los lados (ocultas con
-  una sola foto), botón cerrar arriba a la derecha, crédito en texto pequeño bajo la foto. En móvil
-  (<640 px) las flechas van bajo la foto.
+- **Visor:** fondo `neutral-900/90`, foto centrada a `max-h-[80vh]`, flechas superpuestas a los lados
+  de la foto en todo tamaño de pantalla (ocultas con una sola foto), botón cerrar arriba a la derecha,
+  crédito en texto pequeño bajo la foto. *(Al implementar: el borrador ponía las flechas bajo la foto
+  en móvil; un solo par superpuesto sirve en ambos tamaños sin duplicar botones.)*
 - **Estados:** cargando (placeholder del tamaño de la foto), error de carga (placeholder de la
   especie), una foto (sin flechas).
 - **Avisos de límite:** texto `text-xs text-neutral-500` bajo cada selector de archivo; el error en

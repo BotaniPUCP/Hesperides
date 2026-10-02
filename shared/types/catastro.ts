@@ -74,6 +74,8 @@ export interface ImportPreview {
   decimalComma: boolean;
   canConfirm: boolean;
   expiresAt: string;
+  /** Fotos de especie: cuántas tiene hoy cada especie y cuántas quedarán (SPEC-104). Vacío en las demás cargas. */
+  photoSets: { species: string; current: number; incoming: number }[];
 }
 
 export interface ImportResult {

@@ -38,3 +38,7 @@ Thumbs.db
 
 # Scratch de ejecucion
 .superpowers/
+
+# Bandeja de carga inicial (SPEC-104 D-05): originales que la carga mueve al
+# almacenamiento. Nunca se versionan; sus creditos si, en docs/dominio/datos/.
+inbox/

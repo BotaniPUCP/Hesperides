@@ -52,11 +52,16 @@ export const ESTANDAR_BEBEDEROS: GrupoDeColumnas[] = [
 
 export const ESTANDAR_FOTOS_ESPECIES: GrupoDeColumnas[] = [
   {
-    titulo: 'Foto genérica de cada especie',
-    nota: 'Es la foto de la ficha de la especie. Una fila reemplaza la foto anterior; una especie que no está en el catálogo se omite.',
+    titulo: 'Fotos genéricas de cada especie',
+    nota:
+      'Las fotos de la ficha de la especie, de una a varias. Las filas de una especie reemplazan todas sus fotos; una especie que no aparece conserva las suyas y una que no está en el catálogo se omite.',
     columnas: [
       { nombre: 'nombre_cientifico', obligatoria: true, descripcion: 'Como en el catálogo de especies' },
-      { nombre: 'foto', obligatoria: true, descripcion: 'Enlace público de Google Drive, o el nombre de un archivo del ZIP' },
+      { nombre: 'foto', obligatoria: true, descripcion: 'Enlace público de Google Drive, o el nombre de un archivo del ZIP. Hasta 25 MB' },
+      { nombre: 'orden', obligatoria: false, descripcion: '1 = foto principal. Sin orden, cuenta el de las filas' },
+      { nombre: 'autor', obligatoria: false, descripcion: 'Quien hizo la foto, como pide su licencia' },
+      { nombre: 'licencia', obligatoria: false, descripcion: 'Tal cual la da la fuente: CC BY-SA 4.0, CC0…' },
+      { nombre: 'fuente', obligatoria: false, descripcion: 'Enlace a la página que acredita la foto (https://…)' },
     ],
   },
 ];

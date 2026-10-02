@@ -88,6 +88,8 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `CONTRACT_EDITED` | ADMIN | Campos cambiados (fechas, monto, alcance) | **`audit_log`** |
 | `CONTRACT_TERMINATED` | ADMIN | `{ "statusItemId": { "before": ..., "after": ... }, "reason": "..." }` | **`audit_log`** |
 | `SYSTEM_PARAMETER_CHANGED` | ADMIN | `{ "code": "...", "value": { "before": "...", "after": "..." } }` | **`audit_log`** |
+| `SPECIES_PHOTOS_REPLACED` | ADMIN, COORDINADOR (carga CSV) · ADMIN (bandeja) | `{ "photos": 3 }` — cuántas fotos quedaron en el conjunto de la especie (SPEC-104 D-02) | **`audit_log`** |
+| `SPECIES_PHOTO_ADDED` | ADMIN, COORDINADOR | `{ "photoId": 41 }` — la foto agregada al final por formulario (SPEC-104 D-03) | **`audit_log`** |
 | `LOGIN_FAILED_LOCKOUT` | (sistema, sobre cualquier email) | `{ "email": "...", "attempts": 5, "windowMinutes": 15 }` | **`audit_log`** (además de logs SLF4J, sección 3.4) |
 | `REFRESH_TOKEN_REUSE_DETECTED` | (sistema, sobre cualquier usuario) | `{ "userId": ..., "tokenId": ..., "revokedChainCount": 3 }` | **`audit_log`** |
 | Login exitoso individual | — | — | **Solo SLF4J** (sección 3.4) |

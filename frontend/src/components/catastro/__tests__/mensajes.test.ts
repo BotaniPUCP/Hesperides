@@ -10,6 +10,16 @@ describe('traducirMensajeCatastro', () => {
     ['The file «molle.jpg» is not in the uploaded ZIP', 'El archivo «molle.jpg» no está en el ZIP de fotos'],
     ['Decide on the possible duplicates at lines [3, 7]', 'Falta decidir los posibles duplicados de las líneas 3, 7'],
     ['Possible duplicate of EV-000001', 'Podría ser el ejemplar EV-000001, que ya está registrado'],
+    ['«a.jpg» in the ZIP is larger than 25 MB', '«a.jpg» del ZIP pesa más de 25 MB'],
+    ['The ZIP is larger than 500 MB once uncompressed', 'El ZIP de fotos supera los 500 MB descomprimido'],
+    ['The photo is larger than 25 MB', 'La foto pesa más de 25 MB'],
+    ['Another import is in progress. Try again in a few minutes', 'Hay otra importación en curso. Inténtalo en unos minutos'],
+    ['Another photo of this species already has order 2', 'Otra foto de esta especie ya tiene el orden 2'],
+    ['The source must be a web link (https://…)', 'La fuente debe ser un enlace web (https://…)'],
+    [
+      'Species «schinus-molle» kept its previous photos: 1 of 3 could not be saved',
+      'La especie «schinus-molle» conserva sus fotos anteriores: 1 de 3 no se pudieron guardar',
+    ],
   ])('%s', (ingles, espanol) => {
     expect(traducirMensajeCatastro(ingles)).toBe(espanol);
   });

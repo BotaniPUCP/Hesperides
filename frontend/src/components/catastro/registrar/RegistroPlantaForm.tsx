@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { Button, Card, Input } from '@/components/ui';
+import { LIMITES } from '@/lib/upload-limits';
 import { AvisoDuplicado } from './AvisoDuplicado';
 import { BuscadorDeEspecie } from './BuscadorDeEspecie';
 import { CamposEvaluacion, CamposMedicion } from './CamposMedicionEvaluacion';
@@ -52,11 +54,8 @@ export function RegistroPlantaForm() {
 
       <Card title="Foto y notas">
         <div className="space-y-4">
-          <div className="space-y-1">
-            <label htmlFor="foto" className="block text-sm font-medium text-neutral-700">Foto de la planta (opcional)</label>
-            <input id="foto" type="file" accept="image/jpeg,image/png" onChange={(e) => r.setFoto(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-neutral-700" />
-          </div>
+          <CampoArchivo id="foto" etiqueta="Foto de la planta (opcional)" acepta="image/jpeg,image/png"
+            limite={LIMITES.foto} archivo={r.foto} onElegir={r.setFoto} />
           <Input id="observaciones" label="Observaciones" value={v.observaciones} onChange={(x) => r.cambiar('observaciones', x)} />
         </div>
       </Card>

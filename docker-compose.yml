@@ -65,8 +65,17 @@ services:
       STORAGE_LOCAL_DIR: ${STORAGE_LOCAL_DIR:-/data/storage}
       STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET:-}
       STORAGE_S3_REGION: ${STORAGE_S3_REGION:-}
+      # Bandeja de carga inicial de fotos de especie (SPEC-104 D-05): la carga
+      # borra cada original al guardarlo, por eso el montaje es de escritura.
+      STORAGE_INBOX_DIR: ${STORAGE_INBOX_DIR:-/data/inbox}
+      # Memoria fija del backend (SPEC-104 D-09). Sin -Xmx la JVM toma el 25 % de
+      # la RAM: 512 MB en un servidor de 2 GB, menos de lo que ocupa una sola
+      # importacion al limite (~750 MB). Con 1 GB cabe una, y por eso las
+      # importaciones van de a una (D-10). La JVM lee JAVA_TOOL_OPTIONS sola.
+      JAVA_TOOL_OPTIONS: -Xmx${BACKEND_HEAP:-1g}
     volumes:
       - storage:/data/storage
+      - ./inbox:/data/inbox
     ports:
       - "${BACKEND_PORT:-8080}:${BACKEND_PORT:-8080}"
     depends_on:

@@ -8,6 +8,9 @@ package pe.edu.pucp.hesperides.modules.inventory.service;
  */
 final class PhotoUrls {
 
+    static final String FROM_SPECIES = "SPECIES";
+    static final String FROM_SPECIMEN = "SPECIMEN";
+
     private PhotoUrls() {
     }
 
@@ -18,11 +21,23 @@ final class PhotoUrls {
         return DrivePhotoLinks.thumbnail(sourceUrl);
     }
 
-    /** La genérica de la especie; si no hay, la de uno de sus ejemplares (SPEC-103 D-08). */
+    static String speciesPhoto(long photoId, boolean thumbnail) {
+        return "/files/species/" + photoId + (thumbnail ? "?size=thumb" : "?size=full");
+    }
+
+    /** La principal de la especie; si no hay, la de uno de sus ejemplares (SPEC-103 D-08). */
     static String species(Long speciesPhotoId, Long specimenPhotoId, String specimenSourceUrl) {
         if (speciesPhotoId != null) {
-            return "/files/species/" + speciesPhotoId + "?size=thumb";
+            return speciesPhoto(speciesPhotoId, true);
         }
         return specimen(specimenPhotoId, specimenSourceUrl, true);
+    }
+
+    /** De dónde sale la foto principal: decide la etiqueta de la ficha. */
+    static String speciesSource(Long speciesPhotoId, Long specimenPhotoId, String specimenSourceUrl) {
+        if (speciesPhotoId != null) {
+            return FROM_SPECIES;
+        }
+        return specimenPhotoId != null || specimenSourceUrl != null ? FROM_SPECIMEN : null;
     }
 }

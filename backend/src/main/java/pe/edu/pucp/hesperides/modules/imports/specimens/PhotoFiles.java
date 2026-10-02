@@ -1,6 +1,7 @@
 package pe.edu.pucp.hesperides.modules.imports.specimens;
 
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
+import pe.edu.pucp.hesperides.shared.storage.UploadLimits;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -16,8 +17,6 @@ import java.util.zip.ZipInputStream;
  */
 public final class PhotoFiles {
 
-    static final long MAX_TOTAL_BYTES = 300L * 1024 * 1024;
-    static final long MAX_FILE_BYTES = 15L * 1024 * 1024;
 
     private PhotoFiles() {
     }
@@ -36,13 +35,13 @@ public final class PhotoFiles {
                 if (e.isDirectory() || name(e.getName()).startsWith(".")) {
                     continue;
                 }
-                byte[] bytes = in.readNBytes((int) MAX_FILE_BYTES + 1);
-                if (bytes.length > MAX_FILE_BYTES) {
-                    throw new ValidationException("«" + e.getName() + "» in the ZIP is larger than 15 MB");
+                byte[] bytes = in.readNBytes((int) UploadLimits.MAX_PHOTO_BYTES + 1);
+                if (bytes.length > UploadLimits.MAX_PHOTO_BYTES) {
+                    throw new ValidationException("«" + e.getName() + "» in the ZIP is larger than " + UploadLimits.MAX_PHOTO_LABEL);
                 }
                 total += bytes.length;
-                if (total > MAX_TOTAL_BYTES) {
-                    throw new ValidationException("The ZIP is larger than 300 MB once uncompressed");
+                if (total > UploadLimits.MAX_ZIP_UNCOMPRESSED_BYTES) {
+                    throw new ValidationException("The ZIP is larger than " + UploadLimits.MAX_ZIP_UNCOMPRESSED_LABEL + " once uncompressed");
                 }
                 files.put(name(e.getName()), bytes);
             }

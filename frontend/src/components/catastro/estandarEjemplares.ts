@@ -70,7 +70,7 @@ export const ESTANDAR_EJEMPLARES: GrupoDeColumnas[] = [
   {
     titulo: 'Foto y notas',
     columnas: [
-      opcional('foto', 'Enlace público de Google Drive, o el nombre de un archivo del ZIP. Hasta 15 MB'),
+      opcional('foto', 'Enlace público de Google Drive, o el nombre de un archivo del ZIP. Hasta 25 MB'),
       opcional('observaciones', 'Texto libre sobre la planta'),
     ],
   },

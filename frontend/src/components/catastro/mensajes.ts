@@ -28,8 +28,16 @@ const REGLAS: Regla[] = [
   [/^The separator must be a semicolon/, () => 'El separador debe ser punto y coma (;), no coma'],
   [/^The file is empty$/, () => 'El archivo está vacío'],
   [/^The photos file is not a valid ZIP$/, () => 'El archivo de fotos no es un ZIP válido'],
-  [/^The ZIP is larger than 300 MB/, () => 'El ZIP de fotos supera los 300 MB descomprimido'],
-  [/^«(.*)» in the ZIP is larger than 15 MB$/, (m) => `«${m[1]}» del ZIP pesa más de 15 MB`],
+  [/^The ZIP is larger than (\d+) MB/, (m) => `El ZIP de fotos supera los ${m[1]} MB descomprimido`],
+  [/^«(.*)» in the ZIP is larger than (\d+) MB$/, (m) => `«${m[1]}» del ZIP pesa más de ${m[2]} MB`],
+  [/^The photo is larger than (\d+) MB$/, (m) => `La foto pesa más de ${m[1]} MB`],
+  [/^Another import is in progress/, () => 'Hay otra importación en curso. Inténtalo en unos minutos'],
+  [/^Another photo of this species already has order (\d+)$/, (m) => `Otra foto de esta especie ya tiene el orden ${m[1]}`],
+  [/^The source must be a web link/, () => 'La fuente debe ser un enlace web (https://…)'],
+  [
+    /^Species «(.*)» kept its previous photos: (\d+) of (\d+) could not be saved$/,
+    (m) => `La especie «${m[1]}» conserva sus fotos anteriores: ${m[2]} de ${m[3]} no se pudieron guardar`,
+  ],
   [/^The file has errors/, () => 'El archivo tiene errores: corrígelos y vuelve a subirlo'],
   [/^The preview expired/, () => 'La vista previa venció (dura una hora): vuelve a subir el archivo'],
   [/^This import was already confirmed or expired$/, () => 'Esta carga ya se confirmó o venció'],
@@ -43,7 +51,7 @@ const REGLAS: Regla[] = [
 ];
 
 const CAUSAS_DE_FOTO: Regla[] = [
-  [/larger than 15 MB/, () => 'pesa más de 15 MB'],
+  [/larger than (\d+) MB/i, (m) => `pesa más de ${m[1]} MB`],
   [/not an image/, () => 'el enlace no devuelve una imagen (¿está compartida públicamente?)'],
   [/^HTTP (\d+)/, (m) => `Drive respondió con error ${m[1]}`],
   [/network error|interrupted/, () => 'falló la conexión con Drive'],

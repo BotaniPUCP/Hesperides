@@ -10,7 +10,15 @@ import java.util.List;
 public record ImportPreviewResponse(long batchId, String kind, int totalRows, int toCreate, int toUpdate,
                                     List<UnknownSpecies> unknownSpecies, List<Duplicate> duplicates,
                                     List<Issue> issues, boolean decimalComma, boolean canConfirm,
-                                    LocalDateTime expiresAt) {
+                                    LocalDateTime expiresAt, List<PhotoSet> photoSets) {
+
+    /**
+     * Fotos de especie (SPEC-104 D-02): el archivo reemplaza el conjunto de cada
+     * especie, y la persona ve cuántas tiene hoy y cuántas quedarán. Vacío en
+     * los demás tipos de carga.
+     */
+    public record PhotoSet(String species, int current, int incoming) {
+    }
 
     public record UnknownSpecies(String name, int rows) {
     }

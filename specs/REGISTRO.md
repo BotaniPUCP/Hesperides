@@ -19,7 +19,7 @@
 | SPEC-101 | Frecuencias de mantenimiento | 🔄 En progreso  | —          | S1     |              |
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
-| SPEC-104 | Galería de fotos de especie | 👀 En revisión  | —          | S3     |              |
+| SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 

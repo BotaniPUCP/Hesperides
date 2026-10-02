@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import type { FeatureForm } from '@shared/types';
+import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { Button, Card, Input } from '@/components/ui';
+import { LIMITES } from '@/lib/upload-limits';
 import { AvisoDuplicado } from './AvisoDuplicado';
 import { CamposBebedero, CamposTacho } from './CamposComponente';
 import { MapaSelector } from './MapaSelector';
@@ -57,11 +59,8 @@ export function RegistroComponenteForm({ kind }: { kind: FeatureForm['kind'] }) 
 
       <Card title="Foto y nota">
         <div className="space-y-4">
-          <div className="space-y-1">
-            <label htmlFor="foto-componente" className="block text-sm font-medium text-neutral-700">Foto (opcional)</label>
-            <input id="foto-componente" type="file" accept="image/jpeg,image/png"
-              onChange={(e) => r.setFoto(e.target.files?.[0] ?? null)} className="block w-full text-sm text-neutral-700" />
-          </div>
+          <CampoArchivo id="foto-componente" etiqueta="Foto (opcional)" acepta="image/jpeg,image/png"
+            limite={LIMITES.foto} archivo={r.foto} onElegir={r.setFoto} />
           <Input id="nota" label="Nota" value={v.nota} onChange={(x) => r.cambiar('nota', x)} />
         </div>
       </Card>

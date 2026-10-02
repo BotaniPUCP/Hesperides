@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 @Component
 public class PhotoDownloader {
 
-    static final long MAX_BYTES = 15L * 1024 * 1024;
     private static final int MAX_REDIRECTS = 3;
     private static final Duration TIMEOUT = Duration.ofSeconds(20);
     private static final Set<String> ALLOWED_HOSTS =
@@ -91,9 +90,9 @@ public class PhotoDownloader {
 
     private static byte[] readLimited(InputStream body) {
         try (body) {
-            byte[] bytes = body.readNBytes((int) MAX_BYTES + 1);
-            if (bytes.length > MAX_BYTES) {
-                throw new PhotoNotDownloadedException("larger than 15 MB");
+            byte[] bytes = body.readNBytes((int) UploadLimits.MAX_PHOTO_BYTES + 1);
+            if (bytes.length > UploadLimits.MAX_PHOTO_BYTES) {
+                throw new PhotoNotDownloadedException("larger than " + UploadLimits.MAX_PHOTO_LABEL);
             }
             return bytes;
         } catch (IOException e) {

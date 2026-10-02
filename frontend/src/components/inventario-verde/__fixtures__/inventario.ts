@@ -12,6 +12,8 @@ export const palmeraReal: Species = {
   vegetationTypeName: 'Palmera',
   specimenCount: 167,
   imageUrl: 'https://drive.google.com/thumbnail?id=abc&sz=w1000',
+  imageSource: 'SPECIMEN',
+  photos: [],
 };
 
 export const palmeraReina: Species = {

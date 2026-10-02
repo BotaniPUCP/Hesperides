@@ -33,6 +33,7 @@ const register = jest.mocked(catastroApi.register);
 const MOLLE = {
   slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle serrano', otherNames: [],
   family: 'Anacardiaceae', vegetationTypeCode: 'TREE', vegetationTypeName: 'Árbol', specimenCount: 3, imageUrl: null,
+  imageSource: null, photos: [],
 };
 
 function pantalla(rol = 'SUPERVISOR') {

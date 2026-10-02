@@ -15,5 +15,9 @@ public enum AuditActionCode {
     /** Añadida por SPEC-100 §9.3: explica meses después por qué alguien nunca pudo entrar. */
     USER_CREDENTIALS_DELIVERY_FAILED,
     /** Añadida por el módulo de administración: quién cambió un parámetro general y de qué a qué. */
-    SYSTEM_PARAMETER_CHANGED
+    SYSTEM_PARAMETER_CHANGED,
+    /** SPEC-104: quién cambió el conjunto de fotos de una especie, y cuántas quedaron. */
+    SPECIES_PHOTOS_REPLACED,
+    /** SPEC-104: una foto agregada a una especie desde el formulario. */
+    SPECIES_PHOTO_ADDED
 }

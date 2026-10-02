@@ -90,7 +90,7 @@ class InventoryPhotosIntegrationTest {
     @Test
     void aGenericSpeciesPhotoWinsOverTheSpecimenOne() throws Exception {
         photos.attachToSpecimen("EV-000001", png(), "p01.png", null, "admin@pucp.edu.pe");
-        photos.setSpeciesPhoto("roystonea-regia", png(), null, "admin@pucp.edu.pe");
+        photos.addSpeciesPhoto("roystonea-regia", png(), "admin@pucp.edu.pe");
 
         mockMvc.perform(get("/api/v1/green-inventory/species/roystonea-regia"))
                 .andExpect(jsonPath("$.data.imageUrl", startsWith("/files/species/")));

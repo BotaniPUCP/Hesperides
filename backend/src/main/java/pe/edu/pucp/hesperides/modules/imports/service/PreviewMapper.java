@@ -25,7 +25,7 @@ final class PreviewMapper {
                 p.unknownSpecies().stream().map(s -> new ImportPreviewResponse.UnknownSpecies(s.name(), s.rows())).toList(),
                 duplicates(p.rows(), r -> new ImportPreviewResponse.Duplicate(r.line(), r.draft().scientificName(),
                         r.speciesSlug(), r.duplicateOf(), round(r.duplicateDistanceM()))),
-                issues(p.issues()), p.decimalComma(), p.canConfirm(), expires);
+                issues(p.issues()), p.decimalComma(), p.canConfirm(), expires, List.of());
     }
 
     static ImportPreviewResponse toResponse(long batchId, String kind, FeaturePreview p, LocalDateTime expires) {
@@ -34,7 +34,7 @@ final class PreviewMapper {
                 List.of(),
                 duplicates(p.rows(), r -> new ImportPreviewResponse.Duplicate(r.line(), r.draft().name(), null,
                         r.duplicateOf(), round(r.duplicateDistanceM()))),
-                issues(p.issues()), p.decimalComma(), p.canConfirm(), expires);
+                issues(p.issues()), p.decimalComma(), p.canConfirm(), expires, List.of());
     }
 
     private static <T> int count(List<T> rows, Predicate<T> test) {

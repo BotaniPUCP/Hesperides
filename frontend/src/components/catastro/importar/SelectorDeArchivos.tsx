@@ -1,38 +1,10 @@
 'use client';
 
+import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { Button, Card } from '@/components/ui';
+import { LIMITES } from '@/lib/upload-limits';
 import { ESTANDARES } from '../estandares';
 import type { Importacion } from './useImportacion';
-
-interface CampoArchivoProps {
-  id: string;
-  etiqueta: string;
-  ayuda: string;
-  acepta: string;
-  archivo: File | null;
-  onElegir: (archivo: File | null) => void;
-}
-
-function CampoArchivo({ id, etiqueta, ayuda, acepta, archivo, onElegir }: CampoArchivoProps) {
-  return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium text-neutral-700">
-        {etiqueta}
-      </label>
-      <input
-        id={id}
-        type="file"
-        accept={acepta}
-        aria-describedby={`${id}-ayuda`}
-        onChange={(e) => onElegir(e.target.files?.[0] ?? null)}
-        className="block w-full text-sm text-neutral-700 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-brand-700"
-      />
-      <p id={`${id}-ayuda`} className="text-xs text-neutral-500">
-        {archivo ? `${archivo.name} · ${(archivo.size / 1024).toFixed(0)} KB` : ayuda}
-      </p>
-    </div>
-  );
-}
 
 /** El CSV y, si las fotos no son enlaces de Drive, el ZIP que las trae. */
 export function SelectorDeArchivos({ imp }: { imp: Importacion }) {
@@ -55,14 +27,16 @@ export function SelectorDeArchivos({ imp }: { imp: Importacion }) {
           etiqueta={`Archivo CSV de ${imp.estandar.plural}`}
           ayuda="Separado por punto y coma, en UTF-8."
           acepta=".csv,text/csv"
+          limite={LIMITES.subida}
           archivo={imp.csv}
           onElegir={imp.setCsv}
         />
         <CampoArchivo
           id="archivo-zip"
           etiqueta="Fotos en ZIP (opcional)"
-          ayuda="Solo si la columna foto nombra archivos en vez de enlaces de Drive."
+          ayuda={`Solo si la columna foto nombra archivos en vez de enlaces de Drive. Cada foto hasta ${LIMITES.foto.etiqueta}; descomprimido, hasta ${LIMITES.zipDescomprimido.etiqueta}.`}
           acepta=".zip,application/zip"
+          limite={LIMITES.subida}
           archivo={imp.zip}
           onElegir={imp.setZip}
         />

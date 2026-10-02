@@ -41,9 +41,8 @@ public class ImportController {
     public ResponseEntity<ApiResponse<ImportPreviewResponse>> preview(
             @PathVariable String kind, @RequestPart("file") MultipartFile csv, @RequestPart(value = "photos", required = false) MultipartFile zip,
             @AuthenticationPrincipal UserDetails principal) {
-        byte[] photos = UploadedFiles.optional(zip);
-        return ResponseEntity.ok(ApiResponse.ok("Preview ready",
-                imports.preview(kind, UploadedFiles.required(csv), csv.getOriginalFilename(), photos, principal.getUsername())));
+        return ResponseEntity.ok(ApiResponse.ok("Preview ready", imports.preview(kind, UploadedFiles.required(csv),
+                csv.getOriginalFilename(), () -> UploadedFiles.optional(zip), principal.getUsername())));
     }
 
     @PostMapping("/api/v1/imports/{batchId}/confirm")

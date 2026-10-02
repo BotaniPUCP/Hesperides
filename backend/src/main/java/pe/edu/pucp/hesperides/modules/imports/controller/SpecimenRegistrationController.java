@@ -77,7 +77,7 @@ public class SpecimenRegistrationController {
     public ResponseEntity<ApiResponse<Void>> speciesPhoto(
             @PathVariable String slug, @RequestPart("photo") MultipartFile photo,
             @AuthenticationPrincipal UserDetails principal) {
-        photos.setSpeciesPhoto(slug, UploadedFiles.required(photo), null, principal.getUsername());
+        photos.addSpeciesPhoto(slug, UploadedFiles.requiredPhoto(photo), principal.getUsername());
         return ResponseEntity.ok(ApiResponse.ok("Species photo saved", null));
     }
 

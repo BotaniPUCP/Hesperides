@@ -21,8 +21,9 @@ spring:
     multipart:
       # Una carga de catastro trae el CSV y un ZIP de fotos (SPEC-103 §3.1). Las
       # fotos ya vienen comprimidas, así que el ZIP pesa casi lo mismo que ellas.
-      max-file-size: 150MB
-      max-request-size: 160MB
+      # 250 MB por subida (SPEC-104 D-07); el frontend lo repite en upload-limits.ts.
+      max-file-size: 250MB
+      max-request-size: 250MB
   mvc:
     # Required so unmapped routes raise NoHandlerFoundException and reach the
     # global handler as 404 instead of falling through to a generic 500.
@@ -92,3 +93,6 @@ hesperides:
     local-dir: ${STORAGE_LOCAL_DIR:}
     s3-bucket: ${STORAGE_S3_BUCKET:}
     s3-region: ${STORAGE_S3_REGION:}
+    # Bandeja de carga inicial de fotos de especie (SPEC-104 D-05). Opcional: sin
+    # ella el endpoint load-inbox responde 422 y el resto del sistema no cambia.
+    inbox-dir: ${STORAGE_INBOX_DIR:}

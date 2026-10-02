@@ -14,6 +14,8 @@ function Cifra({ valor, etiqueta }: { valor: number; etiqueta: string }) {
   );
 }
 
+const fotos = (n: number) => (n === 1 ? '1 foto' : `${n} fotos`);
+
 /** Lo que haría la carga, antes de hacerlo (SPEC-103 §5.2). */
 export function VistaPrevia({ imp }: { imp: Importacion }) {
   const vista = imp.vista;
@@ -60,6 +62,21 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                 ))}
               </tbody>
             </table>
+          </section>
+        )}
+
+        {vista.photoSets.length > 0 && (
+          <section aria-labelledby="conjuntos-de-fotos" className="space-y-1">
+            <h3 id="conjuntos-de-fotos" className="font-semibold text-neutral-900">
+              Fotos por especie (el archivo reemplaza todas las fotos de cada una)
+            </h3>
+            <ul className="list-disc pl-5 text-sm text-neutral-700">
+              {vista.photoSets.map((s) => (
+                <li key={s.species}>
+                  <span className="italic">{s.species}</span>: {fotos(s.current)} hoy, {fotos(s.incoming)} después
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 

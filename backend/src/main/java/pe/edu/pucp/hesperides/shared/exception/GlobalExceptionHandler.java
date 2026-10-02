@@ -32,6 +32,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(OperationInProgressException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOperationInProgress(OperationInProgressException ex) {
+        log.info("Operation rejected while another runs: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(PossibleDuplicateException.class)
     public ResponseEntity<ApiResponse<PossibleDuplicateException.Match>> handlePossibleDuplicate(
             PossibleDuplicateException ex) {

@@ -26,6 +26,7 @@ const VISTA: ImportPreview = {
   decimalComma: false,
   canConfirm: true,
   expiresAt: '2026-10-02T12:00:00',
+  photoSets: [],
 };
 
 const RESULTADO: ImportResult = {

@@ -18,6 +18,19 @@ describe('inventarioVerdeApi: fotos', () => {
     expect(species.imageUrl).toBe(`${API_BASE_URL}/files/species/3?size=thumb`);
   });
 
+  it('resuelve también las fotos de la galería de la especie', async () => {
+    mockedGet.mockResolvedValue({
+      ...palmeraReal,
+      photos: [{ thumbnailUrl: '/files/species/3?size=thumb', imageUrl: '/files/species/3?size=full', author: 'Ana', license: 'CC0', sourceUrl: null }],
+    });
+
+    const species = await inventarioVerdeApi.speciesBySlug('roystonea-regia');
+
+    expect(species.photos[0].thumbnailUrl).toBe(`${API_BASE_URL}/files/species/3?size=thumb`);
+    expect(species.photos[0].imageUrl).toBe(`${API_BASE_URL}/files/species/3?size=full`);
+    expect(species.photos[0].author).toBe('Ana');
+  });
+
   it('un enlace externo (Drive) se deja tal cual', async () => {
     mockedGet.mockResolvedValue(palmeraReal);
 
