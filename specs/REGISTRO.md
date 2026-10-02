@@ -18,6 +18,7 @@
 | SPEC-100 | Gestión de usuarios       | 👀 En revisión  | —          | S1     |              |
 | SPEC-101 | Frecuencias de mantenimiento | 🔄 En progreso  | —          | S1     |              |
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
+| SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
