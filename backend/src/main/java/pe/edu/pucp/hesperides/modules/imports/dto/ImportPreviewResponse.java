@@ -16,7 +16,7 @@ public record ImportPreviewResponse(long batchId, String kind, int totalRows, in
     }
 
     /** Una fila nueva que podría ser un ejemplar ya registrado: hay que decidir si entra. */
-    public record Duplicate(int line, String scientificName, String duplicateOf, double distanceM) {
+    public record Duplicate(int line, String scientificName, String speciesSlug, String duplicateOf, double distanceM) {
     }
 
     public record Issue(int line, String column, String message) {

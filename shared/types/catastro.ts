@@ -1,0 +1,86 @@
+/**
+ * Registro del catastro (SPEC-103): formulario, carga por CSV y evaluaciones.
+ * Reflejan los DTO de modules/imports del backend.
+ */
+
+export interface MeasurementForm {
+  /** ISO, AAAA-MM-DD. Decide cuál medición es la vigente. */
+  date: string;
+  heightM?: number | null;
+  trunkHeightM?: number | null;
+  dbhCm?: number | null;
+  crownRadiusM?: number | null;
+  banded?: boolean | null;
+}
+
+/** Nulo en un campo es «no se evaluó», distinto de «no». */
+export interface AssessmentForm {
+  date: string;
+  hasDisease?: boolean | null;
+  hasPests?: boolean | null;
+  hasMechanicalDamage?: boolean | null;
+  isLeaning?: boolean | null;
+  hasDeadBranches?: boolean | null;
+  hasCavitiesOrRot?: boolean | null;
+  hasExposedRoots?: boolean | null;
+  interferesWithInfrastructure?: boolean | null;
+  recommendedManagement?: string | null;
+  observation?: string | null;
+}
+
+export interface SpecimenForm {
+  scientificName: string;
+  lat: number;
+  lon: number;
+  quantity?: number | null;
+  sourceReference?: string | null;
+  legacyCode?: string | null;
+  sourceLocation?: string | null;
+  measurement?: MeasurementForm | null;
+  assessment?: AssessmentForm | null;
+  notes?: string | null;
+}
+
+export interface Assessment extends Required<Omit<AssessmentForm, 'date'>> {
+  id: number;
+  date: string;
+  assessedBy: string | null;
+}
+
+/** El 409 del formulario: la planta podría ser otra ya registrada. */
+export interface DuplicateMatch {
+  duplicateOf: string;
+  distanceM: number;
+}
+
+export interface ImportIssue {
+  /** Línea del archivo; la 1 es la cabecera. */
+  line: number;
+  column: string;
+  message: string;
+}
+
+export interface ImportPreview {
+  batchId: number;
+  kind: string;
+  totalRows: number;
+  toCreate: number;
+  toUpdate: number;
+  unknownSpecies: { name: string; rows: number }[];
+  duplicates: { line: number; scientificName: string; speciesSlug: string; duplicateOf: string; distanceM: number }[];
+  issues: ImportIssue[];
+  /** El archivo usó coma decimal: se aceptó, pero el estándar es punto. */
+  decimalComma: boolean;
+  canConfirm: boolean;
+  expiresAt: string;
+}
+
+export interface ImportResult {
+  batchId: number;
+  created: number;
+  updated: number;
+  omittedDuplicates: number;
+  unknownSpecies: { name: string; rows: number }[];
+  photoWarnings: ImportIssue[];
+  createdCodes: string[];
+}

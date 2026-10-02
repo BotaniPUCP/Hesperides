@@ -42,6 +42,18 @@ export const DIRECT_LINKS: readonly NavItem[] = [
 
 export const NAVIGATION: readonly NavGroup[] = [
   {
+    // M2 · SPEC-103. Registrar el campus es trabajo diario, no configuración.
+    id: 'catastro',
+    label: 'Catastro',
+    icon: '🌳',
+    items: [
+      // D-03: el supervisor registra por formulario; la carga masiva es de quien coordina.
+      { label: 'Registrar planta', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Importar CSV', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+    ],
+  },
+  {
     id: 'administracion',
     label: 'Administración',
     icon: '🛠️',

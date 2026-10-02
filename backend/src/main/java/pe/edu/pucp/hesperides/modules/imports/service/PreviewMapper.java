@@ -20,7 +20,7 @@ final class PreviewMapper {
                 p.unknownSpecies().stream().map(s -> new ImportPreviewResponse.UnknownSpecies(s.name(), s.rows())).toList(),
                 p.rows().stream().filter(SpecimenPreview.PlannedRow::isPossibleDuplicate)
                         .map(r -> new ImportPreviewResponse.Duplicate(r.draft().line(), r.draft().scientificName(),
-                                r.duplicateOf(), Math.round(r.duplicateDistanceM() * 100) / 100.0))
+                                r.speciesSlug(), r.duplicateOf(), Math.round(r.duplicateDistanceM() * 100) / 100.0))
                         .toList(),
                 p.issues().stream().map(i -> new ImportPreviewResponse.Issue(i.line(), i.column(), i.message())).toList(),
                 p.decimalComma(), p.canConfirm(), expires);

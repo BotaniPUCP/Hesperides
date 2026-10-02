@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useInventarioVerdeSpecimenByCode } from '@/hooks/useInventarioVerde';
+import { SpecimenAssessments } from './SpecimenAssessments';
 import { SpecimenInfo } from './SpecimenInfo';
 
 export interface SpecimenDetailScreenProps {
@@ -68,6 +69,7 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
       </div>
 
       <SpecimenInfo specimen={specimen} />
+      <SpecimenAssessments code={specimen.code} />
     </div>
   );
 }
