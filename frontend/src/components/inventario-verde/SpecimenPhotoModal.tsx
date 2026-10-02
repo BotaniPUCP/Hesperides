@@ -98,7 +98,7 @@ export function SpecimenPhotoModal({ specimen, species, onClose }: SpecimenPhoto
           {specimen.thumbnailUrl && !imgError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={specimen.thumbnailUrl}
+              src={specimen.imageUrl ?? specimen.thumbnailUrl ?? undefined}
               alt={`${specimen.code}${species.commonName ? ` · ${species.commonName}` : ''}`}
               onError={() => setImgError(true)}
               className="max-h-[56vh] w-auto max-w-full object-contain mx-auto rounded-lg shadow-xs"

@@ -25,6 +25,10 @@ hesperides:
   mail:
     from: no-reply@hesperides.test
     app-public-url: https://hesperides.test
+  # Directorio temporal: cada ejecución guarda sus fotos de prueba fuera del repositorio.
+  storage:
+    type: local
+    local-dir: ${java.io.tmpdir}/hesperides-test-storage
 
 spring:
   jpa:

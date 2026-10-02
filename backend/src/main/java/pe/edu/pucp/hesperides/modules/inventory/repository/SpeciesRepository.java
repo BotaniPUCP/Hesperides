@@ -23,7 +23,8 @@ public class SpeciesRepository {
     private static final RowMapper<SpeciesRow> ROW = (rs, i) -> new SpeciesRow(
             rs.getString("slug"), rs.getString("scientific_name"), rs.getString("common_name"),
             splitNames(rs.getString("other_names")), rs.getString("family"), rs.getString("type_code"),
-            rs.getString("type_label"), rs.getLong("specimen_count"), rs.getString("photo_url"));
+            rs.getString("type_label"), rs.getLong("specimen_count"), rs.getString("photo_url"),
+            rs.getObject("species_photo_id", Long.class), rs.getObject("specimen_photo_id", Long.class));
 
     private final NamedParameterJdbcTemplate jdbc;
 

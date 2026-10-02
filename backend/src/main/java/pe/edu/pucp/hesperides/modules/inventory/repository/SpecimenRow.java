@@ -7,5 +7,5 @@ public record SpecimenRow(String code, String sourceReference, String sourceLoca
                           Double latitude, Double longitude, String photoUrl, int quantity, String notes,
                           BigDecimal heightM, BigDecimal trunkHeightM, BigDecimal dbhCm, BigDecimal crownRadiusM,
                           Boolean isBanded, String dataSource, String elementTypeCode, String elementTypeName,
-                          String speciesSlug) {
+                          String speciesSlug, Long attachmentId) {
 }

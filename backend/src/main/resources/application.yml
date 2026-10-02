@@ -78,3 +78,11 @@ hesperides:
     # Sin valor por defecto: un default de desarrollo acabaria enviando correos
     # que invitan a entrar en localhost, que no significa nada para quien lo recibe.
     app-public-url: ${APP_PUBLIC_URL}
+  # Fotos y archivos (SPEC-002 §5.4): local en desarrollo y on-premise, s3 en
+  # AWS. El directorio no tiene valor por defecto: guardar fotos en un lugar
+  # que se borra al reiniciar es peor que no arrancar.
+  storage:
+    type: ${STORAGE_TYPE:local}
+    local-dir: ${STORAGE_LOCAL_DIR:}
+    s3-bucket: ${STORAGE_S3_BUCKET:}
+    s3-region: ${STORAGE_S3_REGION:}

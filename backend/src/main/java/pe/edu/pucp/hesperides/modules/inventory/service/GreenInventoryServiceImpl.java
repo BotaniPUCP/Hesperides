@@ -66,8 +66,8 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
         SpecimenRow row = specimenRepository.byCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Specimen not found: " + code));
         return new SpecimenDetailResponse(row.code(), row.sourceReference(), row.sourceLocation(), row.legacyCode(),
-                row.latitude(), row.longitude(), row.photoUrl(), DrivePhotoLinks.thumbnail(row.photoUrl()),
-                row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
+                row.latitude(), row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
+                PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
                 row.trunkHeightM(), row.dbhCm(), row.crownRadiusM(), row.isBanded(), row.dataSource(),
                 specimenRepository.sectionOf(code).orElse(null), speciesBySlug(row.speciesSlug()));
     }
@@ -80,12 +80,12 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
     private SpeciesResponse toResponse(SpeciesRow row) {
         return new SpeciesResponse(row.slug(), row.scientificName(), row.commonName(), row.otherNames(),
                 row.family(), row.typeCode(), row.typeLabel(), row.specimenCount(),
-                DrivePhotoLinks.thumbnail(row.photoUrl()));
+                PhotoUrls.species(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()));
     }
 
     private SpecimenResponse toResponse(SpecimenRow row) {
         return new SpecimenResponse(row.code(), row.sourceReference(), row.sourceLocation(), row.latitude(),
-                row.longitude(), row.photoUrl(), DrivePhotoLinks.thumbnail(row.photoUrl()), row.quantity(),
-                row.notes());
+                row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
+                PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes());
     }
 }

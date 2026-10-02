@@ -47,6 +47,8 @@ public class SecurityConfig {
                         // la ubicación y la foto de cada planta. Se retira al
                         // definir qué ve el público (docs/inventario-verde/README.md).
                         .requestMatchers(HttpMethod.GET, "/api/v1/green-inventory/**").permitAll()
+                        // Sus fotos también: las sirve el backend o redirige a S3.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/files/green-elements/**", "/api/v1/files/species/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(authenticationEntryPoint)

@@ -42,8 +42,10 @@ export interface Specimen {
   sourceLocation: string | null;
   latitude: number | null;
   longitude: number | null;
-  /** Enlace original de la foto (Drive). */
+  /** Enlace de origen de la foto (Drive), como vino del catastro o del CSV. */
   photoUrl: string | null;
+  /** La foto para mostrar en grande: la guardada en nuestro almacenamiento si existe. */
+  imageUrl: string | null;
   /** Miniatura que se puede mostrar como imagen. */
   thumbnailUrl: string | null;
   /** Mayor que 1 en una agrupación (una mata de Pita). */
