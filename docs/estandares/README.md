@@ -7,9 +7,9 @@ un archivo CSV en **Catastro → Importar CSV**. Este directorio define el forma
 | Estándar | Documento | Plantilla | Estado |
 |---|---|---|---|
 | Ejemplares (árboles, palmeras, arbustos…) | [ejemplares.md](ejemplares.md) | [plantillas/ejemplares.csv](plantillas/ejemplares.csv) | Disponible |
-| Tachos | SPEC-103 §6.3 | — | Pendiente (entrega 3) |
-| Bebederos | SPEC-103 §6.4 | — | Pendiente (entrega 3) |
-| Fotos genéricas de especies | SPEC-103 §6.5 | — | Pendiente (entrega 3) |
+| Tachos | [tachos.md](tachos.md) | [plantillas/tachos.csv](plantillas/tachos.csv) | Disponible |
+| Bebederos | [bebederos.md](bebederos.md) | [plantillas/bebederos.csv](plantillas/bebederos.csv) | Disponible |
+| Fotos genéricas de especies | [fotos-especies.md](fotos-especies.md) | [plantillas/fotos-especies.csv](plantillas/fotos-especies.csv) | Disponible |
 
 ## Reglas comunes
 
@@ -37,7 +37,8 @@ un archivo CSV en **Catastro → Importar CSV**. Este directorio define el forma
    que se agregue la especie al catálogo y volver a cargarlas.
 4. **Duplicados se deciden fila por fila.** Una planta nueva a menos de cierta distancia de otra de
    su especie puede ser la misma. La distancia depende del tipo: árbol 1.5 m, palmera 1 m,
-   arbusto, seto o trepadora 0.5 m, herbáceas, suculentas, cubresuelos y macetones 0.3 m.
+   arbusto, seto o trepadora 0.5 m, herbáceas, suculentas, cubresuelos y macetones 0.3 m. Para
+   tachos y bebederos es 1 m, contra otro del mismo tipo.
 5. **Confirmación.** Escribe exactamente lo que mostró la vista previa, todo o nada. La vista
    previa vence a la hora.
 

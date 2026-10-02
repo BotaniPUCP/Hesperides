@@ -85,3 +85,21 @@ export interface ImportResult {
   photoWarnings: ImportIssue[];
   createdCodes: string[];
 }
+
+/** Los estándares de carga por CSV (SPEC-103 §6): el `kind` de la URL. */
+export type ImportKind = 'specimens' | 'waste-bins' | 'drinking-fountains' | 'species-photos';
+
+/** Un tacho o bebedero del formulario. Las listas van por etiqueta o código del catálogo. */
+export interface FeatureForm {
+  kind: 'waste-bins' | 'drinking-fountains';
+  lat: number;
+  lon: number;
+  place?: string | null;
+  wasteStreams?: string[];
+  action?: string | null;
+  recommendations?: string | null;
+  fountainKind?: string | null;
+  fountainStatus?: string | null;
+  sector?: string | null;
+  note?: string | null;
+}

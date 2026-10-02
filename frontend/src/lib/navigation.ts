@@ -47,8 +47,8 @@ export const NAVIGATION: readonly NavGroup[] = [
     label: 'Catastro',
     icon: '🌳',
     items: [
-      // D-03: el supervisor registra por formulario; la carga masiva es de quien coordina.
-      { label: 'Registrar planta', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      // D-03: el supervisor registra por formulario (plantas, tachos, bebederos); la carga masiva es de quien coordina.
+      { label: 'Registrar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
       { label: 'Importar CSV', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
     ],

@@ -307,14 +307,17 @@ El mismo formato que exporta el sistema, para poder exportar, corregir y volver 
 
 ### 6.3 Tachos (`tachos.csv`)
 
-`codigo`, `latitud`, `longitud`, `residuos` (lista separada por `|`: no aprovechables, papel y cartón,
-plástico, vidrio, pilas, peligrosos, RAEE, metales, Aniquem, intermedios plástico, intermedios metal),
-`colores`, `lugar`, `accion`, `tacho_actual`, `tacho_nuevo`, `recomendacion`, `foto`.
+`codigo`, `latitud`, `longitud`, `lugar`, `residuos` (lista separada por `|` de las etiquetas de
+`WASTE_STREAM`), `accion`, `recomendaciones`, `nota`, `foto`. Detalle en `docs/estandares/tachos.md`.
 
 ### 6.4 Bebederos (`bebederos.csv`)
 
-`codigo`, `latitud`, `longitud`, `tipo` (fuente / llenador de botella / sin dato), `estado`
-(operativo / nuevo / en remodelación / en deterioro / de baja), `lugar`, `foto`.
+`codigo`, `latitud`, `longitud`, `lugar`, `tipo` (`FOUNTAIN_KIND`), `estado` (`FOUNTAIN_STATUS`),
+`sector`, `nota`, `foto`. Detalle en `docs/estandares/bebederos.md`.
+
+*(Enmienda del 2 oct 2026: el borrador listaba `colores`, `tacho_actual` y `tacho_nuevo`, que no
+aparecen en los 184 tachos cargados. Las columnas siguen las claves de §4.3. Un componente nuevo
+recibe `TA-000001` o `BB-000001`; los cargados conservan su código de origen.)*
 
 ### 6.5 Fotos genéricas de especies (`fotos-especies.csv`)
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Card } from '@/components/ui';
+import { ESTANDARES } from '../estandares';
 import type { Importacion } from './useImportacion';
 
 interface CampoArchivoProps {
@@ -37,10 +38,21 @@ function CampoArchivo({ id, etiqueta, ayuda, acepta, archivo, onElegir }: CampoA
 export function SelectorDeArchivos({ imp }: { imp: Importacion }) {
   return (
     <Card title="1. Sube el archivo">
+      <fieldset className="mb-4">
+        <legend className="mb-2 text-sm font-medium text-neutral-700">Qué vas a cargar</legend>
+        <div className="flex flex-wrap gap-4 text-sm">
+          {ESTANDARES.map((e) => (
+            <label key={e.kind} className="flex items-center gap-1 text-neutral-900">
+              <input type="radio" name="estandar" checked={imp.kind === e.kind} onChange={() => imp.setKind(e.kind)} />
+              {e.titulo}
+            </label>
+          ))}
+        </div>
+      </fieldset>
       <div className="grid gap-4 sm:grid-cols-2">
         <CampoArchivo
           id="archivo-csv"
-          etiqueta="Archivo CSV de ejemplares"
+          etiqueta={`Archivo CSV de ${imp.estandar.plural}`}
           ayuda="Separado por punto y coma, en UTF-8."
           acepta=".csv,text/csv"
           archivo={imp.csv}

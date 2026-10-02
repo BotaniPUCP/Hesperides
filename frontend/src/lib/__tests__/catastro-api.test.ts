@@ -61,7 +61,7 @@ describe('catastroApi', () => {
     const csv = new File(['a'], 'carga.csv');
     const zip = new File(['z'], 'fotos.zip');
 
-    await catastroApi.previewImport(csv, zip);
+    await catastroApi.previewImport('specimens', csv, zip);
 
     const [path, form] = api.postForm.mock.calls[0];
     expect(path).toBe('/imports/specimens/preview');
@@ -89,5 +89,21 @@ describe('catastroApi', () => {
 
     expect(api.getBlob).toHaveBeenCalledWith('/imports/templates/specimens');
     expect(api.getBlob).toHaveBeenCalledWith('/green-inventory/export.csv');
+  });
+
+  it('la vista previa va al estándar elegido', async () => {
+    await catastroApi.previewImport('waste-bins', new File(['a'], 't.csv'), null);
+
+    expect(api.postForm.mock.calls[0][0]).toBe('/imports/waste-bins/preview');
+    expect(api.postForm.mock.calls[0][1].get('photos')).toBeNull();
+  });
+
+  it('un tacho o bebedero va a campus-features', async () => {
+    api.postForm.mockResolvedValue({ code: 'BB-000001' });
+
+    await expect(
+      catastroApi.registerFeature({ kind: 'drinking-fountains', lat: -12.07, lon: -77.08 }, null, true),
+    ).resolves.toBe('BB-000001');
+    expect(api.postForm.mock.calls[0][0]).toBe('/campus-features?confirmDuplicate=true');
   });
 });

@@ -13,8 +13,8 @@ export function ResultadoImportacion({ imp }: { imp: Importacion }) {
     <Card title="Carga confirmada">
       <div className="space-y-4 text-sm text-neutral-700">
         <ul className="space-y-1">
-          <li>
-            <strong>{r.created}</strong> ejemplares nuevos
+          {imp.kind !== 'species-photos' && <li>
+            <strong>{r.created}</strong> {imp.estandar.textos.nuevos}
             {r.createdCodes.length > 0 && (
               <span className="text-neutral-500">
                 {' '}
@@ -22,9 +22,9 @@ export function ResultadoImportacion({ imp }: { imp: Importacion }) {
                 {r.createdCodes.length > 1 && ` a ${r.createdCodes[r.createdCodes.length - 1]}`})
               </span>
             )}
-          </li>
+          </li>}
           <li>
-            <strong>{r.updated}</strong> ejemplares corregidos
+            <strong>{r.updated}</strong> {imp.estandar.textos.corregidos}
           </li>
           {r.omittedDuplicates > 0 && (
             <li>

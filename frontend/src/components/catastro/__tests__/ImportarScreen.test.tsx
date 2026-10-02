@@ -48,7 +48,7 @@ function pantalla(rol = 'COORDINADOR') {
 }
 
 async function subirYRevisar() {
-  await userEvent.upload(screen.getByLabelText('Archivo CSV de ejemplares'), new File(['a;b'], 'carga.csv', { type: 'text/csv' }));
+  await userEvent.upload(screen.getByLabelText(/^Archivo CSV de/), new File(['a;b'], 'carga.csv', { type: 'text/csv' }));
   await userEvent.click(screen.getByRole('button', { name: 'Revisar archivo' }));
 }
 
@@ -57,7 +57,7 @@ describe('ImportarScreen', () => {
 
   it('el supervisor no puede cargar CSV (CA-02)', () => {
     pantalla('SUPERVISOR');
-    expect(screen.queryByLabelText('Archivo CSV de ejemplares')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Archivo CSV de/)).not.toBeInTheDocument();
     expect(screen.getByText(/es de administración y coordinación/)).toBeInTheDocument();
   });
 
@@ -122,6 +122,32 @@ describe('ImportarScreen', () => {
     await subirYRevisar();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('El separador debe ser punto y coma (;), no coma');
-    expect(screen.getByLabelText('Archivo CSV de ejemplares')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Archivo CSV de/)).toBeInTheDocument();
+  });
+
+  it('carga bebederos en su estándar, sin cifras de especie', async () => {
+    api.previewImport.mockResolvedValue({ ...VISTA, kind: 'drinking-fountains', unknownSpecies: [], duplicates: [] });
+    pantalla();
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Bebederos' }));
+    expect(screen.getByLabelText('Archivo CSV de bebederos')).toBeInTheDocument();
+    await subirYRevisar();
+
+    expect(api.previewImport).toHaveBeenCalledWith('drinking-fountains', expect.any(File), null);
+    expect(await screen.findByText('bebederos nuevos')).toBeInTheDocument();
+    expect(screen.queryByText('filas omitidas por especie')).not.toBeInTheDocument();
+  });
+
+  it('un duplicado de tacho se muestra sin enlace al inventario', async () => {
+    api.previewImport.mockResolvedValue({
+      ...VISTA, kind: 'waste-bins', unknownSpecies: [],
+      duplicates: [{ line: 2, label: 'Frente a Ciencias', speciesSlug: null, duplicateOf: 'PT_44', distanceM: 0.5 }],
+    });
+    pantalla();
+    await userEvent.click(screen.getByRole('radio', { name: 'Tachos' }));
+    await subirYRevisar();
+
+    expect(await screen.findByText('PT_44')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'PT_44' })).not.toBeInTheDocument();
   });
 });

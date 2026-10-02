@@ -19,7 +19,7 @@ export function ImportarScreen() {
     return (
       <EmptyState
         title="La carga por CSV es de administración y coordinación"
-        description="Para registrar una planta usa Catastro → Registrar planta."
+        description="Para registrar uno a la vez usa Catastro → Registrar."
       />
     );
   }
@@ -27,12 +27,12 @@ export function ImportarScreen() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-2xl font-bold text-neutral-900">Importar ejemplares</h1>
+        <h1 className="text-2xl font-bold text-neutral-900">Importar al catastro</h1>
         <p className="text-neutral-700">
-          Sube un CSV en el <Link href="/catastro/estandares" className="text-brand-700 underline">estándar de ejemplares</Link>.
-          Las filas sin código crean ejemplares; las que traen código corrigen ese ejemplar.
+          Sube un CSV en su <Link href={`/catastro/estandares#estandar-${imp.kind}`} className="text-brand-700 underline">estándar</Link>.
+          Las filas sin código crean; las que traen código corrigen lo registrado.
         </p>
-        <DescargasDelEstandar puedeExportar />
+        <DescargasDelEstandar estandar={imp.estandar} puedeExportar />
       </header>
 
       {imp.fase === 'hecho' ? (
@@ -41,7 +41,7 @@ export function ImportarScreen() {
         <VistaPrevia imp={imp} />
       ) : (
         <>
-          <SelectorDeArchivos imp={imp} />
+          <SelectorDeArchivos key={imp.kind} imp={imp} />
           {imp.error && <p role="alert" className="text-sm text-action-danger">{imp.error}</p>}
         </>
       )}

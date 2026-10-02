@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import type { ImportPreview, ImportResult } from '@shared/types';
+import type { ImportKind, ImportPreview, ImportResult } from '@shared/types';
 import { catastroApi } from '@/lib/catastro-api';
+import { estandar } from '../estandares';
 import { mensajeDeErrorCatastro } from '../mensajes';
 
 export type Fase = 'elegir' | 'revisando' | 'vista' | 'confirmando' | 'hecho';
@@ -13,6 +14,7 @@ export type Fase = 'elegir' | 'revisando' | 'vista' | 'confirmando' | 'hecho';
  * hasta confirmar.
  */
 export function useImportacion() {
+  const [kind, setKindState] = useState<ImportKind>('specimens');
   const [fase, setFase] = useState<Fase>('elegir');
   const [csv, setCsv] = useState<File | null>(null);
   const [zip, setZip] = useState<File | null>(null);
@@ -29,7 +31,7 @@ export function useImportacion() {
     setFase('revisando');
     setError(null);
     try {
-      setVista(await catastroApi.previewImport(csv, zip));
+      setVista(await catastroApi.previewImport(kind, csv, zip));
       setDecisiones({});
       setFase('vista');
     } catch (e) {
@@ -59,6 +61,12 @@ export function useImportacion() {
     setDecisiones(Object.fromEntries((vista?.duplicates ?? []).map((d) => [d.line, ingresar])));
   }
 
+  /** Cambiar de estándar descarta lo elegido: otro estándar, otro archivo. */
+  function setKind(k: ImportKind) {
+    reiniciar();
+    setKindState(k);
+  }
+
   function reiniciar() {
     setFase('elegir');
     setCsv(null);
@@ -70,6 +78,7 @@ export function useImportacion() {
   }
 
   return {
+    kind, estandar: estandar(kind), setKind,
     fase, csv, zip, vista, decisiones, resultado, error, pendientes, puedeConfirmar,
     setCsv, setZip, revisar, confirmar, decidir, decidirTodos, reiniciar,
   };

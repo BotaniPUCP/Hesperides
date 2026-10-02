@@ -25,9 +25,9 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Cifra valor={vista.totalRows} etiqueta="filas en el archivo" />
-          <Cifra valor={vista.toCreate} etiqueta="ejemplares nuevos" />
-          <Cifra valor={vista.toUpdate} etiqueta="ejemplares a corregir" />
-          <Cifra valor={especiesOmitidas} etiqueta="filas omitidas por especie" />
+          {imp.kind !== 'species-photos' && <Cifra valor={vista.toCreate} etiqueta={imp.estandar.textos.nuevos} />}
+          <Cifra valor={vista.toUpdate} etiqueta={imp.estandar.textos.aCorregir} />
+          {imp.estandar.porEspecie && <Cifra valor={especiesOmitidas} etiqueta="filas omitidas por especie" />}
         </div>
 
         {vista.decimalComma && (
