@@ -35,6 +35,7 @@ export function Map3DView({ data, onReady, onUnsupported, ...callbacks }: Map3DV
         viewer = createViewer(container.current, labels.current, data, {
           onSelect: (t) => latest.current.onSelect(t),
           onGroundPick: (lat, lon) => latest.current.onGroundPick(lat, lon),
+          onPointPick: (lat, lon) => latest.current.onPointPick?.(lat, lon),
           onHover: (t, x, y) => latest.current.onHover(t, x, y),
           onCompass: (deg) => latest.current.onCompass(deg),
         });

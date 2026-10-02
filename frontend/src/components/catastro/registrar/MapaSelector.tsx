@@ -9,8 +9,9 @@ import { toSceneData } from '@/components/map3d/sceneData';
 const nada = () => undefined;
 
 /**
- * El mapa 3D para marcar dónde está la planta (SPEC-103 D-08). Un clic en el
- * suelo da el punto; sin WebGL o sin capas, quedan las coordenadas a mano.
+ * El mapa 3D para marcar dónde está la planta (SPEC-103 D-08). Cualquier clic
+ * da el punto, también sobre un área verde, que es donde suelen estar. Sin
+ * WebGL o sin capas, quedan las coordenadas a mano.
  */
 export function MapaSelector({ onElegir }: { onElegir: (lat: number, lon: number) => void }) {
   const { data: response, isLoading } = useMapLayers();
@@ -41,10 +42,11 @@ export function MapaSelector({ onElegir }: { onElegir: (lat: number, lon: number
         onSelect={nada}
         onHover={nada}
         onCompass={nada}
-        onGroundPick={onElegir}
+        onGroundPick={nada}
+        onPointPick={onElegir}
       />
       <p className="pointer-events-none absolute left-2 top-2 rounded bg-neutral-0/90 px-2 py-1 text-xs text-neutral-700">
-        Haz clic en el suelo donde está la planta
+        Haz clic donde está la planta
       </p>
     </div>
   );

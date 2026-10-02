@@ -24,6 +24,8 @@ import { WORLD_LIFT, type PolyLayer } from './polyLayer';
 export interface ViewerCallbacks {
   onSelect: (target: Target | null) => void;
   onGroundPick: (lat: number, lon: number) => void;
+  /** Cualquier clic con punto (suelo, área verde, edificio): para marcar una ubicación. */
+  onPointPick?: (lat: number, lon: number) => void;
   onHover: (target: Target | null, clientX: number, clientY: number) => void;
   onCompass: (degrees: number) => void;
 }
@@ -99,12 +101,13 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       pin.hide();
       highlight.setSelected(hit?.target ?? null);
       cb.onSelect(hit?.target ?? null);
-      if (hit) pin.show(hit.point.x, hit.point.y, hit.point.z);
       const g = hit ? null : groundPoint(x, y, dom, rig.camera, data.campus);
-      if (g) {
-        pin.show(g.x, WORLD_LIFT, g.z);
-        const [lat, lon] = data.plane.toLatLon({ x: g.x, y: -g.z });
-        cb.onGroundPick(lat, lon);
+      const at = hit?.point ?? g;
+      if (at) {
+        pin.show(at.x, hit ? hit.point.y : WORLD_LIFT, at.z);
+        const [lat, lon] = data.plane.toLatLon({ x: at.x, y: -at.z });
+        if (g) cb.onGroundPick(lat, lon);
+        cb.onPointPick?.(lat, lon);
       }
       needsRender = true;
     },
