@@ -3,7 +3,9 @@ import type { ModeId } from '../modes';
 import type { SceneData } from '../sceneData';
 import type { LayerId, Target } from '../target';
 import { createCameraRig } from './cameraRig';
-import { createPointLayer, scaleFurniture, type PointLayer } from './furniture';
+import { scaleFurniture, type PointLayer } from './furniture';
+import { createCampusPoints } from './campusPoints';
+import { createFoliageMaterials } from './foliageMaterials';
 import { createHighlight } from './highlight';
 import { createLabels } from './labels';
 import { createLights } from './lighting';
@@ -42,8 +44,6 @@ export interface Viewer {
   dispose: () => void;
 }
 
-const FAUNA_BIRD = /ave|gallinazo/i;
-
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks): Viewer {
   const renderer = createRenderer();
   const textures = createTextures(renderer);
@@ -56,15 +56,9 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
   const poly = createSceneLayers(scene, data, textures, state);
-  const gateRotation = (i: number) => Math.atan2(data.gates[i].p[0] - center.x, -(-data.gates[i].p[1] - center.z));
-  const points: Record<'bins' | 'gates' | 'fauna', PointLayer> = {
-    bins: createPointLayer(scene, 'bins', data.bins, { model: () => 'bin', scaleRange: [2, 7], color: '#9AA4B6' }),
-    gates: createPointLayer(scene, 'gates', data.gates, { model: () => 'gate', rotation: gateRotation, scaleRange: [1, 2.2], color: '#5A6C99' }),
-    fauna: createPointLayer(scene, 'fauna', data.fauna, {
-      model: (i) => (FAUNA_BIRD.test(data.fauna[i].props.name ?? '') ? 'bird' : 'animal'), rotation: (i) => (i * 2.39) % 6.28, scaleRange: [2.4, 9], color: '#AD95D2',
-    }),
-  };
-  const vegetation = createVegetationLayer(scene, data.vegetation);
+  const points = createCampusPoints(scene, data, center);
+  const foliage = createFoliageMaterials(textures);
+  const vegetation = createVegetationLayer(scene, data.vegetation, foliage);
   const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points, vegetation };
   const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
@@ -73,12 +67,18 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const isHidden = (t: Target) => t.layer === 'greenAreas' && state.hidden.size > 0 && poly.greenAreas.options.color(t.index) === state.palette.dimmed;
   const size = () => ({ w: container.clientWidth || 1, h: container.clientHeight || 1 });
 
+  /** El sol mueve también el borde iluminado de las copas. */
+  function relight() {
+    lights.setHour(hour, night);
+    foliage.setLighting(night, lights.sun.position.clone().sub(center).normalize());
+  }
+
   function applyTheme() {
     state.palette = paletteFor(night, gray);
     const { w, h } = size();
     stage.applyTheme(state.palette, night, w, h);
     lights.applyTheme(state.palette, night);
-    lights.setHour(hour, night);
+    relight();
     highlight.repaintAll();
     needsRender = true;
   }
@@ -172,7 +172,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     setNight: (v) => { night = v; applyTheme(); },
-    setHour: (h) => { hour = h; lights.setHour(h, night); needsRender = true; },
+    setHour: (h) => { hour = h; relight(); needsRender = true; },
     setShadows(on) {
       renderer.shadowMap.enabled = on;
       lights.sun.castShadow = on;
