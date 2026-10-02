@@ -9,7 +9,9 @@ conexión, la información que se **agregó** a las fuentes del cliente y lo que
 > **El inventario es público por decisión temporal (1 oct 2026).** Sus pantallas
 > (`/inventario-verde/…`) y sus endpoints de lectura (`GET /api/v1/green-inventory/…`) responden
 > **sin sesión**. Cualquiera que conozca la dirección puede ver la **ubicación exacta y la foto de
-> cada planta del campus**.
+> cada planta del campus**. Desde SPEC-103 eso incluye el **historial de evaluaciones** de cada
+> ejemplar (`GET …/specimens/{code}/assessments`), con el nombre de quien evaluó. Escribir
+> (registrar, corregir, evaluar, importar y exportar) sí exige sesión y rol.
 >
 > Antes de publicar el sistema fuera de la red de desarrollo hay que decidir qué ve el público
 > (por ejemplo, solo especies y conteos) y cerrar el resto detrás de la sesión. Mientras tanto,

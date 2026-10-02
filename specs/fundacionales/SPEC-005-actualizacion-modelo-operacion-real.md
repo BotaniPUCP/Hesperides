@@ -299,7 +299,7 @@ rutinario del que responde a un hallazgo.
 
 > **Renumerado (1 oct 2026).** La numeración es cronológica: §4.1 y §4.2 se implementaron como
 > `V008`–`V011` y hoy viven en el baseline `V001` (commit `638aca0`). El resto va después de las
-> tablas de SPEC-002 (`V015`–`V018`) y de la bitácora de SPEC-004 (`V019`), porque altera tablas
+> tablas de SPEC-002 (`V017`–`V020`) y de la bitácora de SPEC-004 (`V021`), porque altera tablas
 > que esas migraciones crean. Fuente única: el **mapa de migraciones** de
 > [`REGISTRO.md`](../REGISTRO.md#mapa-de-migraciones).
 
@@ -307,14 +307,14 @@ rutinario del que responde a un hallazgo.
 |---|---|---|
 | §4.1 Jerarquía en catálogos | Baseline `V001` (antes `V008`) | ✅ Aplicada |
 | §4.2 Taxonomía real | Baseline `V001` (antes `V009`, `V010` con los tipos provisionales de P-10 y `V011` con las descripciones de clase) | ✅ Aplicada |
-| §4.3 Cantidades, origen e incidencia externa | `V020` | Pendiente |
+| §4.3 Cantidades, origen e incidencia externa | `V022` | Pendiente |
 | §4.4 Zonas reales del campus | `V005` (tablas) y `V011` (semilla), con SPEC-102 | ✅ Aplicada |
 | §4.4.6 Capa de zonas de supervisión | `V006`, con SPEC-102 | ✅ Aplicada |
 | §4.4.7 Referencias | `V007`, con SPEC-102 | ✅ Aplicada |
-| §4.5 Catálogos que la entrega permite cerrar | `V021` | Pendiente |
-| §4.6 Evidencia sin momento declarado | `V022` | Pendiente |
+| §4.5 Catálogos que la entrega permite cerrar | `V023` | Pendiente |
+| §4.6 Evidencia sin momento declarado | `V024` | Pendiente |
 | §4.7 Código heredado del arbolado | `V013`, con el inventario verde | ✅ Aplicada |
-| §4.8 Subida diferida y publicación en el mapa | `V023` | Pendiente |
+| §4.8 Subida diferida y publicación en el mapa | `V025` | Pendiente |
 
 Reescribir una migración aplicada rompe Flyway por checksum: todo lo que este spec corrija de lo
 ya aplicado se hace con `UPDATE`/`INSERT` en migraciones nuevas.
@@ -428,13 +428,13 @@ jardineras o macizos»). Se cargan en `catalog_items.metadata` como `{"descripti
 texto de ayuda para el operario en el formulario, no un campo consultable, y `metadata` (JSONB)
 ya existe en la tabla desde `V001` para exactamente esto.
 
-### 4.3 V020 — Cantidades, origen e incidencia externa
+### 4.3 V022 — Cantidades, origen e incidencia externa
 
 La hoja `Podas arbpalm` revela tres conceptos que el modelo no tiene y que son los que el cliente
 usa para medir cumplimiento.
 
 ```sql
--- V020__add_execution_tracking_to_interventions.sql
+-- V022__add_execution_tracking_to_interventions.sql
 
 ALTER TABLE interventions
     ADD COLUMN intervention_class_item_id BIGINT REFERENCES catalog_items(id),
@@ -921,10 +921,10 @@ CREATE INDEX idx_place_reference_aliases_reference ON place_reference_aliases(re
 - **Ciclos en la jerarquía** (A padre de B, B padre de A): el `CHECK` solo impide el caso de una
   referencia que sea su propio padre. El resto lo valida el servicio, como en `zones`.
 
-### 4.5 V021 — Catálogos que la entrega permite cerrar
+### 4.5 V023 — Catálogos que la entrega permite cerrar
 
 ```sql
--- V021__seed_confirmed_catalogs.sql
+-- V023__seed_confirmed_catalogs.sql
 
 -- SPECIES_TYPE — hoja `tipologia de flora`, los 9 valores del cliente.
 INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
@@ -958,10 +958,10 @@ usa en su operación.
 **`SPECIES_ORIGIN` sigue vacío.** El Excel no dice si una especie es nativa o introducida, y
 deducirlo del nombre científico sería inventar un dato botánico que terminaría en un reporte.
 
-### 4.6 V022 — Evidencia sin momento declarado
+### 4.6 V024 — Evidencia sin momento declarado
 
 ```sql
--- V022__add_unspecified_evidence_moment.sql
+-- V024__add_unspecified_evidence_moment.sql
 
 INSERT INTO catalog_items (catalog_type_id, code, label, sort_order) VALUES
     ((SELECT id FROM catalog_types WHERE code='EVIDENCE_MOMENT'), 'UNSPECIFIED', 'Sin especificar', 3);
@@ -1000,12 +1000,12 @@ antiguo o con la placa perdida.
 
 ---
 
-### 4.8 V023 — Subida diferida de evidencia y publicación en el mapa
+### 4.8 V025 — Subida diferida de evidencia y publicación en el mapa
 
 Dos capacidades que la 2.ª entrevista convirtió en requisito y que el esquema no contemplaba.
 
 ```sql
--- V023__add_deferred_upload_and_map_publication.sql
+-- V025__add_deferred_upload_and_map_publication.sql
 
 -- 1. Evidencia anunciada por el dispositivo pero aún no recibida (enmienda a SPEC-002 §4.6).
 ALTER TABLE intervention_evidences

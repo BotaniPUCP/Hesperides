@@ -160,8 +160,19 @@ por CSV sirva para hacer que el servidor pida direcciones internas.
   hora. La confirmación no vuelve a subir el archivo: así lo que se confirma es exactamente lo que se
   vio.
 - **La confirmación es una transacción.** Si algo falla al escribir, no queda una carga a medias. Las
-  fotos se descargan y procesan **antes**, durante la vista previa, para que la transacción no espere
-  a la red.
+  fotos se descargan y procesan **al confirmar, antes de abrir la transacción**, para que no espere a
+  la red. *(Enmienda del 2 oct 2026: el borrador decía «durante la vista previa». Descargar al revisar
+  bajaría cientos de fotos por cada archivo que se corrige y se vuelve a subir. La vista previa solo
+  valida los enlaces y que los archivos nombrados estén en el ZIP; el ZIP espera en el almacenamiento
+  hasta confirmar.)* Una foto que no se pudo descargar no detiene la carga: su fila entra sin foto y el
+  resultado lo informa.
+- **Exportar y volver a cargar no duplica fotos.** Una fila con código cuyo enlace de Drive ya es la
+  foto del ejemplar no la descarga otra vez.
+- **El límite del campus admite 15 m de margen.** El polígono viene de OpenStreetMap y deja fuera
+  cuatro palmeras reales de la Pista de Salud (de 2 a 10 m). El chequeo busca coordenadas erradas,
+  que caen mucho más lejos.
+- **En el formulario, un posible duplicado responde `409`** con el código y la distancia
+  (`{duplicateOf, distanceM}`); quien registra confirma reenviando con `confirmDuplicate=true`.
 - **Las fotos de los ejemplares son públicas, como el inventario** (README del inventario, aviso de
   seguridad). Si el inventario se cierra, `GET /files/{id}` hereda el cambio: decide la entidad dueña.
 
@@ -203,8 +214,12 @@ con claves fijas, validadas por el servicio contra sus catálogos:
 
 | Tipo | Atributos |
 |---|---|
-| Tacho (`WASTE_BIN`) | `streams` (lista de `WASTE_STREAM`), `color_note`, `location_note`, `action`, `current_bin`, `new_bin`, `recommendation` |
-| Bebedero (`DRINKING_FOUNTAIN`) | `kind` (`FOUNTAIN_KIND`: fuente, llenador de botella, sin dato), `status` (`FOUNTAIN_STATUS`: operativo, nuevo, en remodelación, en deterioro, de baja), `location_note` |
+| Tacho (`WASTE_BIN`) | `residuos` (lista de `WASTE_STREAM`), `accion`, `recomendaciones`, `nota`, `foto` |
+| Bebedero (`DRINKING_FOUNTAIN`) | `tipo` (`FOUNTAIN_KIND`: fuente, llenador de botella, sin dato), `estado` (`FOUNTAIN_STATUS`: operativo, nuevo, en remodelación, en deterioro, de baja), `sector`, `nota` |
+
+*(Enmienda del 2 oct 2026: el borrador proponía claves en inglés. Se conservan las claves en español
+que ya usan los 184 tachos de V011 y los 67 bebederos de V016: renombrarlas obligaría a migrar datos
+cargados sin ganar nada, y el mapa ya las lee así.)*
 
 ### 4.4 Cargas
 
