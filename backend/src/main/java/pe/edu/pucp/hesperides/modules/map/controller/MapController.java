@@ -29,6 +29,14 @@ public class MapController {
     /** Los cuatro roles ven el mapa: el operario es quien más lo usa en campo. */
     private static final String READERS = "hasAnyAuthority('ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO')";
 
+    /**
+     * Versión de la forma de /layers. La etiqueta combina datos y formato: si
+     * solo llevara la versión de datos, una copia guardada antes de un cambio de
+     * forma (la capa de vegetación, por ejemplo) recibiría 304 y el visor
+     * fallaría al leerla. Se incrementa cada vez que cambian las capas o sus campos.
+     */
+    static final int LAYERS_FORMAT = 2;
+
     private final MapLayersService layersService;
     private final LocationDescriptionService descriptionService;
 
@@ -47,15 +55,19 @@ public class MapController {
     @PreAuthorize(READERS)
     public ResponseEntity<ApiResponse<MapLayersResponse>> layers(
             @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) String ifNoneMatch) {
-        String etag = "\"" + layersService.currentVersion() + "\"";
+        String etag = etag(layersService.currentVersion());
         if (etag.equals(ifNoneMatch)) {
             return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(etag).build();
         }
         MapLayersResponse layers = layersService.layers();
         return ResponseEntity.ok()
-                .eTag("\"" + layers.version() + "\"")
+                .eTag(etag(layers.version()))
                 .cacheControl(CacheControl.noCache())
                 .body(ApiResponse.ok("Capas del mapa obtenidas", layers));
+    }
+
+    private static String etag(long dataVersion) {
+        return "\"" + dataVersion + "-f" + LAYERS_FORMAT + "\"";
     }
 
     @PostMapping("/describe")

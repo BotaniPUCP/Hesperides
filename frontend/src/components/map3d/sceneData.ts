@@ -81,7 +81,20 @@ const toPoint =
   (plane: LocalPlane) =>
   <P>(f: GeoJsonFeature<P>): ScenePoint<P> => ({ p: point(f.geometry, plane), props: f.properties });
 
+/** Las capas que el visor necesita. Una respuesta sin alguna no se puede dibujar. */
+export const LAYER_KEYS: (keyof MapLayersResponse['layers'])[] = [
+  'sectors', 'sections', 'subsections', 'supervisionZones', 'references', 'buildings', 'features', 'vegetation',
+];
+
+export function missingLayers(response: MapLayersResponse): string[] {
+  return LAYER_KEYS.filter((k) => !Array.isArray(response.layers?.[k]?.features));
+}
+
 export function toSceneData(response: MapLayersResponse): SceneData {
+  const missing = missingLayers(response);
+  if (missing.length) {
+    throw new Error(`Faltan capas del mapa: ${missing.join(', ')}`);
+  }
   const plane = new LocalPlane(response.origin.lat, response.origin.lon);
   const poly = toPoly(plane);
   const pt = toPoint(plane);

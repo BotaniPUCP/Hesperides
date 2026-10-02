@@ -57,6 +57,13 @@ describe('MapScreen', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Sin conexión');
   });
 
+  it('si las capas llegan incompletas avisa en vez de romper la página', () => {
+    const { vegetation: _omitted, ...incomplete } = sampleLayers.layers;
+    mockedLayers.mockReturnValue(loaded({ ...sampleLayers, layers: incomplete as typeof sampleLayers.layers }));
+    render(<MapScreen />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Los datos del mapa están incompletos');
+  });
+
   it('arranca con las capas de gestión apagadas', async () => {
     await renderLoaded();
     expect(viewer.setLayerVisible).toHaveBeenCalledWith('supervision', false);

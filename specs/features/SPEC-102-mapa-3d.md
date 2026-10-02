@@ -170,7 +170,7 @@ del plano local), `attributionRequired` (verdadero mientras haya edificios de Op
 `subsections`, `supervisionZones`, `references`, `buildings` y `features`. El límite del campus es
 un `feature` de tipo `CAMPUS_BOUNDARY`. `vegetation` trae los ejemplares del inventario verde con su especie y solo las medidas tomadas (D-07).
 
-La etiqueta va en la cabecera `ETag` (`"<versión>"`). Como el frontend vive en otro origen, CORS
+La etiqueta va en la cabecera `ETag` (`"<versión>-f<formato>"`). Combina la versión de datos con la del **formato** de la respuesta (`MapController.LAYERS_FORMAT`): una copia guardada antes de un cambio de forma, como la capa `vegetation`, tenía la misma versión de datos, recibía `304` y el visor fallaba al leerla. El formato se incrementa cada vez que cambian las capas o sus campos, y el visor descarta además toda copia a la que le falte una capa. Como el frontend vive en otro origen, CORS
 admite `If-None-Match` en el preflight y **expone** `ETag`: sin lo segundo el navegador devuelve
 `null` al leerla y cada apertura lo descargaría todo.
 

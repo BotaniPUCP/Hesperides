@@ -114,6 +114,19 @@ class MapIntegrationTest {
 
     @Test
     @WithMockUser(authorities = "OPERARIO")
+    void aCopySavedWithAnOlderResponseFormatIsReplaced() throws Exception {
+        // Una copia de antes de que existiera la capa de vegetación tenía la
+        // misma versión de datos: si recibiera 304, el visor se quedaría con
+        // capas que ya no corresponden a su código y fallaría al dibujar.
+        Long version = jdbcTemplate.queryForObject("SELECT version FROM map_data_version WHERE id = 1", Long.class);
+
+        mockMvc.perform(get("/api/v1/map/layers").header(HttpHeaders.IF_NONE_MATCH, "\"" + version + "\""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.layers.vegetation").exists());
+    }
+
+    @Test
+    @WithMockUser(authorities = "OPERARIO")
     void editingAZoneInvalidatesTheCachedCopy() throws Exception {
         String etag = mockMvc.perform(get("/api/v1/map/layers"))
                 .andReturn().getResponse().getHeader(HttpHeaders.ETAG);

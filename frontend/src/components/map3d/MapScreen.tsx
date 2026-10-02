@@ -18,12 +18,27 @@ import { useMapScreenState } from './useMapScreenState';
 /** El mapa del campus a pantalla completa: la maqueta 3D con buscador, capas, leyenda y ficha. */
 export function MapScreen() {
   const { data: response, isLoading, errorMessage, stale } = useMapLayers();
-  const data = useMemo(() => (response ? toSceneData(response) : null), [response]);
+  const scene = useMemo(() => {
+    if (!response) return { data: null, broken: false };
+    try {
+      return { data: toSceneData(response), broken: false };
+    } catch {
+      return { data: null, broken: true };
+    }
+  }, [response]);
+  const data = scene.data;
   const index = useMemo(() => (data ? buildSearchIndex(data) : []), [data]);
   const s = useMapScreenState(data);
   const [panelOpen, setPanelOpen] = useState(false);
 
   if (isLoading) return <LoadingSkeleton />;
+  if (scene.broken) {
+    return (
+      <p role="alert" className="m-4 rounded-md bg-red-50 p-3 text-sm text-red-800">
+        Los datos del mapa están incompletos. Recarga la página; si el problema sigue, avisa al equipo.
+      </p>
+    );
+  }
   if (!data || !response) {
     return (
       <p role="alert" className="m-4 rounded-md bg-red-50 p-3 text-sm text-red-800">
