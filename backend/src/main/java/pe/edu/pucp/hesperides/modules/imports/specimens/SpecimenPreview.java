@@ -1,6 +1,8 @@
 package pe.edu.pucp.hesperides.modules.imports.specimens;
 
-import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenCsvSchema.Issue;
+import pe.edu.pucp.hesperides.modules.imports.ImportAction;
+import pe.edu.pucp.hesperides.modules.imports.PlannedLine;
+import pe.edu.pucp.hesperides.modules.imports.csv.Issue;
 
 import java.util.List;
 
@@ -13,12 +15,16 @@ import java.util.List;
 public record SpecimenPreview(boolean decimalComma, List<PlannedRow> rows, List<SpeciesCount> unknownSpecies,
                               List<Issue> issues) {
 
-    public enum Action { CREATE, UPDATE }
-
     /** Una fila que se escribirá, con su especie ya resuelta. */
-    public record PlannedRow(SpecimenDraft draft, Action action, long speciesId, String speciesSlug,
-                             String duplicateOf, Double duplicateDistanceM) {
+    public record PlannedRow(SpecimenDraft draft, ImportAction action, long speciesId, String speciesSlug,
+                             String duplicateOf, Double duplicateDistanceM) implements PlannedLine {
 
+        @Override
+        public int line() {
+            return draft.line();
+        }
+
+        @Override
         public boolean isPossibleDuplicate() {
             return duplicateOf != null;
         }

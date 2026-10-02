@@ -3,11 +3,12 @@ package pe.edu.pucp.hesperides.modules.imports.specimens;
 import pe.edu.pucp.hesperides.modules.imports.csv.Cells;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvRow;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvTable;
+import pe.edu.pucp.hesperides.modules.imports.csv.Issue;
+import pe.edu.pucp.hesperides.modules.imports.csv.RowReader;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * El estándar de ejemplares (SPEC-103 §6.2): qué columnas existen, cuáles son
@@ -26,10 +27,6 @@ public final class SpecimenCsvSchema {
     public static final List<String> COLUMNS = columns();
     /** El orden del archivo exportado: el estándar y, al final, las informativas. */
     public static final List<String> EXPORT_COLUMNS = exportColumns();
-
-    /** Un problema con su fila (1 = cabecera) y su columna. */
-    public record Issue(int line, String column, String message) {
-    }
 
     public record Parsed(List<SpecimenDraft> drafts, List<Issue> issues, boolean decimalComma) {
     }
@@ -85,56 +82,5 @@ public final class SpecimenCsvSchema {
             }
         }
         return issues;
-    }
-
-    /** Lee celdas de una fila y acumula sus errores sin detenerse en el primero. */
-    static final class RowReader {
-        private final CsvRow row;
-        private final List<Issue> issues;
-        private boolean ok = true;
-
-        RowReader(CsvRow row, List<Issue> issues) {
-            this.row = row;
-            this.issues = issues;
-        }
-
-        CsvRow row() {
-            return row;
-        }
-
-        boolean ok() {
-            return ok;
-        }
-
-        String text(String column) {
-            String v = row.get(column);
-            return v.isBlank() ? null : v;
-        }
-
-        String required(String column) {
-            String v = text(column);
-            if (v == null) {
-                fail(column, "Required value is empty");
-            }
-            return v;
-        }
-
-        <T> T read(String column, Function<String, T> parser) {
-            String v = text(column);
-            if (v == null) {
-                return null;
-            }
-            try {
-                return parser.apply(v);
-            } catch (Cells.CellException e) {
-                fail(column, e.getMessage());
-                return null;
-            }
-        }
-
-        void fail(String column, String message) {
-            ok = false;
-            issues.add(new Issue(row.line(), column, message));
-        }
     }
 }

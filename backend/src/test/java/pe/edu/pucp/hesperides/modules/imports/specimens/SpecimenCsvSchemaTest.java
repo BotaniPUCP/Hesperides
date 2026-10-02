@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.imports.specimens;
 
+import pe.edu.pucp.hesperides.modules.imports.csv.Issue;
 import org.junit.jupiter.api.Test;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvTable;
 
@@ -47,7 +48,7 @@ class SpecimenCsvSchemaTest {
     void requiredCellsMustBePresent() {
         var parsed = parse(";;;-77.08;;;;;;;\n");
 
-        assertThat(parsed.issues()).extracting(SpecimenCsvSchema.Issue::column)
+        assertThat(parsed.issues()).extracting(Issue::column)
                 .contains("nombre_cientifico", "latitud");
         assertThat(parsed.issues()).allSatisfy(i -> assertThat(i.line()).isEqualTo(2));
     }
@@ -57,21 +58,21 @@ class SpecimenCsvSchemaTest {
         // La fecha decide cuál medida es la vigente (SPEC-103 §5.3).
         var parsed = parse(";Roystonea regia;-12.067;-77.079;;;7.5;;;;\n");
 
-        assertThat(parsed.issues()).extracting(SpecimenCsvSchema.Issue::column).containsExactly("fecha_medicion");
+        assertThat(parsed.issues()).extracting(Issue::column).containsExactly("fecha_medicion");
     }
 
     @Test
     void anAssessmentNeedsItsDate() {
         var parsed = parse(";Roystonea regia;-12.067;-77.079;;;;;si;;\n");
 
-        assertThat(parsed.issues()).extracting(SpecimenCsvSchema.Issue::column).containsExactly("fecha_evaluacion");
+        assertThat(parsed.issues()).extracting(Issue::column).containsExactly("fecha_evaluacion");
     }
 
     @Test
     void badValuesAreReportedPerCell() {
         var parsed = parse(";Roystonea regia;norte;-77.079;0;ayer;;;quizas;;\n");
 
-        assertThat(parsed.issues()).extracting(SpecimenCsvSchema.Issue::column)
+        assertThat(parsed.issues()).extracting(Issue::column)
                 .contains("latitud", "cantidad", "fecha_medicion", "ramas_secas");
     }
 
@@ -100,7 +101,7 @@ class SpecimenCsvSchemaTest {
     void aMissingRequiredColumnIsAFormatError() {
         var parsed = SpecimenCsvSchema.parse(CsvTable.parse("nombre_cientifico;latitud\nRoystonea regia;-12\n".getBytes(StandardCharsets.UTF_8)));
 
-        assertThat(parsed.issues()).extracting(SpecimenCsvSchema.Issue::column).contains("longitud");
+        assertThat(parsed.issues()).extracting(Issue::column).contains("longitud");
     }
 
     @Test

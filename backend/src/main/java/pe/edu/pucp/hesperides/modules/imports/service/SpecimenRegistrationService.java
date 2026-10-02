@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.imports.service;
 
+import pe.edu.pucp.hesperides.modules.imports.csv.Issue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,7 +86,7 @@ public class SpecimenRegistrationService {
                     + ". Ask an administrator to add it to the catalog");
         }
         if (!preview.issues().isEmpty()) {
-            SpecimenCsvSchema.Issue issue = preview.issues().get(0);
+            Issue issue = preview.issues().get(0);
             throw new ValidationException(issue.message() + " (" + issue.column() + ")");
         }
         return preview.rows().get(0);

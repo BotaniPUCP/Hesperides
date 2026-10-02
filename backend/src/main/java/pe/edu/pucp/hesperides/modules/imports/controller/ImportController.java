@@ -20,7 +20,7 @@ import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreviewResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportResultResponse;
 import pe.edu.pucp.hesperides.modules.imports.service.CsvTemplates;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenExportService;
-import pe.edu.pucp.hesperides.modules.imports.service.SpecimenImportService;
+import pe.edu.pucp.hesperides.modules.imports.service.ImportService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
 import java.nio.charset.StandardCharsets;
@@ -32,18 +32,18 @@ public class ImportController {
 
     private static final String LOADERS = "hasAnyAuthority('ADMIN', 'COORDINADOR')";
 
-    private final SpecimenImportService specimens;
+    private final ImportService imports;
     private final CsvTemplates templates;
     private final SpecimenExportService export;
 
-    @PostMapping(value = "/api/v1/imports/specimens/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/api/v1/imports/{kind}/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize(LOADERS)
     public ResponseEntity<ApiResponse<ImportPreviewResponse>> preview(
-            @RequestPart("file") MultipartFile csv, @RequestPart(value = "photos", required = false) MultipartFile zip,
+            @PathVariable String kind, @RequestPart("file") MultipartFile csv, @RequestPart(value = "photos", required = false) MultipartFile zip,
             @AuthenticationPrincipal UserDetails principal) {
         byte[] photos = UploadedFiles.optional(zip);
         return ResponseEntity.ok(ApiResponse.ok("Preview ready",
-                specimens.preview(UploadedFiles.required(csv), csv.getOriginalFilename(), photos, principal.getUsername())));
+                imports.preview(kind, UploadedFiles.required(csv), csv.getOriginalFilename(), photos, principal.getUsername())));
     }
 
     @PostMapping("/api/v1/imports/{batchId}/confirm")
@@ -53,7 +53,7 @@ public class ImportController {
             @AuthenticationPrincipal UserDetails principal) {
         ConfirmImportRequest body = request == null ? new ConfirmImportRequest(null) : request;
         return ResponseEntity.ok(ApiResponse.ok("Import confirmed",
-                specimens.confirm(batchId, body.decisions(), principal.getUsername())));
+                imports.confirm(batchId, body.decisions(), principal.getUsername())));
     }
 
     @GetMapping("/api/v1/imports/templates/{kind}")

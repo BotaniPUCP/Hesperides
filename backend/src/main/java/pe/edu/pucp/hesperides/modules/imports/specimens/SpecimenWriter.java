@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenDraft.Assessment;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenDraft.Measurement;
-import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.Action;
+import pe.edu.pucp.hesperides.modules.imports.ImportAction;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.PlannedRow;
 
 import java.sql.Date;
@@ -27,7 +27,7 @@ public class SpecimenWriter {
     /** @return id y código del ejemplar escrito */
     public Written write(PlannedRow row, Long batchId, long userId, Long measuredBy) {
         SpecimenDraft d = row.draft();
-        Written w = row.action() == Action.CREATE ? create(row, batchId, userId) : update(row);
+        Written w = row.action() == ImportAction.CREATE ? create(row, batchId, userId) : update(row);
         if (d.measurement() != null) {
             measure(w.id(), d.measurement(), measuredBy);
         }

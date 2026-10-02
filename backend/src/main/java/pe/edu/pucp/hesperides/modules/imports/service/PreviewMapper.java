@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.imports.service;
 
+import pe.edu.pucp.hesperides.modules.imports.ImportAction;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreviewResponse;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview;
 
@@ -15,8 +16,8 @@ final class PreviewMapper {
         int unknownRows = p.unknownSpecies().stream().mapToInt(SpecimenPreview.SpeciesCount::rows).sum();
         return new ImportPreviewResponse(batchId, kind,
                 p.rows().size() + unknownRows,
-                (int) p.rows().stream().filter(r -> r.action() == SpecimenPreview.Action.CREATE).count(),
-                (int) p.rows().stream().filter(r -> r.action() == SpecimenPreview.Action.UPDATE).count(),
+                (int) p.rows().stream().filter(r -> r.action() == ImportAction.CREATE).count(),
+                (int) p.rows().stream().filter(r -> r.action() == ImportAction.UPDATE).count(),
                 p.unknownSpecies().stream().map(s -> new ImportPreviewResponse.UnknownSpecies(s.name(), s.rows())).toList(),
                 p.rows().stream().filter(SpecimenPreview.PlannedRow::isPossibleDuplicate)
                         .map(r -> new ImportPreviewResponse.Duplicate(r.draft().line(), r.draft().scientificName(),

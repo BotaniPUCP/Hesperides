@@ -8,11 +8,12 @@ import pe.edu.pucp.hesperides.engine.duplicates.Nearby;
 import pe.edu.pucp.hesperides.modules.imports.repository.SpeciesNames;
 import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository;
 import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository.SpeciesRef;
-import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenCsvSchema.Issue;
-import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.Action;
+import pe.edu.pucp.hesperides.modules.imports.ImportRules;
+import pe.edu.pucp.hesperides.modules.imports.csv.Issue;
+import pe.edu.pucp.hesperides.modules.imports.csv.PhotoReference;
+import pe.edu.pucp.hesperides.modules.imports.ImportAction;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.PlannedRow;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.SpeciesCount;
-import pe.edu.pucp.hesperides.shared.storage.PhotoDownloader;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,13 +29,6 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 public class SpecimenResolver {
-
-    /**
-     * El límite del campus viene de OpenStreetMap y no es exacto: plantas reales
-     * de la Pista de Salud caen hasta 10 m fuera. El chequeo busca coordenadas
-     * erradas (invertidas o con un dígito de más), que caen mucho más lejos.
-     */
-    static final double CAMPUS_MARGIN_M = 15.0;
 
     private final SpecimenLookupRepository lookup;
 
@@ -58,13 +52,13 @@ public class SpecimenResolver {
             if (issues.size() > before) {
                 continue;
             }
-            Action action = d.code() == null ? Action.CREATE : Action.UPDATE;
-            Optional<DuplicateMatch> dup = action == Action.CREATE
+            ImportAction action = d.code() == null ? ImportAction.CREATE : ImportAction.UPDATE;
+            Optional<DuplicateMatch> dup = action == ImportAction.CREATE
                     ? DuplicateDetector.find(d.lat(), d.lon(), ref.slug(), ref.typeCode(), registered)
                     : Optional.empty();
             rows.add(new PlannedRow(d, action, ref.id(), ref.slug(),
                     dup.map(DuplicateMatch::code).orElse(null), dup.map(DuplicateMatch::distanceM).orElse(null)));
-            if (action == Action.CREATE) {
+            if (action == ImportAction.CREATE) {
                 // Dos filas del mismo archivo también pueden ser la misma planta.
                 registered.add(new Nearby("fila " + d.line(), ref.slug(), d.lat(), d.lon()));
             }
@@ -78,20 +72,9 @@ public class SpecimenResolver {
         if (d.code() != null && !codes.contains(d.code())) {
             issues.add(new Issue(d.line(), "codigo", "Code does not exist. Leave it empty to create a new specimen"));
         }
-        if (!lookup.nearCampus(d.lat(), d.lon(), CAMPUS_MARGIN_M)) {
+        if (!lookup.nearCampus(d.lat(), d.lon(), ImportRules.CAMPUS_MARGIN_M)) {
             issues.add(new Issue(d.line(), "latitud", "The point is outside the campus"));
         }
-        String photo = d.photo();
-        if (photo == null) {
-            return;
-        }
-        if (photo.startsWith("http://") || photo.startsWith("https://")) {
-            // Un enlace fuera de Drive es un error de formato (SPEC-103 D-09).
-            if (!PhotoDownloader.isAllowedHost(PhotoDownloader.downloadUrl(photo))) {
-                issues.add(new Issue(d.line(), "foto", "Photo links must be public Google Drive links"));
-            }
-        } else if (!zipFiles.contains(PhotoFiles.name(photo))) {
-            issues.add(new Issue(d.line(), "foto", "The file «" + photo + "» is not in the uploaded ZIP"));
-        }
+        PhotoReference.check(d.line(), d.photo(), zipFiles).ifPresent(issues::add);
     }
 }

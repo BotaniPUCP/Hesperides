@@ -1,7 +1,7 @@
 package pe.edu.pucp.hesperides.modules.imports.specimens;
 
 import pe.edu.pucp.hesperides.modules.imports.csv.Cells;
-import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenCsvSchema.RowReader;
+import pe.edu.pucp.hesperides.modules.imports.csv.RowReader;
 
 import java.time.LocalDate;
 import java.util.Objects;
