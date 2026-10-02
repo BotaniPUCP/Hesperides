@@ -21,7 +21,7 @@ import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentForm;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.SpecimenForm;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenRegistrationService;
-import pe.edu.pucp.hesperides.modules.imports.service.SpecimenRegistrationService.Photo;
+import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
 import pe.edu.pucp.hesperides.modules.inventory.service.InventoryPhotoService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
@@ -44,7 +44,7 @@ public class SpecimenRegistrationController {
     public ResponseEntity<ApiResponse<Map<String, String>>> register(
             @Valid @RequestPart("data") SpecimenForm form, @RequestPart(value = "photo", required = false) MultipartFile photo,
             @RequestParam(defaultValue = "false") boolean confirmDuplicate, @AuthenticationPrincipal UserDetails principal) {
-        String code = service.register(form, photoOf(photo), confirmDuplicate, principal.getUsername());
+        String code = service.register(form, UploadedFiles.photo(photo), confirmDuplicate, principal.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Specimen registered", Map.of("code", code)));
     }
 
@@ -55,7 +55,7 @@ public class SpecimenRegistrationController {
             @RequestPart(value = "photo", required = false) MultipartFile photo,
             @AuthenticationPrincipal UserDetails principal) {
         return ResponseEntity.ok(ApiResponse.ok("Specimen updated",
-                Map.of("code", service.update(code, form, photoOf(photo), principal.getUsername()))));
+                Map.of("code", service.update(code, form, UploadedFiles.photo(photo), principal.getUsername()))));
     }
 
     @GetMapping("/api/v1/green-inventory/specimens/{code}/assessments")
@@ -81,8 +81,4 @@ public class SpecimenRegistrationController {
         return ResponseEntity.ok(ApiResponse.ok("Species photo saved", null));
     }
 
-    private static Photo photoOf(MultipartFile file) {
-        byte[] content = UploadedFiles.optional(file);
-        return content == null ? null : new Photo(content, file.getOriginalFilename());
-    }
 }

@@ -15,7 +15,11 @@ import java.util.Map;
 @Component
 public class CsvTemplates {
 
-    private static final Map<String, String> FILES = Map.of("specimens", "ejemplares.csv");
+    private static final Map<String, String> FILES = Map.of(
+            "specimens", "ejemplares.csv",
+            "waste-bins", "tachos.csv",
+            "drinking-fountains", "bebederos.csv",
+            "species-photos", "fotos-especies.csv");
 
     public record Template(String fileName, byte[] content) {
     }

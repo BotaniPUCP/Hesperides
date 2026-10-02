@@ -21,7 +21,7 @@ const VISTA: ImportPreview = {
   toCreate: 5,
   toUpdate: 1,
   unknownSpecies: [{ name: 'Planta inventada', rows: 4 }],
-  duplicates: [{ line: 3, scientificName: 'Roystonea regia', speciesSlug: 'roystonea-regia', duplicateOf: 'EV-000001', distanceM: 0.8 }],
+  duplicates: [{ line: 3, label: 'Roystonea regia', speciesSlug: 'roystonea-regia', duplicateOf: 'EV-000001', distanceM: 0.8 }],
   issues: [],
   decimalComma: false,
   canConfirm: true,

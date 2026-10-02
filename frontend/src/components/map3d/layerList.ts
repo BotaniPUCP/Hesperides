@@ -20,6 +20,7 @@ export const LAYER_TOGGLES: LayerToggle[] = [
   { id: 'supervision', label: 'Zonas de supervisión', initiallyVisible: false },
   { id: 'sidewalks', label: 'Veredas en riesgo', initiallyVisible: false },
   { id: 'bins', label: 'Tachos', initiallyVisible: false },
+  { id: 'fountains', label: 'Bebederos', initiallyVisible: false },
   { id: 'fauna', label: 'Fauna', initiallyVisible: false },
 ];
 

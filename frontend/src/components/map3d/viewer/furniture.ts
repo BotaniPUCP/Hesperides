@@ -24,6 +24,11 @@ const MODELS: Record<string, { body: Part[]; accent: Part[] }> = {
     body: [[cyl(0.3, 0.3, 0.07, 0, 0.82, 0, 14), '#6F7A8E'], [box(0.14, 0.05, 0.05, 0, 0.88, 0), '#5E687B']],
     accent: [[cyl(0.27, 0.22, 0.78, 0, 0.39, 0, 14), WHITE]],
   },
+  // No está en el prototipo: pedestal con poza. El acento es el agua, que lleva el color de la capa.
+  fountain: {
+    body: [[cyl(0.16, 0.2, 0.8, 0, 0.4, 0, 12), '#C9CED6'], [cyl(0.34, 0.3, 0.1, 0, 0.83, 0, 16), '#AEB5BF']],
+    accent: [[cyl(0.28, 0.28, 0.04, 0, 0.9, 0, 16), WHITE]],
+  },
   gate: {
     body: [[box(0.7, 3.3, 0.7, -3.2, 1.65, 0), '#ECEAE5'], [box(0.7, 3.3, 0.7, 3.2, 1.65, 0), '#ECEAE5'],
       [box(1.1, 0.2, 1.1, -3.2, 0.1, 0), '#D9D6CF'], [box(1.1, 0.2, 1.1, 3.2, 0.1, 0), '#D9D6CF']],

@@ -67,7 +67,8 @@ export interface ImportPreview {
   toCreate: number;
   toUpdate: number;
   unknownSpecies: { name: string; rows: number }[];
-  duplicates: { line: number; scientificName: string; speciesSlug: string; duplicateOf: string; distanceM: number }[];
+  /** `label`: la especie o el lugar. `speciesSlug` solo viene en ejemplares. */
+  duplicates: { line: number; label: string; speciesSlug: string | null; duplicateOf: string; distanceM: number }[];
   issues: ImportIssue[];
   /** El archivo usó coma decimal: se aceptó, pero el estándar es punto. */
   decimalComma: boolean;

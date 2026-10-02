@@ -2,17 +2,18 @@ import type * as THREE from 'three';
 import type { SceneData } from '../sceneData';
 import { createPointLayer, type PointLayer } from './furniture';
 
-/** Mobiliario del campus: tachos, puertas y avistamientos de fauna, con sus modelos del prototipo. */
+/** Mobiliario del campus: tachos, bebederos, puertas y avistamientos de fauna, con sus modelos del prototipo. */
 
 const FAUNA_BIRD = /ave|gallinazo/i;
 
-export type CampusPointLayers = Record<'bins' | 'gates' | 'fauna', PointLayer>;
+export type CampusPointLayers = Record<'bins' | 'fountains' | 'gates' | 'fauna', PointLayer>;
 
 export function createCampusPoints(scene: THREE.Scene, data: SceneData, center: THREE.Vector3): CampusPointLayers {
   // Cada puerta mira hacia el centro del campus, como en la maqueta original.
   const gateRotation = (i: number) => Math.atan2(data.gates[i].p[0] - center.x, -(-data.gates[i].p[1] - center.z));
   return {
     bins: createPointLayer(scene, 'bins', data.bins, { model: () => 'bin', scaleRange: [2, 7], color: '#9AA4B6' }),
+    fountains: createPointLayer(scene, 'fountains', data.fountains, { model: () => 'fountain', scaleRange: [2, 7], color: '#3E9BD6' }),
     gates: createPointLayer(scene, 'gates', data.gates, { model: () => 'gate', rotation: gateRotation, scaleRange: [1, 2.2], color: '#5A6C99' }),
     fauna: createPointLayer(scene, 'fauna', data.fauna, {
       model: (i) => (FAUNA_BIRD.test(data.fauna[i].props.name ?? '') ? 'bird' : 'animal'),

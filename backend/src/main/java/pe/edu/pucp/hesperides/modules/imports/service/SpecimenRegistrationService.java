@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentForm;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.SpecimenForm;
+import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
 import pe.edu.pucp.hesperides.modules.imports.repository.AssessmentRepository;
 import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenCsvSchema;
@@ -30,10 +31,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SpecimenRegistrationService {
 
-    /** Una foto del formulario, ya leída del multipart. */
-    public record Photo(byte[] content, String fileName) {
-    }
-
     private final SpecimenResolver resolver;
     private final SpecimenWriter writer;
     private final SpecimenLookupRepository lookup;
@@ -43,7 +40,7 @@ public class SpecimenRegistrationService {
 
     /** @return el código asignado */
     @Transactional
-    public String register(SpecimenForm form, Photo photo, boolean confirmDuplicate, String userEmail) {
+    public String register(SpecimenForm form, UploadedPhoto photo, boolean confirmDuplicate, String userEmail) {
         PlannedRow row = resolve(form, null);
         if (row.isPossibleDuplicate() && !confirmDuplicate) {
             throw new PossibleDuplicateException(row.duplicateOf(), row.duplicateDistanceM());
@@ -53,7 +50,7 @@ public class SpecimenRegistrationService {
 
     /** Corrige un ejemplar: un campo vacío conserva lo registrado. */
     @Transactional
-    public String update(String code, SpecimenForm form, Photo photo, String userEmail) {
+    public String update(String code, SpecimenForm form, UploadedPhoto photo, String userEmail) {
         return save(resolve(form, code), photo, userEmail);
     }
 
@@ -68,7 +65,7 @@ public class SpecimenRegistrationService {
         return assessments.history(elements.elementId(code));
     }
 
-    private String save(PlannedRow row, Photo photo, String userEmail) {
+    private String save(PlannedRow row, UploadedPhoto photo, String userEmail) {
         long userId = lookup.userId(userEmail);
         SpecimenWriter.Written w = writer.write(row, null, userId, userId);
         if (photo != null) {

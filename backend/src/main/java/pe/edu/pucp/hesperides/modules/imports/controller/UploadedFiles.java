@@ -1,6 +1,7 @@
 package pe.edu.pucp.hesperides.modules.imports.controller;
 
 import org.springframework.web.multipart.MultipartFile;
+import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 
 import java.io.IOException;
@@ -30,5 +31,11 @@ final class UploadedFiles {
         } catch (IOException e) {
             throw new UncheckedIOException("Could not read the uploaded file", e);
         }
+    }
+
+    /** @return la foto con su nombre, o null si no se subió nada */
+    static UploadedPhoto photo(MultipartFile file) {
+        byte[] content = optional(file);
+        return content == null ? null : new UploadedPhoto(content, file.getOriginalFilename());
     }
 }

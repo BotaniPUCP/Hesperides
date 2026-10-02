@@ -26,7 +26,7 @@ function entry(title: string, subtitle: string, terms: string, layer: LayerId, i
 
 type IndexSource = Pick<
   SceneData,
-  'campusBuildings' | 'greenAreas' | 'xerophytic' | 'reserve' | 'supervision' | 'gates' | 'bins' | 'references' | 'sectorNameByCode'
+  'campusBuildings' | 'greenAreas' | 'xerophytic' | 'reserve' | 'supervision' | 'gates' | 'bins' | 'fountains' | 'references' | 'sectorNameByCode'
 > &
   Partial<Pick<SceneData, 'vegetation'>>;
 
@@ -46,6 +46,7 @@ export function buildSearchIndex(data: IndexSource): SearchEntry[] {
   data.supervision.forEach((z, i) => out.push(entry(z.props.name, 'Zona de supervisión', z.props.code, 'supervision', i)));
   data.gates.forEach((g, i) => out.push(entry(g.props.name ?? 'Puerta', 'Puerta de acceso', g.props.code ?? '', 'gates', i)));
   data.bins.forEach((b, i) => out.push(entry('Tacho', b.props.name ?? '', b.props.code ?? '', 'bins', i)));
+  data.fountains.forEach((f, i) => out.push(entry('Bebedero', f.props.name ?? '', f.props.code ?? '', 'fountains', i)));
   out.push(...referenceEntries(data.references));
   // Una planta se busca solo por su código: por especie saldrían cientos de
   // resultados iguales que taparían los lugares (para eso está el inventario).

@@ -33,10 +33,14 @@ export function DecisionesDeDuplicados({ imp }: { imp: Importacion }) {
           return (
             <li key={d.line} className="flex flex-wrap items-center justify-between gap-2 py-2">
               <span>
-                Línea {d.line}: <span className="italic">{d.scientificName}</span> a {d.distanceM} m de{' '}
-                <Link className="text-brand-700 underline" href={`/inventario-verde/especies/${d.speciesSlug}/ejemplares/${d.duplicateOf}`} target="_blank">
-                  {d.duplicateOf}
-                </Link>
+                Línea {d.line}: <span className={d.speciesSlug ? 'italic' : undefined}>{d.label}</span> a {d.distanceM} m de{' '}
+                {d.speciesSlug ? (
+                  <Link className="text-brand-700 underline" href={`/inventario-verde/especies/${d.speciesSlug}/ejemplares/${d.duplicateOf}`} target="_blank">
+                    {d.duplicateOf}
+                  </Link>
+                ) : (
+                  <strong>{d.duplicateOf}</strong>
+                )}
               </span>
               <fieldset className="flex gap-4">
                 <legend className="sr-only">Decisión para la línea {d.line}</legend>
