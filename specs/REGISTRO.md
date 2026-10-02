@@ -19,6 +19,7 @@
 | SPEC-101 | Frecuencias de mantenimiento | 🔄 En progreso  | —          | S1     |              |
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
+| SPEC-104 | Galería de fotos de especie | 👀 En revisión  | —          | S3     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -59,6 +60,7 @@ sorpresa que un principio fundacional cambió.
 | **SPEC-003 §8** | SPEC-005 (29-30 sep 2026) | Entran `USE_TYPE` (los seis tipos de uso del mapa del cliente) y `REFERENCE_CATEGORY` (las 24 categorías de la tabla oficial de referencias). |
 | **SPEC-002 §4.0 · SPEC-004 §4.0 · SPEC-005 §4 · SPEC-006 §4 · REGLAS §5.4** | Renumeración de migraciones (29 sep 2026) | Los números reservados por cada spec (`V003`–`V010`, `V011`, `V013`–`V020`, `V012`) chocaban con las migraciones que sí se aplicaron. Se adopta la **numeración cronológica** y el mapa de migraciones de abajo pasa a ser la fuente única. REGLAS §5.4 deja los rangos por spec. |
 | **Mapa de migraciones · SPEC-002 §4.0, §4.4, §4.5 · SPEC-003 §8 · SPEC-004 §4.0 · SPEC-005 §4, §4.7** | Inventario verde (1 oct 2026) | El inventario verde aplicó **`V012`–`V014`**: especies (con nombres alternativos y `slug`), ejemplares y la carga del catastro. `green_elements` **no lleva `zone_id`**: la sección se calcula por posición, porque un tercio del catastro está fuera de toda sección. Nace con `legacy_code` (absorbe SPEC-005 §4.7), `source_reference`, `source_location`, las medidas de C-08 y su procedencia. `GREEN_ELEMENT_TYPE` pasa a Ejemplar/Agrupación. Las reservas pendientes se corren a **`V015`–`V024`**. Decisiones y datos agregados en [`docs/inventario-verde/README.md`](../docs/inventario-verde/README.md). |
+| **SPEC-103 D-08 y §6.5 · Mapa de migraciones** | SPEC-104 (2 oct 2026) | La especie pasa de **una** foto genérica a **varias**, ordenadas y con crédito (autor, licencia, fuente): 205 de las 230 fotos iniciales son CC BY o CC BY-SA y obligan a atribuir. `fotos-especies.csv` gana `orden`, `autor`, `licencia` y `fuente`, y sus filas **reemplazan el conjunto** de la especie; el formulario **agrega** una foto. Límites únicos: 25 MB por foto, 250 MB por subida, 500 MB descomprimido, y una importación a la vez. SPEC-104 toma **`V017`**; las reservas pendientes se corren a **`V018`–`V027`**. |
 | **Mapa de migraciones · SPEC-002 §4.0 · SPEC-004 §4.0 · SPEC-005 §4 · SPEC-102 §4.4** | SPEC-103 (2 oct 2026) | El registro del catastro aplicó **`V015`–`V016`**: cargas por CSV, historial de evaluaciones, fotos en almacenamiento propio y los bebederos, con las mediciones 2026 y el Bosque Húmedo. Las reservas pendientes se corren a **`V017`–`V026`**. |
 | **Mapa de migraciones · SPEC-002 §4.0 · SPEC-003 §8 · SPEC-004 §4.0 · SPEC-005 §4** | SPEC-102 (1 oct 2026) | El mapa necesitó primero PostGIS, zonas, zonas de supervisión y referencias, y aplicó **`V004`–`V011`**. Lo que reservaban SPEC-005 §4.4, §4.4.6 y §4.4.7 (`V014`–`V016`) quedó dentro de esas migraciones; las demás reservas pendientes se corren a **`V012`–`V024`**. Los umbrales de cercanía no se guardan en la base: son constantes del Engine mostradas como parámetros restringidos (SPEC-102 D-04). |
 | **Mapa de migraciones · SPEC-001 · SPEC-002 §4.0 · SPEC-003 · SPEC-004 §4.0 · SPEC-005 §4 · SPEC-100 · SPEC-101** | Realineamiento al baseline (1 oct 2026) | El commit `638aca0` consolidó V001–V011 en `V001__baseline_schema.sql`, y quedaron aplicadas `V002` (frecuencias, SPEC-101) y `V003` (parámetros del sistema). Las reservas pendientes se corren de `V012`–`V028` a **`V004`–`V020`**; las citas a archivos que ya no existen (`V003__seed_role_catalog`, `V009__seed_intervention_taxonomy`…) apuntan al baseline. **SPEC-006 queda superado por SPEC-101**, que ya implementó la misma tabla. |
@@ -139,16 +141,17 @@ su spec, en el mismo commit. Una migración aplicada nunca cambia de número ni 
 
 | Versión | Archivo | Propietaria | Depende de |
 |---|---|---|---|
-| V017 | `V017__create_interventions.sql` | SPEC-002 §4.6 | V013 |
-| V018 | `V018__create_contracts.sql` | SPEC-002 §4.7 | V017 |
-| V019 | `V019__create_incidents.sql` | SPEC-002 §4.8 | V013, V017 |
-| V020 | `V020__seed_catalogs.sql` | SPEC-002 §4.9 | Sin `ROLE`, `INTERVENTION_TYPE`, `ZONE_TYPE`, `USE_TYPE`, `SPECIES_TYPE`, `GREEN_ELEMENT_TYPE` ni `system_parameters`: ya están en V001, V003, V005, V012 y V013 |
-| V021 | `V021__create_audit_log.sql` | SPEC-004 §4 | V005, V012, V013, V017–V020 (añade columnas de autoría a sus tablas) |
-| V022 | `V022__add_execution_tracking_to_interventions.sql` | SPEC-005 §4.3 | V017 |
-| V023 | `V023__seed_confirmed_catalogs.sql` | SPEC-005 §4.5 | V020 |
-| V024 | `V024__add_unspecified_evidence_moment.sql` | SPEC-005 §4.6 | V017, V020 |
-| V025 | `V025__add_deferred_upload_and_map_publication.sql` | SPEC-005 §4.8 | V017 |
-| V026 | `V026__add_location_description_to_incidents.sql` | SPEC-102 §4.4 | V019, V008 |
+| V017 | `V017__allow_many_species_photos.sql` | SPEC-104 §4 | V015 |
+| V018 | `V018__create_interventions.sql` | SPEC-002 §4.6 | V013 |
+| V019 | `V019__create_contracts.sql` | SPEC-002 §4.7 | V018 |
+| V020 | `V020__create_incidents.sql` | SPEC-002 §4.8 | V013, V018 |
+| V021 | `V021__seed_catalogs.sql` | SPEC-002 §4.9 | Sin `ROLE`, `INTERVENTION_TYPE`, `ZONE_TYPE`, `USE_TYPE`, `SPECIES_TYPE`, `GREEN_ELEMENT_TYPE` ni `system_parameters`: ya están en V001, V003, V005, V012 y V013 |
+| V022 | `V022__create_audit_log.sql` | SPEC-004 §4 | V005, V012, V013, V018–V021 (añade columnas de autoría a sus tablas) |
+| V023 | `V023__add_execution_tracking_to_interventions.sql` | SPEC-005 §4.3 | V018 |
+| V024 | `V024__seed_confirmed_catalogs.sql` | SPEC-005 §4.5 | V021 |
+| V025 | `V025__add_unspecified_evidence_moment.sql` | SPEC-005 §4.6 | V018, V021 |
+| V026 | `V026__add_deferred_upload_and_map_publication.sql` | SPEC-005 §4.8 | V018 |
+| V027 | `V027__add_location_description_to_incidents.sql` | SPEC-102 §4.4 | V020, V008 |
 
 `maintenance_frequencies` no figura entre las pendientes: ya existe como **V002** (SPEC-101).
 SPEC-006, que la diseñaba aparte, quedó superado.
