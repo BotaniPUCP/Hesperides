@@ -8,7 +8,12 @@ import type { CachedLayers, LayerStore } from '@/components/map3d/layerCache';
 jest.mock('@/lib/map-api', () => ({ mapApi: { layers: jest.fn() } }));
 const layers = mapApi.layers as jest.MockedFunction<typeof mapApi.layers>;
 
-const response = (version: number) => ({ version } as unknown as MapLayersResponse);
+const LAYER_KEYS = ['sectors', 'sections', 'subsections', 'supervisionZones', 'references', 'buildings', 'features', 'vegetation'];
+const response = (version: number, without?: string) =>
+  ({
+    version,
+    layers: Object.fromEntries(LAYER_KEYS.filter((k) => k !== without).map((k) => [k, { type: 'FeatureCollection', features: [] }])),
+  }) as unknown as MapLayersResponse;
 
 interface MemoryStore extends LayerStore {
   saved: CachedLayers | null;
@@ -85,6 +90,29 @@ describe('useMapLayers', () => {
     await waitFor(() => expect(result.current.errorMessage).not.toBeNull());
     expect(result.current.data).toBeNull();
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it('descarta una copia guardada a la que le falta una capa y descarga de nuevo', async () => {
+    // Una copia de antes de la capa de vegetación no sirve aunque su etiqueta coincida.
+    const store = memoryStore({ etag: '"39"', data: response(39, 'vegetation') });
+    layers.mockResolvedValue({ changed: true, data: response(39), etag: '"39-f2"' });
+
+    const { result } = renderHook(() => useMapLayers(store));
+
+    await waitFor(() => expect(result.current.data).toEqual(response(39)));
+    expect(layers).toHaveBeenCalledWith(null);
+    expect(store.saved?.etag).toBe('"39-f2"');
+  });
+
+  it('sin red tampoco usa una copia incompleta', async () => {
+    const store = memoryStore({ etag: '"39"', data: response(39, 'vegetation') });
+    layers.mockRejectedValue(new ApiError(0, 'Sin conexión. Verifique su red.'));
+
+    const { result } = renderHook(() => useMapLayers(store));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.data).toBeNull();
+    expect(result.current.errorMessage).toMatch(/Sin conexión/);
   });
 
   it('si la copia local no se puede leer, descarga como la primera vez', async () => {

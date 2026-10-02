@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { MapLayersResponse } from '@shared/types';
 import { indexedDbLayerStore, type CachedLayers, type LayerStore } from '@/components/map3d/layerCache';
+import { missingLayers } from '@/components/map3d/sceneData';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { mapApi } from '@/lib/map-api';
 
@@ -28,7 +29,12 @@ export function useMapLayers(store: LayerStore = indexedDbLayerStore): UseMapLay
 
     // Una copia ilegible (modo privado, cuota agotada) no impide abrir el
     // mapa: se descarga como si fuera la primera vez.
-    const cached = store.read().catch((): CachedLayers | null => null);
+    // Una copia de un formato anterior (sin una capa que hoy existe) tampoco
+    // sirve: se descarta aunque su etiqueta coincida.
+    const cached = store
+      .read()
+      .catch((): CachedLayers | null => null)
+      .then((copy) => (copy && missingLayers(copy.data).length === 0 ? copy : null));
 
     cached
       .then(async (copy) => {
