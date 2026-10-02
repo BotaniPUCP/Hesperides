@@ -3,6 +3,7 @@ package pe.edu.pucp.hesperides.modules.admin.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import pe.edu.pucp.hesperides.engine.duplicates.DuplicateDetector;
 import pe.edu.pucp.hesperides.engine.proximity.ProximityThresholds;
 import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
 import pe.edu.pucp.hesperides.modules.admin.dto.SystemParameterResponse;
@@ -71,7 +72,14 @@ public class RestrictedParameters {
                         "Distancia entre bordes para considerar que un edificio es contiguo a una sección"),
                 locked(SystemParameterCodes.PROXIMITY_NAME_M, "Distancia máxima de una referencia que nombra un edificio (m)",
                         metres(ProximityThresholds.NAME_M), DECIMAL,
-                        "Un edificio sin nombre toma el de la referencia más cercana dentro de esta distancia"));
+                        "Un edificio sin nombre toma el de la referencia más cercana dentro de esta distancia"),
+                duplicate(SystemParameterCodes.DUPLICATE_TREE_M, "árbol", "TREE"),
+                duplicate(SystemParameterCodes.DUPLICATE_PALM_M, "palmera", "PALM"),
+                duplicate(SystemParameterCodes.DUPLICATE_SHRUB_M, "arbusto, seto o trepadora", "SHRUB"),
+                duplicate(SystemParameterCodes.DUPLICATE_HERB_M, "herbácea, suculenta, cubresuelo o macetón", "HERB"),
+                locked(SystemParameterCodes.DUPLICATE_FEATURE_M, "Distancia de duplicado: tacho o bebedero (m)",
+                        metres(DuplicateDetector.FEATURE_THRESHOLD_M), DECIMAL,
+                        "Un tacho o bebedero nuevo más cerca que esto de otro del mismo tipo se marca como posible duplicado"));
     }
 
     public List<SystemParameterResponse> all() {
@@ -80,6 +88,12 @@ public class RestrictedParameters {
 
     public boolean contains(String code) {
         return parameters.stream().anyMatch(parameter -> Objects.equals(parameter.code(), code));
+    }
+
+    /** SPEC-103 D-05: se leen del Engine que las aplica, así que lo que se ve es lo que se usa. */
+    private static SystemParameterResponse duplicate(String code, String kind, String vegetationType) {
+        return locked(code, "Distancia de duplicado: " + kind + " (m)", metres(DuplicateDetector.thresholdFor(vegetationType)),
+                DECIMAL, "Una planta nueva más cerca que esto de otra de su misma especie se marca como posible duplicado");
     }
 
     /** 3.0 se muestra «3» y 0.5 se muestra «0.5»: sin ceros que no aportan. */
