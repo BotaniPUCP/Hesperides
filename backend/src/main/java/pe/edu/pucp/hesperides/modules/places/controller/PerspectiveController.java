@@ -2,6 +2,7 @@ package pe.edu.pucp.hesperides.modules.places.controller;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,13 @@ public class PerspectiveController {
             @Valid @RequestBody PerspectiveRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Perspective created", service.create(code, request)));
+    }
+
+    @PostMapping("/{code}/perspectives/preview")
+    @PreAuthorize(PlaceController.EDITORS)
+    public ResponseEntity<ApiResponse<Map<String, String>>> preview(@PathVariable String code,
+            @Valid @RequestBody PerspectiveRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok("Preview", Map.of("displayName", service.preview(code, request))));
     }
 
     @PutMapping("/{code}/perspectives/{id}")

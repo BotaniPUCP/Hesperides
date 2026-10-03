@@ -32,17 +32,25 @@ public class PerspectiveNaming {
     private final PlaceGeometryRepository geometry;
     private final PlaceTreeRepository tree;
 
-    public void rename(long perspectiveId) {
-        ForNaming p = perspectives.forNaming(perspectiveId);
-        LatLon center = geometry.center(p.placeId());
-        PlanarPoint point = new LocalPlane(center.lat(), center.lon()).toPlane(p.lat(), p.lon());
+    /** El nombre que tendría una perspectiva de ese lado en ese punto. */
+    public record Naming(String compass, Long landmarkPlaceId, String displayName) {
+    }
+
+    public Naming nameFor(long placeId, String placeName, String parentName, PerspectiveSide side, double lat, double lon) {
+        LatLon center = geometry.center(placeId);
+        PlanarPoint point = new LocalPlane(center.lat(), center.lon()).toPlane(lat, lon);
         Optional<CompassPoint> compass = CompassPoint.from(CENTER, point);
         Optional<LandmarkCandidate> landmark = LandmarkPicker.pick(
-                geometry.landmarkCandidates(p.lat(), p.lon(), PlaceThresholds.LANDMARK_MAX_M), tree.family(p.placeId()));
-        String name = PerspectiveName.of(PerspectiveSide.valueOf(p.sideCode()), p.placeName(), p.parentName(),
-                compass.orElse(null), landmark.map(LandmarkCandidate::name).orElse(null));
-        perspectives.saveNaming(perspectiveId, compass.map(Enum::name).orElse(null),
-                landmark.map(LandmarkCandidate::placeId).orElse(null), name);
+                geometry.landmarkCandidates(lat, lon, PlaceThresholds.LANDMARK_MAX_M), tree.family(placeId));
+        String name = PerspectiveName.of(side, placeName, parentName, compass.orElse(null),
+                landmark.map(LandmarkCandidate::name).orElse(null));
+        return new Naming(compass.map(Enum::name).orElse(null), landmark.map(LandmarkCandidate::placeId).orElse(null), name);
+    }
+
+    public void rename(long perspectiveId) {
+        ForNaming p = perspectives.forNaming(perspectiveId);
+        Naming n = nameFor(p.placeId(), p.placeName(), p.parentName(), PerspectiveSide.valueOf(p.sideCode()), p.lat(), p.lon());
+        perspectives.saveNaming(perspectiveId, n.compass(), n.landmarkPlaceId(), n.displayName());
     }
 
     /** Tras crear, mover, renombrar o borrar un lugar: sus perspectivas y las de alrededor. */

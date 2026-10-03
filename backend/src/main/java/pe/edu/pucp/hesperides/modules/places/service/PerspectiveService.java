@@ -56,6 +56,14 @@ public class PerspectiveService {
         return assembler.perspective(perspectives.byId(place.id(), id), List.of());
     }
 
+    /** El nombre que el sistema le pondría, sin guardar nada: para verlo mientras se marca en el mapa. */
+    @Transactional(readOnly = true)
+    public String preview(String placeCode, PerspectiveRequest request) {
+        PlaceRow place = outdoorPlace(placeCode);
+        return naming.nameFor(place.id(), place.name(), place.parentName(), side(request.sideCode()), request.lat(),
+                request.lon()).displayName();
+    }
+
     @Transactional
     public void delete(String placeCode, long id) {
         PlaceRow place = places.byCode(placeCode);
@@ -82,16 +90,19 @@ public class PerspectiveService {
     }
 
     private long sideId(long placeId, String sideCode, long exceptId) {
-        PerspectiveSide side;
-        try {
-            side = PerspectiveSide.valueOf(sideCode);
-        } catch (IllegalArgumentException e) {
-            throw new ValidationException("Unknown perspective side: " + sideCode);
-        }
+        PerspectiveSide side = side(sideCode);
         long sideId = lookup.catalogItemId(PlaceCatalogCodes.SIDE, sideCode);
         if (side.onePerPlace() && perspectives.countSide(placeId, sideId, exceptId) > 0) {
             throw new BusinessRuleException("The place already has a perspective of that side: edit it instead");
         }
         return sideId;
+    }
+
+    private static PerspectiveSide side(String sideCode) {
+        try {
+            return PerspectiveSide.valueOf(sideCode);
+        } catch (IllegalArgumentException e) {
+            throw new ValidationException("Unknown perspective side: " + sideCode);
+        }
     }
 }

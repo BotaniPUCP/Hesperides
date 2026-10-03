@@ -126,6 +126,18 @@ class PlacesIntegrationTest {
     }
 
     @Test
+    void previewsTheNameWithoutSavingThePerspective() throws Exception {
+        String code = createInras();
+        drawnPlace("Caseta de riego", LAT, LON - 2 * OFFSET, null);
+
+        postJson(PLACES + "/" + code + "/perspectives/preview",
+                "{\"sideCode\": \"SIDE\", \"lat\": %s, \"lon\": %s, \"headingDeg\": 90}".formatted(LAT, LON - OFFSET))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.displayName").value("Al lado de INRAS · oeste, hacia Caseta de riego"));
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.perspectives", hasSize(0)));
+    }
+
+    @Test
     void aPlaceHasOnlyOneBack() throws Exception {
         String code = createInras();
         perspective(code, "BACK", LAT - OFFSET, LON).andExpect(status().isCreated());
