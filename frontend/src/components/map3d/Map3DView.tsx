@@ -2,13 +2,21 @@
 
 import { useEffect, useRef } from 'react';
 import type { SceneData } from './sceneData';
+import type { CameraPose } from './viewer/cameraRig';
 import type { Viewer, ViewerCallbacks } from './viewer/createViewer';
+
+/** Guarda la vista entre montajes, para que la cámara no vuelva al encuadre inicial. */
+export interface PoseMemory {
+  recall: () => CameraPose | undefined;
+  remember: (pose: CameraPose) => void;
+}
 
 export interface Map3DViewProps extends ViewerCallbacks {
   data: SceneData;
   onReady: (viewer: Viewer) => void;
   /** El navegador no pudo crear el contexto WebGL: quien llama muestra las listas. */
   onUnsupported: () => void;
+  poseMemory?: PoseMemory;
 }
 
 /**
@@ -16,14 +24,14 @@ export interface Map3DViewProps extends ViewerCallbacks {
  * arriba del archivo: three pesa ~600 kB y no tiene sentido en el servidor ni
  * en las pantallas que no muestran el mapa.
  */
-export function Map3DView({ data, onReady, onUnsupported, ...callbacks }: Map3DViewProps) {
+export function Map3DView({ data, onReady, onUnsupported, poseMemory, ...callbacks }: Map3DViewProps) {
   const container = useRef<HTMLDivElement>(null);
   const labels = useRef<HTMLDivElement>(null);
   // Los callbacks cambian en cada render del padre; el visor se crea una sola
   // vez, así que lee siempre los más recientes a través de esta referencia.
-  const latest = useRef({ ...callbacks, onReady, onUnsupported });
+  const latest = useRef({ ...callbacks, onReady, onUnsupported, poseMemory });
   useEffect(() => {
-    latest.current = { ...callbacks, onReady, onUnsupported };
+    latest.current = { ...callbacks, onReady, onUnsupported, poseMemory };
   });
 
   useEffect(() => {
@@ -38,7 +46,7 @@ export function Map3DView({ data, onReady, onUnsupported, ...callbacks }: Map3DV
           onPointPick: (lat, lon) => latest.current.onPointPick?.(lat, lon),
           onHover: (t, x, y) => latest.current.onHover(t, x, y),
           onCompass: (deg) => latest.current.onCompass(deg),
-        });
+        }, latest.current.poseMemory?.recall());
         latest.current.onReady(viewer);
       })
       .catch(() => {
@@ -46,6 +54,7 @@ export function Map3DView({ data, onReady, onUnsupported, ...callbacks }: Map3DV
       });
     return () => {
       mounted = false;
+      if (viewer) latest.current.poseMemory?.remember(viewer.pose());
       viewer?.dispose();
     };
   }, [data]);

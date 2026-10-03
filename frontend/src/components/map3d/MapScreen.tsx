@@ -1,15 +1,17 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { LoadingSkeleton } from '@/components/ui';
 import { useMapLayers } from '@/hooks/useMapLayers';
 import { LayerToggles } from './LayerToggles';
 import { Map3DView } from './Map3DView';
 import { MapAttribution } from './MapAttribution';
 import { MapFallback } from './MapFallback';
+import { MapFullscreenButton } from './MapFullscreenButton';
 import { MapInfoCard } from './MapInfoCard';
 import { MapSearch } from './MapSearch';
 import { MapToolbar } from './MapToolbar';
+import { mapScreenPose } from './mapScreenPose';
 import { ModeLegend } from './ModeLegend';
 import { toSceneData } from './sceneData';
 import { buildSearchIndex } from './searchIndex';
@@ -30,6 +32,7 @@ export function MapScreen() {
   const index = useMemo(() => (data ? buildSearchIndex(data) : []), [data]);
   const s = useMapScreenState(data);
   const [panelOpen, setPanelOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
 
   if (isLoading) return <LoadingSkeleton />;
   if (scene.broken) {
@@ -48,7 +51,7 @@ export function MapScreen() {
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#dfe7ee]">
+    <div ref={root} className="relative h-full w-full overflow-hidden bg-[#dfe7ee]">
       {s.unsupported ? (
         <MapFallback data={data} onPick={s.select} />
       ) : (
@@ -60,6 +63,7 @@ export function MapScreen() {
           onGroundPick={s.onGroundPick}
           onHover={() => undefined}
           onCompass={s.onCompass}
+          poseMemory={mapScreenPose}
         />
       )}
 
@@ -115,6 +119,10 @@ export function MapScreen() {
         <div className="pointer-events-auto">
           <MapAttribution required={response.attributionRequired} />
         </div>
+      </div>
+
+      <div className="absolute bottom-3 right-3">
+        <MapFullscreenButton target={root} />
       </div>
     </div>
   );

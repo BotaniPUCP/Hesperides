@@ -4,7 +4,7 @@ import type { LayerId } from './target';
 export interface LayerToggle {
   id: LayerId;
   label: string;
-  /** Las capas de gestión empiezan apagadas para no tapar las áreas verdes. */
+  /** Las capas de gestión y el entorno empiezan apagados para no tapar las áreas verdes. */
   initiallyVisible: boolean;
 }
 
@@ -13,7 +13,7 @@ export const LAYER_TOGGLES: LayerToggle[] = [
   { id: 'xerophytic', label: 'Jardines xerofíticos', initiallyVisible: true },
   { id: 'vegetation', label: 'Árboles y plantas', initiallyVisible: true },
   { id: 'campusBuildings', label: 'Edificios del campus', initiallyVisible: true },
-  { id: 'contextBuildings', label: 'Edificios del entorno', initiallyVisible: true },
+  { id: 'contextBuildings', label: 'Edificios del entorno', initiallyVisible: false },
   { id: 'gates', label: 'Puertas', initiallyVisible: true },
   { id: 'parking', label: 'Estacionamientos', initiallyVisible: true },
   { id: 'reserve', label: 'Jardines de reserva', initiallyVisible: false },

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { ModeId } from '../modes';
 import type { SceneData } from '../sceneData';
 import type { LayerId, Target } from '../target';
-import { createCameraRig } from './cameraRig';
+import { createCameraRig, type CameraPose } from './cameraRig';
 import { scaleFurniture, type PointLayer } from './furniture';
 import { createCampusPoints } from './campusPoints';
 import { createFoliageMaterials } from './foliageMaterials';
@@ -43,16 +43,17 @@ export interface Viewer {
   top: () => void;
   north: () => void;
   toggleSpin: () => boolean;
+  pose: () => CameraPose;
   dispose: () => void;
 }
 
-export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks): Viewer {
+export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose): Viewer {
   const renderer = createRenderer();
   const textures = createTextures(renderer);
   const stage = createStage(container, renderer, data.campus, textures);
   const { scene, center } = stage;
   const coarse = window.matchMedia('(pointer: coarse)').matches;
-  const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
   const lights = createLights(scene, center, coarse);
   let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true;
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
@@ -184,10 +185,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     },
     setLabels: (on) => { labelsOn = on; needsRender = true; },
     setGrayBuildings: (v) => { gray = v; applyTheme(); },
-    fit: () => rig.fit(),
-    top: () => rig.top(),
-    north: () => rig.north(),
-    toggleSpin: () => rig.toggleSpin(),
+    fit: rig.fit, top: rig.top, north: rig.north, toggleSpin: rig.toggleSpin, pose: rig.pose,
     dispose() {
       cancelAnimationFrame(frame);
       observer.disconnect();
