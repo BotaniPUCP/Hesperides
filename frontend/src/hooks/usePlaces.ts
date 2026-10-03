@@ -5,8 +5,9 @@ import type { PlaceDetail, PlaceSummary } from '@shared/types';
 import { placesApi, type PlaceFilters } from '@/lib/places-api';
 import { useRequest } from './useRequest';
 
-export function usePlaces(filters: PlaceFilters) {
-  const { data, loading, errorMessage } = useRequest(JSON.stringify(filters), () => placesApi.list(filters));
+/** Con `enabled` en false no consulta: para un buscador que todavía no tiene texto. */
+export function usePlaces(filters: PlaceFilters, enabled = true) {
+  const { data, loading, errorMessage } = useRequest(enabled ? JSON.stringify(filters) : null, () => placesApi.list(filters));
   return { places: (data ?? []) as PlaceSummary[], loading, errorMessage };
 }
 

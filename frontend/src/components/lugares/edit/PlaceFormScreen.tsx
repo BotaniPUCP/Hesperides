@@ -8,7 +8,7 @@ import { useCanEditPlaces } from './useCanEditPlaces';
 const CATALOG = { label: 'Lugares', href: '/lugares' };
 
 /** Alta (sin `code`) o edición de un lugar. Solo para quien puede editar el catálogo. */
-export function PlaceFormScreen({ code }: { code?: string }) {
+export function PlaceFormScreen({ code, defaultName }: { code?: string; defaultName?: string }) {
   const canEdit = useCanEditPlaces();
   const { place, loading } = usePlace(code);
 
@@ -24,7 +24,7 @@ export function PlaceFormScreen({ code }: { code?: string }) {
         items={place ? [CATALOG, { label: place.name, href: `/lugares/${place.code}` }, { label: 'Editar' }] : [CATALOG, { label: 'Nuevo lugar' }]}
       />
       <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">{place ? `Editar ${place.name}` : 'Nuevo lugar'}</h1>
-      <PlaceForm place={place ?? undefined} />
+      <PlaceForm place={place ?? undefined} defaultName={defaultName} />
     </div>
   );
 }

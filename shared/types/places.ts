@@ -112,3 +112,37 @@ export interface PhotoInput {
   author?: string;
   takenOn?: string;
 }
+
+/** Un lugar sugerido para una referencia antigua; más puntaje, más probable. */
+export interface PlaceSuggestion {
+  place: PlaceRef;
+  score: number;
+}
+
+/** Referencias pendientes con el mismo nombre, que se deciden juntas. */
+export interface ReferenceQueueGroup {
+  name: string;
+  category: string;
+  referenceCodes: string[];
+  lat: number;
+  lon: number;
+  /** El lado que nombra el texto («espalda de…»); null si no nombra ninguno. */
+  detectedSide: PerspectiveSideCode | null;
+  /** «Frente a X» a veces es «al otro lado de la calle, mirando a X». */
+  sideUncertain: boolean;
+  suggestions: PlaceSuggestion[];
+}
+
+export interface ReferenceQueuePage {
+  page: number;
+  size: number;
+  totalGroups: number;
+  groups: ReferenceQueueGroup[];
+}
+
+export interface MigrationProgress {
+  total: number;
+  linked: number;
+  discarded: number;
+  pending: number;
+}

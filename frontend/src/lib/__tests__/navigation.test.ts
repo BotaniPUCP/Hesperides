@@ -30,6 +30,7 @@ describe('visibleNavigation', () => {
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
+      '/lugares/migracion',
       '/admin/usuarios',
       '/admin/catalogos',
       '/admin/frecuencias',
@@ -44,6 +45,7 @@ describe('visibleNavigation', () => {
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
+      '/lugares/migracion',
       '/admin/usuarios',
       '/admin/frecuencias',
     ]);

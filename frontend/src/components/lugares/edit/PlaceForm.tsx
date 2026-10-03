@@ -20,9 +20,9 @@ function currentOutline(place: PlaceDetail): PickedOutline | null {
   return null;
 }
 
-function initialValues(place?: PlaceDetail): PlaceFormValues {
+function initialValues(place?: PlaceDetail, defaultName = ''): PlaceFormValues {
   return {
-    name: place?.name ?? '',
+    name: place?.name ?? defaultName,
     kind: (place?.kind.code as PlaceKindCode) ?? 'OUTDOOR',
     category: place?.category.code ?? null,
     parentCode: place?.parent?.code ?? null,
@@ -33,9 +33,9 @@ function initialValues(place?: PlaceDetail): PlaceFormValues {
 const splitAliases = (text: string) => text.split(/[,\n]/).map((a) => a.trim()).filter(Boolean);
 
 /** Alta (sin `place`) o edición de un lugar. Al guardar abre su ficha. */
-export function PlaceForm({ place }: { place?: PlaceDetail }) {
+export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; defaultName?: string }) {
   const router = useRouter();
-  const [values, setValues] = useState(() => initialValues(place));
+  const [values, setValues] = useState(() => initialValues(place, defaultName));
   const [picked, setPicked] = useState<PickedOutline | null>(() => (place ? currentOutline(place) : null));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -33,9 +33,14 @@ export function LugaresScreen() {
           </p>
         </div>
         {canEdit && (
-          <Link href="/lugares/nuevo" className="rounded-md bg-brand-700 px-4 py-2 text-sm font-semibold text-neutral-0 hover:bg-brand-800">
-            Nuevo lugar
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/lugares/migracion" className="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
+              Migrar referencias
+            </Link>
+            <Link href="/lugares/nuevo" className="rounded-md bg-brand-700 px-4 py-2 text-sm font-semibold text-neutral-0 hover:bg-brand-800">
+              Nuevo lugar
+            </Link>
+          </div>
         )}
       </header>
 

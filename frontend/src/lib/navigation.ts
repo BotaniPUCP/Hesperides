@@ -53,6 +53,8 @@ export const NAVIGATION: readonly NavGroup[] = [
       { label: 'Registrar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
       { label: 'Importar CSV', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      // Catálogo de lugares: pasar las referencias antiguas al catálogo es de quien lo edita.
+      { label: 'Migrar referencias', href: '/lugares/migracion', icon: '🔀', roles: ['ADMIN', 'COORDINADOR'] },
     ],
   },
   {

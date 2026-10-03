@@ -1,4 +1,14 @@
-import type { PerspectiveInput, PlaceDetail, PlaceInput, PlacePerspective, PlacePhoto, PlaceSummary, PhotoInput } from '@shared/types';
+import type {
+  MigrationProgress,
+  PerspectiveInput,
+  PhotoInput,
+  PlaceDetail,
+  PlaceInput,
+  PlacePerspective,
+  PlacePhoto,
+  PlaceSummary,
+  ReferenceQueuePage,
+} from '@shared/types';
 import { apiClient } from './api';
 import { API_BASE_URL } from './constants';
 
@@ -58,4 +68,14 @@ export const placesApi = {
     return apiClient.postForm<PlacePhoto>(`/places/${segment(code)}/photos${params ? `?${params}` : ''}`, form);
   },
   removePhoto: (code: string, photoId: number) => apiClient.del<void>(`/places/${segment(code)}/photos/${photoId}`),
+
+  referenceQueue: (search: string, page: number, size: number) => {
+    const q = new URLSearchParams({ page: String(page), size: String(size) });
+    if (search.trim()) q.set('q', search.trim());
+    return apiClient.get<ReferenceQueuePage>(`/places/reference-links/queue?${q.toString()}`);
+  },
+  migrationProgress: () => apiClient.get<MigrationProgress>('/places/reference-links/progress'),
+  linkReferences: (referenceCodes: string[], placeCode: string, perspectiveId: number | null) =>
+    apiClient.post<void>('/places/reference-links', { referenceCodes, placeCode, perspectiveId }),
+  discardReferences: (referenceCodes: string[]) => apiClient.post<void>('/places/reference-links/discard', { referenceCodes }),
 };
