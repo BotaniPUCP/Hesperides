@@ -1,92 +1,91 @@
-nombre_en_catastro,nombre_cientifico,slug,nombre_comun,nombres_alternativos,familia,tipo
-Acacia stenophylla,Acacia stenophylla,acacia-stenophylla,Acacia cordón de zapato,,Fabaceae,TREE
-Adansonia digitata,Adansonia digitata,adansonia-digitata,Baobab,,Malvaceae,TREE
-Adonidia merrillii,Adonidia merrillii,adonidia-merrillii,Palmera de Navidad,,Arecaceae,PALM
-Agave americana,Agave americana,agave-americana,Pita,Agave|Maguey,Asparagaceae,SHRUB
-Bismarckia nobilis,Bismarckia nobilis,bismarckia-nobilis,Palmera de Bismarck,,Arecaceae,PALM
-Bougainvillea glabra,Bougainvillea glabra,bougainvillea-glabra,Buganvilla,Papelillo,Nyctaginaceae,CLIMBER
-Brachychiton populneus,Brachychiton populneus,brachychiton-populneus,Kurrajong,Braquiquito,Malvaceae,TREE
-Brunfelsia australis,Brunfelsia australis,brunfelsia-australis,Jazmín del Paraguay,,Solanaceae,SHRUB
-Butia capitata,Butia capitata,butia-capitata,Palmera de la jalea,Butiá,Arecaceae,PALM
-Byrsonima crassifolia,Byrsonima crassifolia,byrsonima-crassifolia,Indano,Nance,Malpighiaceae,TREE
-Caesalpinia gilliesii,Caesalpinia gilliesii,caesalpinia-gilliesii,Ave del paraíso,,Fabaceae,SHRUB
-Caesalpinia spinosa (Molina) Kuntze,Caesalpinia spinosa,caesalpinia-spinosa,Tara,,Fabaceae,TREE
-Calliandra carbonaria,Calliandra carbonaria,calliandra-carbonaria,Carbonero,,Fabaceae,TREE
-Callistemon viminalis,Callistemon viminalis,callistemon-viminalis,Escobillón rojo,Limpiatubos,Myrtaceae,TREE
-Callitris columellaris,Callitris columellaris,callitris-columellaris,Pino ciprés blanco,,Cupressaceae,TREE
-Cananga odorata,Cananga odorata,cananga-odorata,Ylang-ylang,,Annonaceae,TREE
-Cassia fistula,Cassia fistula,cassia-fistula,Lluvia de oro,Caña fístula,Fabaceae,TREE
-Cedrela odorata,Cedrela odorata,cedrela-odorata,Cedro americano,Cedro,Meliaceae,TREE
-Ceiba speciosa,Ceiba speciosa,ceiba-speciosa,Palo borracho,Ceiba,Malvaceae,TREE
-Chlorophytum comosum,Chlorophytum comosum,chlorophytum-comosum,Lirio listado,Cinta|Mala madre,Asparagaceae,SUCCULENT
-Citrus x sinensis,Citrus × sinensis,citrus-x-sinensis,Naranjo,,Rutaceae,TREE
-Cocos nucifera,Cocos nucifera,cocos-nucifera,Palma de coco,Cocotero,Arecaceae,PALM
-Coffea arabica,Coffea arabica,coffea-arabica,Cafeto,,Rubiaceae,SHRUB
-Delonix regia,Delonix regia,delonix-regia,Ponciana,Flamboyán,Fabaceae,TREE
-Dracaena fragrans,Dracaena fragrans,dracaena-fragrans,Palo de Brasil,Palo de agua,Asparagaceae,SHRUB
-Dypsis lutescens,Dypsis lutescens,dypsis-lutescens,Palmera bambú,Areca,Arecaceae,PALM
-Eriobotrya japonica,Eriobotrya japonica,eriobotrya-japonica,Níspero japonés,,Rosaceae,TREE
-Erythrina smithiana Krukoff,Erythrina smithiana,erythrina-smithiana,Porotillo,,Fabaceae,TREE
-Erythrina variegata,Erythrina variegata,erythrina-variegata,Colorín amarillo,,Fabaceae,TREE
-Eucalyptus cinerea,Eucalyptus cinerea,eucalyptus-cinerea,Eucalipto plateado,,Myrtaceae,TREE
-Eucalyptus globulus,Eucalyptus globulus,eucalyptus-globulus,Eucalipto común,,Myrtaceae,TREE
-Euphorbia tirucalli,Euphorbia tirucalli,euphorbia-tirucalli,Árbol de los dedos,Esqueleto,Euphorbiaceae,TREE
-Euphorbia umbellata,Euphorbia umbellata,euphorbia-umbellata,Planta de la vida,Janaúba,Euphorbiaceae,SHRUB
-Ficus benjamina L.,Ficus benjamina,ficus-benjamina,Ficus benjamina,,Moraceae,TREE
-Ficus benjamina Variegata,Ficus benjamina 'Variegata',ficus-benjamina-variegata,Ficus variegado,Ficus blanco,Moraceae,TREE
-Ficus benjamina ‘Variegata’,Ficus benjamina 'Variegata',ficus-benjamina-variegata,Ficus variegado,Ficus blanco,Moraceae,TREE
-Ficus carica,Ficus carica,ficus-carica,Higuera,,Moraceae,TREE
-Ficus insipida,Ficus insipida,ficus-insipida,Higuera de agua,Ojé,Moraceae,TREE
-Fraxinus uhdei,Fraxinus uhdei,fraxinus-uhdei,Fresno silvestre mexicano,Fresno,Oleaceae,TREE
-Ginkgo biloba,Ginkgo biloba,ginkgo-biloba,Ginkgo,,Ginkgoaceae,TREE
-Handroanthus chrysanthus,Handroanthus chrysanthus,handroanthus-chrysanthus,Guayacán amarillo,,Bignoniaceae,TREE
-Handroanthus impetiginosus,Handroanthus impetiginosus,handroanthus-impetiginosus,Lapacho rosado,Tajibo,Bignoniaceae,TREE
-Hibiscus rosa-sinensis,Hibiscus rosa-sinensis,hibiscus-rosa-sinensis,Hibisco,Cucarda,Malvaceae,SHRUB
-Hibiscus tiliaceus,Hibiscus tiliaceus,hibiscus-tiliaceus,Meijo,Majagua,Malvaceae,TREE
-Hura crepitans,Hura crepitans,hura-crepitans,Jabillo,Catahua,Euphorbiaceae,TREE
-Hyophorbe lagenicaulis,Hyophorbe lagenicaulis,hyophorbe-lagenicaulis,Palmera botella,,Arecaceae,PALM
-Inga feuilleei,Inga feuilleei,inga-feuilleei,Pacae,Guaba,Fabaceae,TREE
-Jacaranda mimosifolia.,Jacaranda mimosifolia,jacaranda-mimosifolia,Jacarandá,,Bignoniaceae,TREE
-Jarava ichu,Jarava ichu,jarava-ichu,Ichu,Paja brava,Poaceae,HERB
-Khaya senegalensis,Khaya senegalensis,khaya-senegalensis,Cedro de altura,Caoba africana,Meliaceae,TREE
-Laurus nobilis.,Laurus nobilis,laurus-nobilis,Laurel,,Lauraceae,TREE
-Leea guineensis,Leea guineensis,leea-guineensis,Leea púrpura,,Vitaceae,SHRUB
-Livistona chinensis,Livistona chinensis,livistona-chinensis,Palmera de abanico china,,Arecaceae,PALM
-Mangifera indica,Mangifera indica,mangifera-indica,Mango,,Anacardiaceae,TREE
-Matthiola incana,Matthiola incana,matthiola-incana,Alhelí,,Brassicaceae,SHRUB
-Melaleuca alternifolia,Melaleuca alternifolia,melaleuca-alternifolia,Árbol del té de hoja estrecha,Árbol del té,Myrtaceae,TREE
-Melaleuca viminalis,Melaleuca viminalis,melaleuca-viminalis,Cepillo de botella de arroyo,,Myrtaceae,TREE
-Myoporum laetum,Myoporum laetum,myoporum-laetum,Mioporo,,Scrophulariaceae,TREE
-Nerium oleander,Nerium oleander,nerium-oleander,Adelfa,Laurel rosa,Apocynaceae,SHRUB
-Parkinsonia praecox,Parkinsonia praecox,parkinsonia-praecox,Palo verde,,Fabaceae,TREE
-Persea americana,Persea americana,persea-americana,Palto,Aguacate,Lauraceae,TREE
-Phoenix canariensis,Phoenix canariensis,phoenix-canariensis,Palmera canaria,,Arecaceae,PALM
-Phoenix roebelenii,Phoenix roebelenii,phoenix-roebelenii,Palmera enana,,Arecaceae,PALM
-Phytolacca dioica,Phytolacca dioica,phytolacca-dioica,Ombú,,Phytolaccaceae,TREE
-Piper aduncum,Piper aduncum,piper-aduncum,Matico,,Piperaceae,SHRUB
-Plumeria obtusa,Plumeria obtusa,plumeria-obtusa,Frangipani blanco,,Apocynaceae,TREE
-Plumeria rubra,Plumeria rubra,plumeria-rubra,Suche,Frangipani,Apocynaceae,TREE
-Podocarpus macrophyllus,Podocarpus macrophyllus,podocarpus-macrophyllus,Podocarpus,,Podocarpaceae,TREE
-Polyscias guilfoylei,Polyscias guilfoylei,polyscias-guilfoylei,Geranio aralia,,Araliaceae,SHRUB
-Populus alba,Populus alba,populus-alba,Álamo,Álamo blanco,Salicaceae,TREE
-Prosopis pallida,Prosopis pallida,prosopis-pallida,Huarango,Algarrobo,Fabaceae,TREE
-Prunus serrulata,Prunus serrulata,prunus-serrulata,Sakura,Cerezo japonés,Rosaceae,TREE
-Psidium guajava,Psidium guajava,psidium-guajava,Guayaba,,Myrtaceae,TREE
-Quillaja saponaria,Quillaja saponaria,quillaja-saponaria,Quillay,,Quillajaceae,TREE
-Randia aculeata,Randia aculeata,randia-aculeata,Crucetilla,,Rubiaceae,SHRUB
-Ravenea rivularis,Ravenea rivularis,ravenea-rivularis,Palmera majestad,,Arecaceae,PALM
-Retrophyllum rospigliosii,Retrophyllum rospigliosii,retrophyllum-rospigliosii,Pino romerón,Ulcumano,Podocarpaceae,TREE
-Robinia pseudoacacia,Robinia pseudoacacia,robinia-pseudoacacia,Falsa acacia,,Fabaceae,TREE
-Roystonea regia,Roystonea regia,roystonea-regia,Palmera real,,Arecaceae,PALM
-Sabal palmetto,Sabal palmetto,sabal-palmetto,Palma de guano,,Arecaceae,PALM
-Schefflera arboricola,Schefflera arboricola,schefflera-arboricola,Cheflera,,Araliaceae,TREE
-Schinus molle,Schinus molle,schinus-molle,Molle serrano,Molle|Pimiento,Anacardiaceae,TREE
-Stenocarpus sinuatus,Stenocarpus sinuatus,stenocarpus-sinuatus,Rueda del fuego,,Proteaceae,TREE
-Syagrus romanzoffiana,Syagrus romanzoffiana,syagrus-romanzoffiana,Palmera reina,Palmera bruja,Arecaceae,PALM
-Tabebuia roseoalba,Tabebuia roseoalba,tabebuia-roseoalba,Roble blanco,,Bignoniaceae,TREE
-Tecoma stans,Tecoma stans,tecoma-stans,Huaranguay,Fresno amarillo,Bignoniaceae,TREE
-Thrinax radiata,Thrinax radiata,thrinax-radiata,Palmera de abanico costera,,Arecaceae,PALM
-Tipuana tipu,Tipuana tipu,tipuana-tipu,Tipa,,Fabaceae,TREE
-Vachellia farnesiana,Vachellia farnesiana,vachellia-farnesiana,Aromo,Huarango espinoso,Fabaceae,SHRUB
-Vachellia horrida,Vachellia horrida,vachellia-horrida,Huaranguillo,,Fabaceae,TREE
-Washingtonia robusta,Washingtonia robusta,washingtonia-robusta,Palmera de abanico mexicana,Washingtonia,Arecaceae,PALM
+nombre_cientifico,slug,nombre_comun,nombres_alternativos,familia,tipo
+Acacia stenophylla,acacia-stenophylla,Acacia cordón de zapato,,Fabaceae,TREE
+Adansonia digitata,adansonia-digitata,Baobab,,Malvaceae,TREE
+Adonidia merrillii,adonidia-merrillii,Palmera de Navidad,,Arecaceae,PALM
+Agave americana,agave-americana,Pita,Agave|Maguey,Asparagaceae,SHRUB
+Bismarckia nobilis,bismarckia-nobilis,Palmera de Bismarck,,Arecaceae,PALM
+Bougainvillea glabra,bougainvillea-glabra,Buganvilla,Papelillo,Nyctaginaceae,CLIMBER
+Brachychiton populneus,brachychiton-populneus,Kurrajong,Braquiquito,Malvaceae,TREE
+Brunfelsia australis,brunfelsia-australis,Jazmín del Paraguay,,Solanaceae,SHRUB
+Butia capitata,butia-capitata,Palmera de la jalea,Butiá,Arecaceae,PALM
+Byrsonima crassifolia,byrsonima-crassifolia,Indano,Nance,Malpighiaceae,TREE
+Caesalpinia gilliesii,caesalpinia-gilliesii,Ave del paraíso,,Fabaceae,SHRUB
+Caesalpinia spinosa,caesalpinia-spinosa,Tara,,Fabaceae,TREE
+Calliandra carbonaria,calliandra-carbonaria,Carbonero,,Fabaceae,TREE
+Callistemon viminalis,callistemon-viminalis,Escobillón rojo,Limpiatubos,Myrtaceae,TREE
+Callitris columellaris,callitris-columellaris,Pino ciprés blanco,,Cupressaceae,TREE
+Cananga odorata,cananga-odorata,Ylang-ylang,,Annonaceae,TREE
+Cassia fistula,cassia-fistula,Lluvia de oro,Caña fístula,Fabaceae,TREE
+Cedrela odorata,cedrela-odorata,Cedro americano,Cedro,Meliaceae,TREE
+Ceiba speciosa,ceiba-speciosa,Palo borracho,Ceiba,Malvaceae,TREE
+Chlorophytum comosum,chlorophytum-comosum,Lirio listado,Cinta|Mala madre,Asparagaceae,SUCCULENT
+Citrus × sinensis,citrus-x-sinensis,Naranjo,,Rutaceae,TREE
+Cocos nucifera,cocos-nucifera,Palma de coco,Cocotero,Arecaceae,PALM
+Coffea arabica,coffea-arabica,Cafeto,,Rubiaceae,SHRUB
+Delonix regia,delonix-regia,Ponciana,Flamboyán,Fabaceae,TREE
+Dracaena fragrans,dracaena-fragrans,Palo de Brasil,Palo de agua,Asparagaceae,SHRUB
+Dypsis lutescens,dypsis-lutescens,Palmera bambú,Areca,Arecaceae,PALM
+Eriobotrya japonica,eriobotrya-japonica,Níspero japonés,,Rosaceae,TREE
+Erythrina smithiana,erythrina-smithiana,Porotillo,,Fabaceae,TREE
+Erythrina variegata,erythrina-variegata,Colorín amarillo,,Fabaceae,TREE
+Eucalyptus cinerea,eucalyptus-cinerea,Eucalipto plateado,,Myrtaceae,TREE
+Eucalyptus globulus,eucalyptus-globulus,Eucalipto común,,Myrtaceae,TREE
+Euphorbia tirucalli,euphorbia-tirucalli,Árbol de los dedos,Esqueleto,Euphorbiaceae,TREE
+Euphorbia umbellata,euphorbia-umbellata,Planta de la vida,Janaúba,Euphorbiaceae,SHRUB
+Ficus benjamina,ficus-benjamina,Ficus benjamina,,Moraceae,TREE
+Ficus benjamina 'Variegata',ficus-benjamina-variegata,Ficus variegado,Ficus blanco,Moraceae,TREE
+Ficus carica,ficus-carica,Higuera,,Moraceae,TREE
+Ficus insipida,ficus-insipida,Higuera de agua,Ojé,Moraceae,TREE
+Fraxinus uhdei,fraxinus-uhdei,Fresno silvestre mexicano,Fresno,Oleaceae,TREE
+Ginkgo biloba,ginkgo-biloba,Ginkgo,,Ginkgoaceae,TREE
+Handroanthus chrysanthus,handroanthus-chrysanthus,Guayacán amarillo,,Bignoniaceae,TREE
+Handroanthus impetiginosus,handroanthus-impetiginosus,Lapacho rosado,Tajibo,Bignoniaceae,TREE
+Hibiscus rosa-sinensis,hibiscus-rosa-sinensis,Hibisco,Cucarda,Malvaceae,SHRUB
+Hibiscus tiliaceus,hibiscus-tiliaceus,Meijo,Majagua,Malvaceae,TREE
+Hura crepitans,hura-crepitans,Jabillo,Catahua,Euphorbiaceae,TREE
+Hyophorbe lagenicaulis,hyophorbe-lagenicaulis,Palmera botella,,Arecaceae,PALM
+Inga feuilleei,inga-feuilleei,Pacae,Guaba,Fabaceae,TREE
+Jacaranda mimosifolia,jacaranda-mimosifolia,Jacarandá,,Bignoniaceae,TREE
+Jarava ichu,jarava-ichu,Ichu,Paja brava,Poaceae,HERB
+Khaya senegalensis,khaya-senegalensis,Cedro de altura,Caoba africana,Meliaceae,TREE
+Laurus nobilis,laurus-nobilis,Laurel,,Lauraceae,TREE
+Leea guineensis,leea-guineensis,Leea púrpura,,Vitaceae,SHRUB
+Livistona chinensis,livistona-chinensis,Palmera de abanico china,,Arecaceae,PALM
+Mangifera indica,mangifera-indica,Mango,,Anacardiaceae,TREE
+Matthiola incana,matthiola-incana,Alhelí,,Brassicaceae,SHRUB
+Melaleuca alternifolia,melaleuca-alternifolia,Árbol del té de hoja estrecha,Árbol del té,Myrtaceae,TREE
+Melaleuca viminalis,melaleuca-viminalis,Cepillo de botella de arroyo,,Myrtaceae,TREE
+Myoporum laetum,myoporum-laetum,Mioporo,,Scrophulariaceae,TREE
+Nerium oleander,nerium-oleander,Adelfa,Laurel rosa,Apocynaceae,SHRUB
+Parkinsonia praecox,parkinsonia-praecox,Palo verde,,Fabaceae,TREE
+Persea americana,persea-americana,Palto,Aguacate,Lauraceae,TREE
+Phoenix canariensis,phoenix-canariensis,Palmera canaria,,Arecaceae,PALM
+Phoenix roebelenii,phoenix-roebelenii,Palmera enana,,Arecaceae,PALM
+Phytolacca dioica,phytolacca-dioica,Ombú,,Phytolaccaceae,TREE
+Piper aduncum,piper-aduncum,Matico,,Piperaceae,SHRUB
+Plumeria obtusa,plumeria-obtusa,Frangipani blanco,,Apocynaceae,TREE
+Plumeria rubra,plumeria-rubra,Suche,Frangipani,Apocynaceae,TREE
+Podocarpus macrophyllus,podocarpus-macrophyllus,Podocarpus,,Podocarpaceae,TREE
+Polyscias guilfoylei,polyscias-guilfoylei,Geranio aralia,,Araliaceae,SHRUB
+Populus alba,populus-alba,Álamo,Álamo blanco,Salicaceae,TREE
+Prosopis pallida,prosopis-pallida,Huarango,Algarrobo,Fabaceae,TREE
+Prunus serrulata,prunus-serrulata,Sakura,Cerezo japonés,Rosaceae,TREE
+Psidium guajava,psidium-guajava,Guayaba,,Myrtaceae,TREE
+Quillaja saponaria,quillaja-saponaria,Quillay,,Quillajaceae,TREE
+Randia aculeata,randia-aculeata,Crucetilla,,Rubiaceae,SHRUB
+Ravenea rivularis,ravenea-rivularis,Palmera majestad,,Arecaceae,PALM
+Retrophyllum rospigliosii,retrophyllum-rospigliosii,Pino romerón,Ulcumano,Podocarpaceae,TREE
+Robinia pseudoacacia,robinia-pseudoacacia,Falsa acacia,,Fabaceae,TREE
+Roystonea regia,roystonea-regia,Palmera real,,Arecaceae,PALM
+Sabal palmetto,sabal-palmetto,Palma de guano,,Arecaceae,PALM
+Schefflera arboricola,schefflera-arboricola,Cheflera,,Araliaceae,TREE
+Schinus molle,schinus-molle,Molle serrano,Molle|Pimiento,Anacardiaceae,TREE
+Stenocarpus sinuatus,stenocarpus-sinuatus,Rueda del fuego,,Proteaceae,TREE
+Syagrus romanzoffiana,syagrus-romanzoffiana,Palmera reina,Palmera bruja,Arecaceae,PALM
+Tabebuia roseoalba,tabebuia-roseoalba,Roble blanco,,Bignoniaceae,TREE
+Tecoma stans,tecoma-stans,Huaranguay,Fresno amarillo,Bignoniaceae,TREE
+Thrinax radiata,thrinax-radiata,Palmera de abanico costera,,Arecaceae,PALM
+Tipuana tipu,tipuana-tipu,Tipa,,Fabaceae,TREE
+Vachellia farnesiana,vachellia-farnesiana,Aromo,Huarango espinoso,Fabaceae,SHRUB
+Vachellia horrida,vachellia-horrida,Huaranguillo,,Fabaceae,TREE
+Washingtonia robusta,washingtonia-robusta,Palmera de abanico mexicana,Washingtonia,Arecaceae,PALM

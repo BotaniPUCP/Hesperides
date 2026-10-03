@@ -46,15 +46,23 @@ def _numero(texto):
 
 
 def especies():
-    """nombre_en_catastro -> Especie, y la lista de especies sin repetir."""
-    por_nombre, unicas = {}, {}
+    """nombre_en_catastro -> Especie, y la lista de especies.
+
+    especies.csv tiene una fila por especie. nombres-catastro.csv traduce cada forma
+    en que el catastro escribio un nombre a su especie: varias formas pueden ser la
+    misma especie (README del inventario verde, §3).
+    """
     with open(DATOS / "especies.csv", encoding="utf-8") as f:
-        for fila in csv.DictReader(f):
-            especie = unicas.setdefault(fila["nombre_cientifico"], Especie(
-                fila["nombre_cientifico"], fila["slug"], fila["nombre_comun"], fila["familia"], fila["tipo"],
-                [n for n in fila["nombres_alternativos"].split("|") if n]))
-            por_nombre[fila["nombre_en_catastro"]] = especie
-    return por_nombre, list(unicas.values())
+        lista = [Especie(fila["nombre_cientifico"], fila["slug"], fila["nombre_comun"], fila["familia"],
+                         fila["tipo"], [n for n in fila["nombres_alternativos"].split("|") if n])
+                 for fila in csv.DictReader(f)]
+    por_cientifico = {especie.cientifico: especie for especie in lista}
+    if len(por_cientifico) != len(lista):
+        raise ValueError("especies.csv repite un nombre científico: debe tener una fila por especie")
+    with open(DATOS / "nombres-catastro.csv", encoding="utf-8") as f:
+        por_nombre = {fila["nombre_en_catastro"]: por_cientifico[fila["nombre_cientifico"]]
+                      for fila in csv.DictReader(f)}
+    return por_nombre, lista
 
 
 def _referencia_de_medicion(numero):
