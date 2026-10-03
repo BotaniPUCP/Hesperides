@@ -49,6 +49,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/green-inventory/**").permitAll()
                         // Sus fotos también: las sirve el backend o redirige a S3.
                         .requestMatchers(HttpMethod.GET, "/api/v1/files/green-elements/**", "/api/v1/files/species/**").permitAll()
+                        // Las del catálogo de lugares, por lo mismo: un <img> no manda el token.
+                        // Son fotos del campus; el catálogo en sí sí exige sesión.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/files/places/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(authenticationEntryPoint)
