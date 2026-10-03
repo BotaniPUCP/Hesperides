@@ -79,3 +79,36 @@ export interface PlaceDetail {
   perspectives: PlacePerspective[];
   interior: InteriorGroup[];
 }
+
+/** De dónde sale el contorno al guardar: uno solo, o ninguno para un interior. */
+export interface OutlineInput {
+  buildingId?: number | null;
+  zoneCode?: string | null;
+  featureCode?: string | null;
+  /** GeoJSON de un punto marcado a mano, cuando el lugar no está en el mapa. */
+  geometry?: { type: 'Point'; coordinates: [number, number] } | null;
+}
+
+export interface PlaceInput {
+  name: string;
+  kindCode: PlaceKindCode;
+  categoryCode: string;
+  parentCode: string | null;
+  outline: OutlineInput;
+  aliases: string[];
+}
+
+export interface PerspectiveInput {
+  sideCode: PerspectiveSideCode;
+  lat: number;
+  lon: number;
+  headingDeg: number;
+}
+
+/** A qué va una foto: a una perspectiva, a una vista interior, o a ninguna (principal). */
+export interface PhotoInput {
+  perspectiveId?: number;
+  interiorViewCode?: string;
+  author?: string;
+  takenOn?: string;
+}

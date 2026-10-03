@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { PlaceDetail } from '@shared/types';
 import { LoadingSkeleton } from '@/components/ui';
 import { Map3DView } from '@/components/map3d/Map3DView';
-import { toSceneData } from '@/components/map3d/sceneData';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
-import { useMapLayers } from '@/hooks/useMapLayers';
+import { focusPlace } from './focusPlace';
+import { useSceneData } from './useSceneData';
 
 const nada = () => undefined;
 
@@ -21,23 +21,14 @@ export interface PlaceMiniMapProps {
  * la cámara a su cono.
  */
 export function PlaceMiniMap({ place, focusedPerspective }: PlaceMiniMapProps) {
-  const { data: response, isLoading } = useMapLayers();
+  const { data, isLoading } = useSceneData();
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [unsupported, setUnsupported] = useState(false);
-  const data = useMemo(() => {
-    try {
-      return response ? toSceneData(response) : null;
-    } catch {
-      return null;
-    }
-  }, [response]);
   useEffect(() => {
     if (!viewer || !data) return;
     const p = place;
     viewer.setViewCones(p.perspectives.map((v) => ({ id: v.id, lat: v.lat, lon: v.lon, headingDeg: v.headingDeg })));
-    const building = data.campusBuildings.findIndex((b) => b.props.id === p.outline.buildingId);
-    if (building >= 0) viewer.select({ layer: 'campusBuildings', index: building }, true);
-    else if (p.outline.centerLat !== null && p.outline.centerLon !== null) viewer.focusLatLon(p.outline.centerLat, p.outline.centerLon);
+    focusPlace(viewer, data, p);
   }, [viewer, data, place]);
 
   useEffect(() => {

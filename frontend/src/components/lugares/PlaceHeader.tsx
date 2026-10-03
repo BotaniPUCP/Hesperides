@@ -1,16 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import type { PlaceDetail } from '@shared/types';
 import { Badge, ImagePlaceholder } from '@/components/ui';
 
 export interface PlaceHeaderProps {
   place: PlaceDetail;
   onOpenMain: (index: number) => void;
+  /** Botones de edición, solo para quien puede editar. */
+  actions?: ReactNode;
 }
 
 /** Foto principal, nombre, padre, categoría, alias y lo que hay dentro del lugar. */
-export function PlaceHeader({ place, onOpenMain }: PlaceHeaderProps) {
+export function PlaceHeader({ place, onOpenMain, actions }: PlaceHeaderProps) {
   const main = place.mainPhotos[0];
   return (
     <section className="grid gap-5 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 shadow-xs md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
@@ -29,6 +32,7 @@ export function PlaceHeader({ place, onOpenMain }: PlaceHeaderProps) {
           <Badge label={place.category.label} color="brand" />
           <Badge label={place.kind.label} color="neutral" />
           <span className="font-mono text-xs text-neutral-400">{place.code}</span>
+          {actions && <div className="ml-auto flex gap-2">{actions}</div>}
         </div>
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">{place.name}</h1>

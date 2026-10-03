@@ -1,10 +1,16 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { PlaceDetail } from '@shared/types';
 import { ApiError } from '@/lib/api';
 import { placesApi } from '@/lib/places-api';
 import { PlaceDetailScreen } from '../PlaceDetailScreen';
 
-jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn() } }));
+const mockRole = { current: 'OPERARIO' };
+jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { role: { code: mockRole.current } } }) }));
+jest.mock('@/components/ui', () => ({
+  ...jest.requireActual('@/components/ui'),
+  useToast: () => ({ showToast: jest.fn(), dismissAll: jest.fn() }),
+}));
+jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn(), removePerspective: jest.fn() } }));
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
 
 const focused: (number | null)[] = [];
@@ -34,6 +40,7 @@ const cia: PlaceDetail = {
 };
 
 afterEach(() => {
+  mockRole.current = 'OPERARIO';
   jest.clearAllMocks();
   focused.length = 0;
 });
@@ -95,5 +102,31 @@ describe('PlaceDetailScreen', () => {
 
     expect(await screen.findByRole('heading', { name: 'Pasillo' })).toBeInTheDocument();
     expect(screen.queryByText('Perspectivas')).not.toBeInTheDocument();
+  });
+
+  it('quien no edita no ve botones de edición', async () => {
+    detail.mockResolvedValue(cia);
+    render(<PlaceDetailScreen code="LUG-0001" />);
+
+    await screen.findByRole('heading', { name: 'CIA' });
+    expect(screen.queryByRole('button', { name: 'Agregar perspectiva' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Editar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Eliminar foto/ })).not.toBeInTheDocument();
+  });
+
+  it('quien coordina edita, agrega perspectivas y borra con confirmación', async () => {
+    mockRole.current = 'COORDINADOR';
+    detail.mockResolvedValue(cia);
+    const remove = placesApi.removePerspective as jest.MockedFunction<typeof placesApi.removePerspective>;
+    remove.mockResolvedValue(undefined);
+    render(<PlaceDetailScreen code="LUG-0001" />);
+
+    expect(await screen.findByRole('link', { name: 'Editar' })).toHaveAttribute('href', '/lugares/LUG-0001/editar');
+    expect(screen.getByRole('button', { name: 'Agregar perspectiva' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar Espalda de CIA' }));
+    expect(remove).not.toHaveBeenCalled();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Eliminar perspectiva' }));
+
+    await waitFor(() => expect(remove).toHaveBeenCalledWith('LUG-0001', 10));
   });
 });

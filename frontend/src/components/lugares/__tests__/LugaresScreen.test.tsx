@@ -3,6 +3,12 @@ import type { PlaceSummary } from '@shared/types';
 import { placesApi } from '@/lib/places-api';
 import { LugaresScreen } from '../LugaresScreen';
 
+const mockRole = { current: 'OPERARIO' };
+jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { role: { code: mockRole.current } } }) }));
+jest.mock('@/components/ui', () => ({
+  ...jest.requireActual('@/components/ui'),
+  useToast: () => ({ showToast: jest.fn(), dismissAll: jest.fn() }),
+}));
 jest.mock('@/lib/places-api', () => ({ placesApi: { list: jest.fn() } }));
 jest.mock('@/hooks/useCatalog', () => ({
   useCatalog: () => ({ items: [{ code: 'DEPORTE', label: 'Deporte', sortOrder: 5, isActive: true, parentCode: null }], isLoading: false, errorMessage: null }),
@@ -18,7 +24,10 @@ function place(overrides: Partial<PlaceSummary> = {}): PlaceSummary {
   };
 }
 
-afterEach(() => jest.clearAllMocks());
+afterEach(() => {
+  jest.clearAllMocks();
+  mockRole.current = 'OPERARIO';
+});
 
 describe('LugaresScreen', () => {
   it('muestra una tarjeta por lugar con su enlace a la ficha', async () => {

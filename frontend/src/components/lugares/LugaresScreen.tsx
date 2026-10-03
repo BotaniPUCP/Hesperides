@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePlaces } from '@/hooks/usePlaces';
+import { useCanEditPlaces } from './edit/useCanEditPlaces';
 import { PlaceCard } from './PlaceCard';
 import { PlaceFilters, type KindFilter } from './PlaceFilters';
 
@@ -13,6 +15,7 @@ export function LugaresScreen() {
   const [category, setCategory] = useState<string | null>(null);
   const [kind, setKind] = useState<KindFilter>(null);
   const debounced = useDebouncedValue(search, 300);
+  const canEdit = useCanEditPlaces();
   const { places, loading, errorMessage } = usePlaces({
     search: debounced || undefined,
     category: category ?? undefined,
@@ -21,12 +24,19 @@ export function LugaresScreen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Lugares del campus</h1>
-        <p className="mt-1 max-w-2xl text-sm text-neutral-600">
-          Edificios, jardines, estacionamientos y complejos, con fotos desde sus alrededores para ubicar un trabajo sin
-          volver al sitio.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Lugares del campus</h1>
+          <p className="mt-1 max-w-2xl text-sm text-neutral-600">
+            Edificios, jardines, estacionamientos y complejos, con fotos desde sus alrededores para ubicar un trabajo sin
+            volver al sitio.
+          </p>
+        </div>
+        {canEdit && (
+          <Link href="/lugares/nuevo" className="rounded-md bg-brand-700 px-4 py-2 text-sm font-semibold text-neutral-0 hover:bg-brand-800">
+            Nuevo lugar
+          </Link>
+        )}
       </header>
 
       <PlaceFilters
