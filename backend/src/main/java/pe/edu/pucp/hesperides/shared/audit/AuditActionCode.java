@@ -28,5 +28,8 @@ public enum AuditActionCode {
     PLACE_PERSPECTIVE_UPDATED,
     PLACE_PERSPECTIVE_DELETED,
     PLACE_PHOTO_ADDED,
-    PLACE_PHOTO_DELETED
+    PLACE_PHOTO_DELETED,
+    /** Migración de referencias: quién decidió a qué lugar va cada referencia antigua, o que no es un lugar. */
+    PLACE_REFERENCES_LINKED,
+    PLACE_REFERENCES_DISCARDED
 }

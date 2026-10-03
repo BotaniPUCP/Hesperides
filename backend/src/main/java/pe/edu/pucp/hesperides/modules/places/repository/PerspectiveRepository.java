@@ -54,7 +54,9 @@ public class PerspectiveRepository {
                 compass, landmarkPlaceId, displayName, id);
     }
 
+    /** Las referencias enlazadas a ella quedan enlazadas al lugar, sin perspectiva. */
     public void softDelete(long id) {
+        jdbc.update("UPDATE place_reference_links SET perspective_id = NULL WHERE perspective_id = ?", id);
         jdbc.update("UPDATE place_photos SET deleted_at = CURRENT_TIMESTAMP WHERE perspective_id = ? AND deleted_at IS NULL", id);
         jdbc.update("UPDATE place_perspectives SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?", id);
     }

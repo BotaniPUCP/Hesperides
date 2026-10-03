@@ -60,9 +60,12 @@ public class PlaceRepository {
                 v.zoneId(), v.featureId(), v.geoJson(), v.geoJson(), id);
     }
 
-    /** Se va con sus perspectivas, fotos y alias: sin el lugar no ubican nada. */
+    /**
+     * Se va con sus perspectivas, fotos y alias: sin el lugar no ubican nada. Sus
+     * referencias migradas vuelven a la cola en vez de perderse.
+     */
     public void softDelete(long id) {
-        for (String table : List.of("place_photos", "place_perspectives", "place_aliases")) {
+        for (String table : List.of("place_photos", "place_perspectives", "place_aliases", "place_reference_links")) {
             jdbc.update("UPDATE " + table + " SET deleted_at = CURRENT_TIMESTAMP WHERE place_id = ? AND deleted_at IS NULL", id);
         }
         jdbc.update("UPDATE places SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?", id);
@@ -71,6 +74,15 @@ public class PlaceRepository {
     public int activeChildren(long id) {
         return jdbc.queryForObject("SELECT count(*) FROM places WHERE parent_place_id = ? AND deleted_at IS NULL",
                 Integer.class, id);
+    }
+
+    /** Agrega el alias si el lugar no lo tiene ya, ni como alias ni como nombre. */
+    public void addAliasIfNew(long placeId, String alias) {
+        jdbc.update("""
+                INSERT INTO place_aliases (place_id, alias) SELECT ?, ?
+                 WHERE NOT EXISTS (SELECT 1 FROM places WHERE id = ? AND lower(name) = lower(?))
+                   AND NOT EXISTS (SELECT 1 FROM place_aliases WHERE place_id = ? AND lower(alias) = lower(?) AND deleted_at IS NULL)""",
+                placeId, alias, placeId, alias, placeId, alias);
     }
 
     public void replaceAliases(long placeId, List<String> aliases) {
