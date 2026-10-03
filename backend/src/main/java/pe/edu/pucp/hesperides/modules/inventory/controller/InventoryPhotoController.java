@@ -1,9 +1,6 @@
 package pe.edu.pucp.hesperides.modules.inventory.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.CacheControl;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,8 +17,8 @@ import pe.edu.pucp.hesperides.modules.inventory.service.InventoryPhotoService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 import pe.edu.pucp.hesperides.shared.storage.FileStorage;
+import pe.edu.pucp.hesperides.shared.storage.StoredFileResponses;
 
-import java.time.Duration;
 import java.util.Optional;
 
 /**
@@ -58,12 +55,6 @@ public class InventoryPhotoController {
     private ResponseEntity<byte[]> serve(Optional<PhotoKeys> found, String size) {
         PhotoKeys keys = found.orElseThrow(() -> new ResourceNotFoundException("Photo not found"));
         String key = "thumb".equals(size) ? keys.thumbnail() : keys.full();
-        return storage.directUrl(key)
-                .map(url -> ResponseEntity.status(HttpStatus.FOUND).location(url).<byte[]>build())
-                // Una foto guardada no cambia: su clave es única, así que se puede cachear.
-                .orElseGet(() -> ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(keys.contentType()))
-                        .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
-                        .body(storage.read(key)));
+        return StoredFileResponses.serve(storage, key, keys.contentType());
     }
 }

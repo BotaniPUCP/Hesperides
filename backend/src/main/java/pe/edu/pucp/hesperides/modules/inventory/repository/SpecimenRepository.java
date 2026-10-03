@@ -1,5 +1,7 @@
 package pe.edu.pucp.hesperides.modules.inventory.repository;
 
+import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;

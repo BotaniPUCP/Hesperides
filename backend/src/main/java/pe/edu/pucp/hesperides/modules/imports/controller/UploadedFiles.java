@@ -3,7 +3,7 @@ package pe.edu.pucp.hesperides.modules.imports.controller;
 import org.springframework.web.multipart.MultipartFile;
 import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
-import pe.edu.pucp.hesperides.shared.storage.UploadLimits;
+import pe.edu.pucp.hesperides.shared.storage.PhotoUploads;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -42,14 +42,8 @@ final class UploadedFiles {
         return new UploadedPhoto(requiredPhoto(file), file.getOriginalFilename());
     }
 
-    /**
-     * Una foto de formulario tiene el mismo tope que una del ZIP (SPEC-104 D-07).
-     * Se mira el tamaño antes de leerla: así no entra en memoria una que se rechaza.
-     */
+    /** Una foto de formulario tiene el mismo tope que una del ZIP (SPEC-104 D-07). */
     static byte[] requiredPhoto(MultipartFile file) {
-        if (file != null && file.getSize() > UploadLimits.MAX_PHOTO_BYTES) {
-            throw new ValidationException("The photo is larger than " + UploadLimits.MAX_PHOTO_LABEL);
-        }
-        return required(file);
+        return PhotoUploads.required(file);
     }
 }
