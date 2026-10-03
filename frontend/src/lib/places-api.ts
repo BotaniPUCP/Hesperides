@@ -21,6 +21,7 @@ export interface PlaceFilters {
 
 /** Las fotos llegan como ruta de la API («/files/places/…»); el navegador necesita la dirección entera. */
 const media = (url: string) => (url.startsWith('/') ? `${API_BASE_URL}${url}` : url);
+
 const withMedia = (p: PlacePhoto): PlacePhoto => ({ ...p, thumbnailUrl: media(p.thumbnailUrl), fullUrl: media(p.fullUrl) });
 
 const segment = encodeURIComponent;

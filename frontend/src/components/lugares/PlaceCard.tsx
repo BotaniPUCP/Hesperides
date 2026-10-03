@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { PlaceSummary } from '@shared/types';
 import { Badge, Card, ImagePlaceholder } from '@/components/ui';
+import { photoSrcSet } from '@/lib/photo-srcset';
 
 /**
  * A un exterior le faltan fotos si no tiene foto principal, frente o espalda:
@@ -31,7 +32,7 @@ export function PlaceCard({ place }: { place: PlaceSummary }) {
         <div className="relative h-40 w-full flex-shrink-0 overflow-hidden bg-neutral-100">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo} alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover" />
+            <img src={photo} srcSet={photoSrcSet(photo)} sizes="(min-width: 640px) 25vw, 100vw" alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover" />
           ) : (
             <ImagePlaceholder label={place.name} size="full" className="rounded-none border-none" />
           )}

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { PlaceDetail } from '@shared/types';
 import { Badge, ImagePlaceholder } from '@/components/ui';
+import { photoSrcSet } from '@/lib/photo-srcset';
 
 export interface PlaceHeaderProps {
   place: PlaceDetail;
@@ -21,7 +22,7 @@ export function PlaceHeader({ place, onOpenMain, actions }: PlaceHeaderProps) {
         {main ? (
           <button type="button" onClick={() => onOpenMain(0)} aria-label={`Abrir foto principal de ${place.name}`} className="h-full w-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={main.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+            <img src={main.thumbnailUrl} srcSet={photoSrcSet(main.thumbnailUrl)} sizes="(min-width: 768px) 40vw, 100vw" alt="" className="h-full w-full object-cover" />
           </button>
         ) : (
           <ImagePlaceholder label="Sin foto principal" size="full" className="rounded-none border-none" />

@@ -1,6 +1,7 @@
 'use client';
 
 import type { MapPerspective } from '@shared/types';
+import { photoSrcSet } from '@/lib/photo-srcset';
 import { placeHref } from './catalog/catalogOnMap';
 import type { InfoCard } from './infoCard';
 
@@ -65,7 +66,7 @@ function PerspectiveBody({ perspective }: { perspective: MapPerspective }) {
     <div className="space-y-2 text-xs">
       {perspective.thumbnailUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={perspective.thumbnailUrl} alt={`Vista: ${perspective.displayName}`} className="h-36 w-full rounded object-cover" />
+        <img src={perspective.thumbnailUrl} srcSet={photoSrcSet(perspective.thumbnailUrl)} sizes="24rem" alt={`Vista: ${perspective.displayName}`} className="h-36 w-full rounded object-cover" />
       ) : (
         <p className="text-neutral-500">Esta perspectiva todavía no tiene fotos.</p>
       )}
