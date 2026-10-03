@@ -1,0 +1,99 @@
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import type { PlaceDetail } from '@shared/types';
+import { ApiError } from '@/lib/api';
+import { placesApi } from '@/lib/places-api';
+import { PlaceDetailScreen } from '../PlaceDetailScreen';
+
+jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn() } }));
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+
+const focused: (number | null)[] = [];
+jest.mock('../PlaceMiniMap', () => ({
+  PlaceMiniMap: ({ focusedPerspective }: { focusedPerspective: number | null }) => {
+    focused.push(focusedPerspective);
+    return <div data-testid="mini-map" />;
+  },
+}));
+
+const detail = placesApi.detail as jest.MockedFunction<typeof placesApi.detail>;
+
+const photo = (id: number) => ({ id, thumbnailUrl: `t${id}`, fullUrl: `f${id}`, author: 'Equipo de catastro', takenOn: '2026-10-01' });
+
+const cia: PlaceDetail = {
+  code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' },
+  category: { code: 'EDIFICIO', label: 'Edificio' },
+  outline: { source: 'BUILDING', buildingId: 87, zoneCode: null, featureCode: null, centerLat: -12.06, centerLon: -77.08 },
+  aliases: ['Centro de Innovación'], children: [{ code: 'LUG-0004', name: 'Piso 2' }], mainPhotos: [photo(1)],
+  perspectives: [
+    { id: 10, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: 'SOUTH', landmark: null,
+      lat: -12.0602, lon: -77.08, headingDeg: 0, photos: [photo(2), photo(3)] },
+    { id: 11, side: { code: 'SIDE', label: 'Al lado' }, displayName: 'Al lado de CIA · oeste, hacia Gelarti', compass: 'WEST',
+      landmark: { code: 'LUG-0007', name: 'Gelarti' }, lat: -12.06, lon: -77.0802, headingDeg: 90, photos: [] },
+  ],
+  interior: [],
+};
+
+afterEach(() => {
+  jest.clearAllMocks();
+  focused.length = 0;
+});
+
+describe('PlaceDetailScreen', () => {
+  it('muestra el lugar, sus alias, sus hijos y cada perspectiva con su nombre estándar', async () => {
+    detail.mockResolvedValue(cia);
+    render(<PlaceDetailScreen code="LUG-0001" />);
+
+    expect(await screen.findByRole('heading', { name: 'CIA' })).toBeInTheDocument();
+    expect(screen.getByText('Centro de Innovación')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Piso 2' })).toHaveAttribute('href', '/lugares/LUG-0004');
+    expect(screen.getByText('Espalda de CIA')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Gelarti' })).toHaveAttribute('href', '/lugares/LUG-0007');
+    expect(screen.getByTestId('mini-map')).toBeInTheDocument();
+  });
+
+  it('una perspectiva sin fotos lo avisa', async () => {
+    detail.mockResolvedValue(cia);
+    render(<PlaceDetailScreen code="LUG-0001" />);
+
+    const lado = (await screen.findByText(/Al lado de CIA/)).closest('li') as HTMLElement;
+    expect(within(lado).getByText('Sin fotos todavía')).toBeInTheDocument();
+  });
+
+  it('elegir una perspectiva la resalta en el mapa', async () => {
+    detail.mockResolvedValue(cia);
+    render(<PlaceDetailScreen code="LUG-0001" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Ver Espalda de CIA en el mapa' }));
+
+    expect(focused.at(-1)).toBe(10);
+  });
+
+  it('abre las fotos de una perspectiva en la galería', async () => {
+    detail.mockResolvedValue(cia);
+    render(<PlaceDetailScreen code="LUG-0001" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir foto 2 de Espalda de CIA' }));
+
+    expect(screen.getByRole('dialog', { name: 'Fotos de Espalda de CIA' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /foto 2 de 2/ })).toHaveAttribute('src', 'f3');
+  });
+
+  it('un lugar inexistente dice que no se encontró', async () => {
+    detail.mockRejectedValue(new ApiError(404, 'Place not found'));
+    render(<PlaceDetailScreen code="LUG-9999" />);
+
+    expect(await screen.findByText('Lugar no encontrado')).toBeInTheDocument();
+  });
+
+  it('un interior muestra sus fotos por vista y no tiene mapa de perspectivas', async () => {
+    detail.mockResolvedValue({
+      ...cia, code: 'LUG-0004', name: 'Piso 2', kind: { code: 'INDOOR', label: 'Interior' }, parent: { code: 'LUG-0001', name: 'CIA' },
+      outline: { ...cia.outline, source: 'INHERITED', buildingId: null }, perspectives: [], children: [],
+      interior: [{ view: { code: 'CORRIDOR', label: 'Pasillo' }, photos: [photo(5)] }],
+    });
+    render(<PlaceDetailScreen code="LUG-0004" />);
+
+    expect(await screen.findByRole('heading', { name: 'Pasillo' })).toBeInTheDocument();
+    expect(screen.queryByText('Perspectivas')).not.toBeInTheDocument();
+  });
+});

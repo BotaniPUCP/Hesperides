@@ -7,3 +7,4 @@ export * from './system-parameters';
 export * from './users';
 export * from './maintenance';
 export * from './map';
+export * from './places';

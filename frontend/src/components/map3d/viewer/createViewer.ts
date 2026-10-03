@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import type { ModeId } from '../modes';
 import type { SceneData } from '../sceneData';
 import type { LayerId, Target } from '../target';
 import { createCameraRig, type CameraPose } from './cameraRig';
@@ -18,34 +17,12 @@ import { createRenderer, createStage } from './stage';
 import { createTextures } from './textures';
 import { createVegetationLayer } from './vegetation';
 import { WORLD_LIFT, type PolyLayer } from './polyLayer';
+import { createViewCones } from './viewCones';
+import type { Viewer, ViewerCallbacks } from './viewerTypes';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
 
-export interface ViewerCallbacks {
-  onSelect: (target: Target | null) => void;
-  onGroundPick: (lat: number, lon: number) => void;
-  /** Cualquier clic con punto (suelo, área verde, edificio): para marcar una ubicación. */
-  onPointPick?: (lat: number, lon: number) => void;
-  onHover: (target: Target | null, clientX: number, clientY: number) => void;
-  onCompass: (degrees: number) => void;
-}
-
-export interface Viewer {
-  setPaint: (mode: ModeId, hidden: Set<string>) => void;
-  setLayerVisible: (id: LayerId, visible: boolean) => void;
-  select: (target: Target | null, focus: boolean) => void;
-  setNight: (night: boolean) => void;
-  setHour: (hour: number) => void;
-  setShadows: (on: boolean) => void;
-  setLabels: (on: boolean) => void;
-  setGrayBuildings: (gray: boolean) => void;
-  fit: () => void;
-  top: () => void;
-  north: () => void;
-  toggleSpin: () => boolean;
-  pose: () => CameraPose;
-  dispose: () => void;
-}
+export type { Viewer, ViewerCallbacks } from './viewerTypes';
 
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose): Viewer {
   const renderer = createRenderer();
@@ -66,6 +43,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
   const pin = createPin(scene);
+  const cones = createViewCones(scene);
   const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta);
   const isHidden = (t: Target) => t.layer === 'greenAreas' && state.hidden.size > 0 && poly.greenAreas.options.color(t.index) === state.palette.dimmed;
   const size = () => ({ w: container.clientWidth || 1, h: container.clientHeight || 1 });
@@ -186,12 +164,27 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     setLabels: (on) => { labelsOn = on; needsRender = true; },
     setGrayBuildings: (v) => { gray = v; applyTheme(); },
     fit: rig.fit, top: rig.top, north: rig.north, toggleSpin: rig.toggleSpin, pose: rig.pose,
+    setViewCones(list) {
+      cones.set(list.map((c) => { const p = data.plane.toPlane(c.lat, c.lon); return { id: c.id, x: p.x, z: -p.y, headingDeg: c.headingDeg }; }));
+      needsRender = true;
+    },
+    focusViewCone(id) {
+      cones.highlight(id);
+      const at = id === null ? null : cones.position(id);
+      if (at) rig.focusPoint(at.x, at.z);
+      needsRender = true;
+    },
+    focusLatLon(lat, lon) {
+      const p = data.plane.toPlane(lat, lon);
+      rig.focusPoint(p.x, -p.y);
+    },
     dispose() {
       cancelAnimationFrame(frame);
       observer.disconnect();
       unbind();
       rig.controls.dispose();
       labels.dispose();
+      cones.dispose();
       stage.dispose();
     },
   };

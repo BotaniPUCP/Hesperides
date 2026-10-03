@@ -38,6 +38,8 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
   // Público incluso sin sesión (docs/inventario-verde/README.md); aquí, para quien ya entró.
   { label: 'Inventario verde', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+  // Catálogo de lugares: lo consultan todos; editarlo es de ADMIN y COORDINADOR.
+  { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [

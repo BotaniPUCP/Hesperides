@@ -63,9 +63,9 @@ describe('visibleNavigation', () => {
     expect(hrefsDe('OPERARIO')).toEqual(['/admin/frecuencias']);
   });
 
-  it('el mapa y el inventario verde son enlaces directos para los cuatro roles, no grupos', () => {
+  it('el mapa, el inventario verde y los lugares son enlaces directos para los cuatro roles, no grupos', () => {
     for (const rol of ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO']) {
-      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/mapa', '/inventario-verde']);
+      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/mapa', '/inventario-verde', '/lugares']);
     }
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual(['Catastro', 'Administración']);
   });
