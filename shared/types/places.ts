@@ -146,3 +146,29 @@ export interface MigrationProgress {
   discarded: number;
   pending: number;
 }
+
+/** Un lugar en el mapa principal: lo justo para buscarlo y llevar la cámara. */
+export interface MapPlace {
+  code: string;
+  name: string;
+  parentName: string | null;
+  buildingId: number | null;
+  lat: number | null;
+  lon: number | null;
+}
+
+/** Una perspectiva en el mapa principal: su cono y lo que muestra su ficha. */
+export interface MapPerspective {
+  id: number;
+  place: PlaceRef;
+  displayName: string;
+  lat: number;
+  lon: number;
+  headingDeg: number;
+  thumbnailUrl: string | null;
+}
+
+export interface MapCatalog {
+  places: MapPlace[];
+  perspectives: MapPerspective[];
+}

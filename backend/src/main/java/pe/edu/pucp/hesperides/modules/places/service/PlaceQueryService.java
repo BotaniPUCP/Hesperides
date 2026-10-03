@@ -5,10 +5,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.CodeLabel;
+import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.MapCatalog;
+import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.MapPerspective;
+import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.MapPlace;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.PlaceDetail;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.PlaceRef;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.PlaceSummary;
 import pe.edu.pucp.hesperides.modules.places.repository.PerspectiveRepository;
+import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlacePhotoRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlacePhotoRepository.PhotoRow;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceReadRepository;
@@ -26,6 +30,7 @@ public class PlaceQueryService {
     private final PerspectiveRepository perspectives;
     private final PlacePhotoRepository photos;
     private final PlaceDetailAssembler assembler;
+    private final PlaceMapRepository mapRows;
 
     @Transactional(readOnly = true)
     public List<PlaceSummary> list(String search, String categoryCode, String kindCode) {
@@ -52,6 +57,17 @@ public class PlaceQueryService {
                 assembler.mainPhotos(placePhotos),
                 perspectives.byPlace(place.id()).stream().map(p -> assembler.perspective(p, placePhotos)).toList(),
                 assembler.interior(placePhotos));
+    }
+
+    /** Todo el catálogo resumido, para la capa de perspectivas y el buscador del mapa. */
+    @Transactional(readOnly = true)
+    public MapCatalog map() {
+        return new MapCatalog(
+                mapRows.places().stream().map(p -> new MapPlace(p.code(), p.name(), p.parentName(), p.buildingId(), p.lat(), p.lon()))
+                        .toList(),
+                mapRows.perspectives().stream().map(v -> new MapPerspective(v.id(), new PlaceRef(v.placeCode(), v.placeName()),
+                        v.displayName(), v.lat(), v.lon(), v.headingDeg(),
+                        v.firstPhotoId() == null ? null : PlaceDetailAssembler.url(v.firstPhotoId(), true))).toList());
     }
 
     private static String blankToNull(String value) {

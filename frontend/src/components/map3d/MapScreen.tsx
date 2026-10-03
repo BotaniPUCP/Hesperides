@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { LoadingSkeleton } from '@/components/ui';
 import { useMapLayers } from '@/hooks/useMapLayers';
+import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
 import { LayerToggles } from './LayerToggles';
 import { Map3DView } from './Map3DView';
 import { MapAttribution } from './MapAttribution';
@@ -14,7 +15,7 @@ import { MapToolbar } from './MapToolbar';
 import { mapScreenPose } from './mapScreenPose';
 import { ModeLegend } from './ModeLegend';
 import { toSceneData } from './sceneData';
-import { buildSearchIndex } from './searchIndex';
+import { buildSearchIndex, isCatalogTarget } from './searchIndex';
 import { useMapScreenState } from './useMapScreenState';
 
 /** El mapa del campus a pantalla completa: la maqueta 3D con buscador, capas, leyenda y ficha. */
@@ -29,8 +30,10 @@ export function MapScreen() {
     }
   }, [response]);
   const data = scene.data;
-  const index = useMemo(() => (data ? buildSearchIndex(data) : []), [data]);
-  const s = useMapScreenState(data);
+  const catalog = useMapCatalog();
+  const s = useMapScreenState(data, useCatalogLinkFor(data, catalog));
+  const onMap = useCatalogOnMap(data, catalog, s);
+  const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
   const [panelOpen, setPanelOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -63,13 +66,14 @@ export function MapScreen() {
           onGroundPick={s.onGroundPick}
           onHover={() => undefined}
           onCompass={s.onCompass}
+          onViewConePick={onMap.onConePick}
           poseMemory={mapScreenPose}
         />
       )}
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start gap-2 p-3">
         <div className="pointer-events-auto w-full max-w-sm space-y-2">
-          <MapSearch index={index} onPick={(e) => s.select(e.target)} />
+          <MapSearch index={index} onPick={(e) => (isCatalogTarget(e.target) ? onMap.pick(e.target) : s.select(e.target))} />
           {stale && (
             <p role="status" className="rounded-md bg-amber-50/95 px-3 py-1.5 text-xs text-amber-900 shadow">
               Sin conexión: se muestra la última versión descargada del mapa.

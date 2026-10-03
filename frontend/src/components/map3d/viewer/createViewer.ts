@@ -76,6 +76,8 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const unbind = bindPointer(dom, {
     onPress: () => { rig.cancelFlight(); rig.controls.autoRotate = false; },
     onClick(x, y) {
+      const cone = cb.onViewConePick ? cones.hitTest(x, y, dom, rig.camera) : null;
+      if (cone !== null) { cones.highlight(cone); cb.onViewConePick?.(cone); needsRender = true; return; }
       const hit = pick(x, y, dom, rig.camera, pickables, isHidden);
       pin.hide();
       highlight.setSelected(hit?.target ?? null);

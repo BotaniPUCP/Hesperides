@@ -1,9 +1,12 @@
 'use client';
 
+import type { MapPerspective } from '@shared/types';
+import { placeHref } from './catalog/catalogOnMap';
 import type { InfoCard } from './infoCard';
 
 export type MapCardContent =
   | { kind: 'element'; card: InfoCard }
+  | { kind: 'perspective'; perspective: MapPerspective }
   | { kind: 'location'; lat: number; lon: number; text: string | null; error: string | null };
 
 export interface MapInfoCardProps {
@@ -15,8 +18,8 @@ const coords = (lat: number, lon: number) => `${lat.toFixed(6)}, ${lon.toFixed(6
 
 /** Ficha del elemento elegido, o la descripción del punto pulsado en el suelo. */
 export function MapInfoCard({ content, onClose }: MapInfoCardProps) {
-  const title = content.kind === 'element' ? content.card.title : 'Punto seleccionado';
-  const kind = content.kind === 'element' ? content.card.kind : 'Ubicación';
+  const title = content.kind === 'element' ? content.card.title : content.kind === 'perspective' ? content.perspective.displayName : 'Punto seleccionado';
+  const kind = content.kind === 'element' ? content.card.kind : content.kind === 'perspective' ? 'Perspectiva' : 'Ubicación';
   return (
     <section aria-label={title} className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white/95 p-3 text-sm shadow-lg">
       <header className="mb-2 flex items-start justify-between gap-2">
@@ -45,6 +48,8 @@ export function MapInfoCard({ content, onClose }: MapInfoCardProps) {
             </a>
           )}
         </>
+      ) : content.kind === 'perspective' ? (
+        <PerspectiveBody perspective={content.perspective} />
       ) : (
         <div className="space-y-1 text-xs">
           <p className="text-neutral-800">{content.error ?? content.text ?? 'Calculando ubicación…'}</p>
@@ -52,5 +57,21 @@ export function MapInfoCard({ content, onClose }: MapInfoCardProps) {
         </div>
       )}
     </section>
+  );
+}
+
+function PerspectiveBody({ perspective }: { perspective: MapPerspective }) {
+  return (
+    <div className="space-y-2 text-xs">
+      {perspective.thumbnailUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={perspective.thumbnailUrl} alt={`Vista: ${perspective.displayName}`} className="h-36 w-full rounded object-cover" />
+      ) : (
+        <p className="text-neutral-500">Esta perspectiva todavía no tiene fotos.</p>
+      )}
+      <a href={placeHref(perspective.place.code)} className="inline-block font-medium text-brand-700 hover:underline">
+        {`Ver ${perspective.place.name} en el catálogo →`}
+      </a>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import type {
+  MapCatalog,
   MigrationProgress,
   PerspectiveInput,
   PhotoInput,
@@ -45,6 +46,13 @@ export const placesApi = {
       mainPhotos: d.mainPhotos.map(withMedia),
       perspectives: d.perspectives.map((v) => ({ ...v, photos: v.photos.map(withMedia) })),
       interior: d.interior.map((g) => ({ ...g, photos: g.photos.map(withMedia) })),
+    })),
+
+  /** El catálogo resumido para el mapa principal. */
+  map: () =>
+    apiClient.get<MapCatalog>('/places/map').then((m) => ({
+      ...m,
+      perspectives: m.perspectives.map((v) => ({ ...v, thumbnailUrl: v.thumbnailUrl ? media(v.thumbnailUrl) : null })),
     })),
 
   create: (input: PlaceInput) => apiClient.post<{ code: string }>('/places', input),

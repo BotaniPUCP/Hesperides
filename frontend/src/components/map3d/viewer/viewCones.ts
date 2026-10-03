@@ -29,8 +29,13 @@ export interface ViewCones {
   set: (cones: { id: number; x: number; z: number; headingDeg: number }[]) => void;
   highlight: (id: number | null) => void;
   position: (id: number) => THREE.Vector3 | null;
+  /** El cono bajo el cursor, si hay uno. */
+  hitTest: (clientX: number, clientY: number, dom: HTMLElement, camera: THREE.Camera) => number | null;
   dispose: () => void;
 }
+
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
 
 /**
  * En la escena el norte es -z. Tras tumbar el círculo (rotación -90° en x), el
@@ -64,6 +69,7 @@ export function createViewCones(scene: THREE.Scene): ViewCones {
         const mesh = new THREE.Mesh(wedge(c.headingDeg), material);
         mesh.position.set(c.x, WORLD_LIFT + LIFT_M, c.z);
         mesh.renderOrder = 20;
+        mesh.userData.coneId = c.id;
         mesh.add(new THREE.Mesh(dot, material));
         meshes.set(c.id, mesh);
         group.add(mesh);
@@ -76,6 +82,14 @@ export function createViewCones(scene: THREE.Scene): ViewCones {
       });
     },
     position: (id) => meshes.get(id)?.position.clone() ?? null,
+    hitTest(clientX, clientY, dom, camera) {
+      if (meshes.size === 0) return null;
+      const r = dom.getBoundingClientRect();
+      ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      const hit = raycaster.intersectObjects([...meshes.values()], false)[0];
+      return hit ? (hit.object.userData.coneId as number) : null;
+    },
     dispose() {
       clear();
       dot.dispose();

@@ -11,6 +11,8 @@ export interface ViewerCallbacks {
   onPointPick?: (lat: number, lon: number) => void;
   onHover: (target: Target | null, clientX: number, clientY: number) => void;
   onCompass: (degrees: number) => void;
+  /** Un clic sobre el cono de una perspectiva. */
+  onViewConePick?: (id: number) => void;
 }
 
 /** Las operaciones que la interfaz React ordena al visor. */

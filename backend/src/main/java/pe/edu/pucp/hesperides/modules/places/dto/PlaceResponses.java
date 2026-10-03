@@ -43,4 +43,16 @@ public final class PlaceResponses {
     /** Una perspectiva sugerida a quien está en el campus. */
     public record NearbyPerspective(long id, String displayName, PlaceRef place, double distanceM, String thumbnailUrl) {
     }
+
+    /** Un lugar en el mapa: lo justo para buscarlo y llevar la cámara. */
+    public record MapPlace(String code, String name, String parentName, Long buildingId, Double lat, Double lon) {
+    }
+
+    /** Una perspectiva en el mapa: su cono y lo que muestra su ficha. */
+    public record MapPerspective(long id, PlaceRef place, String displayName, double lat, double lon, double headingDeg,
+            String thumbnailUrl) {
+    }
+
+    public record MapCatalog(List<MapPlace> places, List<MapPerspective> perspectives) {
+    }
 }

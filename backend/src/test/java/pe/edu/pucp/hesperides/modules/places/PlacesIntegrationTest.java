@@ -138,6 +138,20 @@ class PlacesIntegrationTest {
     }
 
     @Test
+    void theMapGetsEveryPlaceWithItsCenterAndEveryPerspective() throws Exception {
+        String code = createInras();
+        perspective(code, "BACK", LAT - OFFSET, LON).andExpect(status().isCreated());
+
+        mockMvc.perform(get(PLACES + "/map")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.places[0].code").value(code))
+                .andExpect(jsonPath("$.data.places[0].buildingId").value(inrasBuildingId()))
+                .andExpect(jsonPath("$.data.places[0].lat").isNumber())
+                .andExpect(jsonPath("$.data.perspectives[0].displayName").value("Espalda de INRAS"))
+                .andExpect(jsonPath("$.data.perspectives[0].place.code").value(code))
+                .andExpect(jsonPath("$.data.perspectives[0].headingDeg").value(0.0));
+    }
+
+    @Test
     void aPlaceHasOnlyOneBack() throws Exception {
         String code = createInras();
         perspective(code, "BACK", LAT - OFFSET, LON).andExpect(status().isCreated());

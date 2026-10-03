@@ -46,6 +46,8 @@ export function Map3DView({ data, onReady, onUnsupported, poseMemory, ...callbac
           onPointPick: (lat, lon) => latest.current.onPointPick?.(lat, lon),
           onHover: (t, x, y) => latest.current.onHover(t, x, y),
           onCompass: (deg) => latest.current.onCompass(deg),
+          // Solo si la pantalla lo pide: en los editores un clic sobre un cono debe marcar un punto.
+          ...(latest.current.onViewConePick ? { onViewConePick: (id: number) => latest.current.onViewConePick?.(id) } : {}),
         }, latest.current.poseMemory?.recall());
         latest.current.onReady(viewer);
       })

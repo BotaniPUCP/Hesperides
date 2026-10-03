@@ -1,13 +1,24 @@
 import type { SceneData } from './sceneData';
 import type { LayerId, Target } from './target';
 
+/** Un lugar o una perspectiva del catálogo de lugares: no son capas del visor. */
+export interface CatalogTarget {
+  layer: 'catalogPlace' | 'catalogPerspective';
+  index: number;
+}
+
+export type SearchTarget = Target | CatalogTarget;
+
+export const isCatalogTarget = (t: SearchTarget): t is CatalogTarget =>
+  t.layer === 'catalogPlace' || t.layer === 'catalogPerspective';
+
 /** Una fila del buscador del mapa. `key` es el texto normalizado sobre el que se busca. */
 export interface SearchEntry {
   title: string;
   subtitle: string;
   terms: string;
   key: string;
-  target: Target;
+  target: SearchTarget;
   /** Desempata a igual coincidencia: las referencias y los edificios antes que el resto. */
   priority: number;
 }
