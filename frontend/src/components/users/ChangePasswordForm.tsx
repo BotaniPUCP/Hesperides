@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import type { FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Button, Card, Input } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { ApiError } from '@/lib/api';
@@ -21,12 +21,12 @@ import { PasswordPolicyChecklist } from './PasswordPolicyChecklist';
 const ACTUAL_INCORRECTA = 'Current password is incorrect';
 
 export function ChangePasswordForm() {
-  const router = useRouter();
   const { user, refreshSession } = useAuth();
 
   const [actual, setActual] = useState('');
   const [nueva, setNueva] = useState('');
   const [repetida, setRepetida] = useState('');
+  const guard = useUnsavedChangesGuard(actual !== '' || nueva !== '' || repetida !== '');
   const [errorActual, setErrorActual] = useState<string>();
   const [errorFormulario, setErrorFormulario] = useState<string>();
   const [enviando, setEnviando] = useState(false);
@@ -60,7 +60,7 @@ export function ChangePasswordForm() {
       // Sin releer la sesión, `mustChangePassword` seguiría en true en esta
       // pestaña y RouteGuard devolvería aquí mismo a quien acaba de cambiarla.
       await refreshSession();
-      router.push('/');
+      guard.navigate('/');
     } catch (error) {
       aplicarError(error);
     } finally {
@@ -162,6 +162,7 @@ export function ChangePasswordForm() {
             Volver al inicio
           </Link>
         )}
+        {guard.dialog}
       </form>
     </Card>
   );
