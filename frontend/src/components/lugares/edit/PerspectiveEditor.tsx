@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { PerspectiveSideCode, PlaceDetail, PlacePerspective } from '@shared/types';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { Button, LoadingSkeleton, Modal } from '@/components/ui';
 import { Map3DView } from '@/components/map3d/Map3DView';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
@@ -43,6 +44,10 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const marked = JSON.stringify([draft.side, draft.point, draft.heading]);
+  const [initial] = useState(marked);
+  const guard = useUnsavedChangesGuard(marked !== initial);
+  const close = () => guard.confirm(onClose);
   const others = useMemo(() => place.perspectives.filter((v) => v.id !== perspective?.id), [place.perspectives, perspective?.id]);
   const taken = (code: PerspectiveSideCode) => code !== 'SIDE' && others.some((v) => v.side.code === code);
 
@@ -75,7 +80,7 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
 
   const footer = (
     <>
-      <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+      <Button variant="secondary" onClick={close}>Cancelar</Button>
       <Button onClick={() => void save()} disabled={!draft.input || draft.previewError !== null} loading={saving}>
         Guardar perspectiva
       </Button>
@@ -83,7 +88,8 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
   );
 
   return (
-    <Modal isOpen onClose={onClose} title={perspective ? 'Editar perspectiva' : 'Nueva perspectiva'} size="lg" footer={footer}>
+    <>
+    <Modal isOpen onClose={close} title={perspective ? 'Editar perspectiva' : 'Nueva perspectiva'} size="lg" footer={footer}>
       <div className="flex flex-col gap-3">
         <div role="group" aria-label="Lado" className="flex gap-2">
           {SIDES.map((s) => (
@@ -117,5 +123,7 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
         )}
       </div>
     </Modal>
+    {guard.dialog}
+    </>
   );
 }

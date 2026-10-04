@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -40,6 +40,8 @@ export function Modal({
   closeOnEsc = true,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  // Único por modal: con uno sobre otro (el aviso de cambios sin guardar), un id fijo los nombraría igual.
+  const titleId = useId();
   const previouslyFocused = useRef<HTMLElement | null>(null);
   const isMobile = useMediaQuery('(max-width: 639px)');
 
@@ -106,14 +108,14 @@ export function Modal({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
         className={cn(
           'relative z-10 flex max-h-full w-full flex-col rounded-lg bg-neutral-0 shadow-lg',
           SIZES[effectiveSize],
         )}
       >
         <div className="flex items-center justify-between border-b border-neutral-200 p-4">
-          <h2 id="modal-title" className="text-lg font-semibold text-neutral-900">
+          <h2 id={titleId} className="text-lg font-semibold text-neutral-900">
             {title}
           </h2>
           <button

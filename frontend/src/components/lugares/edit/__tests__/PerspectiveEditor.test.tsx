@@ -4,6 +4,7 @@ import type { Map3DViewProps } from '@/components/map3d/Map3DView';
 import { placesApi } from '@/lib/places-api';
 import { PerspectiveEditor } from '../PerspectiveEditor';
 
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
 jest.mock('@/lib/places-api', () => ({
   placesApi: { previewPerspective: jest.fn(), createPerspective: jest.fn(), updatePerspective: jest.fn() },
 }));
@@ -68,4 +69,21 @@ describe('PerspectiveEditor', () => {
     expect(screen.getByRole('button', { name: 'Espalda' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Guardar perspectiva' })).toBeEnabled();
   });
+
+  it('cerrar después de marcar el punto pregunta; sin marcar nada cierra directo', () => {
+    const onClose = jest.fn();
+    const { unmount } = render(<PerspectiveEditor place={place} perspective={null} onClose={onClose} onSaved={jest.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    unmount();
+
+    render(<PerspectiveEditor place={place} perspective={null} onClose={onClose} onSaved={jest.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Al lado' }));
+    act(() => map.onPointPick?.(-12.07, -77.0802));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+  });
 });
+
