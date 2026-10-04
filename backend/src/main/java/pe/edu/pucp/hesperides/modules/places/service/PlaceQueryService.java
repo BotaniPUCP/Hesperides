@@ -13,6 +13,7 @@ import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.PlaceRef;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.PlaceSummary;
 import pe.edu.pucp.hesperides.modules.places.repository.PerspectiveRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapRepository;
+import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapViewRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlacePhotoRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlacePhotoRepository.PhotoRow;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceReadRepository;
@@ -31,6 +32,7 @@ public class PlaceQueryService {
     private final PlacePhotoRepository photos;
     private final PlaceDetailAssembler assembler;
     private final PlaceMapRepository mapRows;
+    private final PlaceMapViewRepository mapViews;
 
     @Transactional(readOnly = true)
     public List<PlaceSummary> list(String search, String categoryCode, String kindCode) {
@@ -56,7 +58,7 @@ public class PlaceQueryService {
                 reads.children(place.id()).stream().map(c -> new PlaceRef(c[0], c[1])).toList(),
                 assembler.mainPhotos(placePhotos),
                 perspectives.byPlace(place.id()).stream().map(p -> assembler.perspective(p, placePhotos)).toList(),
-                assembler.interior(placePhotos));
+                assembler.interior(placePhotos), mapViews.find(place.id()));
     }
 
     /** Todo el catálogo resumido, para la capa de perspectivas y el buscador del mapa. */

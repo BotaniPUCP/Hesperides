@@ -37,7 +37,7 @@ public final class PlaceResponses {
 
     public record PlaceDetail(String code, String name, PlaceRef parent, CodeLabel kind, CodeLabel category,
             Outline outline, List<String> aliases, List<PlaceRef> children, List<Photo> mainPhotos,
-            List<Perspective> perspectives, List<InteriorGroup> interior) {
+            List<Perspective> perspectives, List<InteriorGroup> interior, MapViewDtos.MapView mapView) {
     }
 
     /** Una perspectiva sugerida a quien está en el campus. */

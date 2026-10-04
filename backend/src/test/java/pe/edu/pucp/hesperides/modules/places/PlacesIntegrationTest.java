@@ -152,6 +152,32 @@ class PlacesIntegrationTest {
     }
 
     @Test
+    void savesAndClearsTheMapViewOfAPlace() throws Exception {
+        String code = createInras();
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.mapView").doesNotExist());
+
+        mockMvc.perform(put(PLACES + "/" + code + "/map-view").contentType(MediaType.APPLICATION_JSON).content("""
+                {"camera": {"lat": %s, "lon": %s, "heightM": 120.5}, "target": {"lat": %s, "lon": %s, "heightM": 0}}"""
+                .formatted(LAT - OFFSET, LON, LAT, LON))).andExpect(status().isOk());
+
+        mockMvc.perform(get(PLACES + "/" + code))
+                .andExpect(jsonPath("$.data.mapView.camera.heightM").value(120.5))
+                .andExpect(jsonPath("$.data.mapView.target.lat").value(LAT));
+
+        mockMvc.perform(delete(PLACES + "/" + code + "/map-view")).andExpect(status().isOk());
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.mapView").doesNotExist());
+    }
+
+    @Test
+    void aMapViewWithoutTargetIsRejected() throws Exception {
+        String code = createInras();
+
+        mockMvc.perform(put(PLACES + "/" + code + "/map-view").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"camera\": {\"lat\": %s, \"lon\": %s, \"heightM\": 100}}".formatted(LAT, LON)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void aPlaceHasOnlyOneBack() throws Exception {
         String code = createInras();
         perspective(code, "BACK", LAT - OFFSET, LON).andExpect(status().isCreated());
