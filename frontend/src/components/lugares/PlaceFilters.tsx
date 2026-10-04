@@ -4,6 +4,7 @@ import type { PlaceKindCode } from '@shared/types';
 import { Input, Select } from '@/components/ui';
 import { useCatalog } from '@/hooks/useCatalog';
 import { cn } from '@/lib/cn';
+import { categoryOptions } from './categoryOptions';
 
 export type KindFilter = PlaceKindCode | null;
 
@@ -46,7 +47,7 @@ export function PlaceFilters({ search, onSearch, category, onCategory, kind, onK
           label="Categoría"
           value={category}
           onChange={(o) => onCategory(o?.code ?? null)}
-          options={items.map((i, indice) => ({ id: indice + 1, code: i.code, label: i.label }))}
+          options={categoryOptions(items)}
           placeholder="Todas"
           loading={isLoading}
           clearable

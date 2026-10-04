@@ -5,6 +5,7 @@ import { Input, Select } from '@/components/ui';
 import { useCatalog } from '@/hooks/useCatalog';
 import { usePlaces } from '@/hooks/usePlaces';
 import { cn } from '@/lib/cn';
+import { categoryOptions } from '../categoryOptions';
 
 export interface PlaceFormValues {
   name: string;
@@ -45,7 +46,7 @@ export function PlaceFormFields({ values, onChange, excludeCode }: PlaceFormFiel
         label="Categoría"
         value={values.category}
         onChange={(o) => set({ category: o?.code ?? null })}
-        options={categories.items.map((c, i) => ({ id: i + 1, code: c.code, label: c.label }))}
+        options={categoryOptions(categories.items)}
         loading={categories.isLoading}
         required
       />
