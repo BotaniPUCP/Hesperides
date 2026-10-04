@@ -165,7 +165,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     },
     setLabels: (on) => { labelsOn = on; needsRender = true; },
     setGrayBuildings: (v) => { gray = v; applyTheme(); },
-    fit: rig.fit, top: rig.top, north: rig.north, toggleSpin: rig.toggleSpin, pose: rig.pose,
+    fit: rig.fit, top: rig.top, north: rig.north, toggleSpin: rig.toggleSpin, pose: rig.pose, flyToPose: rig.flyToPose,
     setViewCones(list) {
       cones.set(list.map((c) => { const p = data.plane.toPlane(c.lat, c.lon); return { id: c.id, x: p.x, z: -p.y, headingDeg: c.headingDeg }; }));
       needsRender = true;

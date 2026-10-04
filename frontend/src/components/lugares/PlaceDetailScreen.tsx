@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { PlacePerspective } from '@shared/types';
@@ -14,7 +14,7 @@ import { PerspectiveList } from './PerspectiveList';
 import { PhotoStrip } from './PhotoStrip';
 import { PlaceGallery, type GalleryState } from './PlaceGallery';
 import { PlaceHeader } from './PlaceHeader';
-import { PlaceMiniMap } from './PlaceMiniMap';
+import { usePlaceMap } from './map/PlaceMapContext';
 
 const CATALOG = { label: 'Lugares', href: '/lugares' };
 const NEW = 'new';
@@ -28,6 +28,13 @@ export function PlaceDetailScreen({ code }: { code: string }) {
   const [focused, setFocused] = useState<number | null>(null);
   const [gallery, setGallery] = useState<GalleryState | null>(null);
   const [editing, setEditing] = useState<PlacePerspective | typeof NEW | null>(null);
+  const map = usePlaceMap();
+
+  // El mapa vive en el layout de /lugares: se le dice qué lugar mostrar y qué perspectiva resaltar.
+  useEffect(() => {
+    if (place) map.show(place, reload);
+  }, [map, place, reload]);
+  useEffect(() => map.focusPerspective(focused), [map, focused]);
 
   if (loading) return <LoadingSkeleton variant="card" count={3} />;
   if (!place) {
@@ -69,7 +76,7 @@ export function PlaceDetailScreen({ code }: { code: string }) {
       )}
 
       {outdoor && (
-        <section className="grid gap-5 lg:grid-cols-2">
+        <section>
           <div>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-bold text-neutral-900">Perspectivas</h2>
@@ -87,9 +94,6 @@ export function PlaceDetailScreen({ code }: { code: string }) {
                 uploader: (v) => <PhotoUploader placeCode={place.code} target={{ perspectiveId: v.id }} label={`Subir fotos a ${v.displayName}`} onDone={reload} />,
               } : undefined}
             />
-          </div>
-          <div className="lg:sticky lg:top-4 lg:self-start">
-            <PlaceMiniMap place={place} focusedPerspective={focused} />
           </div>
         </section>
       )}

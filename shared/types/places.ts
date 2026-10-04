@@ -66,6 +66,19 @@ export interface InteriorGroup {
   photos: PlacePhoto[];
 }
 
+/** Un punto del campus con su altura sobre el suelo de la maqueta, en metros. */
+export interface GeoPoint {
+  lat: number;
+  lon: number;
+  heightM: number;
+}
+
+/** El encuadre guardado de un lugar: dónde está la cámara y hacia qué punto mira. */
+export interface PlaceMapView {
+  camera: GeoPoint;
+  target: GeoPoint;
+}
+
 export interface PlaceDetail {
   code: string;
   name: string;
@@ -78,6 +91,8 @@ export interface PlaceDetail {
   mainPhotos: PlacePhoto[];
   perspectives: PlacePerspective[];
   interior: InteriorGroup[];
+  /** Null: el mapa usa el encuadre automático. */
+  mapView: PlaceMapView | null;
 }
 
 /** De dónde sale el contorno al guardar: uno solo, o ninguno para un interior. */

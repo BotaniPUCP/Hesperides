@@ -30,6 +30,8 @@ export interface Viewer {
   north: () => void;
   toggleSpin: () => boolean;
   pose: () => CameraPose;
+  /** Vuela hasta una pose guardada, con la misma animación que al buscar. */
+  flyToPose: (pose: CameraPose) => void;
   /** Los conos de las perspectivas de un lugar; una lista vacía los quita. */
   setViewCones: (cones: ViewCone[]) => void;
   /** Resalta un cono (o ninguno) y lleva la cámara a él. */

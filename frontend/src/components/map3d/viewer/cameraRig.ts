@@ -33,6 +33,8 @@ export interface CameraRig {
   step: (now: number) => boolean;
   cancelFlight: () => void;
   pose: () => CameraPose;
+  /** Vuela hasta una pose guardada. */
+  flyToPose: (pose: CameraPose) => void;
 }
 
 export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE.Vector3, reducedMotion: boolean, initialPose?: CameraPose): CameraRig {
@@ -118,6 +120,7 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
     cancelFlight: () => {
       flight = null;
     },
+    flyToPose: (pose) => flyTo(new THREE.Vector3(...pose.position), new THREE.Vector3(...pose.target)),
     pose: () => ({ position: camera.position.toArray() as Vec3, target: controls.target.toArray() as Vec3 }),
   };
 }

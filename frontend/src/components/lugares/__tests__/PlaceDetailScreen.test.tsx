@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import type { PlaceDetail } from '@shared/types';
 import { ApiError } from '@/lib/api';
 import { placesApi } from '@/lib/places-api';
+import { PlaceMapContext } from '../map/PlaceMapContext';
 import { PlaceDetailScreen } from '../PlaceDetailScreen';
 
 const mockRole = { current: 'OPERARIO' };
@@ -13,13 +14,16 @@ jest.mock('@/components/ui', () => ({
 jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn(), removePerspective: jest.fn() } }));
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
 
-const focused: (number | null)[] = [];
-jest.mock('../PlaceMiniMap', () => ({
-  PlaceMiniMap: ({ focusedPerspective }: { focusedPerspective: number | null }) => {
-    focused.push(focusedPerspective);
-    return <div data-testid="mini-map" />;
-  },
-}));
+const map = { show: jest.fn(), focusPerspective: jest.fn() };
+
+/** La ficha dentro del layout de /lugares, que le da el mapa. */
+function renderScreen(code: string) {
+  return render(
+    <PlaceMapContext.Provider value={map}>
+      <PlaceDetailScreen code={code} />
+    </PlaceMapContext.Provider>,
+  );
+}
 
 const detail = placesApi.detail as jest.MockedFunction<typeof placesApi.detail>;
 
@@ -37,30 +41,30 @@ const cia: PlaceDetail = {
       landmark: { code: 'LUG-0007', name: 'Gelarti' }, lat: -12.06, lon: -77.0802, headingDeg: 90, photos: [] },
   ],
   interior: [],
+  mapView: null,
 };
 
 afterEach(() => {
   mockRole.current = 'OPERARIO';
   jest.clearAllMocks();
-  focused.length = 0;
 });
 
 describe('PlaceDetailScreen', () => {
   it('muestra el lugar, sus alias, sus hijos y cada perspectiva con su nombre estándar', async () => {
     detail.mockResolvedValue(cia);
-    render(<PlaceDetailScreen code="LUG-0001" />);
+    renderScreen('LUG-0001');
 
     expect(await screen.findByRole('heading', { name: 'CIA' })).toBeInTheDocument();
     expect(screen.getByText('Centro de Innovación')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Piso 2' })).toHaveAttribute('href', '/lugares/LUG-0004');
     expect(screen.getByText('Espalda de CIA')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Gelarti' })).toHaveAttribute('href', '/lugares/LUG-0007');
-    expect(screen.getByTestId('mini-map')).toBeInTheDocument();
+    expect(map.show).toHaveBeenCalledWith(cia, expect.any(Function));
   });
 
   it('una perspectiva sin fotos lo avisa', async () => {
     detail.mockResolvedValue(cia);
-    render(<PlaceDetailScreen code="LUG-0001" />);
+    renderScreen('LUG-0001');
 
     const lado = (await screen.findByText(/Al lado de CIA/)).closest('li') as HTMLElement;
     expect(within(lado).getByText('Sin fotos todavía')).toBeInTheDocument();
@@ -68,16 +72,16 @@ describe('PlaceDetailScreen', () => {
 
   it('elegir una perspectiva la resalta en el mapa', async () => {
     detail.mockResolvedValue(cia);
-    render(<PlaceDetailScreen code="LUG-0001" />);
+    renderScreen('LUG-0001');
 
     fireEvent.click(await screen.findByRole('button', { name: 'Ver Espalda de CIA en el mapa' }));
 
-    expect(focused.at(-1)).toBe(10);
+    expect(map.focusPerspective).toHaveBeenLastCalledWith(10);
   });
 
   it('abre las fotos de una perspectiva en la galería', async () => {
     detail.mockResolvedValue(cia);
-    render(<PlaceDetailScreen code="LUG-0001" />);
+    renderScreen('LUG-0001');
 
     fireEvent.click(await screen.findByRole('button', { name: 'Abrir foto 2 de Espalda de CIA' }));
 
@@ -87,7 +91,7 @@ describe('PlaceDetailScreen', () => {
 
   it('un lugar inexistente dice que no se encontró', async () => {
     detail.mockRejectedValue(new ApiError(404, 'Place not found'));
-    render(<PlaceDetailScreen code="LUG-9999" />);
+    renderScreen('LUG-9999');
 
     expect(await screen.findByText('Lugar no encontrado')).toBeInTheDocument();
   });
@@ -98,7 +102,7 @@ describe('PlaceDetailScreen', () => {
       outline: { ...cia.outline, source: 'INHERITED', buildingId: null }, perspectives: [], children: [],
       interior: [{ view: { code: 'CORRIDOR', label: 'Pasillo' }, photos: [photo(5)] }],
     });
-    render(<PlaceDetailScreen code="LUG-0004" />);
+    renderScreen('LUG-0004');
 
     expect(await screen.findByRole('heading', { name: 'Pasillo' })).toBeInTheDocument();
     expect(screen.queryByText('Perspectivas')).not.toBeInTheDocument();
@@ -106,7 +110,7 @@ describe('PlaceDetailScreen', () => {
 
   it('quien no edita no ve botones de edición', async () => {
     detail.mockResolvedValue(cia);
-    render(<PlaceDetailScreen code="LUG-0001" />);
+    renderScreen('LUG-0001');
 
     await screen.findByRole('heading', { name: 'CIA' });
     expect(screen.queryByRole('button', { name: 'Agregar perspectiva' })).not.toBeInTheDocument();
@@ -119,7 +123,7 @@ describe('PlaceDetailScreen', () => {
     detail.mockResolvedValue(cia);
     const remove = placesApi.removePerspective as jest.MockedFunction<typeof placesApi.removePerspective>;
     remove.mockResolvedValue(undefined);
-    render(<PlaceDetailScreen code="LUG-0001" />);
+    renderScreen('LUG-0001');
 
     expect(await screen.findByRole('link', { name: 'Editar' })).toHaveAttribute('href', '/lugares/LUG-0001/editar');
     expect(screen.getByRole('button', { name: 'Agregar perspectiva' })).toBeInTheDocument();

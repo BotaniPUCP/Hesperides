@@ -1,5 +1,6 @@
 import type {
   MapCatalog,
+  PlaceMapView,
   MigrationProgress,
   PerspectiveInput,
   PhotoInput,
@@ -58,6 +59,8 @@ export const placesApi = {
 
   create: (input: PlaceInput) => apiClient.post<{ code: string }>('/places', input),
   update: (code: string, input: PlaceInput) => apiClient.put<void>(`/places/${segment(code)}`, input),
+  saveMapView: (code: string, view: PlaceMapView) => apiClient.put<void>(`/places/${segment(code)}/map-view`, view),
+  clearMapView: (code: string) => apiClient.del<void>(`/places/${segment(code)}/map-view`),
   remove: (code: string) => apiClient.del<void>(`/places/${segment(code)}`),
 
   previewPerspective: (code: string, input: PerspectiveInput) =>
