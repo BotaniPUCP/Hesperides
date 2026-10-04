@@ -66,7 +66,7 @@ export function OutlinePicker({ picked, onPick }: OutlinePickerProps) {
           onPointPick={(lat, lon) => mode === 'point' && onPick(pointOutline({ lat, lon }))}
         />
       </div>
-      <p className={cn('text-sm', picked ? 'text-neutral-800' : 'text-amber-700')}>
+      <p className={cn('text-sm', picked ? 'text-neutral-800' : 'text-alert-warning-fg')}>
         {picked ? <>Contorno: <strong>{picked.label}</strong></> : 'Todavía no se eligió el contorno.'}
       </p>
     </div>

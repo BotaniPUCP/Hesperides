@@ -89,7 +89,7 @@ export function SystemParametersAdminScreen() {
   if (errorMessage !== null) {
     return (
       <Card>
-        <p role="alert" className="text-sm text-red-700">{errorMessage}</p>
+        <p role="alert" className="text-sm text-alert-danger-fg">{errorMessage}</p>
         <div className="mt-3">
           <Button variant="secondary" onClick={refrescar}>Reintentar</Button>
         </div>

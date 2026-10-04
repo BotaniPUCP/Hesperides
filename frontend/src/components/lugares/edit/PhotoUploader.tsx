@@ -71,7 +71,7 @@ export function PhotoUploader({ placeCode, target, askInteriorView = false, labe
         <Button size="sm" onClick={() => input.current?.click()} loading={busy} disabled={askInteriorView && !view}>Elegir fotos…</Button>
         <Button size="sm" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
       </div>
-      {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-xs text-alert-danger-fg">{error}</p>}
     </div>
   );
 }

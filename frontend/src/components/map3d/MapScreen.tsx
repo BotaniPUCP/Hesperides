@@ -40,14 +40,14 @@ export function MapScreen() {
   if (isLoading) return <LoadingSkeleton />;
   if (scene.broken) {
     return (
-      <p role="alert" className="m-4 rounded-md bg-red-50 p-3 text-sm text-red-800">
+      <p role="alert" className="m-4 rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">
         Los datos del mapa están incompletos. Recarga la página; si el problema sigue, avisa al equipo.
       </p>
     );
   }
   if (!data || !response) {
     return (
-      <p role="alert" className="m-4 rounded-md bg-red-50 p-3 text-sm text-red-800">
+      <p role="alert" className="m-4 rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">
         No se pudo cargar el mapa. {errorMessage}
       </p>
     );
@@ -75,7 +75,7 @@ export function MapScreen() {
         <div className="pointer-events-auto w-full max-w-sm space-y-2">
           <MapSearch index={index} onPick={(e) => (isCatalogTarget(e.target) ? onMap.pick(e.target) : s.select(e.target))} />
           {stale && (
-            <p role="status" className="rounded-md bg-amber-50/95 px-3 py-1.5 text-xs text-amber-900 shadow">
+            <p role="status" className="rounded-md bg-alert-warning-bg/95 px-3 py-1.5 text-xs text-alert-warning-fg shadow">
               Sin conexión: se muestra la última versión descargada del mapa.
             </p>
           )}
@@ -101,12 +101,12 @@ export function MapScreen() {
             type="button"
             aria-expanded={panelOpen}
             onClick={() => setPanelOpen((o) => !o)}
-            className="ml-auto block rounded-md bg-white/95 px-3 py-1 text-xs font-medium text-neutral-700 shadow"
+            className="ml-auto block rounded-md bg-neutral-0/95 px-3 py-1 text-xs font-medium text-neutral-700 shadow"
           >
             {panelOpen ? 'Ocultar capas y leyenda' : 'Capas y leyenda'}
           </button>
           {panelOpen && (
-            <div className="mt-2 max-h-[60vh] space-y-4 overflow-y-auto rounded-lg border border-neutral-200 bg-white/95 p-3 shadow-lg">
+            <div className="mt-2 max-h-[60vh] space-y-4 overflow-y-auto rounded-lg border border-neutral-200 bg-neutral-0/95 p-3 shadow-lg">
               <ModeLegend mode={s.mode} hidden={s.hidden} onModeChange={s.setMode} onToggleCategory={s.toggleCategory} />
               <LayerToggles visible={s.visible} onToggle={s.toggleLayer} />
             </div>

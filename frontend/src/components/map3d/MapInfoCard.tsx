@@ -22,7 +22,7 @@ export function MapInfoCard({ content, onClose }: MapInfoCardProps) {
   const title = content.kind === 'element' ? content.card.title : content.kind === 'perspective' ? content.perspective.displayName : 'Punto seleccionado';
   const kind = content.kind === 'element' ? content.card.kind : content.kind === 'perspective' ? 'Perspectiva' : 'Ubicación';
   return (
-    <section aria-label={title} className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white/95 p-3 text-sm shadow-lg">
+    <section aria-label={title} className="w-full max-w-sm rounded-lg border border-neutral-200 bg-neutral-0/95 p-3 text-sm shadow-lg">
       <header className="mb-2 flex items-start justify-between gap-2">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">{kind}</p>

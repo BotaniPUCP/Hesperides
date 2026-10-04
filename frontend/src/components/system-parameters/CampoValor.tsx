@@ -10,7 +10,7 @@ interface CampoValorProps {
 }
 
 const INPUT_CLASS =
-  'h-8 w-44 rounded border border-neutral-200 bg-white px-2 text-sm text-neutral-900 ' +
+  'h-8 w-44 rounded border border-neutral-200 bg-neutral-0 px-2 text-sm text-neutral-900 ' +
   'disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
 
 /**

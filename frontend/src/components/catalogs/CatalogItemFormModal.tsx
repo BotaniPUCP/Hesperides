@@ -190,7 +190,7 @@ export function CatalogItemFormModal({
         />
 
         {formError && (
-          <p className="text-sm text-red-700" role="alert">
+          <p className="text-sm text-alert-danger-fg" role="alert">
             {formError}
           </p>
         )}

@@ -49,14 +49,14 @@ export function SpeciesCover({ species }: { species: Species }) {
 
       {visible && species.imageSource === 'SPECIMEN' && (
         <div className="pointer-events-none absolute bottom-1.5 left-1.5 right-1.5">
-          <span className="block text-center truncate px-1.5 py-0.5 rounded bg-neutral-900/80 backdrop-blur-xs text-[10px] font-medium text-neutral-0">
+          <span className="block text-center truncate px-1.5 py-0.5 rounded bg-ink/80 backdrop-blur-xs text-[10px] font-medium text-white">
             Foto de un ejemplar
           </span>
         </div>
       )}
 
       {fotos.length > 1 && (
-        <span className="pointer-events-none absolute bottom-1.5 right-1.5 rounded bg-neutral-900/80 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-0">
+        <span className="pointer-events-none absolute bottom-1.5 right-1.5 rounded bg-ink/80 px-1.5 py-0.5 text-[10px] font-semibold text-white">
           {`1/${fotos.length}`}
         </span>
       )}

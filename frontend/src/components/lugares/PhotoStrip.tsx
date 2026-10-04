@@ -34,7 +34,7 @@ export function PhotoStrip({ photos, subject, onOpen, onDelete }: PhotoStripProp
               type="button"
               onClick={() => onDelete(p)}
               aria-label={`Eliminar foto ${i + 1} de ${subject}`}
-              className="absolute right-1 top-1 rounded-full bg-neutral-900/70 px-1.5 text-xs text-neutral-0 hover:bg-red-700"
+              className="absolute right-1 top-1 rounded-full bg-ink/70 px-1.5 text-xs text-white hover:bg-action-danger-hover"
             >
               ×
             </button>

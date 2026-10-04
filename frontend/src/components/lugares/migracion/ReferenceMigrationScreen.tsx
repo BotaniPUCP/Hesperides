@@ -57,7 +57,7 @@ export function ReferenceMigrationScreen() {
       <Input id="migracion-buscar" label="Buscar" type="search" value={search} onChange={(v) => { setSearch(v); setPage(0); }}
         placeholder="Parte del nombre: gelarti, pabellón, espalda…" />
 
-      {queue.errorMessage && <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">{queue.errorMessage}</p>}
+      {queue.errorMessage && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{queue.errorMessage}</p>}
       {queue.loading ? (
         <LoadingSkeleton variant="card" count={3} />
       ) : queue.data && queue.data.groups.length === 0 ? (

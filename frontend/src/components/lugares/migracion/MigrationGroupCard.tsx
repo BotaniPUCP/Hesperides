@@ -58,7 +58,7 @@ export function MigrationGroupCard({ group, onDecided }: MigrationGroupCardProps
         {group.referenceCodes.length > 1 && <span className="text-sm font-semibold text-neutral-500">{`×${group.referenceCodes.length}`}</span>}
         <Badge label={group.category} color="neutral" />
         {group.detectedSide && <Badge label={SIDE_LABEL[group.detectedSide]} color={group.sideUncertain ? 'warning' : 'info'} />}
-        {group.sideUncertain && <span className="text-xs text-amber-700">«Frente a» puede ser al otro lado de la calle</span>}
+        {group.sideUncertain && <span className="text-xs text-alert-warning-fg">«Frente a» puede ser al otro lado de la calle</span>}
       </div>
 
       <fieldset className="flex flex-col gap-1">

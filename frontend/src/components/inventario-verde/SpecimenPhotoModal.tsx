@@ -48,7 +48,7 @@ export function SpecimenPhotoModal({ specimen, species, onClose }: SpecimenPhoto
       role="dialog"
       aria-modal="true"
       aria-labelledby="lightbox-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-neutral-900/40 backdrop-blur-xs animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-ink/40 backdrop-blur-xs animate-fadeIn"
       onClick={onClose}
     >
       <div

@@ -1,11 +1,11 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { HOME_ITEM, isActivePath, visibleDirectLinks, visibleNavigation } from '@/lib/navigation';
 import { SidebarGroup } from './SidebarGroup';
 import { SidebarLink } from './SidebarLink';
+import { SidebarUserPanel } from './SidebarUserPanel';
 
 export interface SidebarProps {
   /** Lo usa el panel móvil para cerrarse al elegir una página. */
@@ -14,7 +14,7 @@ export interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const rol = user?.role.code ?? '';
   const enlaces = visibleDirectLinks(rol);
   const grupos = visibleNavigation(rol);
@@ -48,13 +48,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="border-t border-neutral-100 p-4">
-        <p className="truncate text-sm font-medium text-neutral-900">{user?.fullName}</p>
-        <p className="mb-3 truncate text-xs text-neutral-500">{user?.role.label}</p>
-        <Button variant="secondary" size="sm" fullWidth onClick={logout}>
-          Cerrar sesión
-        </Button>
-      </div>
+      <SidebarUserPanel />
     </div>
   );
 }

@@ -69,7 +69,7 @@ export function SpeciesCard({ species }: SpeciesCardProps) {
           {/* La foto genérica de la especie no lleva aviso; la de un ejemplar sí (SPEC-104 §5.3). */}
           {species.imageUrl && !imageError && species.imageSource === 'SPECIMEN' && (
             <div className="absolute bottom-2 left-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded bg-neutral-900/80 backdrop-blur-sm text-[11px] font-medium text-neutral-0">
+              <span className="inline-flex items-center px-2 py-0.5 rounded bg-ink/80 backdrop-blur-sm text-[11px] font-medium text-white">
                 Foto de un ejemplar
               </span>
             </div>

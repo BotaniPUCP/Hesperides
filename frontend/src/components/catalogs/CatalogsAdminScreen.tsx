@@ -106,7 +106,7 @@ export function CatalogsAdminScreen() {
       </header>
 
       {errorTipos && (
-        <p className="text-sm text-red-700" role="alert">
+        <p className="text-sm text-alert-danger-fg" role="alert">
           {errorTipos}
         </p>
       )}

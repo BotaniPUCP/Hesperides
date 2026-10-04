@@ -43,10 +43,10 @@ export function MapSearch({ index, onPick }: MapSearchProps) {
           setActive(0);
         }}
         onKeyDown={onKeyDown}
-        className="w-full rounded-lg border border-neutral-200 bg-white/95 px-3 py-2 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-brand-600"
+        className="w-full rounded-lg border border-neutral-200 bg-neutral-0/95 px-3 py-2 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-brand-600"
       />
       {results.length > 0 && (
-        <ul id="map-search-results" role="listbox" className="absolute mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
+        <ul id="map-search-results" role="listbox" className="absolute mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 bg-neutral-0 shadow-lg">
           {results.map((r, i) => (
             <li
               key={`${r.target.layer}-${r.target.index}`}

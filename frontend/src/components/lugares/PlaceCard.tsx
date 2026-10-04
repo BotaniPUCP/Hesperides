@@ -40,7 +40,7 @@ export function PlaceCard({ place }: { place: PlaceSummary }) {
             <Badge label={place.category.label} color="brand" />
           </div>
           {missingPhotos(place) && (
-            <span className="absolute bottom-2 left-2 rounded bg-amber-500/95 px-2 py-0.5 text-[11px] font-semibold text-neutral-900">
+            <span className="absolute bottom-2 left-2 rounded bg-warning-600/95 px-2 py-0.5 text-[11px] font-semibold text-ink">
               Faltan fotos
             </span>
           )}

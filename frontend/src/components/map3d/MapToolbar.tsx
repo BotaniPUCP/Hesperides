@@ -24,7 +24,7 @@ const OPTION_LABELS: Record<keyof ViewOptions, string> = {
   grayBuildings: 'Edificios grises',
 };
 
-const button = 'rounded-md bg-white/95 px-2 py-1 text-xs text-neutral-700 shadow hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600';
+const button = 'rounded-md bg-neutral-0/95 px-2 py-1 text-xs text-neutral-700 shadow hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600';
 
 /** Controles de cámara y de apariencia. La brújula apunta al norte y, al pulsarla, orienta la vista. */
 export function MapToolbar({ options, compass, onOption, onFit, onTop, onNorth, onSpin }: MapToolbarProps) {

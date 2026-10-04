@@ -73,7 +73,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
     >
       <PlaceFormFields values={values} onChange={setValues} excludeCode={place?.code} />
       {outdoor && <OutlinePicker picked={picked} onPick={setPicked} />}
-      {error && <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">{error}</p>}
+      {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={() => router.push(place ? `/lugares/${place.code}` : '/lugares')}>
           Cancelar

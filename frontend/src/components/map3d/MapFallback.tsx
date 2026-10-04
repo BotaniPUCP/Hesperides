@@ -24,11 +24,11 @@ export function MapFallback({ data, onPick }: MapFallbackProps) {
 
   return (
     <div className="h-full overflow-y-auto p-4 pt-20">
-      <p role="status" className="mb-4 rounded-md bg-amber-50 p-3 text-sm text-amber-900">
+      <p role="status" className="mb-4 rounded-md bg-alert-warning-bg p-3 text-sm text-alert-warning-fg">
         Este navegador no puede mostrar la maqueta 3D. Puedes consultar las áreas verdes en esta lista o usar el buscador.
       </p>
       {[...groups.entries()].map(([sector, sections]) => (
-        <details key={sector} className="mb-2 rounded-md border border-neutral-200 bg-white">
+        <details key={sector} className="mb-2 rounded-md border border-neutral-200 bg-neutral-0">
           <summary className="cursor-pointer px-3 py-2 text-sm font-medium">
             {sector} <span className="text-neutral-500">({sections.length})</span>
           </summary>

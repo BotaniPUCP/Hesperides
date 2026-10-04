@@ -71,14 +71,14 @@ export function SpeciesPhotoViewer({ photos, startAt, speciesName, onClose }: Sp
       role="dialog"
       aria-modal="true"
       aria-label={`Fotos de ${speciesName}`}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-neutral-900/90 p-4"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-ink/90 p-4"
       onClick={onClose}
     >
       <button
         type="button"
         onClick={onClose}
         aria-label="Cerrar galería"
-        className="absolute right-4 top-4 rounded-lg p-1.5 text-neutral-200 hover:bg-neutral-0/10 hover:text-neutral-0 focus:outline-none focus:ring-2 focus:ring-brand-600"
+        className="absolute right-4 top-4 rounded-lg p-1.5 text-white/90 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-600"
       >
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -105,13 +105,13 @@ export function SpeciesPhotoViewer({ photos, startAt, speciesName, onClose }: Sp
       </div>
 
       <div className="flex flex-col items-center gap-1 text-center" onClick={(e) => e.stopPropagation()}>
-        {varias && <span className="text-xs font-medium text-neutral-300">{`${actual + 1} / ${photos.length}`}</span>}
+        {varias && <span className="text-xs font-medium text-white/80">{`${actual + 1} / ${photos.length}`}</span>}
         {(textoCredito || foto.sourceUrl) && (
-          <p className="text-xs text-neutral-200">
+          <p className="text-xs text-white/90">
             {textoCredito}
             {textoCredito && foto.sourceUrl && ' · '}
             {foto.sourceUrl && (
-              <a href={foto.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-0">
+              <a href={foto.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
                 Ver fuente
               </a>
             )}

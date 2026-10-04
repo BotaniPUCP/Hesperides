@@ -99,7 +99,7 @@ export function Modal({
       <div
         data-testid="modal-overlay"
         onClick={closeOnOverlayClick ? onClose : undefined}
-        className="absolute inset-0 bg-neutral-900/50"
+        className="absolute inset-0 bg-ink/50"
         aria-hidden="true"
       />
       <div

@@ -1,3 +1,137 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Valores de los tokens de tailwind.config.ts, como canales RGB sueltos para
+ * que Tailwind pueda aplicarles opacidad. El tema claro reproduce los hex de
+ * SPEC-C01; el oscuro invierte la escala neutra (0 es la superficie, 900 el
+ * texto) y aclara los tonos que se usan como texto sobre fondo oscuro.
+ */
+@layer base {
+  :root {
+    --color-neutral-0: 255 255 255;
+    --color-neutral-50: 248 250 252;
+    --color-neutral-100: 241 245 249;
+    --color-neutral-200: 226 232 240;
+    --color-neutral-300: 212 212 212;
+    --color-neutral-400: 163 163 163;
+    --color-neutral-500: 100 116 139;
+    --color-neutral-600: 82 82 82;
+    --color-neutral-700: 51 65 85;
+    --color-neutral-800: 38 38 38;
+    --color-neutral-900: 15 23 42;
+
+    --color-brand-50: 240 253 244;
+    --color-brand-100: 220 252 231;
+    --color-brand-200: 187 247 208;
+    --color-brand-300: 134 239 172;
+    --color-brand-400: 74 222 128;
+    --color-brand-600: 22 163 74;
+    --color-brand-700: 21 128 61;
+    --color-brand-800: 22 101 52;
+    --color-brand-900: 20 83 45;
+
+    --color-action-danger: 220 38 38;
+    --color-action-danger-hover: 185 28 28;
+    --color-info-600: 2 132 199;
+    --color-warning-600: 245 158 11;
+    --color-success-600: 22 163 74;
+
+    --color-status-reported-bg: 241 245 249;
+    --color-status-reported-fg: 51 65 85;
+    --color-status-in-review-bg: 254 243 199;
+    --color-status-in-review-fg: 146 64 14;
+    --color-status-in-progress-bg: 224 242 254;
+    --color-status-in-progress-fg: 7 89 133;
+    --color-status-resolved-bg: 220 252 231;
+    --color-status-resolved-fg: 22 101 52;
+
+    --color-urgency-low-bg: 241 245 249;
+    --color-urgency-low-fg: 51 65 85;
+    --color-urgency-medium-bg: 254 243 199;
+    --color-urgency-medium-fg: 146 64 14;
+    --color-urgency-high-bg: 255 237 213;
+    --color-urgency-high-fg: 154 52 18;
+    --color-urgency-critical-bg: 254 226 226;
+    --color-urgency-critical-fg: 153 27 27;
+
+    --color-alert-danger-bg: 254 242 242;
+    --color-alert-danger-fg: 153 27 27;
+    --color-alert-warning-bg: 255 251 235;
+    --color-alert-warning-fg: 120 53 15;
+    --color-alert-warning-border: 253 230 138;
+    --color-alert-success-bg: 236 253 245;
+    --color-alert-success-fg: 6 95 70;
+    --color-alert-success-border: 167 243 208;
+  }
+
+  .dark {
+    --color-neutral-0: 15 23 42;
+    --color-neutral-50: 2 6 23;
+    --color-neutral-100: 30 41 59;
+    --color-neutral-200: 51 65 85;
+    --color-neutral-300: 71 85 105;
+    --color-neutral-400: 100 116 139;
+    --color-neutral-500: 148 163 184;
+    --color-neutral-600: 203 213 225;
+    --color-neutral-700: 226 232 240;
+    --color-neutral-800: 241 245 249;
+    --color-neutral-900: 248 250 252;
+
+    --color-brand-50: 5 46 22;
+    --color-brand-100: 20 83 45;
+    --color-brand-200: 22 101 52;
+    --color-brand-300: 21 128 61;
+    --color-brand-400: 22 163 74;
+    --color-brand-600: 22 163 74;
+    --color-brand-700: 74 222 128;
+    --color-brand-800: 134 239 172;
+    --color-brand-900: 187 247 208;
+
+    --color-action-danger: 239 68 68;
+    --color-action-danger-hover: 220 38 38;
+    --color-info-600: 56 189 248;
+    --color-warning-600: 251 191 36;
+    --color-success-600: 74 222 128;
+
+    --color-status-reported-bg: 30 41 59;
+    --color-status-reported-fg: 203 213 225;
+    --color-status-in-review-bg: 69 26 3;
+    --color-status-in-review-fg: 252 211 77;
+    --color-status-in-progress-bg: 8 47 73;
+    --color-status-in-progress-fg: 125 211 252;
+    --color-status-resolved-bg: 5 46 22;
+    --color-status-resolved-fg: 134 239 172;
+
+    --color-urgency-low-bg: 30 41 59;
+    --color-urgency-low-fg: 203 213 225;
+    --color-urgency-medium-bg: 69 26 3;
+    --color-urgency-medium-fg: 252 211 77;
+    --color-urgency-high-bg: 67 20 7;
+    --color-urgency-high-fg: 253 186 116;
+    --color-urgency-critical-bg: 69 10 10;
+    --color-urgency-critical-fg: 252 165 165;
+
+    --color-alert-danger-bg: 69 10 10;
+    --color-alert-danger-fg: 252 165 165;
+    --color-alert-warning-bg: 69 26 3;
+    --color-alert-warning-fg: 253 230 138;
+    --color-alert-warning-border: 146 64 14;
+    --color-alert-success-bg: 2 44 34;
+    --color-alert-success-fg: 110 231 183;
+    --color-alert-success-border: 6 95 70;
+  }
+
+  body {
+    @apply bg-neutral-0 text-neutral-900;
+  }
+
+  /* Tailwind deja el hueco de `ring-offset-*` en blanco fijo; en oscuro se
+     veía como un borde blanco alrededor de cada foco. */
+  .dark *,
+  .dark ::before,
+  .dark ::after {
+    --tw-ring-offset-color: rgb(var(--color-neutral-0));
+  }
+}

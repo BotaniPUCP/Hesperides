@@ -37,7 +37,7 @@ export function LugaresScreen() {
             <Link href="/lugares/migracion" className="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
               Migrar referencias
             </Link>
-            <Link href="/lugares/nuevo" className="rounded-md bg-brand-700 px-4 py-2 text-sm font-semibold text-neutral-0 hover:bg-brand-800">
+            <Link href="/lugares/nuevo" className="rounded-md bg-forest-700 px-4 py-2 text-sm font-semibold text-white hover:bg-forest-800">
               Nuevo lugar
             </Link>
           </div>
@@ -54,7 +54,7 @@ export function LugaresScreen() {
       />
 
       {errorMessage ? (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">
           No se pudo cargar el catálogo. {errorMessage}
         </p>
       ) : loading ? (

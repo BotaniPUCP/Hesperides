@@ -36,7 +36,7 @@ export function PerspectiveList({ perspectives, focused, onFocus, onOpenPhoto, e
           key={v.id}
           className={cn(
             'rounded-lg border p-3 transition-colors',
-            focused === v.id ? 'border-amber-500 bg-amber-50/60' : 'border-neutral-200 bg-neutral-0',
+            focused === v.id ? 'border-warning-600 bg-alert-warning-bg/60' : 'border-neutral-200 bg-neutral-0',
           )}
         >
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -58,7 +58,7 @@ export function PerspectiveList({ perspectives, focused, onFocus, onOpenPhoto, e
                   <button type="button" onClick={() => editing.onEdit(v)} aria-label={`Editar ${v.displayName}`} className={ACTION}>
                     Editar
                   </button>
-                  <button type="button" onClick={() => editing.onDelete(v)} aria-label={`Eliminar ${v.displayName}`} className={`${ACTION} text-red-700 hover:bg-red-50`}>
+                  <button type="button" onClick={() => editing.onDelete(v)} aria-label={`Eliminar ${v.displayName}`} className={`${ACTION} text-alert-danger-fg hover:bg-alert-danger-bg`}>
                     Eliminar
                   </button>
                 </>
