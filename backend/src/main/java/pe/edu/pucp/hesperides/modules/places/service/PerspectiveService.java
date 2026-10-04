@@ -13,6 +13,8 @@ import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.Perspective;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.PlaceRef;
 import pe.edu.pucp.hesperides.modules.places.repository.PerspectiveRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceLookupRepository;
+import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapViewRepository;
+import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapViewRepository.Owner;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository.PlaceRow;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
@@ -32,6 +34,7 @@ public class PerspectiveService {
     private final PerspectiveRepository perspectives;
     private final PlaceLookupRepository lookup;
     private final PerspectiveNaming naming;
+    private final PlaceMapViewRepository views;
     private final PlaceDetailAssembler assembler;
     private final AuditService audit;
 
@@ -40,9 +43,10 @@ public class PerspectiveService {
         PlaceRow place = outdoorPlace(placeCode);
         long sideId = sideId(place.id(), request.sideCode(), NEW_PERSPECTIVE);
         long id = perspectives.insert(place.id(), sideId, request.lat(), request.lon(), request.headingDeg());
+        views.save(Owner.PERSPECTIVE, id, request.mapView());
         naming.rename(id);
         audit.record(AuditActionCode.PLACE_PERSPECTIVE_CREATED, ENTITY, id, Map.of("place", placeCode));
-        return assembler.perspective(perspectives.byId(place.id(), id), List.of());
+        return assembler.perspective(perspectives.byId(place.id(), id), List.of(), views.find(Owner.PERSPECTIVE, id));
     }
 
     @Transactional
@@ -51,9 +55,12 @@ public class PerspectiveService {
         perspectives.byId(place.id(), id);
         long sideId = sideId(place.id(), request.sideCode(), id);
         perspectives.move(id, sideId, request.lat(), request.lon(), request.headingDeg());
+        if (request.mapView() != null) {
+            views.save(Owner.PERSPECTIVE, id, request.mapView());
+        }
         naming.rename(id);
         audit.record(AuditActionCode.PLACE_PERSPECTIVE_UPDATED, ENTITY, id, Map.of("place", placeCode));
-        return assembler.perspective(perspectives.byId(place.id(), id), List.of());
+        return assembler.perspective(perspectives.byId(place.id(), id), List.of(), views.find(Owner.PERSPECTIVE, id));
     }
 
     /** El nombre que el sistema le pondría, sin guardar nada: para verlo mientras se marca en el mapa. */

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import pe.edu.pucp.hesperides.engine.proximity.LocalPlane;
 import pe.edu.pucp.hesperides.engine.proximity.PlanarPoint;
+import pe.edu.pucp.hesperides.modules.places.dto.MapViewDtos.MapView;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.CodeLabel;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.InteriorGroup;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.Outline;
@@ -29,12 +30,12 @@ class PlaceDetailAssembler {
         return new Photo(row.id(), url(row.id(), true), url(row.id(), false), row.author(), row.takenOn());
     }
 
-    Perspective perspective(PerspectiveRow p, List<PhotoRow> placePhotos) {
+    Perspective perspective(PerspectiveRow p, List<PhotoRow> placePhotos, MapView view) {
         List<Photo> own = placePhotos.stream().filter(f -> Long.valueOf(p.id()).equals(f.perspectiveId()))
                 .map(this::photo).toList();
         PlaceRef landmark = p.landmarkCode() == null ? null : new PlaceRef(p.landmarkCode(), p.landmarkName());
         return new Perspective(p.id(), new CodeLabel(p.sideCode(), p.sideLabel()), p.displayName(), p.compass(), landmark,
-                p.lat(), p.lon(), p.headingDeg(), own);
+                p.lat(), p.lon(), p.headingDeg(), own, view);
     }
 
     List<Photo> mainPhotos(List<PhotoRow> placePhotos) {

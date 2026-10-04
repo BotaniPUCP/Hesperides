@@ -29,7 +29,7 @@ public final class PlaceResponses {
     }
 
     public record Perspective(long id, CodeLabel side, String displayName, String compass, PlaceRef landmark,
-            double lat, double lon, double headingDeg, List<Photo> photos) {
+            double lat, double lon, double headingDeg, List<Photo> photos, MapViewDtos.MapView mapView) {
     }
 
     public record InteriorGroup(CodeLabel view, List<Photo> photos) {

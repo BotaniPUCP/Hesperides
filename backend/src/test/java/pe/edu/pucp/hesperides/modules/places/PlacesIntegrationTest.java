@@ -169,6 +169,36 @@ class PlacesIntegrationTest {
     }
 
     @Test
+    void aPerspectiveKeepsTheMapViewItWasSavedWith() throws Exception {
+        String code = createInras();
+        String view = """
+                "mapView": {"camera": {"lat": %s, "lon": %s, "heightM": 40}, "target": {"lat": %s, "lon": %s, "heightM": 0}}"""
+                .formatted(LAT - 2 * OFFSET, LON, LAT, LON);
+        String json = postJson(PLACES + "/" + code + "/perspectives",
+                "{\"sideCode\": \"BACK\", \"lat\": %s, \"lon\": %s, \"headingDeg\": 0, %s}".formatted(LAT - OFFSET, LON, view))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.mapView.camera.heightM").value(40.0))
+                .andReturn().getResponse().getContentAsString();
+        Number id = JsonPath.read(json, "$.data.id");
+
+        // Mover el punto sin mandar vista conserva la que tenía.
+        mockMvc.perform(put(PLACES + "/" + code + "/perspectives/" + id).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sideCode\": \"BACK\", \"lat\": %s, \"lon\": %s, \"headingDeg\": 10}".formatted(LAT - OFFSET, LON)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get(PLACES + "/" + code))
+                .andExpect(jsonPath("$.data.perspectives[0].mapView.camera.heightM").value(40.0))
+                .andExpect(jsonPath("$.data.perspectives[0].headingDeg").value(10.0));
+    }
+
+    @Test
+    void aPerspectiveWithoutMapViewUsesTheDefault() throws Exception {
+        String code = createInras();
+        perspective(code, "BACK", LAT - OFFSET, LON).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.mapView").doesNotExist());
+    }
+
+    @Test
     void aMapViewWithoutTargetIsRejected() throws Exception {
         String code = createInras();
 

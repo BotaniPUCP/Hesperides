@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.places.dto.MapViewDtos.MapView;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapViewRepository;
+import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapViewRepository.Owner;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository.PlaceRow;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
@@ -24,7 +25,7 @@ public class PlaceMapViewService {
     @Transactional
     public void save(String code, MapView view) {
         PlaceRow place = places.byCode(code);
-        views.save(place.id(), view);
+        views.save(Owner.PLACE, place.id(), view);
         audit.record(AuditActionCode.PLACE_UPDATED, "Place", place.id(), Map.of("mapView", view == null ? "automatic" : "saved"));
     }
 }
