@@ -27,6 +27,8 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
   const dirtyRef = useRef(dirty);
   const armed = useRef(false);
   const ignoreNextPop = useRef(false);
+  // Ya se confirmó la salida (o se guardó): el aviso del navegador sería una segunda pregunta.
+  const leaving = useRef(false);
 
   // Primero de los efectos: los demás y los manejadores leen el valor ya al día.
   useEffect(() => {
@@ -36,6 +38,7 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
   /** Salir de verdad: la entrada propia del historial se reemplaza en vez de quedar detrás. */
   const go = useCallback(
     (href: string) => {
+      leaving.current = true;
       const replace = armed.current;
       armed.current = false;
       if (replace) router.replace(href);
@@ -47,6 +50,7 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
   useEffect(() => {
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => {
+      if (leaving.current) return;
       e.preventDefault();
       e.returnValue = '';
     };
@@ -66,6 +70,7 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
   }, [dirty, go]);
 
   useEffect(() => {
+    if (dirty) leaving.current = false;
     if (dirty && !armed.current) {
       armed.current = true;
       window.history.pushState(window.history.state, '', window.location.href);
@@ -112,6 +117,7 @@ export function useUnsavedChangesGuard(dirty: boolean): UnsavedChangesGuard {
       onStay={() => setPending(null)}
       onLeave={() => {
         const action = pending;
+        leaving.current = true;
         setPending(null);
         action?.();
       }}

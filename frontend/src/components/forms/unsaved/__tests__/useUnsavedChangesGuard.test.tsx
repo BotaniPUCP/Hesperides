@@ -119,4 +119,33 @@ describe('useUnsavedChangesGuard', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(replace).toHaveBeenCalledWith('/lugares/LUG-0001');
   });
+
+  it('después de confirmar la salida no vuelve a preguntar el navegador (una sola pregunta)', () => {
+    render(<Form />);
+    type('CIA');
+    jest.spyOn(window.history, 'go').mockImplementation(() => undefined);
+    act(() => {
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('si vuelve a haber cambios, el aviso del navegador vuelve', () => {
+    const onCancel = jest.fn();
+    render(<Form onCancel={onCancel} />);
+    type('CIA');
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    type('');
+    type('Otra');
+
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
 });
+
