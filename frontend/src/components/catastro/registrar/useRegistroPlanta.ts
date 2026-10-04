@@ -14,6 +14,8 @@ import { aSpecimenForm, type Errores, FORMULARIO_VACIO, type FormularioPlanta } 
  */
 export function useRegistroPlanta() {
   const [valores, setValores] = useState<FormularioPlanta>(FORMULARIO_VACIO);
+  // Desde dónde se cuenta un cambio: vacío, o lo que deja «Registrar otra».
+  const [base, setBase] = useState<FormularioPlanta>(FORMULARIO_VACIO);
   const [foto, setFoto] = useState<File | null>(null);
   const [errores, setErrores] = useState<Errores>({});
   const [enviando, setEnviando] = useState(false);
@@ -44,14 +46,18 @@ export function useRegistroPlanta() {
 
   /** Otra planta de la misma especie: conserva el punto, que suele ser el mismo sector. */
   function registrarOtra() {
-    setValores((v) => ({ ...FORMULARIO_VACIO, especie: v.especie, lat: v.lat, lon: v.lon }));
+    const siguiente = { ...FORMULARIO_VACIO, especie: valores.especie, lat: valores.lat, lon: valores.lon };
+    setValores(siguiente);
+    setBase(siguiente);
     setFoto(null);
     setRegistrado(null);
     setErrores({});
   }
 
+  const sinGuardar = registrado === null && (foto !== null || JSON.stringify(valores) !== JSON.stringify(base));
+
   return {
-    valores, foto, errores, enviando, duplicado, error, registrado,
+    valores, foto, errores, enviando, duplicado, error, registrado, sinGuardar,
     cambiar, setFoto, enviar, registrarOtra, descartarDuplicado: () => setDuplicado(null),
   };
 }

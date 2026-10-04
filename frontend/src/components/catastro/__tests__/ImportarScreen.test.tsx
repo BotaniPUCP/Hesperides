@@ -7,6 +7,7 @@ import { catastroApi } from '@/lib/catastro-api';
 import { ImportarScreen } from '../importar/ImportarScreen';
 
 const mockUseAuth = jest.fn();
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
 jest.mock('@/lib/catastro-api', () => ({
   catastroApi: { previewImport: jest.fn(), confirmImport: jest.fn(), template: jest.fn(), exportSpecimens: jest.fn() },
@@ -151,4 +152,14 @@ describe('ImportarScreen', () => {
     expect(await screen.findByText('PT_44')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'PT_44' })).not.toBeInTheDocument();
   });
+
+  it('con un archivo elegido, cambiar de estándar pregunta antes de descartarlo', async () => {
+    pantalla();
+    await userEvent.upload(screen.getByLabelText(/^Archivo CSV de/), new File(['a;b'], 'carga.csv', { type: 'text/csv' }));
+
+    await userEvent.click(screen.getByRole('radio', { name: /Bebederos/ }));
+
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+  });
 });
+

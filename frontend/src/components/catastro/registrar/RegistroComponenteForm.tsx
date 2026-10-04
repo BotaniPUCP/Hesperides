@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import type { FeatureForm } from '@shared/types';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
@@ -17,8 +18,10 @@ const NOMBRE: Record<FeatureForm['kind'], { uno: string; mismo: string }> = {
 };
 
 /** Registro de un tacho o bebedero (SPEC-103 §3): dónde está, lo propio de su tipo y una foto. */
-export function RegistroComponenteForm({ kind }: { kind: FeatureForm['kind'] }) {
+export function RegistroComponenteForm({ kind, onDirtyChange }: { kind: FeatureForm['kind']; onDirtyChange?: (sinGuardar: boolean) => void }) {
   const r = useRegistroComponente(kind);
+  // La pantalla decide si avisa al salir: también al cambiar qué se registra.
+  useEffect(() => onDirtyChange?.(r.sinGuardar), [r.sinGuardar, onDirtyChange]);
   const v = r.valores;
   const nombre = NOMBRE[kind];
 

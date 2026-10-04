@@ -10,6 +10,8 @@ import { aFeatureForm, componenteVacio, type ErroresComponente, type FormularioC
 /** El registro de un tacho o bebedero: mismo ciclo que el de una planta, incluido el 409 de duplicado. */
 export function useRegistroComponente(kind: FeatureForm['kind']) {
   const [valores, setValores] = useState<FormularioComponente>(componenteVacio(kind));
+  // «Registrar otro» vuelve al formulario vacío: el punto de partida no cambia.
+  const [base] = useState<FormularioComponente>(() => componenteVacio(kind));
   const [foto, setFoto] = useState<File | null>(null);
   const [errores, setErrores] = useState<ErroresComponente>({});
   const [enviando, setEnviando] = useState(false);
@@ -45,8 +47,10 @@ export function useRegistroComponente(kind: FeatureForm['kind']) {
     setErrores({});
   }
 
+  const sinGuardar = registrado === null && (foto !== null || JSON.stringify(valores) !== JSON.stringify(base));
+
   return {
-    valores, foto, errores, enviando, duplicado, error, registrado,
+    valores, foto, errores, enviando, duplicado, error, registrado, sinGuardar,
     cambiar, setFoto, enviar, registrarOtro, descartarDuplicado: () => setDuplicado(null),
   };
 }
