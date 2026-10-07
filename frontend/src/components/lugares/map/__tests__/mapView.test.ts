@@ -1,6 +1,6 @@
 import { LocalPlane } from '@/components/map3d/projection';
 import { WORLD_LIFT } from '@/components/map3d/viewer/polyLayer';
-import { mapViewToPose, poseToMapView } from '../mapView';
+import { defaultPerspectiveView, mapViewToPose, poseToMapView } from '../mapView';
 
 const plane = new LocalPlane(-12.07, -77.08);
 
@@ -25,5 +25,17 @@ describe('vista guardada', () => {
     const view = poseToMapView(plane, { position: [0, WORLD_LIFT, -100], target: [0, WORLD_LIFT, 0] });
 
     expect(view.camera.lat).toBeGreaterThan(view.target.lat);
+  });
+
+  it('la vista por defecto mira hacia el rumbo de la foto desde detrás del punto', () => {
+    const north = defaultPerspectiveView(-12.07, -77.08, 0);
+    expect(north.camera.lat).toBeLessThan(-12.07);
+    expect(north.target.lat).toBeGreaterThan(-12.07);
+    expect(north.camera.heightM).toBeGreaterThan(0);
+    expect(north.target.heightM).toBe(0);
+
+    const east = defaultPerspectiveView(-12.07, -77.08, 90);
+    expect(east.camera.lon).toBeLessThan(-77.08);
+    expect(east.target.lon).toBeGreaterThan(-77.08);
   });
 });

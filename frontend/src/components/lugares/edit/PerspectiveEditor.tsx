@@ -10,6 +10,7 @@ import { mensajeDeApiError } from '@/lib/api-errors';
 import { cn } from '@/lib/cn';
 import { placesApi } from '@/lib/places-api';
 import { focusPlace } from '../focusPlace';
+import { mapViewToPose, poseToMapView } from '../map/mapView';
 import { useSceneData } from '../useSceneData';
 import { usePerspectiveDraft, type DraftStep } from './usePerspectiveDraft';
 
@@ -53,7 +54,9 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
 
   // Una sola vez al abrir: después la cámara la mueve quien marca.
   useEffect(() => {
-    if (viewer && data) focusPlace(viewer, data, place);
+    if (!viewer || !data) return;
+    if (perspective?.mapView) viewer.flyToPose(mapViewToPose(data.plane, perspective.mapView));
+    else focusPlace(viewer, data, place);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewer, data]);
 
@@ -69,8 +72,10 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
     setSaving(true);
     setError(null);
     try {
-      if (perspective) await placesApi.updatePerspective(place.code, perspective.id, draft.input);
-      else await placesApi.createPerspective(place.code, draft.input);
+      // La cámara del editor queda como la vista de la perspectiva: «Ver en el mapa» volverá a ella.
+      const input = viewer && data ? { ...draft.input, mapView: poseToMapView(data.plane, viewer.pose()) } : draft.input;
+      if (perspective) await placesApi.updatePerspective(place.code, perspective.id, input);
+      else await placesApi.createPerspective(place.code, input);
       onSaved();
     } catch (e) {
       setError(mensajeDeApiError(e));

@@ -36,9 +36,9 @@ const cia: PlaceDetail = {
   aliases: ['Centro de Innovación'], children: [{ code: 'LUG-0004', name: 'Piso 2' }], mainPhotos: [photo(1)],
   perspectives: [
     { id: 10, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: 'SOUTH', landmark: null,
-      lat: -12.0602, lon: -77.08, headingDeg: 0, photos: [photo(2), photo(3)] },
+      lat: -12.0602, lon: -77.08, headingDeg: 0, photos: [photo(2), photo(3)], mapView: null },
     { id: 11, side: { code: 'SIDE', label: 'Al lado' }, displayName: 'Al lado de CIA · oeste, hacia Gelarti', compass: 'WEST',
-      landmark: { code: 'LUG-0007', name: 'Gelarti' }, lat: -12.06, lon: -77.0802, headingDeg: 90, photos: [] },
+      landmark: { code: 'LUG-0007', name: 'Gelarti' }, lat: -12.06, lon: -77.0802, headingDeg: 90, photos: [], mapView: null },
   ],
   interior: [],
   mapView: null,

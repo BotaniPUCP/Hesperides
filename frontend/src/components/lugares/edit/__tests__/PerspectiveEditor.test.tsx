@@ -27,7 +27,7 @@ const place = {
   code: 'LUG-0001', name: 'CIA', kind: { code: 'OUTDOOR', label: 'Exterior' },
   outline: { source: 'BUILDING', buildingId: 1, zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
   perspectives: [{ id: 3, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: 'SOUTH',
-    landmark: null, lat: -12.0702, lon: -77.08, headingDeg: 0, photos: [] }],
+    landmark: null, lat: -12.0702, lon: -77.08, headingDeg: 0, photos: [], mapView: null }],
 } as unknown as PlaceDetail;
 
 afterEach(() => jest.clearAllMocks());
@@ -85,5 +85,24 @@ describe('PerspectiveEditor', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
   });
-});
 
+  it('guarda la cámara del editor como la vista de la perspectiva', async () => {
+    preview.mockResolvedValue({ displayName: 'Al lado de CIA · oeste' });
+    create.mockResolvedValue({} as never);
+    const viewer = {
+      setViewCones: jest.fn(), select: jest.fn(), focusLatLon: jest.fn(), flyToPose: jest.fn(),
+      pose: jest.fn(() => ({ position: [0, 72, 30] as [number, number, number], target: [0, 22, 0] as [number, number, number] })),
+    };
+    render(<PerspectiveEditor place={place} perspective={null} onClose={jest.fn()} onSaved={jest.fn()} />);
+    act(() => map.onReady(viewer as never));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Al lado' }));
+    act(() => map.onPointPick?.(-12.07, -77.0802));
+    act(() => map.onPointPick?.(-12.07, -77.0799));
+    await screen.findByText('Al lado de CIA · oeste');
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar perspectiva' }));
+
+    await waitFor(() => expect(create).toHaveBeenCalled());
+    expect(create.mock.calls[0][1].mapView?.camera.heightM).toBeCloseTo(50, 6);
+  });
+});

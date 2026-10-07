@@ -3,6 +3,9 @@ import type { PlaceDetail } from '@shared/types';
 import type { Map3DViewProps } from '@/components/map3d/Map3DView';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
 import { placesApi } from '@/lib/places-api';
+import { toSceneData } from '@/components/map3d/sceneData';
+import { sampleLayers } from '@/components/map3d/__fixtures__/mapLayers';
+import { defaultPerspectiveView, mapViewToPose } from '../mapView';
 import { PlaceMapPanel } from '../PlaceMapPanel';
 import { isPlacePage } from '../PlacesShell';
 
@@ -35,6 +38,8 @@ function fakeViewer(): jest.Mocked<Viewer> {
   };
 }
 
+const NO_FOCUS = { id: null, seq: 0 };
+const plane = toSceneData(sampleLayers).plane;
 const view = { camera: { lat: -12.0705, lon: -77.08, heightM: 150 }, target: { lat: -12.07, lon: -77.08, heightM: 0 } };
 
 function place(overrides: Partial<PlaceDetail> = {}): PlaceDetail {
@@ -43,7 +48,7 @@ function place(overrides: Partial<PlaceDetail> = {}): PlaceDetail {
     outline: { source: 'BUILDING', buildingId: 1, zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
     aliases: [], children: [], mainPhotos: [], interior: [], mapView: null,
     perspectives: [{ id: 5, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: null, landmark: null,
-      lat: -12.0702, lon: -77.08, headingDeg: 0, photos: [] }],
+      lat: -12.0702, lon: -77.08, headingDeg: 0, photos: [], mapView: null }],
     ...overrides,
   };
 }
@@ -58,7 +63,7 @@ afterEach(() => {
 });
 
 function renderPanel(p: PlaceDetail, onChanged = jest.fn()) {
-  const utils = render(<PlaceMapPanel place={p} focusedPerspective={null} onChanged={onChanged} />);
+  const utils = render(<PlaceMapPanel place={p} focus={NO_FOCUS} onChanged={onChanged} />);
   act(() => map.onReady(viewer));
   return utils;
 }
@@ -83,7 +88,7 @@ describe('PlaceMapPanel', () => {
     const { rerender } = renderPanel(place({ mapView: view }));
 
     rerender(<PlaceMapPanel place={place({ code: 'LUG-0002', name: 'Gelarti', mapView: { ...view, camera: { ...view.camera, heightM: 300 } } })}
-      focusedPerspective={null} onChanged={jest.fn()} />);
+      focus={NO_FOCUS} onChanged={jest.fn()} />);
 
     expect(viewer.flyToPose).toHaveBeenCalledTimes(2);
     expect(viewer.dispose).not.toHaveBeenCalled();
@@ -92,7 +97,7 @@ describe('PlaceMapPanel', () => {
   it('recargar el mismo lugar (por subir una foto) no mueve la cámara', () => {
     const { rerender } = renderPanel(place({ mapView: view }));
 
-    rerender(<PlaceMapPanel place={place({ mapView: { ...view } })} focusedPerspective={null} onChanged={jest.fn()} />);
+    rerender(<PlaceMapPanel place={place({ mapView: { ...view } })} focus={NO_FOCUS} onChanged={jest.fn()} />);
 
     expect(viewer.flyToPose).toHaveBeenCalledTimes(1);
   });
@@ -121,6 +126,43 @@ describe('PlaceMapPanel', () => {
     renderPanel(place({ mapView: view }));
 
     expect(screen.queryByRole('button', { name: 'Guardar esta vista' })).not.toBeInTheDocument();
+  });
+});
+
+describe('Ver en el mapa', () => {
+  const perspectiveView = { camera: { lat: -12.0703, lon: -77.08, heightM: 60 }, target: { lat: -12.0702, lon: -77.08, heightM: 0 } };
+
+  it('vuela a la vista guardada de la perspectiva y resalta su cono', () => {
+    const p = place();
+    p.perspectives[0].mapView = perspectiveView;
+    const { rerender } = renderPanel(p);
+    viewer.flyToPose.mockClear();
+
+    rerender(<PlaceMapPanel place={p} focus={{ id: 5, seq: 1 }} onChanged={jest.fn()} />);
+
+    expect(viewer.focusViewCone).toHaveBeenLastCalledWith(5);
+    expect(viewer.flyToPose).toHaveBeenCalledWith(mapViewToPose(plane, perspectiveView));
+  });
+
+  it('sin vista guardada usa la vista por defecto: detrás del cono, mirando hacia donde mira la foto', () => {
+    const p = place();
+    const { rerender } = renderPanel(p);
+    viewer.flyToPose.mockClear();
+
+    rerender(<PlaceMapPanel place={p} focus={{ id: 5, seq: 1 }} onChanged={jest.fn()} />);
+
+    expect(viewer.flyToPose).toHaveBeenCalledWith(mapViewToPose(plane, defaultPerspectiveView(-12.0702, -77.08, 0)));
+  });
+
+  it('pulsar otra vez la misma perspectiva vuelve a volar', () => {
+    const p = place();
+    const { rerender } = renderPanel(p);
+    rerender(<PlaceMapPanel place={p} focus={{ id: 5, seq: 1 }} onChanged={jest.fn()} />);
+    viewer.flyToPose.mockClear();
+
+    rerender(<PlaceMapPanel place={p} focus={{ id: 5, seq: 2 }} onChanged={jest.fn()} />);
+
+    expect(viewer.flyToPose).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -34,7 +34,12 @@ export function PlaceDetailScreen({ code }: { code: string }) {
   useEffect(() => {
     if (place) map.show(place, reload);
   }, [map, place, reload]);
-  useEffect(() => map.focusPerspective(focused), [map, focused]);
+  // Al abrir otro lugar no queda ninguna perspectiva resaltada.
+  useEffect(() => map.focusPerspective(null), [map, code]);
+  const focusOnMap = (id: number) => {
+    setFocused(id);
+    map.focusPerspective(id);
+  };
 
   if (loading) return <LoadingSkeleton variant="card" count={3} />;
   if (!place) {
@@ -85,7 +90,7 @@ export function PlaceDetailScreen({ code }: { code: string }) {
             <PerspectiveList
               perspectives={place.perspectives}
               focused={focused}
-              onFocus={setFocused}
+              onFocus={focusOnMap}
               onOpenPhoto={(v, i) => open(v.photos, v.displayName)(i)}
               editing={canEdit ? {
                 onEdit: setEditing,
