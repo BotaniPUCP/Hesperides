@@ -1,11 +1,10 @@
 'use client';
 
-import { LAYER_TOGGLES } from './layerList';
-import type { LayerId } from './target';
+import { LAYER_TOGGLES, type ToggleId } from './layerList';
 
 export interface LayerTogglesProps {
   visible: Record<string, boolean>;
-  onToggle: (id: LayerId, visible: boolean) => void;
+  onToggle: (id: ToggleId, visible: boolean) => void;
 }
 
 export function LayerToggles({ visible, onToggle }: LayerTogglesProps) {

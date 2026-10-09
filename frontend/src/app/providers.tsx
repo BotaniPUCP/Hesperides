@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { ThemeSync } from '@/components/theme';
 import { ToastProvider } from '@/components/ui';
 import { AuthProvider } from '@/lib/auth-context';
 
@@ -16,6 +17,7 @@ import { AuthProvider } from '@/lib/auth-context';
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
+      <ThemeSync />
       <ToastProvider>{children}</ToastProvider>
     </AuthProvider>
   );

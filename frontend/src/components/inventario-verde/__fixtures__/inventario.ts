@@ -12,6 +12,8 @@ export const palmeraReal: Species = {
   vegetationTypeName: 'Palmera',
   specimenCount: 167,
   imageUrl: 'https://drive.google.com/thumbnail?id=abc&sz=w1000',
+  imageSource: 'SPECIMEN',
+  photos: [],
 };
 
 export const palmeraReina: Species = {
@@ -30,6 +32,7 @@ export const p01: Specimen = {
   latitude: -12.067219,
   longitude: -77.079643,
   photoUrl: 'https://drive.google.com/file/d/abc/view',
+  imageUrl: 'https://drive.google.com/thumbnail?id=abc&sz=w1000',
   thumbnailUrl: 'https://drive.google.com/thumbnail?id=abc&sz=w1000',
   quantity: 1,
   notes: 'Medida en «mediciones forestales - palmeras».',

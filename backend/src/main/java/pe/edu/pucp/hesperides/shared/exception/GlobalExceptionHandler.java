@@ -32,6 +32,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConflict(ConflictException ex) {
+        log.warn("Conflict with current state: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(OperationInProgressException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOperationInProgress(OperationInProgressException ex) {
+        log.info("Operation rejected while another runs: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(PossibleDuplicateException.class)
+    public ResponseEntity<ApiResponse<PossibleDuplicateException.Match>> handlePossibleDuplicate(
+            PossibleDuplicateException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.errorWithData(ex.getMessage(), ex.getMatch()));
+    }
+
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessRule(BusinessRuleException ex) {
         log.warn("Business rule violated: {}", ex.getMessage());

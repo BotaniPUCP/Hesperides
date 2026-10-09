@@ -35,7 +35,7 @@ export function SpecimenInfo({ specimen }: SpecimenInfoProps) {
             {showPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={specimen.thumbnailUrl ?? undefined}
+                src={specimen.imageUrl ?? specimen.thumbnailUrl ?? undefined}
                 alt={`Ejemplar ${specimen.code}`}
                 loading="lazy"
                 onError={() => setImageError(true)}

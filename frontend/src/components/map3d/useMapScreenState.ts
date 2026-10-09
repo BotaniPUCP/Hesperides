@@ -3,8 +3,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { mapApi } from '@/lib/map-api';
-import { infoFor } from './infoCard';
-import { initialVisibility, LAYER_TOGGLES } from './layerList';
+import { infoFor, type InfoCard } from './infoCard';
+import { initialVisibility, LAYER_TOGGLES, PERSPECTIVES_TOGGLE, type ToggleId } from './layerList';
 import type { MapCardContent } from './MapInfoCard';
 import type { ViewOptions } from './MapToolbar';
 import type { ModeId } from './modes';
@@ -26,7 +26,10 @@ const APPLY_OPTION: Record<keyof ViewOptions, (v: Viewer, on: boolean) => void> 
  * React: cada cambio se guarda aquí (para pintar los controles) y se ordena al
  * visor en el mismo gesto, sin efectos que sincronicen después.
  */
-export function useMapScreenState(data: SceneData | null) {
+/** Un enlace extra para la ficha de un elemento: hoy, del edificio a su lugar en el catálogo. */
+export type CardLinkFor = (target: Target) => InfoCard['link'] | null;
+
+export function useMapScreenState(data: SceneData | null, linkFor?: CardLinkFor) {
   const viewer = useRef<Viewer | null>(null);
   const describeSeq = useRef(0);
   const [mode, setModeState] = useState<ModeId>('base');
@@ -40,14 +43,18 @@ export function useMapScreenState(data: SceneData | null) {
   const showElement = useCallback(
     (target: Target | null) => {
       describeSeq.current++;
-      setCard(target && data ? { kind: 'element', card: infoFor(data, target) } : null);
+      if (!target || !data) return setCard(null);
+      const card = infoFor(data, target);
+      const link = card.link ?? linkFor?.(target) ?? undefined;
+      setCard({ kind: 'element', card: { ...card, link } });
     },
-    [data],
+    [data, linkFor],
   );
 
   const onReady = useCallback((v: Viewer) => {
     viewer.current = v;
-    LAYER_TOGGLES.filter((t) => !t.initiallyVisible).forEach((t) => v.setLayerVisible(t.id, false));
+    LAYER_TOGGLES.filter((t) => !t.initiallyVisible && t.id !== PERSPECTIVES_TOGGLE)
+      .forEach((t) => v.setLayerVisible(t.id as LayerId, false));
   }, []);
 
   const onGroundPick = useCallback((lat: number, lon: number) => {
@@ -78,9 +85,15 @@ export function useMapScreenState(data: SceneData | null) {
     viewer.current?.setPaint(mode, next);
   };
 
-  const toggleLayer = (id: LayerId, on: boolean) => {
+  /** Los conos de «Perspectivas» los pone quien tiene el catálogo, al ver este estado. */
+  const toggleLayer = (id: ToggleId, on: boolean) => {
     setVisible((v) => ({ ...v, [id]: on }));
-    viewer.current?.setLayerVisible(id, on);
+    if (id !== PERSPECTIVES_TOGGLE) viewer.current?.setLayerVisible(id, on);
+  };
+
+  const showCard = (content: MapCardContent) => {
+    describeSeq.current++;
+    setCard(content);
   };
 
   const setOption = (key: keyof ViewOptions, on: boolean) => {
@@ -97,6 +110,6 @@ export function useMapScreenState(data: SceneData | null) {
   return {
     viewer, mode, hidden, visible, options, compass, card, unsupported,
     onReady, onSelect: showElement, onGroundPick, onCompass: setCompass, onUnsupported: () => setUnsupported(true),
-    select, setMode, toggleCategory, toggleLayer, setOption, closeCard,
+    select, setMode, toggleCategory, toggleLayer, setOption, closeCard, showCard,
   };
 }

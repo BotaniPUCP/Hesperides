@@ -1,9 +1,10 @@
-"""Genera V014__seed_green_inventory.sql desde docs/dominio/datos.
+"""Genera V014__seed_green_inventory.sql y docs/dominio/datos/ejemplares.csv desde docs/dominio/datos.
 
 Uso, desde la raíz del repositorio:
 
     python scripts/catastro/generar_semilla_catastro.py
 """
+import tabla_ejemplares
 from fuentes import RAIZ, especies, ejemplares
 
 SALIDA = RAIZ / "backend/src/main/resources/db/migration/V014__seed_green_inventory.sql"
@@ -85,6 +86,9 @@ def main():
     SALIDA.write_text("\n".join(partes), encoding="utf-8")
     print(f"Escrito {SALIDA.relative_to(RAIZ)}: {len(lista)} especies, {len(todos)} ejemplares, "
           f"{sum(1 for e in todos if e.medidas)} medidos")
+    # Misma lista y mismo orden que la carga: el código EV de cada fila es el del sistema.
+    tabla = tabla_ejemplares.escribir(todos, lista, CODIGO.format)
+    print(f"Escrito {tabla.relative_to(RAIZ)}")
 
 
 if __name__ == "__main__":

@@ -8,11 +8,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.inventory.dto.InventorySummaryResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.LocationCountResponse;
+import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesPhotoResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenDetailResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenResponse;
+import pe.edu.pucp.hesperides.modules.inventory.repository.SpeciesPhotoRepository;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpeciesRepository;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpeciesRow;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpecimenRepository;
@@ -28,6 +30,7 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
 
     private final SpeciesRepository speciesRepository;
     private final SpecimenRepository specimenRepository;
+    private final SpeciesPhotoRepository speciesPhotoRepository;
 
     @Override
     public InventorySummaryResponse summary() {
@@ -37,13 +40,18 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
 
     @Override
     public Page<SpeciesResponse> species(SpeciesQuery query) {
-        List<SpeciesResponse> content = speciesRepository.page(query).stream().map(this::toResponse).toList();
+        List<SpeciesResponse> content = speciesRepository.page(query).stream()
+                .map(row -> toResponse(row, List.of())).toList();
         return new PageImpl<>(content, PageRequest.of(query.page(), query.size()), speciesRepository.count(query));
     }
 
     @Override
     public SpeciesResponse speciesBySlug(String slug) {
-        return toResponse(requireSpecies(slug));
+        List<SpeciesPhotoResponse> photos = speciesPhotoRepository.active(slug).stream()
+                .map(p -> new SpeciesPhotoResponse(PhotoUrls.speciesPhoto(p.id(), true), PhotoUrls.speciesPhoto(p.id(), false),
+                        p.author(), p.license(), p.sourcePage()))
+                .toList();
+        return toResponse(requireSpecies(slug), photos);
     }
 
     @Override
@@ -66,8 +74,8 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
         SpecimenRow row = specimenRepository.byCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Specimen not found: " + code));
         return new SpecimenDetailResponse(row.code(), row.sourceReference(), row.sourceLocation(), row.legacyCode(),
-                row.latitude(), row.longitude(), row.photoUrl(), DrivePhotoLinks.thumbnail(row.photoUrl()),
-                row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
+                row.latitude(), row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
+                PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
                 row.trunkHeightM(), row.dbhCm(), row.crownRadiusM(), row.isBanded(), row.dataSource(),
                 specimenRepository.sectionOf(code).orElse(null), speciesBySlug(row.speciesSlug()));
     }
@@ -77,15 +85,16 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Species not found: " + slug));
     }
 
-    private SpeciesResponse toResponse(SpeciesRow row) {
+    private SpeciesResponse toResponse(SpeciesRow row, List<SpeciesPhotoResponse> photos) {
         return new SpeciesResponse(row.slug(), row.scientificName(), row.commonName(), row.otherNames(),
                 row.family(), row.typeCode(), row.typeLabel(), row.specimenCount(),
-                DrivePhotoLinks.thumbnail(row.photoUrl()));
+                PhotoUrls.species(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()),
+                PhotoUrls.speciesSource(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()), photos);
     }
 
     private SpecimenResponse toResponse(SpecimenRow row) {
         return new SpecimenResponse(row.code(), row.sourceReference(), row.sourceLocation(), row.latitude(),
-                row.longitude(), row.photoUrl(), DrivePhotoLinks.thumbnail(row.photoUrl()), row.quantity(),
-                row.notes());
+                row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
+                PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes());
     }
 }

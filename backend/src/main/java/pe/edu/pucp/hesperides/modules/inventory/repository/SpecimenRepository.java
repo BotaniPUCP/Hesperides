@@ -1,5 +1,7 @@
 package pe.edu.pucp.hesperides.modules.inventory.repository;
 
+import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -23,7 +25,8 @@ public class SpecimenRepository {
             rs.getString("photo_url"), rs.getInt("quantity"), rs.getString("notes"), rs.getBigDecimal("height_m"),
             rs.getBigDecimal("trunk_height_m"), rs.getBigDecimal("dbh_cm"), rs.getBigDecimal("crown_radius_m"),
             rs.getObject("is_banded", Boolean.class), rs.getString("data_source"),
-            rs.getString("element_type_code"), rs.getString("element_type_label"), rs.getString("slug"));
+            rs.getString("element_type_code"), rs.getString("element_type_label"), rs.getString("slug"),
+            rs.getObject("attachment_id", Long.class));
 
     private final NamedParameterJdbcTemplate jdbc;
 

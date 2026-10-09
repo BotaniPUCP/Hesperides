@@ -1,9 +1,10 @@
 import * as THREE from 'three';
-import type { ModeId } from '../modes';
 import type { SceneData } from '../sceneData';
 import type { LayerId, Target } from '../target';
-import { createCameraRig } from './cameraRig';
-import { createPointLayer, scaleFurniture, type PointLayer } from './furniture';
+import { createCameraRig, type CameraPose } from './cameraRig';
+import { scaleFurniture, type PointLayer } from './furniture';
+import { createCampusPoints } from './campusPoints';
+import { createFoliageMaterials } from './foliageMaterials';
 import { createHighlight } from './highlight';
 import { createLabels } from './labels';
 import { createLights } from './lighting';
@@ -16,69 +17,49 @@ import { createRenderer, createStage } from './stage';
 import { createTextures } from './textures';
 import { createVegetationLayer } from './vegetation';
 import { WORLD_LIFT, type PolyLayer } from './polyLayer';
+import { createViewCones } from './viewCones';
+import type { Viewer, ViewerCallbacks } from './viewerTypes';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
 
-export interface ViewerCallbacks {
-  onSelect: (target: Target | null) => void;
-  onGroundPick: (lat: number, lon: number) => void;
-  onHover: (target: Target | null, clientX: number, clientY: number) => void;
-  onCompass: (degrees: number) => void;
-}
+export type { Viewer, ViewerCallbacks } from './viewerTypes';
 
-export interface Viewer {
-  setPaint: (mode: ModeId, hidden: Set<string>) => void;
-  setLayerVisible: (id: LayerId, visible: boolean) => void;
-  select: (target: Target | null, focus: boolean) => void;
-  setNight: (night: boolean) => void;
-  setHour: (hour: number) => void;
-  setShadows: (on: boolean) => void;
-  setLabels: (on: boolean) => void;
-  setGrayBuildings: (gray: boolean) => void;
-  fit: () => void;
-  top: () => void;
-  north: () => void;
-  toggleSpin: () => boolean;
-  dispose: () => void;
-}
-
-const FAUNA_BIRD = /ave|gallinazo/i;
-
-export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks): Viewer {
+export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose): Viewer {
   const renderer = createRenderer();
   const textures = createTextures(renderer);
   const stage = createStage(container, renderer, data.campus, textures);
   const { scene, center } = stage;
   const coarse = window.matchMedia('(pointer: coarse)').matches;
-  const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
   const lights = createLights(scene, center, coarse);
   let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true;
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
   const poly = createSceneLayers(scene, data, textures, state);
-  const gateRotation = (i: number) => Math.atan2(data.gates[i].p[0] - center.x, -(-data.gates[i].p[1] - center.z));
-  const points: Record<'bins' | 'gates' | 'fauna', PointLayer> = {
-    bins: createPointLayer(scene, 'bins', data.bins, { model: () => 'bin', scaleRange: [2, 7], color: '#9AA4B6' }),
-    gates: createPointLayer(scene, 'gates', data.gates, { model: () => 'gate', rotation: gateRotation, scaleRange: [1, 2.2], color: '#5A6C99' }),
-    fauna: createPointLayer(scene, 'fauna', data.fauna, {
-      model: (i) => (FAUNA_BIRD.test(data.fauna[i].props.name ?? '') ? 'bird' : 'animal'), rotation: (i) => (i * 2.39) % 6.28, scaleRange: [2.4, 9], color: '#AD95D2',
-    }),
-  };
-  const vegetation = createVegetationLayer(scene, data.vegetation);
+  const points = createCampusPoints(scene, data, center);
+  const foliage = createFoliageMaterials(textures);
+  const vegetation = createVegetationLayer(scene, data.vegetation, foliage);
   const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points, vegetation };
   const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
   const pin = createPin(scene);
+  const cones = createViewCones(scene);
   const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta);
   const isHidden = (t: Target) => t.layer === 'greenAreas' && state.hidden.size > 0 && poly.greenAreas.options.color(t.index) === state.palette.dimmed;
   const size = () => ({ w: container.clientWidth || 1, h: container.clientHeight || 1 });
+
+  /** El sol mueve también el borde iluminado de las copas. */
+  function relight() {
+    lights.setHour(hour, night);
+    foliage.setLighting(night, lights.sun.position.clone().sub(center).normalize());
+  }
 
   function applyTheme() {
     state.palette = paletteFor(night, gray);
     const { w, h } = size();
     stage.applyTheme(state.palette, night, w, h);
     lights.applyTheme(state.palette, night);
-    lights.setHour(hour, night);
+    relight();
     highlight.repaintAll();
     needsRender = true;
   }
@@ -95,16 +76,19 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const unbind = bindPointer(dom, {
     onPress: () => { rig.cancelFlight(); rig.controls.autoRotate = false; },
     onClick(x, y) {
+      const cone = cb.onViewConePick ? cones.hitTest(x, y, dom, rig.camera) : null;
+      if (cone !== null) { cones.highlight(cone); cb.onViewConePick?.(cone); needsRender = true; return; }
       const hit = pick(x, y, dom, rig.camera, pickables, isHidden);
       pin.hide();
       highlight.setSelected(hit?.target ?? null);
       cb.onSelect(hit?.target ?? null);
-      if (hit) pin.show(hit.point.x, hit.point.y, hit.point.z);
       const g = hit ? null : groundPoint(x, y, dom, rig.camera, data.campus);
-      if (g) {
-        pin.show(g.x, WORLD_LIFT, g.z);
-        const [lat, lon] = data.plane.toLatLon({ x: g.x, y: -g.z });
-        cb.onGroundPick(lat, lon);
+      const at = hit?.point ?? g;
+      if (at) {
+        pin.show(at.x, hit ? hit.point.y : WORLD_LIFT, at.z);
+        const [lat, lon] = data.plane.toLatLon({ x: at.x, y: -at.z });
+        if (g) cb.onGroundPick(lat, lon);
+        cb.onPointPick?.(lat, lon);
       }
       needsRender = true;
     },
@@ -172,7 +156,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     setNight: (v) => { night = v; applyTheme(); },
-    setHour: (h) => { hour = h; lights.setHour(h, night); needsRender = true; },
+    setHour: (h) => { hour = h; relight(); needsRender = true; },
     setShadows(on) {
       renderer.shadowMap.enabled = on;
       lights.sun.castShadow = on;
@@ -181,16 +165,28 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     },
     setLabels: (on) => { labelsOn = on; needsRender = true; },
     setGrayBuildings: (v) => { gray = v; applyTheme(); },
-    fit: () => rig.fit(),
-    top: () => rig.top(),
-    north: () => rig.north(),
-    toggleSpin: () => rig.toggleSpin(),
+    fit: rig.fit, top: rig.top, north: rig.north, toggleSpin: rig.toggleSpin, pose: rig.pose, flyToPose: rig.flyToPose,
+    setViewCones(list) {
+      cones.set(list.map((c) => { const p = data.plane.toPlane(c.lat, c.lon); return { id: c.id, x: p.x, z: -p.y, headingDeg: c.headingDeg }; }));
+      needsRender = true;
+    },
+    focusViewCone(id) {
+      cones.highlight(id);
+      const at = id === null ? null : cones.position(id);
+      if (at) rig.focusPoint(at.x, at.z);
+      needsRender = true;
+    },
+    focusLatLon(lat, lon) {
+      const p = data.plane.toPlane(lat, lon);
+      rig.focusPoint(p.x, -p.y);
+    },
     dispose() {
       cancelAnimationFrame(frame);
       observer.disconnect();
       unbind();
       rig.controls.dispose();
       labels.dispose();
+      cones.dispose();
       stage.dispose();
     },
   };

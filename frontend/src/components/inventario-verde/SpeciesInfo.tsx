@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import type { Species } from '@shared/types';
-import { Badge, ImagePlaceholder } from '@/components/ui';
+import { Badge } from '@/components/ui';
+import { SpeciesCover } from './SpeciesCover';
 
 export interface SpeciesInfoProps {
   species: Species;
@@ -13,39 +13,10 @@ export interface SpeciesInfoProps {
  * Diseñada para alta densidad informativa sin ocupar espacio vertical excesivo.
  */
 export function SpeciesInfo({ species }: SpeciesInfoProps) {
-  const [imageError, setImageError] = useState(false);
-
   return (
     <div className="rounded-xl border border-neutral-200 bg-neutral-0 p-4 sm:p-5 shadow-xs mb-5 transition-shadow">
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-start">
-        {/* Fotografía de referencia compacta */}
-        <div className="relative h-28 w-28 sm:h-32 sm:w-36 rounded-lg overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90 shadow-2xs">
-          {species.imageUrl && !imageError ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={species.imageUrl}
-              alt={species.commonName}
-              loading="lazy"
-              onError={() => setImageError(true)}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <ImagePlaceholder
-              type={species.vegetationTypeCode}
-              label={species.commonName}
-              size="full"
-              className="rounded-none border-none"
-            />
-          )}
-
-          {species.imageUrl && !imageError && (
-          <div className="absolute bottom-1.5 left-1.5 right-1.5">
-            <span className="block text-center truncate px-1.5 py-0.5 rounded bg-neutral-900/80 backdrop-blur-xs text-[10px] font-medium text-neutral-0">
-              Foto de un ejemplar
-            </span>
-          </div>
-          )}
-        </div>
+        <SpeciesCover species={species} />
 
         {/* Información taxonómica estructurada */}
         <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch">

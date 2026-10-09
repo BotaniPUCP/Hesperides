@@ -133,4 +133,51 @@ describe('apiClient', () => {
 
     await expect(apiClient.get('/health')).rejects.toBeInstanceOf(ApiError);
   });
+
+  describe('formularios con archivos', () => {
+    it('envía el FormData tal cual y deja que el navegador ponga el Content-Type', async () => {
+      const fetchMock = jest.fn().mockResolvedValue(okResponse());
+      global.fetch = fetchMock as unknown as typeof fetch;
+      const form = new FormData();
+      form.append('file', new Blob(['a;b']), 'carga.csv');
+
+      await apiClient.postForm('/imports/specimens/preview', form);
+
+      const init = fetchMock.mock.calls[0][1] as RequestInit;
+      expect(init.method).toBe('POST');
+      expect(init.body).toBe(form);
+      expect(cabecerasDelUltimoFetch(fetchMock)['Content-Type']).toBeUndefined();
+    });
+
+    it('putForm usa PUT', async () => {
+      const fetchMock = jest.fn().mockResolvedValue(okResponse());
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      await apiClient.putForm('/green-inventory/specimens/EV-000001', new FormData());
+
+      expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe('PUT');
+    });
+  });
+
+  describe('getBlob', () => {
+    it('devuelve el archivo con el token de la sesión', async () => {
+      setAccessToken('t');
+      const blob = new Blob(['codigo;nombre_cientifico']);
+      const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => blob });
+      global.fetch = fetchMock as unknown as typeof fetch;
+
+      await expect(apiClient.getBlob('/green-inventory/export.csv')).resolves.toBe(blob);
+      expect(cabecerasDelUltimoFetch(fetchMock).Authorization).toBe('Bearer t');
+    });
+
+    it('un error trae el mensaje del sobre', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({ ok: false, message: 'Access denied', data: null }),
+      }) as unknown as typeof fetch;
+
+      await expect(apiClient.getBlob('/green-inventory/export.csv')).rejects.toMatchObject({ status: 403 });
+    });
+  });
 });

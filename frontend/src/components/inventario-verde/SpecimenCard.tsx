@@ -45,14 +45,14 @@ export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
 
           {/* Badge de referencia */}
           <div className="absolute top-2 left-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-900/80 backdrop-blur-sm text-neutral-0 text-xs font-mono font-bold tracking-tight">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-ink/80 backdrop-blur-sm text-white text-xs font-mono font-bold tracking-tight">
               {specimen.code}
             </span>
           </div>
 
           {specimen.code && (
             <div className="absolute top-2 right-2">
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-white/90 backdrop-blur-sm text-neutral-800 text-[10px] font-semibold">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-neutral-0/90 backdrop-blur-sm text-neutral-800 text-[10px] font-semibold">
                 Cód: {specimen.code}
               </span>
             </div>
@@ -73,7 +73,7 @@ export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
           <div>
             <div className="flex items-start gap-1.5 text-xs text-neutral-700 font-medium">
               <svg
-                className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"
+                className="w-4 h-4 text-success-600 flex-shrink-0 mt-0.5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

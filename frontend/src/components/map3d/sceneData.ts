@@ -39,6 +39,7 @@ export interface SceneData {
   parking: ScenePoly<CampusFeatureProperties>[];
   sidewalks: ScenePoly<CampusFeatureProperties>[];
   bins: ScenePoint<CampusFeatureProperties>[];
+  fountains: ScenePoint<CampusFeatureProperties>[];
   gates: ScenePoint<CampusFeatureProperties>[];
   fauna: ScenePoint<CampusFeatureProperties>[];
   references: ScenePoint<ReferenceProperties>[];
@@ -120,6 +121,7 @@ export function toSceneData(response: MapLayersResponse): SceneData {
     parking: ofType('PARKING').map(poly),
     sidewalks: ofType('RISKY_SIDEWALK').map(poly),
     bins: ofType('WASTE_BIN').map(pt),
+    fountains: ofType('DRINKING_FOUNTAIN').map(pt),
     gates: ofType('GATE').map(pt),
     fauna: ofType('FAUNA').map(pt),
     references: layers.references.features.map(pt),

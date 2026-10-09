@@ -1,5 +1,6 @@
 import type { SceneData } from './sceneData';
 import type { Target } from './target';
+import { fountainKind, fountainStatus } from './fountainLabels';
 
 /** Contenido de la ficha de un elemento del mapa. */
 export interface InfoCard {
@@ -69,6 +70,18 @@ function featureCard(data: SceneData, target: Target, kind: string): InfoCard {
   ]);
 }
 
+/** CA-10: el bebedero dice qué es y si funciona. */
+function fountainCard(data: SceneData, target: Target): InfoCard {
+  const p = data.fountains[target.index].props;
+  const attrs = p.attributes ?? {};
+  return card('Bebedero', p.name ?? 'Bebedero', [
+    ['Código', p.code],
+    ['Tipo', fountainKind(attrs.tipo)],
+    ['Estado', fountainStatus(attrs.estado)],
+    ['Nota', (attrs.nota as string) ?? null],
+  ]);
+}
+
 /** Solo se muestran medidas tomadas: la maqueta dibuja las demás con una altura ilustrativa (C-08). */
 function plantCard(data: SceneData, target: Target): InfoCard {
   const p = data.vegetation[target.index].props;
@@ -114,6 +127,8 @@ export function infoFor(data: SceneData, target: Target): InfoCard {
       return featureCard(data, target, 'Puerta de acceso');
     case 'fauna':
       return featureCard(data, target, 'Avistamiento de fauna');
+    case 'fountains':
+      return fountainCard(data, target);
     case 'vegetation':
       return plantCard(data, target);
   }

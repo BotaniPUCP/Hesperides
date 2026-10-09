@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="fixed inset-0 z-40 md:hidden">
           <div
             data-testid="menu-overlay"
-            className="absolute inset-0 bg-neutral-900/40"
+            className="absolute inset-0 bg-ink/40"
             onClick={cerrarMenu}
           />
           <div

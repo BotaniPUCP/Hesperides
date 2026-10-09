@@ -151,7 +151,7 @@ export function MaintenanceFrequenciesScreen() {
         <div
           className={`p-3 rounded-md text-sm border flex justify-between items-center gap-3 ${
             feedback.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              ? 'bg-alert-success-bg text-alert-success-fg border-alert-success-border'
               : 'bg-rose-50 text-rose-800 border-rose-200'
           }`}
         >

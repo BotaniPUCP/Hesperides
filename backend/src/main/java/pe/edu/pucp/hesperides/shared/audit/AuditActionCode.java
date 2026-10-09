@@ -15,5 +15,21 @@ public enum AuditActionCode {
     /** Añadida por SPEC-100 §9.3: explica meses después por qué alguien nunca pudo entrar. */
     USER_CREDENTIALS_DELIVERY_FAILED,
     /** Añadida por el módulo de administración: quién cambió un parámetro general y de qué a qué. */
-    SYSTEM_PARAMETER_CHANGED
+    SYSTEM_PARAMETER_CHANGED,
+    /** SPEC-104: quién cambió el conjunto de fotos de una especie, y cuántas quedaron. */
+    SPECIES_PHOTOS_REPLACED,
+    /** SPEC-104: una foto agregada a una especie desde el formulario. */
+    SPECIES_PHOTO_ADDED,
+    /** Catálogo de lugares: quién creó, cambió o dio de baja un lugar, una perspectiva o una foto. */
+    PLACE_CREATED,
+    PLACE_UPDATED,
+    PLACE_DELETED,
+    PLACE_PERSPECTIVE_CREATED,
+    PLACE_PERSPECTIVE_UPDATED,
+    PLACE_PERSPECTIVE_DELETED,
+    PLACE_PHOTO_ADDED,
+    PLACE_PHOTO_DELETED,
+    /** Migración de referencias: quién decidió a qué lugar va cada referencia antigua, o que no es un lugar. */
+    PLACE_REFERENCES_LINKED,
+    PLACE_REFERENCES_DISCARDED
 }

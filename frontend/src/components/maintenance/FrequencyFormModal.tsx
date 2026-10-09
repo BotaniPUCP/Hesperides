@@ -37,7 +37,7 @@ interface Props {
 }
 
 const INPUT = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none';
-const SELECT = `${INPUT} bg-white`;
+const SELECT = `${INPUT} bg-neutral-0`;
 const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
 
 const EMPTY_FIELDS: RuleFieldsState = {
@@ -147,7 +147,7 @@ function FrequencyForm({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {creaVersionNueva && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          <div className="rounded-md border border-alert-warning-border bg-alert-warning-bg p-3 text-xs text-alert-warning-fg">
             Los periodos ya evaluados conservan la configuración anterior. Al guardar se crea una
             versión nueva vigente desde hoy, y el historial anterior queda intacto.
           </div>

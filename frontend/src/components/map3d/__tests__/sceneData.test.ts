@@ -22,6 +22,7 @@ describe('toSceneData', () => {
     expect(data.bins).toHaveLength(1);
     expect(data.gates).toHaveLength(1);
     expect(data.fauna).toHaveLength(1);
+    expect(data.fountains).toHaveLength(1);
     expect(data.parking).toHaveLength(1);
     expect(data.sidewalks).toHaveLength(1);
     expect(data.campus).toHaveLength(1);

@@ -205,7 +205,7 @@ cronológica del [mapa de migraciones](../REGISTRO.md#mapa-de-migraciones):
 | V010 | La versión de datos y los triggers que la incrementan |
 | V011 | La semilla, generada por `scripts/mapa/generar_semilla_mapa.py` desde `docs/dominio/datos/fuentes-mapa/` |
 
-La descripción congelada en la incidencia (§4.4) queda reservada como `V024`, después de la
+La descripción congelada en la incidencia (§4.4) queda reservada como `V026`, después de la
 migración que crea `incidents`.
 
 ### 4.1 Edificios

@@ -64,7 +64,7 @@ class MapIntegrationTest {
                 .andExpect(jsonPath("$.data.layers.supervisionZones.features", hasSize(4)))
                 .andExpect(jsonPath("$.data.layers.references.features", hasSize(411)))
                 .andExpect(jsonPath("$.data.layers.buildings.features", hasSize(417)))
-                .andExpect(jsonPath("$.data.layers.features.features", hasSize(227)))
+                .andExpect(jsonPath("$.data.layers.features.features", hasSize(294)))
                 .andExpect(jsonPath("$.data.layers.vegetation.features", hasSize(965)))
                 .andExpect(jsonPath("$.data.attributionRequired").value(true))
                 .andExpect(jsonPath("$.data.origin.lat").exists());

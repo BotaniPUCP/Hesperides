@@ -28,13 +28,13 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
   return (
     <div className="space-y-3">
       {rows.map((row) => (
-        <div key={row.id} className="rounded-md border border-neutral-200 bg-white p-3">
+        <div key={row.id} className="rounded-md border border-neutral-200 bg-neutral-0 p-3">
           <div className="flex items-start justify-between gap-3 mb-2">
             <div className="flex-1">
               <select
                 value={row.season}
                 onChange={(e) => update(row.id, 'season', e.target.value as SeasonKey)}
-                className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-medium focus:border-primary-500 focus:outline-none"
+                className="rounded-md border border-neutral-300 bg-neutral-0 px-2 py-1 text-sm font-medium focus:border-primary-500 focus:outline-none"
               >
                 {SEASON_ORDER.map((key) => (
                   <option

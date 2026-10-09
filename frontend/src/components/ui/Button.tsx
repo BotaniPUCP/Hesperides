@@ -21,9 +21,9 @@ export interface ButtonProps {
 }
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-brand-600 text-neutral-0 hover:bg-brand-700 active:bg-brand-900',
+  primary: 'bg-brand-600 text-white hover:bg-forest-700 active:bg-forest-900',
   secondary: 'bg-neutral-0 text-neutral-900 border border-neutral-200 hover:bg-neutral-50',
-  danger: 'bg-action-danger text-neutral-0 hover:bg-action-danger-hover',
+  danger: 'bg-action-danger text-white hover:bg-action-danger-hover',
   ghost: 'bg-transparent text-neutral-700 hover:bg-neutral-50',
 };
 

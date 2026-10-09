@@ -13,7 +13,7 @@ export interface InventarioVerdeHeroProps {
  */
 export function InventarioVerdeHero({ searchValue, onSearchChange }: InventarioVerdeHeroProps) {
   return (
-    <div className="relative overflow-hidden rounded-xl bg-brand-900 py-5 px-5 sm:py-6 sm:px-8 text-neutral-0 shadow-md mb-4">
+    <div className="relative overflow-hidden rounded-xl bg-forest-900 py-5 px-5 sm:py-6 sm:px-8 text-white shadow-md mb-4">
       {/* Follaje botánico integrado sutilmente a la derecha */}
       <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-2/5 sm:w-1/3 overflow-hidden select-none">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -23,25 +23,25 @@ export function InventarioVerdeHero({ searchValue, onSearchChange }: InventarioV
           aria-hidden="true"
           className="h-full w-full object-cover object-center opacity-30 mix-blend-screen"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-900 via-brand-900/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-forest-900 via-forest-900/60 to-transparent" />
       </div>
 
       <div className="relative z-10 max-w-2xl">
         {/* Badge institucional compacto */}
-        <div className="inline-flex flex-wrap items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-900/70 border border-brand-700/70 text-brand-100 text-[11px] font-medium mb-2 backdrop-blur-xs">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
-          <span className="font-semibold text-neutral-0">Catastro del campus PUCP</span>
-          <span className="text-brand-300/60">›</span>
-          <span className="text-brand-100">Fotos tomadas en campo</span>
+        <div className="inline-flex flex-wrap items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-ink/70 border border-forest-700/70 text-forest-100 text-[11px] font-medium mb-2 backdrop-blur-xs">
+          <span className="h-1.5 w-1.5 rounded-full bg-forest-400" />
+          <span className="font-semibold text-white">Catastro del campus PUCP</span>
+          <span className="text-forest-300/60">›</span>
+          <span className="text-forest-100">Fotos tomadas en campo</span>
         </div>
 
         {/* Título optimizado */}
-        <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-neutral-0 mb-1 leading-snug">
+        <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-white mb-1 leading-snug">
           Inventario de Especies
         </h1>
 
         {/* Descripción directa y concisa */}
-        <p className="text-xs sm:text-[13px] text-brand-50/90 mb-3.5 leading-normal max-w-xl">
+        <p className="text-xs sm:text-[13px] text-forest-50/90 mb-3.5 leading-normal max-w-xl">
           Consulta la diversidad vegetal, ejemplares censados y georreferenciación del campus universitario.
         </p>
 

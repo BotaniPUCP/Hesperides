@@ -59,7 +59,7 @@ function ThumbnailCell({
           label=""
         />
       )}
-      <span className="absolute inset-0 bg-neutral-900/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+      <span className="absolute inset-0 bg-ink/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
@@ -204,10 +204,10 @@ export function SpecimenTable({
                   tabIndex={0}
                   role="note"
                   aria-label={`Observación: ${row.notes}`}
-                  className="inline-flex items-center justify-center h-7 w-7 rounded-md bg-amber-50 text-amber-800 border border-amber-200/90 hover:bg-amber-100 transition-colors cursor-help focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-md bg-alert-warning-bg text-alert-warning-fg border border-alert-warning-border/90 hover:bg-alert-warning-border/40 transition-colors cursor-help focus:outline-none focus:ring-1 focus:ring-warning-600"
                 >
                   <svg
-                    className="w-3.5 h-3.5 text-amber-700 flex-shrink-0"
+                    className="w-3.5 h-3.5 text-alert-warning-fg flex-shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -224,13 +224,13 @@ export function SpecimenTable({
 
                 {/* Tooltip accesible con título "Observación" y contenido */}
                 <div className="pointer-events-none absolute right-0 bottom-full mb-1.5 hidden group-hover/obs:flex group-focus-within/obs:flex flex-col items-end z-30 w-max max-w-xs">
-                  <div className="bg-neutral-900 text-neutral-0 text-xs rounded-md py-1.5 px-2.5 leading-snug border border-neutral-700 text-left shadow-lg">
+                  <div className="bg-ink text-white text-xs rounded-md py-1.5 px-2.5 leading-snug border border-ink-line text-left shadow-lg">
                     <span className="font-semibold text-amber-300 block text-[10px] uppercase tracking-wider mb-0.5">
                       Observación
                     </span>
                     <span className="break-words">{row.notes}</span>
                   </div>
-                  <div className="w-2 h-2 bg-neutral-900 rotate-45 mr-2.5 -mt-1 border-r border-b border-neutral-700" />
+                  <div className="w-2 h-2 bg-ink rotate-45 mr-2.5 -mt-1 border-r border-b border-ink-line" />
                 </div>
               </div>
             )}

@@ -2,13 +2,14 @@ import * as THREE from 'three';
 import type { VegetationProperties } from '@shared/types';
 import { plantShape, type PlantShape } from '../plantShape';
 import type { ScenePoint } from '../sceneData';
+import type { FoliageMaterials } from './foliageMaterials';
 import type { PointLayer } from './furniture';
 import { WORLD_LIFT } from './polyLayer';
 
 /**
- * La vegetación del catastro como instancias, con las formas del prototipo
- * v39: copa redonda, plana, alta, en cono o de palmera, tronco en árboles y
- * palmeras altas, y una sombra de contacto que la asienta en el suelo.
+ * La vegetación del catastro como instancias, con las formas y materiales del
+ * prototipo v39: copa redonda, plana, alta, en cono o de palmera con borde
+ * iluminado y halo, tronco en árboles y palmeras altas, y sombra de contacto.
  */
 
 type Crown = 'ico' | 'palm' | 'cone';
@@ -18,10 +19,9 @@ const GEOMETRY: Record<Crown, () => THREE.BufferGeometry> = {
   palm: () => new THREE.IcosahedronGeometry(1, 0),
   cone: () => new THREE.ConeGeometry(1, 1, 8).translate(0, 0.5, 0),
 };
+/** El halo es la misma copa algo más grande, vista por dentro. */
+const GLOW_SCALE: Record<Crown, number> = { ico: 1.085, palm: 1.12, cone: 1.09 };
 const TRUNK_COLOR = 0x5c3318;
-const CONTACT_OPACITY = 0.18;
-/** El reflejo del cielo aclara el follaje hasta dejarlo casi blanco: el prototipo lo baja igual. */
-const FOLIAGE_ENV = 0.05;
 
 const crownOf = (s: PlantShape): Crown => (s.shape === 'palm' ? 'palm' : s.shape === 'cone' ? 'cone' : 'ico');
 const isWoody = (p: VegetationProperties) => p.typeCode === 'TREE' || p.typeCode === 'PALM';
@@ -47,13 +47,20 @@ function instanced(scene: THREE.Scene, geo: THREE.BufferGeometry, mat: THREE.Mat
   return mesh;
 }
 
-export function createVegetationLayer(scene: THREE.Scene, plants: ScenePoint<VegetationProperties>[]): PointLayer {
+export function createVegetationLayer(
+  scene: THREE.Scene,
+  plants: ScenePoint<VegetationProperties>[],
+  materials: FoliageMaterials,
+): PointLayer {
   const shapes = plants.map((p) => plantShape(p.props));
   const colors = shapes.map((s) => `#${new THREE.Color(s.color).offsetHSL(...s.jitter).getHexString()}`);
   const layer: PointLayer = {
     id: 'vegetation', kind: 'inst', count: plants.length, meshes: [], slots: [], items: [], scaleRange: [1, 1],
     color: (i) => colors[i], meta: plants.map((p) => ({ x: p.p[0], z: -p.p[1], r: 25, area: 0 })),
   };
+  // Las mallas auxiliares (halo, sombra) se encienden con la capa pero el clic
+  // las atraviesa: no llevan la capa en userData.
+  const auxiliary = (mesh: THREE.InstancedMesh) => layer.meshes.push(mesh);
   const pickable = (mesh: THREE.InstancedMesh, map: number[]) => {
     mesh.castShadow = true;
     mesh.userData = { layer, map };
@@ -65,9 +72,10 @@ export function createVegetationLayer(scene: THREE.Scene, plants: ScenePoint<Veg
   for (const crown of Object.keys(groups) as Crown[]) {
     const idx = groups[crown];
     if (!idx.length) continue;
-    const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, flatShading: true, roughness: 0.6, envMapIntensity: FOLIAGE_ENV });
-    const mesh = instanced(scene, GEOMETRY[crown](), mat, idx.length);
+    const mesh = instanced(scene, GEOMETRY[crown](), materials.foliage(), idx.length);
+    const glow = instanced(scene, GEOMETRY[crown](), materials.glow, idx.length);
     pickable(mesh, idx);
+    auxiliary(glow);
     idx.forEach((i, k) => {
       const [x, y] = plants[i].p;
       dummy.position.set(x, 0, -y);
@@ -77,13 +85,17 @@ export function createVegetationLayer(scene: THREE.Scene, plants: ScenePoint<Veg
       mesh.setMatrixAt(k, dummy.matrix);
       mesh.setColorAt(k, new THREE.Color(colors[i]));
       layer.slots[i] = { mesh, k };
+      dummy.scale.multiplyScalar(GLOW_SCALE[crown]);
+      if (crown === 'cone') dummy.scale.y *= 1.04;
+      dummy.updateMatrix();
+      glow.setMatrixAt(k, dummy.matrix);
     });
   }
 
   const trunks = shapes.map((s, i) => (s.trunk ? i : -1)).filter((i) => i >= 0);
   if (trunks.length) {
     const mesh = instanced(scene, new THREE.CylinderGeometry(0.5, 0.8, 1, 7).translate(0, 0.5, 0),
-      new THREE.MeshStandardMaterial({ color: TRUNK_COLOR, roughness: 0.7, envMapIntensity: FOLIAGE_ENV }), trunks.length);
+      new THREE.MeshStandardMaterial({ color: TRUNK_COLOR, roughness: 0.7, metalness: 0 }), trunks.length);
     pickable(mesh, trunks);
     trunks.forEach((i, k) => {
       const s = shapes[i];
@@ -96,16 +108,15 @@ export function createVegetationLayer(scene: THREE.Scene, plants: ScenePoint<Veg
     });
   }
 
-  // La sombra de contacto no se elige: no lleva capa en userData y el clic la atraviesa.
-  const contact = instanced(scene, new THREE.CircleGeometry(1, 16).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: CONTACT_OPACITY, depthWrite: false }), plants.length);
+  const contact = instanced(scene, new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), materials.contact, plants.length);
   contact.renderOrder = -0.2;
-  layer.meshes.push(contact);
+  auxiliary(contact);
   shapes.forEach((s, i) => {
-    const spread = s.shape === 'palm' ? 1.2 : isWoody(plants[i].props) ? 1 : 0.75;
+    const woody = isWoody(plants[i].props), palm = s.shape === 'palm';
     dummy.position.set(plants[i].p[0], 0.05, -plants[i].p[1]);
-    dummy.rotation.set(0, 0, 0);
-    dummy.scale.set(Math.max(0.5, s.crownRadiusM * spread), 1, Math.max(0.4, s.crownRadiusM * spread * 0.8));
+    dummy.rotation.set(0, (i * 1.37) % Math.PI, 0);
+    dummy.scale.set(Math.max(0.95, s.crownRadiusM * (palm ? 2.4 : woody ? 2.05 : 1.55)), 1,
+      Math.max(0.75, s.crownRadiusM * (palm ? 1.7 : woody ? 1.8 : 1.35)));
     dummy.updateMatrix();
     contact.setMatrixAt(i, dummy.matrix);
   });

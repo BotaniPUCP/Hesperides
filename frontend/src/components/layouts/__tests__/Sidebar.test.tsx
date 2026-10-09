@@ -110,6 +110,21 @@ describe('Sidebar', () => {
     expect(logout).toHaveBeenCalledTimes(1);
   });
 
+  it('esconde las preferencias tras el engrane y ahí ofrece el modo oscuro', async () => {
+    render(<Sidebar />);
+    const engrane = screen.getByRole('button', { name: 'Preferencias' });
+
+    expect(engrane).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('radio', { name: /oscuro/i })).not.toBeInTheDocument();
+
+    await userEvent.click(engrane);
+    expect(engrane).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('radio', { name: /oscuro/i })).toBeInTheDocument();
+
+    await userEvent.click(engrane);
+    expect(screen.queryByRole('radio', { name: /oscuro/i })).not.toBeInTheDocument();
+  });
+
   it('avisa al navegar, para que el panel móvil pueda cerrarse', async () => {
     const onNavigate = jest.fn();
     render(<Sidebar onNavigate={onNavigate} />);

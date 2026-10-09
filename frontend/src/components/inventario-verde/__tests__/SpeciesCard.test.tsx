@@ -27,6 +27,12 @@ describe('SpeciesCard', () => {
     expect(screen.queryByText(/referencial/i)).not.toBeInTheDocument();
   });
 
+  it('una foto genérica de la especie no dice que es de un ejemplar', () => {
+    render(<SpeciesCard species={{ ...palmeraReal, imageUrl: '/t1.jpg', imageSource: 'SPECIES' }} />);
+
+    expect(screen.queryByText('Foto de un ejemplar')).not.toBeInTheDocument();
+  });
+
   it('muestra el placeholder si la especie no tiene foto', () => {
     const withoutImg: Species = { ...palmeraReal, imageUrl: null };
     render(<SpeciesCard species={withoutImg} />);

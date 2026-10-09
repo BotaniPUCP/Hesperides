@@ -5,5 +5,6 @@ package pe.edu.pucp.hesperides.modules.inventory.dto;
  * los de la fuente (catastro): el código propio es {@code code}.
  */
 public record SpecimenResponse(String code, String sourceReference, String sourceLocation, Double latitude,
-                               Double longitude, String photoUrl, String thumbnailUrl, int quantity, String notes) {
+                               Double longitude, String photoUrl, String imageUrl, String thumbnailUrl, int quantity,
+                               String notes) {
 }
