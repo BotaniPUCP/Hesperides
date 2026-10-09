@@ -39,9 +39,10 @@ public class PerspectiveRepository {
     /** El nombre definitivo lo escribe {@link #saveNaming} en la misma transacción. */
     public long insert(long placeId, long sideItemId, double lat, double lon, double headingDeg) {
         return jdbc.queryForObject("""
-                INSERT INTO place_perspectives (place_id, side_item_id, location, heading_deg, display_name)
-                VALUES (?, ?, %s, ?, '') RETURNING id""".formatted(POINT), Long.class, placeId, sideItemId, lon, lat,
-                headingDeg);
+                INSERT INTO place_perspectives (place_id, side_item_id, location, heading_deg, display_name, sort_order)
+                VALUES (?, ?, %s, ?, '', (SELECT COALESCE(max(sort_order), 0) + 1 FROM place_perspectives
+                                           WHERE place_id = ? AND deleted_at IS NULL)) RETURNING id""".formatted(POINT),
+                Long.class, placeId, sideItemId, lon, lat, headingDeg, placeId);
     }
 
     public void move(long id, long sideItemId, double lat, double lon, double headingDeg) {
@@ -85,7 +86,7 @@ public class PerspectiveRepository {
     }
 
     public List<PerspectiveRow> byPlace(long placeId) {
-        return jdbc.query(SELECT_ROW + "v.place_id = ? ORDER BY s.sort_order, v.display_name", ROW, placeId);
+        return jdbc.query(SELECT_ROW + "v.place_id = ? ORDER BY v.sort_order, v.id", ROW, placeId);
     }
 
     /** Las vigentes a {@code radiusM} o menos del punto, de la más cercana a la más lejana. */
