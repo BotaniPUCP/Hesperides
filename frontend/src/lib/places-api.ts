@@ -69,6 +69,8 @@ export const placesApi = {
     apiClient.post<PlacePerspective>(`/places/${segment(code)}/perspectives`, input),
   updatePerspective: (code: string, id: number, input: PerspectiveInput) =>
     apiClient.put<PlacePerspective>(`/places/${segment(code)}/perspectives/${id}`, input),
+  reorderPerspectives: (code: string, ids: number[]) =>
+    apiClient.put<void>(`/places/${segment(code)}/perspectives/order`, { ids }),
   removePerspective: (code: string, id: number) => apiClient.del<void>(`/places/${segment(code)}/perspectives/${id}`),
 
   uploadPhoto: (code: string, file: File, target: PhotoInput) => {

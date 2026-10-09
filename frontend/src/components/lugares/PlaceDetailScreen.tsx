@@ -10,7 +10,7 @@ import { PerspectiveEditor } from './edit/PerspectiveEditor';
 import { PhotoUploader } from './edit/PhotoUploader';
 import { useCanEditPlaces } from './edit/useCanEditPlaces';
 import { usePlaceActions } from './edit/usePlaceActions';
-import { PerspectiveList } from './PerspectiveList';
+import { PerspectivesSection } from './perspectives/PerspectivesSection';
 import { PhotoStrip } from './PhotoStrip';
 import { PlaceGallery, type GalleryState } from './PlaceGallery';
 import { PlaceHeader } from './PlaceHeader';
@@ -81,26 +81,20 @@ export function PlaceDetailScreen({ code }: { code: string }) {
       )}
 
       {outdoor && (
-        <section>
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-neutral-900">Perspectivas</h2>
-              {canEdit && <Button size="sm" onClick={() => setEditing(NEW)}>Agregar perspectiva</Button>}
-            </div>
-            <PerspectiveList
-              perspectives={place.perspectives}
-              focused={focused}
-              onFocus={focusOnMap}
-              onOpenPhoto={(v, i) => open(v.photos, v.displayName)(i)}
-              editing={canEdit ? {
-                onEdit: setEditing,
-                onDelete: actions.deletePerspective,
-                onDeletePhoto: actions.deletePhoto,
-                uploader: (v) => <PhotoUploader placeCode={place.code} target={{ perspectiveId: v.id }} label={`Subir fotos a ${v.displayName}`} onDone={reload} />,
-              } : undefined}
-            />
-          </div>
-        </section>
+        <PerspectivesSection
+          placeCode={place.code}
+          perspectives={place.perspectives}
+          focused={focused}
+          onFocus={focusOnMap}
+          onOpenPhoto={(v, i) => open(v.photos, v.displayName)(i)}
+          onAdd={canEdit ? () => setEditing(NEW) : undefined}
+          editing={canEdit ? {
+            onEdit: setEditing,
+            onDelete: actions.deletePerspective,
+            onDeletePhoto: actions.deletePhoto,
+            uploader: (v) => <PhotoUploader placeCode={place.code} target={{ perspectiveId: v.id }} label={`Subir fotos a ${v.displayName}`} onDone={reload} />,
+          } : undefined}
+        />
       )}
 
       {place.interior.map((g) => (
