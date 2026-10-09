@@ -44,7 +44,7 @@ export function FrequencyFilters({ value, onChange, ruleTypes }: Props) {
           <select
             value={value.regime}
             onChange={(e) => onChange({ regime: e.target.value })}
-            className={`${FIELD} bg-white`}
+            className={`${FIELD} bg-neutral-0`}
           >
             <option value="">Todas las modalidades</option>
             <option value="IN_HOUSE">Personal propio</option>
@@ -57,7 +57,7 @@ export function FrequencyFilters({ value, onChange, ruleTypes }: Props) {
           <select
             value={value.ruleType}
             onChange={(e) => onChange({ ruleType: e.target.value })}
-            className={`${FIELD} bg-white`}
+            className={`${FIELD} bg-neutral-0`}
           >
             <option value="">Todos los modelos</option>
             {ruleTypes.map((r) => (

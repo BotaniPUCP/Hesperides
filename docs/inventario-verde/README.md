@@ -9,7 +9,9 @@ conexión, la información que se **agregó** a las fuentes del cliente y lo que
 > **El inventario es público por decisión temporal (1 oct 2026).** Sus pantallas
 > (`/inventario-verde/…`) y sus endpoints de lectura (`GET /api/v1/green-inventory/…`) responden
 > **sin sesión**. Cualquiera que conozca la dirección puede ver la **ubicación exacta y la foto de
-> cada planta del campus**.
+> cada planta del campus**. Desde SPEC-103 eso incluye el **historial de evaluaciones** de cada
+> ejemplar (`GET …/specimens/{code}/assessments`), con el nombre de quien evaluó. Escribir
+> (registrar, corregir, evaluar, importar y exportar) sí exige sesión y rol.
 >
 > Antes de publicar el sistema fuera de la red de desarrollo hay que decidir qué ve el público
 > (por ejemplo, solo especies y conteos) y cerrar el resto detrás de la sesión. Mientras tanto,
@@ -25,10 +27,16 @@ conexión, la información que se **agregó** a las fuentes del cliente y lo que
 | `catastro campus.xlsx`, hoja `catastro` | `docs/dominio/datos/fuentes-catastro/catastro.csv` | Los 962 registros: ubicación, referencia, coordenadas, especie, tipo, cantidad, foto y código antiguo |
 | `mediciones forestales - palmeras.csv` | `…/mediciones-palmeras.csv` | Altura, altura del fuste, DAP, radio de copa y zunchado de 76 palmeras, **medidos** |
 | `mediciones forestales - Cafetos.csv` | `…/mediciones-cafetos.csv` | Nada que cargar (ver §6) |
-| Limpieza de especies (nuestra) | `docs/dominio/datos/especies.csv` | Nombre corregido, nombre común, nombres alternativos, familia y tipo |
+| Especies (nuestra) | `docs/dominio/datos/especies.csv` | Una fila por especie: nombre científico, nombre común, nombres alternativos, familia y tipo |
+| Limpieza de nombres (nuestra) | `docs/dominio/datos/nombres-catastro.csv` | Cada forma en que el catastro escribe un nombre y la especie a la que corresponde (§3) |
 
 La carga no se escribe a mano: `scripts/catastro/generar_semilla_catastro.py` produce la migración
 de semilla a partir de estos archivos. Para corregir un dato se corrige la fuente y se regenera.
+
+El mismo script escribe **`docs/dominio/datos/ejemplares.csv`**: los 965 ejemplares unificados tal
+como quedan en la base, con su código `EV`, la especie limpia, la familia, la ubicación del catastro,
+las medidas (solo en los medidos) y la foto. Sale de la misma lista y en el mismo orden que la carga,
+así que nunca se desalinea de ella. Es una salida, no una fuente: no se edita a mano.
 
 ## 2. Decisiones sobre los ejemplares
 
@@ -60,7 +68,8 @@ de semilla a partir de estos archivos. Para corregir un dato se corrige la fuent
 | `Jacaranda mimosifolia.` · `Laurus nobilis.` | sin el punto final | Error de tipeo |
 | `Citrus x sinensis` | `Citrus × sinensis` | Signo de híbrido |
 
-Resultado: **90 especies** a partir de 91 nombres. También se normalizaron mayúsculas y tildes de
+Resultado: **90 especies** a partir de 91 nombres. La traducción de los 91 nombres vive en
+`docs/dominio/datos/nombres-catastro.csv`; `especies.csv` solo tiene las 90 especies. También se normalizaron mayúsculas y tildes de
 los nombres comunes («Escobillon Rojo» → «Escobillón rojo», «Jazmin del paraguay» → «Jazmín del
 Paraguay», «Palo borracho (Ceiba)» → «Palo borracho» con «Ceiba» como nombre alternativo).
 

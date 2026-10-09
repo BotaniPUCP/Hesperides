@@ -48,7 +48,7 @@ export function SpecimenPhotoModal({ specimen, species, onClose }: SpecimenPhoto
       role="dialog"
       aria-modal="true"
       aria-labelledby="lightbox-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-neutral-900/40 backdrop-blur-xs animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-ink/40 backdrop-blur-xs animate-fadeIn"
       onClick={onClose}
     >
       <div
@@ -98,7 +98,7 @@ export function SpecimenPhotoModal({ specimen, species, onClose }: SpecimenPhoto
           {specimen.thumbnailUrl && !imgError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={specimen.thumbnailUrl}
+              src={specimen.imageUrl ?? specimen.thumbnailUrl ?? undefined}
               alt={`${specimen.code}${species.commonName ? ` · ${species.commonName}` : ''}`}
               onError={() => setImgError(true)}
               className="max-h-[56vh] w-auto max-w-full object-contain mx-auto rounded-lg shadow-xs"

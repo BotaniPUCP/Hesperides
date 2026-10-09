@@ -74,6 +74,7 @@ export const sampleLayers: MapLayersResponse = {
         feature('WASTE_BIN', point),
         feature('GATE', point),
         feature('FAUNA', point),
+        feature('DRINKING_FOUNTAIN', point),
         feature('PARKING', square()),
         feature('RISKY_SIDEWALK', square()),
       ],

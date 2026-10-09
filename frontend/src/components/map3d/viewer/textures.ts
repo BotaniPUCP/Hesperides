@@ -8,7 +8,7 @@ import * as THREE from 'three';
 
 type Painter = (c: CanvasRenderingContext2D, size: number) => void;
 
-function canvasTexture(size: number, paint: Painter, anisotropy: number, repeat: number): THREE.CanvasTexture {
+export function canvasTexture(size: number, paint: Painter, anisotropy: number, repeat: number): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   paint(canvas.getContext('2d') as CanvasRenderingContext2D, size);
@@ -20,7 +20,7 @@ function canvasTexture(size: number, paint: Painter, anisotropy: number, repeat:
 }
 
 /** Normal map a partir de un mapa de alturas en escala de grises. */
-function normalTexture(size: number, paintHeight: Painter, strength: number, anisotropy: number, repeat: number): THREE.CanvasTexture {
+export function normalTexture(size: number, paintHeight: Painter, strength: number, anisotropy: number, repeat: number): THREE.CanvasTexture {
   const src = document.createElement('canvas');
   src.width = src.height = size;
   const sc = src.getContext('2d') as CanvasRenderingContext2D;
@@ -81,12 +81,19 @@ const green: Painter = (c, s) => {
   const bg = c.createLinearGradient(0, 0, 0, s);
   bg.addColorStop(0, '#F4F4F0'); bg.addColorStop(1, '#E4E4E0');
   c.fillStyle = bg; c.fillRect(0, 0, s, s);
+  for (const [x, y] of [[50, 50], [170, 40], [110, 140], [40, 200], [200, 180], [130, 240], [220, 80]]) {
+    const g = c.createRadialGradient(x, y, 0, x, y, 22);
+    g.addColorStop(0, 'rgba(255,255,255,0.5)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, 22, 0, 7); c.fill();
+  }
   c.strokeStyle = '#D8D8D0'; c.lineWidth = 2;
   for (let row = 0; row < 4; row++) {
     c.beginPath();
     for (let x = 0; x <= s; x += 2) c.lineTo(x, row * 68 + 34 + Math.sin(x * 0.06) * 10);
     c.stroke();
   }
+  c.fillStyle = '#D0D0C8';
+  for (let i = 0; i < 15; i++) { c.beginPath(); c.arc((i * 43 + 17) % s, (i * 67 + 11) % s, 2.5, 0, 7); c.fill(); }
 };
 
 const ground: Painter = (c, s) => {
@@ -95,6 +102,8 @@ const ground: Painter = (c, s) => {
   c.fillStyle = '#F0F0EC';
   for (let r = 0; r < 4; r++) for (let cl = 0; cl < 4; cl++) if ((r + cl) % 2) c.fillRect(cl * cs, r * cs, cs, cs);
   grid(c, s, 4, '#D0D0C8', 4);
+  c.fillStyle = '#D8D8D0';
+  for (let r = 0; r <= 4; r++) for (let cl = 0; cl <= 4; cl++) { c.beginPath(); c.arc(cl * cs, r * cs, 5, 0, 7); c.fill(); }
 };
 
 const parking: Painter = (c, s) => {
@@ -107,16 +116,51 @@ const buildingRelief: Painter = (c, s) => {
   c.fillStyle = '#808080'; c.fillRect(0, 0, s, s);
   grain(c, s, 6000, 105, 40, 3);
   grid(c, s, 4, '#484848', 8);
+  // Un abombado por panel: es lo que da a los edificios su aspecto de bloque inflado.
+  const cs = s / 4;
+  for (let r = 0; r < 4; r++) for (let cl = 0; cl < 4; cl++) {
+    const x = cl * cs + cs / 2, y = r * cs + cs / 2;
+    const g = c.createRadialGradient(x, y, 0, x, y, cs * 0.42);
+    g.addColorStop(0, '#B0B0B0'); g.addColorStop(1, '#808080');
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, cs * 0.38, 0, 7); c.fill();
+  }
 };
 
-const greenRelief: Painter = (c, s) => {
-  c.fillStyle = '#808080'; c.fillRect(0, 0, s, s);
-  for (let i = 0; i < 100; i++) {
-    const x = Math.random() * s, y = Math.random() * s, r = 10 + Math.random() * 20;
-    const g = c.createRadialGradient(x, y, r * 0.3, x, y, r);
-    g.addColorStop(0, '#B0B0B0'); g.addColorStop(1, '#808080');
+function bumps(c: CanvasRenderingContext2D, s: number, count: number, minR: number, spreadR: number, stops: [number, string][], inner = 0) {
+  for (let i = 0; i < count; i++) {
+    const x = Math.random() * s, y = Math.random() * s, r = minR + Math.random() * spreadR;
+    const g = c.createRadialGradient(x, y, r * inner, x, y, r);
+    for (const [at, color] of stops) g.addColorStop(at, color);
     c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
   }
+}
+
+/** Césped denso: hoyos de tierra, matas grandes y briznas. */
+const greenRelief: Painter = (c, s) => {
+  c.fillStyle = '#808080'; c.fillRect(0, 0, s, s);
+  bumps(c, s, 30, 6, 12, [[0, '#606060'], [1, '#808080']]);
+  bumps(c, s, 100, 10, 20, [[0, '#B0B0B0'], [0.6, '#959595'], [1, '#808080']], 0.3);
+  c.lineWidth = 2;
+  for (let i = 0; i < 400; i++) {
+    const x = Math.random() * s, y = Math.random() * s, v = 140 + Math.random() * 40;
+    c.strokeStyle = `rgb(${v},${v},${v})`;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.random() * 6 - 3, y - 5 - Math.random() * 10); c.stroke();
+  }
+};
+
+/** Follaje: casi blanco, para que el color de cada planta se vea intenso. */
+const foliage: Painter = (c, s) => {
+  c.fillStyle = '#F0F0F0'; c.fillRect(0, 0, s, s);
+  c.fillStyle = '#FFFFFF';
+  for (let i = 0; i < 30; i++) { c.beginPath(); c.arc(Math.random() * s, Math.random() * s, 4 + Math.random() * 8, 0, 7); c.fill(); }
+  c.fillStyle = '#E0E0E0';
+  for (let i = 0; i < 20; i++) { c.beginPath(); c.arc(Math.random() * s, Math.random() * s, 2 + Math.random() * 4, 0, 7); c.fill(); }
+};
+
+/** Follaje: hojas grandes en relieve. */
+const foliageRelief: Painter = (c, s) => {
+  c.fillStyle = '#808080'; c.fillRect(0, 0, s, s);
+  bumps(c, s, 60, 6, 14, [[0, '#B8B8B8'], [0.5, '#909090'], [1, '#808080']]);
 };
 
 const groundRelief: Painter = (c, s) => {
@@ -133,6 +177,8 @@ export interface SceneTextures {
   ground: THREE.Texture;
   groundNormal: THREE.Texture;
   parking: THREE.Texture;
+  foliage: THREE.Texture;
+  foliageNormal: THREE.Texture;
 }
 
 export function createTextures(renderer: THREE.WebGLRenderer): SceneTextures {
@@ -145,5 +191,7 @@ export function createTextures(renderer: THREE.WebGLRenderer): SceneTextures {
     ground: canvasTexture(256, ground, aniso, 0.04),
     groundNormal: normalTexture(256, groundRelief, 3, aniso, 0.04),
     parking: canvasTexture(128, parking, aniso, 0.1),
+    foliage: canvasTexture(128, foliage, aniso, 0.3),
+    foliageNormal: normalTexture(128, foliageRelief, 3, aniso, 0.3),
   };
 }

@@ -72,7 +72,11 @@ async function doFetch(
   body?: unknown,
   extraHeaders: Record<string, string> = {},
 ): Promise<Response> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...extraHeaders };
+  // Con FormData el navegador pone el Content-Type con su boundary; fijarlo aquí lo rompería.
+  const isForm = body instanceof FormData;
+  const headers: Record<string, string> = isForm
+    ? { ...extraHeaders }
+    : { 'Content-Type': 'application/json', ...extraHeaders };
 
   // El backend lee el access token del header y nunca de la cookie
   // (SPEC-001 §5.1): la cookie solo sirve para /auth/refresh y /auth/logout.
@@ -84,7 +88,7 @@ async function doFetch(
     // La cookie httpOnly de refresh viaja igual: es lo que permite recuperar la
     // sesión tras recargar, cuando el token en memoria ya no está.
     credentials: 'include',
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
   });
 }
 
@@ -168,12 +172,24 @@ async function getIfChanged<T>(path: string, etag: string | null): Promise<Condi
   return { changed: true, data, etag: response.headers.get('ETag') };
 }
 
+/** Un archivo que el backend genera (plantilla, exportación), con la sesión del usuario. */
+async function getBlob(path: string): Promise<Blob> {
+  const response = await send('GET', path);
+  if (!response.ok) {
+    return unwrap<Blob>(response);
+  }
+  return response.blob();
+}
+
 export const apiClient = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
+  postForm: <T>(path: string, form: FormData) => request<T>('POST', path, form),
+  putForm: <T>(path: string, form: FormData) => request<T>('PUT', path, form),
+  getBlob,
   getIfChanged,
 };
 

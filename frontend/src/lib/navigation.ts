@@ -38,9 +38,25 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
   // Público incluso sin sesión (docs/inventario-verde/README.md); aquí, para quien ya entró.
   { label: 'Inventario verde', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+  // Catálogo de lugares: lo consultan todos; editarlo es de ADMIN y COORDINADOR.
+  { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
+  {
+    // M2 · SPEC-103. Registrar el campus es trabajo diario, no configuración.
+    id: 'catastro',
+    label: 'Catastro',
+    icon: '🌳',
+    items: [
+      // D-03: el supervisor registra por formulario (plantas, tachos, bebederos); la carga masiva es de quien coordina.
+      { label: 'Registrar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Importar CSV', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      // Catálogo de lugares: pasar las referencias antiguas al catálogo es de quien lo edita.
+      { label: 'Migrar referencias', href: '/lugares/migracion', icon: '🔀', roles: ['ADMIN', 'COORDINADOR'] },
+    ],
+  },
   {
     id: 'administracion',
     label: 'Administración',

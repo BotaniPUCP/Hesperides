@@ -1,12 +1,12 @@
-package pe.edu.pucp.hesperides.modules.inventory.repository;
+package pe.edu.pucp.hesperides.shared.persistence;
 
 /** Patrón LIKE de «contiene», con los comodines del texto escapados. */
-final class LikePattern {
+public final class LikePattern {
 
     private LikePattern() {
     }
 
-    static String contains(String text) {
+    public static String contains(String text) {
         if (text == null) {
             return null;
         }

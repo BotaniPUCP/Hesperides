@@ -20,6 +20,11 @@ const data = {
     { p: [0, 0], props: { code: 'EV-000400', speciesSlug: 'agave-americana', commonName: 'Pita', scientificName: 'Agave americana',
       typeCode: 'SHRUB', typeLabel: 'Arbusto', quantity: 3, heightM: null, crownRadiusM: null } },
   ],
+  fountains: [
+    { p: [0, 0], props: { code: 'PT_bb1', type: 'DRINKING_FOUNTAIN', typeLabel: 'Bebedero', name: 'Maestranza - Salida del baño',
+      attributes: { tipo: 'BOTTLE_FILLER', estado: 'DETERIORATED', sector: 'CAMPUS', nota: 'Gotea' } } },
+    { p: [0, 0], props: { code: 'PT_bb2', type: 'DRINKING_FOUNTAIN', typeLabel: 'Bebedero', name: 'Sin datos', attributes: { tipo: 'RARO' } } },
+  ],
 } as unknown as SceneData;
 
 describe('infoFor', () => {
@@ -74,5 +79,16 @@ describe('infoFor', () => {
   it('las filas sin dato no se muestran', () => {
     const rows = infoFor(data, { layer: 'references', index: 0 }).rows;
     expect(rows.every(([, v]) => v !== null && v !== '')).toBe(true);
+  });
+
+  it('un bebedero muestra su tipo y su estado en palabras (CA-10)', () => {
+    const c = infoFor(data, { layer: 'fountains', index: 0 });
+    expect(c.kind).toBe('Bebedero');
+    expect(c.title).toBe('Maestranza - Salida del baño');
+    expect(c.rows).toEqual(expect.arrayContaining([['Tipo', 'Llenador de botella'], ['Estado', 'En deterioro'], ['Nota', 'Gotea']]));
+  });
+
+  it('un código de bebedero desconocido se muestra tal cual en vez de esconderse', () => {
+    expect(infoFor(data, { layer: 'fountains', index: 1 }).rows).toEqual(expect.arrayContaining([['Tipo', 'RARO']]));
   });
 });

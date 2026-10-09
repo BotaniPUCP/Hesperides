@@ -17,6 +17,13 @@ spring:
     # alguna vez hiciera falta activarlo, es senal de que alguien se salto la
     # convencion y tomo un numero ya usado.
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      # Una carga de catastro trae el CSV y un ZIP de fotos (SPEC-103 §3.1). Las
+      # fotos ya vienen comprimidas, así que el ZIP pesa casi lo mismo que ellas.
+      # 250 MB por subida (SPEC-104 D-07); el frontend lo repite en upload-limits.ts.
+      max-file-size: 250MB
+      max-request-size: 250MB
   mvc:
     # Required so unmapped routes raise NoHandlerFoundException and reach the
     # global handler as 404 instead of falling through to a generic 500.
@@ -78,3 +85,14 @@ hesperides:
     # Sin valor por defecto: un default de desarrollo acabaria enviando correos
     # que invitan a entrar en localhost, que no significa nada para quien lo recibe.
     app-public-url: ${APP_PUBLIC_URL}
+  # Fotos y archivos (SPEC-002 §5.4): local en desarrollo y on-premise, s3 en
+  # AWS. El directorio no tiene valor por defecto: guardar fotos en un lugar
+  # que se borra al reiniciar es peor que no arrancar.
+  storage:
+    type: ${STORAGE_TYPE:local}
+    local-dir: ${STORAGE_LOCAL_DIR:}
+    s3-bucket: ${STORAGE_S3_BUCKET:}
+    s3-region: ${STORAGE_S3_REGION:}
+    # Bandeja de carga inicial de fotos de especie (SPEC-104 D-05). Opcional: sin
+    # ella el endpoint load-inbox responde 422 y el resto del sistema no cambia.
+    inbox-dir: ${STORAGE_INBOX_DIR:}

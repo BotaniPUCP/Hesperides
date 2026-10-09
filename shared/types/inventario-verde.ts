@@ -28,8 +28,22 @@ export interface Species {
   vegetationTypeCode: string;
   vegetationTypeName: string;
   specimenCount: number;
-  /** Miniatura de la foto de uno de sus ejemplares. */
+  /** Miniatura de la foto principal: la de la especie o, si no tiene, la de uno de sus ejemplares. */
   imageUrl: string | null;
+  /** De dónde sale `imageUrl`: decide la etiqueta de la ficha. Nulo si no hay foto. */
+  imageSource: 'SPECIES' | 'SPECIMEN' | null;
+  /** Las fotos genéricas en su orden (SPEC-104). Solo en la ficha; en el listado viene vacío. */
+  photos: SpeciesPhoto[];
+}
+
+/** Una foto genérica de especie con su crédito. Autor, licencia y fuente faltan en una foto propia. */
+export interface SpeciesPhoto {
+  thumbnailUrl: string;
+  imageUrl: string;
+  author: string | null;
+  license: string | null;
+  /** La página que acredita la foto (Wikimedia Commons), no la de descarga. */
+  sourceUrl: string | null;
 }
 
 /**
@@ -42,8 +56,10 @@ export interface Specimen {
   sourceLocation: string | null;
   latitude: number | null;
   longitude: number | null;
-  /** Enlace original de la foto (Drive). */
+  /** Enlace de origen de la foto (Drive), como vino del catastro o del CSV. */
   photoUrl: string | null;
+  /** La foto para mostrar en grande: la guardada en nuestro almacenamiento si existe. */
+  imageUrl: string | null;
   /** Miniatura que se puede mostrar como imagen. */
   thumbnailUrl: string | null;
   /** Mayor que 1 en una agrupación (una mata de Pita). */

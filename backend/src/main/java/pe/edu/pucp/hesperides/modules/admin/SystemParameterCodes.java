@@ -34,4 +34,9 @@ public final class SystemParameterCodes {
     public static final String PROXIMITY_INSIDE_M = "PROXIMITY_INSIDE_M";
     public static final String PROXIMITY_ADJACENT_M = "PROXIMITY_ADJACENT_M";
     public static final String PROXIMITY_NAME_M = "PROXIMITY_NAME_M";
+    public static final String DUPLICATE_TREE_M = "DUPLICATE_TREE_M";
+    public static final String DUPLICATE_PALM_M = "DUPLICATE_PALM_M";
+    public static final String DUPLICATE_SHRUB_M = "DUPLICATE_SHRUB_M";
+    public static final String DUPLICATE_HERB_M = "DUPLICATE_HERB_M";
+    public static final String DUPLICATE_FEATURE_M = "DUPLICATE_FEATURE_M";
 }

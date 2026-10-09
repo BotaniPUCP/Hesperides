@@ -20,7 +20,12 @@ final class InventoryQueries {
                    (SELECT e.photo_url FROM green_elements e WHERE e.species_id = s.id AND %1$s AND e.photo_url IS NOT NULL
                      ORDER BY e.data_source = 'MEASURED' DESC, e.code LIMIT 1) AS photo_url,
                    (SELECT string_agg(n.name, '|' ORDER BY n.name) FROM species_common_names n
-                     WHERE n.species_id = s.id AND n.deleted_at IS NULL) AS other_names
+                     WHERE n.species_id = s.id AND n.deleted_at IS NULL) AS other_names,
+                   (SELECT sp.id FROM species_photos sp WHERE sp.species_id = s.id AND sp.deleted_at IS NULL
+                     ORDER BY sp.sort_order LIMIT 1) AS species_photo_id,
+                   (SELECT a.id FROM green_element_attachments a JOIN green_elements e ON e.id = a.green_element_id
+                     WHERE e.species_id = s.id AND %1$s AND a.deleted_at IS NULL
+                     ORDER BY e.data_source = 'MEASURED' DESC, e.code, a.id DESC LIMIT 1) AS specimen_photo_id
               FROM species s JOIN catalog_items t ON t.id = s.species_type_item_id
             """.formatted(ACTIVE_ELEMENT);
 
@@ -59,7 +64,9 @@ final class InventoryQueries {
             SELECT e.code, e.source_reference, e.source_location, e.legacy_code, ST_Y(e.location) AS lat,
                    ST_X(e.location) AS lon, e.photo_url, e.quantity, e.notes, e.height_m, e.trunk_height_m, e.dbh_cm,
                    e.crown_radius_m, e.is_banded, e.data_source, et.code AS element_type_code,
-                   et.label AS element_type_label, s.slug
+                   et.label AS element_type_label, s.slug,
+                   (SELECT a.id FROM green_element_attachments a WHERE a.green_element_id = e.id AND a.deleted_at IS NULL
+                     ORDER BY a.id DESC LIMIT 1) AS attachment_id
               FROM green_elements e
               JOIN species s ON s.id = e.species_id
               JOIN catalog_items et ON et.id = e.element_type_item_id

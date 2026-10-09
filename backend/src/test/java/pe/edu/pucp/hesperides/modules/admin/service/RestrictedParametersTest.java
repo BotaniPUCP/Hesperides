@@ -58,10 +58,22 @@ class RestrictedParametersTest {
     }
 
     @Test
+    void exposesTheDuplicateThresholdsFromTheEngineThatAppliesThem() {
+        // SPEC-103 D-05: umbral según el tipo de planta, fijo y visible.
+        Map<String, String> values = valuesByCode();
+
+        assertThat(values).containsEntry("DUPLICATE_TREE_M", "1.5")
+                .containsEntry("DUPLICATE_PALM_M", "1")
+                .containsEntry("DUPLICATE_SHRUB_M", "0.5")
+                .containsEntry("DUPLICATE_HERB_M", "0.3")
+                .containsEntry("DUPLICATE_FEATURE_M", "1");
+    }
+
+    @Test
     void everyEntryIsLockedAndFullyDescribed() {
         List<SystemParameterResponse> all = restricted.all();
 
-        assertThat(all).hasSize(11).allSatisfy(parameter -> {
+        assertThat(all).hasSize(16).allSatisfy(parameter -> {
             assertThat(parameter.isEditable()).isFalse();
             assertThat(parameter.label()).isNotBlank();
             assertThat(parameter.description()).isNotBlank();

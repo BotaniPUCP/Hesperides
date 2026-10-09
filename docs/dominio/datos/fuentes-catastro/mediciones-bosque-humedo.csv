@@ -1,0 +1,16 @@
+n,lugar,latitud,longitud,nombre_comun,nombre_cientifico,origen,arbol,palmera,arbusto,altura_m,altura_fuste_m,dap_cm,radio_copa_m,enfermedades,plagas,danos_mecanicos,observacion,zunchado,inclinacion,ramas_secas,cavidades,raices_expuestas,interferencia,manejo_recomendado,foto
+1,Bosque Húmedo,-12.0736718994297,-77.0797287962311,Ceiba,Ceiba speciosa,Introducida,1,,,10.5,,124.0,6.5,No,No,No,,,No,Sí,No,Sí,No,Sin intervención,BH1
+2,Bosque Húmedo,-12.0736797733147,-77.0797093479582,Ceiba,Ceiba speciosa,Introducida,1,,,6.0,,72.0,2.5,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH2
+3,Bosque Húmedo,-12.0736882972271,-77.079689228446,Ceiba,Ceiba speciosa,Introducida,1,,,7.5,,215.0,4.8,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH3
+4,Bosque Húmedo,-12.0737007633353,-77.0796670974733,Ceiba,Ceiba speciosa,Introducida,1,,,5.3,,37.0,1.3,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH4
+5,Bosque Húmedo,-12.0737073222786,-77.0796456383289,Ceiba,Ceiba speciosa,Introducida,1,,,6.5,,83.0,2.5,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH5
+6,Bosque Húmedo,-12.0737185010282,-77.0796275298845,Ceiba,Ceiba speciosa,Introducida,1,,,6.0,,37.0,2.5,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH6
+7,Bosque Húmedo,-12.0737244200137,-77.0796040583962,Ceiba,Ceiba speciosa,Introducida,1,,,7.5,,132.0,2.2,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH7
+8,Bosque Húmedo,-12.073726387609,-77.0795866214856,Ceiba,Ceiba speciosa,Introducida,1,,,6.0,,44.0,1.7,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH8
+9,Bosque Húmedo,-12.0737172106057,-77.0795651645988,Ceiba,Ceiba speciosa,Introducida,1,,,7.5,,144.0,7.5,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH9
+10,Bosque Húmedo,-12.0737211523637,-77.0795383437846,Ceiba,Ceiba speciosa,Introducida,1,,,7.7,,102.0,3.1,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH10
+11,Bosque Húmedo,-12.0738178,-77.079335,Ceiba,Ceiba speciosa,Introducida,1,,,7.8,,170.0,2.1,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH11
+12,Bosque Húmedo,-12.0737375177588,-77.0794854098106,Ceiba,Ceiba speciosa,Introducida,1,,,,,,,No,No,No,,,No,Sí,No,Sí,No,Sin intervención,BH12
+13,Bosque Húmedo,-12.0737538761476,-77.0794579021507,Ceiba,Ceiba speciosa,Introducida,1,,,,,,,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH13
+14,Bosque Húmedo,-12.0737630746033,-77.0794290584903,Ceiba,Ceiba speciosa,Introducida,1,,,,,,,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH14
+15,Bosque Húmedo,-12.0737650527062,-77.0794049089901,Ceiba,Ceiba speciosa,Introducida,1,,,,,,,No,No,No,,,No,Sí,No,No,No,Sin intervención,BH15

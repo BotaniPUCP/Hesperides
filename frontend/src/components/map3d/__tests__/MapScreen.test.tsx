@@ -2,14 +2,18 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import type { MapLayersResponse } from '@shared/types';
 import { MapScreen } from '../MapScreen';
 import { sampleLayers } from '../__fixtures__/mapLayers';
+import type { CameraPose } from '../viewer/cameraRig';
 import { createViewer, type Viewer, type ViewerCallbacks } from '../viewer/createViewer';
 import { useMapLayers, type UseMapLayersResult } from '@/hooks/useMapLayers';
 import { mapApi } from '@/lib/map-api';
 import { ApiError } from '@/lib/api';
+import { placesApi } from '@/lib/places-api';
+import type { MapCatalog } from '@shared/types';
 
 jest.mock('../viewer/createViewer', () => ({ createViewer: jest.fn() }));
 jest.mock('@/hooks/useMapLayers', () => ({ useMapLayers: jest.fn() }));
 jest.mock('@/lib/map-api', () => ({ mapApi: { describe: jest.fn() } }));
+jest.mock('@/lib/places-api', () => ({ placesApi: { map: jest.fn() } }));
 
 const mockedCreate = createViewer as jest.MockedFunction<typeof createViewer>;
 const mockedLayers = useMapLayers as jest.MockedFunction<typeof useMapLayers>;
@@ -19,9 +23,12 @@ function fakeViewer(): jest.Mocked<Viewer> {
   return {
     setPaint: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), fit: jest.fn(), top: jest.fn(),
-    north: jest.fn(), toggleSpin: jest.fn(), dispose: jest.fn(),
+    north: jest.fn(), toggleSpin: jest.fn(), pose: jest.fn(() => SAVED_POSE),
+    setViewCones: jest.fn(), flyToPose: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(), dispose: jest.fn(),
   };
 }
+
+const SAVED_POSE: CameraPose = { position: [10, 400, 250], target: [12, 0, -30] };
 
 const loaded = (data: MapLayersResponse = sampleLayers): UseMapLayersResult => ({ data, isLoading: false, errorMessage: null, stale: false });
 
@@ -34,7 +41,14 @@ async function renderLoaded(data?: MapLayersResponse) {
   await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
 }
 
+const catalog: MapCatalog = {
+  places: [{ code: 'LUG-0001', name: 'Edificio de prueba', parentName: null, buildingId: 1, lat: -12.07, lon: -77.08 }],
+  perspectives: [{ id: 7, place: { code: 'LUG-0001', name: 'Edificio de prueba' }, displayName: 'Espalda de Edificio de prueba',
+    lat: -12.0701, lon: -77.08, headingDeg: 0, thumbnailUrl: 'http://api/files/places/3?size=thumb' }],
+};
+
 beforeEach(() => {
+  (placesApi.map as jest.Mock).mockResolvedValue(catalog);
   viewer = fakeViewer();
   mockedCreate.mockImplementation((_c, _l, _d, cb) => {
     callbacks = cb;
@@ -69,6 +83,13 @@ describe('MapScreen', () => {
     expect(viewer.setLayerVisible).toHaveBeenCalledWith('supervision', false);
     expect(viewer.setLayerVisible).toHaveBeenCalledWith('reserve', false);
     expect(viewer.setLayerVisible).not.toHaveBeenCalledWith('greenAreas', false);
+  });
+
+  it('arranca sin los edificios del entorno', async () => {
+    await renderLoaded();
+    expect(viewer.setLayerVisible).toHaveBeenCalledWith('contextBuildings', false);
+    fireEvent.click(screen.getByRole('button', { name: 'Capas y leyenda' }));
+    expect(screen.getByRole('checkbox', { name: 'Edificios del entorno' })).not.toBeChecked();
   });
 
   it('buscar y elegir un resultado lleva la cámara y abre su ficha', async () => {
@@ -191,5 +212,103 @@ describe('MapScreen', () => {
     await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
     unmount();
     expect(viewer.dispose).toHaveBeenCalled();
+  });
+
+  it('al volver a la pantalla la cámara sigue donde se dejó', async () => {
+    mockedLayers.mockReturnValue(loaded());
+    const { unmount } = render(<MapScreen />);
+    await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(1));
+    unmount();
+    render(<MapScreen />);
+    await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(2));
+    expect(mockedCreate.mock.calls[1][4]).toEqual(SAVED_POSE);
+  });
+
+  describe('pantalla completa', () => {
+    const request = jest.fn(() => Promise.resolve());
+    const exit = jest.fn(() => Promise.resolve());
+
+    beforeEach(() => {
+      Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, value: true });
+      Object.defineProperty(document, 'exitFullscreen', { configurable: true, value: exit });
+      HTMLElement.prototype.requestFullscreen = request;
+    });
+
+    afterEach(() => {
+      Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, value: undefined });
+      Object.defineProperty(document, 'fullscreenElement', { configurable: true, value: null });
+    });
+
+    it('el botón expande el mapa y vuelve a pulsarse para salir', async () => {
+      await renderLoaded();
+      fireEvent.click(screen.getByRole('button', { name: 'Pantalla completa' }));
+      expect(request).toHaveBeenCalled();
+      expect(request.mock.contexts[0]).toContainElement(screen.getByTestId('map-3d'));
+
+      Object.defineProperty(document, 'fullscreenElement', { configurable: true, value: request.mock.contexts[0] });
+      act(() => {
+        document.dispatchEvent(new Event('fullscreenchange'));
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Salir de pantalla completa' }));
+      expect(exit).toHaveBeenCalled();
+    });
+
+    it('sin soporte del navegador no muestra el botón', async () => {
+      Object.defineProperty(document, 'fullscreenEnabled', { configurable: true, value: false });
+      await renderLoaded();
+      expect(screen.queryByRole('button', { name: 'Pantalla completa' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('catálogo de lugares', () => {
+    it('la capa Perspectivas empieza apagada y al encenderla dibuja un cono por perspectiva', async () => {
+      await renderLoaded();
+      fireEvent.click(screen.getByRole('button', { name: 'Capas y leyenda' }));
+      const toggle = screen.getByRole('checkbox', { name: 'Perspectivas' });
+      expect(toggle).not.toBeChecked();
+      expect(viewer.setLayerVisible).not.toHaveBeenCalledWith('perspectives', expect.anything());
+
+      fireEvent.click(toggle);
+
+      await waitFor(() => expect(viewer.setViewCones).toHaveBeenLastCalledWith([{ id: 7, lat: -12.0701, lon: -77.08, headingDeg: 0 }]));
+    });
+
+    it('pulsar un cono abre la ficha de la perspectiva con su foto y el enlace al lugar', async () => {
+      await renderLoaded();
+      await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+
+      await act(async () => callbacks.onViewConePick?.(7));
+
+      const card = await screen.findByRole('region', { name: 'Espalda de Edificio de prueba' });
+      expect(within(card).getByRole('img')).toHaveAttribute('src', 'http://api/files/places/3?size=thumb');
+      expect(within(card).getByRole('link', { name: /Ver Edificio de prueba en el catálogo/ })).toHaveAttribute('href', '/lugares/LUG-0001');
+    });
+
+    it('el buscador encuentra una perspectiva y lleva la cámara a su cono', async () => {
+      await renderLoaded();
+      await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+      const box = screen.getByRole('combobox', { name: 'Buscar en el mapa' });
+      fireEvent.change(box, { target: { value: 'espalda de edificio' } });
+      fireEvent.click(await screen.findByRole('option', { name: /Espalda de Edificio de prueba/ }));
+
+      expect(viewer.focusViewCone).toHaveBeenCalledWith(7);
+      expect(screen.getByRole('region', { name: 'Espalda de Edificio de prueba' })).toBeInTheDocument();
+    });
+
+    it('la ficha de un edificio del catálogo enlaza a su lugar', async () => {
+      await renderLoaded();
+      await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+      fireEvent.change(screen.getByRole('combobox', { name: 'Buscar en el mapa' }), { target: { value: 'edificio de prueba' } });
+      fireEvent.click(await screen.findByRole('option', { name: /Edificio de prueba Lugar del catálogo/ }));
+
+      expect(viewer.select).toHaveBeenCalledWith({ layer: 'campusBuildings', index: 0 }, true);
+      expect(screen.getByRole('link', { name: /Ver en el catálogo/ })).toHaveAttribute('href', '/lugares/LUG-0001');
+    });
+
+    it('si el catálogo no carga, el mapa funciona igual', async () => {
+      (placesApi.map as jest.Mock).mockRejectedValue(new Error('caído'));
+      await renderLoaded();
+      expect(screen.getByTestId('map-3d')).toBeInTheDocument();
+    });
   });
 });

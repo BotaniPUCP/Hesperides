@@ -44,7 +44,7 @@ describe('search', () => {
 describe('buildSearchIndex', () => {
   it('indexa los alias de una referencia para encontrarla por ellos', () => {
     const index = buildSearchIndex({
-      campusBuildings: [], greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [],
+      campusBuildings: [], greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], fountains: [],
       references: [{ p: [0, 0], props: { code: 'REF-1', name: 'Oficina de hallazgos', category: 'Servicios PUCP', parentCode: null, aliases: ['hallazgos'] } }],
       sectorNameByCode: {},
     });
@@ -58,7 +58,7 @@ describe('buildSearchIndex', () => {
   });
   const onlyRefs = (references: ReturnType<typeof ref>[]) =>
     buildSearchIndex({
-      campusBuildings: [], greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [],
+      campusBuildings: [], greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], fountains: [],
       references, sectorNameByCode: {},
     });
 
@@ -93,7 +93,7 @@ describe('buildSearchIndex', () => {
 
   it('encuentra una planta por su código, pero no la mezcla con las búsquedas por nombre', () => {
     const index = buildSearchIndex({
-      campusBuildings: [], greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], references: [],
+      campusBuildings: [], greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], fountains: [], references: [],
       sectorNameByCode: {},
       vegetation: [{ p: [0, 0], props: { code: 'EV-000123', speciesSlug: 'delonix-regia', commonName: 'Ponciana',
         scientificName: 'Delonix regia', typeCode: 'TREE', typeLabel: 'Árbol', quantity: 1, heightM: null, crownRadiusM: null } }],
@@ -106,7 +106,7 @@ describe('buildSearchIndex', () => {
   it('no indexa edificios sin nombre: no se pueden buscar', () => {
     const index = buildSearchIndex({
       campusBuildings: [{ g: [], props: { id: 1, name: null, inferredName: false, category: null, campus: true, heightM: 8, levels: null, source: 'OSM', aliases: null } }],
-      greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], references: [], sectorNameByCode: {},
+      greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], fountains: [], references: [], sectorNameByCode: {},
     });
 
     expect(index).toHaveLength(0);
