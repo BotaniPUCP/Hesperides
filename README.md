@@ -5,7 +5,7 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 ## Descripción
 
 **Hesperides** es un proyecto de investigación que implementa una arquitectura distribuida en tres capas:
-- Backend REST escalable (Spring Boot 4.1, Java 26)
+- Backend REST escalable (Spring Boot 4.1, Java 25 LTS)
 - Frontend responsivo (Next.js, TypeScript/React)
 - Data service especializado (Python Flask)
 
@@ -13,15 +13,21 @@ El dominio funcional y las características específicas se definen en los specs
 
 ## Requisitos previos
 
-- **Docker** 24+ (compose incluido)
-- **JDK 26** — obligatorio. El backend fija `<java.version>26</java.version>`; con un
-  JDK anterior `./mvnw test` falla con `release version 26 not supported`. Verifica tu
-  versión con `java -version` antes de empezar.
+- **Docker con Docker Compose**, o **Podman** con `podman compose` y su proveedor
+  Compose configurados. No es necesario instalar ambos motores.
+- **JDK 25 LTS** — obligatorio para todos. El backend fija `<java.version>25</java.version>`
+  y Maven Enforcer exige JDK 25.x al iniciar el ciclo de build. Configura `JAVA_HOME`
+  para que Maven use esa instalación; no basta generar bytecode 25 con otro JDK.
 - **Node.js** 20+
 - **Python** 3.11+
 - **Git**
 
 ## Configuración inicial
+
+Los mismos archivos Compose y Dockerfiles sirven para ambos motores. Elige **una**
+alternativa; los comandos de Docker Compose también pueden ejecutarse con
+`podman compose` conservando los argumentos. `podman-compose` puede usarse
+directamente si es el proveedor instalado. La CI conserva Docker Compose.
 
 ```bash
 # Clonar el repositorio
@@ -31,11 +37,16 @@ cd Hesperides
 # Copiar configuración de ejemplo
 cp .env.example .env
 
-# Levantar todos los servicios (base de datos, backend, frontend, data service)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# Completar los valores de .env, incluidos JWT_SECRET, SMTP_FROM y APP_PUBLIC_URL
 
-# Verificar que está listo
-docker compose logs -f
+# Levantar todos los servicios con Docker
+docker compose -f compose.yml -f compose.dev.yml up -d
+
+# O, con Podman (alternativa al comando anterior)
+podman compose -f compose.yml -f compose.dev.yml up -d
+
+# Seguir los logs con el motor elegido (sustituir por podman compose si aplica)
+docker compose -f compose.yml -f compose.dev.yml logs -f
 ```
 
 Acceso local:
@@ -54,6 +65,10 @@ Acceso local:
 | Data Service    | 5001   | hesperides-data-service | Python Flask, procesamiento de datos |
 
 ## Ejecución de tests
+
+Los tests de backend con Testcontainers requieren una API compatible con Docker.
+Con Podman, configurar su socket para Testcontainers es independiente de configurar
+`podman compose`; consultar la [guía de Testcontainers para Podman](https://java.testcontainers.org/supported_docker_environment/#podman).
 
 Cada stack tiene su suite de pruebas:
 
@@ -78,15 +93,18 @@ servidor de desarrollo de Next en lugar del build de producción. Editar cualqui
 archivo bajo `frontend/src/` se refleja en http://localhost:3000 sin reconstruir:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d frontend
+# Docker
+docker compose -f compose.yml -f compose.dev.yml up -d frontend
+# O Podman
+podman compose -f compose.yml -f compose.dev.yml up -d frontend
 ```
 
 Dos detalles del entorno que conviene conocer:
 
-- En desarrollo dentro de Docker se usa **webpack** (`next dev --webpack`), no
+- En desarrollo dentro del contenedor se usa **webpack** (`next dev --webpack`), no
   Turbopack. WSL2 no propaga los eventos del sistema de archivos de Windows al
   contenedor, así que el servidor necesita sondear los cambios, y Turbopack
-  ignora esa opción. Fuera de Docker, `npm run dev` sí usa Turbopack, que es
+  ignora esa opción. Fuera del contenedor, `npm run dev` sí usa Turbopack, que es
   más rápido.
 - El primer arranque tras `--build` tarda unos segundos en compilar. Los
   cambios posteriores se aplican en menos de un segundo.
@@ -112,7 +130,7 @@ Dos detalles del entorno que conviene conocer:
 │   ├── _plantilla.md           # Template para nuevos specs
 │   └── REGISTRO.md             # Seguimiento de specs
 │
-├── backend/                    # Spring Boot (Java 26)
+├── backend/                    # Spring Boot (Java 25 LTS)
 │   ├── src/
 │   ├── pom.xml
 │   └── .mvn/wrapper/           # Maven Wrapper
@@ -138,8 +156,8 @@ Dos detalles del entorno que conviene conocer:
 │
 ├── .github/workflows/          # CI/CD (GitHub Actions)
 │
-├── docker-compose.yml          # Orquestación de contenedores (despliegue)
-├── docker-compose.dev.yml      # Overrides de desarrollo local
+├── compose.yml                 # Orquestación de contenedores (despliegue)
+├── compose.dev.yml             # Overrides de desarrollo local
 │
 ├── .env.example                # Plantilla de variables de entorno
 ├── .gitignore
@@ -201,7 +219,10 @@ SPRING_PROFILES_ACTIVE=dev
 
 ### Desarrollo local
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# Docker
+docker compose -f compose.yml -f compose.dev.yml up -d
+# O Podman
+podman compose -f compose.yml -f compose.dev.yml up -d
 ```
 
 ### Validación en CI
@@ -209,6 +230,8 @@ Los tests se ejecutan automáticamente en GitHub Actions:
 - `./mvnw test` en cada push a `develop` o PR a `main`
 - `npm test` en frontend
 - `python -m pytest` en services
+- Infraestructura: `docker compose -f compose.yml -f compose.dev.yml config --quiet`,
+  con variables ficticias para validar la configuración sin levantar servicios.
 
 ### Producción (AWS)
 El despliegue a la nube está pendiente de licencias AWS. Cuando esté disponible:

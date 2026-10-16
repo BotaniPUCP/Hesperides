@@ -1,5 +1,8 @@
 # Biblioteca de componentes SPEC-C01 y pantalla de login — Implementation Plan
 
+> Contenedores: los ejemplos con `podman compose` admiten `docker compose` con
+> los mismos argumentos, según el motor instalado. La CI usa Docker Compose.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Dejar construido el design system del proyecto (11 componentes de SPEC-C01) y la pantalla de login que cierra el frontend de SPEC-001, de modo que una persona pueda entrar al sistema desde el navegador.
@@ -3617,7 +3620,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 1: Levantar el stack completo**
 
 ```bash
-docker compose up -d --build
+podman compose up -d --build
 sleep 40
 curl -s http://localhost:8080/api/v1/health
 ```

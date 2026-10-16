@@ -1,12 +1,16 @@
 # SPEC-100 Backend — Gestión de usuarios — Implementation Plan
 
+> Entorno vigente: JDK 25 LTS con `JAVA_HOME` configurado. Los ejemplos con
+> `podman compose` admiten `docker compose` con los mismos argumentos; elegir
+> según el motor instalado. La CI usa Docker Compose.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Exponer los nueve endpoints que permiten a un administrador crear, editar, desactivar y reactivar cuentas, con entrega de credenciales por correo, de modo que el frontend de SPEC-100 tenga contra qué trabajar.
 
 **Architecture:** Un módulo `modules/users` independiente de `modules/auth`: auth resuelve *sesiones*, users resuelve *cuentas*. Comparten la entidad `User` y `UsersRepository`, que ya existen. El `UsersService` orquesta; las reglas que protegen al sistema (último ADMIN, autodesactivación) viven ahí, no en el controller. El envío de correo está aislado en `CredentialDeliveryService` y ocurre **fuera** de la transacción del alta: un SMTP caído no puede impedir registrar a una persona.
 
-**Tech Stack:** Java 26 · Spring Boot 4.1.1 · Spring Security 7.1.1 · `spring-boot-starter-mail` (JavaMailSender) · PostgreSQL 16 · Flyway · JUnit 5 + Mockito + Testcontainers + GreenMail 2.1.3
+**Tech Stack:** Java 25 LTS · Spring Boot 4.1.1 · Spring Security 7.1.1 · `spring-boot-starter-mail` (JavaMailSender) · PostgreSQL 16 · Flyway · JUnit 5 + Mockito + Testcontainers + GreenMail 2.1.3
 
 **Spec:** `specs/features/SPEC-100-gestion-usuarios.md` (leer completo; su §2.5 enmienda SPEC-000 y SPEC-001, y su Anexo de permisos sale del Anexo A de SPEC-001)
 
@@ -25,8 +29,8 @@ Copiadas de los specs. Aplican a **todas** las tareas.
 - **Autorización con `@PreAuthorize` y `hasAuthority` sobre el `code` del rol**, usando las constantes de `RoleCodes` — nunca literales repetidos.
 - **Límites de tamaño** (CLAUDE.md): controllers ≤100 líneas, services ≤150, repositories ≤100, ningún archivo >200. DTOs y tests sin límite. `UsersService` roza el límite: por eso la política de contraseñas, la generación de temporales y el envío viven en clases aparte.
 - **TDD estricto:** test primero, se ejecuta y falla, luego el mínimo para que pase.
-- **Build:** desde `backend/`, `JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test`. El `JAVA_HOME` es obligatorio en cada invocación: el JDK del sistema es el 21 y no compila a release 26.
-- **Docker debe estar corriendo** (Testcontainers levanta PostgreSQL 16 real).
+- **Build:** desde `backend/`, `./mvnw -B test`, con `JAVA_HOME` apuntando a la instalación local de JDK 25. Maven Enforcer exige JDK 25.x.
+- **Runtime con API compatible con Docker disponible** (Docker o socket de Podman configurado para Testcontainers; levanta PostgreSQL 16 real).
 
 ## Decisiones tomadas antes de escribir este plan
 
@@ -73,7 +77,7 @@ Tres cosas que el spec no resolvía y que se cerraron con el usuario:
 - `AuditService.java` — interfaz mínima; su implementación completa es de SPEC-004
 
 **Configuración**
-- `application.yml`, `application-test.yml`, `.env.example`, `docker-compose.yml` — variables SMTP
+- `application.yml`, `application-test.yml`, `.env.example`, `compose.yml` — variables SMTP
 - `pom.xml` — `spring-boot-starter-mail`, GreenMail
 
 **Nota sobre `AuditService`:** SPEC-004 (auditoría) no está implementado y define la tabla `audit_log` en V011. SPEC-100 §9.3 exige registrar cinco acciones. Este plan crea la **interfaz** `AuditService` y una implementación que escribe a SLF4J, dejando el `@Primary` para cuando SPEC-004 aporte la persistencia. Así las llamadas quedan en su sitio desde el principio y SPEC-004 solo tendrá que sustituir el bean, sin tocar `UsersServiceImpl`.
@@ -180,7 +184,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 - [ ] **Step 2: Ejecutar y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=MigrationSmokeTest
+cd backend && ./mvnw -B test -Dtest=MigrationSmokeTest
 ```
 
 Esperado: FALLA. Las columnas de V100 no existen y `teams` tampoco.
@@ -292,7 +296,7 @@ CREATE INDEX idx_users_credential_status ON users(credential_status)
 - [ ] **Step 6: Ejecutar y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=MigrationSmokeTest
+cd backend && ./mvnw -B test -Dtest=MigrationSmokeTest
 ```
 
 Esperado: `Tests run: 10, Failures: 0` (5 previos + 5 nuevos).
@@ -302,7 +306,7 @@ Esperado: `Tests run: 10, Failures: 0` (5 previos + 5 nuevos).
 La renumeración cambia el historial de Flyway, así que la base local **debe** recrearse: reaplicar sobre la existente fallaría porque `V003` ya consta aplicada con otro checksum.
 
 ```bash
-docker compose down -v && docker compose up -d db backend
+podman compose down -v && podman compose up -d db backend
 sleep 40
 docker exec hesperides-db psql -U hesperides -d hesperides -c "SELECT version, description FROM flyway_schema_history ORDER BY installed_rank;"
 docker exec hesperides-db psql -U hesperides -d hesperides -c "\d teams"
@@ -475,7 +479,7 @@ class TeamMembersRepositoryTest {
 - [ ] **Step 2: Ejecutar y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=TeamMembersRepositoryTest
+cd backend && ./mvnw -B test -Dtest=TeamMembersRepositoryTest
 ```
 
 Esperado: FALLA con `package pe.edu.pucp.hesperides.modules.users.entity does not exist`.
@@ -725,7 +729,7 @@ import java.util.List;
 - [ ] **Step 8: Ejecutar y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=TeamMembersRepositoryTest
+cd backend && ./mvnw -B test -Dtest=TeamMembersRepositoryTest
 ```
 
 Esperado: `Tests run: 5, Failures: 0`.
@@ -733,7 +737,7 @@ Esperado: `Tests run: 5, Failures: 0`.
 - [ ] **Step 9: Ejecutar la suite completa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test
+cd backend && ./mvnw -B test
 ```
 
 Esperado: `BUILD SUCCESS`. Los 70 tests previos siguen verdes: los campos nuevos tienen default y no rompen a `AuthService`.
@@ -952,7 +956,7 @@ class TemporaryPasswordGeneratorTest {
 - [ ] **Step 2: Ejecutar y verificar que fallan**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest='PasswordPolicyTest,TemporaryPasswordGeneratorTest'
+cd backend && ./mvnw -B test -Dtest='PasswordPolicyTest,TemporaryPasswordGeneratorTest'
 ```
 
 Esperado: FALLA con `cannot find symbol: class PasswordPolicy`.
@@ -1135,7 +1139,7 @@ public class TemporaryPasswordGenerator {
 - [ ] **Step 6: Ejecutar y verificar que pasan**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest='PasswordPolicyTest,TemporaryPasswordGeneratorTest'
+cd backend && ./mvnw -B test -Dtest='PasswordPolicyTest,TemporaryPasswordGeneratorTest'
 ```
 
 Esperado: `Tests run: 17, Failures: 0` (13 de política + 4 del generador).
@@ -1174,7 +1178,7 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Create: `shared/audit/AuditActionCode.java`, `shared/audit/AuditService.java`, `shared/audit/LoggingAuditService.java`
 - Test: `backend/src/test/java/pe/edu/pucp/hesperides/modules/users/service/CredentialDeliveryServiceTest.java`
 - Modify: `backend/pom.xml` (mail + GreenMail)
-- Modify: `application.yml`, `src/test/resources/application.yml`, `.env.example`, `docker-compose.yml`
+- Modify: `application.yml`, `src/test/resources/application.yml`, `.env.example`, `compose.yml`
 
 **Interfaces:**
 - Consumes: `User` (Task 2)
@@ -1279,7 +1283,7 @@ SMTP_FROM=no-reply@hesperides.pucp.edu.pe
 APP_PUBLIC_URL=http://localhost:3000
 ```
 
-En `docker-compose.yml`, dentro de `environment:` del servicio `backend`:
+En `compose.yml`, dentro de `environment:` del servicio `backend`:
 
 ```yaml
       SMTP_HOST: ${SMTP_HOST:-smtp.pucp.edu.pe}
@@ -1403,7 +1407,7 @@ class CredentialDeliveryServiceTest {
 - [ ] **Step 4: Ejecutar y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=CredentialDeliveryServiceTest
+cd backend && ./mvnw -B test -Dtest=CredentialDeliveryServiceTest
 ```
 
 Esperado: FALLA con `cannot find symbol: class CredentialDeliveryService`.
@@ -1580,7 +1584,7 @@ public class CredentialDeliveryService {
 - [ ] **Step 7: Ejecutar y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=CredentialDeliveryServiceTest
+cd backend && ./mvnw -B test -Dtest=CredentialDeliveryServiceTest
 ```
 
 Esperado: `Tests run: 6, Failures: 0`.
@@ -1590,7 +1594,7 @@ Si falla con `Could not resolve placeholder 'SMTP_HOST'`, es que el `application
 - [ ] **Step 8: Verificar que la suite entera sigue verde**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test
+cd backend && ./mvnw -B test
 ```
 
 Esperado: `BUILD SUCCESS`. Atención: al añadir `spring-boot-starter-mail`, Spring autoconfigura un `JavaMailSender` que exige `spring.mail.host`. Si algún test de contexto falla por eso, es que falta el bloque en `src/test/resources/application.yml`.
@@ -1599,7 +1603,7 @@ Esperado: `BUILD SUCCESS`. Atención: al añadir `spring-boot-starter-mail`, Spr
 
 ```bash
 git add backend/pom.xml backend/src/main/resources/application.yml backend/src/test/resources/application.yml \
-        .env.example docker-compose.yml \
+        .env.example compose.yml \
         backend/src/main/java/pe/edu/pucp/hesperides/shared/audit/ \
         backend/src/main/java/pe/edu/pucp/hesperides/modules/users/service/CredentialDeliveryService.java \
         backend/src/test/java/pe/edu/pucp/hesperides/modules/users/service/CredentialDeliveryServiceTest.java
@@ -2073,7 +2077,7 @@ class UserSpecificationsTest {
 - [ ] **Step 3: Ejecutar y verificar que fallan**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest='UserScopeResolverTest,UserSpecificationsTest'
+cd backend && ./mvnw -B test -Dtest='UserScopeResolverTest,UserSpecificationsTest'
 ```
 
 Esperado: FALLA con `cannot find symbol: class UserScopeResolver`.
@@ -2298,7 +2302,7 @@ public class UserScopeResolver {
 - [ ] **Step 6: Ejecutar y verificar que pasan**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest='UserScopeResolverTest,UserSpecificationsTest'
+cd backend && ./mvnw -B test -Dtest='UserScopeResolverTest,UserSpecificationsTest'
 ```
 
 Esperado: `Tests run: 16, Failures: 0` (6 de alcance + 10 de filtros).
@@ -2871,7 +2875,7 @@ class UsersServiceImplTest {
 - [ ] **Step 2: Ejecutar y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=UsersServiceImplTest
+cd backend && ./mvnw -B test -Dtest=UsersServiceImplTest
 ```
 
 Esperado: FALLA con `cannot find symbol: class UsersServiceImpl`.
@@ -3335,7 +3339,7 @@ El orden de los 12 parámetros del constructor es exactamente el que el `setUp()
 - [ ] **Step 7: Ejecutar y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=UsersServiceImplTest
+cd backend && ./mvnw -B test -Dtest=UsersServiceImplTest
 ```
 
 Esperado: `Tests run: 25, Failures: 0`.
@@ -3691,7 +3695,7 @@ class UsersControllerTest {
 - [ ] **Step 2: Ejecutar y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=UsersControllerTest
+cd backend && ./mvnw -B test -Dtest=UsersControllerTest
 ```
 
 Esperado: FALLA con `cannot find symbol: class UsersController`.
@@ -3854,7 +3858,7 @@ public class UsersController {
 - [ ] **Step 4: Ejecutar y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=UsersControllerTest
+cd backend && ./mvnw -B test -Dtest=UsersControllerTest
 ```
 
 Esperado: `Tests run: 18, Failures: 0`.
@@ -4067,7 +4071,7 @@ class PasswordChangeRequiredFilterTest {
 - [ ] **Step 2: Ejecutar y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=PasswordChangeRequiredFilterTest
+cd backend && ./mvnw -B test -Dtest=PasswordChangeRequiredFilterTest
 ```
 
 Esperado: FALLA con `cannot find symbol: class PasswordChangeRequiredFilter`.
@@ -4220,7 +4224,7 @@ Los tests de `AuthServiceImplTest` y `AuthControllerTest` que construyen un `Use
 - [ ] **Step 6: Ejecutar y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=PasswordChangeRequiredFilterTest
+cd backend && ./mvnw -B test -Dtest=PasswordChangeRequiredFilterTest
 ```
 
 Esperado: `Tests run: 8, Failures: 0`.
@@ -4228,7 +4232,7 @@ Esperado: `Tests run: 8, Failures: 0`.
 - [ ] **Step 7: Suite completa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test
+cd backend && ./mvnw -B test
 ```
 
 Esperado: `BUILD SUCCESS`. Si falla en `AuthServiceImplTest` o `AuthControllerTest`, es el argumento que falta del Step 5.
@@ -4539,7 +4543,7 @@ class UsersIntegrationTest {
 - [ ] **Step 2: Ejecutar y verificar**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=UsersIntegrationTest
+cd backend && ./mvnw -B test -Dtest=UsersIntegrationTest
 ```
 
 Esperado: `Tests run: 10, Failures: 0`.
@@ -4549,7 +4553,7 @@ Esperado: `Tests run: 10, Failures: 0`.
 - [ ] **Step 3: Suite completa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test
+cd backend && ./mvnw -B test
 ```
 
 Esperado: `BUILD SUCCESS` con todos los tests verdes (70 previos + los de las tareas 1–9).
@@ -4557,7 +4561,7 @@ Esperado: `BUILD SUCCESS` con todos los tests verdes (70 previos + los de las ta
 - [ ] **Step 4: Verificación manual contra el entorno real**
 
 ```bash
-docker compose down -v && docker compose up -d --build
+podman compose down -v && podman compose up -d --build
 sleep 45
 
 TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
@@ -4581,8 +4585,8 @@ Para probar el envío de verdad, levantar un SMTP de juguete y apuntar el backen
 
 ```bash
 docker run -d --name mailpit --network 5hesperides_hesperides-net -p 8025:8025 axllent/mailpit
-docker compose stop backend
-SMTP_HOST=mailpit SMTP_PORT=1025 SMTP_AUTH=false SMTP_STARTTLS=false docker compose up -d backend
+podman compose stop backend
+SMTP_HOST=mailpit SMTP_PORT=1025 SMTP_AUTH=false SMTP_STARTTLS=false podman compose up -d backend
 # Crear un usuario y abrir http://localhost:8025 para ver el correo
 ```
 

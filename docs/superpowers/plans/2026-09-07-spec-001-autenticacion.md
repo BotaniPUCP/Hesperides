@@ -1,12 +1,16 @@
 # SPEC-001 Autenticación y autorización — Implementation Plan
 
+> Entorno vigente: JDK 25 LTS con `JAVA_HOME` configurado. Los ejemplos con
+> `podman compose` admiten `docker compose` con los mismos argumentos; elegir
+> según el motor instalado. La CI usa Docker Compose.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Que un administrador, coordinador, supervisor u operario inicie sesión con credenciales propias y que cada request quede autorizado según su rol, dejando lista la base (`users`, `BaseEntity`, seguridad JWT) sobre la que se apoyan todos los módulos de negocio.
 
 **Architecture:** Autenticación stateless con JWT de acceso (30 min) y refresh tokens rotatorios persistidos en base de datos (7 días). El access token no se puede revocar, así que la capacidad real de cerrar sesión vive en la tabla `refresh_tokens`; el filtro JWT carga el usuario en cada request vía `CustomUserDetailsService`, de modo que desactivar una cuenta surte efecto sin esperar a que expire el token. Los roles son filas de `catalog_items` (tipo `ROLE`), nunca un enum Java. Web recibe el refresh token en cookie httpOnly; móvil lo recibe en el body.
 
-**Tech Stack:** Java 26 · Spring Boot 4.1.1 · Spring Security 7.1.1 · JJWT 0.12.6 · PostgreSQL 16 · Flyway · JPA/Hibernate · JUnit 5 + Mockito + Testcontainers · Lombok
+**Tech Stack:** Java 25 LTS · Spring Boot 4.1.1 · Spring Security 7.1.1 · JJWT 0.12.6 · PostgreSQL 16 · Flyway · JPA/Hibernate · JUnit 5 + Mockito + Testcontainers · Lombok
 
 **Spec:** `specs/fundacionales/SPEC-001-autenticacion.md` (leer completo antes de empezar; su Anexo A gobierna la autorización de todo el proyecto)
 
@@ -14,7 +18,7 @@
 
 Copiadas literalmente de los specs. Aplican a **todas** las tareas de este plan.
 
-- **Java 26 / Spring Boot 4.1.1.** Ya configurado en `backend/pom.xml` (commit `fe7e343`). No cambiar.
+- **Java 25 LTS / Spring Boot 4.1.1.** Configurado en `backend/pom.xml`; Maven Enforcer exige JDK 25.x.
 - **Paquete raíz:** `pe.edu.pucp.hesperides`. Los módulos van en `modules.<modulo>.<capa>`; lo transversal en `shared.<area>`.
 - **Sobre de respuesta uniforme:** todo endpoint devuelve `ApiResponse<T>` — `{ ok, message, data }` (`shared/exception/ApiResponse.java`, ya existe). Nunca 200 en un error.
 - **Mensajes de `message` en inglés técnico** (el frontend traduce). Los textos de UI en español viven en el frontend.
@@ -28,7 +32,7 @@ Copiadas literalmente de los specs. Aplican a **todas** las tareas de este plan.
 - **Autorización por `@PreAuthorize` con `hasAuthority` sobre el `code` del rol, sin prefijo `ROLE_`**, centralizando las cadenas en constantes (`RoleCodes.ADMIN = "ADMIN"`), nunca literales repetidos.
 - **Límites de tamaño de archivo** (CLAUDE.md): controllers ≤100 líneas, services ≤150, repositories ≤100, ningún archivo >200. Tipos/DTO y tests sin límite.
 - **TDD estricto:** el test se escribe antes, se ejecuta y debe fallar, luego se implementa el mínimo.
-- **Comando de build:** desde `backend/`, `JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test`. El JDK del sistema es el 21 y no compila a release 26, así que `JAVA_HOME` es obligatorio en cada invocación.
+- **Comando de build:** desde `backend/`, `./mvnw -B test`, con `JAVA_HOME` apuntando a la instalación local de JDK 25. No usar una ruta de JDK de otra máquina.
 
 ## Notas de API verificadas (Spring Security 7.1.1)
 
@@ -159,7 +163,7 @@ class BaseEntityTest {
 - [ ] **Step 2: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=BaseEntityTest
+cd backend && ./mvnw -B test -Dtest=BaseEntityTest
 ```
 
 Esperado: FALLA con error de compilación, `package pe.edu.pucp.hesperides.shared.entity does not exist`.
@@ -233,7 +237,7 @@ Nota: `onCreate` y `onUpdate` son package-private a propósito — los invoca JP
 - [ ] **Step 4: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=BaseEntityTest
+cd backend && ./mvnw -B test -Dtest=BaseEntityTest
 ```
 
 Esperado: `Tests run: 4, Failures: 0, Errors: 0`.
@@ -324,7 +328,7 @@ public class CatalogItem extends BaseEntity {
 - [ ] **Step 6: Compilar y verificar que todo sigue verde**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test
+cd backend && ./mvnw -B test
 ```
 
 Esperado: `BUILD SUCCESS`, 12 tests (8 previos + 4 nuevos).
@@ -498,7 +502,7 @@ class MigrationSmokeTest {
 - [ ] **Step 3: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=MigrationSmokeTest
+cd backend && ./mvnw -B test -Dtest=MigrationSmokeTest
 ```
 
 Esperado: FALLA. `users` no existe todavía, así que la consulta a `information_schema` devuelve lista vacía.
@@ -584,7 +588,7 @@ WHERE code = 'USER'
 - [ ] **Step 6: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=MigrationSmokeTest
+cd backend && ./mvnw -B test -Dtest=MigrationSmokeTest
 ```
 
 Esperado: `Tests run: 5, Failures: 0, Errors: 0`. Docker debe estar corriendo (Testcontainers levanta PostgreSQL 16).
@@ -592,7 +596,7 @@ Esperado: `Tests run: 5, Failures: 0, Errors: 0`. Docker debe estar corriendo (T
 - [ ] **Step 7: Verificar contra la base real del entorno de desarrollo**
 
 ```bash
-docker compose down -v && docker compose up -d db backend
+podman compose down -v && podman compose up -d db backend
 sleep 30
 docker exec hesperides-db psql -U hesperides -d hesperides -c "\d users"
 docker exec hesperides-db psql -U hesperides -d hesperides -c "SELECT ci.code, ci.is_active FROM catalog_items ci JOIN catalog_types ct ON ct.id = ci.catalog_type_id WHERE ct.code = 'ROLE' ORDER BY ci.sort_order;"
@@ -741,7 +745,7 @@ class UsersRepositoryTest {
 - [ ] **Step 2: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=UsersRepositoryTest
+cd backend && ./mvnw -B test -Dtest=UsersRepositoryTest
 ```
 
 Esperado: FALLA con error de compilación, `package pe.edu.pucp.hesperides.modules.auth.entity does not exist`.
@@ -1008,7 +1012,7 @@ public interface RefreshTokensRepository extends JpaRepository<RefreshToken, Lon
 - [ ] **Step 5: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=UsersRepositoryTest
+cd backend && ./mvnw -B test -Dtest=UsersRepositoryTest
 ```
 
 Esperado: `Tests run: 4, Failures: 0, Errors: 0`.
@@ -1095,7 +1099,7 @@ En `.env.example`, bajo la sección del backend:
 JWT_SECRET=cambiar_por_una_clave_larga_y_aleatoria_de_al_menos_32_chars
 ```
 
-Y en `docker-compose.yml`, dentro de `environment:` del servicio `backend`, añadir `JWT_SECRET: ${JWT_SECRET}`.
+Y en `compose.yml`, dentro de `environment:` del servicio `backend`, añadir `JWT_SECRET: ${JWT_SECRET}`.
 
 - [ ] **Step 2: Escribir el test que falla**
 
@@ -1170,7 +1174,7 @@ class JwtTokenProviderTest {
 - [ ] **Step 3: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=JwtTokenProviderTest
+cd backend && ./mvnw -B test -Dtest=JwtTokenProviderTest
 ```
 
 Esperado: FALLA, `cannot find symbol: class JwtTokenProvider`.
@@ -1288,7 +1292,7 @@ public class JwtTokenProvider {
 - [ ] **Step 5: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=JwtTokenProviderTest
+cd backend && ./mvnw -B test -Dtest=JwtTokenProviderTest
 ```
 
 Esperado: `Tests run: 6, Failures: 0, Errors: 0`.
@@ -1296,7 +1300,7 @@ Esperado: `Tests run: 6, Failures: 0, Errors: 0`.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add backend/pom.xml backend/src/main/resources/application.yml .env.example docker-compose.yml \
+git add backend/pom.xml backend/src/main/resources/application.yml .env.example compose.yml \
         backend/src/main/java/pe/edu/pucp/hesperides/shared/security/ \
         backend/src/test/java/pe/edu/pucp/hesperides/shared/security/
 git commit -m "feat(security): agrega JwtTokenProvider y las constantes de rol
@@ -1422,7 +1426,7 @@ class CustomUserDetailsServiceTest {
 - [ ] **Step 2: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=CustomUserDetailsServiceTest
+cd backend && ./mvnw -B test -Dtest=CustomUserDetailsServiceTest
 ```
 
 Esperado: FALLA, `cannot find symbol: class CustomUserDetailsService`.
@@ -1476,7 +1480,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 - [ ] **Step 4: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=CustomUserDetailsServiceTest
+cd backend && ./mvnw -B test -Dtest=CustomUserDetailsServiceTest
 ```
 
 Esperado: `Tests run: 4, Failures: 0, Errors: 0`.
@@ -1695,7 +1699,7 @@ public class SecurityConfig {
 - [ ] **Step 6: Verificar que la aplicación sigue arrancando**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test
+cd backend && ./mvnw -B test
 ```
 
 Esperado: `BUILD SUCCESS`. El `HealthControllerTest` existente debe seguir pasando: `/api/v1/health` está en las rutas públicas.
@@ -1905,7 +1909,7 @@ class RefreshTokenServiceTest {
 - [ ] **Step 2: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=RefreshTokenServiceTest
+cd backend && ./mvnw -B test -Dtest=RefreshTokenServiceTest
 ```
 
 Esperado: FALLA, `cannot find symbol: class RefreshTokenService`.
@@ -2046,7 +2050,7 @@ public class RefreshTokenService {
 - [ ] **Step 4: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=RefreshTokenServiceTest
+cd backend && ./mvnw -B test -Dtest=RefreshTokenServiceTest
 ```
 
 Esperado: `Tests run: 7, Failures: 0, Errors: 0`.
@@ -2172,7 +2176,7 @@ class LoginAttemptServiceTest {
 - [ ] **Step 2: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=LoginAttemptServiceTest
+cd backend && ./mvnw -B test -Dtest=LoginAttemptServiceTest
 ```
 
 Esperado: FALLA, `cannot find symbol: class LoginAttemptService`.
@@ -2250,7 +2254,7 @@ public class LoginAttemptService {
 - [ ] **Step 4: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=LoginAttemptServiceTest
+cd backend && ./mvnw -B test -Dtest=LoginAttemptServiceTest
 ```
 
 Esperado: `Tests run: 7, Failures: 0, Errors: 0`.
@@ -2543,7 +2547,7 @@ class AuthServiceImplTest {
 - [ ] **Step 3: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=AuthServiceImplTest
+cd backend && ./mvnw -B test -Dtest=AuthServiceImplTest
 ```
 
 Esperado: FALLA, `cannot find symbol: class AuthServiceImpl`.
@@ -2738,7 +2742,7 @@ public class AuthServiceImpl implements AuthService {
 - [ ] **Step 6: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=AuthServiceImplTest
+cd backend && ./mvnw -B test -Dtest=AuthServiceImplTest
 ```
 
 Esperado: `Tests run: 8, Failures: 0, Errors: 0`.
@@ -2906,7 +2910,7 @@ class AuthControllerTest {
 - [ ] **Step 2: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=AuthControllerTest
+cd backend && ./mvnw -B test -Dtest=AuthControllerTest
 ```
 
 Esperado: FALLA, `cannot find symbol: class AuthController`.
@@ -3079,7 +3083,7 @@ public class AuthController {
 - [ ] **Step 5: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=AuthControllerTest
+cd backend && ./mvnw -B test -Dtest=AuthControllerTest
 ```
 
 Esperado: `Tests run: 6, Failures: 0, Errors: 0`.
@@ -3253,7 +3257,7 @@ class AuthIntegrationTest {
 - [ ] **Step 2: Ejecutar el test y verificar que falla**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=AuthIntegrationTest
+cd backend && ./mvnw -B test -Dtest=AuthIntegrationTest
 ```
 
 Esperado: FALLA con 401 en el login — el usuario administrador todavía no existe.
@@ -3288,7 +3292,7 @@ WHERE NOT EXISTS (
 **Verificación obligatoria del hash:** el hash de arriba es un valor de ejemplo conocido. Antes de dar por buena esta migración, generarlo de verdad y sustituirlo:
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B -q compile exec:java \
+cd backend && ./mvnw -B -q compile exec:java \
   -Dexec.mainClass=org.springframework.security.crypto.bcrypt.BCrypt 2>/dev/null || \
   echo "Generar con un test temporal: new BCryptPasswordEncoder().encode(\"Hesperides2026\")"
 ```
@@ -3298,7 +3302,7 @@ Si el login del test falla con 401 pese a la contraseña correcta, es que el has
 - [ ] **Step 4: Ejecutar el test y verificar que pasa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test -Dtest=AuthIntegrationTest
+cd backend && ./mvnw -B test -Dtest=AuthIntegrationTest
 ```
 
 Esperado: `Tests run: 5, Failures: 0, Errors: 0`.
@@ -3306,7 +3310,7 @@ Esperado: `Tests run: 5, Failures: 0, Errors: 0`.
 - [ ] **Step 5: Ejecutar la suite completa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test
+cd backend && ./mvnw -B test
 ```
 
 Esperado: `BUILD SUCCESS` con todos los tests verdes (8 previos + los de las tareas 1 a 10).
@@ -3314,7 +3318,7 @@ Esperado: `BUILD SUCCESS` con todos los tests verdes (8 previos + los de las tar
 - [ ] **Step 6: Verificar a mano contra el entorno real**
 
 ```bash
-docker compose down -v && docker compose up -d --build
+podman compose down -v && podman compose up -d --build
 sleep 40
 curl -s -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -3673,9 +3677,9 @@ En `specs/REGISTRO.md`, cambiar la fila de SPEC-001 a `✅ Completado` con la fe
 - [ ] **Step 2: Verificación final completa**
 
 ```bash
-cd backend && JAVA_HOME="/c/Program Files/Eclipse Adoptium/jdk-26.0.2.101-hotspot" ./mvnw -B test
+cd backend && ./mvnw -B test
 cd ../frontend && npm test
-cd .. && docker compose down -v && docker compose up -d --build && sleep 40
+cd .. && podman compose down -v && podman compose up -d --build && sleep 40
 curl -s http://localhost:8080/api/v1/health
 curl -s -X POST http://localhost:8080/api/v1/auth/login -H "Content-Type: application/json" \
   -d '{"email":"admin@pucp.edu.pe","password":"Hesperides2026"}' -i | head -15

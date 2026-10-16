@@ -23,11 +23,11 @@ jobs:
       # La version debe seguir a <java.version> del pom y al Dockerfile: si el
       # runner trae un JDK anterior, el compilador falla con "release version
       # not supported" y el fallo no aparece en local.
-      - name: Set up JDK 26 (Temurin)
+      - name: Set up JDK 25 LTS (Temurin)
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: "26"
+          java-version: "25"
           cache: maven
 
       - name: Run backend verification (build + tests)

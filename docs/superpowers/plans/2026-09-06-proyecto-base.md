@@ -1,12 +1,16 @@
 # Proyecto base Hesperides — Plan de implementación
 
+> Entorno vigente: JDK 25 LTS obligatorio. Los ejemplos con `podman compose`
+> admiten `docker compose` con los mismos argumentos, según el motor instalado.
+> La CI conserva Docker Compose.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Dejar el monorepo Hesperides listo para desarrollar features: un comando levanta los cuatro servicios, tres comandos corren los tests, y el CI valida cada PR.
 
-**Architecture:** Monorepo con `backend/` (Spring Boot 3, Java 17, Maven), `frontend/` (Next.js 16 App Router, TypeScript, Tailwind), `services/` (Flask 3), `shared/types/` (TypeScript compartido web + móvil), `mobile/` (placeholder fase 2) y `specs/`. Orquestación con Docker Compose. Cada servicio incluye el mínimo código que demuestra las convenciones y pasa un test; nada de lógica de negocio.
+**Architecture:** Monorepo con `backend/` (Spring Boot 4.1, Java 25 LTS, Maven), `frontend/` (Next.js 16 App Router, TypeScript, Tailwind), `services/` (Flask 3), `shared/types/` (TypeScript compartido web + móvil), `mobile/` (placeholder fase 2) y `specs/`. Orquestación con Docker Compose o Podman Compose. Cada servicio incluye el mínimo código que demuestra las convenciones y pasa un test; nada de lógica de negocio.
 
-**Tech Stack:** Java 17 + Spring Boot 3.3 + Maven Wrapper + Flyway + PostgreSQL 16 + JUnit 5 + JaCoCo · Next.js 16 + React 19 + TypeScript 5 + Tailwind 3 + Jest + React Testing Library · Python 3.11 + Flask 3 + pytest · Docker Compose · GitHub Actions
+**Tech Stack:** Java 25 LTS + Spring Boot 4.1 + Maven Wrapper + Flyway + PostgreSQL 16 + JUnit 5 + JaCoCo · Next.js 16 + React 19 + TypeScript 5 + Tailwind 3 + Jest + React Testing Library · Python 3.11 + Flask 3 + pytest · Docker Compose o Podman Compose · GitHub Actions
 
 **Spec:** `docs/superpowers/specs/2026-09-06-proyecto-base-design.md`
 
@@ -14,7 +18,7 @@
 
 - Monorepo: un solo repositorio, carpetas hermanas. Remoto `https://github.com/BotaniPUCP/Hesperides.git`.
 - Paquete Java base: `pe.edu.pucp.hesperides`. Nunca `pe.edu.pucp.proyecto`.
-- Java 17 como target de compilación (el entorno local tiene JDK 21; compilar a 17).
+- JDK 25 LTS obligatorio como JDK de desarrollo y target de compilación; configurar `JAVA_HOME` a la instalación local de JDK 25.
 - Maven Wrapper (`mvnw`) obligatorio: `mvn` no está instalado en el entorno.
 - Nombre de BD: `hesperides`. Contenedores: `hesperides-db`, `hesperides-backend`, `hesperides-frontend`, `hesperides-data-service`.
 - Puertos: backend 8080, frontend 3000, Flask 5001, PostgreSQL 5432.
@@ -158,7 +162,7 @@ Requiere su propio spec antes de escribir código.
 
 - [ ] **Step 7: Escribir `README.md` raíz**
 
-Debe contener: descripción del proyecto, requisitos (Docker, JDK 17+, Node 20+, Python 3.11+), cómo levantar (`cp .env.example .env` y `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d`), tabla de servicios y puertos, cómo correr los tests de cada stack, el flujo SDD resumido (spec → revisión → código → verificación → PR), convención de ramas y commits, y una nota de que el despliegue AWS está pendiente de licencias.
+Debe contener: descripción del proyecto, requisitos (Docker con Compose o Podman con proveedor Compose, JDK 25 LTS obligatorio, Node 20+, Python 3.11+), cómo levantar (`cp .env.example .env` y `podman compose -f compose.yml -f compose.dev.yml up -d`, o el equivalente con `docker compose`), tabla de servicios y puertos, cómo correr los tests de cada stack, el flujo SDD resumido (spec → revisión → código → verificación → PR), convención de ramas y commits, y una nota de que el despliegue AWS está pendiente de licencias.
 
 - [ ] **Step 8: Commit**
 
@@ -543,7 +547,7 @@ Expected: PASS — 4 tests, 0 fallos.
 
 - [ ] **Step 12: Escribir `backend/Dockerfile`**
 
-Multi-stage. Etapa de build: `maven:3.9-eclipse-temurin-17`, copiar `pom.xml`, `mvn dependency:go-offline`, copiar `src/`, `mvn -B package -DskipTests`. Etapa de runtime: `eclipse-temurin:17-jre-alpine`, usuario no root, copiar el jar, `EXPOSE 8080`, `ENTRYPOINT ["java","-jar","/app/app.jar"]`.
+Multi-stage. Etapa de build: `docker.io/library/maven:3.9-eclipse-temurin-25`, copiar `pom.xml`, `mvn dependency:go-offline`, copiar `src/`, `mvn -B package -DskipTests`. Etapa de runtime: `docker.io/library/eclipse-temurin:25-jre-alpine`, usuario no root, copiar el jar, `EXPOSE 8080`, `ENTRYPOINT ["java","-jar","/app/app.jar"]`.
 
 - [ ] **Step 13: Commit**
 
@@ -914,29 +918,29 @@ git commit -m "feat(services): agrega microservicio Flask con endpoint de salud"
 ### Task 5: Orquestación con Docker Compose
 
 **Files:**
-- Create: `docker-compose.yml`, `docker-compose.dev.yml`
+- Create: `compose.yml`, `compose.dev.yml`
 
 **Interfaces:**
 - Consumes: los tres Dockerfiles de Tasks 2, 3 y 4.
 - Produces: cuatro servicios (`db`, `backend`, `frontend`, `data-service`) levantables con un comando, en la red `hesperides-net`.
 
-- [ ] **Step 1: Escribir `docker-compose.yml`**
+- [ ] **Step 1: Escribir `compose.yml`**
 
 Cuatro servicios con `container_name` `hesperides-db`, `hesperides-backend`, `hesperides-frontend`, `hesperides-data-service`; red `hesperides-net`; volumen `pgdata` para la BD. `db` usa `postgres:16-alpine` con healthcheck `pg_isready -U ${POSTGRES_USER}`. `backend` declara `depends_on: db: condition: service_healthy`. Solo `backend` y `frontend` publican puertos al host. Todos los valores vienen de variables de entorno con default.
 
-- [ ] **Step 2: Escribir `docker-compose.dev.yml`**
+- [ ] **Step 2: Escribir `compose.dev.yml`**
 
 Override de desarrollo: publica al host los puertos de `db` (5432) y `data-service` (5001) para poder inspeccionarlos con DBeaver y curl, monta volúmenes de código en `frontend` y `services` para hot reload, y fija `SPRING_PROFILES_ACTIVE=dev` y `FLASK_DEBUG=1`.
 
 - [ ] **Step 3: Validar la sintaxis de ambos archivos**
 
-Run: `docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet`
+Run: `podman compose -f compose.yml -f compose.dev.yml config > /dev/null`
 Expected: sin salida, exit code 0. Los errores de sintaxis y las variables mal referenciadas aparecen aquí.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add docker-compose.yml docker-compose.dev.yml
+git add compose.yml compose.dev.yml
 git commit -m "feat(infra): agrega orquestacion Docker Compose para los cuatro servicios"
 ```
 
@@ -988,7 +992,7 @@ Expected: sin resultados.
 cd backend && ./mvnw -q test && cd ..
 cd frontend && npm test && cd ..
 cd services && python -m pytest -q && cd ..
-docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet
+podman compose -f compose.yml -f compose.dev.yml config > /dev/null
 ```
 
 Expected: las tres suites en verde y Compose sin errores. Si algo falla, arreglarlo antes de continuar: no se publica en rojo.
@@ -1014,7 +1018,7 @@ git push -u origin develop
 | El backend compila y pasa sus tests | `cd backend && ./mvnw -q test` → 4 tests en verde |
 | El frontend pasa sus tests | `cd frontend && npm test` → 4 tests en verde |
 | El servicio Flask pasa su test | `cd services && python -m pytest -q` → 1 test en verde |
-| Compose es válido | `docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet` → exit 0 |
+| Compose es válido | `podman compose -f compose.yml -f compose.dev.yml config > /dev/null` → exit 0 |
 | No hay credenciales commiteadas | Revisar que `.env` esté en `.gitignore` y que solo exista `.env.example` con placeholders |
 | El SPEC-000 es coherente con el código | El grep del Step 5 de Task 6 no devuelve resultados |
 | El repositorio está publicado | Ramas `main` y `develop` visibles en github.com/BotaniPUCP/Hesperides |

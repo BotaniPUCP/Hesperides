@@ -18,7 +18,7 @@
     <description>Hesperides backend - Spring Boot</description>
 
     <properties>
-        <java.version>26</java.version>
+        <java.version>25</java.version>
         <aws.sdk.version>2.31.0</aws.sdk.version>
     </properties>
 
@@ -154,6 +154,28 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.6.3</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java-25</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[25,26)</version>
+                                    <message>JDK 25 LTS is required. Set JAVA_HOME to a JDK 25 installation.</message>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Lombok debe declararse como annotation processor de forma explícita:
                  a partir de Spring Boot 4 el parent ya no lo inyecta por defecto y,
                  sin esto, @Slf4j y @Data no generan nada y la compilación falla. -->
@@ -177,8 +199,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <!-- 0.8.12 no instrumenta bytecode de Java 26 (class file 70) y
-                     rompe cualquier test que cargue el contexto de Spring. -->
+                <!-- Keep coverage instrumentation compatible with Java 25 bytecode. -->
                 <version>0.8.15</version>
                 <executions>
                     <execution>

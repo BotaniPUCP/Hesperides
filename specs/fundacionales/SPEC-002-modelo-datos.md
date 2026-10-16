@@ -50,7 +50,7 @@ Mismos tipos vía `shared/types/`. El móvil consume las mismas tablas por la mi
 
 **Librerías que DEBE usar:**
 
-- **PostGIS 3.4** sobre PostgreSQL 16. La imagen Docker del servicio `db` en `docker-compose.yml` y `docker-compose.dev.yml` pasa de `postgres:16-alpine` a **`postgis/postgis:16-3.4`**. Es un cambio de imagen base, no de motor: los datos existentes y la configuración de conexión no cambian.
+- **PostGIS 3.4** sobre PostgreSQL 16. La imagen del servicio `db` en `compose.yml`, heredada por `compose.dev.yml`, es **`docker.io/postgis/postgis:16-3.4`** en lugar de `postgres:16-alpine`. Es un cambio de imagen base, no de motor: los datos existentes y la configuración de conexión no cambian.
 - **`hibernate-spatial`** (`org.hibernate.orm:hibernate-spatial`, versión gestionada por el BOM de Spring Boot) como dependencia nueva en `backend/pom.xml`. Sin ella Hibernate no sabe mapear las columnas `GEOMETRY`.
 - **JTS** (`org.locationtech.jts`), que entra transitivamente con `hibernate-spatial`. Los tipos Java de geometría son `org.locationtech.jts.geom.Point` y `org.locationtech.jts.geom.Polygon`.
 - **Flyway** para toda evolución del esquema. `ddl-auto` se queda en `validate`; nunca en `update`.
@@ -998,7 +998,7 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 
 | # | Criterio | Método de verificación |
 |---|----------|----------------------|
-| CA-01 | Las migraciones corren limpias desde cero | `docker-compose down -v && docker-compose up --build`. El backend arranca sin error. `SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;` devuelve V001–V020 con `success = t` en todas. |
+| CA-01 | Las migraciones corren limpias desde cero | En una base de prueba vacía, `podman compose -f compose.yml -f compose.dev.yml up --build`. El backend arranca sin error. `SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;` devuelve las migraciones publicadas en `db/migration/` con `success = t` en todas. |
 | CA-02 | PostGIS está instalado y operativo | `SELECT PostGIS_Version();` devuelve una versión 3.4.x. `SELECT extname FROM pg_extension WHERE extname='postgis';` devuelve una fila. |
 | CA-03 | Existen las 20 tablas de dominio (17 de este spec + `catalog_types`/`catalog_items` y `users` del baseline V001) | `SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('catalog_types','catalog_items','users','zones','species','green_elements','green_element_attachments','supplies','interventions','intervention_elements','intervention_supplies','intervention_evidences','providers','contracts','contract_zones','contract_executions','incidents','incident_status_history','incident_evidences','system_parameters');` devuelve **20**. |
 | CA-04 | Toda tabla de dominio cumple la convención de auditoría | `SELECT table_name FROM information_schema.tables t WHERE table_schema='public' AND table_name NOT LIKE 'flyway%' AND table_name NOT LIKE 'spatial_ref_sys' AND NOT EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name=t.table_name AND c.column_name='deleted_at');` devuelve **0 filas**. Repetir cambiando `deleted_at` por `created_at` y `updated_at`. |
@@ -1012,7 +1012,7 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 | CA-12 | Existen los índices espaciales GIST | `SELECT indexname FROM pg_indexes WHERE schemaname='public' AND indexdef LIKE '%USING gist%' ORDER BY 1;` incluye `idx_zones_boundary`, `idx_green_elements_location`, `idx_green_elements_area` e `idx_incidents_location`. |
 | CA-13 | Ninguna tabla usa un tipo ENUM de PostgreSQL | `SELECT typname FROM pg_type WHERE typtype='e';` devuelve **0 filas**. Todo tipo/estado/prioridad es una fila de `catalog_items`. |
 | CA-14 | El historial de intervenciones de un elemento se obtiene con una sola consulta | `SELECT i.code, i.scheduled_date, ci.label FROM interventions i JOIN intervention_elements ie ON ie.intervention_id=i.id JOIN catalog_items ci ON ci.id=i.intervention_type_item_id WHERE ie.green_element_id = :id AND i.deleted_at IS NULL ORDER BY i.scheduled_date DESC;` se ejecuta sin error sobre la base vacía (devuelve 0 filas) y no requiere ninguna tabla de historial adicional. |
-| CA-15 | Hibernate valida el esquema al arrancar | Con `ddl-auto: validate`, el backend levanta sin excepciones de validación una vez implementadas las entidades. Verificable en los logs de `docker-compose logs backend`: no aparece `SchemaManagementException`. |
+| CA-15 | Hibernate valida el esquema al arrancar | Con `ddl-auto: validate`, el backend levanta sin excepciones de validación una vez implementadas las entidades. Verificable en los logs de `podman compose logs backend`: no aparece `SchemaManagementException`. |
 
 ---
 
@@ -1030,7 +1030,7 @@ Lo que debe quedar fijado:
 
 ```
 Migraciones
-- docker-compose down -v && up --build aplica V004-V020 desde cero sin error
+- en una base de prueba vacía, podman compose -f compose.yml -f compose.dev.yml up --build aplica el baseline y las migraciones publicadas desde cero sin error
 - la extensión PostGIS queda disponible antes de la primera tabla con geometría
 - reejecutar las migraciones no altera checksums (V001–V003 no se tocan)
 
@@ -1088,10 +1088,10 @@ propia en una `V1XX`. El JSONB no es el destino final de un atributo consolidado
 
 **Checklist propio** (el común está en [`REGLAS.md` §6](../REGLAS.md)):
 
-- [ ] Los ocho archivos `V004`, `V005`, `V012`, `V013` y `V017`–`V020` están en `db/migration/`, uno por área, y
+- [ ] Las migraciones de `db/migration/` siguen el orden cronológico publicado y
       `V001__baseline_schema.sql` **no fue modificado** (Flyway falla por checksum).
-- [ ] La imagen de `db` es `postgis/postgis:16-3.4` en `docker-compose.yml` **y** en
-      `docker-compose.dev.yml`; `hibernate-spatial` está en el `pom` sin versión explícita.
+- [ ] La imagen de `db` es `docker.io/postgis/postgis:16-3.4` en `compose.yml`, heredada por
+      `compose.dev.yml`; `hibernate-spatial` está en el `pom` sin versión explícita.
 - [ ] `ddl-auto` sigue en `validate` en los tres `application*.yml`.
 - [ ] Los tipos geométricos son `org.locationtech.jts.geom.Point`/`Polygon`; no hay `LatLng` propia.
 - [ ] Ningún `@Column` de tipo `byte[]` para imágenes.
@@ -1099,7 +1099,7 @@ propia en una `V1XX`. El JSONB no es el destino final de un atributo consolidado
 - [ ] **`@EnableJpaAuditing` está activo:** sin él `createdAt`/`updatedAt` quedan nulos y el
       `INSERT` falla por `NOT NULL`.
 - [ ] `shared/types/models.ts` refleja las entidades y extiende `AuditFields`.
-- [ ] `docker-compose down -v && docker-compose up --build` levanta desde cero sin error de Flyway.
+- [ ] `podman compose down -v && podman compose up --build` levanta desde cero sin error de Flyway.
 - [ ] Ninguna migración siembra zonas, especies, frecuencias ni parámetros: siguen pendientes
       del cliente (ver Anexo).
 

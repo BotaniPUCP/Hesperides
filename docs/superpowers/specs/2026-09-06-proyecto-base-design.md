@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|-------|
 | Fecha | 2026-09-06 |
-| Alcance | Monorepo, entorno Docker, CI, scaffolding mínimo verificable |
+| Alcance | Monorepo, entorno Docker o Podman, CI, scaffolding mínimo verificable |
 | Referencia | `specs/fundacionales/SPEC-000-arquitectura-general.md` |
 | Fuera de alcance | Autenticación, entidades de negocio, React Native, tests E2E, despliegue AWS |
 
@@ -35,8 +35,8 @@ produzcan diez formatos distintos.
 
 ```
 Hesperides/
-├── docker-compose.yml            db + backend + frontend + data-service
-├── docker-compose.dev.yml        override de desarrollo: hot reload, puertos
+├── compose.yml                   db + backend + frontend + data-service
+├── compose.dev.yml               override de desarrollo: hot reload, puertos
 ├── .env.example                  placeholders, sin credenciales reales
 ├── .gitignore
 ├── README.md
@@ -50,7 +50,7 @@ Hesperides/
 │   ├── compartidos/
 │   ├── _plantilla.md
 │   └── REGISTRO.md
-├── backend/     Spring Boot 3 · Java 17 · Maven · pe.edu.pucp.hesperides
+├── backend/     Spring Boot 4.1 · Java 25 LTS · Maven · pe.edu.pucp.hesperides
 ├── services/    Flask 3 · pytest
 ├── frontend/    Next.js 16 App Router · React 19 · TypeScript · Tailwind
 ├── mobile/      README: fase 2, posterior al web
@@ -71,7 +71,9 @@ web + móvil: es lo que sostiene la reutilización de código entre plataformas.
 | Flask | `hesperides-data-service` | 5001 | solo en dev |
 
 Flask no se expone al host en producción: solo el backend lo alcanza por la red
-interna de Docker, como define la sección 3 del SPEC-000.
+interna de contenedores, como define la sección 3 del SPEC-000. Se puede usar
+Docker con `docker compose` o Podman con `podman compose`, conservando los mismos
+archivos y argumentos; CI usa Docker Compose.
 
 El servicio `mobile-api` que lista la sección 4 del SPEC-000 no se crea. No existe
 en el diagrama de arquitectura de la sección 3, donde móvil consume la misma API de
@@ -134,7 +136,7 @@ todavía. Se registran en el README como pendientes de sprint.
 Tres workflows, cada uno con filtro `paths:` para no correr de más, disparados en
 push y PR contra `main` y `develop`:
 
-- `ci-backend.yml` — `mvn -B verify`, JDK 17, caché de `~/.m2`.
+- `ci-backend.yml` — `./mvnw -B verify`, JDK 25 LTS, caché de `~/.m2`.
 - `ci-frontend.yml` — `npm ci`, `npm run lint`, `npm test`, `npm run build`.
 - `ci-data-service.yml` — `pip install -r requirements.txt`, `pytest`.
 
