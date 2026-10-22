@@ -22,6 +22,10 @@ public interface UsersRepository extends JpaRepository<User, Long>, JpaSpecifica
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.deletedAt IS NULL")
     Optional<User> findActiveByEmail(@Param("email") String email);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.email = :email AND u.deletedAt IS NULL AND u.active = true")
+    Optional<User> lockActiveByEmail(String email);
+
     @Query("SELECT COUNT(u) FROM User u WHERE u.roleItem.code = 'ADMIN' "
             + "AND u.active = TRUE AND u.deletedAt IS NULL AND u.id <> :excludedId")
     long countOtherActiveAdmins(@Param("excludedId") Long excludedId);

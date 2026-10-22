@@ -5,6 +5,7 @@
 
 # Java / Maven
 backend/target/
+backend/uploads/
 *.class
 *.jar
 !backend/.mvn/wrapper/maven-wrapper.jar

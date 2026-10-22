@@ -20,12 +20,17 @@
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
+| SPEC-200 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
 ---
 
 ## Enmiendas a specs cerrados
+
+SPEC-200 ajusta SPEC-001 Anexo A (aprobación exclusiva de coordinación y resolución
+por capataz), SPEC-002 §4.8 (captura mínima, ubicación opcional, 1:N intervenciones)
+y SPEC-C01 (estados). La matriz del cliente sigue pendiente; categorías provisionales.
 
 Cuando un spec de feature obliga a corregir uno fundacional ya cerrado, la enmienda se aplica al
 archivo original (marcada como cita con su procedencia) y se anota aquí. Nadie debe descubrir por
@@ -106,9 +111,9 @@ que todavía no se ha escrito. La pareja que tome ese spec debe cerrarlos.
 ## Mapa de migraciones
 
 **Fuente única de la numeración Flyway** (REGLAS §5.4). La numeración es cronológica: cada
-migración nueva toma el siguiente número libre. Las pendientes tienen un número **reservado**
-en el orden previsto de implementación; si una se implementa antes que otra, se renumera aquí y en
-su spec, en el mismo commit. Una migración aplicada nunca cambia de número ni de contenido.
+migración nueva toma el siguiente número libre según los archivos de `db/migration/`.
+Las cifras de diseños pendientes antiguos no reservan versiones. Una migración
+publicada nunca cambia de número ni de contenido.
 
 ### Aplicadas
 
@@ -137,8 +142,19 @@ su spec, en el mismo commit. Una migración aplicada nunca cambia de número ni 
 | V014 | `V014__seed_green_inventory.sql` | C-10 | Carga del catastro: 90 especies, 965 ejemplares (985 plantas), 76 palmeras medidas |
 | V015 | `V015__create_catastro_registration.sql` | SPEC-103 §4 | Cargas por CSV, historial de evaluaciones, fotos en almacenamiento propio (ejemplares, componentes y especies), bebederos como `FEATURE_TYPE` |
 | V016 | `V016__seed_measurements_2026_and_fountains.sql` | SPEC-103 §4.5 | Mediciones 2026 (palmeras, cafetos y Bosque Húmedo), 15 evaluaciones y 67 bebederos |
+| V017 | `V017__allow_many_species_photos.sql` | SPEC-104 | Galería ordenada de fotografías de especies |
+| V018 | `V018__create_places.sql` | Catálogo de lugares | Lugares y sus perspectivas/fotografías |
+| V019 | `V019__create_place_reference_links.sql` | Catálogo de lugares | Migración gradual de referencias al catálogo de lugares |
+| V020 | `V020__track_purged_photo_files.sql` | Almacenamiento compartido | Seguimiento de archivos eliminados tras la retención de fotografías |
+| V021 | `V021__add_place_map_view.sql` | Catálogo de lugares | Vista de cámara del mapa asociada a un lugar |
+| V022 | `V022__create_incident_workflow.sql` | SPEC-200 | Captura mínima, aprobación, intervenciones vinculadas, historial y fotos privadas |
 
-### Pendientes (número reservado)
+### Diseño pendiente (numeración histórica, no reservada)
+
+Las versiones de esta tabla pertenecen al diseño anterior: algunas ya tienen otro
+uso en los archivos publicados de arriba. No crear migraciones con esos números.
+SPEC-200 ya implementa incidencias e intervenciones mínimas en V022; los diseños
+restantes describen ampliaciones futuras, no una segunda creación de esas tablas.
 
 | Versión | Archivo | Propietaria | Depende de |
 |---|---|---|---|

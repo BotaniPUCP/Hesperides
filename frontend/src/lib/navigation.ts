@@ -34,6 +34,7 @@ export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
  * a un clic de más para llegar a lo que más se usa.
  */
 export const DIRECT_LINKS: readonly NavItem[] = [
+  { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: ['COORDINADOR', 'SUPERVISOR'] },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
   // Público incluso sin sesión (docs/inventario-verde/README.md); aquí, para quien ya entró.

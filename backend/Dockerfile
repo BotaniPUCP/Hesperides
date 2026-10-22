@@ -15,6 +15,7 @@ RUN addgroup --system hesperides && adduser --system --ingroup hesperides --no-c
 RUN mkdir -p /data/storage && chown hesperides:hesperides /data/storage
 WORKDIR /app
 COPY --from=build /app/target/*.jar /app/app.jar
+RUN mkdir -p /app/uploads/incidents && chown -R hesperides:hesperides /app/uploads
 USER hesperides
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

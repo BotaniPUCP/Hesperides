@@ -11,6 +11,53 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 
 El dominio funcional y las características específicas se definen en los specs de `specs/`. Este repositorio contiene por ahora la arquitectura base, las convenciones comunes y un sistema de catálogos configurables que permite extender tipos, estados y categorías sin recompilación.
 
+## Incidencias — prueba de concepto web
+
+Disponible en `/incidencias` para `SUPERVISOR` (capataz) y `COORDINADOR`.
+Spec: [`SPEC-200`](specs/features/SPEC-200-incidencias.md).
+
+- Capataz: enviar una frase, añadir fotos/ubicación opcionales y seguir sus envíos.
+- Coordinación: revisar, aprobar y asignar la atención a una cuadrilla.
+- Capataz responsable o coordinación: registrar intervenciones realizadas y resolver
+  cuando no quede ninguna pendiente. Se permiten varias intervenciones por incidencia.
+- El tablero de coordinación cuenta estos casos y sus intervenciones, no el
+  mantenimiento rutinario de otros módulos. Las categorías son provisionales;
+  no hay IA ni aplicación React Native en esta entrega.
+
+Solo la descripción es obligatoria para informar o aprobar. Fotos JPEG/PNG/WebP:
+máximo seis por incidencia y 5 MiB por archivo. La posición del teléfono se obtiene
+solo al solicitarla; puede corregirse o quitarse. Geolocalización desde un teléfono
+requiere **HTTPS**: abrir una IP de la red local por HTTP no basta. La captura sigue
+funcionando sin permisos de ubicación.
+
+Las fotografías se guardan en `INCIDENT_UPLOAD_DIR` (por defecto
+`backend/uploads/incidents` si Java se ejecuta desde `backend/`). Compose usa el
+volumen `incident-uploads`; respaldarlo junto con PostgreSQL. Las fotos se consultan
+autenticadas por la API, no mediante un directorio público. No se promete guardado
+offline ni sincronización automática: ante error se conserva el formulario abierto,
+y una subida de fotos fallida no vuelve a crear el registro recibido.
+
+La guía de prueba y las cuentas de ejemplo para una **base aislada** están en
+[`docs/demos/incidencias.md`](docs/demos/incidencias.md). No ejecutar los fixtures en
+una base con información real.
+
+### Verificación local con Bun y Maven
+
+En este entorno se usa Bun como runtime del frontend. Los cambios de Docker/CI
+para migrar el frontend a Bun se gestionan por separado de este módulo. Con
+dependencias ya instaladas:
+
+```bash
+# Desde frontend/ (el --bun evita ejecutar los scripts con Node)
+bun --bun run lint
+bun --bun run test -- --runInBand
+bun --bun run build
+bun --bun run dev
+
+# Desde backend/, con JDK 25 y el socket Podman disponible
+DOCKER_HOST=unix://${XDG_RUNTIME_DIR}/podman/podman.sock TESTCONTAINERS_RYUK_DISABLED=true mvn -B verify
+```
+
 ## Requisitos previos
 
 - **Docker con Docker Compose**, o **Podman** con `podman compose` y su proveedor

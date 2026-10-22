@@ -349,6 +349,14 @@ El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
 ## Anexo A — Matriz de permisos por rol × módulo × acción
 
+> **Enmienda SPEC-200 (incidencias web):** en este módulo participan COORDINADOR y
+> SUPERVISOR (capataz). Solo COORDINADOR aprueba registros y revisa/asigna sus datos.
+> SUPERVISOR consulta sus envíos y los casos de las cuadrillas que dirige; registra
+> ejecución y resuelve únicamente los asignados a esas cuadrillas. COORDINADOR
+> también puede atender y resolver. Para intervenciones vinculadas, SUPERVISOR
+> puede registrar trabajo ya ejecutado; la planificación sigue en coordinación.
+> El detalle de estas acciones prevalece sobre las filas genéricas de abajo.
+
 Esta matriz gobierna la autorización (`@PreAuthorize` o equivalente) de **todos** los endpoints de negocio del proyecto, no solo los de este spec. Se documenta aquí porque SPEC-001 es quien define el mecanismo de roles; cada SPEC-1XX de feature debe implementar exactamente estas reglas sobre sus propios controllers, sin reinterpretarlas.
 
 Convención: **C** = crear, **L** = leer/listar, **U** = actualizar, **D** = desactivar (soft delete), **V** = validar/aprobar (acción de negocio, no CRUD), **A** = asignar. Celda vacía = sin acceso; el intento responde 403.

@@ -10,6 +10,10 @@ export interface StatusBadgeProps {
  * "resuelta" es del mismo verde en toda la aplicación (SPEC-C01 §4.9).
  */
 const STATUS_COLORS: Record<string, string> = {
+  PENDING_APPROVAL: 'bg-status-in-review-bg text-status-in-review-fg',
+  OPEN: 'bg-status-reported-bg text-status-reported-fg',
+  ASSIGNED: 'bg-status-reported-bg text-status-reported-fg',
+  COMPLETED: 'bg-status-resolved-bg text-status-resolved-fg',
   REPORTED: 'bg-status-reported-bg text-status-reported-fg',
   IN_REVIEW: 'bg-status-in-review-bg text-status-in-review-fg',
   IN_PROGRESS: 'bg-status-in-progress-bg text-status-in-progress-fg',

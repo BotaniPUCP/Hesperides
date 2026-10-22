@@ -41,7 +41,7 @@ public class CorsConfig {
         // If-None-Match y ETag sostienen la copia local del mapa (SPEC-102 §5.1):
         // sin la primera el GET condicional no pasa el preflight, y sin exponer
         // la segunda el navegador no deja leerla desde otro origen.
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Client-Type", "If-None-Match"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Client-Type", "If-None-Match", "Idempotency-Key"));
         configuration.setExposedHeaders(List.of("ETag"));
 
         // Imprescindible para la cookie httpOnly del refresh token: sin esto el

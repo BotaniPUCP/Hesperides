@@ -99,6 +99,12 @@ Paleta construida sobre la escala de Tailwind, con un tono verde como color de m
 
 #### Estados de incidencia — flujo `Reportada → En evaluación → En atención → Resuelta`
 
+> **Enmienda SPEC-200:** para incidencias nuevas se usan `PENDING_APPROVAL`
+> (ámbar, pendiente de aprobación), `OPEN` (neutro, pendiente de atención),
+> `IN_PROGRESS` (celeste) y `RESOLVED` (verde). `ASSIGNED` es neutro y `COMPLETED`
+> verde para las intervenciones de esta prueba. Urgencias: LOW/MEDIUM/HIGH; sin
+> urgencia asignada se muestra «Sin evaluar». Los códigos anteriores no se siembran.
+
 Este mapeo es **obligatorio y único** en todo el sistema (web, móvil, `StatusBadge`, líneas de tiempo, mapa, dashboard, reportes). El `code` es el mismo que en `catalog_items` de `INCIDENT_STATUS` (SPEC-002 §4.9).
 
 | `code` (catálogo) | Label | Token de color | Hex fondo | Hex texto | Significado visual |
@@ -443,4 +449,3 @@ proveedor de tiles de `MapView` es configuración, no literal.
 - [ ] `DataTable` probado bajo 640px: se ve como tarjetas, no con scroll horizontal.
 - [ ] Navegación completa por teclado probada en al menos un formulario y un modal.
 - [ ] Los tests de §12 pasan (`npm test` en `frontend/` y en `mobile/`).
-
