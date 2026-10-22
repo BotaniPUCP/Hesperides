@@ -36,10 +36,15 @@ export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
 export const DIRECT_LINKS: readonly NavItem[] = [
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // Público incluso sin sesión (docs/inventario-verde/README.md); aquí, para quien ya entró.
+
+  // Público incluso sin sesión.
   { label: 'Inventario verde', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // Catálogo de lugares: lo consultan todos; editarlo es de ADMIN y COORDINADOR.
+
+  // Catálogo de lugares.
   { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+
+  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
+  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
