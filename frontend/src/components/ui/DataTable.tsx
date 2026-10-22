@@ -127,12 +127,18 @@ export function DataTable<T>({
                       <button
                         type="button"
                         onClick={() => toggleSort(column.key)}
-                        className="inline-flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                        className="group inline-flex items-center gap-1 rounded hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
                       >
-                        {column.header}
-                        <span aria-hidden="true">
-                          {sort?.key === column.key ? (sort.direction === 'asc' ? '↑' : '↓') : '↕'}
-                        </span>
+                        <span>{column.header}</span>
+                        {sort?.key === column.key ? (
+                          <span aria-hidden="true" className="text-forest-700 font-bold">
+                            {sort.direction === 'asc' ? '↑' : '↓'}
+                          </span>
+                        ) : (
+                          <span aria-hidden="true" className="opacity-0 group-hover:opacity-40 text-neutral-400">
+                            ↕
+                          </span>
+                        )}
                       </button>
                     ) : (
                       column.header

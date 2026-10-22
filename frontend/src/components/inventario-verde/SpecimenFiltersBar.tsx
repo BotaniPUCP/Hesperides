@@ -13,6 +13,7 @@ export interface SpecimenFiltersBarProps {
   sortDirection: 'asc' | 'desc';
   onSortDirectionChange: (dir: 'asc' | 'desc') => void;
   totalFilteredCount: number;
+  onReset?: () => void;
 }
 
 /**
@@ -30,6 +31,7 @@ export function SpecimenFiltersBar({
   sortDirection,
   onSortDirectionChange,
   totalFilteredCount,
+  onReset,
 }: SpecimenFiltersBarProps) {
   const locationOptions = [
     { id: 0, code: 'ALL', label: 'Todas las ubicaciones' },
@@ -110,22 +112,34 @@ export function SpecimenFiltersBar({
         </div>
       </div>
 
-      {/* Barra de estado con conteo de resultados */}
-      <div className="flex items-center justify-between text-xs text-neutral-500 px-0.5">
-        <span>
-          Mostrando{' '}
-          <strong className="text-neutral-900 font-semibold">{totalFilteredCount}</strong>{' '}
-          {totalFilteredCount === 1 ? 'ejemplar coincidente' : 'ejemplares coincidentes'}
-        </span>
-        {selectedLocation !== 'ALL' && (
-          <button
-            type="button"
-            onClick={() => onLocationChange('ALL')}
-            className="text-xs text-brand-700 hover:text-brand-900 hover:underline font-medium"
-          >
-            Quitar filtro de ubicación
-          </button>
-        )}
+      {/* Barra de estado con filtros activos */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1 text-xs text-neutral-500 px-0.5 border-t border-neutral-100">
+        <div className="flex items-center gap-3">
+          <span>
+            Mostrando{' '}
+            <strong className="text-neutral-900 font-semibold">{totalFilteredCount}</strong>{' '}
+            {totalFilteredCount === 1 ? 'ejemplar coincidente' : 'ejemplares coincidentes'}
+          </span>
+
+          {(Boolean(searchValue.trim()) || selectedLocation !== 'ALL' || sortBy !== 'reference' || sortDirection !== 'asc') && (
+            <button
+              type="button"
+              onClick={() => {
+                if (onReset) {
+                  onReset();
+                } else {
+                  if (searchValue) onSearchChange('');
+                  if (selectedLocation !== 'ALL') onLocationChange('ALL');
+                  if (sortBy !== 'reference') onSortByChange('reference');
+                  if (sortDirection !== 'asc') onSortDirectionChange('asc');
+                }
+              }}
+              className="text-xs text-brand-700 hover:text-brand-900 hover:underline font-medium"
+            >
+              Restablecer filtros
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

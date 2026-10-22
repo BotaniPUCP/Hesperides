@@ -15,7 +15,11 @@ export interface InputProps {
   disabled?: boolean;
   required?: boolean;
   maxLength?: number;
+  step?: string;
   leadingIcon?: ReactNode;
+  autoComplete?: string;
+  autoFocus?: boolean;
+  onFocus?: () => void;
   onBlur?: () => void;
 }
 
@@ -31,7 +35,11 @@ export function Input({
   disabled = false,
   required = false,
   maxLength,
+  step,
   leadingIcon,
+  autoComplete,
+  autoFocus,
+  onFocus,
   onBlur,
 }: InputProps) {
   const hasError = Boolean(errorMessage);
@@ -58,10 +66,14 @@ export function Input({
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          onFocus={onFocus}
           onBlur={onBlur}
           placeholder={placeholder}
           disabled={disabled}
           maxLength={maxLength}
+          step={step}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
           aria-required={required || undefined}
           aria-invalid={hasError || undefined}
           aria-describedby={describedBy}

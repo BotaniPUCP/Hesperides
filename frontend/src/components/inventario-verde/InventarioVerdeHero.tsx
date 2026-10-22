@@ -1,78 +1,80 @@
-'use client';
-
-import { Input } from '@/components/ui';
-
 export interface InventarioVerdeHeroProps {
-  searchValue: string;
-  onSearchChange: (value: string) => void;
+  totalSpecies?: number;
+  totalSpecimens?: number;
 }
 
+/** Total de ejemplares leñosos estimados en el campus PUCP según el dominio (C-02 y REQ 2.12) */
+export const ESTIMATED_CAMPUS_SPECIMENS = 3500;
+
 /**
- * Hero compacto e institucional para el Inventario de Especies.
- * Diseñado con altura optimizada para dar prioridad al contenido y al buscador.
+ * Cabecera limpia y compacta estilo SaaS/Enterprise para el Inventario de Especies.
+ * Fondo blanco institucional con badges numéricos integrados que eliminan el desperdicio de espacio vertical.
  */
-export function InventarioVerdeHero({ searchValue, onSearchChange }: InventarioVerdeHeroProps) {
+export function InventarioVerdeHero({
+  totalSpecies,
+  totalSpecimens,
+}: InventarioVerdeHeroProps) {
+  const percentage =
+    totalSpecimens !== undefined && ESTIMATED_CAMPUS_SPECIMENS > 0
+      ? Math.min(100, Math.round((totalSpecimens / ESTIMATED_CAMPUS_SPECIMENS) * 100))
+      : null;
+
   return (
-    <div className="relative overflow-hidden rounded-xl bg-forest-900 py-5 px-5 sm:py-6 sm:px-8 text-white shadow-md mb-4">
-      {/* Follaje botánico integrado sutilmente a la derecha */}
-      <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-2/5 sm:w-1/3 overflow-hidden select-none">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80"
-          alt=""
-          aria-hidden="true"
-          className="h-full w-full object-cover object-center opacity-30 mix-blend-screen"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-forest-900 via-forest-900/60 to-transparent" />
-      </div>
-
-      <div className="relative z-10 max-w-2xl">
-        {/* Badge institucional compacto */}
-        <div className="inline-flex flex-wrap items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-ink/70 border border-forest-700/70 text-forest-100 text-[11px] font-medium mb-2 backdrop-blur-xs">
-          <span className="h-1.5 w-1.5 rounded-full bg-forest-400" />
-          <span className="font-semibold text-white">Catastro del campus PUCP</span>
-          <span className="text-forest-300/60">›</span>
-          <span className="text-forest-100">Fotos tomadas en campo</span>
-        </div>
-
-        {/* Título optimizado */}
-        <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-white mb-1 leading-snug">
+    <header className="mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
           Inventario de Especies
         </h1>
-
-        {/* Descripción directa y concisa */}
-        <p className="text-xs sm:text-[13px] text-forest-50/90 mb-3.5 leading-normal max-w-xl">
+        <p className="text-xs sm:text-sm text-neutral-500 mt-1">
           Consulta la diversidad vegetal, ejemplares censados y georreferenciación del campus universitario.
         </p>
-
-        {/* Buscador como elemento principal de acción */}
-        <div className="max-w-xl">
-          <Input
-            id="inventario-global-search"
-            label=""
-            type="search"
-            value={searchValue}
-            onChange={onSearchChange}
-            placeholder="Buscar por nombre común, científico o familia botánica..."
-            leadingIcon={
-              <svg
-                className="h-4 w-4 text-neutral-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            }
-          />
-        </div>
       </div>
-    </div>
+
+      {(totalSpecies !== undefined || totalSpecimens !== undefined) && (
+        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto shrink-0">
+          {totalSpecies !== undefined && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-0 border border-neutral-200/90 shadow-2xs">
+              <span className="text-xs text-neutral-500 font-medium">Especies:</span>
+              <span className="text-sm font-bold text-neutral-900 font-mono">
+                {totalSpecies}
+              </span>
+            </div>
+          )}
+
+          {totalSpecimens !== undefined && (
+            <div
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-brand-50/80 border border-brand-200/70 shadow-2xs"
+              title={`Avance progresivo: ${totalSpecimens.toLocaleString('es-PE')} de ~${ESTIMATED_CAMPUS_SPECIMENS.toLocaleString('es-PE')} ejemplares estimados en el campus PUCP (C-02)`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-neutral-600 font-medium">
+                  Catastro censado:
+                </span>
+                <span className="text-sm font-bold text-neutral-900 font-mono">
+                  {totalSpecimens}
+                </span>
+                <span className="text-xs text-neutral-400 font-medium">
+                  / ~{ESTIMATED_CAMPUS_SPECIMENS.toLocaleString('es-PE')}
+                </span>
+              </div>
+
+              {percentage !== null && (
+                <div className="flex items-center gap-2 pl-2.5 border-l border-brand-200/80">
+                  <div className="w-14 sm:w-16 h-2 rounded-full bg-brand-200/60 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-brand-600 transition-all duration-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-brand-900 font-mono">
+                    {percentage}%
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </header>
   );
 }

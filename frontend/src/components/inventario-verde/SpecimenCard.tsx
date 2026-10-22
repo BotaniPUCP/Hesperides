@@ -12,6 +12,9 @@ export interface SpecimenCardProps {
 
 export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const thumbSrc = specimen.thumbnailUrl ? specimen.thumbnailUrl.replace(/sz=w\d+/, 'sz=w400') : null;
 
   return (
     <Link
@@ -24,16 +27,24 @@ export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
       >
         {/* Foto o placeholder */}
         <div className="relative h-36 w-full overflow-hidden bg-neutral-100 flex-shrink-0">
-          {specimen.thumbnailUrl && !imageError ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={specimen.thumbnailUrl}
-              alt={`Ejemplar ${specimen.code}`}
-              loading="lazy"
-              decoding="async"
-              onError={() => setImageError(true)}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
+          {thumbSrc && !imageError ? (
+            <>
+              {!imageLoaded && (
+                <div className="absolute inset-0 bg-neutral-200/70 animate-pulse" />
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={thumbSrc}
+                alt={`Ejemplar ${specimen.code}`}
+                loading="lazy"
+                decoding="async"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+                className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-105 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </>
           ) : (
             <ImagePlaceholder
               type={species.vegetationTypeCode}

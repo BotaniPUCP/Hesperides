@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import type { LocationCount, Species, SpeciesFilters, SpecimenFilters, Specimen } from '@shared/types';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { useRequest } from './useRequest';
@@ -10,16 +11,17 @@ export interface UseInventarioVerdeSpeciesParams extends SpeciesFilters {
 }
 
 export function useInventarioVerdeSpecies(params: UseInventarioVerdeSpeciesParams = {}) {
-  const { search = '', vegetationType, page = 0, pageSize = 24 } = params;
+  const { search = '', vegetationType, page = 0, pageSize = 16 } = params;
   const request = { search, vegetationType, page, size: pageSize };
-  const { data, loading, errorMessage } = useRequest(JSON.stringify(request), () =>
-    inventarioVerdeApi.species(request),
+  const { data, loading, errorMessage } = useRequest(
+    JSON.stringify(request),
+    () => inventarioVerdeApi.species(request),
   );
   return {
     species: data?.content ?? [],
     totalElements: data?.page.totalElements ?? 0,
     totalPages: Math.max(data?.page.totalPages ?? 1, 1),
-    currentPage: data?.page.number ?? page,
+    currentPage: page,
     loading,
     errorMessage,
   };
@@ -44,11 +46,14 @@ export function useInventarioVerdeSpecimens(
   const { search = '', location = 'ALL', sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12 } =
     params;
   const request = { search, location, sortBy, sortDirection, page, size: pageSize };
-  const specimens = useRequest(slug ? `${slug}:${JSON.stringify(request)}` : null, () =>
-    inventarioVerdeApi.specimens(slug as string, request),
+  const specimens = useRequest(
+    slug ? `${slug}:${JSON.stringify(request)}` : null,
+    () => inventarioVerdeApi.specimens(slug as string, request),
+    { keepPreviousData: true },
   );
   const locations = useRequest(slug || null, () => inventarioVerdeApi.locations(slug as string));
   const total = specimens.data?.page.totalElements ?? 0;
+
   return {
     specimens: (specimens.data?.content ?? []) as Specimen[],
     allFilteredCount: total,

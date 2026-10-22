@@ -33,6 +33,26 @@ describe('InventarioVerdeScreen', () => {
 
     await waitFor(() => expect(api.species).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'bruja', page: 0 })));
     await waitFor(() => expect(screen.queryByText('Palmera real')).not.toBeInTheDocument());
-    expect(screen.getByText('Palmera reina')).toBeInTheDocument();
+    expect(screen.getAllByText('Palmera reina').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('muestra dropdown predictivo para saltar directo a ejemplar cuando se ingresa un código EV', async () => {
+    (api as unknown as { specimen: jest.Mock }).specimen = jest.fn().mockResolvedValue({
+      code: 'EV-000179',
+      sourceLocation: 'Jardín Central',
+      species: {
+        slug: 'delonix-regia',
+        commonName: 'Ponciana',
+        scientificName: 'Delonix regia',
+      },
+    });
+
+    render(<InventarioVerdeScreen />);
+
+    await userEvent.type(screen.getByPlaceholderText(/Buscar por nombre común/i), 'EV-000179');
+
+    expect(await screen.findByText('Ir directo a la ficha')).toBeInTheDocument();
+    expect(screen.getByText('Ponciana')).toBeInTheDocument();
+    expect(screen.getByText(/Jardín Central/)).toBeInTheDocument();
   });
 });

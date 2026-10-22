@@ -53,6 +53,14 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
     setPage(0);
   }
 
+  function handleResetFilters() {
+    setSearchInput('');
+    setSelectedLocation('ALL');
+    setSortBy('reference');
+    setSortDirection('asc');
+    setPage(0);
+  }
+
   if (speciesLoading) {
     return (
       <div className="flex flex-col gap-6">
@@ -94,7 +102,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
         />
       </div>
 
-      <SpeciesInfo species={species} />
+      <SpeciesInfo species={species} availableLocations={availableLocations} />
 
       <div className="bg-neutral-0 rounded-xl border border-neutral-200 p-4 sm:p-5 shadow-xs">
         <SpecimenFiltersBar
@@ -108,6 +116,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
           sortDirection={sortDirection}
           onSortDirectionChange={setSortDirection}
           totalFilteredCount={allFilteredCount}
+          onReset={handleResetFilters}
         />
 
         <SpecimenTable
@@ -122,6 +131,9 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
           onSortChange={(sort) => {
             setSortBy(sort.key as 'reference' | 'code' | 'location');
             setSortDirection(sort.direction);
+          }}
+          onViewOnMap={(specimen) => {
+            router.push(`/mapa?code=${specimen.code}`);
           }}
           loading={specimensLoading}
         />

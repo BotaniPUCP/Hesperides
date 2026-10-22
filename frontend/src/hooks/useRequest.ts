@@ -11,13 +11,21 @@ interface RequestState<T> {
   notFound: boolean;
 }
 
+export interface UseRequestOptions {
+  keepPreviousData?: boolean;
+}
+
 /**
  * Una consulta al backend que se repite cuando cambia `key`. Guardar la clave
  * junto a la respuesta es lo que evita mostrar por un render los datos del
  * filtro anterior, y descartar las respuestas que llegan tarde. Con `key` null
  * no consulta.
  */
-export function useRequest<T>(key: string | null, load: () => Promise<T>) {
+export function useRequest<T>(
+  key: string | null,
+  load: () => Promise<T>,
+  options: UseRequestOptions = {},
+) {
   const [state, setState] = useState<RequestState<T> | null>(null);
 
   useEffect(() => {
@@ -38,8 +46,10 @@ export function useRequest<T>(key: string | null, load: () => Promise<T>) {
   }, [key]);
 
   const fresh = state?.key === key ? state : null;
+  const data = options.keepPreviousData ? (fresh?.data ?? state?.data ?? null) : (fresh?.data ?? null);
+
   return {
-    data: fresh?.data ?? null,
+    data,
     loading: key !== null && fresh === null,
     errorMessage: fresh?.errorMessage ?? null,
     notFound: fresh?.notFound ?? false,

@@ -30,10 +30,14 @@ describe('SpecimenDetailScreen', () => {
 
     expect(await screen.findByRole('heading', { name: 'EV-000001' })).toBeInTheDocument();
     expect(screen.getByText('D 3 (AV-0312)')).toBeInTheDocument();
-    expect(screen.getByText('p01')).toBeInTheDocument();
+    expect(screen.getByText(/Ref:\s*p01/)).toBeInTheDocument();
     expect(screen.getByText('Medido en campo')).toBeInTheDocument();
-    expect(screen.getByText(/^7[.,]5 m$/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Volver a los ejemplares/i })).toHaveAttribute(
+    expect(
+      screen.getByText((_, element) => element?.tagName.toLowerCase() === 'dd' && /^7[.,]5\s*m$/.test(element.textContent?.trim() ?? ''))
+    ).toBeInTheDocument();
+    const speciesLinks = screen.getAllByRole('link', { name: 'Palmera real' });
+    expect(speciesLinks.length).toBeGreaterThanOrEqual(1);
+    expect(speciesLinks[0]).toHaveAttribute(
       'href',
       '/inventario-verde/especies/roystonea-regia',
     );
@@ -83,6 +87,8 @@ describe('SpecimenDetailScreen', () => {
 
     render(<SpecimenDetailScreen code="EV-000001" />);
 
-    expect(await screen.findByText('Esta planta todavía no tiene evaluaciones.')).toBeInTheDocument();
+    expect(
+      await screen.findByText(/No se registran evaluaciones fitosanitarias/i),
+    ).toBeInTheDocument();
   });
 });

@@ -108,7 +108,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         className={cn(
-          'relative z-10 flex max-h-full w-full flex-col rounded-lg bg-neutral-0 shadow-lg',
+          'relative z-10 flex max-h-[90vh] w-full flex-col rounded-2xl bg-neutral-0 shadow-2xl',
           SIZES[effectiveSize],
         )}
       >

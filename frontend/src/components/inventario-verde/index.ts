@@ -14,4 +14,6 @@ export { SpecimenTable } from './SpecimenTable';
 export { SpeciesDetailScreen } from './SpeciesDetailScreen';
 
 export { SpecimenInfo } from './SpecimenInfo';
+export { SpecimenInterventions } from './SpecimenInterventions';
+export { SpecimenAssessments } from './SpecimenAssessments';
 export { SpecimenDetailScreen } from './SpecimenDetailScreen';

@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { Species, Specimen } from '@shared/types';
-import { DataTable, type DataTableColumn, type DataTableSort, ImagePlaceholder } from '@/components/ui';
-import { SpecimenPhotoModal } from './SpecimenPhotoModal';
+import { EmptyState, ImagePlaceholder, type DataTableSort } from '@/components/ui';
 
 export interface SpecimenTableProps {
   specimens: Specimen[];
@@ -20,36 +19,30 @@ export interface SpecimenTableProps {
   loading?: boolean;
 }
 
-function ThumbnailCell({
+function SpecimenThumbnail({
   specimen,
   typeCode,
-  onPhotoClick,
 }: {
   specimen: Specimen;
   typeCode: string;
-  onPhotoClick: (specimen: Specimen) => void;
 }) {
   const [error, setError] = useState(false);
+  const thumbSrc = specimen.thumbnailUrl ? specimen.thumbnailUrl.replace(/sz=w\d+/, 'sz=w160') : null;
 
   return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onPhotoClick(specimen);
-      }}
-      title={`Ampliar fotografía de ${specimen.code}`}
-      aria-label={`Ver fotografía ampliada de ${specimen.code}`}
-      className="group relative h-9 w-9 rounded-md overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90 hover:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600 transition-all cursor-pointer"
+    <div
+      aria-hidden="true"
+      className="relative h-9 w-9 rounded-md overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90"
     >
-      {specimen.thumbnailUrl && !error ? (
+      {thumbSrc && !error ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={specimen.thumbnailUrl}
-          alt={specimen.code}
+          src={thumbSrc}
+          alt=""
           loading="lazy"
+          decoding="async"
           onError={() => setError(true)}
-          className="h-full w-full object-cover transition-transform duration-150 group-hover:scale-105"
+          className="h-full w-full object-cover"
         />
       ) : (
         <ImagePlaceholder
@@ -59,12 +52,7 @@ function ThumbnailCell({
           label=""
         />
       )}
-      <span className="absolute inset-0 bg-ink/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </span>
-    </button>
+    </div>
   );
 }
 
@@ -75,14 +63,13 @@ export function SpecimenTable({
   page,
   pageSize,
   onPageChange,
-  sortBy,
-  sortDirection,
-  onSortChange,
   onViewOnMap,
   loading = false,
 }: SpecimenTableProps) {
-  const router = useRouter();
-  const [selectedPhotoSpecimen, setSelectedPhotoSpecimen] = useState<Specimen | null>(null);
+
+  const desde = page * pageSize + 1;
+  const hasta = Math.min((page + 1) * pageSize, totalElements);
+  const esUltimaPagina = hasta >= totalElements;
 
   function handleMapAction(specimen: Specimen) {
     if (onViewOnMap) {
@@ -90,178 +77,172 @@ export function SpecimenTable({
     }
   }
 
-  const columns: DataTableColumn<Specimen>[] = [
-    {
-      key: 'photo',
-      header: 'Foto',
-      sortable: false,
-      className: 'w-16 sm:w-20 text-center',
-      headerClassName: 'w-16 sm:w-20 text-center',
-      render: (row) => (
-        <ThumbnailCell specimen={row} typeCode={species.vegetationTypeCode} onPhotoClick={setSelectedPhotoSpecimen} />
-      ),
-    },
-    {
-      key: 'reference',
-      header: 'Código / Referencia',
-      sortable: true,
-      className: 'w-[28%] min-w-[150px]',
-      headerClassName: 'w-[28%]',
-      render: (row) => (
-        <div className="flex flex-col items-start gap-0.5 py-0.5">
-          <span className="font-mono font-bold text-neutral-900 text-xs">{row.code}</span>
-          {row.sourceReference && (
-            <span className="text-[11px] font-mono text-neutral-500 font-medium">Ref. {row.sourceReference}</span>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'location',
-      header: 'Ubicación (catastro)',
-      sortable: true,
-      className: 'w-[36%] min-w-[180px]',
-      headerClassName: 'w-[36%]',
-      render: (row) => (
-        <span className="text-xs font-medium text-neutral-800">
-          {row.sourceLocation}
-        </span>
-      ),
-    },
-    {
-      key: 'coordinates',
-      header: 'Coordenadas (GPS)',
-      sortable: false,
-      hideOnMobile: true,
-      className: 'w-[180px] whitespace-nowrap',
-      headerClassName: 'w-[180px] whitespace-nowrap',
-      render: (row) => {
-        const hasCoords = row.latitude !== null && row.longitude !== null;
-
-        if (hasCoords) {
-          return (
-            <span className="font-mono text-xs text-neutral-600">
-              {row.latitude?.toFixed(5)}, {row.longitude?.toFixed(5)}
-            </span>
-          );
-        }
-        return <span className="text-neutral-400 text-xs italic">No registradas</span>;
-      },
-    },
-    {
-      key: 'actions',
-      header: 'Acciones',
-      sortable: false,
-      className: 'w-[140px] whitespace-nowrap text-right',
-      headerClassName: 'w-[140px] whitespace-nowrap text-right',
-      render: (row) => {
-        const hasCoords = row.latitude !== null && row.longitude !== null;
-
-        return (
-          <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
-            {/* Solo si la pantalla sabe llevar al mapa: un botón que no hace nada promete algo falso. */}
-            {!onViewOnMap ? null : hasCoords ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleMapAction(row);
-                }}
-                title={`Ver ubicación de ${row.code} en el mapa`}
-                aria-label={`Ver ubicación de ${row.code} en el mapa`}
-                className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs font-medium text-brand-800 bg-brand-50/70 hover:bg-brand-100 hover:text-brand-900 hover:border-brand-300 border border-brand-200/80 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1"
-              >
-                <svg
-                  className="w-3.5 h-3.5 text-brand-700 flex-shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                <span>Ver en mapa</span>
-              </button>
-            ) : (
-              <span className="text-[11px] text-neutral-400 italic">Sin mapa</span>
-            )}
-
-            {/* Indicador discreto de observación: SOLO visible si el ejemplar tiene observación */}
-            {row.notes && (
-              <div className="relative group/obs inline-flex items-center">
-                <span
-                  tabIndex={0}
-                  role="note"
-                  aria-label={`Observación: ${row.notes}`}
-                  className="inline-flex items-center justify-center h-7 w-7 rounded-md bg-alert-warning-bg text-alert-warning-fg border border-alert-warning-border/90 hover:bg-alert-warning-border/40 transition-colors cursor-help focus:outline-none focus:ring-1 focus:ring-warning-600"
-                >
-                  <svg
-                    className="w-3.5 h-3.5 text-alert-warning-fg flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                    />
-                  </svg>
-                </span>
-
-                {/* Tooltip accesible con título "Observación" y contenido */}
-                <div className="pointer-events-none absolute right-0 bottom-full mb-1.5 hidden group-hover/obs:flex group-focus-within/obs:flex flex-col items-end z-30 w-max max-w-xs">
-                  <div className="bg-ink text-white text-xs rounded-md py-1.5 px-2.5 leading-snug border border-ink-line text-left shadow-lg">
-                    <span className="font-semibold text-amber-300 block text-[10px] uppercase tracking-wider mb-0.5">
-                      Observación
-                    </span>
-                    <span className="break-words">{row.notes}</span>
-                  </div>
-                  <div className="w-2 h-2 bg-ink rotate-45 mr-2.5 -mt-1 border-r border-b border-ink-line" />
-                </div>
-              </div>
-            )}
+  if (loading && specimens.length === 0) {
+    return (
+      <div className="flex flex-col divide-y divide-neutral-200/80 rounded-lg border border-neutral-200 bg-neutral-0">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
+            <div className="h-10 w-10 rounded-lg bg-neutral-200" />
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="h-4 w-40 bg-neutral-200 rounded" />
+              <div className="h-3 w-64 bg-neutral-100 rounded" />
+            </div>
+            <div className="h-4 w-20 bg-neutral-100 rounded" />
           </div>
-        );
-      },
-    },
-  ];
+        ))}
+      </div>
+    );
+  }
+
+  if (specimens.length === 0) {
+    return (
+      <div className="rounded-lg border border-neutral-200 bg-neutral-0">
+        <EmptyState
+          title="Sin ejemplares coincidentes"
+          description="Prueba cambiando los términos de búsqueda o quitando el filtro de ubicación."
+        />
+      </div>
+    );
+  }
 
   return (
-    <>
-      <DataTable<Specimen>
-        columns={columns}
-        rows={specimens}
-        rowKey={(row) => row.code}
-        onRowClick={(row) => router.push(`/inventario-verde/especies/${species.slug}/ejemplares/${row.code}`)}
-        totalElements={totalElements}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={onPageChange}
-        sort={{ key: sortBy, direction: sortDirection }}
-        onSortChange={onSortChange}
-        loading={loading}
-      />
+    <div className="flex flex-col gap-3">
+      {/* Lista estructurada estilo GitHub / Linear con transición suave de carga */}
+      <div className={`overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 shadow-2xs divide-y divide-neutral-200/80 transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        {specimens.map((item) => {
+          const detailUrl = `/inventario-verde/especies/${species.slug}/ejemplares/${item.code}`;
 
-      {/* Visor lightbox enfocado exclusivamente en la fotografía */}
-      <SpecimenPhotoModal
-        specimen={selectedPhotoSpecimen}
-        species={species}
-        onClose={() => setSelectedPhotoSpecimen(null)}
-      />
-    </>
+          return (
+            <Link
+              key={item.code}
+              href={detailUrl}
+              className="group relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center gap-3 p-3.5 sm:px-4 sm:py-3 hover:bg-neutral-50/90 transition-colors"
+            >
+              {/* Columna 1 (Izquierda, 5 cols): Miniatura + Código + Badges */}
+              <div className="flex items-center gap-3.5 min-w-0 sm:col-span-5">
+                <SpecimenThumbnail
+                  specimen={item}
+                  typeCode={species.vegetationTypeCode}
+                />
+
+                <div className="flex flex-col gap-1 min-w-0">
+                  {/* Línea 1: Código oficial + Badge de Referencia de campo + Badge de nota */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-sm font-bold text-neutral-900 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      {item.code}
+                    </span>
+
+                    {item.sourceReference && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-[11px] font-mono font-medium text-neutral-600">
+                        Ref: {item.sourceReference}
+                      </span>
+                    )}
+
+                    {item.notes && (
+                      <span
+                        tabIndex={0}
+                        role="note"
+                        title={`Observación: ${item.notes}`}
+                        aria-label={`Observación: ${item.notes}`}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border cursor-help transition-colors ${
+                          item.notes.toLowerCase().includes('medid') ||
+                          item.notes.toLowerCase().includes('medicion') ||
+                          item.notes.toLowerCase().includes('forestal')
+                            ? 'bg-brand-50 text-brand-900 border-brand-200/80 hover:bg-brand-100/80'
+                            : 'bg-alert-warning-bg text-alert-warning-fg border-alert-warning-border hover:opacity-90'
+                        }`}
+                      >
+                        <svg
+                          className={`w-3 h-3 flex-shrink-0 ${
+                            item.notes.toLowerCase().includes('medid') ||
+                            item.notes.toLowerCase().includes('medicion') ||
+                            item.notes.toLowerCase().includes('forestal')
+                              ? 'text-brand-600'
+                              : 'text-alert-warning-fg'
+                          }`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                          />
+                        </svg>
+                        <span className="text-[10px] font-semibold tracking-tight">
+                          {item.notes.toLowerCase().includes('medid') ||
+                          item.notes.toLowerCase().includes('medicion') ||
+                          item.notes.toLowerCase().includes('forestal')
+                            ? 'Medido'
+                            : 'Nota'}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* En móviles mostramos la ubicación debajo */}
+                  <div className="flex sm:hidden items-center gap-1.5 text-xs text-neutral-600">
+                    <svg className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="font-medium text-neutral-700 truncate">
+                      {item.sourceLocation || 'Sin ubicación específica'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Columna 2 (Centro exacto, 4 cols): Ubicación / Referente */}
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-neutral-600 sm:col-span-4 min-w-0">
+                <svg className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="font-medium text-neutral-700 truncate" title={item.sourceLocation || 'Sin ubicación específica'}>
+                  {item.sourceLocation || 'Sin ubicación específica'}
+                </span>
+              </div>
+
+              {/* Columna 3 (Derecha alineada, 3 cols): Botón Ver ficha */}
+              <div className="flex items-center justify-end sm:col-span-3">
+                <span className="inline-flex items-center text-xs h-8 px-3 font-medium rounded-lg border border-neutral-200 bg-neutral-0 text-neutral-800 shadow-2xs group-hover:border-neutral-400 group-hover:bg-neutral-100 group-hover:text-neutral-900 transition-all">
+                  <span>Ver ficha</span>
+                  <span aria-hidden="true" className="ml-1 text-neutral-400 group-hover:text-neutral-700 transition-transform group-hover:translate-x-0.5">→</span>
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Paginación minimalista idéntica al estándar del sistema */}
+      <div className="flex items-center justify-between gap-2 px-1 pt-1">
+        <span className="text-xs text-neutral-500 font-medium">
+          {`${desde}–${hasta} de ${totalElements} ejemplares`}
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={page === 0}
+            onClick={() => onPageChange(page - 1)}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-neutral-200 bg-neutral-0 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            disabled={esUltimaPagina}
+            onClick={() => onPageChange(page + 1)}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-neutral-200 bg-neutral-0 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
