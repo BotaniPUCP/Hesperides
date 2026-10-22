@@ -9,6 +9,8 @@ import { mapApi } from '@/lib/map-api';
 import { ApiError } from '@/lib/api';
 import { placesApi } from '@/lib/places-api';
 import type { MapCatalog } from '@shared/types';
+import { toSceneData } from '../sceneData';
+import { defaultPerspectiveView, mapViewToPose } from '../mapView';
 
 jest.mock('../viewer/createViewer', () => ({ createViewer: jest.fn() }));
 jest.mock('@/hooks/useMapLayers', () => ({ useMapLayers: jest.fn() }));
@@ -24,7 +26,7 @@ function fakeViewer(): jest.Mocked<Viewer> {
     setPaint: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), pose: jest.fn(() => SAVED_POSE),
-    setViewCones: jest.fn(), flyToPose: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(), dispose: jest.fn(),
+    setViewCones: jest.fn(), highlightViewCone: jest.fn(), flyToPose: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(), dispose: jest.fn(),
   };
 }
 
@@ -44,8 +46,10 @@ async function renderLoaded(data?: MapLayersResponse) {
 const catalog: MapCatalog = {
   places: [{ code: 'LUG-0001', name: 'Edificio de prueba', parentName: null, buildingId: 1, lat: -12.07, lon: -77.08 }],
   perspectives: [{ id: 7, place: { code: 'LUG-0001', name: 'Edificio de prueba' }, displayName: 'Espalda de Edificio de prueba',
-    lat: -12.0701, lon: -77.08, headingDeg: 0, thumbnailUrl: 'http://api/files/places/3?size=thumb' }],
+    lat: -12.0701, lon: -77.08, headingDeg: 0, thumbnailUrl: 'http://api/files/places/3?size=thumb',
+    mapView: { camera: { lat: -12.0705, lon: -77.08, heightM: 120 }, target: { lat: -12.0701, lon: -77.08, heightM: 0 } } }],
 };
+const plane = toSceneData(sampleLayers).plane;
 
 beforeEach(() => {
   (placesApi.map as jest.Mock).mockResolvedValue(catalog);
@@ -273,26 +277,44 @@ describe('MapScreen', () => {
       await waitFor(() => expect(viewer.setViewCones).toHaveBeenLastCalledWith([{ id: 7, lat: -12.0701, lon: -77.08, headingDeg: 0 }]));
     });
 
-    it('pulsar un cono abre la ficha de la perspectiva con su foto y el enlace al lugar', async () => {
+    it('pulsar un cono vuela al encuadre guardado y abre la ficha de la perspectiva', async () => {
       await renderLoaded();
       await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
 
       await act(async () => callbacks.onViewConePick?.(7));
 
+      expect(viewer.highlightViewCone).toHaveBeenCalledWith(7);
+      expect(viewer.flyToPose).toHaveBeenCalledWith(mapViewToPose(plane, catalog.perspectives[0].mapView!));
       const card = await screen.findByRole('region', { name: 'Espalda de Edificio de prueba' });
       expect(within(card).getByRole('img')).toHaveAttribute('src', 'http://api/files/places/3?size=thumb');
       expect(within(card).getByRole('link', { name: /Ver Edificio de prueba en el catálogo/ })).toHaveAttribute('href', '/lugares/LUG-0001');
     });
 
-    it('el buscador encuentra una perspectiva y lleva la cámara a su cono', async () => {
+    it('el buscador encuentra una perspectiva y vuela a su encuadre guardado', async () => {
       await renderLoaded();
       await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
       const box = screen.getByRole('combobox', { name: 'Buscar en el mapa' });
       fireEvent.change(box, { target: { value: 'espalda de edificio' } });
       fireEvent.click(await screen.findByRole('option', { name: /Espalda de Edificio de prueba/ }));
 
-      expect(viewer.focusViewCone).toHaveBeenCalledWith(7);
+      expect(viewer.highlightViewCone).toHaveBeenCalledWith(7);
+      expect(viewer.flyToPose).toHaveBeenCalledWith(mapViewToPose(plane, catalog.perspectives[0].mapView!));
       expect(screen.getByRole('region', { name: 'Espalda de Edificio de prueba' })).toBeInTheDocument();
+    });
+
+    it('si la perspectiva no tiene encuadre guardado, vuela al encuadre por defecto de su rumbo', async () => {
+      const withoutSavedView: MapCatalog = {
+        ...catalog,
+        perspectives: [{ ...catalog.perspectives[0], mapView: null }],
+      };
+      (placesApi.map as jest.Mock).mockResolvedValueOnce(withoutSavedView);
+      await renderLoaded();
+      await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+      fireEvent.change(screen.getByRole('combobox', { name: 'Buscar en el mapa' }), { target: { value: 'espalda de edificio' } });
+      fireEvent.click(await screen.findByRole('option', { name: /Espalda de Edificio de prueba/ }));
+
+      const view = defaultPerspectiveView(-12.0701, -77.08, 0);
+      expect(viewer.flyToPose).toHaveBeenCalledWith(mapViewToPose(plane, view));
     });
 
     it('la ficha de un edificio del catálogo enlaza a su lugar', async () => {

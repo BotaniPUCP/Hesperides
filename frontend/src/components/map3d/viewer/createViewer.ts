@@ -170,6 +170,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       cones.set(list.map((c) => { const p = data.plane.toPlane(c.lat, c.lon); return { id: c.id, x: p.x, z: -p.y, headingDeg: c.headingDeg }; }));
       needsRender = true;
     },
+    highlightViewCone(id) {
+      cones.highlight(id);
+      needsRender = true;
+    },
     focusViewCone(id) {
       cones.highlight(id);
       const at = id === null ? null : cones.position(id);

@@ -294,6 +294,9 @@ calculados por el servidor al registrar (D-05).
 3. `304` → dibuja con la caché. `200` → guarda la respuesta nueva y dibuja.
 4. Al hacer clic en un punto: marcador, ficha del elemento y descripción vía `POST /describe`.
 
+Al elegir una perspectiva en el buscador o pulsar su cono, el visor vuela al encuadre guardado
+con la perspectiva; si todavía no tiene uno, usa el encuadre por defecto orientado según su rumbo.
+
 ### 5.2 Flujos alternativos
 
 - **Sin WebGL:** la pantalla muestra las áreas verdes agrupadas por sector y el mismo buscador;

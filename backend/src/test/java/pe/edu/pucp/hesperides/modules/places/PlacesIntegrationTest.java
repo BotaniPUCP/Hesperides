@@ -189,6 +189,9 @@ class PlacesIntegrationTest {
         mockMvc.perform(get(PLACES + "/" + code))
                 .andExpect(jsonPath("$.data.perspectives[0].mapView.camera.heightM").value(40.0))
                 .andExpect(jsonPath("$.data.perspectives[0].headingDeg").value(10.0));
+        mockMvc.perform(get(PLACES + "/map"))
+                .andExpect(jsonPath("$.data.perspectives[0].mapView.camera.heightM").value(40.0))
+                .andExpect(jsonPath("$.data.perspectives[0].mapView.target.lat").value(LAT));
     }
 
     @Test

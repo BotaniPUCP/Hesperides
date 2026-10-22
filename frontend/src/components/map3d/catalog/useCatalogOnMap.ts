@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, type RefObject } from 'react';
-import type { MapCatalog } from '@shared/types';
+import type { MapCatalog, MapPerspective } from '@shared/types';
 import { useRequest } from '@/hooks/useRequest';
 import { placesApi } from '@/lib/places-api';
 import { PERSPECTIVES_TOGGLE, type ToggleId } from '../layerList';
@@ -10,7 +10,18 @@ import type { SceneData } from '../sceneData';
 import type { CatalogTarget } from '../searchIndex';
 import type { Target } from '../target';
 import type { Viewer } from '../viewer/createViewer';
+import { defaultPerspectiveView, mapViewToPose } from '../mapView';
 import { catalogEntries, catalogLink, conesOf, placeCard, placeOfBuilding } from './catalogOnMap';
+
+function flyToPerspective(viewerRef: RefObject<Viewer | null>, data: SceneData, perspective: MapPerspective) {
+  const viewer = viewerRef.current;
+  if (!viewer) return;
+  viewer.highlightViewCone(perspective.id);
+  viewer.flyToPose(mapViewToPose(
+    data.plane,
+    perspective.mapView ?? defaultPerspectiveView(perspective.lat, perspective.lon, perspective.headingDeg),
+  ));
+}
 
 /** El catálogo resumido. Sin él, el mapa funciona igual: solo no muestra lugares ni perspectivas. */
 export function useMapCatalog(): MapCatalog | null {
@@ -54,9 +65,11 @@ export function useCatalogOnMap(data: SceneData | null, catalog: MapCatalog | nu
   const onConePick = useCallback(
     (id: number) => {
       const perspective = catalog?.perspectives.find((v) => v.id === id);
-      if (perspective) showCard({ kind: 'perspective', perspective });
+      if (!perspective || !data) return;
+      flyToPerspective(viewer, data, perspective);
+      showCard({ kind: 'perspective', perspective });
     },
-    [catalog, showCard],
+    [catalog, data, viewer, showCard],
   );
 
   function pick(target: CatalogTarget) {
@@ -65,7 +78,7 @@ export function useCatalogOnMap(data: SceneData | null, catalog: MapCatalog | nu
       const perspective = catalog.perspectives[target.index];
       if (!conesOn) s.toggleLayer(PERSPECTIVES_TOGGLE, true);
       viewer.current?.setViewCones(cones);
-      viewer.current?.focusViewCone(perspective.id);
+      flyToPerspective(viewer, data, perspective);
       return showCard({ kind: 'perspective', perspective });
     }
     const place = catalog.places[target.index];

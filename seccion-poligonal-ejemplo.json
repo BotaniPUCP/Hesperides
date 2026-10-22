@@ -1,0 +1,123 @@
+{
+  "type": "FeatureCollection",
+  "bbox": [-77.07982, -12.07038, -77.07892, -12.06946],
+  "metadata": {
+    "schemaVersion": "1.0.0",
+    "coordinateReferenceSystem": "WGS84",
+    "coordinateOrder": ["longitude", "latitude", "elevationMeters"],
+    "coordinateUnits": ["decimalDegrees", "decimalDegrees", "meters"],
+    "processing": {
+      "localProjection": {
+        "method": "equirectangular-local",
+        "origin": [-77.07934, -12.06987],
+        "earthRadiusMeters": 6371008.8
+      },
+      "ringRules": {
+        "mustBeClosed": true,
+        "minimumUniqueVertices": 3,
+        "exteriorOrientation": "counterclockwise"
+      },
+      "hierarchyRule": "A feature with parentId must be geometrically contained by its parent. Features with the same parentId must not overlap in area.",
+      "curveRule": "Curves are represented by sufficiently dense boundary vertices; algorithms must process them as polygon segments."
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "sector-area-verde-central",
+      "bbox": [-77.07982, -12.07038, -77.07892, -12.06946],
+      "properties": {
+        "name": "Área verde central",
+        "parentId": null,
+        "depth": 0,
+        "category": "green-area",
+        "geometryCharacteristics": {
+          "hasInternalConcavity": true,
+          "boundarySource": "GNSS survey",
+          "horizontalAccuracyMeters": 0.8,
+          "elevationReference": "WGS84 ellipsoidal height"
+        },
+        "declaredDimensions": {
+          "unit": "metric",
+          "approximateWidthMeters": 84.0,
+          "approximateHeightMeters": 102.0,
+          "estimatedAreaSquareMeters": 5480.0,
+          "estimatedPerimeterMeters": 302.0,
+          "calculationStatus": "estimate; recalculate from geometry after local projection"
+        },
+        "attributes": {
+          "vegetationType": "mixed native garden",
+          "irrigation": "drip",
+          "responsibleUnit": "Campus landscaping"
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-77.07972, -12.07025, 112.4],
+            [-77.07951, -12.07036, 112.2],
+            [-77.07925, -12.07038, 112.0],
+            [-77.07902, -12.07027, 111.9],
+            [-77.07892, -12.07006, 112.1],
+            [-77.07894, -12.06982, 112.3],
+            [-77.07908, -12.06959, 112.5],
+            [-77.07931, -12.06946, 112.7],
+            [-77.07956, -12.06949, 112.8],
+            [-77.07975, -12.06964, 112.8],
+            [-77.07982, -12.06985, 112.6],
+            [-77.07973, -12.06999, 112.5],
+            [-77.07950, -12.06991, 112.5],
+            [-77.07961, -12.07008, 112.4],
+            [-77.07972, -12.07025, 112.4]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "subsector-jardin-polinizadores",
+      "bbox": [-77.07958, -12.06988, -77.07913, -12.06956],
+      "properties": {
+        "name": "Jardín de polinizadores",
+        "parentId": "sector-area-verde-central",
+        "depth": 1,
+        "category": "pollinator-garden",
+        "geometryCharacteristics": {
+          "hasInternalConcavity": true,
+          "boundarySource": "GNSS survey",
+          "horizontalAccuracyMeters": 0.5,
+          "elevationReference": "WGS84 ellipsoidal height"
+        },
+        "declaredDimensions": {
+          "unit": "metric",
+          "approximateWidthMeters": 49.0,
+          "approximateHeightMeters": 36.0,
+          "estimatedAreaSquareMeters": 505.0,
+          "estimatedPerimeterMeters": 96.0,
+          "calculationStatus": "estimate; recalculate from geometry after local projection"
+        },
+        "attributes": {
+          "vegetationType": "flowering native plants",
+          "irrigation": "drip",
+          "responsibleUnit": "Campus landscaping"
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-77.07958, -12.06982, 112.6],
+            [-77.07939, -12.06988, 112.5],
+            [-77.07917, -12.06980, 112.5],
+            [-77.07913, -12.06964, 112.6],
+            [-77.07930, -12.06956, 112.7],
+            [-77.07949, -12.06960, 112.7],
+            [-77.07939, -12.06970, 112.6],
+            [-77.07958, -12.06982, 112.6]
+          ]
+        ]
+      }
+    }
+  ]
+}

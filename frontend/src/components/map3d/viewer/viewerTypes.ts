@@ -34,6 +34,8 @@ export interface Viewer {
   flyToPose: (pose: CameraPose) => void;
   /** Los conos de las perspectivas de un lugar; una lista vacía los quita. */
   setViewCones: (cones: ViewCone[]) => void;
+  /** Resalta un cono sin cambiar la cámara. */
+  highlightViewCone: (id: number | null) => void;
   /** Resalta un cono (o ninguno) y lleva la cámara a él. */
   focusViewCone: (id: number | null) => void;
   /** Lleva la cámara a un punto del campus. */

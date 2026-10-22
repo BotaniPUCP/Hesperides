@@ -185,6 +185,8 @@ export interface MapPerspective {
   lon: number;
   headingDeg: number;
   thumbnailUrl: string | null;
+  /** Nulo: el mapa usa la vista por defecto detrás del cono, mirando hacia donde mira la foto. */
+  mapView: PlaceMapView | null;
 }
 
 export interface MapCatalog {

@@ -50,7 +50,7 @@ public final class PlaceResponses {
 
     /** Una perspectiva en el mapa: su cono y lo que muestra su ficha. */
     public record MapPerspective(long id, PlaceRef place, String displayName, double lat, double lon, double headingDeg,
-            String thumbnailUrl) {
+            String thumbnailUrl, MapViewDtos.MapView mapView) {
     }
 
     public record MapCatalog(List<MapPlace> places, List<MapPerspective> perspectives) {
