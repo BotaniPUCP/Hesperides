@@ -38,6 +38,18 @@ class MigrationSmokeTest {
     private JdbcTemplate jdbcTemplate;
 
     @Test
+    void demoMigrationIsNotLoadedWithoutTheDevProfile() {
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM users
+                WHERE email IN ('capataz@demo.invalid', 'otro-capataz@demo.invalid', 'coordinador@demo.invalid')
+                """, Long.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM incidents", Long.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM flyway_schema_history WHERE script = 'R__seed_demo_incidents.sql'
+                """, Long.class)).isZero();
+    }
+
+    @Test
     void usersTableHasEveryColumnTheSpecDeclares() {
         List<String> columns = jdbcTemplate.queryForList(
                 "SELECT column_name FROM information_schema.columns WHERE table_name = 'users'",

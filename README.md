@@ -31,15 +31,20 @@ requiere **HTTPS**: abrir una IP de la red local por HTTP no basta. La captura s
 funcionando sin permisos de ubicación.
 
 Las fotografías se guardan en `INCIDENT_UPLOAD_DIR` (por defecto
-`backend/uploads/incidents` si Java se ejecuta desde `backend/`). Compose usa el
-volumen `incident-uploads`; respaldarlo junto con PostgreSQL. Las fotos se consultan
+`backend/uploads/incidents` si Java se ejecuta desde `backend/`). El override dev
+usa `tmpfs`: fotos y PostgreSQL son desechables al detener sus contenedores. Para
+datos reales, configurar almacenamiento persistente y respaldar fotos y BD. Las fotos se consultan
 autenticadas por la API, no mediante un directorio público. No se promete guardado
 offline ni sincronización automática: ante error se conserva el formulario abierto,
 y una subida de fotos fallida no vuelve a crear el registro recibido.
 
-La guía de prueba y las cuentas de ejemplo para una **base aislada** están en
-[`docs/demos/incidencias.md`](docs/demos/incidencias.md). No ejecutar los fixtures en
-una base con información real.
+El perfil `dev` carga automáticamente las cuentas y los casos de demostración
+mediante Flyway, después de crear el esquema. El SQL vive en
+`backend/src/main/resources/db/dev-migration/R__seed_demo_incidents.sql`; no se
+ejecuta desde la configuración común sin dev. La guía y las cuentas para una
+**base aislada** están en [`docs/demos/incidencias.md`](docs/demos/incidencias.md).
+No activar `dev` en una base real: Compose base lo usa por defecto y el override
+dev lo fuerza; producción debe seleccionar otro perfil sin ese override.
 
 ### Verificación local con Bun y Maven
 

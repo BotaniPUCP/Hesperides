@@ -2,12 +2,15 @@ package pe.edu.pucp.hesperides.modules.incidents;
 
 import pe.edu.pucp.hesperides.support.TestDatabase;
 import jakarta.persistence.EntityManager;
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -16,13 +19,13 @@ import pe.edu.pucp.hesperides.modules.incidents.dto.IncidentContracts.ReviewInci
 import pe.edu.pucp.hesperides.modules.incidents.service.IncidentsService;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
+@SpringBootTest(properties = {"spring.jpa.show-sql=false", "logging.level.pe.edu.pucp.hesperides=INFO"})
+@ActiveProfiles("dev")
 @Testcontainers
 @Transactional
 class DemoIncidentsSeedTest {
@@ -39,11 +42,18 @@ class DemoIncidentsSeedTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired IncidentsService service;
     @Autowired EntityManager entityManager;
+    @Autowired Flyway flyway;
 
     @Test
     void seedPopulatesTheWorkflowAndRerunsPreserveDemoChanges() throws Exception {
-        String seed = Files.readString(Path.of("..", "docs", "demos", "incidencias.sql"));
-        jdbc.execute(seed);
+        // Startup must apply the repeatable migration after the versioned schema.
+        assertThat(flyway.migrate().migrationsExecuted).isZero();
+        assertThat(jdbc.queryForObject("""
+                SELECT script FROM flyway_schema_history
+                WHERE success ORDER BY installed_rank DESC LIMIT 1
+                """, String.class)).isEqualTo("R__seed_demo_incidents.sql");
+        String seed = new ClassPathResource("db/dev-migration/R__seed_demo_incidents.sql")
+                .getContentAsString(StandardCharsets.UTF_8);
 
         String coordinator = "coordinador@demo.invalid";
         String foreman = "capataz@demo.invalid";

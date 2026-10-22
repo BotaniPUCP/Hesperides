@@ -1,4 +1,4 @@
--- SPEC-200: fixtures ONLY for an isolated local demonstration database.
+-- SPEC-200: development-only repeatable migration, applied after schema migrations.
 -- Public test password: Hesperides2026. Never run against real user data.
 INSERT INTO users (email, password_hash, first_name, last_name, role_item_id, is_active, must_change_password)
 SELECT fixture.email, '$2a$10$4r8g9MXWvnVXpz.Z5AIjRO/OsgquCUkP3xribRDZTpWkIJB06V22y',

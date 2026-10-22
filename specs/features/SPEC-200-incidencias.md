@@ -58,6 +58,23 @@ patrones explícitos como «rama caída», «fuga de agua», «hojarasca». No s
 urgencia ni coordenadas. Categorías provisionales, marcadas en la UI; se omite
 la sugerencia en mensajes con negación. Sin motor de reglas ni servicio externo.
 
+## Datos de demostración
+
+El perfil `dev` añade `classpath:db/dev-migration` a las ubicaciones Flyway. La
+migración repetible `R__seed_demo_incidents.sql` es la única fuente de los fixtures:
+se ejecuta después de las migraciones versionadas, en bases nuevas y cuando cambia
+su checksum. No duplica ni restablece registros existentes. La configuración común
+sin dev no carga esas cuentas ni casos. El seed no requiere tablas nuevas ni otra
+migración versionada adicional a V022; se conserva la numeración del esquema.
+
+Verificación: el arranque con dev deja ocho incidencias y doce intervenciones;
+un segundo `migrate()` sin cambios no ejecuta migraciones. Sin dev no aparecen
+cuentas demo ni la migración repetible en el historial.
+
+Comprobado el 22 de octubre de 2026 con `mvn -B verify`: **215 pruebas backend**
+sin fallos, incluidas la carga automática, su exclusión sin dev y la conservación
+de cambios al repetir el SQL.
+
 ## Contratos
 
 Todas las rutas bajo `/api/v1/incidents`; sobre `{ok,message,data}`.

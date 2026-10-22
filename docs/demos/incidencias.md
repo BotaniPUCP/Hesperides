@@ -7,9 +7,24 @@ aplica V022 para incidencias después de las migraciones de develop. La base com
 requiere PostGIS; el servicio Flask no interviene en este flujo.
 No usar `.env` ni credenciales reales en una prueba automatizada compartida.
 
-En la base aislada, el archivo `incidencias.sql` crea dos capataces, un coordinador
-y dos cuadrillas, ocho incidencias y doce intervenciones. Contraseña pública de prueba:
+Con el perfil `dev`, Flyway ejecuta automáticamente
+`backend/src/main/resources/db/dev-migration/R__seed_demo_incidents.sql` después de
+las migraciones del esquema. Crea dos capataces, un coordinador, dos cuadrillas,
+ocho incidencias y doce intervenciones. Contraseña pública de prueba:
 `Hesperides2026`. Los nombres de cuenta terminan en `@demo.invalid`.
+
+Desde la raíz, con `.env` configurado, reconstruir e iniciar los servicios de desarrollo:
+
+```bash
+podman compose -f compose.yml -f compose.dev.yml up -d --build db backend
+```
+
+No hace falta ejecutar SQL manualmente. El override dev activa el perfil `dev`;
+al ejecutar Java fuera de Compose hay que activarlo con `SPRING_PROFILES_ACTIVE=dev`.
+La configuración común de Flyway solo incluye `db/migration`: sin el perfil dev
+no se crean cuentas ni incidencias de demostración. **No activar `dev` en una base
+real.** Compose base también usa dev por defecto; para producción, usar un perfil
+no dev explícito y no cargar `compose.dev.yml`.
 
 La carga es repetible: no duplica los casos ni restablece cambios realizados durante
 la demostración. Cada capataz ve cuatro casos iniciales, uno por estado, y el
@@ -26,20 +41,16 @@ coordinador ve los ocho. En una base sin otras incidencias, el tablero comienza 
 El caso del Tontódromo tiene una intervención realizada y otra pendiente, útil para
 demostrar la resolución parcial. El caso de la puerta principal contiene solo el
 texto mínimo. Las coordenadas de ejemplo son ilustrativas; no se crean fotografías
-ficticias. Ejecutar la carga después de las migraciones. Con el override dev, repetirla
-si se reinicia el contenedor de PostgreSQL: su almacenamiento `tmpfs` es desechable.
+ficticias. Flyway aplica esta migración repetible en una base nueva y cuando cambia
+su contenido, no en cada `compose up` si la base ya está al día. Con el override dev,
+el almacenamiento PostgreSQL `tmpfs` se vacía al detener/reiniciar su contenedor;
+reiniciar también el backend permite que Flyway cree el esquema y cargue de nuevo
+los datos. Si el SQL cambia, reconstruir la imagen del backend para incluirlo.
 
-Desde la raíz, con el backend ya iniciado y usando únicamente una base local aislada:
-
-```bash
-podman exec -i hesperides-db sh -c \
-  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1' \
-  < docs/demos/incidencias.sql
-```
-
-No requiere reconstruir las imágenes. La prueba `DemoIncidentsSeedTest` verifica
-la carga en PostgreSQL, los contadores, los permisos por cuadrilla y que una nueva
-ejecución conserva las ediciones y resoluciones realizadas durante la demo.
+La prueba `DemoIncidentsSeedTest` verifica la carga automática con el perfil dev,
+los contadores, los permisos por cuadrilla y la conservación de ediciones y
+resoluciones al repetir el SQL. `MigrationSmokeTest` comprueba que la configuración
+sin dev no ejecuta la carga de demostración.
 
 La cuenta inicial ADMIN puede seguir administrando usuarios, pero no participa en
 este flujo operativo. Para la prueba se necesitan los perfiles de coordinación y
