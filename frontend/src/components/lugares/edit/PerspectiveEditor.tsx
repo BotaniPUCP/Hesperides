@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { PerspectiveSideCode, PlaceDetail, PlacePerspective } from '@shared/types';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { Button, LoadingSkeleton, Modal } from '@/components/ui';
 import { Map3DView } from '@/components/map3d/Map3DView';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
@@ -9,6 +10,7 @@ import { mensajeDeApiError } from '@/lib/api-errors';
 import { cn } from '@/lib/cn';
 import { placesApi } from '@/lib/places-api';
 import { focusPlace } from '../focusPlace';
+import { mapViewToPose, poseToMapView } from '../map/mapView';
 import { useSceneData } from '../useSceneData';
 import { usePerspectiveDraft, type DraftStep } from './usePerspectiveDraft';
 
@@ -43,12 +45,18 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const marked = JSON.stringify([draft.side, draft.point, draft.heading]);
+  const [initial] = useState(marked);
+  const guard = useUnsavedChangesGuard(marked !== initial);
+  const close = () => guard.confirm(onClose);
   const others = useMemo(() => place.perspectives.filter((v) => v.id !== perspective?.id), [place.perspectives, perspective?.id]);
   const taken = (code: PerspectiveSideCode) => code !== 'SIDE' && others.some((v) => v.side.code === code);
 
   // Una sola vez al abrir: después la cámara la mueve quien marca.
   useEffect(() => {
-    if (viewer && data) focusPlace(viewer, data, place);
+    if (!viewer || !data) return;
+    if (perspective?.mapView) viewer.flyToPose(mapViewToPose(data.plane, perspective.mapView));
+    else focusPlace(viewer, data, place);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewer, data]);
 
@@ -64,8 +72,10 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
     setSaving(true);
     setError(null);
     try {
-      if (perspective) await placesApi.updatePerspective(place.code, perspective.id, draft.input);
-      else await placesApi.createPerspective(place.code, draft.input);
+      // La cámara del editor queda como la vista de la perspectiva: «Ver en el mapa» volverá a ella.
+      const input = viewer && data ? { ...draft.input, mapView: poseToMapView(data.plane, viewer.pose()) } : draft.input;
+      if (perspective) await placesApi.updatePerspective(place.code, perspective.id, input);
+      else await placesApi.createPerspective(place.code, input);
       onSaved();
     } catch (e) {
       setError(mensajeDeApiError(e));
@@ -75,7 +85,7 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
 
   const footer = (
     <>
-      <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+      <Button variant="secondary" onClick={close}>Cancelar</Button>
       <Button onClick={() => void save()} disabled={!draft.input || draft.previewError !== null} loading={saving}>
         Guardar perspectiva
       </Button>
@@ -83,7 +93,8 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
   );
 
   return (
-    <Modal isOpen onClose={onClose} title={perspective ? 'Editar perspectiva' : 'Nueva perspectiva'} size="lg" footer={footer}>
+    <>
+    <Modal isOpen onClose={close} title={perspective ? 'Editar perspectiva' : 'Nueva perspectiva'} size="lg" footer={footer}>
       <div className="flex flex-col gap-3">
         <div role="group" aria-label="Lado" className="flex gap-2">
           {SIDES.map((s) => (
@@ -117,5 +128,7 @@ export function PerspectiveEditor({ place, perspective, onClose, onSaved }: Pers
         )}
       </div>
     </Modal>
+    {guard.dialog}
+    </>
   );
 }

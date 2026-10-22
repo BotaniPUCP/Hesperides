@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import type { PhotoInput } from '@shared/types';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { Button, Input, Select } from '@/components/ui';
 import { useCatalog } from '@/hooks/useCatalog';
 import { mensajeDeApiError } from '@/lib/api-errors';
@@ -27,6 +28,13 @@ export function PhotoUploader({ placeCode, target, askInteriorView = false, labe
   const [view, setView] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Las fotos se suben al elegirlas; lo único que se puede perder es el autor o la fecha escritos.
+  const guard = useUnsavedChangesGuard(open && (author.trim() !== '' || takenOn !== ''));
+  const close = () => guard.confirm(() => {
+    setOpen(false);
+    setAuthor('');
+    setTakenOn('');
+  });
 
   async function upload(files: File[]) {
     const rejected = files.map((f) => ({ f, why: motivoDeRechazo(f, LIMITES.foto) })).find((r) => r.why);
@@ -69,8 +77,9 @@ export function PhotoUploader({ placeCode, target, askInteriorView = false, labe
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => void upload(Array.from(e.target.files ?? []))} aria-label={`Archivos para ${label}`} />
       <div className="flex gap-2">
         <Button size="sm" onClick={() => input.current?.click()} loading={busy} disabled={askInteriorView && !view}>Elegir fotos…</Button>
-        <Button size="sm" variant="secondary" onClick={() => setOpen(false)}>Cancelar</Button>
+        <Button size="sm" variant="secondary" onClick={close}>Cancelar</Button>
       </div>
+      {guard.dialog}
       {error && <p role="alert" className="text-xs text-alert-danger-fg">{error}</p>}
     </div>
   );

@@ -6,6 +6,7 @@ import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { RegistrarScreen } from '../registrar/RegistrarScreen';
 
 const mockUseAuth = jest.fn();
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
 jest.mock('@/lib/catastro-api', () => ({ catastroApi: { register: jest.fn(), registerFeature: jest.fn() } }));
 jest.mock('@/hooks/useCatalog', () => ({
@@ -133,4 +134,29 @@ describe('RegistrarScreen', () => {
     expect(screen.getByText('Marca al menos un tipo de residuo')).toBeInTheDocument();
     expect(catastroApi.registerFeature).not.toHaveBeenCalled();
   });
+
+  it('cambiar a tacho con la planta a medio llenar pregunta antes de perder lo escrito', async () => {
+    pantalla();
+    await elegirMolleYPunto();
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Tacho' }));
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Seguir editando' }));
+    expect(screen.getByRole('radio', { name: 'Planta' })).toBeChecked();
+    expect(screen.getByLabelText(/Latitud/)).toHaveValue('-12.070200');
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Tacho' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(screen.getByRole('radio', { name: 'Tacho' })).toBeChecked();
+  });
+
+  it('con el formulario vacío cambia de tipo sin preguntar', async () => {
+    pantalla();
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Bebedero' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Bebedero' })).toBeChecked();
+  });
 });
+

@@ -169,6 +169,65 @@ class PlacesIntegrationTest {
     }
 
     @Test
+    void aPerspectiveKeepsTheMapViewItWasSavedWith() throws Exception {
+        String code = createInras();
+        String view = """
+                "mapView": {"camera": {"lat": %s, "lon": %s, "heightM": 40}, "target": {"lat": %s, "lon": %s, "heightM": 0}}"""
+                .formatted(LAT - 2 * OFFSET, LON, LAT, LON);
+        String json = postJson(PLACES + "/" + code + "/perspectives",
+                "{\"sideCode\": \"BACK\", \"lat\": %s, \"lon\": %s, \"headingDeg\": 0, %s}".formatted(LAT - OFFSET, LON, view))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.mapView.camera.heightM").value(40.0))
+                .andReturn().getResponse().getContentAsString();
+        Number id = JsonPath.read(json, "$.data.id");
+
+        // Mover el punto sin mandar vista conserva la que tenía.
+        mockMvc.perform(put(PLACES + "/" + code + "/perspectives/" + id).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sideCode\": \"BACK\", \"lat\": %s, \"lon\": %s, \"headingDeg\": 10}".formatted(LAT - OFFSET, LON)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get(PLACES + "/" + code))
+                .andExpect(jsonPath("$.data.perspectives[0].mapView.camera.heightM").value(40.0))
+                .andExpect(jsonPath("$.data.perspectives[0].headingDeg").value(10.0));
+    }
+
+    @Test
+    void aPerspectiveWithoutMapViewUsesTheDefault() throws Exception {
+        String code = createInras();
+        perspective(code, "BACK", LAT - OFFSET, LON).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.mapView").doesNotExist());
+    }
+
+    private long perspectiveId(ResultActions created) throws Exception {
+        return ((Number) JsonPath.read(created.andReturn().getResponse().getContentAsString(), "$.data.id")).longValue();
+    }
+
+    @Test
+    void newPerspectivesGoLastAndTheOrderCanBeChanged() throws Exception {
+        String code = createInras();
+        long side = perspectiveId(perspective(code, "SIDE", LAT, LON - OFFSET));
+        long back = perspectiveId(perspective(code, "BACK", LAT - OFFSET, LON));
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.perspectives[*].id", contains((int) side, (int) back)));
+
+        mockMvc.perform(put(PLACES + "/" + code + "/perspectives/order").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ids\": [%d, %d]}".formatted(back, side))).andExpect(status().isOk());
+
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.perspectives[*].id", contains((int) back, (int) side)));
+    }
+
+    @Test
+    void theNewOrderMustListExactlyThePlacesPerspectives() throws Exception {
+        String code = createInras();
+        long side = perspectiveId(perspective(code, "SIDE", LAT, LON - OFFSET));
+        perspective(code, "BACK", LAT - OFFSET, LON);
+
+        mockMvc.perform(put(PLACES + "/" + code + "/perspectives/order").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ids\": [%d]}".formatted(side))).andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(put(PLACES + "/" + code + "/perspectives/order").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ids\": [%d, %d, 999999]}".formatted(side, side))).andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     void aMapViewWithoutTargetIsRejected() throws Exception {
         String code = createInras();
 

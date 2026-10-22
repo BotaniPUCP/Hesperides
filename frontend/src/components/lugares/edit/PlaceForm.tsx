@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { PlaceDetail, PlaceInput, PlaceKindCode } from '@shared/types';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { Button } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { placesApi } from '@/lib/places-api';
@@ -30,13 +30,17 @@ function initialValues(place?: PlaceDetail, defaultName = ''): PlaceFormValues {
   };
 }
 
+/** Lo que el formulario guardaría: si cambia respecto del inicio, hay algo que perder. */
+const snapshot = (values: PlaceFormValues, picked: PickedOutline | null) => JSON.stringify([values, picked?.outline ?? null]);
+
 const splitAliases = (text: string) => text.split(/[,\n]/).map((a) => a.trim()).filter(Boolean);
 
 /** Alta (sin `place`) o edición de un lugar. Al guardar abre su ficha. */
 export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; defaultName?: string }) {
-  const router = useRouter();
   const [values, setValues] = useState(() => initialValues(place, defaultName));
   const [picked, setPicked] = useState<PickedOutline | null>(() => (place ? currentOutline(place) : null));
+  const [initial] = useState(() => snapshot(values, picked));
+  const guard = useUnsavedChangesGuard(snapshot(values, picked) !== initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const outdoor = values.kind === 'OUTDOOR';
@@ -56,7 +60,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
     setError(null);
     try {
       const code = place ? (await placesApi.update(place.code, input), place.code) : (await placesApi.create(input)).code;
-      router.push(`/lugares/${code}`);
+      guard.navigate(`/lugares/${code}`);
     } catch (e) {
       setError(mensajeDeApiError(e));
       setSaving(false);
@@ -75,13 +79,14 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
       {outdoor && <OutlinePicker picked={picked} onPick={setPicked} />}
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={() => router.push(place ? `/lugares/${place.code}` : '/lugares')}>
+        <Button variant="secondary" onClick={() => guard.confirm(() => guard.navigate(place ? `/lugares/${place.code}` : '/lugares'))}>
           Cancelar
         </Button>
         <Button type="submit" disabled={!ready} loading={saving}>
           Guardar lugar
         </Button>
       </div>
+      {guard.dialog}
     </form>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { Button, Card, Input } from '@/components/ui';
@@ -13,8 +14,10 @@ import { useRegistroPlanta } from './useRegistroPlanta';
 const DECIMALES_COORDENADA = 6;
 
 /** Registro de una planta por formulario (SPEC-103 §5.1). */
-export function RegistroPlantaForm() {
+export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuardar: boolean) => void }) {
   const r = useRegistroPlanta();
+  // La pantalla decide si avisa al salir: también al cambiar qué se registra.
+  useEffect(() => onDirtyChange?.(r.sinGuardar), [r.sinGuardar, onDirtyChange]);
   const v = r.valores;
 
   if (r.registrado) {
