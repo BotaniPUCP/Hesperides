@@ -182,6 +182,8 @@ async function getBlob(path: string): Promise<Blob> {
 }
 
 export const apiClient = {
+  postWithKey: async <T>(path: string, body: unknown, key: string): Promise<T> =>
+    unwrap<T>(await send('POST', path, body, { 'Idempotency-Key': key })),
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),

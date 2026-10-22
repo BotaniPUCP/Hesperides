@@ -27,6 +27,7 @@ function hrefsDe(rol: string): string[] {
 describe('visibleNavigation', () => {
   it('a un ADMIN le muestra el catastro completo y las cuatro pantallas de administración', () => {
     expect(hrefsDe('ADMIN')).toEqual([
+      '/intervenciones',
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
@@ -42,6 +43,7 @@ describe('visibleNavigation', () => {
     // SPEC-003 §4 y §5.6: el backend responde 403 al resto. Mostrar el enlace
     // sería mandarlo a una pantalla que solo puede negarle el paso.
     expect(hrefsDe('COORDINADOR')).toEqual([
+      '/intervenciones',
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
@@ -54,6 +56,7 @@ describe('visibleNavigation', () => {
   it('a un SUPERVISOR le muestra el formulario del catastro pero no la carga por CSV', () => {
     // SPEC-103 D-03: el supervisor registra en campo, una planta a la vez.
     expect(hrefsDe('SUPERVISOR')).toEqual([
+      '/intervenciones',
       '/catastro/registrar',
       '/catastro/estandares',
       '/admin/usuarios',
@@ -62,14 +65,14 @@ describe('visibleNavigation', () => {
   });
 
   it('a un OPERARIO le muestra frecuencias, que puede consultar', () => {
-    expect(hrefsDe('OPERARIO')).toEqual(['/admin/frecuencias']);
+    expect(hrefsDe('OPERARIO')).toEqual(['/intervenciones', '/admin/frecuencias']);
   });
 
   it('el mapa, el inventario verde y los lugares son enlaces directos para los cuatro roles, no grupos', () => {
     for (const rol of ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO']) {
       expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/mapa', '/inventario-verde', '/lugares']);
     }
-    expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual(['Catastro', 'Administración']);
+    expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual(['Intervenciones', 'Catastro', 'Administración']);
   });
 
   it('un rol desconocido no ve enlaces directos', () => {

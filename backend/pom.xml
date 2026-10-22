@@ -20,9 +20,16 @@
     <properties>
         <java.version>26</java.version>
         <aws.sdk.version>2.31.0</aws.sdk.version>
+        <twelvemonkeys.version>3.12.0</twelvemonkeys.version>
     </properties>
 
     <dependencies>
+        <!-- SPEC-200: decode WebP locally to validate evidence content, not just its MIME. -->
+        <dependency>
+            <groupId>com.twelvemonkeys.imageio</groupId>
+            <artifactId>imageio-webp</artifactId>
+            <version>${twelvemonkeys.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

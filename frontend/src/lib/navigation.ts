@@ -44,6 +44,12 @@ export const DIRECT_LINKS: readonly NavItem[] = [
 
 export const NAVIGATION: readonly NavGroup[] = [
   {
+    id: 'intervenciones',
+    label: 'Intervenciones',
+    icon: '🧰',
+    items: [{label:'Actividades',href:'/intervenciones',icon:'📋',roles:['ADMIN','COORDINADOR','SUPERVISOR','OPERARIO']}],
+  },
+  {
     // M2 · SPEC-103. Registrar el campus es trabajo diario, no configuración.
     id: 'catastro',
     label: 'Catastro',
