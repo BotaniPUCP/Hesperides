@@ -1,11 +1,11 @@
 # Dependencies stage
-FROM node:20-alpine AS deps
+FROM docker.io/library/node:20-alpine AS deps
 WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM docker.io/library/node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY shared ../shared
@@ -18,9 +18,9 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build
 
 # Development stage: runs `next dev` with the full toolchain so edits on the
-# host trigger Fast Refresh. Selected via `target: dev` in docker-compose.dev.yml.
+# host trigger Fast Refresh. Selected via `target: dev` in compose.dev.yml.
 # Not used in production — the runner stage below is the deployable image.
-FROM node:20-alpine AS dev
+FROM docker.io/library/node:20-alpine AS dev
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY shared ../shared
@@ -30,7 +30,7 @@ EXPOSE 3000
 CMD ["npm", "run", "dev:docker"]
 
 # Runtime stage
-FROM node:20-alpine AS runner
+FROM docker.io/library/node:20-alpine AS runner
 RUN addgroup -S hesperides && adduser -S hesperides -G hesperides
 WORKDIR /app
 ENV NODE_ENV=production

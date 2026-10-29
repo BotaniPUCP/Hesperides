@@ -84,7 +84,11 @@ describe('visibleNavigation', () => {
 
   it('el mapa y los lugares son enlaces directos para los cuatro roles, no grupos', () => {
     for (const rol of ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO']) {
-      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/mapa', '/lugares']);
+      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(
+        ['COORDINADOR', 'SUPERVISOR'].includes(rol)
+          ? ['/incidencias', '/mapa', '/lugares']
+          : ['/mapa', '/lugares'],
+      );
     }
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Catálogo botánico',
@@ -92,6 +96,15 @@ describe('visibleNavigation', () => {
       'Catastro verde',
       'Administración',
     ]);
+  });
+
+  it('solo coordinación y capataces ven el acceso directo a incidencias', () => {
+    for (const role of ['COORDINADOR', 'SUPERVISOR']) {
+      expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(true);
+    }
+    for (const role of ['ADMIN', 'OPERARIO', 'DESCONOCIDO']) {
+      expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(false);
+    }
   });
 
   it('un rol desconocido no ve enlaces directos', () => {

@@ -13,6 +13,17 @@ import { ApiError } from './api';
 
 /** Mensajes de regla de negocio (422) y conflicto (409) de SPEC-100 §3. */
 const MENSAJES: Record<string, string> = {
+  'Incident changed; reload before editing': 'La incidencia cambió. Actualiza el detalle antes de guardar o aprobar.',
+  'Incident already resolved': 'La incidencia ya está resuelta.',
+  'Incident approval required': 'El coordinador debe aprobar el registro antes de iniciar su atención.',
+  'Complete the interventions before resolving': 'Registra al menos una intervención realizada y completa las pendientes antes de resolver.',
+  'Request reference already used with different content': 'Este envío ya fue recibido con otro contenido. Actualiza el detalle antes de continuar.',
+  'Invalid coordinates': 'Revisa la latitud y longitud, o quita la ubicación para continuar.',
+  'Invalid catalog item': 'La opción seleccionada ya no está disponible. Actualiza la pantalla.',
+  'Invalid team': 'La cuadrilla seleccionada ya no está disponible.',
+  'Photo limit reached': 'Esta incidencia ya tiene seis fotografías.',
+  'Invalid photo size': 'La fotografía debe pesar entre 1 byte y 5 MiB.',
+  'Unsupported photo format': 'Usa una fotografía JPEG, PNG o WebP.',
   'Email already registered': 'Ya existe un usuario con ese correo',
   'You cannot deactivate your own account': 'No puedes desactivar tu propia cuenta.',
   'Cannot deactivate the last active administrator':
@@ -56,7 +67,9 @@ export function mensajeDeApiError(error: unknown): string {
     case 403:
       return 'No tienes permisos para esta acción.';
     case 404:
-      return 'Ese usuario ya no existe. Puede que alguien lo haya eliminado.';
+      return 'No se encontró el registro o no tienes acceso a él.';
+    case 413:
+      return 'La carga supera el tamaño máximo permitido.';
     case 409:
     case 422:
       // El 422 es una regla del dominio que la persona debe entender, no un

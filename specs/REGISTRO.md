@@ -20,13 +20,18 @@
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
-| SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: V022, planificación/asignación, ejecución, evidencia y revisión local; web incremental en verificación | — | S2 (propuesto) | |
+| SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: V025, planificación/asignación, ejecución, evidencia y revisión local; web incremental en verificación | — | S2 (propuesto) | |
+| SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
 ---
 
 ## Enmiendas a specs cerrados
+
+SPEC-200 ajusta SPEC-001 Anexo A (aprobación exclusiva de coordinación y resolución
+por capataz), SPEC-002 §4.8 (captura mínima, ubicación opcional, 1:N intervenciones)
+y SPEC-C01 (estados). La matriz del cliente sigue pendiente; categorías provisionales.
 
 Cuando un spec de feature obliga a corregir uno fundacional ya cerrado, la enmienda se aplica al
 archivo original (marcada como cita con su procedencia) y se anota aquí. Nadie debe descubrir por
@@ -80,7 +85,9 @@ sorpresa que un principio fundacional cambió.
 | **SPEC-002 §4.8** | SPEC-102 | `incidents` gana `location_description`, `described_section_id` y `described_building_id`: la descripción de la ubicación se calcula en el servidor al registrar y queda congelada. |
 | **SPEC-C01 §4.2 (nueva) y §9** | Sidebar de navegación (1 oct 2026) | La navegación pasa de una lista de enlaces en el inicio a un **sidebar** con módulos desplegables, **un grupo por módulo del dominio** (hoy solo «Administración»). La estructura vive en `lib/navigation.ts` con los roles por ítem; las pantallas con sesión se mueven al grupo `app/(dashboard)/`, que aplica guard y sidebar una sola vez. Se retiran los «Volver al inicio». Catálogos, que no tenía enlace, queda accesible desde el sidebar para `ADMIN`. |
 | Todos los specs | Refactor a formato atómico | Las invariantes comunes salen a **`REGLAS.md`** (lectura obligatoria antes de generar código): las diez invariantes, las convenciones de SPEC-000 §5 —con §5.2.1 de Spring Boot 4 y §5.2.2 de CORS íntegras— y el checklist común. SPEC-000 pierde la copia de `_plantilla.md` y los resúmenes de los otros specs, que ya contradecían a SPEC-001. En cada spec, las secciones genéricas de Seguridad, Extensibilidad y Checklist se funden en una sola "Propio de este spec". **La numeración se conserva**: toda referencia `SPEC-XXX §N` sigue siendo válida, y `SPEC-000 §5.x` pasa a `REGLAS.md §5.x` con el mismo número. Ninguna decisión técnica, contrato ni criterio de aceptación cambió. |
-| SPEC-002 §4.9 | SPEC-101 | La migración `V010` queda asignada a `V010__create_maintenance_frequencies.sql` siguiendo `REGLAS.md` §0.2 (numeración cronológica sin huecos). El sembrado de catálogos que SPEC-002 proyectaba para V010 ya fue absorbido íntegramente por `V009__seed_intervention_taxonomy.sql`. |
+| SPEC-002 §4.9 | SPEC-101 | Antes del realineamiento al baseline, `V010` correspondía a `V010__create_maintenance_frequencies.sql` y `V009` contenía la taxonomía. Referencia histórica: las frecuencias vigentes están en `V002` y la taxonomía en el baseline `V001`, según el mapa de migraciones de abajo. |
+| SPEC-000 · REGLAS | Ajuste de toolchain e infraestructura | Se mantiene Java **26** (la propuesta de bajar a 25 LTS se descartó al integrar). Docker y Podman son alternativas sobre `compose.yml` y `compose.dev.yml`; CI conserva Docker Compose y `AGENTS.md` usa Podman para el desarrollo local de este usuario. |
+| SPEC-200 · SPEC-C01 | Realineamiento tras integrar develop (24 oct 2026; ejecución y almacenamiento simplificados el 29 oct) | Rutas de captura/detalle con filtros en URL, consultas independientes sobre `useRequest` y controles compartidos con tamaño grande optativo. Se conservan los tokens claro/oscuro actuales. Fotos privadas únicamente mediante `FileStorage` y claves `incidents/{uuid}`, sin conversión ni cambio de límites. Base/dev conservan volúmenes y hot reload; la demostración usa BD/backend en contenedores y Bun local, con `down --volumes` para descartar los datos de prueba de todo el proyecto. No cambia el esquema ni ninguna migración publicada. |
 
 ---
 
@@ -158,6 +165,7 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V023 | `V023__add_perspective_sort_order.sql` | Catálogo de lugares (cabecera SQL) | Orden manual de las perspectivas de un lugar |
 | V024 | `V024__create_irrigation_turns.sql` | M7 riego | Turnos de riego y sus secciones |
 | V025 | `V025__create_interventions.sql` | SPEC-200 §4 | Núcleo multiubicación: seis tablas, código interno y catálogos ausentes; probado en bases temporales, no aplicado a la base de trabajo |
+| V026 | `V026__create_incident_workflow.sql` | SPEC-201 | Incidencias: captura mínima, aprobación, trabajos vinculados (`incident_interventions`), historial y fotos privadas |
 
 ### Pendientes (sin número reservado)
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '@/lib/api';
 import { mensajeDeApiError } from '@/lib/api-errors';
 
@@ -48,10 +48,16 @@ export function useRequest<T>(
   const fresh = state?.key === key ? state : null;
   const data = options.keepPreviousData ? (fresh?.data ?? state?.data ?? null) : (fresh?.data ?? null);
 
+  // A successful mutation can return the updated resource without a second GET.
+  // A callback from an older query must not replace the current resource.
+  const updateData = useCallback((data: T) => {
+    setState((current) => current?.key === key ? { ...current, data, errorMessage: null, notFound: false } : current);
+  }, [key]);
   return {
     data,
     loading: key !== null && fresh === null,
     errorMessage: fresh?.errorMessage ?? null,
     notFound: fresh?.notFound ?? false,
+    updateData,
   };
 }

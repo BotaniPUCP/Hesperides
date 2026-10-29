@@ -10,6 +10,16 @@ const OPCIONES: SelectOption[] = [
 ];
 
 describe('Select', () => {
+  it('only uses the large size when requested, including its loading placeholder', () => {
+    const props = { id: 'status', label: 'Estado', value: null, onChange: jest.fn(), options: OPCIONES };
+    const { rerender } = render(<Select {...props} />);
+    expect(screen.getByRole('combobox')).toHaveClass('h-10');
+    rerender(<Select {...props} size="lg" />);
+    expect(screen.getByRole('combobox')).toHaveClass('h-12', 'bg-neutral-0', 'text-neutral-900');
+    rerender(<Select {...props} size="lg" loading />);
+    expect(screen.getByTestId('skeleton-item')).toHaveClass('h-12');
+  });
+
   it('asocia el label al control', () => {
     render(<Select id="rol" label="Rol" value={null} onChange={jest.fn()} options={OPCIONES} />);
     expect(screen.getByLabelText('Rol')).toBeInTheDocument();

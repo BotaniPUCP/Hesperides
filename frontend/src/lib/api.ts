@@ -144,8 +144,8 @@ async function unwrap<T>(response: Response): Promise<T> {
  * The only place in the web app that calls fetch. Components must never
  * call it directly.
  */
-async function request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
-  const response = await send(method, path, body);
+async function request<T>(method: HttpMethod, path: string, body?: unknown, headers?: Record<string, string>): Promise<T> {
+  const response = await send(method, path, body, headers);
 
   if (response.status === 204) {
     return null as T;
@@ -185,7 +185,7 @@ export const apiClient = {
   postWithKey: async <T>(path: string, body: unknown, key: string): Promise<T> =>
     unwrap<T>(await send('POST', path, body, { 'Idempotency-Key': key })),
   get: <T>(path: string) => request<T>('GET', path),
-  post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
+  post: <T>(path: string, body?: unknown, headers?: Record<string, string>) => request<T>('POST', path, body, headers),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
@@ -194,4 +194,3 @@ export const apiClient = {
   getBlob,
   getIfChanged,
 };
-

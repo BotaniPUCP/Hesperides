@@ -68,13 +68,21 @@ No aplica. Este spec es puramente de presentación.
 
 Paleta construida sobre la escala de Tailwind, con un tono verde como color de marca (coherente con "áreas verdes") y colores semánticos de estado que son **fijos e idénticos en todo el sistema**: ningún componente ni feature puede redefinir qué color representa "crítico" o "resuelta".
 
+El producto usa los tokens de `tailwind.config.ts` y `styles/globals.css`: las
+variables cambian bajo `.dark`. `neutral-*`, `brand-*`, `status-*`, `urgency-*`
+y `alert-*` se adaptan al tema; `forest-*` e `ink` mantienen su valor para fondos
+con texto blanco y velos. Los avisos en línea usan los pares `alert-*-bg/fg`.
+La guía gráfica de `docs/marca/` no sustituye estos tokens sin una migración
+global acordada; ninguna feature introduce su propia paleta.
+
 #### Color de marca
 
 | Token | Escala Tailwind | Hex | Uso |
 |---|---|---|---|
 | `brand-50` … `brand-900` | `green` | `#f0fdf4` … `#14532d` | Superficies de marca, estados activos de navegación |
 | `brand-600` | `green-600` | `#16a34a` | Color primario de acción (`Button` variante `primary`) |
-| `brand-700` | `green-700` | `#15803d` | Hover de acción primaria |
+| `brand-700` | `green-700` | `#15803d` | Texto y enlaces de marca; se aclara en oscuro |
+| `forest-700` | `green-700` | `#15803d` | Hover de acción primaria con texto blanco; no se invierte en oscuro |
 
 #### Neutros
 
@@ -98,6 +106,12 @@ Paleta construida sobre la escala de Tailwind, con un tono verde como color de m
 | `success-600` | `green-600` | `#16a34a` | `Toast` variante `success` (mismo verde de marca: éxito y acción primaria comparten semántica positiva) |
 
 #### Estados de incidencia — flujo `Reportada → En evaluación → En atención → Resuelta`
+
+> **Enmienda SPEC-200:** para incidencias nuevas se usan `PENDING_APPROVAL`
+> (ámbar, pendiente de aprobación), `OPEN` (neutro, pendiente de atención),
+> `IN_PROGRESS` (celeste) y `RESOLVED` (verde). `ASSIGNED` es neutro y `COMPLETED`
+> verde para las intervenciones de esta prueba. Urgencias: LOW/MEDIUM/HIGH; sin
+> urgencia asignada se muestra «Sin evaluar». Los códigos anteriores no se siembran.
 
 Este mapeo es **obligatorio y único** en todo el sistema (web, móvil, `StatusBadge`, líneas de tiempo, mapa, dashboard, reportes). El `code` es el mismo que en `catalog_items` de `INCIDENT_STATUS` (SPEC-002 §4.9).
 
@@ -183,6 +197,7 @@ Se usa la escala nativa de Tailwind (múltiplos de 4px) sin extensión: `space-1
 |---|---|---|
 | `Button` | Acción primaria, secundaria, destructiva o discreta | `loading` bloquea el doble click y marca `aria-busy`. `aria-label` es **obligatorio** si el contenido es solo un icono |
 | `Input` | Campo de texto con etiqueta | `errorMessage` presente ⇒ estado error y `aria-invalid`. El `hover` solo aplica en dispositivos con puntero |
+| `Textarea` | Texto multilínea con etiqueta | Comparte superficie, foco, ayuda y errores accesibles con `Input`; no hace llamadas HTTP |
 | `Select` | Elección de una opción | El que carga catálogos consume `useCatalog` (SPEC-003 §6.1); no hace fetch propio |
 | `Modal` | Diálogo y confirmación destructiva | Atrapa el foco y cierra con `Esc`. El texto nombra a la entidad afectada, no dice "¿Está seguro?" |
 | `Toast` | Feedback de resultado | Verde éxito, ámbar advertencia (p. ej. correo no entregado), rojo error |
@@ -196,6 +211,12 @@ Se usa la escala nativa de Tailwind (múltiplos de 4px) sin extensión: `space-1
 | `PhotoUpload` | Evidencia fotográfica | Recibe callbacks; no llama a la API por su cuenta |
 | `BeforeAfterViewer` | Comparar antes/después | Consume URLs prefirmadas de vida corta; no las cachea |
 | `DateRangePicker` | Rango de fechas | — |
+
+`Input` y `Select` conservan el tamaño `md` (40 px) de las pantallas existentes;
+`size="lg"` activa 48 px para trabajo de campo, sin cambiar todos los formularios
+del sistema. El skeleton del selector respeta el tamaño elegido. En campo se
+usan estos controles grandes y `Button size="lg"`; `Textarea` conserva etiquetas,
+`aria-required`, `aria-invalid` y `aria-describedby` como el resto de campos.
 
 ### 4.1 Reglas que gobiernan el catálogo
 
@@ -297,7 +318,7 @@ Justificación:
 
 Estas reglas aplican a **todo** componente usado en las pantallas de trabajo en campo (formulario de intervención, formulario de incidencia, `PhotoUpload`, `LocationPicker`) y son más estrictas que el resto de la interfaz:
 
-1. **Objetivos táctiles grandes.** Todo elemento interactivo en pantallas de campo (botones, checkboxes, ítems de lista tocables, controles del mapa) mide **mínimo 44×44px** de área táctil, aunque su contenido visual sea menor (el padding compensa). Esto vale para usar el sistema con guantes de trabajo o dedos húmedos. `Button` `size="md"` y `size="lg"` ya cumplen; `size="sm"` está prohibido en pantallas de formulario de campo, solo se permite en tablas/paneles de escritorio.
+1. **Objetivos táctiles grandes.** Todo elemento interactivo en pantallas de campo (botones, checkboxes, ítems de lista tocables, controles del mapa) mide **mínimo 44×44px** de área táctil, aunque su contenido visual sea menor (el padding compensa). Esto vale para usar el sistema con guantes de trabajo o dedos húmedos. Usar `Button`, `Input` y `Select` con `size="lg"` (48 px); el tamaño `md` actual mide 40 px y no alcanza el mínimo. `size="sm"` está prohibido en formularios de campo, solo se permite en tablas/paneles de escritorio.
 2. **Contraste alto para exterior.** En pantallas de campo, el contraste texto/fondo mínimo sube de 4.5:1 (ver sección 8) a **7:1** para texto de cuerpo, porque se usa bajo luz solar directa. Esto excluye combinaciones de gris claro sobre blanco en esas pantallas específicas: se usa `neutral-900` sobre `neutral-0`, no `neutral-500` sobre `neutral-50`.
 3. **Feedback de subida con mala conexión.** `PhotoUpload` es el componente crítico:
    - Al agregar una foto, esta entra en estado `idle` inmediatamente y su miniatura (desde el archivo local, `previewUrl`) se muestra sin esperar red — el operario ve confirmación visual instantánea de que la foto quedó en cola, independientemente de la conexión.
@@ -443,4 +464,3 @@ proveedor de tiles de `MapView` es configuración, no literal.
 - [ ] `DataTable` probado bajo 640px: se ve como tarjetas, no con scroll horizontal.
 - [ ] Navegación completa por teclado probada en al menos un formulario y un modal.
 - [ ] Los tests de §12 pasan (`npm test` en `frontend/` y en `mobile/`).
-
