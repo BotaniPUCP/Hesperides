@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Recorre el flujo completo de SPEC-001 contra el backend levantado.
 #
-#   docker compose -f compose.yml -f compose.dev.yml up -d
-#   # O: podman compose -f compose.yml -f compose.dev.yml up -d
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#   # O: podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 #   bash backend/probar-auth.sh
 #
 # No modifica nada del sistema salvo el last_login del administrador.

@@ -214,7 +214,7 @@ Reglas obligatorias (implementadas en `shared/security/CorsConfig.java`):
 
 Se puede usar Docker con `docker compose` o Podman con `podman compose` (o
 `podman-compose`, si se invoca el proveedor directamente). Los argumentos y los
-archivos `compose.yml` y `compose.dev.yml` son comunes; los ejemplos con uno de los
+archivos `docker-compose.yml` y `docker-compose.dev.yml` son comunes; los ejemplos con uno de los
 motores admiten sustituir el comando por el otro. La CI usa Docker Compose;
 la preferencia local de este usuario en `AGENTS.md` es Podman.
 

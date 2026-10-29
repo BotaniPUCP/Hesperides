@@ -106,8 +106,8 @@ Cada HU debe tener su spec completo **antes** de que el desarrollador comience a
 
 ```
 Hesperides/
-├── compose.yml
-├── compose.dev.yml
+├── docker-compose.yml
+├── docker-compose.dev.yml
 ├── .github/
 │   └── workflows/
 │       ├── ci-backend.yml
@@ -398,7 +398,7 @@ Elegir Docker o Podman según el entorno: los ejemplos siguientes usan
 `docker exec`. También se puede invocar `podman-compose` directamente si es el
 proveedor instalado. Ambos usan los mismos archivos; CI conserva Docker Compose.
 
-> `compose.dev.yml` es un **override**, no un compose completo: no
+> `docker-compose.dev.yml` es un **override**, no un compose completo: no
 > declara `build` ni `image`, solo modifica lo que ya define el archivo base.
 > Por eso todo comando de desarrollo encadena ambos archivos con `-f`.
 > Usarlo solo falla con "no image / build context" en `backend`.
@@ -411,16 +411,16 @@ proveedor instalado. Ambos usan los mismos archivos; CI conserva Docker Compose.
 cp .env.example .env
 
 # 2. Validar que la combinacion de ambos compose es correcta
-podman compose -f compose.yml -f compose.dev.yml config > /dev/null
+podman compose -f docker-compose.yml -f docker-compose.dev.yml config > /dev/null
 
 # 3. Construir imágenes y levantar los cuatro servicios
-podman compose -f compose.yml -f compose.dev.yml up --build -d
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 
 # 4. Verificar que los cuatro servicios están arriba
-podman compose -f compose.yml -f compose.dev.yml ps
+podman compose -f docker-compose.yml -f docker-compose.dev.yml ps
 
 # 5. Seguir el arranque del backend (Flyway aplicando migraciones)
-podman compose -f compose.yml -f compose.dev.yml logs -f backend
+podman compose -f docker-compose.yml -f docker-compose.dev.yml logs -f backend
 ```
 
 Para no repetir los dos `-f` en cada comando, exportar la variable una vez por
@@ -428,7 +428,7 @@ terminal. A partir de ahí basta con `podman compose up -d`, `logs -f backend`,
 `ps`, `down`:
 
 ```bash
-export COMPOSE_FILE="compose.yml:compose.dev.yml"
+export COMPOSE_FILE="docker-compose.yml:docker-compose.dev.yml"
 ```
 
 ### Comandos del día a día
@@ -436,16 +436,16 @@ export COMPOSE_FILE="compose.yml:compose.dev.yml"
 ```bash
 # Levantar el entorno ya construido (sin --build: solo tras cambiar
 # un Dockerfile o las dependencias hace falta reconstruir)
-podman compose -f compose.yml -f compose.dev.yml up -d
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # Estado de los servicios
-podman compose -f compose.yml -f compose.dev.yml ps
+podman compose -f docker-compose.yml -f docker-compose.dev.yml ps
 
 # Ver logs del backend
-podman compose -f compose.yml -f compose.dev.yml logs -f backend
+podman compose -f docker-compose.yml -f docker-compose.dev.yml logs -f backend
 
 # Detener el entorno conservando los datos de la BD
-podman compose -f compose.yml -f compose.dev.yml down
+podman compose -f docker-compose.yml -f docker-compose.dev.yml down
 
 # Ejecutar tests backend
 cd backend && mvn test
@@ -464,8 +464,8 @@ podman exec -it hesperides-db psql -U hesperides -d hesperides
 
 # Limpiar y reconstruir (--volumes borra pgdata: la BD arranca vacía
 # y Flyway vuelve a aplicar todas las migraciones desde cero)
-podman compose -f compose.yml -f compose.dev.yml down -v
-podman compose -f compose.yml -f compose.dev.yml up --build -d
+podman compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 ```
 
 ---

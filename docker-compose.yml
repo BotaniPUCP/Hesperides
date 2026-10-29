@@ -1,7 +1,7 @@
 # Base orchestration for the four Hesperides services.
 # Only `backend` and `frontend` are reachable from the host here;
 # `db` and `data-service` stay internal to the `hesperides-net` network.
-# Development-only exposure and hot reload live in compose.dev.yml.
+# Development-only exposure and hot reload live in docker-compose.dev.yml.
 
 services:
   db:

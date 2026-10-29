@@ -5,8 +5,8 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - "compose.yml"
-      - "compose.dev.yml"
+      - "docker-compose.yml"
+      - "docker-compose.dev.yml"
       - ".env.example"
       - "backend/Dockerfile"
       - "frontend/Dockerfile"
@@ -15,8 +15,8 @@ on:
   pull_request:
     branches: [main, develop]
     paths:
-      - "compose.yml"
-      - "compose.dev.yml"
+      - "docker-compose.yml"
+      - "docker-compose.dev.yml"
       - ".env.example"
       - "backend/Dockerfile"
       - "frontend/Dockerfile"
@@ -39,4 +39,4 @@ jobs:
           JWT_SECRET: clave-ficticia-solo-para-validar-el-yaml-en-ci
           SMTP_FROM: ci@example.test
           APP_PUBLIC_URL: https://ci.example.test
-        run: docker compose -f compose.yml -f compose.dev.yml config --quiet
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet

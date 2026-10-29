@@ -25,7 +25,7 @@ Para que la limpieza de volúmenes incluya las fotos de prueba, usar
 Desde la raíz, reconstruir e iniciar solo PostgreSQL/PostGIS y backend:
 
 ```bash
-podman compose -f compose.yml -f compose.dev.yml up -d --build db backend
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build db backend
 ```
 
 En otra terminal, desde `frontend/` y con dependencias instaladas:
@@ -44,7 +44,7 @@ Detener Bun con Ctrl+C. Desde la raíz, esta limpieza **destructiva** detiene y
 elimina los contenedores y los volúmenes `pgdata` y `storage` del proyecto:
 
 ```bash
-podman compose -f compose.yml -f compose.dev.yml down --volumes
+podman compose -f docker-compose.yml -f docker-compose.dev.yml down --volumes
 ```
 
 Elimina **toda la BD y las fotos locales del proyecto**, no solo las incidencias.
@@ -60,7 +60,7 @@ al ejecutar Java fuera de Compose hay que activarlo con `SPRING_PROFILES_ACTIVE=
 La configuración común de Flyway solo incluye `db/migration`: sin el perfil dev
 no se crean cuentas ni incidencias de demostración. **No activar `dev` en una base
 real.** Compose base también usa dev por defecto; para producción, usar un perfil
-no dev explícito y no cargar `compose.dev.yml`.
+no dev explícito y no cargar `docker-compose.dev.yml`.
 
 La carga es repetible: no duplica los casos ni restablece cambios realizados durante
 la demostración. Cada capataz ve cuatro casos iniciales, uno por estado, y el

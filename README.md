@@ -42,7 +42,7 @@ mediante una URL pública ni caché pública.
 
 Compose base y dev conservan PostgreSQL en `pgdata` y las fotos nuevas en `storage`.
 Para descartar los datos locales de prueba, terminar con
-`podman compose -f compose.yml -f compose.dev.yml down --volumes`: elimina los
+`podman compose -f docker-compose.yml -f docker-compose.dev.yml down --volumes`: elimina los
 contenedores y los volúmenes de BD/fotos de **todo ese proyecto**, no solo incidencias.
 `stop` o `down` sin `--volumes` conservan los volúmenes. No usar esta limpieza con
 datos reales; respaldar fotos y BD juntos cuando deban conservarse. No se promete guardado
@@ -63,7 +63,7 @@ Con `.env` configurado y los puertos habituales (backend 8080, frontend 3000):
 
 ```bash
 # Desde la raíz: solo PostgreSQL/PostGIS y backend
-podman compose -f compose.yml -f compose.dev.yml up -d --build db backend
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build db backend
 ```
 
 En otra terminal, desde `frontend/` y con dependencias instaladas:
@@ -82,7 +82,7 @@ Al terminar, detener Bun con Ctrl+C y ejecutar desde la raíz:
 
 ```bash
 # DESTRUCTIVO: descarta toda la BD y las fotos locales de este proyecto
-podman compose -f compose.yml -f compose.dev.yml down --volumes
+podman compose -f docker-compose.yml -f docker-compose.dev.yml down --volumes
 ```
 
 El próximo `up` con dev vuelve a crear el esquema y los datos de demostración.
@@ -135,13 +135,13 @@ cp .env.example .env
 # Completar los valores de .env, incluidos JWT_SECRET, SMTP_FROM y APP_PUBLIC_URL
 
 # Levantar todos los servicios con Docker
-docker compose -f compose.yml -f compose.dev.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # O, con Podman (alternativa al comando anterior)
-podman compose -f compose.yml -f compose.dev.yml up -d
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # Seguir los logs con el motor elegido (sustituir por podman compose si aplica)
-docker compose -f compose.yml -f compose.dev.yml logs -f
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f
 ```
 
 Acceso local:
@@ -189,9 +189,9 @@ archivo bajo `frontend/src/` se refleja en http://localhost:3000 sin reconstruir
 
 ```bash
 # Docker
-docker compose -f compose.yml -f compose.dev.yml up -d frontend
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d frontend
 # O Podman
-podman compose -f compose.yml -f compose.dev.yml up -d frontend
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d frontend
 ```
 
 Dos detalles del entorno que conviene conocer:
@@ -251,8 +251,8 @@ Dos detalles del entorno que conviene conocer:
 │
 ├── .github/workflows/          # CI/CD (GitHub Actions)
 │
-├── compose.yml                 # Orquestación de contenedores (despliegue)
-├── compose.dev.yml             # Overrides de desarrollo local
+├── docker-compose.yml                 # Orquestación de contenedores (despliegue)
+├── docker-compose.dev.yml             # Overrides de desarrollo local
 │
 ├── .env.example                # Plantilla de variables de entorno
 ├── .gitignore
@@ -315,9 +315,9 @@ SPRING_PROFILES_ACTIVE=dev
 ### Desarrollo local
 ```bash
 # Docker
-docker compose -f compose.yml -f compose.dev.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 # O Podman
-podman compose -f compose.yml -f compose.dev.yml up -d
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
 ### Validación en CI
@@ -325,7 +325,7 @@ Los tests se ejecutan automáticamente en GitHub Actions:
 - `./mvnw test` en cada push a `develop` o PR a `main`
 - `npm test` en frontend
 - `python -m pytest` en services
-- Infraestructura: `docker compose -f compose.yml -f compose.dev.yml config --quiet`,
+- Infraestructura: `docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet`,
   con variables ficticias para validar la configuración sin levantar servicios.
 
 ### Producción (AWS)

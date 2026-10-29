@@ -430,7 +430,7 @@ son los únicos que ninguna suite puede dar por buenos.
 | CA-09 | **[manual]** El formulario de edición no tiene campo de contraseña, y un `password` inyectado en el body de `PUT` no la cambia |
 | CA-10 | Las cinco acciones dejan rastro en `audit_log` con su `before`/`after`. Desactivar dos veces deja **una** sola fila |
 | CA-11 | **[manual]** Cambiar la propia contraseña expulsa las demás sesiones y mantiene la actual |
-| CA-12 | En una base de prueba vacía, `podman compose -f compose.yml -f compose.dev.yml up --build` aplica el baseline V001 sin error de checksum; un `INSERT` con `credential_status = 'OTRO'` falla por el CHECK |
+| CA-12 | En una base de prueba vacía, `podman compose -f docker-compose.yml -f docker-compose.dev.yml up --build` aplica el baseline V001 sin error de checksum; un `INSERT` con `credential_status = 'OTRO'` falla por el CHECK |
 
 ## 7. Especificación visual
 
