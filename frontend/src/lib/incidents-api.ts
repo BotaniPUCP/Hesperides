@@ -19,7 +19,7 @@ export const incidentsApi = {
     const form = new FormData();
     form.append('file', file);
     form.append('clientReference', reference);
-    return apiClient.post<IncidentPhoto>(`${path}/${id}/photos`, form);
+    return apiClient.postForm<IncidentPhoto>(`${path}/${id}/photos`, form);
   },
   photo: (id: number, photoId: number) => apiClient.get<{ contentType: string; base64: string }>(`${path}/${id}/photos/${photoId}`),
 };

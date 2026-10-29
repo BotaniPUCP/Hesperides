@@ -45,13 +45,34 @@ V002–V021 de develop; no se modifican esas migraciones publicadas. La versión
 de la rama anterior solo se usó con datos de demostración desechables.
 Estados/categorías/urgencia son catálogos. Latitud/longitud opcionales como números
 con límites y presencia conjunta; no se incorpora el catastro para guardar un punto.
-Fotos JPEG/PNG/WebP, hasta 5 MiB cada una y 6 por incidencia, en directorio persistente
-configurado por `INCIDENT_UPLOAD_DIR`; lectura autenticada y autorizada por incidencia.
+Fotos JPEG/PNG/WebP, hasta 5 MiB cada una y 6 por incidencia, en el `FileStorage`
+compartido bajo claves `incidents/{uuid}`: directorio `STORAGE_LOCAL_DIR` o bucket
+privado S3. Se conservan los bytes originales, sin conversión JPEG. Las claves UUID
+de los archivos siempre llevan el prefijo `incidents/` y se leen únicamente desde
+ese almacenamiento. En Compose local residen en `/data/storage/incidents/`.
+No se requiere otra migración ni se modifica V022.
+Lectura autenticada y autorizada por incidencia, con `Cache-Control: no-store`;
+no se reutiliza el helper de entrega pública de fotos del catastro.
 La API devuelve el contenido de cada foto en base64 dentro del sobre habitual.
 
 La captura se guarda antes de subir fotos. Cada foto se puede reintentar sin
 duplicarla; el usuario ve los fallos y puede continuar con el texto ya recibido.
 No se promete sincronización sin conexión: un envío fallido conserva el formulario.
+
+La navegación web usa `/incidencias`, `/incidencias/nueva` y `/incidencias/{id}`
+dentro del dashboard, con guard de roles común y breadcrumbs. Búsqueda, estado y
+página viajan en la URL para conservarlos al volver o recargar. Consultas mediante
+hooks sobre `useRequest`, independientes para lista, opciones y resumen; un fallo
+de opciones o resumen no oculta los registros. La presentación reutiliza los tokens
+claro/oscuro y los controles compartidos de SPEC-C01 (`Input`/`Select` grandes,
+`Textarea`, `Card`, badges y skeletons). No introduce otra paleta ni dependencias.
+
+Compose base conserva `pgdata` y `storage`; dev añade recarga de frontend/shared/services,
+no almacenamiento desechable automático. La demostración usa esos mismos archivos:
+`up -d --build db backend` y Bun local para el frontend. Al terminar, `down --volumes`
+descarta explícitamente toda la BD y las fotos locales de ese proyecto; `stop`
+no las elimina. El siguiente arranque con dev vuelve a cargar esquema y fixtures.
+No se usa otro override ni `tmpfs`; las fotos de prueba deben usar almacenamiento local.
 
 Prellenado determinista conservador: datos de sesión, cuadrilla inequívoca y
 patrones explícitos como «rama caída», «fuga de agua», «hojarasca». No se infiere
@@ -147,3 +168,20 @@ opciones es local al módulo; no implementa la administración de catálogos com
 - Los logs del navegador revelaron un fallo previo al interpretar el 204 vacío
   de logout como JSON. Cliente corregido y cubierto por prueba de regresión.
 - Pendiente: validación del cliente, matriz real y prueba física en Android.
+
+## Verificación del realineamiento — 24 de octubre de 2026
+
+- `mvn -B verify`, JDK 25 y API de Podman: **606 pruebas backend**, sin fallos.
+- Bun 1.4.4: **606 pruebas frontend**, lint y build de Next 16.3.4 correctos.
+- Firefox real/BiDi, 390×844 y 1440×1000: tema claro/oscuro, tamaños de controles,
+  captura, detalle enlazable, recarga y Back con filtros; sin scroll horizontal.
+- Foto fallida y reintentada sin recrear la incidencia; bytes originales en el
+  almacenamiento compartido y acceso privado. Ubicación denegada no bloquea el envío.
+- Aprobación, dos intervenciones planificadas, ejecución parcial y resolución por
+  capataz, acceso denegado entre cuadrillas y totales de coordinación comprobados.
+- Reinicio del backend: se conservan el estado de la incidencia y los bytes de la
+  fotografía, que siguen siendo accesibles por su API privada.
+- 47 preflights del navegador sin errores; Compose base/dev validado con
+  persistencia y recarga de código, sin montajes duplicados. No se alteraron migraciones.
+- Lectura de fotos y limpieza en rollback cubiertas por `IncidentFilesTest`.
+  S3 se comprueba mediante la abstracción de almacenamiento, no con un bucket real.

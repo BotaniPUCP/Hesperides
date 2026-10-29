@@ -16,6 +16,14 @@ describe('Badge', () => {
 });
 
 describe('StatusBadge', () => {
+  it.each([
+    ['PENDING_APPROVAL', 'status-in-review'], ['OPEN', 'status-reported'],
+    ['ASSIGNED', 'status-reported'], ['COMPLETED', 'status-resolved'],
+  ])('maps %s to shared theme tokens independently of the label', (code, token) => {
+    render(<StatusBadge code={code} label="Translated label" />);
+    expect(screen.getByText('Translated label')).toHaveClass(`bg-${token}-bg`, `text-${token}-fg`);
+  });
+
   it('resuelve el color internamente segun el code del catalogo', () => {
     render(<StatusBadge code="IN_REVIEW" label="En evaluación" />);
 

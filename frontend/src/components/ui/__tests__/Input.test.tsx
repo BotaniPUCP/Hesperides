@@ -3,6 +3,16 @@ import userEvent from '@testing-library/user-event';
 import { Input } from '../Input';
 
 describe('Input', () => {
+  it('keeps the default size and opts into touch-friendly controls', () => {
+    const props = { id: 'latitude', label: 'Latitud', value: '', onChange: jest.fn() };
+    const { rerender } = render(<Input {...props} />);
+    expect(screen.getByLabelText('Latitud')).toHaveClass('h-10');
+    rerender(<Input {...props} size="lg" type="number" step="any" inputMode="decimal" />);
+    expect(screen.getByLabelText('Latitud')).toHaveClass('h-12', 'bg-neutral-0', 'text-neutral-900');
+    expect(screen.getByLabelText('Latitud')).toHaveAttribute('step', 'any');
+    expect(screen.getByLabelText('Latitud')).toHaveAttribute('inputmode', 'decimal');
+  });
+
   it('asocia el label al campo por id, no por placeholder', () => {
     render(<Input id="email" label="Correo" value="" onChange={jest.fn()} />);
 

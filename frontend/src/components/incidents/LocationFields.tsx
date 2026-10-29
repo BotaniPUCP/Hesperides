@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Button, Input } from '@/components/ui';
 
 export interface LocationValue { reference: string; latitude: string; longitude: string }
 export const emptyLocation: LocationValue = { reference: '', latitude: '', longitude: '' };
@@ -20,6 +20,7 @@ export function LocationFields({ value, onChange, disabled = false }: {
   value: LocationValue; onChange: (value: LocationValue) => void; disabled?: boolean;
 }) {
   const [message, setMessage] = useState('');
+  const id = useId();
   const [locating, setLocating] = useState(false);
   const generation = useRef({ value: 0, disabled });
   const currentValue = useRef(value);
@@ -49,25 +50,19 @@ export function LocationFields({ value, onChange, disabled = false }: {
   };
   return (
     <div className="space-y-3">
-      <label className="block text-sm text-neutral-700">
-        Referencia del lugar (opcional)
-        <input className="mt-1 min-h-12 w-full rounded-md border border-neutral-200 px-3 text-base" value={value.reference}
-          disabled={disabled} maxLength={500} placeholder="Frente a la entrada de Ingeniería Civil"
-          onChange={(e) => onChange({ ...value, reference: e.target.value })} />
-      </label>
+      <Input id={`${id}-reference`} label="Referencia del lugar (opcional)" size="lg" value={value.reference}
+        disabled={disabled} maxLength={500} placeholder="Frente a la entrada de Ingeniería Civil"
+        onChange={(reference) => onChange({ ...value, reference })} />
       <Button type="button" variant="secondary" size="lg" disabled={disabled || locating} onClick={locate}>
         {locating ? 'Obteniendo ubicación…' : 'Usar ubicación del teléfono'}
       </Button>
       <details>
-        <summary className="cursor-pointer py-3 text-sm text-brand-700">Ver o corregir coordenadas</summary>
+        <summary className="min-h-12 cursor-pointer rounded-md py-3 text-sm text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">Ver o corregir coordenadas</summary>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {(['latitude', 'longitude'] as const).map((field) => (
-            <label key={field} className="text-sm text-neutral-700">
-              {field === 'latitude' ? 'Latitud' : 'Longitud'}
-              <input type="number" step="any" inputMode="decimal" disabled={disabled}
-                className="mt-1 min-h-12 w-full rounded-md border border-neutral-200 px-3 text-base" value={value[field]}
-                onChange={(e) => { generation.current.value++; setLocating(false); onChange({ ...value, [field]: e.target.value }); }} />
-            </label>
+            <Input key={field} id={`${id}-${field}`} label={field === 'latitude' ? 'Latitud' : 'Longitud'}
+              type="number" step="any" inputMode="decimal" size="lg" disabled={disabled} value={value[field]}
+              onChange={(coordinate) => { generation.current.value++; setLocating(false); onChange({ ...value, [field]: coordinate }); }} />
           ))}
         </div>
       </details>

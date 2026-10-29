@@ -18,6 +18,8 @@ import pe.edu.pucp.hesperides.modules.incidents.repository.*;
 import pe.edu.pucp.hesperides.modules.users.entity.Team;
 import pe.edu.pucp.hesperides.modules.users.repository.TeamsRepository;
 import pe.edu.pucp.hesperides.shared.exception.*;
+import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
+import pe.edu.pucp.hesperides.shared.storage.StoredFileNotFoundException;
 import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -51,8 +53,7 @@ public class IncidentsServiceImpl implements IncidentsService {
             filter = filter.and((root, query, cb) -> cb.equal(root.get("status").get("code"), status));
         }
         if (search != null && !search.isBlank()) {
-            String pattern = "%" + search.trim().toLowerCase(Locale.ROOT)
-                    .replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+            String pattern = LikePattern.contains(search.trim().toLowerCase(Locale.ROOT));
             filter = filter.and((root, query, cb) -> cb.or(
                     cb.like(cb.lower(root.get("description")), pattern, '\\'),
                     cb.like(cb.lower(root.get("locationReference")), pattern, '\\')));
@@ -113,7 +114,7 @@ public class IncidentsServiceImpl implements IncidentsService {
     public DetailResponse update(Long id, ReviewIncidentRequest request, String email) {
         User actor = actor(email); requireCoordinator(actor);
         Incident incident = visible(id, actor, true);
-        if (incident.getVersion() != request.version()) throw new DuplicateResourceException("Incident changed; reload before editing");
+        if (incident.getVersion() != request.version()) throw new ConflictException("Incident changed; reload before editing");
         if (state(incident, "RESOLVED")) throw new BusinessRuleException("Incident already resolved");
         coordinates(request.latitude(), request.longitude());
         incident.setDescription(request.description().trim());
@@ -132,7 +133,7 @@ public class IncidentsServiceImpl implements IncidentsService {
         User actor = actor(email); requireCoordinator(actor);
         Incident incident = visible(id, actor, true);
         if (incident.getApprovedAt() != null) return detail(incident, actor);
-        if (incident.getVersion() != version) throw new DuplicateResourceException("Incident changed; reload before editing");
+        if (incident.getVersion() != version) throw new ConflictException("Incident changed; reload before editing");
         incident.setApprovedBy(actor); incident.setApprovedAt(Instant.now());
         transition(incident, "OPEN", actor);
         return detail(incident, actor);
@@ -216,7 +217,7 @@ public class IncidentsServiceImpl implements IncidentsService {
         }
         if (photos.countByIncidentIdAndDeletedAtIsNull(id) >= 6) throw new BusinessRuleException("Photo limit reached");
         IncidentPhoto photo = new IncidentPhoto();
-        photo.setIncident(incident); photo.setStorageKey(files.write(bytes)); photo.setContentType(type);
+        photo.setIncident(incident); photo.setStorageKey(files.write(bytes, type)); photo.setContentType(type);
         photo.setSizeBytes(bytes.length); photo.setUploadedBy(actor); photo.setClientReference(reference); photo.setRequestHash(hash);
         return photoResponse(photos.saveAndFlush(photo));
     }
@@ -225,7 +226,11 @@ public class IncidentsServiceImpl implements IncidentsService {
         visible(id, actor(email), false);
         IncidentPhoto photo = photos.findByIdAndIncidentIdAndDeletedAtIsNull(photoId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Photo not found"));
-        return new PhotoContentResponse(photo.getContentType(), Base64.getEncoder().encodeToString(files.read(photo.getStorageKey())));
+        try {
+            return new PhotoContentResponse(photo.getContentType(), Base64.getEncoder().encodeToString(files.read(photo.getStorageKey())));
+        } catch (StoredFileNotFoundException ex) {
+            throw new ResourceNotFoundException("Photo not found");
+        }
     }
 
     private User actor(String email) {
@@ -306,6 +311,6 @@ public class IncidentsServiceImpl implements IncidentsService {
         catch (NoSuchAlgorithmException ex) { throw new IllegalStateException(ex); }
     }
     private void sameRequest(String previous, String current) {
-        if (!previous.equals(current)) throw new DuplicateResourceException("Request reference already used with different content");
+        if (!previous.equals(current)) throw new ConflictException("Request reference already used with different content");
     }
 }

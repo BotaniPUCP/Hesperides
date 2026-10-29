@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, Textarea } from '@/components/ui';
 import { incidentsApi, newClientReference } from '@/lib/incidents-api';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { emptyLocation, LocationFields, locationPayload } from './LocationFields';
@@ -28,12 +28,14 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [descriptionError, setDescriptionError] = useState('');
   const [savedId, setSavedId] = useState<number | null>(null);
   const attempt = useRef<{ json: string; reference: string } | null>(null);
   const sending = useRef(false);
   const submit = async () => {
     if (sending.current) return;
-    if (!description.trim()) { setError('Escribe brevemente qué pasó.'); return; }
+    if (!description.trim()) { setDescriptionError('Escribe brevemente qué pasó.'); return; }
+    setDescriptionError('');
     let payload;
     try { payload = { description: description.trim(), ...locationPayload(location) }; }
     catch (ex) { setError((ex as Error).message); return; }
@@ -73,30 +75,29 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
   };
 
   return (
-    <Card title="Informar una incidencia">
+    <Card>
       <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-        <p className="text-sm text-neutral-500">Envía: {sender} · Canal: web<br />La fecha y hora de recepción se registrarán al enviar.</p>
-        <label htmlFor="incident-description" className="block font-medium text-neutral-900">¿Qué pasó?</label>
-        <textarea id="incident-description" rows={4} maxLength={10000} aria-required="true"
-          className="w-full rounded-lg border border-neutral-200 p-3 text-base focus:outline-none focus:ring-2 focus:ring-brand-600"
+        <p className="text-sm text-neutral-700">Envía: {sender} · Canal: web<br />La fecha y hora de recepción se registrarán al enviar.</p>
+        <Textarea id="incident-description" label="¿Qué pasó?" rows={4} maxLength={10000} required
+          helperText="Una frase basta. Si puedes, indica dónde ocurrió." errorMessage={descriptionError}
           placeholder="Rama caída en puerta principal" value={description} disabled={busy || savedId !== null}
-          onChange={(event) => setDescription(event.target.value)} />
-        <p className="text-sm text-neutral-500">Una frase basta. Si puedes, indica dónde ocurrió.</p>
+          onChange={(value) => { setDescription(value); setDescriptionError(''); }} />
         <fieldset disabled={busy || savedId !== null} className="space-y-4">
           <div className="flex flex-wrap gap-3">
-            <label className="flex min-h-12 cursor-pointer items-center rounded-md border border-neutral-200 px-4 text-sm font-medium focus-within:ring-2 focus-within:ring-brand-600">
+            <label className="flex min-h-12 cursor-pointer items-center rounded-md border border-neutral-200 bg-neutral-0 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 focus-within:ring-2 focus-within:ring-brand-600">
               Añadir fotos
               <input className="sr-only" type="file" multiple accept="image/jpeg,image/png,image/webp" aria-label="Añadir fotos"
                 onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
             </label>
-            <label className="flex min-h-12 cursor-pointer items-center rounded-md border border-neutral-200 px-4 text-sm font-medium focus-within:ring-2 focus-within:ring-brand-600">
+            <label className="flex min-h-12 cursor-pointer items-center rounded-md border border-neutral-200 bg-neutral-0 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 focus-within:ring-2 focus-within:ring-brand-600">
               Tomar foto
               <input className="sr-only" type="file" capture="environment" accept="image/jpeg,image/png,image/webp" aria-label="Tomar foto"
                 onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
             </label>
           </div>
+          <p className="text-sm text-neutral-700">Hasta seis fotos JPEG, PNG o WebP, de 5 MiB cada una.</p>
           <details>
-            <summary className="cursor-pointer py-3 text-sm font-medium text-brand-700">Añadir ubicación (opcional)</summary>
+            <summary className="min-h-12 cursor-pointer rounded-md py-3 text-sm font-medium text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">Añadir ubicación (opcional)</summary>
             <LocationFields value={location} onChange={setLocation} disabled={busy || savedId !== null} />
           </details>
         </fieldset>
@@ -110,10 +111,10 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
               onClick={() => setAttachments((all) => all.filter((item) => item.reference !== a.reference))}>Quitar foto</Button>}
           </li>)}
         </ul>}
-        {savedId !== null && <p role="status" className="rounded-lg bg-brand-50 p-3 text-brand-900">
+        {savedId !== null && <p role="status" className="rounded-lg border border-alert-success-border bg-alert-success-bg p-3 text-alert-success-fg">
           Tu texto ya fue recibido con el número #{savedId}. Las fotografías pendientes se pueden reintentar o puedes continuar sin ellas.
         </p>}
-        {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}
+        {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
         <div className="flex flex-wrap gap-3">
           <Button type="submit" size="lg" loading={busy}>{savedId === null ? 'Enviar' : 'Reintentar fotos pendientes'}</Button>
           {savedId === null ? <Button type="button" size="lg" variant="ghost" disabled={busy} onClick={onCancel}>Volver</Button>

@@ -16,6 +16,10 @@ El dominio funcional y las características específicas se definen en los specs
 Disponible en `/incidencias` para `SUPERVISOR` (capataz) y `COORDINADOR`.
 Spec: [`SPEC-200`](specs/features/SPEC-200-incidencias.md).
 
+Captura en `/incidencias/nueva` y detalle enlazable en `/incidencias/{id}`.
+Los filtros y la página del listado viajan en la URL y se conservan al volver.
+La interfaz reutiliza los controles y el tema claro/oscuro del producto.
+
 - Capataz: enviar una frase, añadir fotos/ubicación opcionales y seguir sus envíos.
 - Coordinación: revisar, aprobar y asignar la atención a una cuadrilla.
 - Capataz responsable o coordinación: registrar intervenciones realizadas y resolver
@@ -30,11 +34,18 @@ solo al solicitarla; puede corregirse o quitarse. Geolocalización desde un tel�
 requiere **HTTPS**: abrir una IP de la red local por HTTP no basta. La captura sigue
 funcionando sin permisos de ubicación.
 
-Las fotografías se guardan en `INCIDENT_UPLOAD_DIR` (por defecto
-`backend/uploads/incidents` si Java se ejecuta desde `backend/`). El override dev
-usa `tmpfs`: fotos y PostgreSQL son desechables al detener sus contenedores. Para
-datos reales, configurar almacenamiento persistente y respaldar fotos y BD. Las fotos se consultan
-autenticadas por la API, no mediante un directorio público. No se promete guardado
+Las fotografías usan únicamente el `FileStorage` compartido, con claves
+`incidents/{uuid}`. En el Compose local están en `/data/storage/incidents/`, dentro
+del volumen `storage`; PostgreSQL guarda sus metadatos y claves, no los bytes.
+Conservan los archivos originales y se consultan autenticadas por la API, nunca
+mediante una URL pública ni caché pública.
+
+Compose base y dev conservan PostgreSQL en `pgdata` y las fotos nuevas en `storage`.
+Para descartar los datos locales de prueba, terminar con
+`podman compose -f compose.yml -f compose.dev.yml down --volumes`: elimina los
+contenedores y los volúmenes de BD/fotos de **todo ese proyecto**, no solo incidencias.
+`stop` o `down` sin `--volumes` conservan los volúmenes. No usar esta limpieza con
+datos reales; respaldar fotos y BD juntos cuando deban conservarse. No se promete guardado
 offline ni sincronización automática: ante error se conserva el formulario abierto,
 y una subida de fotos fallida no vuelve a crear el registro recibido.
 
@@ -45,6 +56,38 @@ ejecuta desde la configuración común sin dev. La guía y las cuentas para una
 **base aislada** están en [`docs/demos/incidencias.md`](docs/demos/incidencias.md).
 No activar `dev` en una base real: Compose base lo usa por defecto y el override
 dev lo fuerza; producción debe seleccionar otro perfil sin ese override.
+
+### Desarrollo local: BD y backend en contenedores, frontend con Bun
+
+Con `.env` configurado y los puertos habituales (backend 8080, frontend 3000):
+
+```bash
+# Desde la raíz: solo PostgreSQL/PostGIS y backend
+podman compose -f compose.yml -f compose.dev.yml up -d --build db backend
+```
+
+En otra terminal, desde `frontend/` y con dependencias instaladas:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1 bun --bun run dev
+```
+
+Abrir http://localhost:3000/incidencias. En `.env`, usar
+`APP_PUBLIC_URL=http://localhost:3000`, `CORS_ALLOWED_ORIGINS=http://localhost:3000`,
+`COOKIE_SECURE=false`, `STORAGE_TYPE=local` y `STORAGE_LOCAL_DIR=/data/storage`.
+Completar también `POSTGRES_PASSWORD`, `JWT_SECRET` y `SMTP_FROM`.
+No hace falta exportar variables para Java ni iniciarlo fuera de Compose.
+
+Al terminar, detener Bun con Ctrl+C y ejecutar desde la raíz:
+
+```bash
+# DESTRUCTIVO: descarta toda la BD y las fotos locales de este proyecto
+podman compose -f compose.yml -f compose.dev.yml down --volumes
+```
+
+El próximo `up` con dev vuelve a crear el esquema y los datos de demostración.
+Esta limpieza no borra `.env`, archivos montados desde el host (`inbox/`) ni S3.
+Usar almacenamiento local para que las fotos de prueba estén en el volumen eliminado.
 
 ### Verificación local con Bun y Maven
 

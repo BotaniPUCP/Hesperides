@@ -10,8 +10,6 @@
 # una sola propiedad la deja sin resolver.
 
 hesperides:
-  incidents:
-    upload-dir: ./target/test-incident-uploads
   security:
     jwt:
       secret: clave-de-prueba-suficientemente-larga-para-hs256-en-tests

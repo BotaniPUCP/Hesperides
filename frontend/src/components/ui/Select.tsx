@@ -23,6 +23,7 @@ export interface SelectProps {
   required?: boolean;
   clearable?: boolean;
   searchable?: boolean;
+  size?: 'md' | 'lg';
 }
 
 /**
@@ -46,6 +47,7 @@ export function Select({
   loading = false,
   required = false,
   clearable = false,
+  size = 'md',
 }: SelectProps) {
   const hasError = Boolean(errorMessage);
   const describedBy = hasError ? `${id}-error` : helperText ? `${id}-helper` : undefined;
@@ -54,7 +56,7 @@ export function Select({
     return (
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium text-neutral-700">{label}</span>
-        <LoadingSkeleton variant="text" className="h-10" />
+        <LoadingSkeleton variant="text" className={size === 'lg' ? 'h-12' : 'h-10'} />
       </div>
     );
   }
@@ -78,7 +80,8 @@ export function Select({
           onChange(code === '' ? null : (options.find((o) => o.code === code) ?? null));
         }}
         className={cn(
-          'min-h-12 w-full rounded-md border bg-neutral-0 px-3 text-base text-neutral-900',
+          'w-full rounded-md border bg-neutral-0 px-3 text-base text-neutral-900',
+          size === 'lg' ? 'h-12' : 'h-10',
           'focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
           'disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500',
           hasError ? 'border-action-danger' : 'border-neutral-200 hover:border-neutral-500',

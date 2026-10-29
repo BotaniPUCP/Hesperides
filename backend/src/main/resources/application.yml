@@ -59,8 +59,6 @@ server:
   port: ${BACKEND_PORT:8080}
 
 hesperides:
-  incidents:
-    upload-dir: ${INCIDENT_UPLOAD_DIR:./uploads/incidents}
   security:
     jwt:
       # Sin valor por defecto: si falta la variable, la aplicación no arranca

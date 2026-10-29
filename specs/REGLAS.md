@@ -223,7 +223,7 @@ la preferencia local de este usuario en `AGENTS.md` es Podman.
 | Nombres de servicio | `backend`, `frontend`, `db`, `data-service` |
 | Puertos | Backend: 8080, Frontend: 3000, Flask: 5001, PostgreSQL: 5432 |
 | Env vars | Archivo `.env` (no commiteado), `.env.example` (commiteado con placeholders) |
-| Volúmenes | Solo para BD en dev (`pgdata:/var/lib/postgresql/data`) |
+| Volúmenes | BD en `pgdata` y fotos en `storage`, persistentes en base/dev. `stop` conserva; `down --volumes` descarta los datos locales de todo el proyecto, solo para desarrollo desechable. No usar `tmpfs` por defecto |
 
 
 ---

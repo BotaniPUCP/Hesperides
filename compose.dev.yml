@@ -1,5 +1,5 @@
 # Development override: exposes db and data-service to the host for
-# inspection and keeps database data and incident uploads in disposable tmpfs.
+# inspection and mounts source code for hot reload. Data remains persistent.
 # Usage: docker compose -f compose.yml -f compose.dev.yml up
 # Or:    podman compose -f compose.yml -f compose.dev.yml up
 
@@ -7,16 +7,10 @@ services:
   db:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
-    # Override the image-declared volume; data is lost when the container stops.
-    tmpfs:
-      - /var/lib/postgresql/data:size=1g
 
   backend:
     environment:
       SPRING_PROFILES_ACTIVE: dev
-    # Writable by the non-root backend user; development data only.
-    tmpfs:
-      - /app/uploads/incidents:size=256m,mode=1777
 
   # Builds the `dev` stage instead of the production runner, so `next dev`
   # serves the app and edits on the host trigger Fast Refresh.
@@ -28,13 +22,13 @@ services:
       # container, so the dev server has to poll. Turbopack ignores this flag,
       # which is why the `dev` stage runs `next dev --webpack`.
       WATCHPACK_POLLING: "true"
-    # volumes:
-      # - ./frontend:/app
-      # - ./shared:/shared
+    volumes:
+      - ./frontend:/app
+      - ./shared:/shared
       # Anonymous volumes keep the container's own node_modules and .next,
       # which the bind mount above would otherwise shadow with the host's.
-      # - /app/node_modules
-      # - /app/.next
+      - /app/node_modules
+      - /app/.next
 
   data-service:
     environment:
@@ -42,5 +36,5 @@ services:
       DATA_SERVICE_PORT: ${DATA_SERVICE_PORT:-5001}
     ports:
       - "${DATA_SERVICE_PORT:-5001}:${DATA_SERVICE_PORT:-5001}"
-    # volumes:
-      # - ./services:/app
+    volumes:
+      - ./services:/app

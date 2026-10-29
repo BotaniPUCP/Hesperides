@@ -106,8 +106,8 @@ class IncidentsIntegrationTest {
         var edited = service.update(id, review, coordinator);
         assertThat(edited.incident().originalDescription()).isEqualTo(capture().description());
         assertThat(edited.incident().description()).isEqualTo(review.description());
-        assertThatThrownBy(() -> service.update(id, review, coordinator)).isInstanceOf(DuplicateResourceException.class);
-        assertThatThrownBy(() -> service.approve(id, sent.incident().version(), coordinator)).isInstanceOf(DuplicateResourceException.class);
+        assertThatThrownBy(() -> service.update(id, review, coordinator)).isInstanceOf(ConflictException.class);
+        assertThatThrownBy(() -> service.approve(id, sent.incident().version(), coordinator)).isInstanceOf(ConflictException.class);
         assertThat(approve(edited).incident().approvedBy().fullName()).isEqualTo("Persona Prueba");
     }
 
@@ -130,7 +130,7 @@ class IncidentsIntegrationTest {
         assertThat(retry.detail().incident().id()).isEqualTo(first.detail().incident().id());
         assertThat(retry.detail().history()).hasSize(1);
         assertThatThrownBy(() -> service.create(new CreateIncidentRequest("Otro problema", null, null, null), reference, foreman))
-                .isInstanceOf(DuplicateResourceException.class);
+                .isInstanceOf(ConflictException.class);
     }
 
     @Test @Transactional(propagation = Propagation.NOT_SUPPORTED)

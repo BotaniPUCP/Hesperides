@@ -13,8 +13,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-hesperides}
       POSTGRES_USER: ${POSTGRES_USER:-hesperides}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_local}
-    # volumes:
-      # - pgdata:/var/lib/postgresql/data
+    volumes:
+      - type: volume
+        source: pgdata
+        target: /var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hesperides} -d ${POSTGRES_DB:-hesperides}"]
       interval: 10s
@@ -73,9 +75,10 @@ services:
       # importacion al limite (~750 MB). Con 1 GB cabe una, y por eso las
       # importaciones van de a una (D-10). La JVM lee JAVA_TOOL_OPTIONS sola.
       JAVA_TOOL_OPTIONS: -Xmx${BACKEND_HEAP:-1g}
-      INCIDENT_UPLOAD_DIR: /app/uploads/incidents
     volumes:
-      - storage:/data/storage
+      - type: volume
+        source: storage
+        target: /data/storage
       - ./inbox:/data/inbox
     ports:
       - "${BACKEND_PORT:-8080}:${BACKEND_PORT:-8080}"

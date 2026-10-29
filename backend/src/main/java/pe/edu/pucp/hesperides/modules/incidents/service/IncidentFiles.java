@@ -1,26 +1,21 @@
 package pe.edu.pucp.hesperides.modules.incidents.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
 import java.util.HexFormat;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import pe.edu.pucp.hesperides.shared.storage.FileStorage;
 
-@Component @Slf4j
+@Component @Slf4j @RequiredArgsConstructor
 public class IncidentFiles {
     public static final long MAX_BYTES = 5 * 1024 * 1024;
-    private final Path root;
-
-    public IncidentFiles(@Value("${hesperides.incidents.upload-dir}") String directory) {
-        root = Path.of(directory).toAbsolutePath().normalize();
-    }
+    private static final String PREFIX = "incidents/";
+    private final FileStorage storage;
 
     public String contentType(byte[] bytes) {
         if (bytes.length == 0 || bytes.length > MAX_BYTES) throw new ValidationException("Invalid photo size");
@@ -32,33 +27,34 @@ public class IncidentFiles {
         throw new ValidationException("Unsupported photo format");
     }
 
-    public String write(byte[] bytes) {
-        String key = UUID.randomUUID().toString();
-        Path path = root.resolve(key);
-        try {
-            Files.createDirectories(root);
-            Files.write(path, bytes, StandardOpenOption.CREATE_NEW);
-        } catch (IOException ex) {
-            removeIncomplete(path);
-            throw new UncheckedIOException(ex);
+    public String write(byte[] bytes, String contentType) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            throw new IllegalStateException("Incident photos must be stored within a transaction");
         }
+        String key = PREFIX + UUID.randomUUID();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override public void afterCompletion(int status) {
-                if (status != STATUS_COMMITTED) removeIncomplete(path);
+                if (status != STATUS_COMMITTED) removeIncomplete(key);
             }
         });
+        try {
+            storage.put(key, bytes, contentType);
+        } catch (RuntimeException ex) {
+            removeIncomplete(key);
+            throw ex;
+        }
         return key;
     }
 
     public byte[] read(String key) {
-        Path path = root.resolve(key).normalize();
-        if (!path.getParent().equals(root)) throw new IllegalStateException("Invalid storage key");
-        try { return Files.readAllBytes(path); }
-        catch (IOException ex) { throw new UncheckedIOException(ex); }
+        if (!key.startsWith(PREFIX)) throw new IllegalArgumentException("Invalid storage key");
+        String name = key.substring(PREFIX.length());
+        if (!UUID.fromString(name).toString().equals(name)) throw new IllegalArgumentException("Invalid storage key");
+        return storage.read(key);
     }
 
-    private void removeIncomplete(Path path) {
-        try { Files.deleteIfExists(path); }
-        catch (IOException ex) { log.error("Could not remove an uncommitted photo", ex); }
+    private void removeIncomplete(String key) {
+        try { storage.delete(key); }
+        catch (RuntimeException ex) { log.error("Could not remove an uncommitted photo", ex); }
     }
 }
