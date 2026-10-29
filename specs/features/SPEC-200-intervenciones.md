@@ -569,7 +569,7 @@ de eventos/calendario hasta acordar fuentes. Cambiar fecha no crea otra incidenc
 
 ## 4. Migración de base de datos
 
-Implementada en [V022__create_interventions.sql](../../backend/src/main/resources/db/migration/V022__create_interventions.sql),
+Implementada en [V025__create_interventions.sql](../../backend/src/main/resources/db/migration/V025__create_interventions.sql),
 propietaria SPEC-200, que concilia SPEC-002 §4.6 y SPEC-005. Es aditiva: no modifica las
 migraciones V001–V021 ni altera tablas existentes. Solo inserta los catálogos ausentes y
 crea el núcleo nuevo. Aplicación comprobada en bases desechables; no aplicada a la base de trabajo.

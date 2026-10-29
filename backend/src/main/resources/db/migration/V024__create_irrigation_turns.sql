@@ -1,5 +1,5 @@
--- M7/D-01. Migración provisional para rama privada wip/riego-m7.
--- Coordinar número con el líder antes de integrar: Flyway no permite reutilizar V022.
+-- M7/D-01. Turnos de riego multisector (rama wip/riego-m7).
+-- Renumerada de V022 a V024 al integrar: V022 y V023 ya eran de las perspectivas de lugares.
 -- Reutilizamos zones y users, no creamos geografía ni autenticación nuevas.
 CREATE TABLE irrigation_turns (
     id                 BIGSERIAL PRIMARY KEY,

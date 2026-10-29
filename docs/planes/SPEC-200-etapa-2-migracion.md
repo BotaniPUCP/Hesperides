@@ -5,7 +5,7 @@ a la base de trabajo y sin desarrollar todavía entidades JPA, API o interfaz.
 
 ## 1. Archivo SQL nuevo
 
-Se crea [V022__create_interventions.sql](../../backend/src/main/resources/db/migration/V022__create_interventions.sql),
+Se crea [V025__create_interventions.sql](../../backend/src/main/resources/db/migration/V025__create_interventions.sql),
 después de verificar que las versiones presentes terminaban en V021. Propietaria: SPEC-200.
 Se comprobaron hashes SHA-256 de las 21 migraciones anteriores antes/después: sin cambios.
 

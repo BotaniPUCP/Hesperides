@@ -91,7 +91,7 @@ public class InterventionQueriesRepository {
         d.setPlanningStatusCode(r.getString("planning_status_code"));d.setStatusCode(r.getString("status_code"));
         d.setTeamId(r.getObject("team_id",Long.class));d.setAssignedToUserId(r.getObject("assigned_to_user_id",Long.class));
         d.setScheduledDate(r.getDate("scheduled_date").toLocalDate());
-        // V022 timestamps persist UTC without a zone, as Hibernate does for Instant.
+        // V025 timestamps persist UTC without a zone, as Hibernate does for Instant.
         // Read the stored wall time explicitly, independently of the JVM time zone.
         d.setStartedAt(instant(r.getObject("started_at",java.time.LocalDateTime.class)));
         d.setCompletedAt(instant(r.getObject("completed_at",java.time.LocalDateTime.class)));

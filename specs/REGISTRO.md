@@ -154,11 +154,14 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V019 | `V019__create_place_reference_links.sql` | Catálogo de lugares (cabecera SQL) | Enlaces para la migración gradual de referencias a lugares |
 | V020 | `V020__track_purged_photo_files.sql` | Retención de fotos (cabecera SQL) | Seguimiento de archivos purgados de fotos de lugares y especies |
 | V021 | `V021__add_place_map_view.sql` | Catálogo de lugares (cabecera SQL) | Vista de cámara guardada para un lugar en el mapa |
-| V022 | `V022__create_interventions.sql` | SPEC-200 §4 | Núcleo multiubicación: seis tablas, código interno y catálogos ausentes; probado en bases temporales, no aplicado a la base de trabajo |
+| V022 | `V022__add_perspective_map_view.sql` | Catálogo de lugares (cabecera SQL) | Vista de cámara guardada para cada perspectiva |
+| V023 | `V023__add_perspective_sort_order.sql` | Catálogo de lugares (cabecera SQL) | Orden manual de las perspectivas de un lugar |
+| V024 | `V024__create_irrigation_turns.sql` | M7 riego | Turnos de riego y sus secciones |
+| V025 | `V025__create_interventions.sql` | SPEC-200 §4 | Núcleo multiubicación: seis tablas, código interno y catálogos ausentes; probado en bases temporales, no aplicado a la base de trabajo |
 
 ### Pendientes (sin número reservado)
 
-Al 22 oct 2026 el siguiente número libre es **V023**, sujeto a comprobarlo nuevamente al
+Al 22 oct 2026 el siguiente número libre es **V027**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

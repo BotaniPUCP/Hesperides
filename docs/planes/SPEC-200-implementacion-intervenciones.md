@@ -151,7 +151,7 @@ no se atribuye ese ensayo a las pruebas anteriores al cambio.
 - Usar MigrationNumberingTest/MigrationSmokeTest existentes y ampliar pruebas de actualización
   para comprobar conservación de usuarios, frecuencias, lugares, inventario y metadatos de fotos.
 
-Salida completada: [V022](../../backend/src/main/resources/db/migration/V022__create_interventions.sql)
+Salida completada: [V022](../../backend/src/main/resources/db/migration/V025__create_interventions.sql)
 probada desde vacío y actualizando V021 con datos representativos; 51 comprobaciones de
 migración aprobadas y suite completa de backend con 605 pruebas aprobadas. Detalle en el
 [informe de etapa 2](SPEC-200-etapa-2-migracion.md). Los archivos V001–V021 conservan su SHA-256.

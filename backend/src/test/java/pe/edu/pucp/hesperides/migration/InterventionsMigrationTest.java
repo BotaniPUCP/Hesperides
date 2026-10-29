@@ -33,6 +33,9 @@ import static org.assertj.core.api.Assertions.tuple;
 @Testcontainers
 class InterventionsMigrationTest {
 
+    private static final String PREVIOUS_VERSION = "24";
+    private static final String INTERVENTIONS_VERSION = "25";
+
     @Container
     static final PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
 
@@ -56,11 +59,11 @@ class InterventionsMigrationTest {
         seedPeople(fresh);
 
         Flyway.configure().dataSource(upgrade.getDataSource())
-                .locations("classpath:db/migration").target("21").load().migrate();
+                .locations("classpath:db/migration").target(PREVIOUS_VERSION).load().migrate();
         seedPeople(upgrade);
         seedExistingData(upgrade);
         beforeRows = snapshot(upgrade);
-        beforeHistory = migrationHistory(upgrade, 21);
+        beforeHistory = migrationHistory(upgrade, 24);
         flyway(upgrade).migrate();
     }
 
@@ -71,14 +74,15 @@ class InterventionsMigrationTest {
                 url, postgres.getUsername(), postgres.getPassword()));
     }
 
+    /** Hasta V025: las migraciones posteriores (incidencias) no deben alterar lo que esta prueba mide. */
     private static Flyway flyway(JdbcTemplate jdbc) {
         return Flyway.configure().dataSource(jdbc.getDataSource())
-                .locations("classpath:db/migration").cleanDisabled(true).load();
+                .locations("classpath:db/migration").target(INTERVENTIONS_VERSION).cleanDisabled(true).load();
     }
 
     @Test
-    void migratesAnEmptyDatabaseTo22WithoutImplementingIncidentsOrContracts() {
-        assertThat(flyway(fresh).info().current().getVersion()).isEqualTo(MigrationVersion.fromVersion("22"));
+    void migratesAnEmptyDatabaseTo25WithoutImplementingIncidentsOrContracts() {
+        assertThat(flyway(fresh).info().current().getVersion()).isEqualTo(MigrationVersion.fromVersion(INTERVENTIONS_VERSION));
         assertThat(fresh.queryForList("""
                 SELECT tablename FROM pg_tables WHERE schemaname = 'public'
                 AND tablename IN ('interventions', 'intervention_locations', 'intervention_elements',
@@ -96,7 +100,7 @@ class InterventionsMigrationTest {
     }
 
     @Test
-    void upgrading21PreservesEveryExistingRowAndTableDefinition() {
+    void upgrading24PreservesEveryExistingRowAndTableDefinition() {
         Map<String, TableSnapshot> after = snapshot(upgrade);
         assertThat(beforeRows.keySet()).contains("users", "teams", "maintenance_frequencies",
                 "green_elements", "zones", "places", "species_photos", "map_data_version");
@@ -114,7 +118,7 @@ class InterventionsMigrationTest {
             }
         });
         assertThat(after.size()).isEqualTo(beforeRows.size() + 6);
-        assertThat(migrationHistory(upgrade, 21)).containsExactlyElementsOf(beforeHistory);
+        assertThat(migrationHistory(upgrade, 24)).containsExactlyElementsOf(beforeHistory);
         assertThatCode(() -> flyway(upgrade).validate()).doesNotThrowAnyException();
     }
 
@@ -132,10 +136,10 @@ class InterventionsMigrationTest {
 
     @Test
     void repeatingMigrateDoesNotDuplicateCatalogsOrChangeAppliedChecksums() {
-        List<Map<String, Object>> history = migrationHistory(upgrade, 22);
+        List<Map<String, Object>> history = migrationHistory(upgrade, 25);
         Map<String, TableSnapshot> catalogs = snapshot(upgrade);
         assertThat(flyway(upgrade).migrate().migrationsExecuted).isZero();
-        assertThat(migrationHistory(upgrade, 22)).containsExactlyElementsOf(history);
+        assertThat(migrationHistory(upgrade, 25)).containsExactlyElementsOf(history);
         Map<String, TableSnapshot> after = snapshot(upgrade);
         assertThat(after.get("catalog_types")).isEqualTo(catalogs.get("catalog_types"));
         assertThat(after.get("catalog_items")).isEqualTo(catalogs.get("catalog_items"));
