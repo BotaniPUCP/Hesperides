@@ -634,9 +634,9 @@ CREATE INDEX idx_interventions_contract_id ON interventions(contract_id);
 
 ### 4.8 V019 — Incidencias
 
-> **Enmienda SPEC-200:** el siguiente DDL es el diseño preliminar, nunca aplicado.
+> **Enmienda SPEC-201:** el siguiente DDL es el diseño preliminar, nunca aplicado.
 > La implementación vigente se define en `features/SPEC-201-incidencias.md` y la
-> migración cronológica V022, después del baseline y de V002–V021 de develop. Usa un único registro pendiente/aprobado, ubicación
+> migración cronológica V026 (renumerada desde V022 al integrar). Usa un único registro pendiente/aprobado, ubicación
 > opcional sin dependencia del catastro y relación 1:N con intervenciones. No se
 > debe copiar la restricción GPS obligatoria ni `incidents.intervention_id` de abajo.
 
