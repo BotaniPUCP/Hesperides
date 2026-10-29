@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Breadcrumb, EmptyState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { puedeRegistrar } from '@/components/catastro/permisos';
@@ -7,6 +8,7 @@ import { RegistroEspecieForm } from '@/components/inventario-verde/RegistroEspec
 
 export default function RegistrarEspeciePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const canRegister = puedeRegistrar(user?.role.code);
 
   return (
@@ -34,9 +36,7 @@ export default function RegistrarEspeciePage() {
             description="El registro de nuevas especies botánicas en el catálogo requiere permisos de Administración, Coordinación o Supervisión."
             action={{
               label: 'Volver al catálogo',
-              onClick: () => {
-                window.location.href = '/inventario-verde';
-              },
+              onClick: () => router.push('/inventario-verde'),
             }}
           />
         ) : (

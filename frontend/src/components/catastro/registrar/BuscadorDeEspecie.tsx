@@ -21,44 +21,36 @@ export interface BuscadorDeEspecieProps {
  */
 export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieProps) {
   const [texto, setTexto] = useState(valor);
-  const [opciones, setOpciones] = useState<Species[]>([]);
-  const [buscando, setBuscando] = useState(false);
+  // La respuesta guarda el texto que la produjo: así «buscando» y las opciones se
+  // derivan en el render y el efecto solo escribe estado al resolver la promesa.
+  const [respuesta, setRespuesta] = useState<{ texto: string; opciones: Species[] } | null>(null);
 
   const buscado = useDebouncedValue(texto, ESPERA_MS);
   const elegida = valor !== '' && texto === valor;
+  const consultable = buscado.trim().length >= 2 && buscado !== valor;
+  const respondida = respuesta?.texto === buscado;
+  const opciones = consultable && respondida ? (respuesta?.opciones ?? []) : [];
+  const buscando = consultable && !respondida;
 
   useEffect(() => {
+    if (!consultable) return;
     let vigente = true;
-    if (buscado.trim().length < 2 || buscado === valor) {
-      setOpciones([]);
-      setBuscando(false);
-      return;
-    }
-
-    setBuscando(true);
     inventarioVerdeApi
       .species({ search: buscado, page: 0, size: SUGERENCIAS })
       .then((p) => {
-        if (vigente) {
-          setOpciones(p.content);
-          setBuscando(false);
-        }
+        if (vigente) setRespuesta({ texto: buscado, opciones: p.content });
       })
       .catch(() => {
-        if (vigente) {
-          setOpciones([]);
-          setBuscando(false);
-        }
+        if (vigente) setRespuesta({ texto: buscado, opciones: [] });
       });
 
     return () => {
       vigente = false;
     };
-  }, [buscado, valor]);
+  }, [buscado, consultable]);
 
   function elegir(s: Species) {
     setTexto(s.scientificName);
-    setOpciones([]);
     onElegir(s.scientificName);
   }
 

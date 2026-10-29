@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Species, SpeciesForm } from '@shared/types';
 import { Button, Input, Modal, Select, type SelectOption } from '@/components/ui';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
@@ -28,7 +28,17 @@ const TIPOS_VEGETACION_DEFAULT: SelectOption[] = [
   { id: 9, code: 'POTTED_HERB', label: 'Macetones (herbáceas)' },
 ];
 
-export function RegistroEspecieModal({
+/**
+ * El formulario solo existe mientras el modal está abierto, con una key por nombre
+ * inicial: cada apertura nace con su estado, sin un efecto que lo resetee a golpe
+ * de setState (react-hooks/set-state-in-effect).
+ */
+export function RegistroEspecieModal(props: RegistroEspecieModalProps) {
+  if (!props.isOpen) return null;
+  return <RegistroEspecieDialog key={props.initialScientificName ?? ''} {...props} />;
+}
+
+function RegistroEspecieDialog({
   isOpen,
   onClose,
   initialScientificName = '',
@@ -61,14 +71,6 @@ export function RegistroEspecieModal({
     code: i.code,
     label: i.label,
   }));
-
-  useEffect(() => {
-    if (isOpen) {
-      setScientificName(initialScientificName);
-      setError(null);
-      setFieldErrors({});
-    }
-  }, [isOpen, initialScientificName]);
 
   function resetForm() {
     setScientificName('');

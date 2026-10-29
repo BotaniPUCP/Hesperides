@@ -36,15 +36,19 @@ export function IrrigationTurnsScreen() {
   const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 15); return dateLocal(d); });
   const [to, setTo] = useState(() => dateLocal(new Date()));
   const [loadingSectors, setLoadingSectors] = useState(true);
-  const [loadingSections, setLoadingSections] = useState(true);
-  const [loadingTurns, setLoadingTurns] = useState(true);
+  // Cada carga recuerda para qué entrada terminó; «cargando» se deriva de
+  // comparar con la entrada actual y los efectos no escriben estado al empezar.
+  const [sectionsLoadedFor, setSectionsLoadedFor] = useState<IrrigationZone[] | null>(null);
+  const [turnsLoadedFor, setTurnsLoadedFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [message, setMessage] = useState<{ kind: 'error' | 'success'; text: string } | null>(null);
+  const turnsQuery = `${historySector}|${from}|${to}|${refresh}`;
+  const loadingSections = isSupervisor && sectors.length > 0 && sectionsLoadedFor !== sectors;
+  const loadingTurns = turnsLoadedFor !== turnsQuery;
 
   useEffect(() => {
     let live = true;
-    setLoadingSectors(true);
     irrigationApi.sectors().then((data) => {
       if (!live) return;
       setSectors(data);
@@ -56,13 +60,8 @@ export function IrrigationTurnsScreen() {
   }, []);
 
   useEffect(() => {
+    if (!isSupervisor || sectors.length === 0) return;
     let live = true;
-    if (!isSupervisor || sectors.length === 0) {
-      setSectionsBySector({});
-      setLoadingSections(false);
-      return;
-    }
-    setLoadingSections(true);
     Promise.all(sectors.map((sector) => irrigationApi.sections(sector.id)))
       .then((groups) => {
         if (!live) return;
@@ -71,19 +70,20 @@ export function IrrigationTurnsScreen() {
         setSectionsBySector(bySector);
       })
       .catch(() => { if (live) setMessage({ kind: 'error', text: 'No se pudieron cargar las secciones. Actualiza la página antes de registrar.' }); })
-      .finally(() => { if (live) setLoadingSections(false); });
+      .finally(() => { if (live) setSectionsLoadedFor(sectors); });
     return () => { live = false; };
   }, [isSupervisor, sectors]);
 
   useEffect(() => {
     let live = true;
-    setLoadingTurns(true);
     irrigationApi.turns(from, to, historySector !== ALL ? Number(historySector) : undefined)
       .then((data) => { if (live) setTurns(data); })
       .catch(() => { if (live) setMessage({ kind: 'error', text: 'No se pudieron consultar los turnos.' }); })
-      .finally(() => { if (live) setLoadingTurns(false); });
+      .finally(() => { if (live) setTurnsLoadedFor(turnsQuery); });
     return () => { live = false; };
-  }, [historySector, from, to, refresh]);
+    // turnsQuery resume historySector, from, to y refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turnsQuery]);
 
   const sectionsInScope = useMemo(() => sectors
     .filter((sector) => scope === ALL || String(sector.id) === scope)

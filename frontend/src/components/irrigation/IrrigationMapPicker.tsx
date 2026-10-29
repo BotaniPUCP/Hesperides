@@ -23,7 +23,8 @@ interface Props {
   onConfirm: (ids: number[]) => void;
 }
 
-interface DragBox { startX: number; startY: number; endX: number; endY: number; }
+/** Coordenadas de cliente más el origen del mapa, leído al empezar: el render no toca refs. */
+interface DragBox { startX: number; startY: number; endX: number; endY: number; originX: number; originY: number; }
 
 /** Seleccion multiple por IDs autorizados, con mapa + lista siempre sincronizados. */
 export function IrrigationMapPicker({ sectors, sectionsBySector, scope, selectedIds, onCancel, onConfirm }: Props) {
@@ -104,12 +105,13 @@ export function IrrigationMapPicker({ sectors, sectionsBySector, scope, selected
   function beginDrag(e: ReactPointerEvent<HTMLDivElement>) {
     e.preventDefault();
     dragStart.current = { x: e.clientX, y: e.clientY };
-    setDrag({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
+    const origin = mapRegion.current?.getBoundingClientRect();
+    setDrag({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY, originX: origin?.left ?? 0, originY: origin?.top ?? 0 });
     e.currentTarget.setPointerCapture(e.pointerId);
   }
   function moveDrag(e: ReactPointerEvent<HTMLDivElement>) {
     if (!dragStart.current) return;
-    setDrag({ startX: dragStart.current.x, startY: dragStart.current.y, endX: e.clientX, endY: e.clientY });
+    setDrag((prev) => prev && { ...prev, endX: e.clientX, endY: e.clientY });
   }
   function endDrag(e: ReactPointerEvent<HTMLDivElement>) {
     if (!dragStart.current) return;
@@ -158,8 +160,8 @@ export function IrrigationMapPicker({ sectors, sectionsBySector, scope, selected
             aria-label="Dibuja un rectángulo sobre el mapa para seleccionar secciones"
             onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={() => { dragStart.current = null; setDrag(null); }}>
               {drag && <div className="pointer-events-none absolute border-2 border-brand-700 bg-brand-200/30"
-                style={{ left: Math.min(drag.startX, drag.endX) - ((mapRegion.current?.getBoundingClientRect().left ?? 0)),
-                  top: Math.min(drag.startY, drag.endY) - ((mapRegion.current?.getBoundingClientRect().top ?? 0)),
+                style={{ left: Math.min(drag.startX, drag.endX) - drag.originX,
+                  top: Math.min(drag.startY, drag.endY) - drag.originY,
                   width: Math.abs(drag.endX - drag.startX), height: Math.abs(drag.endY - drag.startY) }}/>}
             </div>}
           {stale && <div className="absolute bottom-10 left-3 z-30 max-w-xs rounded-md bg-alert-warning-bg p-2 text-xs text-alert-warning-fg">Mapa almacenado sin conexión; verifica la selección.</div>}
