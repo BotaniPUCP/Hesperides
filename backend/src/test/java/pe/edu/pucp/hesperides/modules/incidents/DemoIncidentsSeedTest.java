@@ -112,7 +112,7 @@ class DemoIncidentsSeedTest {
             case "users" -> "SELECT count(*) FROM users";
             case "teams" -> "SELECT count(*) FROM teams";
             case "incidents" -> "SELECT count(*) FROM incidents";
-            case "interventions" -> "SELECT count(*) FROM interventions";
+            case "interventions" -> "SELECT count(*) FROM incident_interventions";
             case "incident_status_history" -> "SELECT count(*) FROM incident_status_history";
             default -> throw new IllegalArgumentException("Unknown fixture table");
         };

@@ -14,7 +14,7 @@ El dominio funcional y las características específicas se definen en los specs
 ## Incidencias — prueba de concepto web
 
 Disponible en `/incidencias` para `SUPERVISOR` (capataz) y `COORDINADOR`.
-Spec: [`SPEC-200`](specs/features/SPEC-200-incidencias.md).
+Spec: [`SPEC-201`](specs/features/SPEC-201-incidencias.md).
 
 Captura en `/incidencias/nueva` y detalle enlazable en `/incidencias/{id}`.
 Los filtros y la página del listado viajan en la URL y se conservan al volver.

@@ -5,7 +5,7 @@
 Usar un entorno local de desarrollo con datos desechables: PostgreSQL/PostGIS y
 backend en contenedores, frontend con Bun local. La imagen del backend incluye
 JDK 25; no hace falta ejecutar Java ni exportar sus variables manualmente. El módulo
-aplica V022 después de las migraciones de develop. El servicio Flask no interviene.
+aplica V026 después de las migraciones de develop. El servicio Flask no interviene.
 No conectar esta demostración a una base real.
 No usar `.env` ni credenciales reales en una prueba automatizada compartida.
 

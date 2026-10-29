@@ -29,7 +29,7 @@
 
 ## Enmiendas a specs cerrados
 
-SPEC-200 ajusta SPEC-001 Anexo A (aprobación exclusiva de coordinación y resolución
+SPEC-201 ajusta SPEC-001 Anexo A (aprobación exclusiva de coordinación y resolución
 por capataz), SPEC-002 §4.8 (captura mínima, ubicación opcional, 1:N intervenciones)
 y SPEC-C01 (estados). La matriz del cliente sigue pendiente; categorías provisionales.
 
@@ -87,7 +87,7 @@ sorpresa que un principio fundacional cambió.
 | Todos los specs | Refactor a formato atómico | Las invariantes comunes salen a **`REGLAS.md`** (lectura obligatoria antes de generar código): las diez invariantes, las convenciones de SPEC-000 §5 —con §5.2.1 de Spring Boot 4 y §5.2.2 de CORS íntegras— y el checklist común. SPEC-000 pierde la copia de `_plantilla.md` y los resúmenes de los otros specs, que ya contradecían a SPEC-001. En cada spec, las secciones genéricas de Seguridad, Extensibilidad y Checklist se funden en una sola "Propio de este spec". **La numeración se conserva**: toda referencia `SPEC-XXX §N` sigue siendo válida, y `SPEC-000 §5.x` pasa a `REGLAS.md §5.x` con el mismo número. Ninguna decisión técnica, contrato ni criterio de aceptación cambió. |
 | SPEC-002 §4.9 | SPEC-101 | Antes del realineamiento al baseline, `V010` correspondía a `V010__create_maintenance_frequencies.sql` y `V009` contenía la taxonomía. Referencia histórica: las frecuencias vigentes están en `V002` y la taxonomía en el baseline `V001`, según el mapa de migraciones de abajo. |
 | SPEC-000 · REGLAS | Ajuste de toolchain e infraestructura | Se mantiene Java **26** (la propuesta de bajar a 25 LTS se descartó al integrar). Docker y Podman son alternativas sobre `compose.yml` y `compose.dev.yml`; CI conserva Docker Compose y `AGENTS.md` usa Podman para el desarrollo local de este usuario. |
-| SPEC-200 · SPEC-C01 | Realineamiento tras integrar develop (24 oct 2026; ejecución y almacenamiento simplificados el 29 oct) | Rutas de captura/detalle con filtros en URL, consultas independientes sobre `useRequest` y controles compartidos con tamaño grande optativo. Se conservan los tokens claro/oscuro actuales. Fotos privadas únicamente mediante `FileStorage` y claves `incidents/{uuid}`, sin conversión ni cambio de límites. Base/dev conservan volúmenes y hot reload; la demostración usa BD/backend en contenedores y Bun local, con `down --volumes` para descartar los datos de prueba de todo el proyecto. No cambia el esquema ni ninguna migración publicada. |
+| SPEC-201 · SPEC-C01 | Realineamiento tras integrar develop (24 oct 2026; ejecución y almacenamiento simplificados el 29 oct) | Rutas de captura/detalle con filtros en URL, consultas independientes sobre `useRequest` y controles compartidos con tamaño grande optativo. Se conservan los tokens claro/oscuro actuales. Fotos privadas únicamente mediante `FileStorage` y claves `incidents/{uuid}`, sin conversión ni cambio de límites. Base/dev conservan volúmenes y hot reload; la demostración usa BD/backend en contenedores y Bun local, con `down --volumes` para descartar los datos de prueba de todo el proyecto. No cambia el esquema ni ninguna migración publicada. |
 
 ---
 

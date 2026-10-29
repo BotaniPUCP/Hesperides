@@ -32,7 +32,7 @@ import java.util.*;
 @Service @RequiredArgsConstructor @Transactional(readOnly = true)
 public class IncidentsServiceImpl implements IncidentsService {
     private final IncidentsRepository incidents;
-    private final InterventionsRepository interventions;
+    private final IncidentInterventionsRepository interventions;
     private final IncidentHistoryRepository history;
     private final IncidentPhotosRepository photos;
     private final UsersRepository users;
@@ -153,7 +153,7 @@ public class IncidentsServiceImpl implements IncidentsService {
         Incident incident = visible(id, actor, true); requireAttendance(incident, actor);
         if (state(incident, "RESOLVED")) return detail(incident, actor);
         requireOpen(incident);
-        List<Intervention> work = interventions.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(id);
+        List<IncidentIntervention> work = interventions.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(id);
         if (work.isEmpty() || work.stream().anyMatch(w -> !w.getStatus().getCode().equals("COMPLETED")))
             throw new BusinessRuleException("Complete the interventions before resolving");
         incident.setResolvedAt(Instant.now());
@@ -173,7 +173,7 @@ public class IncidentsServiceImpl implements IncidentsService {
             return detail(incident, actor);
         }
         requireOpen(incident);
-        Intervention work = new Intervention();
+        IncidentIntervention work = new IncidentIntervention();
         work.setIncident(incident); work.setDescription(request.description().trim());
         work.setType(item("INTERVENTION_TYPE", request.typeCode())); work.setRecordedBy(actor);
         work.setClientReference(request.clientReference()); work.setRequestHash(hash);
@@ -190,7 +190,7 @@ public class IncidentsServiceImpl implements IncidentsService {
     public DetailResponse completeIntervention(Long id, Long workId, String email) {
         User actor = actor(email);
         Incident incident = visible(id, actor, true); requireAttendance(incident, actor);
-        Intervention work = interventions.findByIdAndIncidentIdAndDeletedAtIsNull(workId, id)
+        IncidentIntervention work = interventions.findByIdAndIncidentIdAndDeletedAtIsNull(workId, id)
                 .orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
         if (work.getCompletedAt() != null) return detail(incident, actor);
         requireOpen(incident);

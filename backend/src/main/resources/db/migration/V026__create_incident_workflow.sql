@@ -1,10 +1,11 @@
--- SPEC-200: minimal incident capture, approval and linked interventions.
--- Integrated after develop's V001 baseline and V002-V021; old demo data is disposable.
+-- SPEC-201: minimal incident capture, approval and linked interventions.
+-- Renumbered from V022 at integration. The linked work lives in incident_interventions
+-- because `interventions` belongs to SPEC-200 (V025), whose INTERVENTION_STATUS
+-- catalog (ASSIGNED, COMPLETED) is reused here instead of being created twice.
 INSERT INTO catalog_types (code, name, description, is_system) VALUES
 ('INCIDENT_STATUS', 'Estados de incidencia', 'Flujo de aprobación y atención', TRUE),
 ('INCIDENT_TYPE', 'Tipos de incidencia', 'Provisionales: validar con la matriz del cliente', FALSE),
-('URGENCY_LEVEL', 'Urgencia', 'Evaluación del coordinador', TRUE),
-('INTERVENTION_STATUS', 'Estados de intervención', 'Trabajo planificado o realizado', TRUE);
+('URGENCY_LEVEL', 'Urgencia', 'Evaluación del coordinador', TRUE);
 
 INSERT INTO catalog_items (catalog_type_id, code, label, sort_order)
 SELECT ct.id, v.code, v.label, v.position FROM (VALUES
@@ -17,9 +18,7 @@ SELECT ct.id, v.code, v.label, v.position FROM (VALUES
 ('INCIDENT_TYPE','LEAF_LITTER','Acumulación de hojarasca',3),
 ('URGENCY_LEVEL','LOW','Baja',1),
 ('URGENCY_LEVEL','MEDIUM','Media',2),
-('URGENCY_LEVEL','HIGH','Alta',3),
-('INTERVENTION_STATUS','ASSIGNED','Pendiente',1),
-('INTERVENTION_STATUS','COMPLETED','Realizada',2)
+('URGENCY_LEVEL','HIGH','Alta',3)
 ) AS v(type,code,label,position) JOIN catalog_types ct ON ct.code=v.type;
 
 CREATE TABLE incidents (
@@ -54,7 +53,7 @@ CREATE UNIQUE INDEX idx_incidents_reference ON incidents(reported_by_user_id,cli
 CREATE INDEX idx_incidents_team ON incidents(team_id) WHERE deleted_at IS NULL;
 CREATE INDEX idx_incidents_status ON incidents(status_item_id,created_at) WHERE deleted_at IS NULL;
 
-CREATE TABLE interventions (
+CREATE TABLE incident_interventions (
  id BIGSERIAL PRIMARY KEY,
  incident_id BIGINT NOT NULL REFERENCES incidents(id),
  description TEXT NOT NULL,
@@ -70,7 +69,7 @@ CREATE TABLE interventions (
  deleted_at TIMESTAMP WITH TIME ZONE,
  CONSTRAINT chk_intervention_description CHECK (length(trim(description)) > 0)
 );
-CREATE UNIQUE INDEX idx_interventions_reference ON interventions(incident_id,client_reference) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX idx_incident_interventions_reference ON incident_interventions(incident_id,client_reference) WHERE deleted_at IS NULL;
 
 CREATE TABLE incident_status_history (
  id BIGSERIAL PRIMARY KEY,

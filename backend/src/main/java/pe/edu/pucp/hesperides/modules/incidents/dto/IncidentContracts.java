@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/** HTTP contracts for SPEC-200. Nullable fields represent information not yet known. */
+/** HTTP contracts for SPEC-201. Nullable fields represent information not yet known. */
 public final class IncidentContracts {
     private IncidentContracts() {}
 

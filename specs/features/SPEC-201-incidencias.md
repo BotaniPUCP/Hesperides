@@ -1,4 +1,4 @@
-# SPEC-200 — Incidencias: captura, aprobación y atención
+# SPEC-201 — Incidencias: captura, aprobación y atención
 
 ## Objetivo y alcance
 
@@ -39,8 +39,10 @@ concepto sin IA; React Native queda para después de validar este recorrido.
 ## Decisiones mínimas
 
 Backend Spring existente, PostgreSQL, web Next y cliente HTTP central. Nuevas
-tablas `incidents`, `interventions`, `incident_status_history`, `incident_photos`.
-La migración es `V022__create_incident_workflow.sql`, posterior al baseline y a
+tablas `incidents`, `incident_interventions`, `incident_status_history`, `incident_photos`.
+La tabla de trabajos vinculados se llama `incident_interventions` (no `interventions`, que es de
+SPEC-200) y reutiliza el catálogo `INTERVENTION_STATUS` de V025 en vez de crearlo.
+La migración es `V026__create_incident_workflow.sql`, posterior al baseline y a
 V002–V021 de develop; no se modifican esas migraciones publicadas. La versión V010
 de la rama anterior solo se usó con datos de demostración desechables.
 Estados/categorías/urgencia son catálogos. Latitud/longitud opcionales como números
@@ -50,7 +52,7 @@ compartido bajo claves `incidents/{uuid}`: directorio `STORAGE_LOCAL_DIR` o buck
 privado S3. Se conservan los bytes originales, sin conversión JPEG. Las claves UUID
 de los archivos siempre llevan el prefijo `incidents/` y se leen únicamente desde
 ese almacenamiento. En Compose local residen en `/data/storage/incidents/`.
-No se requiere otra migración ni se modifica V022.
+No se requiere otra migración ni se modifica V026.
 Lectura autenticada y autorizada por incidencia, con `Cache-Control: no-store`;
 no se reutiliza el helper de entrega pública de fotos del catastro.
 La API devuelve el contenido de cada foto en base64 dentro del sobre habitual.
@@ -86,7 +88,7 @@ migración repetible `R__seed_demo_incidents.sql` es la única fuente de los fix
 se ejecuta después de las migraciones versionadas, en bases nuevas y cuando cambia
 su checksum. No duplica ni restablece registros existentes. La configuración común
 sin dev no carga esas cuentas ni casos. El seed no requiere tablas nuevas ni otra
-migración versionada adicional a V022; se conserva la numeración del esquema.
+migración versionada adicional a V026; se conserva la numeración del esquema.
 
 Verificación: el arranque con dev deja ocho incidencias y doce intervenciones;
 un segundo `migrate()` sin cambios no ejecuta migraciones. Sin dev no aparecen

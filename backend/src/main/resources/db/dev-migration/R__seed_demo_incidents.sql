@@ -1,4 +1,4 @@
--- SPEC-200: development-only repeatable migration, applied after schema migrations.
+-- SPEC-201: development-only repeatable migration, applied after schema migrations.
 -- Public test password: Hesperides2026. Never run against real user data.
 INSERT INTO users (email, password_hash, first_name, last_name, role_item_id, is_active, must_change_password)
 SELECT fixture.email, '$2a$10$4r8g9MXWvnVXpz.Z5AIjRO/OsgquCUkP3xribRDZTpWkIJB06V22y',
@@ -103,7 +103,7 @@ WITH fixtures (
     ON CONFLICT (reported_by_user_id, client_reference) WHERE deleted_at IS NULL DO NOTHING
     RETURNING *
 ), inserted_work AS (
-    INSERT INTO interventions (
+    INSERT INTO incident_interventions (
         incident_id, description, type_item_id, status_item_id, recorded_by_user_id,
         completed_by_user_id, completed_at, client_reference, request_hash, created_at, updated_at
     )

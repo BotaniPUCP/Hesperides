@@ -10,9 +10,9 @@ import pe.edu.pucp.hesperides.shared.entity.BaseEntity;
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity @Table(name = "interventions")
+@Entity @Table(name = "incident_interventions")
 @Getter @Setter @NoArgsConstructor
-public class Intervention extends BaseEntity {
+public class IncidentIntervention extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false) private Incident incident;
     @Column(nullable = false) private String description;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "type_item_id") private CatalogItem type;
