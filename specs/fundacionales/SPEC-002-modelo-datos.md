@@ -1,5 +1,13 @@
 # SPEC-002 — Modelo de datos
 
+> **Enmienda SPEC-200, 22 oct 2026:** el usuario confirma aprobación final exclusiva del
+> COORDINADOR para contar el trabajo, fotos obligatorias, capataz responsable por sector,
+> una actividad con varias ubicaciones y primera entrega web a Roobert. El flujo y sus
+> detalles provisionales vigentes se precisan en [SPEC-200 §2.8](../features/SPEC-200-intervenciones.md).
+> No habilita proveedor real de frecuencias sin acordar cobertura, ni relevo/multisector.
+> Se reutiliza V022; no se reescriben los DDL históricos ni se migra la base de trabajo.
+
+
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec fundacional, no deriva de una HU) |
@@ -84,6 +92,11 @@ Este spec no expone endpoints propios. Fija los invariantes que toda API constru
 
 ### 4.0 Numeración y propiedad de migraciones
 
+> **Actualización de SPEC-200 (22 oct 2026).** El repositorio ya tiene
+> archivos V001–V022; V022 se probó solo en bases temporales. Las reservas y los nombres numerados pendientes de esta sección son
+> históricos y no se pueden ejecutar con esos números. Rige REGLAS §0.2: siguiente número
+> libre al implementar, sin reservas. Véase el [inventario actualizado](../REGISTRO.md#mapa-de-migraciones).
+
 > **Renumerado (1 oct 2026).** La numeración original (`V003`–`V010`) nunca llegó al repo. Lo ya
 > implementado vive en el baseline `V001` (commit `638aca0`) y en `V002`–`V003`; lo pendiente se
 > reserva desde `V004`. La fuente única de la numeración es el **mapa de migraciones** de
@@ -101,10 +114,10 @@ Este spec no expone endpoints propios. Fija los invariantes que toda API constru
 | V005 | `V005__create_zones.sql` | SPEC-002 | ✅ Aplicada con SPEC-102, que añade contorno, reserva, tipo de paisaje y riego |
 | V012 | `V012__create_species.sql` | SPEC-002 | ✅ Aplicada con el inventario verde (docs/inventario-verde/README.md) |
 | V013 | `V013__create_green_elements.sql` | SPEC-002 | ✅ Aplicada con el inventario verde, sin `zone_id` y con medidas (README §2) |
-| V017 | `V017__create_interventions.sql` | SPEC-002 | Definida abajo |
-| V018 | `V018__create_contracts.sql` | SPEC-002 | Definida abajo |
-| V019 | `V019__create_incidents.sql` | SPEC-002 | Definida abajo |
-| V020 | `V020__seed_catalogs.sql` | SPEC-002 | Definida abajo. **Sin** `ROLE`, `INTERVENTION_TYPE` ni `system_parameters`: ya están en V001 y V003 |
+| V022 | `V022__create_interventions.sql` | SPEC-200, concilia SPEC-002/005 | Implementada y probada en bases temporales; ejecución independiente por ubicación. API y base de trabajo pendientes |
+| Por asignar | Creación de contratos | SPEC-002 | Diseño histórico abajo; asignar número al implementar |
+| Por asignar | Creación de incidencias | SPEC-002 | Diseño histórico abajo; asignar número al implementar |
+| Por asignar | Catálogos restantes | SPEC-002 / SPEC-005 | Sembrar solo los ausentes; números antiguos no reservados |
 
 > **Orden de aplicación:** V004 debe correr antes que V005 y V013, porque `zones` y `green_elements` usan tipos `GEOMETRY` que solo existen tras `CREATE EXTENSION postgis`. Flyway lo garantiza por número de versión.
 
@@ -368,10 +381,17 @@ CREATE INDEX idx_green_element_attachments_element
 
 **Por qué `location` y `area` son dos columnas y no una `GEOMETRY(Geometry, 4326)` genérica:** con dos columnas tipadas, PostGIS valida el tipo geométrico al insertar y el índice GIST de cada una es específico. Una columna genérica aceptaría una `LineString` por error y obligaría a filtrar por `ST_GeometryType` en cada consulta. El `CHECK` garantiza que al menos una está poblada; ambas pobladas es válido y útil (un árbol singular con su copa proyectada).
 
-### 4.6 V017 — Intervenciones de personal estable
+### 4.6 Intervenciones de personal estable — diseño original
+
+> **Desarrollo de este diseño: [SPEC-200](../features/SPEC-200-intervenciones.md), borrador.**
+> El SQL de abajo conserva el modelo original y sus motivos; no es una migración para copiar
+> ni ejecutar junto a los ALTER de SPEC-005. SPEC-200 §4 propone el núcleo conciliado con
+> autoría, cuadrilla histórica, planificación sin asignación y evidencia anunciada sin archivo.
+> Insumos y ficha técnica siguen previstos como entregas posteriores. `V017` ya pertenece a
+> fotos de especies; el próximo número se elige al implementar según REGLAS §0.2.
 
 ```sql
--- V017__create_interventions.sql
+-- Historical design only; current proposal: SPEC-200 section 4.
 
 CREATE TABLE supplies (
     id                 BIGSERIAL PRIMARY KEY,

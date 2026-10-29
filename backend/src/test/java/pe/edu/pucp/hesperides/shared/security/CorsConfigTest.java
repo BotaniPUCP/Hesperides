@@ -106,14 +106,17 @@ class CorsConfigTest {
     }
 
     @Test
-    void responsesExposeTheEtagToTheBrowser() throws Exception {
+    void responsesExposeEtagAndCreatedResourceLocationToTheBrowser() throws Exception {
         // Sin exponerla, fetch() devuelve null al leer ETag desde otro origen
         // y la copia local se guarda sin etiqueta: cada apertura lo descarga todo.
         mockMvc.perform(post("/api/v1/auth/login")
                         .header(HttpHeaders.ORIGIN, WEB_ORIGIN)
                         .contentType("application/json")
                         .content("{\"email\":\"admin@pucp.edu.pe\",\"password\":\"Hesperides2026\"}"))
-                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "ETag"));
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+                        containsStringIgnoringCase("ETag")))
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+                        containsStringIgnoringCase("Location")));
     }
 
     @Test

@@ -29,6 +29,7 @@ describe('visibleNavigation', () => {
     expect(hrefsDe('ADMIN')).toEqual([
       '/inventario-verde',
       '/inventario-verde/registrar',
+      '/intervenciones',
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/importar',
@@ -47,6 +48,7 @@ describe('visibleNavigation', () => {
     expect(hrefsDe('COORDINADOR')).toEqual([
       '/inventario-verde',
       '/inventario-verde/registrar',
+      '/intervenciones',
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/importar',
@@ -62,6 +64,7 @@ describe('visibleNavigation', () => {
     expect(hrefsDe('SUPERVISOR')).toEqual([
       '/inventario-verde',
       '/inventario-verde/registrar',
+      '/intervenciones',
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/estandares',
@@ -70,9 +73,10 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('a un OPERARIO le muestra especies, ejemplares y frecuencias, que puede consultar', () => {
+  it('a un OPERARIO le muestra especies, intervenciones, ejemplares y frecuencias, que puede consultar', () => {
     expect(hrefsDe('OPERARIO')).toEqual([
       '/inventario-verde',
+      '/intervenciones',
       '/catastro/ejemplares',
       '/admin/frecuencias',
     ]);
@@ -84,6 +88,7 @@ describe('visibleNavigation', () => {
     }
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Catálogo botánico',
+      'Intervenciones',
       'Catastro verde',
       'Administración',
     ]);

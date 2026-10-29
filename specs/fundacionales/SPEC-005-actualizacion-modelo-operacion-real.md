@@ -1,5 +1,13 @@
 # SPEC-005 — Actualización del modelo a la operación real del cliente
 
+> **Enmienda SPEC-200, 22 oct 2026:** el usuario confirma aprobación final exclusiva del
+> COORDINADOR para contar el trabajo, fotos obligatorias, capataz responsable por sector,
+> una actividad con varias ubicaciones y primera entrega web a Roobert. El flujo y sus
+> detalles provisionales vigentes se precisan en [SPEC-200 §2.8](../features/SPEC-200-intervenciones.md).
+> No habilita proveedor real de frecuencias sin acordar cobertura, ni relevo/multisector.
+> Se reutiliza V022; no se reescriben los DDL históricos ni se migra la base de trabajo.
+
+
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | — (spec fundacional correctivo, no deriva de una HU) |
@@ -184,7 +192,7 @@ catastro y de los reportes:
 
 Sin rutas ni componentes nuevos. El único impacto es que el selector de tipo de intervención
 pasa de ser **un** desplegable plano a **dos** dependientes (clase → tipo), lo que afecta al
-formulario de intervenciones cuando se escriba su SPEC-2XX. Se anota aquí para que quien lo
+formulario de intervenciones propuesto en [SPEC-200](../features/SPEC-200-intervenciones.md) (borrador). Se anota aquí para que quien lo
 escriba no diseñe un selector simple.
 
 ### 2.3 Móvil
@@ -428,7 +436,12 @@ jardineras o macizos»). Se cargan en `catalog_items.metadata` como `{"descripti
 texto de ayuda para el operario en el formulario, no un campo consultable, y `metadata` (JSONB)
 ya existe en la tabla desde `V001` para exactamente esto.
 
-### 4.3 V022 — Cantidades, origen e incidencia externa
+### 4.3 Cantidades, origen e incidencia externa — diseño original
+
+> **SPEC-200 (borrador, 22 oct 2026):** los campos de intervención de esta sección se
+> incluyen en su esquema de creación propuesto. No ejecutar este ALTER ni reservar V022.
+> La ficha técnica y los cambios de `incidents` pertenecen a entregas posteriores. Los nombres
+> numerados del SQL siguiente son históricos; rige el [mapa actualizado](../REGISTRO.md#mapa-de-migraciones).
 
 La hoja `Podas arbpalm` revela tres conceptos que el modelo no tiene y que son los que el cliente
 usa para medir cumplimiento.
@@ -958,7 +971,11 @@ usa en su operación.
 **`SPECIES_ORIGIN` sigue vacío.** El Excel no dice si una especie es nativa o introducida, y
 deducirlo del nombre científico sería inventar un dato botánico que terminaría en un reporte.
 
-### 4.6 V024 — Evidencia sin momento declarado
+### 4.6 Evidencia sin momento declarado
+
+> **SPEC-200 (borrador):** sembrar `UNSPECIFIED` con los catálogos de evidencia si falta.
+> Su uso continúa limitado a importación histórica; no es válido en captura nueva. No hay
+> número reservado para este SQL histórico.
 
 ```sql
 -- V024__add_unspecified_evidence_moment.sql
@@ -1000,7 +1017,12 @@ antiguo o con la placa perdida.
 
 ---
 
-### 4.8 V025 — Subida diferida de evidencia y publicación en el mapa
+### 4.8 Subida diferida de evidencia y publicación en el mapa
+
+> **SPEC-200 (borrador):** integra estos campos en la creación del núcleo y propone que
+> `storage_key` sea nulo mientras el archivo no llegue. Las columnas no implican que Android
+> ni el publicador externo estén implementados. El ALTER siguiente es histórico, no una
+> migración adicional con número reservado.
 
 Dos capacidades que la 2.ª entrevista convirtió en requisito y que el esquema no contemplaba.
 
@@ -1070,6 +1092,10 @@ una implementación, no rehacer el módulo de intervenciones.
 ## 5. Comportamiento
 
 ### 5.1 Flujo principal — registrar una intervención con la taxonomía nueva
+
+> **Precisión de permisos (SPEC-200, borrador):** esta secuencia explica la selección de
+> clase/tipo, no concede permiso de creación al operario. Conforme a SPEC-001 Anexo A e
+> INV-5, ADMIN/COORDINADOR crean la planificación; el operario ejecuta su asignación.
 
 1. El operario abre el formulario → el sistema carga las **9 clases** activas de
    `INTERVENTION_CLASS`.
@@ -1177,7 +1203,7 @@ De `Podas arbpalm`, con el par nombre común / científico que pide la tabla `sp
 ## 7. Especificación visual
 
 No aplica como pantalla nueva. La única exigencia visual es la del **selector encadenado**
-(clase → tipo) descrito en CA-07, que el SPEC-2XX de intervenciones debe implementar con los
+(clase → tipo) descrito en CA-07, que [SPEC-200](../features/SPEC-200-intervenciones.md) propone implementar con los
 estados habituales (default, loading mientras carga la clase, disabled hasta que haya clase
 elegida, vacío cuando la clase no tiene tipos).
 

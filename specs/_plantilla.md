@@ -81,8 +81,9 @@
 > catálogo.
 > **Sin implementar:** el SQL literal va aquí.
 >
-> Rango: lo fija la spec que **posee** la tabla (fundacionales `V001`-`V099`, SPEC-1NN usa
-> `V1NN__`). Toda tabla lleva `created_at`, `updated_at`, `deleted_at` (INV-4) y su entidad
+> Numeración: siguiente número libre al implementar, sin rangos ni reservas por spec
+> (REGLAS §0.2). La propietaria se declara en la cabecera SQL. Toda tabla lleva
+> `created_at`, `updated_at`, `deleted_at` (INV-4) y su entidad
 > extiende `BaseEntity` (INV-3).
 >
 > **Si no necesita tablas nuevas, decirlo aquí y no inventar una migración.**
