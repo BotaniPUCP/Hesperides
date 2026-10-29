@@ -165,4 +165,33 @@ class GreenInventoryIntegrationTest {
     void anUnknownSpecimenIsA404() throws Exception {
         mockMvc.perform(get(BASE + "/specimens/EV-999999")).andExpect(status().isNotFound());
     }
+
+    @Test
+    void globalSpecimenSearchFindsByCodeReferenceOrSpecies() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens/search").param("q", "EV-000001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].code").value("EV-000001"))
+                .andExpect(jsonPath("$.data[0].speciesSlug").value("roystonea-regia"));
+
+        mockMvc.perform(get(BASE + "/specimens/search").param("q", "p01"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].sourceReference").value("p01"));
+    }
+
+    @Test
+    void allSpecimensReturnsGlobalInventoryAcrossAllSpecies() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page.totalElements").value(965))
+                .andExpect(jsonPath("$.data.content", hasSize(10)))
+                .andExpect(jsonPath("$.data.content[0].speciesSlug").isString());
+    }
+
+    @Test
+    void globalLocationsReturnsLocationsAcrossAllSpecies() throws Exception {
+        mockMvc.perform(get(BASE + "/locations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray());
+    }
 }

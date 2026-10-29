@@ -4,15 +4,31 @@ import { InventarioVerdeScreen } from '../InventarioVerdeScreen';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { page, palmeraReal, palmeraReina, summary } from '../__fixtures__/inventario';
 
-jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { summary: jest.fn(), species: jest.fn() } }));
+const mockUseAuth = jest.fn();
+jest.mock('@/hooks/useAuth', () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
+jest.mock('@/lib/inventario-verde-api', () => ({
+  inventarioVerdeApi: {
+    summary: jest.fn(),
+    species: jest.fn(),
+    searchSpecimens: jest.fn(),
+    specimen: jest.fn(),
+    registerSpecies: jest.fn(),
+  },
+}));
 
 const api = inventarioVerdeApi as jest.Mocked<typeof inventarioVerdeApi>;
 
 beforeEach(() => {
+  mockUseAuth.mockReturnValue({ user: null });
   api.summary.mockResolvedValue(summary);
   api.species.mockImplementation(async ({ search }) =>
     page(search ? [palmeraReina] : [palmeraReal, palmeraReina]),
   );
+  api.searchSpecimens.mockResolvedValue([]);
+  api.specimen.mockResolvedValue(null as any);
 });
 
 afterEach(() => jest.resetAllMocks());
@@ -36,23 +52,30 @@ describe('InventarioVerdeScreen', () => {
     expect(screen.getAllByText('Palmera reina').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('muestra dropdown predictivo para saltar directo a ejemplar cuando se ingresa un código EV', async () => {
-    (api as unknown as { specimen: jest.Mock }).specimen = jest.fn().mockResolvedValue({
-      code: 'EV-000179',
-      sourceLocation: 'Jardín Central',
-      species: {
-        slug: 'delonix-regia',
-        commonName: 'Ponciana',
-        scientificName: 'Delonix regia',
-      },
+  it('la búsqueda carga directamente en el inventario de especies sin popovers de ejemplares', async () => {
+    render(<InventarioVerdeScreen />);
+
+    await userEvent.type(screen.getByPlaceholderText(/Buscar por nombre común/i), 'reina');
+
+    await waitFor(() =>
+      expect(api.species).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: 'reina', page: 0 }),
+      ),
+    );
+    expect(screen.queryByText('Ir directo a la ficha')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Palmera reina').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('no muestra botones al vuelo de registro ni tabs superiores de módulos en la cabecera', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { role: { code: 'COORDINADOR' } },
     });
 
     render(<InventarioVerdeScreen />);
 
-    await userEvent.type(screen.getByPlaceholderText(/Buscar por nombre común/i), 'EV-000179');
-
-    expect(await screen.findByText('Ir directo a la ficha')).toBeInTheDocument();
-    expect(screen.getByText('Ponciana')).toBeInTheDocument();
-    expect(screen.getByText(/Jardín Central/)).toBeInTheDocument();
+    expect(await screen.findByText('Palmera real')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /\+ Registrar especie/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Catastro de Ejemplares/i })).not.toBeInTheDocument();
   });
 });
+

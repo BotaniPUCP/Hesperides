@@ -8,13 +8,14 @@ import { useRequest } from './useRequest';
 export interface UseInventarioVerdeSpeciesParams extends SpeciesFilters {
   page?: number;
   pageSize?: number;
+  reloadKey?: number;
 }
 
 export function useInventarioVerdeSpecies(params: UseInventarioVerdeSpeciesParams = {}) {
-  const { search = '', vegetationType, page = 0, pageSize = 16 } = params;
+  const { search = '', vegetationType, page = 0, pageSize = 16, reloadKey } = params;
   const request = { search, vegetationType, page, size: pageSize };
   const { data, loading, errorMessage } = useRequest(
-    JSON.stringify(request),
+    JSON.stringify({ ...request, reloadKey }),
     () => inventarioVerdeApi.species(request),
   );
   return {
@@ -46,12 +47,16 @@ export function useInventarioVerdeSpecimens(
   const { search = '', location = 'ALL', sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12 } =
     params;
   const request = { search, location, sortBy, sortDirection, page, size: pageSize };
+  const key = slug ? `${slug}:${JSON.stringify(request)}` : `all:${JSON.stringify(request)}`;
   const specimens = useRequest(
-    slug ? `${slug}:${JSON.stringify(request)}` : null,
-    () => inventarioVerdeApi.specimens(slug as string, request),
+    key,
+    () => (slug ? inventarioVerdeApi.specimens(slug, request) : inventarioVerdeApi.allSpecimens(request)),
     { keepPreviousData: true },
   );
-  const locations = useRequest(slug || null, () => inventarioVerdeApi.locations(slug as string));
+  const locationsKey = slug ? `locations:${slug}` : 'locations:all';
+  const locations = useRequest(locationsKey, () =>
+    slug ? inventarioVerdeApi.locations(slug) : inventarioVerdeApi.allLocations(),
+  );
   const total = specimens.data?.page.totalElements ?? 0;
 
   return {
@@ -74,8 +79,11 @@ export function useInventarioVerdeSpecimenByCode(code: string | null | undefined
 }
 
 /** Totales y tipos de vegetación. El filtro solo ofrece los tipos con ejemplares (README, D-1). */
-export function useInventarioVerdeStats() {
-  const { data, loading, errorMessage } = useRequest('summary', () => inventarioVerdeApi.summary());
+export function useInventarioVerdeStats(reloadKey?: number) {
+  const { data, loading, errorMessage } = useRequest(
+    reloadKey !== undefined ? `summary:${reloadKey}` : 'summary',
+    () => inventarioVerdeApi.summary(),
+  );
   return {
     totalSpecies: data?.totalSpecies ?? 0,
     totalSpecimens: data?.totalSpecimens ?? 0,

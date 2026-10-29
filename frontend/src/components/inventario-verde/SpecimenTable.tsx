@@ -7,50 +7,63 @@ import { EmptyState, ImagePlaceholder, type DataTableSort } from '@/components/u
 
 export interface SpecimenTableProps {
   specimens: Specimen[];
-  species: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'>;
+  species?: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'> & { imageUrl?: string | null };
+  speciesMap?: Record<string, Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'> & { imageUrl?: string | null }>;
   totalElements: number;
   page: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  sortBy: string;
-  sortDirection: 'asc' | 'desc';
-  onSortChange: (sort: DataTableSort) => void;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSortChange?: (sort: DataTableSort) => void;
   onViewOnMap?: (specimen: Specimen) => void;
   loading?: boolean;
 }
 
 function SpecimenThumbnail({
   specimen,
-  typeCode,
+  fallbackUrl,
 }: {
   specimen: Specimen;
-  typeCode: string;
+  fallbackUrl?: string | null;
 }) {
   const [error, setError] = useState(false);
-  const thumbSrc = specimen.thumbnailUrl ? specimen.thumbnailUrl.replace(/sz=w\d+/, 'sz=w160') : null;
+  const [speciesError, setSpeciesError] = useState(false);
+  const rawThumb = specimen.thumbnailUrl || specimen.imageUrl;
+  const thumbSrc = rawThumb ? rawThumb.replace(/sz=w\d+/, 'sz=w160') : null;
+  const displaySrc = thumbSrc && !error ? thumbSrc : fallbackUrl && !speciesError ? fallbackUrl : null;
 
   return (
     <div
       aria-hidden="true"
-      className="relative h-9 w-9 rounded-md overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90"
+      className="relative h-10 w-10 rounded-lg overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90 shadow-2xs"
     >
-      {thumbSrc && !error ? (
+      {displaySrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={thumbSrc}
+          src={displaySrc}
           alt=""
           loading="lazy"
           decoding="async"
-          onError={() => setError(true)}
-          className="h-full w-full object-cover"
+          referrerPolicy="no-referrer"
+          onError={() => {
+            if (thumbSrc && !error) {
+              setError(true);
+            } else {
+              setSpeciesError(true);
+            }
+          }}
+          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-110"
         />
       ) : (
-        <ImagePlaceholder
-          type={typeCode}
-          size="sm"
-          className="h-full w-full rounded-none border-none p-0.5"
-          label=""
-        />
+        <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-neutral-100 to-primary-50/50 text-primary-700">
+          <svg className="w-5 h-5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 22v-6" />
+            <path d="M7 16l5-12 5 12" />
+            <path d="M9 13h6" />
+            <path d="M6 19c-2 0-3-1-3-3a4 4 0 0 1 4-4c.5-2 2.5-4 5-4s4.5 2 5 4a4 4 0 0 1 4 4c0 2-1 3-3 3H6Z" />
+          </svg>
+        </div>
       )}
     </div>
   );
@@ -59,27 +72,20 @@ function SpecimenThumbnail({
 export function SpecimenTable({
   specimens,
   species,
+  speciesMap,
   totalElements,
   page,
   pageSize,
   onPageChange,
-  onViewOnMap,
   loading = false,
 }: SpecimenTableProps) {
-
   const desde = page * pageSize + 1;
   const hasta = Math.min((page + 1) * pageSize, totalElements);
   const esUltimaPagina = hasta >= totalElements;
 
-  function handleMapAction(specimen: Specimen) {
-    if (onViewOnMap) {
-      onViewOnMap(specimen);
-    }
-  }
-
   if (loading && specimens.length === 0) {
     return (
-      <div className="flex flex-col divide-y divide-neutral-200/80 rounded-lg border border-neutral-200 bg-neutral-0">
+      <div className="flex flex-col divide-y divide-neutral-200/80 rounded-xl border border-neutral-200 bg-neutral-0">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex items-center gap-4 p-4 animate-pulse">
             <div className="h-10 w-10 rounded-lg bg-neutral-200" />
@@ -96,7 +102,7 @@ export function SpecimenTable({
 
   if (specimens.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-neutral-0">
+      <div className="rounded-xl border border-neutral-200 bg-neutral-0">
         <EmptyState
           title="Sin ejemplares coincidentes"
           description="Prueba cambiando los términos de búsqueda o quitando el filtro de ubicación."
@@ -107,111 +113,83 @@ export function SpecimenTable({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Lista estructurada estilo GitHub / Linear con transición suave de carga */}
+      {/* Tabla estructurada con cabecera y filas alineadas */}
       <div className={`overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 shadow-2xs divide-y divide-neutral-200/80 transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        {/* Cabecera de columnas en pantallas medianas y grandes */}
+        <div className="hidden sm:grid sm:grid-cols-12 gap-3 px-4 py-2.5 bg-neutral-50/80 border-b border-neutral-200 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+          <div className="sm:col-span-5">Código</div>
+          <div className="sm:col-span-4">Ubicación</div>
+          <div className="sm:col-span-3 text-right">Referencia</div>
+        </div>
+
         {specimens.map((item) => {
-          const detailUrl = `/inventario-verde/especies/${species.slug}/ejemplares/${item.code}`;
+          const specSpecies = speciesMap?.[item.speciesSlug ?? ''] || species;
+          const itemSlug = item.speciesSlug || specSpecies?.slug;
+          const detailUrl = itemSlug
+            ? `/inventario-verde/especies/${itemSlug}/ejemplares/${item.code}`
+            : `/catastro/registrar`;
+
+          const hasNotes = Boolean(item.notes);
 
           return (
             <Link
               key={item.code}
               href={detailUrl}
-              className="group relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center gap-3 p-3.5 sm:px-4 sm:py-3 hover:bg-neutral-50/90 transition-colors"
+              className="group relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center gap-2.5 sm:gap-3 p-3.5 sm:px-4 sm:py-3 cursor-pointer hover:bg-brand-50/40 transition-all duration-150"
             >
-              {/* Columna 1 (Izquierda, 5 cols): Miniatura + Código + Badges */}
+              {/* Columna 1 (5 cols): Miniatura + Código */}
               <div className="flex items-center gap-3.5 min-w-0 sm:col-span-5">
                 <SpecimenThumbnail
                   specimen={item}
-                  typeCode={species.vegetationTypeCode}
+                  fallbackUrl={specSpecies?.imageUrl}
                 />
 
-                <div className="flex flex-col gap-1 min-w-0">
-                  {/* Línea 1: Código oficial + Badge de Referencia de campo + Badge de nota */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-sm font-bold text-neutral-900 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                      {item.code}
-                    </span>
-
-                    {item.sourceReference && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-100 text-[11px] font-mono font-medium text-neutral-600">
-                        Ref: {item.sourceReference}
-                      </span>
-                    )}
-
-                    {item.notes && (
-                      <span
-                        tabIndex={0}
-                        role="note"
-                        title={`Observación: ${item.notes}`}
-                        aria-label={`Observación: ${item.notes}`}
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border cursor-help transition-colors ${
-                          item.notes.toLowerCase().includes('medid') ||
-                          item.notes.toLowerCase().includes('medicion') ||
-                          item.notes.toLowerCase().includes('forestal')
-                            ? 'bg-brand-50 text-brand-900 border-brand-200/80 hover:bg-brand-100/80'
-                            : 'bg-alert-warning-bg text-alert-warning-fg border-alert-warning-border hover:opacity-90'
-                        }`}
-                      >
-                        <svg
-                          className={`w-3 h-3 flex-shrink-0 ${
-                            item.notes.toLowerCase().includes('medid') ||
-                            item.notes.toLowerCase().includes('medicion') ||
-                            item.notes.toLowerCase().includes('forestal')
-                              ? 'text-brand-600'
-                              : 'text-alert-warning-fg'
-                          }`}
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                          />
-                        </svg>
-                        <span className="text-[10px] font-semibold tracking-tight">
-                          {item.notes.toLowerCase().includes('medid') ||
-                          item.notes.toLowerCase().includes('medicion') ||
-                          item.notes.toLowerCase().includes('forestal')
-                            ? 'Medido'
-                            : 'Nota'}
-                        </span>
-                      </span>
-                    )}
-                  </div>
-
-                  {/* En móviles mostramos la ubicación debajo */}
-                  <div className="flex sm:hidden items-center gap-1.5 text-xs text-neutral-600">
-                    <svg className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="font-medium text-neutral-700 truncate">
-                      {item.sourceLocation || 'Sin ubicación específica'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Columna 2 (Centro exacto, 4 cols): Ubicación / Referente */}
-              <div className="hidden sm:flex items-center gap-1.5 text-xs text-neutral-600 sm:col-span-4 min-w-0">
-                <svg className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="font-medium text-neutral-700 truncate" title={item.sourceLocation || 'Sin ubicación específica'}>
-                  {item.sourceLocation || 'Sin ubicación específica'}
+                <span className="font-mono text-sm font-bold text-neutral-900 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">
+                  {item.code}
                 </span>
               </div>
 
-              {/* Columna 3 (Derecha alineada, 3 cols): Botón Ver ficha */}
-              <div className="flex items-center justify-end sm:col-span-3">
-                <span className="inline-flex items-center text-xs h-8 px-3 font-medium rounded-lg border border-neutral-200 bg-neutral-0 text-neutral-800 shadow-2xs group-hover:border-neutral-400 group-hover:bg-neutral-100 group-hover:text-neutral-900 transition-all">
-                  <span>Ver ficha</span>
-                  <span aria-hidden="true" className="ml-1 text-neutral-400 group-hover:text-neutral-700 transition-transform group-hover:translate-x-0.5">→</span>
+              {/* Columna 2 (4 cols): Ubicación */}
+              <div className="flex items-center gap-1.5 text-xs text-neutral-700 sm:col-span-4 min-w-0">
+                <span aria-hidden="true" className="text-neutral-400 shrink-0">📍</span>
+                <span className="font-medium truncate" title={item.sourceLocation || 'Campus PUCP'}>
+                  {item.sourceLocation || 'Campus PUCP'}
+                </span>
+              </div>
+
+              {/* Columna 3 (3 cols): Referencia + Nota + Indicador de acción */}
+              <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:col-span-3 text-xs">
+                {item.sourceReference ? (
+                  <span className="font-mono text-neutral-600 text-xs">Ref: {item.sourceReference}</span>
+                ) : (
+                  <span className="text-neutral-300 font-mono text-xs">—</span>
+                )}
+
+                {hasNotes && (
+                  <span
+                    role="note"
+                    tabIndex={0}
+                    title={`Observación: ${item.notes}`}
+                    aria-label={`Observación: ${item.notes}`}
+                    className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-neutral-100 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200 transition-colors shrink-0"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                  </span>
+                )}
+
+                <span
+                  aria-hidden="true"
+                  className="text-neutral-400 group-hover:text-brand-600 group-hover:translate-x-1 transition-all duration-200 shrink-0 ml-1"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
                 </span>
               </div>
             </Link>
@@ -219,7 +197,7 @@ export function SpecimenTable({
         })}
       </div>
 
-      {/* Paginación minimalista idéntica al estándar del sistema */}
+      {/* Paginación */}
       <div className="flex items-center justify-between gap-2 px-1 pt-1">
         <span className="text-xs text-neutral-500 font-medium">
           {`${desde}–${hasta} de ${totalElements} ejemplares`}

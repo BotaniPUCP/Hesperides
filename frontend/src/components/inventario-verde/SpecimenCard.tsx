@@ -3,131 +3,138 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Species, Specimen } from '@shared/types';
-import { Card, ImagePlaceholder } from '@/components/ui';
+import { Badge, ImagePlaceholder } from '@/components/ui';
 
 export interface SpecimenCardProps {
   specimen: Specimen;
-  species: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'>;
+  species?: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'> & {
+    imageUrl?: string | null;
+    vegetationTypeName?: string;
+  };
 }
+
+const VEGETATION_TYPE_FALLBACK: Record<string, string> = {
+  TREE: 'Árbol',
+  PALM: 'Palmera',
+  SHRUB: 'Arbusto',
+  HERB: 'Herbácea',
+  HERBACEOUS: 'Herbácea',
+  BAMBOO: 'Bambú',
+  CACTUS: 'Cactus',
+  SUCCULENT: 'Suculenta',
+  FERN: 'Helecho',
+  VINE: 'Enredadera',
+  OTHER: 'Vegetación',
+};
 
 export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [speciesError, setSpeciesError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const thumbSrc = specimen.thumbnailUrl ? specimen.thumbnailUrl.replace(/sz=w\d+/, 'sz=w400') : null;
+  const fallbackSrc = species?.imageUrl && !speciesError ? species.imageUrl : null;
+  const isUsingFallback = (!thumbSrc || imageError) && Boolean(fallbackSrc);
+  const displaySrc = thumbSrc && !imageError ? thumbSrc : fallbackSrc;
+  const itemSlug = specimen.speciesSlug || species?.slug;
+  const itemTypeCode = species?.vegetationTypeCode || 'TREE';
+  const typeBadgeLabel =
+    species?.vegetationTypeName || VEGETATION_TYPE_FALLBACK[itemTypeCode] || 'Ejemplar';
+
+  const detailUrl = itemSlug
+    ? `/inventario-verde/especies/${itemSlug}/ejemplares/${specimen.code}`
+    : `/catastro/registrar`;
 
   return (
     <Link
-      href={`/inventario-verde/especies/${species.slug}/ejemplares/${specimen.code}`}
-      className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 rounded-xl transition-transform duration-150 hover:-translate-y-0.5"
+      href={detailUrl}
+      className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-2 rounded-2xl transition-all duration-300 hover:-translate-y-1"
     >
-      <Card
-        padded={false}
-        className="overflow-hidden border-neutral-200/80 bg-neutral-0 shadow-sm transition-all duration-150 group-hover:shadow-md group-hover:border-primary-300 flex flex-col h-full"
-      >
-        {/* Foto o placeholder */}
-        <div className="relative h-36 w-full overflow-hidden bg-neutral-100 flex-shrink-0">
-          {thumbSrc && !imageError ? (
+      <div className="overflow-hidden border border-neutral-200/90 bg-neutral-0 shadow-xs transition-all duration-300 group-hover:shadow-lg group-hover:shadow-neutral-900/5 group-hover:border-neutral-300/90 flex flex-col h-full rounded-2xl">
+        {/* Foto a sangre con altura equilibrada de 176px (h-44), idéntica a SpeciesCard */}
+        <div className="relative h-44 w-full overflow-hidden bg-neutral-100 flex-shrink-0">
+          {displaySrc ? (
             <>
               {!imageLoaded && (
                 <div className="absolute inset-0 bg-neutral-200/70 animate-pulse" />
               )}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={thumbSrc}
+                src={displaySrc}
                 alt={`Ejemplar ${specimen.code}`}
                 loading="lazy"
                 decoding="async"
+                referrerPolicy="no-referrer"
                 onLoad={() => setImageLoaded(true)}
-                onError={() => setImageError(true)}
-                className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-105 ${
+                onError={() => {
+                  if (thumbSrc && !imageError) {
+                    setImageError(true);
+                  } else {
+                    setSpeciesError(true);
+                  }
+                }}
+                className={`h-full w-full object-cover transition-[opacity,transform] duration-300 ease-out group-hover:scale-105 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
               />
+              {isUsingFallback && (
+                <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-neutral-900/75 px-1.5 py-0.5 text-[9px] font-medium text-white backdrop-blur-2xs">
+                  Foto referencial
+                </span>
+              )}
             </>
           ) : (
             <ImagePlaceholder
-              type={species.vegetationTypeCode}
+              type={itemTypeCode}
               label={specimen.code}
               size="full"
-              className="rounded-none border-none"
+              className="rounded-none border-none transition-transform duration-300 ease-out group-hover:scale-105"
             />
           )}
 
-          {/* Badge de referencia */}
-          <div className="absolute top-2 left-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-ink/80 backdrop-blur-sm text-white text-xs font-mono font-bold tracking-tight">
+          {/* Badge de tipo de vegetación en la esquina superior derecha, consistente con SpeciesCard */}
+          <div className="absolute top-2.5 right-2.5 shadow-2xs">
+            <Badge label={typeBadgeLabel} color="brand" />
+          </div>
+        </div>
+
+        {/* Información del ejemplar con jerarquía limpia */}
+        <div className="p-4 flex flex-col flex-1 justify-between gap-3">
+          <div className="space-y-1">
+            {/* Código oficial como título principal del ejemplar */}
+            <h3 className="font-mono font-bold text-base text-neutral-900 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors duration-200 line-clamp-1 leading-snug">
               {specimen.code}
-            </span>
-          </div>
+            </h3>
 
-          {specimen.code && (
-            <div className="absolute top-2 right-2">
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-neutral-0/90 backdrop-blur-sm text-neutral-800 text-[10px] font-semibold">
-                Cód: {specimen.code}
-              </span>
-            </div>
-          )}
+            {/* Nombre común de la especie */}
+            <p className="text-sm font-semibold text-neutral-800 line-clamp-1">
+              {specimen.speciesCommonName || species?.commonName || 'Ejemplar botánico'}
+            </p>
 
-          {/* Indicador de fotografía provisional de especie */}
-          {specimen.thumbnailUrl && !imageError && (
-            <div className="absolute bottom-2 left-2">
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[9px] font-medium text-white/90">
-                Foto del ejemplar
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Datos del ejemplar */}
-        <div className="p-3.5 flex flex-col flex-1 justify-between gap-2.5">
-          <div>
-            <div className="flex items-start gap-1.5 text-xs text-neutral-700 font-medium">
-              <svg
-                className="w-4 h-4 text-success-600 flex-shrink-0 mt-0.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <span className="line-clamp-1">{specimen.sourceLocation}</span>
-            </div>
-
-            {specimen.latitude !== null && specimen.longitude !== null && (
-              <p className="text-[11px] font-mono text-neutral-400 mt-1 pl-5">
-                {specimen.latitude.toFixed(5)}, {specimen.longitude.toFixed(5)}
-              </p>
-            )}
-
-            {specimen.notes && (
-              <p className="text-[11px] text-neutral-500 line-clamp-1 mt-1 pl-5 italic">
-                {specimen.notes}
+            {/* Nombre científico en cursiva */}
+            {specimen.speciesScientificName && (
+              <p className="text-xs italic text-neutral-500 font-serif line-clamp-1">
+                {specimen.speciesScientificName}
               </p>
             )}
           </div>
 
-          <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs">
-            <span className="text-[11px] text-neutral-400">
-              Cantidad: {specimen.quantity}
-            </span>
-            <span className="text-primary-700 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 text-xs">
-              Ver ficha →
-            </span>
+          {/* Pie de tarjeta: Ubicación y Referencia de campo */}
+          <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
+            <div className="flex items-center gap-1.5 truncate min-w-0" title={specimen.sourceLocation || 'Campus PUCP'}>
+              <span aria-hidden="true" className="text-neutral-400 shrink-0">📍</span>
+              <span className="truncate text-neutral-600 font-medium">
+                {specimen.sourceLocation || 'Campus PUCP'}
+              </span>
+            </div>
+            {specimen.sourceReference && (
+              <span className="shrink-0 text-neutral-400 font-mono text-[11px] ml-2">
+                Ref: {specimen.sourceReference}
+              </span>
+            )}
           </div>
         </div>
-      </Card>
+      </div>
     </Link>
   );
 }

@@ -2,14 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { VegetationTypeFilter } from '../VegetationTypeFilter';
 
-jest.mock('@/lib/inventario-verde-api', () => ({
-  inventarioVerdeApi: {
-    species: jest.fn().mockResolvedValue({ content: [], totalElements: 0 }),
-    specimen: jest.fn().mockResolvedValue(null),
-  },
-}));
-
-describe('VegetationTypeFilter - Búsqueda predictiva unificada', () => {
+describe('VegetationTypeFilter - Búsqueda de especies y filtros de tipo', () => {
   const defaultProps = {
     types: [
       { code: 'ARBOL', label: 'Árbol', count: 50 },
@@ -28,49 +21,31 @@ describe('VegetationTypeFilter - Búsqueda predictiva unificada', () => {
     expect(input).toHaveAttribute('autocomplete', 'off');
   });
 
-  it('permite buscar ejemplares desde la primera letra "E" y muestra hasta 10 en orden', async () => {
+  it('permite escribir en el buscador y llama a onSearchChange', async () => {
     const handleSearchChange = jest.fn();
-    const { rerender } = render(
+    render(
       <VegetationTypeFilter
         {...defaultProps}
-        searchValue="E"
+        searchValue=""
         onSearchChange={handleSearchChange}
       />,
     );
 
-    expect(screen.getByText(/Ejemplares coincidentes/i)).toBeInTheDocument();
-    expect(screen.getByText('EV-000001')).toBeInTheDocument();
-    expect(screen.getByText('EV-000010')).toBeInTheDocument();
-
-    // No debe exceder el límite de 10
-    expect(screen.queryByText('EV-000011')).not.toBeInTheDocument();
+    const input = screen.getByRole('searchbox');
+    await userEvent.type(input, 'ficus');
+    expect(handleSearchChange).toHaveBeenCalled();
   });
 
-  it('encuentra el ejemplar por su referencia de campo (ej. "A231")', async () => {
+  it('no muestra popovers ni sugerencias de ejemplares directamente en el buscador', () => {
     render(
       <VegetationTypeFilter
         {...defaultProps}
-        searchValue="A231"
-        onSearchChange={jest.fn()}
+        searchValue="EV-000240"
       />,
     );
 
-    expect(screen.getByText('EV-000240')).toBeInTheDocument();
-    expect(screen.getByText('Ref: A231')).toBeInTheDocument();
-    expect(screen.getByText('Buganvilla')).toBeInTheDocument();
-  });
-
-  it('encuentra el ejemplar por su código legacy / placa antigua (ej. "959")', async () => {
-    render(
-      <VegetationTypeFilter
-        {...defaultProps}
-        searchValue="959"
-        onSearchChange={jest.fn()}
-      />,
-    );
-
-    expect(screen.getByText('EV-000243')).toBeInTheDocument();
-    expect(screen.getByText('Placa: 959')).toBeInTheDocument();
+    expect(screen.queryByText(/Ejemplares coincidentes/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ir directo a la ficha/i)).not.toBeInTheDocument();
   });
 
   it('permite seleccionar chips de tipo de vegetación', async () => {

@@ -14,6 +14,7 @@ import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenDetailResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenResponse;
+import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenSearchResultResponse;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpeciesPhotoRepository;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpeciesRepository;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpeciesRow;
@@ -64,8 +65,18 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
     }
 
     @Override
+    public Page<SpecimenResponse> allSpecimens(SpecimenQuery query) {
+        List<SpecimenResponse> content = specimenRepository.page(null, query).stream()
+                .map(this::toResponse).toList();
+        return new PageImpl<>(content, PageRequest.of(query.page(), query.size()),
+                specimenRepository.count(null, query));
+    }
+
+    @Override
     public List<LocationCountResponse> locations(String speciesSlug) {
-        requireSpecies(speciesSlug);
+        if (speciesSlug != null) {
+            requireSpecies(speciesSlug);
+        }
         return specimenRepository.locations(speciesSlug);
     }
 
@@ -78,6 +89,11 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
                 PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
                 row.trunkHeightM(), row.dbhCm(), row.crownRadiusM(), row.isBanded(), row.dataSource(),
                 specimenRepository.sectionOf(code).orElse(null), speciesBySlug(row.speciesSlug()));
+    }
+
+    @Override
+    public List<SpecimenSearchResultResponse> searchSpecimens(String query, int limit) {
+        return specimenRepository.search(query, limit);
     }
 
     private SpeciesRow requireSpecies(String slug) {
@@ -95,6 +111,7 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
     private SpecimenResponse toResponse(SpecimenRow row) {
         return new SpecimenResponse(row.code(), row.sourceReference(), row.sourceLocation(), row.latitude(),
                 row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
-                PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes());
+                PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(),
+                row.speciesSlug(), row.speciesCommonName(), row.speciesScientificName());
     }
 }

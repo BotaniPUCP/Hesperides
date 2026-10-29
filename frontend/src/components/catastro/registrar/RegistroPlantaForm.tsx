@@ -39,10 +39,14 @@ export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuar
       <Card title="Qué y dónde">
         <div className="space-y-4">
           <BuscadorDeEspecie valor={v.especie} onElegir={(n) => r.cambiar('especie', n)} error={r.errores.especie} />
-          <MapaSelector onElegir={(lat, lon) => {
-            r.cambiar('lat', lat.toFixed(DECIMALES_COORDENADA));
-            r.cambiar('lon', lon.toFixed(DECIMALES_COORDENADA));
-          }} />
+          <MapaSelector
+            lat={v.lat}
+            lon={v.lon}
+            onElegir={(lat, lon) => {
+              r.cambiar('lat', lat.toFixed(DECIMALES_COORDENADA));
+              r.cambiar('lon', lon.toFixed(DECIMALES_COORDENADA));
+            }}
+          />
           <div className="grid gap-4 sm:grid-cols-3">
             <Input id="lat" label="Latitud" value={v.lat} onChange={(x) => r.cambiar('lat', x)} required errorMessage={r.errores.lat} />
             <Input id="lon" label="Longitud" value={v.lon} onChange={(x) => r.cambiar('lon', x)} required errorMessage={r.errores.lon} />

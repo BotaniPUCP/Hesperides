@@ -17,6 +17,7 @@ export interface InputProps {
   maxLength?: number;
   step?: string;
   leadingIcon?: ReactNode;
+  labelAction?: ReactNode;
   autoComplete?: string;
   autoFocus?: boolean;
   onFocus?: () => void;
@@ -37,6 +38,7 @@ export function Input({
   maxLength,
   step,
   leadingIcon,
+  labelAction,
   autoComplete,
   autoFocus,
   onFocus,
@@ -47,10 +49,13 @@ export function Input({
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium text-neutral-700">
-        {label}
-        {required && <span className="ml-0.5 text-action-danger">*</span>}
-      </label>
+      <div className="flex items-center justify-between">
+        <label htmlFor={id} className="text-sm font-medium text-neutral-700">
+          {label}
+          {required && <span className="ml-0.5 text-action-danger">*</span>}
+        </label>
+        {labelAction}
+      </div>
 
       <div className="relative">
         {leadingIcon && (

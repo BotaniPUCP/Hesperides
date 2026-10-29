@@ -36,6 +36,18 @@ export interface Species {
   photos: SpeciesPhoto[];
 }
 
+/** Formulario para registrar una nueva especie botánica en el catálogo. */
+export interface SpeciesForm {
+  scientificName: string;
+  commonName?: string;
+  family?: string;
+  vegetationTypeCode: string;
+  originCode?: string;
+  otherNames?: string[];
+  description?: string;
+  careNotes?: string;
+}
+
 /** Una foto genérica de especie con su crédito. Autor, licencia y fuente faltan en una foto propia. */
 export interface SpeciesPhoto {
   thumbnailUrl: string;
@@ -65,6 +77,9 @@ export interface Specimen {
   /** Mayor que 1 en una agrupación (una mata de Pita). */
   quantity: number;
   notes: string | null;
+  speciesSlug?: string | null;
+  speciesCommonName?: string | null;
+  speciesScientificName?: string | null;
 }
 
 /** Procedencia de las medidas (C-08). Solo MEASURED vale para decidir quién poda. */
@@ -105,3 +120,13 @@ export interface SpecimenFilters {
 }
 
 export type SpecimenViewMode = 'cards' | 'table';
+
+export interface SpecimenSearchResult {
+  code: string;
+  sourceReference: string | null;
+  sourceLocation: string | null;
+  legacyCode: string | null;
+  speciesSlug: string;
+  speciesCommonName: string;
+  speciesScientificName: string;
+}

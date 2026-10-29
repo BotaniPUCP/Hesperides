@@ -38,5 +38,9 @@ export interface Viewer {
   focusViewCone: (id: number | null) => void;
   /** Lleva la cámara a un punto del campus. */
   focusLatLon: (lat: number, lon: number) => void;
+  /** Muestra o reposiciona el marcador/pin en las coordenadas indicadas. */
+  setPinLatLon?: (lat: number, lon: number) => void;
+  /** Oculta el marcador/pin de la escena. */
+  clearPin?: () => void;
   dispose: () => void;
 }

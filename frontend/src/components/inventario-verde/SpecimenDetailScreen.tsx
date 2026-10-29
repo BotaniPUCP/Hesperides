@@ -28,8 +28,7 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
       <div className="flex flex-col gap-6">
         <Breadcrumb
           items={[
-            { label: 'Inventario Verde', href: '/inventario-verde' },
-            { label: 'Especies', href: '/inventario-verde' },
+            { label: 'Catastro de Ejemplares', href: '/catastro/ejemplares' },
             { label: 'Ejemplar no encontrado' },
           ]}
         />
@@ -37,8 +36,8 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
           title={errorMessage ? 'No se pudo cargar el ejemplar' : 'Ejemplar no encontrado'}
           description={errorMessage ?? 'El ejemplar solicitado no está en el inventario o fue dado de baja.'}
           action={{
-            label: 'Volver al catálogo principal',
-            onClick: () => router.push('/inventario-verde'),
+            label: 'Volver a ejemplares',
+            onClick: () => router.push('/catastro/ejemplares'),
           }}
         />
       </div>
@@ -46,11 +45,7 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   }
 
   const breadcrumbItems = [
-    { label: 'Inventario Verde', href: '/inventario-verde' },
-    {
-      label: species?.commonName || 'Especies',
-      href: species ? `/inventario-verde/especies/${species.slug}` : '/inventario-verde',
-    },
+    { label: 'Catastro de Ejemplares', href: '/catastro/ejemplares' },
     { label: `Ejemplar ${specimen.code}` },
   ];
 

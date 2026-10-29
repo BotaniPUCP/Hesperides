@@ -91,9 +91,10 @@ describe('ImportarScreen', () => {
 
     const confirmar = await screen.findByRole('button', { name: 'Confirmar carga' });
     expect(confirmar).toBeDisabled();
-    expect(screen.getByText('Falta decidir 1 posible duplicado.')).toBeInTheDocument();
+    expect(screen.getByText('1 pendiente')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('radio', { name: 'Omitir' }));
+    expect(confirmar).toBeEnabled();
     await userEvent.click(confirmar);
 
     expect(api.confirmImport).toHaveBeenCalledWith(12, { 3: false });
@@ -160,6 +161,20 @@ describe('ImportarScreen', () => {
     await userEvent.click(screen.getByRole('radio', { name: /Bebederos/ }));
 
     expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+  });
+
+  it('permite abrir el modal de registro de especie desde la lista de especies no registradas', async () => {
+    api.previewImport.mockResolvedValue(VISTA);
+    pantalla();
+    await subirYRevisar();
+
+    expect(await screen.findByText('Planta inventada')).toBeInTheDocument();
+    const btnRegistrar = screen.getByRole('button', { name: '+ Registrar especie' });
+    expect(btnRegistrar).toBeInTheDocument();
+
+    await userEvent.click(btnRegistrar);
+    expect(await screen.findByRole('dialog', { name: 'Registrar nueva especie botánica' })).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Planta inventada')).toBeInTheDocument();
   });
 });
 

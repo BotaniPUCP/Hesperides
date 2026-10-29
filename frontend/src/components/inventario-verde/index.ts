@@ -4,6 +4,9 @@ export { VegetationTypeFilter } from './VegetationTypeFilter';
 export { SpeciesCard } from './SpeciesCard';
 export { SpeciesGrid } from './SpeciesGrid';
 export { InventarioVerdeScreen } from './InventarioVerdeScreen';
+export { InventarioEjemplaresScreen } from './InventarioEjemplaresScreen';
+export { RegistroEspecieModal } from './RegistroEspecieModal';
+export { RegistroEspecieForm } from './RegistroEspecieForm';
 
 export { SpeciesInfo } from './SpeciesInfo';
 export { SpecimenViewToggle } from './SpecimenViewToggle';

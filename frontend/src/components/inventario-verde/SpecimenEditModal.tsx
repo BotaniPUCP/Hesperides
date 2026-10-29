@@ -71,13 +71,13 @@ export function SpecimenEditModal({
       notes: notes.trim() || null,
       measurement: hasAnyMeasure
         ? {
-            date: fechaMedicion,
-            heightM: parsedHeight,
-            trunkHeightM: parsedTrunk,
-            dbhCm: parsedDap,
-            crownRadiusM: parsedCrown,
-            banded: zunchado === '' ? null : zunchado === 'si',
-          }
+          date: fechaMedicion,
+          heightM: parsedHeight,
+          trunkHeightM: parsedTrunk,
+          dbhCm: parsedDap,
+          crownRadiusM: parsedCrown,
+          banded: zunchado === '' ? null : zunchado === 'si',
+        }
         : null,
     };
 

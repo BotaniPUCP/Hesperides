@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useInventarioVerdeSpeciesBySlug, useInventarioVerdeSpecimens } from '@/hooks/useInventarioVerde';
+import { Breadcrumb, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { useInventarioVerdeSpeciesBySlug } from '@/hooks/useInventarioVerde';
+import { useRequest } from '@/hooks/useRequest';
+import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import type { LocationCount } from '@shared/types';
 import { SpeciesInfo } from './SpeciesInfo';
-import { SpecimenFiltersBar } from './SpecimenFiltersBar';
-import { SpecimenTable } from './SpecimenTable';
 
 export interface SpeciesDetailScreenProps {
   slug: string;
@@ -15,57 +15,16 @@ export interface SpeciesDetailScreenProps {
 
 export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   const router = useRouter();
-  const [searchInput, setSearchInput] = useState('');
-  const debouncedSearch = useDebouncedValue(searchInput, 300);
-  const [selectedLocation, setSelectedLocation] = useState('ALL');
-  const [sortBy, setSortBy] = useState<'reference' | 'code' | 'location'>('reference');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [page, setPage] = useState(0);
-
-  // Consulta de ejemplares: paginación de 20 ejemplares por página
-  const pageSize = 20;
-
   const { species, loading: speciesLoading, errorMessage } = useInventarioVerdeSpeciesBySlug(slug);
 
-  const {
-    specimens,
-    allFilteredCount,
-    totalElements,
-    currentPage,
-    availableLocations,
-    loading: specimensLoading,
-  } = useInventarioVerdeSpecimens(slug, {
-    search: debouncedSearch,
-    location: selectedLocation,
-    sortBy,
-    sortDirection,
-    page,
-    pageSize,
-  });
-
-  function handleSearchChange(val: string) {
-    setSearchInput(val);
-    setPage(0);
-  }
-
-  function handleLocationChange(loc: string) {
-    setSelectedLocation(loc);
-    setPage(0);
-  }
-
-  function handleResetFilters() {
-    setSearchInput('');
-    setSelectedLocation('ALL');
-    setSortBy('reference');
-    setSortDirection('asc');
-    setPage(0);
-  }
+  const locations = useRequest(slug || null, () => inventarioVerdeApi.locations(slug));
+  const availableLocations = (locations.data ?? []) as LocationCount[];
 
   if (speciesLoading) {
     return (
       <div className="flex flex-col gap-6">
         <LoadingSkeleton variant="card" />
-        <LoadingSkeleton variant="table-row" count={4} />
+        <LoadingSkeleton variant="table-row" count={3} />
       </div>
     );
   }
@@ -83,7 +42,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
           title={errorMessage ? 'No se pudo cargar la especie' : 'Especie no encontrada'}
           description={errorMessage ?? 'La especie solicitada no está registrada en el inventario.'}
           action={{
-            label: 'Volver al catálogo',
+            label: 'Volver al inventario',
             onClick: () => router.push('/inventario-verde'),
           }}
         />
@@ -92,52 +51,45 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   }
 
   return (
-    <div className="flex flex-col max-w-5xl mx-auto w-full">
-      <div className="mb-4">
-        <Breadcrumb
-          items={[
-            { label: 'Inventario de Especies', href: '/inventario-verde' },
-            { label: species.commonName },
-          ]}
-        />
-      </div>
+    <div className="flex flex-col max-w-5xl mx-auto w-full space-y-6">
+      <Breadcrumb
+        items={[
+          { label: 'Inventario de Especies', href: '/inventario-verde' },
+          { label: species.commonName },
+        ]}
+      />
 
+      {/* Cabecera taxonómica e información de la especie */}
       <SpeciesInfo species={species} availableLocations={availableLocations} />
 
-      <div className="bg-neutral-0 rounded-xl border border-neutral-200 p-4 sm:p-5 shadow-xs">
-        <SpecimenFiltersBar
-          searchValue={searchInput}
-          onSearchChange={handleSearchChange}
-          selectedLocation={selectedLocation}
-          onLocationChange={handleLocationChange}
-          availableLocations={availableLocations}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-          sortDirection={sortDirection}
-          onSortDirectionChange={setSortDirection}
-          totalFilteredCount={allFilteredCount}
-          onReset={handleResetFilters}
-        />
+      {/* Tarjeta de vinculación con el Catastro Físico de Ejemplares */}
+      <Card title="Presencia y Catastro de Ejemplares">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-1">
+          <div className="space-y-1.5">
+            <p className="text-sm text-neutral-700">
+              Actualmente hay{' '}
+              <strong className="text-neutral-900 font-bold font-mono">
+                {species.specimenCount}
+              </strong>{' '}
+              {species.specimenCount === 1 ? 'ejemplar registrado' : 'ejemplares registrados'} de esta especie en el campus universitario.
+            </p>
+            <p className="text-xs text-neutral-500">
+              Consulta las coordenadas GPS en el mapa, medidas dendrométricas e historial de podas e intervenciones en el módulo de Catastro.
+            </p>
+          </div>
 
-        <SpecimenTable
-          specimens={specimens}
-          species={species}
-          totalElements={totalElements}
-          page={currentPage}
-          pageSize={pageSize}
-          onPageChange={setPage}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-          onSortChange={(sort) => {
-            setSortBy(sort.key as 'reference' | 'code' | 'location');
-            setSortDirection(sort.direction);
-          }}
-          onViewOnMap={(specimen) => {
-            router.push(`/mapa?code=${specimen.code}`);
-          }}
-          loading={specimensLoading}
-        />
-      </div>
+          <div className="shrink-0 flex items-center gap-2.5">
+            <Link
+              href={`/catastro/ejemplares?search=${encodeURIComponent(species.commonName || species.scientificName)}`}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-xs"
+            >
+              <span aria-hidden="true">🌳</span>
+              <span>Ver ejemplares en Catastro</span>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

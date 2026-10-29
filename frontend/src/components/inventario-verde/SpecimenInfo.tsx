@@ -85,6 +85,32 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
   const hasPhotos = specimenPhotos.length > 0 && !imageError;
   const currentPhoto = specimenPhotos[photoIndex] ?? specimenPhotos[0];
 
+  // Fallback botánico: si la foto de campo en Drive falla o no existe, recurre a la foto de su especie
+  const speciesFallbackPhoto = species.imageUrl ?? species.photos?.[0]?.imageUrl ?? null;
+  const [speciesImageError, setSpeciesImageError] = useState(false);
+  const isUsingSpeciesFallback = !hasPhotos && Boolean(speciesFallbackPhoto) && !speciesImageError;
+  const displayPhotoUrl = hasPhotos
+    ? (currentPhoto?.imageUrl ?? currentPhoto?.thumbnailUrl)
+    : isUsingSpeciesFallback
+    ? speciesFallbackPhoto
+    : null;
+
+  const activeViewerPhotos: SpeciesPhoto[] = hasPhotos
+    ? specimenPhotos
+    : isUsingSpeciesFallback && speciesFallbackPhoto
+    ? species.photos && species.photos.length > 0
+      ? species.photos
+      : [
+          {
+            imageUrl: speciesFallbackPhoto,
+            thumbnailUrl: speciesFallbackPhoto,
+            author: `Fotografía botánica referencial (${species.commonName})`,
+            license: 'Referencia de especie',
+            sourceUrl: null,
+          },
+        ]
+    : [];
+
   const copyCoordinates = () => {
     if (hasCoords) {
       navigator.clipboard.writeText(`${specimen.latitude}, ${specimen.longitude}`);
@@ -105,22 +131,39 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
               <div className="relative shrink-0">
                 <div
                   className="h-28 w-28 sm:h-32 sm:w-32 rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200 shadow-xs cursor-zoom-in relative group"
-                  onClick={() => hasPhotos && setModalOpen(true)}
-                  title={hasPhotos ? 'Clic para ampliar foto a pantalla completa' : undefined}
+                  onClick={() => (hasPhotos || isUsingSpeciesFallback) && setModalOpen(true)}
+                  title={
+                    hasPhotos
+                      ? 'Clic para ampliar foto a pantalla completa'
+                      : isUsingSpeciesFallback
+                      ? `Foto referencial de ${species.commonName} (Clic para ampliar)`
+                      : undefined
+                  }
                 >
-                  {hasPhotos ? (
+                  {displayPhotoUrl ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={currentPhoto?.imageUrl ?? currentPhoto?.thumbnailUrl}
+                        src={displayPhotoUrl}
                         alt={`Ejemplar ${specimen.code}`}
                         loading="lazy"
-                        onError={() => setImageError(true)}
+                        onError={() => {
+                          if (hasPhotos) {
+                            setImageError(true);
+                          } else {
+                            setSpeciesImageError(true);
+                          }
+                        }}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                      {specimenPhotos.length > 1 && (
+                      {hasPhotos && specimenPhotos.length > 1 && (
                         <span className="pointer-events-none absolute bottom-1.5 right-1.5 rounded bg-ink/80 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-xs">
                           {`${photoIndex + 1}/${specimenPhotos.length}`}
+                        </span>
+                      )}
+                      {isUsingSpeciesFallback && (
+                        <span className="pointer-events-none absolute bottom-1 left-1 right-1 rounded bg-ink/75 px-1 py-0.5 text-[9px] font-medium text-white text-center truncate backdrop-blur-2xs">
+                          Foto referencial
                         </span>
                       )}
                     </>
@@ -223,7 +266,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                     <div className="flex items-center gap-1.5 pl-3 border-l border-neutral-200">
                       <span className="text-neutral-400">GPS:</span>
                       <span className="font-mono font-medium text-neutral-700">
-                        {specimen.latitude?.toFixed(5)}, {specimen.longitude?.toFixed(5)}
+                        {Number(specimen.latitude).toFixed(5)}, {Number(specimen.longitude).toFixed(5)}
                       </span>
                       <button
                         type="button"
@@ -389,11 +432,15 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
       </div>
 
       {/* Visor inmersivo a pantalla completa para la galería del ejemplar */}
-      {hasPhotos && modalOpen && (
+      {(hasPhotos || isUsingSpeciesFallback) && modalOpen && activeViewerPhotos.length > 0 && (
         <SpeciesPhotoViewer
-          photos={specimenPhotos}
-          startAt={photoIndex}
-          speciesName={`Ejemplar ${specimen.code} · ${species.commonName}`}
+          photos={activeViewerPhotos}
+          startAt={hasPhotos ? photoIndex : 0}
+          speciesName={
+            hasPhotos
+              ? `Ejemplar ${specimen.code} · ${species.commonName}`
+              : `Foto referencial · ${species.commonName} (${species.scientificName})`
+          }
           onClose={() => setModalOpen(false)}
         />
       )}

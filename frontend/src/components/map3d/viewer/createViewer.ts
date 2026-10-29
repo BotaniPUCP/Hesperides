@@ -179,6 +179,16 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     focusLatLon(lat, lon) {
       const p = data.plane.toPlane(lat, lon);
       rig.focusPoint(p.x, -p.y);
+      needsRender = true;
+    },
+    setPinLatLon(lat, lon) {
+      const p = data.plane.toPlane(lat, lon);
+      pin.show(p.x, WORLD_LIFT, -p.y);
+      needsRender = true;
+    },
+    clearPin() {
+      pin.hide();
+      needsRender = true;
     },
     dispose() {
       cancelAnimationFrame(frame);

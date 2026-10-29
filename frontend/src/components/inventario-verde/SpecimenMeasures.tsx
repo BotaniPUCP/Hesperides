@@ -24,11 +24,16 @@ export function SpecimenMeasures({
 }) {
   const measured = specimen.dataSource !== 'UNKNOWN';
 
+  const formatMeasure = (val: number | null | undefined): string => {
+    if (val == null || isNaN(Number(val))) return '—';
+    return Number(val).toLocaleString('es-PE');
+  };
+
   const stats: DendrometricStat[] = [
     {
       label: 'Altura',
-      num: specimen.heightM === null ? '—' : specimen.heightM.toLocaleString('es-PE'),
-      unit: specimen.heightM === null ? '' : 'm',
+      num: formatMeasure(specimen.heightM),
+      unit: specimen.heightM == null ? '' : 'm',
       icon: (
         <svg className="w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
@@ -37,8 +42,8 @@ export function SpecimenMeasures({
     },
     {
       label: 'Altura del fuste',
-      num: specimen.trunkHeightM === null ? '—' : specimen.trunkHeightM.toLocaleString('es-PE'),
-      unit: specimen.trunkHeightM === null ? '' : 'm',
+      num: formatMeasure(specimen.trunkHeightM),
+      unit: specimen.trunkHeightM == null ? '' : 'm',
       icon: (
         <svg className="w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
@@ -47,8 +52,8 @@ export function SpecimenMeasures({
     },
     {
       label: 'DAP',
-      num: specimen.dbhCm === null ? '—' : specimen.dbhCm.toLocaleString('es-PE'),
-      unit: specimen.dbhCm === null ? '' : 'cm',
+      num: formatMeasure(specimen.dbhCm),
+      unit: specimen.dbhCm == null ? '' : 'cm',
       icon: (
         <svg className="w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <circle cx="12" cy="12" r="8" strokeWidth={2} strokeDasharray="3 3" />
@@ -57,8 +62,8 @@ export function SpecimenMeasures({
     },
     {
       label: 'Radio de copa',
-      num: specimen.crownRadiusM === null ? '—' : specimen.crownRadiusM.toLocaleString('es-PE'),
-      unit: specimen.crownRadiusM === null ? '' : 'm',
+      num: formatMeasure(specimen.crownRadiusM),
+      unit: specimen.crownRadiusM == null ? '' : 'm',
       icon: (
         <svg className="w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />

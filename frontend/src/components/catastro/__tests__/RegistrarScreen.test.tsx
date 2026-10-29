@@ -13,12 +13,16 @@ jest.mock('@/hooks/useCatalog', () => ({
   useCatalog: (type: string) => ({
     items: type === 'FOUNTAIN_STATUS'
       ? [{ code: 'OPERATIONAL', label: 'Operativo' }, { code: 'NEW', label: 'Nuevo' }]
-      : type === 'FOUNTAIN_KIND' ? [{ code: 'FOUNTAIN', label: 'Fuente' }] : [{ code: 'GLASS', label: 'Vidrio' }],
+      : type === 'FOUNTAIN_KIND' ? [{ code: 'FOUNTAIN', label: 'Fuente' }]
+      : type === 'SPECIES_TYPE' ? [{ id: 1, code: 'TREE', label: 'Árbol' }]
+      : [{ code: 'GLASS', label: 'Vidrio' }],
     isLoading: false,
     errorMessage: null,
   }),
 }));
-jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { species: jest.fn() } }));
+jest.mock('@/lib/inventario-verde-api', () => ({
+  inventarioVerdeApi: { species: jest.fn(), registerSpecies: jest.fn() },
+}));
 // El visor 3D no corre en jsdom: un botón hace de clic en el suelo.
 jest.mock('../registrar/MapaSelector', () => ({
   MapaSelector: ({ onElegir }: { onElegir: (lat: number, lon: number) => void }) => (
@@ -150,13 +154,11 @@ describe('RegistrarScreen', () => {
     expect(screen.getByRole('radio', { name: 'Tacho' })).toBeChecked();
   });
 
-  it('con el formulario vacío cambia de tipo sin preguntar', async () => {
+  it('no muestra el botón de registrar nueva especie al vuelo', async () => {
     pantalla();
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Bebedero' }));
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Bebedero' })).toBeChecked();
+    expect(screen.queryByRole('button', { name: /\+ Nueva especie/ })).not.toBeInTheDocument();
   });
 });
+
 
