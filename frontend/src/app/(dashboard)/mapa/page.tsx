@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { LoadingSkeleton } from '@/components/ui';
 import { MapScreen } from '@/components/map3d/MapScreen';
 
 export const metadata = {
@@ -10,7 +12,9 @@ export const metadata = {
 export default function MapaPage() {
   return (
     <div className="-m-4 h-[calc(100dvh-3.25rem)] md:-m-6 md:h-dvh">
-      <MapScreen />
+      <Suspense fallback={<LoadingSkeleton />}>
+        <MapScreen />
+      </Suspense>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { Button, Card, Input } from '@/components/ui';
@@ -13,8 +14,10 @@ import { useRegistroPlanta } from './useRegistroPlanta';
 const DECIMALES_COORDENADA = 6;
 
 /** Registro de una planta por formulario (SPEC-103 §5.1). */
-export function RegistroPlantaForm() {
+export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuardar: boolean) => void }) {
   const r = useRegistroPlanta();
+  // La pantalla decide si avisa al salir: también al cambiar qué se registra.
+  useEffect(() => onDirtyChange?.(r.sinGuardar), [r.sinGuardar, onDirtyChange]);
   const v = r.valores;
 
   if (r.registrado) {
@@ -36,10 +39,14 @@ export function RegistroPlantaForm() {
       <Card title="Qué y dónde">
         <div className="space-y-4">
           <BuscadorDeEspecie valor={v.especie} onElegir={(n) => r.cambiar('especie', n)} error={r.errores.especie} />
-          <MapaSelector onElegir={(lat, lon) => {
-            r.cambiar('lat', lat.toFixed(DECIMALES_COORDENADA));
-            r.cambiar('lon', lon.toFixed(DECIMALES_COORDENADA));
-          }} />
+          <MapaSelector
+            lat={v.lat}
+            lon={v.lon}
+            onElegir={(lat, lon) => {
+              r.cambiar('lat', lat.toFixed(DECIMALES_COORDENADA));
+              r.cambiar('lon', lon.toFixed(DECIMALES_COORDENADA));
+            }}
+          />
           <div className="grid gap-4 sm:grid-cols-3">
             <Input id="lat" label="Latitud" value={v.lat} onChange={(x) => r.cambiar('lat', x)} required errorMessage={r.errores.lat} />
             <Input id="lon" label="Longitud" value={v.lon} onChange={(x) => r.cambiar('lon', x)} required errorMessage={r.errores.lon} />

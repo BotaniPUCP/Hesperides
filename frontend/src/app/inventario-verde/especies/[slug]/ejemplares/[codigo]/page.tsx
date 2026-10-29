@@ -5,8 +5,8 @@ interface PageProps {
 }
 
 export const metadata = {
-  title: 'Ficha de Ejemplar · Inventario Verde · Hesperides',
-  description: 'Ficha técnica individual del ejemplar botánico del campus PUCP.',
+  title: 'Ficha del Ejemplar · Inventario Verde · Hesperides',
+  description: 'Detalle e información técnica del ejemplar botánico.',
 };
 
 export default async function SpecimenDetailPage({ params }: PageProps) {
@@ -20,3 +20,4 @@ export default async function SpecimenDetailPage({ params }: PageProps) {
     </main>
   );
 }
+

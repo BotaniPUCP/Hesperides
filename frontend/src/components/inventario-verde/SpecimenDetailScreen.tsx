@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useInventarioVerdeSpecimenByCode } from '@/hooks/useInventarioVerde';
 import { SpecimenAssessments } from './SpecimenAssessments';
 import { SpecimenInfo } from './SpecimenInfo';
+import { SpecimenInterventions } from './SpecimenInterventions';
 
 export interface SpecimenDetailScreenProps {
   code: string;
@@ -28,8 +28,7 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
       <div className="flex flex-col gap-6">
         <Breadcrumb
           items={[
-            { label: 'Inventario Verde', href: '/inventario-verde' },
-            { label: 'Especies', href: '/inventario-verde' },
+            { label: 'Catastro de Ejemplares', href: '/catastro/ejemplares' },
             { label: 'Ejemplar no encontrado' },
           ]}
         />
@@ -37,8 +36,8 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
           title={errorMessage ? 'No se pudo cargar el ejemplar' : 'Ejemplar no encontrado'}
           description={errorMessage ?? 'El ejemplar solicitado no está en el inventario o fue dado de baja.'}
           action={{
-            label: 'Volver al catálogo principal',
-            onClick: () => router.push('/inventario-verde'),
+            label: 'Volver a ejemplares',
+            onClick: () => router.push('/catastro/ejemplares'),
           }}
         />
       </div>
@@ -46,29 +45,18 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   }
 
   const breadcrumbItems = [
-    { label: 'Inventario Verde', href: '/inventario-verde' },
-    {
-      label: species?.commonName || 'Especies',
-      href: species ? `/inventario-verde/especies/${species.slug}` : '/inventario-verde',
-    },
+    { label: 'Catastro de Ejemplares', href: '/catastro/ejemplares' },
     { label: `Ejemplar ${specimen.code}` },
   ];
 
   return (
     <div className="flex flex-col">
-      <div className="mb-5 flex flex-col gap-2.5">
+      <div className="mb-4">
         <Breadcrumb items={breadcrumbItems} />
-        <div>
-          <Link
-            href={species ? `/inventario-verde/especies/${species.slug}` : '/inventario-verde'}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-900 hover:underline transition-colors"
-          >
-            ← Volver a los ejemplares de {species?.commonName || 'la especie'}
-          </Link>
-        </div>
       </div>
 
       <SpecimenInfo specimen={specimen} />
+      <SpecimenInterventions code={specimen.code} />
       <SpecimenAssessments code={specimen.code} />
     </div>
   );

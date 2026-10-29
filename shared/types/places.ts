@@ -59,6 +59,8 @@ export interface PlacePerspective {
   /** Hacia dónde miran las fotos: 0 al norte, creciendo hacia el este. */
   headingDeg: number;
   photos: PlacePhoto[];
+  /** La cámara con que se encuadró al guardarla; null: «Ver en el mapa» usa la vista por defecto. */
+  mapView: PlaceMapView | null;
 }
 
 export interface InteriorGroup {
@@ -118,6 +120,8 @@ export interface PerspectiveInput {
   lat: number;
   lon: number;
   headingDeg: number;
+  /** La cámara del editor al guardar. */
+  mapView?: PlaceMapView;
 }
 
 /** A qué va una foto: a una perspectiva, a una vista interior, o a ninguna (principal). */

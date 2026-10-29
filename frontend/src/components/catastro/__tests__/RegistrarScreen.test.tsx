@@ -6,18 +6,23 @@ import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { RegistrarScreen } from '../registrar/RegistrarScreen';
 
 const mockUseAuth = jest.fn();
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
 jest.mock('@/lib/catastro-api', () => ({ catastroApi: { register: jest.fn(), registerFeature: jest.fn() } }));
 jest.mock('@/hooks/useCatalog', () => ({
   useCatalog: (type: string) => ({
     items: type === 'FOUNTAIN_STATUS'
       ? [{ code: 'OPERATIONAL', label: 'Operativo' }, { code: 'NEW', label: 'Nuevo' }]
-      : type === 'FOUNTAIN_KIND' ? [{ code: 'FOUNTAIN', label: 'Fuente' }] : [{ code: 'GLASS', label: 'Vidrio' }],
+      : type === 'FOUNTAIN_KIND' ? [{ code: 'FOUNTAIN', label: 'Fuente' }]
+      : type === 'SPECIES_TYPE' ? [{ id: 1, code: 'TREE', label: 'Árbol' }]
+      : [{ code: 'GLASS', label: 'Vidrio' }],
     isLoading: false,
     errorMessage: null,
   }),
 }));
-jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { species: jest.fn() } }));
+jest.mock('@/lib/inventario-verde-api', () => ({
+  inventarioVerdeApi: { species: jest.fn(), registerSpecies: jest.fn() },
+}));
 // El visor 3D no corre en jsdom: un botón hace de clic en el suelo.
 jest.mock('../registrar/MapaSelector', () => ({
   MapaSelector: ({ onElegir }: { onElegir: (lat: number, lon: number) => void }) => (
@@ -133,4 +138,27 @@ describe('RegistrarScreen', () => {
     expect(screen.getByText('Marca al menos un tipo de residuo')).toBeInTheDocument();
     expect(catastroApi.registerFeature).not.toHaveBeenCalled();
   });
+
+  it('cambiar a tacho con la planta a medio llenar pregunta antes de perder lo escrito', async () => {
+    pantalla();
+    await elegirMolleYPunto();
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Tacho' }));
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Seguir editando' }));
+    expect(screen.getByRole('radio', { name: 'Planta' })).toBeChecked();
+    expect(screen.getByLabelText(/Latitud/)).toHaveValue('-12.070200');
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Tacho' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(screen.getByRole('radio', { name: 'Tacho' })).toBeChecked();
+  });
+
+  it('no muestra el botón de registrar nueva especie al vuelo', async () => {
+    pantalla();
+
+    expect(screen.queryByRole('button', { name: /\+ Nueva especie/ })).not.toBeInTheDocument();
+  });
 });
+
+

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import type {
   CatalogItem,
   CreateCatalogItemRequest,
@@ -57,6 +58,8 @@ export function CatalogItemFormModal({
 }: CatalogItemFormModalProps) {
   const esAlta = item === null;
   const [values, setValues] = useState<Valores>(() => valoresDe(item));
+  const guard = useUnsavedChangesGuard(isOpen && JSON.stringify(values) !== JSON.stringify(valoresDe(item)));
+  const cerrar = () => guard.confirm(onClose);
   const [errors, setErrors] = useState<Partial<Record<keyof Valores, string>>>({});
   const [formError, setFormError] = useState<string>();
   const [guardando, setGuardando] = useState(false);
@@ -123,9 +126,10 @@ export function CatalogItemFormModal({
   }
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={cerrar}
       title={esAlta ? 'Nuevo ítem' : `Editar ${item.label}`}
     >
       <form className="flex flex-col gap-4" onSubmit={enviar} noValidate>
@@ -196,7 +200,7 @@ export function CatalogItemFormModal({
         )}
 
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose} disabled={guardando}>
+          <Button variant="secondary" onClick={cerrar} disabled={guardando}>
             Cancelar
           </Button>
           <Button type="submit" loading={guardando}>
@@ -205,5 +209,7 @@ export function CatalogItemFormModal({
         </div>
       </form>
     </Modal>
+    {guard.dialog}
+    </>
   );
 }

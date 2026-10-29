@@ -10,13 +10,19 @@ import { placesApi } from '@/lib/places-api';
 import { useCanEditPlaces } from '../edit/useCanEditPlaces';
 import { focusPlace, highlightBuilding } from '../focusPlace';
 import { useSceneData } from '../useSceneData';
-import { mapViewToPose, poseToMapView } from './mapView';
+import { defaultPerspectiveView, mapViewToPose, poseToMapView } from './mapView';
+
+/** Un pedido de «Ver en el mapa»: `seq` cambia en cada clic. */
+export interface PerspectiveFocus {
+  id: number | null;
+  seq: number;
+}
 
 const nada = () => undefined;
 
 export interface PlaceMapPanelProps {
   place: PlaceDetail | null;
-  focusedPerspective: number | null;
+  focus: PerspectiveFocus;
   onChanged: () => void;
 }
 
@@ -28,7 +34,7 @@ const flightKey = (p: PlaceDetail) => `${p.code}|${JSON.stringify(p.mapView)}`;
  * a su vista guardada (o al encuadre automático). Quien edita guarda aquí la
  * vista: encuadra a mano y pulsa «Guardar esta vista».
  */
-export function PlaceMapPanel({ place, focusedPerspective, onChanged }: PlaceMapPanelProps) {
+export function PlaceMapPanel({ place, focus, onChanged }: PlaceMapPanelProps) {
   const { data, isLoading } = useSceneData();
   const canEdit = useCanEditPlaces();
   const { showToast } = useToast();
@@ -47,9 +53,20 @@ export function PlaceMapPanel({ place, focusedPerspective, onChanged }: PlaceMap
     viewer.flyToPose(mapViewToPose(data.plane, place.mapView));
   }, [viewer, data, place]);
 
+  // Lo último del lugar, para leerlo sin volver a volar cada vez que la ficha se recarga.
+  const latest = useRef({ place, data });
   useEffect(() => {
-    viewer?.focusViewCone(focusedPerspective);
-  }, [viewer, focusedPerspective]);
+    latest.current = { place, data };
+  });
+
+  useEffect(() => {
+    if (!viewer) return;
+    viewer.focusViewCone(focus.id);
+    const { place: p, data: d } = latest.current;
+    const v = p?.perspectives.find((x) => x.id === focus.id);
+    if (!v || !d) return;
+    viewer.flyToPose(mapViewToPose(d.plane, v.mapView ?? defaultPerspectiveView(v.lat, v.lon, v.headingDeg)));
+  }, [viewer, focus]);
 
   async function run(action: () => Promise<void>, done: string) {
     setBusy(true);

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import type { FeatureForm } from '@shared/types';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
@@ -17,8 +18,10 @@ const NOMBRE: Record<FeatureForm['kind'], { uno: string; mismo: string }> = {
 };
 
 /** Registro de un tacho o bebedero (SPEC-103 §3): dónde está, lo propio de su tipo y una foto. */
-export function RegistroComponenteForm({ kind }: { kind: FeatureForm['kind'] }) {
+export function RegistroComponenteForm({ kind, onDirtyChange }: { kind: FeatureForm['kind']; onDirtyChange?: (sinGuardar: boolean) => void }) {
   const r = useRegistroComponente(kind);
+  // La pantalla decide si avisa al salir: también al cambiar qué se registra.
+  useEffect(() => onDirtyChange?.(r.sinGuardar), [r.sinGuardar, onDirtyChange]);
   const v = r.valores;
   const nombre = NOMBRE[kind];
 
@@ -42,10 +45,15 @@ export function RegistroComponenteForm({ kind }: { kind: FeatureForm['kind'] }) 
         <div className="space-y-4">
           <Input id="lugar" label="Lugar" value={v.lugar} onChange={(x) => r.cambiar('lugar', x)}
             helperText="Como lo diría alguien en el campus: «Pabellón H, primer piso»" />
-          <MapaSelector onElegir={(lat, lon) => {
-            r.cambiar('lat', lat.toFixed(DECIMALES_COORDENADA));
-            r.cambiar('lon', lon.toFixed(DECIMALES_COORDENADA));
-          }} />
+          <MapaSelector
+            lat={v.lat}
+            lon={v.lon}
+            etiqueta={`Haz clic donde está el ${nombre.uno}`}
+            onElegir={(lat, lon) => {
+              r.cambiar('lat', lat.toFixed(DECIMALES_COORDENADA));
+              r.cambiar('lon', lon.toFixed(DECIMALES_COORDENADA));
+            }}
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input id="lat" label="Latitud" value={v.lat} onChange={(x) => r.cambiar('lat', x)} required errorMessage={r.errores.lat} />
             <Input id="lon" label="Longitud" value={v.lon} onChange={(x) => r.cambiar('lon', x)} required errorMessage={r.errores.lon} />

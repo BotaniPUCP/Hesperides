@@ -3,112 +3,84 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Species } from '@shared/types';
-import { Card, Badge, ImagePlaceholder } from '@/components/ui';
+import { Badge, Card, ImagePlaceholder } from '@/components/ui';
 
 export interface SpeciesCardProps {
   species: Species;
 }
 
-function getBadgeColor(typeCode: string): 'neutral' | 'brand' | 'success' | 'warning' | 'info' {
-  switch (typeCode) {
-    case 'PALM':
-      return 'info';
-    case 'SHRUB':
-      return 'warning';
-    case 'HERBACEOUS':
-    case 'CLIMBER':
-    case 'SUCCULENT':
-      return 'neutral';
-    case 'TREE':
-    default:
-      return 'success';
-  }
-}
-
 export function SpeciesCard({ species }: SpeciesCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Optimizar miniaturas de Drive de 1000px a 400px para tarjetas de ~250px
+  const optimizedImageUrl = species.imageUrl ? species.imageUrl.replace(/sz=w\d+/, 'sz=w400') : null;
 
   return (
     <Link
       href={`/inventario-verde/especies/${species.slug}`}
-      className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 rounded-xl transition-transform duration-200 hover:-translate-y-1"
+      className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-2 rounded-2xl transition-all duration-300 hover:-translate-y-1"
     >
-      <Card
-        padded={false}
-        className="overflow-hidden border-neutral-200 bg-neutral-0 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:border-brand-600 flex flex-col h-full"
-      >
-        {/* Imagen del espécimen o placeholder */}
+      <div className="overflow-hidden border border-neutral-200/90 bg-neutral-0 shadow-xs transition-all duration-300 group-hover:shadow-lg group-hover:shadow-neutral-900/5 group-hover:border-neutral-300/90 flex flex-col h-full rounded-2xl">
+        {/* Imagen a sangre (flush con los bordes superiores y laterales) */}
         <div className="relative h-44 w-full overflow-hidden bg-neutral-100 flex-shrink-0">
-          {species.imageUrl && !imageError ? (
+          {optimizedImageUrl && !imageError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={species.imageUrl}
+              ref={(img) => {
+                if (img?.complete && !imageLoaded) {
+                  setImageLoaded(true);
+                }
+              }}
+              src={optimizedImageUrl}
               alt={species.commonName}
               loading="lazy"
               decoding="async"
+              onLoad={() => setImageLoaded(true)}
               onError={() => setImageError(true)}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className={`h-full w-full object-cover transition-[opacity,transform] duration-300 ease-out group-hover:scale-105 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
             />
           ) : (
             <ImagePlaceholder
               type={species.vegetationTypeCode}
               label={species.commonName}
               size="full"
-              className="rounded-none border-none"
+              className="rounded-none border-none transition-transform duration-300 ease-out group-hover:scale-105"
             />
           )}
 
-          {/* Badge flotante de tipo de vegetación */}
-          <div className="absolute top-2.5 right-2.5">
-            <Badge
-              label={species.vegetationTypeName}
-              color={getBadgeColor(species.vegetationTypeCode)}
-            />
+          {/* Badge de tipo de vegetación unificado */}
+          <div className="absolute top-2.5 right-2.5 shadow-2xs">
+            <Badge label={species.vegetationTypeName} color="brand" />
           </div>
-
-          {/* La foto genérica de la especie no lleva aviso; la de un ejemplar sí (SPEC-104 §5.3). */}
-          {species.imageUrl && !imageError && species.imageSource === 'SPECIMEN' && (
-            <div className="absolute bottom-2 left-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded bg-ink/80 backdrop-blur-sm text-[11px] font-medium text-white">
-                Foto de un ejemplar
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Información taxonómica */}
+        {/* Información taxonómica con padding interno natural */}
         <div className="p-4 flex flex-col flex-1 justify-between gap-3">
-          <div>
-            <h3 className="font-bold text-base text-neutral-900 group-hover:text-brand-700 transition-colors line-clamp-1">
+          <div className="space-y-0.5">
+            <h3 className="font-bold text-base text-neutral-900 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors duration-200 line-clamp-1 leading-snug">
               {species.commonName}
             </h3>
-            <p className="text-xs italic text-neutral-500 font-serif line-clamp-1 mt-0.5">
+            <p className="text-xs italic text-neutral-500 font-serif line-clamp-1">
               {species.scientificName}
             </p>
             {species.family && (
-              <span className="inline-block mt-1 text-[11px] text-neutral-500 font-medium">
+              <span className="inline-block text-[11px] text-neutral-400 font-medium tracking-tight">
                 Fam. {species.family}
               </span>
             )}
           </div>
 
-          <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-700">
-            <div className="flex items-center gap-1.5 font-medium">
-              <svg className="w-4 h-4 text-brand-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-              </svg>
-              <span>{species.specimenCount} {species.specimenCount === 1 ? 'ejemplar' : 'ejemplares'}</span>
-            </div>
-
-            <span className="text-brand-700 font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 text-xs">
-              Ver detalle
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
+          {/* Conteo de ejemplares limpio y directo */}
+          <div className="pt-0.5 flex items-center justify-between text-xs">
+            <span className="text-xs font-semibold text-neutral-800 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+              {species.specimenCount} {species.specimenCount === 1 ? 'ejemplar' : 'ejemplares'}
             </span>
           </div>
         </div>
-      </Card>
+      </div>
     </Link>
   );
 }

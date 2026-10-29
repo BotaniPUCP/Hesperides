@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.places.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -23,5 +24,9 @@ public record PerspectiveRequest(
         @NotNull(message = "La dirección es obligatoria")
         @DecimalMin(value = "0", message = "La dirección va de 0 a 360 grados")
         @DecimalMax(value = "360", inclusive = false, message = "La dirección va de 0 a 360 grados")
-        Double headingDeg) {
+        Double headingDeg,
+
+        /** La cámara con que se encuadró al guardarla. Sin ella, al editar se conserva la que tenía. */
+        @Valid
+        MapViewDtos.MapView mapView) {
 }

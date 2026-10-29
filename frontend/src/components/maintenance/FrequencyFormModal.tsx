@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import type {
   CreateMaintenanceFrequencyRequest,
   FrequencyRuleTypeCode,
@@ -94,6 +95,10 @@ function FrequencyForm({
   const [notes, setNotes] = useState(f?.notes ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const snapshot = JSON.stringify([activityTypeItemId, regime, ruleTypeCode, scope, fields, estimatedDuration, notes]);
+  const [initial] = useState(snapshot);
+  const guard = useUnsavedChangesGuard(snapshot !== initial);
+  const cerrar = () => guard.confirm(onClose);
 
   const patchFields = (patch: Partial<RuleFieldsState>) =>
     setFields((prev) => ({ ...prev, ...patch }));
@@ -140,9 +145,10 @@ function FrequencyForm({
   const creaVersionNueva = Boolean(frequencyToEdit && frequencyToEdit.validFrom < today());
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={cerrar}
       title={frequencyToEdit ? 'Editar frecuencia' : 'Nueva frecuencia de mantenimiento'}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -238,7 +244,7 @@ function FrequencyForm({
         </label>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
+          <Button type="button" variant="secondary" onClick={cerrar} disabled={loading}>
             Cancelar
           </Button>
           <Button type="submit" variant="primary" disabled={loading}>
@@ -247,6 +253,8 @@ function FrequencyForm({
         </div>
       </form>
     </Modal>
+    {guard.dialog}
+    </>
   );
 }
 

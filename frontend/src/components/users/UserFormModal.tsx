@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import type { CreateUserPayload, UpdateUserPayload, UserDetail } from '@shared/types';
 import { Button, Input, Modal, Select } from '@/components/ui';
 import type { SelectOption } from '@/components/ui';
@@ -61,6 +62,8 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
   const esAlta = user === null;
   const { options: roleOptions, isLoading: cargandoRoles } = useCatalogOptions(CATALOG_ROLE);
   const [values, setValues] = useState<UserFormValues>(() => valoresDe(user));
+  const guard = useUnsavedChangesGuard(isOpen && JSON.stringify(values) !== JSON.stringify(valoresDe(user)));
+  const cerrar = () => guard.confirm(onClose);
   const [errors, setErrors] = useState<UserFormErrors>({});
   const [formError, setFormError] = useState<string>();
   const [guardando, setGuardando] = useState(false);
@@ -156,13 +159,14 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={cerrar}
       title={esAlta ? 'Nuevo usuario' : 'Editar usuario'}
       footer={
         <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={onClose} disabled={guardando}>
+          <Button variant="ghost" onClick={cerrar} disabled={guardando}>
             Cancelar
           </Button>
           <Button onClick={enviar} loading={guardando} disabled={guardando}>
@@ -252,5 +256,7 @@ export function UserFormModal({ isOpen, user, onClose, onSubmit }: UserFormModal
         )}
       </div>
     </Modal>
+    {guard.dialog}
+    </>
   );
 }

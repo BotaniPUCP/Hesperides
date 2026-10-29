@@ -37,6 +37,20 @@ describe('UserFormModal en modo creacion', () => {
   const abrir = () =>
     render(<UserFormModal isOpen user={null} onClose={onClose} onSubmit={onSubmit} />);
 
+  it('cancelar con datos escritos pregunta antes de cerrar; sin datos cierra directo', async () => {
+    abrir();
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    await userEvent.type(screen.getByLabelText(/nombres/i), 'Luis');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
   it('pide la contrasena inicial, que en el alta si la escribe el administrador', () => {
     abrir();
 

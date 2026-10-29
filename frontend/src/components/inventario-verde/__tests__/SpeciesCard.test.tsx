@@ -20,17 +20,10 @@ describe('SpeciesCard', () => {
     expect(screen.getByRole('link')).toHaveAttribute('href', '/inventario-verde/especies/roystonea-regia');
   });
 
-  it('dice que la foto es de un ejemplar, no una imagen de referencia', () => {
+  it('muestra la etiqueta unificada de tipo de vegetación', () => {
     render(<SpeciesCard species={palmeraReal} />);
 
-    expect(screen.getByText('Foto de un ejemplar')).toBeInTheDocument();
-    expect(screen.queryByText(/referencial/i)).not.toBeInTheDocument();
-  });
-
-  it('una foto genérica de la especie no dice que es de un ejemplar', () => {
-    render(<SpeciesCard species={{ ...palmeraReal, imageUrl: '/t1.jpg', imageSource: 'SPECIES' }} />);
-
-    expect(screen.queryByText('Foto de un ejemplar')).not.toBeInTheDocument();
+    expect(screen.getByText('Palmera')).toBeInTheDocument();
   });
 
   it('muestra el placeholder si la especie no tiene foto', () => {

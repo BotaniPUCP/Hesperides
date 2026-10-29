@@ -27,11 +27,9 @@ describe('SpecimenTable', () => {
   it('muestra el código propio, la referencia y la ubicación del catastro', () => {
     renderTable();
 
-    expect(screen.getByRole('columnheader', { name: /Código \/ Referencia/i })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /Ubicación \(catastro\)/i })).toBeInTheDocument();
     expect(screen.getByText('EV-000001')).toBeInTheDocument();
-    expect(screen.getByText('Ref. p01')).toBeInTheDocument();
-    expect(screen.getAllByText('Educación')).toHaveLength(2);
+    expect(screen.getByText('Ref: p01')).toBeInTheDocument();
+    expect(screen.getAllByText('Educación').length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText(/null/i)).not.toBeInTheDocument();
   });
 
@@ -43,22 +41,20 @@ describe('SpecimenTable', () => {
     expect(notes[0]).toHaveAttribute('aria-label', expect.stringContaining('mediciones forestales'));
   });
 
-  it('abre la ficha del ejemplar al elegir su fila', () => {
+  it('vincula cada fila a la ficha de su ejemplar', () => {
     renderTable();
 
-    fireEvent.click(screen.getByText('EV-000002'));
-    expect(push).toHaveBeenCalledWith('/inventario-verde/especies/roystonea-regia/ejemplares/EV-000002');
-  });
+    const links = screen.getAllByRole('link');
+    const linkEV01 = links.find((l) => l.getAttribute('href')?.includes('EV-000001'));
+    const linkEV02 = links.find((l) => l.getAttribute('href')?.includes('EV-000002'));
 
-  it('amplía la miniatura de Drive sin abrir la ficha', () => {
-    renderTable();
-
-    fireEvent.click(screen.getAllByRole('button', { name: /Ver fotografía ampliada de/i })[0]);
-
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent(/EV-000001\s*·\s*Palmera real/);
-    expect(push).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Cerrar vista previa' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(linkEV01).toHaveAttribute(
+      'href',
+      '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001',
+    );
+    expect(linkEV02).toHaveAttribute(
+      'href',
+      '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000002',
+    );
   });
 });

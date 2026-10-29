@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import type { ImportKind, ImportPreview, ImportResult } from '@shared/types';
 import { catastroApi } from '@/lib/catastro-api';
 import { estandar } from '../estandares';
@@ -22,6 +23,9 @@ export function useImportacion() {
   const [decisiones, setDecisiones] = useState<Record<number, boolean>>({});
   const [resultado, setResultado] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reanalizando, setReanalizando] = useState(false);
+  // Un archivo elegido o una vista previa sin confirmar es trabajo que se pierde al salir.
+  const guard = useUnsavedChangesGuard(fase !== 'hecho' && (csv !== null || zip !== null || vista !== null));
 
   const pendientes = vista ? vista.duplicates.filter((d) => decisiones[d.line] === undefined).length : 0;
   const puedeConfirmar = vista !== null && vista.canConfirm && pendientes === 0 && fase === 'vista';
@@ -37,6 +41,24 @@ export function useImportacion() {
     } catch (e) {
       setError(mensajeDeErrorCatastro(e));
       setFase('elegir');
+    }
+  }
+
+  /**
+   * Re-analiza el archivo CSV/ZIP en memoria sin desmontar la pantalla de vista previa.
+   * Útil cuando se crea una especie al vuelo o se resuelven dependencias externas.
+   */
+  async function reanalizar() {
+    if (!csv) return;
+    setReanalizando(true);
+    setError(null);
+    try {
+      setVista(await catastroApi.previewImport(kind, csv, zip));
+      setDecisiones({});
+    } catch (e) {
+      setError(mensajeDeErrorCatastro(e));
+    } finally {
+      setReanalizando(false);
     }
   }
 
@@ -63,11 +85,17 @@ export function useImportacion() {
 
   /** Cambiar de estándar descarta lo elegido: otro estándar, otro archivo. */
   function setKind(k: ImportKind) {
-    reiniciar();
-    setKindState(k);
+    guard.confirm(() => {
+      limpiar();
+      setKindState(k);
+    });
   }
 
   function reiniciar() {
+    guard.confirm(limpiar);
+  }
+
+  function limpiar() {
     setFase('elegir');
     setCsv(null);
     setZip(null);
@@ -80,7 +108,8 @@ export function useImportacion() {
   return {
     kind, estandar: estandar(kind), setKind,
     fase, csv, zip, vista, decisiones, resultado, error, pendientes, puedeConfirmar,
-    setCsv, setZip, revisar, confirmar, decidir, decidirTodos, reiniciar,
+    reanalizando, reanalizar,
+    setCsv, setZip, revisar, confirmar, decidir, decidirTodos, reiniciar, avisoSinGuardar: guard.dialog,
   };
 }
 

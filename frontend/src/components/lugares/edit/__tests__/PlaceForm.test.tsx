@@ -7,7 +7,8 @@ import { placesApi } from '@/lib/places-api';
 import { PlaceForm } from '../PlaceForm';
 
 const push = jest.fn();
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
+const replace = jest.fn();
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push, replace }) }));
 jest.mock('@/lib/places-api', () => ({ placesApi: { create: jest.fn(), update: jest.fn(), list: jest.fn() } }));
 jest.mock('@/hooks/useMapLayers', () => ({
   useMapLayers: () => ({ data: jest.requireActual('@/components/map3d/__fixtures__/mapLayers').sampleLayers, isLoading: false }),
@@ -55,7 +56,8 @@ describe('PlaceForm', () => {
       name: 'CIA', kindCode: 'OUTDOOR', categoryCode: 'EDIFICIO', parentCode: null,
       outline: { buildingId: data.campusBuildings[0].props.id }, aliases: ['Complejo de Innovación', 'CIA nuevo'],
     }));
-    expect(push).toHaveBeenCalledWith('/lugares/LUG-0005');
+    // Con cambios hay una entrada propia en el historial: se reemplaza al salir.
+    expect(replace).toHaveBeenCalledWith('/lugares/LUG-0005');
   });
 
   it('un exterior sin contorno no se puede guardar', () => {
@@ -102,5 +104,27 @@ describe('PlaceForm', () => {
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it('cancelar con datos escritos pregunta antes de salir', () => {
+    render(<PlaceForm />);
+    fillBasics();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(replace).toHaveBeenCalledWith('/lugares');
+  });
+
+  it('cancelar sin haber escrito nada sale sin preguntar', () => {
+    render(<PlaceForm />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(push).toHaveBeenCalledWith('/lugares');
   });
 });
