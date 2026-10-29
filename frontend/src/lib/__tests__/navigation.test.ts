@@ -82,14 +82,12 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('el mapa y los lugares son enlaces directos para los cuatro roles, no grupos', () => {
-    for (const rol of ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO']) {
-      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(
-        ['COORDINADOR', 'SUPERVISOR'].includes(rol)
-          ? ['/incidencias', '/mapa', '/lugares']
-          : ['/mapa', '/lugares'],
-      );
+  it('el mapa y los lugares son enlaces directos para los cuatro roles; incidencias y riego, para quien los opera', () => {
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/lugares', '/riego']);
+    for (const rol of ['COORDINADOR', 'SUPERVISOR']) {
+      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/lugares', '/riego']);
     }
+    expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa', '/lugares']);
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Catálogo botánico',
       'Intervenciones',

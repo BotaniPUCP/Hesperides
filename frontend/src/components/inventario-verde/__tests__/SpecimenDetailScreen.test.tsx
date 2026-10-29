@@ -6,6 +6,8 @@ import { catastroApi } from '@/lib/catastro-api';
 import { p01Detail } from '../__fixtures__/inventario';
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+// La ficha es publica: sin sesion no ofrece editar.
+jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: null }) }));
 jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { specimen: jest.fn() } }));
 
 jest.mock('@/lib/catastro-api', () => ({ catastroApi: { assessments: jest.fn() } }));
