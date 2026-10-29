@@ -58,6 +58,12 @@ spring:
 server:
   port: ${BACKEND_PORT:8080}
 
+# SPEC-200: provisional workflow details, independent from the mandatory-photo rule.
+interventions:
+  review:
+    require-photo-on-completion: ${INTERVENTIONS_REQUIRE_PHOTO_ON_COMPLETION:true}
+    block-pending-on-approval: ${INTERVENTIONS_BLOCK_PENDING_ON_APPROVAL:true}
+
 hesperides:
   security:
     jwt:

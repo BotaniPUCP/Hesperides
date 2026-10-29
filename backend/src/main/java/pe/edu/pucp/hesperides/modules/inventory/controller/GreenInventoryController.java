@@ -15,6 +15,7 @@ import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenDetailResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenResponse;
+import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenSearchResultResponse;
 import pe.edu.pucp.hesperides.modules.inventory.service.GreenInventoryService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
@@ -67,6 +68,30 @@ public class GreenInventoryController {
     @GetMapping("/species/{slug}/locations")
     public ResponseEntity<ApiResponse<List<LocationCountResponse>>> locations(@PathVariable String slug) {
         return ResponseEntity.ok(ApiResponse.ok("Locations retrieved", service.locations(slug)));
+    }
+
+    @GetMapping("/specimens")
+    public ResponseEntity<ApiResponse<Page<SpecimenResponse>>> allSpecimens(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String direction,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        SpecimenQuery query = SpecimenQuery.of(search, location, sort, direction, page, size);
+        return ResponseEntity.ok(ApiResponse.ok("Specimens retrieved", service.allSpecimens(query)));
+    }
+
+    @GetMapping("/locations")
+    public ResponseEntity<ApiResponse<List<LocationCountResponse>>> allLocations() {
+        return ResponseEntity.ok(ApiResponse.ok("Locations retrieved", service.locations(null)));
+    }
+
+    @GetMapping("/specimens/search")
+    public ResponseEntity<ApiResponse<List<SpecimenSearchResultResponse>>> searchSpecimens(
+            @RequestParam(required = false, defaultValue = "") String q,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(ApiResponse.ok("Specimens retrieved", service.searchSpecimens(q, limit)));
     }
 
     @GetMapping("/specimens/{code}")

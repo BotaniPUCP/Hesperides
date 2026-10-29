@@ -20,6 +20,8 @@
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
+| SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: V025, planificación/asignación, ejecución, evidencia y revisión local; web incremental en verificación | — | S2 (propuesto) | |
+| SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -27,12 +29,26 @@
 
 ## Enmiendas a specs cerrados
 
+SPEC-201 ajusta SPEC-001 Anexo A (aprobación exclusiva de coordinación y resolución
+por capataz), SPEC-002 §4.8 (captura mínima, ubicación opcional, 1:N intervenciones)
+y SPEC-C01 (estados). La matriz del cliente sigue pendiente; categorías provisionales.
+
 Cuando un spec de feature obliga a corregir uno fundacional ya cerrado, la enmienda se aplica al
 archivo original (marcada como cita con su procedencia) y se anota aquí. Nadie debe descubrir por
 sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-200 §§3.1–3.5 · Plan T06 | Núcleo de evidencia por ubicación | Anuncio, recepción y lectura privada; referencia permanente, ventana de submit de 24 h, bytes originales y SHA-256, compensación ante rollback y reintentos sin duplicar. Se agrega decodificación local WebP; se reutilizan FileStorage/PhotoUploads. Formato HTTP incompatible → 415 mediante el manejador común. 16 pruebas nuevas, 51 específicas y suite completa de 656 aprobadas; resultados y límites en `docs/planes/SPEC-200-etapa-3-evidencia.md`. Sin otra migración ni cambios en la base de trabajo; P-02/P-03 siguen delimitando finalización/revisión y cargas pendientes posteriores. |
+| SPEC-200 §§3.1, 3.3, 3.5 y 5 · Plan T05 parcial | Inicio y avance por ubicación | Dos rutas locales con autor real, intento, permisos vigentes, versión común y bloqueo cabecera/ubicación. Eventos STARTED/PROGRESS_SAVED atómicos; no se modifica cantidad final ni otras ubicaciones. 12 pruebas nuevas, 35 específicas y suite completa de 640 aprobadas; resultados y límites en `docs/planes/SPEC-200-etapa-3-inicio-avance.md`. Sin otra migración ni cambios en base de trabajo. Finalización/revisión, fotos e indicadores pendientes en aquella entrega. |
+| SPEC-200 §§3–5, §8 · Plan T04 | Backend de planificación y asignación | Entidades/repositorios de V022 y API de consulta, opciones, creación idempotente, edición, reprogramación, asignación y cancelación previa al inicio. Permisos vigentes, alcance por supervisión/asignación, versión común y eventos atómicos. 23 pruebas nuevas y suite completa de 628 aprobadas; resultados y límites en `docs/planes/SPEC-200-etapa-3-planificacion.md`. Base de trabajo sin migrar; ejecución, fotos, indicadores, web e incidencias no habilitados en aquella entrega. |
+| SPEC-200 §4 y §8 · Plan T03 · SPEC-002 §4.0 | Etapa 2 de intervenciones | Se implementa V022 sin modificar V001–V021. 16 pruebas nuevas validan arranque vacío, actualización desde V021, conservación de filas/definiciones/checksums y restricciones. Pasan 51 comprobaciones de migración y 605 pruebas en la suite backend completa. Solo bases temporales; base de trabajo sin migrar. API/JPA/web y políticas operativas pendientes en aquella entrega. |
+| SPEC-200 §§3–8 · Plan T01 | Normalización documental multiubicación | Contratos de ejecución/revisión por ubicación, DDL con intervention_locations, evidencia/eventos/elementos con pertenencia mediante FK compuesta y resúmenes derivados sin cantidades globales editables. Se reemplaza el borrador singular; incidencia sigue vinculando el trabajo completo (§3.6). No se creó ni ejecutó una migración; políticas P-01/P-02/P-03 siguen pendientes. |
+| SPEC-200 D-05, §2.7 y P-04 · Plan T01 | Confirmación del usuario sobre multiubicación | Un trabajo abarca varias ubicaciones y cada una tiene avance, cantidad ejecutada y estado propios. Se requiere entidad hija y ejecución localizada; el DDL/contrato singular anterior queda señalado como sustituido y debe normalizarse antes de migrar. Las fotos se vinculan al lugar documentado sin imponer cantidad mínima. P-01/P-02 siguen pendientes. |
+| SPEC-200 §8 y §9.3 · Plan T02 | Preparación del entorno y referencia de pruebas (22 oct 2026) | Se instalan dependencias desde lockfile, se inicia Docker Desktop y se selecciona JDK 26 solo para Maven. Tras recompilación limpia: 589 pruebas backend y 555 frontend aprobadas; lint/build frontend correctos. Resultado y advertencias en `docs/planes/SPEC-200-referencia-pruebas.md`. Sin cambios de código, permisos o migraciones; políticas operativas siguen pendientes. |
+| SPEC-200 §9.3 | Plan de tareas y consulta al usuario (22 oct 2026) | El usuario dejó indicadores P-01, fotografías P-02 y multiubicación P-04 pendientes del cliente; no se adoptaron políticas por defecto. Se añade `docs/planes/SPEC-200-implementacion-intervenciones.md` con tareas por las seis etapas y verificación inicial parcial del entorno. El alcance sigue siendo intervenciones, sin implementar incidencias. |
+| SPEC-200 §2.6, §3.3 y §9 | Revisión con actas 004, 009 y 010 (22 oct 2026) | Se incorpora trazabilidad por acuerdo, contrato con incidencias y distinción entre ejecución y cierre de solicitud. Se retiran el mínimo BEFORE/AFTER y el conteo de frecuencias solo por validadas/fecha como reglas no confirmadas; ubicación sin zona queda propuesta en el esquema. Cinco preguntas operativas locales quedan explícitas. No cambia código, SQL publicado ni permisos. |
+| SPEC-002 §4.6 · SPEC-005 §4.3, §4.6, §4.8 · Mapa de migraciones | SPEC-200 (borrador, 22 oct 2026) | Se documenta el esquema conciliado de intervenciones y las decisiones propuestas, sin implementarlas. Los números antiguos de migraciones pendientes dejan de ser reservas: V017–V021 ya existen con otros contenidos. Las ampliaciones de intervenciones se integrarán en su creación nueva, sin ejecutar los ALTER históricos. Permisos según SPEC-001; las nuevas decisiones de negocio de SPEC-200 siguen sujetas a revisión. |
 | SPEC-000 §1 | SPEC-100 | "Sin dependencia de servicios externos" pasa a admitir **SMTP como única excepción**, con la condición de que su caída nunca impida una operación de negocio. |
 | SPEC-001 §2.5 | SPEC-100 | Se corrige la justificación del "no autorregistro": el argumento de que no había correo en el alcance ya no aplica. **La decisión de no permitir autorregistro no cambia.** |
 | SPEC-004 §3.2 | SPEC-100 | Se añade la acción auditable `USER_CREDENTIALS_DELIVERY_FAILED`. |
@@ -69,7 +85,9 @@ sorpresa que un principio fundacional cambió.
 | **SPEC-002 §4.8** | SPEC-102 | `incidents` gana `location_description`, `described_section_id` y `described_building_id`: la descripción de la ubicación se calcula en el servidor al registrar y queda congelada. |
 | **SPEC-C01 §4.2 (nueva) y §9** | Sidebar de navegación (1 oct 2026) | La navegación pasa de una lista de enlaces en el inicio a un **sidebar** con módulos desplegables, **un grupo por módulo del dominio** (hoy solo «Administración»). La estructura vive en `lib/navigation.ts` con los roles por ítem; las pantallas con sesión se mueven al grupo `app/(dashboard)/`, que aplica guard y sidebar una sola vez. Se retiran los «Volver al inicio». Catálogos, que no tenía enlace, queda accesible desde el sidebar para `ADMIN`. |
 | Todos los specs | Refactor a formato atómico | Las invariantes comunes salen a **`REGLAS.md`** (lectura obligatoria antes de generar código): las diez invariantes, las convenciones de SPEC-000 §5 —con §5.2.1 de Spring Boot 4 y §5.2.2 de CORS íntegras— y el checklist común. SPEC-000 pierde la copia de `_plantilla.md` y los resúmenes de los otros specs, que ya contradecían a SPEC-001. En cada spec, las secciones genéricas de Seguridad, Extensibilidad y Checklist se funden en una sola "Propio de este spec". **La numeración se conserva**: toda referencia `SPEC-XXX §N` sigue siendo válida, y `SPEC-000 §5.x` pasa a `REGLAS.md §5.x` con el mismo número. Ninguna decisión técnica, contrato ni criterio de aceptación cambió. |
-| SPEC-002 §4.9 | SPEC-101 | La migración `V010` queda asignada a `V010__create_maintenance_frequencies.sql` siguiendo `REGLAS.md` §0.2 (numeración cronológica sin huecos). El sembrado de catálogos que SPEC-002 proyectaba para V010 ya fue absorbido íntegramente por `V009__seed_intervention_taxonomy.sql`. |
+| SPEC-002 §4.9 | SPEC-101 | Antes del realineamiento al baseline, `V010` correspondía a `V010__create_maintenance_frequencies.sql` y `V009` contenía la taxonomía. Referencia histórica: las frecuencias vigentes están en `V002` y la taxonomía en el baseline `V001`, según el mapa de migraciones de abajo. |
+| SPEC-000 · REGLAS | Ajuste de toolchain e infraestructura | Se mantiene Java **26** (la propuesta de bajar a 25 LTS se descartó al integrar). Docker y Podman son alternativas sobre `docker-compose.yml` y `docker-compose.dev.yml`; CI conserva Docker Compose y `AGENTS.md` usa Podman para el desarrollo local de este usuario. |
+| SPEC-201 · SPEC-C01 | Realineamiento tras integrar develop (24 oct 2026; ejecución y almacenamiento simplificados el 29 oct) | Rutas de captura/detalle con filtros en URL, consultas independientes sobre `useRequest` y controles compartidos con tamaño grande optativo. Se conservan los tokens claro/oscuro actuales. Fotos privadas únicamente mediante `FileStorage` y claves `incidents/{uuid}`, sin conversión ni cambio de límites. Base/dev conservan volúmenes y hot reload; la demostración usa BD/backend en contenedores y Bun local, con `down --volumes` para descartar los datos de prueba de todo el proyecto. No cambia el esquema ni ninguna migración publicada. |
 
 ---
 
@@ -96,7 +114,7 @@ que todavía no se ha escrito. La pareja que tome ese spec debe cerrarlos.
 | ~~¿El vivero entra en la fase 1?~~ | Equipo | **✅ Cerrada: NO entra; pasa a fase futura** (25 sep). La clase de actividad «Propagación y plantación» (10 tipos) **sí permanece** en la taxonomía: el personal estable propaga en campo, no solo en vivero — es la 2.ª clase más usada del Excel (36 de 171 registros). Las plantas que consume una intervención se registran como insumo, sin rastrear su origen. |
 | **Cómo integrarse con el mapa interactivo del cliente** | Cliente (3.ª entrevista) | **Decidido: nos integramos, no construimos uno nuevo.** El cliente ya tiene un mapa de varias capas que comparten las 3 secciones de OSG y que **Carolina alimenta a mano cada semana** desde el Excel — ese trabajo manual es el dolor D1. Robert pidió «una aplicación que pueda enlazarse a este insumo». **Falta saber de qué fuente lee cada capa y si podemos escribir en ella**: si lee de una hoja de Google el riesgo es bajo y Carolina deja de copiar; si es cerrado, la integración automática no es posible. Preguntas en `docs/dominio/integracion-mapa-interactivo.md`. |
 | ~~¿Los locales periféricos entran al alcance?~~ | Equipo | **✅ Cerrada (25 sep): NO entran, ni se planea incluirlos.** El cliente no los necesita («la mayor dinámica de atención y recursos es el campus»). `zones` no necesita un nivel de sede. Ver `docs/dominio/fuera-de-alcance.md` §2. |
-| Intervenciones que afectan varias zonas | SPEC-2XX de intervenciones | `interventions.zone_id` es único, pero el registro del cliente tiene celdas como «Comedor Central, Gastronomía y Matemática». Al importar se crea una intervención por zona; si el caso resulta frecuente hará falta una tabla puente `intervention_zones` (SPEC-005 §5.4). |
+| Intervenciones que afectan varias zonas | SPEC-200 §2.7, §§3–5 | Confirmado por el usuario: una intervención, varias ubicaciones, avance/cantidad/estado por ubicación. Contratos y esquema documental normalizados; P-04 resuelta. Obligatoriedad de fotos e indicadores siguen pendientes. |
 | Composición de las cuadrillas | SPEC-1XX de equipos | Las tablas `teams`/`team_members` existen (**V001**, baseline), pero el cliente aún no ha dicho cuántas cuadrillas hay, cómo se llaman ni qué zonas cubre cada una. |
 | ~~Frecuencias de mantenimiento (P-03 de SPEC-002)~~ | SPEC-006 | **✅ Cerrada.** La frecuencia se define **por tipo de intervención** — ninguna de las que el cliente declaró varía por zona, especie ni tipo de elemento. Se modela con **criterio configurable** (`FREQUENCY_CRITERION`) más `target_value` y `tolerance_percent` **por actividad**, y con **vigencia temporal** para que relajar una tolerancia no reescriba los periodos ya evaluados. La poda a demanda se configura con criterio `NONE` explícito, no dejándola sin fila: «no tiene frecuencia» y «nadie la configuró» son estados distintos. |
 
@@ -104,19 +122,21 @@ que todavía no se ha escrito. La pareja que tome ese spec debe cerrarlos.
 
 ## Mapa de migraciones
 
-**Fuente única de la numeración Flyway** (REGLAS §5.4). La numeración es cronológica: cada
-migración nueva toma el siguiente número libre. Las pendientes tienen un número **reservado**
-en el orden previsto de implementación; si una se implementa antes que otra, se renumera aquí y en
-su spec, en el mismo commit. Una migración aplicada nunca cambia de número ni de contenido.
+**Inventario de archivos Flyway del repositorio** (REGLAS §0.2 y §5.4). La numeración es
+cronológica: cada migración nueva toma el siguiente número libre. **Las pendientes no reservan
+números.** Al implementarlas se asigna su versión y se actualiza este mapa en el mismo commit.
+Una migración publicada nunca cambia de número ni de contenido. La presencia de un archivo
+no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_schema_history`.
 
-### Aplicadas
+### Implementadas (archivos presentes en el repositorio)
 
 > **Baseline (commit `638aca0`).** Las once migraciones V001–V011 que existieron hasta la
 > integración de frecuencias se consolidaron en un solo `V001__baseline_schema.sql`: dos ramas
 > habían tomado el número V010 a la vez y ninguna base desplegada conservaba datos. El esquema
 > resultante es el mismo; cada sección del baseline conserva los porqués de la migración que
-> reemplaza. Una base migrada con el historial anterior falla la validación de Flyway por
-> checksum y hay que recrearla (`docker compose down -v`).
+> reemplaza. Si una base conserva el historial anterior, requiere un plan de actualización con
+> respaldo y restauración comprobada. Esta nota histórica no prescribe borrar datos ni usar
+> `down -v` en una base existente.
 
 | Versión | Archivo | Propietaria | Qué contiene |
 |---|---|---|---|
@@ -136,22 +156,37 @@ su spec, en el mismo commit. Una migración aplicada nunca cambia de número ni 
 | V014 | `V014__seed_green_inventory.sql` | C-10 | Carga del catastro: 90 especies, 965 ejemplares (985 plantas), 76 palmeras medidas |
 | V015 | `V015__create_catastro_registration.sql` | SPEC-103 §4 | Cargas por CSV, historial de evaluaciones, fotos en almacenamiento propio (ejemplares, componentes y especies), bebederos como `FEATURE_TYPE` |
 | V016 | `V016__seed_measurements_2026_and_fountains.sql` | SPEC-103 §4.5 | Mediciones 2026 (palmeras, cafetos y Bosque Húmedo), 15 evaluaciones y 67 bebederos |
+| V017 | `V017__allow_many_species_photos.sql` | SPEC-104 §4 | Varias fotos por especie, orden y créditos |
+| V018 | `V018__create_places.sql` | Catálogo de lugares (cabecera SQL) | Lugares, perspectivas y fotos; convive con las referencias anteriores |
+| V019 | `V019__create_place_reference_links.sql` | Catálogo de lugares (cabecera SQL) | Enlaces para la migración gradual de referencias a lugares |
+| V020 | `V020__track_purged_photo_files.sql` | Retención de fotos (cabecera SQL) | Seguimiento de archivos purgados de fotos de lugares y especies |
+| V021 | `V021__add_place_map_view.sql` | Catálogo de lugares (cabecera SQL) | Vista de cámara guardada para un lugar en el mapa |
+| V022 | `V022__add_perspective_map_view.sql` | Catálogo de lugares (cabecera SQL) | Vista de cámara guardada para cada perspectiva |
+| V023 | `V023__add_perspective_sort_order.sql` | Catálogo de lugares (cabecera SQL) | Orden manual de las perspectivas de un lugar |
+| V024 | `V024__create_irrigation_turns.sql` | M7 riego | Turnos de riego y sus secciones |
+| V025 | `V025__create_interventions.sql` | SPEC-200 §4 | Núcleo multiubicación: seis tablas, código interno y catálogos ausentes; probado en bases temporales, no aplicado a la base de trabajo |
+| V026 | `V026__create_incident_workflow.sql` | SPEC-201 | Incidencias: captura mínima, aprobación, trabajos vinculados (`incident_interventions`), historial y fotos privadas |
 
-### Pendientes (número reservado)
+### Pendientes (sin número reservado)
 
-| Versión | Archivo | Propietaria | Depende de |
-|---|---|---|---|
-| V017 | `V017__allow_many_species_photos.sql` | SPEC-104 §4 | V015 |
-| V018 | `V018__create_interventions.sql` | SPEC-002 §4.6 | V013 |
-| V019 | `V019__create_contracts.sql` | SPEC-002 §4.7 | V018 |
-| V020 | `V020__create_incidents.sql` | SPEC-002 §4.8 | V013, V018 |
-| V021 | `V021__seed_catalogs.sql` | SPEC-002 §4.9 | Sin `ROLE`, `INTERVENTION_TYPE`, `ZONE_TYPE`, `USE_TYPE`, `SPECIES_TYPE`, `GREEN_ELEMENT_TYPE` ni `system_parameters`: ya están en V001, V003, V005, V012 y V013 |
-| V022 | `V022__create_audit_log.sql` | SPEC-004 §4 | V005, V012, V013, V018–V021 (añade columnas de autoría a sus tablas) |
-| V023 | `V023__add_execution_tracking_to_interventions.sql` | SPEC-005 §4.3 | V018 |
-| V024 | `V024__seed_confirmed_catalogs.sql` | SPEC-005 §4.5 | V021 |
-| V025 | `V025__add_unspecified_evidence_moment.sql` | SPEC-005 §4.6 | V018, V021 |
-| V026 | `V026__add_deferred_upload_and_map_publication.sql` | SPEC-005 §4.8 | V018 |
-| V027 | `V027__add_location_description_to_incidents.sql` | SPEC-102 §4.4 | V020, V008 |
+Al 22 oct 2026 el siguiente número libre es **V027**, sujeto a comprobarlo nuevamente al
+implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
+Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
+
+| Trabajo | Propietaria | Depende de / tratamiento |
+|---|---|---|
+| Finalización/revisión e interfaz de intervenciones | SPEC-200, concilia SPEC-002 §4.6 y SPEC-005 | V022, T04, inicio/avance por ubicación de T05 y núcleo de fotos T06 implementados. Faltan finalización/revisión, políticas operativas acordadas y web; resultados en informes T04/T05 parcial/T06 |
+| Insumos y consumo; ficha técnica | SPEC-002 §4.6 · SPEC-005 §4.3 | Entregas posteriores a la primera de SPEC-200; no desaparecen del alcance global |
+| Contratos y proveedores | SPEC-002 §4.7 | Intervenciones; definir la FK cuando ambas tablas existan |
+| Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
+| Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
+| Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
+
+Las antiguas pendientes `add_execution_tracking_to_interventions`,
+`add_unspecified_evidence_moment` y `add_deferred_upload_and_map_publication` quedan
+absorbidas, para los campos de la primera entrega, por el diseño de creación de SPEC-200.
+No se crean primero tablas incompletas para aplicar después esos ALTER. Los campos de
+incidencias, insumos y ficha técnica permanecen en sus entregas respectivas.
 
 `maintenance_frequencies` no figura entre las pendientes: ya existe como **V002** (SPEC-101).
 SPEC-006, que la diseñaba aparte, quedó superado.

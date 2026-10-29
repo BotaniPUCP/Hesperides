@@ -6,6 +6,8 @@ import { catastroApi } from '@/lib/catastro-api';
 import { p01Detail } from '../__fixtures__/inventario';
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+// La ficha es publica: sin sesion no ofrece editar.
+jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: null }) }));
 jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { specimen: jest.fn() } }));
 
 jest.mock('@/lib/catastro-api', () => ({ catastroApi: { assessments: jest.fn() } }));
@@ -30,13 +32,13 @@ describe('SpecimenDetailScreen', () => {
 
     expect(await screen.findByRole('heading', { name: 'EV-000001' })).toBeInTheDocument();
     expect(screen.getByText('D 3 (AV-0312)')).toBeInTheDocument();
-    expect(screen.getByText('p01')).toBeInTheDocument();
+    expect(screen.getByText(/Ref:\s*p01/)).toBeInTheDocument();
     expect(screen.getByText('Medido en campo')).toBeInTheDocument();
-    expect(screen.getByText(/^7[.,]5 m$/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Volver a los ejemplares/i })).toHaveAttribute(
-      'href',
-      '/inventario-verde/especies/roystonea-regia',
-    );
+    expect(
+      screen.getByText((_, element) => element?.tagName.toLowerCase() === 'dd' && /^7[.,]5\s*m$/.test(element.textContent?.trim() ?? ''))
+    ).toBeInTheDocument();
+    const catastroLink = screen.getByRole('link', { name: 'Catastro de Ejemplares' });
+    expect(catastroLink).toHaveAttribute('href', '/catastro/ejemplares');
   });
 
   it('un ejemplar sin medir no muestra alturas y lo dice', async () => {
@@ -83,6 +85,54 @@ describe('SpecimenDetailScreen', () => {
 
     render(<SpecimenDetailScreen code="EV-000001" />);
 
-    expect(await screen.findByText('Esta planta todavía no tiene evaluaciones.')).toBeInTheDocument();
+    expect(
+      await screen.findByText(/No se registran evaluaciones fitosanitarias/i),
+    ).toBeInTheDocument();
+  });
+
+  it('renderiza sin caerse la ficha del ejemplar del mango (EV-000660)', async () => {
+    const mangoDetail = {
+      code: 'EV-000660',
+      sourceReference: 'SA-50',
+      sourceLocation: 'Pista de Salud',
+      latitude: -12.0653920588178,
+      longitude: -77.0817645639143,
+      photoUrl: 'https://drive.google.com/file/d/1Xw6yHnlypBUrDWHnhtRPzfF-e-vHSzCM/view?usp=drivesdk',
+      imageUrl: 'https://drive.google.com/thumbnail?id=1Xw6yHnlypBUrDWHnhtRPzfF-e-vHSzCM&sz=w1000',
+      thumbnailUrl: 'https://drive.google.com/thumbnail?id=1Xw6yHnlypBUrDWHnhtRPzfF-e-vHSzCM&sz=w1000',
+      quantity: 1,
+      notes: null,
+      legacyCode: null,
+      elementTypeCode: 'INDIVIDUAL',
+      elementTypeName: 'Ejemplar',
+      heightM: null,
+      trunkHeightM: null,
+      dbhCm: null,
+      crownRadiusM: null,
+      isBanded: null,
+      dataSource: 'UNKNOWN' as const,
+      section: null,
+      species: {
+        slug: 'mangifera-indica',
+        scientificName: 'Mangifera indica',
+        commonName: 'Mango',
+        otherNames: [],
+        family: 'Anacardiaceae',
+        vegetationTypeCode: 'TREE',
+        vegetationTypeName: 'Árbol',
+        specimenCount: 1,
+        imageUrl: 'https://drive.google.com/thumbnail?id=1Xw6yHnlypBUrDWHnhtRPzfF-e-vHSzCM&sz=w1000',
+        imageSource: 'SPECIMEN' as const,
+        photos: [],
+      },
+    };
+
+    api.specimen.mockResolvedValue(mangoDetail);
+
+    render(<SpecimenDetailScreen code="EV-000660" />);
+
+    expect(await screen.findByRole('heading', { name: 'EV-000660' })).toBeInTheDocument();
+    expect(screen.getAllByText('Mango').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Mangifera indica')).toBeInTheDocument();
   });
 });

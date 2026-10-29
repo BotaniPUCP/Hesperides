@@ -16,7 +16,9 @@ jest.mock('@/lib/inventario-verde-api', () => ({
     species: jest.fn(),
     speciesBySlug: jest.fn(),
     specimens: jest.fn(),
+    allSpecimens: jest.fn(),
     locations: jest.fn(),
+    allLocations: jest.fn(),
     specimen: jest.fn(),
   },
 }));
@@ -81,9 +83,11 @@ describe('useInventarioVerde', () => {
     await waitFor(() => expect(result.current.availableLocations).toEqual([{ location: 'Educación', count: 12 }]));
   });
 
-  it('sin especie no pide ejemplares', () => {
+  it('sin especie pide todos los ejemplares globales', () => {
+    api.allSpecimens.mockResolvedValue(page([p01], 1, 0, 12));
+    api.allLocations.mockResolvedValue([{ location: 'Educación', count: 12 }]);
     renderHook(() => useInventarioVerdeSpecimens(null));
-    expect(api.specimens).not.toHaveBeenCalled();
+    expect(api.allSpecimens).toHaveBeenCalled();
   });
 
   it('busca un ejemplar por su código y expone su especie', async () => {

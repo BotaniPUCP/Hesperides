@@ -18,6 +18,10 @@ export interface ViewerCallbacks {
 /** Las operaciones que la interfaz React ordena al visor. */
 export interface Viewer {
   setPaint: (mode: ModeId, hidden: Set<string>) => void;
+  /** M7: áreas registradas temporalmente, sin cambiar el modo normal del mapa. */
+  setMarkedSections: (codes: readonly string[]) => void;
+  /** Areas del sector cuyo poligono cruza el rectangulo de pantalla (pixeles cliente). */
+  sectionCodesInScreenRect: (x1: number, y1: number, x2: number, y2: number, eligible: readonly string[]) => string[];
   setLayerVisible: (id: LayerId, visible: boolean) => void;
   select: (target: Target | null, focus: boolean) => void;
   setNight: (night: boolean) => void;
@@ -38,5 +42,9 @@ export interface Viewer {
   focusViewCone: (id: number | null) => void;
   /** Lleva la cámara a un punto del campus. */
   focusLatLon: (lat: number, lon: number) => void;
+  /** Muestra o reposiciona el marcador/pin en las coordenadas indicadas. */
+  setPinLatLon?: (lat: number, lon: number) => void;
+  /** Oculta el marcador/pin de la escena. */
+  clearPin?: () => void;
   dispose: () => void;
 }

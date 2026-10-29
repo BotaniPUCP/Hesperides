@@ -6,12 +6,12 @@
 > **Frontend:** Next.js 16+ (React 19) + React Native · TypeScript · Tailwind CSS
 >   (subido desde Next.js 14 / React 18 por 1 vulnerabilidad crítica y 7 altas, incluido un bypass de autorización en middleware, CVSS 9.1)
 > **BD:** PostgreSQL + PostGIS · Hibernate/JPA + Hibernate Spatial · Flyway
-> **Infra:** Docker · Docker Compose · GitHub Actions
+> **Infra:** Docker + Docker Compose o Podman + proveedor Compose · GitHub Actions (Docker)
 > **Calidad:** JaCoCo 0.8.15+ (cobertura backend) · Jest + React Testing Library (frontend) · pytest (data service)
 >
-> **Versiones exactas verificadas en el pom** (§5.2.1 documenta lo que Spring Boot 4
+> **Versiones configuradas en el pom** (§5.2.1 documenta lo que Spring Boot 4
 > cambió respecto a 3.x): Spring Boot **4.1.1**, Spring Security **7.1.1**, Java **26**
-> (Temurin 26.0.2), JJWT **0.12.6**, Testcontainers **2.x**, JaCoCo **0.8.15**.
+> (Temurin 25), JJWT **0.12.6**, Testcontainers **2.x**, JaCoCo **0.8.15**.
 
 ---
 
@@ -393,6 +393,11 @@ eliminó para no mantener dos versiones del mismo índice.
 
 ## Anexo A — Comandos útiles de desarrollo
 
+Elegir Docker o Podman según el entorno: los ejemplos siguientes usan
+`podman compose`; con Docker sustituirlo por `docker compose` y `podman exec` por
+`docker exec`. También se puede invocar `podman-compose` directamente si es el
+proveedor instalado. Ambos usan los mismos archivos; CI conserva Docker Compose.
+
 > `docker-compose.dev.yml` es un **override**, no un compose completo: no
 > declara `build` ni `image`, solo modifica lo que ya define el archivo base.
 > Por eso todo comando de desarrollo encadena ambos archivos con `-f`.
@@ -406,20 +411,20 @@ eliminó para no mantener dos versiones del mismo índice.
 cp .env.example .env
 
 # 2. Validar que la combinacion de ambos compose es correcta
-docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet
+podman compose -f docker-compose.yml -f docker-compose.dev.yml config > /dev/null
 
 # 3. Construir imágenes y levantar los cuatro servicios
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 
 # 4. Verificar que los cuatro servicios están arriba
-docker compose -f docker-compose.yml -f docker-compose.dev.yml ps
+podman compose -f docker-compose.yml -f docker-compose.dev.yml ps
 
 # 5. Seguir el arranque del backend (Flyway aplicando migraciones)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f backend
+podman compose -f docker-compose.yml -f docker-compose.dev.yml logs -f backend
 ```
 
 Para no repetir los dos `-f` en cada comando, exportar la variable una vez por
-terminal. A partir de ahí basta con `docker compose up -d`, `logs -f backend`,
+terminal. A partir de ahí basta con `podman compose up -d`, `logs -f backend`,
 `ps`, `down`:
 
 ```bash
@@ -431,16 +436,16 @@ export COMPOSE_FILE="docker-compose.yml:docker-compose.dev.yml"
 ```bash
 # Levantar el entorno ya construido (sin --build: solo tras cambiar
 # un Dockerfile o las dependencias hace falta reconstruir)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 # Estado de los servicios
-docker compose -f docker-compose.yml -f docker-compose.dev.yml ps
+podman compose -f docker-compose.yml -f docker-compose.dev.yml ps
 
 # Ver logs del backend
-docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f backend
+podman compose -f docker-compose.yml -f docker-compose.dev.yml logs -f backend
 
 # Detener el entorno conservando los datos de la BD
-docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+podman compose -f docker-compose.yml -f docker-compose.dev.yml down
 
 # Ejecutar tests backend
 cd backend && mvn test
@@ -455,12 +460,12 @@ cd mobile && npm test
 cd backend && mvn flyway:migrate
 
 # Conectar a PostgreSQL (usuario y BD por defecto del .env.example)
-docker exec -it hesperides-db psql -U hesperides -d hesperides
+podman exec -it hesperides-db psql -U hesperides -d hesperides
 
 # Limpiar y reconstruir (--volumes borra pgdata: la BD arranca vacía
 # y Flyway vuelve a aplicar todas las migraciones desde cero)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+podman compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 ```
 
 ---

@@ -5,6 +5,7 @@
 
 # Java / Maven
 backend/target/
+backend/uploads/
 *.class
 *.jar
 !backend/.mvn/wrapper/maven-wrapper.jar
@@ -31,6 +32,7 @@ venv/
 .vscode/*
 !.vscode/extensions.json
 *.iml
+.agents/
 
 # SO
 .DS_Store

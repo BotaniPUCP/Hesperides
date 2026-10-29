@@ -34,23 +34,43 @@ export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
  * a un clic de más para llegar a lo que más se usa.
  */
 export const DIRECT_LINKS: readonly NavItem[] = [
+  { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: ['COORDINADOR', 'SUPERVISOR'] },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // Público incluso sin sesión (docs/inventario-verde/README.md); aquí, para quien ya entró.
-  { label: 'Inventario verde', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
   // Catálogo de lugares: lo consultan todos; editarlo es de ADMIN y COORDINADOR.
   { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+
+  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
+  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
   {
+    // Catálogo taxonómico botánico de especies del campus PUCP.
+    id: 'inventario-verde',
+    label: 'Catálogo botánico',
+    icon: '🌿',
+    items: [
+      { label: 'Especies', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+      { label: 'Registrar especie', href: '/inventario-verde/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+    ],
+  },
+  {
+    id: 'intervenciones',
+    label: 'Intervenciones',
+    icon: '🧰',
+    items: [{ label: 'Actividades', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] }],
+  },
+  {
     // M2 · SPEC-103. Registrar el campus es trabajo diario, no configuración.
     id: 'catastro',
-    label: 'Catastro',
+    label: 'Catastro verde',
     icon: '🌳',
     items: [
+      // Inventario georreferenciado de ejemplares botánicos censados en el campus.
+      { label: 'Ejemplares', href: '/catastro/ejemplares', icon: '🌳', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       // D-03: el supervisor registra por formulario (plantas, tachos, bebederos); la carga masiva es de quien coordina.
-      { label: 'Registrar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Registrar ejemplar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
       { label: 'Importar CSV', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
       // Catálogo de lugares: pasar las referencias antiguas al catálogo es de quien lo edita.

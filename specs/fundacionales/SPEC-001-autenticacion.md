@@ -233,7 +233,7 @@ Ambos flujos comparten `AuthController` y `JwtTokenProvider`. Lo que cambia es *
 | CA-07 | El logout revoca la sesión de verdad, no solo en el cliente | `POST /api/v1/auth/logout` con una sesión activa → 204. Intentar `POST /api/v1/auth/refresh` reusando el mismo refresh token (cookie o body guardado antes del logout) → 401. En la BD, la fila de `refresh_tokens` correspondiente tiene `revoked_at` no nulo. |
 | CA-08 | Múltiples peticiones simultáneas con el access token vencido disparan un único refresh | En el cliente web, forzar 3 llamadas API concurrentes con un access token ya expirado → en la pestaña Network se observa **una sola** llamada a `POST /api/v1/auth/refresh`, seguida de las 3 peticiones originales reintentadas con el nuevo access token. |
 | CA-09 | Los intentos fallidos de login se limitan por email | Enviar 6 intentos de login fallidos seguidos para el mismo email en menos de 15 minutos → el sexto (o el que corresponda según el umbral fijado en sección 9) responde 429 con el mensaje de bloqueo, no 401. |
-| CA-10 | El baseline V001 crea exactamente las tablas y columnas descritas | `docker-compose down -v && docker-compose up --build` levanta sin error. `\d users` en `psql` muestra las columnas `id, email, password_hash, first_name, last_name, role_item_id, is_active, last_login, created_at, updated_at, deleted_at`. `\d refresh_tokens` muestra `id, user_id, token_hash, issued_at, expires_at, revoked_at, replaced_by_id, client_type, user_agent, created_at, updated_at, deleted_at`. |
+| CA-10 | El baseline V001 crea exactamente las tablas y columnas descritas | En una base de prueba vacía, `podman compose -f docker-compose.yml -f docker-compose.dev.yml up --build` levanta sin error. `\d users` en `psql` muestra las columnas `id, email, password_hash, first_name, last_name, role_item_id, is_active, last_login, created_at, updated_at, deleted_at`. `\d refresh_tokens` muestra `id, user_id, token_hash, issued_at, expires_at, revoked_at, replaced_by_id, client_type, user_agent, created_at, updated_at, deleted_at`. |
 | CA-11 | El login funciona **desde un navegador**, no solo por protocolo | Abrir `http://localhost:3000/login` en Chrome o Firefox e iniciar sesión con un usuario activo → entra al sistema. En la pestaña Network, la petición `OPTIONS` a `/api/v1/auth/login` responde **200** (no 401) con `Access-Control-Allow-Origin: http://localhost:3000` y `Access-Control-Allow-Credentials: true`. Este CA existe porque `curl` y MockMvc no hacen preflight: sin él, una suite entera en verde es compatible con un login que ningún navegador puede usar. |
 | CA-12 | Un origen no autorizado no puede llamar a la API | `curl -i -X OPTIONS http://localhost:8080/api/v1/auth/login -H "Origin: http://sitio-cualquiera.example" -H "Access-Control-Request-Method: POST"` → **403**, sin cabecera `Access-Control-Allow-Origin`. Repetir con `Origin: http://localhost:3000` → 200 con la cabecera presente. |
 
@@ -349,6 +349,14 @@ El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
 ## Anexo A — Matriz de permisos por rol × módulo × acción
 
+> **Enmienda SPEC-200 (incidencias web):** en este módulo participan COORDINADOR y
+> SUPERVISOR (capataz). Solo COORDINADOR aprueba registros y revisa/asigna sus datos.
+> SUPERVISOR consulta sus envíos y los casos de las cuadrillas que dirige; registra
+> ejecución y resuelve únicamente los asignados a esas cuadrillas. COORDINADOR
+> también puede atender y resolver. Para intervenciones vinculadas, SUPERVISOR
+> puede registrar trabajo ya ejecutado; la planificación sigue en coordinación.
+> El detalle de estas acciones prevalece sobre las filas genéricas de abajo.
+
 Esta matriz gobierna la autorización (`@PreAuthorize` o equivalente) de **todos** los endpoints de negocio del proyecto, no solo los de este spec. Se documenta aquí porque SPEC-001 es quien define el mecanismo de roles; cada SPEC-1XX de feature debe implementar exactamente estas reglas sobre sus propios controllers, sin reinterpretarlas.
 
 Convención: **C** = crear, **L** = leer/listar, **U** = actualizar, **D** = desactivar (soft delete), **V** = validar/aprobar (acción de negocio, no CRUD), **A** = asignar. Celda vacía = sin acceso; el intento responde 403.
@@ -368,7 +376,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **3. Intervenciones** | Crear / editar una intervención | CU | CU | | |
 | **3. Intervenciones** | Asignar una intervención | | A (a cualquier cuadrilla) | A (dentro de su cuadrilla) | |
 | **3. Intervenciones** | Registrar ejecución (iniciar/completar, subir evidencia) | | | CU (las de su cuadrilla) | CU (solo las propias asignadas) |
-| **3. Intervenciones** | Validar/observar una intervención ejecutada | | V | V (las de su cuadrilla, ver nota 4) | |
+| **3. Intervenciones** | Validar/observar una intervención ejecutada | | V (ver nota 4) | | |
 | **3. Intervenciones** | Ver historial de intervenciones | L | L | L (las de su cuadrilla) | L (solo las propias) |
 | **4. Contratos y proveedores** | Crear / editar contratos y proveedores | CUD | CU (sin desactivar, ver nota 3) | | |
 | **4. Contratos y proveedores** | Registrar y ver ejecuciones de servicio | CUD | CU | L (las de su zona) | |
@@ -390,7 +398,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 1. El coordinador ve el listado completo de usuarios y de cuadrillas porque planifica sobre todas ellas y necesita saber a qué supervisor dirigirse; sigue sin poder crear, editar ni desactivar cuentas, que es acción exclusivamente administrativa. El supervisor ve solo a los miembros de su propia cuadrilla.
 2. El coordinador mantiene el catastro (crear/editar elementos que descubre o corrige en campo) pero no desactiva elementos: desactivar un elemento del catastro es una decisión administrativa con impacto en reportes históricos, reservada a ADMIN.
 3. El coordinador crea y actualiza contratos y proveedores porque es quien gestiona la relación operativa con los tercerizados y da seguimiento al cumplimiento. Lo que no puede es desactivar un proveedor o un contrato: dar de baja una relación comercial tiene implicaciones administrativas y queda en ADMIN.
-4. Un supervisor no valida su propia ejecución: si él mismo registró la intervención, la validación corresponde al coordinador. La regla concreta ("quien ejecuta no valida") la implementa el SPEC-1XX de intervenciones sobre `validated_by_user_id`, que no puede coincidir con quien registró la ejecución.
+4. Enmienda SPEC-200 (confirmación del usuario con su grupo, 22 oct 2026): solo COORDINADOR valida/observa intervenciones. El SUPERVISOR representa al capataz responsable: registra y corrige, pero no aprueba; ADMIN tampoco aprueba. Un coordinador no valida ejecución/reportes propios, incluso después de cambiar de rol. La regla concreta ("quien ejecuta no valida") se desarrolla en [SPEC-200](../features/SPEC-200-intervenciones.md) (borrador), sobre `validated_by_user_id`, que no puede coincidir con quien registró la ejecución.
 
 **Cómo se resuelve "solo su cuadrilla":** el alcance del supervisor y del operario se calcula contra las tablas `teams`/`team_members` de SPEC-002 (baseline V001), no contra un campo del JWT. El servicio filtra por las cuadrillas vigentes del usuario (`team_members.left_at IS NULL`), de modo que reasignar a alguien de equipo cambia su alcance en el siguiente request, sin esperar a que expire su token.
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { EmptyState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { puedeRegistrar } from '../permisos';
@@ -19,6 +20,8 @@ const OPCIONES: [QueSeRegistra, string][] = [
 export function RegistrarScreen() {
   const { user } = useAuth();
   const [que, setQue] = useState<QueSeRegistra>('planta');
+  const [sinGuardar, setSinGuardar] = useState(false);
+  const guard = useUnsavedChangesGuard(sinGuardar);
 
   if (!puedeRegistrar(user?.role.code)) {
     return <EmptyState title="El registro del catastro es de supervisión, coordinación y administración" />;
@@ -34,7 +37,7 @@ export function RegistrarScreen() {
           <div className="flex flex-wrap gap-4 text-sm">
             {OPCIONES.map(([valor, etiqueta]) => (
               <label key={valor} className="flex items-center gap-1 text-neutral-900">
-                <input type="radio" name="que-se-registra" checked={que === valor} onChange={() => setQue(valor)} />
+                <input type="radio" name="que-se-registra" checked={que === valor} onChange={() => guard.confirm(() => { setSinGuardar(false); setQue(valor); })} />
                 {etiqueta}
               </label>
             ))}
@@ -42,7 +45,12 @@ export function RegistrarScreen() {
         </fieldset>
       </header>
       {/* La clave reinicia el formulario al cambiar de tipo: lo escrito para un tacho no vale para un bebedero. */}
-      {que === 'planta' ? <RegistroPlantaForm /> : <RegistroComponenteForm key={que} kind={que} />}
+      {que === 'planta' ? (
+        <RegistroPlantaForm onDirtyChange={setSinGuardar} />
+      ) : (
+        <RegistroComponenteForm key={que} kind={que} onDirtyChange={setSinGuardar} />
+      )}
+      {guard.dialog}
     </div>
   );
 }

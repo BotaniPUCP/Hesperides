@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { LoadingSkeleton } from '@/components/ui';
 import { useMapLayers } from '@/hooks/useMapLayers';
 import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
@@ -20,6 +21,9 @@ import { useMapScreenState } from './useMapScreenState';
 
 /** El mapa del campus a pantalla completa: la maqueta 3D con buscador, capas, leyenda y ficha. */
 export function MapScreen() {
+  const searchParams = useSearchParams();
+  const codigoParam = searchParams?.get('codigo') ?? null;
+
   const { data: response, isLoading, errorMessage, stale } = useMapLayers();
   const scene = useMemo(() => {
     if (!response) return { data: null, broken: false };
@@ -36,6 +40,22 @@ export function MapScreen() {
   const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
   const [panelOpen, setPanelOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const focusedParamRef = useRef<string | null>(null);
+
+  // Deep-link: si llega con ?codigo=EV-XXXXXX, seleccionamos y enfocamos el ejemplar al cargar
+  useEffect(() => {
+    if (!codigoParam || !data || focusedParamRef.current === codigoParam) return;
+    const normalizedParam = codigoParam.trim().toLowerCase();
+    const entry = index.find((item) => item.title.toLowerCase() === normalizedParam || item.key.toLowerCase().includes(normalizedParam));
+    if (entry) {
+      focusedParamRef.current = codigoParam;
+      if (isCatalogTarget(entry.target)) {
+        onMap.pick(entry.target);
+      } else {
+        s.select(entry.target);
+      }
+    }
+  }, [codigoParam, data, index, onMap, s]);
 
   if (isLoading) return <LoadingSkeleton />;
   if (scene.broken) {

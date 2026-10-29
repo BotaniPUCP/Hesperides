@@ -7,14 +7,16 @@ services:
   db:
     # PostGIS, no postgres a secas: el catastro georreferenciado (SPEC-002)
     # usa columnas GEOMETRY. La imagen es Debian, no Alpine, y pesa mas.
-    image: postgis/postgis:16-3.4
+    image: docker.io/postgis/postgis:16-3.4
     container_name: hesperides-db
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-hesperides}
       POSTGRES_USER: ${POSTGRES_USER:-hesperides}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cambiar_en_local}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - type: volume
+        source: pgdata
+        target: /var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hesperides} -d ${POSTGRES_DB:-hesperides}"]
       interval: 10s
@@ -74,7 +76,9 @@ services:
       # importaciones van de a una (D-10). La JVM lee JAVA_TOOL_OPTIONS sola.
       JAVA_TOOL_OPTIONS: -Xmx${BACKEND_HEAP:-1g}
     volumes:
-      - storage:/data/storage
+      - type: volume
+        source: storage
+        target: /data/storage
       - ./inbox:/data/inbox
     ports:
       - "${BACKEND_PORT:-8080}:${BACKEND_PORT:-8080}"

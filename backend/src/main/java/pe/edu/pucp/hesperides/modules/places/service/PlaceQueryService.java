@@ -1,9 +1,11 @@
 package pe.edu.pucp.hesperides.modules.places.service;
 
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.pucp.hesperides.modules.places.dto.MapViewDtos.MapView;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.CodeLabel;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.MapCatalog;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.MapPerspective;
@@ -14,6 +16,7 @@ import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.PlaceSummary;
 import pe.edu.pucp.hesperides.modules.places.repository.PerspectiveRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapViewRepository;
+import pe.edu.pucp.hesperides.modules.places.repository.PlaceMapViewRepository.Owner;
 import pe.edu.pucp.hesperides.modules.places.repository.PlacePhotoRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlacePhotoRepository.PhotoRow;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceReadRepository;
@@ -50,6 +53,7 @@ public class PlaceQueryService {
         PlaceRow place = places.byCode(code);
         CategoryRow kc = reads.kindAndCategory(place.id());
         List<PhotoRow> placePhotos = photos.byPlace(place.id());
+        Map<Long, MapView> views = mapViews.perspectivesOf(place.id());
         PlaceRef parent = place.parentId() == null ? null
                 : new PlaceRef(places.byId(place.parentId()).code(), place.parentName());
         return new PlaceDetail(place.code(), place.name(), parent, new CodeLabel(kc.kindCode(), kc.kindLabel()),
@@ -57,8 +61,9 @@ public class PlaceQueryService {
                 reads.aliases(place.id()),
                 reads.children(place.id()).stream().map(c -> new PlaceRef(c[0], c[1])).toList(),
                 assembler.mainPhotos(placePhotos),
-                perspectives.byPlace(place.id()).stream().map(p -> assembler.perspective(p, placePhotos)).toList(),
-                assembler.interior(placePhotos), mapViews.find(place.id()));
+                perspectives.byPlace(place.id()).stream().map(p -> assembler.perspective(p, placePhotos, views.get(p.id())))
+                        .toList(),
+                assembler.interior(placePhotos), mapViews.find(Owner.PLACE, place.id()));
     }
 
     /** Todo el catálogo resumido, para la capa de perspectivas y el buscador del mapa. */

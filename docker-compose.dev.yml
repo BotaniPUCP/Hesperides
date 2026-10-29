@@ -1,6 +1,7 @@
 # Development override: exposes db and data-service to the host for
-# inspection (DBeaver, curl) and mounts source code for hot reload.
+# inspection and mounts source code for hot reload. Data remains persistent.
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Or:    podman compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 services:
   db:

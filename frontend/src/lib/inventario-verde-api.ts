@@ -3,8 +3,10 @@ import type {
   LocationCount,
   Page,
   Species,
+  SpeciesForm,
   SpecimenDetail,
   Specimen,
+  SpecimenSearchResult,
   SpecimenSortKey,
 } from '@shared/types';
 import { apiClient } from './api';
@@ -79,10 +81,36 @@ export const inventarioVerdeApi = {
       })}`,
     ).then((r) => mapPage(r, withSpecimenMedia)),
 
+  allSpecimens: (p: SpecimenParams) =>
+    apiClient.get<Page<Specimen>>(
+      `/green-inventory/specimens?${query({
+        search: p.search?.trim(),
+        location: unlessAll(p.location),
+        sort: p.sortBy,
+        direction: p.sortDirection,
+        page: p.page,
+        size: p.size,
+      })}`,
+    ).then((r) => mapPage(r, withSpecimenMedia)),
+
   locations: (slug: string) => apiClient.get<LocationCount[]>(`/green-inventory/species/${segment(slug)}/locations`),
+
+  allLocations: () => apiClient.get<LocationCount[]>('/green-inventory/locations'),
 
   specimen: (code: string) =>
     apiClient
       .get<SpecimenDetail>(`/green-inventory/specimens/${segment(code)}`)
       .then((d) => ({ ...withSpecimenMedia(d), species: withSpeciesMedia(d.species) })),
+
+  searchSpecimens: (queryText: string, limit = 10) =>
+    apiClient.get<SpecimenSearchResult[]>(
+      `/green-inventory/specimens/search?q=${segment(queryText.trim())}&limit=${limit}`,
+    ),
+
+  registerSpecies: (form: SpeciesForm, photo: File | null) => {
+    const data = new FormData();
+    data.append('data', new Blob([JSON.stringify(form)], { type: 'application/json' }));
+    if (photo) data.append('photo', photo);
+    return apiClient.postForm<Species>('/green-inventory/species', data).then(withSpeciesMedia);
+  },
 };

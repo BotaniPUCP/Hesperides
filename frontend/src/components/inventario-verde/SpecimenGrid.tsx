@@ -6,7 +6,8 @@ import { SpecimenCard } from './SpecimenCard';
 
 export interface SpecimenGridProps {
   specimens: Specimen[];
-  species: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'>;
+  species?: Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'> & { imageUrl?: string | null; vegetationTypeName?: string };
+  speciesMap?: Record<string, Pick<Species, 'slug' | 'commonName' | 'vegetationTypeCode'> & { imageUrl?: string | null; vegetationTypeName?: string }>;
   loading?: boolean;
   page: number;
   totalPages: number;
@@ -19,6 +20,7 @@ export interface SpecimenGridProps {
 export function SpecimenGrid({
   specimens,
   species,
+  speciesMap,
   loading = false,
   page,
   totalPages,
@@ -27,7 +29,7 @@ export function SpecimenGrid({
   onPageChange,
   onClearFilters,
 }: SpecimenGridProps) {
-  if (loading) {
+  if (loading && specimens.length === 0) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, i) => (
@@ -59,9 +61,13 @@ export function SpecimenGrid({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 transition-opacity duration-200 ${loading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
         {specimens.map((specimen) => (
-          <SpecimenCard key={specimen.code} specimen={specimen} species={species} />
+          <SpecimenCard
+            key={specimen.code}
+            specimen={specimen}
+            species={speciesMap?.[specimen.speciesSlug ?? ''] || species}
+          />
         ))}
       </div>
 

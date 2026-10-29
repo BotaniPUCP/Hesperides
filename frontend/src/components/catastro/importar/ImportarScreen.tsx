@@ -45,6 +45,7 @@ export function ImportarScreen() {
           {imp.error && <p role="alert" className="text-sm text-action-danger">{imp.error}</p>}
         </>
       )}
+      {imp.avisoSinGuardar}
     </div>
   );
 }

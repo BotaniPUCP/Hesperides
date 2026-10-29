@@ -39,7 +39,7 @@ public class PlaceMapRepository {
                        (SELECT f.id FROM place_photos f WHERE f.perspective_id = v.id AND f.deleted_at IS NULL
                          ORDER BY f.sort_order LIMIT 1)
                   FROM place_perspectives v JOIN places p ON p.id = v.place_id
-                 WHERE v.deleted_at IS NULL AND p.deleted_at IS NULL ORDER BY v.id""",
+                 WHERE v.deleted_at IS NULL AND p.deleted_at IS NULL ORDER BY p.code, v.sort_order""",
                 (rs, i) -> new MapPerspectiveRow(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4),
                         rs.getDouble(5), rs.getDouble(6), rs.getDouble(7), rs.getObject(8, Long.class)));
     }

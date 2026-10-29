@@ -104,7 +104,7 @@ Regla: el verbo de acción va siempre en el path, nunca en el body (`{"action": 
 Justificación:
 
 1. **Consistencia cognitiva única.** El equipo tiene 10 desarrolladores rotando entre módulos y lenguajes (Java, Python, TypeScript). Una sola convención de rutas — "todo endpoint HTTP de este sistema empieza con `/api/v1`" — sin excepciones por servicio, elimina una pregunta que de otro modo se repite en cada code review y cada spec de feature que toque el microservicio de datos.
-2. **El hecho de que Flask sea interno (no lo consume el navegador, solo `backend` vía la red Docker `hesperides-net`, según `docker-compose.yml`: `DATA_SERVICE_URL: http://data-service:5001`) no es razón para una convención distinta.** El versionado de rutas no es una preocupación de "quién es el cliente" sino de "este servicio puede tener endpoints que cambien de forma incompatible en el futuro" — y Flask, como servicio de procesamiento de datos, es tan candidato a una v2 como cualquier otro.
+2. **El hecho de que Flask sea interno (no lo consume el navegador, solo `backend` vía la red de contenedores `hesperides-net`, según `docker-compose.yml`: `DATA_SERVICE_URL: http://data-service:5001`) no es razón para una convención distinta.** El versionado de rutas no es una preocupación de "quién es el cliente" sino de "este servicio puede tener endpoints que cambien de forma incompatible en el futuro" — y Flask, como servicio de procesamiento de datos, es tan candidato a una v2 como cualquier otro.
 3. **Costo de alinear ahora es mínimo; costo de no alinear crece.** Hoy solo existe `/health` en Flask. Cuantos más endpoints se agreguen sin prefijo (Sprint 2, microservicios de procesamiento de datos geoespaciales), más costoso será migrarlos después. Alinear ahora, con un solo endpoint, es el momento más barato posible.
 4. **No hay un argumento técnico real a favor de mantener a Flask sin versionar**: no expone una API pública estable que un tercero externo consuma sin control de versión (eso justificaría lo opuesto: congelar la ruta). Al ser 100% interno, el equipo controla ambos extremos de la llamada y puede versionar libremente.
 
@@ -323,4 +323,3 @@ Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio de los patrones de A
 - [ ] Ningún listado nuevo omite paginación ni supera el máximo de `size`.
 - [ ] Fechas ISO 8601 UTC; campos camelCase en JSON y snake_case en BD.
 - [ ] Los tests de la sección 11 pasan.
-

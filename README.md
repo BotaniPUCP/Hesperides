@@ -11,17 +11,118 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 
 El dominio funcional y las características específicas se definen en los specs de `specs/`. Este repositorio contiene por ahora la arquitectura base, las convenciones comunes y un sistema de catálogos configurables que permite extender tipos, estados y categorías sin recompilación.
 
+## Incidencias — prueba de concepto web
+
+Disponible en `/incidencias` para `SUPERVISOR` (capataz) y `COORDINADOR`.
+Spec: [`SPEC-201`](specs/features/SPEC-201-incidencias.md).
+
+Captura en `/incidencias/nueva` y detalle enlazable en `/incidencias/{id}`.
+Los filtros y la página del listado viajan en la URL y se conservan al volver.
+La interfaz reutiliza los controles y el tema claro/oscuro del producto.
+
+- Capataz: enviar una frase, añadir fotos/ubicación opcionales y seguir sus envíos.
+- Coordinación: revisar, aprobar y asignar la atención a una cuadrilla.
+- Capataz responsable o coordinación: registrar intervenciones realizadas y resolver
+  cuando no quede ninguna pendiente. Se permiten varias intervenciones por incidencia.
+- El tablero de coordinación cuenta estos casos y sus intervenciones, no el
+  mantenimiento rutinario de otros módulos. Las categorías son provisionales;
+  no hay IA ni aplicación React Native en esta entrega.
+
+Solo la descripción es obligatoria para informar o aprobar. Fotos JPEG/PNG/WebP:
+máximo seis por incidencia y 5 MiB por archivo. La posición del teléfono se obtiene
+solo al solicitarla; puede corregirse o quitarse. Geolocalización desde un teléfono
+requiere **HTTPS**: abrir una IP de la red local por HTTP no basta. La captura sigue
+funcionando sin permisos de ubicación.
+
+Las fotografías usan únicamente el `FileStorage` compartido, con claves
+`incidents/{uuid}`. En el Compose local están en `/data/storage/incidents/`, dentro
+del volumen `storage`; PostgreSQL guarda sus metadatos y claves, no los bytes.
+Conservan los archivos originales y se consultan autenticadas por la API, nunca
+mediante una URL pública ni caché pública.
+
+Compose base y dev conservan PostgreSQL en `pgdata` y las fotos nuevas en `storage`.
+Para descartar los datos locales de prueba, terminar con
+`podman compose -f docker-compose.yml -f docker-compose.dev.yml down --volumes`: elimina los
+contenedores y los volúmenes de BD/fotos de **todo ese proyecto**, no solo incidencias.
+`stop` o `down` sin `--volumes` conservan los volúmenes. No usar esta limpieza con
+datos reales; respaldar fotos y BD juntos cuando deban conservarse. No se promete guardado
+offline ni sincronización automática: ante error se conserva el formulario abierto,
+y una subida de fotos fallida no vuelve a crear el registro recibido.
+
+El perfil `dev` carga automáticamente las cuentas y los casos de demostración
+mediante Flyway, después de crear el esquema. El SQL vive en
+`backend/src/main/resources/db/dev-migration/R__seed_demo_incidents.sql`; no se
+ejecuta desde la configuración común sin dev. La guía y las cuentas para una
+**base aislada** están en [`docs/demos/incidencias.md`](docs/demos/incidencias.md).
+No activar `dev` en una base real: Compose base lo usa por defecto y el override
+dev lo fuerza; producción debe seleccionar otro perfil sin ese override.
+
+### Desarrollo local: BD y backend en contenedores, frontend con Bun
+
+Con `.env` configurado y los puertos habituales (backend 8080, frontend 3000):
+
+```bash
+# Desde la raíz: solo PostgreSQL/PostGIS y backend
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build db backend
+```
+
+En otra terminal, desde `frontend/` y con dependencias instaladas:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1 bun --bun run dev
+```
+
+Abrir http://localhost:3000/incidencias. En `.env`, usar
+`APP_PUBLIC_URL=http://localhost:3000`, `CORS_ALLOWED_ORIGINS=http://localhost:3000`,
+`COOKIE_SECURE=false`, `STORAGE_TYPE=local` y `STORAGE_LOCAL_DIR=/data/storage`.
+Completar también `POSTGRES_PASSWORD`, `JWT_SECRET` y `SMTP_FROM`.
+No hace falta exportar variables para Java ni iniciarlo fuera de Compose.
+
+Al terminar, detener Bun con Ctrl+C y ejecutar desde la raíz:
+
+```bash
+# DESTRUCTIVO: descarta toda la BD y las fotos locales de este proyecto
+podman compose -f docker-compose.yml -f docker-compose.dev.yml down --volumes
+```
+
+El próximo `up` con dev vuelve a crear el esquema y los datos de demostración.
+Esta limpieza no borra `.env`, archivos montados desde el host (`inbox/`) ni S3.
+Usar almacenamiento local para que las fotos de prueba estén en el volumen eliminado.
+
+### Verificación local con Bun y Maven
+
+En este entorno se usa Bun como runtime del frontend. Los cambios de Docker/CI
+para migrar el frontend a Bun se gestionan por separado de este módulo. Con
+dependencias ya instaladas:
+
+```bash
+# Desde frontend/ (el --bun evita ejecutar los scripts con Node)
+bun --bun run lint
+bun --bun run test -- --runInBand
+bun --bun run build
+bun --bun run dev
+
+# Desde backend/, con JDK 26 y el socket Podman disponible
+DOCKER_HOST=unix://${XDG_RUNTIME_DIR}/podman/podman.sock TESTCONTAINERS_RYUK_DISABLED=true mvn -B verify
+```
+
 ## Requisitos previos
 
-- **Docker** 24+ (compose incluido)
-- **JDK 26** — obligatorio. El backend fija `<java.version>26</java.version>`; con un
-  JDK anterior `./mvnw test` falla con `release version 26 not supported`. Verifica tu
-  versión con `java -version` antes de empezar.
+- **Docker con Docker Compose**, o **Podman** con `podman compose` y su proveedor
+  Compose configurados. No es necesario instalar ambos motores.
+- **JDK 26** — obligatorio para todos. El backend fija `<java.version>26</java.version>`;
+  con un JDK anterior Maven falla con `release version 26 not supported`. Configura
+  `JAVA_HOME` para que Maven use esa instalación.
 - **Node.js** 20+
 - **Python** 3.11+
 - **Git**
 
 ## Configuración inicial
+
+Los mismos archivos Compose y Dockerfiles sirven para ambos motores. Elige **una**
+alternativa; los comandos de Docker Compose también pueden ejecutarse con
+`podman compose` conservando los argumentos. `podman-compose` puede usarse
+directamente si es el proveedor instalado. La CI conserva Docker Compose.
 
 ```bash
 # Clonar el repositorio
@@ -31,11 +132,16 @@ cd Hesperides
 # Copiar configuración de ejemplo
 cp .env.example .env
 
-# Levantar todos los servicios (base de datos, backend, frontend, data service)
+# Completar los valores de .env, incluidos JWT_SECRET, SMTP_FROM y APP_PUBLIC_URL
+
+# Levantar todos los servicios con Docker
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-# Verificar que está listo
-docker compose logs -f
+# O, con Podman (alternativa al comando anterior)
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# Seguir los logs con el motor elegido (sustituir por podman compose si aplica)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f
 ```
 
 Acceso local:
@@ -54,6 +160,10 @@ Acceso local:
 | Data Service    | 5001   | hesperides-data-service | Python Flask, procesamiento de datos |
 
 ## Ejecución de tests
+
+Los tests de backend con Testcontainers requieren una API compatible con Docker.
+Con Podman, configurar su socket para Testcontainers es independiente de configurar
+`podman compose`; consultar la [guía de Testcontainers para Podman](https://java.testcontainers.org/supported_docker_environment/#podman).
 
 Cada stack tiene su suite de pruebas:
 
@@ -78,15 +188,18 @@ servidor de desarrollo de Next en lugar del build de producción. Editar cualqui
 archivo bajo `frontend/src/` se refleja en http://localhost:3000 sin reconstruir:
 
 ```bash
+# Docker
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d frontend
+# O Podman
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d frontend
 ```
 
 Dos detalles del entorno que conviene conocer:
 
-- En desarrollo dentro de Docker se usa **webpack** (`next dev --webpack`), no
+- En desarrollo dentro del contenedor se usa **webpack** (`next dev --webpack`), no
   Turbopack. WSL2 no propaga los eventos del sistema de archivos de Windows al
   contenedor, así que el servidor necesita sondear los cambios, y Turbopack
-  ignora esa opción. Fuera de Docker, `npm run dev` sí usa Turbopack, que es
+  ignora esa opción. Fuera del contenedor, `npm run dev` sí usa Turbopack, que es
   más rápido.
 - El primer arranque tras `--build` tarda unos segundos en compilar. Los
   cambios posteriores se aplican en menos de un segundo.
@@ -138,8 +251,8 @@ Dos detalles del entorno que conviene conocer:
 │
 ├── .github/workflows/          # CI/CD (GitHub Actions)
 │
-├── docker-compose.yml          # Orquestación de contenedores (despliegue)
-├── docker-compose.dev.yml      # Overrides de desarrollo local
+├── docker-compose.yml                 # Orquestación de contenedores (despliegue)
+├── docker-compose.dev.yml             # Overrides de desarrollo local
 │
 ├── .env.example                # Plantilla de variables de entorno
 ├── .gitignore
@@ -201,7 +314,10 @@ SPRING_PROFILES_ACTIVE=dev
 
 ### Desarrollo local
 ```bash
+# Docker
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# O Podman
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
 ### Validación en CI
@@ -209,6 +325,8 @@ Los tests se ejecutan automáticamente en GitHub Actions:
 - `./mvnw test` en cada push a `develop` o PR a `main`
 - `npm test` en frontend
 - `python -m pytest` en services
+- Infraestructura: `docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet`,
+  con variables ficticias para validar la configuración sin levantar servicios.
 
 ### Producción (AWS)
 El despliegue a la nube está pendiente de licencias AWS. Cuando esté disponible:

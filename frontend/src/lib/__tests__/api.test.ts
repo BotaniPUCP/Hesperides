@@ -32,6 +32,14 @@ describe('apiClient', () => {
     expect(result).toEqual({ status: 'UP' });
   });
 
+  it('accepts an empty 204 on logout without attempting JSON parsing', async () => {
+    const json = jest.fn();
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 204, json }) as unknown as typeof fetch;
+
+    await expect(apiClient.post<void>('/auth/logout')).resolves.toBeNull();
+    expect(json).not.toHaveBeenCalled();
+  });
+
   it('throws ApiError carrying status and message on failure', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,

@@ -20,6 +20,8 @@ public enum AuditActionCode {
     SPECIES_PHOTOS_REPLACED,
     /** SPEC-104: una foto agregada a una especie desde el formulario. */
     SPECIES_PHOTO_ADDED,
+    /** Quién registró una nueva especie en el catálogo botánico. */
+    SPECIES_CREATED,
     /** Catálogo de lugares: quién creó, cambió o dio de baja un lugar, una perspectiva o una foto. */
     PLACE_CREATED,
     PLACE_UPDATED,
