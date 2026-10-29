@@ -38,6 +38,9 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
   // Catálogo de lugares: lo consultan todos; editarlo es de ADMIN y COORDINADOR.
   { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+
+  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
+  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
