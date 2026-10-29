@@ -16,6 +16,7 @@ final class InventoryQueries {
 
     static final String SPECIES_COLUMNS = """
             SELECT s.slug, s.scientific_name, s.common_name, s.family, t.code AS type_code, t.label AS type_label,
+                   o.code AS origin_code, o.label AS origin_label, s.description, s.care_notes,
                    (SELECT count(*) FROM green_elements e WHERE e.species_id = s.id AND %1$s) AS specimen_count,
                    (SELECT e.photo_url FROM green_elements e WHERE e.species_id = s.id AND %1$s AND e.photo_url IS NOT NULL
                      ORDER BY e.data_source = 'MEASURED' DESC, e.code LIMIT 1) AS photo_url,
@@ -26,7 +27,9 @@ final class InventoryQueries {
                    (SELECT a.id FROM green_element_attachments a JOIN green_elements e ON e.id = a.green_element_id
                      WHERE e.species_id = s.id AND %1$s AND a.deleted_at IS NULL
                      ORDER BY e.data_source = 'MEASURED' DESC, e.code, a.id DESC LIMIT 1) AS specimen_photo_id
-              FROM species s JOIN catalog_items t ON t.id = s.species_type_item_id
+              FROM species s
+              JOIN catalog_items t ON t.id = s.species_type_item_id
+              LEFT JOIN catalog_items o ON o.id = s.origin_item_id
             """.formatted(ACTIVE_ELEMENT);
 
     static final String SPECIES_FILTER = """

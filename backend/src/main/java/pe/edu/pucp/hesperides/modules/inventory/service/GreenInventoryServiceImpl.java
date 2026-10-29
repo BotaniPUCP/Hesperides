@@ -103,7 +103,8 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
 
     private SpeciesResponse toResponse(SpeciesRow row, List<SpeciesPhotoResponse> photos) {
         return new SpeciesResponse(row.slug(), row.scientificName(), row.commonName(), row.otherNames(),
-                row.family(), row.typeCode(), row.typeLabel(), row.specimenCount(),
+                row.family(), row.typeCode(), row.typeLabel(), row.originCode(), row.originLabel(),
+                row.description(), row.careNotes(), row.specimenCount(),
                 PhotoUrls.species(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()),
                 PhotoUrls.speciesSource(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()), photos);
     }

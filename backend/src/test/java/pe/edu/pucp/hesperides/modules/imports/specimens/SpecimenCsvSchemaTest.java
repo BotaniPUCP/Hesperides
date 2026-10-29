@@ -112,4 +112,13 @@ class SpecimenCsvSchemaTest {
 
         assertThat(parsed.issues()).isEmpty();
     }
+
+    @Test
+    void negativeOrOutOfRangeMeasurementsAndLongStringsAreRejected() {
+        String longManagement = "x".repeat(201);
+        var parsed = parse(";Roystonea regia;-12.067;-77.079;1;2026-03-01;0;2026-03-02;si;" + longManagement + ";\n");
+
+        assertThat(parsed.issues()).extracting(Issue::column)
+                .contains("altura_m", "manejo_recomendado");
+    }
 }

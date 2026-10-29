@@ -5,6 +5,11 @@ describe('traducirMensajeCatastro', () => {
   it.each([
     ['«12,0a» is not a number', '«12,0a» no es un número'],
     ['«x» must be si or no', '«x» debe ser «si» o «no»'],
+    ['must be greater than 0', 'Debe ser mayor que 0'],
+    ['must be 0 or more', 'Debe ser 0 o más'],
+    ['must be less than 1000', 'Debe ser menor que 1000'],
+    ['must be at most 40 characters', 'No puede superar los 40 caracteres'],
+    ['Code «EV-000003» is repeated in the file', 'El código «EV-000003» está repetido en el archivo'],
     ['Required value is empty', 'Es obligatorio y está vacío'],
     ['The point is outside the campus', 'El punto cae fuera del campus: revisa la latitud y la longitud (¿están invertidas?)'],
     ['The file «molle.jpg» is not in the uploaded ZIP', 'El archivo «molle.jpg» no está en el ZIP de fotos'],

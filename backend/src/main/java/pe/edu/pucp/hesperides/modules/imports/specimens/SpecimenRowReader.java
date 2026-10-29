@@ -18,13 +18,16 @@ final class SpecimenRowReader {
         Double lat = coordinate(r, "latitud");
         Double lon = coordinate(r, "longitud");
         Integer quantity = r.read("cantidad", Cells::positiveInteger);
+        String sourceReference = r.read("referencia_catastro", t -> Cells.maxLength(t, 40));
+        String legacyCode = r.read("placa_antigua", t -> Cells.maxLength(t, 40));
+        String sourceLocation = r.read("ubicacion_catastro", t -> Cells.maxLength(t, 150));
         SpecimenDraft.Measurement measurement = measurement(r);
         SpecimenDraft.Assessment assessment = assessment(r);
         if (!r.ok()) {
             return null;
         }
         return new SpecimenDraft(r.row().line(), r.text("codigo"), species, lat, lon, quantity == null ? 1 : quantity,
-                r.text("referencia_catastro"), r.text("placa_antigua"), r.text("ubicacion_catastro"),
+                sourceReference, legacyCode, sourceLocation,
                 measurement, assessment, r.text("foto"), r.text("observaciones"));
     }
 
@@ -37,10 +40,10 @@ final class SpecimenRowReader {
 
     /** Si hay alguna medida, la fecha es obligatoria: decide cuál es la vigente. */
     private static SpecimenDraft.Measurement measurement(RowReader r) {
-        Double height = r.read("altura_m", Cells::decimal);
-        Double trunk = r.read("altura_fuste_m", Cells::decimal);
-        Double dbh = r.read("dap_cm", Cells::decimal);
-        Double crown = r.read("radio_copa_m", Cells::decimal);
+        Double height = r.read("altura_m", t -> Cells.positiveDecimal(t, 1000));
+        Double trunk = r.read("altura_fuste_m", t -> Cells.nonNegativeDecimal(t, 1000));
+        Double dbh = r.read("dap_cm", t -> Cells.nonNegativeDecimal(t, 10000));
+        Double crown = r.read("radio_copa_m", t -> Cells.positiveDecimal(t, 1000));
         Boolean banded = r.read("zunchado", Cells::yesNo);
         LocalDate date = r.read("fecha_medicion", Cells::date);
         boolean any = Stream.of(height, trunk, dbh, crown, banded).anyMatch(Objects::nonNull);
@@ -54,12 +57,13 @@ final class SpecimenRowReader {
     }
 
     private static SpecimenDraft.Assessment assessment(RowReader r) {
+        String recommendedManagement = r.read("manejo_recomendado", t -> Cells.maxLength(t, 200));
         SpecimenDraft.Assessment a = new SpecimenDraft.Assessment(null,
                 r.read("enfermedades", Cells::yesNo), r.read("plagas", Cells::yesNo),
                 r.read("danos_mecanicos", Cells::yesNo), r.read("inclinacion", Cells::yesNo),
                 r.read("ramas_secas", Cells::yesNo), r.read("cavidades", Cells::yesNo),
                 r.read("raices_expuestas", Cells::yesNo), r.read("interferencia", Cells::yesNo),
-                r.text("manejo_recomendado"), r.text("observacion_evaluacion"));
+                recommendedManagement, r.text("observacion_evaluacion"));
         LocalDate date = r.read("fecha_evaluacion", Cells::date);
         boolean any = SpecimenCsvSchema.ASSESSMENT.stream().anyMatch(c -> r.text(c) != null);
         if (!any) {

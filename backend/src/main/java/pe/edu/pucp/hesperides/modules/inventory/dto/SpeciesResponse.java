@@ -11,6 +11,7 @@ import java.util.List;
  */
 public record SpeciesResponse(String slug, String scientificName, String commonName, List<String> otherNames,
                               String family, String vegetationTypeCode, String vegetationTypeName,
+                              String originCode, String originName, String description, String careNotes,
                               long specimenCount, String imageUrl, String imageSource,
                               List<SpeciesPhotoResponse> photos) {
 }

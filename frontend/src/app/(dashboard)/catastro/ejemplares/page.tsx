@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { LoadingSkeleton } from '@/components/ui';
 import { InventarioEjemplaresScreen } from '@/components/inventario-verde/InventarioEjemplaresScreen';
 
 export const metadata: Metadata = {
@@ -9,7 +11,9 @@ export const metadata: Metadata = {
 export default function CatastroEjemplaresPage() {
   return (
     <div className="mx-auto max-w-7xl">
-      <InventarioEjemplaresScreen />
+      <Suspense fallback={<LoadingSkeleton />}>
+        <InventarioEjemplaresScreen />
+      </Suspense>
     </div>
   );
 }

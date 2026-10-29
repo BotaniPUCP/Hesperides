@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { Species } from '@shared/types';
 import { Badge } from '@/components/ui';
 import { SpeciesCover } from './SpeciesCover';
@@ -16,10 +17,10 @@ export interface SpeciesInfoProps {
 export function SpeciesInfo({ species, availableLocations = [] }: SpeciesInfoProps) {
   const isNameIdentical = species.commonName.trim().toLowerCase() === species.scientificName.trim().toLowerCase();
 
-  // Filtrar 'ALL' si viene en availableLocations
-  const topLocations = availableLocations
-    .filter((l) => l.location !== 'ALL' && l.count > 0)
-    .slice(0, 3);
+  // Filtrar 'ALL' si viene en availableLocations y mostrar todos los sectores donde está presente
+  const locations = availableLocations.filter((l) => l.location !== 'ALL' && l.count > 0);
+  const speciesSearchTerm = species.commonName || species.scientificName;
+  const hasNotesOrDescription = Boolean(species.description?.trim() || species.careNotes?.trim());
 
   return (
     <div className="rounded-2xl border border-neutral-200/90 bg-neutral-0 p-4 sm:p-5 shadow-xs mb-5 transition-shadow">
@@ -35,6 +36,9 @@ export function SpeciesInfo({ species, availableLocations = [] }: SpeciesInfoPro
                 <Badge label={species.vegetationTypeName} color="brand" />
                 {species.family && (
                   <Badge label={`Fam. ${species.family}`} color="neutral" />
+                )}
+                {species.originName && (
+                  <Badge label={species.originName} color="neutral" />
                 )}
               </div>
 
@@ -65,25 +69,48 @@ export function SpeciesInfo({ species, availableLocations = [] }: SpeciesInfoPro
               </p>
             )}
 
+            {/* Descripción y notas de manejo si están registradas */}
+            {hasNotesOrDescription && (
+              <div className="mt-3 pt-2.5 border-t border-neutral-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                {species.description?.trim() && (
+                  <div className={!species.careNotes?.trim() ? 'sm:col-span-2' : ''}>
+                    <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-500 mb-0.5">
+                      Descripción botánica
+                    </span>
+                    <p className="text-neutral-700 leading-relaxed whitespace-pre-line">
+                      {species.description.trim()}
+                    </p>
+                  </div>
+                )}
+                {species.careNotes?.trim() && (
+                  <div className={!species.description?.trim() ? 'sm:col-span-2' : ''}>
+                    <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-500 mb-0.5">
+                      Cuidados y manejo
+                    </span>
+                    <p className="text-neutral-700 leading-relaxed whitespace-pre-line">
+                      {species.careNotes.trim()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Distribución por sectores en campus */}
-            {topLocations.length > 0 && (
+            {locations.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap mt-3 pt-2.5 border-t border-neutral-100 text-xs text-neutral-500">
                 <span className="font-semibold text-neutral-700">Presencia en campus:</span>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  {topLocations.map((loc) => (
-                    <span
+                  {locations.map((loc) => (
+                    <Link
                       key={loc.location}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-xs font-medium"
+                      href={`/catastro/ejemplares?search=${encodeURIComponent(speciesSearchTerm)}&location=${encodeURIComponent(loc.location)}`}
+                      title={`Ver ejemplares de ${species.commonName} en ${loc.location}`}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-100 hover:bg-brand-50 hover:text-brand-700 border border-transparent hover:border-brand-200 text-neutral-700 text-xs font-medium transition-colors"
                     >
                       <span>{loc.location}</span>
                       <span className="text-[10px] text-neutral-400 font-bold font-mono">({loc.count})</span>
-                    </span>
+                    </Link>
                   ))}
-                  {availableLocations.filter((l) => l.location !== 'ALL').length > 3 && (
-                    <span className="text-neutral-400 text-[11px] italic">
-                      +{availableLocations.filter((l) => l.location !== 'ALL').length - 3} sectores más
-                    </span>
-                  )}
                 </div>
               </div>
             )}
