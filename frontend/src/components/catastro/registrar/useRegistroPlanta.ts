@@ -25,6 +25,13 @@ export function useRegistroPlanta() {
 
   function cambiar<K extends keyof FormularioPlanta>(campo: K, valor: FormularioPlanta[K]) {
     setValores((v) => ({ ...v, [campo]: valor }));
+    setError(null);
+    setErrores((prev) => {
+      if (!prev[campo as keyof Errores]) return prev;
+      const next = { ...prev };
+      delete next[campo as keyof Errores];
+      return next;
+    });
   }
 
   async function enviar(confirmarDuplicado = false) {

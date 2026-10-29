@@ -111,6 +111,18 @@ describe('RegistrarScreen', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/El punto cae fuera del campus/);
   });
 
+  it('el mensaje de error del backend se limpia al corregir la coordenada', async () => {
+    register.mockRejectedValue(new ApiError(400, 'The point is outside the campus (latitud)'));
+    pantalla();
+    await elegirMolleYPunto();
+    await userEvent.click(screen.getByRole('button', { name: 'Registrar planta' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/El punto cae fuera del campus/);
+
+    await userEvent.type(screen.getByLabelText(/Latitud/), '0');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('registra un bebedero con su estado y el punto del mapa', async () => {
     jest.mocked(catastroApi.registerFeature).mockResolvedValue('BB-000001');
     pantalla();

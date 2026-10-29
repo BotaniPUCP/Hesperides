@@ -99,6 +99,25 @@ describe('useInventarioVerde', () => {
     expect(result.current.species).toEqual(palmeraReal);
   });
 
+  it('recarga el ejemplar si cambia reloadKey', async () => {
+    api.specimen.mockResolvedValue(p01Detail);
+
+    const { result, rerender } = renderHook(
+      ({ key }) => useInventarioVerdeSpecimenByCode('EV-000001', key),
+      { initialProps: { key: 0 } },
+    );
+
+    await waitFor(() => expect(result.current.specimen).toEqual(p01Detail));
+    expect(api.specimen).toHaveBeenCalledTimes(1);
+
+    const updated = { ...p01Detail, heightM: 9.5 };
+    api.specimen.mockResolvedValue(updated);
+
+    rerender({ key: 1 });
+    await waitFor(() => expect(result.current.specimen?.heightM).toBe(9.5));
+    expect(api.specimen).toHaveBeenCalledTimes(2);
+  });
+
   it('el resumen solo ofrece los tipos que tienen ejemplares', async () => {
     api.summary.mockResolvedValue(summary);
 

@@ -57,4 +57,15 @@ describe('SpeciesDetailScreen', () => {
       expect.stringContaining('/catastro/ejemplares?search=Palmera%20reina'),
     );
   });
+
+  it('no muestra el enlace de catastro si la especie tiene 0 ejemplares censados', async () => {
+    api.speciesBySlug.mockResolvedValue({ ...palmeraReina, specimenCount: 0 });
+    api.locations.mockResolvedValue([]);
+
+    render(<SpeciesDetailScreen slug="syagrus-romanzoffiana" />);
+
+    expect(await screen.findByText(/Esta especie no cuenta con ejemplares censados/i)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Ver ejemplares en Catastro/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Sin ejemplares censados')).toBeInTheDocument();
+  });
 });
