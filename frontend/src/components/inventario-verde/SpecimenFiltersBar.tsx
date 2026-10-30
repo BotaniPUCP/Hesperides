@@ -90,7 +90,7 @@ export function SpecimenFiltersBar({
             id="specimen-location-filter"
             value={selectedLocation}
             onChange={(e) => onLocationChange(e.target.value)}
-            className="w-full h-10 text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors"
+            className="w-full h-10 text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-md px-3 focus:outline-hidden focus:ring-2 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors"
           >
             <option value="ALL">Todas las ubicaciones</option>
             {availableLocations.map((loc) => (
@@ -145,7 +145,7 @@ export function SpecimenFiltersBar({
               id="specimen-sort-select"
               value={`${sortBy}:${sortDirection}`}
               onChange={(e) => handleSortSelect(e.target.value)}
-              className="text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors"
+              className="text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:ring-1 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors"
             >
               <option value="code:asc">Código (EV)</option>
               <option value="reference:asc">Referencia (A - Z)</option>

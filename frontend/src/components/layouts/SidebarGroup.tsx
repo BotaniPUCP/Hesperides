@@ -30,7 +30,7 @@ export function SidebarGroup({ group, pathname, onNavigate }: SidebarGroupProps)
         onClick={() => setAbierto((valor) => !valor)}
         className={cn(
           'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
+          'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600',
           contieneActiva ? 'text-brand-700' : 'text-neutral-900 hover:bg-neutral-100',
         )}
       >

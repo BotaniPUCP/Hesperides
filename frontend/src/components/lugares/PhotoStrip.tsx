@@ -24,7 +24,7 @@ export function PhotoStrip({ photos, subject, onOpen, onDelete }: PhotoStripProp
             type="button"
             onClick={() => onOpen(i)}
             aria-label={`Abrir foto ${i + 1} de ${subject}`}
-            className="block h-20 w-28 overflow-hidden rounded-md border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-brand-600"
+            className="block h-20 w-28 overflow-hidden rounded-md border border-neutral-200 focus:outline-hidden focus:ring-2 focus:ring-brand-600"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={p.thumbnailUrl} alt="" loading="lazy" className="h-full w-full object-cover" />

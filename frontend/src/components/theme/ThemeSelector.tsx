@@ -28,7 +28,7 @@ export function ThemeSelector() {
               'flex cursor-pointer flex-col items-center gap-0.5 rounded px-1 py-1.5 text-xs transition-colors',
               'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-600',
               preference === option.value
-                ? 'bg-neutral-0 font-semibold text-brand-700 shadow-sm'
+                ? 'bg-neutral-0 font-semibold text-brand-700 shadow-xs'
                 : 'text-neutral-600 hover:text-neutral-900',
             )}
           >

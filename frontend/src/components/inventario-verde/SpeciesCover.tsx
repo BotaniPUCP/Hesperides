@@ -54,7 +54,7 @@ export function SpeciesCover({ species }: { species: Species }) {
           type="button"
           onClick={() => setAbierta(true)}
           aria-label={verFotos(fotos.length)}
-          className="block h-full w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-brand-600"
+          className="block h-full w-full cursor-zoom-in focus:outline-hidden focus:ring-2 focus:ring-brand-600"
         >
           {imagen}
         </button>

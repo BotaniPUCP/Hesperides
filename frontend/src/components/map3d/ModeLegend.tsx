@@ -37,7 +37,7 @@ export function ModeLegend({ mode, hidden, onModeChange, onToggleCategory }: Mod
                 onClick={() => onToggleCategory(c.key)}
                 className={`flex w-full items-center gap-2 text-left text-xs ${hidden.has(c.key) ? 'text-neutral-400 line-through' : 'text-neutral-700'}`}
               >
-                <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: c.color }} />
+                <span className="h-3 w-3 shrink-0 rounded-xs" style={{ backgroundColor: c.color }} />
                 {c.label}
               </button>
             </li>

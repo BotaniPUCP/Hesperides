@@ -40,7 +40,7 @@ export function createRenderer(): THREE.WebGLRenderer {
 export function createStage(container: HTMLElement, renderer: THREE.WebGLRenderer, campus: Polygon[], textures: SceneTextures): Stage {
   const backdrop = document.createElement('canvas');
   backdrop.className = 'pointer-events-none absolute inset-0 h-full w-full';
-  renderer.domElement.className = 'absolute inset-0 h-full w-full touch-none outline-none';
+  renderer.domElement.className = 'absolute inset-0 h-full w-full touch-none outline-hidden';
   renderer.domElement.tabIndex = 0;
   container.append(backdrop, renderer.domElement);
 

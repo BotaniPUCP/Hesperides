@@ -289,7 +289,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
                 onDirtyChange?.(true);
               }}
               placeholder="Características de la copa, floración, tronco, follaje..."
-              className="w-full rounded-xl border border-neutral-300 p-3 text-sm text-neutral-900 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+              className="w-full rounded-xl border border-neutral-300 p-3 text-sm text-neutral-900 focus:border-brand-600 focus:outline-hidden focus:ring-1 focus:ring-brand-600"
             />
           </div>
 
@@ -306,7 +306,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
                 onDirtyChange?.(true);
               }}
               placeholder="Necesidad hídrica, exposición solar, susceptibilidad a plagas, poda..."
-              className="w-full rounded-xl border border-neutral-300 p-3 text-sm text-neutral-900 focus:border-brand-600 focus:outline-none focus:ring-1 focus:ring-brand-600"
+              className="w-full rounded-xl border border-neutral-300 p-3 text-sm text-neutral-900 focus:border-brand-600 focus:outline-hidden focus:ring-1 focus:ring-brand-600"
             />
           </div>
         </div>

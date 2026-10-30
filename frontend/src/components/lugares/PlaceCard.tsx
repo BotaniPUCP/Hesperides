@@ -23,7 +23,7 @@ export function PlaceCard({ place }: { place: PlaceSummary }) {
   return (
     <Link
       href={`/lugares/${place.code}`}
-      className="group block h-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+      className="group block h-full rounded-xl focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
     >
       <Card
         padded={false}

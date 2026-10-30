@@ -127,7 +127,7 @@ export function DataTable<T>({
                       <button
                         type="button"
                         onClick={() => toggleSort(column.key)}
-                        className="group inline-flex items-center gap-1 rounded hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+                        className="group inline-flex items-center gap-1 rounded hover:text-neutral-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600"
                       >
                         <span>{column.header}</span>
                         {sort?.key === column.key ? (

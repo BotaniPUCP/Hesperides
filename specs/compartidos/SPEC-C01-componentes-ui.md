@@ -184,7 +184,7 @@ Se usa la escala nativa de Tailwind (múltiplos de 4px) sin extensión: `space-1
 | `rounded-md` | 6px | `Input`, `Select`, `Button` |
 | `rounded-lg` | 8px | `Card`, `Modal` |
 | `rounded-full` | 9999px | `Badge`, `StatusBadge`, `UrgencyBadge`, avatares |
-| `shadow-sm` | sombra sutil | `Card` en reposo |
+| `shadow-xs` (Tailwind 4; antes `shadow-sm`) | sombra sutil | `Card` en reposo |
 | `shadow-lg` | sombra pronunciada | `Modal`, `Toast` (para separarse del fondo) |
 
 ## 4. Catálogo de componentes web

@@ -97,7 +97,7 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
           </div>
           <p className="text-sm text-neutral-700">Hasta seis fotos JPEG, PNG o WebP, de 5 MiB cada una.</p>
           <details>
-            <summary className="min-h-12 cursor-pointer rounded-md py-3 text-sm font-medium text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">Añadir ubicación (opcional)</summary>
+            <summary className="min-h-12 cursor-pointer rounded-md py-3 text-sm font-medium text-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600">Añadir ubicación (opcional)</summary>
             <LocationFields value={location} onChange={setLocation} disabled={busy || savedId !== null} />
           </details>
         </fieldset>

@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           aria-label="Abrir menú"
           aria-expanded={menuAbierto}
           onClick={() => setMenuAbierto(true)}
-          className="rounded-md px-2 py-1 text-xl text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+          className="rounded-md px-2 py-1 text-xl text-neutral-700 hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600"
         >
           ☰
         </button>

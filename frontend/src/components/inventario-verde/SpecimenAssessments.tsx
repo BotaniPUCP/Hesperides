@@ -47,7 +47,7 @@ export function SpecimenAssessments({ code }: { code: string }) {
   if (fallo || historial === null) return null;
 
   return (
-    <div className="rounded-3xl border border-neutral-200/90 bg-neutral-0 p-6 shadow-sm">
+    <div className="rounded-3xl border border-neutral-200/90 bg-neutral-0 p-6 shadow-xs">
       <div className="flex items-center justify-between pb-3 mb-4 border-b border-neutral-100">
         <div className="flex items-center gap-2.5">
           <span className="p-1.5 rounded-lg bg-neutral-100 text-neutral-600">

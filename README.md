@@ -106,6 +106,20 @@ bun --bun run dev
 DOCKER_HOST=unix://${XDG_RUNTIME_DIR}/podman/podman.sock TESTCONTAINERS_RYUK_DISABLED=true mvn -B verify
 ```
 
+### Estilos del frontend
+
+El frontend usa **Tailwind CSS 4** mediante `@tailwindcss/postcss`; no necesita
+`autoprefixer`. `frontend/src/styles/globals.css` importa Tailwind y carga
+explícitamente `frontend/tailwind.config.ts`, que conserva los tokens del
+producto y el modo oscuro por clase. No eliminar ese `@config`: perdería los
+colores semánticos. La paleta `forest` es fija y no depende de los colores
+predeterminados de nuevas versiones de Tailwind.
+
+Navegadores mínimos: Safari 16.4, Chrome 111 y Firefox 128. La migración conserva
+los valores de claro/oscuro y los estilos de foco, bordes y sombras existentes.
+La suite de Jest también compila la hoja con el PostCSS real para verificar los
+tokens, las opacidades y las utilidades migradas. Babel permanece en v7.
+
 ## Requisitos previos
 
 - **Docker con Docker Compose**, o **Podman** con `podman compose` y su proveedor

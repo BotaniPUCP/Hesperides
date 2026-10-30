@@ -63,7 +63,7 @@ export function Toast({ toast, onDismiss }: { toast: ToastData; onDismiss: (id: 
         type="button"
         onClick={() => onDismiss(toast.id)}
         aria-label="Cerrar notificación"
-        className="shrink-0 rounded p-0.5 text-neutral-500 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+        className="shrink-0 rounded p-0.5 text-neutral-500 hover:bg-neutral-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600"
       >
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path fillRule="evenodd" clipRule="evenodd" d={ICONS.error} />
