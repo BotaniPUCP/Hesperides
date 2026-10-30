@@ -4,7 +4,7 @@
 |-------|-------|
 | HU relacionada | Pendiente de vincular en GitHub Projects |
 | Autor | Propuesta elaborada con Codex para revisión del equipo |
-| Estado | En progreso: V022, planificación/asignación, ejecución, evidencia y revisión por ubicación implementadas; web incremental en verificación |
+| Estado | En progreso: núcleo/web probados; T08 y T09 local implementados con validación visual pendiente; T10 requiere conciliar contrato con incidencias |
 | Fecha | 22 oct 2026 |
 | Revisión | Ejecución multiubicación normalizada en contratos y esquema; evidencias de actas 004, 009 y 010 |
 | Plataforma | Web; contrato de evidencias preparado para un futuro cliente Android |
@@ -18,7 +18,8 @@
 > El DDL implementado se referencia desde §4. El backend implementa las rutas de consulta,
 > opciones, creación, edición, asignación, cancelación, inicio/avance y anuncio/subida/lectura
 > de evidencia por ubicación de §3.1. Las rutas locales de finalización, observación, reapertura y aprobación están implementadas.
-> La integración con incidencias y el proveedor real de frecuencias siguen pendientes. Las referencias
+> El proveedor real de frecuencias evalúa lugares explícitos; la integración con incidencias y
+> la evaluación territorial histórica por sector siguen pendientes. Las referencias
 > antiguas a «SPEC-2XX de intervenciones» corresponden ahora a este documento.
 
 ## 1. Objetivo
@@ -105,7 +106,7 @@ Los valores inactivos siguen resolviendo en el historial, pero no se ofrecen par
 | D-03 | Conservar asignación y `team_id` en la intervención, y ejecutor/validador reales por ubicación. El asignado y quien ejecutó pueden ser distintos si ejecuta el supervisor. No atribuir un autor global a lugares ejecutados por personas distintas ni inferirlo de membresía actual. |
 | D-04 | Clase obligatoria y tipo nulable únicamente si esa clase no tiene tipos activos. Si los tiene, exigir uno de sus hijos activos. Los tipos provisionales existentes no se reemplazan ni se presentan como confirmados. |
 | D-05 | Confirmado por el usuario para este desarrollo: una intervención puede tener varias ubicaciones, cada una con avance, cantidad ejecutada y estado propios. Usar unidades de ejecución por ubicación según §2.7, sin dividir el trabajo en intervenciones independientes. P-04 queda resuelta con procedencia de esta conversación, no de las actas. No añadir `zone_id` a `green_elements`. |
-| D-06 | Confirmación posterior del usuario: el trabajo cuenta únicamente después de la aprobación final del COORDINADOR. `approvedForCounting` es verdadero solo cuando todas las ubicaciones activas están VALIDATED: una actividad, no una por jardín. Conservar `completed_at` local como fecha de ejecución; cobertura, cantidades y fecha civil para frecuencias siguen pendientes. No habilitar el proveedor real ni agrupar por fecha. |
+| D-06 | Confirmación posterior del usuario: cuenta tras aprobación final del COORDINADOR, con todas las ubicaciones activas VALIDATED. T09 actualiza solo lugares atendidos y conserva ambas fechas: completed_at mide intervalos y aprobación final acredita aceptación. Una actividad por objetivo cuenta una vez aunque tenga varias unidades locales; distintos trabajos el mismo día no se fusionan. No inferir cobertura global de campus. |
 | D-07 | El usuario confirma fotos obligatorias. Detalle provisional aceptado para avanzar: mínimo una recibida por ubicación e intento para completar, y ninguna foto pendiente de esa ubicación al aprobar, incluso de intentos anteriores. BEFORE/AFTER/UNSPECIFIED clasifican la evidencia sin exigir una pareja. Ver política configurable en §2.8. |
 | D-08 | Capataz responsable de los trabajos de su sector, representado por el supervisor vigente de la cuadrilla asignada. Flujo provisional aceptado: COORDINADOR observa con motivo; capataz reabre y corrige; COORDINADOR revisa y aprueba. Conservar ejecución original y snapshot de cada intento. Relevo y coordinación entre distintos sectores siguen pendientes; no implementar transferencias. |
 | D-09 | `storage_key`, tamaño y tipo de archivo son nulos en evidencia anunciada; se completan conjuntamente al recibir el archivo. Corrige la incompatibilidad del `NOT NULL` original de SPEC-002 con la subida diferida de SPEC-005. |
@@ -200,7 +201,7 @@ presentan como nuevos acuerdos directos del cliente.
 
 | Tema | Confirmado por el usuario | Aplicación en esta entrega |
 |------|--------------------------|---------------------------|
-| Indicadores | Cuenta después de la aprobación final del coordinador | `approvedForCounting` derivado de todas las ubicaciones VALIDATED. Una intervención sigue siendo una actividad. No mide cobertura ni alimenta todavía el proveedor de frecuencias. |
+| Indicadores | Cuenta después de la aprobación final del coordinador | `approvedForCounting` derivado de todas las ubicaciones VALIDATED. Una intervención sigue siendo una actividad. T09 evalúa por objetivo local conforme a la aclaración posterior de §2.9, sin inferir cobertura global. |
 | Fotos | Son obligatorias | Regla provisional: una foto recibida por ubicación e intento para completar; aprobar requiere una recibida del intento vigente y cero pendientes de esa ubicación, incluidos intentos anteriores. Sin pareja antes/después. |
 | Responsable | Capataz asignado al sector | Supervisor vigente de la cuadrilla asignada puede reportar, aportar fotos y completar sin reemplazar al ejecutor original; actor real de cada acción queda en eventos. |
 | Ubicaciones | Varios jardines son una actividad | Se conserva cabecera única y ejecución local independiente. |
@@ -225,12 +226,41 @@ no habilita el conteo de actividad. No se concede aprobación a SUPERVISOR ni AD
 Se impide autoaprobación también cuando un autor de reportes/fotos cambia de rol.
 Terminar/aprobar no cierra incidencias ni publica información externamente.
 
-Límites que requieren coordinación: cobertura para frecuencias; autoridad de relevo;
+Límites que requieren coordinación: correspondencia territorial histórica por sector; autoridad de relevo;
 actividad que cruce sectores. El modelo actual tiene una cuadrilla por actividad; no puede
 atribuir distintos capataces por ubicación. No inventar la correspondencia sector/cuadrilla
 ni dividir una actividad automáticamente: ese caso requiere contrato y migración posteriores.
 La primera web permite registrar varias ubicaciones con esa asignación común y muestra el
 capataz responsable disponible; no se declara resuelta la asignación multisectorial.
+
+### 2.9 T09: cumplimiento local con ambas fechas
+
+El 29 oct 2026 el usuario precisó que se actualizan solo los lugares atendidos y se usan tanto
+la fecha de ejecución como la de aprobación. Esto reemplaza la decisión previa de esperar
+P-01, sin duplicar una ocurrencia por tener dos fechas.
+
+`InterventionExecutionHistoryProvider` aporta hechos IN_HOUSE solo cuando el trabajo tiene
+aprobación final. Conserva local completedAt/validatedAt y aprobación final derivada approvedAt;
+executionDate y approvalDate se calculan en MAINTENANCE_TIME_ZONE (America/Lima por defecto).
+La evaluación usa fecha física y conserva aprobación como aceptación y trazabilidad. Es una
+consulta retrospectiva al estado actual, no una reconstrucción de lo conocido antes de aprobar.
+
+La respuesta de `/maintenance/frequencies/compliance` añade `locations` con objetivo,
+ejecuciones y segmentos. La referencia PLACE tiene prioridad sobre ZONE; sin ninguna se
+conservan los hechos pero no se emite veredicto de cobertura. CAMPUS_WIDE distribuye el
+calendario por objetivo atendido, BY_ZONE filtra la sección explícita; BY_SECTOR requiere
+correspondencia histórica adicional y no se evalúa automáticamente. No se infieren sectores,
+otros jardines o campus completo de una ejecución local. El historial respeta el alcance del lector.
+
+Por trabajo/objetivo se usa una ocurrencia en la última ejecución real de sus unidades; dos
+trabajos diferentes el mismo día permanecen distintos. El periodo se recorta después de
+recoger todas las piezas de ese trabajo/objetivo y se conserva historia previa para continuidad.
+OUTSOURCED no se alimenta con trabajo propio. No se crea otra migración.
+
+Detalle y límites: [informe T09](../../docs/planes/SPEC-200-etapa-5-frecuencias-locales.md).
+La referencia local origin/modulo-incidencias contiene una implementación incompatible con
+la tabla/entidad Intervention y V022: [revisión del contrato](../../docs/planes/SPEC-200-revision-contrato-incidencias.md).
+T10 no se habilita hasta conciliar ese contrato y probar ambos módulos juntos.
 
 ## 3. Contratos de API
 
@@ -355,6 +385,26 @@ nueva y motivo. No editar planificación, unidad, elementos o conjunto de ubicac
 de que se inició alguna ubicación. Un relevo posterior depende de P-03 y no se obtiene por PUT.
 
 ### 3.3 Asignación, ejecución local y evidencia
+
+**Ampliación T08 (29 oct 2026):** cada ubicación de Planning admite opcionalmente
+`elementCodes: ["código del ejemplar"]`, además de `elementIds`. El servidor resuelve códigos
+exactos (quitando espacios exteriores), valida vigencia y combina ambas referencias sin duplicar
+la asociación. Códigos inexistentes/dados de baja → 422; vacíos o repetidos → 400. La operación
+es atómica y mantiene la restricción de editar asociaciones solo antes del inicio.
+El detalle local incluye `linkedElementCodes` para mostrar asociaciones guardadas; es una
+proyección informativa, no otro campo editable de persistencia. El formulario añade códigos
+sin retirar las asociaciones existentes por ID.
+
+Listado privado: `greenElementCode` es un filtro opcional exacto de 1–100 caracteres,
+alternativo al conocimiento de IDs internos. Se combina con los demás filtros en la misma
+ubicación activa y se aplica antes de paginar, dentro del alcance del lector. Una actividad con
+el mismo ejemplar en varios lugares aparece una sola vez. Código sin trabajos autorizados →
+página vacía; no se distinguen códigos inexistentes de trabajos ajenos. No inferir asociaciones
+por pertenecer al mismo jardín, especie o coordenadas. La API pública del inventario no cambia.
+
+La ficha pública muestra el historial solo a ADMIN/C/S/O con sesión y enlaza el detalle privado
+y `/intervenciones?greenElementCode=...`; el listado conserva el filtro al paginar/cambiar estado.
+Al cerrar sesión o cambiar de lector/ejemplar se descarta el historial anterior.
 
 Asignación global:
 ~~~json
@@ -921,7 +971,7 @@ del diseño inicial, aun antes de crear las tablas de incidencias/contratos.
 
 | ID | Resuelto | Pendiente / provisional |
 |----|----------|------------------------|
-| P-01 | Cuenta después de aprobación final del COORDINADOR, todas las ubicaciones aprobadas | Cobertura de frecuencias y fecha de cómputo; no habilitar proveedor real por asumir equivalencias |
+| P-01 | Cuenta después de aprobación final del COORDINADOR, todas las ubicaciones aprobadas. Aclaración posterior del usuario el 29 oct 2026: actualizar solo lugares atendidos y conservar fecha real y fecha de aprobación | Sustituye la espera anterior: ejecución mide el intervalo y aprobación acredita aceptación; ambas fechas describen una sola ocurrencia. T09 evalúa referencias estables de lugar/sección; no inventa cobertura global ni correspondencias históricas por sector |
 | P-02 | Fotografías obligatorias | Mínimo por ubicación/intento y momento del bloqueo son detalles provisionales de §2.8; sin pareja BEFORE/AFTER |
 | P-03 | Capataz responsable del trabajo del sector; coordinador da aprobación final | Corrección propuesta aceptada para desarrollo: capataz subsana y coordinador revisa. Autoridad de relevo y revocación de aprobación siguen pendientes |
 | P-04 | Una actividad con varios jardines; ejecución local independiente | Caso que cruza sectores con distintos capataces requiere contrato de asignación posterior; no dividir automáticamente |
@@ -940,5 +990,6 @@ T03 (V022) y T04 están implementados. T05 incorpora completar, aprobar, observa
 por ubicación; T06 incorpora evidencia obligatoria y recuperación de subidas. T07 añade web
 incremental para listado/planificación/asignación/ejecución/evidencia/revisión. Las pruebas y
 límites de esta entrega se registran en `docs/planes/SPEC-200-etapa-3-revision-y-web.md`.
-No se declara terminada la integración de indicadores, incidencias, Android ni publicación.
+T08 añade historial por ejemplar y T09 cumplimiento local con ambas fechas (§2.9).
+No se declara terminada la evaluación histórica por sector, incidencias, Android ni publicación.
 La base de trabajo no se migra como parte de esta entrega.

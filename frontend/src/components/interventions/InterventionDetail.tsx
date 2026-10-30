@@ -9,6 +9,7 @@ import { LIMITES, motivoDeRechazo } from '@/lib/upload-limits';
 import { interventionsApi, interventionError, type InterventionDetail as Detail, type InterventionEvidence, type InterventionLocation, type InterventionOptions } from '@/lib/interventions-api';
 import { InterventionForm } from './InterventionForm';
 import { ApiError } from '@/lib/api';
+import { createClientUuid } from '@/lib/client-uuid';
 
 const actionLabels: Record<string,string> = {
   start:'Iniciar', execution:'Guardar avance', complete:'Reportar terminada', validate:'Aprobar', observe:'Observar', reopen:'Corregir observación',
@@ -33,7 +34,7 @@ function EvidenceUpload({ work, location, pendingEvidence, onChange }: { work:De
     if (rejection) { setError(rejection); return; }
     setBusy(true); setError(''); setAttempted(true);
     try {
-      if (!attempt.current) attempt.current = {reference:crypto.randomUUID(),key:crypto.randomUUID(),version:work.version,caption,moment:selectedMoment,evidenceId:pendingEvidence?.id};
+      if (!attempt.current) attempt.current = {reference:createClientUuid(),key:createClientUuid(),version:work.version,caption,moment:selectedMoment,evidenceId:pendingEvidence?.id};
       const saved = attempt.current;
       if (!saved.evidenceId) {
         const announced = await interventionsApi.announce(work.id, location.id!, saved.version, saved.reference, saved.key, saved.caption, saved.moment);

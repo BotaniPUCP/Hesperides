@@ -15,6 +15,7 @@ export interface InterventionLocation {
   location: { latitude: number; longitude: number } | null; description: string | null;
   locationDescription?: string; elementIds: number[]; unitItemId: number | null;
   requestedQuantity: number | null; progressQuantity?: number | null; executedQuantity?: number | null;
+  elementCodes?: string[]; linkedElementCodes?: string[];
   statusCode?: string; executionNotes?: string | null; rejectionReason?: string | null;
   attemptNumber?: number; executedByUserId?: number | null; allowedActions?: string[];
 }
@@ -44,11 +45,12 @@ export interface InterventionOptions {
 export type InterventionPage = Page<InterventionSummary>;
 const base = '/interventions';
 export const interventionsApi = {
-  list: (page: number, status: string, dateFrom: string, dateTo: string) => {
+  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string) => {
     const query = new URLSearchParams({ page: String(page), size: '20' });
     if (status) query.set('statusCode', status);
     if (dateFrom) query.set('dateFrom', dateFrom);
     if (dateTo) query.set('dateTo', dateTo);
+    if (greenElementCode !== undefined) query.set('greenElementCode', greenElementCode);
     return apiClient.get<InterventionPage>(`${base}?${query}`);
   },
   detail: (id: number) => apiClient.get<InterventionDetail>(`${base}/${id}`),
@@ -81,6 +83,7 @@ export function interventionError(error: unknown): string {
       'A quantity requires a local measurement unit': 'Esta ubicación necesita una unidad de medida para registrar cantidades.',
       'Team requires an active responsible supervisor': 'La cuadrilla necesita un capataz activo antes de asignar el trabajo.',
       'Planning is closed after execution starts or cancellation': 'La planificación ya no puede editarse porque el trabajo empezó o fue cancelado.',
+      'Element code is not available': 'Uno de los códigos de ejemplar no existe o fue dado de baja. Comprueba los códigos en el inventario verde.',
     };
     if (messages[error.message]) return messages[error.message];
   }

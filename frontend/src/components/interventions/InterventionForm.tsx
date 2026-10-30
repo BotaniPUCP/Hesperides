@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button, Input, Select } from '@/components/ui';
 import { ApiError } from '@/lib/api';
+import { createClientUuid } from '@/lib/client-uuid';
 import { interventionsApi, interventionError, type InterventionDetail, type InterventionLocation, type InterventionOptions, type InterventionPlanning } from '@/lib/interventions-api';
 
-const blankLocation = (): InterventionLocation => ({ clientReference: crypto.randomUUID(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
+const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
 const nullableNumber = (s: string) => s === '' ? null : Number(s);
 
 export function InterventionForm({ initial }: { initial?: InterventionDetail }) {
@@ -21,6 +22,7 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
   const [description, setDescription] = useState(initial?.description ?? '');
   const [reason, setReason] = useState('');
   const [locations, setLocations] = useState<InterventionLocation[]>(initial?.locations ?? []);
+  const [elementCodeInputs, setElementCodeInputs] = useState<Record<string,string>>({});
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [uncertain, setUncertain] = useState(false);
@@ -33,12 +35,21 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
     return () => { active = false; };
   }, []);
   const updateLocation = (index: number, patch: Partial<InterventionLocation>) => setLocations(rows => rows.map((row,i) => i === index ? {...row,...patch} : row));
+  const addLocation = () => {
+    try {
+      const location = blankLocation();
+      setLocations(rows => [...rows,location]);
+      setError('');
+    } catch {
+      setError('No se pudo crear la ubicación. Usa un navegador actualizado con soporte de generación segura de identificadores.');
+    }
+  };
   const catalog = (type: string) => options?.catalogs.filter(c => c.typeCode === type) ?? [];
   const types = catalog('INTERVENTION_TYPE').filter(t => t.parentItemId === classId);
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!classId || !date || (types.length > 0 && !typeId) || locations.length === 0) { setError('Selecciona clase, tipo, fecha y al menos una ubicación.'); return; }
-    if (locations.some(l => (!l.placeId && !l.zoneId && !l.location && !l.elementIds.length) || (l.location && (!Number.isFinite(l.location.latitude) || !Number.isFinite(l.location.longitude))))) {
+    if (locations.some(l => (!l.placeId && !l.zoneId && !l.location && !l.elementIds.length && !l.elementCodes?.length) || (l.location && (!Number.isFinite(l.location.latitude) || !Number.isFinite(l.location.longitude))))) {
       setError('Cada ubicación necesita un lugar o coordenadas válidas.'); return;
     }
     if (locations.some(l => l.requestedQuantity !== null && (!l.unitItemId || l.requestedQuantity < 0))) { setError('La cantidad debe ser positiva o cero y tener una unidad.'); return; }
@@ -47,17 +58,19 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
       classItemId:classId, typeItemId:typeId, scheduledDate:date, description, locations,
     };
     setPending(true); setError('');
+    let requestSent = false;
     try {
       let result: InterventionDetail;
       if (initial) result = await interventionsApi.update(initial.id, body);
       else {
-        if (!uncertain) attempt.current = {body, key:crypto.randomUUID()};
+        if (!uncertain) attempt.current = {body, key:createClientUuid()};
         const saved = attempt.current!;
+        requestSent = true;
         result = await interventionsApi.create(saved.body, saved.key);
       }
       router.push(`/intervenciones/${result.id}`);
     } catch (e) {
-      if (!initial && (!(e instanceof ApiError) || e.status === 0 || e.status >= 500 || e.status === 409)) setUncertain(true);
+      if (!initial && requestSent && (!(e instanceof ApiError) || e.status === 0 || e.status >= 500 || e.status === 409)) setUncertain(true);
       setError(interventionError(e));
     } finally { setPending(false); }
   };
@@ -81,6 +94,13 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
         <Select id={`place-${index}`} label="Lugar" value={l.placeId === null ? null : String(l.placeId)} options={(options?.places ?? []).map(p => ({id:p.id,code:String(p.id),label:p.name}))} onChange={o => updateLocation(index,{placeId:o?.id ?? null})} clearable />
         <Select id={`zone-${index}`} label="Sección o sector" value={l.zoneId === null ? null : String(l.zoneId)} options={(options?.zones ?? []).map(p => ({id:p.id,code:String(p.id),label:p.name}))} onChange={o => updateLocation(index,{zoneId:o?.id ?? null})} clearable />
         <Input id={`description-${index}`} label="Referencia de la ubicación" value={l.description ?? ''} onChange={v => updateLocation(index,{description:v})} maxLength={4000} />
+        {!!l.linkedElementCodes?.length && <p className="text-sm">Ejemplares asociados: {l.linkedElementCodes.join(', ')}</p>}
+        <Input id={`elements-${index}`} label="Agregar ejemplares por código (separados por comas)" value={elementCodeInputs[l.clientReference] ?? ''} maxLength={4000}
+          helperText="Copia los códigos de las fichas del inventario verde. Solo asocia los ejemplares atendidos en esta ubicación."
+          onChange={value => {
+            setElementCodeInputs(inputs => ({...inputs,[l.clientReference]:value}));
+            updateLocation(index,{elementCodes:value.split(',').map(code => code.trim()).filter(Boolean)});
+          }} />
         <details open={!l.placeId && !l.zoneId}><summary className="cursor-pointer py-2">Ubicar por coordenadas</summary>
           <div className="grid gap-3 sm:grid-cols-2">{(['latitude','longitude'] as const).map(axis => <label className="grid gap-1 text-sm" key={axis}>{axis === 'latitude' ? 'Latitud' : 'Longitud'}
             <input className="h-11 rounded-md border border-neutral-200 p-2" type="number" step="any" min={axis === 'latitude' ? -90 : -180} max={axis === 'latitude' ? 90 : 180} value={Number.isFinite(l.location?.[axis]) ? l.location?.[axis] : ''}
@@ -92,7 +112,7 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
         <div className="grid gap-3 sm:grid-cols-2"><Select id={`unit-${index}`} label="Unidad de medida" value={l.unitItemId === null ? null : String(l.unitItemId)} options={catalog('MEASUREMENT_UNIT').map(c => ({...c,code:String(c.id)}))} onChange={o => updateLocation(index,{unitItemId:o?.id ?? null})} clearable />
           <label className="grid gap-1 text-sm">Cantidad solicitada<input className="h-11 rounded-md border border-neutral-200 p-2" type="number" min="0" step="0.001" value={l.requestedQuantity ?? ''} onChange={e => updateLocation(index,{requestedQuantity:nullableNumber(e.target.value)})} /></label></div>
       </div>)}
-      <Button variant="secondary" onClick={() => setLocations(rows => [...rows,blankLocation()])}>Agregar ubicación</Button>
+      <Button variant="secondary" onClick={addLocation}>Agregar ubicación</Button>
     </fieldset>
     <Button type="submit" loading={pending} disabled={!options}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : 'Crear intervención'}</Button>
   </form>;

@@ -43,6 +43,16 @@ public class InterventionReferencesRepository {
         return jdbc.query(sql,(r,n)->r.getString(1),id).stream().findFirst();
     }
     public String nextCode() { return jdbc.queryForObject("select next_intervention_code()",String.class); }
+    public Optional<Long> elementIdByCode(String code) {
+        return jdbc.query("select id from green_elements where code=? and deleted_at is null",
+                (r,n)->r.getLong(1),code).stream().findFirst();
+    }
+    public List<String> linkedElementCodes(Long locationId) {
+        return jdbc.query("""
+            select g.code from intervention_elements e join green_elements g on g.id=e.green_element_id
+            where e.intervention_location_id=? and e.deleted_at is null order by g.code,g.id
+            """,(r,n)->r.getString(1),locationId);
+    }
     public boolean lockSubmission(Long actor,UUID key) {
         return Boolean.TRUE.equals(jdbc.queryForObject("select pg_try_advisory_xact_lock(hashtextextended(?,0))",Boolean.class,"interventions:create:"+actor+":"+key));
     }

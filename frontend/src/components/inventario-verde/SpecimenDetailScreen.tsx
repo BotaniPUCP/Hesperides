@@ -13,7 +13,7 @@ export interface SpecimenDetailScreenProps {
 
 export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   const router = useRouter();
-  const { specimen, species, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code);
+  const { specimen, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code);
 
   if (loading) {
     return (

@@ -19,8 +19,16 @@ public record ComplianceResponse(
         String ruleTypeCode,
         LocalDate from,
         LocalDate to,
-        List<Segment> segments
+        List<Segment> segments,
+        List<LocationCompliance> locations
 ) {
+    public ComplianceResponse(Long activityTypeItemId, String activityTypeLabel, String regime, String ruleTypeCode,
+            LocalDate from, LocalDate to, List<Segment> segments) {
+        this(activityTypeItemId,activityTypeLabel,regime,ruleTypeCode,from,to,segments,List.of());
+    }
+    public record LocationCompliance(String targetKind, Long targetId, String targetLabel,
+            List<pe.edu.pucp.hesperides.modules.maintenance.service.LocationExecution> executions,
+            List<Segment> segments) {}
     /**
      * @param evaluatedWithConfigId la version que se uso. Es lo que permite
      *        responder "por que este mes salio asi" sin reconstruir el estado

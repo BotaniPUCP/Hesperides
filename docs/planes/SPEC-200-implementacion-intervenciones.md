@@ -2,6 +2,13 @@
 
 Fecha: 22 oct 2026.
 
+**Actualización 29 oct 2026:** el usuario confirmó que realizó las pruebas manuales del flujo
+web y todo funcionó correctamente. Se registra su verificación de la entrega anterior para
+cerrar la etapa 4 de ese alcance, sin atribuir al agente la ejecución visual. La siguiente tarea
+es T08, dentro de la etapa 5: asociaciones por código y consulta privada del historial desde
+la ficha pública del ejemplar, sin otra migración. T09 espera cobertura y T10 depende del otro
+módulo. Resultados y límites nuevos: [informe T08](SPEC-200-etapa-5-historial-ejemplar.md).
+
 > **Actualización vigente:** el usuario confirmó aprobación final por coordinador, fotos
 > obligatorias, capataz responsable por sector, una actividad multiubicación y primera web a
 > Roobert. Reemplaza el estado de espera P-01/P-02/P-03/P-05 descrito históricamente abajo
@@ -12,7 +19,8 @@ Fecha: 22 oct 2026.
 
 Resultado de esta revisión: backend 664 pruebas aprobadas, incluidas 59 de intervenciones;
 frontend 82 suites/564 pruebas aprobadas, lint/build correctos. T07 permanece en verificación
-por ausencia de navegador habilitado; no se declara completa la etapa 4 ni se migra la base de trabajo.
+por ausencia de navegador habilitado en aquella entrega; la confirmación posterior del usuario
+se registra en la actualización anterior. No se migra la base de trabajo.
 
 Fecha de la referencia histórica: 22 oct 2026. Estado: etapa 2 probada, T04, inicio/avance local de T05 y núcleo T06 implementados; el usuario decidió dejar
 indicadores y obligatoriedad de fotos pendientes del cliente; posteriormente confirmó un
@@ -248,11 +256,38 @@ Salida: flujo web de intervenciones usable y revisable, sin enlaces que prometan
 
 **T08. Historial por ejemplar.** Depende de T04/T05/T07.
 
+Implementación del 29 oct 2026: Planning acepta códigos de ejemplar por ubicación, resueltos
+a asociaciones existentes; listado privado filtra por código sin duplicar y ficha de ejemplar
+ofrece historial paginado con acceso por rol y enlaces al trabajo/listado filtrado. No cambia
+el contrato público del inventario ni la base de datos. Validación visual de esta ampliación
+pendiente; no se considera completada toda la etapa 5.
+
 - Consultar mediante asociaciones de trabajo y filtro greenElementId, sin duplicar historial.
 - Agregar enlace desde ficha de ejemplar sin alterar los contratos actuales del inventario.
 - Probar alcance del lector y trabajo con varios elementos.
 
 **T09. Historial real para frecuencias.** Depende de T05 y P-01 completo (estado y cobertura).
+
+Preparación del 29 oct 2026: se verificó que el proveedor/lector actuales no reciben alcance
+espacial y se enviaron preguntas sobre cobertura y fecha de cómputo. Las referencias a una
+tabla inexistente y a executed_at se corrigieron en comentarios, sin activar el adaptador.
+Ver [preparación de T09](SPEC-200-etapa-5-preparacion-frecuencias.md). La implementación
+funcional espera esas respuestas y no se declara completada.
+
+Respuesta posterior del usuario (29 oct 2026): dejar ambas definiciones —cobertura y fecha
+de cómputo— pendientes del grupo/cliente. No activar T09 ni adoptar las recomendaciones
+como valores por defecto. El resto del flujo de intervenciones conserva su funcionamiento.
+
+**Aclaración más reciente del usuario (29 oct 2026):** actualizar solo los atendidos y usar
+ambas fechas. Reemplaza la espera anterior. Se implementa el proveedor real por lugar/sección,
+con ejecución para intervalos y aprobación final para aceptación/trazabilidad; no se cuenta
+dos veces ni se infiere cobertura de campus. Ver [T09 local](SPEC-200-etapa-5-frecuencias-locales.md).
+El informe por sector con historia territorial y la validación visual mantienen límites explícitos.
+
+Verificación de T09: suite backend limpia 675 pruebas aprobadas, frontend 84 suites/574
+pruebas aprobadas, lint/build y validación de Compose correctos. Se preparó un
+[borrador de PR](SPEC-200-PR-develop.md) y una [revisión del contrato](SPEC-200-revision-contrato-incidencias.md)
+con la referencia local de incidencias; no se publicaron ni mezclaron ramas.
 
 - Implementar ExecutionHistoryProvider con completed_at local, ID de trabajo/ubicación,
   fecha civil y modalidad acordada; decidir cobertura por P-01 antes de traducirlo a fechas.
@@ -305,6 +340,10 @@ mezclar cambios ajenos automáticamente. El checklist final incluye login/refres
 catálogos, frecuencias, mapa, lugares, inventario y fotos existentes.
 
 ## 5. Secuencia actualizada
+
+Al 29 oct 2026: las tareas 1–3 siguientes corresponden a la entrega anterior probada por el
+usuario. T08 ya implementa asociación e historial por ejemplar; falta su recorrido visual
+específico. Después corresponde T09 cuando se defina cobertura, y T10 al disponer de incidencias.
 
 1. Incorporar confirmaciones a SPEC-200 y conciliar permiso exclusivo de COORDINADOR en SPEC-001.
 2. Completar T05 revisión y reglas fotográficas de T06 reutilizando V022, con pruebas aisladas.

@@ -1,5 +1,16 @@
 # SPEC-101 — Configuración de Frecuencias de Mantenimiento
 
+> **Enmienda SPEC-200/T09, 29 oct 2026:** el usuario confirma actualizar solo los lugares
+> atendidos y conservar ambas fechas. El proveedor real IN_HOUSE entrega ejecuciones aceptadas
+> por lugar/sección; fecha física para intervalo y fecha de aprobación final para trazabilidad.
+> `GET /maintenance/frequencies/compliance` conserva sus campos y añade `locations` con
+> historial y segmentos locales. El segmento general no afirma cobertura de todo el campus.
+> Una regla CAMPUS_WIDE aplica su calendario a cada referencia atendida independientemente;
+> BY_ZONE filtra la sección explícita registrada, sin expansión a territorios vecinos.
+> BY_SECTOR queda sin evaluación territorial automática hasta disponer de correspondencia
+> histórica fiable. Solo puntos/elementos sin lugar/sección estable conservan los hechos,
+> pero no producen un veredicto local de frecuencia. Véase el informe T09 de SPEC-200.
+
 | Campo | Valor |
 |-------|-------|
 | HU relacionada | Requisito 1.7 del Catálogo de Requisitos — configurar frecuencias de mantenimiento preventivo |

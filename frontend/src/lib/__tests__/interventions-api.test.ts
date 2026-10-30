@@ -2,6 +2,11 @@ import { interventionsApi } from '../interventions-api';
 import { apiClient, setAccessToken } from '../api';
 
 afterEach(()=>{jest.restoreAllMocks();setAccessToken(null);});
+it('conserva el código del ejemplar junto con los filtros y la página',async()=>{
+  jest.spyOn(apiClient,'get').mockResolvedValue({});
+  await interventionsApi.list(2,'COMPLETED','2026-10-01','2026-10-29','EV/A & B');
+  expect(apiClient.get).toHaveBeenCalledWith('/interventions?page=2&size=20&statusCode=COMPLETED&dateFrom=2026-10-01&dateTo=2026-10-29&greenElementCode=EV%2FA+%26+B');
+});
 it('preserva Idempotency-Key al refrescar sesión y reintentar el mismo anuncio',async()=>{
   setAccessToken('old');const fetch=jest.fn().mockResolvedValueOnce({status:401,ok:false})
     .mockResolvedValueOnce({status:200,ok:true,json:async()=>({ok:true,data:{accessToken:'new'}})})

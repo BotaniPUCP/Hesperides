@@ -27,6 +27,33 @@ const detail = ():Detail => ({id:10,code:'INT-000010',version:5,classItemId:1,ty
 ]});
 beforeEach(()=>{jest.clearAllMocks();role='COORDINADOR';jest.mocked(interventionsApi.options).mockResolvedValue(options);jest.mocked(interventionsApi.detail).mockResolvedValue(detail());});
 
+it('agrega ubicaciones y registra una intervención sin crypto.randomUUID',async()=>{
+  const original=Object.getOwnPropertyDescriptor(global.crypto,'randomUUID');
+  Object.defineProperty(global.crypto,'randomUUID',{configurable:true,value:undefined});
+  try {
+    jest.mocked(interventionsApi.create).mockResolvedValue(detail());
+    render(<InterventionForm/>);
+    await waitFor(()=>expect(screen.getByRole('button',{name:'Agregar ubicación'})).toBeEnabled());
+    fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
+    fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
+    expect(screen.getAllByLabelText('Lugar')).toHaveLength(2);
+    fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});
+    fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:'2026-10-29'}});
+    for(const select of screen.getAllByLabelText('Lugar'))fireEvent.change(select,{target:{value:'15'}});
+    fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));
+    await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledTimes(1));
+    const [body,key]=jest.mocked(interventionsApi.create).mock.calls[0];
+    const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+    expect(key).toMatch(uuid);
+    expect(body.locations[0].clientReference).toMatch(uuid);
+    expect(body.locations[1].clientReference).toMatch(uuid);
+    expect(body.locations[0].clientReference).not.toBe(body.locations[1].clientReference);
+  } finally {
+    if(original)Object.defineProperty(global.crypto,'randomUUID',original);
+    else Reflect.deleteProperty(global.crypto,'randomUUID');
+  }
+});
+
 it('aprueba únicamente la ubicación elegida y conserva la actividad hasta aprobar todas',async()=>{
   const d=detail();d.version=6;d.locations[0].statusCode='VALIDATED';d.locations[0].allowedActions=[];d.validatedLocationCount=1;
   jest.mocked(interventionsApi.command).mockResolvedValue(d);
@@ -89,7 +116,9 @@ it('crea una sola actividad con dos ubicaciones y reintenta con la misma clave t
   fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:'2026-10-23'}});
   fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
   for(const select of screen.getAllByLabelText('Lugar'))fireEvent.change(select,{target:{value:'15'}});
+  fireEvent.change(screen.getAllByLabelText('Agregar ejemplares por código (separados por comas)')[0],{target:{value:'EV-000001, EV-000002'}});
   fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));await screen.findByRole('button',{name:'Reintentar registro'});
   fireEvent.click(screen.getByRole('button',{name:'Reintentar registro'}));await waitFor(()=>expect(push).toHaveBeenCalledWith('/intervenciones/10'));
   const calls=jest.mocked(interventionsApi.create).mock.calls;expect(calls[0]).toEqual(calls[1]);expect(calls[0][0].locations).toHaveLength(2);
+  expect(calls[0][0].locations[0].elementCodes).toEqual(['EV-000001','EV-000002']);
 });

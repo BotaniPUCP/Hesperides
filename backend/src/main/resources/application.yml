@@ -65,6 +65,8 @@ interventions:
     block-pending-on-approval: ${INTERVENTIONS_BLOCK_PENDING_ON_APPROVAL:true}
 
 hesperides:
+  maintenance:
+    time-zone: ${MAINTENANCE_TIME_ZONE:America/Lima}
   security:
     jwt:
       # Sin valor por defecto: si falta la variable, la aplicación no arranca
