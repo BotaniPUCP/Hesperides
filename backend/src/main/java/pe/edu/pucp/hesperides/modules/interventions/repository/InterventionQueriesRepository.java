@@ -54,7 +54,7 @@ public class InterventionQueriesRepository {
         if(order.isEmpty())order.add(Sort.Order.desc("scheduled_date"));
         if(page.getSort().getOrderFor("id")==null)order.add(Sort.Order.desc("id"));
         var result=search.search(actor,role,f.classItemId(),f.typeItemId(),f.teamId(),f.assignedToUserId(),f.statusCode(),
-            f.dateFrom(),f.dateTo(),f.zoneId(),f.placeId(),f.locationStatusCode(),f.greenElementId(),
+            f.dateFrom(),f.dateTo(),f.zoneId(),f.placeId(),f.locationStatusCode(),f.greenElementId(),f.greenElementCode(),
             PageRequest.of(page.getPageNumber(),page.getPageSize(),Sort.by(order)));
         return new PageImpl<>(result.getContent().stream().map(this::summary).toList(),page,result.getTotalElements());
     }

@@ -43,6 +43,8 @@ class InterventionsIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired JdbcTemplate jdbc;
     @Autowired ObjectMapper json;
+    @Autowired pe.edu.pucp.hesperides.modules.maintenance.service.ExecutionHistoryProvider executionHistory;
+    @Autowired org.springframework.context.ApplicationContext applicationContext;
     @MockitoSpyBean FileStorage storage;
     long planner, coordinator, supervisor, operator, otherSupervisor, otherOperator, team, otherTeam, classId, typeId;
 
@@ -214,6 +216,67 @@ class InterventionsIntegrationTest {
             .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(1))).andExpect(jsonPath("$.data.page.totalElements").value(1));
         mvc.perform(get("/api/v1/interventions").param("sort","description,desc")).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/interventions").param("incidentId","1")).andExpect(status().isUnprocessableEntity());
+    }
+    @Test void planningResolvesElementCodesAndPreservesAssociationsWhenEditing() throws Exception {
+        long element=jdbc.queryForObject("select id from green_elements where deleted_at is null and is_active order by id limit 1",Long.class);
+        String code=jdbc.queryForObject("select code from green_elements where id=?",String.class,element);
+        var body=plan();
+        @SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
+        // A specimen code can itself identify a location, without inventing a point.
+        rows.set(0,new LinkedHashMap<>(Map.of("clientReference",UUID.randomUUID().toString(),"elementCodes",List.of(code),"elementIds",List.of(element))));
+        var d=create(body,UUID.randomUUID().toString(),201);long id=d.get("id").asLong();
+        assertThat(d.get("locations").get(0).get("linkedElementCodes").get(0).asString()).isEqualTo(code);
+        assertThat(d.get("locations").get(0).get("elementIds").size()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from intervention_elements where intervention_id=? and deleted_at is null",Integer.class,id)).isEqualTo(1);
+        rows.get(0).put("id",d.get("locations").get(0).get("id").asLong());
+        for(int n=1;n<rows.size();n++)rows.get(n).put("id",d.get("locations").get(n).get("id").asLong());
+        body.put("version",0);
+        mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body)))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.locations[0].elementIds",hasSize(1)));
+        assertThat(jdbc.queryForObject("select count(*) from intervention_elements where intervention_id=? and deleted_at is null",Integer.class,id)).isEqualTo(1);
+    }
+    @Test void unavailableDuplicateAndBlankElementCodesCannotCreatePartialWork() throws Exception {
+        long element=jdbc.queryForObject("select id from green_elements where deleted_at is null and is_active order by id limit 1",Long.class);
+        String code=jdbc.queryForObject("select code from green_elements where id=?",String.class,element);
+        for(var codes:List.of(List.of("NO-SUCH-SPECIMEN"),List.of(code,code),List.of(" "))) {
+            var body=plan();@SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
+            rows.get(1).put("elementCodes",codes);
+            create(body,UUID.randomUUID().toString(),codes.get(0).equals("NO-SUCH-SPECIMEN")?422:400);
+        }
+        jdbc.update("update green_elements set is_active=false where id=?",element);
+        try {
+            var body=plan();@SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
+            rows.get(0).put("elementCodes",List.of(code));create(body,UUID.randomUUID().toString(),422);
+        } finally {jdbc.update("update green_elements set is_active=true where id=?",element);}
+        assertThat(jdbc.queryForObject("select count(*) from interventions where created_by_user_id=? and deleted_at is null",Integer.class,planner)).isZero();
+    }
+    @Test void specimenHistoryByCodeIsScopedPaginatedAndDoesNotDuplicateActivities() throws Exception {
+        long element=jdbc.queryForObject("select id from green_elements where deleted_at is null and is_active order by id limit 1",Long.class);
+        String code=jdbc.queryForObject("select code from green_elements where id=?",String.class,element);
+        var zoneIds=jdbc.queryForList("select id from zones where deleted_at is null and is_active order by id limit 2",Long.class);
+        for(boolean own:List.of(true,false)) {
+            var body=plan();@SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
+            rows.get(0).put("zoneId",zoneIds.get(0));
+            for(int n=1;n<3;n++){rows.get(n).put("zoneId",zoneIds.get(1));rows.get(n).put("elementCodes",List.of(code));}
+            long id=create(body,UUID.randomUUID().toString(),201).get("id").asLong();
+            assign(id,own?team:otherTeam,own?operator:otherOperator,"coordinator","COORDINADOR",0,200);
+        }
+        mvc.perform(get("/api/v1/interventions").param("greenElementCode",code).param("size","1"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(1))).andExpect(jsonPath("$.data.page.totalElements").value(2));
+        for(var actor:Map.of("coordinator","COORDINADOR","supervisor","SUPERVISOR","operator","OPERARIO","other-supervisor","SUPERVISOR").entrySet()) {
+            mvc.perform(get("/api/v1/interventions").param("greenElementCode",code).with(user(actor.getKey()+"@test.local").authorities(()->actor.getValue())))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(actor.getKey().equals("coordinator")?2:1)));
+        }
+        mvc.perform(get("/api/v1/interventions").param("greenElementCode",code).param("zoneId",zoneIds.get(0).toString()))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(0)));
+        mvc.perform(get("/api/v1/interventions").param("greenElementCode","NO-SUCH-SPECIMEN"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(0)));
+        mvc.perform(get("/api/v1/interventions").param("greenElementCode"," ")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/interventions").param("greenElementCode",code).with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous()))
+            .andExpect(status().isUnauthorized());
+        jdbc.update("update intervention_elements set deleted_at=current_timestamp where green_element_id=? and intervention_id in(select id from interventions where created_by_user_id=? and deleted_at is null)",element,planner);
+        mvc.perform(get("/api/v1/interventions").param("greenElementCode",code))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(0)));
     }
     @Test void aggregateStatusAndUnitsAreDerivedBeforeFiltering() throws Exception {
         var body=plan();
@@ -815,6 +878,82 @@ class InterventionsIntegrationTest {
             assertThat(jdbc.queryForObject("select version from interventions where id=?",Long.class,id)).isEqualTo(version);
         } finally {jdbc.execute("drop trigger test_reject_approval on intervention_events");jdbc.execute("drop function test_reject_approval()");}
         localCommand(id,a,"validate","coordinator","COORDINADOR",Map.of("version",version),200);
+    }
+
+    JsonNode acceptedHistoryFixture() throws Exception {
+        var detail=assignedPlan(true);long id=detail.get("id").asLong();
+        var zones=jdbc.queryForList("select id from zones where deleted_at is null and is_active order by id limit 2",Long.class);
+        for(int n=0;n<3;n++)jdbc.update("""
+            update intervention_locations set zone_id=?,status_item_id=?,attempt_number=1,
+              started_at=timestamp '2026-10-19 12:00:00',completed_at=timestamp '2026-10-20 03:00:00',
+              validated_at=timestamp '2026-10-22 17:00:00'+(? * interval '1 hour'),
+              executed_by_user_id=?,validated_by_user_id=? where id=?
+            """,zones.get(n<2?0:1),statusId("VALIDATED"),n,operator,coordinator,detail.get("locations").get(n).get("id").asLong());
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("planner@test.local",null,
+                List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ADMIN"))));
+        return detail;
+    }
+    @Test void acceptedHistoryUsesRealProviderWithBothDatesAndRequiresFinalApproval() throws Exception {
+        var d=acceptedHistoryFixture();long id=d.get("id").asLong(),last=d.get("locations").get(2).get("id").asLong();
+        assertThat(applicationContext.getBeansOfType(pe.edu.pucp.hesperides.modules.maintenance.service.ExecutionHistoryProvider.class)).hasSize(1);
+        assertThat(executionHistory.supportsLocationHistory()).isTrue();
+        var rows=executionHistory.locationExecutions(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31));
+        assertThat(rows).hasSize(3);
+        assertThat(rows).allSatisfy(row->{
+            assertThat(row.executionDate()).isEqualTo(java.time.LocalDate.of(2026,10,19));
+            assertThat(row.approvalDate()).isEqualTo(java.time.LocalDate.of(2026,10,22));
+            assertThat(row.approvedAt()).isEqualTo(java.time.Instant.parse("2026-10-22T19:00:00Z"));
+        });
+        jdbc.update("update intervention_locations set status_item_id=?,validated_at=null,validated_by_user_id=null where id=?",statusId("COMPLETED"),last);
+        assertThat(executionHistory.locationExecutions(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).isEmpty();
+        assertThat(executionHistory.executionDates(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).isEmpty();
+        assertThat(executionHistory.locationExecutions(typeId,"OUTSOURCED",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).isEmpty();
+    }
+    @Test void complianceEndpointReturnsOnlyTheConfiguredZoneAndBothDatesWithoutDoubleCounting() throws Exception {
+        var d=acceptedHistoryFixture();long location=d.get("locations").get(0).get("id").asLong();
+        long zone=jdbc.queryForObject("select zone_id from intervention_locations where id=?",Long.class,location);
+        long config=jdbc.queryForObject("""
+            insert into maintenance_frequencies(activity_type_item_id,frequency_rule_type_item_id,regime,scope,zone_id,annual_target_count,valid_from)
+            values (?,(select i.id from catalog_items i join catalog_types t on t.id=i.catalog_type_id
+                where t.code='FREQUENCY_RULE_TYPE' and i.code='SEASONAL_PERIOD'),'IN_HOUSE','BY_ZONE',?,2,'2026-01-01') returning id
+            """,Long.class,typeId,zone);
+        var result=json.readTree(mvc.perform(get("/api/v1/maintenance/frequencies/compliance")
+            .with(user("planner@test.local").authorities(()->"ADMIN"))
+            .param("from","2026-10-19").param("to","2026-10-19").param("activityTypeItemId",Long.toString(typeId)))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
+        JsonNode report=null;
+        for(var row:result)if(row.get("segments").get(0).get("evaluatedWithConfigId").asLong()==config)report=row;
+        assertThat(report).isNotNull();assertThat(report.get("locations").size()).isEqualTo(1);
+        var target=report.get("locations").get(0);
+        assertThat(target.get("segments").get(0).get("observedValue").asInt()).isEqualTo(1);
+        assertThat(target.get("executions").size()).isEqualTo(2);
+        assertThat(target.get("executions").get(0).get("executionDate").asString()).isEqualTo("2026-10-19");
+        assertThat(target.get("executions").get(0).get("approvalDate").asString()).isEqualTo("2026-10-22");
+    }
+    @Test void historyKeepsPriorExecutionsAndDoesNotCountPartOfSameTargetBeforeItsFinalPiece() throws Exception {
+        var d=acceptedHistoryFixture();long later=d.get("locations").get(1).get("id").asLong();
+        jdbc.update("update intervention_locations set completed_at=timestamp '2026-10-21 03:00:00' where id=?",later);
+        var early=executionHistory.locationExecutions(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,19));
+        assertThat(early).hasSize(1); // Only the other target completed on the 19th.
+        var history=executionHistory.locationExecutions(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,25),java.time.LocalDate.of(2026,10,31));
+        assertThat(history).hasSize(3); // Previous dates are required for continuity.
+        jdbc.update("update interventions set deleted_at=current_timestamp where id=?",d.get("id").asLong());
+        assertThat(executionHistory.locationExecutions(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).isEmpty();
+    }
+    @Test void executionHistoryDoesNotExposeOtherTeamsAndReloadsCurrentRole() throws Exception {
+        acceptedHistoryFixture();var other=acceptedHistoryFixture();
+        jdbc.update("update interventions set team_id=?,assigned_to_user_id=? where id=?",otherTeam,otherOperator,other.get("id").asLong());
+        var previous=org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        try {
+            org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("supervisor@test.local",null,
+                    List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("COORDINADOR"))));
+            assertThat(executionHistory.locationExecutions(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).hasSize(3);
+            jdbc.update("update users set is_active=false where id=?",supervisor);
+            org.assertj.core.api.Assertions.assertThatThrownBy(()->executionHistory.locationExecutions(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31)))
+                .isInstanceOf(pe.edu.pucp.hesperides.shared.exception.UnauthorizedException.class);
+        } finally {org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(previous);}
     }
 
     @Test void busyAnnouncementKeyReturnsConflictWithoutCreatingPhoto() throws Exception {

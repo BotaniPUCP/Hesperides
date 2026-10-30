@@ -15,7 +15,7 @@ export interface SpecimenDetailScreenProps {
 export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   const router = useRouter();
   const [reloadKey, setReloadKey] = useState(0);
-  const { specimen, species, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code, reloadKey);
+  const { specimen, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code, reloadKey);
 
   if (loading) {
     return (

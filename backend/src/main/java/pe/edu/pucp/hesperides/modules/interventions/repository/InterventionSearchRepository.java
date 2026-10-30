@@ -29,6 +29,10 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
               and (cast(:zone as bigint) is null or l.zone_id=:zone)
               and (cast(:place as bigint) is null or l.place_id=:place)
               and (cast(:localStatus as varchar) is null or ls.code=:localStatus)
+              and (cast(:elementCode as varchar) is null or exists(select 1 from intervention_elements ec
+                join green_elements g on g.id=ec.green_element_id
+                where ec.intervention_location_id=l.id and ec.deleted_at is null
+                  and g.code=:elementCode and g.deleted_at is null))
               and (cast(:element as bigint) is null or exists(select 1 from intervention_elements e
                 where e.intervention_location_id=l.id and e.green_element_id=:element and e.deleted_at is null)))
         """;
@@ -38,5 +42,6 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
         @Param("classId") Long classId,@Param("typeId") Long typeId,@Param("team") Long team,
         @Param("assignee") Long assignee,@Param("status") String status,@Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo,@Param("zone") Long zone,@Param("place") Long place,
-        @Param("localStatus") String localStatus,@Param("element") Long element,Pageable pageable);
+        @Param("localStatus") String localStatus,@Param("element") Long element,
+        @Param("elementCode") String elementCode,Pageable pageable);
 }

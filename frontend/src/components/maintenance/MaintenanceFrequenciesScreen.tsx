@@ -12,6 +12,7 @@ import { maintenanceApi } from '@/lib/maintenance-api';
 import { FrequenciesTable } from './FrequenciesTable';
 import { FrequencyFilters, type FilterState } from './FrequencyFilters';
 import { FrequencyFormModal } from './FrequencyFormModal';
+import { LocationCompliancePanel } from './LocationCompliancePanel';
 
 interface CatalogOption {
   id: number;
@@ -205,6 +206,8 @@ export function MaintenanceFrequenciesScreen() {
           />
         )}
       </Card>
+
+      <LocationCompliancePanel key={`${user?.id}:${roleCode}`} />
 
       <FrequencyFormModal
         isOpen={isModalOpen}

@@ -7,7 +7,7 @@ import { useCatalog } from '@/hooks/useCatalog';
 import { Button, EmptyState, LoadingSkeleton, Select, StatusBadge } from '@/components/ui';
 import { interventionsApi, interventionError, type InterventionPage } from '@/lib/interventions-api';
 
-export function InterventionsList() {
+export function InterventionsList({ greenElementCode }: { greenElementCode?:string }) {
   const { user } = useAuth();
   const statuses = useCatalog('INTERVENTION_STATUS');
   const [page, setPage] = useState(0);
@@ -20,12 +20,12 @@ export function InterventionsList() {
   const [error, setError] = useState('');
   useEffect(() => {
     let active = true;
-    interventionsApi.list(page, status, from, to).then(data => {
+    interventionsApi.list(page, status, from, to, greenElementCode).then(data => {
       if (active) { setResult(data); setError(''); }
     }).catch(e => { if (active) setError(interventionError(e)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [page, status, from, to, revision]);
+  }, [page, status, from, to, revision, greenElementCode]);
   const reload = () => { setLoading(true); setRevision(n => n + 1); };
   const change = (action: () => void) => { setLoading(true); setPage(0); action(); };
   return <section className="space-y-6">
@@ -33,6 +33,7 @@ export function InterventionsList() {
       <div><h1 className="text-2xl font-bold">Intervenciones</h1><p className="text-neutral-500">Actividades y avances por ubicación</p></div>
       {['ADMIN','COORDINADOR'].includes(user?.role.code ?? '') && <Link className="rounded-md bg-brand-600 px-4 py-3 text-white" href="/intervenciones/nueva">Nueva intervención</Link>}
     </div>
+    {greenElementCode !== undefined && <p className="rounded-md border border-neutral-200 p-3">Ejemplar: <strong>{greenElementCode}</strong> · <Link href="/intervenciones" className="text-brand-600 underline">Ver todas las intervenciones</Link></p>}
     <div className="grid gap-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4 sm:grid-cols-3">
       <Select id="intervention-status" label="Estado" value={status} onChange={o => change(() => setStatus(o?.code ?? ''))}
         options={statuses.items.map((s,i) => ({ id:i, code:s.code, label:s.label }))} placeholder="Todos los estados" clearable />

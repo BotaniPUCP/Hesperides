@@ -3,6 +3,12 @@
 Fecha: 22 oct 2026. Etapa 3: flujo propio implementado y probado. Etapa 4: interfaz
 implementada, pendiente de comprobación en navegador real. No se declara entrega desplegada.
 
+**Actualización registrada el 29 oct 2026:** el usuario confirmó posteriormente que realizó
+las pruebas propuestas en navegador y que todo funcionó correctamente. Esa confirmación
+cierra la comprobación manual de la entrega descrita aquí; la limitación técnica del agente
+que se registra más abajo se conserva como hecho histórico. No equivale a prueba manual de
+ampliaciones posteriores, como T08. No confirma migración de la base de trabajo ni despliegue.
+
 ## Reglas incorporadas
 
 Fuente: confirmaciones del usuario después de consultar a su grupo, seguidas de la autorización

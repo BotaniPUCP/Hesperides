@@ -13,7 +13,8 @@ public final class InterventionRequests {
                         @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude) {}
     public record Location(Long id, @NotNull UUID clientReference, Long zoneId, Long placeId,
             @Valid Point location, List<@NotNull Long> elementIds, @Size(max=4000) String description,
-            Long unitItemId, @DecimalMin("0") @Digits(integer=9, fraction=3) BigDecimal requestedQuantity) {
+            Long unitItemId, @DecimalMin("0") @Digits(integer=9, fraction=3) BigDecimal requestedQuantity,
+            List<@NotBlank @Size(max=100) String> elementCodes) {
         public Location { elementIds = elementIds == null ? List.of() : java.util.Collections.unmodifiableList(new java.util.ArrayList<>(elementIds)); }
     }
     public record Planning(@NotNull Long classItemId, Long typeItemId, @NotNull LocalDate scheduledDate,
@@ -42,6 +43,7 @@ public final class InterventionRequests {
     public record Filter(String statusCode, String locationStatusCode, Long classItemId, Long typeItemId,
             Long zoneId, Long placeId, Long greenElementId, Long teamId, Long assignedToUserId,
             @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate dateFrom,
-            @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate dateTo, Long incidentId) {}
+            @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate dateTo, Long incidentId,
+            @Size(min=1,max=100) String greenElementCode) {}
 }
 

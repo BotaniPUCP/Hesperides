@@ -71,6 +71,8 @@ public class InterventionsServiceImpl implements InterventionsService {
     }
     @Override public Page<InterventionSummaryResponse> findAll(Filter f,Pageable p){
         var u=actor();
+        validate(f);
+        if (f.greenElementCode()!=null && f.greenElementCode().isBlank()) throw new ValidationException("Element code cannot be blank");
         if(f.incidentId()!=null)throw new BusinessRuleException("Incident integration is not available");
         if(f.dateFrom()!=null&&f.dateTo()!=null&&f.dateFrom().isAfter(f.dateTo()))throw new ValidationException("Invalid date range");
         if(p.isUnpaged()||p.getPageSize()>100)throw new ValidationException("Page size must be between 1 and 100");
@@ -146,6 +148,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         m.put("zoneId",l.getZoneId());m.put("placeId",l.getPlaceId());m.put("location",point(l.getLocation()));
         m.put("description",l.getDescription());m.put("locationDescription",l.getLocationDescription());m.put("unitItemId",l.getUnitItemId());
         m.put("requestedQuantity",l.getRequestedQuantity());
+        m.put("linkedElementCodes",references.linkedElementCodes(l.getId()));
         m.put("elementIds",elements.findByInterventionLocationIdAndDeletedAtIsNull(l.getId()).stream().map(InterventionElement::getGreenElementId).toList());return m;
     }
     private Point point(String wkt){
@@ -691,21 +694,30 @@ public class InterventionsServiceImpl implements InterventionsService {
                 l.setInterventionId(i.getId());l.setClientReference(r.clientReference());l.setStatusItemId(i.getPlanningStatusItemId());
             }
             if(new HashSet<>(r.elementIds()).size()!=r.elementIds().size())throw new ValidationException("Duplicate element in location");
-            if(r.zoneId()==null&&r.placeId()==null&&r.location()==null&&r.elementIds().isEmpty())throw new BusinessRuleException("Each location needs a zone, place, point or element");
+            var requestedElements = new LinkedHashSet<Long>(r.elementIds());
+            if (r.elementCodes()!=null) {
+                var codes = new HashSet<String>();
+                for (String code : r.elementCodes()) {
+                    if (!codes.add(code.trim())) throw new ValidationException("Duplicate element code in location");
+                    requestedElements.add(references.elementIdByCode(code.trim())
+                            .orElseThrow(() -> new BusinessRuleException("Element code is not available")));
+                }
+            }
+            if(r.zoneId()==null&&r.placeId()==null&&r.location()==null&&requestedElements.isEmpty())throw new BusinessRuleException("Each location needs a zone, place, point or element");
             var names=new ArrayList<String>();
             if(r.zoneId()!=null)names.add(spatialName("zone",r.zoneId(),l.getZoneId()));
             if(r.placeId()!=null)names.add(spatialName("place",r.placeId(),l.getPlaceId()));
             var oldElements=l.getId()==null?List.<InterventionElement>of():elements.findByInterventionLocationIdAndDeletedAtIsNull(l.getId());
-            for(Long element:r.elementIds())names.add(spatialName("element",element,oldElements.stream().anyMatch(e->e.getGreenElementId().equals(element))?element:null));
+            for(Long element:requestedElements)names.add(spatialName("element",element,oldElements.stream().anyMatch(e->e.getGreenElementId().equals(element))?element:null));
             String wkt=r.location()==null?null:"POINT("+r.location().longitude()+" "+r.location().latitude()+")";
             if(r.location()!=null)names.add(descriptions.describe(r.location().latitude(),r.location().longitude()).text());
             if(r.requestedQuantity()!=null&&r.unitItemId()==null)throw new BusinessRuleException("A quantity requires a local measurement unit");
             if(r.unitItemId()!=null)item(r.unitItemId(),"MEASUREMENT_UNIT",l.getUnitItemId());
             l.setZoneId(r.zoneId());l.setPlaceId(r.placeId());l.setLocation(wkt);l.setLocationDescription(String.join(" · ",names));
             l.setDescription(r.description());l.setUnitItemId(r.unitItemId());l.setRequestedQuantity(r.requestedQuantity());locations.saveAndFlush(l);
-            for(var e:oldElements)if(!r.elementIds().contains(e.getGreenElementId()))e.softDelete();
+            for(var e:oldElements)if(!requestedElements.contains(e.getGreenElementId()))e.softDelete();
             elements.flush();
-            for(Long element:r.elementIds())if(oldElements.stream().noneMatch(e->e.getGreenElementId().equals(element))){
+            for(Long element:requestedElements)if(oldElements.stream().noneMatch(e->e.getGreenElementId().equals(element))){
                 var e=new InterventionElement();e.setInterventionId(i.getId());e.setInterventionLocationId(l.getId());e.setGreenElementId(element);elements.save(e);
             }
         }

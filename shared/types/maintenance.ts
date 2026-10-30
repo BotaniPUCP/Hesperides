@@ -145,4 +145,30 @@ export interface ComplianceReport {
   to: string;
   /** Un tramo por version vigente en el periodo. No se promedian. */
   segments: ComplianceSegment[];
+  locations?: LocationCompliance[];
+}
+
+export interface LocationExecution {
+  interventionId: number;
+  interventionCode: string;
+  locationId: number;
+  attemptNumber: number;
+  targetKind: string;
+  targetId: number;
+  targetLabel: string;
+  zoneId: number | null;
+  placeId: number | null;
+  completedAt: string;
+  validatedAt: string;
+  approvedAt: string;
+  executionDate: string;
+  approvalDate: string;
+}
+
+export interface LocationCompliance {
+  targetKind: string;
+  targetId: number;
+  targetLabel: string;
+  executions: LocationExecution[];
+  segments: ComplianceSegment[];
 }
