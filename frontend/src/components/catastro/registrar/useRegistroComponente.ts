@@ -21,6 +21,13 @@ export function useRegistroComponente(kind: FeatureForm['kind']) {
 
   function cambiar<K extends keyof FormularioComponente>(campo: K, valor: FormularioComponente[K]) {
     setValores((v) => ({ ...v, [campo]: valor }));
+    setError(null);
+    setErrores((prev) => {
+      if (!prev[campo as keyof ErroresComponente]) return prev;
+      const next = { ...prev };
+      delete next[campo as keyof ErroresComponente];
+      return next;
+    });
   }
 
   async function enviar(confirmarDuplicado = false) {

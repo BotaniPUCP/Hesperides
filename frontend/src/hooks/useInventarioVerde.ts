@@ -71,9 +71,12 @@ export function useInventarioVerdeSpecimens(
   };
 }
 
-export function useInventarioVerdeSpecimenByCode(code: string | null | undefined) {
-  const { data, loading, errorMessage, notFound } = useRequest(code || null, () =>
-    inventarioVerdeApi.specimen(code as string),
+export function useInventarioVerdeSpecimenByCode(code: string | null | undefined, reloadKey?: number) {
+  const queryKey = code ? (reloadKey !== undefined ? `${code}:${reloadKey}` : code) : null;
+  const { data, loading, errorMessage, notFound } = useRequest(
+    queryKey,
+    () => inventarioVerdeApi.specimen(code as string),
+    { keepPreviousData: true },
   );
   return { specimen: data, species: data?.species ?? null, loading, errorMessage, notFound };
 }

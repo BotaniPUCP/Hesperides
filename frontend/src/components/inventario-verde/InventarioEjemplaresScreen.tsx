@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { Species, SpecimenSortKey, SpecimenViewMode } from '@shared/types';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useInventarioVerdeSpecimens, useInventarioVerdeStats } from '@/hooks/useInventarioVerde';
@@ -17,16 +18,25 @@ import { SpecimenGrid } from './SpecimenGrid';
  * referencia, ubicación y nombre de especie, así como acceso directo al registro de ejemplares.
  */
 export function InventarioEjemplaresScreen() {
+  const searchParams = useSearchParams();
 
   const [searchInput, setSearchInput] = useState(() => {
+    const fromHook = searchParams?.get('search');
+    if (fromHook !== null && fromHook !== undefined) return fromHook;
     if (typeof window !== 'undefined') {
-      const sp = new URLSearchParams(window.location.search);
-      return sp.get('search') ?? '';
+      return new URLSearchParams(window.location.search).get('search') ?? '';
     }
     return '';
   });
   const debouncedSearch = useDebouncedValue(searchInput, 300);
-  const [selectedLocation, setSelectedLocation] = useState('ALL');
+  const [selectedLocation, setSelectedLocation] = useState(() => {
+    const fromHook = searchParams?.get('location');
+    if (fromHook) return fromHook;
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('location') || 'ALL';
+    }
+    return 'ALL';
+  });
   const [sortBy, setSortBy] = useState<SpecimenSortKey>('code');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<SpecimenViewMode>('cards');

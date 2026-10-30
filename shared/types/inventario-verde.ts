@@ -27,6 +27,10 @@ export interface Species {
   family: string | null;
   vegetationTypeCode: string;
   vegetationTypeName: string;
+  originCode?: string | null;
+  originName?: string | null;
+  description?: string | null;
+  careNotes?: string | null;
   specimenCount: number;
   /** Miniatura de la foto principal: la de la especie o, si no tiene, la de uno de sus ejemplares. */
   imageUrl: string | null;

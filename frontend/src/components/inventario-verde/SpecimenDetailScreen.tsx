@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useInventarioVerdeSpecimenByCode } from '@/hooks/useInventarioVerde';
@@ -13,7 +14,8 @@ export interface SpecimenDetailScreenProps {
 
 export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   const router = useRouter();
-  const { specimen, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code);
+  const [reloadKey, setReloadKey] = useState(0);
+  const { specimen, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code, reloadKey);
 
   if (loading) {
     return (
@@ -55,9 +57,9 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
         <Breadcrumb items={breadcrumbItems} />
       </div>
 
-      <SpecimenInfo specimen={specimen} />
+      <SpecimenInfo specimen={specimen} onSpecimenUpdated={() => setReloadKey((k) => k + 1)} />
       <SpecimenInterventions code={specimen.code} />
-      <SpecimenAssessments code={specimen.code} />
+      <SpecimenAssessments key={reloadKey} code={specimen.code} />
     </div>
   );
 }

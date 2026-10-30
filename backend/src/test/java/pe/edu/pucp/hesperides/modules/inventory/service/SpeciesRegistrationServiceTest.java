@@ -114,7 +114,8 @@ class SpeciesRegistrationServiceTest {
                 .thenReturn(42L);
 
         SpeciesResponse mockResponse = new SpeciesResponse("mangus-urus", "Mangus urus", "Mango",
-                List.of("Mango", "Naranja"), "Mangurus", "TREE", "Árbol", 0, null, null, List.of());
+                List.of("Mango", "Naranja"), "Mangurus", "TREE", "Árbol",
+                "INTRODUCED", "Introducida", "Descripcion", "Cuidados", 0, null, null, List.of());
         when(inventoryService.speciesBySlug("mangus-urus")).thenReturn(mockResponse);
 
         SpeciesResponse created = service.register(form, null, "admin@pucp.edu.pe");

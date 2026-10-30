@@ -15,22 +15,6 @@ export function DecisionesDeDuplicados({ imp }: { imp: Importacion }) {
 
   return (
     <section aria-labelledby="posibles-duplicados" className="space-y-3 pt-1">
-      {/* Banner de Acción Requerida */}
-      <div className="rounded-xl border border-alert-warning-border bg-alert-warning-bg/90 p-3.5 text-alert-warning-fg shadow-2xs">
-        <div className="flex items-start gap-2.5">
-          <span className="text-base select-none mt-0.5" aria-hidden="true">⚠️</span>
-          <div className="space-y-1 text-xs">
-            <p className="font-bold text-neutral-900 text-sm">
-              Acción requerida: Se detectaron {duplicados.length} posibles duplicados
-            </p>
-            <p className="text-neutral-700 leading-relaxed">
-              Estas filas están en la misma ubicación o muy cerca de ejemplares ya registrados.
-              Para habilitar el botón <strong>«Confirmar carga»</strong>, debes indicar si deseas <strong>Ingresar</strong> u <strong>Omitir</strong> cada una.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Cabecera de la lista con botones de decisión rápida */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
         <div className="flex items-center gap-2.5">

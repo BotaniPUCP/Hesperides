@@ -4,6 +4,7 @@ import java.util.List;
 
 /** Una especie tal como sale de la base, con la foto original de uno de sus ejemplares. */
 public record SpeciesRow(String slug, String scientificName, String commonName, List<String> otherNames,
-                         String family, String typeCode, String typeLabel, long specimenCount, String photoUrl,
+                         String family, String typeCode, String typeLabel, String originCode, String originLabel,
+                         String description, String careNotes, long specimenCount, String photoUrl,
                          Long speciesPhotoId, Long specimenPhotoId) {
 }
