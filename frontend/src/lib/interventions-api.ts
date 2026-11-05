@@ -24,11 +24,21 @@ export interface InterventionEvidence {
   caption: string | null; uploadedAt: string | null; canUpload: boolean;
   uploadedByUserId: number; momentCode: string;
 }
+export interface InterventionHistoryEvent {
+  id?: number; actionCode: string; interventionLocationId: number | null;
+  actorUserId: number; actorName?: string | null; occurredAt: string; reason: string | null;
+  attemptNumber?: number | null;
+  progress?: {
+    quantity: number | null; notes: string | null; unitItemId: number | null;
+    previousQuantity?: number | null; previousNotes?: string | null;
+  };
+}
 export interface InterventionDetail extends InterventionSummary {
   description: string | null; locations: InterventionLocation[]; evidences: InterventionEvidence[];
   originItemId: number; reportedByItemId: number; externalCode: string | null; requestedAt: string | null;
   responsibleSupervisorUserId: number | null;
-  history: { actionCode: string; interventionLocationId: number | null; actorUserId: number; occurredAt: string; reason: string | null }[];
+  executionBlockedUntil?: string | null;
+  history: InterventionHistoryEvent[];
   quantityTotals: { unitItemId: number; requestedQuantity: number | null; progressQuantity: number | null; executedQuantity: number | null }[];
 }
 export interface InterventionPlanning {
@@ -75,8 +85,9 @@ export const interventionsApi = {
 export function interventionError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 404) return 'La intervención o ubicación no está disponible para tu cuenta.';
-    if (error.status === 409) return 'El trabajo cambió o hay un envío en curso. Recarga los datos antes de reintentar; conserva tu texto.';
+    if (error.status === 409) return 'El trabajo cambió o hay un envío en curso. Actualiza la información antes de reintentar; conserva tu texto.';
     const messages: Record<string,string> = {
+      'Execution cannot begin before the scheduled date': 'El trabajo podrá ejecutarse desde la fecha programada. Si debe adelantarse, solicita al coordinador que revise la planificación.',
       'At least one received photo is required for this location and attempt': 'Adjunta al menos una foto recibida de esta ubicación e intento antes de continuar.',
       'Receive all pending photos for this location before approval': 'Todavía hay fotos pendientes de subir en esta ubicación. Deben recibirse antes de aprobar.',
       'Executed quantity is required when the location has a measurement unit': 'Ingresa la cantidad ejecutada en la unidad de esta ubicación.',

@@ -43,6 +43,7 @@ public class InterventionsServiceImpl implements InterventionsService {
     private final pe.edu.pucp.hesperides.shared.storage.FileStorage storage;
     private final InterventionEvidenceFiles evidenceFiles;
     private final InterventionReviewPolicy reviewPolicy;
+    private final InterventionExecutionSchedule schedule;
 
     private void validate(Object request) {
         if(request==null)throw new ValidationException("Request is required");
@@ -85,8 +86,10 @@ public class InterventionsServiceImpl implements InterventionsService {
         var d=queries.detail(id).orElseThrow(()->new ResourceNotFoundException("Intervention not found"));
         scope(u,d.getTeamId(),d.getAssignedToUserId());
         d.setResponsibleSupervisorUserId(references.responsibleSupervisor(d.getTeamId()));
+        boolean dateAvailable=schedule.canExecute(d.getScheduledDate());
+        d.setExecutionBlockedUntil(dateAvailable?null:d.getScheduledDate());
         var photos=evidences.findByInterventionIdAndDeletedAtIsNullOrderById(id);
-        boolean executing = Set.of("SUPERVISOR","OPERARIO").contains(u.getRoleCode())
+        boolean executing = dateAvailable && Set.of("SUPERVISOR","OPERARIO").contains(u.getRoleCode())
                 && references.candidates(d.getTeamId()).stream().anyMatch(c -> Objects.equals(c.get("id"),u.getId()));
         var localRows=new ArrayList<Map<String,Object>>();
         for(var l:locations.findByInterventionIdAndDeletedAtIsNullOrderById(id)){
@@ -124,12 +127,32 @@ public class InterventionsServiceImpl implements InterventionsService {
             m.put("fileUrl",e.getUploadedAt()==null?null:evidenceFileUrl(e));photoRows.add(m);
         }
         d.setEvidences(photoRows);
+        var historyEvents=events.findByInterventionIdAndDeletedAtIsNullOrderByOccurredAtAscIdAsc(id);
+        var actorNames=new HashMap<Long,String>();
+        users.findAllById(historyEvents.stream().map(InterventionEvent::getActorUserId).distinct().toList())
+                .forEach(author -> actorNames.put(author.getId(),author.getFullName()));
         var history=new ArrayList<Map<String,Object>>();
-        for(var e:events.findByInterventionIdAndDeletedAtIsNullOrderByOccurredAtAscIdAsc(id)){
-            var m=new LinkedHashMap<String,Object>();m.put("actionCode",e.getActionCode());m.put("interventionLocationId",e.getInterventionLocationId());
+        for(var e:historyEvents){
+            var m=new LinkedHashMap<String,Object>();m.put("id",e.getId());m.put("actionCode",e.getActionCode());m.put("interventionLocationId",e.getInterventionLocationId());
             m.put("attemptNumber",e.getAttemptNumber());m.put("actorUserId",e.getActorUserId());m.put("occurredAt",e.getOccurredAt());
+            m.put("actorName",actorNames.get(e.getActorUserId()));
             m.put("fromStatusCode",e.getFromStatusItemId()==null?null:references.code(e.getFromStatusItemId()));
-            m.put("toStatusCode",references.code(e.getToStatusItemId()));m.put("reason",e.getReason());history.add(m);
+            m.put("toStatusCode",references.code(e.getToStatusItemId()));m.put("reason",e.getReason());
+            // Expose only report fields, not the full internal audit snapshots.
+            if("PROGRESS_SAVED".equals(e.getActionCode()) && e.getDetails()!=null
+                    && e.getDetails().get("current") instanceof Map<?,?> current){
+                var progress=new LinkedHashMap<String,Object>();
+                progress.put("quantity",current.get("progressQuantity"));
+                progress.put("notes",current.get("executionNotes"));
+                if(e.getDetails().get("previous") instanceof Map<?,?> previous){
+                    progress.put("previousQuantity",previous.get("progressQuantity"));
+                    progress.put("previousNotes",previous.get("executionNotes"));
+                }
+                progress.put("unitItemId",localRows.stream().filter(l->Objects.equals(l.get("id"),e.getInterventionLocationId()))
+                        .map(l->l.get("unitItemId")).filter(Objects::nonNull).findFirst().orElse(null));
+                m.put("progress",progress);
+            }
+            history.add(m);
         }
         d.setHistory(history);
         var grouped=new LinkedHashMap<Long,List<Map<String,Object>>>();
@@ -631,6 +654,7 @@ public class InterventionsServiceImpl implements InterventionsService {
                 .noneMatch(candidate -> Objects.equals(candidate.get("id"), user.getId()))) {
             throw new AccessDeniedException("Execution requires an active assignment or supervision in this team");
         }
+        schedule.requireAvailable(intervention.getScheduledDate());
     }
 
     private Map<String, Object> executionSnapshot(InterventionLocation location) {
