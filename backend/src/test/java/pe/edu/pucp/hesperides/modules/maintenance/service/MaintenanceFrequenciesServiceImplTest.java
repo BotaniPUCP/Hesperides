@@ -19,6 +19,7 @@ import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequency
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequency;
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequencySeason;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceFrequenciesRepository;
+import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceZoneQueries;
 import pe.edu.pucp.hesperides.shared.entity.BaseEntity;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
@@ -50,6 +51,9 @@ class MaintenanceFrequenciesServiceImplTest {
     @Mock
     private ComplianceReader complianceReader;
 
+    @Mock
+    private MaintenanceZoneQueries zoneQueries;
+
     private MaintenanceFrequenciesServiceImpl service;
 
     private CatalogItem activityItem;
@@ -60,7 +64,7 @@ class MaintenanceFrequenciesServiceImplTest {
     @BeforeEach
     void setUp() throws Exception {
         service = new MaintenanceFrequenciesServiceImpl(
-                frequenciesRepository, catalogItemsRepository, complianceReader);
+                frequenciesRepository, catalogItemsRepository, complianceReader, zoneQueries);
 
         activityItem = catalogItem(10L, "CORTE_CESPED", "Corte de césped");
         intervalDaysRuleItem = catalogItem(101L, "INTERVAL_DAYS", "Intervalo por rango de días");
@@ -139,6 +143,88 @@ class MaintenanceFrequenciesServiceImplTest {
     @Nested
     @DisplayName("Creacion")
     class Creacion {
+
+        @Test
+        void zoneRequiredBeforePersisting() {
+            var request = new CreateMaintenanceFrequencyRequest(
+                    10L, "OUTSOURCED", "ON_DEMAND", "BY_ZONE", null,
+                    null, null, null, null, null, 3, null, null, null, null);
+
+            assertThatThrownBy(() -> service.create(request))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("Selecciona una sección");
+            verify(frequenciesRepository, never()).save(any());
+        }
+
+        @Test
+        void zoneMustBeAnActiveSection() {
+            when(zoneQueries.isActiveSection(999L)).thenReturn(false);
+            var request = new CreateMaintenanceFrequencyRequest(
+                    10L, "OUTSOURCED", "ON_DEMAND", "BY_ZONE", 999L,
+                    null, null, null, null, null, 3, null, null, null, null);
+
+            assertThatThrownBy(() -> service.create(request))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("no existe o no está activa");
+            verify(frequenciesRepository, never()).save(any());
+        }
+
+        @Test
+        void byZoneFrequencyKeepsTheChosenSection() {
+            when(zoneQueries.isActiveSection(7L)).thenReturn(true);
+            var request = new CreateMaintenanceFrequencyRequest(
+                    10L, "OUTSOURCED", "ON_DEMAND", "BY_ZONE", 7L,
+                    null, null, null, null, null, 3, null, null, null, null);
+
+            var response = service.create(request);
+
+            assertThat(response.scope()).isEqualTo("BY_ZONE");
+            assertThat(response.zoneId()).isEqualTo(7L);
+        }
+
+        @Test
+        void campusWideCannotCarryAZone() {
+            var request = new CreateMaintenanceFrequencyRequest(
+                    10L, "OUTSOURCED", "ON_DEMAND", "CAMPUS_WIDE", 7L,
+                    null, null, null, null, null, 3, null, null, null, null);
+
+            assertThatThrownBy(() -> service.create(request))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("Solo una frecuencia por sección");
+            verify(frequenciesRepository, never()).save(any());
+        }
+
+        @Test
+        void leavingByZoneDropsTheZone() throws Exception {
+            var current = vigenteAntigua();
+            current.setScope("BY_ZONE");
+            current.setZoneId(7L);
+            when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(current));
+            var request = new UpdateMaintenanceFrequencyRequest(
+                    null, null, "CAMPUS_WIDE", null, null, null, null, null,
+                    null, null, null, null, null, null, null);
+
+            var response = service.update(500L, request);
+
+            assertThat(response.scope()).isEqualTo("CAMPUS_WIDE");
+            assertThat(response.zoneId()).isNull();
+        }
+
+        @Test
+        void updateRequiresZoneBeforeClosingCurrentVersion() throws Exception {
+            var current = vigenteAntigua();
+            when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(current));
+            var request = new UpdateMaintenanceFrequencyRequest(
+                    null, null, "BY_ZONE", null, null, null, null, null,
+                    null, null, null, null, null, null, null);
+
+            assertThatThrownBy(() -> service.update(500L, request))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("Selecciona una sección");
+            assertThat(current.getValidTo()).isNull();
+            verify(frequenciesRepository, never()).saveAndFlush(any());
+            verify(frequenciesRepository, never()).save(any());
+        }
 
         @Test
         @DisplayName("un intervalo valido se persiste con vigencia abierta")

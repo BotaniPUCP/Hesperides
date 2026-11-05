@@ -83,6 +83,6 @@ export function scopeLabel(scope: MaintenanceFrequency['scope']): string {
     case 'BY_SECTOR':
       return 'Por sector';
     default:
-      return 'Por zona';
+      return 'Por sección';
   }
 }
