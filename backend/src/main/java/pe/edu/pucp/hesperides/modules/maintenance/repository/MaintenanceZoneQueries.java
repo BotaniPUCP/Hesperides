@@ -18,6 +18,7 @@ public class MaintenanceZoneQueries {
 
     private final JdbcTemplate jdbc;
 
+    /** Secciones activas con su sector, ordenadas por sector para agruparlas en el selector. */
     public List<ZoneOptionResponse> activeSections() {
         return jdbc.query("""
                 SELECT s.id, s.code, s.name, p.id AS sector_id, p.name AS sector_name
@@ -33,6 +34,7 @@ public class MaintenanceZoneQueries {
                 rs.getObject("sector_id", Long.class), rs.getString("sector_name")));
     }
 
+    /** Indica si el id es una sección activa; un sector, una subsección o un id inexistente dan {@code false}. */
     public boolean isActiveSection(Long zoneId) {
         Integer found = jdbc.queryForObject("""
                 SELECT COUNT(*) FROM zones s
