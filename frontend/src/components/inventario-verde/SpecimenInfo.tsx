@@ -424,24 +424,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
             </div>
           </div>
 
-          {/* Observaciones de campo integradas */}
-          {specimen.notes && (
-            <div className="mt-3.5 pt-3 border-t border-neutral-100 flex items-start gap-2.5 text-xs">
-              <span className="p-1 rounded-md bg-neutral-100 text-neutral-600 shrink-0 mt-0.5" aria-hidden="true">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                </svg>
-              </span>
-              <div className="min-w-0">
-                <span className="font-bold text-neutral-700">
-                  Observaciones de campo:{' '}
-                </span>
-                <span className="text-neutral-600 leading-relaxed italic">
-                  «{specimen.notes}»
-                </span>
-              </div>
-            </div>
-          )}
+
         </div>
       </div>
 
