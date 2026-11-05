@@ -18,6 +18,7 @@ public class InterventionDetailResponse extends InterventionSummaryResponse {
     private LocalDate requestedAt;
     private Instant createdAt;
     private Instant updatedAt;
+    private LocalDate executionBlockedUntil;
     private List<Map<String,Object>> locations;
     private List<Map<String,Object>> evidences;
     private List<Map<String,Object>> history;

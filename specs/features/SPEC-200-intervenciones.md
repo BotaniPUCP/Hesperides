@@ -262,6 +262,34 @@ La referencia local origin/modulo-incidencias contiene una implementación incom
 la tabla/entidad Intervention y V022: [revisión del contrato](../../docs/planes/SPEC-200-revision-contrato-incidencias.md).
 T10 no se habilita hasta conciliar ese contrato y probar ambos módulos juntos.
 
+### 2.10 Correcciones de uso confirmadas el 5 nov 2026
+
+- La interfaz usa «Enviar a revisión» para completar una ubicación y «Subsanar observación»
+  para abrir el siguiente intento. «Registrar avance» conserva el significado de avance acumulado.
+- Las observaciones de revisión permanecen visibles por ubicación, con motivo, fecha,
+  autor e intento original, también durante la subsanación y después de nuevos intentos.
+  Se leen de los eventos OBSERVED existentes; limpiar el rechazo del intento activo no
+  elimina ni oculta la observación histórica. Los reportes y fotos anteriores se conservan.
+- Cada guardado de avance se muestra en el historial de esa ubicación, con fecha, autor,
+  intento, cantidad acumulada, cantidad anterior y notas. Se recupera del evento
+  PROGRESS_SAVED ya persistido; los registros de distintos intentos no se sobrescriben.
+  Las cantidades son acumulados, no incrementos que se sumen automáticamente. El valor cero
+  y las correcciones de cantidades anteriores siguen admitidos.
+- «Actualizar información» consulta el último estado guardado en el servidor. No guarda
+  un formulario pendiente. Tras un conflicto conserva el texto del reporte; una actualización
+  correcta se comunica como estado informativo, no como error.
+- Confirmación explícita del usuario: el coordinador puede programar una intervención
+  futura, pero el capataz no puede ejecutarla antes de la fecha programada. Se aplica a
+  todo ejecutor autorizado, incluido OPERARIO, tanto en la API como en las acciones ofrecidas.
+  La planificación y asignación futuras permanecen permitidas. Inicio, avance, envío a
+  revisión, subsanación y carga de evidencia requieren haber alcanzado el día programado.
+  La fecha se compara con el día civil de `hesperides.maintenance.time-zone` (por defecto
+  America/Lima), sin depender de la fecha o zona horaria del navegador.
+- Adelantar una intervención requiere reprogramar antes de iniciar, con motivo y los
+  permisos de planificación ya definidos. No se amplían los permisos del capataz.
+
+Estas correcciones reutilizan el esquema vigente y sus eventos. No necesitan una migración nueva.
+
 ## 3. Contratos de API
 
 Los contratos siguientes sustituyen íntegramente el borrador singular: las operaciones de
@@ -444,6 +472,12 @@ Se admite cantidad cero, corrección de un avance previo y cantidades sobre la p
 convertirlas en finalización ni imponer un progreso porcentual. Cantidad sin unidad local → 422.
 Cada guardado conserva valores anteriores/nuevos en PROGRESS_SAVED y no altera inicio,
 intento, ejecutor, cantidad final ni revisión. El bloqueo sigue el orden cabecera → ubicación.
+El detalle añade a cada evento de avance `progress: {quantity, notes, previousQuantity,
+previousNotes, unitItemId}`, y a los eventos `id`, `actorName` y `attemptNumber`.
+No expone el JSON interno completo de auditoría. La lectura está sujeta al mismo alcance
+de la intervención. `executionBlockedUntil` contiene la fecha programada si todavía no
+puede ejecutarse, o null cuando la fecha ya se alcanzó. Intentar ejecutar antes devuelve 422
+sin modificar versión, ubicación ni eventos.
 
 Anuncio de evidencia:
 ~~~json

@@ -30,7 +30,10 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
   useEffect(() => {
     let active = true;
     interventionsApi.options().then(o => {
-      if (active) setOptions(o);
+      if (active) {
+        setOptions(o);
+        setClassId(selected => selected || o.catalogs.find(c => c.typeCode === 'INTERVENTION_CLASS')?.id || 0);
+      }
     }).catch(e => { if (active) setError(interventionError(e)); });
     return () => { active = false; };
   }, []);
