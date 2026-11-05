@@ -10,8 +10,10 @@ import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequency
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.SeasonalIntervalPayload;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequencyRequest;
+import pe.edu.pucp.hesperides.modules.maintenance.dto.ZoneOptionResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequency;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceFrequenciesRepository;
+import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceZoneQueries;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
@@ -28,6 +30,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
     private final MaintenanceFrequenciesRepository frequenciesRepository;
     private final CatalogItemsRepository catalogItemsRepository;
     private final ComplianceReader complianceReader;
+    private final MaintenanceZoneQueries zoneQueries;
 
     @Override
     @Transactional(readOnly = true)
@@ -52,6 +55,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
     @Override
     @Transactional
     public MaintenanceFrequencyResponse create(CreateMaintenanceFrequencyRequest r) {
+        validateScope(r.scope(), r.zoneId());
         CatalogItem activity = loadActivity(r.activityTypeItemId());
         CatalogItem ruleType = loadRuleType(r.frequencyRuleTypeCode());
 
@@ -78,6 +82,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         }
 
         FrequencyFieldMapper.ResolvedFields fields = resolve(r, current);
+        validateScope(fields.scope(), fields.zoneId());
         List<SeasonalIntervalPayload> seasons = r.seasons() != null
                 ? r.seasons()
                 : current.getSeasons().stream().map(FrequencyVersioning::toPayload).toList();
@@ -137,6 +142,12 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 .map(MaintenanceFrequencyResponse.FrequencyRuleTypeSummary::from).toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ZoneOptionResponse> getZoneOptions() {
+        return zoneQueries.activeSections();
+    }
+
     // ── apoyo ───────────────────────────────────────────────────────────────
 
     /** Mezcla lo que el request pide cambiar con lo que la version vigente ya tiene. */
@@ -150,7 +161,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 ruleType,
                 pick(r.regime(), current.getRegime()),
                 pick(r.scope(), current.getScope()),
-                pick(r.zoneId(), current.getZoneId()),
+                resolveZoneId(r, current),
                 pick(r.targetDaysInterval(), current.getTargetDaysInterval()),
                 pick(r.minDaysInterval(), current.getMinDaysInterval()),
                 pick(r.maxDaysInterval(), current.getMaxDaysInterval()),
@@ -159,6 +170,29 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 pick(r.estimatedDurationDays(), current.getEstimatedDurationDays()),
                 pick(r.seasonStartMonth(), FrequencyFieldMapper.toInt(current.getSeasonStartMonth())),
                 pick(r.seasonEndMonth(), FrequencyFieldMapper.toInt(current.getSeasonEndMonth())));
+    }
+
+    /**
+     * Quien deja de ser "por sección" suelta la sección: si no, la versión nueva
+     * heredaría una sección que ya no es su ámbito.
+     */
+    private static Long resolveZoneId(UpdateMaintenanceFrequencyRequest r, MaintenanceFrequency current) {
+        if (r.zoneId() != null) return r.zoneId();
+        if (r.scope() != null && !"BY_ZONE".equals(r.scope())) return null;
+        return current.getZoneId();
+    }
+
+    private void validateScope(String scope, Long zoneId) {
+        if ("BY_ZONE".equals(scope)) {
+            if (zoneId == null) {
+                throw new BusinessRuleException("Selecciona una sección para configurar una frecuencia por sección");
+            }
+            if (!zoneQueries.isActiveSection(zoneId)) {
+                throw new BusinessRuleException("La sección seleccionada no existe o no está activa");
+            }
+        } else if (zoneId != null) {
+            throw new BusinessRuleException("Solo una frecuencia por sección lleva una sección asociada");
+        }
     }
 
     private MaintenanceFrequency load(Long id) {

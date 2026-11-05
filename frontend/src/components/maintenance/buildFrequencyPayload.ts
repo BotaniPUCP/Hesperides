@@ -13,6 +13,8 @@ export interface FormState {
   regime: MaintenanceRegime;
   ruleTypeCode: FrequencyRuleTypeCode;
   scope: MaintenanceScope;
+  /** Solo cuenta cuando el ámbito es por sección. */
+  zoneId: number | null;
   fields: RuleFieldsState;
   estimatedDuration: string;
   notes: string;
@@ -37,6 +39,12 @@ function num(value: string): number | null {
  * cortesía de la interfaz, nunca la garantía.
  */
 export function buildFrequencyPayload(s: FormState): BuildResult {
+  if (s.scope === 'BY_SECTOR') {
+    return { error: 'Las frecuencias por sector aún no se evalúan. Elige Todo el campus o Por sección.' };
+  }
+  if (s.scope === 'BY_ZONE' && !s.zoneId) {
+    return { error: 'Selecciona la sección a la que aplica la frecuencia' };
+  }
   if (!s.isEditing && !s.activityTypeItemId) {
     return { error: 'Selecciona el tipo de actividad' };
   }
@@ -95,6 +103,7 @@ export function buildFrequencyPayload(s: FormState): BuildResult {
       regime: s.regime,
       frequencyRuleTypeCode: s.ruleTypeCode,
       scope: s.scope,
+      zoneId: s.scope === 'BY_ZONE' ? s.zoneId : null,
       minDaysInterval: min,
       maxDaysInterval: max,
       targetDaysInterval: target,
