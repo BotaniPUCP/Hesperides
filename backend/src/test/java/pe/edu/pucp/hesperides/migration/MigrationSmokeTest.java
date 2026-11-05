@@ -45,8 +45,11 @@ class MigrationSmokeTest {
                 """, Long.class)).isZero();
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM incidents", Long.class)).isZero();
         assertThat(jdbcTemplate.queryForObject("""
-                SELECT count(*) FROM flyway_schema_history WHERE script = 'R__seed_demo_incidents.sql'
+                SELECT count(*) FROM flyway_schema_history
+                WHERE script IN ('R__seed_demo_incidents.sql', 'R__seed_demo_reports.sql')
                 """, Long.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM interventions WHERE external_code LIKE 'DEMO-REP-%'", Long.class)).isZero();
     }
 
     @Test
