@@ -46,7 +46,7 @@ export function SpecimenMeasures({
       ),
     },
     {
-      label: 'Altura del fuste',
+      label: 'Altura fuste',
       num: formatMeasure(specimen.trunkHeightM),
       unit: specimen.trunkHeightM == null ? '' : 'm',
       icon: (
@@ -56,7 +56,7 @@ export function SpecimenMeasures({
       ),
     },
     {
-      label: 'DAP (diámetro tronco)',
+      label: 'DAP (tronco)',
       num: formatMeasure(specimen.dbhCm),
       unit: specimen.dbhCm == null ? '' : 'cm',
       icon: (

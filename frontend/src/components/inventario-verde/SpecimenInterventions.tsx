@@ -226,25 +226,27 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
                     </li>
                   ))}
                 </ul>
-                <nav
-                  aria-label="Páginas del historial de intervenciones"
-                  className="mt-4 pt-3 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-600"
-                >
-                  <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => navigate(page - 1)}>
-                    Anterior
-                  </Button>
-                  <span className="font-medium">
-                    Página {page + 1} de {result.page.totalPages}
-                  </span>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={page + 1 >= result.page.totalPages}
-                    onClick={() => navigate(page + 1)}
+                {result.page.totalPages > 1 && (
+                  <nav
+                    aria-label="Páginas del historial de intervenciones"
+                    className="mt-4 pt-3 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-2 text-xs text-neutral-600"
                   >
-                    Siguiente
-                  </Button>
-                </nav>
+                    <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => navigate(page - 1)}>
+                      Anterior
+                    </Button>
+                    <span className="font-medium">
+                      Página {page + 1} de {result.page.totalPages}
+                    </span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={page + 1 >= result.page.totalPages}
+                      onClick={() => navigate(page + 1)}
+                    >
+                      Siguiente
+                    </Button>
+                  </nav>
+                )}
               </>
             )}
           </>
