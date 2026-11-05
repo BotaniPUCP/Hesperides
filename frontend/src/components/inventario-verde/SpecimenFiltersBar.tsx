@@ -102,10 +102,10 @@ export function SpecimenFiltersBar({
         </div>
       </div>
 
-      {/* Fila inferior: Estado a la izquierda y controles a la derecha en una sola línea */}
-      <div className="flex items-center justify-between gap-3 text-xs text-neutral-500 pt-1 border-b border-neutral-100 pb-3 min-h-[42px]">
+      {/* Fila inferior: Estado a la izquierda y controles a la derecha */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-neutral-500 pt-1 border-b border-neutral-100 pb-3 min-h-[42px]">
         {/* Lado izquierdo: Cantidad de ejemplares coincidentes / estado de carga */}
-        <div className="flex items-center gap-3 whitespace-nowrap">
+        <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
           {loading ? (
             <div className="flex items-center gap-2 text-xs text-neutral-500 py-0.5" role="status">
               <span
@@ -115,7 +115,7 @@ export function SpecimenFiltersBar({
               <span>Actualizando catálogo...</span>
             </div>
           ) : (
-            <span>
+            <span className="whitespace-nowrap">
               Mostrando{' '}
               <strong className="text-neutral-800 font-semibold">{fromItem}</strong>–
               <strong className="text-neutral-800 font-semibold">{toItem}</strong> de{' '}
@@ -128,16 +128,16 @@ export function SpecimenFiltersBar({
             <button
               type="button"
               onClick={onReset}
-              className="text-xs text-brand-700 hover:text-brand-900 hover:underline font-medium"
+              className="text-xs text-brand-700 hover:text-brand-900 hover:underline font-medium whitespace-nowrap"
             >
               Restablecer filtros
             </button>
           )}
         </div>
 
-        {/* Lado derecho: Ordenamiento y modo de vista en una sola línea */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-1.5">
+        {/* Lado derecho: Ordenamiento y modo de vista */}
+        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto shrink-0">
+          <div className="flex items-center gap-1.5 flex-1 sm:flex-initial justify-between sm:justify-start">
             <label htmlFor="specimen-sort-select" className="text-neutral-500 font-medium shrink-0">
               Ordenar por:
             </label>
