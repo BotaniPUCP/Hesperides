@@ -8,6 +8,7 @@ import { useCatalog } from '@/hooks/useCatalog';
 import { LIMITES } from '@/lib/upload-limits';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
+import { ConfirmSaveModal } from './ConfirmSaveModal';
 
 export interface RegistroEspecieModalProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ function RegistroEspecieDialog({
   const [photo, setPhoto] = useState<File | null>(null);
 
   const [saving, setSaving] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -103,10 +105,13 @@ function RegistroEspecieDialog({
     return Object.keys(errs).length === 0;
   }
 
-  async function handleSubmit(e?: React.FormEvent) {
+  function handlePreSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!validate()) return;
+    setConfirmOpen(true);
+  }
 
+  async function handleConfirmSave() {
     setSaving(true);
     setError(null);
 
@@ -128,10 +133,12 @@ function RegistroEspecieDialog({
 
     try {
       const created = await inventarioVerdeApi.registerSpecies(form, photo);
+      setConfirmOpen(false);
       resetForm();
       onCreated?.(created);
       onClose();
     } catch (err: unknown) {
+      setConfirmOpen(false);
       if (err instanceof ApiError && err.status === 409) {
         setError(err.message || `La especie «${scientificName}» ya está registrada en el catálogo`);
       } else if (err instanceof ApiError && err.status === 500) {
@@ -147,7 +154,8 @@ function RegistroEspecieDialog({
   }
 
   return (
-    <Modal
+    <>
+      <Modal
       isOpen={isOpen}
       onClose={() => {
         if (!saving) {
@@ -172,7 +180,7 @@ function RegistroEspecieDialog({
           </Button>
           <Button
             type="button"
-            onClick={() => void handleSubmit()}
+            onClick={() => void handlePreSubmit()}
             loading={saving}
           >
             Guardar especie
@@ -185,7 +193,7 @@ function RegistroEspecieDialog({
         onKeyDown={(e) => {
           if (e.key === 'Enter' && (e.target as HTMLElement)?.tagName === 'INPUT') {
             e.preventDefault();
-            void handleSubmit();
+            void handlePreSubmit();
           }
         }}
       >
@@ -291,5 +299,50 @@ function RegistroEspecieDialog({
         </div>
       </div>
     </Modal>
+
+    <ConfirmSaveModal
+      isOpen={confirmOpen}
+      title="¿Registrar nueva especie botánica?"
+      entityLabel={scientificName.trim()}
+      subtitle="Catálogo Botánico Maestro"
+      confirmLabel="Confirmar y registrar"
+      cancelLabel="Revisar datos"
+      isWorking={saving}
+      onConfirm={handleConfirmSave}
+      onCancel={() => setConfirmOpen(false)}
+    >
+      <div className="space-y-2 p-3 rounded-xl bg-neutral-50 border border-neutral-200">
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Nombre científico:</span>
+          <span className="font-semibold italic text-neutral-900">{scientificName.trim()}</span>
+        </div>
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Nombre común:</span>
+          <span className="font-medium text-neutral-800">{commonName.trim() || '—'}</span>
+        </div>
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Tipo de vegetación:</span>
+          <span className="font-medium text-neutral-800">
+            {typeOptions.find((t) => t.code === vegetationTypeCode)?.label ?? vegetationTypeCode}
+          </span>
+        </div>
+        {family.trim() && (
+          <div className="flex justify-between py-1 border-b border-neutral-200/60">
+            <span className="text-neutral-500">Familia:</span>
+            <span className="font-medium text-neutral-800">{family.trim()}</span>
+          </div>
+        )}
+        {photo && (
+          <div className="flex justify-between py-1">
+            <span className="text-neutral-500">Foto oficial:</span>
+            <span className="font-medium text-neutral-800 truncate max-w-[180px]">{photo.name}</span>
+          </div>
+        )}
+      </div>
+      <p className="text-[11px] text-neutral-500 leading-relaxed">
+        Esta especie quedará disponible en el catálogo botánico para el censo y registro de ejemplares del campus.
+      </p>
+    </ConfirmSaveModal>
+    </>
   );
 }

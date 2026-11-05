@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentForm;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentResponse;
+import pe.edu.pucp.hesperides.modules.imports.dto.MeasurementResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.SpecimenForm;
 import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
 import pe.edu.pucp.hesperides.modules.imports.repository.AssessmentRepository;
+import pe.edu.pucp.hesperides.modules.imports.repository.MeasurementRepository;
 import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenCsvSchema;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview;
@@ -35,6 +37,7 @@ public class SpecimenRegistrationService {
     private final SpecimenWriter writer;
     private final SpecimenLookupRepository lookup;
     private final AssessmentRepository assessments;
+    private final MeasurementRepository measurements;
     private final PhotoRepository elements;
     private final InventoryPhotoService photos;
 
@@ -63,6 +66,10 @@ public class SpecimenRegistrationService {
 
     public List<AssessmentResponse> history(String code) {
         return assessments.history(elements.elementId(code));
+    }
+
+    public List<MeasurementResponse> measurementHistory(String code) {
+        return measurements.history(elements.elementId(code));
     }
 
     private String save(PlannedRow row, UploadedPhoto photo, String userEmail) {

@@ -124,10 +124,7 @@ export function SpecimenTable({
 
         {specimens.map((item) => {
           const specSpecies = speciesMap?.[item.speciesSlug ?? ''] || species;
-          const itemSlug = item.speciesSlug || specSpecies?.slug;
-          const detailUrl = itemSlug
-            ? `/inventario-verde/especies/${itemSlug}/ejemplares/${item.code}`
-            : `/catastro/registrar`;
+          const detailUrl = `/catastro/ejemplares/${item.code}`;
 
           const hasNotes = Boolean(item.notes);
 

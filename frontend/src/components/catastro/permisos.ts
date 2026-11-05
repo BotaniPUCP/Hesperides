@@ -5,7 +5,7 @@
  */
 const CARGAN_CSV = ['ADMIN', 'COORDINADOR'];
 const REGISTRAN = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
-const EDITAN_EJEMPLAR = ['ADMIN', 'COORDINADOR'];
+const EDITAN_EJEMPLAR = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
 
 export const puedeCargarCsv = (rol?: string) => CARGAN_CSV.includes(rol ?? '');
 

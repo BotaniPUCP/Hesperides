@@ -1,5 +1,5 @@
 import type {
-  Assessment, AssessmentForm, FeatureForm, ImportKind, ImportPreview, ImportResult, SpecimenForm,
+  Assessment, AssessmentForm, FeatureForm, ImportKind, ImportPreview, ImportResult, MeasurementRecord, SpecimenForm,
 } from '@shared/types';
 import { apiClient } from './api';
 
@@ -29,6 +29,9 @@ export const catastroApi = {
 
   assessments: (code: string) =>
     apiClient.get<Assessment[]>(`/green-inventory/specimens/${segment(code)}/assessments`),
+
+  measurements: (code: string) =>
+    apiClient.get<MeasurementRecord[]>(`/green-inventory/specimens/${segment(code)}/measurements`),
 
   assess: (code: string, form: AssessmentForm) =>
     apiClient.post<Assessment[]>(`/green-inventory/specimens/${segment(code)}/assessments`, form),

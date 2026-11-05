@@ -41,9 +41,7 @@ export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
   const typeBadgeLabel =
     species?.vegetationTypeName || VEGETATION_TYPE_FALLBACK[itemTypeCode] || 'Ejemplar';
 
-  const detailUrl = itemSlug
-    ? `/inventario-verde/especies/${itemSlug}/ejemplares/${specimen.code}`
-    : `/catastro/registrar`;
+  const detailUrl = `/catastro/ejemplares/${specimen.code}`;
 
   return (
     <Link

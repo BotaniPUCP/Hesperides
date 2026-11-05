@@ -40,6 +40,7 @@ export function SpeciesCover({ species }: { species: Species }) {
       src={species.imageUrl ?? undefined}
       alt={species.commonName}
       loading="lazy"
+      referrerPolicy="no-referrer"
       onError={() => setImageError(true)}
       className="h-full w-full object-cover"
     />
@@ -74,3 +75,4 @@ export function SpeciesCover({ species }: { species: Species }) {
     </div>
   );
 }
+

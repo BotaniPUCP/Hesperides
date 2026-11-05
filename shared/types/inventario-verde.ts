@@ -89,6 +89,18 @@ export interface Specimen {
 /** Procedencia de las medidas (C-08). Solo MEASURED vale para decidir quién poda. */
 export type MeasurementSource = 'MEASURED' | 'GENERIC' | 'UNKNOWN';
 
+export interface MeasurementRecord {
+  id: number;
+  date: string;
+  heightM: number | null;
+  trunkHeightM: number | null;
+  dbhCm: number | null;
+  crownRadiusM: number | null;
+  banded: boolean | null;
+  measuredBy: string | null;
+  notes?: string | null;
+}
+
 export interface SpecimenDetail extends Specimen {
   legacyCode: string | null;
   elementTypeCode: string;
@@ -102,6 +114,7 @@ export interface SpecimenDetail extends Specimen {
   /** Calculada por posición; nula si el ejemplar está fuera de toda sección. */
   section: { code: string; name: string } | null;
   species: Species;
+  latestMeasurementNotes?: string | null;
 }
 
 export interface LocationCount {

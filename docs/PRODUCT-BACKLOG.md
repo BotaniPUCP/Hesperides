@@ -103,21 +103,21 @@
 | **B-08** | REQ 3.11 | Épica B · Intervenciones del personal estable (M3) | `COORDINADOR` | comparar lo que se pidió contra lo que realmente se usó en una... | Media | Listo ✅ | **0%** | S3 | 3 |
 | **B-09** | REQ 3.2 | Épica B · Intervenciones del personal estable (M3) | `COORDINADOR` | asignar una tarea a una cuadrilla con fecha y prioridad | Media | Listo ✅ | **10%** | S4 | 3 |
 | **B-10** | REQ 3.6 | Épica B · Intervenciones del personal estable (M3) | `COORDINADOR` | validar una actividad registrada por el capataz antes de que e... | Media | Listo ✅ | **0%** | S4 | 3 |
-| **B-11** | REQ 3.12 | Épica B · Intervenciones del personal estable (M3) | `SUPERVISOR` | registrar la ficha técnica cuando la labor fue poda mayor o tala | Media | Listo ✅ | **10%** | S3 | 3 |
+| **B-11** | REQ 3.12 | Épica B · Intervenciones del personal estable (M3) | `SUPERVISOR` | registrar la ficha técnica cuando la labor fue poda con escalera (< 5 m) | Media | Listo ✅ | **10%** | S3 | 3 |
 | **C-01** | REQ 2.2 | Épica C · Catastro verde (M2) | `SUPERVISOR` | capturar un árbol o elemento verde en campo con foto, especie ... | Alta | Listo ✅ | **60%** | S2 | 8 |
 | **C-02** | REQ 2.12 | Épica C · Catastro verde (M2) | `COORDINADOR` | que el sistema funcione con el mapa base actual aunque el cens... | Alta | Listo ✅ | **80%** | S2 | 5 |
 | **C-03** | REQ 2.9 | Épica C · Catastro verde (M2) | `COORDINADOR` | que cada ejemplar reciba un código único del sistema cuando se... | Alta | Listo ✅ | **100%** | S3 | 5 |
 | **C-04** | REQ 2.10 | Épica C · Catastro verde (M2) | `COORDINADOR` | guardar el código antiguo junto al nuevo cuando exista | Media | Listo ✅ | **100%** | S3 | 2 |
-| **C-05** | REQ 2.7 | Épica C · Catastro verde (M2) | `COORDINADOR` | ver todas las intervenciones que recibió un ejemplar desde que... | Media | Parcial 🔶 | **30%** | S3 | 3 |
+| **C-05** | REQ 2.7 | Épica C · Catastro verde (M2) | `COORDINADOR` | ver todas las intervenciones que recibió un ejemplar desde que... | Media | Listo ✅ | **100%** | S3 | 3 |
 | **C-06** | REQ 2.4 | Épica C · Catastro verde (M2) | `COORDINADOR` | filtrar el mapa por periodo, clase de actividad y tipo | Media | Listo ✅ | **70%** | S3 | 5 |
 | **C-07** | REQ 2.6 | Épica C · Catastro verde (M2) | `COORDINADOR` | registrar las superficies deportivas y jardines botánicos como... | Baja | Listo ✅ | **80%** | S4 | 3 |
 | **C-08** | REQ 2.3 | Épica C · Catastro verde (M2) | `COORDINADOR` | saber si la altura de un ejemplar viene de una medición real o... | Alta | Listo ✅ | **100%** | S2 | 5 |
 | **C-09** | REQ 2.3 | Épica C · Catastro verde (M2) | `COORDINADOR` | que el sistema me pida verificar la altura en campo antes de p... | Alta | Listo ✅ | **100%** | S3 | 3 |
 | **C-10** | REQ 2.13 | Épica C · Catastro verde (M2) | `COORDINADOR` | cargar el levantamiento de campo con datos reales de los árbol... | Alta | Listo ✅ | **100%** | S2 | 8 |
-| **C-11** | REQ 2.3 | Épica C · Catastro verde (M2) | `COORDINADOR` | consultar la ficha de cada ejemplar con su información botánic... | Media | Parcial 🔶 | **60%** | S2 | 5 |
+| **C-11** | REQ 2.3 | Épica C · Catastro verde (M2) | `COORDINADOR` | consultar la ficha de cada ejemplar con su información botánic... | Media | Listo ✅ | **100%** | S2 | 5 |
 | **C-12** | REQ 2.14 | Épica C · Catastro verde (M2) | `COORDINADOR` | clasificar cada sección por su tipo de uso (jardín, cerco, xer... | Media | Listo ✅ | **90%** | S2 | 3 |
-| **C-13** | REQ 1.5 / REQ 2.13 | Épica C · Catastro verde (M2) | `COORDINADOR` | registrar evaluaciones fitosanitarias basadas en el método Vis... | Media | Listo ✅ | **100%** | S2 | 3 |
-| **C-14** | REQ 2.3 | Épica C · Catastro verde (M2) | `COORDINADOR` | visualizar un visor fotográfico multiejemplar con visor tipo l... | Alta | Listo ✅ | **100%** | S2 | 3 |
+| **C-13** | REQ 2.2 / REQ 2.3 / REQ 2.7 | Épica C · Catastro verde (M2) | `COORDINADOR` | registrar y consultar el historial de evaluaciones fitosanitar... | Media | Listo ✅ | **100%** | S2 | 3 |
+| **C-14** | REQ 2.3 / REQ 2.7 | Épica C · Catastro verde (M2) | `COORDINADOR` | actualizar mediciones dendrométricas y fotos conservando su hi... | Alta | Listo ✅ | **100%** | S2 | 3 |
 | **C-15** | REQ 2.15 | Épica C · Catastro verde (M2) | `COORDINADOR` | registrar y visualizar en el mapa la ubicación y estado de tac... | Baja | Listo ✅ | **80%** | S2 | 2 |
 | **D-01** | REQ 7.1 | Épica D · Riego (M7) | `SUPERVISOR` | registrar el turno de riego de mi cuadrilla (horario, sector y... | Alta | Listo ✅ | **40%** | S3 | 8 |
 | **D-02** | REQ 7.2 | Épica D · Riego (M7) | `COORDINADOR` | ver qué porcentaje del campus se regó en el mes y qué zonas ll... | Alta | Parcial 🔶 | **20%** | S3 | 8 |
@@ -131,7 +131,7 @@
 | **E-06** | REQ 5.4 | Épica E · Incidencias (M5) | `COORDINADOR` | ligar una incidencia al ejemplar o sección correspondiente | Media | Listo ✅ | **0%** | S4 | 3 |
 | **E-07** | REQ 5.5 | Épica E · Incidencias (M5) | `COORDINADOR` | consultar las incidencias pasadas con filtros por zona, tipo y... | Media | Listo ✅ | **0%** | S4 | 2 |
 | **E-08** | REQ 5.7 | Épica E · Incidencias (M5) | `ADMIN` | administrar los tipos de incidencia del catálogo | HAB | Listo ✅ | **0%** | S3 | 3 |
-| **E-09** | REQ 5.11 | Épica E · Incidencias (M5) | `COORDINADOR` | que el sistema solo admita sábados para la programación de maq... | Media | Listo ✅ | **0%** | S3 | 3 |
+| **E-09** | REQ 5.11 | Épica E · Incidencias (M5) | `COORDINADOR` | que el sistema solo admita sábados, domingos y feriados para m... | Media | Listo ✅ | **0%** | S3 | 3 |
 | **E-10** | REQ 5.6 | Épica E · Incidencias (M5) | `COORDINADOR` | que el sistema me avise cuando una incidencia supera el plazo ... | Media | Listo ✅ | **0%** | S4 | 5 |
 | **F-01** | REQ 6.1 | Épica F · Reportes y analítica (M6) | `COORDINADOR` | un tablero con el estado del mes (cobertura, labores realizada... | Alta | Listo ✅ | **0%** | S4 | 8 |
 | **F-02** | REQ 6.8 | Épica F · Reportes y analítica (M6) | `COORDINADOR` | ver qué porcentaje del área verde total del campus recibió man... | Alta | Parcial 🔶 | **0%** | S4 | 8 |
@@ -159,7 +159,7 @@
 - **Módulo:** `M1` | **Tipo:** `Enabler` | **Actor:** `ADMIN`
 - **Prioridad:** `HAB` | **Preparación:** `Listo ✅` | **Sprint:** `S1` | **Story Points:** `5 pts`
 - **Avance Real Implementado:** **`100%`**
-- **Fuente / Evidencia:** Catálogo REQ 1.1; SPEC-100; Curso: autenticación/autorización
+- **Fuente / Evidencia:** Catálogo REQ 1.1; Entrevista 1; Requisitos de seguridad
 - **Dependencia / Bloqueante:** —
 - **Notas de Alcance y Realidad Técnica:** Ya especificado en SPEC-100. Esta historia es su implementación.
 
@@ -192,7 +192,7 @@
 - **Módulo:** `M1` | **Tipo:** `Enabler` | **Actor:** `ADMIN`
 - **Prioridad:** `HAB` | **Preparación:** `Listo ✅` | **Sprint:** `S1` | **Story Points:** `3 pts`
 - **Avance Real Implementado:** **`100%`**
-- **Fuente / Evidencia:** Catálogo REQ 1.2; SPEC-100; Curso 3.6
+- **Fuente / Evidencia:** Catálogo REQ 1.2; Entrevista 1; Matriz de roles RBAC
 - **Dependencia / Bloqueante:** A-01
 - **Notas de Alcance y Realidad Técnica:** **Por qué superconjunto y no varios roles por usuario:** el modelo implementado guarda **un rol  por usuario** (`users.role_item_id`, un solo `role` en el JWT). El superconjunto resuelve el caso  real sin tocar SPEC-001 ni SPEC-100.
 
@@ -307,8 +307,8 @@
 - **Módulo:** `M1` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S3` | **Story Points:** `8 pts`
 - **Avance Real Implementado:** **`60%`**
-- **Fuente / Evidencia:** Catálogo REQ 1.7; REQ 1.8; SPEC-006; SPEC-101; Entrevista 1
-- **Dependencia / Bloqueante:** SPEC-006
+- **Fuente / Evidencia:** Catálogo REQ 1.7, REQ 1.8; D5, D7; Entrevista 1
+- **Dependencia / Bloqueante:** A-04
 - **Notas de Alcance y Realidad Técnica:** 📄 **Especificado en [SPEC-006](../specs/fundacionales/SPEC-006-frecuencias-mantenimiento.md).**  Cierra el pendiente P-03 de SPEC-002.   ⬆️ **Sube de 3 a 8 pts.** El análisis reveló que no es un CRUD: son tres criterios de evaluación  distintos (intervalo, conteo anual, ninguno), vigencia temporal, evaluadores puros en el Engine y  pantalla de administración. La estimación de 3 pts asumía una tabla de valores fijos.   ⚠️ **No llamarlo «pactado vs. real» todavía.** Conocemos las frecuencias **operativas** por  entrevista, pero no si están escritas en los contratos (W-07 pasó a fase futura). Compara contra una  referencia operativa, no contra una obligación contractual.   La razón de la tolerancia está documentada: en 2026 un «verano eterno» obligó a cortar césped cada  30-35 días y a sumar un tercer control fitosanitario. **El clima manda.**
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
@@ -363,7 +363,7 @@
 - **Módulo:** `M1` | **Tipo:** `Enabler` | **Actor:** `ADMIN`
 - **Prioridad:** `Baja` | **Preparación:** `Listo ✅` | **Sprint:** `S3` | **Story Points:** `2 pts`
 - **Avance Real Implementado:** **`60%`**
-- **Fuente / Evidencia:** Catálogo REQ 1.8; Curso 3.2
+- **Fuente / Evidencia:** Catálogo REQ 1.8; Catálogo de configuración de parámetros del sistema
 - **Dependencia / Bloqueante:** —
 - **Notas de Alcance y Realidad Técnica:** **Pasa de S4 a S3** porque E-09 (S3) necesita la lista de feriados.
 - **Ninguna referencia a «PUCP» queda escrita en la lógica de negocio.**
@@ -622,7 +622,7 @@
 
 #### `B-11` — REQ 3.12
 
-> **COMO SUPERVISOR QUIERO registrar la ficha técnica cuando la labor fue poda mayor o tala PARA documentar el trabajo de alto riesgo y alimentar el historial del árbol.**
+> **COMO SUPERVISOR QUIERO registrar la ficha técnica cuando la labor fue poda con escalera (< 5 m) PARA documentar las medidas de seguridad del trabajo en altura del personal estable.**
 
 - **Módulo:** `M3` | **Tipo:** `User Story` | **Actor:** `SUPERVISOR`
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S3` | **Story Points:** `3 pts`
@@ -633,11 +633,11 @@
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
-**ESCENARIO: Ficha especializada de poda de altura o tala**
-- **DADO QUE** la labor ejecutada sobre un ejemplar fue poda con grúa o tala,
-- **CUANDO** el SUPERVISOR completa el informe técnico de la intervención,
-- **ENTONCES** el sistema habilita la ficha técnica que solo aplica a poda con grúa o tala
-- **Y** captura obligatoriamente la altura del ejemplar, DAP, método de corte y disposición de restos vegetales
+**ESCENARIO: Ficha técnica de seguridad para poda con escalera (< 5 m)**
+- **DADO QUE** el personal estable ejecuta una labor de poda sobre un ejemplar menor a 5 m que requiere uso de escalera,
+- **CUANDO** el SUPERVISOR completa el registro de la intervención,
+- **ENTONCES** el sistema habilita la ficha técnica de poda con escalera
+- **Y** registra obligatoriamente las herramientas empleadas, el personal interviniente y la confirmación de prevencionista presente
 
 ---
 
@@ -650,7 +650,7 @@
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `SUPERVISOR`
 - **Prioridad:** `Alta` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `8 pts`
 - **Avance Real Implementado:** **`60%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.2; D3; Entrevista 2; SPEC-103
+- **Fuente / Evidencia:** Catálogo REQ 2.2; D3; Entrevista 2; Censo forestal campus
 - **Dependencia / Bloqueante:** A-04, B-02, C-08
 - **Notas de Alcance y Realidad Técnica:** Formulario web listo en /catastro/registrar (60%); API lista para consumo del canal móvil.
 
@@ -660,8 +660,8 @@
 - **DADO QUE** el capataz ubica un árbol o arbusto no registrado en el plano,
 - **CUANDO** inicia la captura desde la aplicación móvil,
 - **ENTONCES** el formulario realiza la captura de especie, ubicación GPS del teléfono, tipo de elemento verde y foto opcional
-- **Y** el registro queda en estado PENDING_VALIDATION hasta que el coordinador lo revise
-- **PERO** si el GPS no tiene precisión menor a 10 metros, la app avisa y pide confirmación visual en el mapa
+- **Y** el sistema valida que las coordenadas caigan dentro del límite del campus y verifica cercanía espacial según el tipo de vegetación (1.5 m en árboles, 1 m en palmeras)
+- **PERO** si detecta otro ejemplar de la misma especie dentro del umbral, advierte del posible duplicado (409) y solicita confirmación antes de crearlo
 
 ---
 
@@ -672,7 +672,7 @@
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Alta` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `5 pts`
 - **Avance Real Implementado:** **`80%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.12; D3; Entrevista 2; SPEC-103
+- **Fuente / Evidencia:** Catálogo REQ 2.12; D3; Entrevista 2; Plano base campus
 - **Dependencia / Bloqueante:** A-04
 - **Notas de Alcance y Realidad Técnica:** **Es la historia que hace viable todo el módulo.** Sin ella, el sistema sería inútil hasta que  alguien termine un levantamiento que hoy va al 30%.
 
@@ -694,7 +694,7 @@
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Alta` | **Preparación:** `Listo ✅` | **Sprint:** `S3` | **Story Points:** `5 pts`
 - **Avance Real Implementado:** **`100%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.9; D3; Decisión 25 sep; SPEC-103
+- **Fuente / Evidencia:** Catálogo REQ 2.9; D3; Entrevista 2; Decisión de codificación 25 sep
 - **Dependencia / Bloqueante:** —
 - **Notas de Alcance y Realidad Técnica:** 🔶 → ✅ **El criterio de codificación lo define el equipo** (decisión del 25 sep).   **Por qué hace falta:** las placas de aluminio actuales están rotas como sistema — hay árboles sin  placa, placas en ejemplares que ya no existen, y placas reasignadas: *«un código de un eucalipto  se lo puso a una palmera»*.
 
@@ -703,7 +703,7 @@
 **ESCENARIO: Generación de código único inmutable**
 - **DADO QUE** se da de alta un nuevo activo en el catastro verde,
 - **CUANDO** se confirma la creación del registro,
-- **ENTONCES** cada elemento verde recibe un código único inmutable generado por el sistema (ej. ARB-2026-0001)
+- **ENTONCES** cada elemento verde recibe un código único inmutable generado por el sistema (ej. EV-000001)
 - **Y** el código nunca se reasigna si el ejemplar es talado o dado de baja
 - **Y** el código del sistema es independiente de cualquier código antiguo o etiqueta física que lleve el ejemplar
 
@@ -716,7 +716,7 @@
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S3` | **Story Points:** `2 pts`
 - **Avance Real Implementado:** **`100%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.10; D3; Decisión 25 sep; SPEC-103
+- **Fuente / Evidencia:** Catálogo REQ 2.10; D3; Entrevista 2; Catastro campus.xlsx
 - **Dependencia / Bloqueante:** C-03
 - **Notas de Alcance y Realidad Técnica:** 100% implementado en V013/V014. 46 placas reales importadas desde catastro campus.xlsx.
 
@@ -733,23 +733,35 @@
 
 #### `C-05` — REQ 2.7
 
-> **COMO COORDINADOR QUIERO ver todas las intervenciones que recibió un ejemplar desde que fue registrado PARA conocer su historial fitosanitario y de podas.**
+> **COMO COORDINADOR QUIERO ver todas las intervenciones que recibió un ejemplar desde que fue registrado PARA conocer su historial de atenciones y mantenimientos realizados en campo.**
 
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
-- **Prioridad:** `Media` | **Preparación:** `Parcial 🔶` | **Sprint:** `S3` | **Story Points:** `3 pts`
-- **Avance Real Implementado:** **`30%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.7; D7; Entrevista 2; SPEC-103
+- **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S3` | **Story Points:** `3 pts`
+- **Avance Real Implementado:** **`100%`**
+- **Fuente / Evidencia:** Catálogo REQ 2.7; D7; Entrevista 2; Hoja de vida del ejemplar
 - **Dependencia / Bloqueante:** B-01, C-11
-- **Notas de Alcance y Realidad Técnica:** AVANCE DE INTERFAZ: Componente SpecimenInterventions.tsx implementado por contrato en frontend (S2). Pendiente de integración con la API de actividades diarias (Épica B) en S3.
+- **Notas de Alcance y Realidad Técnica:** Componente `SpecimenInterventions.tsx` integrado con `GET /api/v1/interventions?greenElementCode={code}` (SPEC-200). Muestra las intervenciones vinculadas al ejemplar de forma paginada (mostrando controles solo si `totalPages > 1`) con enlace directo al detalle de cada orden de trabajo (`/intervenciones/{id}`). Se reemplazó la alerta manual intrusiva por el servicio automático de proyección dendrométrica biofísica (`SpecimenInterventionMeasurementService.java`), que estima y actualiza las medidas del ejemplar según su especie y el tipo de poda ejecutado.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
-**ESCENARIO: Hoja de vida histórica del ejemplar**
-- **DADO QUE** el usuario consulta el detalle de un árbol específico,
-- **CUANDO** accede a la pestaña de historial,
-- **ENTONCES** la ficha del elemento lista sus intervenciones ordenadas por fecha descendente, con tipo, fecha, cuadrilla y fotos
-- **Y** admite registrar una intervención directamente contra el ejemplar o contra su sección
-- **PERO** si el módulo de intervenciones aún no cuenta con registros vinculados, presenta un estado informativo visual de contrato
+**ESCENARIO: Hoja de vida operativa de intervenciones del ejemplar**
+- **DADO QUE** un usuario con permisos operativos consulta la ficha de un ejemplar (`EV-XXXXXX`),
+- **CUANDO** visualiza la sección «Intervenciones del ejemplar»,
+- **ENTONCES** el sistema lista las intervenciones vinculadas a ese ejemplar ordenadas por fecha programada descendente, indicando código (`INT-XXXXXX`), clase, tipo de labor, estado y progreso
+- **Y** cada registro permite navegar directamente al detalle completo de la intervención (`Detalle >`)
+- **Y** los controles de paginación solo se despliegan cuando existen múltiples páginas de historial (`totalPages > 1`)
+- **PERO** si el ejemplar aún no registra intervenciones asociadas, muestra un estado vacío informativo claro
+
+**ESCENARIO: Proyección y estimación dendrométrica automática post-poda por especie (sin alertas manuales)**
+- **DADO QUE** se completa o valida una intervención de poda sobre un ejemplar censado (`INT-XXXXXX`),
+- **CUANDO** el servicio de mantenimiento procesa la ejecución de la labor,
+- **ENTONCES** el sistema calcula y proyecta automáticamente las nuevas dimensiones del ejemplar cruzando el tipo de vegetación con la labor técnica (`SpecimenInterventionMeasurementService`):
+  - **Palmeras (`PALM`):** Preserva la altura intacta (meristemo apical inviolable) y aplica reducción mínima de copa (5-10% por retiro de frondas basales).
+  - **Árboles (`TREE`):** Reduce copa lateral (10-15%) y conserva altura salvo en despeje por interferencia (reducción moderada del 10%).
+  - **Arbustos y Cercos (`SHRUB`/`HEDGE`):** Aplica rebaje proporcional de copa (15-25%) y altura (10-20%).
+  - **DAP y fuste:** Permanecen inalterados en todos los casos, respetando un umbral mínimo de copa (0.50 m).
+- **Y** registra de forma automática una nueva medición en el historial (`green_element_measurements`) con la nota técnica explicativa del cálculo
+- **Y** la ficha del ejemplar exhibe de inmediato el badge ámbar «Medición estimada» y el tooltip interactivo en el historial, eliminando la necesidad de banners de alerta o checklists manuales
 
 ---
 
@@ -760,8 +772,8 @@
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S3` | **Story Points:** `5 pts`
 - **Avance Real Implementado:** **`70%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.4; D6; Entrevista 2; SPEC-102
-- **Dependencia / Bloqueante:** A-04, B-01, SPEC-102
+- **Fuente / Evidencia:** Catálogo REQ 2.4; D6; Entrevista 2; Cobertura espacial de labores
+- **Dependencia / Bloqueante:** A-04, B-01
 - **Notas de Alcance y Realidad Técnica:** El cliente busca por «Jardines de Ingeniería Civil»: se orienta por referentes, que son las secciones.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
@@ -803,7 +815,7 @@
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Alta` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `5 pts`
 - **Avance Real Implementado:** **`100%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.3; D3; Decisión 21 sep; SPEC-103
+- **Fuente / Evidencia:** Catálogo REQ 2.3; D3; Entrevista 2; Decisión de alturas 21 sep
 - **Dependencia / Bloqueante:** C-10
 - **Notas de Alcance y Realidad Técnica:** **Ajuste del 25 sep:** para decidir quién poda basta la **clase de altura** (< 5 m / ≥ 5 m), no la  medida exacta. `MEASURED` significa que **alguien registró la clase en campo**, no que midió  con cinta. El inventario botánico (W-04) pasa a fase futura.
 
@@ -848,8 +860,8 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 **ESCENARIO: Trazabilidad del origen del dato de altura**
 - **DADO QUE** se evalúan las dimensiones de un ejemplar,
 - **CUANDO** se consulta su registro dendrométrico,
-- **ENTONCES** cada ejemplar lleva data_source en su altura (MEASURED con telemetro/cinta, o ESTIMATED si fue aproximada)
-- **Y** los 817 registros del levantamiento sin altura real entran como ESTIMATED
+- **ENTONCES** cada ejemplar lleva data_source con tres valores posibles: MEASURED (medido/verificado en campo), GENERIC (solo arbustos/herbáceas) o UNKNOWN (sin medir)
+- **Y** los 817 árboles y palmeras del levantamiento sin altura real entran como UNKNOWN
 - **Y** la ficha muestra claramente si el dato fue medido o estimado, con la fecha de la última medición
 
 ---
@@ -869,9 +881,9 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 
 **ESCENARIO: Salvaguarda de verificación presencial previa a poda con grúa**
 - **DADO QUE** se planifica una orden de trabajo de poda en altura,
-- **CUANDO** el ejemplar tiene altura clasificada como ESTIMATED,
-- **ENTONCES** la clasificación '< 5 m' o '> 5 m' decide si la poda es con cuadrilla interna o con grúa/tercero
-- **Y** si la altura es ESTIMATED y la labor exige grúa, el sistema muestra una advertencia bloqueante: 'Requiere verificación de altura en campo'
+- **CUANDO** el ejemplar tiene su procedencia de medidas en estado UNKNOWN (sin medir),
+- **ENTONCES** la clase de altura ('< 5 m' o '≥ 5 m') decide si la poda es con cuadrilla estable o con grúa/tercero
+- **Y** mientras la altura sea UNKNOWN, el sistema muestra una advertencia solicitando verificar la altura en campo antes de asignar quién atiende
 - **PERO** la advertencia solo se levanta cuando un supervisor registra la medición real en campo
 
 ---
@@ -903,20 +915,19 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 > **COMO COORDINADOR QUIERO consultar la ficha de cada ejemplar con su información botánica, ubicación y estado PARA tomar decisiones de manejo sin ir físicamente al árbol.**
 
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
-- **Prioridad:** `Media` | **Preparación:** `Parcial 🔶` | **Sprint:** `S2` | **Story Points:** `5 pts`
-- **Avance Real Implementado:** **`60%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.3; D3; SPEC-103; SPEC-104
+- **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `5 pts`
+- **Avance Real Implementado:** **`100%`**
+- **Fuente / Evidencia:** Catálogo REQ 2.3; D3; Entrevista 2; Formato de Registro Forestal
 - **Dependencia / Bloqueante:** C-08, C-10
-- **Notas de Alcance y Realidad Técnica:** 🆕 **Sale de la espera (antes W-10).** Ya no esperamos el «Excel forestal»: los campos se infieren  del inventario entregado y el equipo propone el resto.
+- **Notas de Alcance y Realidad Técnica:** 🆕 **Sale de la espera (antes W-10).** Ya no esperamos el «Excel forestal»: los campos se infieren del inventario entregado y del Formato de Registro Forestal del cliente.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
-**ESCENARIO: Ficha completa del ejemplar con datos botánicos y VTA**
+**ESCENARIO: Ficha completa del ejemplar con datos botánicos, dendrometría, evaluaciones e intervenciones**
 - **DADO QUE** el usuario accede al perfil de un ejemplar censado,
 - **CUANDO** abre el detalle del espécimen,
-- **ENTONCES** la ficha muestra ubicación, referencia, código, especie (nombre común y científico), altura y DAP
-- **Y** presenta la galería fotográfica y la evaluación fitosanitaria VTA con su puntaje de riesgo
-- **PERO** las intervenciones e incidencias se muestran en estado preliminar hasta completar la integración del backend en Sprint 3
+- **ENTONCES** la ficha muestra ubicación, referencia, código, especie (nombre común y científico), medidas físicas con clase de altura (`< 5 m` / `≥ 5 m`) e historial de mediciones
+- **Y** presenta la galería fotográfica, el historial de evaluaciones fitosanitarias según el Formato de Registro Forestal y las intervenciones vinculadas al ejemplar
 
 ---
 
@@ -942,40 +953,51 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 
 ---
 
-#### `C-13` — REQ 1.5 / REQ 2.13
+#### `C-13` — REQ 2.2 / REQ 2.3 / REQ 2.7
 
-> **COMO ADMIN QUIERO registrar evaluaciones fitosanitarias basadas en el método Visual Tree Assessment (VTA) en tres zonas (raíz, tronco y copa) PARA diagnosticar y prevenir riesgos de caída de ramas o árboles.**
+> **COMO COORDINADOR O SUPERVISOR QUIERO registrar y consultar el historial de evaluaciones fitosanitarias e inspecciones de un ejemplar según el Formato de Registro Forestal PARA llevar la trazabilidad cronológica de su estado sanitario, estructural y el manejo agronómico recomendado.**
 
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `3 pts`
 - **Avance Real Implementado:** **`100%`**
-- **Fuente / Evidencia:** Catálogo REQ 1.5, REQ 2.13; SPEC-104; inventario verde
-- **Dependencia / Bloqueante:** C-10, SPEC-104
-- **Notas de Alcance y Realidad Técnica:** NUEVA HU (SPEC-104): Galería botánica multiejemplar construida en frontend y backend en S2.
+- **Fuente / Evidencia:** Catálogo REQ 2.2, REQ 2.3, REQ 2.7; Entrega TODA DOCUMENTACION (Formato de Registro Forestal y censo Bosque Húmedo)
+- **Dependencia / Bloqueante:** C-10, C-11
+- **Notas de Alcance y Realidad Técnica:** Implementado en base de datos (`V015` tabla `green_element_assessments` y `V016` con las 15 evaluaciones reales del Bosque Húmedo), backend (`GET` y `POST /api/v1/green-inventory/specimens/{code}/assessments`) y frontend (`SpecimenAssessments.tsx` y `SpecimenAssessmentModal.tsx`). El estado vigente del ejemplar cambia cuando se ingresa una nueva inspección más reciente.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
-**ESCENARIO: Evaluación VTA en 3 zonas con cálculo de riesgo estructural**
-- **DADO QUE** el especialista o supervisor inspecciona la sanidad de un árbol,
-- **CUANDO** ingresa la severidad y daños detectados en raíz, tronco y copa en el componente SpecimenAssessments,
-- **ENTONCES** el sistema calcula automáticamente el nivel de riesgo fitosanitario (BAJO, MEDIO, ALTO o CRÍTICO)
-- **Y** recomienda la labor prioritaria correspondiente según la matriz de decisión VTA
-- **SOLO SI** las tres zonas estructurales obligatorias cuentan con estado evaluado
+**ESCENARIO: Registro de nueva evaluación fitosanitaria e inspección desde la ficha del ejemplar**
+- **DADO QUE** un usuario con rol `ADMIN`, `COORDINADOR` o `SUPERVISOR` consulta la ficha de un ejemplar,
+- **CUANDO** registra una nueva evaluación indicando la fecha de inspección, los 8 criterios del Formato de Registro Forestal (enfermedades, plagas, daños mecánicos, inclinación, ramas secas, cavidades/pudrición, raíces expuestas e interferencia con infraestructura), el manejo recomendado y las observaciones,
+- **ENTONCES** el sistema almacena la evaluación asociada al ejemplar y al usuario evaluador sin sobrescribir las evaluaciones previas
+- **Y** actualiza inmediatamente el historial mostrando la evaluación de fecha más reciente como «vigente» y las anteriores como «histórico» (CA-08)
+
+**ESCENARIO: Distinción entre hallazgos detectados, buen estado y criterios no evaluados**
+- **DADO QUE** se visualiza el historial de evaluaciones en la ficha del ejemplar (`SpecimenAssessments`),
+- **CUANDO** una evaluación tiene uno o más criterios marcados en «Sí»,
+- **ENTONCES** la tarjeta destaca visualmente la alerta «Hallazgos detectados» enumerando cada afección encontrada y el bloque de «Manejo recomendado»
+- **PERO** los campos dejados como «Sin evaluar» (`null`) se omiten del resumen para no confundir la falta de inspección con la ausencia de problemas
 
 ---
 
-#### `C-14` — REQ 2.3
+#### `C-14` — REQ 2.3 / REQ 2.7
 
-> **COMO SUPERVISOR QUIERO visualizar un visor fotográfico multiejemplar con visor tipo lightbox y comparación temporal PARA examinar el desarrollo foliar y sanitario de los árboles en el tiempo.**
+> **COMO COORDINADOR O SUPERVISOR QUIERO actualizar las mediciones dendrométricas y fotografías de un ejemplar conservando su historial cronológico de medidas y visor lightbox PARA examinar el crecimiento y evolución física del árbol en el tiempo.**
 
 - **Módulo:** `M2` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Alta` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `3 pts`
 - **Avance Real Implementado:** **`100%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.3; SPEC-103 D-07, D-08
+- **Fuente / Evidencia:** Catálogo REQ 2.3, REQ 2.7; Entrevista 2; Historial de mediciones y archivo fotográfico
 - **Dependencia / Bloqueante:** C-08, C-11
-- **Notas de Alcance y Realidad Técnica:** NUEVA HU (SPEC-103): Modal de actualización dendrométrica y fotos implementado en S2.
+- **Notas de Alcance y Realidad Técnica:** NUEVA HU (SPEC-103): Incluye visor fotográfico lightbox (`SpeciesPhotoViewer.tsx`), modal de actualización dendrométrica (`SpecimenEditModal.tsx`) e historial cronológico de mediciones (`V027` tabla `green_element_measurements` y `SpecimenMeasurementsModal.tsx`).
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
+
+**ESCENARIO: Actualización de mediciones dendrométricas y registro en el historial cronológico**
+- **DADO QUE** un usuario autorizado actualiza las medidas físicas de un ejemplar (altura total, altura de fuste, DAP, radio de copa, zunchado y fecha de medición),
+- **CUANDO** guarda los cambios desde el modal de edición de la ficha (`SpecimenEditModal`) o mediante carga CSV,
+- **ENTONCES** el sistema actualiza las medidas vigentes del ejemplar, cambia `data_source` a `MEASURED` y registra la medición en el historial (`green_element_measurements`) sin sobrescribir las anteriores
+- **Y** al consultar «Ver historial» (`SpecimenMeasurementsModal`), se listan todas las mediciones ordenadas de la más reciente («vigente») a las anteriores («histórico») con su fecha y responsable
 
 **ESCENARIO: Galería fotográfica con visor interactivo y zoom**
 - **DADO QUE** se consultan las capturas visuales de un ejemplar o especie,
@@ -992,8 +1014,8 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Módulo:** `M2` | **Tipo:** `Enabler` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Baja` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `2 pts`
 - **Avance Real Implementado:** **`80%`**
-- **Fuente / Evidencia:** Catálogo REQ 2.15; SPEC-103
-- **Dependencia / Bloqueante:** A-04, SPEC-103
+- **Fuente / Evidencia:** Catálogo REQ 2.15; D1; Inventario de soporte y mobiliario del campus
+- **Dependencia / Bloqueante:** A-04
 - **Notas de Alcance y Realidad Técnica:** NUEVA HU: Ya construido en backend y frontend (SPEC-103). Incluido formalmente desde catálogo 21 oct.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
@@ -1068,7 +1090,7 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 **ESCENARIO: Control de ventana horaria de riego permitida**
 - **DADO QUE** la institución establece políticas de uso racional del agua,
 - **CUANDO** se programa un turno de riego en el sistema,
-- **ENTONCES** la ventana horaria es configurable, con horario por defecto de 22:00 a 06:00 (o turno tarde autorizado)
+- **ENTONCES** la ventana horaria es configurable, con horario operativo por defecto de 06:30–07:00 a 11:30 de la mañana
 - **Y** si se intenta registrar un turno fuera de la ventana, el sistema muestra una advertencia informativa
 - **PERO** permite continuar al usuario solicitando indicar si fue una emergencia o autorización especial
 
@@ -1083,14 +1105,14 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Avance Real Implementado:** **`0%`**
 - **Fuente / Evidencia:** Catálogo REQ 7.5; Entrevistas
 - **Dependencia / Bloqueante:** D-01
-- **Notas de Alcance y Realidad Técnica:** Ataca D7. **Modelo propio, al estilo de la gestión de incidencias de TI:** no replicamos la  matriz del cliente, proponemos nuestro flujo de registro, urgencia, estados y cierre. **Las  incidencias las registra el capataz.**
+- **Notas de Alcance y Realidad Técnica:** Control operativo del recurso hídrico propio del campus según estación (referencia operativa de entrevista: 5.5 h en verano y 3 h en invierno).
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
 **ESCENARIO: Registro de horómetro de pozo y nivel de reservorio**
 - **DADO QUE** el encargado opera el sistema de bombeo del campus,
 - **CUANDO** ingresa la lectura del horómetro de la bomba y el nivel del reservorio,
-- **ENTONCES** el sistema almacena las horas diarias de operación (referencia: 5.5 h/día en verano, 2.5 h/día en invierno)
+- **ENTONCES** el sistema almacena las horas diarias de operación de la bomba (referencia: 5.5 h/día en verano, 3 h/día en invierno)
 - **Y** calcula el volumen estimado extraído en metros cúbicos según el caudal de la bomba
 - **Y** alerta automáticamente si las horas de bombeo superan el límite diario de seguridad
 
@@ -1114,7 +1136,7 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 **ESCENARIO: Registro de problema en campo con severidad y foto**
 - **DADO QUE** el SUPERVISOR detecta una anomalía en su ronda,
 - **CUANDO** completa el reporte de incidencia,
-- **ENTONCES** el formulario captura tipo de incidencia, zona o sección, urgencia (alta, media, baja) y foto obligatoria
+- **ENTONCES** solo la descripción es obligatoria al reportar desde campo, permitiendo adjuntar fotografías (hasta 6), ubicación y referencia de forma opcional (SPEC-201)
 - **Y** genera un ticket con código único y fecha de reporte
 - **Y** si la urgencia es alta, el ticket aparece destacado en el tablero de control del coordinador
 
@@ -1288,7 +1310,7 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 
 #### `E-09` — REQ 5.11
 
-> **COMO COORDINADOR QUIERO que el sistema solo admita sábados para la programación de maquinaria de corte en zonas académicas PARA cumplir con las normas de ruido del campus.**
+> **COMO COORDINADOR QUIERO que el sistema solo admita sábados, domingos y feriados para la programación de maquinaria de corte PARA cumplir con las normas de ruido académico del campus.**
 
 - **Módulo:** `M5` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S3` | **Story Points:** `3 pts`
@@ -1299,12 +1321,12 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
-**ESCENARIO: Restricción de maquinaria ruidosa a sábados en zonas académicas**
-- **DADO QUE** se programa una labor que emplea maquinaria ruidosa (motoguadaña, cortadora),
-- **CUANDO** el usuario asigna la fecha en una sección clasificada como zona académica,
-- **ENTONCES** el sistema valida que el día seleccionado sea estrictamente sábado
-- **Y** si se intenta programar de lunes a viernes, el sistema bloquea con advertencia de restricción de ruido académico
-- **EXCEPTO CUANDO** la fecha corresponda a periodo de vacaciones verificado en el calendario
+**ESCENARIO: Restricción de maquinaria de corte a sábados, domingos y feriados**
+- **DADO QUE** se programa una labor que emplea maquinaria ruidosa de corte,
+- **CUANDO** el usuario asigna la fecha de programación,
+- **ENTONCES** el sistema valida que la fecha corresponda a sábado, domingo o un feriado configurado en la lista del sistema (REQ 1.8)
+- **Y** no admite programar de lunes a viernes no feriado
+- **PERO** si en esa fecha existe un evento bloqueante del campus (REQ 1.12, como examen de admisión), el sistema muestra un aviso informativo sin bloquear el registro
 
 ---
 
@@ -1383,7 +1405,7 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Módulo:** `M6` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Alta` | **Preparación:** `Listo ✅` | **Sprint:** `S4` | **Story Points:** `5 pts`
 - **Avance Real Implementado:** **`0%`**
-- **Fuente / Evidencia:** Catálogo REQ 6.10; D2, D5; SPEC-006; SPEC-101
+- **Fuente / Evidencia:** Catálogo REQ 6.10; D2, D5; Entrevista 1; Calendario operativo de cuadrillas
 - **Dependencia / Bloqueante:** A-06, B-01
 - **Notas de Alcance y Realidad Técnica:** Evalúa cumplimiento de césped, podas y controles fitosanitarios.
 
@@ -1449,7 +1471,7 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S4` | **Story Points:** `5 pts`
 - **Avance Real Implementado:** **`0%`**
 - **Fuente / Evidencia:** Catálogo REQ 6.9; D6; 3.ª entrevista (absorbe W-09)
-- **Dependencia / Bloqueante:** A-04, B-01, SPEC-102
+- **Dependencia / Bloqueante:** A-04, B-01
 - **Notas de Alcance y Realidad Técnica:** 🆕 **Sale de la espera (antes W-09).** El cliente ya tiene un mapa de calor en su mapa, pero  decidimos incluirlo en nuestro modelado: es *«la función principal de la herramienta que ya  usan»*.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
@@ -1521,7 +1543,7 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `3 pts`
 - **Avance Real Implementado:** **`90%`**
 - **Fuente / Evidencia:** Catálogo REQ 9.1; Entrevistas 2 y 3 (referentes vs cuarteles); Módulo places backend y frontend
-- **Dependencia / Bloqueante:** A-04, SPEC-102
+- **Dependencia / Bloqueante:** A-04
 - **Notas de Alcance y Realidad Técnica:** CONSTRUIDA EN S2 (90%): Pantallas /lugares y /lugares/[code] operativas con repositorio y controladores en modules.places.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
@@ -1562,8 +1584,8 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Módulo:** `M9` | **Tipo:** `User Story` | **Actor:** `COORDINADOR`
 - **Prioridad:** `Media` | **Preparación:** `Listo ✅` | **Sprint:** `S2` | **Story Points:** `3 pts`
 - **Avance Real Implementado:** **`90%`**
-- **Fuente / Evidencia:** Catálogo REQ 9.3; D1; SPEC-102; frontend PlaceMapPanel y mapView.ts
-- **Dependencia / Bloqueante:** L-01, SPEC-102
+- **Fuente / Evidencia:** Catálogo REQ 9.3; D1; Entrevista 1; Georreferenciación de lugares y sectores
+- **Dependencia / Bloqueante:** L-01
 - **Notas de Alcance y Realidad Técnica:** CONSTRUIDA EN S2 (90%): Integración de cámara 3D y polígonos Mapbox/Deck.gl operativa en PlaceMapPanel.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**

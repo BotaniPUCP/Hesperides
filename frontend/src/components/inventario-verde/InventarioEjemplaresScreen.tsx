@@ -100,7 +100,7 @@ export function InventarioEjemplaresScreen() {
         totalSpecimens={totalSpecimens}
       />
 
-      <div className="bg-neutral-0 rounded-2xl border border-neutral-200/90 p-5 sm:p-6 shadow-xs">
+      <div className="bg-neutral-0 rounded-2xl border border-neutral-200/90 p-4 sm:p-6 shadow-xs">
         <SpecimenFiltersBar
           searchValue={searchInput}
           onSearchChange={handleSearchChange}

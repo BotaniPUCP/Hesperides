@@ -9,6 +9,7 @@ import { useCatalog } from '@/hooks/useCatalog';
 import { LIMITES } from '@/lib/upload-limits';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
+import { ConfirmSaveModal } from './ConfirmSaveModal';
 
 const TIPOS_VEGETACION_DEFAULT: SelectOption[] = [
   { id: 1, code: 'TREE', label: 'Árbol' },
@@ -43,6 +44,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
   const [photo, setPhoto] = useState<File | null>(null);
 
   const [saving, setSaving] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [registered, setRegistered] = useState<Species | null>(null);
@@ -109,10 +111,13 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
     return Object.keys(errs).length === 0;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handlePreSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
+    setConfirmOpen(true);
+  }
 
+  async function handleConfirmSave() {
     setSaving(true);
     setError(null);
 
@@ -122,9 +127,9 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
       .filter((n) => n.length > 0);
 
     const payload: SpeciesForm = {
-      scientificName: scientificName.trim(),
+      scientificName: scientificName.trim().charAt(0).toUpperCase() + scientificName.trim().slice(1),
       commonName: commonName.trim() || undefined,
-      family: family.trim() || undefined,
+      family: family.trim() ? family.trim().charAt(0).toUpperCase() + family.trim().slice(1) : undefined,
       vegetationTypeCode: vegetationTypeCode!,
       originCode: originCode?.trim() || undefined,
       otherNames: otherNames.length > 0 ? otherNames : undefined,
@@ -134,10 +139,12 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
 
     try {
       const created = await inventarioVerdeApi.registerSpecies(payload, photo);
+      setConfirmOpen(false);
       setRegistered(created);
       onSuccess?.(created);
       onDirtyChange?.(false);
     } catch (err) {
+      setConfirmOpen(false);
       if (err instanceof ApiError) {
         if (err.status === 409) {
           setError('Ya existe una especie con este nombre científico en el catálogo.');
@@ -187,7 +194,8 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
   }
 
   return (
-    <form className="space-y-6" noValidate onSubmit={handleSubmit}>
+    <>
+      <form className="space-y-6" noValidate onSubmit={handlePreSubmit}>
       <Card title="Identificación botánica">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -345,5 +353,50 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
         </Link>
       </div>
     </form>
+
+    <ConfirmSaveModal
+      isOpen={confirmOpen}
+      title="¿Registrar nueva especie botánica?"
+      entityLabel={scientificName.trim()}
+      subtitle="Catálogo Botánico Maestro"
+      confirmLabel="Confirmar y registrar"
+      cancelLabel="Revisar datos"
+      isWorking={saving}
+      onConfirm={handleConfirmSave}
+      onCancel={() => setConfirmOpen(false)}
+    >
+      <div className="space-y-2 p-3 rounded-xl bg-neutral-50 border border-neutral-200">
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Nombre científico:</span>
+          <span className="font-semibold italic text-neutral-900">{scientificName.trim()}</span>
+        </div>
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Nombre común:</span>
+          <span className="font-medium text-neutral-800">{commonName.trim() || '—'}</span>
+        </div>
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Tipo de vegetación:</span>
+          <span className="font-medium text-neutral-800">
+            {typeOptions.find((t) => t.code === vegetationTypeCode)?.label ?? vegetationTypeCode}
+          </span>
+        </div>
+        {family.trim() && (
+          <div className="flex justify-between py-1 border-b border-neutral-200/60">
+            <span className="text-neutral-500">Familia:</span>
+            <span className="font-medium text-neutral-800">{family.trim()}</span>
+          </div>
+        )}
+        {photo && (
+          <div className="flex justify-between py-1">
+            <span className="text-neutral-500">Foto oficial:</span>
+            <span className="font-medium text-neutral-800 truncate max-w-[180px]">{photo.name}</span>
+          </div>
+        )}
+      </div>
+      <p className="text-[11px] text-neutral-500 leading-relaxed">
+        Esta especie quedará disponible en el catálogo botánico para el censo y registro de ejemplares del campus.
+      </p>
+    </ConfirmSaveModal>
+    </>
   );
 }
