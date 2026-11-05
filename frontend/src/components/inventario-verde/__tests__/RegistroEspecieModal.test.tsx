@@ -107,6 +107,10 @@ describe('RegistroEspecieModal', () => {
     const submitBtn = screen.getByRole('button', { name: 'Guardar especie' });
     await userEvent.click(submitBtn);
 
+    expect(await screen.findByText('¿Registrar nueva especie botánica?')).toBeInTheDocument();
+    const confirmBtn = screen.getByRole('button', { name: 'Confirmar y registrar' });
+    await userEvent.click(confirmBtn);
+
     await waitFor(() => {
       expect(inventarioVerdeApi.registerSpecies).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -138,6 +142,9 @@ describe('RegistroEspecieModal', () => {
 
     const submitBtn = screen.getByRole('button', { name: 'Guardar especie' });
     await userEvent.click(submitBtn);
+
+    const confirmBtn = await screen.findByRole('button', { name: 'Confirmar y registrar' });
+    await userEvent.click(confirmBtn);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'La especie «Ceiba speciosa» ya está registrada en el catálogo'

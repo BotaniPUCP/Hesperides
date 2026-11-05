@@ -6,7 +6,8 @@ import { Button, Modal } from '@/components/ui';
 export interface ConfirmSaveModalProps {
   isOpen: boolean;
   title: string;
-  specimenCode: string;
+  specimenCode?: string;
+  entityLabel?: string;
   subtitle?: string;
   confirmLabel?: string;
   cancelLabel?: string;
@@ -29,6 +30,7 @@ export function ConfirmSaveModal({
   isOpen,
   title,
   specimenCode,
+  entityLabel,
   subtitle = 'Confirmación de registro oficial en catastro',
   confirmLabel = 'Confirmar y guardar',
   cancelLabel = 'Revisar datos',
@@ -71,7 +73,7 @@ export function ConfirmSaveModal({
               {subtitle}
             </p>
             <p className="font-mono font-bold text-neutral-900 text-xs">
-              Ejemplar {specimenCode}
+              {entityLabel ?? (specimenCode ? `Ejemplar ${specimenCode}` : 'Registro en Catastro')}
             </p>
           </div>
         </div>
