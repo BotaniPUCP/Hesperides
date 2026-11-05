@@ -11,6 +11,24 @@ export const TAB_TEXTS: Record<ReportTab, { label: string; shortLabel: string }>
   direccion: { label: 'Resumen para OSG', shortLabel: 'OSG' },
 };
 
+/** Labels of the report badges (SPEC-C01 §3.1, amended by SPEC-202). */
+export const BADGE_TEXTS = {
+  ON_TARGET: 'En objetivo',
+  WITHIN_TOLERANCE: 'Dentro de tolerancia',
+  OVERDUE: 'Fuera de plazo',
+  NOT_APPLICABLE: 'No aplica',
+  NOT_EVALUABLE: 'No evaluable',
+  NO_DATA: 'Sin datos',
+  PROVISIONAL: 'Regla provisional',
+} as const;
+
+export const CHART_TEXTS = {
+  noData: 'Sin datos',
+  sectorColumn: 'Sector',
+  percentColumn: 'Porcentaje',
+  detailColumn: 'Superficie',
+};
+
 export const SCREEN_TEXTS = {
   title: 'Reportes',
   breadcrumbHome: 'Inicio',
