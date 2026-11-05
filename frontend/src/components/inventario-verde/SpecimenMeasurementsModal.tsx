@@ -83,7 +83,7 @@ export function SpecimenMeasurementsModal({
             No se han registrado mediciones históricas para este ejemplar.
           </div>
         ) : (
-          <div className="rounded-2xl border border-neutral-200 bg-neutral-0 overflow-hidden">
+          <div className="rounded-2xl border border-neutral-200 bg-neutral-0">
             <table className="w-full text-left text-xs">
               <thead className="bg-neutral-50 text-neutral-600 border-b border-neutral-200">
                 <tr>
@@ -116,7 +116,7 @@ export function SpecimenMeasurementsModal({
                               {/* Ícono compacto de nota técnica de estimación */}
                               <button
                                 type="button"
-                                className="inline-flex items-center justify-center p-1 rounded-md text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20 transition-colors cursor-help"
+                                className="inline-flex items-center justify-center p-1 rounded-md text-amber-700 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 transition-colors cursor-help"
                                 aria-label="Medición estimada con nota de cálculo"
                                 aria-describedby={`tooltip-calc-${m.id}`}
                               >
@@ -135,23 +135,23 @@ export function SpecimenMeasurementsModal({
                                 </svg>
                               </button>
 
-                              {/* Tooltip flotante en hover con información técnica */}
+                              {/* Tooltip flotante en hover con z-50 y sin clipping */}
                               <div
                                 id={`tooltip-calc-${m.id}`}
                                 role="tooltip"
-                                className="pointer-events-none absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block group-focus-within/tooltip:block z-50 w-72 sm:w-80 rounded-xl bg-ink text-white p-3 text-xs shadow-2xl border border-neutral-700/70 backdrop-blur-sm animate-in fade-in-0 zoom-in-95 duration-150"
+                                className="pointer-events-none absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block group-focus-within/tooltip:block z-50 w-72 sm:w-80 rounded-xl bg-neutral-900 text-white p-3 text-xs shadow-2xl border border-neutral-700/80 backdrop-blur-sm animate-in fade-in-0 zoom-in-95 duration-150"
                               >
                                 <div className="flex items-center gap-1.5 mb-1 text-amber-400 font-bold text-[11px] uppercase tracking-wider">
                                   <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
-                                  <span>Detalle del cálculo</span>
+                                  <span>Detalle de estimación</span>
                                 </div>
                                 <p className="text-neutral-200 text-[11px] leading-relaxed font-sans whitespace-normal font-normal">
                                   {m.notes}
                                 </p>
                                 {/* Triángulo indicador inferior */}
-                                <div className="absolute top-full left-4 -mt-px border-4 border-transparent border-t-ink" />
+                                <div className="absolute top-full left-3 -mt-px border-4 border-transparent border-t-neutral-900" />
                               </div>
                             </div>
                           )}
@@ -174,11 +174,13 @@ export function SpecimenMeasurementsModal({
                       <td className="py-2.5 px-3 font-mono text-neutral-700">
                         {m.crownRadiusM != null ? `${m.crownRadiusM} m` : '—'}
                       </td>
-                      <td className="py-2.5 px-3 text-neutral-600">
+                      <td className="py-2.5 px-3">
                         {m.banded === true ? (
-                          <span className="text-amber-700 dark:text-amber-400 font-semibold">Con zuncho</span>
+                          <span className="inline-flex items-center text-amber-700 font-medium">
+                            Con zuncho
+                          </span>
                         ) : m.banded === false ? (
-                          <span>Sin zuncho</span>
+                          <span className="text-neutral-500">Sin zuncho</span>
                         ) : (
                           <span className="text-neutral-400">—</span>
                         )}

@@ -292,26 +292,27 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
             {/* Lado Derecho: Acciones Contextuales y Enlace Original */}
             <div className="flex flex-row sm:flex-col items-stretch sm:items-end justify-start gap-2.5 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-neutral-200/60">
               {canEdit && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="whitespace-nowrap w-full sm:w-auto"
-                  onClick={() => setEditModalOpen(true)}
-                  leadingIcon={
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  }
-                >
-                  Actualizar medidas
-                </Button>
+                <div className="w-full sm:w-auto">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    fullWidth
+                    onClick={() => setEditModalOpen(true)}
+                    leadingIcon={
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    }
+                  >
+                    Actualizar medidas
+                  </Button>
+                </div>
               )}
               <Link href={`/mapa?codigo=${encodeURIComponent(specimen.code)}`} className="w-full sm:w-auto">
                 <Button
                   variant="secondary"
                   size="sm"
                   fullWidth
-                  className="whitespace-nowrap"
                   leadingIcon={
                     <svg className="w-3.5 h-3.5 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -321,20 +322,6 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                   Ver en Mapa 3D
                 </Button>
               </Link>
-              {specimen.photoUrl && (
-                <a
-                  href={specimen.photoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 text-xs text-neutral-500 hover:text-brand-700 dark:text-neutral-400 dark:hover:text-brand-300 py-0.5 hover:underline transition-colors w-full sm:w-auto"
-                  title="Abrir fotografía original de campo en Google Drive"
-                >
-                  <span>Foto original en Drive</span>
-                  <svg className="w-3 h-3 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              )}
             </div>
           </div></div>
       </div>
