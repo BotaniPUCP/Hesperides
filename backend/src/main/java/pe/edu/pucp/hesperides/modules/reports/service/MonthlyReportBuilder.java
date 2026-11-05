@@ -7,7 +7,6 @@ import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse.Coverage
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse.Incidents;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse.Interventions;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse.Period;
-import pe.edu.pucp.hesperides.modules.reports.dto.TopList;
 import pe.edu.pucp.hesperides.modules.reports.repository.CoverageQueries;
 import pe.edu.pucp.hesperides.modules.reports.repository.CoverageQueries.SectionRef;
 import pe.edu.pucp.hesperides.modules.reports.repository.IncidentReportQueries;
@@ -26,11 +25,12 @@ public class MonthlyReportBuilder {
     private final CoverageQueries coverage;
     private final InterventionReportQueries interventions;
     private final IncidentReportQueries incidents;
+    private final ComplianceSummary compliance;
     private final ReportCalendar calendar;
 
     public MonthlyReportResponse build(ReportFilter filter, ReportScope scope) {
         List<SectionRef> sections = coverage.denominator(filter);
-        var stats = CoverageAssembler.stats(sections, coverage.attendance(filter));
+        var stats = CoverageAssembler.stats(sections, coverage.attendance(filter), filter.period());
         // D-08: a SUPERVISOR whose teams have no sector has nothing to measure coverage against.
         Coverage summary = !scope.campus() && scope.sectorIds().isEmpty()
                 ? CoverageAssembler.unavailable(MonthlyReportResponse.NO_SECTOR_ASSIGNED)
@@ -42,7 +42,9 @@ public class MonthlyReportBuilder {
                 new Period(filter.period().from(), filter.period().to(), filter.zone().getId()),
                 scope.monthlyLabel(), summary, work, incidents(filter),
                 CoverageAssembler.sectorRows(stats.values()),
-                List.of(), new TopList<>(0, List.of()), new TopList<>(0, List.of()),
+                compliance.summarize(filter, sectionIds),
+                CoverageAssembler.mostAttended(stats.values()),
+                CoverageAssembler.unattended(stats.values()),
                 calendar.now());
     }
 

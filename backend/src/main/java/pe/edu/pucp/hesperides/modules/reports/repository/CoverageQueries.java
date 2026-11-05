@@ -8,7 +8,10 @@ import pe.edu.pucp.hesperides.modules.interventions.repository.FinalApprovalSql;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -79,9 +82,10 @@ public class CoverageQueries {
     }
 
     /**
-     * Approved work per section in the period. The last execution of all the
-     * work's pieces in a section decides the date, so earlier pieces never count
-     * before the final one (D-02, T09).
+     * Approved work per section up to the end of the period. The last execution
+     * of all the work's pieces in a section decides the date, so earlier pieces
+     * never count before the final one (D-02, T09). Rows before the period start
+     * are kept: they give an unattended section its last attention.
      */
     public List<Attendance> attendance(ReportFilter f) {
         var params = ReportSql.periodParams(f);
@@ -92,8 +96,39 @@ public class CoverageQueries {
                 + " where " + FinalApprovalSql.PREDICATE + ReportSql.workFilters(f, params) + ")"
                 + " select l.work_id, l.section_id, " + lastDate + " attended_on from pieces l"
                 + " where l.section_id is not null group by l.work_id, l.section_id"
-                + " having " + lastDate + " between :from and :to";
+                + " having " + lastDate + " <= :to";
         return jdbc.query(sql, params, (rs, n) -> new Attendance(
                 rs.getLong("section_id"), rs.getLong("work_id"), rs.getObject("attended_on", LocalDate.class)));
+    }
+
+    /** Section of each zone: a subsection resolves to its parent; any other type to none (D-03). */
+    public Map<Long, Long> sectionsOfZones(Collection<Long> zoneIds) {
+        return sectionMap("""
+            select z.id, case t.code when 'SECTION' then z.id when 'SUBSECTION' then z.parent_zone_id end
+            from zones z join catalog_items t on t.id=z.zone_type_item_id where z.id in (:ids)
+            """, zoneIds);
+    }
+
+    /** Section of each place, through its zone. */
+    public Map<Long, Long> sectionsOfPlaces(Collection<Long> placeIds) {
+        return sectionMap("""
+            select p.id, case t.code when 'SECTION' then z.id when 'SUBSECTION' then z.parent_zone_id end
+            from places p join zones z on z.id=p.zone_id join catalog_items t on t.id=z.zone_type_item_id
+            where p.id in (:ids)
+            """, placeIds);
+    }
+
+    private Map<Long, Long> sectionMap(String sql, Collection<Long> ids) {
+        Map<Long, Long> sections = new HashMap<>();
+        if (ids.isEmpty()) {
+            return sections;
+        }
+        jdbc.query(sql, new MapSqlParameterSource("ids", List.copyOf(ids)), rs -> {
+            Long section = rs.getObject(2, Long.class);
+            if (section != null) {
+                sections.put(rs.getLong(1), section);
+            }
+        });
+        return sections;
     }
 }
