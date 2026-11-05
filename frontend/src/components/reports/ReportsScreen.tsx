@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Breadcrumb, EmptyState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { useReportNavigation } from '@/hooks/useReports';
+import { useReportNavigation, useReportOptions } from '@/hooks/useReports';
 import { allowedTabs, type ReportTab } from '@/lib/reportNavigation';
+import { MonthlyReport } from './MonthlyReport';
 import { ReportTabs, panelId, tabId } from './ReportTabs';
 import { SCREEN_TEXTS, TAB_TEXTS } from './reportTexts';
 
@@ -16,7 +17,8 @@ export function ReportsScreen() {
   const { user } = useAuth();
   const role = user?.role.code ?? null;
   const tabs = allowedTabs(role);
-  const { tab, selectTab } = useReportNavigation(tabs.length > 0 ? role : null);
+  const { tab, selectTab, monthly, changeMonthly } = useReportNavigation(tabs.length > 0 ? role : null);
+  const options = useReportOptions();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const activatedByUser = useRef(false);
   const [announcement, setAnnouncement] = useState('');
@@ -52,17 +54,12 @@ export function ReportsScreen() {
             <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold text-neutral-900 focus:outline-none">
               {TAB_TEXTS[tab].label}
             </h2>
-            {panel(tab)}
+            {tab === 'mensual'
+              ? <MonthlyReport parsed={monthly} onChange={changeMonthly} options={options} />
+              : <EmptyState title={SCREEN_TEXTS.comingSoonTitle} description={SCREEN_TEXTS.comingSoonDescription} />}
           </div>
         </>
       )}
     </div>
   );
-}
-
-function panel(tab: ReportTab): ReactNode {
-  switch (tab) {
-    default:
-      return <EmptyState title={SCREEN_TEXTS.comingSoonTitle} description={SCREEN_TEXTS.comingSoonDescription} />;
-  }
 }

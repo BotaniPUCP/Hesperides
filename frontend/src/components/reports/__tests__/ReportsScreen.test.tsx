@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAuth } from '@/hooks/useAuth';
+import { reportsApi } from '@/lib/reports-api';
 import { ReportsScreen } from '../ReportsScreen';
 
 const push = jest.fn();
@@ -11,6 +12,14 @@ jest.mock('@/hooks/useAuth', () => ({ useAuth: jest.fn() }));
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push, replace }),
   useSearchParams: () => search,
+}));
+// Pending forever: these tests look at which endpoints a panel requests, not at their data.
+jest.mock('@/lib/reports-api', () => ({
+  reportsApi: {
+    options: jest.fn(() => new Promise(() => undefined)),
+    sections: jest.fn(() => new Promise(() => undefined)),
+    monthly: jest.fn(() => new Promise(() => undefined)),
+  },
 }));
 
 function as(role: string, query = '') {
@@ -54,6 +63,15 @@ describe('ReportsScreen (SPEC-202 D-13, CA-G01, CA-G03)', () => {
   it('sin pestaña en la URL reemplaza por la del rol', () => {
     as('COORDINADOR');
     expect(replace).toHaveBeenCalledWith('/reportes?tab=mensual', { scroll: false });
+  });
+
+  it('cada panel consulta solo cuando está activo', () => {
+    const { unmount } = as('COORDINADOR', 'tab=semanal');
+    expect(reportsApi.monthly).not.toHaveBeenCalled();
+    unmount();
+    as('COORDINADOR', 'tab=mensual&sectorId=1');
+    expect(reportsApi.monthly).toHaveBeenCalledTimes(1);
+    expect(reportsApi.monthly).toHaveBeenCalledWith(expect.objectContaining({ sectorId: 1 }));
   });
 
   it('el operario no ve pestañas', () => {
