@@ -130,7 +130,7 @@ export function SpecimenBackdrop() {
   return (
     <div
       ref={containerRef}
-      className="pointer-events-none absolute -inset-4 sm:-inset-6 -z-10 rounded-3xl overflow-hidden select-none transition-colors duration-300"
+      className="pointer-events-none absolute -inset-4 md:-inset-6 -z-10 overflow-hidden select-none transition-colors duration-300"
       aria-hidden="true"
     >
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full block" />
