@@ -50,11 +50,11 @@ describe('SpecimenTable', () => {
 
     expect(linkEV01).toHaveAttribute(
       'href',
-      '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001',
+      '/catastro/ejemplares/EV-000001',
     );
     expect(linkEV02).toHaveAttribute(
       'href',
-      '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000002',
+      '/catastro/ejemplares/EV-000002',
     );
   });
 });

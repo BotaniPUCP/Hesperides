@@ -63,7 +63,19 @@ export function CamposEvaluacion({ r }: { r: RegistroPlanta }) {
               onCambiar={(x) => r.cambiar('respuestas', { ...v.respuestas, [clave]: x })} />
           ))}
         </div>
-        <Input id="manejo" label="Manejo recomendado" value={v.manejo} maxLength={200} onChange={(x) => r.cambiar('manejo', x)} />
+        <div className="space-y-1">
+          <Input id="manejo" label="Manejo recomendado" value={v.manejo} maxLength={200} onChange={(x) => r.cambiar('manejo', x)} list="sugerencias-manejo" />
+          <datalist id="sugerencias-manejo">
+            <option value="Sin intervención" />
+            <option value="Poda sanitaria" />
+            <option value="Poda de despeje" />
+            <option value="Poda de formación" />
+            <option value="Poda de ramas secas" />
+            <option value="Tratamiento fitosanitario" />
+            <option value="Evaluación de estabilidad" />
+            <option value="Riego de recuperación" />
+          </datalist>
+        </div>
         <Input id="observacion-evaluacion" label="Observación de la evaluación" value={v.observacionEvaluacion}
           onChange={(x) => r.cambiar('observacionEvaluacion', x)} />
       </div>

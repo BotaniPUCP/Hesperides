@@ -90,6 +90,7 @@ export function SpeciesPhotoViewer({ photos, startAt, speciesName, onClose }: Sp
         <img
           src={foto.imageUrl}
           alt={`${speciesName}, foto ${actual + 1} de ${photos.length}`}
+          referrerPolicy="no-referrer"
           className="max-h-[80vh] w-auto max-w-full rounded-lg object-contain"
         />
         {varias && (
@@ -121,3 +122,4 @@ export function SpeciesPhotoViewer({ photos, startAt, speciesName, onClose }: Sp
     </div>
   );
 }
+

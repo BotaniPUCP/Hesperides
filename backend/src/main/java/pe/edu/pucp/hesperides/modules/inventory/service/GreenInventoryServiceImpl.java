@@ -88,7 +88,7 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
                 row.latitude(), row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
                 PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
                 row.trunkHeightM(), row.dbhCm(), row.crownRadiusM(), row.isBanded(), row.dataSource(),
-                specimenRepository.sectionOf(code).orElse(null), speciesBySlug(row.speciesSlug()));
+                specimenRepository.sectionOf(code).orElse(null), speciesBySlug(row.speciesSlug()), row.latestMeasurementNotes());
     }
 
     @Override

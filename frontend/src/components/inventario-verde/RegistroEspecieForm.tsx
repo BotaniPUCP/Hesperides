@@ -122,9 +122,9 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
       .filter((n) => n.length > 0);
 
     const payload: SpeciesForm = {
-      scientificName: scientificName.trim(),
+      scientificName: scientificName.trim().charAt(0).toUpperCase() + scientificName.trim().slice(1),
       commonName: commonName.trim() || undefined,
-      family: family.trim() || undefined,
+      family: family.trim() ? family.trim().charAt(0).toUpperCase() + family.trim().slice(1) : undefined,
       vegetationTypeCode: vegetationTypeCode!,
       originCode: originCode?.trim() || undefined,
       otherNames: otherNames.length > 0 ? otherNames : undefined,

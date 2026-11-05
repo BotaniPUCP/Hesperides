@@ -22,6 +22,7 @@ export interface InputProps {
   labelAction?: ReactNode;
   autoComplete?: string;
   autoFocus?: boolean;
+  list?: string;
   onFocus?: () => void;
   onBlur?: () => void;
 }
@@ -45,6 +46,7 @@ export function Input({
   labelAction,
   autoComplete,
   autoFocus,
+  list,
   onFocus,
   onBlur,
 }: InputProps) {
@@ -83,6 +85,7 @@ export function Input({
           step={step}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
+          list={list}
           inputMode={inputMode}
           aria-required={required || undefined}
           aria-invalid={hasError || undefined}

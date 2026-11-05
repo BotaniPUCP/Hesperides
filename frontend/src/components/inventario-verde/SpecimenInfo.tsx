@@ -207,10 +207,24 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                   {specimen.elementTypeCode === 'GROUP' && (
                     <Badge label={`Agrupación (${specimen.quantity})`} color="neutral" />
                   )}
-                  <Badge
-                    label={specimen.dataSource === 'MEASURED' ? 'Medido en campo' : 'Sin medir'}
-                    color={specimen.dataSource === 'MEASURED' ? 'neutral' : 'warning'}
-                  />
+                  {(() => {
+                    const isEstimated = specimen.latestMeasurementNotes?.includes('Estimación por labor técnica');
+                    const badgeLabel = isEstimated
+                      ? 'Medición estimada'
+                      : specimen.dataSource === 'MEASURED'
+                      ? 'Medido en campo'
+                      : specimen.dataSource === 'GENERIC'
+                      ? 'Estimado por especie'
+                      : 'Sin medir';
+                    const badgeColor = isEstimated
+                      ? 'warning'
+                      : specimen.dataSource === 'MEASURED'
+                      ? 'neutral'
+                      : specimen.dataSource === 'GENERIC'
+                      ? 'info'
+                      : 'warning';
+                    return <Badge label={badgeLabel} color={badgeColor} />;
+                  })()}
                 </div>
 
                 {/* Código principal destacado */}

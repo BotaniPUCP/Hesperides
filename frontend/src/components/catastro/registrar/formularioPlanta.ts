@@ -54,8 +54,11 @@ function medicion(f: FormularioPlanta, errores: Errores): MeasurementForm | null
   const valores = [f.alturaM, f.alturaFusteM, f.dapCm, f.radioCopaM].map(numero);
   if (valores.every((v) => v === null) && f.zunchado === '') return null;
   if (valores.some((v) => v !== null && (Number.isNaN(v) || v < 0))) errores.medidas = 'Las medidas deben ser números positivos';
-  if (!f.fechaMedicion) errores.fechaMedicion = 'Una medición necesita su fecha';
   const [heightM, trunkHeightM, dbhCm, crownRadiusM] = valores;
+  if (heightM !== null && trunkHeightM !== null && trunkHeightM > heightM) {
+    errores.medidas = 'La altura del fuste no puede superar la altura total';
+  }
+  if (!f.fechaMedicion) errores.fechaMedicion = 'Una medición necesita su fecha';
   return { date: f.fechaMedicion, heightM, trunkHeightM, dbhCm, crownRadiusM, banded: siNo(f.zunchado) };
 }
 

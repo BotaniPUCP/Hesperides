@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentForm;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentResponse;
+import pe.edu.pucp.hesperides.modules.imports.dto.MeasurementResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.SpecimenForm;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenRegistrationService;
 import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
@@ -65,6 +66,11 @@ public class SpecimenRegistrationController {
     @GetMapping("/api/v1/green-inventory/specimens/{code}/assessments")
     public ResponseEntity<ApiResponse<List<AssessmentResponse>>> history(@PathVariable String code) {
         return ResponseEntity.ok(ApiResponse.ok("Assessment history", service.history(code)));
+    }
+
+    @GetMapping("/api/v1/green-inventory/specimens/{code}/measurements")
+    public ResponseEntity<ApiResponse<List<MeasurementResponse>>> measurementHistory(@PathVariable String code) {
+        return ResponseEntity.ok(ApiResponse.ok("Measurement history", service.measurementHistory(code)));
     }
 
     @PostMapping("/api/v1/green-inventory/specimens/{code}/assessments")
