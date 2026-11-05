@@ -740,24 +740,28 @@
 - **Avance Real Implementado:** **`100%`**
 - **Fuente / Evidencia:** Catálogo REQ 2.7; D7; Entrevista 2; Hoja de vida del ejemplar
 - **Dependencia / Bloqueante:** B-01, C-11
-- **Notas de Alcance y Realidad Técnica:** Componente `SpecimenInterventions.tsx` integrado con `GET /api/v1/interventions?greenElementCode={code}` (SPEC-200). Muestra las intervenciones vinculadas al ejemplar de forma paginada con enlace directo al detalle de cada orden de trabajo (`/intervenciones/{id}`).
+- **Notas de Alcance y Realidad Técnica:** Componente `SpecimenInterventions.tsx` integrado con `GET /api/v1/interventions?greenElementCode={code}` (SPEC-200). Muestra las intervenciones vinculadas al ejemplar de forma paginada (mostrando controles solo si `totalPages > 1`) con enlace directo al detalle de cada orden de trabajo (`/intervenciones/{id}`). Se reemplazó la alerta manual intrusiva por el servicio automático de proyección dendrométrica biofísica (`SpecimenInterventionMeasurementService.java`), que estima y actualiza las medidas del ejemplar según su especie y el tipo de poda ejecutado.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
 **ESCENARIO: Hoja de vida operativa de intervenciones del ejemplar**
 - **DADO QUE** un usuario con permisos operativos consulta la ficha de un ejemplar (`EV-XXXXXX`),
 - **CUANDO** visualiza la sección «Intervenciones del ejemplar»,
-- **ENTONCES** el sistema lista paginadamente las intervenciones vinculadas a ese ejemplar ordenadas por fecha programada descendente, indicando código (`INT-XXXXXX`), clase, tipo de labor, estado y progreso
-- **Y** cada registro permite navegar directamente al detalle completo de la intervención (`Ver detalle →`)
+- **ENTONCES** el sistema lista las intervenciones vinculadas a ese ejemplar ordenadas por fecha programada descendente, indicando código (`INT-XXXXXX`), clase, tipo de labor, estado y progreso
+- **Y** cada registro permite navegar directamente al detalle completo de la intervención (`Detalle >`)
+- **Y** los controles de paginación solo se despliegan cuando existen múltiples páginas de historial (`totalPages > 1`)
 - **PERO** si el ejemplar aún no registra intervenciones asociadas, muestra un estado vacío informativo claro
 
-**ESCENARIO: Alerta reactiva de verificación post-intervención y checklist en la ficha**
-- **DADO QUE** un ejemplar tiene una intervención registrada en estado ejecutada (COMPLETED) o validada (VALIDATED),
-- **Y** un usuario con rol operativo (ADMIN, COORDINADOR, SUPERVISOR) consulta su ficha de detalle,
-- **CUANDO** la fecha de la última medición o de la última evaluación fitosanitaria es anterior a la fecha programada de dicha labor,
-- **ENTONCES** el sistema despliega un banner de advertencia contextual vinculando la intervención ejecutada y un mini-checklist con el estado de actualización de medidas y evaluación fitosanitaria
-- **Y** si ninguna o solo una fue actualizada, ofrece las acciones «Verificado sin cambios» o «Concluir verificación» para descartar el aviso en el dispositivo
-- **PERO** si ambas registran fecha igual o posterior a la labor, la alerta se resuelve y desaparece automáticamente
+**ESCENARIO: Proyección y estimación dendrométrica automática post-poda por especie (sin alertas manuales)**
+- **DADO QUE** se completa o valida una intervención de poda sobre un ejemplar censado (`INT-XXXXXX`),
+- **CUANDO** el servicio de mantenimiento procesa la ejecución de la labor,
+- **ENTONCES** el sistema calcula y proyecta automáticamente las nuevas dimensiones del ejemplar cruzando el tipo de vegetación con la labor técnica (`SpecimenInterventionMeasurementService`):
+  - **Palmeras (`PALM`):** Preserva la altura intacta (meristemo apical inviolable) y aplica reducción mínima de copa (5-10% por retiro de frondas basales).
+  - **Árboles (`TREE`):** Reduce copa lateral (10-15%) y conserva altura salvo en despeje por interferencia (reducción moderada del 10%).
+  - **Arbustos y Cercos (`SHRUB`/`HEDGE`):** Aplica rebaje proporcional de copa (15-25%) y altura (10-20%).
+  - **DAP y fuste:** Permanecen inalterados en todos los casos, respetando un umbral mínimo de copa (0.50 m).
+- **Y** registra de forma automática una nueva medición en el historial (`green_element_measurements`) con la nota técnica explicativa del cálculo
+- **Y** la ficha del ejemplar exhibe de inmediato el badge ámbar «Medición estimada» y el tooltip interactivo en el historial, eliminando la necesidad de banners de alerta o checklists manuales
 
 ---
 
