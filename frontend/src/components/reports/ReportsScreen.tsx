@@ -50,8 +50,8 @@ export function ReportsScreen() {
           <ReportTabs tabs={tabs} active={tab} onActivate={activate} />
           <p aria-live="polite" className="sr-only">{announcement}</p>
           <div role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)} tabIndex={0}
-            className="space-y-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
-            <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold text-neutral-900 focus:outline-none">
+            className="space-y-6 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+            <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold text-neutral-900 focus:outline-hidden">
               {TAB_TEXTS[tab].label}
             </h2>
             {tab === 'mensual'

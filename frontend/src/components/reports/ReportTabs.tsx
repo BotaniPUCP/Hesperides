@@ -47,7 +47,7 @@ export function ReportTabs({ tabs, active, onActivate }: ReportTabsProps) {
             tabIndex={selected ? 0 : -1} onClick={() => onActivate(tab)}
             className={cn(
               'min-h-11 min-w-0 border-b-2 px-3 py-2 text-sm font-semibold transition-colors sm:px-4 sm:text-base',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2',
+              'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2',
               selected ? 'border-brand-600 text-brand-700' : 'border-transparent text-neutral-700 hover:text-neutral-900',
             )}>
             <span className="sm:hidden">{TAB_TEXTS[tab].shortLabel}</span>

@@ -180,7 +180,7 @@ export function SpecimenAssessmentModal({
                 max={hoy}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full sm:w-44 rounded-xl border border-neutral-200 px-3 py-1.5 text-sm bg-neutral-0 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-forest-600"
+                className="w-full sm:w-44 rounded-xl border border-neutral-200 px-3 py-1.5 text-sm bg-neutral-0 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-forest-600"
               />
             </div>
           </div>
@@ -323,7 +323,7 @@ export function SpecimenAssessmentModal({
                 value={observation}
                 onChange={(e) => setObservation(e.target.value)}
                 placeholder="Detalles sobre afecciones específicas, severidad o ubicación de daños..."
-                className="w-full rounded-xl border border-neutral-200/90 p-3 text-sm bg-neutral-0 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-forest-600"
+                className="w-full rounded-xl border border-neutral-200/90 p-3 text-sm bg-neutral-0 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-forest-600"
               />
             </div>
           </div>

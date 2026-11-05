@@ -49,13 +49,13 @@ export function SpeciesCover({ species }: { species: Species }) {
   );
 
   return (
-    <div className="relative w-full sm:w-64 md:w-72 h-40 sm:h-44 rounded-xl overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90 shadow-2xs">
+    <div className="relative w-full sm:w-64 md:w-72 h-40 sm:h-44 rounded-xl overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200/90 shadow-2xs">
       {conGaleria ? (
         <button
           type="button"
           onClick={() => setAbierta(true)}
           aria-label={verFotos(fotos.length)}
-          className="block h-full w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-brand-600"
+          className="block h-full w-full cursor-zoom-in focus:outline-hidden focus:ring-2 focus:ring-brand-600"
         >
           {imagen}
         </button>

@@ -32,7 +32,7 @@ export function SidebarUserPanel() {
           onClick={() => setPreferencesOpen((open) => !open)}
           className={cn(
             'rounded-md p-1.5 text-base leading-none transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
+            'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600',
             preferencesOpen ? 'bg-neutral-100' : 'hover:bg-neutral-100',
           )}
         >

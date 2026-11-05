@@ -31,7 +31,7 @@ export function IncidentsScreen() {
           <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Incidencias</h1>
           <p className="mt-1 text-sm text-neutral-700">{coordinator ? 'Revisión y seguimiento de la atención.' : 'Tus envíos y las incidencias de tu cuadrilla.'}</p>
         </div>
-        <Link href={href('/incidencias/nueva')} className="inline-flex min-h-12 items-center rounded-md bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+        <Link href={href('/incidencias/nueva')} className="inline-flex min-h-12 items-center rounded-md bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-forest-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
           Informar una incidencia
         </Link>
       </header>
@@ -80,7 +80,7 @@ export function IncidentsScreen() {
             description={filters.search || filters.status ? 'Prueba con otra descripción o cambia los filtros.' : 'Informa lo que ocurrió con un texto breve; las fotos y la ubicación son opcionales.'} />
         ) : <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">{list.data.content.map((incident) => (
           <li key={incident.id}>
-            <Link href={href(`/incidencias/${incident.id}`)} className="block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+            <Link href={href(`/incidencias/${incident.id}`)} className="block h-full rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
               <Card className="h-full transition-shadow hover:shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-sm text-neutral-700">{incident.officialCode ?? `#${incident.id}`}</span>

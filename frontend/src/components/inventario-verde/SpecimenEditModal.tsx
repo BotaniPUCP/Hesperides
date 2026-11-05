@@ -164,7 +164,7 @@ export function SpecimenEditModal({
               <span className="font-bold text-neutral-800">{specimen.species.commonName}</span>
               <span className="text-neutral-500 italic ml-1.5">({specimen.species.scientificName})</span>
             </div>
-            <span className="font-mono font-bold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
+            <span className="font-mono font-bold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded-sm border border-neutral-200">
               {specimen.code}
             </span>
           </div>
@@ -243,7 +243,7 @@ export function SpecimenEditModal({
                   id="edit-specimen-banded"
                   value={zunchado}
                   onChange={(e) => setZunchado(e.target.value as '' | 'si' | 'no')}
-                  className="w-full rounded-xl border border-neutral-200/90 px-3 py-2 text-sm bg-neutral-0 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-forest-600"
+                  className="w-full rounded-xl border border-neutral-200/90 px-3 py-2 text-sm bg-neutral-0 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-forest-600"
                 >
                   <option value="">Sin especificar / No aplica</option>
                   <option value="si">Con zunchado (abrazadera metálica presente)</option>
@@ -261,7 +261,7 @@ export function SpecimenEditModal({
                   max={hoy}
                   value={fechaMedicion}
                   onChange={(e) => setFechaMedicion(e.target.value)}
-                  className="w-full rounded-xl border border-neutral-200/90 px-3 py-2 text-sm bg-neutral-0 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-forest-600"
+                  className="w-full rounded-xl border border-neutral-200/90 px-3 py-2 text-sm bg-neutral-0 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-forest-600"
                 />
               </div>
             </div>
@@ -300,7 +300,7 @@ export function SpecimenEditModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Detalles sobre estado del tronco, inclinación, entorno..."
-                className="w-full rounded-xl border border-neutral-200/90 p-3 text-sm bg-neutral-0 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-forest-600"
+                className="w-full rounded-xl border border-neutral-200/90 p-3 text-sm bg-neutral-0 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-forest-600"
               />
             </div>
 

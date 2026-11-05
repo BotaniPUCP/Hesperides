@@ -23,13 +23,13 @@ export function PlaceCard({ place }: { place: PlaceSummary }) {
   return (
     <Link
       href={`/lugares/${place.code}`}
-      className="group block h-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+      className="group block h-full rounded-xl focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
     >
       <Card
         padded={false}
         className="flex h-full flex-col overflow-hidden border-neutral-200 transition-all group-hover:border-brand-600 group-hover:shadow-md"
       >
-        <div className="relative h-40 w-full flex-shrink-0 overflow-hidden bg-neutral-100">
+        <div className="relative h-40 w-full shrink-0 overflow-hidden bg-neutral-100">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photo} srcSet={photoSrcSet(photo)} sizes="(min-width: 640px) 25vw, 100vw" alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover" />

@@ -122,7 +122,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
   return (
     <>
       {/* TARJETA SUPERIOR HERO / ID CARD INTEGRADA */}
-      <div className="rounded-3xl border border-neutral-200/90 bg-neutral-0 shadow-sm overflow-hidden mb-6 transition-shadow hover:shadow-md">
+      <div className="rounded-3xl border border-neutral-200/90 bg-neutral-0 shadow-xs overflow-hidden mb-6 transition-shadow hover:shadow-md">
         <div className="p-5 sm:p-7 bg-gradient-to-br from-brand-50/40 via-brand-50/10 to-transparent">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             {/* Lado Izquierdo y Centro: Foto + Bloque de Identidad */}
@@ -162,7 +162,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                         </span>
                       )}
                       {isUsingSpeciesFallback && (
-                        <span className="pointer-events-none absolute bottom-1.5 left-1.5 right-1.5 rounded bg-ink/75 px-1 py-0.5 text-[10px] font-medium text-white text-center truncate backdrop-blur-2xs">
+                        <span className="pointer-events-none absolute bottom-1.5 left-1.5 right-1.5 rounded-sm bg-ink/75 px-1 py-0.5 text-[10px] font-medium text-white text-center truncate backdrop-blur-2xs">
                           Foto referencial
                         </span>
                       )}
@@ -329,12 +329,12 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
       {/* GRID EN 2 COLUMNAS EQUILIBRADAS (50% / 50%) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
         {/* Columna Izquierda: Dendrometría */}
-        <div className="p-5 rounded-3xl bg-neutral-0 border border-neutral-200/90 shadow-sm flex flex-col h-full justify-between">
+        <div className="p-5 rounded-3xl bg-neutral-0 border border-neutral-200/90 shadow-xs flex flex-col h-full justify-between">
           <SpecimenMeasures specimen={specimen} showOperationalRegime={canViewInternalData} />
         </div>
 
         {/* Columna Derecha: Territorio y Gobernanza del Ejemplar */}
-        <div className="p-5 rounded-3xl bg-neutral-0 border border-neutral-200/90 shadow-sm flex flex-col justify-between h-full">
+        <div className="p-5 rounded-3xl bg-neutral-0 border border-neutral-200/90 shadow-xs flex flex-col justify-between h-full">
           <div>
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-neutral-100">
               <span className="p-1 rounded-md bg-neutral-100 text-neutral-600">

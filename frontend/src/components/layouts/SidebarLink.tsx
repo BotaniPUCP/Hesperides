@@ -25,7 +25,7 @@ export function SidebarLink({ href, label, icon, active, nested = false, onNavig
       aria-current={active ? 'page' : undefined}
       className={cn(
         'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
+        'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600',
         nested && 'pl-9',
         active
           ? 'bg-brand-50 font-semibold text-brand-700'

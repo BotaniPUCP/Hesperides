@@ -18,7 +18,7 @@ export interface PerspectiveCarouselProps {
   onOpenPhoto: (perspective: PlacePerspective, index: number) => void;
 }
 
-const ARROW = 'rounded-full bg-neutral-0/95 p-2 text-neutral-800 shadow hover:bg-neutral-0 disabled:opacity-30 focus:outline-none focus:ring-2 focus:ring-brand-600';
+const ARROW = 'rounded-full bg-neutral-0/95 p-2 text-neutral-800 shadow hover:bg-neutral-0 disabled:opacity-30 focus:outline-hidden focus:ring-2 focus:ring-brand-600';
 
 /** Una perspectiva a la vez, con su foto en grande: para reconocer el sitio, no para editarlo. */
 export function PerspectiveCarousel({ perspectives, index, onIndexChange, onOpenPhoto }: PerspectiveCarouselProps) {
@@ -42,12 +42,12 @@ export function PerspectiveCarousel({ perspectives, index, onIndexChange, onOpen
         touchX.current = null;
         if (Math.abs(dx) >= SWIPE_MIN_PX) go(index + (dx < 0 ? 1 : -1));
       }}
-      className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+      className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600"
     >
       <div className="flex transition-transform duration-300 ease-out motion-reduce:transition-none" style={{ transform: `translateX(-${index * 100}%)` }}>
         {perspectives.map((v, i) => (
           <div key={v.id} role="group" aria-roledescription="diapositiva" aria-label={`${i + 1} de ${perspectives.length}: ${v.displayName}`}
-            aria-hidden={i !== index} inert={i !== index} className="w-full flex-shrink-0">
+            aria-hidden={i !== index} inert={i !== index} className="w-full shrink-0">
             <div className="h-64 bg-neutral-100 sm:h-80">
               {v.photos[0] ? (
                 <button type="button" onClick={() => onOpenPhoto(v, 0)} aria-label={`Abrir foto 1 de ${v.displayName}`} className="h-full w-full">

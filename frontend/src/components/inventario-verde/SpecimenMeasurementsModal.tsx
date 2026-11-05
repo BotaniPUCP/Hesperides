@@ -107,7 +107,7 @@ export function SpecimenMeasurementsModal({
                         <div className="flex items-center gap-1.5">
                           <span>{fecha(m.date)}</span>
                           {isLatest && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-brand-100 text-brand-800">
+                            <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-brand-100 text-brand-800">
                               Vigente
                             </span>
                           )}
@@ -139,7 +139,7 @@ export function SpecimenMeasurementsModal({
                               <div
                                 id={`tooltip-calc-${m.id}`}
                                 role="tooltip"
-                                className="pointer-events-none absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block group-focus-within/tooltip:block z-50 w-72 sm:w-80 rounded-xl bg-neutral-900 text-white p-3 text-xs shadow-2xl border border-neutral-700/80 backdrop-blur-sm animate-in fade-in-0 zoom-in-95 duration-150"
+                                className="pointer-events-none absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block group-focus-within/tooltip:block z-50 w-72 sm:w-80 rounded-xl bg-neutral-900 text-white p-3 text-xs shadow-2xl border border-neutral-700/80 backdrop-blur-xs animate-in fade-in-0 zoom-in-95 duration-150"
                               >
                                 <div className="flex items-center gap-1.5 mb-1 text-amber-400 font-bold text-[11px] uppercase tracking-wider">
                                   <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

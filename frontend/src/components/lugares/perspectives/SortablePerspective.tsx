@@ -34,7 +34,7 @@ export function SortablePerspective({ perspective, focused, children }: Sortable
         {...attributes}
         {...listeners}
         aria-label={`Mover ${perspective.displayName}`}
-        className="-ml-1 flex w-6 flex-shrink-0 cursor-grab touch-none items-start justify-center rounded pt-1 text-neutral-400 hover:text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-600 active:cursor-grabbing"
+        className="-ml-1 flex w-6 shrink-0 cursor-grab touch-none items-start justify-center rounded pt-1 text-neutral-400 hover:text-neutral-700 focus:outline-hidden focus:ring-2 focus:ring-brand-600 active:cursor-grabbing"
       >
         <svg viewBox="0 0 20 20" className="h-5 w-5" fill="currentColor" aria-hidden="true">
           <circle cx="7" cy="5" r="1.5" /><circle cx="13" cy="5" r="1.5" />

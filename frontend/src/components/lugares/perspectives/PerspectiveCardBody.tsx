@@ -19,7 +19,7 @@ export interface PerspectiveCardBodyProps {
 }
 
 const ACTION =
-  'rounded-md px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-600';
+  'rounded-md px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50 focus:outline-hidden focus:ring-2 focus:ring-brand-600';
 
 /** El contenido de una tarjeta de perspectiva: nombre, lado, hito, acciones y fotos. */
 export function PerspectiveCardBody({ perspective: v, onFocus, onOpenPhoto, editing }: PerspectiveCardBodyProps) {

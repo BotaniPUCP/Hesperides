@@ -69,7 +69,7 @@ export function InventarioVerdeStats({
           </div>
 
           <div
-            className="text-brand-600 flex-shrink-0 ml-3 p-2.5 rounded-xl bg-brand-50 border border-brand-100"
+            className="text-brand-600 shrink-0 ml-3 p-2.5 rounded-xl bg-brand-50 border border-brand-100"
             aria-hidden="true"
           >
             {kpi.icon}

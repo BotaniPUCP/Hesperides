@@ -82,7 +82,7 @@ export function Select({
         className={cn(
           'w-full rounded-md border bg-neutral-0 px-3 text-base text-neutral-900',
           size === 'lg' ? 'h-12' : 'h-10',
-          'focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
+          'focus:outline-hidden focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
           'disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500',
           hasError ? 'border-action-danger' : 'border-neutral-200 hover:border-neutral-500',
         )}

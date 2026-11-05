@@ -26,7 +26,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
             <li key={`${item.label}-${index}`} className="flex items-center gap-1.5">
               {index > 0 && (
                 <svg
-                  className="h-3.5 w-3.5 flex-shrink-0 text-neutral-400"
+                  className="h-3.5 w-3.5 shrink-0 text-neutral-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

@@ -59,7 +59,7 @@ export function LocationFields({ value, onChange, disabled = false }: {
         {locating ? 'Obteniendo ubicación…' : 'Usar ubicación del teléfono'}
       </Button>
       <details>
-        <summary className="min-h-12 cursor-pointer rounded-md py-3 text-sm text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">Ver o corregir coordenadas</summary>
+        <summary className="min-h-12 cursor-pointer rounded-md py-3 text-sm text-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600">Ver o corregir coordenadas</summary>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {(['latitude', 'longitude'] as const).map((field) => (
             <Input key={field} id={`${id}-${field}`} label={field === 'latitude' ? 'Latitud' : 'Longitud'}

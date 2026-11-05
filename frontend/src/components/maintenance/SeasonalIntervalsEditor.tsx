@@ -34,7 +34,7 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
               <select
                 value={row.season}
                 onChange={(e) => update(row.id, 'season', e.target.value as SeasonKey)}
-                className="rounded-md border border-neutral-300 bg-neutral-0 px-2 py-1 text-sm font-medium focus:border-primary-500 focus:outline-none"
+                className="rounded-md border border-neutral-300 bg-neutral-0 px-2 py-1 text-sm font-medium focus:border-primary-500 focus:outline-hidden"
               >
                 {SEASON_ORDER.map((key) => (
                   <option
@@ -66,7 +66,7 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
                 value={row.minDays}
                 onChange={(e) => update(row.id, 'minDays', e.target.value)}
                 placeholder="30"
-                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
+                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-hidden"
               />
             </label>
             <label className="block">
@@ -77,7 +77,7 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
                 value={row.maxDays}
                 onChange={(e) => update(row.id, 'maxDays', e.target.value)}
                 placeholder="35"
-                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
+                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-hidden"
               />
             </label>
             <label className="block">
@@ -91,7 +91,7 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
                 value={row.targetDays}
                 onChange={(e) => update(row.id, 'targetDays', e.target.value)}
                 placeholder="21"
-                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
+                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-hidden"
               />
             </label>
           </div>

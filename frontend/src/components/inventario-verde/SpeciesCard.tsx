@@ -19,11 +19,11 @@ export function SpeciesCard({ species }: SpeciesCardProps) {
   return (
     <Link
       href={`/inventario-verde/especies/${species.slug}`}
-      className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-2 rounded-2xl transition-all duration-300 hover:-translate-y-1"
+      className="group block focus:outline-hidden focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-2 rounded-2xl transition-all duration-300 hover:-translate-y-1"
     >
       <div className="overflow-hidden border border-neutral-200/90 bg-neutral-0 shadow-xs transition-all duration-300 group-hover:shadow-lg group-hover:shadow-neutral-900/5 group-hover:border-neutral-300/90 flex flex-col h-full rounded-2xl">
         {/* Imagen a sangre (flush con los bordes superiores y laterales) */}
-        <div className="relative h-44 w-full overflow-hidden bg-neutral-100 flex-shrink-0">
+        <div className="relative h-44 w-full overflow-hidden bg-neutral-100 shrink-0">
           {optimizedImageUrl && !imageError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
