@@ -74,7 +74,7 @@ export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
             </svg>
           </span>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider">
+            <h2 className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
               Evaluaciones Fitosanitarias e Inspecciones
             </h2>
             <p className="text-xs text-neutral-500 leading-relaxed">

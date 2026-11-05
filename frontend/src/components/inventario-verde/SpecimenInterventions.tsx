@@ -127,12 +127,9 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
             </svg>
           </span>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider">
+            <h2 className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
               Intervenciones del ejemplar
             </h2>
-            <p className="text-xs text-neutral-500 leading-relaxed">
-              Actividades vinculadas expresamente a <span className="font-mono font-medium text-neutral-700">{code}</span>, según los permisos de tu cuenta.
-            </p>
           </div>
         </div>
 

@@ -359,7 +359,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </span>
-              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">
+              <h3 className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
                 Territorio y Datos Registrales
               </h3>
             </div>
