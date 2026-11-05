@@ -77,9 +77,6 @@ export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
             <h2 className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
               Evaluaciones Fitosanitarias e Inspecciones
             </h2>
-            <p className="text-xs text-neutral-500 leading-relaxed">
-              Historial cronológico de salud vegetal y manejo agronómico
-            </p>
           </div>
         </div>
 
