@@ -22,6 +22,7 @@
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
+| SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 📝 En spec | —          | S4     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -182,6 +183,7 @@ Los números en citas históricas de otros specs no autorizan reutilizar version
 | Contratos y proveedores | SPEC-002 §4.7 | Intervenciones; definir la FK cuando ambas tablas existan |
 | Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
 | Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
+| Metas del resumen de reportes (dos filas en `system_parameters`, sin tablas) | SPEC-202 §4 | Solo datos; se numera al implementar el módulo de reportes |
 | Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
 
 Las antiguas pendientes `add_execution_tracking_to_interventions`,
