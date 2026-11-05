@@ -1,4 +1,4 @@
-import type { Incident, IncidentCapture, IncidentDetail, IncidentOptions, IncidentPhoto, IncidentReview, IncidentSummary, InterventionCapture, Page } from '@shared/types';
+import type { Incident, IncidentCapture, IncidentDetail, IncidentInterventionLink, LinkedIncidentIntervention, IncidentMatrixExport, IncidentOptions, IncidentPhoto, IncidentReview, IncidentSummary, Page } from '@shared/types';
 import { apiClient } from './api';
 
 const path = '/incidents';
@@ -7,14 +7,20 @@ export const incidentsApi = {
     `${path}?${new URLSearchParams({ page: String(page), size: '20', status, search })}`),
   options: () => apiClient.get<IncidentOptions>(`${path}/options`),
   summary: () => apiClient.get<IncidentSummary>(`${path}/summary`),
+  export: () => apiClient.get<IncidentMatrixExport>(`${path}/export`),
+  comment: (id: number, body: string, clientReference: string) => apiClient.post<IncidentDetail>(`${path}/${id}/comments`, { body, clientReference }),
   detail: (id: number) => apiClient.get<IncidentDetail>(`${path}/${id}`),
   create: (body: IncidentCapture, reference: string) => apiClient.post<IncidentDetail>(path, body, { 'Idempotency-Key': reference }),
   review: (id: number, body: IncidentReview) => apiClient.put<IncidentDetail>(`${path}/${id}`, body),
   approve: (id: number, version: number) => apiClient.post<IncidentDetail>(`${path}/${id}/approve`, { version }),
   start: (id: number) => apiClient.post<IncidentDetail>(`${path}/${id}/start`),
-  resolve: (id: number) => apiClient.post<IncidentDetail>(`${path}/${id}/resolve`),
-  addIntervention: (id: number, body: InterventionCapture) => apiClient.post<IncidentDetail>(`${path}/${id}/interventions`, body),
-  completeIntervention: (id: number, workId: number) => apiClient.post<IncidentDetail>(`${path}/${id}/interventions/${workId}/complete`),
+  requestCorrection: (id: number, version: number, reason: string) => apiClient.post<IncidentDetail>(`${path}/${id}/request-correction`, { version, reason }),
+  resubmit: (id: number, version: number, report: IncidentCapture) => apiClient.post<IncidentDetail>(`${path}/${id}/resubmit`, { version, report }),
+  resolve: (id: number, version: number, resolutionSummary: string) => apiClient.post<IncidentDetail>(`${path}/${id}/resolve`, { version, resolutionSummary }),
+  observeResolution: (id: number, version: number, reason: string) => apiClient.post<IncidentDetail>(`${path}/${id}/observe-resolution`, { version, reason }),
+  interventionOptions: (id: number, search: string, page: number) => apiClient.get<Page<LinkedIncidentIntervention>>(`${path}/${id}/intervention-options?${new URLSearchParams({ search, page: String(page) })}`),
+  linkIntervention: (id: number, body: IncidentInterventionLink) => apiClient.post<IncidentDetail>(`${path}/${id}/intervention-links`, body),
+  unlinkIntervention: (id: number, linkId: number, version: number, reason: string) => apiClient.post<IncidentDetail>(`${path}/${id}/intervention-links/${linkId}/remove`, { version, reason }),
   upload: (id: number, file: File, reference: string) => {
     const form = new FormData();
     form.append('file', file);

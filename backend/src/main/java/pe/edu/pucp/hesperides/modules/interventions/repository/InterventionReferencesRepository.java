@@ -71,7 +71,7 @@ public class InterventionReferencesRepository {
             select i.id,i.code,i.label,i.parent_item_id as "parentItemId",t.code as "typeCode"
             from catalog_items i join catalog_types t on t.id=i.catalog_type_id
             where i.is_active and i.deleted_at is null and t.deleted_at is null
-              and t.code in ('INTERVENTION_CLASS','INTERVENTION_TYPE','INTERVENTION_STATUS','MEASUREMENT_UNIT','EVIDENCE_MOMENT')
+              and t.code in ('INTERVENTION_CLASS','INTERVENTION_TYPE','INTERVENTION_STATUS','INTERVENTION_ORIGIN','INCIDENT_SOURCE','MEASUREMENT_UNIT','EVIDENCE_MOMENT')
             order by t.code,i.sort_order,i.id
             """);
     }

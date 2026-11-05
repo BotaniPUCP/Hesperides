@@ -2,25 +2,35 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button, Input, Select } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { createClientUuid } from '@/lib/client-uuid';
 import { interventionsApi, interventionError, type InterventionDetail, type InterventionLocation, type InterventionOptions, type InterventionPlanning } from '@/lib/interventions-api';
+import { incidentsApi } from '@/lib/incidents-api';
+import { incidentAfterCreationHref, type IncidentFilters } from '@/lib/incidentNavigation';
+import { useRequest } from '@/hooks/useRequest';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 
 const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
 const nullableNumber = (s: string) => s === '' ? null : Number(s);
 
-export function InterventionForm({ initial }: { initial?: InterventionDetail }) {
+export function InterventionForm({ initial, fromIncident = null, returnFilters = { search:'',status:'',page:0 } }: {
+  initial?: InterventionDetail; fromIncident?: number | null; returnFilters?: IncidentFilters;
+}) {
   const { user } = useAuth();
-  const router = useRouter();
+  const origin = initial ? null : fromIncident;
+  const source = useRequest(origin ? `intervention-origin:${user?.id}:${origin}` : null, () => incidentsApi.detail(origin!));
+  const [dirty,setDirty] = useState(false);
+  const guard = useUnsavedChangesGuard(dirty);
+  const sourceAvailable = !origin || (user?.role.code === 'COORDINADOR' && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? null);
   const [date, setDate] = useState(initial?.scheduledDate ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [reason, setReason] = useState('');
+  const [findingSource,setFindingSource] = useState<number | null>(null);
   const [locations, setLocations] = useState<InterventionLocation[]>(initial?.locations ?? []);
   const [elementCodeInputs, setElementCodeInputs] = useState<Record<string,string>>({});
   const [error, setError] = useState('');
@@ -39,6 +49,7 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
     try {
       const location = blankLocation();
       setLocations(rows => [...rows,location]);
+      setDirty(true);
       setError('');
     } catch {
       setError('No se pudo crear la ubicación. Usa un navegador actualizado con soporte de generación segura de identificadores.');
@@ -48,6 +59,8 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
   const types = catalog('INTERVENTION_TYPE').filter(t => t.parentItemId === classId);
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const findingOrigin=options?.catalogs.find(c => c.typeCode === 'INTERVENTION_ORIGIN' && c.code === 'FINDING');
+    if (origin && (!findingSource || !findingOrigin)) { setError('Selecciona la clasificación de origen del reporte.'); return; }
     if (!classId || !date || (types.length > 0 && !typeId) || locations.length === 0) { setError('Selecciona clase, tipo, fecha y al menos una ubicación.'); return; }
     if (locations.some(l => (!l.placeId && !l.zoneId && !l.location && !l.elementIds.length && !l.elementCodes?.length) || (l.location && (!Number.isFinite(l.location.latitude) || !Number.isFinite(l.location.longitude))))) {
       setError('Cada ubicación necesita un lugar o coordenadas válidas.'); return;
@@ -55,6 +68,7 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
     if (locations.some(l => l.requestedQuantity !== null && (!l.unitItemId || l.requestedQuantity < 0))) { setError('La cantidad debe ser positiva o cero y tener una unidad.'); return; }
     const body: InterventionPlanning = {
       ...(initial ? {originItemId:initial.originItemId, reportedByItemId:initial.reportedByItemId, externalCode:initial.externalCode, requestedAt:initial.requestedAt, version:initial.version, rescheduleReason:reason} : {}),
+      ...(origin ? {originItemId:findingOrigin!.id,reportedByItemId:findingSource!} : {}),
       classItemId:classId, typeItemId:typeId, scheduledDate:date, description, locations,
     };
     setPending(true); setError('');
@@ -68,19 +82,25 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
         requestSent = true;
         result = await interventionsApi.create(saved.body, saved.key);
       }
-      router.push(`/intervenciones/${result.id}`);
+      guard.navigate(origin ? incidentAfterCreationHref(origin,result.id,returnFilters) : `/intervenciones/${result.id}`);
     } catch (e) {
       if (!initial && requestSent && (!(e instanceof ApiError) || e.status === 0 || e.status >= 500 || e.status === 409)) setUncertain(true);
       setError(interventionError(e));
     } finally { setPending(false); }
   };
   if (!['ADMIN','COORDINADOR'].includes(user?.role.code ?? '')) return <p>No tienes permiso para planificar intervenciones.</p>;
-  return <form className="space-y-6" onSubmit={submit}>
-    <Link href={initial ? `/intervenciones/${initial.id}` : '/intervenciones'} className="text-brand-600 underline">Volver</Link>
+  return <form className="space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
+    {guard.dialog}
+    <Link href={origin ? incidentAfterCreationHref(origin,null,returnFilters) : initial ? `/intervenciones/${initial.id}` : '/intervenciones'} className="text-brand-600 underline">{origin ? 'Volver a la incidencia' : 'Volver'}</Link>
     <h1 className="text-2xl font-bold">{initial ? `Editar ${initial.code}` : 'Nueva intervención'}</h1>
+    {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.officialCode ?? `incidencia #${origin}`}. Al guardar volverás para confirmar el vínculo; todavía no se crea una asociación.</p>}
+    {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar registrada, abierta y disponible para tu cuenta.'}</p>}
     {error && <p role="alert" className="text-action-danger">{error}</p>}
     {uncertain && <p role="status">No se pudo confirmar el registro. Reintentar enviará exactamente los mismos datos para evitar duplicados. También puedes consultar el listado.</p>}
-    <fieldset disabled={pending || uncertain || !options} className="space-y-5 disabled:opacity-70">
+    <fieldset disabled={pending || uncertain || !options || !sourceAvailable} className="space-y-5 disabled:opacity-70">
+      {origin && <Select id="finding-source" label="Clasificación de origen del reporte" required value={findingSource?.toString() ?? null}
+        options={catalog('INCIDENT_SOURCE').map(c => ({...c,code:String(c.id)}))} onChange={o => setFindingSource(o?.id ?? null)}
+        helperText="La actividad se registra como hallazgo. Esta clasificación es distinta del nombre de quien envió la incidencia." />}
       <div className="grid gap-4 sm:grid-cols-2">
         <Select id="work-class" label="Clase" value={String(classId)} options={catalog('INTERVENTION_CLASS').map(c => ({...c,code:String(c.id)}))} onChange={o => {setClassId(o?.id ?? 0);setTypeId(null);}} required />
         <Select id="work-type" label="Tipo" value={typeId === null ? null : String(typeId)} options={types.map(c => ({...c,code:String(c.id)}))} onChange={o => setTypeId(o?.id ?? null)} disabled={!types.length} required={types.length > 0} />
@@ -90,7 +110,7 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
       <Input id="work-description" label="Descripción del trabajo" value={description} onChange={setDescription} maxLength={4000} />
       <h2 className="text-lg font-semibold">Ubicaciones de esta actividad</h2>
       {locations.map((l,index) => <div key={l.clientReference} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
-        <div className="flex items-center justify-between"><h3 className="font-semibold">Ubicación {index + 1}</h3><Button variant="ghost" onClick={() => setLocations(rows => rows.filter((_,i) => i !== index))}>Retirar ubicación {index + 1}</Button></div>
+        <div className="flex items-center justify-between"><h3 className="font-semibold">Ubicación {index + 1}</h3><Button variant="ghost" onClick={() => { setDirty(true); setLocations(rows => rows.filter((_,i) => i !== index)); }}>Retirar ubicación {index + 1}</Button></div>
         <Select id={`place-${index}`} label="Lugar" value={l.placeId === null ? null : String(l.placeId)} options={(options?.places ?? []).map(p => ({id:p.id,code:String(p.id),label:p.name}))} onChange={o => updateLocation(index,{placeId:o?.id ?? null})} clearable />
         <Select id={`zone-${index}`} label="Sección o sector" value={l.zoneId === null ? null : String(l.zoneId)} options={(options?.zones ?? []).map(p => ({id:p.id,code:String(p.id),label:p.name}))} onChange={o => updateLocation(index,{zoneId:o?.id ?? null})} clearable />
         <Input id={`description-${index}`} label="Referencia de la ubicación" value={l.description ?? ''} onChange={v => updateLocation(index,{description:v})} maxLength={4000} />
@@ -114,6 +134,6 @@ export function InterventionForm({ initial }: { initial?: InterventionDetail }) 
       </div>)}
       <Button variant="secondary" onClick={addLocation}>Agregar ubicación</Button>
     </fieldset>
-    <Button type="submit" loading={pending} disabled={!options}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : 'Crear intervención'}</Button>
+    <Button type="submit" loading={pending} disabled={!options || !sourceAvailable}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : origin ? 'Guardar y volver a la incidencia' : 'Crear intervención'}</Button>
   </form>;
 }

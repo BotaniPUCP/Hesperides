@@ -43,6 +43,8 @@ public class InterventionsServiceImpl implements InterventionsService {
     private final pe.edu.pucp.hesperides.shared.storage.FileStorage storage;
     private final InterventionEvidenceFiles evidenceFiles;
     private final InterventionReviewPolicy reviewPolicy;
+    private final InterventionAccess access;
+    private final pe.edu.pucp.hesperides.modules.incidents.repository.IncidentLinkQueries incidentLinks;
 
     private void validate(Object request) {
         if(request==null)throw new ValidationException("Request is required");
@@ -61,19 +63,13 @@ public class InterventionsServiceImpl implements InterventionsService {
         if(!Arrays.asList(allowed).contains(u.getRoleCode()))throw new AccessDeniedException("Action not allowed for this role");
     }
     private void scope(User u,Long team,Long assignee){
-        boolean visible=switch(u.getRoleCode()){
-            case "ADMIN","COORDINADOR"->true;
-            case "SUPERVISOR"->references.supervises(u.getId(),team);
-            case "OPERARIO"->Objects.equals(u.getId(),assignee);
-            default->false;
-        };
-        if(!visible)throw new ResourceNotFoundException("Intervention not found");
+        access.requireRead(u,team,assignee);
     }
     @Override public Page<InterventionSummaryResponse> findAll(Filter f,Pageable p){
         var u=actor();
         validate(f);
         if (f.greenElementCode()!=null && f.greenElementCode().isBlank()) throw new ValidationException("Element code cannot be blank");
-        if(f.incidentId()!=null)throw new BusinessRuleException("Incident integration is not available");
+        if(f.incidentId()!=null)incidentLinks.requireIncident(f.incidentId(),u);
         if(f.dateFrom()!=null&&f.dateTo()!=null&&f.dateFrom().isAfter(f.dateTo()))throw new ValidationException("Invalid date range");
         if(p.isUnpaged()||p.getPageSize()>100)throw new ValidationException("Page size must be between 1 and 100");
         return queries.findAll(f,u.getId(),u.getRoleCode(),p);
@@ -85,6 +81,9 @@ public class InterventionsServiceImpl implements InterventionsService {
         var d=queries.detail(id).orElseThrow(()->new ResourceNotFoundException("Intervention not found"));
         scope(u,d.getTeamId(),d.getAssignedToUserId());
         d.setResponsibleSupervisorUserId(references.responsibleSupervisor(d.getTeamId()));
+        d.setIncidentIntegrationAvailable(true);
+        var sourceRows=incidentLinks.sourceIncidents(id,u);
+        d.setSourceIncidents(new ArrayList<>(sourceRows));
         var photos=evidences.findByInterventionIdAndDeletedAtIsNullOrderById(id);
         boolean executing = Set.of("SUPERVISOR","OPERARIO").contains(u.getRoleCode())
                 && references.candidates(d.getTeamId()).stream().anyMatch(c -> Objects.equals(c.get("id"),u.getId()));
@@ -126,6 +125,8 @@ public class InterventionsServiceImpl implements InterventionsService {
         d.setEvidences(photoRows);
         var history=new ArrayList<Map<String,Object>>();
         for(var e:events.findByInterventionIdAndDeletedAtIsNullOrderByOccurredAtAscIdAsc(id)){
+            if (Set.of("INCIDENT_LINKED","INCIDENT_UNLINKED").contains(e.getActionCode()) && (e.getDetails()==null
+                    || !(e.getDetails().get("incidentId") instanceof Number sourceId) || !incidentLinks.canReadIncident(sourceId.longValue(),u))) continue;
             var m=new LinkedHashMap<String,Object>();m.put("actionCode",e.getActionCode());m.put("interventionLocationId",e.getInterventionLocationId());
             m.put("attemptNumber",e.getAttemptNumber());m.put("actorUserId",e.getActorUserId());m.put("occurredAt",e.getOccurredAt());
             m.put("fromStatusCode",e.getFromStatusItemId()==null?null:references.code(e.getFromStatusItemId()));

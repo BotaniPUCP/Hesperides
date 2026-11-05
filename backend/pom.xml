@@ -18,7 +18,7 @@
     <description>Hesperides backend - Spring Boot</description>
 
     <properties>
-        <java.version>26</java.version>
+        <java.version>25</java.version>
         <aws.sdk.version>2.31.0</aws.sdk.version>
         <twelvemonkeys.version>3.12.0</twelvemonkeys.version>
     </properties>
@@ -184,8 +184,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <!-- 0.8.12 no instrumenta bytecode de Java 26 (class file 70) y
-                     rompe cualquier test que cargue el contexto de Spring. -->
+                <!-- Keep a JaCoCo release compatible with Java 25 bytecode. -->
                 <version>0.8.15</version>
                 <executions>
                     <execution>

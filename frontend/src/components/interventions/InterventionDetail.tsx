@@ -135,6 +135,10 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
       <p>{data.completedLocationCount}/{data.locationCount} ubicaciones terminadas · {data.validatedLocationCount}/{data.locationCount} aprobadas</p>
       <p>{data.approvedForCounting ? 'Actividad con aprobación final del coordinador.' : 'La actividad contará cuando el coordinador apruebe todas las ubicaciones.'}</p>
       <p className="text-sm">{options?.teams.find(t => t.id === data.teamId)?.name ?? (data.teamId ? 'Cuadrilla asignada' : 'Sin cuadrilla asignada')}{data.responsibleSupervisorUserId ? ' · Responsable: capataz de la cuadrilla' : ''}</p>
+      {!!data.sourceIncidents?.length && <div className="space-y-2"><p className="font-medium">Incidencias relacionadas disponibles para tu cuenta</p>
+        <ul className="space-y-2">{data.sourceIncidents.map(i => <li key={i.id}><Link className="text-brand-700 underline" href={`/incidencias/${i.id}`}>{i.code ?? `Incidencia #${i.id}`}</Link></li>)}</ul>
+        <p className="text-sm text-neutral-700">Aprobar esta intervención no cierra sus incidencias. Cada una requiere una revisión final independiente.</p>
+      </div>}
       {data.pendingEvidenceCount > 0 && <p>Fotos pendientes: {data.pendingEvidenceCount}</p>}
       <div className="flex flex-wrap gap-3">
         {canPlan && <><Link href={`/intervenciones/${id}/editar`} className="px-3 py-2 text-brand-600 underline">Editar planificación</Link><Button variant="danger" disabled={busy} onClick={() => {setCancelOpen(true);setReason('');setError('');}}>Cancelar trabajo</Button></>}

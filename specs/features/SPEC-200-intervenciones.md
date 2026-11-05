@@ -558,6 +558,17 @@ Un reintento no agrega eventos ni incrementos de versión por segunda vez.
 
 ### 3.6 Contrato con incidencias y servicios tercerizados
 
+> **Enmienda SPEC-201, 5 nov 2026:** la aclaración del cliente sustituye el contrato
+> singular siguiente. El vínculo implementado es N:M en `incident_intervention_links`,
+> sin FK singular en `incidents`, sin duplicar trabajos y sin vincular por externalCode.
+> Crear se realiza en el módulo de intervenciones y vuelve preseleccionado al selector
+> de incidencias, donde coordinación confirma el vínculo. Los estados de ejecución/
+> revisión se mantienen aquí; todas las ubicaciones deben estar VALIDATED antes del
+> cierre de cada incidencia por coordinación. Finalizar no equivale a validar ni cierra
+> casos. `sourceIncidents` y los eventos de vínculo se filtran por alcance de incidencia;
+> `incidentId` está habilitado y exige acceso al caso y al trabajo. El texto de abajo
+> conserva el diseño previo, no es una autorización para restaurar el contrato singular.
+
 **Propiedad del vínculo.** SPEC-002 §4.8 conserva `incidents.intervention_id` como FK
 nulable al trabajo completo. No añadir FK inversa persistida ni convertir cada ubicación en
 una incidencia. Cada incidencia apunta a cero o una intervención; no imponer unicidad inversa

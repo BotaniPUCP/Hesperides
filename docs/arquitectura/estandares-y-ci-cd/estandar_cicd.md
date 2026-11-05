@@ -194,7 +194,7 @@ flowchart TB
     F -- "services/**" --> P[CI Data Service]
     F -- "docker-compose*.yml · Dockerfiles · .env.example" --> I[CI Infra]
 
-    B --> B1[JDK 26 Temurin + caché Maven] --> B2["./mvnw -B verify<br/>compila · tests · JaCoCo"]
+    B --> B1[JDK 25 LTS Temurin + caché Maven] --> B2["./mvnw -B verify<br/>compila · tests · JaCoCo"]
     W --> W1[Node 20 + caché npm] --> W2[npm ci] --> W3[npm run lint] --> W4[npm test] --> W5[npm run build]
     P --> P1[Python 3.11] --> P2[pip install -r requirements.txt] --> P3[python -m pytest -q]
     I --> I1["docker compose config --quiet<br/>con variables ficticias"]
@@ -202,7 +202,7 @@ flowchart TB
 
 | Workflow | Archivo | Se dispara con cambios en | Pasos |
 |---|---|---|---|
-| CI Backend | `ci-backend.yml` | `backend/**` | JDK 26 → `./mvnw -B verify` |
+| CI Backend | `ci-backend.yml` | `backend/**` | JDK 25 LTS → `./mvnw -B verify` |
 | CI Frontend | `ci-frontend.yml` | `frontend/**`, `shared/**` | Node 20 → `npm ci` → `lint` → `test` → `build` |
 | CI Data Service | `ci-data-service.yml` | `services/**` | Python 3.11 → `pip install` → `pytest -q` |
 | CI Infra | `ci-infra.yml` | `docker-compose*.yml`, los tres `Dockerfile`, `.env.example` | Valida el YAML de Compose |

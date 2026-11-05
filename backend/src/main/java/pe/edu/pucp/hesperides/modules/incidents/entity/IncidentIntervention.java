@@ -16,10 +16,12 @@ public class IncidentIntervention extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false) private Incident incident;
     @Column(nullable = false) private String description;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "type_item_id") private CatalogItem type;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "purpose_item_id") private CatalogItem purpose;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "status_item_id") private CatalogItem status;
     @ManyToOne(fetch = FetchType.LAZY, optional = false) @JoinColumn(name = "recorded_by_user_id") private User recordedBy;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "completed_by_user_id") private User completedBy;
     private Instant completedAt;
+    private Long replacementInterventionId;
     @Column(nullable = false) private UUID clientReference;
     @Column(nullable = false) private String requestHash;
 }

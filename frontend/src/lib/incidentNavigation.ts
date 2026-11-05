@@ -26,3 +26,20 @@ export function incidentHref(path: string, filters: IncidentFilters): string {
 export function incidentDate(date: string): string {
   return new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(date));
 }
+
+export function positiveIncidentId(value: string | string[] | undefined | null): number | null {
+  if (typeof value !== 'string' || !/^[1-9]\d*$/.test(value)) return null;
+  const id = Number(value);
+  return Number.isSafeInteger(id) ? id : null;
+}
+
+export function interventionCreationHref(id: number, filters: IncidentFilters): string {
+  const query = new URLSearchParams({ fromIncident: String(id), incidentSearch: filters.search,
+    incidentStatus: filters.status, incidentPage: String(filters.page) });
+  return `/intervenciones/nueva?${query}`;
+}
+
+export function incidentAfterCreationHref(id: number, interventionId: number | null, filters: IncidentFilters): string {
+  const href = incidentHref(`/incidencias/${id}`, filters);
+  return interventionId === null ? href : `${href}${href.includes('?') ? '&' : '?'}selectIntervention=${interventionId}`;
+}

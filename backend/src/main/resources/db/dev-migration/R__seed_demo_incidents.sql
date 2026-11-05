@@ -86,7 +86,7 @@ WITH fixtures (
         original_description, description, location_reference, latitude, longitude,
         incident_type_item_id, urgency_item_id, status_item_id, reported_by_user_id, team_id,
         approved_by_user_id, approved_at, resolved_at, channel, client_reference, request_hash,
-        version, created_at, updated_at
+        version, created_at, updated_at, official_number, event_item_id, service_group_item_id
     )
     SELECT original_description, description, location_reference, latitude, longitude,
            type_id, urgency_id, status_id, sender_id, team_id,
@@ -98,14 +98,21 @@ WITH fixtures (
            received_at,
            received_at + CASE status_code WHEN 'PENDING_APPROVAL' THEN INTERVAL '0 minutes'
                WHEN 'OPEN' THEN INTERVAL '30 minutes' WHEN 'IN_PROGRESS' THEN INTERVAL '75 minutes'
-               ELSE INTERVAL '4 hours' END
+                ELSE INTERVAL '4 hours' END,
+            CASE WHEN status_code <> 'PENDING_APPROVAL' THEN nextval('incident_official_number_seq') END,
+            (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
+             WHERE ct.code='INCIDENT_EVENT' AND ci.code='INCIDENT'),
+            (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
+             WHERE ct.code='INCIDENT_SERVICE_GROUP' AND ci.code='GREEN_AREAS')
     FROM prepared
+    WHERE NOT EXISTS (SELECT 1 FROM incidents existing WHERE existing.reported_by_user_id=sender_id
+        AND existing.client_reference=reference AND existing.deleted_at IS NULL)
     ON CONFLICT (reported_by_user_id, client_reference) WHERE deleted_at IS NULL DO NOTHING
     RETURNING *
 ), inserted_work AS (
     INSERT INTO incident_interventions (
         incident_id, description, type_item_id, status_item_id, recorded_by_user_id,
-        completed_by_user_id, completed_at, client_reference, request_hash, created_at, updated_at
+        completed_by_user_id, completed_at, client_reference, request_hash, created_at, updated_at, purpose_item_id
     )
     SELECT i.id, work.description,
            (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
@@ -117,7 +124,9 @@ WITH fixtures (
            encode(sha256(convert_to(work.description, 'UTF8')), 'hex'),
            i.approved_at + INTERVAL '15 minutes',
            i.approved_at + CASE WHEN work.position <= f.completed_work_count THEN work.position * INTERVAL '1 hour'
-               ELSE INTERVAL '15 minutes' END
+                ELSE INTERVAL '15 minutes' END,
+            (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
+             WHERE ct.code='INCIDENT_ACTION_PURPOSE' AND ci.code='MITIGATION')
     FROM inserted i
     JOIN prepared f ON f.reference=i.client_reference
     CROSS JOIN LATERAL (VALUES (1, f.first_work, f.first_activity), (2, f.second_work, f.second_activity))

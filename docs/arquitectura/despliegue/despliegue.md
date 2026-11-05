@@ -36,7 +36,7 @@ flowchart TB
     subgraph HOST[Nodo: servidor Docker]
         subgraph NET[Red bridge: hesperides-net]
             FE["hesperides-frontend<br/>node:20-alpine<br/>Next.js standalone<br/>:3000"]
-            BE["hesperides-backend<br/>eclipse-temurin:26-jre-alpine<br/>Spring Boot jar<br/>:8080"]
+            BE["hesperides-backend<br/>eclipse-temurin:25-jre-alpine<br/>Spring Boot jar<br/>:8080"]
             DS["hesperides-data-service<br/>python:3.11-slim<br/>Flask<br/>:5001 (interno)"]
             DB[("hesperides-db<br/>postgis/postgis:16-3.4<br/>:5432 (interno)")]
         end
@@ -64,7 +64,7 @@ del frontend), por eso CORS es obligatorio: `:3000` y `:8080` son orígenes dist
 | Servicio | Contenedor | Imagen base | Puerto | Expuesto al host | Depende de |
 |---|---|---|---|---|---|
 | `db` | `hesperides-db` | `postgis/postgis:16-3.4` | 5432 | Solo en dev | — |
-| `backend` | `hesperides-backend` | build multi-etapa → `eclipse-temurin:26-jre-alpine` | 8080 | Sí | `db` *healthy* |
+| `backend` | `hesperides-backend` | build multi-etapa → `eclipse-temurin:25-jre-alpine` | 8080 | Sí | `db` *healthy* |
 | `frontend` | `hesperides-frontend` | build multi-etapa → `node:20-alpine` | 3000 | Sí | `backend` |
 | `data-service` | `hesperides-data-service` | `python:3.11-slim` | 5001 | Solo en dev | — |
 
@@ -74,8 +74,8 @@ del frontend), por eso CORS es obligatorio: `:3000` y `:8080` son orígenes dist
 
 | Etapa | Base | Qué hace |
 |---|---|---|
-| `build` | `maven:3.9-eclipse-temurin-26` | `dependency:go-offline` (capa cacheable) y `package -DskipTests` |
-| runtime | `eclipse-temurin:26-jre-alpine` | Solo el JRE y `app.jar`; usuario sin privilegios `hesperides` |
+| `build` | `maven:3.9-eclipse-temurin-25` | `dependency:go-offline` (capa cacheable) y `package -DskipTests` |
+| runtime | `eclipse-temurin:25-jre-alpine` | Solo el JRE y `app.jar`; usuario sin privilegios `hesperides` |
 
 Los tests no se corren en el build de la imagen porque ya los corre CI (`./mvnw verify`).
 

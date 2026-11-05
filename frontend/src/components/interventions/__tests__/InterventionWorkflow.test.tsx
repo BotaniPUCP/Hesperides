@@ -4,11 +4,13 @@ import { InterventionForm } from '../InterventionForm';
 import { interventionsApi } from '@/lib/interventions-api';
 import { ApiError } from '@/lib/api';
 import type { InterventionDetail as Detail, InterventionOptions } from '@/lib/interventions-api';
+import { incidentsApi } from '@/lib/incidents-api';
+import { approvedDetail } from '@/components/incidents/__fixtures__/incidents';
 
 const push = jest.fn();
 const toast = jest.fn();
 let role = 'COORDINADOR';
-jest.mock('next/navigation', () => ({useRouter:()=>({push})}));
+jest.mock('next/navigation', () => ({useRouter:()=>({push,replace:push})}));
 jest.mock('@/hooks/useAuth', () => ({useAuth:()=>({user:{id:3,role:{code:role}}})}));
 jest.mock('@/hooks/useCatalog', () => ({useCatalog:()=>({items:[{code:'UNSPECIFIED',label:'Sin especificar'}],isLoading:false,errorMessage:null})}));
 jest.mock('@/components/ui', () => {
@@ -16,16 +18,19 @@ jest.mock('@/components/ui', () => {
   return {...actual,useToast:()=>({showToast:toast})};
 });
 jest.mock('@/lib/interventions-api', () => ({...jest.requireActual('@/lib/interventions-api'),interventionsApi:{detail:jest.fn(),options:jest.fn(),command:jest.fn(),create:jest.fn(),photo:jest.fn(),announce:jest.fn(),upload:jest.fn()}}));
+jest.mock('@/lib/incidents-api', () => ({incidentsApi:{detail:jest.fn(),linkIntervention:jest.fn()}}));
 const options:InterventionOptions={teams:[],places:[{id:15,name:'Jardín de prueba'}],zones:[],catalogs:[
   {id:1,code:'CLASS',label:'Jardinería',typeCode:'INTERVENTION_CLASS',parentItemId:null},
   {id:2,code:'UNIT',label:'Unidad',typeCode:'MEASUREMENT_UNIT',parentItemId:null},
   {id:3,code:'COMPLETED',label:'Ejecutada',typeCode:'INTERVENTION_STATUS',parentItemId:null},
+  {id:4,code:'FINDING',label:'Hallazgo',typeCode:'INTERVENTION_ORIGIN',parentItemId:null},
+  {id:5,code:'SUPERVISION',label:'Supervisión',typeCode:'INCIDENT_SOURCE',parentItemId:null},
 ]};
 const detail = ():Detail => ({id:10,code:'INT-000010',version:5,classItemId:1,typeItemId:null,scheduledDate:'2026-10-23',statusCode:'COMPLETED',planningStatusCode:'ASSIGNED',teamId:2,assignedToUserId:4,startedAt:'2026-10-22T10:00:00Z',completedAt:'2026-10-22T11:00:00Z',validatedAt:null,locationCount:2,completedLocationCount:2,validatedLocationCount:0,pendingEvidenceCount:0,approvedForCounting:false,description:'Actividad en dos jardines',originItemId:1,reportedByItemId:2,externalCode:null,requestedAt:null,responsibleSupervisorUserId:3,quantityTotals:[],history:[],evidences:[],locations:[
   {id:21,clientReference:'a',zoneId:null,placeId:15,location:null,description:'Jardín A',locationDescription:'Jardín A',elementIds:[],unitItemId:2,requestedQuantity:2,progressQuantity:2,executedQuantity:2,statusCode:'COMPLETED',executionNotes:'Trabajo terminado',attemptNumber:1,allowedActions:['validate','observe']},
   {id:22,clientReference:'b',zoneId:null,placeId:15,location:null,description:'Jardín B',locationDescription:'Jardín B',elementIds:[],unitItemId:2,requestedQuantity:2,statusCode:'COMPLETED',attemptNumber:1,allowedActions:['validate','observe']},
 ]});
-beforeEach(()=>{jest.clearAllMocks();role='COORDINADOR';jest.mocked(interventionsApi.options).mockResolvedValue(options);jest.mocked(interventionsApi.detail).mockResolvedValue(detail());});
+beforeEach(()=>{jest.clearAllMocks();role='COORDINADOR';jest.mocked(interventionsApi.options).mockResolvedValue(options);jest.mocked(interventionsApi.detail).mockResolvedValue(detail());jest.mocked(incidentsApi.detail).mockResolvedValue(approvedDetail);});
 
 it('agrega ubicaciones y registra una intervención sin crypto.randomUUID',async()=>{
   const original=Object.getOwnPropertyDescriptor(global.crypto,'randomUUID');
@@ -121,4 +126,27 @@ it('crea una sola actividad con dos ubicaciones y reintenta con la misma clave t
   fireEvent.click(screen.getByRole('button',{name:'Reintentar registro'}));await waitFor(()=>expect(push).toHaveBeenCalledWith('/intervenciones/10'));
   const calls=jest.mocked(interventionsApi.create).mock.calls;expect(calls[0]).toEqual(calls[1]);expect(calls[0][0].locations).toHaveLength(2);
   expect(calls[0][0].locations[0].elementCodes).toEqual(['EV-000001','EV-000002']);
+});
+
+it('crea como hallazgo y vuelve a la incidencia con preselección y filtros, sin vincular silenciosamente',async()=>{
+  jest.mocked(interventionsApi.create).mockResolvedValue(detail());
+  render(<InterventionForm fromIncident={7} returnFilters={{search:'rama',status:'OPEN',page:2}}/>);
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Agregar ubicación'})).toBeEnabled());
+  expect(screen.getByRole('link',{name:'Volver a la incidencia'})).toHaveAttribute('href','/incidencias/7?search=rama&status=OPEN&page=2');
+  fireEvent.change(screen.getByLabelText(/Clasificación de origen del reporte/),{target:{value:'5'}});
+  fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});
+  fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:'2026-11-05'}});
+  fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
+  fireEvent.change(screen.getByLabelText('Lugar'),{target:{value:'15'}});
+  fireEvent.click(screen.getByRole('button',{name:'Guardar y volver a la incidencia'}));
+  await waitFor(()=>expect(push).toHaveBeenCalledWith('/incidencias/7?search=rama&status=OPEN&page=2&selectIntervention=10'));
+  expect(jest.mocked(interventionsApi.create).mock.calls[0][0]).toMatchObject({originItemId:4,reportedByItemId:5});
+  expect(incidentsApi.linkIntervention).not.toHaveBeenCalled();
+});
+
+it('no habilita creación contextual si la incidencia no está registrada',async()=>{
+  jest.mocked(incidentsApi.detail).mockResolvedValue({...approvedDetail,incident:{...approvedDetail.incident,approvedAt:null}});
+  render(<InterventionForm fromIncident={7}/>);
+  expect(await screen.findByRole('button',{name:'Guardar y volver a la incidencia'})).toBeDisabled();
+  expect(interventionsApi.create).not.toHaveBeenCalled();
 });

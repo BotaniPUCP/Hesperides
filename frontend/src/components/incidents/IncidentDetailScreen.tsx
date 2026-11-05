@@ -4,21 +4,23 @@ import { Breadcrumb, Button, EmptyState, LoadingSkeleton } from '@/components/ui
 import { useAuth } from '@/hooks/useAuth';
 import { useIncidentDetail, useIncidentNavigation, useIncidentOptions } from '@/hooks/useIncidents';
 import { IncidentDetailPanel } from './IncidentDetailPanel';
+import { interventionCreationHref } from '@/lib/incidentNavigation';
 
 export interface IncidentDetailScreenProps {
   id: number;
+  selectedInterventionId?: number | null;
 }
 
-export function IncidentDetailScreen({ id }: IncidentDetailScreenProps) {
+export function IncidentDetailScreen({ id, selectedInterventionId = null }: IncidentDetailScreenProps) {
   const { user } = useAuth();
-  const { listHref } = useIncidentNavigation();
+  const { listHref, filters } = useIncidentNavigation();
   const detail = useIncidentDetail(id);
   const options = useIncidentOptions();
   const reload = () => { detail.reload(); options.reload(); };
 
   return (
     <div className="space-y-5">
-      <Breadcrumb items={[{ label: 'Incidencias', href: listHref }, { label: `Incidencia #${id}` }]} />
+      <Breadcrumb items={[{ label: 'Incidencias', href: listHref }, { label: detail.data?.incident.officialCode ?? `Incidencia #${id}` }]} />
       {detail.loading ? <LoadingSkeleton variant="card" count={3} /> : detail.notFound ? (
         <EmptyState title="Incidencia no encontrada" description="El registro no existe o no tienes acceso a él." />
       ) : detail.errorMessage ? (
@@ -34,6 +36,7 @@ export function IncidentDetailScreen({ id }: IncidentDetailScreenProps) {
             </div>
           )}
           <IncidentDetailPanel key={id} detail={detail.data} options={options.data} optionsLoading={options.loading}
+            selectedInterventionId={selectedInterventionId} createInterventionHref={interventionCreationHref(id,filters)}
             coordinator={user?.role.code === 'COORDINADOR'} onChange={detail.updateData} onReload={reload} />
         </>
       )}

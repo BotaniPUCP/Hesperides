@@ -1,4 +1,12 @@
-import type { IncidentDetail, IncidentOptions, Page, Incident } from '@shared/types';
+import type { IncidentDetail, IncidentOptions, Page, Incident, IncidentMatrix } from '@shared/types';
+
+export const emptyMatrix: IncidentMatrix = {
+  event: { id: 20, code: 'INCIDENT', label: 'Incidencia' },
+  serviceGroup: { id: 21, code: 'GREEN_AREAS', label: 'Servicios de Áreas verdes' },
+  service: null, company: null, process: null, subprocess: null, severity: null, impacts: [],
+  responsible: null, immediateAction: null, rootCauseItem: null, rootCause: null,
+  preventiveAction: null, impactedProcess: null, observations: null,
+};
 
 export const pendingDetail: IncidentDetail = {
   incident: {
@@ -7,15 +15,29 @@ export const pendingDetail: IncidentDetail = {
     status: { id: 1, code: 'PENDING_APPROVAL', label: 'Pendiente de aprobación' },
     reportedBy: { id: 2, fullName: 'Óscar' }, team: { id: 3, name: 'Cuadrilla norte' },
     approvedBy: null, approvedAt: null, resolvedAt: null, channel: 'WEB', createdAt: '2026-10-24T10:00:00Z', version: 0,
+    officialCode: null, closureBusinessDays: null, matrix: emptyMatrix,
+    correctionReason: null, resolutionSummary: null, resolvedBy: null, resolutionObservation: null,
   },
-  interventions: [], photos: [], history: [], suggestedType: null, canAttend: true,
+  interventions: [], photos: [], history: [], suggestedType: null, canAttend: true, updates: [],
+  linkedInterventions: [], requiredInterventionCount: 0, canResolve: false, canCorrectReport: false,
 };
 
 export const incidentOptions: IncidentOptions = {
+  workStatuses: [{ id: 60, code: 'PLANNED', label: 'Planificada' }, { id: 61, code: 'COMPLETED', label: 'Finalizada, pendiente de validación' },
+    { id: 62, code: 'VALIDATED', label: 'Validada' }],
   statuses: [pendingDetail.incident.status, { id: 2, code: 'OPEN', label: 'Pendiente de atención' }],
   types: [{ id: 3, code: 'FALLEN_BRANCH', label: 'Rama caída' }],
   urgencies: [{ id: 4, code: 'HIGH', label: 'Alta' }],
   activities: [{ id: 5, code: 'PODA', label: 'Poda' }], teams: [pendingDetail.incident.team!],
+  matrix: {
+    services: [{ id: 30, code: 'AV-01', label: 'AV-01- Mantenimiento de áreas verdes', parentCode: null, description: null }],
+    companies: [], processes: [], subprocesses: [], rootCauses: [], responsiblePeople: [],
+    severities: [{ id: 31, code: 'HIGH', label: 'Alta', parentCode: null, description: null }],
+    impacts: [{ id: 32, code: 'SAFETY', label: 'Seguridad', parentCode: null, description: null },
+      { id: 33, code: 'ENVIRONMENT', label: 'Ambiental', parentCode: null, description: null }],
+    actionPurposes: [{ id: 34, code: 'MITIGATION', label: 'Mitigación / corrección inmediata', parentCode: null, description: null },
+      { id: 35, code: 'PREVENTION', label: 'Prevención / mejora', parentCode: null, description: null }],
+  },
 };
 
 export const incidentPage: Page<Incident> = {
