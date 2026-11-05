@@ -46,12 +46,13 @@ class DemoIncidentsSeedTest {
 
     @Test
     void seedPopulatesTheWorkflowAndRerunsPreserveDemoChanges() throws Exception {
-        // Startup must apply the repeatable migration after the versioned schema.
+        // Startup must apply the repeatable migration after the versioned schema. Other
+        // dev seeds (SPEC-202) may run after it, so it is not necessarily the last one.
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         assertThat(jdbc.queryForObject("""
-                SELECT script FROM flyway_schema_history
-                WHERE success ORDER BY installed_rank DESC LIMIT 1
-                """, String.class)).isEqualTo("R__seed_demo_incidents.sql");
+                SELECT installed_rank > (SELECT max(installed_rank) FROM flyway_schema_history WHERE version IS NOT NULL)
+                FROM flyway_schema_history WHERE script = 'R__seed_demo_incidents.sql' AND success
+                """, Boolean.class)).isTrue();
         String seed = new ClassPathResource("db/dev-migration/R__seed_demo_incidents.sql")
                 .getContentAsString(StandardCharsets.UTF_8);
 

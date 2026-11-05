@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
+import pe.edu.pucp.hesperides.modules.interventions.repository.FinalApprovalSql;
 import pe.edu.pucp.hesperides.modules.maintenance.service.ExecutionHistoryProvider;
 import pe.edu.pucp.hesperides.modules.maintenance.service.LocationExecution;
 import pe.edu.pucp.hesperides.shared.exception.UnauthorizedException;
@@ -42,16 +43,14 @@ public class InterventionExecutionHistoryProvider implements ExecutionHistoryPro
             select i.id work_id,i.code,l.id location_id,l.attempt_number,l.zone_id,l.place_id,
                    l.completed_at,l.validated_at,a.approved_at,
                    coalesce(p.name,z.name,l.location_description,i.code) target_label
-            from interventions i join catalog_items ps on ps.id=i.planning_status_item_id
+            from interventions i
             join intervention_locations l on l.intervention_id=i.id and l.deleted_at is null
             left join places p on p.id=l.place_id left join zones z on z.id=l.zone_id
             cross join lateral (select max(al.validated_at) approved_at
                 from intervention_locations al where al.intervention_id=i.id and al.deleted_at is null) a
-            where i.deleted_at is null and ps.code='ASSIGNED' and i.intervention_type_item_id=:activity
+            where i.intervention_type_item_id=:activity
               and l.completed_at is not null and l.validated_at is not null
-              and not exists(select 1 from intervention_locations al join catalog_items s on s.id=al.status_item_id
-                  where al.intervention_id=i.id and al.deleted_at is null
-                    and (s.code<>'VALIDATED' or al.completed_at is null or al.validated_at is null))
+              and """ + FinalApprovalSql.PREDICATE + """
               and (:role in ('ADMIN','COORDINADOR')
                 or (:role='OPERARIO' and i.assigned_to_user_id=:actor)
                 or (:role='SUPERVISOR' and exists(select 1 from teams t where t.id=i.team_id

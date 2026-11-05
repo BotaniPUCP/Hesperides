@@ -9,3 +9,4 @@ export * from './maintenance';
 export * from './map';
 export * from './places';
 export * from './incidents';
+export * from './reports';

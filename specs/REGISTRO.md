@@ -22,6 +22,7 @@
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
+| SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -39,6 +40,7 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-C01 §3.1 | SPEC-202 (4 nov 2026) | Colores de los badges de reportes sobre `Badge`, en el orden neutro → ámbar → rojo: `ON_TARGET` success, `WITHIN_TOLERANCE` warning, `OVERDUE` danger; «No evaluable», `NOT_APPLICABLE` y «Sin datos» neutral; «Regla provisional» info; variación favorable success, desfavorable danger, y sin sentido o igual neutral. No se crea ningún token ni color nuevo. En la misma fecha el equipo aprobó las decisiones pendientes de SPEC-202 y sus aclaraciones frente al código, que quedan escritas en el propio spec. |
 | SPEC-101 y SPEC-200 §2.9/P-01 | Respuestas posteriores del usuario y T09 local (29 oct 2026) | Actualizar solo lugares atendidos y conservar ejecución/aprobación como fechas distintas de una ocurrencia. Proveedor real con alcance por lector, cumplimiento por lugar/sección, ambas fechas visibles y sin cobertura global implícita. BY_SECTOR y referencias sin lugar estable mantienen límites explícitos. Se prepara borrador de PR y revisión del contrato con la referencia local de incidencias, que presenta colisión V022/modelo Intervention. Ver informes de T09 y de contrato; sin otra migración ni cambios en base de trabajo. |
 | SPEC-103 §4.2 · V027 | Observación JP / Equipo (04 nov 2026) | Historial de mediciones dendrométricas del ejemplar: se crea la tabla `green_element_measurements` (V027) para desacoplar el registro histórico de las dimensiones físicas (`height_m`, `trunk_height_m`, `dbh_cm`, `crown_radius_m`) de la fila única en `green_elements`, conservando la trazabilidad de la evolución del crecimiento en campo y evitando la pérdida de datos históricos al actualizar medidas. |
 | SPEC-200 §3.3 y plan T08 | Historial por ejemplar (29 oct 2026) | Asociación opcional por códigos al planificar; filtro privado por código con alcance, paginación y deduplicación; historial desde la ficha pública solo con sesión. Sin cambiar API pública del inventario ni migraciones. 667 pruebas backend y 571 frontend aprobadas, lint/build correctos. Revisión visual nueva pendiente por detención de Computer Use al no poder verificar la URL de Chrome. Se registra además la confirmación del usuario sobre las pruebas manuales satisfactorias de la entrega web anterior. Informe: `docs/planes/SPEC-200-etapa-5-historial-ejemplar.md`. |
@@ -183,6 +185,7 @@ Los números en citas históricas de otros specs no autorizan reutilizar version
 | Contratos y proveedores | SPEC-002 §4.7 | Intervenciones; definir la FK cuando ambas tablas existan |
 | Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
 | Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
+| Metas del resumen de reportes (dos filas en `system_parameters`, sin tablas) | SPEC-202 §4 | Solo datos; se numera al implementar el módulo de reportes |
 | Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
 
 Las antiguas pendientes `add_execution_tracking_to_interventions`,

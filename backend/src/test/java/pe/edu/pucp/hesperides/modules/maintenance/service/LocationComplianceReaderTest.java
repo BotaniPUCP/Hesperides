@@ -55,6 +55,7 @@ class LocationComplianceReaderTest {
         when(history.locationExecutions(10L,"IN_HOUSE",from,to)).thenReturn(List.of(fact(1,1,7,19)));
         var report=reader.evaluate(from,to,null).get(0);
         assertThat(report.locations()).isEmpty();assertThat(report.segments().get(0).explanation()).contains("territorial histórica");
+        assertThat(report.scope()).isEqualTo("BY_SECTOR");
     }
     @Test void calendarOnlyProvidersRetainCompatibility() {
         when(history.supportsLocationHistory()).thenReturn(false);
