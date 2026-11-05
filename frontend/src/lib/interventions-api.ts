@@ -34,6 +34,8 @@ export interface InterventionHistoryEvent {
   };
 }
 export interface InterventionDetail extends InterventionSummary {
+  incidentIntegrationAvailable?: boolean;
+  sourceIncidents?: { id: number; code: string | null; statusCode: string }[];
   description: string | null; locations: InterventionLocation[]; evidences: InterventionEvidence[];
   originItemId: number; reportedByItemId: number; externalCode: string | null; requestedAt: string | null;
   responsibleSupervisorUserId: number | null;

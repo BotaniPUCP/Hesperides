@@ -11,7 +11,7 @@
 >
 > **Versiones configuradas en el pom** (§5.2.1 documenta lo que Spring Boot 4
 > cambió respecto a 3.x): Spring Boot **4.1.1**, Spring Security **7.1.1**, Java **26**
-> (Temurin 25), JJWT **0.12.6**, Testcontainers **2.x**, JaCoCo **0.8.15**.
+> (Temurin 26), JJWT **0.12.6**, Testcontainers **2.x**, JaCoCo **0.8.15**.
 
 ---
 

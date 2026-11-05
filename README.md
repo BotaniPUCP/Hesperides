@@ -11,7 +11,7 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 
 El dominio funcional y las características específicas se definen en los specs de `specs/`. Este repositorio contiene por ahora la arquitectura base, las convenciones comunes y un sistema de catálogos configurables que permite extender tipos, estados y categorías sin recompilación.
 
-## Incidencias — prueba de concepto web
+## Incidencias — registro y atención web
 
 Disponible en `/incidencias` para `SUPERVISOR` (capataz) y `COORDINADOR`.
 Spec: [`SPEC-201`](specs/features/SPEC-201-incidencias.md).
@@ -22,11 +22,60 @@ La interfaz reutiliza los controles y el tema claro/oscuro del producto.
 
 - Capataz: enviar una frase, añadir fotos/ubicación opcionales y seguir sus envíos.
 - Coordinación: revisar, aprobar y asignar la atención a una cuadrilla.
-- Capataz responsable o coordinación: registrar intervenciones realizadas y resolver
-  cuando no quede ninguna pendiente. Se permiten varias intervenciones por incidencia.
+- Equipo encargado: ejecutar y finalizar intervenciones reales. Coordinación valida
+  el trabajo y después el cierre de cada incidencia, con resumen de resolución.
+  Las intervenciones se pueden compartir entre incidencias mediante vínculos N:M.
 - El tablero de coordinación cuenta estos casos y sus intervenciones, no el
   mantenimiento rutinario de otros módulos. Las categorías son provisionales;
   no hay IA ni aplicación React Native en esta entrega.
+
+### Matriz OSG y seguimiento
+
+La ampliación de SPEC-201 incorpora servicio/proceso/subproceso, empresa, severidad,
+impactos múltiples, responsable, causas raíz y acciones/mejora. La urgencia operativa
+anterior permanece separada de la severidad. Los correlativos `OSG-####` se asignan
+al aprobar, son propios de la plataforma y no se reinician por año. Los pendientes
+conservan su ID técnico. Los correlativos no se reutilizan; pueden tener huecos por
+transacciones abortadas.
+
+Cada vínculo de trabajo requerido indica mitigación o prevención. Para cerrar deben
+estar todas las intervenciones requeridas validadas por coordinación; texto y comentarios
+no acreditan ejecución ni validación. La comunicación queda dentro del caso, con autor y hora, sin
+integración WhatsApp. Coordinación puede exportar los aprobados a CSV UTF-8 con las
+23 columnas de la matriz; no exporta borradores ni aplica las fórmulas rotas del Excel.
+
+La duración cuenta días hábiles inclusivos entre recepción y cierre: lunes a martes
+= 2, un único día hábil = 1, solo fin de semana = 0. Configurar `INCIDENT_TIME_ZONE`
+(por defecto `America/Lima`) y **completar `INCIDENT_HOLIDAYS`** con fechas ISO separadas
+por comas. No hay feriados implícitos. Los cierres nuevos conservan el resultado; para
+casos cerrados anteriores a V028 se calcula con el calendario configurado. No hay SLA
+ni clasificación IA. Las referencias conocidas se buscan por nombre/alias sin inventar GPS.
+
+V028 amplía el esquema sin reescribir V001–V027. Reconstruir el backend antes de usar
+los contratos nuevos. No es necesario borrar la BD ni los volúmenes.
+
+### Registro y cierre separados; intervenciones reales (V029)
+
+La confirmación inicial de coordinación registra oficialmente y asigna OSG, incluso
+sin intervenciones. Opcionalmente puede devolver el reporte con motivo; el remitente
+corrige y reenvía el mismo registro, conservando la recepción y el texto original.
+
+Después se seleccionan intervenciones del módulo real, con relación N:M. «Registrar
+nueva intervención» abre su formulario y vuelve con el trabajo preseleccionado; el
+vínculo requiere confirmación. Se conserva la navegación filtrada y se advierten
+ediciones pendientes. Las intervenciones nuevas desde este flujo son hallazgos; la
+clasificación de origen se selecciona explícitamente.
+
+El equipo ejecuta y reporta finalización; coordinación valida u observa; el capataz
+reabre y corrige. Solo después de validar todas las intervenciones requeridas puede
+**coordinación** cerrar cada incidencia, con breve resumen obligatorio de resolución.
+No hay cierre automático de incidencias compartidas. Observar/reabrir una incidencia
+no invalida automáticamente intervenciones aprobadas.
+
+Los trabajos antiguos permanecen de solo lectura: no equivalen a intervenciones
+validadas ni se convierten inventando fechas o ubicaciones. En casos abiertos,
+coordinación debe asociarlos expresamente a intervenciones reales antes del cierre.
+Los cierres históricos se conservan. V029 es aditiva; no requiere borrar volúmenes.
 
 Solo la descripción es obligatoria para informar o aprobar. Fotos JPEG/PNG/WebP:
 máximo seis por incidencia y 5 MiB por archivo. La posición del teléfono se obtiene

@@ -81,12 +81,13 @@ class InterventionsIntegrationTest {
         return json.readTree(mvc.perform(post("/api/v1/interventions").header("Idempotency-Key",key).contentType("application/json").content(json.writeValueAsString(body)))
             .andExpect(status().is(status)).andReturn().getResponse().getContentAsString()).get("data");
     }
-    @Test void createsThreeStableLocationsWithoutIncidentTables() throws Exception {
+    @Test void createsStandaloneWorkWithNoSourceIncidents() throws Exception {
         var d=create(plan(),UUID.randomUUID().toString(),201);
         assertThat(d.get("locations").size()).isEqualTo(3);
         assertThat(d.get("statusCode").asString()).isEqualTo("PLANNED");
         assertThat(d.get("version").asLong()).isZero();
-        assertThat(d.get("incidentIntegrationAvailable").asBoolean()).isFalse();
+        assertThat(d.get("incidentIntegrationAvailable").asBoolean()).isTrue();
+        assertThat(d.get("sourceIncidents").size()).isZero();
         assertThat(d.get("history").size()).isEqualTo(1);
         assertThat(d.get("completedAt").isNull()).isTrue();
         assertThat(java.time.Duration.between(java.time.Instant.parse(d.get("createdAt").asString()),java.time.Instant.now()).abs().getSeconds()).isLessThan(20);
@@ -215,7 +216,7 @@ class InterventionsIntegrationTest {
         mvc.perform(get("/api/v1/interventions").param("zoneId",zoneIds.get(1).toString()).param("size","1").param("dateFrom","2026-10-23"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(1))).andExpect(jsonPath("$.data.page.totalElements").value(1));
         mvc.perform(get("/api/v1/interventions").param("sort","description,desc")).andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/interventions").param("incidentId","1")).andExpect(status().isUnprocessableEntity());
+        mvc.perform(get("/api/v1/interventions").param("incidentId","1")).andExpect(status().isNotFound());
     }
     @Test void planningResolvesElementCodesAndPreservesAssociationsWhenEditing() throws Exception {
         long element=jdbc.queryForObject("select id from green_elements where deleted_at is null and is_active order by id limit 1",Long.class);

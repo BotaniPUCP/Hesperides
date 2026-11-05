@@ -4,15 +4,16 @@
 
 Usar un entorno local de desarrollo con datos desechables: PostgreSQL/PostGIS y
 backend en contenedores, frontend con Bun local. La imagen del backend incluye
-JDK 25; no hace falta ejecutar Java ni exportar sus variables manualmente. El módulo
-aplica V026 después de las migraciones de develop. El servicio Flask no interviene.
+JDK 26; no hace falta ejecutar Java ni exportar sus variables manualmente. El módulo
+aplica V026–V029 después de las migraciones de develop. El servicio Flask no interviene.
 No conectar esta demostración a una base real.
 No usar `.env` ni credenciales reales en una prueba automatizada compartida.
 
 Con el perfil `dev`, Flyway ejecuta automáticamente
 `backend/src/main/resources/db/dev-migration/R__seed_demo_incidents.sql` después de
 las migraciones del esquema. Crea dos capataces, un coordinador, dos cuadrillas,
-ocho incidencias y doce intervenciones. Contraseña pública de prueba:
+ocho incidencias y doce trabajos del prototipo, conservados de solo lectura. No los
+convierte automáticamente en intervenciones reales validadas. Contraseña pública de prueba:
 `Hesperides2026`. Los nombres de cuenta terminan en `@demo.invalid`.
 
 Preparar `.env` con los valores de `.env.example`: completar `POSTGRES_PASSWORD`,
@@ -72,10 +73,12 @@ coordinador ve los ocho. En una base sin otras incidencias, el tablero comienza 
 | Pendientes de atención | 2 |
 | En atención | 2 |
 | Resueltas | 2 |
-| Intervenciones realizadas | 5 |
+| Intervenciones reales finalizadas | 0 |
+| Intervenciones reales validadas | 0 |
 
-El caso del Tontódromo tiene una intervención realizada y otra pendiente, útil para
-demostrar la resolución parcial. El caso de la puerta principal contiene solo el
+El caso del Tontódromo conserva un trabajo realizado y otro pendiente. Desde V029
+sirve para demostrar la asociación explícita del legado, no para marcarlo finalizado
+sin ejecución/revisión del módulo real. El caso de la puerta principal contiene solo el
 texto mínimo. Las coordenadas de ejemplo son ilustrativas; no se crean fotografías
 ficticias. Flyway aplica esta migración repetible en una base nueva y cuando cambia
 su contenido, no en cada `compose up` si la base ya está al día. Después de una
@@ -98,19 +101,28 @@ capataz; cambiar el rol de ADMIN no es necesario.
    detalle: pendiente de aprobación, remitente y fecha de recepción visibles.
 3. Repetir con una fotografía y, si el contexto es HTTPS/localhost, ubicación.
    Denegar ubicación y comprobar que sigue siendo posible enviar.
-4. Entrar como `coordinador@demo.invalid`. Ver el contador de pendientes y abrir
-   el caso. Revisar la sugerencia provisional, dejar urgencia desconocida o elegirla,
-   comprobar la cuadrilla y **Aprobar registro**.
-5. Planificar dos intervenciones (desmarcar «Trabajo ya realizado»). La incidencia
-   permanece pendiente hasta iniciar o registrar ejecución.
-6. Volver a `capataz@demo.invalid`; marcar una intervención realizada. La incidencia
-   pasa a **En atención**, pero no permite resolver mientras quede otra pendiente.
-7. Completar la segunda y **Resolver incidencia**. Revisar historial y tablero:
-   una incidencia resuelta más y dos intervenciones realizadas más que al inicio.
-8. Entrar como `otro-capataz@demo.invalid`: ve sus propios casos, no el caso creado
+4. Entrar como `coordinador@demo.invalid`. Opcionalmente **Devolver para corrección**
+   con un motivo; volver al capataz, corregir y **Reenviar para revisión**. Comprobar
+   que siguen siendo el mismo ID, recepción y texto original conservado.
+5. Coordinación revisa matriz, cuadrilla y datos recibidos y pulsa **Registrar incidencia
+   oficialmente**. Se asigna OSG, incluso sin intervenciones; el cierre sigue bloqueado.
+6. **Registrar nueva intervención** abre el módulo real. Seleccionar clasificación de
+   origen, clase/tipo, fecha y ubicaciones verdaderas. Guardar y volver: queda preseleccionada,
+   pero solo se asocia al confirmar **Vincular intervención**. También se puede elegir
+   una existente y compartirla entre incidencias. Para legado, marcar qué registros sustituye.
+7. En la intervención, coordinación asigna cuadrilla y ejecutor. El capataz inicia,
+   registra evidencia de la ubicación/intento y reporta terminada. Esto no habilita
+   todavía el cierre de la incidencia.
+8. Coordinación revisa las ubicaciones: **Observar** con motivo devuelve a corrección;
+   el capataz abre otro intento y lo finaliza con sus evidencias. **Aprobar** valida
+   cada ubicación; la intervención completa solo queda validada al aprobarlas todas.
+9. Volver a cada incidencia. Solo coordinación, con todas sus requeridas validadas,
+   completa **Cómo se resolvió la incidencia** y **Validar resolución y cerrar incidencia**.
+   Un trabajo compartido no cierra automáticamente ningún caso. Cada cierre tiene su resumen.
+10. Entrar como `otro-capataz@demo.invalid`: ve sus propios casos, no el caso creado
    para la otra cuadrilla.
-9. En una ventana de unos 390 px, repetir captura/listado/detalle sin scroll lateral.
-10. Cambiar entre claro y oscuro; revisar controles, avisos y badges. Abrir un detalle,
+11. En una ventana de unos 390 px, repetir captura/listado/detalle sin scroll lateral.
+12. Cambiar entre claro y oscuro; revisar controles, avisos y badges. Abrir un detalle,
     recargar su URL y volver con el navegador y el breadcrumb: se conservan los filtros.
 
 ## Fotografías
@@ -137,7 +149,8 @@ sin error. Configuración Compose base/dev validada, incluidos los montajes de
 almacenamiento y recarga. Falta comprobar captura de cámara en un Android físico y recoger las
 observaciones del cliente; no se probó contra un bucket S3 real.
 
-- Categorías provisionales hasta recibir la matriz del cliente; no se infiere riesgo.
+- La matriz OSG entregada aporta servicios, causas, severidad e impactos; la categoría
+  operativa del prototipo permanece provisional y no se infiere riesgo.
 - Sin IA, notificaciones, integración con WhatsApp ni app React Native.
 - Sin mapa interactivo: referencia textual y coordenadas editables; ningún registro
   depende de cargar mapas o de habilitar GPS.

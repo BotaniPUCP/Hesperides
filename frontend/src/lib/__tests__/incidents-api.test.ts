@@ -24,3 +24,10 @@ it('reads private photo content through the authenticated JSON client', () => {
   incidentsApi.photo(7, 3);
   expect(apiClient.get).toHaveBeenCalledWith('/incidents/7/photos/3');
 });
+
+it('keeps matrix export and comments on the central authenticated client', () => {
+  incidentsApi.export();
+  expect(apiClient.get).toHaveBeenCalledWith('/incidents/export');
+  incidentsApi.comment(7, 'Actualización', 'stable-reference');
+  expect(apiClient.post).toHaveBeenCalledWith('/incidents/7/comments', { body: 'Actualización', clientReference: 'stable-reference' });
+});

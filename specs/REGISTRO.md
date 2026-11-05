@@ -32,7 +32,9 @@
 
 SPEC-201 ajusta SPEC-001 Anexo A (aprobación exclusiva de coordinación y resolución
 por capataz), SPEC-002 §4.8 (captura mínima, ubicación opcional, 1:N intervenciones)
-y SPEC-C01 (estados). La matriz del cliente sigue pendiente; categorías provisionales.
+y SPEC-C01 (estados). La ampliación de noviembre usa la matriz OSG entregada:
+severidad/impactos separados, catálogo de causas y servicios, acciones requeridas,
+numeración propia, comunicación interna y cierre en días hábiles inclusivos. Sin IA.
 
 Cuando un spec de feature obliga a corregir uno fundacional ya cerrado, la enmienda se aplica al
 archivo original (marcada como cita con su procedencia) y se anota aquí. Nadie debe descubrir por
@@ -40,7 +42,10 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| Mapa de migraciones · SPEC-201 · SPEC-002 §4.8 | Integración de noviembre (5 nov 2026) | Inventario verde e incidencias usaron ambos `V027`. Inventario verde conserva `V027`; incidencias pasa a `V028` y `V029`, y sus citas se actualizan. |
 | SPEC-C01 §3.1 | SPEC-202 (4 nov 2026) | Colores de los badges de reportes sobre `Badge`, en el orden neutro → ámbar → rojo: `ON_TARGET` success, `WITHIN_TOLERANCE` warning, `OVERDUE` danger; «No evaluable», `NOT_APPLICABLE` y «Sin datos» neutral; «Regla provisional» info; variación favorable success, desfavorable danger, y sin sentido o igual neutral. No se crea ningún token ni color nuevo. En la misma fecha el equipo aprobó las decisiones pendientes de SPEC-202 y sus aclaraciones frente al código, que quedan escritas en el propio spec. |
+| SPEC-001 Anexo A · SPEC-002 §4.8 · SPEC-200 §3.6 · SPEC-201 | Aclaraciones del cliente y del usuario (5 nov 2026) | Registro oficial separado del cierre, devolución/corrección/reenvío inicial opcionales, N:M con intervenciones reales y creación con retorno/preselección. Equipo finaliza, coordinación valida trabajo y luego cada incidencia con resumen obligatorio. Legado conservado sin ejecución/validación inventadas; cierres independientes y lectura de fuentes/eventos con alcance propio. V029 aditiva. |
+| SPEC-201 y REGLAS · toolchain | Plan aprobado y aclaraciones del usuario (4 nov 2026) | Matriz OSG, acciones de mitigación/prevención completadas antes de cerrar, correlativo propio al aprobar y días hábiles inclusivos recepción→cierre. Comunicación dentro del caso; sin integración WhatsApp ni IA. Bun y Podman para verificación local, sin alterar lockfile npm. El proyecto se mantiene en Java 26 (integración de noviembre). |
 | SPEC-101 y SPEC-200 §2.9/P-01 | Respuestas posteriores del usuario y T09 local (29 oct 2026) | Actualizar solo lugares atendidos y conservar ejecución/aprobación como fechas distintas de una ocurrencia. Proveedor real con alcance por lector, cumplimiento por lugar/sección, ambas fechas visibles y sin cobertura global implícita. BY_SECTOR y referencias sin lugar estable mantienen límites explícitos. Se prepara borrador de PR y revisión del contrato con la referencia local de incidencias, que presenta colisión V022/modelo Intervention. Ver informes de T09 y de contrato; sin otra migración ni cambios en base de trabajo. |
 | SPEC-103 §4.2 · V027 | Observación JP / Equipo (04 nov 2026) | Historial de mediciones dendrométricas del ejemplar: se crea la tabla `green_element_measurements` (V027) para desacoplar el registro histórico de las dimensiones físicas (`height_m`, `trunk_height_m`, `dbh_cm`, `crown_radius_m`) de la fila única en `green_elements`, conservando la trazabilidad de la evolución del crecimiento en campo y evitando la pérdida de datos históricos al actualizar medidas. |
 | SPEC-200 §3.3 y plan T08 | Historial por ejemplar (29 oct 2026) | Asociación opcional por códigos al planificar; filtro privado por código con alcance, paginación y deduplicación; historial desde la ficha pública solo con sesión. Sin cambiar API pública del inventario ni migraciones. 667 pruebas backend y 571 frontend aprobadas, lint/build correctos. Revisión visual nueva pendiente por detención de Computer Use al no poder verificar la URL de Chrome. Se registra además la confirmación del usuario sobre las pruebas manuales satisfactorias de la entrega web anterior. Informe: `docs/planes/SPEC-200-etapa-5-historial-ejemplar.md`. |
@@ -91,7 +96,7 @@ sorpresa que un principio fundacional cambió.
 | **SPEC-C01 §4.2 (nueva) y §9** | Sidebar de navegación (1 oct 2026) | La navegación pasa de una lista de enlaces en el inicio a un **sidebar** con módulos desplegables, **un grupo por módulo del dominio** (hoy solo «Administración»). La estructura vive en `lib/navigation.ts` con los roles por ítem; las pantallas con sesión se mueven al grupo `app/(dashboard)/`, que aplica guard y sidebar una sola vez. Se retiran los «Volver al inicio». Catálogos, que no tenía enlace, queda accesible desde el sidebar para `ADMIN`. |
 | Todos los specs | Refactor a formato atómico | Las invariantes comunes salen a **`REGLAS.md`** (lectura obligatoria antes de generar código): las diez invariantes, las convenciones de SPEC-000 §5 —con §5.2.1 de Spring Boot 4 y §5.2.2 de CORS íntegras— y el checklist común. SPEC-000 pierde la copia de `_plantilla.md` y los resúmenes de los otros specs, que ya contradecían a SPEC-001. En cada spec, las secciones genéricas de Seguridad, Extensibilidad y Checklist se funden en una sola "Propio de este spec". **La numeración se conserva**: toda referencia `SPEC-XXX §N` sigue siendo válida, y `SPEC-000 §5.x` pasa a `REGLAS.md §5.x` con el mismo número. Ninguna decisión técnica, contrato ni criterio de aceptación cambió. |
 | SPEC-002 §4.9 | SPEC-101 | Antes del realineamiento al baseline, `V010` correspondía a `V010__create_maintenance_frequencies.sql` y `V009` contenía la taxonomía. Referencia histórica: las frecuencias vigentes están en `V002` y la taxonomía en el baseline `V001`, según el mapa de migraciones de abajo. |
-| SPEC-000 · REGLAS | Ajuste de toolchain e infraestructura | Se mantiene Java **26** (la propuesta de bajar a 25 LTS se descartó al integrar). Docker y Podman son alternativas sobre `docker-compose.yml` y `docker-compose.dev.yml`; CI conserva Docker Compose y `AGENTS.md` usa Podman para el desarrollo local de este usuario. |
+| SPEC-000 · REGLAS | Ajuste histórico de toolchain e infraestructura (superado el 4 nov 2026) | En aquella integración se mantuvo Java **26**. La instrucción posterior del usuario restablece **25 LTS** en REGLAS, pom, CI e imágenes. Docker y Podman siguen siendo alternativas sobre `docker-compose.yml` y `docker-compose.dev.yml`; CI conserva Docker Compose y el desarrollo local usa Podman. |
 | SPEC-201 · SPEC-C01 | Realineamiento tras integrar develop (24 oct 2026; ejecución y almacenamiento simplificados el 29 oct) | Rutas de captura/detalle con filtros en URL, consultas independientes sobre `useRequest` y controles compartidos con tamaño grande optativo. Se conservan los tokens claro/oscuro actuales. Fotos privadas únicamente mediante `FileStorage` y claves `incidents/{uuid}`, sin conversión ni cambio de límites. Base/dev conservan volúmenes y hot reload; la demostración usa BD/backend en contenedores y Bun local, con `down --volumes` para descartar los datos de prueba de todo el proyecto. No cambia el esquema ni ninguna migración publicada. |
 
 ---
@@ -171,10 +176,13 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V024 | `V024__create_irrigation_turns.sql` | M7 riego | Turnos de riego y sus secciones |
 | V025 | `V025__create_interventions.sql` | SPEC-200 §4 | Núcleo multiubicación: seis tablas, código interno y catálogos ausentes; probado en bases temporales, no aplicado a la base de trabajo |
 | V026 | `V026__create_incident_workflow.sql` | SPEC-201 | Incidencias: captura mínima, aprobación, trabajos vinculados (`incident_interventions`), historial y fotos privadas |
+| V027 | `V027__create_specimen_measurements_history.sql` | SPEC-103 §4.2 | Historial de mediciones dendrométricas del ejemplar |
+| V028 | `V028__align_incidents_with_osg_matrix.sql` | SPEC-201 | Catálogos OSG, campos de matriz, impactos múltiples, numeración de aprobados, propósito de acciones, comunicación y duración congelada al cierre |
+| V029 | `V029__integrate_incident_interventions_and_reviews.sql` | SPEC-201 / SPEC-200 | Vínculos N:M con intervenciones reales, corrección inicial, resumen/actor de resolución, observaciones y sustitución explícita del legado sin fabricar ejecución |
 
 ### Pendientes (sin número reservado)
 
-Al 22 oct 2026 el siguiente número libre es **V027**, sujeto a comprobarlo nuevamente al
+Al 5 nov 2026 el siguiente número libre es **V030**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

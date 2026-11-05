@@ -24,6 +24,8 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
           and (cast(:status as varchar) is null or a.status_code=:status)
           and (cast(:dateFrom as date) is null or i.scheduled_date>=:dateFrom)
           and (cast(:dateTo as date) is null or i.scheduled_date<=:dateTo)
+          and (cast(:incidentId as bigint) is null or exists(select 1 from incident_intervention_links il
+            where il.intervention_id=i.id and il.incident_id=:incidentId and il.deleted_at is null))
           and exists(select 1 from intervention_locations l join catalog_items ls on ls.id=l.status_item_id
             where l.intervention_id=i.id and l.deleted_at is null
               and (cast(:zone as bigint) is null or l.zone_id=:zone)
@@ -43,5 +45,5 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
         @Param("assignee") Long assignee,@Param("status") String status,@Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo,@Param("zone") Long zone,@Param("place") Long place,
         @Param("localStatus") String localStatus,@Param("element") Long element,
-        @Param("elementCode") String elementCode,Pageable pageable);
+        @Param("elementCode") String elementCode,@Param("incidentId") Long incidentId,Pageable pageable);
 }
