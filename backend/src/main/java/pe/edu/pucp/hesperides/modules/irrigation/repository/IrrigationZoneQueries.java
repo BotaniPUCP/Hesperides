@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationZoneResponse;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /** zones todavía no tiene entidad JPA. SQL parametrizado sobre el catálogo existente. */
@@ -12,6 +13,23 @@ import java.util.List;
 @RequiredArgsConstructor
 public class IrrigationZoneQueries {
     private final JdbcTemplate jdbc;
+
+    /**
+     * Qué es «una sección de un sector»: la regla la comparten riego y reportes
+     * (SPEC-202 §2.1), así que vive una sola vez.
+     */
+    private static final String SECTIONS_OF_SECTOR = """
+        FROM zones z
+        JOIN catalog_items ci ON ci.id = z.zone_type_item_id
+        JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+        WHERE ct.code = 'ZONE_TYPE' AND ci.code = 'SECTION'
+          AND z.parent_zone_id = ? AND z.is_active = TRUE AND z.deleted_at IS NULL
+        ORDER BY z.name
+        """;
+
+    /** Una sección con su superficie; la superficie es nula si el mapa no la trae. */
+    public record SectionWithArea(Long id, String code, String name, BigDecimal areaM2) {
+    }
 
     public List<IrrigationZoneResponse> sectors() {
         return jdbc.query("""
@@ -26,15 +44,16 @@ public class IrrigationZoneQueries {
     }
 
     public List<IrrigationZoneResponse> sectionsOf(Long sectorId) {
-        return jdbc.query("""
-            SELECT z.id, z.code, z.name FROM zones z
-            JOIN catalog_items ci ON ci.id = z.zone_type_item_id
-            JOIN catalog_types ct ON ct.id = ci.catalog_type_id
-            WHERE ct.code = 'ZONE_TYPE' AND ci.code = 'SECTION'
-              AND z.parent_zone_id = ? AND z.is_active = TRUE AND z.deleted_at IS NULL
-            ORDER BY z.name
-            """, (rs, n) -> new IrrigationZoneResponse(
+        return jdbc.query("SELECT z.id, z.code, z.name " + SECTIONS_OF_SECTOR,
+            (rs, n) -> new IrrigationZoneResponse(
                 rs.getLong("id"), rs.getString("code"), rs.getString("name")), sectorId);
+    }
+
+    /** Misma regla que {@link #sectionsOf(Long)}, con la superficie que necesitan los reportes. */
+    public List<SectionWithArea> sectionsWithAreaOf(Long sectorId) {
+        return jdbc.query("SELECT z.id, z.code, z.name, z.area_m2 " + SECTIONS_OF_SECTOR,
+            (rs, n) -> new SectionWithArea(rs.getLong("id"), rs.getString("code"),
+                rs.getString("name"), rs.getBigDecimal("area_m2")), sectorId);
     }
 
     public List<Long> activeSectorsOfSupervisor(Long userId) {
