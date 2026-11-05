@@ -65,7 +65,7 @@ export function SpecimenFiltersBar({
             autoComplete="off"
             value={searchValue}
             onChange={onSearchChange}
-            placeholder="Buscar por código, referencia (ej. p01), especie o notas..."
+            placeholder="Buscar por código, referencia (ej. p01) o especie..."
             leadingIcon={
               <svg
                 className="h-4 w-4 text-neutral-400"
