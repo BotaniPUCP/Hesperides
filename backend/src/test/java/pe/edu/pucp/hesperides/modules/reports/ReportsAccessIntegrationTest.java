@@ -17,6 +17,7 @@ class ReportsAccessIntegrationTest extends ReportsIntegrationSupport {
         mvc.perform(get("/api/v1/reports/options").with(as(operator))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/reports/options/sections").param("sectorId", String.valueOf(sector)).with(as(operator)))
                 .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/reports/monthly").with(as(operator))).andExpect(status().isForbidden());
     }
 
     @Test

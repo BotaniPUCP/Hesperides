@@ -126,6 +126,35 @@ final class ReportFixtures {
                 completedUtc, executor.id(), validated, validator.id());
     }
 
+    /**
+     * An incident registered at {@code createdAt} (ISO-8601 with offset) whose
+     * history starts with {@code initialStatus}. The current status is set by
+     * {@link #changeStatus}.
+     */
+    long incident(Account reporter, Long teamId, String initialStatus, String createdAt, Double lat, Double lon) {
+        long id = jdbc.queryForObject("""
+            insert into incidents(original_description,description,latitude,longitude,status_item_id,
+                reported_by_user_id,team_id,client_reference,request_hash,created_at,updated_at)
+            values (?,?,?,?,?,?,?,gen_random_uuid(),'test',?::timestamptz,?::timestamptz) returning id
+            """, Long.class, "Incidencia de prueba", "Incidencia de prueba", lat, lon,
+                item("INCIDENT_STATUS", initialStatus), reporter.id(), teamId, createdAt, createdAt);
+        history(id, initialStatus, createdAt, reporter);
+        return id;
+    }
+
+    void changeStatus(long incidentId, String status, String at, Account by) {
+        jdbc.update("update incidents set status_item_id=?, resolved_at=case when ?='RESOLVED' then ?::timestamptz end where id=?",
+                item("INCIDENT_STATUS", status), status, at, incidentId);
+        history(incidentId, status, at, by);
+    }
+
+    private void history(long incidentId, String status, String at, Account by) {
+        jdbc.update("""
+            insert into incident_status_history(incident_id,status_item_id,changed_by_user_id,created_at,updated_at)
+            values (?,?,?,?::timestamptz,?::timestamptz)
+            """, incidentId, item("INCIDENT_STATUS", status), by.id(), at, at);
+    }
+
     /** One approved work with a single location in {@code zoneId}, executed at {@code completedUtc}. */
     long approvedWork(long typeId, long teamId, Account operator, Account coordinator, Long zoneId, String completedUtc) {
         long work = work(typeId, teamId, operator, coordinator, "ASSIGNED");

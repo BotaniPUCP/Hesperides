@@ -1,5 +1,7 @@
 package pe.edu.pucp.hesperides.modules.reports.service;
 
+import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportFilter;
+import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportSectionResponse;
 
@@ -11,4 +13,6 @@ public interface ReportsService {
     ReportOptionsResponse options(String email);
 
     List<ReportSectionResponse> sections(Long sectorId, String email);
+
+    MonthlyReportResponse monthly(MonthlyReportFilter filter, String email);
 }

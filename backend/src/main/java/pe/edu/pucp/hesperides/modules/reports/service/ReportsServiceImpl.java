@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.engine.reporting.DateRange;
 import pe.edu.pucp.hesperides.engine.reporting.ReportPeriods;
 import pe.edu.pucp.hesperides.modules.irrigation.repository.IrrigationZoneQueries;
+import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportFilter;
+import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse.Defaults;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse.Period;
@@ -29,6 +31,8 @@ public class ReportsServiceImpl implements ReportsService {
     private final IrrigationZoneQueries zones;
     private final TeamsRepository teams;
     private final InterventionReportQueries interventions;
+    private final MonthlyFilterValidator monthlyFilters;
+    private final MonthlyReportBuilder monthlyReports;
 
     @Override
     @Transactional(readOnly = true)
@@ -60,6 +64,13 @@ public class ReportsServiceImpl implements ReportsService {
         return zones.sectionsWithAreaOf(sectorId).stream()
                 .map(s -> new ReportSectionResponse(s.id(), s.code(), s.name(), s.areaM2()))
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MonthlyReportResponse monthly(MonthlyReportFilter filter, String email) {
+        ReportScope scope = scopes.resolve(email);
+        return monthlyReports.build(monthlyFilters.resolve(filter, scope), scope);
     }
 
     /** 404 and not 403 for a sector outside the scope: it must not confirm that it exists (§3.6). */
