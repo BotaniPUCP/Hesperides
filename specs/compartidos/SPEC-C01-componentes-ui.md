@@ -148,6 +148,25 @@ El `code` es el de `catalog_items` de `URGENCY_LEVEL` (SPEC-002 §4.9). Esta esc
 
 `UrgencyBadge` en nivel `CRITICAL` es el único caso del sistema que además añade un ícono de alerta junto al texto: la urgencia crítica no puede depender solo del color (ver sección 4, accesibilidad — no depender del color únicamente).
 
+#### Badges de reportes
+
+> **Enmienda SPEC-202 (4 nov 2026).** Los reportes pintan veredictos de cumplimiento,
+> variaciones y avisos con `Badge` existente, en el mismo orden neutro → ámbar → rojo. No
+> se crea ningún token: cada fila usa un `color` que `Badge` ya ofrece.
+
+| Badge | `color` de `Badge` |
+|---|---|
+| `ON_TARGET` | `success` |
+| `WITHIN_TOLERANCE` | `warning` |
+| `OVERDUE` | `danger` |
+| «No evaluable», `NOT_APPLICABLE` y «Sin datos» | `neutral` |
+| «Regla provisional» | `info` |
+| Variación favorable | `success` |
+| Variación desfavorable | `danger` |
+| Variación sin meta de sentido, o igual | `neutral` |
+
+La variación lleva además ▲, ▼ o = y una palabra: el color nunca es la única señal (§8.2).
+
 ### 3.2 Tipografía
 
 | Token | Valor | Uso |

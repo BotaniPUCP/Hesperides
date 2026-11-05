@@ -60,7 +60,7 @@ solo con lo que ya está registrado en el sistema.
 |---|---|
 | `ComplianceReader.evaluate(from, to, null)` (SPEC-101, T09) | Cumplimiento por lugar; ya aplica el alcance del lector y la aprobación final |
 | Predicado de aprobación final de `InterventionExecutionHistoryProvider` | Qué trabajo cuenta (D-02). Se extrae a una constante compartida del módulo `interventions` para que exista **una sola definición** |
-| `IrrigationZoneQueries.activeSectorsOfSupervisor` y `sectionsOf` (M7) | Sectores del SUPERVISOR y secciones de un sector, con **la misma regla** que ya aplica riego |
+| `IrrigationZoneQueries.activeSectorsOfSupervisor` y `sectionsOf` (M7) | Sectores del SUPERVISOR y secciones de un sector, con **la misma regla** que ya aplica riego. `sectionsOf` no devuelve `area_m2`: se añade en la misma clase un método hermano con el mismo `WHERE`, sin cambiar el contrato de riego |
 | `irrigation_turns`, `irrigation_turn_sections` (V024) | Riego registrado |
 | `incidents`, `incident_status_history` (V026) | Incidencias y su estado en una fecha (el alta ya escribe su estado inicial en el historial) |
 | `zones` (`parent_zone_id`, `area_m2`, `boundary`, `ZONE_TYPE`) (V005), `places.zone_id` (V018) | Jerarquía, superficie y ubicación |
@@ -98,8 +98,9 @@ solo con lo que ya está registrado en el sistema.
 - **Textos** en `frontend/src/components/reports/reportTexts.ts`: rótulos de indicadores,
   motivos de «Sin datos» y nombres de pestañas. El backend envía códigos, no textos
   (SPEC-C02 §11).
-- **Navegación:** se conserva el enlace directo «Reportes» en `DIRECT_LINKS` de
-  `lib/navigation.ts`, para `ADMIN`, `COORDINADOR` y `SUPERVISOR` (D-09).
+- **Navegación:** se añade el enlace directo «Reportes» en `DIRECT_LINKS` de
+  `lib/navigation.ts`, para `ADMIN`, `COORDINADOR` y `SUPERVISOR` (D-09). Hasta este spec
+  no existía.
 
 ### 2.3 Móvil
 
@@ -128,10 +129,10 @@ pestaña Semanal es la suya.
 | **D-02** | **Qué trabajo cuenta:** solo con aprobación final, es decir, planificación `ASSIGNED` y todas sus ubicaciones activas `VALIDATED` (SPEC-200 D-06). La fecha es la **ejecución física** (`completed_at`) en fecha civil de la zona configurada. Por trabajo y sección cuenta una vez, en la última ejecución de sus piezas allí (T09). Se consulta en forma retrospectiva: la aprobación debe existir al consultar. | Usar la fecha de aprobación: un trabajo del 30/10 aprobado el 3/11 caería en noviembre |
 | **D-03** | **Sección del objetivo:** `intervention_locations.zone_id` o, si es nula, `places.zone_id`. Una subsección cuenta para su sección padre. Una ubicación sin sección no cubre nada. | Ubicar el trabajo por su punto GPS: SPEC-200 D-06 prohíbe inferir cobertura desde un punto |
 | **D-04** | **Denominador de cobertura:** secciones activas y no borradas dentro del filtro. Las que no tienen `area_m2` se cuentan aparte (`sectionsWithoutArea`). Las que no tienen sector padre forman la fila «Sin sector». `CAMPUS_TOTAL_HECTARES` (41 ha) **no** sirve de denominador porque es el campus entero: solo se muestra en la cabecera del resumen. | Excluir los sectores sin cuadrilla propia: escondería que su trabajo aún no se registra |
-| **D-05** | **Cumplimiento:** se agregan los resultados por lugar de `ComplianceReader`. El veredicto de un lugar es su tramo más grave (`OVERDUE` > `WITHIN_TOLERANCE` > `ON_TARGET` > `NOT_APPLICABLE`). `OUTSOURCED` y `BY_SECTOR` se muestran «No evaluable». | Reimplementar la evaluación de frecuencias |
+| **D-05** | **Cumplimiento:** se agregan los resultados por lugar de `ComplianceReader`. El veredicto de un lugar es su tramo más grave (`OVERDUE` > `WITHIN_TOLERANCE` > `ON_TARGET` > `NOT_APPLICABLE`); `NOT_CONFIGURED` suma en `notApplicable`. `OUTSOURCED` y `BY_SECTOR` se muestran «No evaluable», con `notEvaluableReason` igual a `OUTSOURCED` o `BY_SECTOR`. Para distinguir `BY_SECTOR`, `ComplianceResponse` gana el campo `scope`. | Reimplementar la evaluación de frecuencias |
 | **D-06** | **Incidencias:** «abiertas» = `OPEN` + `IN_PROGRESS`; `PENDING_APPROVAL` va aparte. El **estado en una fecha** se reconstruye con `incident_status_history`. Una incidencia pertenece a un sector en este orden: (1) sus coordenadas caen dentro de una sección del sector (`ST_Covers`); (2) si no tiene coordenadas, la cuadrilla asignada tiene ese sector (`teams.zone_id`). Si no cumple ninguna, es «sin sector identificable» y se cuenta aparte. **Días abierta** = fecha civil del corte − fecha civil del registro. | Mostrar «En plazo»: los plazos por urgencia no están confirmados (catálogo 5.6) |
 | **D-07** | **Permisos por pestaña** (Anexo A, filas 5 y 6). Se declaran **explícitamente** en este controller y **no** se cambia el mapeo global de roles: ADMIN entra aunque su authority no incluya la de COORDINADOR. La tabla y su justificación están debajo de esta. | Implementar el superconjunto ADMIN ⊃ COORDINADOR en `CustomUserDetailsService`: cambio transversal que necesita su propio spec |
-| **D-08** | **Alcance del SUPERVISOR:** sus cuadrillas son las que dirige (`teams.supervisor_user_id`, activas). Sus sectores son los `teams.zone_id` de esas cuadrillas, **la misma regla que ya aplica el módulo de riego** (`activeSectorsOfSupervisor`). Sin sectores, la Semanal muestra «Tu cuadrilla no tiene sector asignado» y la cobertura de la Mensual queda `available: false`. | Deducir su sector de los turnos de riego que registró: un dato de actividad no define una asignación |
+| **D-08** | **Alcance del SUPERVISOR:** sus cuadrillas son las que dirige (`teams.supervisor_user_id`, activas). Sus sectores son los `teams.zone_id` de esas cuadrillas, **la misma regla que ya aplica el módulo de riego** (`activeSectorsOfSupervisor`). Sin sectores, la Semanal muestra «Tu cuadrilla no tiene sector asignado» y la cobertura de la Mensual queda `available: false` con `unavailableReason: NO_SECTOR_ASSIGNED`. Aprobado el 4 nov 2026 aunque hoy ninguna cuadrilla real tenga sector: la pantalla lo avisa. | Deducir su sector de los turnos de riego que registró: un dato de actividad no define una asignación |
 | **D-09** | **Un solo enlace directo «Reportes»** en el sidebar, como Riego e Incidencias. Las tres pestañas viven dentro de la pantalla. | Tres ítems en un grupo M6: el usuario pidió una sola pantalla |
 | **D-10** | **Sin caché ni vistas materializadas:** se calcula al consultar, así que el reporte cambia con cada aprobación (F-01). Es un sistema de bajo volumen (dominio §12). | Vista materializada: refrescos programados y migración sin necesidad medida |
 | **D-11** | **Listas de tope fijo**, con `total`: secciones más atendidas, sin atención y sin regar (10); intervenciones de la semana (50); incidencias abiertas de la semana (50); lugares vencidos por actividad (5). No son listados navegables y no usan `Page<T>`. | Tres paginadores en un tablero |
@@ -156,7 +157,7 @@ SPEC-201 dejó a ADMIN fuera de su prueba de concepto, así que el enlace al det
 `/incidencias/{id}` solo se muestra a COORDINADOR y SUPERVISOR. Reconciliar ambos specs queda
 en «Por validar».
 
-**Enmienda a SPEC-C01 §3.1, a aplicar al aprobar este spec:** colores de los badges nuevos
+**Enmienda a SPEC-C01 §3.1, aplicada el 4 nov 2026:** colores de los badges nuevos
 sobre `Badge` existente, en el mismo orden neutro → ámbar → rojo:
 
 | Badge | Color |
@@ -206,7 +207,7 @@ muestra «Sin datos», y se lista en §9 «Por validar».
 | 25 | Poda mayor del año | OSG | La ejecutan terceros y su ejecución no se registra (W-05, fase futura) | Falta | «Sin datos» · Por validar |
 | 26 | Ejemplares de arbolado en el catastro | OSG | `green_elements` `INDIVIDUAL` con `species_type` `TREE` o `PALM` | Parcial: hay conteo y fecha de alta; la meta (~3 500) no está en la BD | Mostrar conteo y variación; meta «Sin datos» · Por validar |
 | 27 | Metas de cobertura y de riego | OSG | No existen hoy | Falta | Sembrarlas como parámetros editables (§4, Vnext) |
-| 28 | Cabecera: áreas verdes, superficie del campus y cuadrillas activas | OSG | `SUM(zones.area_m2)`, `CAMPUS_TOTAL_HECTARES`, `teams` | Disponible | Mostrar |
+| 28 | Cabecera: áreas verdes, superficie del campus y cuadrillas activas | OSG | Suma de `area_m2` de las **secciones** activas (el sector ya guarda la suma de las suyas, así que sumar todas las zonas contaría doble), `CAMPUS_TOTAL_HECTARES`, `teams` | Disponible | Mostrar |
 | 29 | Observaciones de la jefatura | OSG | No hay dónde guardarlas | Falta | Omitir · Por validar |
 
 ## 3. Contratos de API
@@ -450,6 +451,9 @@ Un `sectorId` inexistente o fuera del alcance responde **404**.
 - **`teamId` con ADMIN o COORDINADOR** restringe solo el numerador. Responde «¿qué parte del
   sector cubrió esta cuadrilla?».
 - **A las incidencias solo les aplica `teamId`**, porque V026 no las liga a una sección.
+- **Al cumplimiento** le aplican `classItemId` y `typeItemId` (filtran actividades) y
+  `sectorId` y `sectionId` (filtran lugares por su sección). `teamId` no le aplica, porque la
+  ejecución por lugar no guarda la cuadrilla, y la UI lo dice junto a la tabla.
 - **`unattended`** ordena por `lastAttendedOn` ascendente, las nulas primero, y luego por
   `areaM2` descendente. **`mostAttended`** ordena por `approvedInterventions` descendente, luego
   por `areaM2` descendente y luego por `code`.
@@ -471,8 +475,10 @@ Un `sectorId` inexistente o fuera del alcance responde **404**.
   registrados hasta el último día del mes. Los dados de baja después se excluyen de todos los
   meses: es un límite declarado.
 - **Códigos de motivo:** `unavailableReason` vale `RULE_NOT_DEFINED`, `UNIT_NOT_MODELED`,
-  `NOT_RECORDED` o `NO_DEADLINES_CONFIGURED`. `targetReason` vale `NO_TARGET` o
-  `TARGET_NOT_STORED`. El frontend los traduce a texto en `reportTexts.ts`.
+  `NOT_RECORDED` o `NO_DEADLINES_CONFIGURED`, y en la cobertura de la Mensual
+  `NO_SECTOR_ASSIGNED` (D-08). `targetReason` vale `NO_TARGET` o `TARGET_NOT_STORED`.
+  `notEvaluableReason` vale `OUTSOURCED` o `BY_SECTOR` (D-05). El frontend los traduce a
+  texto en `reportTexts.ts`.
 
 **Errores**
 
@@ -516,8 +522,9 @@ WHERE NOT EXISTS (
 una meta acordada. Las de fitosanitario y poda mayor no tienen indicador calculable (§2.6
 filas 24 y 25). Sembrarlas daría a entender que el sistema las mide.
 
-Al editar estas metas se valida un rango de 1 a 100, igual que los demás parámetros
-numéricos de `SystemParametersService`. Las lecturas usan los índices existentes:
+Al editar estas metas se valida un rango de 1 a 100 con un chequeo explícito para cada
+código en `SystemParametersService`, igual que cada parámetro numérico tiene el suyo: no
+existe un rango genérico. Las lecturas usan los índices existentes:
 `idx_intervention_locations_zone`, `idx_intervention_locations_completed`,
 `idx_interventions_team_plan`, `idx_zones_parent_zone_id`, `idx_zones_boundary` (GIST) e
 `idx_irrigation_turns_date_sector`.
@@ -559,9 +566,10 @@ numéricos de `SystemParametersService`. Las lecturas usan los índices existent
 - **Sector sin cuadrilla propia** (Polideportivo, Bosque húmedo): la Semanal muestra «Sin
   cuadrilla asignada». La Mensual añade la nota «Mantenimiento tercerizado o a demanda: su
   trabajo aún no se registra en el sistema».
-- **Falla `/reports/options`:** la pestaña activa se consulta con los valores por defecto
-  calculados en el cliente, en la misma zona horaria; los filtros muestran el error y
-  «Reintentar».
+- **Falla `/reports/options`:** la pestaña activa se consulta **sin parámetros de periodo**,
+  para que el backend aplique sus valores por defecto en la zona configurada; el cliente no
+  conoce esa zona sin `options`. La Semanal, que exige `sectorId`, no puede consultarse sin
+  un sector en la URL y muestra el error. Los filtros muestran el error y «Reintentar».
 - **Falla el endpoint de una pestaña:** ese panel muestra el error y «Reintentar», y las otras
   pestañas siguen funcionando.
 - **Parámetros inválidos en la URL:** el frontend no consulta, muestra el error junto al
@@ -611,7 +619,7 @@ numéricos de `SystemParametersService`. Las lecturas usan los índices existent
 | CA-G01 | Una sola pantalla con tres pestañas y la pestaña en la URL | Abrir `/reportes?tab=semanal`: está activa «Semanal del sector». Pasar a «Mensual»: la URL cambia a `?tab=mensual`. «Atrás» vuelve a la Semanal |
 | CA-G02 | Las pestañas se manejan con teclado | Con Tab se llega a la pestaña activa; ←/→ mueven el foco, Inicio/Fin van a los extremos, Enter/Espacio activan, y Tab entra al panel. El foco siempre es visible |
 | CA-G03 | Cada rol ve solo sus pestañas | ADMIN y COORDINADOR ven las tres. SUPERVISOR ve Semanal y Mensual, y `?tab=direccion` lo deja en Semanal. OPERARIO no tiene el enlace «Reportes» y recibe 403 en `/api/v1/reports/*` |
-| CA-G04 | El enlace directo «Reportes» se conserva | El sidebar muestra «Reportes» como enlace directo (no grupo) para ADMIN, COORDINADOR y SUPERVISOR |
+| CA-G04 | El enlace directo «Reportes» existe | El sidebar muestra «Reportes» como enlace directo (no grupo) para ADMIN, COORDINADOR y SUPERVISOR |
 | CA-G05 | Los gráficos funcionan en claro, en oscuro y con lector de pantalla | En ambos temas, barras, línea y meta se distinguen del fondo y no hay colores fuera de los tokens. Un lector de pantalla anuncia cada gráfico con un texto que incluye sus valores |
 | CA-G06 | Usable en celular y en navegador real | A 390 px: sin scroll horizontal, pestañas de ≥44 px de alto y tablas como tarjetas. Sin errores de CORS ni `OPTIONS` con 401 en consola (INV-10) |
 
@@ -750,6 +758,10 @@ Cada panel tiene los suyos y no afecta a los otros.
 
 - En español y externalizados en `reportTexts.ts`. Inter y los tokens del producto. No se usan
   IBM Plex ni la paleta del HTML de referencia.
+- Las cifras de los reportes se formatean con la configuración regional `es`: coma decimal y
+  sin separador de miles en cuatro cifras («25,0 %», «1000 de 4000 m²»), como piden los
+  criterios. Otras pantallas usan `es-PE`, que da «25.0» y «1,000»; la diferencia es
+  deliberada y se limita a este módulo.
 
 ## 8. Tests
 
@@ -843,7 +855,9 @@ Frontend
    al 100 %.
 2. **Sector de las cuadrillas (`teams.zone_id`):** hoy no está cargado para ninguna cuadrilla
    real. Sin él, la Semanal del SUPERVISOR y su cobertura no están disponibles. Es un dato que
-   A-07 debe completar, no código.
+   A-07 debe completar, no código. *El equipo aceptó esta dependencia el 4 nov 2026, con el
+   aviso en pantalla; para probar ambos caminos hay una semilla solo de desarrollo
+   (`db/dev-migration/R__seed_demo_reports.sql`).*
 3. **Indicadores sin fuente:**
    - Ciclo de riego completo: falta su definición (catálogo 7.2).
    - Plazos de atención por urgencia: los 24/48/72 h no están confirmados (5.6).
@@ -855,7 +869,8 @@ Frontend
    - Observaciones de la jefatura: requerirían una tabla.
 4. **ADMIN e incidencias:** el Anexo A le da lectura de incidencias, pero SPEC-201 lo dejó
    fuera de su prueba de concepto. Este spec le muestra la lista resumida de la Semanal y le
-   oculta el enlace al detalle. Hay que reconciliar ambos specs.
+   oculta el enlace al detalle. Hay que reconciliar ambos specs. *El equipo aprobó esta
+   solución provisional el 4 nov 2026.*
 5. Si se conserva el KPI informativo «pendientes de aprobación».
 
 **Checklist propio** (el común está en `REGLAS.md` §6):
