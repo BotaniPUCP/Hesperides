@@ -144,8 +144,8 @@ it('crea como hallazgo y vuelve a la incidencia con preselección y filtros, sin
   expect(incidentsApi.linkIntervention).not.toHaveBeenCalled();
 });
 
-it('no habilita creación contextual si la incidencia no está registrada',async()=>{
-  jest.mocked(incidentsApi.detail).mockResolvedValue({...approvedDetail,incident:{...approvedDetail.incident,approvedAt:null}});
+it('no habilita creación contextual sin permiso de creación en el caso',async()=>{
+  jest.mocked(incidentsApi.detail).mockResolvedValue({...approvedDetail,canCreateIntervention:false});
   render(<InterventionForm fromIncident={7}/>);
   expect(await screen.findByRole('button',{name:'Guardar y volver a la incidencia'})).toBeDisabled();
   expect(interventionsApi.create).not.toHaveBeenCalled();

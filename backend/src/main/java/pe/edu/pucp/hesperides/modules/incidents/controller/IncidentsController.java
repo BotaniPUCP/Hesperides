@@ -28,12 +28,24 @@ public class IncidentsController {
     public ResponseEntity<ApiResponse<Page<IncidentResponse>>> getAll(
             @RequestParam(required = false) String search, @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required=false) String severity,@RequestParam(required=false) String urgency,
+            @RequestParam(required=false) String service,@RequestParam(required=false) Long zoneId,
+            @RequestParam(required=false) String registration,
             @AuthenticationPrincipal UserDetails user) {
-        return ok(service.getAll(user.getUsername(), search, status, page, size));
+        return ok(this.service.getAll(user.getUsername(), search, status, page, size,new ListFilter(severity,urgency,service,zoneId,registration)));
     }
     @GetMapping("/options")
     public ResponseEntity<ApiResponse<OptionsResponse>> options(@AuthenticationPrincipal UserDetails user) {
         return ok(service.options(user.getUsername()));
+    }
+    @GetMapping("/mine")
+    public ResponseEntity<ApiResponse<MyReportsResponse>> myReports(@AuthenticationPrincipal UserDetails user) {
+        return ok(service.myReports(user.getUsername()));
+    }
+    @GetMapping("/intervention-options")
+    public ResponseEntity<ApiResponse<Page<LinkedInterventionResponse>>> availableInterventions(
+            @RequestParam(defaultValue="") String search,@RequestParam(defaultValue="0") int page,@AuthenticationPrincipal UserDetails user) {
+        return ok(service.availableInterventions(search,page,user.getUsername()));
     }
     @GetMapping("/summary") @PreAuthorize("hasAuthority('COORDINADOR')")
     public ResponseEntity<ApiResponse<SummaryResponse>> summary(@AuthenticationPrincipal UserDetails user) {
@@ -60,7 +72,7 @@ public class IncidentsController {
         return result.created() ? ResponseEntity.created(URI.create("/api/v1/incidents/" + result.detail().incident().id()))
                 .body(ApiResponse.ok("Incident received", result.detail())) : ok(result.detail());
     }
-    @PutMapping("/{id}") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<DetailResponse>> update(@PathVariable Long id,
             @Valid @RequestBody ReviewIncidentRequest request, @AuthenticationPrincipal UserDetails user) {
         return ok(service.update(id, request, user.getUsername()));
@@ -94,30 +106,20 @@ public class IncidentsController {
             @Valid @RequestBody ResolutionRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.resolve(id,request,user.getUsername()));
     }
-    @GetMapping("/{id}/intervention-options") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @GetMapping("/{id}/intervention-options")
     public ResponseEntity<ApiResponse<Page<LinkedInterventionResponse>>> interventionOptions(@PathVariable Long id,
             @RequestParam(defaultValue="") String search,@RequestParam(defaultValue="0") int page,@AuthenticationPrincipal UserDetails user) {
         return ok(service.interventionOptions(id,search,page,user.getUsername()));
     }
-    @PostMapping("/{id}/intervention-links") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PostMapping("/{id}/intervention-links")
     public ResponseEntity<ApiResponse<DetailResponse>> linkIntervention(@PathVariable Long id,
             @Valid @RequestBody LinkInterventionRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.linkIntervention(id,request,user.getUsername()));
     }
-    @PostMapping("/{id}/intervention-links/{linkId}/remove") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PostMapping("/{id}/intervention-links/{linkId}/remove")
     public ResponseEntity<ApiResponse<DetailResponse>> unlinkIntervention(@PathVariable Long id,@PathVariable Long linkId,
             @Valid @RequestBody ReasonRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.unlinkIntervention(id,linkId,request,user.getUsername()));
-    }
-    @PostMapping("/{id}/interventions")
-    public ResponseEntity<ApiResponse<DetailResponse>> addIntervention(@PathVariable Long id,
-            @Valid @RequestBody CreateInterventionRequest request, @AuthenticationPrincipal UserDetails user) {
-        return ok(service.addIntervention(id, request, user.getUsername()));
-    }
-    @PostMapping("/{id}/interventions/{workId}/complete")
-    public ResponseEntity<ApiResponse<DetailResponse>> completeIntervention(@PathVariable Long id, @PathVariable Long workId,
-            @AuthenticationPrincipal UserDetails user) {
-        return ok(service.completeIntervention(id, workId, user.getUsername()));
     }
     @PostMapping(value = "/{id}/photos", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<PhotoResponse>> addPhoto(@PathVariable Long id,

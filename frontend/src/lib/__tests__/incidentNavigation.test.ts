@@ -32,3 +32,13 @@ it('returns only to a local incident route and preserves allowed list filters',(
   expect(incidentAfterCreationHref(7,11,filters)).toBe('/incidencias/7?search=rama+%26+riego&status=OPEN&page=2&selectIntervention=11');
   expect(incidentAfterCreationHref(7,null,filters)).not.toContain('selectIntervention');
 });
+
+it('keeps report view and OSG filters when creating work and returning to the case',()=>{
+  const filters=incidentFilters(new URLSearchParams('search=aspersor&severity=HIGH&urgency=MEDIUM&service=AV-01&registration=PENDING&zoneId=42&view=reports'));
+  const creation=new URL(interventionCreationHref(7,filters),'https://local.test');
+  expect(creation.searchParams.get('incidentSeverity')).toBe('HIGH');
+  expect(creation.searchParams.get('incidentRegistration')).toBe('PENDING');
+  expect(creation.searchParams.get('incidentView')).toBe('reports');
+  const back=new URL(incidentAfterCreationHref(7,11,filters),'https://local.test');
+  for(const key of ['severity','urgency','service','registration','zoneId','view'] as const)expect(back.searchParams.get(key)).toBe(filters[key]);
+});

@@ -72,10 +72,25 @@ reabre y corrige. Solo después de validar todas las intervenciones requeridas p
 No hay cierre automático de incidencias compartidas. Observar/reabrir una incidencia
 no invalida automáticamente intervenciones aprobadas.
 
-Los trabajos antiguos permanecen de solo lectura: no equivalen a intervenciones
-validadas ni se convierten inventando fechas o ubicaciones. En casos abiertos,
-coordinación debe asociarlos expresamente a intervenciones reales antes del cierre.
-Los cierres históricos se conservan. V028 es aditiva; no requiere borrar volúmenes.
+### Captura ampliada y tablero OSG (V029)
+
+El capataz puede enviar solo una frase o abrir el modo ampliado para aportar los
+campos de la matriz: servicios, severidad, impactos, causas catalogadas completas y
+análisis, acciones y observaciones. Son los mismos datos editables que revisa
+coordinación. «Mis reportes» muestra únicamente sus envíos, no todos los de su cuadrilla.
+
+Los vínculos opcionales con trabajo real se pueden añadir desde la captura y el
+detalle, incluso antes del registro oficial, respetando el alcance de ambos recursos.
+Crear conserva los permisos de Intervenciones: el capataz no recibe planificación.
+Coordinación dispone de Tablero y Reportes, atención prioritaria, gráficos y tabla
+filtrable. No hay métricas ficticias de IA ni SLA. La correspondencia de los 23
+campos está en [la guía OSG](docs/incidencias/matriz-osg.md).
+
+**V029 elimina la tabla de trabajos internos del prototipo**, junto con su API y
+adaptadores. No convierte esos trabajos ni inventa ejecución. Revisar el impacto y
+respaldar datos importantes antes de aplicarla; no se reescriben V001–V028.
+La demo nueva incluye 12 reportes, 8 intervenciones reales y 10 vínculos, con imágenes
+explícitamente ficticias. No requiere borrar volúmenes para aplicar el nuevo esquema.
 
 Solo la descripción es obligatoria para informar o aprobar. Fotos JPEG/PNG/WebP:
 máximo seis por incidencia y 5 MiB por archivo. La posición del teléfono se obtiene

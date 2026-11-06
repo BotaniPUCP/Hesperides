@@ -34,7 +34,7 @@ class IncidentReviewMigrationTest {
           SELECT ?,'Trabajo histórico',ci.id,?,?,CURRENT_TIMESTAMP,?,repeat('0',64)
           FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='INTERVENTION_STATUS' AND ci.code='COMPLETED'
           """,incident,user,user,UUID.randomUUID());
-        Flyway.configure().dataSource(postgres.getJdbcUrl(),postgres.getUsername(),postgres.getPassword()).load().migrate();
+        Flyway.configure().dataSource(postgres.getJdbcUrl(),postgres.getUsername(),postgres.getPassword()).target("028").load().migrate();
         assertThat(jdbc.queryForList("SELECT version,checksum FROM flyway_schema_history WHERE version IS NOT NULL AND version::integer<=27 ORDER BY installed_rank")).isEqualTo(checksums);
         assertThat(jdbc.queryForObject("SELECT resolved_at IS NOT NULL AND resolution_summary IS NULL AND resolved_by_user_id IS NULL FROM incidents WHERE id=?",Boolean.class,incident)).isTrue();
         assertThat(jdbc.queryForObject("SELECT count(*) FROM incident_intervention_links",Long.class)).isZero();

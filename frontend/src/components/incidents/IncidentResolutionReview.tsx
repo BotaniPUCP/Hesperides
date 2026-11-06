@@ -19,7 +19,7 @@ export function IncidentResolutionReview({ detail, busy, onResolve, onObserve }:
       }}>
         <p className="text-sm text-neutral-700">Finalizar una intervención no equivale a validarla. Para cerrar, todas las intervenciones requeridas deben estar validadas por coordinación.</p>
         <Textarea id="incident-resolution-summary" label="Cómo se resolvió la incidencia" value={summary} onChange={setSummary} disabled={busy} required maxLength={2000} />
-        {!detail.canResolve && <p className="text-sm text-alert-warning-fg">Falta vincular o validar trabajo requerido. Los registros de trabajo anteriores deben asociarse explícitamente a intervenciones reales.</p>}
+        {!detail.canResolve && <p className="text-sm text-alert-warning-fg">Falta relacionar al menos una intervención o validar todas las requeridas.</p>}
         <Button type="submit" size="lg" loading={busy} disabled={!detail.canResolve}>Validar resolución y cerrar incidencia</Button>
       </form>}
       <form className="space-y-3 border-t border-neutral-200 pt-4" onSubmit={async (e) => {

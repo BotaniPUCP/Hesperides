@@ -1,0 +1,26 @@
+{
+  "source": "Matriz Unificada de Incidencias y Reclamos – OSG.xlsx",
+  "sheets": ["Matriz", "Listas", "Catalogo CR", "BaseServicios", "Procesos_N2"],
+  "columns": ["N°", "Fecha de recepción/registro", "Tipo de evento", "Tipo de servicio", "Servicio", "Empresa", "Código Proceso (N2)", "Subproceso", "Descripción del evento", "Canal de ingreso", "Reportado por", "Severidad", "Impacto", "Responsable de atención", "Acción inmediata// Acción correctiva", "Causa Raíz C", "Causa raíz", "Acción preventiva/ Oportunidad de mejora", "Proceso impactado para mejora", "Estado", "Fecha de cierre", "Tiempo de cierre", "Observaciones"],
+  "events": ["Incidencia", "Reclamo", "No conformidad", "Hallazgo de supervisión", "Hallazgo de auditoría"],
+  "channels": ["Correo institucional", "WhatsApp", "Supervisión", "Auditoría", "Encuesta", "Presencial", "Formulario"],
+  "services": ["AV-01- Mantenimiento de áreas verdes", "AV-02- Rehabilitación de áreas verdes", "AV-03- Habilitación de áreas verdes"],
+  "processes": ["GSG-01- Planificación de servicios y operaciones del campus", "GSG-02- Gestión de servicios y operaciones del campus", "GSG-03- Supervisión de servicios y operaciones del campus", "GSG-04- Control y evaluación"],
+  "rootCauses": [
+    "Caída y/o acumulacion de hojas de palmera por renovacion natural de follaje (crecimiento de inflorescencia)",
+    "Caída de ramas por sobrecrecimiento, por falta de poda/competencia por la luz/factores climaticos",
+    "Caida estacional de hojarasca, acumulacion en exceso por falta de recojo/conglomerado de arboles",
+    "Arbustos con sobrecrecimiento por falta de poda/exceso de agua/competencia por la luz/factores climaticos",
+    "Maleza (mala hierba) con sobrecrecimineto exceso de agua/ falta de control de malezas",
+    "Árbol o arbusto muy antiguos con estructura semileñosa envejecida (frágil), requieren programa de renovacion",
+    "Césped deteriorado por sobrecarga de uso/alto transito",
+    "Residuos acumulados de servicio de corte de cesped y poda, debido falta de supervisión en la ruta de limpieza",
+    "Aspersor mal colocado /con rotación manual incorrecta",
+    "Falta de elementos de seguridad y/o elementos de segruridad deteriorados durante las labores de jardineria (conos, cintas, mallas, carteles etc)",
+    "Arbol con falta de tutor/tallo en condicion inestable",
+    "Falta de cronograma de poda preventiva de arboles y arbustos",
+    "Personal de Eulen con tardanza / ausencia en apoyo de labores de jardines",
+    "Cesped con sobrecimiento por falta de corte /exceso de agua/ factores climaticos",
+    "Arboles con sobrecrecimineto, por falta de poda/exceso de agua/competencia por la luz/factores climaticos"
+  ]
+}

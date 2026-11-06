@@ -12,6 +12,7 @@ jest.mock('@/hooks/useIncidents', () => ({
   useIncidentNavigation: jest.fn(), useIncidents: jest.fn(), useIncidentOptions: jest.fn(), useIncidentSummary: jest.fn(), useIncidentDetail: jest.fn(),
 }));
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
+jest.mock('../IncidentMyReports',() => ({IncidentMyReports:() => <aside>Mis reportes</aside>}));
 
 const idle = { loading: false, errorMessage: null, notFound: false, reload: jest.fn(), updateData: jest.fn() };
 const filters = { search: 'rama', status: 'OPEN', page: 2 };
@@ -37,7 +38,7 @@ it('shows the list when summary and filter options fail', () => {
   jest.mocked(useIncidentOptions).mockReturnValue({ ...idle, data: null, errorMessage: 'Error del servidor.' });
   jest.mocked(useIncidentSummary).mockReturnValue({ ...idle, data: null, errorMessage: 'Error del servidor.' });
   render(<IncidentsScreen />);
-  expect(screen.getByText('Rama caída en puerta principal')).toBeInTheDocument();
+  expect(screen.getAllByText('Rama caída en puerta principal').length).toBeGreaterThan(0);
   expect(screen.getByRole('button', { name: 'Reintentar resumen' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Reintentar opciones' })).toBeInTheDocument();
 });

@@ -60,6 +60,9 @@ public class Incident extends BaseEntity {
     private String preventiveAction;
     private String impactedProcess;
     private String observations;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "intake_channel_item_id") private CatalogItem intakeChannel;
+    private String reporterName;
+    private Long zoneId;
     @Column(nullable = false) private String channel = "WEB";
     @Column(nullable = false, updatable = false) private UUID clientReference;
     @Column(nullable = false, updatable = false) private String requestHash;

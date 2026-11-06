@@ -23,7 +23,7 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
   const source = useRequest(origin ? `intervention-origin:${user?.id}:${origin}` : null, () => incidentsApi.detail(origin!));
   const [dirty,setDirty] = useState(false);
   const guard = useUnsavedChangesGuard(dirty);
-  const sourceAvailable = !origin || (user?.role.code === 'COORDINADOR' && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
+  const sourceAvailable = !origin || source.data?.canCreateIntervention === true;
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? null);
@@ -94,7 +94,7 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
     <Link href={origin ? incidentAfterCreationHref(origin,null,returnFilters) : initial ? `/intervenciones/${initial.id}` : '/intervenciones'} className="text-brand-600 underline">{origin ? 'Volver a la incidencia' : 'Volver'}</Link>
     <h1 className="text-2xl font-bold">{initial ? `Editar ${initial.code}` : 'Nueva intervención'}</h1>
     {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.officialCode ?? `incidencia #${origin}`}. Al guardar volverás para confirmar el vínculo; todavía no se crea una asociación.</p>}
-    {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar registrada, abierta y disponible para tu cuenta.'}</p>}
+    {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar abierta y permitirte crear intervenciones.'}</p>}
     {error && <p role="alert" className="text-action-danger">{error}</p>}
     {uncertain && <p role="status">No se pudo confirmar el registro. Reintentar enviará exactamente los mismos datos para evitar duplicados. También puedes consultar el listado.</p>}
     <fieldset disabled={pending || uncertain || !options || !sourceAvailable} className="space-y-5 disabled:opacity-70">

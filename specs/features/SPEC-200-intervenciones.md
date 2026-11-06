@@ -558,6 +558,12 @@ Un reintento no agrega eventos ni incrementos de versión por segunda vez.
 
 ### 3.6 Contrato con incidencias y servicios tercerizados
 
+> **Corrección OSG, 5 nov 2026:** relacionar trabajo es opcional antes y después
+> del registro oficial. Exige editar el caso y leer el trabajo con su alcance propio.
+> La redirección a crear no concede planificación: se usan los permisos vigentes
+> de este módulo y acceso al caso. Capataz no crea; ADMIN no accede a incidencias
+> por poder crear trabajo. V029 retira los trabajos internos y su compatibilidad.
+
 > **Enmienda SPEC-201, 5 nov 2026:** la aclaración del cliente sustituye el contrato
 > singular siguiente. El vínculo implementado es N:M en `incident_intervention_links`,
 > sin FK singular en `incidents`, sin duplicar trabajos y sin vincular por externalCode.

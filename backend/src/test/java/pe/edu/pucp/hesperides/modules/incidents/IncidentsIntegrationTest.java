@@ -89,7 +89,7 @@ class IncidentsIntegrationTest {
         var request=new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Planning(group,type,java.time.LocalDate.now(),"Acción ejecutada de prueba",null,null,null,null,List.of(location),null,null);
         var work=asActor(coordinator,() -> workService.create(request,UUID.randomUUID()).intervention());
         var current=service.getById(incidentId,coordinator);
-        service.linkIntervention(incidentId,new LinkInterventionRequest(current.incident().version(),work.getId(),work.getVersion(),purpose,List.of()),coordinator);
+        service.linkIntervention(incidentId,new LinkInterventionRequest(current.incident().version(),work.getId(),work.getVersion(),purpose),coordinator);
         return work.getId();
     }
     pe.edu.pucp.hesperides.modules.interventions.dto.InterventionDetailResponse finishWork(long id) {
@@ -230,6 +230,83 @@ class IncidentsIntegrationTest {
         assertThat(approve(reviewed).incident().officialCode()).startsWith("OSG-");
     }
 
+    @Test void reporterCanCaptureAndReviseTheOsgTemplateWithoutOfficialRegistration() {
+        var a=assessment("Revisar árboles adyacentes");
+        var detail=service.create(new CreateIncidentRequest("Ejemplo OSG: rama inclinada junto al aula",null,null,null,a),UUID.randomUUID(),foreman).detail();
+        assertThat(detail.incident().approvedAt()).isNull();
+        assertThat(detail.incident().matrix().rootCauseItem().label()).contains("falta de poda/competencia por la luz");
+        assertThat(detail.incident().matrix().impacts()).hasSize(2);
+        assertThat(detail.canEdit()).isTrue();
+        var i=detail.incident();
+        var revised=service.update(i.id(),new ReviewIncidentRequest(i.version(),"Precisado por el capataz",null,null,null,null,null,teamId,a),foreman);
+        assertThat(revised.incident().originalDescription()).isEqualTo(i.originalDescription());
+        assertThat(revised.incident().matrix().preventiveAction()).isEqualTo(a.preventiveAction());
+        assertThatThrownBy(() -> service.update(i.id(),new ReviewIncidentRequest(revised.incident().version(),"Intrusión",null,null,null,null,null,teamId,a),outsider)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test void intakeChannelAndReportedPersonAreNotTheAuthenticatedCaptureIdentity() {
+        var a=assessment(null);
+        long zone=service.options(foreman).matrix().zones().getFirst().id();
+        var data=new MatrixRequest(a.serviceCode(),a.companyCode(),a.processCode(),a.subprocessCode(),a.severityCode(),a.impactCodes(),
+                a.responsibleUserId(),a.immediateAction(),a.rootCauseCode(),a.rootCause(),null,a.impactedProcess(),a.observations(),
+                "COMPLAINT","EMAIL","Persona que envió el correo",zone);
+        var report=service.create(new CreateIncidentRequest("Reporte recibido por correo",null,null,null,data),UUID.randomUUID(),foreman).detail();
+        assertThat(report.incident().channel()).isEqualTo("WEB");
+        assertThat(report.incident().reportedBy().id()).isEqualTo(foremanId);
+        assertThat(report.incident().matrix().intakeChannel().label()).isEqualTo("Correo institucional");
+        assertThat(report.incident().matrix().event().label()).isEqualTo("Reclamo");
+        assertThat(report.incident().matrix().zone().id()).isEqualTo(zone);
+        approve(report);
+        assertThat(service.export(coordinator).content()).contains("Persona que envió el correo","Correo institucional");
+    }
+
+    @Test void catalogsAndExportHeadersMatchTheSuppliedWorkbookReference() throws Exception {
+        var path=java.nio.file.Path.of(System.getProperty("basedir","."),"..","shared","fixtures","osg-incidents.json");
+        var reference=mapper.readTree(java.nio.file.Files.readString(path));
+        var options=service.options(foreman).matrix();
+        assertThat(options.rootCauses()).hasSize(15);
+        for(int n=0;n<15;n++)assertThat(options.rootCauses().get(n).description()).isEqualTo(reference.get("rootCauses").get(n).asString());
+        assertThat(options.events()).extracting(MatrixOptionResponse::label).containsExactlyElementsOf(reference.get("events").valueStream().map(v -> v.asString()).toList());
+        assertThat(options.intakeChannels()).extracting(MatrixOptionResponse::label).containsExactlyElementsOf(reference.get("channels").valueStream().map(v -> v.asString()).toList());
+        assertThat(options.services()).extracting(MatrixOptionResponse::label).containsExactlyElementsOf(reference.get("services").valueStream().map(v -> v.asString()).toList());
+        String expected=reference.get("columns").valueStream().map(v -> "\""+v.asString()+"\"").collect(java.util.stream.Collectors.joining(","));
+        assertThat(service.export(coordinator).content().lines().findFirst().orElseThrow()).isEqualTo("\uFEFF"+expected);
+    }
+
+    @Test void myReportsExcludeOtherPeoplesReportsEvenWhenTheForemanCanReadThem() {
+        var own=create();
+        var other=service.create(capture(),UUID.randomUUID(),coordinator).detail();
+        var i=other.incident();
+        service.update(i.id(),new ReviewIncidentRequest(i.version(),i.description(),null,null,null,null,null,teamId),coordinator);
+        assertThat(service.getAll(foreman,null,null,0,50).getContent()).extracting(IncidentResponse::id).contains(own.incident().id(),i.id());
+        assertThat(service.myReports(foreman).recent()).extracting(IncidentResponse::id).contains(own.incident().id()).doesNotContain(i.id());
+    }
+
+    @Test void foremanLinksOnlyVisibleRealWorkAndCannotPlanThroughTheIncident() {
+        var first=create();long work=planWork(first.incident().id(),"MITIGATION");finishWork(work);
+        var other=create();var real=asActor(coordinator,() -> workService.findById(work));
+        var linked=service.linkIntervention(other.incident().id(),new LinkInterventionRequest(other.incident().version(),work,real.getVersion(),"MITIGATION"),foreman);
+        assertThat(linked.linkedInterventions()).hasSize(1);
+        assertThat(linked.canCreateIntervention()).isFalse();
+        assertThat(linked.incident().approvedAt()).isNull();
+        var privateReport=service.create(capture(),UUID.randomUUID(),outsider).detail();
+        long hidden=planWork(privateReport.incident().id(),"MITIGATION");var privateWork=asActor(coordinator,() -> workService.findById(hidden));
+        assertThatThrownBy(() -> service.linkIntervention(linked.incident().id(),new LinkInterventionRequest(linked.incident().version(),hidden,privateWork.getVersion(),"MITIGATION"),foreman)).isInstanceOf(ResourceNotFoundException.class);
+        assertThat(service.availableInterventions("",0,foreman).getContent()).extracting(LinkedInterventionResponse::id).doesNotContain(hidden);
+    }
+
+    @Test void dashboardIncludesPendingReportsAndFiltersDoNotChangeItsPopulation() {
+        long before=service.summary(coordinator).dashboard().total();
+        var sent=service.create(new CreateIncidentRequest("Detalle para resumen y filtros",null,null,null,assessment(null)),UUID.randomUUID(),foreman).detail();
+        var summary=service.summary(coordinator);
+        assertThat(summary.dashboard().total()).isEqualTo(before+1);
+        assertThat(summary.matrix().rootCauses()).anyMatch(r -> r.label().equals("AV-02") && r.count()>0);
+        var filtered=service.getAll(coordinator,"Detalle para resumen y filtros",null,0,20,new ListFilter("HIGH",null,"AV-01",null,"PENDING"));
+        assertThat(filtered.getContent()).extracting(IncidentResponse::id).containsExactly(sent.incident().id());
+        assertThat(service.getAll(coordinator,"Detalle para resumen y filtros",null,0,20,new ListFilter("LOW",null,null,null,null))).isEmpty();
+        assertThat(service.summary(coordinator).dashboard().total()).isEqualTo(before+1);
+    }
+
     @Test void rejectsSubprocessFromAnotherProcessAndCrossCatalogSelections() {
         var sent = create(); var a = assessment(null);
         var invalid = new MatrixRequest(a.serviceCode(), a.companyCode(), "GSG-01", a.subprocessCode(), a.severityCode(),
@@ -311,7 +388,7 @@ class IncidentsIntegrationTest {
         long shared=planWork(first.incident().id(),"MITIGATION");
         long extra=planWork(first.incident().id(),"PREVENTION");
         var work=asActor(coordinator,() -> workService.findById(shared));
-        var request=new LinkInterventionRequest(second.incident().version(),shared,work.getVersion(),"MITIGATION",List.of());
+        var request=new LinkInterventionRequest(second.incident().version(),shared,work.getVersion(),"MITIGATION");
         var linked=service.linkIntervention(second.incident().id(),request,coordinator);
         assertThat(service.linkIntervention(second.incident().id(),request,coordinator).linkedInterventions()).hasSize(1);
         assertThat(asActor(coordinator,() -> workService.findById(shared)).getSourceIncidents()).hasSize(2);
@@ -350,7 +427,7 @@ class IncidentsIntegrationTest {
         var privateReport=approve(service.create(capture(),UUID.randomUUID(),outsider).detail());
         long work=planWork(first.incident().id(),"MITIGATION");
         var real=asActor(coordinator,() -> workService.findById(work));
-        service.linkIntervention(privateReport.incident().id(),new LinkInterventionRequest(privateReport.incident().version(),work,real.getVersion(),"MITIGATION",List.of()),coordinator);
+        service.linkIntervention(privateReport.incident().id(),new LinkInterventionRequest(privateReport.incident().version(),work,real.getVersion(),"MITIGATION"),coordinator);
         finishWork(work);
         assertThat(asActor(foreman,() -> workService.findById(work)).getSourceIncidents()).hasSize(1);
         assertThat(asActor(foreman,() -> workService.findById(work)).getHistory().stream().filter(e -> e.get("actionCode").equals("INCIDENT_LINKED"))).hasSize(1);
@@ -358,27 +435,11 @@ class IncidentsIntegrationTest {
         assertThatThrownBy(() -> service.getById(privateReport.incident().id(),foreman)).isInstanceOf(ResourceNotFoundException.class);
     }
 
-    @Test void historicalCompletedTasksNeedExplicitMappingAndRealValidation() {
-        var approved=approve(create());long id=approved.incident().id();
-        long old=jdbc.queryForObject("""
-          INSERT INTO incident_interventions(incident_id,description,status_item_id,recorded_by_user_id,completed_by_user_id,completed_at,client_reference,request_hash)
-          SELECT ?,'Trabajo histórico sin planificación completa',ci.id,?,?,CURRENT_TIMESTAMP,?,repeat('0',64)
-          FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
-          WHERE ct.code='INTERVENTION_STATUS' AND ci.code='COMPLETED' RETURNING id
-          """,Long.class,id,foremanId,foremanId,UUID.randomUUID());
-        long work=planWork(id,"MITIGATION");finishWork(work);validateWork(work);
-        assertThatThrownBy(() -> resolve(id,coordinator)).isInstanceOf(BusinessRuleException.class);
-        var current=service.getById(id,coordinator); var real=asActor(coordinator,() -> workService.findById(work));
-        service.linkIntervention(id,new LinkInterventionRequest(current.incident().version(),work,real.getVersion(),"MITIGATION",List.of(old)),coordinator);
-        assertThat(resolve(id,coordinator).incident().resolvedAt()).isNotNull();
-        assertThat(jdbc.queryForObject("SELECT description FROM incident_interventions WHERE id=?",String.class,old)).isEqualTo("Trabajo histórico sin planificación completa");
-    }
-
     @Test void removesOnlyUnstartedLinksWithReasonWithoutDeletingSharedWork() {
         var first=approve(create());var second=approve(create());
         long work=planWork(first.incident().id(),"MITIGATION");
         var real=asActor(coordinator,() -> workService.findById(work));
-        var other=service.linkIntervention(second.incident().id(),new LinkInterventionRequest(second.incident().version(),work,real.getVersion(),"MITIGATION",List.of()),coordinator);
+        var other=service.linkIntervention(second.incident().id(),new LinkInterventionRequest(second.incident().version(),work,real.getVersion(),"MITIGATION"),coordinator);
         var current=service.getById(first.incident().id(),coordinator);
         service.unlinkIntervention(first.incident().id(),current.linkedInterventions().getFirst().linkId(),new ReasonRequest(current.incident().version(),"Se seleccionó un trabajo que no corresponde"),coordinator);
         assertThat(service.getById(first.incident().id(),coordinator).linkedInterventions()).isEmpty();
@@ -390,21 +451,21 @@ class IncidentsIntegrationTest {
         assertThatThrownBy(() -> service.unlinkIntervention(second.incident().id(),other.linkedInterventions().getFirst().linkId(),new ReasonRequest(fresh.incident().version(),"Intento de omitir revisión"),coordinator)).isInstanceOf(BusinessRuleException.class);
     }
 
-    @Test void realWorkSelectorRequiresAnOfficialOpenIncidentAndSearchesWithoutDuplicates() {
+    @Test void workCanBeRelatedBeforeOfficialRegistrationWithoutGrantingPlanningPermission() {
         var pending=create();
-        assertThatThrownBy(() -> service.interventionOptions(pending.incident().id(),"",0,coordinator)).isInstanceOf(BusinessRuleException.class);
-        var official=approve(pending);long work=planWork(official.incident().id(),"MITIGATION");
-        var result=service.interventionOptions(official.incident().id(),"Acción ejecutada",0,coordinator);
+        assertThat(service.getById(pending.incident().id(),foreman).canCreateIntervention()).isFalse();
+        assertThat(pending.canCreateIntervention()).isFalse();
+        long work=planWork(pending.incident().id(),"MITIGATION");
+        var result=service.interventionOptions(pending.incident().id(),"Acción ejecutada",0,coordinator);
         assertThat(result.getContent()).extracting(LinkedInterventionResponse::id).containsExactly(work);
-        assertThatThrownBy(() -> service.interventionOptions(official.incident().id(),"",0,foreman)).isInstanceOf(AccessDeniedException.class);
+        assertThat(service.interventionOptions(pending.incident().id(),"",0,foreman)).isEmpty();
+        finishWork(work);
+        assertThat(service.interventionOptions(pending.incident().id(),"",0,foreman).getContent()).extracting(LinkedInterventionResponse::id).containsExactly(work);
+        assertThat(service.getById(pending.incident().id(),foreman).incident().approvedAt()).isNull();
     }
 
-    @Test void legacyMutationEndpointsCannotBypassRealExecutionAndReview() {
-        var approved = approve(create());
-        var request = new CreateInterventionRequest(UUID.randomUUID(), "Solicitud anterior a V027", null, false);
-        assertThatThrownBy(() -> service.addIntervention(approved.incident().id(),request,coordinator)).isInstanceOf(BusinessRuleException.class);
-        assertThatThrownBy(() -> service.completeIntervention(approved.incident().id(),1L,foreman)).isInstanceOf(BusinessRuleException.class);
-        assertThat(service.getById(approved.incident().id(),coordinator).interventions()).isEmpty();
+    @Test void prototypeWorkModelIsRemoved() {
+        assertThat(jdbc.queryForObject("SELECT to_regclass('public.incident_interventions') IS NULL",Boolean.class)).isTrue();
     }
 
     @Test void exportsOnlyApprovedRecordsWithTwentyThreeColumnsAndNoFormulas() {

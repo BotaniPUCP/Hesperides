@@ -1,18 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import type { IncidentCapture, IncidentDetail } from '@shared/types';
+import type { IncidentCapture, IncidentDetail, IncidentOptions } from '@shared/types';
 import { Button, Card, Textarea } from '@/components/ui';
 import { LocationFields, locationPayload } from './LocationFields';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
+import { IncidentMatrixFields,matrixReview } from './IncidentMatrixFields';
 
-export function IncidentRegistrationReview({ detail, coordinator, busy, onReturn, onResubmit }: {
+export function IncidentRegistrationReview({ detail, options, coordinator, busy, onReturn, onResubmit }: {
   detail: IncidentDetail; coordinator: boolean; busy: boolean;
+  options: IncidentOptions | null;
   onReturn: (reason: string) => Promise<boolean>; onResubmit: (report: IncidentCapture) => Promise<boolean>;
 }) {
   const incident = detail.incident;
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState(incident.description);
+  const [matrix,setMatrix] = useState(() => matrixReview(incident.matrix));
   const [location, setLocation] = useState({ reference: incident.locationReference ?? '', latitude: incident.latitude?.toString() ?? '', longitude: incident.longitude?.toString() ?? '' });
   const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -25,12 +28,13 @@ export function IncidentRegistrationReview({ detail, coordinator, busy, onReturn
       e.preventDefault();
       if (!description.trim()) { setError('Describe lo ocurrido.'); return; }
       try {
-        const report = { description: description.trim(), ...locationPayload(location) };
+        const report = { description: description.trim(), ...locationPayload(location),matrix };
         setError(''); if (await onResubmit(report)) setDirty(false);
       } catch (ex) { setError((ex as Error).message); }
     }}>
       <Textarea id="corrected-description" label="Descripción corregida" value={description} onChange={setDescription} required disabled={busy} maxLength={10000} />
       <LocationFields value={location} onChange={(next) => { setLocation(next); setDirty(true); }} disabled={busy} />
+      {options && <IncidentMatrixFields value={matrix} original={incident.matrix} options={options.matrix} disabled={busy} onChange={(next) => {setMatrix(next);setDirty(true);}} />}
       {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}
       <Button type="submit" size="lg" loading={busy}>Reenviar para revisión</Button>
       <p className="text-sm text-neutral-700">Conserva el mismo reporte y fecha de recepción. El texto original y las correcciones quedan en el historial.</p>

@@ -30,9 +30,10 @@ function Photo({ incidentId, photo }: { incidentId: number; photo: IncidentPhoto
   </figure>;
 }
 
-function ReviewForm({ detail, options, busy, onSave }: {
+function ReviewForm({ detail, options, busy, onSave, coordinator }: {
   detail: IncidentDetail; options: IncidentOptions; busy: boolean;
   onSave: (review: IncidentReview, approve: boolean) => Promise<boolean>;
+  coordinator: boolean;
 }) {
   const incident = detail.incident;
   const [description, setDescription] = useState(incident.description);
@@ -54,7 +55,7 @@ function ReviewForm({ detail, options, busy, onSave }: {
       setError(''); if (await onSave(review, approve)) setDirty(false);
     } catch (ex) { setError((ex as Error).message); }
   };
-  return <Card title={incident.approvedAt ? 'Datos de atención' : 'Revisión del registro'}>
+  return <Card title="Registro OSG · editar datos">
     {guard.dialog}
     <form className="space-y-4" onChange={() => setDirty(true)} onSubmit={(e) => { e.preventDefault(); void save(false); }}>
       <Textarea id="review-description" label="Descripción" value={description} rows={4} maxLength={10000} disabled={busy} required
@@ -74,7 +75,7 @@ function ReviewForm({ detail, options, busy, onSave }: {
       <IncidentMatrixFields value={matrix} original={incident.matrix} options={options.matrix} disabled={busy} onChange={setMatrix} />
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <div className="flex flex-wrap gap-3">
-        {!incident.approvedAt && <Button type="button" size="lg" loading={busy} disabled={incident.status.code !== 'PENDING_APPROVAL'} onClick={() => void save(true)}>Registrar incidencia oficialmente</Button>}
+        {coordinator && !incident.approvedAt && <Button type="button" size="lg" loading={busy} disabled={incident.status.code !== 'PENDING_APPROVAL'} onClick={() => void save(true)}>Registrar incidencia oficialmente</Button>}
         <Button type="submit" size="lg" variant={incident.approvedAt ? 'primary' : 'secondary'} disabled={busy}>Guardar cambios</Button>
       </div>
     </form>
@@ -129,9 +130,12 @@ export function IncidentDetailPanel({ detail, options, optionsLoading, coordinat
           </dl>
         </Card>
         {detail.photos.length > 0 && <Card title="Fotografías"><div className="space-y-5">{detail.photos.map((photo) => <Photo key={photo.id} incidentId={incident.id} photo={photo} />)}</div></Card>}
-        <Card title="Matriz OSG"><details><summary className="cursor-pointer py-2 text-sm text-brand-700">Ver datos del registro</summary><IncidentMatrixSummary matrix={incident.matrix} /></details>
+        <Card title="Registro OSG · datos guardados">
+          <p className="mb-3 text-sm text-neutral-700">{detail.canEdit ? 'Puedes modificarlos en la ficha editable de esta pantalla.' : resolved ? 'Caso cerrado. Coordinación puede reabrirlo con una observación antes de modificarlo.' : 'Consulta del registro.'}</p>
+          {detail.canEdit && <a href={detail.canCorrectReport ? '#corrected-description' : '#review-description'} className="mb-4 inline-flex min-h-12 items-center rounded-md border border-neutral-200 px-4 font-medium text-brand-700">Ir a editar el registro OSG</a>}
+          <IncidentMatrixSummary matrix={incident.matrix} />
           {incident.resolvedAt && <div className="mt-4 space-y-2 text-sm"><p>Cerrada: {incidentDate(incident.resolvedAt)} · {incident.closureBusinessDays} días hábiles inclusivos desde recepción.</p>
-            <p className="whitespace-pre-wrap break-words">Cómo se resolvió: {incident.resolutionSummary ?? 'Sin resumen: cierre del registro anterior.'}</p>
+            <p className="whitespace-pre-wrap break-words">Cómo se resolvió: {incident.resolutionSummary ?? 'Sin resumen de resolución.'}</p>
             {incident.resolvedBy && <p>Validó la resolución: {incident.resolvedBy.fullName}</p>}</div>}
         </Card>
         <IncidentCommunication updates={detail.updates} busy={busy}
@@ -142,13 +146,13 @@ export function IncidentDetailPanel({ detail, options, optionsLoading, coordinat
       </div>
       <div className="min-w-0 space-y-5">
         {optionsLoading && !resolved && <LoadingSkeleton variant="card" />}
-        {coordinator && !resolved && options && <ReviewForm key={`${incident.id}:${incident.version}`} detail={detail} options={options} busy={busy}
+        {detail.canEdit && !detail.canCorrectReport && options && <ReviewForm key={incident.id} detail={detail} options={options} busy={busy} coordinator={coordinator}
           onSave={async (review, approve) => mutate(async () => {
             const saved = await incidentsApi.review(incident.id, review);
             onChange(saved);
             return approve ? incidentsApi.approve(incident.id, saved.incident.version) : saved;
           }, approve ? 'Registro oficial confirmado.' : 'Cambios guardados.')} />}
-        <IncidentRegistrationReview key={`registration:${incident.id}:${incident.version}`} detail={detail} coordinator={coordinator} busy={busy}
+        <IncidentRegistrationReview key={`registration:${incident.id}:${incident.version}`} detail={detail} options={options} coordinator={coordinator} busy={busy}
           onReturn={(reason) => mutate(() => incidentsApi.requestCorrection(incident.id,incident.version,reason),'Corrección solicitada al remitente.')}
           onResubmit={(report) => mutate(() => incidentsApi.resubmit(incident.id,incident.version,report),'Reporte corregido y reenviado.')} />
         {coordinator && !resolved && <IncidentPreviousCases incidentId={incident.id} disabled={busy} />}

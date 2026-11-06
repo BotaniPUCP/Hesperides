@@ -32,7 +32,6 @@ import java.util.*;
 @Service @RequiredArgsConstructor @Transactional(readOnly = true)
 public class IncidentsServiceImpl implements IncidentsService {
     private final IncidentsRepository incidents;
-    private final IncidentInterventionsRepository interventions;
     private final IncidentHistoryRepository history;
     private final IncidentPhotosRepository photos;
     private final UsersRepository users;
@@ -49,8 +48,9 @@ public class IncidentsServiceImpl implements IncidentsService {
     private final pe.edu.pucp.hesperides.modules.interventions.repository.InterventionQueriesRepository workQueries;
     private final pe.edu.pucp.hesperides.modules.interventions.repository.InterventionEventsRepository workEvents;
     private final jakarta.validation.Validator validator;
+    private final pe.edu.pucp.hesperides.modules.interventions.service.InterventionAccess interventionAccess;
 
-    @Override public Page<IncidentResponse> getAll(String email, String search, String status, int page, int size) {
+    @Override public Page<IncidentResponse> getAll(String email, String search, String status, int page, int size,ListFilter extra) {
         User actor = actor(email);
         List<Long> teamIds = ledTeams(actor).stream().map(Team::getId).toList();
         Specification<Incident> filter = (root, query, cb) -> cb.isNull(root.get("deletedAt"));
@@ -60,6 +60,24 @@ public class IncidentsServiceImpl implements IncidentsService {
         if (status != null && !status.isBlank()) {
             item("INCIDENT_STATUS", status);
             filter = filter.and((root, query, cb) -> cb.equal(root.get("status").get("code"), status));
+        }
+        if (extra.severity()!=null && !extra.severity().isBlank()) {
+            item("INCIDENT_SEVERITY",extra.severity());filter=filter.and((r,q,cb) -> cb.equal(r.get("severity").get("code"),extra.severity()));
+        }
+        if (extra.urgency()!=null && !extra.urgency().isBlank()) {
+            item("URGENCY_LEVEL",extra.urgency());filter=filter.and((r,q,cb) -> cb.equal(r.get("urgency").get("code"),extra.urgency()));
+        }
+        if (extra.service()!=null && !extra.service().isBlank()) {
+            item("INCIDENT_SERVICE",extra.service());filter=filter.and((r,q,cb) -> cb.equal(r.get("service").get("code"),extra.service()));
+        }
+        if (extra.zoneId()!=null) filter=filter.and((r,q,cb) -> cb.equal(r.get("zoneId"),extra.zoneId()));
+        if (extra.registration()!=null && !extra.registration().isBlank()) {
+            filter=filter.and((r,q,cb) -> switch(extra.registration()) {
+                case "PENDING" -> cb.isNull(r.get("approvedAt"));
+                case "REGISTERED" -> cb.and(cb.isNotNull(r.get("approvedAt")),cb.isNull(r.get("resolvedAt")));
+                case "CLOSED" -> cb.isNotNull(r.get("resolvedAt"));
+                default -> throw new ValidationException("Invalid registration filter");
+            });
         }
         if (search != null && !search.isBlank()) {
             String pattern = LikePattern.contains(search.trim().toLowerCase(Locale.ROOT));
@@ -82,19 +100,38 @@ public class IncidentsServiceImpl implements IncidentsService {
         return new OptionsResponse(optionsOf("INCIDENT_STATUS"), optionsOf("INCIDENT_TYPE"),
                 optionsOf("URGENCY_LEVEL"), optionsOf("INTERVENTION_TYPE"),
                 (coordinator(actor) ? teams.findByActiveTrueAndDeletedAtIsNullOrderByNameAsc() : ledTeams(actor))
-                        .stream().map(this::teamResponse).toList(), matrix.options(coordinator(actor)),optionsOf("INTERVENTION_STATUS"));
+                        .stream().map(this::teamResponse).toList(), matrix.options(coordinator(actor)),optionsOf("INTERVENTION_STATUS"),interventionAccess.canCreate(actor));
     }
 
     @Override @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public SummaryResponse summary(String email) {
         requireCoordinator(actor(email));
+        var records=incidents.findAll((root,query,cb) -> cb.isNull(root.get("deletedAt")),Sort.by(Sort.Direction.DESC,"createdAt","id"));
+        var active=records.stream().filter(i -> i.getResolvedAt()==null).toList();
+        var attention=active.stream().filter(i -> i.getApprovedAt()==null || i.getTeam()==null || i.getResponsible()==null
+                || state(i,"RESOLUTION_OBSERVED") || (i.getUrgency()!=null && i.getUrgency().getCode().equals("HIGH")))
+                .limit(12).map(this::response).toList();
+        long withoutWork=active.stream().filter(i -> i.getApprovedAt()!=null && workLinks.all(i.getId()).isEmpty()).count();
+        long ready=active.stream().filter(i -> i.getApprovedAt()!=null && workLinks.ready(i.getId())).count();
         return new SummaryResponse(incidents.countByStatusCodeAndDeletedAtIsNull("PENDING_APPROVAL"),
                 incidents.countByStatusCodeAndDeletedAtIsNull("OPEN"),
                 incidents.countByStatusCodeAndDeletedAtIsNull("IN_PROGRESS"),
                 incidents.countByStatusCodeAndDeletedAtIsNull("RESOLVED"), workLinks.countWork(false,false),
-                matrix.summary(incidents.findAll((root, query, cb) -> cb.isNull(root.get("deletedAt")))),
+                matrix.summary(records),
                 incidents.countByStatusCodeAndDeletedAtIsNull("CHANGES_REQUESTED"),
-                incidents.countByStatusCodeAndDeletedAtIsNull("RESOLUTION_OBSERVED"), workLinks.countWork(true,false));
+                incidents.countByStatusCodeAndDeletedAtIsNull("RESOLUTION_OBSERVED"), workLinks.countWork(true,false),
+                new DashboardResponse(records.size(),active.size(),active.stream().filter(i -> i.getUrgency()!=null && i.getUrgency().getCode().equals("HIGH")).count(),
+                        active.stream().filter(i -> i.getApprovedAt()==null).count(),withoutWork,ready,Instant.now(),attention));
+    }
+
+    @Override public MyReportsResponse myReports(String email) {
+        User actor=actor(email);
+        Specification<Incident> mine=(r,q,cb) -> cb.and(cb.isNull(r.get("deletedAt")),cb.equal(r.get("reportedBy").get("id"),actor.getId()));
+        long total=incidents.count(mine);
+        long pending=incidents.count(mine.and((r,q,cb) -> cb.isNull(r.get("approvedAt"))));
+        long closed=incidents.count(mine.and((r,q,cb) -> cb.isNotNull(r.get("resolvedAt"))));
+        return new MyReportsResponse(total,pending,total-closed,closed,
+                incidents.findAll(mine,PageRequest.of(0,8,Sort.by(Sort.Direction.DESC,"createdAt","id"))).map(this::response).getContent());
     }
 
     @Override @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
@@ -119,6 +156,7 @@ public class IncidentsServiceImpl implements IncidentsService {
 
     @Override @Transactional
     public CreationResult create(CreateIncidentRequest request, UUID reference, String email) {
+        validateRequest(request);
         // Serialize creation per sender before testing the unique reference, including concurrent retries.
         User actor = users.lockActiveByEmail(email).orElseThrow(() -> new UnauthorizedException("Session expired"));
         requireRole(actor);
@@ -139,6 +177,7 @@ public class IncidentsServiceImpl implements IncidentsService {
         List<Team> led = ledTeams(actor);
         if (led.size() == 1) incident.setTeam(led.getFirst());
         incident.setStatus(item("INCIDENT_STATUS", "PENDING_APPROVAL"));
+        matrix.apply(incident,request.matrix());
         incidents.saveAndFlush(incident);
         recordStatus(incident, actor);
         return new CreationResult(detail(incident, actor), true);
@@ -146,8 +185,13 @@ public class IncidentsServiceImpl implements IncidentsService {
 
     @Override @Transactional
     public DetailResponse update(Long id, ReviewIncidentRequest request, String email) {
-        User actor = actor(email); requireCoordinator(actor);
+        validateRequest(request);
+        User actor = actor(email);
         Incident incident = visible(id, actor, true);
+        requireEditable(incident,actor);
+        if (!coordinator(actor) && !Objects.equals(incident.getTeam()==null ? null : incident.getTeam().getId(),request.teamId())
+                && request.teamId()!=null && ledTeams(actor).stream().noneMatch(t -> t.getId().equals(request.teamId())))
+            throw new AccessDeniedException("Assigned team required");
         if (incident.getVersion() != request.version()) throw new ConflictException("Incident changed; reload before editing");
         if (state(incident, "RESOLVED")) throw new BusinessRuleException("Incident already resolved");
         String before = mapper.writeValueAsString(response(incident));
@@ -216,13 +260,15 @@ public class IncidentsServiceImpl implements IncidentsService {
         if (state(incident,"PENDING_APPROVAL") && incident.getCorrectionReason()!=null
                 && incident.getDescription().equals(report.description().trim())
                 && Objects.equals(incident.getLocationReference(),clean(report.locationReference()))
-                && Objects.equals(incident.getLatitude(),report.latitude()) && Objects.equals(incident.getLongitude(),report.longitude())) return detail(incident,actor);
+                && Objects.equals(incident.getLatitude(),report.latitude()) && Objects.equals(incident.getLongitude(),report.longitude())
+                && updates.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(id).stream().anyMatch(u -> u.getKind().getCode().equals("REPORT_RESUBMITTED") && u.getRequestHash().equals(hash(request)))) return detail(incident,actor);
         version(incident,request.version());
         if (!state(incident,"CHANGES_REQUESTED")) throw new BusinessRuleException("The report has not been returned for correction");
         coordinates(report.latitude(),report.longitude());
         String before=mapper.writeValueAsString(response(incident));
         incident.setDescription(report.description().trim()); incident.setLocationReference(clean(report.locationReference()));
         incident.setLatitude(report.latitude()); incident.setLongitude(report.longitude());
+        matrix.apply(incident,report.matrix());
         transition(incident,"PENDING_APPROVAL",actor);
         recordUpdate(incident,actor,"REPORT_RESUBMITTED",mapper.writeValueAsString(Map.of("before",mapper.readTree(before),
                 "after",mapper.valueToTree(response(incident)))),UUID.randomUUID(),hash(request));
@@ -262,7 +308,7 @@ public class IncidentsServiceImpl implements IncidentsService {
         version(incident,request.version());
         requireOpen(incident);
         workLinks.lockRequired(id);
-        if (!workLinks.ready(id)) throw new BusinessRuleException("Validate all required interventions and map legacy work before closing");
+        if (!workLinks.ready(id)) throw new BusinessRuleException("Validate all required interventions before closing");
         incident.setResolvedAt(Instant.now());
         incident.setResolvedBy(actor); incident.setResolutionSummary(summary);
         incident.setClosureBusinessDays(calendar.count(incident.getCreatedAt(), incident.getResolvedAt()));
@@ -272,43 +318,40 @@ public class IncidentsServiceImpl implements IncidentsService {
     }
 
     @Override public Page<LinkedInterventionResponse> interventionOptions(Long id,String search,int page,String email) {
-        User actor=actor(email); requireCoordinator(actor);
-        requireOpen(visible(id,actor,false));
-        return workLinks.candidates(search,page);
+        User actor=actor(email);
+        requireEditable(visible(id,actor,false),actor);
+        return workLinks.candidates(search,page,actor);
+    }
+    @Override public Page<LinkedInterventionResponse> availableInterventions(String search,int page,String email) {
+        return workLinks.candidates(search,page,actor(email));
     }
 
     @Override @Transactional
     public DetailResponse linkIntervention(Long id,LinkInterventionRequest request,String email) {
         validateRequest(request);
-        User actor=actor(email); requireCoordinator(actor);
-        Incident incident=visible(id,actor,true); requireOpen(incident);
+        User actor=actor(email);
+        Incident incident=visible(id,actor,true); requireEditable(incident,actor);
         var work=realInterventions.findForUpdate(request.interventionId()).orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
         var live=workQueries.detail(work.getId()).orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
+        interventionAccess.requireRead(actor,live.getTeamId(),live.getAssignedToUserId());
         if (live.getStatusCode().equals("CANCELLED")) throw new BusinessRuleException("Cancelled interventions cannot be required work");
         var existing=links.findByIncidentIdAndInterventionIdAndDeletedAtIsNull(id,work.getId());
-        var legacyIds=request.legacyWorkIds()==null ? List.<Long>of() : request.legacyWorkIds().stream().distinct().sorted().toList();
-        var previousWork=legacyIds.stream().map(old -> interventions.findByIdAndIncidentIdAndDeletedAtIsNull(old,id)
-                .orElseThrow(() -> new ValidationException("Legacy work does not belong to this incident"))).toList();
-        if (existing.isPresent() && existing.get().getPurpose().getCode().equals(request.purposeCode())
-                && previousWork.stream().allMatch(w -> Objects.equals(w.getReplacementInterventionId(),work.getId()))) return detail(incident,actor);
+        if (existing.isPresent() && existing.get().getPurpose().getCode().equals(request.purposeCode())) return detail(incident,actor);
         version(incident,request.version());
         if (!work.getVersion().equals(request.interventionVersion())) throw new ConflictException("Intervention changed; reload before linking");
         if (existing.isPresent() && !existing.get().getPurpose().getCode().equals(request.purposeCode())) throw new ConflictException("Intervention is already linked with another purpose");
-        if (previousWork.stream().anyMatch(w -> w.getReplacementInterventionId()!=null && !w.getReplacementInterventionId().equals(work.getId())))
-            throw new ConflictException("Legacy work is already mapped to another intervention");
         if (existing.isEmpty()) {
             var link=new IncidentInterventionLink(); link.setIncident(incident); link.setIntervention(work); link.setLinkedBy(actor);
             CatalogItem purpose=item("INCIDENT_ACTION_PURPOSE",request.purposeCode());
             if (purpose==null) throw new ValidationException("Invalid catalog item");
             link.setPurpose(purpose); links.saveAndFlush(link);
         }
-        previousWork.forEach(w -> w.setReplacementInterventionId(work.getId())); interventions.flush();
         incident.setReviewedAt(Instant.now()); incidents.saveAndFlush(incident);
         work.setVersion(work.getVersion()+1); realInterventions.saveAndFlush(work);
         var event=new pe.edu.pucp.hesperides.modules.interventions.entity.InterventionEvent();
         event.setInterventionId(work.getId()); event.setActorUserId(actor.getId()); event.setActionCode("INCIDENT_LINKED");
         event.setFromStatusItemId(work.getPlanningStatusItemId()); event.setToStatusItemId(work.getPlanningStatusItemId());
-        event.setOccurredAt(Instant.now()); event.setDetails(Map.of("incidentId",id,"purposeCode",request.purposeCode(),"legacyWorkIds",legacyIds));
+        event.setOccurredAt(Instant.now()); event.setDetails(Map.of("incidentId",id,"purposeCode",request.purposeCode()));
         workEvents.saveAndFlush(event);
         recordUpdate(incident,actor,"INTERVENTION_LINKED",work.getCode()+" · "+request.purposeCode(),UUID.randomUUID(),hash(request));
         return detail(incident,actor);
@@ -317,19 +360,18 @@ public class IncidentsServiceImpl implements IncidentsService {
     @Override @Transactional
     public DetailResponse unlinkIntervention(Long id,Long linkId,ReasonRequest request,String email) {
         validateRequest(request);
-        User actor=actor(email); requireCoordinator(actor);
-        Incident incident=visible(id,actor,true); requireOpen(incident);
+        User actor=actor(email);
+        Incident incident=visible(id,actor,true); requireEditable(incident,actor);
         var link=links.findById(linkId).filter(l -> l.getIncident().getId().equals(id))
                 .orElseThrow(() -> new ResourceNotFoundException("Intervention link not found"));
         if (link.isDeleted()) return detail(incident,actor);
         version(incident,request.version());
         var work=realInterventions.findForUpdate(link.getIntervention().getId()).orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
         var live=workQueries.detail(work.getId()).orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
+        interventionAccess.requireRead(actor,live.getTeamId(),live.getAssignedToUserId());
         if (live.getStartedAt()!=null) throw new BusinessRuleException("Started work cannot be removed from required interventions");
         link.softDelete(); links.saveAndFlush(link);
-        interventions.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(id).stream()
-                .filter(w -> Objects.equals(w.getReplacementInterventionId(),work.getId())).forEach(w -> w.setReplacementInterventionId(null));
-        interventions.flush(); incident.setReviewedAt(Instant.now());incidents.saveAndFlush(incident);
+        incident.setReviewedAt(Instant.now());incidents.saveAndFlush(incident);
         work.setVersion(work.getVersion()+1);realInterventions.saveAndFlush(work);
         var event=new pe.edu.pucp.hesperides.modules.interventions.entity.InterventionEvent();
         event.setInterventionId(work.getId());event.setActorUserId(actor.getId());event.setActionCode("INCIDENT_UNLINKED");
@@ -338,20 +380,6 @@ public class IncidentsServiceImpl implements IncidentsService {
         workEvents.saveAndFlush(event);
         recordUpdate(incident,actor,"INTERVENTION_UNLINKED",work.getCode()+" · "+request.reason().trim(),UUID.randomUUID(),hash(request));
         return detail(incident,actor);
-    }
-
-    @Override @Transactional
-    public DetailResponse addIntervention(Long id, CreateInterventionRequest request, String email) {
-        User actor = actor(email);
-        Incident incident = visible(id, actor, true); requireAttendance(incident, actor);
-        throw new BusinessRuleException("Use the intervention module; legacy work is read-only");
-    }
-
-    @Override @Transactional
-    public DetailResponse completeIntervention(Long id, Long workId, String email) {
-        User actor = actor(email);
-        Incident incident = visible(id, actor, true); requireAttendance(incident, actor);
-        throw new BusinessRuleException("Use the intervention module; legacy work is read-only");
     }
 
     @Override @Transactional
@@ -405,6 +433,14 @@ public class IncidentsServiceImpl implements IncidentsService {
     }
     private void requireAttendance(Incident incident, User actor) {
         if (!canAttend(incident, actor)) throw new AccessDeniedException("Assigned team required");
+    }
+    private boolean canEdit(Incident incident,User actor) {
+        return incident.getResolvedAt()==null && (coordinator(actor) || canAttend(incident,actor)
+                || (incident.getApprovedAt()==null && incident.getReportedBy().getId().equals(actor.getId())));
+    }
+    private void requireEditable(Incident incident,User actor) {
+        if (incident.getResolvedAt()!=null) throw new BusinessRuleException("Incident already resolved");
+        if (!canEdit(incident,actor)) throw new AccessDeniedException("Assigned team required");
     }
     private Incident visible(Long id, User actor, boolean lock) {
         Incident incident = (lock ? incidents.lockById(id) : incidents.findByIdAndDeletedAtIsNull(id))
@@ -462,9 +498,6 @@ public class IncidentsServiceImpl implements IncidentsService {
         String suggestedCode = IncidentSuggestions.typeCode(incident.getOriginalDescription());
         OptionResponse suggested = suggestedCode == null ? null : catalogs.findActiveItemByTypeAndCode("INCIDENT_TYPE", suggestedCode).map(this::option).orElse(null);
         return new DetailResponse(response(incident),
-                interventions.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(id).stream()
-                    .map(w -> new InterventionResponse(w.getId(), w.getDescription(), option(w.getType()), option(w.getStatus()),
-                            person(w.getRecordedBy()), person(w.getCompletedBy()), w.getCompletedAt(), w.getCreatedAt(), option(w.getPurpose()),w.getReplacementInterventionId())).toList(),
                 history.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(id).stream()
                     .map(h -> new HistoryResponse(h.getId(), option(h.getStatus()), person(h.getChangedBy()), h.getCreatedAt())).toList(),
                 photos.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(id).stream().map(this::photoResponse).toList(), suggested, canAttend(incident, actor),
@@ -472,7 +505,8 @@ public class IncidentsServiceImpl implements IncidentsService {
                         .map(u -> new UpdateResponse(u.getId(), person(u.getAuthor()), option(u.getKind()), u.getBody(), u.getCreatedAt())).toList(),
                 workLinks.visible(id,actor),links.findByIncidentIdAndDeletedAtIsNullOrderByIdAsc(id).size(),
                 coordinator(actor) && incident.getApprovedAt()!=null && incident.getResolvedAt()==null && workLinks.ready(id),
-                incident.getApprovedAt()==null && state(incident,"CHANGES_REQUESTED") && incident.getReportedBy().getId().equals(actor.getId()));
+                incident.getApprovedAt()==null && state(incident,"CHANGES_REQUESTED") && incident.getReportedBy().getId().equals(actor.getId()),
+                canEdit(incident,actor),canEdit(incident,actor),canEdit(incident,actor) && interventionAccess.canCreate(actor));
     }
     private String clean(String value) { return value == null || value.isBlank() ? null : value.trim(); }
     private void coordinates(Double latitude, Double longitude) {

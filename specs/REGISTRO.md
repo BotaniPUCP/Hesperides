@@ -41,6 +41,7 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-001 Anexo A · SPEC-002 §4.8 · SPEC-200 §3.6 · SPEC-201 | Corrección solicitada por el usuario (5 nov 2026) | Captura simple/ampliada también por capataz, ficha OSG editable y catálogos de las cinco hojas del Excel. Tablero y Mis reportes sin reproducción literal del HTML. Vínculos opcionales antes del registro; permisos heredados de Intervenciones. V029 retira el modelo interno sin compatibilidad; demo nueva con 12 reportes, 8 intervenciones reales y 10 vínculos. |
 | SPEC-001 Anexo A · SPEC-002 §4.8 · SPEC-200 §3.6 · SPEC-201 | Aclaraciones del cliente y del usuario (5 nov 2026) | Registro oficial separado del cierre, devolución/corrección/reenvío inicial opcionales, N:M con intervenciones reales y creación con retorno/preselección. Equipo finaliza, coordinación valida trabajo y luego cada incidencia con resumen obligatorio. Legado conservado sin ejecución/validación inventadas; cierres independientes y lectura de fuentes/eventos con alcance propio. V028 aditiva. |
 | SPEC-201 y REGLAS · toolchain | Plan aprobado y aclaraciones del usuario (4 nov 2026) | Matriz OSG, acciones de mitigación/prevención completadas antes de cerrar, correlativo propio al aprobar y días hábiles inclusivos recepción→cierre. Comunicación dentro del caso; sin integración WhatsApp ni IA. Se restablece Java 25 LTS en pom, CI e imágenes por instrucción explícita; Bun y Podman para verificación local, sin alterar lockfile npm. |
 | SPEC-101 y SPEC-200 §2.9/P-01 | Respuestas posteriores del usuario y T09 local (29 oct 2026) | Actualizar solo lugares atendidos y conservar ejecución/aprobación como fechas distintas de una ocurrencia. Proveedor real con alcance por lector, cumplimiento por lugar/sección, ambas fechas visibles y sin cobertura global implícita. BY_SECTOR y referencias sin lugar estable mantienen límites explícitos. Se prepara borrador de PR y revisión del contrato con la referencia local de incidencias, que presenta colisión V022/modelo Intervention. Ver informes de T09 y de contrato; sin otra migración ni cambios en base de trabajo. |
@@ -174,10 +175,11 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V026 | `V026__create_incident_workflow.sql` | SPEC-201 | Incidencias: captura mínima, aprobación, trabajos vinculados (`incident_interventions`), historial y fotos privadas |
 | V027 | `V027__align_incidents_with_osg_matrix.sql` | SPEC-201 | Catálogos OSG, campos de matriz, impactos múltiples, numeración de aprobados, propósito de acciones, comunicación y duración congelada al cierre |
 | V028 | `V028__integrate_incident_interventions_and_reviews.sql` | SPEC-201 / SPEC-200 | Vínculos N:M con intervenciones reales, corrección inicial, resumen/actor de resolución, observaciones y sustitución explícita del legado sin fabricar ejecución |
+| V029 | `V029__complete_incident_capture_and_remove_internal_work.sql` | SPEC-201 | Canal de ingreso OSG, comunicante y sección; retiro de incident_interventions sin conversión ni adaptadores |
 
 ### Pendientes (sin número reservado)
 
-Al 5 nov 2026 el siguiente número libre es **V029**, sujeto a comprobarlo nuevamente al
+Al 5 nov 2026 el siguiente número libre es **V030**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
