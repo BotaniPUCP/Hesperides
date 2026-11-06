@@ -11,6 +11,7 @@ import java.util.Objects;
 @Component @RequiredArgsConstructor
 public class InterventionAccess {
     private final InterventionReferencesRepository references;
+    public boolean canCreate(User user) { return java.util.Set.of("ADMIN","COORDINADOR").contains(user.getRoleCode()); }
     public boolean canRead(User user, Long team, Long assignee) {
         return switch (user.getRoleCode()) {
             case "ADMIN", "COORDINADOR" -> true;

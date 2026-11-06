@@ -17,7 +17,8 @@ function ReviewChanges({ body }: { body: string }) {
     type: 'Categoría operativa', urgency: 'Urgencia', team: 'Cuadrilla', service: 'Servicio', company: 'Empresa',
     process: 'Proceso N2', subprocess: 'Subproceso', severity: 'Severidad', impacts: 'Impactos', responsible: 'Responsable',
     immediateAction: 'Acción inmediata', rootCauseItem: 'Causa catalogada', rootCause: 'Causa detallada',
-    preventiveAction: 'Prevención / mejora', impactedProcess: 'Proceso impactado', observations: 'Observaciones' };
+    preventiveAction: 'Prevención / mejora', impactedProcess: 'Proceso impactado', observations: 'Observaciones',
+    event:'Tipo de evento',intakeChannel:'Canal de ingreso',reporterName:'Reportado por',zone:'Sección' };
   const format = (value: unknown): string => {
     if (value === null || value === undefined || value === '') return 'Sin determinar';
     if (Array.isArray(value)) return value.map(format).join(', ') || 'Sin determinar';

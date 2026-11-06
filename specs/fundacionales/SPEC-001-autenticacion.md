@@ -351,13 +351,18 @@ El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
 > **Enmienda SPEC-201 (5 nov 2026):** en incidencias participan COORDINADOR y
 > SUPERVISOR (capataz). Solo COORDINADOR confirma el registro oficial, solicita
-> correcciones iniciales, vincula intervenciones reales, observa/reabre la resolución
+> correcciones iniciales, observa/reabre la resolución
 > y valida su cierre final. El remitente corrige y reenvía únicamente su reporte
 > devuelto, antes del registro oficial. SUPERVISOR consulta sus envíos y los casos
 > de las cuadrillas que dirige, y puede iniciar atención, pero no cerrar la incidencia.
 > La ejecución y validación de intervenciones conservan los permisos de SPEC-200:
 > equipo ejecutor finaliza; solo COORDINADOR valida/observa; capataz reabre para corregir.
 > Leer una intervención compartida no concede lectura a todas sus incidencias.
+> Aclaración posterior del usuario: el capataz también aporta datos OSG en captura
+> ampliada y edita sus pendientes o casos de sus cuadrillas. Puede relacionar trabajo
+> visible con un caso editable, antes o después del registro oficial. Crear trabajo
+> conserva los permisos de Intervenciones (ADMIN/COORDINADOR) y exige además acceso
+> al caso; no se concede acceso a incidencias a ADMIN por transitividad.
 > El detalle de estas acciones prevalece sobre las filas genéricas de abajo.
 
 Esta matriz gobierna la autorización (`@PreAuthorize` o equivalente) de **todos** los endpoints de negocio del proyecto, no solo los de este spec. Se documenta aquí porque SPEC-001 es quien define el mecanismo de roles; cada SPEC-1XX de feature debe implementar exactamente estas reglas sobre sus propios controllers, sin reinterpretarlas.
@@ -386,7 +391,9 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **5. Incidencias** | Reportar una incidencia | | C | C | |
 | **5. Incidencias** | Registrar oficialmente / devolver para corrección | | V, U | | |
 | **5. Incidencias** | Corregir y reenviar reporte devuelto propio | | U (propio) | U (propio) | |
-| **5. Incidencias** | Revisar datos / asignar / vincular trabajo | | U, A | | |
+| **5. Incidencias** | Completar / editar datos OSG | | U | U (pendientes propios o cuadrillas que dirige) | |
+| **5. Incidencias** | Relacionar trabajo real visible | | U | U (caso editable y trabajo de su ámbito) | |
+| **5. Incidencias** | Asignar cuadrilla | | A | A (solo las que dirige) | |
 | **5. Incidencias** | Iniciar atención | | U | U (cuadrillas que dirige) | |
 | **5. Incidencias** | Validar cierre / observar o reabrir resolución | | V, U | | |
 | **5. Incidencias** | Ver incidencias | | L | L (envíos propios y cuadrillas que dirige) | |

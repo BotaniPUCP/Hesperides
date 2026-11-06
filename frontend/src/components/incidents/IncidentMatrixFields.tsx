@@ -3,6 +3,12 @@
 import type { IncidentMatrix, IncidentMatrixOptions, IncidentMatrixReview, IncidentOption } from '@shared/types';
 import { Input, Select, Textarea } from '@/components/ui';
 
+export const emptyIncidentMatrix: IncidentMatrix = {
+  event: null,serviceGroup: null,service: null,company: null,process: null,subprocess: null,severity: null,impacts: [],
+  responsible: null,immediateAction: null,rootCauseItem: null,rootCause: null,preventiveAction: null,impactedProcess: null,
+  observations: null,intakeChannel: null,reporterName: null,zone: null,
+};
+
 export function matrixReview(matrix: IncidentMatrix): IncidentMatrixReview {
   return {
     serviceCode: matrix.service?.code ?? null, companyCode: matrix.company?.code ?? null,
@@ -11,6 +17,8 @@ export function matrixReview(matrix: IncidentMatrix): IncidentMatrixReview {
     responsibleUserId: matrix.responsible?.id ?? null, immediateAction: matrix.immediateAction,
     rootCauseCode: matrix.rootCauseItem?.code ?? null, rootCause: matrix.rootCause,
     preventiveAction: matrix.preventiveAction, impactedProcess: matrix.impactedProcess, observations: matrix.observations,
+    eventCode: matrix.event?.code ?? 'INCIDENT',intakeChannelCode: matrix.intakeChannel?.code ?? 'FORM',
+    reporterName: matrix.reporterName,zoneId: matrix.zone?.id ?? null,
   };
 }
 
@@ -19,11 +27,11 @@ export function IncidentMatrixFields({ value, original, options, disabled, onCha
   disabled: boolean; onChange: (value: IncidentMatrixReview) => void;
 }) {
   const change = <K extends keyof IncidentMatrixReview>(key: K, next: IncidentMatrixReview[K]) => onChange({ ...value, [key]: next });
-  const select = (key: 'serviceCode' | 'companyCode' | 'processCode' | 'subprocessCode' | 'severityCode' | 'rootCauseCode', label: string,
+  const select = (key: 'serviceCode' | 'companyCode' | 'processCode' | 'subprocessCode' | 'severityCode' | 'rootCauseCode' | 'eventCode' | 'intakeChannelCode', label: string,
     choices: IncidentOption[], previous: IncidentOption | null) => {
     const available = previous && !choices.some((i) => i.code === previous.code) ? [...choices, previous] : choices;
     return <Select id={`matrix-${key}`} label={label} size="lg" clearable disabled={disabled}
-      value={value[key]} options={available} placeholder="Sin determinar"
+       value={value[key] ?? null} options={available} placeholder="Sin determinar"
       onChange={(item) => {
         if (key === 'processCode') onChange({ ...value, processCode: item?.code ?? null, subprocessCode: null });
         else change(key, item?.code ?? null);
@@ -33,8 +41,17 @@ export function IncidentMatrixFields({ value, original, options, disabled, onCha
   return <div className="space-y-5 border-t border-neutral-200 pt-5">
     <section className="space-y-4" aria-labelledby="matrix-classification">
       <h2 id="matrix-classification" className="text-lg font-semibold">Clasificación OSG</h2>
-      <p className="text-sm text-neutral-700">{original.event?.label ?? 'Incidencia'} · {original.serviceGroup?.label ?? 'Áreas verdes'}. Los datos aún desconocidos pueden quedar sin determinar.</p>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <p className="text-sm text-neutral-700">Tipo de servicio: {original.serviceGroup?.label ?? 'Servicios de Áreas verdes'}. Completa solo lo que conoces; coordinación podrá revisarlo.</p>
+      <div className="grid gap-4 sm:grid-cols-2 [&>div]:min-w-0 [&_select]:min-w-0 [&_select]:max-w-full">
+        {select('eventCode','Tipo de evento',options.events,original.event)}
+        {select('intakeChannelCode','Canal de ingreso',options.intakeChannels,original.intakeChannel)}
+        <Input id="matrix-reporter" label="Reportado por (opcional)" size="lg" value={value.reporterName ?? ''} disabled={disabled} maxLength={200}
+          helperText="Persona que comunicó el evento, si es distinta de quien lo captura. El usuario autenticado queda conservado."
+          onChange={(reporterName) => change('reporterName',reporterName)} />
+        <Select id="matrix-zone" label="Sección del campus (opcional)" size="lg" clearable disabled={disabled} value={value.zoneId?.toString() ?? null}
+          options={options.zones.map(z => ({id:z.id,code:String(z.id),label:`${z.label}${z.sectorLabel ? ` · ${z.sectorLabel}` : ''}`}))}
+          helperText="Identifica el sector del tablero sin deducirlo del texto ni inventar coordenadas."
+          onChange={(z) => change('zoneId',z?.id ?? null)} />
         {select('serviceCode', 'Servicio', options.services, original.service)}
         {select('companyCode', 'Empresa', options.companies, original.company)}
         {select('processCode', 'Proceso N2', options.processes, original.process)}
@@ -66,7 +83,7 @@ export function IncidentMatrixFields({ value, original, options, disabled, onCha
       <Textarea id="matrix-cause" label="Causa raíz detallada" value={value.rootCause ?? ''} disabled={disabled} maxLength={10000}
         onChange={(v) => change('rootCause', v)} helperText="Se confirma mediante análisis; no se deduce automáticamente del reporte." />
       <Textarea id="matrix-preventive" label="Acción preventiva / oportunidad de mejora" value={value.preventiveAction ?? ''} disabled={disabled} maxLength={10000}
-        onChange={(v) => change('preventiveAction', v)} helperText="Si se declara una acción preventiva, debe registrarse y completarse trabajo de prevención antes del cierre." />
+        onChange={(v) => change('preventiveAction', v)} helperText="Propuesta para evitar recurrencias o mejorar el servicio. El trabajo real se relaciona en Intervenciones." />
       <Input id="matrix-impacted" label="Proceso impactado para mejora" size="lg" value={value.impactedProcess ?? ''} disabled={disabled} maxLength={1000}
         onChange={(v) => change('impactedProcess', v)} />
       <Textarea id="matrix-observations" label="Observaciones" value={value.observations ?? ''} disabled={disabled} maxLength={10000}
@@ -77,6 +94,8 @@ export function IncidentMatrixFields({ value, original, options, disabled, onCha
 
 export function IncidentMatrixSummary({ matrix }: { matrix: IncidentMatrix }) {
   const fields: [string, string | null | undefined][] = [
+    ['Tipo de evento',matrix.event?.label],['Tipo de servicio',matrix.serviceGroup?.label],['Canal de ingreso',matrix.intakeChannel?.label],
+    ['Reportado por',matrix.reporterName],['Sección',matrix.zone?.label],['Sector',matrix.zone?.sectorLabel],
     ['Servicio', matrix.service?.label], ['Empresa', matrix.company?.label], ['Proceso N2', matrix.process?.label],
     ['Subproceso', matrix.subprocess?.label], ['Severidad', matrix.severity?.label],
     ['Impactos', matrix.impacts.map((i) => i.label).join(', ')], ['Responsable', matrix.responsible?.fullName],

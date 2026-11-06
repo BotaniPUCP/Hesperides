@@ -9,13 +9,14 @@
 > El SPEC-000 se escribió antes de conocer el dominio y algunas de sus directrices quedaron
 > genéricas. Si este archivo contradice a un spec, manda este archivo.
 
-**Stack configurado en el `pom`:** Java **26** (Temurin 26) · Spring Boot **4.1.1** ·
+**Stack configurado en el `pom`:** Java **25 LTS** (Temurin 25) · Spring Boot **4.1.1** ·
 Spring Security **7.1.1** · JJWT **0.12.6** · Testcontainers **2.x** · JaCoCo **0.8.15** ·
 PostgreSQL + PostGIS · Flyway · Next.js 16 (React 19) · TypeScript · Tailwind · React Native ·
 Python 3.11 / Flask.
 
-**JDK 26 obligatorio para todos:** el JDK local, el de CI y las imágenes de construcción
-y ejecución usan Java 26.
+**JDK 25 LTS obligatorio para todos:** el JDK local, el de CI y las imágenes de construcción
+y ejecución usan Java 25. Maven Enforcer exige `[25,26)` durante `validate`;
+compilar con release 25 desde JDK 26 no sustituye este requisito.
 
 ---
 
@@ -144,7 +145,7 @@ Boot 4 probablemente vive en su propio starter. Buscar en el BOM antes de asumir
 | `@MockBean` | Existe | **Eliminado.** Usar `@MockitoBean` de `org.springframework.test.context.bean.override.mockito` |
 | Bean `HttpSecurity` en slices de test | Disponible | Un `@WebMvcTest` que importe `SecurityConfig` necesita **`spring-boot-starter-security-test`** o no existe el bean |
 | Lombok como annotation processor | Lo inyecta el parent | **Hay que declararlo** en `annotationProcessorPaths` del `maven-compiler-plugin`, o `@Slf4j` no genera el campo `log` y la compilación falla |
-| JaCoCo | No asumir compatibilidad con JDK recientes | Se conserva **0.8.15** para instrumentar el bytecode de Java 26 (0.8.12 no lo soporta); no bajar la versión al cambiar de JDK |
+| JaCoCo | No asumir compatibilidad con JDK recientes | Se conserva **0.8.15**, compatible con Java 25; no bajar la versión al cambiar de JDK |
 | Testcontainers | Artefactos `postgresql`, `junit-jupiter` | Boot 4 gestiona Testcontainers **2.x**, que los renombró a **`testcontainers-postgresql`** y **`testcontainers-junit-jupiter`** |
 | `OncePerRequestFilter` | `org.springframework.web.filter` | Sin cambio (está en `spring-web`, **no** en `spring-security-web`) |
 

@@ -9,8 +9,6 @@ import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
 import pe.edu.pucp.hesperides.modules.catalogs.repository.CatalogItemsRepository;
 import pe.edu.pucp.hesperides.modules.incidents.dto.IncidentContracts.*;
 import pe.edu.pucp.hesperides.modules.incidents.entity.Incident;
-import pe.edu.pucp.hesperides.modules.incidents.entity.IncidentIntervention;
-import pe.edu.pucp.hesperides.modules.incidents.repository.IncidentInterventionsRepository;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 import java.util.*;
 import java.util.function.Function;
@@ -24,12 +22,12 @@ public class IncidentMatrix {
     private final UsersRepository users;
     private final JdbcTemplate jdbc;
     private final IncidentBusinessCalendar calendar;
-    private final IncidentInterventionsRepository interventions;
     private final IncidentWorkLinks workLinks;
 
     public void initialize(Incident incident) {
         incident.setEvent(item("INCIDENT_EVENT", "INCIDENT"));
         incident.setServiceGroup(item("INCIDENT_SERVICE_GROUP", "GREEN_AREAS"));
+        incident.setIntakeChannel(item("INCIDENT_INTAKE_CHANNEL", "FORM"));
     }
 
     public void number(Incident incident) {
@@ -49,6 +47,12 @@ public class IncidentMatrix {
 
     public void apply(Incident incident, MatrixRequest request) {
         if (request == null) return;
+        incident.setEvent(retainedItem("INCIDENT_EVENT",request.eventCode()==null ? "INCIDENT" : request.eventCode(),incident.getEvent()));
+        incident.setIntakeChannel(retainedItem("INCIDENT_INTAKE_CHANNEL",request.intakeChannelCode()==null ? "FORM" : request.intakeChannelCode(),incident.getIntakeChannel()));
+        incident.setReporterName(clean(request.reporterName()));
+        if (request.zoneId()!=null && !Objects.equals(request.zoneId(),incident.getZoneId()) && zones().stream().noneMatch(z -> z.id().equals(request.zoneId())))
+            throw new ValidationException("Invalid incident section");
+        incident.setZoneId(request.zoneId());
         incident.setService(retainedItem("INCIDENT_SERVICE", request.serviceCode(), incident.getService()));
         incident.setCompany(retainedItem("INCIDENT_COMPANY", request.companyCode(), incident.getCompany()));
         CatalogItem process = retainedItem("INCIDENT_PROCESS", request.processCode(), incident.getProcess());
@@ -78,16 +82,36 @@ public class IncidentMatrix {
         return new MatrixResponse(option(i.getEvent()), option(i.getServiceGroup()), option(i.getService()),
                 option(i.getCompany()), option(i.getProcess()), option(i.getSubprocess()), option(i.getSeverity()),
                 i.getImpacts().stream().sorted(Comparator.comparingInt(CatalogItem::getSortOrder)).map(this::option).toList(),
-                person(i.getResponsible()), i.getImmediateAction(), option(i.getRootCauseItem()), i.getRootCause(),
-                i.getPreventiveAction(), i.getImpactedProcess(), i.getObservations());
+                person(i.getResponsible()), i.getImmediateAction(), causeOption(i.getRootCauseItem()), i.getRootCause(),
+                i.getPreventiveAction(), i.getImpactedProcess(), i.getObservations(),option(i.getIntakeChannel()),i.getReporterName(),zone(i.getZoneId()));
     }
 
     public MatrixOptionsResponse options(boolean coordinator) {
         return new MatrixOptionsResponse(options("INCIDENT_SERVICE"), options("INCIDENT_COMPANY"),
                 options("INCIDENT_PROCESS"), options("INCIDENT_SUBPROCESS"), options("INCIDENT_SEVERITY"),
                 options("INCIDENT_IMPACT"), options("INCIDENT_ROOT_CAUSE"), options("INCIDENT_ACTION_PURPOSE"),
-                coordinator ? users.findAll().stream().filter(this::availablePerson)
-                        .sorted(Comparator.comparing(User::getFullName)).map(this::person).toList() : List.of());
+                users.findAll().stream().filter(this::availablePerson)
+                        .sorted(Comparator.comparing(User::getFullName)).map(this::person).toList(),
+                options("INCIDENT_EVENT"),options("INCIDENT_INTAKE_CHANNEL"),zones());
+    }
+
+    private static final String ZONES = """
+        SELECT z.id,z.code,z.name,coalesce(s.name,ps.name) AS sector FROM zones z
+        JOIN catalog_items t ON t.id=z.zone_type_item_id
+        LEFT JOIN zones p ON p.id=z.parent_zone_id AND p.deleted_at IS NULL
+        LEFT JOIN catalog_items pt ON pt.id=p.zone_type_item_id
+        LEFT JOIN zones s ON s.id=p.id AND pt.code='SECTOR'
+        LEFT JOIN zones ps ON ps.id=p.parent_zone_id AND ps.deleted_at IS NULL
+        WHERE t.code IN ('SECTION','SUBSECTION')
+        """;
+    public List<ZoneOptionResponse> zones() {
+        return jdbc.query(ZONES+" AND z.is_active AND z.deleted_at IS NULL ORDER BY z.name,z.id",
+                (r,n) -> new ZoneOptionResponse(r.getLong("id"),r.getString("code"),r.getString("name"),r.getString("sector")));
+    }
+    private ZoneOptionResponse zone(Long id) {
+        if (id==null) return null;
+        return jdbc.query(ZONES+" AND z.id=?",(r,n) -> new ZoneOptionResponse(r.getLong("id"),r.getString("code"),r.getString("name"),r.getString("sector")),id)
+                .stream().findFirst().orElse(null);
     }
 
     public MatrixSummaryResponse summary(List<Incident> records) {
@@ -96,12 +120,22 @@ public class IncidentMatrix {
         long pending = workLinks.countWork(false,true);
         return new MatrixSummaryResponse(pending, durations.size(), durations.isEmpty() ? null :
                 durations.stream().mapToLong(Long::longValue).average().orElseThrow(),
-                distribution(approved, i -> Stream.of(label(i.getSeverity()))),
-                distribution(approved, i -> i.getImpacts().isEmpty() ? Stream.of("Sin evaluar")
+                distribution(records, i -> Stream.of(label(i.getSeverity()))),
+                distribution(records, i -> i.getImpacts().isEmpty() ? Stream.of("Sin evaluar")
                         : i.getImpacts().stream().map(CatalogItem::getLabel)),
-                distribution(approved, i -> Stream.of(label(i.getService()))),
-                distribution(approved.stream().filter(i -> i.getResolvedAt() == null).toList(),
-                        i -> Stream.of(i.getResponsible() == null ? "Sin asignar" : i.getResponsible().getFullName())));
+                distribution(records, i -> Stream.of(label(i.getService()))),
+                distribution(records.stream().filter(i -> i.getResolvedAt() == null).toList(),
+                         i -> Stream.of(i.getResponsible() == null ? "Sin asignar" : i.getResponsible().getFullName())),
+                distribution(records,i -> Stream.of(label(i.getStatus()))),
+                distribution(records.stream().filter(i -> i.getResolvedAt()==null).toList(),i -> Stream.of(label(i.getUrgency()))),
+                distribution(records,i -> Stream.of(i.getRootCauseItem()==null ? "Sin determinar" : i.getRootCauseItem().getCode())),
+                distribution(records,i -> Stream.of(label(i.getCompany()))),
+                distribution(records.stream().filter(i -> i.getResolvedAt()==null).toList(),i -> {
+                    var z=zone(i.getZoneId());return Stream.of(z==null || z.sectorLabel()==null ? "Sin sector identificado" : z.sectorLabel());
+                }),
+                distribution(records,i -> {var z=zone(i.getZoneId());return Stream.of(z==null ? "Sin sección identificada" : z.label());}),
+                distribution(records,i -> Stream.of(label(i.getEvent()))),
+                distribution(records,i -> Stream.of(label(i.getIntakeChannel()))));
     }
 
     private List<DistributionResponse> distribution(List<Incident> records, Function<Incident, Stream<String>> values) {
@@ -119,16 +153,15 @@ public class IncidentMatrix {
                 "Acción preventiva/ Oportunidad de mejora", "Proceso impactado para mejora", "Estado",
                 "Fecha de cierre", "Tiempo de cierre", "Observaciones")));
         records.stream().filter(i -> i.getApprovedAt() != null).forEach(i -> {
-            var work = interventions.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(i.getId());
             var linked = workLinks.all(i.getId());
             lines.add(csv(Arrays.asList(
                 code(i), calendar.date(i.getCreatedAt()).toString(), text(i.getEvent()), text(i.getServiceGroup()),
                 text(i.getService()), text(i.getCompany()), text(i.getProcess()), text(i.getSubprocess()),
-                i.getDescription(), i.getChannel(), i.getReportedBy().getFullName(), text(i.getSeverity()),
+                i.getDescription(), text(i.getIntakeChannel()), i.getReporterName()==null ? i.getReportedBy().getFullName() : i.getReporterName(), text(i.getSeverity()),
                 i.getImpacts().stream().sorted(Comparator.comparingInt(CatalogItem::getSortOrder))
                         .map(CatalogItem::getLabel).collect(Collectors.joining(", ")),
-                i.getResponsible() == null ? "" : i.getResponsible().getFullName(), actionText(i.getImmediateAction(), work, linked, "MITIGATION"),
-                causeText(i.getRootCauseItem()), i.getRootCause(), actionText(i.getPreventiveAction(), work, linked, "PREVENTION"), i.getImpactedProcess(),
+                i.getResponsible() == null ? "" : i.getResponsible().getFullName(), actionText(i.getImmediateAction(), linked, "MITIGATION"),
+                causeText(i.getRootCauseItem()), i.getRootCause(), actionText(i.getPreventiveAction(), linked, "PREVENTION"), i.getImpactedProcess(),
                 i.getResolvedAt() != null ? "Cerrado" : Set.of("IN_PROGRESS","RESOLUTION_OBSERVED").contains(i.getStatus().getCode()) ? "En proceso" : "Abierto",
                 i.getResolvedAt() == null ? "" : calendar.date(i.getResolvedAt()).toString(),
                 duration(i) == null ? "" : duration(i).toString(), Stream.of(i.getObservations(),
@@ -139,12 +172,9 @@ public class IncidentMatrix {
         return new ExportResponse("matriz-incidencias-osg.csv", "text/csv;charset=utf-8", "\uFEFF" + String.join("\r\n", lines) + "\r\n");
     }
 
-    private String actionText(String declared, List<IncidentIntervention> work, List<LinkedInterventionResponse> linked, String purpose) {
+    private String actionText(String declared, List<LinkedInterventionResponse> linked, String purpose) {
         List<String> descriptions = new ArrayList<>();
         if (declared != null) descriptions.add(declared);
-        work.stream().filter(w -> w.getReplacementInterventionId()==null
-                        && (w.getPurpose() == null ? "MITIGATION" : w.getPurpose().getCode()).equals(purpose))
-                .forEach(w -> descriptions.add("[Registro anterior: " + w.getStatus().getLabel() + "] " + w.getDescription()));
         linked.stream().filter(w -> w.purpose().code().equals(purpose)).forEach(w -> descriptions.add(
                 "["+catalogs.findByTypeCodeAndCode("INTERVENTION_STATUS",w.statusCode()).map(CatalogItem::getLabel).orElse(w.statusCode())+"] "
                         +Objects.toString(w.code(),"No disponible")+" · "+Objects.toString(w.description(),"")));
@@ -173,7 +203,7 @@ public class IncidentMatrix {
     }
     private List<MatrixOptionResponse> options(String type) {
         return catalogs.findActiveByTypeCode(type).stream().map(i -> new MatrixOptionResponse(i.getId(), i.getCode(),
-                i.getLabel(), i.getParentItem() == null ? null : i.getParentItem().getCode(), description(i))).toList();
+                type.equals("INCIDENT_ROOT_CAUSE") ? causeText(i) : i.getLabel(), i.getParentItem() == null ? null : i.getParentItem().getCode(), description(i))).toList();
     }
     private String description(CatalogItem item) {
         return item.getMetadata() == null ? null : Objects.toString(item.getMetadata().get("description"), null);
@@ -181,6 +211,7 @@ public class IncidentMatrix {
     private String causeText(CatalogItem item) {
         return item == null ? "" : item.getCode() + " — " + Objects.toString(description(item), item.getLabel());
     }
+    private OptionResponse causeOption(CatalogItem i) {return i==null ? null : new OptionResponse(i.getId(),i.getCode(),causeText(i));}
     private String clean(String s) { return s == null || s.isBlank() ? null : s.trim(); }
     private String text(CatalogItem i) { return i == null ? "" : i.getLabel(); }
     private String label(CatalogItem i) { return i == null ? "Sin evaluar" : i.getLabel(); }

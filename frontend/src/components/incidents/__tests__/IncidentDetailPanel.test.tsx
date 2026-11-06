@@ -65,13 +65,13 @@ it('preselects created real work and retries the same explicit link rather than 
   expect(screen.getByRole('link', { name:'Registrar nueva intervención' })).toHaveAttribute('href','/intervenciones/nueva?fromIncident=7');
 });
 
-it('keeps historical work visible but read-only when review options are unavailable', () => {
-  const detail = { ...approvedDetail, interventions: [{
-    id: 10, description: 'Retirar rama', type: null, status: { id: 6, code: 'ASSIGNED', label: 'Pendiente' },
-    recordedBy: pendingDetail.incident.reportedBy, completedBy: null, completedAt: null, createdAt: pendingDetail.incident.createdAt, purpose: null, replacementInterventionId: null,
+it('keeps real work visible without offering creation to a foreman when options fail', () => {
+  const detail = { ...approvedDetail,canCreateIntervention:false, linkedInterventions: [{
+    id:10,linkId:1,code:'INT-000010',description:'Retirar rama',statusCode:'ASSIGNED',version:0,purpose:null,locationCount:1,validatedLocationCount:0,
   }] };
   render(<Panel initial={detail} coordinator={false} options={false} />);
-  expect(screen.getByText(/Trabajos del registro anterior/)).toBeInTheDocument();
+  expect(screen.getByRole('link',{name:'INT-000010 · Retirar rama'})).toHaveAttribute('href','/intervenciones/10');
+  expect(screen.queryByRole('link',{name:'Registrar nueva intervención'})).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Marcar realizada' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Validar resolución y cerrar incidencia' })).not.toBeInTheDocument();
 });
@@ -89,12 +89,11 @@ it('saves matrix severity and multiple impacts without assigning urgency', async
   })));
 });
 
-it('does not enable closure when declared prevention has no completed preventive action', () => {
+it('does not enable closure for finalized but unvalidated real work', () => {
   const detail: IncidentDetail = { ...approvedDetail, incident: { ...approvedDetail.incident,
     matrix: { ...approvedDetail.incident.matrix, preventiveAction: 'Inspeccionar árboles vecinos' } },
-    interventions: [{ id: 10, description: 'Rama retirada', type: null, purpose: { id: 34, code: 'MITIGATION', label: 'Mitigación' },
-      status: { id: 6, code: 'COMPLETED', label: 'Realizada' }, recordedBy: pendingDetail.incident.reportedBy,
-      completedBy: pendingDetail.incident.reportedBy, completedAt: pendingDetail.incident.createdAt, createdAt: pendingDetail.incident.createdAt, replacementInterventionId:null }],
+    linkedInterventions: [{ id:10,linkId:1,code:'INT-000010',description:'Rama retirada',statusCode:'COMPLETED',version:1,
+      purpose:{id:34,code:'MITIGATION',label:'Mitigación'},locationCount:1,validatedLocationCount:0 }],
   };
   render(<Panel initial={detail} />);
   expect(screen.getByRole('button', { name: 'Validar resolución y cerrar incidencia' })).toBeDisabled();

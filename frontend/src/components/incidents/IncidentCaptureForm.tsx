@@ -5,6 +5,9 @@ import { Button, Card, Textarea } from '@/components/ui';
 import { incidentsApi, newClientReference } from '@/lib/incidents-api';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { emptyLocation, LocationFields, locationPayload } from './LocationFields';
+import type { IncidentDetail,IncidentOptions } from '@shared/types';
+import { emptyIncidentMatrix,IncidentMatrixFields,matrixReview } from './IncidentMatrixFields';
+import { IncidentCaptureLinks,type CaptureWorkLink } from './IncidentCaptureLinks';
 
 interface Attachment { file: File; reference: string; uploaded: boolean; error: string | null }
 
@@ -20,8 +23,10 @@ function Preview({ file }: { file: File }) {
   return <img ref={image} alt={`Fotografía seleccionada: ${file.name}`} className="h-28 w-full rounded-md object-cover" />;
 }
 
-export function IncidentCaptureForm({ sender, onDone, onCancel }: {
+export function IncidentCaptureForm({ sender, onDone, onCancel, options = null, optionsError, onRetryOptions,onCreateIntervention,scopeKey = sender }: {
   sender: string; onDone: (id: number) => void; onCancel: () => void;
+  options?: IncidentOptions | null;optionsError?: string | null;onRetryOptions?: () => void;onCreateIntervention?: (id: number) => void;
+  scopeKey?: string;
 }) {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState(emptyLocation);
@@ -32,12 +37,17 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
   const [savedId, setSavedId] = useState<number | null>(null);
   const attempt = useRef<{ json: string; reference: string } | null>(null);
   const sending = useRef(false);
-  const submit = async () => {
+  const saved = useRef<IncidentDetail | null>(null);
+  const [extended,setExtended]=useState(false);
+  const [matrix,setMatrix]=useState(() => matrixReview(emptyIncidentMatrix));
+  const [hasMatrix,setHasMatrix]=useState(false);
+  const [links,setLinks]=useState<CaptureWorkLink[]>([]);
+  const submit = async (createWork = false) => {
     if (sending.current) return;
     if (!description.trim()) { setDescriptionError('Escribe brevemente qué pasó.'); return; }
     setDescriptionError('');
     let payload;
-    try { payload = { description: description.trim(), ...locationPayload(location) }; }
+    try { payload = { description: description.trim(), ...locationPayload(location),...(hasMatrix ? {matrix} : {}) }; }
     catch (ex) { setError((ex as Error).message); return; }
     sending.current = true; setBusy(true); setError('');
     try {
@@ -46,6 +56,7 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
         const json = JSON.stringify(payload);
         if (attempt.current?.json !== json) attempt.current = { json, reference: newClientReference() };
         const detail = await incidentsApi.create(payload, attempt.current.reference);
+        saved.current=detail;
         id = detail.incident.id; setSavedId(id);
       }
       let failed = false;
@@ -58,7 +69,18 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
           setAttachments((all) => all.map((a) => a.reference === attachment.reference ? { ...a, error: mensajeDeApiError(ex) } : a));
         }
       }
-      if (!failed) onDone(id);
+      for (const link of links) {
+        if (saved.current?.linkedInterventions.some(w => w.id===link.work.id)) continue;
+        try {
+          saved.current=await incidentsApi.linkIntervention(id,{version:saved.current!.incident.version,
+            interventionId:link.work.id,interventionVersion:link.work.version,purposeCode:link.purposeCode});
+        } catch(ex) {
+          // Keep the saved report and selections; refresh versions for an explicit retry.
+          try { saved.current=await incidentsApi.detail(id); } catch { /* Preserve the original failure and retry data. */ }
+          throw ex;
+        }
+      }
+      if (!failed) {if(createWork && onCreateIntervention)onCreateIntervention(id);else onDone(id);}
     } catch (ex) { setError(mensajeDeApiError(ex)); }
     finally { sending.current = false; setBusy(false); }
   };
@@ -82,6 +104,15 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
           helperText="Una frase basta. Si puedes, indica dónde ocurrió." errorMessage={descriptionError}
           placeholder="Rama caída en puerta principal" value={description} disabled={busy || savedId !== null}
           onChange={(value) => { setDescription(value); setDescriptionError(''); }} />
+        <Button type="button" size="lg" variant="secondary" disabled={busy || savedId!==null} onClick={() => setExtended(v => !v)}>
+          {extended ? 'Volver al modo simple' : 'Añadir más detalles · modo ampliado'}
+        </Button>
+        <div className={extended ? 'space-y-4' : 'hidden'}>
+          <p className="text-sm text-neutral-700">Datos opcionales de la plantilla OSG. No necesitas completarlos para enviar.</p>
+          {options ? <IncidentMatrixFields value={matrix} original={emptyIncidentMatrix} options={options.matrix} disabled={busy || savedId!==null}
+            onChange={(next) => {setMatrix(next);setHasMatrix(true);}} /> : <p className="text-sm text-neutral-700">{optionsError ?? 'Cargando los campos opcionales…'} Puedes enviar el reporte simple.</p>}
+          {optionsError && onRetryOptions && <Button type="button" size="lg" onClick={onRetryOptions}>Reintentar campos OSG</Button>}
+        </div>
         <fieldset disabled={busy || savedId !== null} className="space-y-4">
           <div className="flex flex-wrap gap-3">
             <label className="flex min-h-12 cursor-pointer items-center rounded-md border border-neutral-200 bg-neutral-0 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 focus-within:ring-2 focus-within:ring-brand-600">
@@ -101,6 +132,7 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
             <LocationFields value={location} onChange={setLocation} disabled={busy || savedId !== null} />
           </details>
         </fieldset>
+        <IncidentCaptureLinks value={links} onChange={setLinks} disabled={busy || savedId!==null} scopeKey={scopeKey} />
         {attachments.length > 0 && <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {attachments.map((a) => <li key={a.reference} className="space-y-2 rounded-lg border border-neutral-200 p-3">
             <Preview file={a.file} />
@@ -112,11 +144,13 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
           </li>)}
         </ul>}
         {savedId !== null && <p role="status" className="rounded-lg border border-alert-success-border bg-alert-success-bg p-3 text-alert-success-fg">
-          Tu texto ya fue recibido con el número #{savedId}. Las fotografías pendientes se pueden reintentar o puedes continuar sin ellas.
+          Tu texto ya fue recibido con el número #{savedId}. Puedes reintentar los pendientes o continuar al detalle para completar fotos y relaciones sin duplicar el reporte.
         </p>}
         {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
         <div className="flex flex-wrap gap-3">
-          <Button type="submit" size="lg" loading={busy}>{savedId === null ? 'Enviar' : 'Reintentar fotos pendientes'}</Button>
+          <Button type="submit" size="lg" loading={busy}>{savedId === null ? 'Enviar' : 'Reintentar pendientes'}</Button>
+          {options?.canCreateIntervention && onCreateIntervention && <Button type="button" size="lg" variant="secondary" disabled={busy}
+            onClick={() => void submit(true)}>Guardar reporte y crear intervención</Button>}
           {savedId === null ? <Button type="button" size="lg" variant="ghost" disabled={busy} onClick={onCancel}>Volver</Button>
             : <Button type="button" size="lg" variant="secondary" disabled={busy} onClick={() => onDone(savedId)}>Continuar al detalle</Button>}
         </div>

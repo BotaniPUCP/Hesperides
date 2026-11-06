@@ -112,7 +112,7 @@ flowchart TB
     end
 
     subgraph Servidor
-        API[Backend API<br/>Spring Boot 4.1 · Java 26<br/>:8080 /api/v1]
+        API[Backend API<br/>Spring Boot 4.1 · Java 25<br/>:8080 /api/v1]
         DS[Data service<br/>Flask · Python 3.11<br/>:5001]
         DB[(PostgreSQL 16<br/>+ PostGIS 3.4<br/>:5432)]
     end
@@ -371,6 +371,6 @@ y queda congelada.
 | Tres excepciones a «sin servicios externos» | SPEC-100, SPEC-005 → REGLAS §0.1 |
 | Visor 3D (Three.js) en lugar de Leaflet | SPEC-102 → SPEC-C01 §6 |
 | Sin `zone_id` en `green_elements` | Inventario verde, 1 oct 2026 |
-| Spring Boot 4 / Java 26 | SPEC-000, versiones verificadas en el `pom` |
+| Spring Boot 4 / Java 25 | SPEC-000, versiones verificadas en el `pom` |
 
 El historial completo de enmiendas está en [`specs/REGISTRO.md`](../../../specs/REGISTRO.md).

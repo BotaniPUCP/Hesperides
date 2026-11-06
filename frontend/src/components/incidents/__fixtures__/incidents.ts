@@ -6,6 +6,7 @@ export const emptyMatrix: IncidentMatrix = {
   service: null, company: null, process: null, subprocess: null, severity: null, impacts: [],
   responsible: null, immediateAction: null, rootCauseItem: null, rootCause: null,
   preventiveAction: null, impactedProcess: null, observations: null,
+  intakeChannel: {id:80,code:'FORM',label:'Formulario'},reporterName:null,zone:null,
 };
 
 export const pendingDetail: IncidentDetail = {
@@ -18,11 +19,13 @@ export const pendingDetail: IncidentDetail = {
     officialCode: null, closureBusinessDays: null, matrix: emptyMatrix,
     correctionReason: null, resolutionSummary: null, resolvedBy: null, resolutionObservation: null,
   },
-  interventions: [], photos: [], history: [], suggestedType: null, canAttend: true, updates: [],
+  photos: [], history: [], suggestedType: null, canAttend: true, updates: [],
   linkedInterventions: [], requiredInterventionCount: 0, canResolve: false, canCorrectReport: false,
+  canEdit:true,canLinkInterventions:true,canCreateIntervention:true,
 };
 
 export const incidentOptions: IncidentOptions = {
+  canCreateIntervention:true,
   workStatuses: [{ id: 60, code: 'PLANNED', label: 'Planificada' }, { id: 61, code: 'COMPLETED', label: 'Finalizada, pendiente de validación' },
     { id: 62, code: 'VALIDATED', label: 'Validada' }],
   statuses: [pendingDetail.incident.status, { id: 2, code: 'OPEN', label: 'Pendiente de atención' }],
@@ -30,6 +33,8 @@ export const incidentOptions: IncidentOptions = {
   urgencies: [{ id: 4, code: 'HIGH', label: 'Alta' }],
   activities: [{ id: 5, code: 'PODA', label: 'Poda' }], teams: [pendingDetail.incident.team!],
   matrix: {
+    events:[{id:20,code:'INCIDENT',label:'Incidencia',parentCode:null,description:null}],
+    intakeChannels:[{id:80,code:'FORM',label:'Formulario',parentCode:null,description:null}],zones:[],
     services: [{ id: 30, code: 'AV-01', label: 'AV-01- Mantenimiento de áreas verdes', parentCode: null, description: null }],
     companies: [], processes: [], subprocesses: [], rootCauses: [], responsiblePeople: [],
     severities: [{ id: 31, code: 'HIGH', label: 'Alta', parentCode: null, description: null }],

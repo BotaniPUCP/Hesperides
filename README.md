@@ -5,7 +5,7 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 ## Descripción
 
 **Hesperides** es un proyecto de investigación que implementa una arquitectura distribuida en tres capas:
-- Backend REST escalable (Spring Boot 4.1, Java 26)
+- Backend REST escalable (Spring Boot 4.1, Java 25 LTS)
 - Frontend responsivo (Next.js, TypeScript/React)
 - Data service especializado (Python Flask)
 
@@ -72,10 +72,25 @@ reabre y corrige. Solo después de validar todas las intervenciones requeridas p
 No hay cierre automático de incidencias compartidas. Observar/reabrir una incidencia
 no invalida automáticamente intervenciones aprobadas.
 
-Los trabajos antiguos permanecen de solo lectura: no equivalen a intervenciones
-validadas ni se convierten inventando fechas o ubicaciones. En casos abiertos,
-coordinación debe asociarlos expresamente a intervenciones reales antes del cierre.
-Los cierres históricos se conservan. V029 es aditiva; no requiere borrar volúmenes.
+### Captura ampliada y tablero OSG (V035)
+
+El capataz puede enviar solo una frase o abrir el modo ampliado para aportar los
+campos de la matriz: servicios, severidad, impactos, causas catalogadas completas y
+análisis, acciones y observaciones. Son los mismos datos editables que revisa
+coordinación. «Mis reportes» muestra únicamente sus envíos, no todos los de su cuadrilla.
+
+Los vínculos opcionales con trabajo real se pueden añadir desde la captura y el
+detalle, incluso antes del registro oficial, respetando el alcance de ambos recursos.
+Crear conserva los permisos de Intervenciones: el capataz no recibe planificación.
+Coordinación dispone de Tablero y Reportes, atención prioritaria, gráficos y tabla
+filtrable. No hay métricas ficticias de IA ni SLA. La correspondencia de los 23
+campos está en [la guía OSG](docs/incidencias/matriz-osg.md).
+
+**V035 elimina la tabla de trabajos internos del prototipo**, junto con su API y
+adaptadores. No convierte esos trabajos ni inventa ejecución. Revisar el impacto y
+respaldar datos importantes antes de aplicarla; no se reescriben V001–V034.
+La demo nueva incluye 12 reportes, 8 intervenciones reales y 10 vínculos, con imágenes
+explícitamente ficticias. No requiere borrar volúmenes para aplicar el nuevo esquema.
 
 Solo la descripción es obligatoria para informar o aprobar. Fotos JPEG/PNG/WebP:
 máximo seis por incidencia y 5 MiB por archivo. La posición del teléfono se obtiene
@@ -151,7 +166,7 @@ bun --bun run test -- --runInBand
 bun --bun run build
 bun --bun run dev
 
-# Desde backend/, con JDK 26 y el socket Podman disponible
+# Desde backend/, con JDK 25 y el socket Podman disponible
 DOCKER_HOST=unix://${XDG_RUNTIME_DIR}/podman/podman.sock TESTCONTAINERS_RYUK_DISABLED=true mvn -B verify
 ```
 
@@ -173,9 +188,9 @@ tokens, las opacidades y las utilidades migradas. Babel permanece en v7.
 
 - **Docker con Docker Compose**, o **Podman** con `podman compose` y su proveedor
   Compose configurados. No es necesario instalar ambos motores.
-- **JDK 26** — obligatorio para todos. El backend fija `<java.version>26</java.version>`;
-  con un JDK anterior Maven falla con `release version 26 not supported`. Configura
-  `JAVA_HOME` para que Maven use esa instalación.
+- **JDK 25 LTS** — obligatorio para todos. El backend fija `<java.version>25</java.version>`;
+  Maven Enforcer exige JDK 25.x en `validate`, también para ejecutar los tests. Configura
+  `JAVA_HOME` para que Maven use esa instalación, no JDK 26.
 - **Node.js** 20+
 - **Python** 3.11+
 - **Git**
@@ -288,7 +303,7 @@ Dos detalles del entorno que conviene conocer:
 │   ├── _plantilla.md           # Template para nuevos specs
 │   └── REGISTRO.md             # Seguimiento de specs
 │
-├── backend/                    # Spring Boot (Java 26)
+├── backend/                    # Spring Boot (Java 25 LTS)
 │   ├── src/
 │   ├── pom.xml
 │   └── .mvn/wrapper/           # Maven Wrapper

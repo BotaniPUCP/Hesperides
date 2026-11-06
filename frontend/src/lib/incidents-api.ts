@@ -1,12 +1,18 @@
-import type { Incident, IncidentCapture, IncidentDetail, IncidentInterventionLink, LinkedIncidentIntervention, IncidentMatrixExport, IncidentOptions, IncidentPhoto, IncidentReview, IncidentSummary, Page } from '@shared/types';
+import type { Incident, IncidentCapture, IncidentDetail, IncidentInterventionLink, LinkedIncidentIntervention, IncidentMatrixExport, IncidentOptions, IncidentPhoto, IncidentReview, IncidentSummary, MyIncidentReports, Page } from '@shared/types';
 import { apiClient } from './api';
+import type { IncidentFilters } from './incidentNavigation';
 
 const path = '/incidents';
 export const incidentsApi = {
-  list: (page: number, status: string, search: string) => apiClient.get<Page<Incident>>(
-    `${path}?${new URLSearchParams({ page: String(page), size: '20', status, search })}`),
+  list: (page: number, status: string, search: string, filters: Partial<IncidentFilters> = {}) => {
+    const query=new URLSearchParams({ page: String(page), size: '20', status, search });
+    for(const key of ['severity','urgency','service','zoneId','registration'] as const)if(filters[key])query.set(key,String(filters[key]));
+    return apiClient.get<Page<Incident>>(`${path}?${query}`);
+  },
   options: () => apiClient.get<IncidentOptions>(`${path}/options`),
   summary: () => apiClient.get<IncidentSummary>(`${path}/summary`),
+  mine: () => apiClient.get<MyIncidentReports>(`${path}/mine`),
+  availableInterventions: (search: string,page: number) => apiClient.get<Page<LinkedIncidentIntervention>>(`${path}/intervention-options?${new URLSearchParams({search,page:String(page)})}`),
   export: () => apiClient.get<IncidentMatrixExport>(`${path}/export`),
   comment: (id: number, body: string, clientReference: string) => apiClient.post<IncidentDetail>(`${path}/${id}/comments`, { body, clientReference }),
   detail: (id: number) => apiClient.get<IncidentDetail>(`${path}/${id}`),

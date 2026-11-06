@@ -200,7 +200,7 @@ public class InterventionsServiceImpl implements InterventionsService {
                 row.put("assignees", references.candidates((Long)t.get("id")));rows.add(row);
             }
         }
-        return Map.of("teams",rows,"catalogs",references.catalogOptions(),"places",references.placeOptions(),"zones",references.zoneOptions());
+        return Map.of("teams",rows,"catalogs",references.catalogOptions(),"places",references.placeOptions(),"zones",references.zoneOptions(),"canCreate",access.canCreate(u));
     }
     @Override @Transactional public Creation create(Planning r,UUID key){
         var u=actor();role(u,"ADMIN","COORDINADOR");

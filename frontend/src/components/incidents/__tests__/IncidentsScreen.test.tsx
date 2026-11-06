@@ -17,11 +17,13 @@ jest.mock('@/hooks/useIncidents', () => ({
 }));
 let mockPathname = '/incidencias';
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }), usePathname: () => mockPathname }));
+jest.mock('../IncidentMyReports',() => ({IncidentMyReports:() => <aside>Mis reportes</aside>}));
 
 const idle = { loading: false, errorMessage: null, notFound: false, reload: jest.fn(), updateData: jest.fn() };
 const filters = { search: 'rama', status: 'OPEN', page: 2 };
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPathname = '/incidencias';
   jest.mocked(useAuth).mockReturnValue({ user: { id: 1, fullName: 'Óscar', role: { code: 'COORDINADOR' } } } as ReturnType<typeof useAuth>);
   jest.mocked(useIncidentNavigation).mockReturnValue({
     filters, href: (path) => incidentHref(path, filters), listHref: incidentHref('/incidencias', filters), changeFilters: jest.fn(),
@@ -47,11 +49,20 @@ it('recupera la posición del scroll de la lista con los mismos filtros', () => 
   window.sessionStorage.clear();
 });
 
+it('does not restore a scroll position saved for different OSG filters', () => {
+  const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+  saveListScroll('/incidencias', 'search=rama&status=OPEN&page=2&severity=HIGH', 900);
+  render(<IncidentsScreen />);
+  expect(scrollTo).not.toHaveBeenCalled();
+  scrollTo.mockRestore();
+  window.sessionStorage.clear();
+});
+
 it('shows the list when summary and filter options fail', () => {
   jest.mocked(useIncidentOptions).mockReturnValue({ ...idle, data: null, errorMessage: 'Error del servidor.' });
   jest.mocked(useIncidentSummary).mockReturnValue({ ...idle, data: null, errorMessage: 'Error del servidor.' });
   render(<IncidentsScreen />);
-  expect(screen.getByText('Rama caída en puerta principal')).toBeInTheDocument();
+  expect(screen.getAllByText('Rama caída en puerta principal').length).toBeGreaterThan(0);
   expect(screen.getByRole('button', { name: 'Reintentar resumen' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Reintentar opciones' })).toBeInTheDocument();
 });

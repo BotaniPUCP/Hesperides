@@ -7,6 +7,7 @@ export interface IncidentCapture {
   locationReference: string | null;
   latitude: number | null;
   longitude: number | null;
+  matrix?: IncidentMatrixReview;
 }
 export interface IncidentReview extends IncidentCapture {
   version: number;
@@ -29,6 +30,10 @@ export interface IncidentMatrixReview {
   preventiveAction: string | null;
   impactedProcess: string | null;
   observations: string | null;
+  eventCode?: string | null;
+  intakeChannelCode?: string | null;
+  reporterName?: string | null;
+  zoneId?: number | null;
 }
 export interface IncidentMatrix {
   event: IncidentOption | null;
@@ -46,7 +51,11 @@ export interface IncidentMatrix {
   preventiveAction: string | null;
   impactedProcess: string | null;
   observations: string | null;
+  intakeChannel: IncidentOption | null;
+  reporterName: string | null;
+  zone: IncidentZone | null;
 }
+export interface IncidentZone { id: number; code: string; label: string; sectorLabel: string | null }
 export interface IncidentMatrixOption extends IncidentOption { parentCode: string | null; description: string | null }
 export interface IncidentMatrixOptions {
   services: IncidentMatrixOption[];
@@ -58,6 +67,9 @@ export interface IncidentMatrixOptions {
   rootCauses: IncidentMatrixOption[];
   actionPurposes: IncidentMatrixOption[];
   responsiblePeople: IncidentPerson[];
+  events: IncidentMatrixOption[];
+  intakeChannels: IncidentMatrixOption[];
+  zones: IncidentZone[];
 }
 export interface IncidentDistribution { label: string; count: number }
 export interface IncidentMatrixSummary {
@@ -68,6 +80,14 @@ export interface IncidentMatrixSummary {
   impacts: IncidentDistribution[];
   services: IncidentDistribution[];
   responsiblePeople: IncidentDistribution[];
+  states: IncidentDistribution[];
+  urgencies: IncidentDistribution[];
+  rootCauses: IncidentDistribution[];
+  companies: IncidentDistribution[];
+  sectors: IncidentDistribution[];
+  locations: IncidentDistribution[];
+  events: IncidentDistribution[];
+  channels: IncidentDistribution[];
 }
 export interface IncidentUpdate {
   id: number;
@@ -77,7 +97,7 @@ export interface IncidentUpdate {
   createdAt: string;
 }
 export interface IncidentMatrixExport { filename: string; contentType: string; content: string }
-export interface Incident extends IncidentCapture {
+export interface Incident extends Omit<IncidentCapture,'matrix'> {
   id: number;
   originalDescription: string;
   type: IncidentOption | null;
@@ -99,18 +119,6 @@ export interface Incident extends IncidentCapture {
   resolvedBy: IncidentPerson | null;
   resolutionObservation: string | null;
 }
-export interface IncidentIntervention {
-  id: number;
-  description: string;
-  type: IncidentOption | null;
-  status: IncidentOption;
-  recordedBy: IncidentPerson;
-  completedBy: IncidentPerson | null;
-  completedAt: string | null;
-  createdAt: string;
-  purpose: IncidentOption | null;
-  replacementInterventionId: number | null;
-}
 export interface LinkedIncidentIntervention {
   linkId: number | null;
   id: number;
@@ -127,12 +135,10 @@ export interface IncidentInterventionLink {
   interventionId: number;
   interventionVersion: number;
   purposeCode: string;
-  legacyWorkIds: number[];
 }
 export interface IncidentPhoto { id: number; contentType: string; sizeBytes: number; createdAt: string }
 export interface IncidentDetail {
   incident: Incident;
-  interventions: IncidentIntervention[];
   history: { id: number; status: IncidentOption; changedBy: IncidentPerson; createdAt: string }[];
   photos: IncidentPhoto[];
   suggestedType: IncidentOption | null;
@@ -142,8 +148,12 @@ export interface IncidentDetail {
   requiredInterventionCount: number;
   canResolve: boolean;
   canCorrectReport: boolean;
+  canEdit: boolean;
+  canLinkInterventions: boolean;
+  canCreateIntervention: boolean;
 }
 export interface IncidentOptions {
+  canCreateIntervention: boolean;
   statuses: IncidentOption[];
   types: IncidentOption[];
   urgencies: IncidentOption[];
@@ -162,11 +172,12 @@ export interface IncidentSummary {
   pendingCorrection: number;
   resolutionObserved: number;
   validatedInterventions: number;
+  dashboard: IncidentDashboardSummary;
 }
-export interface InterventionCapture {
-  clientReference: string;
-  description: string;
-  typeCode: string | null;
-  completed: boolean;
-  purposeCode?: string;
+export interface IncidentDashboardSummary {
+  total: number; active: number; highUrgency: number; pendingRegistration: number;
+  withoutWork: number; readyForClosure: number; generatedAt: string; attention: Incident[];
+}
+export interface MyIncidentReports {
+  total: number; pendingRegistration: number; active: number; resolved: number; recent: Incident[];
 }

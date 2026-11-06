@@ -13,11 +13,10 @@ import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
 import java.util.*;
 
-/** Reads real work status; never promotes historical incident tasks to validated work. */
+/** Real work is the sole execution model for incident attention. */
 @Component @RequiredArgsConstructor
 public class IncidentWorkLinks {
     private final IncidentInterventionLinksRepository links;
-    private final IncidentInterventionsRepository legacy;
     private final InterventionsRepository interventions;
     private final InterventionQueriesRepository queries;
     private final InterventionAccess access;
@@ -44,10 +43,7 @@ public class IncidentWorkLinks {
     }
     public boolean ready(Long id) {
         var linked = all(id);
-        if (linked.isEmpty() || linked.stream().anyMatch(w -> !w.statusCode().equals("VALIDATED"))) return false;
-        Set<Long> ids = new HashSet<>(linked.stream().map(LinkedInterventionResponse::id).toList());
-        return legacy.findByIncidentIdAndDeletedAtIsNullOrderByCreatedAtAscIdAsc(id).stream()
-                .allMatch(w -> w.getReplacementInterventionId() != null && ids.contains(w.getReplacementInterventionId()));
+        return !linked.isEmpty() && linked.stream().allMatch(w -> w.statusCode().equals("VALIDATED"));
     }
     public void lockRequired(Long id) {
         var ids = links.findByIncidentIdAndDeletedAtIsNullOrderByIdAsc(id).stream()
@@ -63,17 +59,18 @@ public class IncidentWorkLinks {
                 + "WHERE l.intervention_id=i.id AND l.deleted_at IS NULL AND c.deleted_at IS NULL AND c.approved_at IS NOT NULL"
                 + (pendingOnly ? " AND c.resolved_at IS NULL" : "") + ")", Long.class);
     }
-    public Page<LinkedInterventionResponse> candidates(String search, int page) {
+    public Page<LinkedInterventionResponse> candidates(String search, int page,User user) {
         int number = Math.max(0, page), size = 20;
         String pattern = LikePattern.contains(search == null ? "" : search.trim().toLowerCase(Locale.ROOT));
         String where = " WHERE i.deleted_at IS NULL AND a.status_code<>'CANCELLED' AND "
                 + "(lower(i.code) LIKE ? ESCAPE '\\' OR lower(coalesce(i.description,'')) LIKE ? ESCAPE '\\')";
-        Long count = jdbc.queryForObject("SELECT count(*) " + InterventionQueriesRepository.FROM + where, Long.class,pattern,pattern);
+        where += " AND (?='COORDINADOR' OR EXISTS(SELECT 1 FROM teams t WHERE t.id=i.team_id AND t.supervisor_user_id=? AND t.is_active AND t.deleted_at IS NULL))";
+        Long count = jdbc.queryForObject("SELECT count(*) " + InterventionQueriesRepository.FROM + where, Long.class,pattern,pattern,user.getRoleCode(),user.getId());
         var rows = jdbc.query("SELECT i.id,i.code,i.description,i.version,a.status_code,a.location_count,a.validated_location_count "
                 + InterventionQueriesRepository.FROM + where + " ORDER BY i.created_at DESC,i.id DESC LIMIT ? OFFSET ?",
                 (r,n) -> new LinkedInterventionResponse(null,r.getLong("id"),r.getString("code"),r.getString("description"),
                         r.getString("status_code"),r.getLong("version"),null,r.getInt("location_count"),r.getInt("validated_location_count")),
-                pattern,pattern,size,(long)number*size);
+                pattern,pattern,user.getRoleCode(),user.getId(),size,(long)number*size);
         return new PageImpl<>(rows,PageRequest.of(number,size),count);
     }
 }

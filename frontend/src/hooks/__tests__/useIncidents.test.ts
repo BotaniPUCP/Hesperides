@@ -25,11 +25,12 @@ beforeEach(() => {
 });
 
 it('recuerda los filtros de la URL para que el breadcrumb regrese a la lista filtrada', () => {
-  jest.mocked(useSearchParams).mockReturnValue(new URLSearchParams('search=rama&status=OPEN') as ReturnType<typeof useSearchParams>);
+  const query = 'search=rama&status=OPEN&severity=HIGH&service=AV-01&view=reports';
+  jest.mocked(useSearchParams).mockReturnValue(new URLSearchParams(query) as ReturnType<typeof useSearchParams>);
 
   renderHook(() => useIncidentNavigation());
 
-  expect(rememberedHref('/incidencias')).toBe('/incidencias?search=rama&status=OPEN');
+  expect(rememberedHref('/incidencias')).toBe(`/incidencias?${query}`);
   window.sessionStorage.clear();
 });
 
@@ -43,7 +44,7 @@ it('loads the list even when options and summary fail, without refetching them f
   await waitFor(() => expect(result.current.options.errorMessage).toBeTruthy());
   expect(result.current.summary.errorMessage).toBeTruthy();
   rerender({ search: 'rama' });
-  await waitFor(() => expect(api.list).toHaveBeenLastCalledWith(0, '', 'rama'));
+  await waitFor(() => expect(api.list).toHaveBeenLastCalledWith(0, '', 'rama',{...filters,search:'rama'}));
   expect(api.options).toHaveBeenCalledTimes(1);
   expect(api.summary).toHaveBeenCalledTimes(1);
 });
@@ -105,4 +106,18 @@ it('discards data when the signed-in actor changes', async () => {
   rerender();
   expect(result.current.data).toBeNull();
   expect(result.current.loading).toBe(true);
+});
+
+it('preserves independent filters when several controls update before the next render',()=>{
+  window.history.replaceState(null,'','/incidencias?search=rama&page=2');
+  jest.mocked(useSearchParams).mockReturnValue(new URLSearchParams(window.location.search) as ReturnType<typeof useSearchParams>);
+  const {result}=renderHook(()=>useIncidentNavigation());
+  act(()=>{
+    result.current.changeFilters(current=>({...current,severity:'HIGH',page:0}));
+    result.current.changeFilters(current=>({...current,service:'AV-01',page:0}));
+    result.current.changeFilters(current=>({...current,registration:'PENDING',page:0}));
+  });
+  const query=new URLSearchParams(window.location.search);
+  expect(query.get('search')).toBe('rama');expect(query.get('severity')).toBe('HIGH');
+  expect(query.get('service')).toBe('AV-01');expect(query.get('registration')).toBe('PENDING');expect(query.has('page')).toBe(false);
 });

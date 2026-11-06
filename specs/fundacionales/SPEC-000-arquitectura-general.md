@@ -2,7 +2,7 @@
 
 > **Equipo:** 10 desarrolladores | **Plazo:** 8 semanas | **Cliente:** PUCP
 > **Tipo:** Software interno con despliegue en la nube (AWS, pendiente de licencias), arquitectura extensible
-> **Backend:** Java 26 / Spring Boot 4.1 · Python 3.11+ / Flask (microservicios de datos)
+> **Backend:** Java 25 LTS / Spring Boot 4.1 · Python 3.11+ / Flask (microservicios de datos)
 > **Frontend:** Next.js 16+ (React 19) + React Native · TypeScript · Tailwind CSS
 >   (subido desde Next.js 14 / React 18 por 1 vulnerabilidad crítica y 7 altas, incluido un bypass de autorización en middleware, CVSS 9.1)
 > **BD:** PostgreSQL + PostGIS · Hibernate/JPA + Hibernate Spatial · Flyway
@@ -10,8 +10,8 @@
 > **Calidad:** JaCoCo 0.8.15+ (cobertura backend) · Jest + React Testing Library (frontend) · pytest (data service)
 >
 > **Versiones configuradas en el pom** (§5.2.1 documenta lo que Spring Boot 4
-> cambió respecto a 3.x): Spring Boot **4.1.1**, Spring Security **7.1.1**, Java **26**
-> (Temurin 26), JJWT **0.12.6**, Testcontainers **2.x**, JaCoCo **0.8.15**.
+> cambió respecto a 3.x): Spring Boot **4.1.1**, Spring Security **7.1.1**, Java **25 LTS**
+> (Temurin 25), JJWT **0.12.6**, Testcontainers **2.x**, JaCoCo **0.8.15**.
 
 ---
 
@@ -320,7 +320,7 @@ fuente de verdad de su propio contenido.**
 Eres un desarrollador senior trabajando en un proyecto para la PUCP.
 
 STACK TECNOLÓGICO:
-- Backend: Java 26 + Spring Boot 4.1 + JPA/Hibernate + PostgreSQL
+- Backend: Java 25 LTS + Spring Boot 4.1 + JPA/Hibernate + PostgreSQL
 - Frontend web: Next.js 16+ (React 19, App Router) + TypeScript + Tailwind
 - Frontend móvil: React Native + TypeScript
 - Migraciones: Flyway

@@ -641,8 +641,9 @@ CREATE INDEX idx_interventions_contract_id ON interventions(contract_id);
 > la relación es N:M con `interventions` mediante `incident_intervention_links`, con
 > propósito por vínculo y sin duplicar ejecución. El registro oficial puede no tener
 > intervenciones; cerrar exige todas las requeridas validadas y resumen de resolución
-> por coordinación. Los trabajos internos de V026 se conservan como legado de solo
-> lectura, con sustitución explícita, sin inventar planificación ni validaciones.
+> por coordinación. V035 retira los trabajos internos de V026 y sus adaptadores,
+> sin convertirlos en ejecución. Añade canal OSG separado del canal técnico, nombre
+> del comunicante y sección explícita opcionales, también capturables por capataz.
 > No se debe copiar la restricción GPS ni `incidents.intervention_id` de abajo.
 
 ```sql

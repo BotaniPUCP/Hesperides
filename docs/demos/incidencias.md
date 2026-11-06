@@ -1,159 +1,102 @@
-# Demostración del módulo de incidencias
+# Demostración de captura OSG y atención
 
 ## Preparación
 
 Usar un entorno local de desarrollo con datos desechables: PostgreSQL/PostGIS y
 backend en contenedores, frontend con Bun local. La imagen del backend incluye
-JDK 26; no hace falta ejecutar Java ni exportar sus variables manualmente. El módulo
-aplica V026–V029 después de las migraciones de develop. El servicio Flask no interviene.
+JDK 25; no hace falta ejecutar Java ni exportar sus variables manualmente. El módulo
+aplica V026, V028, V029 y V035 junto con las migraciones de develop. Flask no interviene.
 No conectar esta demostración a una base real.
 No usar `.env` ni credenciales reales en una prueba automatizada compartida.
 
-Con el perfil `dev`, Flyway ejecuta automáticamente
-`backend/src/main/resources/db/dev-migration/R__seed_demo_incidents.sql` después de
-las migraciones del esquema. Crea dos capataces, un coordinador, dos cuadrillas,
-ocho incidencias y doce trabajos del prototipo, conservados de solo lectura. No los
-convierte automáticamente en intervenciones reales validadas. Contraseña pública de prueba:
-`Hesperides2026`. Los nombres de cuenta terminan en `@demo.invalid`.
+Usar exclusivamente una base de demostración con perfil dev. La imagen nueva del
+backend debe incluir V035 y el seed actual. **V035 elimina los trabajos internos
+del prototipo**; no convertirlos ni intentar mantener compatibilidad. No se alteran
+V001–V034. Aplicar migraciones/recrear una base de trabajo requiere autorización
+y, si contiene datos importantes, respaldo previo.
 
-Preparar `.env` con los valores de `.env.example`: completar `POSTGRES_PASSWORD`,
-`JWT_SECRET` y `SMTP_FROM`. Los siguientes ejemplos usan backend en 8080 y frontend
-en 3000; configurar `APP_PUBLIC_URL=http://localhost:3000`,
-`CORS_ALLOWED_ORIGINS=http://localhost:3000` y `COOKIE_SECURE=false`.
-Para que la limpieza de volúmenes incluya las fotos de prueba, usar
-`STORAGE_TYPE=local` y `STORAGE_LOCAL_DIR=/data/storage`.
+El arranque general del repositorio está en README. No hace falta importar SQL a
+mano: Flyway carga `db/dev-migration/R__seed_demo_incidents.sql` únicamente con dev.
+Las imágenes de evidencia ficticia se guardan a través de FileStorage al arrancar.
+No activar dev en bases reales.
 
-Desde la raíz, reconstruir e iniciar solo PostgreSQL/PostGIS y backend:
+| Cuenta | Rol |
+|---|---|
+| capataz@demo.invalid | Capataz de Cuadrilla de demostración |
+| otro-capataz@demo.invalid | Capataz de Otra cuadrilla de demostración |
+| coordinador@demo.invalid | Coordinación |
 
-```bash
-podman compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build db backend
-```
+Contraseña pública para las tres: **Hesperides2026**. Usar perfiles de navegador
+separados, no pestañas de una misma sesión. ADMIN no participa en incidencias.
 
-En otra terminal, desde `frontend/` y con dependencias instaladas:
+## Qué debe haber al iniciar una base nueva
 
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1 bun --bun run dev
-```
+**12 reportes, 8 intervenciones reales y 10 vínculos.** No hay trabajos internos.
+Estos conteos corresponden al seed de incidencias. El perfil dev también carga
+el seed de reportes de SPEC-202, que añade sus propias intervenciones y evidencias.
 
-Abrir http://localhost:3000/incidencias. Si se cambian los puertos, alinear la URL
-de la API del frontend, la URL pública y los orígenes CORS. Los cambios de Java o
-del SQL requieren reconstruir el backend con el mismo comando `up --build`.
-
-### Terminar y descartar los datos
-
-Detener Bun con Ctrl+C. Desde la raíz, esta limpieza **destructiva** detiene y
-elimina los contenedores y los volúmenes `pgdata` y `storage` del proyecto:
-
-```bash
-podman compose -f docker-compose.yml -f docker-compose.dev.yml down --volumes
-```
-
-Elimina **toda la BD y las fotos locales del proyecto**, no solo las incidencias.
-No usarla con datos que se deban conservar. `stop`, `restart` y `down` sin
-`--volumes` no descartan estos volúmenes. No se borran `.env`, los directorios
-montados desde el host (como `inbox/`) ni los objetos en S3.
-
-### Carga automática
-
-No hace falta ejecutar SQL manualmente ni usar otra configuración de Compose.
-El override dev activa el perfil `dev`;
-al ejecutar Java fuera de Compose hay que activarlo con `SPRING_PROFILES_ACTIVE=dev`.
-La configuración común de Flyway solo incluye `db/migration`: sin el perfil dev
-no se crean cuentas ni incidencias de demostración. **No activar `dev` en una base
-real.** Compose base también usa dev por defecto; para producción, usar un perfil
-no dev explícito y no cargar `docker-compose.dev.yml`.
-
-La carga es repetible: no duplica los casos ni restablece cambios realizados durante
-la demostración. Cada capataz ve cuatro casos iniciales, uno por estado, y el
-coordinador ve los ocho. En una base sin otras incidencias, el tablero comienza con:
-
-| Indicador | Total inicial |
+| Indicador | Total |
 |---|---:|
-| Pendientes de aprobación | 2 |
-| Pendientes de atención | 2 |
+| Pendientes de registro | 3 |
+| Reportes por corregir | 1 |
+| Pendientes de atención | 3 |
 | En atención | 2 |
+| Resoluciones observadas | 1 |
 | Resueltas | 2 |
-| Intervenciones reales finalizadas | 0 |
-| Intervenciones reales validadas | 0 |
+| Intervenciones finalizadas (incluye validadas) | 3 |
+| Intervenciones validadas | 2 |
+| Casos pendientes de revisión final de cierre | 1 |
 
-El caso del Tontódromo conserva un trabajo realizado y otro pendiente. Desde V029
-sirve para demostrar la asociación explícita del legado, no para marcarlo finalizado
-sin ejecución/revisión del módulo real. El caso de la puerta principal contiene solo el
-texto mínimo. Las coordenadas de ejemplo son ilustrativas; no se crean fotografías
-ficticias. Flyway aplica esta migración repetible en una base nueva y cuando cambia
-su contenido, no en cada `compose up` si la base ya está al día. Después de una
-limpieza explícita de la demo, el siguiente arranque crea el esquema y vuelve a
-cargar sus datos. Si el SQL cambia, reconstruir la imagen del backend para incluirlo.
+Una intervención validada es compartida por un reporte aún abierto y otro cerrado;
+otra intervención asignada atiende dos pendientes de registro. Hay además un caso
+registrado sin trabajo y otro con dos intervenciones. Las imágenes recibidas dicen
+DEMOSTRACIÓN: no representan fotos ni trabajos reales del campus.
 
-La prueba `DemoIncidentsSeedTest` verifica la carga automática con el perfil dev,
-los contadores, los permisos por cuadrilla y la conservación de ediciones y
-resoluciones al repetir el SQL. `MigrationSmokeTest` comprueba que la configuración
-sin dev no ejecuta la carga de demostración.
+Flyway aplica el seed repetible en una base nueva y cuando cambia su contenido,
+no en cada `compose up` si ya está al día. Si cambia el SQL, reconstruir la imagen
+del backend para incluirlo. No recrear ni limpiar una base sin autorización.
 
-La cuenta inicial ADMIN puede seguir administrando usuarios, pero no participa en
-este flujo operativo. Para la prueba se necesitan los perfiles de coordinación y
-capataz; cambiar el rol de ADMIN no es necesario.
+## Recorrido manual
 
-## Recorrido para presentar al cliente
+1. **Capataz → Informar una incidencia.** Ver Mis reportes con solo sus ocho envíos
+   iniciales. Enviar una frase sin datos adicionales: no exigir campos OSG ni trabajo.
+2. Crear otro reporte. Abrir **Añadir más detalles · modo ampliado**. Seleccionar
+   servicio, severidad, dos impactos, causa raíz catalogada y escribir el análisis.
+   Ver las 15 causas completas del Excel. Volver al modo simple y enviar: conservar
+   esos valores. Recargar el detalle y comprobarlos en Registro OSG.
+3. En la ficha, **Ir a editar el registro OSG**, cambiar datos y Guardar cambios.
+   Recargar y confirmar persistencia, original conservado e historial de revisión.
+4. Antes de enviar otro reporte, abrir **Relacionar intervenciones existentes**,
+   elegir trabajos visibles y enviar. También se pueden relacionar desde el detalle
+   pendiente, sin registrarlo oficialmente. El capataz no ve Crear intervención.
+5. **Coordinación:** revisar el caso. Opcionalmente devolver con motivo; capataz
+   corrige datos OSG y reenvía el mismo reporte. Confirmar después el registro oficial.
+   Se puede registrar sin intervenciones, pero no cerrar sin trabajo validado.
+6. **Coordinación → Registrar nueva intervención**, desde un caso pendiente o
+   registrado; o **Guardar reporte y crear intervención**, durante captura. Completar
+   su formulario existente y volver: verificar preselección y confirmar Vincular
+   intervención. Cancelar la creación no debe generar asociaciones.
+7. Relacionar esa intervención con una segunda incidencia. Confirmar que no se
+   duplica el trabajo y que las fuentes solo se ven con permiso de cada caso.
+8. Asignar el trabajo. Capataz inicia por ubicación, sube evidencia y reporta terminada.
+   Aún no habilita el cierre. Coordinación observa con motivo; capataz corrige con
+   un nuevo intento/evidencia; coordinación aprueba todas las ubicaciones.
+9. Cerrar cada incidencia por separado como coordinación, con resumen obligatorio.
+   Verificar que aprobar una intervención no autocierra ninguno de sus reportes.
+10. **Tablero:** comprobar atención prioritaria, totales, gráficos y tabla resumen.
+    Alternar con Reportes; filtrar por registro oficial, estado, severidad, urgencia
+    y servicio. Los filtros del listado no cambian la población global del tablero.
+11. Descargar la matriz: 23 columnas, causas completas, canales de ingreso, impactos,
+    acciones relacionadas y resúmenes de cierre. Excluir pendientes de registro.
+12. Probar los enlaces de detalle y retorno conservando filtros; usar 390 px y
+    escritorio en claro/oscuro. No debe desbordar horizontalmente la página.
 
-1. Entrar como `capataz@demo.invalid` y abrir **Incidencias**.
-2. Informar «Rama caída en puerta principal», sin completar nada más. Abrir el
-   detalle: pendiente de aprobación, remitente y fecha de recepción visibles.
-3. Repetir con una fotografía y, si el contexto es HTTPS/localhost, ubicación.
-   Denegar ubicación y comprobar que sigue siendo posible enviar.
-4. Entrar como `coordinador@demo.invalid`. Opcionalmente **Devolver para corrección**
-   con un motivo; volver al capataz, corregir y **Reenviar para revisión**. Comprobar
-   que siguen siendo el mismo ID, recepción y texto original conservado.
-5. Coordinación revisa matriz, cuadrilla y datos recibidos y pulsa **Registrar incidencia
-   oficialmente**. Se asigna OSG, incluso sin intervenciones; el cierre sigue bloqueado.
-6. **Registrar nueva intervención** abre el módulo real. Seleccionar clasificación de
-   origen, clase/tipo, fecha y ubicaciones verdaderas. Guardar y volver: queda preseleccionada,
-   pero solo se asocia al confirmar **Vincular intervención**. También se puede elegir
-   una existente y compartirla entre incidencias. Para legado, marcar qué registros sustituye.
-7. En la intervención, coordinación asigna cuadrilla y ejecutor. El capataz inicia,
-   registra evidencia de la ubicación/intento y reporta terminada. Esto no habilita
-   todavía el cierre de la incidencia.
-8. Coordinación revisa las ubicaciones: **Observar** con motivo devuelve a corrección;
-   el capataz abre otro intento y lo finaliza con sus evidencias. **Aprobar** valida
-   cada ubicación; la intervención completa solo queda validada al aprobarlas todas.
-9. Volver a cada incidencia. Solo coordinación, con todas sus requeridas validadas,
-   completa **Cómo se resolvió la incidencia** y **Validar resolución y cerrar incidencia**.
-   Un trabajo compartido no cierra automáticamente ningún caso. Cada cierre tiene su resumen.
-10. Entrar como `otro-capataz@demo.invalid`: ve sus propios casos, no el caso creado
-   para la otra cuadrilla.
-11. En una ventana de unos 390 px, repetir captura/listado/detalle sin scroll lateral.
-12. Cambiar entre claro y oscuro; revisar controles, avisos y badges. Abrir un detalle,
-    recargar su URL y volver con el navegador y el breadcrumb: se conservan los filtros.
+## Límites
 
-## Fotografías
+Sin IA ni integración WhatsApp: el canal se registra como dato. No hay SLA inventado.
+La sección es opcional; no se infiere el sector de un nombre ni se inventa GPS.
+El reporte simple sigue funcionando si fallan opciones, resumen o mapa.
+Una foto fallida permite reintentar sin duplicar el reporte.
 
-Las evidencias usan únicamente el mismo `FileStorage` que el resto del producto,
-con claves `incidents/{uuid}`, sin conversión JPEG ni incremento de límites. En
-Compose local están en `/data/storage/incidents/`, dentro del volumen `storage`;
-PostgreSQL guarda sus metadatos y claves, no los bytes. La API sigue siendo
-privada, con `Cache-Control: no-store`; no se usan los endpoints públicos del catastro.
-
-La prueba unitaria `IncidentFilesTest` cubre la lectura desde ese único almacenamiento,
-los límites de claves, conservación de bytes y limpieza en rollback.
-
-## Límites explícitos de la prueba de concepto
-
-Verificación del realineamiento, 24 de octubre de 2026: **606 pruebas backend**
-con JDK 25 y Testcontainers/Podman, **606 frontend**, lint y build correctos.
-Firefox real mediante WebDriver BiDi a 390×844 y 1440×1000: claro/oscuro, controles
-de 48 px, navegación/recarga con filtros, ubicación denegada, foto con reintento sin
-recrear la incidencia, aprobación, dos trabajos con ejecución parcial, resolución,
-permisos entre cuadrillas y contadores. Tras reiniciar Java, el estado resuelto y
-los bytes de la foto siguen disponibles. Los 47 preflights observados respondieron
-sin error. Configuración Compose base/dev validada, incluidos los montajes de
-almacenamiento y recarga. Falta comprobar captura de cámara en un Android físico y recoger las
-observaciones del cliente; no se probó contra un bucket S3 real.
-
-- La matriz OSG entregada aporta servicios, causas, severidad e impactos; la categoría
-  operativa del prototipo permanece provisional y no se infiere riesgo.
-- Sin IA, notificaciones, integración con WhatsApp ni app React Native.
-- Sin mapa interactivo: referencia textual y coordenadas editables; ningún registro
-  depende de cargar mapas o de habilitar GPS.
-- Sin sincronización offline: los errores conservan el formulario mientras siga
-  abierto. Tras recibir el texto se reintentan fotos, no la creación completa.
-- El tablero usa totales generales; los filtros afectan solo al listado.
+La validación funcional del cliente y captura de cámara en Android físico son
+comprobaciones pendientes distintas de la automatización en navegador.

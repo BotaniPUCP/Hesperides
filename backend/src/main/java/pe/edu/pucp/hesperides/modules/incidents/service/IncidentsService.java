@@ -7,10 +7,14 @@ import pe.edu.pucp.hesperides.modules.incidents.dto.IncidentContracts.*;
 
 public interface IncidentsService {
     record CreationResult(DetailResponse detail, boolean created) {}
-    Page<IncidentResponse> getAll(String email, String search, String status, int page, int size);
+    Page<IncidentResponse> getAll(String email,String search,String status,int page,int size,ListFilter filter);
+    default Page<IncidentResponse> getAll(String email,String search,String status,int page,int size) {
+        return getAll(email,search,status,page,size,new ListFilter(null,null,null,null,null));
+    }
     DetailResponse getById(Long id, String email);
     OptionsResponse options(String email);
     SummaryResponse summary(String email);
+    MyReportsResponse myReports(String email);
     ExportResponse export(String email);
     DetailResponse addComment(Long id, CommentRequest request, String email);
     CreationResult create(CreateIncidentRequest request, UUID reference, String email);
@@ -24,8 +28,7 @@ public interface IncidentsService {
     DetailResponse linkIntervention(Long id, LinkInterventionRequest request, String email);
     DetailResponse unlinkIntervention(Long id, Long linkId, ReasonRequest request, String email);
     Page<LinkedInterventionResponse> interventionOptions(Long id, String search, int page, String email);
-    DetailResponse addIntervention(Long id, CreateInterventionRequest request, String email);
-    DetailResponse completeIntervention(Long id, Long workId, String email);
+    Page<LinkedInterventionResponse> availableInterventions(String search,int page,String email);
     PhotoResponse addPhoto(Long id, UUID reference, MultipartFile file, String email);
     PhotoContentResponse getPhoto(Long id, Long photoId, String email);
 }
