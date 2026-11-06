@@ -2,29 +2,56 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import type { ComplianceReport, ComplianceStatus } from '@shared/types';
+import type { ComplianceStatus } from '@shared/types';
 import { Button, Card } from '@/components/ui';
+import { useListUrlState } from '@/hooks/useListUrlState';
+import { useRequest } from '@/hooks/useRequest';
+import { isoDateFrom } from '@/lib/listUrl';
 import { maintenanceApi } from '@/lib/maintenance-api';
-import { mensajeDeApiError } from '@/lib/api-errors';
+import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS } from './frequencyListState';
 
 const labels:Record<ComplianceStatus,string> = {
   ON_TARGET:'En plazo',WITHIN_TOLERANCE:'Dentro de tolerancia',OVERDUE:'Fuera de plazo',
   NOT_APPLICABLE:'Sin evaluación aplicable',NOT_CONFIGURED:'Sin frecuencia configurada',
 };
 
+const isValidPeriod = (from:string,to:string) => Boolean(from && to && to >= from);
+
+/** El periodo consultado vive en la URL: al regresar de una intervención, el reporte vuelve a cargarse. */
 export function LocationCompliancePanel() {
-  const [from,setFrom] = useState('');
-  const [to,setTo] = useState('');
-  const [reports,setReports] = useState<ComplianceReport[] | null>(null);
-  const [loading,setLoading] = useState(false);
-  const [error,setError] = useState('');
-  const query = async (event:React.FormEvent) => {
+  const { values, setValues } = useListUrlState(FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS);
+  const consultedFrom = isoDateFrom(values.from);
+  const consultedTo = isoDateFrom(values.to);
+  const urlPeriod = `${consultedFrom}:${consultedTo}`;
+  const [from,setFrom] = useState(consultedFrom);
+  const [to,setTo] = useState(consultedTo);
+  const [seenPeriod,setSeenPeriod] = useState(urlPeriod);
+  const [invalid,setInvalid] = useState(false);
+  const [revision,setRevision] = useState(0);
+
+  // Si la URL cambia desde afuera (el menú lateral), los campos la siguen.
+  if (urlPeriod !== seenPeriod) {
+    setSeenPeriod(urlPeriod);
+    setFrom(consultedFrom);
+    setTo(consultedTo);
+    setInvalid(false);
+  }
+
+  const compliance = useRequest(
+    isValidPeriod(consultedFrom,consultedTo) ? `${urlPeriod}:${revision}` : null,
+    () => maintenanceApi.getCompliance(consultedFrom,consultedTo),
+  );
+  const reports = compliance.data;
+  const loading = compliance.loading;
+  const error = invalid ? 'Selecciona un periodo válido.'
+    : compliance.notFound ? 'No se encontró el reporte de cumplimiento.' : compliance.errorMessage;
+
+  const query = (event:React.FormEvent) => {
     event.preventDefault();
-    if (!from || !to || to < from) {setError('Selecciona un periodo válido.');return;}
-    setLoading(true);setError('');setReports(null);
-    try {setReports(await maintenanceApi.getCompliance(from,to));}
-    catch(e){setError(mensajeDeApiError(e));}
-    finally{setLoading(false);}
+    if (!isValidPeriod(from,to)) {setInvalid(true);return;}
+    setInvalid(false);
+    if (from === consultedFrom && to === consultedTo) setRevision(n=>n+1);
+    else setValues({from,to});
   };
   return <Card title="Cumplimiento por lugar atendido">
     <p className="mb-4 text-sm text-neutral-500">Según los permisos de tu cuenta, se consideran trabajos con aprobación final. La fecha de ejecución mide el intervalo; la de aprobación conserva la aceptación. Cada actividad cuenta una vez por lugar aunque tenga varias unidades locales. No se infiere cobertura de otros jardines.</p>

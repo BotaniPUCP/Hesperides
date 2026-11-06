@@ -9,10 +9,13 @@ import type {
 } from '@shared/types';
 import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useListUrlState } from '@/hooks/useListUrlState';
+import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { maintenanceApi } from '@/lib/maintenance-api';
 import { FrequenciesTable } from './FrequenciesTable';
 import { FrequencyFilters, type FilterState } from './FrequencyFilters';
 import { FrequencyFormModal } from './FrequencyFormModal';
+import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS } from './frequencyListState';
 import { LocationCompliancePanel } from './LocationCompliancePanel';
 
 interface CatalogOption {
@@ -21,8 +24,6 @@ interface CatalogOption {
   label: string;
   parentCode?: string | null;
 }
-
-const NO_FILTERS: FilterState = { search: '', regime: '', ruleType: '' };
 
 export function MaintenanceFrequenciesScreen() {
   const { user } = useAuth();
@@ -34,7 +35,8 @@ export function MaintenanceFrequenciesScreen() {
   const [ruleTypes, setRuleTypes] = useState<CatalogOption[]>([]);
   const [zones, setZones] = useState<MaintenanceZoneOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterState>(NO_FILTERS);
+  const { values: filters, setValues: setFilters } = useListUrlState(FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS);
+  const [searchInput, setSearchInput] = useSearchDraft(filters.search, (search) => setFilters({ search }));
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFrequency, setEditingFrequency] = useState<MaintenanceFrequency | null>(null);
@@ -89,6 +91,11 @@ export function MaintenanceFrequenciesScreen() {
       return matchesSearch && matchesRegime && matchesRuleType;
     });
   }, [frequencies, filters]);
+
+  const handleFiltersChange = ({ search, ...others }: Partial<FilterState>) => {
+    if (search !== undefined) setSearchInput(search);
+    else setFilters(others);
+  };
 
   const handleOpenCreate = () => {
     setEditingFrequency(null);
@@ -171,8 +178,8 @@ export function MaintenanceFrequenciesScreen() {
       )}
 
       <FrequencyFilters
-        value={filters}
-        onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        value={{ search: searchInput, regime: filters.regime, ruleType: filters.ruleType }}
+        onChange={handleFiltersChange}
         ruleTypes={ruleTypes}
       />
 
