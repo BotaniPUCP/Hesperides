@@ -11,6 +11,7 @@ import { InterventionForm } from './InterventionForm';
 import { ApiError } from '@/lib/api';
 import { createClientUuid } from '@/lib/client-uuid';
 import { LocationObservations, LocationProgressHistory } from './LocationHistory';
+import { ExecutionTime } from './ExecutionTime';
 
 const actionLabels: Record<string,string> = {
   start:'Iniciar trabajo', execution:'Registrar avance', complete:'Enviar a revisión', validate:'Aprobar', observe:'Observar', reopen:'Subsanar observación',
@@ -141,9 +142,10 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-0 p-5">
       <p className="font-medium">{unit(data.classItemId)}{data.typeItemId ? ` · ${unit(data.typeItemId)}` : ''}</p>
       <p>{data.description || 'Sin descripción'}</p><p>Programada: {data.scheduledDate}</p>
+      <ExecutionTime work={data}/>
       {data.executionBlockedUntil && <p role="status" className="rounded-md border border-neutral-200 p-3">El trabajo podrá ejecutarse desde el {data.executionBlockedUntil}. Si debe adelantarse, solicita al coordinador que revise la planificación.</p>}
       <p>{data.completedLocationCount}/{data.locationCount} ubicaciones terminadas · {data.validatedLocationCount}/{data.locationCount} aprobadas</p>
-      <p>{data.approvedForCounting ? 'Actividad con aprobación final del coordinador.' : 'La actividad contará cuando el coordinador apruebe todas las ubicaciones.'}</p>
+      <p>{data.approvedForCounting ? 'Actividad con aprobación final.' : 'La actividad contará cuando el capataz responsable o el coordinador aprueben todas las ubicaciones.'}</p>
       <p className="text-sm">{options?.teams.find(t => t.id === data.teamId)?.name ?? (data.teamId ? 'Cuadrilla asignada' : 'Sin cuadrilla asignada')}{data.responsibleSupervisorUserId ? ' · Responsable: capataz de la cuadrilla' : ''}</p>
       {data.pendingEvidenceCount > 0 && <p>Fotos pendientes: {data.pendingEvidenceCount}</p>}
       <div className="flex flex-wrap gap-3">

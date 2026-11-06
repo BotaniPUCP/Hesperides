@@ -87,14 +87,14 @@ public class InterventionsController {
     }
 
     @PostMapping("/{id}/locations/{locationId}/validate")
-    @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PreAuthorize("hasAnyAuthority('COORDINADOR','SUPERVISOR')")
     public ResponseEntity<ApiResponse<InterventionDetailResponse>> validateLocation(@PathVariable Long id,
             @PathVariable Long locationId, @Valid @RequestBody Review request) {
         return ResponseEntity.ok(ApiResponse.ok("Location approved", service.validateLocation(id, locationId, request)));
     }
 
     @PostMapping("/{id}/locations/{locationId}/observe")
-    @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PreAuthorize("hasAnyAuthority('COORDINADOR','SUPERVISOR')")
     public ResponseEntity<ApiResponse<InterventionDetailResponse>> observe(@PathVariable Long id,
             @PathVariable Long locationId, @Valid @RequestBody Observation request) {
         return ResponseEntity.ok(ApiResponse.ok("Location observed", service.observe(id, locationId, request)));

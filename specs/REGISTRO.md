@@ -195,3 +195,5 @@ SPEC-006, que la diseñaba aparte, quedó superado.
 
 Los planes de `docs/superpowers/plans/` citan los números antiguos: son registro histórico de
 cómo se ejecutó cada plan y no se corrigen.
+
+**Actualización 5 nov 2026:** se conservan aprobación de intervenciones por coordinador o capataz responsable y tiempos de ejecución. La implementación local de T10 se retiró por solicitud del usuario para evitar duplicar el servicio del responsable de incidencias; no se declara verificada su integración en develop.

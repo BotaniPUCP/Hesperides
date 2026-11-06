@@ -97,14 +97,24 @@ it('aprueba únicamente la ubicación elegida y conserva la actividad hasta apro
   fireEvent.click(within(modal).getByRole('button',{name:'Confirmar'}));
   await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'validate',{version:5}));
   expect(await screen.findByText('2/2 ubicaciones terminadas · 1/2 aprobadas')).toBeInTheDocument();
-  expect(screen.getByText(/contará cuando el coordinador apruebe todas/)).toBeInTheDocument();
+  expect(screen.getByText(/contará cuando el capataz responsable o el coordinador aprueben todas/)).toBeInTheDocument();
 });
-it('el capataz puede corregir y no recibe botones de aprobación',async()=>{
+it('el capataz puede subsanar una ubicación observada sin aprobarla mientras está observada',async()=>{
   role='SUPERVISOR';const d=detail();d.locations[0].statusCode='OBSERVED';d.locations[0].allowedActions=['reopen'];d.locations[1].allowedActions=[];
   jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);
   fireEvent.click(await screen.findByRole('button',{name:'Subsanar observación'}));
   expect(screen.queryByRole('button',{name:'Aprobar'})).not.toBeInTheDocument();
   expect(screen.getByText(/nuevo intento/)).toBeInTheDocument();
+});
+it('el capataz aprueba cuando el backend autoriza la revisión y el conteo no exige otra firma',async()=>{
+  role='SUPERVISOR';const approved=detail();approved.approvedForCounting=true;approved.validatedLocationCount=2;
+  approved.locations.forEach(location=>{location.statusCode='VALIDATED';location.allowedActions=[];});
+  jest.mocked(interventionsApi.command).mockResolvedValue(approved);
+  render(<InterventionDetail id={10}/>);
+  fireEvent.click((await screen.findAllByRole('button',{name:'Aprobar'}))[0]);
+  fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button',{name:'Confirmar'}));
+  await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'validate',{version:5}));
+  expect(await screen.findByText('Actividad con aprobación final.')).toBeInTheDocument();
 });
 it('una observación requiere motivo antes de enviarse',async()=>{
   render(<InterventionDetail id={10}/>);fireEvent.click((await screen.findAllByRole('button',{name:'Observar'}))[1]);

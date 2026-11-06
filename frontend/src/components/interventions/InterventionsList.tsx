@@ -48,7 +48,7 @@ export function InterventionsList({ greenElementCode }: { greenElementCode?:stri
           <StatusBadge code={work.statusCode} label={statuses.items.find(s => s.code === work.statusCode)?.label ?? work.statusCode} /></div>
         <p>Programada: {work.scheduledDate}</p><p>{work.completedLocationCount}/{work.locationCount} ubicaciones terminadas · {work.validatedLocationCount} aprobadas</p>
         {work.pendingEvidenceCount > 0 && <p className="text-sm">Fotos pendientes: {work.pendingEvidenceCount}</p>}
-        {work.approvedForCounting && <p className="text-sm text-brand-600">Aprobación final del coordinador recibida</p>}
+        {work.approvedForCounting && <p className="text-sm text-brand-600">Aprobación final recibida</p>}
       </article>)}</div>
       <nav aria-label="Páginas de intervenciones" className="flex items-center justify-between gap-3">
         <Button variant="secondary" disabled={page === 0} onClick={() => { setLoading(true); setPage(n => n - 1); }}>Anterior</Button>

@@ -2,6 +2,11 @@
 
 Fecha: 22 oct 2026.
 
+**Actualización 5 nov 2026:** T10 se delega al responsable de incidencias. Se retiró nuestra
+implementación local de vínculos y V027, sin aplicar esa migración a la base habitual.
+Se conservan aprobación por capataz responsable/coordinador y tiempos de ejecución.
+Ver [alcance de los ajustes conservados](SPEC-200-ajustes-aprobacion-y-tiempos.md).
+
 **Actualización 29 oct 2026:** el usuario confirmó que realizó las pruebas manuales del flujo
 web y todo funcionó correctamente. Se registra su verificación de la entrega anterior para
 cerrar la etapa 4 de ese alcance, sin atribuir al agente la ejecución visual. La siguiente tarea
