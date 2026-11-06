@@ -154,3 +154,17 @@
     --tw-ring-offset-color: rgb(var(--color-neutral-0));
   }
 }
+
+/*
+ * Lo que va sobre el fondo de un módulo nunca queda suelto: su trama y su color
+ * cambian de una pantalla a otra, así que el texto lleva su propia superficie.
+ */
+@layer components {
+  .surface-card {
+    @apply rounded-2xl border border-neutral-200/90 bg-neutral-0 p-5 shadow-xs;
+  }
+
+  .surface-pill {
+    @apply inline-flex w-fit items-center rounded-full border border-neutral-200/70 bg-neutral-0 px-3.5 py-1.5 shadow-xs;
+  }
+}

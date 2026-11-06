@@ -346,7 +346,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
         </Button>
         <Link
           href="/inventario-verde"
-          className="px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+          className="surface-pill text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
         >
           Cancelar
         </Link>

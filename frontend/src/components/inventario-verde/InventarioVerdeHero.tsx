@@ -23,7 +23,7 @@ export function InventarioVerdeHero({
       : null;
 
   return (
-    <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+    <header className="surface-card mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
       <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900 whitespace-nowrap">
         {title}
       </h1>

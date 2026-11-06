@@ -102,7 +102,7 @@ export function IncidentDetailPanel({ detail, options, optionsLoading, coordinat
   const canWork = detail.canAttend && incident.approvedAt !== null && !resolved;
 
   return <div className="space-y-5">
-    <header className="flex flex-wrap items-start justify-between gap-3">
+    <header className="surface-card flex flex-wrap items-start justify-between gap-3">
       <div className="space-y-2"><h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">{incident.officialCode ?? `Incidencia #${incident.id}`}</h1>
         <div className="flex flex-wrap gap-2"><StatusBadge code={incident.status.code} label={incident.status.label} />
           {incident.urgency && <UrgencyBadge code={incident.urgency.code as UrgencyCode} label={incident.urgency.label} />}
@@ -110,7 +110,7 @@ export function IncidentDetailPanel({ detail, options, optionsLoading, coordinat
       </div>
       <Button variant="secondary" size="lg" disabled={busy} onClick={onReload}>Actualizar detalle</Button>
     </header>
-    <p className="whitespace-pre-wrap break-words text-lg text-neutral-900">{incident.description}</p>
+    <p className="surface-card whitespace-pre-wrap break-words text-lg text-neutral-900">{incident.description}</p>
     {message && <p role="status" className="rounded-lg border border-alert-success-border bg-alert-success-bg p-3 text-alert-success-fg">{message}</p>}
     {error && <p role="alert" className="rounded-lg bg-alert-danger-bg p-3 text-alert-danger-fg">{error}</p>}
     {incident.resolutionObservation && !resolved && <p className="whitespace-pre-wrap rounded-md bg-alert-warning-bg p-3 text-alert-warning-fg">Resolución observada: {incident.resolutionObservation}</p>}

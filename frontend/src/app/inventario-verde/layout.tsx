@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { AppShell } from '@/components/layouts/AppShell';
+import { ModuleBackdrop } from '@/components/layouts/ModuleBackdrop';
 import { useAuth } from '@/hooks/useAuth';
 
 /**
@@ -11,5 +12,11 @@ import { useAuth } from '@/hooks/useAuth';
  */
 export default function InventarioVerdeLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  return user ? <AppShell>{children}</AppShell> : <>{children}</>;
+  if (user) return <AppShell>{children}</AppShell>;
+  return (
+    <div className="relative isolate min-h-screen">
+      <ModuleBackdrop />
+      {children}
+    </div>
+  );
 }

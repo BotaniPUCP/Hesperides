@@ -38,8 +38,8 @@ export function ReportsScreen() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-2">
-        <Breadcrumb items={[{ label: SCREEN_TEXTS.breadcrumbHome, href: '/' }, { label: SCREEN_TEXTS.title }]} />
+      <Breadcrumb items={[{ label: SCREEN_TEXTS.breadcrumbHome, href: '/' }, { label: SCREEN_TEXTS.title }]} />
+      <header className="surface-card space-y-2">
         <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">{SCREEN_TEXTS.title}</h1>
         {role === 'SUPERVISOR' && <p className="text-sm text-neutral-700">{SCREEN_TEXTS.supervisorNotice}</p>}
       </header>
@@ -50,7 +50,7 @@ export function ReportsScreen() {
           <ReportTabs tabs={tabs} active={tab} onActivate={activate} />
           <p aria-live="polite" className="sr-only">{announcement}</p>
           <div role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)} tabIndex={0}
-            className="space-y-6 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+            className="surface-card space-y-6 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
             <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold text-neutral-900 focus:outline-hidden">
               {TAB_TEXTS[tab].label}
             </h2>

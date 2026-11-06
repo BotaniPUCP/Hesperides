@@ -24,7 +24,7 @@ export function LugaresScreen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header className="surface-card flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Lugares del campus</h1>
           <p className="mt-1 max-w-2xl text-sm text-neutral-600">

@@ -97,7 +97,7 @@ export function CatalogsAdminScreen() {
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
-      <header>
+      <header className="surface-card">
         <h1 className="text-xl font-semibold text-neutral-900">Catálogos</h1>
         <p className="mt-1 text-sm text-neutral-600">
           Las opciones que ofrecen los desplegables del sistema. Lo que cambie aquí lo ven

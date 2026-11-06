@@ -26,7 +26,7 @@ export function IncidentsScreen() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header className="surface-card flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Incidencias</h1>
           <p className="mt-1 text-sm text-neutral-700">{coordinator ? 'Revisión y seguimiento de la atención.' : 'Tus envíos y las incidencias de tu cuadrilla.'}</p>
@@ -37,7 +37,7 @@ export function IncidentsScreen() {
       </header>
       {coordinator && <IncidentExportButton />}
 
-      {coordinator && <section aria-label="Tablero de incidencias" className="space-y-3">
+      {coordinator && <section aria-label="Tablero de incidencias" className="surface-card space-y-3">
         <h2 className="text-lg font-semibold text-neutral-900">Resumen de atención</h2>
         <p className="text-sm text-neutral-700">Incidencias y sus intervenciones vinculadas. Totales generales, independientes de los filtros de la lista.</p>
         {summary.loading ? <LoadingSkeleton variant="card" /> : summary.errorMessage ? (
@@ -95,7 +95,7 @@ export function IncidentsScreen() {
             </Link>
           </li>
         ))}</ul>}
-        <nav aria-label="Páginas de incidencias" className="flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Páginas de incidencias" className="surface-card flex flex-wrap items-center justify-between gap-3">
           <Button variant="secondary" size="lg" disabled={filters.page === 0} onClick={() => changeFilters({ ...filters, page: filters.page - 1 })}>Anterior</Button>
           <p className="text-sm text-neutral-700">{list.data.page.totalElements} registros · Página {filters.page + 1} de {Math.max(1, list.data.page.totalPages)}</p>
           <Button variant="secondary" size="lg" disabled={filters.page + 1 >= list.data.page.totalPages} onClick={() => changeFilters({ ...filters, page: filters.page + 1 })}>Siguiente</Button>

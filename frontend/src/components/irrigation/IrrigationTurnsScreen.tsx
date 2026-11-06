@@ -165,7 +165,7 @@ export function IrrigationTurnsScreen() {
 
   return (
     <div className="space-y-6">
-      <header>
+      <header className="surface-card">
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Riego · Turnos por sector</h1>
         <p className="mt-1 text-sm text-neutral-500">D-01 · Registro por uno o varios sectores. La cobertura de 15 días pertenece a D-02 y requiere validación.</p>
       </header>

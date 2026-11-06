@@ -135,8 +135,8 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     void mutate(() => interventionsApi.command(id,selected.location.id!,selected.action,body));
   };
   return <section className="space-y-6">
-    <Link className="text-brand-600 underline" href="/intervenciones">Volver a intervenciones</Link>
-    <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
+    <Link className="surface-pill text-sm text-brand-600 underline" href="/intervenciones">Volver a intervenciones</Link>
+    <div className="surface-card flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
     {error && !selected && !cancelOpen && <p role="alert" className="text-action-danger">{error}</p>}
     {notice && !selected && <p role="status">{notice}</p>}
     <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-0 p-5">
@@ -164,7 +164,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
         <Select id="assign-user" label="Persona asignada" value={assignee} options={(teamOption?.assignees ?? []).map(u => ({id:u.id,code:String(u.id),label:u.fullName}))} onChange={o => setAssignee(o?.code ?? '')} />
       </div><Button disabled={busy || !team || !assignee} onClick={() => mutate(() => interventionsApi.assign(id,data.version,Number(team),Number(assignee)))}>Asignar</Button>
     </div>}
-    <h2 className="text-xl font-semibold">Ubicaciones</h2>
+    <h2 className="surface-pill text-xl font-semibold">Ubicaciones</h2>
     <div className="grid gap-5 xl:grid-cols-2">{data.locations.map((location,index) => {
       const photos = data.evidences.filter(e => e.interventionLocationId === location.id);
       return <article key={location.id} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-5">
@@ -186,7 +186,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
         {location.allowedActions?.includes('evidence') && <EvidenceUpload key={`new-${location.id}-${location.attemptNumber}`} work={data} location={location} onChange={refresh} />}
       </article>;
     })}</div>
-    <details className="rounded-lg border border-neutral-200 p-4"><summary className="cursor-pointer font-semibold">Historial de la actividad</summary><ol className="mt-3 space-y-2 text-sm">{data.history.map((event,index) => <li key={index}>
+    <details className="rounded-lg border border-neutral-200 bg-neutral-0 p-4"><summary className="cursor-pointer font-semibold">Historial de la actividad</summary><ol className="mt-3 space-y-2 text-sm">{data.history.map((event,index) => <li key={index}>
       {new Date(event.occurredAt).toLocaleString()} · {actionLabels[event.actionCode.toLowerCase()] ?? ({CREATED:'Creada',ASSIGNED:'Asignada',STARTED:'Trabajo iniciado',PROGRESS_SAVED:'Avance registrado',COMPLETED:'Enviada a revisión',VALIDATED:'Aprobada',OBSERVED:'Observada',REOPENED:'Subsanación iniciada',UPDATED:'Planificación actualizada',REPROGRAMMED:'Reprogramada',CANCELLED:'Cancelada',EVIDENCE_ANNOUNCED:'Foto pendiente',EVIDENCE_UPLOADED:'Foto recibida'} as Record<string,string>)[event.actionCode] ?? 'Actualización'}
       {event.interventionLocationId && ` · Ubicación ${data.locations.findIndex(l => l.id === event.interventionLocationId) + 1}`}{event.reason && ` · ${event.reason}`}
     </li>)}</ol></details>

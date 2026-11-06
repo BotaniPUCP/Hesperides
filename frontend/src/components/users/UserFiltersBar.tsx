@@ -53,7 +53,7 @@ export function UserFiltersBar({ filters, onChange, disabled = false }: UserFilt
   const hayFiltros = Object.keys(filters).length > 0;
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-end">
+    <div className="surface-card flex flex-col gap-4 md:flex-row md:items-end">
       <div className="flex-1">
         <Input
           id="users-search"

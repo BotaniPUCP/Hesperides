@@ -175,7 +175,7 @@ export function DataTable<T>({
       {/* Anterior/Siguiente en vez de números de página: en una pantalla
           angosta la lista de números no cabe ni es cómoda de tocar. */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-neutral-500">{`${desde}–${hasta} de ${totalElements}`}</span>
+        <span className="surface-pill text-sm text-neutral-500">{`${desde}–${hasta} de ${totalElements}`}</span>
         <div className="flex gap-2">
           <Button
             variant="secondary"
