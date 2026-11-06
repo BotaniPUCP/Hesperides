@@ -89,6 +89,7 @@ public class SpecimenRepository {
         return new MapSqlParameterSource()
                 .addValue("slug", speciesSlug)
                 .addValue("location", query.location())
+                .addValue("type", query.vegetationType())
                 .addValue("search", LikePattern.contains(query.search()));
     }
 }

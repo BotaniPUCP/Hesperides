@@ -97,6 +97,41 @@ class GreenInventoryIntegrationTest {
     }
 
     @Test
+    void allSpecimensAreFilteredByTheVegetationTypeOfTheirSpecies() throws Exception {
+        // Sin filtrar, el café (c1, c2…) encabeza el orden por referencia: si el filtro
+        // solo tocara el conteo, aparecería en esta página.
+        mockMvc.perform(get(BASE + "/specimens").param("vegetationType", "PALM")
+                        .param("sort", "reference").param("size", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page.totalElements").value(250))
+                .andExpect(jsonPath("$.data.content", hasSize(100)))
+                .andExpect(jsonPath("$.data.content[*].speciesSlug").value(org.hamcrest.Matchers.everyItem(
+                        org.hamcrest.Matchers.not("coffea-arabica"))));
+    }
+
+    @Test
+    void theAllTypesValueLeavesTheSpecimensUnfiltered() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("vegetationType", "ALL"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(965));
+    }
+
+    @Test
+    void theVegetationTypeCombinesWithTheSearch() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("search", "coffea"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(org.hamcrest.Matchers.greaterThan(0)));
+        mockMvc.perform(get(BASE + "/specimens").param("search", "coffea").param("vegetationType", "PALM"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(0));
+    }
+
+    @Test
+    void anUnknownVegetationTypeFindsNoSpecimens() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("vegetationType", "NO_EXISTE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content", hasSize(0)));
+    }
+
+    @Test
     void anUnknownSpeciesIsA404() throws Exception {
         mockMvc.perform(get(BASE + "/species/no-existe")).andExpect(status().isNotFound());
     }
