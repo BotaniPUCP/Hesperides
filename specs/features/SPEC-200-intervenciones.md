@@ -106,7 +106,7 @@ Los valores inactivos siguen resolviendo en el historial, pero no se ofrecen par
 | D-03 | Conservar asignación y `team_id` en la intervención, y ejecutor/validador reales por ubicación. El asignado y quien ejecutó pueden ser distintos si ejecuta el supervisor. No atribuir un autor global a lugares ejecutados por personas distintas ni inferirlo de membresía actual. |
 | D-04 | Clase obligatoria y tipo nulable únicamente si esa clase no tiene tipos activos. Si los tiene, exigir uno de sus hijos activos. Los tipos provisionales existentes no se reemplazan ni se presentan como confirmados. |
 | D-05 | Confirmado por el usuario para este desarrollo: una intervención puede tener varias ubicaciones, cada una con avance, cantidad ejecutada y estado propios. Usar unidades de ejecución por ubicación según §2.7, sin dividir el trabajo en intervenciones independientes. P-04 queda resuelta con procedencia de esta conversación, no de las actas. No añadir `zone_id` a `green_elements`. |
-| D-06 | Confirmación posterior del usuario: cuenta tras aprobación final del COORDINADOR, con todas las ubicaciones activas VALIDATED. T09 actualiza solo lugares atendidos y conserva ambas fechas: completed_at mide intervalos y aprobación final acredita aceptación. Una actividad por objetivo cuenta una vez aunque tenga varias unidades locales; distintos trabajos el mismo día no se fusionan. No inferir cobertura global de campus. |
+| D-06 | Confirmación posterior del usuario: cuenta tras aprobación final del COORDINADOR o del capataz responsable (SUPERVISOR), con todas las ubicaciones activas VALIDATED. T09 actualiza solo lugares atendidos y conserva ambas fechas: completed_at mide intervalos y aprobación final acredita aceptación. Una actividad por objetivo cuenta una vez aunque tenga varias unidades locales; distintos trabajos el mismo día no se fusionan. No inferir cobertura global de campus. |
 | D-07 | El usuario confirma fotos obligatorias. Detalle provisional aceptado para avanzar: mínimo una recibida por ubicación e intento para completar, y ninguna foto pendiente de esa ubicación al aprobar, incluso de intentos anteriores. BEFORE/AFTER/UNSPECIFIED clasifican la evidencia sin exigir una pareja. Ver política configurable en §2.8. |
 | D-08 | Capataz responsable de los trabajos de su sector, representado por el supervisor vigente de la cuadrilla asignada. Flujo provisional aceptado: COORDINADOR observa con motivo; capataz reabre y corrige; COORDINADOR revisa y aprueba. Conservar ejecución original y snapshot de cada intento. Relevo y coordinación entre distintos sectores siguen pendientes; no implementar transferencias. |
 | D-09 | `storage_key`, tamaño y tipo de archivo son nulos en evidencia anunciada; se completan conjuntamente al recibir el archivo. Corrige la incompatibilidad del `NOT NULL` original de SPEC-002 con la subida diferida de SPEC-005. |
@@ -194,6 +194,13 @@ cardinalidad; P-01/P-02/P-03 conservan las dependencias operativas correspondien
 
 ### 2.8 Confirmaciones del grupo y reglas provisionales de esta entrega
 
+**Enmienda 5 nov 2026:** el usuario adopta la aclaración del líder: el capataz responsable
+también aprueba intervenciones y su aprobación cuenta sin otra firma del coordinador.
+Se conserva la prohibición de autoaprobación. Por instrucción posterior del usuario se
+retira la implementación local de T10: la relación con incidencias queda a cargo de su
+responsable y deberá integrarse mediante su servicio, sin duplicar tablas ni endpoints.
+La disponibilidad de ese servicio en develop no se presume verificada.
+
 Procedencia: respuestas del usuario tras consultar a sus compañeros, 22 oct 2026. No se
 atribuyen estas confirmaciones a las actas E1–E3. La instrucción posterior «realiza los
 cambios» autoriza implementar la propuesta incremental; sus detalles provisionales no se
@@ -201,13 +208,13 @@ presentan como nuevos acuerdos directos del cliente.
 
 | Tema | Confirmado por el usuario | Aplicación en esta entrega |
 |------|--------------------------|---------------------------|
-| Indicadores | Cuenta después de la aprobación final del coordinador | `approvedForCounting` derivado de todas las ubicaciones VALIDATED. Una intervención sigue siendo una actividad. T09 evalúa por objetivo local conforme a la aclaración posterior de §2.9, sin inferir cobertura global. |
+| Indicadores | Cuenta después de la aprobación final del coordinador o del capataz responsable | `approvedForCounting` derivado de todas las ubicaciones VALIDATED. Una intervención sigue siendo una actividad. T09 evalúa por objetivo local conforme a la aclaración posterior de §2.9, sin inferir cobertura global. |
 | Fotos | Son obligatorias | Regla provisional: una foto recibida por ubicación e intento para completar; aprobar requiere una recibida del intento vigente y cero pendientes de esa ubicación, incluidos intentos anteriores. Sin pareja antes/después. |
 | Responsable | Capataz asignado al sector | Supervisor vigente de la cuadrilla asignada puede reportar, aportar fotos y completar sin reemplazar al ejecutor original; actor real de cada acción queda en eventos. |
 | Ubicaciones | Varios jardines son una actividad | Se conserva cabecera única y ejecución local independiente. |
 | Entrega | Primera entrega web a Roobert | Prioridad T07; Android, recursos y terceros mantienen su planificación posterior. |
 
-Detalles provisionales aceptados para avanzar: coordinador observa una ubicación COMPLETED
+Detalles de revisión: coordinador o capataz responsable observa una ubicación COMPLETED
 con motivo; capataz responsable reabre OBSERVED e incrementa intento. El snapshot anterior
 conserva cantidades, notas, fechas, rechazo y autoría; las fotos siguen en su intento original.
 La reapertura limpia resultados del intento activo sin transferir el ejecutor ni eliminar historia.
@@ -221,8 +228,8 @@ aprobar sin foto. Una modificación posterior no requiere cambiar V022 ni reatri
 El mínimo por ubicación/intento permanece explícito en esa política, sin dispersarlo por UI.
 
 La actividad obtiene aprobación final al quedar todas sus ubicaciones VALIDATED por
-COORDINADOR; el resumen deriva `validatedAt` del último acto local. La validación parcial
-no habilita el conteo de actividad. No se concede aprobación a SUPERVISOR ni ADMIN.
+COORDINADOR o SUPERVISOR responsable de su cuadrilla; el resumen deriva `validatedAt` del último acto local. La validación parcial
+no habilita el conteo de actividad. No se concede aprobación a ADMIN ni OPERARIO. No se exige una segunda firma del coordinador tras una aprobación válida del capataz.
 Se impide autoaprobación también cuando un autor de reportes/fotos cambia de rol.
 Terminar/aprobar no cierra incidencias ni publica información externamente.
 
@@ -317,8 +324,8 @@ Un `locationId` que pertenece a otro trabajo → 404 aunque el usuario vea ambos
 | `POST /interventions/{id}/locations/{locationId}/start` | S en su cuadrilla / O asignado | Inicia esa ubicación; solo inicio desde ASSIGNED; corrección por ruta /reopen; 200 |
 | `PUT /interventions/{id}/locations/{locationId}/execution` | Ejecutor o capataz responsable vigente | Guarda avance local en IN_PROGRESS; 200 |
 | `POST /interventions/{id}/locations/{locationId}/complete` | Ejecutor o capataz responsable vigente | Completa con reporte, cantidad cuando hay unidad y foto recibida del intento vigente; 200 |
-| `POST /interventions/{id}/locations/{locationId}/validate` | Solo C, sin autoaprobación | Valida ubicación COMPLETED con evidencia y sin pendientes; 200 |
-| `POST /interventions/{id}/locations/{locationId}/observe` | Solo C | Observa ubicación COMPLETED con motivo; 200 |
+| `POST /interventions/{id}/locations/{locationId}/validate` | C / S responsable, sin autoaprobación | Valida ubicación COMPLETED con evidencia y sin pendientes; 200 |
+| `POST /interventions/{id}/locations/{locationId}/observe` | C / S responsable | Observa ubicación COMPLETED con motivo; 200 |
 | `POST /interventions/{id}/locations/{locationId}/reopen` | S responsable vigente | OBSERVED → IN_PROGRESS con nuevo intento; body `{version}`; 200 |
 | `POST /interventions/{id}/evidences` | Ejecutor o capataz responsable vigente | Anuncia foto de la ubicación indicada; 201; Idempotency-Key obligatorio |
 | `PUT /interventions/{id}/evidences/{evidenceId}/file` | Autor con acceso vigente | Recibe archivo pendiente de una ubicación IN_PROGRESS/COMPLETED; no se habilita subida nueva en VALIDATED/OBSERVED; 200 |
@@ -772,7 +779,7 @@ los ALTER históricos del diseño singular. El mapeo JPA y los servicios son la 
    de forma independiente; un avance en A nunca sobrescribe cantidades ni notas de B.
 5. Se completa A con cantidad final y reporte descriptivo, con foto recibida del intento vigente y reporte obligatorio (§2.8). A queda
    COMPLETED; B/C conservan sus estados. El resumen general no se marca COMPLETED todavía.
-6. Solo C puede aprobar/observar A; se aplica la política de §2.8 y se impide autoaprobación. Eso no valida/observa B ni requiere falsificar un validador único para todo el trabajo.
+6. C o S responsable puede aprobar/observar A; se aplica la política de §2.8 y se impide autoaprobación. Eso no valida/observa B ni requiere falsificar un validador único para todo el trabajo.
 7. Historial de cada elemento recupera el trabajo y sus ubicaciones correspondientes sin
    duplicar la intervención. Terminar todos los lugares tampoco cierra una incidencia enlazada.
    El proveedor de cumplimiento espera la unidad de cobertura de P-01; el momento de aceptación ya está confirmado.
@@ -872,7 +879,7 @@ por la corrección de otra. No hay reapertura de una ubicación validada en este
 | CA-01 | ADMIN planifica pero no asigna/ejecuta | Crear con tres ubicaciones como ADMIN e intentar ambas acciones; conserva planificación |
 | CA-02 | Clase/tipo y referencias locales válidas | Rechazar hijo de otra clase; omitir tipo solo si no hay hijos activos; cada lugar debe ubicarse |
 | CA-03 | Alcance por cuadrilla/asignación | Dos cuadrillas; IDs/filtros de trabajo y ubicación no revelan la otra |
-| CA-04 | Solo COORDINADOR aprueba y nunca su propio reporte | S/O reporta; S y ADMIN reciben 403 al aprobar; cambio de rol de un autor a coordinador tampoco le permite aprobar su ejecución/reporte anterior |
+| CA-04 | COORDINADOR o SUPERVISOR responsable aprueba, sin autoaprobación | S aprueba trabajo ajeno de su cuadrilla; otro S recibe 404; ADMIN/O reciben 403. Autor de ejecución, reportes o fotos no aprueba esa ubicación, aunque cambie de rol. El conteo no exige otra firma del coordinador |
 | CA-05 | Avance/cantidad/estado independientes | Pedir A=2 y B=3; A ejecutada 2, B avance 1, C pendiente; no sobrescribir B/C ni completar el trabajo |
 | CA-06 | Foto recibida y pendiente diferenciadas por lugar | Anunciar en A/subir; pendiente cambia solo al recibir archivo. No imponer cuotas BEFORE/AFTER sin P-02 |
 | CA-07 | Reintentos no duplican trabajo, lugares o foto | Repetir creación, referencia local y subida; conservar IDs/bytes y un único evento por operación |
@@ -1016,9 +1023,9 @@ del diseño inicial, aun antes de crear las tablas de incidencias/contratos.
 
 | ID | Resuelto | Pendiente / provisional |
 |----|----------|------------------------|
-| P-01 | Cuenta después de aprobación final del COORDINADOR, todas las ubicaciones aprobadas. Aclaración posterior del usuario el 29 oct 2026: actualizar solo lugares atendidos y conservar fecha real y fecha de aprobación | Sustituye la espera anterior: ejecución mide el intervalo y aprobación acredita aceptación; ambas fechas describen una sola ocurrencia. T09 evalúa referencias estables de lugar/sección; no inventa cobertura global ni correspondencias históricas por sector |
+| P-01 | Cuenta después de aprobación final del COORDINADOR o del capataz responsable (SUPERVISOR), todas las ubicaciones aprobadas. Aclaración posterior del usuario el 29 oct 2026: actualizar solo lugares atendidos y conservar fecha real y fecha de aprobación | Sustituye la espera anterior: ejecución mide el intervalo y aprobación acredita aceptación; ambas fechas describen una sola ocurrencia. T09 evalúa referencias estables de lugar/sección; no inventa cobertura global ni correspondencias históricas por sector |
 | P-02 | Fotografías obligatorias | Mínimo por ubicación/intento y momento del bloqueo son detalles provisionales de §2.8; sin pareja BEFORE/AFTER |
-| P-03 | Capataz responsable del trabajo del sector; coordinador da aprobación final | Corrección propuesta aceptada para desarrollo: capataz subsana y coordinador revisa. Autoridad de relevo y revocación de aprobación siguen pendientes |
+| P-03 | Capataz responsable del trabajo del sector; coordinador o capataz responsable da aprobación final | Corrección propuesta aceptada para desarrollo: capataz subsana; coordinador o capataz responsable revisa sin autoaprobación. Autoridad de relevo y revocación de aprobación siguen pendientes |
 | P-04 | Una actividad con varios jardines; ejecución local independiente | Caso que cruza sectores con distintos capataces requiere contrato de asignación posterior; no dividir automáticamente |
 | P-05 | Primera entrega web para Roobert | Recursos, Android, terceros y fuentes externas mantienen entregas propias; no declarar todo el MVP completado |
 
@@ -1038,3 +1045,10 @@ límites de esta entrega se registran en `docs/planes/SPEC-200-etapa-3-revision-
 T08 añade historial por ejemplar y T09 cumplimiento local con ambas fechas (§2.9).
 No se declara terminada la evaluación histórica por sector, incidencias, Android ni publicación.
 La base de trabajo no se migra como parte de esta entrega.
+
+### Ajuste de tiempos de ejecución (5 nov 2026)
+
+El resumen expone `elapsedSeconds`: desde el primer inicio real de las ubicaciones activas
+hasta su última finalización, cuando todas están terminadas o aprobadas. Conserva el inicio
+original durante subsanaciones. Incluye pausas, no suma ejecuciones simultáneas ni añade
+la espera posterior para aprobación. Sin finalizar, el valor es null. No registra tiempo efectivo manual.

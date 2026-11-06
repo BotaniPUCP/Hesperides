@@ -89,6 +89,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         var sourceRows=incidentLinks.sourceIncidents(id,u);
         d.setSourceIncidents(new ArrayList<>(sourceRows));
         var photos=evidences.findByInterventionIdAndDeletedAtIsNullOrderById(id);
+        var historyEvents=events.findByInterventionIdAndDeletedAtIsNullOrderByOccurredAtAscIdAsc(id);
         boolean executing = dateAvailable && Set.of("SUPERVISOR","OPERARIO").contains(u.getRoleCode())
                 && references.candidates(d.getTeamId()).stream().anyMatch(c -> Objects.equals(c.get("id"),u.getId()));
         var localRows=new ArrayList<Map<String,Object>>();
@@ -109,7 +110,10 @@ public class InterventionsServiceImpl implements InterventionsService {
                 }
                 if ("OBSERVED".equals(localStatus) && "SUPERVISOR".equals(u.getRoleCode())) actions.add("reopen");
             }
-            if ("COORDINADOR".equals(u.getRoleCode()) && "COMPLETED".equals(localStatus)) actions.addAll(List.of("validate","observe"));
+            if (Set.of("COORDINADOR","SUPERVISOR").contains(u.getRoleCode()) && "COMPLETED".equals(localStatus)) {
+                if(!reportedBy(u.getId(),l,historyEvents))actions.add("validate");
+                actions.add("observe");
+            }
             m.put("allowedActions", actions);
             localRows.add(m);
         }
@@ -127,7 +131,6 @@ public class InterventionsServiceImpl implements InterventionsService {
             m.put("fileUrl",e.getUploadedAt()==null?null:evidenceFileUrl(e));photoRows.add(m);
         }
         d.setEvidences(photoRows);
-        var historyEvents=events.findByInterventionIdAndDeletedAtIsNullOrderByOccurredAtAscIdAsc(id);
         var actorNames=new HashMap<Long,String>();
         users.findAllById(historyEvents.stream().map(InterventionEvent::getActorUserId).distinct().toList())
                 .forEach(author -> actorNames.put(author.getId(),author.getFullName()));
@@ -167,6 +170,11 @@ public class InterventionsServiceImpl implements InterventionsService {
             }totals.add(m);
         });
         d.setQuantityTotals(totals);return d;
+    }
+    private boolean reportedBy(Long userId,InterventionLocation location,List<InterventionEvent> history){
+        return Objects.equals(userId,location.getExecutedByUserId()) || history.stream().anyMatch(e ->
+            Objects.equals(e.getInterventionLocationId(),location.getId()) && Objects.equals(e.getActorUserId(),userId)
+            && Set.of("STARTED","PROGRESS_SAVED","COMPLETED","REOPENED","EVIDENCE_ANNOUNCED","EVIDENCE_UPLOADED").contains(e.getActionCode()));
     }
     private Map<String,Object> locationSnapshot(InterventionLocation l){
         var m=new LinkedHashMap<String,Object>();m.put("id",l.getId());m.put("clientReference",l.getClientReference());
@@ -342,16 +350,13 @@ public class InterventionsServiceImpl implements InterventionsService {
     public InterventionDetailResponse validateLocation(Long id, Long locationId, Review request) {
         validate(request);
         var user = actor();
-        role(user, "COORDINADOR");
+        role(user, "COORDINADOR", "SUPERVISOR");
         var intervention = locked(id, user);
         var location = lockedLocation(locationId, intervention);
         version(intervention, request.version());
         requireLocalState(intervention, location, "COMPLETED");
-        if (Objects.equals(user.getId(), location.getExecutedByUserId()) ||
-                events.findByInterventionIdAndDeletedAtIsNullOrderByOccurredAtAscIdAsc(id).stream().anyMatch(e ->
-                    Objects.equals(e.getInterventionLocationId(), locationId) && Objects.equals(e.getActorUserId(), user.getId())
-                    && Set.of("STARTED", "PROGRESS_SAVED", "COMPLETED", "REOPENED", "EVIDENCE_ANNOUNCED", "EVIDENCE_UPLOADED").contains(e.getActionCode()))) {
-            throw new AccessDeniedException("A coordinator cannot approve their own execution or reporting");
+        if (reportedBy(user.getId(),location,events.findByInterventionIdAndDeletedAtIsNullOrderByOccurredAtAscIdAsc(id))) {
+            throw new AccessDeniedException("A reviewer cannot approve their own execution or reporting");
         }
         reviewPolicy.check(location, true);
         var previous = reviewSnapshot(location);
@@ -368,7 +373,7 @@ public class InterventionsServiceImpl implements InterventionsService {
     public InterventionDetailResponse observe(Long id, Long locationId, Observation request) {
         validate(request);
         var user = actor();
-        role(user, "COORDINADOR");
+        role(user, "COORDINADOR", "SUPERVISOR");
         var intervention = locked(id, user);
         var location = lockedLocation(locationId, intervention);
         version(intervention, request.version());

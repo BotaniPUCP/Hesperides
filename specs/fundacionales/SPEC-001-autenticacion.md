@@ -379,7 +379,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **3. Intervenciones** | Crear / editar una intervención | CU | CU | | |
 | **3. Intervenciones** | Asignar una intervención | | A (a cualquier cuadrilla) | A (dentro de su cuadrilla) | |
 | **3. Intervenciones** | Registrar ejecución (iniciar/completar, subir evidencia) | | | CU (las de su cuadrilla) | CU (solo las propias asignadas) |
-| **3. Intervenciones** | Validar/observar una intervención ejecutada | | V (ver nota 4) | | |
+| **3. Intervenciones** | Validar/observar una intervención ejecutada | | V (ver nota 4) | V (su cuadrilla; ver nota 4) | |
 | **3. Intervenciones** | Ver historial de intervenciones | L | L | L (las de su cuadrilla) | L (solo las propias) |
 | **4. Contratos y proveedores** | Crear / editar contratos y proveedores | CUD | CU (sin desactivar, ver nota 3) | | |
 | **4. Contratos y proveedores** | Registrar y ver ejecuciones de servicio | CUD | CU | L (las de su zona) | |
@@ -405,7 +405,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 1. El coordinador ve el listado completo de usuarios y de cuadrillas porque planifica sobre todas ellas y necesita saber a qué supervisor dirigirse; sigue sin poder crear, editar ni desactivar cuentas, que es acción exclusivamente administrativa. El supervisor ve solo a los miembros de su propia cuadrilla.
 2. El coordinador mantiene el catastro (crear/editar elementos que descubre o corrige en campo) pero no desactiva elementos: desactivar un elemento del catastro es una decisión administrativa con impacto en reportes históricos, reservada a ADMIN.
 3. El coordinador crea y actualiza contratos y proveedores porque es quien gestiona la relación operativa con los tercerizados y da seguimiento al cumplimiento. Lo que no puede es desactivar un proveedor o un contrato: dar de baja una relación comercial tiene implicaciones administrativas y queda en ADMIN.
-4. Enmienda SPEC-200 (confirmación del usuario con su grupo, 22 oct 2026): solo COORDINADOR valida/observa intervenciones. El SUPERVISOR representa al capataz responsable: registra y corrige, pero no aprueba; ADMIN tampoco aprueba. Un coordinador no valida ejecución/reportes propios, incluso después de cambiar de rol. La regla concreta ("quien ejecuta no valida") se desarrolla en [SPEC-200](../features/SPEC-200-intervenciones.md) (borrador), sobre `validated_by_user_id`, que no puede coincidir con quien registró la ejecución.
+4. Enmienda SPEC-200 (5 nov 2026, usuario adopta la aclaración del líder): COORDINADOR y SUPERVISOR responsable validan/observan intervenciones; el supervisor solo las de sus cuadrillas activas. La aprobación de cualquiera cuenta cuando todas las ubicaciones estén aprobadas, sin segunda firma del coordinador. ADMIN/OPERARIO no aprueban. Se conserva la prohibición de aprobar ejecución, reportes o fotos propios, incluso tras cambiar de rol. El actor de cada aprobación queda en validated_by_user_id. Esta regla reemplaza la restricción anterior a solo COORDINADOR.
 
 **Cómo se resuelve "solo su cuadrilla":** el alcance del supervisor y del operario se calcula contra las tablas `teams`/`team_members` de SPEC-002 (baseline V001), no contra un campo del JWT. El servicio filtra por las cuadrillas vigentes del usuario (`team_members.left_at IS NULL`), de modo que reasignar a alguien de equipo cambia su alcance en el siguiente request, sin esperar a que expire su token.
 

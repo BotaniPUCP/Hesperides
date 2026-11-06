@@ -1006,7 +1006,7 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 | Código único entre elementos vigentes | **BD** | índice único parcial |
 | Validador y fecha de validación van juntos | **BD** | `CHECK chk_interventions_validation` |
 | El flujo de estados de incidencia respeta el orden | **Servicio** | Los estados son filas de catálogo; la BD no conoce las transiciones válidas. `incident_status_history` deja el rastro. |
-| Solo un coordinador valida una intervención | **Servicio** | La FK apunta a `users`, no a un rol. La autorización es de SPEC-001. |
+| Coordinador o capataz responsable valida una intervención, sin autoaprobación | **Servicio** | La FK apunta a `users`, no a un rol. La autorización es de SPEC-001. |
 | El operario asignado es el que registra la ejecución | **Servicio** | — |
 | El polígono de un elemento cae dentro de su zona | **Servicio** (advertencia, no bloqueo) | `ST_Within`. Es advertencia porque los límites digitalizados serán aproximados hasta que el cliente entregue la zonificación oficial. |
 
