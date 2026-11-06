@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { SpeciesDetailScreen } from '../SpeciesDetailScreen';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
+import { rememberListQuery } from '@/lib/listMemory';
 import { p01, page, palmeraReina } from '../__fixtures__/inventario';
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
@@ -14,6 +15,19 @@ const api = inventarioVerdeApi as jest.Mocked<typeof inventarioVerdeApi>;
 afterEach(() => jest.resetAllMocks());
 
 describe('SpeciesDetailScreen', () => {
+  it('el breadcrumb y la flecha regresan a la lista con sus últimos filtros', async () => {
+    rememberListQuery('/inventario-verde', 'type=PALM&page=1');
+    api.speciesBySlug.mockResolvedValue(palmeraReina);
+    api.locations.mockResolvedValue([]);
+
+    render(<SpeciesDetailScreen slug="syagrus-romanzoffiana" />);
+
+    const crumb = await screen.findByRole('link', { name: 'Inventario de Especies' });
+    expect(crumb).toHaveAttribute('href', '/inventario-verde?type=PALM&page=1');
+    expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/inventario-verde?type=PALM&page=1');
+    window.sessionStorage.clear();
+  });
+
   it('muestra la especie, sus otros nombres y el enlace al catastro de ejemplares', async () => {
     api.speciesBySlug.mockResolvedValue(palmeraReina);
     api.locations.mockResolvedValue([{ location: 'Educación', count: 1 }]);

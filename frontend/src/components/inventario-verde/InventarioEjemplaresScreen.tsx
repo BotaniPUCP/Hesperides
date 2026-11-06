@@ -1,48 +1,41 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useMemo } from 'react';
 import type { Species, SpecimenSortKey, SpecimenViewMode } from '@shared/types';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { BackButton } from '@/components/ui';
 import { useInventarioVerdeSpecimens, useInventarioVerdeStats } from '@/hooks/useInventarioVerde';
+import { useListUrlState } from '@/hooks/useListUrlState';
 import { useRequest } from '@/hooks/useRequest';
+import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { oneOf, pageFrom } from '@/lib/listUrl';
 import { InventarioVerdeHero } from './InventarioVerdeHero';
 import { SpecimenFiltersBar } from './SpecimenFiltersBar';
 import { SpecimenTable } from './SpecimenTable';
 import { SpecimenGrid } from './SpecimenGrid';
 
+const LIST_PATH = '/catastro/ejemplares';
+const PAGE_SIZE = 16;
+const SORT_KEYS: readonly SpecimenSortKey[] = ['code', 'reference', 'location'];
+const DIRECTIONS = ['asc', 'desc'] as const;
+const VIEW_MODES: readonly SpecimenViewMode[] = ['cards', 'table'];
+const DEFAULTS = {
+  search: '', location: 'ALL', type: 'ALL', sort: 'code', dir: 'asc', view: 'cards', page: '0',
+};
+
 /**
  * Pantalla principal del Inventario de Ejemplares (Catastro Verde georreferenciado).
  * Muestra el catálogo de individuos botánicos en el campus con filtros por código,
- * referencia, ubicación y nombre de especie, así como acceso directo al registro de ejemplares.
+ * referencia, ubicación, tipo y nombre de especie. Filtros, orden, vista y página
+ * viven en la URL para encontrarlos igual al regresar de una ficha.
  */
 export function InventarioEjemplaresScreen() {
-  const searchParams = useSearchParams();
-
-  const [searchInput, setSearchInput] = useState(() => {
-    const fromHook = searchParams?.get('search');
-    if (fromHook !== null && fromHook !== undefined) return fromHook;
-    if (typeof window !== 'undefined') {
-      return new URLSearchParams(window.location.search).get('search') ?? '';
-    }
-    return '';
-  });
-  const debouncedSearch = useDebouncedValue(searchInput, 300);
-  const [selectedLocation, setSelectedLocation] = useState(() => {
-    const fromHook = searchParams?.get('location');
-    if (fromHook) return fromHook;
-    if (typeof window !== 'undefined') {
-      return new URLSearchParams(window.location.search).get('location') || 'ALL';
-    }
-    return 'ALL';
-  });
-  const [selectedType, setSelectedType] = useState('ALL');
-  const [sortBy, setSortBy] = useState<SpecimenSortKey>('code');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [viewMode, setViewMode] = useState<SpecimenViewMode>('cards');
-  const [page, setPage] = useState(0);
-  const pageSize = 16;
+  const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
+  const [searchInput, setSearchInput] = useSearchDraft(values.search, (search) => setValues({ search, page: '0' }));
+  const sortBy = oneOf(values.sort, SORT_KEYS, 'code');
+  const sortDirection = oneOf(values.dir, DIRECTIONS, 'asc');
+  const viewMode = oneOf(values.view, VIEW_MODES, 'cards');
+  const page = pageFrom(values.page);
 
   const { totalSpecimens, vegetationTypes } = useInventarioVerdeStats();
 
@@ -54,13 +47,13 @@ export function InventarioEjemplaresScreen() {
     availableLocations,
     loading,
   } = useInventarioVerdeSpecimens(null, {
-    search: debouncedSearch,
-    location: selectedLocation,
-    vegetationType: selectedType,
+    search: values.search,
+    location: values.location,
+    vegetationType: values.type,
     sortBy,
     sortDirection,
     page,
-    pageSize,
+    pageSize: PAGE_SIZE,
   });
 
   const allSpeciesReq = useRequest('all-species-catalog', () =>
@@ -77,32 +70,15 @@ export function InventarioEjemplaresScreen() {
     return map;
   }, [allSpeciesReq.data]);
 
-  function handleSearchChange(value: string) {
-    setSearchInput(value);
-    setPage(0);
-  }
-
-  function handleLocationChange(loc: string) {
-    setSelectedLocation(loc);
-    setPage(0);
-  }
-
-  function handleTypeChange(typeCode: string) {
-    setSelectedType(typeCode);
-    setPage(0);
-  }
-
-  function handleResetFilters() {
-    setSearchInput('');
-    setSelectedType('ALL');
-    setSelectedLocation('ALL');
-    setSortBy('code');
-    setSortDirection('asc');
-    setPage(0);
-  }
+  const handlePageChange = (next: number) => setValues({ page: String(next) });
+  const handleResetFilters = () => setValues(DEFAULTS);
 
   return (
     <div className="flex flex-col">
+      <div className="mb-3 empty:hidden">
+        <BackButton />
+      </div>
+
       <InventarioVerdeHero
         title="Catastro de Ejemplares"
         totalSpecimens={totalSpecimens}
@@ -111,30 +87,24 @@ export function InventarioEjemplaresScreen() {
       <div className="bg-neutral-0 rounded-2xl border border-neutral-200/90 p-4 sm:p-6 shadow-xs">
         <SpecimenFiltersBar
           searchValue={searchInput}
-          onSearchChange={handleSearchChange}
-          selectedType={selectedType}
-          onTypeChange={handleTypeChange}
+          onSearchChange={setSearchInput}
+          selectedType={values.type}
+          onTypeChange={(type) => setValues({ type, page: '0' })}
           availableTypes={vegetationTypes}
-          selectedLocation={selectedLocation}
-          onLocationChange={handleLocationChange}
+          selectedLocation={values.location}
+          onLocationChange={(location) => setValues({ location, page: '0' })}
           availableLocations={availableLocations}
           sortBy={sortBy}
-          onSortByChange={(s) => {
-            setSortBy(s);
-            setPage(0);
-          }}
+          onSortByChange={(sort) => setValues({ sort, page: '0' })}
           sortDirection={sortDirection}
-          onSortDirectionChange={(d) => {
-            setSortDirection(d);
-            setPage(0);
-          }}
+          onSortDirectionChange={(dir) => setValues({ dir, page: '0' })}
           totalFilteredCount={totalElements}
-          fromItem={totalElements === 0 ? 0 : page * pageSize + 1}
-          toItem={Math.min((page + 1) * pageSize, totalElements)}
+          fromItem={totalElements === 0 ? 0 : page * PAGE_SIZE + 1}
+          toItem={Math.min((page + 1) * PAGE_SIZE, totalElements)}
           loading={loading}
           onReset={handleResetFilters}
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={(view) => setValues({ view })}
         />
 
         {viewMode === 'table' ? (
@@ -143,15 +113,13 @@ export function InventarioEjemplaresScreen() {
             speciesMap={speciesMap}
             totalElements={totalElements}
             page={currentPage}
-            pageSize={pageSize}
-            onPageChange={setPage}
+            pageSize={PAGE_SIZE}
+            onPageChange={handlePageChange}
             sortBy={sortBy}
             sortDirection={sortDirection}
             onSortChange={(sort) => {
               if (sort.key === 'code' || sort.key === 'location' || sort.key === 'reference') {
-                setSortBy(sort.key);
-                setSortDirection(sort.direction);
-                setPage(0);
+                setValues({ sort: sort.key, dir: sort.direction, page: '0' });
               }
             }}
             loading={loading}
@@ -164,8 +132,8 @@ export function InventarioEjemplaresScreen() {
             page={currentPage}
             totalPages={totalPages}
             totalElements={totalElements}
-            pageSize={pageSize}
-            onPageChange={setPage}
+            pageSize={PAGE_SIZE}
+            onPageChange={handlePageChange}
             onClearFilters={handleResetFilters}
           />
         )}

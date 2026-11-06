@@ -1,20 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useInventarioVerdeSpecies, useInventarioVerdeStats } from '@/hooks/useInventarioVerde';
+import { useListUrlState } from '@/hooks/useListUrlState';
+import { useSearchDraft } from '@/hooks/useSearchDraft';
+import { oneOf, pageFrom } from '@/lib/listUrl';
 import { InventarioVerdeHero } from './InventarioVerdeHero';
 import { VegetationTypeFilter } from './VegetationTypeFilter';
 import { SpeciesGrid } from './SpeciesGrid';
 
+const LIST_PATH = '/inventario-verde';
+const SPECIES_SORTS = ['name:asc', 'name:desc', 'count:desc', 'count:asc'] as const;
+const DEFAULTS = { search: '', type: 'ALL', sort: 'name:asc', page: '0' };
+
+/** El catálogo de especies. Sus filtros viven en la URL para encontrarlos igual al regresar de una ficha. */
 export function InventarioVerdeScreen() {
   const [reloadKey] = useState(0);
 
-  const [searchInput, setSearchInput] = useState('');
-  const debouncedSearch = useDebouncedValue(searchInput, 300);
-  const [selectedType, setSelectedType] = useState('ALL');
-  const [speciesSort, setSpeciesSort] = useState<'name:asc' | 'name:desc' | 'count:desc' | 'count:asc'>('name:asc');
-  const [page, setPage] = useState(0);
+  const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
+  const [searchInput, setSearchInput] = useSearchDraft(values.search, (search) => setValues({ search, page: '0' }));
+  const selectedType = values.type;
+  const speciesSort = oneOf(values.sort, SPECIES_SORTS, 'name:asc');
+  const page = pageFrom(values.page);
   const pageSize = 16;
 
   const { totalSpecimens, vegetationTypes } = useInventarioVerdeStats(reloadKey);
@@ -26,7 +33,7 @@ export function InventarioVerdeScreen() {
     currentPage,
     loading,
   } = useInventarioVerdeSpecies({
-    search: debouncedSearch,
+    search: values.search,
     vegetationType: selectedType,
     page,
     pageSize,
@@ -36,19 +43,11 @@ export function InventarioVerdeScreen() {
   function handleTypeSelect(typeCode: string) {
     const nextType = selectedType === typeCode && typeCode !== 'ALL' ? 'ALL' : typeCode;
     if (nextType === selectedType) return;
-    setSelectedType(nextType);
-    setPage(0);
-  }
-
-  function handleSearchChange(value: string) {
-    setSearchInput(value);
-    setPage(0);
+    setValues({ type: nextType, page: '0' });
   }
 
   function handleClearFilters() {
-    setSearchInput('');
-    setSelectedType('ALL');
-    setPage(0);
+    setValues({ search: '', type: 'ALL', page: '0' });
   }
 
   return (
@@ -62,7 +61,7 @@ export function InventarioVerdeScreen() {
           onSelectType={handleTypeSelect}
           totalAllCount={totalSpecimens}
           searchValue={searchInput}
-          onSearchChange={handleSearchChange}
+          onSearchChange={setSearchInput}
         />
 
         <SpeciesGrid
@@ -72,10 +71,10 @@ export function InventarioVerdeScreen() {
           totalPages={totalPages}
           totalElements={totalElements}
           pageSize={pageSize}
-          onPageChange={setPage}
+          onPageChange={(next) => setValues({ page: String(next) })}
           onClearFilters={handleClearFilters}
           sortBy={speciesSort}
-          onSortByChange={setSpeciesSort}
+          onSortByChange={(sort) => setValues({ sort })}
         />
       </div>
     </div>

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { BackButton, Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useInventarioVerdeSpecimenByCode } from '@/hooks/useInventarioVerde';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { SpecimenAssessments } from './SpecimenAssessments';
 import { SpecimenInfo } from './SpecimenInfo';
 import { SpecimenInterventions } from './SpecimenInterventions';
@@ -13,8 +14,11 @@ export interface SpecimenDetailScreenProps {
   code: string;
 }
 
+const LIST_PATH = '/catastro/ejemplares';
+
 export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   const router = useRouter();
+  const listHref = useRememberedHref(LIST_PATH);
   const [reloadKey, setReloadKey] = useState(0);
   const { specimen, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code, reloadKey);
 
@@ -31,7 +35,7 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
       <div className="flex flex-col gap-6">
         <Breadcrumb
           items={[
-            { label: 'Catastro de Ejemplares', href: '/catastro/ejemplares' },
+            { label: 'Catastro de Ejemplares', href: listHref },
             { label: 'Ejemplar no encontrado' },
           ]}
         />
@@ -40,7 +44,7 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
           description={errorMessage ?? 'El ejemplar solicitado no está en el inventario o fue dado de baja.'}
           action={{
             label: 'Volver a ejemplares',
-            onClick: () => router.push('/catastro/ejemplares'),
+            onClick: () => router.push(listHref),
           }}
         />
       </div>
@@ -48,13 +52,16 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   }
 
   const breadcrumbItems = [
-    { label: 'Catastro de Ejemplares', href: '/catastro/ejemplares' },
+    { label: 'Catastro de Ejemplares', href: listHref },
     { label: `Ejemplar ${specimen.code}` },
   ];
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Breadcrumb items={breadcrumbItems} className="mb-4" />
+      <div className="mb-4 flex items-center gap-2">
+        <BackButton fallbackHref={LIST_PATH} />
+        <Breadcrumb items={breadcrumbItems} />
+      </div>
 
       <SpecimenInfo specimen={specimen} onSpecimenUpdated={() => setReloadKey((k) => k + 1)} />
 

@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { BackButton, Breadcrumb, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useInventarioVerdeSpeciesBySlug } from '@/hooks/useInventarioVerde';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { useRequest } from '@/hooks/useRequest';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import type { LocationCount } from '@shared/types';
@@ -13,8 +14,11 @@ export interface SpeciesDetailScreenProps {
   slug: string;
 }
 
+const LIST_PATH = '/inventario-verde';
+
 export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   const router = useRouter();
+  const listHref = useRememberedHref(LIST_PATH);
   const { species, loading: speciesLoading, errorMessage } = useInventarioVerdeSpeciesBySlug(slug);
 
   const locations = useRequest(slug || null, () => inventarioVerdeApi.locations(slug));
@@ -34,7 +38,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
       <div className="flex flex-col gap-6">
         <Breadcrumb
           items={[
-            { label: 'Inventario de Especies', href: '/inventario-verde' },
+            { label: 'Inventario de Especies', href: listHref },
             { label: 'No encontrada' },
           ]}
         />
@@ -43,7 +47,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
           description={errorMessage ?? 'La especie solicitada no está registrada en el inventario.'}
           action={{
             label: 'Volver al inventario',
-            onClick: () => router.push('/inventario-verde'),
+            onClick: () => router.push(listHref),
           }}
         />
       </div>
@@ -52,12 +56,15 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
 
   return (
     <div className="flex flex-col max-w-5xl mx-auto w-full space-y-6">
-      <Breadcrumb
-        items={[
-          { label: 'Inventario de Especies', href: '/inventario-verde' },
-          { label: species.commonName },
-        ]}
-      />
+      <div className="flex items-center gap-2">
+        <BackButton fallbackHref={LIST_PATH} />
+        <Breadcrumb
+          items={[
+            { label: 'Inventario de Especies', href: listHref },
+            { label: species.commonName },
+          ]}
+        />
+      </div>
 
       {/* Cabecera taxonómica e información de la especie */}
       <SpeciesInfo species={species} availableLocations={availableLocations} />

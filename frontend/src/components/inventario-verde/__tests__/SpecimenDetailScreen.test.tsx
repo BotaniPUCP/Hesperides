@@ -3,6 +3,7 @@ import { SpecimenDetailScreen } from '../SpecimenDetailScreen';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
 import { catastroApi } from '@/lib/catastro-api';
+import { rememberListQuery } from '@/lib/listMemory';
 import { p01Detail } from '../__fixtures__/inventario';
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
@@ -24,6 +25,18 @@ beforeEach(() => assessments.mockResolvedValue([]));
 afterEach(() => jest.resetAllMocks());
 
 describe('SpecimenDetailScreen', () => {
+  it('el breadcrumb y la flecha regresan a la lista con sus últimos filtros', async () => {
+    rememberListQuery('/catastro/ejemplares', 'search=real&type=PALM');
+    api.specimen.mockResolvedValue(p01Detail);
+
+    render(<SpecimenDetailScreen code="EV-000001" />);
+
+    const crumb = await screen.findByRole('link', { name: 'Catastro de Ejemplares' });
+    expect(crumb).toHaveAttribute('href', '/catastro/ejemplares?search=real&type=PALM');
+    expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/catastro/ejemplares?search=real&type=PALM');
+    window.sessionStorage.clear();
+  });
+
   it('muestra la ficha con su sección, su origen en el catastro y sus medidas', async () => {
     api.specimen.mockResolvedValue(p01Detail);
 

@@ -1,8 +1,14 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { InventarioEjemplaresScreen } from '../InventarioEjemplaresScreen';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { rememberedHref } from '@/lib/listMemory';
+import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { page, p01, p02, summary } from '../__fixtures__/inventario';
+
+jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
+
+const LIST = '/catastro/ejemplares';
 
 const mockUseAuth = jest.fn();
 jest.mock('@/hooks/useAuth', () => ({
@@ -36,6 +42,9 @@ const mockSpecimenGlobal2 = {
 };
 
 beforeEach(() => {
+  window.history.replaceState(null, '', LIST);
+  window.sessionStorage.clear();
+  restartTrail(LIST);
   mockUseAuth.mockReturnValue({ user: null });
   api.summary.mockResolvedValue(summary);
   api.allSpecimens.mockImplementation(async ({ search }) =>
@@ -84,6 +93,80 @@ describe('InventarioEjemplaresScreen', () => {
     await waitFor(() => {
       expect(screen.queryByText('EV-000001')).not.toBeInTheDocument();
       expect(screen.getByText('EV-000002')).toBeInTheDocument();
+    });
+  });
+
+  describe('conservar la pantalla para regresar', () => {
+    it('reabre con los filtros, el orden, la vista y la página que trae la URL', async () => {
+      window.history.replaceState(null, '', `${LIST}?search=real&type=PALM&location=Educación&sort=location&view=table&page=2`);
+      render(<InventarioEjemplaresScreen />);
+
+      await waitFor(() =>
+        expect(api.allSpecimens).toHaveBeenCalledWith(
+          expect.objectContaining({
+            search: 'real', vegetationType: 'PALM', location: 'Educación', sortBy: 'location', page: 2,
+          }),
+        ),
+      );
+      expect(screen.getByPlaceholderText(/Buscar por código, referencia/i)).toHaveValue('real');
+      expect(await screen.findByText('Código')).toBeInTheDocument();
+    });
+
+    it('un orden o una página manipulados en la URL vuelven al valor por defecto', async () => {
+      window.history.replaceState(null, '', `${LIST}?sort=photo_url;drop&dir=x&view=y&page=-4`);
+      render(<InventarioEjemplaresScreen />);
+
+      await waitFor(() =>
+        expect(api.allSpecimens).toHaveBeenCalledWith(
+          expect.objectContaining({ sortBy: 'code', sortDirection: 'asc', page: 0 }),
+        ),
+      );
+    });
+
+    it('lleva a la URL lo que se filtra y lo recuerda para el breadcrumb', async () => {
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByRole('option', { name: 'Palmera (250)' });
+
+      await userEvent.selectOptions(screen.getByRole('combobox', { name: /tipo de ejemplar/i }), 'PALM');
+
+      await waitFor(() => expect(window.location.search).toBe('?type=PALM'));
+      await waitFor(() => expect(rememberedHref(LIST)).toBe(`${LIST}?type=PALM`));
+    });
+
+    it('cambiar el orden conserva campo y dirección, que llegan en dos avisos seguidos', async () => {
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByText('EV-000001');
+
+      await userEvent.selectOptions(screen.getByLabelText('Ordenar por:'), 'reference:desc');
+
+      await waitFor(() => expect(window.location.search).toBe('?sort=reference&dir=desc'));
+    });
+
+    it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de cero', async () => {
+      window.history.replaceState(null, '', `${LIST}?search=real&type=PALM`);
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByRole('option', { name: 'Palmera (250)' });
+
+      act(() => window.history.pushState(null, '', LIST));
+
+      expect(await screen.findByPlaceholderText(/Buscar por código, referencia/i)).toHaveValue('');
+      expect(screen.getByRole('combobox', { name: /tipo de ejemplar/i })).toHaveValue('ALL');
+      await waitFor(() => expect(rememberedHref(LIST)).toBe(LIST));
+    });
+
+    it('muestra la flecha solo si se llegó desde otra pantalla', async () => {
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByText('EV-000001');
+      expect(screen.queryByRole('link', { name: 'Volver' })).not.toBeInTheDocument();
+
+      act(() => {
+        restartTrail('/inventario-verde/especies/roystonea-regia');
+        recordVisit(LIST);
+      });
+
+      expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute(
+        'href', '/inventario-verde/especies/roystonea-regia',
+      );
     });
   });
 
