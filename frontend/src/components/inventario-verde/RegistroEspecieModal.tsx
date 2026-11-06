@@ -9,6 +9,7 @@ import { LIMITES } from '@/lib/upload-limits';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
+import { normalizarNombreCientifico, validarNombreCientifico } from './validacionesEspecie';
 
 export interface RegistroEspecieModalProps {
   isOpen: boolean;
@@ -90,11 +91,9 @@ function RegistroEspecieDialog({
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
-    const scName = scientificName.trim();
-    if (!scName) {
-      errs.scientificName = 'El nombre científico es obligatorio';
-    } else if (scName.length < 2) {
-      errs.scientificName = 'Debe tener al menos 2 caracteres';
+    const scError = validarNombreCientifico(scientificName);
+    if (scError) {
+      errs.scientificName = scError;
     }
 
     if (!vegetationTypeCode) {
@@ -121,7 +120,7 @@ function RegistroEspecieDialog({
       .filter(Boolean);
 
     const form: SpeciesForm = {
-      scientificName: scientificName.trim(),
+      scientificName: normalizarNombreCientifico(scientificName),
       commonName: commonName.trim() || undefined,
       family: family.trim() || undefined,
       vegetationTypeCode: vegetationTypeCode!,

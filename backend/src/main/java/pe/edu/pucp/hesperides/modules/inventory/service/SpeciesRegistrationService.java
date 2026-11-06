@@ -28,12 +28,34 @@ public class SpeciesRegistrationService {
     private final InventoryPhotoService photoService;
     private final AuditService auditService;
 
-    @Transactional
-    public SpeciesResponse register(SpeciesForm form, UploadedPhoto photo, String userEmail) {
-        String scientificName = form.scientificName() != null ? form.scientificName().trim() : "";
-        if (scientificName.length() < 2) {
+    private static final java.util.regex.Pattern INVALID_BOTANICAL_CHARS =
+            java.util.regex.Pattern.compile("[0-9/\\\\@#$%^&*()_+=\\[\\]{}|<>?!;:~`\"“”«»]");
+
+    public static void validateScientificName(String scientificName) {
+        if (scientificName == null || scientificName.isBlank()) {
+            throw new ValidationException("El nombre científico es obligatorio");
+        }
+        String cleaned = scientificName.trim().replaceAll("\\s+", " ");
+        if (cleaned.length() < 2) {
             throw new ValidationException("El nombre científico debe tener al menos 2 caracteres");
         }
+        if (cleaned.length() > 150) {
+            throw new ValidationException("El nombre científico no puede exceder 150 caracteres");
+        }
+        if (INVALID_BOTANICAL_CHARS.matcher(cleaned).find()) {
+            throw new ValidationException("El nombre científico no debe contener números, barras (/) ni caracteres especiales no botánicos");
+        }
+        String[] words = cleaned.split(" ");
+        if (words.length < 2) {
+            throw new ValidationException("El nombre científico debe incluir al menos género y epíteto específico (ej. «Jacaranda mimosifolia» o «Ficus sp.»)");
+        }
+    }
+
+    @Transactional
+    public SpeciesResponse register(SpeciesForm form, UploadedPhoto photo, String userEmail) {
+        String rawName = form.scientificName() != null ? form.scientificName().trim().replaceAll("\\s+", " ") : "";
+        validateScientificName(rawName);
+        String scientificName = rawName.substring(0, 1).toUpperCase(Locale.ROOT) + rawName.substring(1);
 
         // Verificar unicidad de nombre científico activo
         Boolean exists = jdbc.queryForObject(
