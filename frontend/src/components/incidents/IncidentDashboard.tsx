@@ -27,7 +27,7 @@ export function IncidentExportButton() {
       } catch (ex) { setError(mensajeDeApiError(ex)); }
       finally { setBusy(false); }
     }}>Exportar matriz OSG</Button>
-    <p className="text-xs text-neutral-700">CSV de registros aprobados: 23 columnas, independiente de los filtros.</p>
+    <p className="surface-pill text-xs text-neutral-700">CSV de registros aprobados: 23 columnas, independiente de los filtros.</p>
     {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}
   </div>;
 }

@@ -73,7 +73,8 @@ variables cambian bajo `.dark`. `neutral-*`, `brand-*`, `status-*`, `urgency-*`
 y `alert-*` se adaptan al tema; `forest-*` e `ink` mantienen su valor para fondos
 con texto blanco y velos. Los avisos en línea usan los pares `alert-*-bg/fg`.
 La guía gráfica de `docs/marca/` no sustituye estos tokens sin una migración
-global acordada; ninguna feature introduce su propia paleta.
+global acordada; ninguna feature introduce su propia paleta, salvo los fondos por
+módulo definidos abajo.
 
 #### Color de marca
 
@@ -166,6 +167,26 @@ El `code` es el de `catalog_items` de `URGENCY_LEVEL` (SPEC-002 §4.9). Esta esc
 | Variación sin meta de sentido, o igual | `neutral` |
 
 La variación lleva además ▲, ▼ o = y una palabra: el color nunca es la única señal (§8.2).
+
+#### Fondos por módulo
+
+Cada módulo tiene un fondo propio con la trama de triángulos del mapa 3D. La fuente
+única es `frontend/src/lib/moduleThemes.ts`, porque lo pinta un canvas. Solo tiñe el
+fondo: botones, enlaces y badges conservan sus tokens. Rojo y ámbar quedan excluidos
+porque significan «crítico» y «advertencia». El módulo se deduce de la ruta; Inicio y
+el mapa no llevan fondo. El fondo es completo en todas las pantallas del módulo, y ningún
+texto queda directamente sobre él: va dentro de una tarjeta o un globo. Aplica solo a la web.
+
+| Módulo | Tono | Hex día (de arriba a abajo) |
+|---|---|---|
+| Catastro verde | Esmeralda | `#0D7344` `#10B981` `#6EE7B7` `#F0FDF4` |
+| Catálogo botánico | Oliva | `#4D6B12` `#84A41A` `#C5DB6A` `#F7FEE7` |
+| Riego | Azul agua | `#0B5F8A` `#0EA5E9` `#7DD3FC` `#F0F9FF` |
+| Intervenciones | Turquesa | `#0F6E6E` `#14B8A6` `#7DE3D4` `#F0FDFA` |
+| Lugares | Terracota | `#8A3F1F` `#C4673A` `#EDB08C` `#FEF6F0` |
+| Incidencias | Ciruela | `#6B2463` `#A8448F` `#DDA6D0` `#FCF4FA` |
+| Reportes | Índigo | `#2F3A8F` `#4F5FD9` `#A5B0F5` `#F2F4FF` |
+| Administración | Pizarra | `#334155` `#64748B` `#B4BFCC` `#F8FAFC` |
 
 ### 3.2 Tipografía
 

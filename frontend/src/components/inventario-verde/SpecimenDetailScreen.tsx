@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useInventarioVerdeSpecimenByCode } from '@/hooks/useInventarioVerde';
 import { SpecimenAssessments } from './SpecimenAssessments';
-import { SpecimenBackdrop } from './SpecimenBackdrop';
 import { SpecimenInfo } from './SpecimenInfo';
 import { SpecimenInterventions } from './SpecimenInterventions';
 
@@ -54,15 +53,8 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   ];
 
   return (
-    <div className="relative flex flex-col isolate min-h-screen">
-      {/* Fondo de rombitos verde adaptado del mapa 3D (acotado solo a la ficha, sin tocar el sidebar) */}
-      <SpecimenBackdrop />
-
-      <div className="mb-4">
-        <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-neutral-0/95 backdrop-blur-md border border-neutral-200/80 shadow-xs">
-          <Breadcrumb items={breadcrumbItems} />
-        </div>
-      </div>
+    <div className="flex flex-col min-h-screen">
+      <Breadcrumb items={breadcrumbItems} className="mb-4" />
 
       <SpecimenInfo specimen={specimen} onSpecimenUpdated={() => setReloadKey((k) => k + 1)} />
 

@@ -38,7 +38,7 @@ export function ReportTabs({ tabs, active, onActivate }: ReportTabsProps) {
 
   return (
     <div role="tablist" aria-label={SCREEN_TEXTS.tablistLabel} onKeyDown={onKeyDown}
-      className="grid auto-cols-fr grid-flow-col border-b border-neutral-200 sm:flex sm:gap-2">
+      className="grid auto-cols-fr grid-flow-col rounded-xl border border-neutral-200 bg-neutral-0 px-2 sm:flex sm:gap-2">
       {tabs.map((tab, index) => {
         const selected = tab === active;
         return (

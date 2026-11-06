@@ -9,3 +9,12 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),
 }));
+
+// jsdom no implementa ResizeObserver ni el canvas 2D, y ModuleBackdrop se monta en
+// toda pantalla de un módulo. Las pruebas que dibujan declaran su propio contexto.
+global.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+if (typeof HTMLCanvasElement !== 'undefined') HTMLCanvasElement.prototype.getContext = () => null;

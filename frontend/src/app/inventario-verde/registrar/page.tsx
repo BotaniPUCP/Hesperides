@@ -12,7 +12,7 @@ export default function RegistrarEspeciePage() {
   const canRegister = puedeRegistrar(user?.role.code);
 
   return (
-    <main className="min-h-screen bg-neutral-50 p-4 md:p-6 lg:p-8">
+    <main className="min-h-screen p-4 md:p-6 lg:p-8">
       <div className="mx-auto max-w-4xl space-y-6">
         <Breadcrumb
           items={[
@@ -21,7 +21,7 @@ export default function RegistrarEspeciePage() {
           ]}
         />
 
-        <div className="border-b border-neutral-200/80 pb-4">
+        <div className="surface-card">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-900">
             Registrar especie botánica
           </h1>

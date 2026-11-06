@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { ModuleBackdrop } from './ModuleBackdrop';
 import { Sidebar } from './Sidebar';
 
 const ANCHO_SIDEBAR = 'w-64';
@@ -65,7 +66,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <main className="min-w-0 flex-1 p-4 md:p-6">{children}</main>
+      <main className="relative isolate min-w-0 flex-1 p-4 md:p-6">
+        <ModuleBackdrop />
+        {children}
+      </main>
     </div>
   );
 }

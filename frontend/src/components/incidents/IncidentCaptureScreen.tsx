@@ -14,7 +14,7 @@ export function IncidentCaptureScreen() {
   return (
     <div className="space-y-5">
       <Breadcrumb items={[{ label: 'Incidencias', href: listHref }, { label: 'Informar' }]} />
-      <header>
+      <header className="surface-card">
         <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Informar una incidencia</h1>
         <p className="mt-1 text-sm text-neutral-700">Una frase basta. Las fotos y la ubicación son opcionales.</p>
       </header>

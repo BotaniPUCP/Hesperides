@@ -92,7 +92,7 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
     } finally { setPending(false); }
   };
   if (!['ADMIN','COORDINADOR'].includes(user?.role.code ?? '')) return <p>No tienes permiso para planificar intervenciones.</p>;
-  return <form className="space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
+  return <form className="surface-card space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
     {guard.dialog}
     <Link href={origin ? incidentAfterCreationHref(origin,null,returnFilters) : initial ? `/intervenciones/${initial.id}` : '/intervenciones'} className="text-brand-600 underline">{origin ? 'Volver a la incidencia' : 'Volver'}</Link>
     <h1 className="text-2xl font-bold">{initial ? `Editar ${initial.code}` : 'Nueva intervención'}</h1>

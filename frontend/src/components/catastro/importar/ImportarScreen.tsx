@@ -26,7 +26,7 @@ export function ImportarScreen() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-2">
+      <header className="surface-card space-y-2">
         <h1 className="text-2xl font-bold text-neutral-900">Importar al catastro</h1>
         <p className="text-neutral-700">
           Sube un CSV en su <Link href={`/catastro/estandares#estandar-${imp.kind}`} className="text-brand-700 underline">estándar</Link>.

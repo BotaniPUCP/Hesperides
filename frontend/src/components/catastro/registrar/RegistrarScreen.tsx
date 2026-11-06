@@ -29,7 +29,7 @@ export function RegistrarScreen() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-3">
+      <header className="surface-card space-y-3">
         <h1 className="text-2xl font-bold text-neutral-900">Registrar en el catastro</h1>
         <p className="text-neutral-700">Uno a la vez. Para muchos, usa la importación por CSV.</p>
         <fieldset>

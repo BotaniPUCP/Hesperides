@@ -36,7 +36,7 @@ export function ReferenceMigrationScreen() {
   return (
     <div className="flex flex-col gap-4">
       <Breadcrumb items={[{ label: 'Lugares', href: '/lugares' }, { label: 'Migración de referencias' }]} />
-      <header>
+      <header className="surface-card">
         <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Migración de referencias</h1>
         <p className="mt-1 max-w-3xl text-sm text-neutral-600">
           Cada referencia antigua se enlaza a un lugar del catálogo (su nombre queda como alias) o se descarta. Las
@@ -54,8 +54,10 @@ export function ReferenceMigrationScreen() {
         </div>
       )}
 
-      <Input id="migracion-buscar" label="Buscar" type="search" value={search} onChange={(v) => { setSearch(v); setPage(0); }}
+      <div className="surface-card">
+        <Input id="migracion-buscar" label="Buscar" type="search" value={search} onChange={(v) => { setSearch(v); setPage(0); }}
         placeholder="Parte del nombre: gelarti, pabellón, espalda…" />
+      </div>
 
       {queue.errorMessage && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{queue.errorMessage}</p>}
       {queue.loading ? (
@@ -73,7 +75,7 @@ export function ReferenceMigrationScreen() {
       )}
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="surface-card flex items-center justify-between">
           <Button variant="secondary" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>← Anterior</Button>
           <span className="text-xs text-neutral-600">{`Página ${page + 1} de ${totalPages}`}</span>
           <Button variant="secondary" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>Siguiente →</Button>

@@ -120,7 +120,7 @@ function PanelDeUsuarios({ canManage }: { canManage: boolean }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="surface-card flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-neutral-900">Usuarios</h1>
           <p className="text-sm text-neutral-500">

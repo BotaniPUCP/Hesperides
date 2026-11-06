@@ -18,7 +18,7 @@ const REGLAS_COMUNES = [
 function SeccionEstandar({ e, puedeExportar }: { e: Estandar; puedeExportar: boolean }) {
   const id = `estandar-${e.kind}`;
   return (
-    <section aria-labelledby={id} className="space-y-4">
+    <section aria-labelledby={id} className="surface-card space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id={id} className="text-xl font-semibold text-neutral-900">
           {e.titulo} <code className="text-base font-normal text-neutral-500">{e.archivo}</code>
@@ -57,7 +57,7 @@ export function EstandaresScreen() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-2">
+      <header className="surface-card space-y-2">
         <h1 className="text-2xl font-bold text-neutral-900">Estándares de carga</h1>
         <p className="text-neutral-700">
           El formato de los archivos CSV del catastro. El de ejemplares es el mismo que produce la exportación: se

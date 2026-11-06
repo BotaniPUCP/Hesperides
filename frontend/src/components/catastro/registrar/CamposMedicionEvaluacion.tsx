@@ -31,7 +31,7 @@ function CampoFecha({ id, etiqueta, valor, onCambiar, error }: {
 export function CamposMedicion({ r }: { r: RegistroPlanta }) {
   const v = r.valores;
   return (
-    <details className="rounded-lg border border-neutral-200 p-4" open={Boolean(v.alturaM || v.dapCm)}>
+    <details className="rounded-lg border border-neutral-200 bg-neutral-0 p-4" open={Boolean(v.alturaM || v.dapCm)}>
       <summary className="cursor-pointer font-semibold text-neutral-900">Medición (opcional)</summary>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <CampoFecha id="fecha-medicion" etiqueta="Fecha de medición" valor={v.fechaMedicion}
@@ -52,7 +52,7 @@ export function CamposMedicion({ r }: { r: RegistroPlanta }) {
 export function CamposEvaluacion({ r }: { r: RegistroPlanta }) {
   const v = r.valores;
   return (
-    <details className="rounded-lg border border-neutral-200 p-4">
+    <details className="rounded-lg border border-neutral-200 bg-neutral-0 p-4">
       <summary className="cursor-pointer font-semibold text-neutral-900">Evaluación (opcional)</summary>
       <div className="mt-4 space-y-3">
         <CampoFecha id="fecha-evaluacion" etiqueta="Fecha de evaluación" valor={v.fechaEvaluacion}

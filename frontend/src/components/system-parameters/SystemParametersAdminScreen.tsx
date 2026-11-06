@@ -101,7 +101,7 @@ export function SystemParametersAdminScreen() {
 
   return (
     <div className="flex flex-col gap-5">
-      <header>
+      <header className="surface-card">
         <h1 className="text-xl font-semibold text-neutral-900">Parámetros del sistema</h1>
         <p className="mt-1 text-sm text-neutral-600">
           Configuración global que gobierna cómo se valida y se muestra el resto de la aplicación.
