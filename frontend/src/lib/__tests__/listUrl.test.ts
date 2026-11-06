@@ -1,4 +1,14 @@
-import { listHref, listQuery, oneOf, pageFrom, readListValues } from '../listUrl';
+import { isoDateFrom, listHref, listQuery, oneOf, pageFrom, readListValues } from '../listUrl';
+
+describe('isoDateFrom', () => {
+  it('acepta una fecha en formato ISO', () => {
+    expect(isoDateFrom('2026-10-31')).toBe('2026-10-31');
+  });
+
+  it.each(['ayer', '2026-10', '31/10/2026', '2026-10-31T00:00', ''])('descarta «%s»', (value) => {
+    expect(isoDateFrom(value)).toBe('');
+  });
+});
 
 const DEFAULTS = { search: '', type: 'ALL', page: '0' };
 

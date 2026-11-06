@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCatalog } from '@/hooks/useCatalog';
-import { Button, Input, LoadingSkeleton, Modal, Select, StatusBadge, useToast } from '@/components/ui';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
+import { BackButton, Breadcrumb, Button, Input, LoadingSkeleton, Modal, Select, StatusBadge, useToast } from '@/components/ui';
 import { LIMITES, motivoDeRechazo } from '@/lib/upload-limits';
 import { interventionsApi, interventionError, type InterventionDetail as Detail, type InterventionEvidence, type InterventionLocation, type InterventionOptions } from '@/lib/interventions-api';
 import { InterventionForm } from './InterventionForm';
@@ -70,8 +71,11 @@ function EvidenceUpload({ work, location, pendingEvidence, onChange }: { work:De
   </div>;
 }
 
+const LIST_PATH = '/intervenciones';
+
 export function InterventionDetail({ id, edit = false }: { id:number; edit?:boolean }) {
   const { user } = useAuth();
+  const listHref = useRememberedHref(LIST_PATH);
   const { showToast } = useToast();
   const [data, setData] = useState<Detail | null>(null);
   const [options, setOptions] = useState<InterventionOptions | null>(null);
@@ -112,7 +116,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   };
   if (!Number.isSafeInteger(id) || id < 1) return <p role="alert">Intervención no válida.</p>;
   if (loading) return <LoadingSkeleton variant="card" />;
-  if (!data) return <div role="alert">{error}<Link href="/intervenciones">Volver al listado</Link></div>;
+  if (!data) return <div role="alert">{error}<Link href={listHref}>Volver al listado</Link></div>;
   if (edit) return data.startedAt || data.planningStatusCode === 'CANCELLED'
     ? <p>La planificación está cerrada. <Link href={`/intervenciones/${id}`}>Volver al detalle</Link></p>
     : <InterventionForm initial={data} />;
@@ -135,7 +139,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     void mutate(() => interventionsApi.command(id,selected.location.id!,selected.action,body));
   };
   return <section className="space-y-6">
-    <Link className="surface-pill text-sm text-brand-600 underline" href="/intervenciones">Volver a intervenciones</Link>
+    <div className="flex items-center gap-2"><BackButton fallbackHref={LIST_PATH} /><Breadcrumb items={[{ label: 'Intervenciones', href: listHref }, { label: data.code }]} /></div>
     <div className="surface-card flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
     {error && !selected && !cancelOpen && <p role="alert" className="text-action-danger">{error}</p>}
     {notice && !selected && <p role="status">{notice}</p>}

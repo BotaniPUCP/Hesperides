@@ -39,6 +39,11 @@ export function pageFrom(value: string): number {
   return page <= MAX_PAGE ? page : 0;
 }
 
+/** La URL se puede editar a mano: lo que no sea una fecha ISO queda como sin fecha. */
+export function isoDateFrom(value: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '';
+}
+
 /** La URL se puede editar a mano: solo pasan los valores de una lista cerrada. */
 export function oneOf<T extends string>(value: string, allowed: readonly T[], fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;

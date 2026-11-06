@@ -97,7 +97,7 @@ it('aprueba únicamente la ubicación elegida y conserva la actividad hasta apro
   const d=detail();d.version=6;d.locations[0].statusCode='VALIDATED';d.locations[0].allowedActions=[];d.validatedLocationCount=1;
   jest.mocked(interventionsApi.command).mockResolvedValue(d);
   render(<InterventionDetail id={10}/>);
-  await screen.findByText('INT-000010');fireEvent.click(screen.getAllByRole('button',{name:'Aprobar'})[0]);
+  await screen.findByRole('heading',{name:'INT-000010'});fireEvent.click(screen.getAllByRole('button',{name:'Aprobar'})[0]);
   const modal=await screen.findByRole('dialog');expect(within(modal).getByText(/únicamente esta ubicación/)).toBeInTheDocument();
   fireEvent.click(within(modal).getByRole('button',{name:'Confirmar'}));
   await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'validate',{version:5}));
@@ -158,7 +158,7 @@ it('muestra cantidades y notas de todos los avances por ubicación e intento, in
     {id:3,actionCode:'PROGRESS_SAVED',interventionLocationId:22,actorUserId:4,attemptNumber:1,occurredAt:'2026-10-22T17:00:00Z',reason:null,progress:{quantity:9,notes:'Avance de otro jardín',unitItemId:2}},
     {id:4,actionCode:'PROGRESS_SAVED',interventionLocationId:21,actorUserId:3,actorName:'Capataz de prueba',attemptNumber:2,occurredAt:'2026-10-23T15:00:00Z',reason:null,progress:{quantity:2,notes:'Subsanación realizada',unitItemId:2}},
   ];
-  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);await screen.findByText('INT-000010');
+  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);await screen.findByRole('heading',{name:'INT-000010'});
   const location=within(screen.getAllByRole('article')[0]);const reports=within(location.getByRole('list',{name:'Avances registrados'}));
   expect(reports.getAllByRole('listitem')).toHaveLength(3);
   for(const text of ['Primera pasada','Cantidad corregida','Subsanación realizada'])expect(reports.getByText(text)).toBeInTheDocument();
