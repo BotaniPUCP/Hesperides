@@ -77,6 +77,15 @@ export interface MaintenanceFrequency {
   updatedAt: string;
 }
 
+/** Una sección del campus que puede ser el ámbito de una frecuencia por sección. */
+export interface MaintenanceZoneOption {
+  id: number;
+  code: string;
+  name: string;
+  sectorId: number | null;
+  sectorName: string | null;
+}
+
 export interface CreateMaintenanceFrequencyRequest {
   activityTypeItemId: number;
   regime: MaintenanceRegime;

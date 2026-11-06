@@ -82,10 +82,10 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('el mapa y los lugares son enlaces directos para los cuatro roles; incidencias y riego, para quien los opera', () => {
-    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/lugares', '/riego']);
+  it('el mapa y los lugares son enlaces directos para los cuatro roles; incidencias, riego y reportes, para quien los opera', () => {
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/lugares', '/riego', '/reportes']);
     for (const rol of ['COORDINADOR', 'SUPERVISOR']) {
-      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/lugares', '/riego']);
+      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/lugares', '/riego', '/reportes']);
     }
     expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa', '/lugares']);
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
@@ -103,6 +103,15 @@ describe('visibleNavigation', () => {
     for (const role of ['ADMIN', 'OPERARIO', 'DESCONOCIDO']) {
       expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(false);
     }
+  });
+
+  it('Reportes es un enlace directo, no un grupo, y el operario no lo ve (SPEC-202 CA-G03, CA-G04)', () => {
+    for (const role of ['ADMIN', 'COORDINADOR', 'SUPERVISOR']) {
+      expect(visibleDirectLinks(role).filter((item) => item.href === '/reportes').map((item) => item.label))
+        .toEqual(['Reportes']);
+    }
+    expect(visibleDirectLinks('OPERARIO').some((item) => item.href === '/reportes')).toBe(false);
+    expect(NAVIGATION.some((group) => group.items.some((item) => item.href === '/reportes'))).toBe(false);
   });
 
   it('un rol desconocido no ve enlaces directos', () => {

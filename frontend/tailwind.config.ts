@@ -1,5 +1,4 @@
 import type { Config } from 'tailwindcss';
-import colors from 'tailwindcss/colors';
 
 /**
  * Los tokens salen de SPEC-C01 §3.1 y son la única fuente de color del
@@ -45,7 +44,19 @@ const config: Config = {
         // Lo que NO se invierte en oscuro: fondos sólidos de marca con texto
         // blanco encima (botones, hero) y el velo oscuro de modales y de las
         // etiquetas sobre fotos. Invertirlos dejaría texto blanco sobre claro.
-        forest: colors.green,
+        forest: {
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          200: '#bbf7d0',
+          300: '#86efac',
+          400: '#4ade80',
+          500: '#22c55e',
+          600: '#16a34a',
+          700: '#15803d',
+          800: '#166534',
+          900: '#14532d',
+          950: '#052e16',
+        },
         ink: { DEFAULT: '#0f172a', line: '#334155' },
       },
     },

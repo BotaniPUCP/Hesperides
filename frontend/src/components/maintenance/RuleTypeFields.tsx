@@ -5,7 +5,7 @@ import type { FrequencyRuleTypeCode } from '@shared/types';
 import { SeasonalIntervalsEditor } from './SeasonalIntervalsEditor';
 import { ANNUAL_WINDOWS, type SeasonRow, newRow } from './seasons';
 
-const INPUT = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none';
+const INPUT = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
 const SELECT = `${INPUT} bg-neutral-0`;
 const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
 

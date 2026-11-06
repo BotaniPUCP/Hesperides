@@ -78,7 +78,7 @@ export function VegetationTypeFilter({
                 onClick={() => onSelectType(chip.code)}
                 title={typeof chip.count === 'number' ? `${chip.label}: ${chip.count} ${chip.count === 1 ? 'ejemplar censado' : 'ejemplares censados'} en campus` : chip.label}
                 className={cn(
-                  'inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs transition-all duration-150 select-none border focus:outline-none focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-2',
+                  'inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs transition-all duration-150 select-none border focus:outline-hidden focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-2',
                   isSelected
                     ? 'bg-forest-800 text-white border-forest-800 font-semibold shadow-xs'
                     : 'bg-neutral-0 text-neutral-700 border-neutral-200 font-medium hover:bg-neutral-100 hover:text-neutral-900 hover:border-neutral-300'

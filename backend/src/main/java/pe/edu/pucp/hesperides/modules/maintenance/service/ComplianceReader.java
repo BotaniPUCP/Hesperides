@@ -84,7 +84,8 @@ public class ComplianceReader {
                 currentVersion.getFrequencyRuleTypeItem().getCode(),
                 from,
                 to,
-                results.stream().map(ComplianceResponse.Segment::from).toList());
+                results.stream().map(ComplianceResponse.Segment::from).toList(),
+                currentVersion.getScope());
     }
 
     private ComplianceResponse evaluateLocations(MaintenanceFrequency frequency, List<FrequencyRule> versions,
@@ -118,7 +119,7 @@ public class ComplianceReader {
                     : "El cumplimiento se evalúa por lugar atendido, sin inferir cobertura de todo el campus");
         return new ComplianceResponse(frequency.getActivityTypeItem().getId(),frequency.getActivityTypeItem().getLabel(),
                 frequency.getRegime(),frequency.getFrequencyRuleTypeItem().getCode(),from,to,
-                List.of(ComplianceResponse.Segment.from(summary)),locations);
+                List.of(ComplianceResponse.Segment.from(summary)),locations,frequency.getScope());
     }
 
     /**

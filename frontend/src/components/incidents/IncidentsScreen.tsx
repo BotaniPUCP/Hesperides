@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSummary } from '@/hooks/useIncidents';
 import { incidentDate } from '@/lib/incidentNavigation';
+import { IncidentDashboard, IncidentExportButton } from './IncidentDashboard';
 
 export function IncidentsScreen() {
   const { user } = useAuth();
@@ -17,8 +18,10 @@ export function IncidentsScreen() {
   const summary = useIncidentSummary();
   const refresh = () => { list.reload(); options.reload(); summary.reload(); };
   const metrics: [string, number][] = summary.data ? [
-    ['Pendientes de aprobación', summary.data.pendingApproval], ['Pendientes de atención', summary.data.pendingAttention],
-    ['En atención', summary.data.inProgress], ['Resueltas', summary.data.resolved], ['Intervenciones realizadas', summary.data.completedInterventions],
+    ['Pendientes de registro', summary.data.pendingApproval], ['Pendientes de atención', summary.data.pendingAttention],
+    ['En atención', summary.data.inProgress], ['Resueltas', summary.data.resolved], ['Intervenciones finalizadas', summary.data.completedInterventions],
+    ['Reportes por corregir', summary.data.pendingCorrection], ['Resoluciones observadas', summary.data.resolutionObserved],
+    ['Intervenciones validadas', summary.data.validatedInterventions],
   ] : [];
 
   return (
@@ -28,10 +31,11 @@ export function IncidentsScreen() {
           <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Incidencias</h1>
           <p className="mt-1 text-sm text-neutral-700">{coordinator ? 'Revisión y seguimiento de la atención.' : 'Tus envíos y las incidencias de tu cuadrilla.'}</p>
         </div>
-        <Link href={href('/incidencias/nueva')} className="inline-flex min-h-12 items-center rounded-md bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+        <Link href={href('/incidencias/nueva')} className="inline-flex min-h-12 items-center rounded-md bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-forest-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
           Informar una incidencia
         </Link>
       </header>
+      {coordinator && <IncidentExportButton />}
 
       {coordinator && <section aria-label="Tablero de incidencias" className="space-y-3">
         <h2 className="text-lg font-semibold text-neutral-900">Resumen de atención</h2>
@@ -44,13 +48,14 @@ export function IncidentsScreen() {
         ) : <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">{metrics.map(([label, count]) => (
           <Card key={label}><p className="text-sm text-neutral-700">{label}</p><p className="mt-2 text-3xl font-semibold text-neutral-900">{count}</p></Card>
         ))}</div>}
+        {summary.data?.matrix && <IncidentDashboard matrix={summary.data.matrix} />}
       </section>}
 
       <Card>
         <div className="flex flex-col gap-3 md:flex-row md:items-end">
           <div className="min-w-0 flex-1">
             <Input id="incident-search" label="Buscar" type="search" size="lg" value={filters.search} maxLength={200}
-              onChange={(search) => changeFilters({ ...filters, search, page: 0 })} placeholder="Descripción o referencia del lugar" />
+              onChange={(search) => changeFilters({ ...filters, search, page: 0 })} placeholder="Número OSG, descripción o referencia" />
           </div>
           <div className="md:w-64">
             <Select id="incident-status" label="Estado" size="lg" value={filters.status || null}
@@ -75,15 +80,16 @@ export function IncidentsScreen() {
             description={filters.search || filters.status ? 'Prueba con otra descripción o cambia los filtros.' : 'Informa lo que ocurrió con un texto breve; las fotos y la ubicación son opcionales.'} />
         ) : <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">{list.data.content.map((incident) => (
           <li key={incident.id}>
-            <Link href={href(`/incidencias/${incident.id}`)} className="block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+            <Link href={href(`/incidencias/${incident.id}`)} className="block h-full rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
               <Card className="h-full transition-shadow hover:shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm text-neutral-700">#{incident.id}</span>
+                  <span className="text-sm text-neutral-700">{incident.officialCode ?? `#${incident.id}`}</span>
                   <StatusBadge code={incident.status.code} label={incident.status.label} />
                 </div>
                 <p className="mt-3 line-clamp-3 break-words font-medium text-neutral-900">{incident.description}</p>
                 <p className="mt-3 text-sm text-neutral-700">{incident.reportedBy.fullName} · {incidentDate(incident.createdAt)}</p>
                 <p className="mt-1 text-sm text-neutral-700">{incident.team?.name ?? 'Sin cuadrilla asignada'}</p>
+                <p className="mt-1 text-sm text-neutral-700">Severidad: {incident.matrix.severity?.label ?? 'Sin evaluar'} · {incident.matrix.service?.label ?? 'Servicio sin determinar'}</p>
                 <div className="mt-3">{incident.urgency ? <UrgencyBadge code={incident.urgency.code as UrgencyCode} label={incident.urgency.label} /> : <span className="text-sm text-neutral-700">Urgencia sin evaluar</span>}</div>
               </Card>
             </Link>

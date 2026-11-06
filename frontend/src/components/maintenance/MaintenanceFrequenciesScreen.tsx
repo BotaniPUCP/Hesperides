@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type {
   CreateMaintenanceFrequencyRequest,
   MaintenanceFrequency,
+  MaintenanceZoneOption,
   UpdateMaintenanceFrequencyRequest,
 } from '@shared/types';
 import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
@@ -31,6 +32,7 @@ export function MaintenanceFrequenciesScreen() {
   const [frequencies, setFrequencies] = useState<MaintenanceFrequency[]>([]);
   const [activities, setActivities] = useState<CatalogOption[]>([]);
   const [ruleTypes, setRuleTypes] = useState<CatalogOption[]>([]);
+  const [zones, setZones] = useState<MaintenanceZoneOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>(NO_FILTERS);
 
@@ -54,12 +56,14 @@ export function MaintenanceFrequenciesScreen() {
       maintenanceApi.list().catch(() => []),
       maintenanceApi.getActivityTypes().catch(() => []),
       maintenanceApi.getRuleTypes().catch(() => []),
+      maintenanceApi.getZones().catch(() => []),
     ])
-      .then(([freqRes, actRes, ruleRes]) => {
+      .then(([freqRes, actRes, ruleRes, zoneRes]) => {
         if (!vigente) return;
         setFrequencies(Array.isArray(freqRes) ? freqRes : []);
         setActivities(Array.isArray(actRes) ? actRes : []);
         setRuleTypes(Array.isArray(ruleRes) ? ruleRes : []);
+        setZones(Array.isArray(zoneRes) ? zoneRes : []);
       })
       .catch(() => {
         if (vigente) setFeedback({ type: 'error', message: 'Error al cargar las frecuencias de mantenimiento' });
@@ -197,6 +201,7 @@ export function MaintenanceFrequenciesScreen() {
         ) : (
           <FrequenciesTable
             frequencies={filteredFrequencies}
+            zones={zones}
             canManage={canManage}
             onEdit={(f) => {
               setEditingFrequency(f);
@@ -215,6 +220,7 @@ export function MaintenanceFrequenciesScreen() {
         frequencyToEdit={editingFrequency}
         activities={activities}
         ruleTypes={ruleTypes}
+        zones={zones}
         onSubmit={handleFormSubmit}
       />
     </div>

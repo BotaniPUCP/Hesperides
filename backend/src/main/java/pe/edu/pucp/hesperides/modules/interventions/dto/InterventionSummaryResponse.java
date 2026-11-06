@@ -31,5 +31,10 @@ public class InterventionSummaryResponse {
     /** An activity counts once, only after the coordinator approves every location.
      * This is not a measurement of campus maintenance coverage. */
     public boolean isApprovedForCounting() { return "VALIDATED".equals(statusCode); }
+
+    /** Elapsed execution, including pauses and corrections; approval waiting is excluded. */
+    public Long getElapsedSeconds() {
+        return startedAt==null || completedAt==null ? null : Math.max(0,java.time.Duration.between(startedAt,completedAt).getSeconds());
+    }
 }
 

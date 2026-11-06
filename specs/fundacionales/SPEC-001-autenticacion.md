@@ -349,12 +349,15 @@ El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
 ## Anexo A — Matriz de permisos por rol × módulo × acción
 
-> **Enmienda SPEC-200 (incidencias web):** en este módulo participan COORDINADOR y
-> SUPERVISOR (capataz). Solo COORDINADOR aprueba registros y revisa/asigna sus datos.
-> SUPERVISOR consulta sus envíos y los casos de las cuadrillas que dirige; registra
-> ejecución y resuelve únicamente los asignados a esas cuadrillas. COORDINADOR
-> también puede atender y resolver. Para intervenciones vinculadas, SUPERVISOR
-> puede registrar trabajo ya ejecutado; la planificación sigue en coordinación.
+> **Enmienda SPEC-201 (5 nov 2026):** en incidencias participan COORDINADOR y
+> SUPERVISOR (capataz). Solo COORDINADOR confirma el registro oficial, solicita
+> correcciones iniciales, vincula intervenciones reales, observa/reabre la resolución
+> y valida su cierre final. El remitente corrige y reenvía únicamente su reporte
+> devuelto, antes del registro oficial. SUPERVISOR consulta sus envíos y los casos
+> de las cuadrillas que dirige, y puede iniciar atención, pero no cerrar la incidencia.
+> La ejecución y validación de intervenciones conservan los permisos de SPEC-200:
+> equipo ejecutor finaliza; solo COORDINADOR valida/observa; capataz reabre para corregir.
+> Leer una intervención compartida no concede lectura a todas sus incidencias.
 > El detalle de estas acciones prevalece sobre las filas genéricas de abajo.
 
 Esta matriz gobierna la autorización (`@PreAuthorize` o equivalente) de **todos** los endpoints de negocio del proyecto, no solo los de este spec. Se documenta aquí porque SPEC-001 es quien define el mecanismo de roles; cada SPEC-1XX de feature debe implementar exactamente estas reglas sobre sus propios controllers, sin reinterpretarlas.
@@ -376,13 +379,17 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **3. Intervenciones** | Crear / editar una intervención | CU | CU | | |
 | **3. Intervenciones** | Asignar una intervención | | A (a cualquier cuadrilla) | A (dentro de su cuadrilla) | |
 | **3. Intervenciones** | Registrar ejecución (iniciar/completar, subir evidencia) | | | CU (las de su cuadrilla) | CU (solo las propias asignadas) |
-| **3. Intervenciones** | Validar/observar una intervención ejecutada | | V (ver nota 4) | | |
+| **3. Intervenciones** | Validar/observar una intervención ejecutada | | V (ver nota 4) | V (su cuadrilla; ver nota 4) | |
 | **3. Intervenciones** | Ver historial de intervenciones | L | L | L (las de su cuadrilla) | L (solo las propias) |
 | **4. Contratos y proveedores** | Crear / editar contratos y proveedores | CUD | CU (sin desactivar, ver nota 3) | | |
 | **4. Contratos y proveedores** | Registrar y ver ejecuciones de servicio | CUD | CU | L (las de su zona) | |
-| **5. Incidencias** | Reportar una incidencia | C | C | C | C |
-| **5. Incidencias** | Cambiar estado / asignar / resolver una incidencia | U, A | U, A | U, A (las de su cuadrilla) | |
-| **5. Incidencias** | Ver incidencias | L | L | L (las de su cuadrilla/zona) | L (solo las propias/asignadas) |
+| **5. Incidencias** | Reportar una incidencia | | C | C | |
+| **5. Incidencias** | Registrar oficialmente / devolver para corrección | | V, U | | |
+| **5. Incidencias** | Corregir y reenviar reporte devuelto propio | | U (propio) | U (propio) | |
+| **5. Incidencias** | Revisar datos / asignar / vincular trabajo | | U, A | | |
+| **5. Incidencias** | Iniciar atención | | U | U (cuadrillas que dirige) | |
+| **5. Incidencias** | Validar cierre / observar o reabrir resolución | | V, U | | |
+| **5. Incidencias** | Ver incidencias | | L | L (envíos propios y cuadrillas que dirige) | |
 | **6. Reportes** | Generar y ver reportes de dirección/coordinación | L | L | L (solo de su cuadrilla) | |
 | **Configuración del sistema** (`system_parameters`) | Editar parámetros generales | CU | | | |
 
@@ -398,7 +405,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 1. El coordinador ve el listado completo de usuarios y de cuadrillas porque planifica sobre todas ellas y necesita saber a qué supervisor dirigirse; sigue sin poder crear, editar ni desactivar cuentas, que es acción exclusivamente administrativa. El supervisor ve solo a los miembros de su propia cuadrilla.
 2. El coordinador mantiene el catastro (crear/editar elementos que descubre o corrige en campo) pero no desactiva elementos: desactivar un elemento del catastro es una decisión administrativa con impacto en reportes históricos, reservada a ADMIN.
 3. El coordinador crea y actualiza contratos y proveedores porque es quien gestiona la relación operativa con los tercerizados y da seguimiento al cumplimiento. Lo que no puede es desactivar un proveedor o un contrato: dar de baja una relación comercial tiene implicaciones administrativas y queda en ADMIN.
-4. Enmienda SPEC-200 (confirmación del usuario con su grupo, 22 oct 2026): solo COORDINADOR valida/observa intervenciones. El SUPERVISOR representa al capataz responsable: registra y corrige, pero no aprueba; ADMIN tampoco aprueba. Un coordinador no valida ejecución/reportes propios, incluso después de cambiar de rol. La regla concreta ("quien ejecuta no valida") se desarrolla en [SPEC-200](../features/SPEC-200-intervenciones.md) (borrador), sobre `validated_by_user_id`, que no puede coincidir con quien registró la ejecución.
+4. Enmienda SPEC-200 (5 nov 2026, usuario adopta la aclaración del líder): COORDINADOR y SUPERVISOR responsable validan/observan intervenciones; el supervisor solo las de sus cuadrillas activas. La aprobación de cualquiera cuenta cuando todas las ubicaciones estén aprobadas, sin segunda firma del coordinador. ADMIN/OPERARIO no aprueban. Se conserva la prohibición de aprobar ejecución, reportes o fotos propios, incluso tras cambiar de rol. El actor de cada aprobación queda en validated_by_user_id. Esta regla reemplaza la restricción anterior a solo COORDINADOR.
 
 **Cómo se resuelve "solo su cuadrilla":** el alcance del supervisor y del operario se calcula contra las tablas `teams`/`team_members` de SPEC-002 (baseline V001), no contra un campo del JWT. El servicio filtra por las cuadrillas vigentes del usuario (`team_members.left_at IS NULL`), de modo que reasignar a alguien de equipo cambia su alcance en el siguiente request, sin esperar a que expire su token.
 

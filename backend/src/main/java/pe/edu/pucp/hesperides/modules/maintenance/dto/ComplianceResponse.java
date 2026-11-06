@@ -20,11 +20,16 @@ public record ComplianceResponse(
         LocalDate from,
         LocalDate to,
         List<Segment> segments,
-        List<LocationCompliance> locations
+        List<LocationCompliance> locations,
+        /*
+         * Territorial scope of the frequency (CAMPUS_WIDE, BY_SECTOR, BY_ZONE).
+         * The reports need it to show BY_SECTOR as "not evaluable" (SPEC-202 D-05).
+         */
+        String scope
 ) {
     public ComplianceResponse(Long activityTypeItemId, String activityTypeLabel, String regime, String ruleTypeCode,
-            LocalDate from, LocalDate to, List<Segment> segments) {
-        this(activityTypeItemId,activityTypeLabel,regime,ruleTypeCode,from,to,segments,List.of());
+            LocalDate from, LocalDate to, List<Segment> segments, String scope) {
+        this(activityTypeItemId,activityTypeLabel,regime,ruleTypeCode,from,to,segments,List.of(),scope);
     }
     public record LocationCompliance(String targetKind, Long targetId, String targetLabel,
             List<pe.edu.pucp.hesperides.modules.maintenance.service.LocationExecution> executions,

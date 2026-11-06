@@ -18,6 +18,7 @@ import pe.edu.pucp.hesperides.modules.maintenance.dto.ComplianceResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequencyRequest;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequencyRequest;
+import pe.edu.pucp.hesperides.modules.maintenance.dto.ZoneOptionResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.service.MaintenanceFrequenciesService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
@@ -61,6 +62,13 @@ public class MaintenanceFrequencyController {
     public ResponseEntity<ApiResponse<List<MaintenanceFrequencyResponse.FrequencyRuleTypeSummary>>> getRuleTypes() {
         return ResponseEntity.ok(ApiResponse.ok("Tipos de regla obtenidos exitosamente",
                 frequenciesService.getFrequencyRuleTypes()));
+    }
+
+    @GetMapping("/zones")
+    @PreAuthorize(READERS)
+    public ResponseEntity<ApiResponse<List<ZoneOptionResponse>>> getZones() {
+        return ResponseEntity.ok(ApiResponse.ok("Zonas obtenidas exitosamente",
+                frequenciesService.getZoneOptions()));
     }
 
     /**

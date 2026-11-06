@@ -78,6 +78,7 @@ describe('RegistrarScreen', () => {
 
     expect(screen.getByLabelText(/Latitud/)).toHaveValue('-12.070200');
     await userEvent.click(screen.getByRole('button', { name: 'Registrar planta' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar y registrar' }));
 
     expect(register).toHaveBeenCalledWith(
       expect.objectContaining({ scientificName: 'Schinus molle', lat: -12.0702, lon: -77.081 }),
@@ -94,6 +95,7 @@ describe('RegistrarScreen', () => {
     pantalla();
     await elegirMolleYPunto();
     await userEvent.click(screen.getByRole('button', { name: 'Registrar planta' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar y registrar' }));
 
     expect(await screen.findByText('¿Es la misma planta que EV-000140?')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'No, es otro: registrar' }));
@@ -107,6 +109,7 @@ describe('RegistrarScreen', () => {
     pantalla();
     await elegirMolleYPunto();
     await userEvent.click(screen.getByRole('button', { name: 'Registrar planta' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar y registrar' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/El punto cae fuera del campus/);
   });
@@ -116,6 +119,7 @@ describe('RegistrarScreen', () => {
     pantalla();
     await elegirMolleYPunto();
     await userEvent.click(screen.getByRole('button', { name: 'Registrar planta' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar y registrar' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/El punto cae fuera del campus/);
 

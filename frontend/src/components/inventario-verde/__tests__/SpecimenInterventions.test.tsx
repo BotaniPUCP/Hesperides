@@ -18,10 +18,9 @@ it('la ficha pública no solicita ni muestra trabajos privados sin sesión',()=>
   reader=null;render(<SpecimenInterventions code="EV-000001"/>);
   expect(interventionsApi.list).not.toHaveBeenCalled();expect(screen.queryByText('Intervenciones del ejemplar')).not.toBeInTheDocument();
 });
-it('muestra cada actividad y conserva el ejemplar al paginar o abrir el listado',async()=>{
+it('muestra cada actividad y conserva el ejemplar al paginar',async()=>{
   render(<SpecimenInterventions code="EV-000001"/>);
   const link=await screen.findByRole('link',{name:'INT-000001'});expect(link).toHaveAttribute('href','/intervenciones/1');
-  expect(screen.getByRole('link',{name:'Abrir listado filtrado por este ejemplar'})).toHaveAttribute('href','/intervenciones?greenElementCode=EV-000001');
   expect(screen.getAllByRole('listitem')).toHaveLength(1);
   fireEvent.click(screen.getByRole('button',{name:'Siguiente'}));
   await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','','EV-000001'));

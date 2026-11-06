@@ -83,6 +83,14 @@ public final class Cells {
         }
     }
 
+    public static LocalDate pastOrPresentDate(String text) {
+        LocalDate d = date(text);
+        if (d.isAfter(LocalDate.now())) {
+            throw new CellException("«" + text + "» cannot be in the future");
+        }
+        return d;
+    }
+
     /** si / no; vacío es «no evaluado» y se lee como nulo. */
     public static Boolean yesNo(String text) {
         return switch (text.trim().toLowerCase(Locale.ROOT)) {

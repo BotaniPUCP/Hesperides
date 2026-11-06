@@ -74,7 +74,7 @@ export function SpecimenPhotoModal({ specimen, species, onClose }: SpecimenPhoto
             type="button"
             onClick={onClose}
             aria-label="Cerrar vista previa"
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-600 flex-shrink-0"
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors focus:outline-hidden focus:ring-2 focus:ring-brand-600 shrink-0"
           >
             <svg
               className="w-5 h-5"

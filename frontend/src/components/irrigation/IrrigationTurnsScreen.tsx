@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { irrigationApi } from '@/lib/irrigation-api';
 import { IrrigationMapPicker } from './IrrigationMapPicker';
 
-const FIELD = 'h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-600';
+const FIELD = 'h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-brand-600';
 const ALL = 'ALL';
 
 function dateLocal(day: Date) {

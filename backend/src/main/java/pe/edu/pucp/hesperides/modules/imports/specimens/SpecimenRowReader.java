@@ -45,7 +45,7 @@ final class SpecimenRowReader {
         Double dbh = r.read("dap_cm", t -> Cells.nonNegativeDecimal(t, 10000));
         Double crown = r.read("radio_copa_m", t -> Cells.positiveDecimal(t, 1000));
         Boolean banded = r.read("zunchado", Cells::yesNo);
-        LocalDate date = r.read("fecha_medicion", Cells::date);
+        LocalDate date = r.read("fecha_medicion", Cells::pastOrPresentDate);
         boolean any = Stream.of(height, trunk, dbh, crown, banded).anyMatch(Objects::nonNull);
         if (!any) {
             return null;
@@ -64,7 +64,7 @@ final class SpecimenRowReader {
                 r.read("ramas_secas", Cells::yesNo), r.read("cavidades", Cells::yesNo),
                 r.read("raices_expuestas", Cells::yesNo), r.read("interferencia", Cells::yesNo),
                 recommendedManagement, r.text("observacion_evaluacion"));
-        LocalDate date = r.read("fecha_evaluacion", Cells::date);
+        LocalDate date = r.read("fecha_evaluacion", Cells::pastOrPresentDate);
         boolean any = SpecimenCsvSchema.ASSESSMENT.stream().anyMatch(c -> r.text(c) != null);
         if (!any) {
             return null;

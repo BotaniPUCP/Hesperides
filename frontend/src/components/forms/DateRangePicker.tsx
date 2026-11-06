@@ -48,7 +48,7 @@ export function DateRangePicker({
 
   const inputClass = cn(
     'h-10 w-full rounded-md border bg-neutral-0 px-3 text-base text-neutral-900',
-    'focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
+    'focus:outline-hidden focus:ring-2 focus:ring-brand-600 focus:ring-offset-1',
     'disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500',
     hasError ? 'border-action-danger' : 'border-neutral-200 hover:border-neutral-500',
   );
@@ -64,7 +64,7 @@ export function DateRangePicker({
               key={preset.label}
               type="button"
               onClick={() => onChange(preset.range)}
-              className="rounded-full border border-neutral-200 px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+              className="rounded-full border border-neutral-200 px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600"
             >
               {preset.label}
             </button>

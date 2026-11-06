@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { Button, Card, Input } from '@/components/ui';
 import { LIMITES } from '@/lib/upload-limits';
+import { ConfirmSaveModal } from '@/components/inventario-verde/ConfirmSaveModal';
+import { aSpecimenForm } from './formularioPlanta';
 import { AvisoDuplicado } from './AvisoDuplicado';
 import { BuscadorDeEspecie } from './BuscadorDeEspecie';
 import { CamposEvaluacion, CamposMedicion } from './CamposMedicionEvaluacion';
@@ -16,9 +18,20 @@ const DECIMALES_COORDENADA = 6;
 /** Registro de una planta por formulario (SPEC-103 §5.1). */
 export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuardar: boolean) => void }) {
   const r = useRegistroPlanta();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   // La pantalla decide si avisa al salir: también al cambiar qué se registra.
   useEffect(() => onDirtyChange?.(r.sinGuardar), [r.sinGuardar, onDirtyChange]);
   const v = r.valores;
+
+  function handlePreSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const { form, errores } = aSpecimenForm(v);
+    if (!form || Object.keys(errores).length > 0) {
+      r.enviar();
+      return;
+    }
+    setConfirmOpen(true);
+  }
 
   if (r.registrado) {
     return (
@@ -35,7 +48,8 @@ export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuar
   }
 
   return (
-    <form className="space-y-6" noValidate onSubmit={(e) => { e.preventDefault(); r.enviar(); }}>
+    <>
+      <form className="space-y-6" noValidate onSubmit={handlePreSubmit}>
       <Card title="Qué y dónde">
         <div className="space-y-4">
           <BuscadorDeEspecie valor={v.especie} onElegir={(n) => r.cambiar('especie', n)} error={r.errores.especie} />
@@ -76,5 +90,67 @@ export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuar
 
       {!r.duplicado && <Button type="submit" loading={r.enviando}>Registrar planta</Button>}
     </form>
+
+    <ConfirmSaveModal
+      isOpen={confirmOpen}
+      title="¿Confirmar registro de ejemplar en catastro?"
+      entityLabel={v.especie || 'Ejemplar censado'}
+      subtitle="Censo de Catastro Verde"
+      confirmLabel="Confirmar y registrar"
+      cancelLabel="Revisar datos"
+      isWorking={r.enviando}
+      onConfirm={() => {
+        setConfirmOpen(false);
+        r.enviar();
+      }}
+      onCancel={() => setConfirmOpen(false)}
+    >
+      <div className="space-y-2 p-3 rounded-xl bg-neutral-50 border border-neutral-200">
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Especie:</span>
+          <span className="font-semibold text-neutral-900 truncate max-w-[190px]">
+            {v.especie || '—'}
+          </span>
+        </div>
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Coordenadas:</span>
+          <span className="font-mono text-neutral-800">{v.lat}, {v.lon}</span>
+        </div>
+        <div className="flex justify-between py-1 border-b border-neutral-200/60">
+          <span className="text-neutral-500">Tipo de registro:</span>
+          <span className="font-medium text-neutral-800">
+            {Number(v.cantidad) > 1 ? `Agrupación (${v.cantidad})` : 'Ejemplar individual'}
+          </span>
+        </div>
+        {(v.alturaM || v.dapCm || v.radioCopaM) && (
+          <div className="flex justify-between py-1 border-b border-neutral-200/60">
+            <span className="text-neutral-500">Medidas iniciales:</span>
+            <span className="font-medium text-neutral-800">
+              {[
+                v.alturaM ? `Alt: ${v.alturaM}m` : null,
+                v.dapCm ? `DAP: ${v.dapCm}cm` : null,
+                v.radioCopaM ? `Copa: ${v.radioCopaM}m` : null,
+              ].filter(Boolean).join(' · ')}
+            </span>
+          </div>
+        )}
+        {r.foto && (
+          <div className="flex justify-between py-1 border-b border-neutral-200/60">
+            <span className="text-neutral-500">Foto de campo:</span>
+            <span className="font-medium text-neutral-800 truncate max-w-[180px]">{r.foto.name}</span>
+          </div>
+        )}
+        {v.observaciones && (
+          <div className="flex justify-between py-1">
+            <span className="text-neutral-500">Observaciones:</span>
+            <span className="font-medium text-neutral-800 truncate max-w-[180px]">{v.observaciones}</span>
+          </div>
+        )}
+      </div>
+      <p className="text-[11px] text-neutral-500 leading-relaxed">
+        El ejemplar quedará registrado formalmente con código único y aparecerá inmediatamente en el catastro y mapa 3D.
+      </p>
+    </ConfirmSaveModal>
+    </>
   );
 }

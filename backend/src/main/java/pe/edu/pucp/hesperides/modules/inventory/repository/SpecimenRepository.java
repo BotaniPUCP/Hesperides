@@ -28,7 +28,8 @@ public class SpecimenRepository {
             rs.getObject("is_banded", Boolean.class), rs.getString("data_source"),
             rs.getString("element_type_code"), rs.getString("element_type_label"), rs.getString("slug"),
             rs.getObject("attachment_id", Long.class),
-            rs.getString("species_common_name"), rs.getString("species_scientific_name"));
+            rs.getString("species_common_name"), rs.getString("species_scientific_name"),
+            rs.getString("latest_measurement_notes"));
 
     private final NamedParameterJdbcTemplate jdbc;
 

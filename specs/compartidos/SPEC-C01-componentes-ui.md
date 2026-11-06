@@ -148,6 +148,25 @@ El `code` es el de `catalog_items` de `URGENCY_LEVEL` (SPEC-002 §4.9). Esta esc
 
 `UrgencyBadge` en nivel `CRITICAL` es el único caso del sistema que además añade un ícono de alerta junto al texto: la urgencia crítica no puede depender solo del color (ver sección 4, accesibilidad — no depender del color únicamente).
 
+#### Badges de reportes
+
+> **Enmienda SPEC-202 (4 nov 2026).** Los reportes pintan veredictos de cumplimiento,
+> variaciones y avisos con `Badge` existente, en el mismo orden neutro → ámbar → rojo. No
+> se crea ningún token: cada fila usa un `color` que `Badge` ya ofrece.
+
+| Badge | `color` de `Badge` |
+|---|---|
+| `ON_TARGET` | `success` |
+| `WITHIN_TOLERANCE` | `warning` |
+| `OVERDUE` | `danger` |
+| «No evaluable», `NOT_APPLICABLE` y «Sin datos» | `neutral` |
+| «Regla provisional» | `info` |
+| Variación favorable | `success` |
+| Variación desfavorable | `danger` |
+| Variación sin meta de sentido, o igual | `neutral` |
+
+La variación lleva además ▲, ▼ o = y una palabra: el color nunca es la única señal (§8.2).
+
 ### 3.2 Tipografía
 
 | Token | Valor | Uso |
@@ -184,7 +203,7 @@ Se usa la escala nativa de Tailwind (múltiplos de 4px) sin extensión: `space-1
 | `rounded-md` | 6px | `Input`, `Select`, `Button` |
 | `rounded-lg` | 8px | `Card`, `Modal` |
 | `rounded-full` | 9999px | `Badge`, `StatusBadge`, `UrgencyBadge`, avatares |
-| `shadow-sm` | sombra sutil | `Card` en reposo |
+| `shadow-xs` (Tailwind 4; antes `shadow-sm`) | sombra sutil | `Card` en reposo |
 | `shadow-lg` | sombra pronunciada | `Modal`, `Toast` (para separarse del fondo) |
 
 ## 4. Catálogo de componentes web

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button, Input } from '@/components/ui';
+import { IncidentPlaceLookup } from './IncidentPlaceLookup';
 
 export interface LocationValue { reference: string; latitude: string; longitude: string }
 export const emptyLocation: LocationValue = { reference: '', latitude: '', longitude: '' };
@@ -53,11 +54,12 @@ export function LocationFields({ value, onChange, disabled = false }: {
       <Input id={`${id}-reference`} label="Referencia del lugar (opcional)" size="lg" value={value.reference}
         disabled={disabled} maxLength={500} placeholder="Frente a la entrada de Ingeniería Civil"
         onChange={(reference) => onChange({ ...value, reference })} />
+      <IncidentPlaceLookup disabled={disabled} onChoose={(reference) => onChange({ ...value, reference })} />
       <Button type="button" variant="secondary" size="lg" disabled={disabled || locating} onClick={locate}>
         {locating ? 'Obteniendo ubicación…' : 'Usar ubicación del teléfono'}
       </Button>
       <details>
-        <summary className="min-h-12 cursor-pointer rounded-md py-3 text-sm text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">Ver o corregir coordenadas</summary>
+        <summary className="min-h-12 cursor-pointer rounded-md py-3 text-sm text-brand-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600">Ver o corregir coordenadas</summary>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {(['latitude', 'longitude'] as const).map((field) => (
             <Input key={field} id={`${id}-${field}`} label={field === 'latitude' ? 'Latitud' : 'Longitud'}

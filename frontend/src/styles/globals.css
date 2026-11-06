@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source("../");
+@config "../../tailwind.config.ts";
 
 /*
  * Valores de los tokens de tailwind.config.ts, como canales RGB sueltos para
@@ -9,6 +8,26 @@
  * texto) y aclara los tonos que se usan como texto sobre fondo oscuro.
  */
 @layer base {
+  /* Preserve the existing border, placeholder and button defaults from v3. */
+  *,
+  ::before,
+  ::after,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: rgb(var(--color-neutral-200));
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: rgb(var(--color-neutral-400));
+    opacity: 1;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
   :root {
     --color-neutral-0: 255 255 255;
     --color-neutral-50: 248 250 252;

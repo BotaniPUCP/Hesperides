@@ -8,6 +8,116 @@ concepto sin IA; React Native queda para después de validar este recorrido.
 
 ## Comportamiento aprobado
 
+### Registro, atención N:M y cierre independiente — 5 de noviembre de 2026
+
+Esta aclaración del cliente prevalece sobre el circuito simplificado de trabajos
+internos descrito en la entrega del 4 de noviembre.
+
+- La aprobación inicial es **solo el registro oficial**. No exige intervenciones,
+  ni ubicación, clasificación o cuadrilla. Asigna OSG y no equivale a validar ejecución.
+- Antes del registro, coordinación puede solicitar correcciones con motivo obligatorio.
+  `PENDING_APPROVAL → CHANGES_REQUESTED → PENDING_APPROVAL` se repite cuando haga falta.
+  Solo el remitente corrige datos capturados y reenvía. Se conservan ID, recepción,
+  texto original y fotografías; cada revisión registra autor, hora y cambios.
+- Tras registrar, coordinación vincula cero o más intervenciones del módulo SPEC-200.
+  La relación es N:M mediante `incident_intervention_links`; una intervención se
+  ejecuta/valida una vez aunque atienda varias incidencias. El propósito es del vínculo.
+- Se reutiliza `/intervenciones/nueva` con origen numérico autorizado. Al guardar vuelve
+  a la incidencia con la intervención preseleccionada; **vincular requiere confirmación**.
+  Cancelar no crea vínculos. Se conservan filtros de la lista y se advierten cambios sin guardar.
+  La actividad nueva nace como FINDING; la clasificación INCIDENT_SOURCE se elige
+  explícitamente del catálogo y no se deduce del nombre o rol del remitente.
+- Cerrar exige al menos una intervención requerida y **todas VALIDATED**, no simplemente
+  COMPLETED. La validación por ubicaciones y sus evidencias siguen siendo de SPEC-200.
+  Solo COORDINADOR valida el cierre, con resumen obligatorio de cómo se resolvió (hasta
+  2000 caracteres), autor, fecha y días hábiles inclusivos. No hay cierre automático.
+- Coordinación puede observar la resolución con motivo; la incidencia queda abierta
+  en `RESOLUTION_OBSERVED`. Si se reabre un cierre, se conserva su resumen/autor/fecha/
+  duración en el historial y se limpian los datos del cierre vigente. No se invalidan
+  automáticamente intervenciones compartidas ya validadas.
+- Los textos de acciones no crean intervenciones ni obligan a duplicar un trabajo:
+  coordinación define explícitamente el conjunto requerido y evalúa su suficiencia.
+- Los trabajos anteriores en `incident_interventions` son históricos y de solo lectura.
+  No se fabrican planificación, ubicaciones, ejecución ni validaciones. Antes de cerrar
+  casos abiertos con esos registros, coordinación los asocia explícitamente a trabajo
+  real (`replacement_intervention_id`), incluso varios registros al mismo trabajo.
+  Los cierres históricos no se reescriben ni se les inventa una explicación.
+- Los conteos de intervenciones son DISTINCT, separados entre finalizadas y validadas;
+  la lectura de incidencias de origen exige permiso propio, también en el historial
+  de una intervención compartida. Los informes oficiales excluyen reportes no registrados.
+- Para corregir selecciones o sustituir trabajo cancelado, coordinación puede retirar
+  un vínculo de un caso abierto **solo antes de iniciar ejecución**, con motivo y versión.
+  Es soft delete del vínculo, no del trabajo; conserva otras incidencias y eventos en
+  ambos agregados. El legado asociado vuelve a requerir asociación explícita. No permite
+  retirar ejecución iniciada/completada para evitar la validación; sin vínculos no se cierra.
+
+V029 es aditiva y conserva V001–V028. Nuevos contratos bajo `/api/v1/incidents`:
+
+| Ruta | Entrada y autorización |
+|---|---|
+| POST `/{id}/request-correction` | `{version,reason}`, coordinación, solo no registrados |
+| POST `/{id}/resubmit` | `{version,report:{description,locationReference,latitude,longitude}}`, remitente devuelto |
+| GET `/{id}/intervention-options` | `search,page`, coordinación, registrado y abierto; páginas de 20 |
+| POST `/{id}/intervention-links` | `{version,interventionId,interventionVersion,purposeCode,legacyWorkIds}`, coordinación |
+| POST `/{id}/intervention-links/{linkId}/remove` | `{version,reason}`, coordinación, solo antes de ejecución |
+| POST `/{id}/resolve` | `{version,resolutionSummary}`, coordinación, todas las requeridas validadas |
+| POST `/{id}/observe-resolution` | `{version,reason}`, coordinación; mantiene/abre atención |
+
+Los endpoints antiguos de creación/finalización de trabajos internos rechazan mutaciones
+con 422. El detalle conserva su lectura histórica y añade `linkedInterventions`,
+`requiredInterventionCount`, `canResolve` y `canCorrectReport`. Las versiones, bloqueos
+de incidencia seguidos de intervenciones ordenadas y eventos atómicos evitan sobrescrituras
+y cierre concurrente incorrecto. Repetir un vínculo idéntico no duplica vínculos/eventos.
+
+Escenarios nuevos: registro sin trabajo; dos ciclos de corrección sin otro ID/OSG;
+intervención compartida y conteos sin duplicados; COMPLETED bloquea cierre; VALIDATED
+habilita revisión pero no autocierra; solo coordinación cierra y con resumen; observar
+no invalida trabajo ajeno; legado no se convierte automáticamente; crear/volver/preseleccionar
+sin vincular silenciosamente; origen o intervención fuera de alcance no filtra datos.
+
+### Ampliación aprobada — matriz OSG (noviembre de 2026)
+
+La matriz unificada define las 23 columnas del registro/exportación; el HTML es
+referencia de UX, no fuente de reglas de negocio. Esta entrega sigue limitada a
+incidencias de áreas verdes, con comunicación dentro de cada caso. No integra
+WhatsApp, no incorpora IA y no implementa otros módulos OSG.
+
+- Se conservan descripción original, permisos, fotos privadas e idempotencia.
+- El correlativo `OSG-####` pertenece a esta plataforma, se asigna al aprobar y no
+  se reinicia por año. Los registros pendientes conservan su ID técnico.
+- Servicio, proceso/subproceso, severidad, impactos múltiples, empresa, responsable,
+  causa catalogada/detallada y acciones/mejora son campos separados. Severidad no
+  reemplaza implícitamente la urgencia anterior; impacto no significa riesgo geográfico.
+- Toda intervención es una acción requerida de mitigación o prevención. Cerrar exige
+  aprobación, al menos una acción realizada y ninguna pendiente. Si el análisis declara
+  acciones inmediatas o preventivas, debe existir trabajo completado de ese propósito.
+  Completar texto o planificar no equivale a ejecutar; el cierre sigue siendo explícito.
+- Se admiten comentarios por quienes pueden ver el caso, con autor/hora y reintentos
+  idempotentes. Las revisiones y ejecución generan entradas de trazabilidad distintas.
+- Duración de cierre: días hábiles **inclusivos** entre recepción y cierre en la zona
+  horaria institucional, excluyendo sábado/domingo y feriados configurados. Día hábil
+  único = 1; lunes a martes = 2. Solo fin de semana = 0. Se congela al cerrar.
+- Exportación CSV UTF-8 con las 23 columnas y protección contra fórmulas de hoja de
+  cálculo, solo para coordinación y registros aprobados. No se copian fórmulas rotas.
+  Las columnas de acciones incluyen el resumen declarado y los trabajos registrados
+  de su propósito, con estado explícito; no se omite trabajo por falta de resumen.
+- El resumen distingue pendientes, acciones e indicadores de cierre; no promete SLA.
+- No se inventan plantillas ni planes técnicos no validados por el cliente. Se
+  consultan casos cerrados como referencia; las acciones nuevas se confirman a mano.
+- Migración aditiva V028, sin modificar V001–V027. Los registros aprobados anteriores
+  reciben correlativo; no se inventan clasificaciones ni fechas de ejecución.
+
+Contratos nuevos: `matrix` en revisión/respuesta/opciones; `officialCode` y
+`closureBusinessDays` en respuesta; `purposeCode` en acciones; `updates` en detalle;
+POST `/{id}/comments` con `clientReference` y `body`; GET `/export` con CSV en
+`ApiResponse.data`. Calendario por `INCIDENT_TIME_ZONE` y `INCIDENT_HOLIDAYS` (fechas
+ISO separadas por comas); sin feriados implícitos ni servicios de calendario externos.
+
+Las verificaciones históricas de abajo corresponden al prototipo anterior y no
+demuestran la ampliación. Los resultados nuevos se registrarán tras ejecutar pruebas.
+
+### Base conservada
+
 - `SUPERVISOR` representa al capataz; `COORDINADOR` revisa y aprueba.
 - Solo la descripción es obligatoria al enviar. Un texto breve es válido.
   Fotografías, referencia textual y coordenadas son opcionales. No se exige
@@ -52,7 +162,7 @@ compartido bajo claves `incidents/{uuid}`: directorio `STORAGE_LOCAL_DIR` o buck
 privado S3. Se conservan los bytes originales, sin conversión JPEG. Las claves UUID
 de los archivos siempre llevan el prefijo `incidents/` y se leen únicamente desde
 ese almacenamiento. En Compose local residen en `/data/storage/incidents/`.
-No se requiere otra migración ni se modifica V026.
+La ampliación OSG requiere V028; no se modifica V026.
 Lectura autenticada y autorizada por incidencia, con `Cache-Control: no-store`;
 no se reutiliza el helper de entrega pública de fotos del catastro.
 La API devuelve el contenido de cada foto en base64 dentro del sobre habitual.
@@ -187,3 +297,52 @@ opciones es local al módulo; no implementa la administración de catálogos com
   persistencia y recarga de código, sin montajes duplicados. No se alteraron migraciones.
 - Lectura de fotos y limpieza en rollback cubiertas por `IncidentFilesTest`.
   S3 se comprueba mediante la abstracción de almacenamiento, no con un bucket real.
+
+## Verificación de la ampliación OSG — 4 de noviembre de 2026
+
+- Java **25 LTS**, Maven del sistema y PostGIS 16 en bases temporales mediante la
+  API de Podman: suite completa de **730 pruebas**, sin fallos, errores ni omitidas.
+- Verificación final enfocada: **35 pruebas** aprobadas, incluidas actualización
+  V026→V028 conservando checksums, numeración concurrente/idempotente, impactos con
+  soft delete y versión común, campos de matriz, prevención antes del cierre,
+  comentarios privados, CSV seguro y huella compatible con peticiones anteriores.
+- Bun: **703 pruebas frontend** en 106 suites; comprobación enfocada posterior de
+  19 pruebas. Lint y build de Next correctos. Sin cambios al lockfile npm.
+- Firefox real/WebDriver BiDi, 390×844 y 1440×1000: captura por capataz, revisión de
+  matriz por coordinación, aprobación y correlativo, comentarios, planificación de
+  mitigación/prevención, ejecución parcial con cierre bloqueado, ejecución completa
+  y cierre explícito. Temas claro/oscuro y formulario móvil sin overflow horizontal.
+- Dos recorridos de navegador aprobados: **18 preflights por recorrido**, sin
+  fallos de red/API ni respuestas 5xx. Descarga CSV efectiva, con 23 columnas por
+  fila, estados de acciones y duración inclusiva de un día hábil comprobados.
+- Compose base/dev validado con Podman y variables ficticias. La BD y aplicación
+  habituales no se reconstruyeron ni migraron; solo entornos aislados de prueba.
+- La suite completa conserva avisos de cierre de pools/Surefire al terminar las
+  bases temporales y advertencias de instrumentación; termina en `BUILD SUCCESS`.
+- Pendiente: validación funcional del cliente, calendario de feriados de cada
+  entorno y prueba física en Android. No se inventan planes técnicos aprobados.
+
+## Verificación de registro/revisión y N:M — 5 de noviembre de 2026
+
+- Java 25 LTS, Maven y API de Podman: **739 pruebas backend**, sin fallos, errores
+  ni omitidas. Incluye V028→V029 con conservación de checksums/cierres/legado, ciclos
+  iniciales, permisos conjuntos, vínculos idempotentes, conteos DISTINCT, bloqueo de
+  cierre en COMPLETED, resumen obligatorio y cierre exclusivo de coordinación.
+- Las pruebas de integración ejecutan el módulo real con fotos PNG recibidas y sus
+  validaciones normales; no simulan VALIDATED ni desactivan la política de evidencia.
+- Bun: **715 pruebas frontend** aprobadas; lint y build correctos. Creación contextual,
+  retorno local seguro, preservación de filtros, preselección sin vínculo automático,
+  corrección inicial, borradores tras errores y separación de permisos comprobados.
+- Firefox real/WebDriver BiDi, 390×844 y 1440×1000: devolver reporte, corregir y
+  reenviar conservando original, registrar sin intervenciones, crear desde el módulo
+  real y volver preseleccionado, vincular una misma intervención a dos incidencias,
+  asignar al equipo, ejecutar/subir evidencia/finalizar, observar, reabrir un segundo
+  intento con nueva evidencia, validar trabajo y cerrar cada incidencia por separado
+  con su descripción. Se verificó que finalizar no habilita cierre ni validar autocierra.
+- **37 preflights**, sin fallos de red ni respuestas 5xx. CSV descargado y leído:
+  23 columnas por fila, intervención compartida, dos resúmenes independientes y un
+  día hábil inclusivo por cierre. BD aislada: una intervención, dos vínculos,
+  dos evidencias recibidas (dos intentos) y dos cierres con actor/resumen.
+- Se conservaron los cambios ya preparados en el índice de Git. No se instalaron
+  dependencias, no se migró/reinició el entorno habitual y no se reescribieron V001–V028.
+- Siguen pendientes la validación funcional del cliente y prueba física de cámara en Android.

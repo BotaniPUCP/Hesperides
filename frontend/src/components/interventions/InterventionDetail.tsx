@@ -10,9 +10,11 @@ import { interventionsApi, interventionError, type InterventionDetail as Detail,
 import { InterventionForm } from './InterventionForm';
 import { ApiError } from '@/lib/api';
 import { createClientUuid } from '@/lib/client-uuid';
+import { LocationObservations, LocationProgressHistory } from './LocationHistory';
+import { ExecutionTime } from './ExecutionTime';
 
 const actionLabels: Record<string,string> = {
-  start:'Iniciar', execution:'Guardar avance', complete:'Reportar terminada', validate:'Aprobar', observe:'Observar', reopen:'Corregir observación',
+  start:'Iniciar trabajo', execution:'Registrar avance', complete:'Enviar a revisión', validate:'Aprobar', observe:'Observar', reopen:'Subsanar observación',
 };
 
 function EvidenceUpload({ work, location, pendingEvidence, onChange }: { work:Detail; location:InterventionLocation; pendingEvidence?:InterventionEvidence; onChange:()=>Promise<void> }) {
@@ -75,6 +77,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<{location:InterventionLocation; action:string} | null>(null);
   const [quantity, setQuantity] = useState('');
@@ -95,12 +98,18 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   },[id]);
   useEffect(() => () => { if (photo) URL.revokeObjectURL(photo.url); },[photo]);
   const mutate = async (action:()=>Promise<Detail>) => {
-    setBusy(true);setError('');
+    setBusy(true);setError('');setNotice('');
     try {setData(await action());setSelected(null);setCancelOpen(false);setReason('');showToast({variant:'success',title:'Intervención actualizada.'});}
     catch (e) {setError(interventionError(e));}
     finally {setBusy(false);}
   };
-  const reload = async () => {setBusy(true);try {await refresh();setError('Datos recargados. Revisa el estado actual antes de reintentar; tu borrador se conserva.');} catch(e){setError(interventionError(e));} finally {setBusy(false);}};
+  const reload = async () => {
+    setBusy(true);setError('');setNotice('');
+    try {
+      await refresh();
+      setNotice(selected ? 'Información actualizada. Revisa los cambios antes de reintentar; tu borrador se conserva.' : 'Información actualizada con los últimos cambios guardados.');
+    } catch(e){setError(interventionError(e));} finally {setBusy(false);}
+  };
   if (!Number.isSafeInteger(id) || id < 1) return <p role="alert">Intervención no válida.</p>;
   if (loading) return <LoadingSkeleton variant="card" />;
   if (!data) return <div role="alert">{error}<Link href="/intervenciones">Volver al listado</Link></div>;
@@ -113,7 +122,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   const teamOption = options?.teams.find(t => String(t.id) === team);
   const label = (type:string,code:string) => options?.catalogs.find(c => c.typeCode === type && c.code === code)?.label ?? code;
   const unit = (id:number|null|undefined) => options?.catalogs.find(c => c.id === id)?.label ?? '';
-  const openAction = (location:InterventionLocation,action:string) => {setSelected({location,action});setQuantity(String(location.progressQuantity ?? location.executedQuantity ?? ''));setNotes(location.executionNotes ?? '');setReason('');setError('');};
+  const openAction = (location:InterventionLocation,action:string) => {setSelected({location,action});setQuantity(String(location.progressQuantity ?? location.executedQuantity ?? ''));setNotes(location.executionNotes ?? '');setReason('');setError('');setNotice('');};
   const submitAction = () => {
     if (!selected) return;
     const body:Record<string,unknown> = {version:data.version};
@@ -129,17 +138,25 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     <Link className="text-brand-600 underline" href="/intervenciones">Volver a intervenciones</Link>
     <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
     {error && !selected && !cancelOpen && <p role="alert" className="text-action-danger">{error}</p>}
+    {notice && !selected && <p role="status">{notice}</p>}
     <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-0 p-5">
       <p className="font-medium">{unit(data.classItemId)}{data.typeItemId ? ` · ${unit(data.typeItemId)}` : ''}</p>
       <p>{data.description || 'Sin descripción'}</p><p>Programada: {data.scheduledDate}</p>
+      <ExecutionTime work={data}/>
+      {data.executionBlockedUntil && <p role="status" className="rounded-md border border-neutral-200 p-3">El trabajo podrá ejecutarse desde el {data.executionBlockedUntil}. Si debe adelantarse, solicita al coordinador que revise la planificación.</p>}
       <p>{data.completedLocationCount}/{data.locationCount} ubicaciones terminadas · {data.validatedLocationCount}/{data.locationCount} aprobadas</p>
-      <p>{data.approvedForCounting ? 'Actividad con aprobación final del coordinador.' : 'La actividad contará cuando el coordinador apruebe todas las ubicaciones.'}</p>
+      <p>{data.approvedForCounting ? 'Actividad con aprobación final.' : 'La actividad contará cuando el capataz responsable o el coordinador aprueben todas las ubicaciones.'}</p>
       <p className="text-sm">{options?.teams.find(t => t.id === data.teamId)?.name ?? (data.teamId ? 'Cuadrilla asignada' : 'Sin cuadrilla asignada')}{data.responsibleSupervisorUserId ? ' · Responsable: capataz de la cuadrilla' : ''}</p>
+      {!!data.sourceIncidents?.length && <div className="space-y-2"><p className="font-medium">Incidencias relacionadas disponibles para tu cuenta</p>
+        <ul className="space-y-2">{data.sourceIncidents.map(i => <li key={i.id}><Link className="text-brand-700 underline" href={`/incidencias/${i.id}`}>{i.code ?? `Incidencia #${i.id}`}</Link></li>)}</ul>
+        <p className="text-sm text-neutral-700">Aprobar esta intervención no cierra sus incidencias. Cada una requiere una revisión final independiente.</p>
+      </div>}
       {data.pendingEvidenceCount > 0 && <p>Fotos pendientes: {data.pendingEvidenceCount}</p>}
       <div className="flex flex-wrap gap-3">
         {canPlan && <><Link href={`/intervenciones/${id}/editar`} className="px-3 py-2 text-brand-600 underline">Editar planificación</Link><Button variant="danger" disabled={busy} onClick={() => {setCancelOpen(true);setReason('');setError('');}}>Cancelar trabajo</Button></>}
-        <Button variant="secondary" disabled={busy} onClick={reload}>Recargar datos</Button>
+        <Button variant="secondary" disabled={busy} onClick={reload}>Actualizar información</Button>
       </div>
+      <p className="text-sm text-neutral-500">Actualiza la información para consultar cambios guardados por otras personas. Tus acciones se guardan al confirmarlas.</p>
     </div>
     {canAssign && <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-0 p-5"><h2 className="font-semibold">Asignación del trabajo</h2>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -154,9 +171,10 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
         <div className="flex flex-wrap justify-between gap-2"><h3 className="font-semibold">Ubicación {index + 1}</h3><StatusBadge code={location.statusCode ?? ''} label={label('INTERVENTION_STATUS',location.statusCode ?? '')} /></div>
         <p>{location.locationDescription || location.description}</p>{location.description && <p>{location.description}</p>}
         <dl className="grid grid-cols-2 gap-2 text-sm"><dt>Cantidad solicitada</dt><dd>{location.requestedQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd>
-          <dt>Avance</dt><dd>{location.progressQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd><dt>Cantidad ejecutada</dt><dd>{location.executedQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd><dt>Intento</dt><dd>{location.attemptNumber}</dd></dl>
+          <dt>Avance acumulado</dt><dd>{location.progressQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd><dt>Cantidad ejecutada</dt><dd>{location.executedQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd><dt>Intento</dt><dd>{location.attemptNumber}</dd></dl>
         {location.executionNotes && <p className="whitespace-pre-wrap">{location.executionNotes}</p>}
-        {location.rejectionReason && <p className="rounded-md border border-action-danger p-3">Observación: {location.rejectionReason}</p>}
+        <LocationObservations locationId={location.id} history={data.history} fallbackReason={location.rejectionReason} />
+        <LocationProgressHistory locationId={location.id} history={data.history} unit={unit} />
         <div className="flex flex-wrap gap-2">{(location.allowedActions ?? []).filter(a => a !== 'evidence').map(action => <Button key={action} variant={action === 'observe' ? 'secondary' : 'primary'} disabled={busy} onClick={() => openAction(location,action)}>{actionLabels[action]}</Button>)}</div>
         <h4 className="font-medium">Fotos de esta ubicación</h4>
         {photos.length === 0 && <p className="text-sm text-neutral-500">Aún no hay fotos.</p>}
@@ -169,20 +187,23 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
       </article>;
     })}</div>
     <details className="rounded-lg border border-neutral-200 p-4"><summary className="cursor-pointer font-semibold">Historial de la actividad</summary><ol className="mt-3 space-y-2 text-sm">{data.history.map((event,index) => <li key={index}>
-      {new Date(event.occurredAt).toLocaleString()} · {actionLabels[event.actionCode.toLowerCase()] ?? ({CREATED:'Creada',ASSIGNED:'Asignada',STARTED:'Inicio',PROGRESS_SAVED:'Avance guardado',COMPLETED:'Terminada',VALIDATED:'Aprobada',OBSERVED:'Observada',REOPENED:'Reabierta',UPDATED:'Planificación actualizada',REPROGRAMMED:'Reprogramada',CANCELLED:'Cancelada',EVIDENCE_ANNOUNCED:'Foto pendiente',EVIDENCE_UPLOADED:'Foto recibida'} as Record<string,string>)[event.actionCode] ?? 'Actualización'}
+      {new Date(event.occurredAt).toLocaleString()} · {actionLabels[event.actionCode.toLowerCase()] ?? ({CREATED:'Creada',ASSIGNED:'Asignada',STARTED:'Trabajo iniciado',PROGRESS_SAVED:'Avance registrado',COMPLETED:'Enviada a revisión',VALIDATED:'Aprobada',OBSERVED:'Observada',REOPENED:'Subsanación iniciada',UPDATED:'Planificación actualizada',REPROGRAMMED:'Reprogramada',CANCELLED:'Cancelada',EVIDENCE_ANNOUNCED:'Foto pendiente',EVIDENCE_UPLOADED:'Foto recibida'} as Record<string,string>)[event.actionCode] ?? 'Actualización'}
       {event.interventionLocationId && ` · Ubicación ${data.locations.findIndex(l => l.id === event.interventionLocationId) + 1}`}{event.reason && ` · ${event.reason}`}
     </li>)}</ol></details>
     <Modal isOpen={!!selected} onClose={() => {if (!busy) setSelected(null);}} title={selected ? `${actionLabels[selected.action]} · ubicación ${data.locations.findIndex(l => l.id === selected.location.id) + 1}` : ''} closeOnEsc={!busy} closeOnOverlayClick={!busy}
       footer={<><Button variant="secondary" disabled={busy} onClick={() => setSelected(null)}>Volver</Button><Button loading={busy} onClick={submitAction}>Confirmar</Button></>}>
       <div className="space-y-4"><p>{selected?.location.locationDescription}</p>
+        {selected && ['reopen','execution','complete'].includes(selected.action) && <LocationObservations locationId={selected.location.id} history={data.history} fallbackReason={selected.location.rejectionReason} />}
         {selected && ['execution','complete'].includes(selected.action) && <>
           {selected.location.unitItemId && <label className="grid gap-1 text-sm">Cantidad {unit(selected.location.unitItemId)}<input type="number" min="0" step="0.001" className="h-11 rounded-md border border-neutral-200 p-2" value={quantity} onChange={e => setQuantity(e.target.value)} disabled={busy} /></label>}
+          {selected.action === 'execution' && <p className="text-sm text-neutral-500">Indica el total realizado hasta ahora en esta ubicación. Cada registro conserva su cantidad, descripción y fecha en el historial.</p>}
           <label className="grid gap-1 text-sm">Reporte de ejecución<textarea className="min-h-28 rounded-md border border-neutral-200 p-2" maxLength={4000} value={notes} onChange={e => setNotes(e.target.value)} disabled={busy} /></label>
         </>}
         {selected?.action === 'observe' && <Input id="observation-reason" label="Motivo de la observación" value={reason} onChange={setReason} required maxLength={2000} disabled={busy} />}
         {selected?.action === 'validate' && <p>Apruebas únicamente esta ubicación. El trabajo contará después de aprobarlas todas.</p>}
-        {selected?.action === 'reopen' && <p>Se abrirá un nuevo intento para corregir esta ubicación. Las fotos y reportes anteriores se conservarán.</p>}
-        {error && <div role="alert"><p className="text-action-danger">{error}</p><Button variant="secondary" disabled={busy} onClick={reload}>Recargar datos y conservar borrador</Button></div>}
+        {selected?.action === 'reopen' && <p>Se abrirá un nuevo intento para subsanar esta ubicación. Las observaciones, fotos y avances anteriores seguirán disponibles.</p>}
+        {notice && <p role="status">{notice}</p>}
+        {error && <div role="alert"><p className="text-action-danger">{error}</p><Button variant="secondary" disabled={busy} onClick={reload}>Actualizar información y conservar borrador</Button></div>}
       </div>
     </Modal>
     <Modal isOpen={cancelOpen} onClose={() => {if (!busy) setCancelOpen(false);}} title="Cancelar trabajo" closeOnEsc={!busy} closeOnOverlayClick={!busy}

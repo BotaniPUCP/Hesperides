@@ -23,7 +23,11 @@ public class InterventionQueriesRepository {
           select count(*) location_count,
             count(*) filter(where s.code in ('COMPLETED','VALIDATED')) completed_location_count,
             count(*) filter(where s.code='VALIDATED') validated_location_count,
-            min(l.started_at) started_at,
+            least(min(l.started_at),
+              (select min((e.details->>'startedAt')::timestamptz at time zone 'UTC')
+               from intervention_events e join intervention_locations el on el.id=e.intervention_location_id
+               where e.intervention_id=i.id and e.action_code='STARTED' and e.deleted_at is null
+                 and el.deleted_at is null and e.details->>'startedAt' is not null)) started_at,
             case when bool_and(s.code in ('COMPLETED','VALIDATED')) then max(l.completed_at) end completed_at,
             case when bool_and(s.code='VALIDATED') then max(l.validated_at) end validated_at,
             case when ps.code in ('PLANNED','CANCELLED') then ps.code
@@ -55,7 +59,7 @@ public class InterventionQueriesRepository {
         if(page.getSort().getOrderFor("id")==null)order.add(Sort.Order.desc("id"));
         var result=search.search(actor,role,f.classItemId(),f.typeItemId(),f.teamId(),f.assignedToUserId(),f.statusCode(),
             f.dateFrom(),f.dateTo(),f.zoneId(),f.placeId(),f.locationStatusCode(),f.greenElementId(),f.greenElementCode(),
-            PageRequest.of(page.getPageNumber(),page.getPageSize(),Sort.by(order)));
+            f.incidentId(),PageRequest.of(page.getPageNumber(),page.getPageSize(),Sort.by(order)));
         return new PageImpl<>(result.getContent().stream().map(this::summary).toList(),page,result.getTotalElements());
     }
     private InterventionSummaryResponse summary(Map<String,Object> r){

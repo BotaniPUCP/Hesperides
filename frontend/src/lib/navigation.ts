@@ -42,6 +42,8 @@ export const DIRECT_LINKS: readonly NavItem[] = [
 
   // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
   { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+  // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
+  { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [

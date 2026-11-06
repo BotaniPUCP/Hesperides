@@ -157,7 +157,7 @@ export function ChangePasswordForm() {
         {!esObligatorio && (
           <Link
             href="/"
-            className="text-center text-sm font-medium text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+            className="text-center text-sm font-medium text-brand-600 hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600"
           >
             Volver al inicio
           </Link>

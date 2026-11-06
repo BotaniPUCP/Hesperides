@@ -338,6 +338,7 @@ recibe `TA-000001` o `BB-000001`; los cargados conservan su código de origen.)*
 | CA-09 | Bosque Húmedo cargado | `EV-000951` aparece medido (altura 10.5 m) con una evaluación del 2026-01-01 |
 | CA-10 | 67 bebederos | La capa de bebederos del mapa muestra 67, con tipo y estado |
 | CA-11 | Descarga controlada | Un CSV con `foto` apuntando a `http://localhost:8080/...` da error de formato |
+| CA-12 | Verificación post-intervención | Si un ejemplar tiene una labor ejecutada/validada posterior a su última medición o evaluación, la ficha muestra un checklist reactivo; al actualizarse ambos o descartarse, la alerta desaparece |
 
 ## 8. Tests
 

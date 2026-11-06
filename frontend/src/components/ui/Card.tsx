@@ -33,10 +33,10 @@ export function Card({ title, actions, children, padded = true, onClick, classNa
           : undefined
       }
       className={cn(
-        'rounded-lg border border-neutral-200 bg-neutral-0 shadow-sm',
+        'rounded-lg border border-neutral-200 bg-neutral-0 shadow-xs',
         padded && 'p-4',
         interactive &&
-          'cursor-pointer transition-shadow hover:shadow-lg focus-visible:outline-none ' +
+          'cursor-pointer transition-shadow hover:shadow-lg focus-visible:outline-hidden ' +
             'focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2',
         className,
       )}

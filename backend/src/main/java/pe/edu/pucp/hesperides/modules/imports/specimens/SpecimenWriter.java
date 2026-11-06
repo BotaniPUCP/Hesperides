@@ -78,6 +78,14 @@ public class SpecimenWriter {
                  WHERE id = ? AND (measured_at IS NULL OR measured_at <= ?)""",
                 m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded(), Date.valueOf(m.date()),
                 measuredBy, id, Date.valueOf(m.date()));
+
+        // Conservar en el historial de mediciones (SPEC-103 / V027)
+        jdbc.update("""
+                INSERT INTO green_element_measurements (green_element_id, measured_at, measured_by_user_id,
+                       height_m, trunk_height_m, dbh_cm, crown_radius_m, is_banded, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)""",
+                id, Date.valueOf(m.date()), measuredBy, m.heightM(), m.trunkHeightM(), m.dbhCm(),
+                m.crownRadiusM(), m.banded());
     }
 
     /** Añade una evaluación al historial (SPEC-103 D-06): nunca reemplaza las anteriores. */

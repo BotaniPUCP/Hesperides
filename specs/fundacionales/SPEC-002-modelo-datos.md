@@ -637,8 +637,13 @@ CREATE INDEX idx_interventions_contract_id ON interventions(contract_id);
 > **Enmienda SPEC-201:** el siguiente DDL es el diseño preliminar, nunca aplicado.
 > La implementación vigente se define en `features/SPEC-201-incidencias.md` y la
 > migración cronológica V026 (renumerada desde V022 al integrar). Usa un único registro pendiente/aprobado, ubicación
-> opcional sin dependencia del catastro y relación 1:N con intervenciones. No se
-> debe copiar la restricción GPS obligatoria ni `incidents.intervention_id` de abajo.
+> opcional sin dependencia del catastro. Desde V029 (aclaración del cliente, 5 nov 2026)
+> la relación es N:M con `interventions` mediante `incident_intervention_links`, con
+> propósito por vínculo y sin duplicar ejecución. El registro oficial puede no tener
+> intervenciones; cerrar exige todas las requeridas validadas y resumen de resolución
+> por coordinación. Los trabajos internos de V026 se conservan como legado de solo
+> lectura, con sustitución explícita, sin inventar planificación ni validaciones.
+> No se debe copiar la restricción GPS ni `incidents.intervention_id` de abajo.
 
 ```sql
 -- V019__create_incidents.sql
@@ -1001,7 +1006,7 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 | Código único entre elementos vigentes | **BD** | índice único parcial |
 | Validador y fecha de validación van juntos | **BD** | `CHECK chk_interventions_validation` |
 | El flujo de estados de incidencia respeta el orden | **Servicio** | Los estados son filas de catálogo; la BD no conoce las transiciones válidas. `incident_status_history` deja el rastro. |
-| Solo un coordinador valida una intervención | **Servicio** | La FK apunta a `users`, no a un rol. La autorización es de SPEC-001. |
+| Coordinador o capataz responsable valida una intervención, sin autoaprobación | **Servicio** | La FK apunta a `users`, no a un rol. La autorización es de SPEC-001. |
 | El operario asignado es el que registra la ejecución | **Servicio** | — |
 | El polígono de un elemento cae dentro de su zona | **Servicio** (advertencia, no bloqueo) | `ST_Within`. Es advertencia porque los límites digitalizados serán aproximados hasta que el cliente entregue la zonificación oficial. |
 

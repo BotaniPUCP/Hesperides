@@ -81,12 +81,13 @@ class InterventionsIntegrationTest {
         return json.readTree(mvc.perform(post("/api/v1/interventions").header("Idempotency-Key",key).contentType("application/json").content(json.writeValueAsString(body)))
             .andExpect(status().is(status)).andReturn().getResponse().getContentAsString()).get("data");
     }
-    @Test void createsThreeStableLocationsWithoutIncidentTables() throws Exception {
+    @Test void createsStandaloneWorkWithNoSourceIncidents() throws Exception {
         var d=create(plan(),UUID.randomUUID().toString(),201);
         assertThat(d.get("locations").size()).isEqualTo(3);
         assertThat(d.get("statusCode").asString()).isEqualTo("PLANNED");
         assertThat(d.get("version").asLong()).isZero();
-        assertThat(d.get("incidentIntegrationAvailable").asBoolean()).isFalse();
+        assertThat(d.get("incidentIntegrationAvailable").asBoolean()).isTrue();
+        assertThat(d.get("sourceIncidents").size()).isZero();
         assertThat(d.get("history").size()).isEqualTo(1);
         assertThat(d.get("completedAt").isNull()).isTrue();
         assertThat(java.time.Duration.between(java.time.Instant.parse(d.get("createdAt").asString()),java.time.Instant.now()).abs().getSeconds()).isLessThan(20);
@@ -215,7 +216,7 @@ class InterventionsIntegrationTest {
         mvc.perform(get("/api/v1/interventions").param("zoneId",zoneIds.get(1).toString()).param("size","1").param("dateFrom","2026-10-23"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(1))).andExpect(jsonPath("$.data.page.totalElements").value(1));
         mvc.perform(get("/api/v1/interventions").param("sort","description,desc")).andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/interventions").param("incidentId","1")).andExpect(status().isUnprocessableEntity());
+        mvc.perform(get("/api/v1/interventions").param("incidentId","1")).andExpect(status().isNotFound());
     }
     @Test void planningResolvesElementCodesAndPreservesAssociationsWhenEditing() throws Exception {
         long element=jdbc.queryForObject("select id from green_elements where deleted_at is null and is_active order by id limit 1",Long.class);
@@ -398,6 +399,38 @@ class InterventionsIntegrationTest {
         long id=create(body,UUID.randomUUID().toString(),201).get("id").asLong();
         return assign(id,team,operator,"coordinator","COORDINADOR",0,200);
     }
+    @Test void futurePlanCanBeAssignedButOnlyStartsAfterCoordinatorReschedulesIt() throws Exception {
+        var today=java.time.LocalDate.now(java.time.ZoneId.of("America/Lima"));
+        var body=plan();body.put("scheduledDate",today.plusDays(2).toString());
+        long id=create(body,UUID.randomUUID().toString(),201).get("id").asLong();
+        var d=assign(id,team,operator,"coordinator","COORDINADOR",0,200);
+        long local=d.get("locations").get(0).get("id").asLong();
+        var response=json.readTree(mvc.perform(get("/api/v1/interventions/"+id)
+                .with(user("supervisor@test.local").authorities(()->"SUPERVISOR")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
+        assertThat(response.get("executionBlockedUntil").asString()).isEqualTo(today.plusDays(2).toString());
+        assertThat(response.get("locations").get(0).get("allowedActions").size()).isZero();
+        localCommand(id,local,"start","supervisor","SUPERVISOR",Map.of("version",1),422);
+        localCommand(id,local,"start","operator","OPERARIO",Map.of("version",1),422);
+        assertThat(jdbc.queryForObject("select count(*) from intervention_events where intervention_id=? and action_code='STARTED'",Integer.class,id)).isZero();
+        var edit=editableBody(d);edit.put("scheduledDate",today.toString());edit.put("rescheduleReason","Earlier work authorized by coordinator");
+        mvc.perform(put("/api/v1/interventions/"+id).with(user("supervisor@test.local").authorities(()->"SUPERVISOR"))
+                .contentType("application/json").content(json.writeValueAsString(edit))).andExpect(status().isForbidden());
+        mvc.perform(put("/api/v1/interventions/"+id).with(user("coordinator@test.local").authorities(()->"COORDINADOR"))
+                .contentType("application/json").content(json.writeValueAsString(edit))).andExpect(status().isOk());
+        var started=localCommand(id,local,"start","supervisor","SUPERVISOR",Map.of("version",2),200);
+        assertThat(started.get("executionBlockedUntil").isNull()).isTrue();
+        assertThat(started.get("locations").get(0).get("statusCode").asString()).isEqualTo("IN_PROGRESS");
+    }
+    @Test void futureLegacyExecutionCannotSaveProgressOrBeCompleted() throws Exception {
+        var d=assignedPlan(true);long id=d.get("id").asLong(),local=d.get("locations").get(0).get("id").asLong();
+        localCommand(id,local,"start","operator","OPERARIO",Map.of("version",1),200);
+        jdbc.update("update interventions set scheduled_date=? where id=?",java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).plusDays(2),id);
+        localCommand(id,local,"execution","supervisor","SUPERVISOR",Map.of("version",2,"progressQuantity",1,"executionNotes","Too early"),422);
+        localCommand(id,local,"complete","operator","OPERARIO",Map.of("version",2,"executedQuantity",2,"executionNotes","Too early"),422);
+        assertThat(jdbc.queryForObject("select version from interventions where id=?",Long.class,id)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("select count(*) from intervention_events where intervention_id=? and action_code='PROGRESS_SAVED'",Integer.class,id)).isZero();
+    }
     @Test void startingOneLocationKeepsOtherLocationsAssignedAndRecordsRealActor() throws Exception {
         var d=assignedPlan(true);long id=d.get("id").asLong(),a=d.get("locations").get(0).get("id").asLong();
         var started=localCommand(id,a,"start","operator","OPERARIO",Map.of("version",1),200);
@@ -493,6 +526,19 @@ class InterventionsIntegrationTest {
         assertThat(history).hasSize(2);
         assertThat(new java.math.BigDecimal((String)history.get(1).get("previous"))).isEqualByComparingTo("1.125");
         assertThat(new java.math.BigDecimal((String)history.get(1).get("current"))).isEqualByComparingTo("0");
+        var response= json.readTree(mvc.perform(get("/api/v1/interventions/"+id)
+                .with(user("operator@test.local").authorities(()->"OPERARIO")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
+        var firstReport=response.get("history").get(3);
+        var correctedReport=response.get("history").get(4);
+        assertThat(firstReport.get("progress").get("quantity").decimalValue()).isEqualByComparingTo("1.125");
+        assertThat(firstReport.get("progress").get("notes").asString()).isEqualTo("First pass");
+        assertThat(firstReport.get("actorName").asString()).isEqualTo("Test operator");
+        assertThat(correctedReport.get("progress").get("quantity").asInt()).isZero();
+        assertThat(correctedReport.get("progress").get("previousQuantity").decimalValue()).isEqualByComparingTo("1.125");
+        assertThat(correctedReport.get("progress").get("previousNotes").asString()).isEqualTo("First pass");
+        assertThat(correctedReport.get("progress").get("notes").asString()).isEqualTo("Corrected progress");
+        assertThat(correctedReport.has("details")).isFalse();
     }
     @Test void startClosesPlanningAndCompletionRequiresAReport() throws Exception {
         var d=assignedPlan(true);long id=d.get("id").asLong(),a=d.get("locations").get(0).get("id").asLong();
@@ -788,7 +834,7 @@ class InterventionsIntegrationTest {
         var next=localCommand(id,b,"start","operator","OPERARIO",Map.of("version",5),200);
         completeLocation(next,1,"operator","OPERARIO",422);
     }
-    @Test void onlyCoordinatorApprovesAndActivityCountsOnceAfterAllLocationsApproved() throws Exception {
+    @Test void ownReporterCannotApproveAndCoordinatorApprovalCountsAfterAllLocationsApproved() throws Exception {
         var d=assignedPlan(true);long id=d.get("id").asLong();
         for(int index=0;index<3;index++) {
             long location=d.get("locations").get(index).get("id").asLong();
@@ -809,6 +855,34 @@ class InterventionsIntegrationTest {
             .andExpect(jsonPath("$.data.page.totalElements").value(1)).andExpect(jsonPath("$.data.content[0].approvedForCounting").value(true));
         localCommand(id,d.get("locations").get(0).get("id").asLong(),"observe","coordinator","COORDINADOR",Map.of("version",d.get("version").asLong(),"reason","Already approved"),422);
     }
+    @Test void responsibleSupervisorCanApproveTeamWorkAndCountWithoutASecondCoordinatorApproval() throws Exception {
+        var d=assignedPlan(true);long id=d.get("id").asLong();
+        for(int index=0;index<3;index++){
+            long location=d.get("locations").get(index).get("id").asLong();
+            d=localCommand(id,location,"start","operator","OPERARIO",Map.of("version",d.get("version").asLong()),200);
+            d=completeLocation(receivedPhoto(d,index,"operator","OPERARIO"),index,"operator","OPERARIO",200);
+            long version=d.get("version").asLong();
+            localCommand(id,location,"validate","other-supervisor","SUPERVISOR",Map.of("version",version),404);
+            localCommand(id,location,"validate","operator","SUPERVISOR",Map.of("version",version),403);
+            mvc.perform(get("/api/v1/interventions/"+id).with(user("supervisor@test.local").authorities(()->"SUPERVISOR")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.locations["+index+"].allowedActions",org.hamcrest.Matchers.hasItem("validate")));
+            d=localCommand(id,location,"validate","supervisor","SUPERVISOR",Map.of("version",version),200);
+            assertThat(d.get("approvedForCounting").asBoolean()).isEqualTo(index==2);
+            assertThat(d.get("locations").get(index).get("validatedByUserId").asLong()).isEqualTo(supervisor);
+        }
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("supervisor@test.local",null,
+                List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("SUPERVISOR"))));
+        assertThat(executionHistory.locationExecutions(typeId,"IN_HOUSE",java.time.LocalDate.of(2000,1,1),java.time.LocalDate.of(2100,1,1))).hasSize(3);
+    }
+    @Test void responsibleSupervisorCanObserveButCannotApproveTheirOwnReport() throws Exception {
+        var d=completeLocation(receivedPhoto(startedPlan(),0,"operator","OPERARIO"),0,"supervisor","SUPERVISOR",200);
+        long id=d.get("id").asLong(),location=d.get("locations").get(0).get("id").asLong();
+        assertThat(d.get("locations").get(0).get("allowedActions").toString()).doesNotContain("validate");
+        localCommand(id,location,"validate","supervisor","SUPERVISOR",Map.of("version",d.get("version").asLong()),403);
+        d=localCommand(id,location,"observe","supervisor","SUPERVISOR",Map.of("version",d.get("version").asLong(),"reason","Needs more work"),200);
+        assertThat(d.get("locations").get(0).get("rejectionReason").asString()).isEqualTo("Needs more work");
+    }
     @Test void approvalBlocksPendingPhotosAndRetriesDoNotRewriteApproval() throws Exception {
         var d=receivedPhoto(startedPlan(),0,"operator","OPERARIO");long id=d.get("id").asLong(),a=d.get("locations").get(0).get("id").asLong();
         long pending=announce(id,evidenceBody(d,0,d.get("version").asLong()),UUID.randomUUID().toString(),"operator","OPERARIO",201).get("id").asLong();
@@ -823,7 +897,7 @@ class InterventionsIntegrationTest {
     @Test void observationAndCapatazCorrectionPreserveHistoryAndRequireNewEvidence() throws Exception {
         var d=completeLocation(receivedPhoto(startedPlan(),0,"operator","OPERARIO"),0,"operator","OPERARIO",200);
         long id=d.get("id").asLong(),a=d.get("locations").get(0).get("id").asLong();
-        localCommand(id,a,"observe","supervisor","SUPERVISOR",Map.of("version",d.get("version").asLong(),"reason","Review"),403);
+        localCommand(id,a,"observe","other-supervisor","SUPERVISOR",Map.of("version",d.get("version").asLong(),"reason","Review"),404);
         localCommand(id,a,"observe","coordinator","COORDINADOR",Map.of("version",d.get("version").asLong(),"reason"," "),400);
         d=localCommand(id,a,"observe","coordinator","COORDINADOR",Map.of("version",d.get("version").asLong(),"reason","Correct garden A"),200);
         assertThat(d.get("statusCode").asString()).isEqualTo("OBSERVED");
@@ -833,6 +907,20 @@ class InterventionsIntegrationTest {
         assertThat(d.get("locations").get(0).get("attemptNumber").asInt()).isEqualTo(2);
         assertThat(d.get("locations").get(0).get("executedByUserId").asLong()).isEqualTo(operator);
         assertThat(d.get("locations").get(0).get("completedAt").isNull()).isTrue();
+        assertThat(d.get("locations").get(0).get("rejectionReason").isNull()).isTrue();
+        var reread=json.readTree(mvc.perform(get("/api/v1/interventions/"+id)
+                .with(user("supervisor@test.local").authorities(()->"SUPERVISOR")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
+        boolean preservedObservation=false;
+        for(var entry:reread.get("history")){
+            if("OBSERVED".equals(entry.get("actionCode").asString())){
+                assertThat(entry.get("reason").asString()).isEqualTo("Correct garden A");
+                assertThat(entry.get("attemptNumber").asInt()).isEqualTo(1);
+                assertThat(entry.get("actorName").asString()).isEqualTo("Test coordinator");
+                preservedObservation=true;
+            }
+        }
+        assertThat(preservedObservation).isTrue();
         assertThat(jdbc.queryForObject("select details->'previous'->>'executionNotes' from intervention_events where intervention_id=? and action_code='REOPENED'",String.class,id)).isEqualTo("Work reported complete");
         completeLocation(d,0,"supervisor","SUPERVISOR",422);
         d=receivedPhoto(d,0,"supervisor","SUPERVISOR");
@@ -878,6 +966,18 @@ class InterventionsIntegrationTest {
             assertThat(jdbc.queryForObject("select version from interventions where id=?",Long.class,id)).isEqualTo(version);
         } finally {jdbc.execute("drop trigger test_reject_approval on intervention_events");jdbc.execute("drop function test_reject_approval()");}
         localCommand(id,a,"validate","coordinator","COORDINADOR",Map.of("version",version),200);
+    }
+
+    @Test void elapsedExecutionKeepsOriginalStartAcrossAttemptsAndExcludesApprovalWaiting() throws Exception {
+        var d=assignedPlan(true);long work=d.get("id").asLong(),local=d.get("locations").get(0).get("id").asLong();
+        jdbc.update("update intervention_locations set status_item_id=?,started_at=timestamp '2026-11-05 14:00:00',completed_at=timestamp '2026-11-05 16:00:00',validated_at=timestamp '2026-11-07 16:00:00',attempt_number=2,executed_by_user_id=?,validated_by_user_id=?,executed_quantity=2,execution_notes='Work complete' where intervention_id=?",statusId("VALIDATED"),operator,coordinator,work);
+        jdbc.update("insert into intervention_events(intervention_id,intervention_location_id,attempt_number,action_code,actor_user_id,to_status_item_id,details,occurred_at) values (?,?,1,'STARTED',?,?,cast(? as jsonb),timestamp '2026-11-05 10:00:00')",work,local,operator,statusId("IN_PROGRESS"),"{\"startedAt\":\"2026-11-05T10:00:00Z\"}");
+        mvc.perform(get("/api/v1/interventions/"+work).with(user("coordinator@test.local").authorities(()->"COORDINADOR")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.startedAt").value("2026-11-05T10:00:00Z"))
+            .andExpect(jsonPath("$.data.elapsedSeconds").value(21600));
+        jdbc.update("update intervention_locations set status_item_id=? where id=?",statusId("OBSERVED"),local);
+        mvc.perform(get("/api/v1/interventions/"+work).with(user("coordinator@test.local").authorities(()->"COORDINADOR")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.elapsedSeconds").isEmpty());
     }
 
     JsonNode acceptedHistoryFixture() throws Exception {

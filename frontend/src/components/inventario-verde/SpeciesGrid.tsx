@@ -71,7 +71,7 @@ export function SpeciesGrid({
               value={sortBy}
               disabled={loading}
               onChange={(e) => onSortByChange(e.target.value as 'name:asc' | 'name:desc' | 'count:desc' | 'count:asc')}
-              className="text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors disabled:opacity-50"
+              className="text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-lg px-2.5 py-1.5 focus:outline-hidden focus:ring-1 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors disabled:opacity-50"
             >
               <option value="name:asc">Nombre común (A - Z)</option>
               <option value="name:desc">Nombre común (Z - A)</option>

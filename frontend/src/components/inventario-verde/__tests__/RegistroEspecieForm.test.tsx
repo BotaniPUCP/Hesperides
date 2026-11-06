@@ -57,6 +57,7 @@ describe('RegistroEspecieForm', () => {
     await userEvent.type(screen.getByLabelText(/Familia botánica/i), 'Arecaceae');
 
     fireEvent.click(screen.getByRole('button', { name: /Registrar especie/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Confirmar y registrar/i }));
 
     await waitFor(() => {
       expect(api.registerSpecies).toHaveBeenCalledWith(
@@ -85,6 +86,7 @@ describe('RegistroEspecieForm', () => {
 
     await userEvent.type(screen.getByLabelText(/Nombre científico/i), 'Roystonea regia');
     fireEvent.click(screen.getByRole('button', { name: /Registrar especie/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Confirmar y registrar/i }));
 
     expect(
       await screen.findByText('Ya existe una especie con este nombre científico en el catálogo.'),

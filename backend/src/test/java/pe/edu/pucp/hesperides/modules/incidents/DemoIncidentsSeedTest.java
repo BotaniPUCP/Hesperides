@@ -46,12 +46,13 @@ class DemoIncidentsSeedTest {
 
     @Test
     void seedPopulatesTheWorkflowAndRerunsPreserveDemoChanges() throws Exception {
-        // Startup must apply the repeatable migration after the versioned schema.
+        // Startup must apply the repeatable migration after the versioned schema. Other
+        // dev seeds (SPEC-202) may run after it, so it is not necessarily the last one.
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         assertThat(jdbc.queryForObject("""
-                SELECT script FROM flyway_schema_history
-                WHERE success ORDER BY installed_rank DESC LIMIT 1
-                """, String.class)).isEqualTo("R__seed_demo_incidents.sql");
+                SELECT installed_rank > (SELECT max(installed_rank) FROM flyway_schema_history WHERE version IS NOT NULL)
+                FROM flyway_schema_history WHERE script = 'R__seed_demo_incidents.sql' AND success
+                """, Boolean.class)).isTrue();
         String seed = new ClassPathResource("db/dev-migration/R__seed_demo_incidents.sql")
                 .getContentAsString(StandardCharsets.UTF_8);
 
@@ -63,7 +64,8 @@ class DemoIncidentsSeedTest {
         assertThat(summary.pendingAttention()).isEqualTo(2);
         assertThat(summary.inProgress()).isEqualTo(2);
         assertThat(summary.resolved()).isEqualTo(2);
-        assertThat(summary.completedInterventions()).isEqualTo(5);
+        assertThat(summary.completedInterventions()).isZero();
+        assertThat(summary.validatedInterventions()).isZero();
         assertThat(service.getAll(foreman, null, null, 0, 20).getTotalElements()).isEqualTo(4);
         assertThat(service.getAll(otherForeman, null, null, 0, 20).getTotalElements()).isEqualTo(4);
         assertThat(count("interventions")).isEqualTo(12);
@@ -90,8 +92,11 @@ class DemoIncidentsSeedTest {
         assertThat(partial.interventions().getLast().status().code()).isEqualTo("ASSIGNED");
         assertThatThrownBy(() -> service.getById(partialId, otherForeman))
                 .isInstanceOf(ResourceNotFoundException.class);
-        service.completeIntervention(partialId, partial.interventions().getLast().id(), foreman);
-        service.resolve(partialId, foreman);
+        assertThatThrownBy(() -> service.completeIntervention(partialId, partial.interventions().getLast().id(), foreman))
+                .isInstanceOf(pe.edu.pucp.hesperides.shared.exception.BusinessRuleException.class);
+        assertThatThrownBy(() -> service.resolve(partialId,new pe.edu.pucp.hesperides.modules.incidents.dto.IncidentContracts.ResolutionRequest(
+                partial.incident().version(),"Intento de cierre sin revisión real"),coordinator))
+                .isInstanceOf(pe.edu.pucp.hesperides.shared.exception.BusinessRuleException.class);
 
         entityManager.flush();
         jdbc.execute(seed);
@@ -100,11 +105,12 @@ class DemoIncidentsSeedTest {
         assertThat(preserved.description()).isEqualTo("Descripción ajustada durante la demo");
         assertThat(preserved.originalDescription()).isEqualTo("Rama caída en puerta principal.");
         assertThat(preserved.status().code()).isEqualTo("OPEN");
-        assertThat(service.getById(partialId, foreman).incident().status().code()).isEqualTo("RESOLVED");
+        assertThat(service.getById(partialId, foreman).incident().status().code()).isEqualTo("IN_PROGRESS");
         assertThat(count("incidents")).isEqualTo(8);
         assertThat(count("interventions")).isEqualTo(12);
-        assertThat(count("incident_status_history")).isEqualTo(22);
-        assertThat(service.summary(coordinator).completedInterventions()).isEqualTo(6);
+        assertThat(count("incident_status_history")).isEqualTo(21);
+        assertThat(service.summary(coordinator).completedInterventions()).isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM incident_interventions WHERE completed_at IS NOT NULL",Long.class)).isEqualTo(5);
     }
 
     private long count(String table) {

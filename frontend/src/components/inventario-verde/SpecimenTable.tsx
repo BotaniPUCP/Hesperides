@@ -36,7 +36,7 @@ function SpecimenThumbnail({
   return (
     <div
       aria-hidden="true"
-      className="relative h-10 w-10 rounded-lg overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90 shadow-2xs"
+      className="relative h-10 w-10 rounded-lg overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200/90 shadow-2xs"
     >
       {displaySrc ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -124,10 +124,7 @@ export function SpecimenTable({
 
         {specimens.map((item) => {
           const specSpecies = speciesMap?.[item.speciesSlug ?? ''] || species;
-          const itemSlug = item.speciesSlug || specSpecies?.slug;
-          const detailUrl = itemSlug
-            ? `/inventario-verde/especies/${itemSlug}/ejemplares/${item.code}`
-            : `/catastro/registrar`;
+          const detailUrl = `/catastro/ejemplares/${item.code}`;
 
           const hasNotes = Boolean(item.notes);
 
