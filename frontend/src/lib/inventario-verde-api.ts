@@ -22,6 +22,7 @@ export interface SpeciesParams {
 export interface SpecimenParams {
   search?: string;
   location?: string;
+  vegetationType?: string;
   sortBy: SpecimenSortKey;
   sortDirection: 'asc' | 'desc';
   page: number;
@@ -86,6 +87,7 @@ export const inventarioVerdeApi = {
       `/green-inventory/specimens?${query({
         search: p.search?.trim(),
         location: unlessAll(p.location),
+        vegetationType: unlessAll(p.vegetationType),
         sort: p.sortBy,
         direction: p.sortDirection,
         page: p.page,

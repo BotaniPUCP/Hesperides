@@ -1,12 +1,18 @@
 'use client';
 
-import type { SpecimenSortKey, SpecimenViewMode } from '@shared/types';
+import type { SpecimenSortKey, SpecimenViewMode, VegetationType } from '@shared/types';
 import { Input } from '@/components/ui';
 import { SpecimenViewToggle } from './SpecimenViewToggle';
+
+const FILTER_SELECT_CLASS =
+  'w-full h-10 text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-md px-3 focus:outline-hidden focus:ring-2 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors';
 
 export interface SpecimenFiltersBarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
+  selectedType: string;
+  onTypeChange: (typeCode: string) => void;
+  availableTypes: VegetationType[];
   selectedLocation: string;
   onLocationChange: (loc: string) => void;
   availableLocations: { location: string; count: number }[];
@@ -26,6 +32,9 @@ export interface SpecimenFiltersBarProps {
 export function SpecimenFiltersBar({
   searchValue,
   onSearchChange,
+  selectedType,
+  onTypeChange,
+  availableTypes,
   selectedLocation,
   onLocationChange,
   availableLocations,
@@ -43,6 +52,7 @@ export function SpecimenFiltersBar({
 }: SpecimenFiltersBarProps) {
   const hasActiveFilters =
     Boolean(searchValue.trim()) ||
+    selectedType !== 'ALL' ||
     selectedLocation !== 'ALL' ||
     sortBy !== 'code' ||
     sortDirection !== 'asc';
@@ -85,12 +95,29 @@ export function SpecimenFiltersBar({
           />
         </div>
 
+        <div className="sm:w-48 shrink-0">
+          <select
+            id="specimen-type-filter"
+            aria-label="Filtrar por tipo de ejemplar"
+            value={selectedType}
+            onChange={(e) => onTypeChange(e.target.value)}
+            className={FILTER_SELECT_CLASS}
+          >
+            <option value="ALL">Todos los tipos</option>
+            {availableTypes.map((type) => (
+              <option key={type.code} value={type.code}>
+                {type.label} ({type.count})
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="sm:w-60 shrink-0">
           <select
             id="specimen-location-filter"
             value={selectedLocation}
             onChange={(e) => onLocationChange(e.target.value)}
-            className="w-full h-10 text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-md px-3 focus:outline-hidden focus:ring-2 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors"
+            className={FILTER_SELECT_CLASS}
           >
             <option value="ALL">Todas las ubicaciones</option>
             {availableLocations.map((loc) => (

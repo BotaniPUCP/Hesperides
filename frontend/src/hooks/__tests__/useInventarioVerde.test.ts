@@ -90,6 +90,13 @@ describe('useInventarioVerde', () => {
     expect(api.allSpecimens).toHaveBeenCalled();
   });
 
+  it('pasa el tipo de ejemplar al listado global', () => {
+    api.allSpecimens.mockResolvedValue(page([p01], 1, 0, 12));
+    api.allLocations.mockResolvedValue([]);
+    renderHook(() => useInventarioVerdeSpecimens(null, { vegetationType: 'PALM' }));
+    expect(api.allSpecimens).toHaveBeenCalledWith(expect.objectContaining({ vegetationType: 'PALM' }));
+  });
+
   it('busca un ejemplar por su código y expone su especie', async () => {
     api.specimen.mockResolvedValue(p01Detail);
 

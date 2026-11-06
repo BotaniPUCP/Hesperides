@@ -132,6 +132,7 @@ export type SpecimenSortKey = 'reference' | 'code' | 'location';
 export interface SpecimenFilters {
   search?: string;
   location?: string;
+  vegetationType?: string;
   sortBy?: SpecimenSortKey;
   sortDirection?: 'asc' | 'desc';
 }

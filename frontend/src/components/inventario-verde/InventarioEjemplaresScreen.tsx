@@ -37,13 +37,14 @@ export function InventarioEjemplaresScreen() {
     }
     return 'ALL';
   });
+  const [selectedType, setSelectedType] = useState('ALL');
   const [sortBy, setSortBy] = useState<SpecimenSortKey>('code');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<SpecimenViewMode>('cards');
   const [page, setPage] = useState(0);
   const pageSize = 16;
 
-  const { totalSpecimens, totalSpecies } = useInventarioVerdeStats();
+  const { totalSpecimens, vegetationTypes } = useInventarioVerdeStats();
 
   const {
     specimens,
@@ -55,6 +56,7 @@ export function InventarioEjemplaresScreen() {
   } = useInventarioVerdeSpecimens(null, {
     search: debouncedSearch,
     location: selectedLocation,
+    vegetationType: selectedType,
     sortBy,
     sortDirection,
     page,
@@ -85,8 +87,14 @@ export function InventarioEjemplaresScreen() {
     setPage(0);
   }
 
+  function handleTypeChange(typeCode: string) {
+    setSelectedType(typeCode);
+    setPage(0);
+  }
+
   function handleResetFilters() {
     setSearchInput('');
+    setSelectedType('ALL');
     setSelectedLocation('ALL');
     setSortBy('code');
     setSortDirection('asc');
@@ -104,6 +112,9 @@ export function InventarioEjemplaresScreen() {
         <SpecimenFiltersBar
           searchValue={searchInput}
           onSearchChange={handleSearchChange}
+          selectedType={selectedType}
+          onTypeChange={handleTypeChange}
+          availableTypes={vegetationTypes}
           selectedLocation={selectedLocation}
           onLocationChange={handleLocationChange}
           availableLocations={availableLocations}

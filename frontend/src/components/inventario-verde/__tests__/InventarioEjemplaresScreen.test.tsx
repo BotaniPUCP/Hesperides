@@ -87,6 +87,69 @@ describe('InventarioEjemplaresScreen', () => {
     });
   });
 
+  describe('filtro por tipo de ejemplar', () => {
+    const typeFilter = () => screen.findByRole('combobox', { name: /tipo de ejemplar/i });
+
+    it('ofrece solo los tipos que tienen ejemplares, con su conteo', async () => {
+      render(<InventarioEjemplaresScreen />);
+
+      expect(await screen.findByRole('option', { name: 'Palmera (250)' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Árbol (570)' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Todos los tipos' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: /Cubresuelo/ })).not.toBeInTheDocument();
+    });
+
+    it('pide los ejemplares del tipo elegido y vuelve a la primera página', async () => {
+      api.allSpecimens.mockImplementation(async () => page([mockSpecimenGlobal1], 40, 0, 16));
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByText('EV-000001');
+      await userEvent.click(screen.getByRole('button', { name: /siguiente|next/i }));
+      await waitFor(() =>
+        expect(api.allSpecimens).toHaveBeenCalledWith(expect.objectContaining({ page: 1 })),
+      );
+
+      await screen.findByRole('option', { name: 'Palmera (250)' });
+      await userEvent.selectOptions(await typeFilter(), 'PALM');
+
+      await waitFor(() =>
+        expect(api.allSpecimens).toHaveBeenLastCalledWith(
+          expect.objectContaining({ vegetationType: 'PALM', page: 0 }),
+        ),
+      );
+    });
+
+    it('se combina con el filtro de ubicación', async () => {
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByRole('option', { name: 'Palmera (250)' });
+      await screen.findByRole('option', { name: 'Educación (5)' });
+
+      await userEvent.selectOptions(await typeFilter(), 'PALM');
+      await userEvent.selectOptions(screen.getByDisplayValue('Todas las ubicaciones'), 'Educación');
+
+      await waitFor(() =>
+        expect(api.allSpecimens).toHaveBeenLastCalledWith(
+          expect.objectContaining({ vegetationType: 'PALM', location: 'Educación' }),
+        ),
+      );
+    });
+
+    it('«Restablecer filtros» aparece con un tipo elegido y lo quita', async () => {
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByRole('option', { name: 'Palmera (250)' });
+      expect(screen.queryByRole('button', { name: 'Restablecer filtros' })).not.toBeInTheDocument();
+
+      await userEvent.selectOptions(await typeFilter(), 'PALM');
+      await userEvent.click(await screen.findByRole('button', { name: 'Restablecer filtros' }));
+
+      expect(await typeFilter()).toHaveValue('ALL');
+      await waitFor(() =>
+        expect(api.allSpecimens).toHaveBeenLastCalledWith(
+          expect.objectContaining({ vegetationType: 'ALL' }),
+        ),
+      );
+    });
+  });
+
   it('arranca en vista de cuadrícula por defecto y permite alternar a tabla', async () => {
     render(<InventarioEjemplaresScreen />);
 
