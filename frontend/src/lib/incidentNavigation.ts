@@ -14,12 +14,16 @@ export function incidentFilters(params: Pick<URLSearchParams, 'get'>): IncidentF
   };
 }
 
-export function incidentHref(path: string, filters: IncidentFilters): string {
+export function incidentQuery(filters: IncidentFilters): string {
   const params = new URLSearchParams();
   if (filters.search) params.set('search', filters.search);
   if (filters.status) params.set('status', filters.status);
   if (filters.page > 0) params.set('page', String(filters.page));
-  const query = params.toString();
+  return params.toString();
+}
+
+export function incidentHref(path: string, filters: IncidentFilters): string {
+  const query = incidentQuery(filters);
   return query ? `${path}?${query}` : path;
 }
 

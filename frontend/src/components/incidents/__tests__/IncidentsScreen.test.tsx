@@ -5,6 +5,8 @@ import { IncidentCaptureScreen } from '../IncidentCaptureScreen';
 import { useAuth } from '@/hooks/useAuth';
 import { useIncidentDetail, useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSummary } from '@/hooks/useIncidents';
 import { incidentHref } from '@/lib/incidentNavigation';
+import { rememberedHref } from '@/lib/listMemory';
+import { restartTrail } from '@/lib/navigationTrail';
 import { incidentOptions, incidentPage, pendingDetail } from '../__fixtures__/incidents';
 
 jest.mock('@/hooks/useAuth', () => ({ useAuth: jest.fn() }));
@@ -48,6 +50,17 @@ it('keeps the detail visible when options fail and offers a breadcrumb back to t
   expect(screen.getByRole('heading', { name: 'Incidencia #7' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Incidencias' })).toHaveAttribute('href', '/incidencias?search=rama&status=OPEN&page=2');
   expect(screen.getByRole('button', { name: 'Reintentar opciones' })).toBeInTheDocument();
+});
+
+it('sin recorrido, la flecha del detalle lleva a la lista filtrada', () => {
+  restartTrail('/incidencias/7');
+  render(<IncidentDetailScreen id={7} />);
+  expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/incidencias?search=rama&status=OPEN&page=2');
+});
+
+it('recuerda sus filtros para que al regresar de una intervención no se pierdan', () => {
+  render(<IncidentDetailScreen id={7} />);
+  expect(rememberedHref('/incidencias/7')).toBe('/incidencias/7?search=rama&status=OPEN&page=2');
 });
 
 it('uses a route-level heading and filtered breadcrumb for capture', () => {

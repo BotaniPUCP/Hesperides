@@ -1,10 +1,12 @@
 'use client';
 
-import { Breadcrumb, Button, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { useEffect } from 'react';
+import { BackButton, Breadcrumb, Button, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useIncidentDetail, useIncidentNavigation, useIncidentOptions } from '@/hooks/useIncidents';
 import { IncidentDetailPanel } from './IncidentDetailPanel';
-import { interventionCreationHref } from '@/lib/incidentNavigation';
+import { incidentQuery, interventionCreationHref } from '@/lib/incidentNavigation';
+import { rememberListQuery } from '@/lib/listMemory';
 
 export interface IncidentDetailScreenProps {
   id: number;
@@ -17,10 +19,20 @@ export function IncidentDetailScreen({ id, selectedInterventionId = null }: Inci
   const detail = useIncidentDetail(id);
   const options = useIncidentOptions();
   const reload = () => { detail.reload(); options.reload(); };
+  const query = incidentQuery(filters);
+
+  // El detalle lleva en su URL los filtros de la lista. Quien salga a una
+  // intervención y regrese con la flecha debe recuperarlos.
+  useEffect(() => {
+    rememberListQuery(`/incidencias/${id}`, query);
+  }, [id, query]);
 
   return (
     <div className="space-y-5">
-      <Breadcrumb items={[{ label: 'Incidencias', href: listHref }, { label: detail.data?.incident.officialCode ?? `Incidencia #${id}` }]} />
+      <div className="flex items-center gap-2">
+        <BackButton fallbackHref={listHref} />
+        <Breadcrumb items={[{ label: 'Incidencias', href: listHref }, { label: detail.data?.incident.officialCode ?? `Incidencia #${id}` }]} />
+      </div>
       {detail.loading ? <LoadingSkeleton variant="card" count={3} /> : detail.notFound ? (
         <EmptyState title="Incidencia no encontrada" description="El registro no existe o no tienes acceso a él." />
       ) : detail.errorMessage ? (
