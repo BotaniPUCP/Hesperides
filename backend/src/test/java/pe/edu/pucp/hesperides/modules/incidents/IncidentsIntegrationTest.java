@@ -32,6 +32,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest @AutoConfigureMockMvc @Testcontainers @Transactional
 class IncidentsIntegrationTest {
+    /** La regla de fecha compara con el día civil del campus, no con el del servidor de CI (UTC). */
+    private static final java.time.ZoneId CAMPUS_ZONE = java.time.ZoneId.of("America/Lima");
     @Container static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
     @DynamicPropertySource static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
@@ -86,7 +88,7 @@ class IncidentsIntegrationTest {
         long group=jdbc.queryForObject("SELECT parent_item_id FROM catalog_items WHERE id=?",Long.class,type);
         var point=new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Point(-12.07,-77.08);
         var location=new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Location(null,UUID.randomUUID(),null,null,point,List.of(),"Lugar comprobado",null,null,List.of());
-        var request=new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Planning(group,type,java.time.LocalDate.now(),"Acción ejecutada de prueba",null,null,null,null,List.of(location),null,null);
+        var request=new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Planning(group,type,java.time.LocalDate.now(CAMPUS_ZONE),"Acción ejecutada de prueba",null,null,null,null,List.of(location),null,null);
         var work=asActor(coordinator,() -> workService.create(request,UUID.randomUUID()).intervention());
         var current=service.getById(incidentId,coordinator);
         service.linkIntervention(incidentId,new LinkInterventionRequest(current.incident().version(),work.getId(),work.getVersion(),purpose,List.of()),coordinator);
