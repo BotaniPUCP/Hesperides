@@ -58,14 +58,24 @@ function medicion(f: FormularioPlanta, errores: Errores): MeasurementForm | null
   if (heightM !== null && trunkHeightM !== null && trunkHeightM > heightM) {
     errores.medidas = 'La altura del fuste no puede superar la altura total';
   }
-  if (!f.fechaMedicion) errores.fechaMedicion = 'Una medición necesita su fecha';
+  const hoy = new Date().toISOString().slice(0, 10);
+  if (!f.fechaMedicion) {
+    errores.fechaMedicion = 'Una medición necesita su fecha';
+  } else if (f.fechaMedicion > hoy) {
+    errores.fechaMedicion = 'La fecha de medición no puede ser futura';
+  }
   return { date: f.fechaMedicion, heightM, trunkHeightM, dbhCm, crownRadiusM, banded: siNo(f.zunchado) };
 }
 
 function evaluacion(f: FormularioPlanta, errores: Errores): AssessmentForm | null {
   const respondidas = PREGUNTAS_EVALUACION.some(([k]) => f.respuestas[k] !== '');
   if (!respondidas && !texto(f.manejo) && !texto(f.observacionEvaluacion)) return null;
-  if (!f.fechaEvaluacion) errores.fechaEvaluacion = 'Una evaluación necesita su fecha';
+  const hoy = new Date().toISOString().slice(0, 10);
+  if (!f.fechaEvaluacion) {
+    errores.fechaEvaluacion = 'Una evaluación necesita su fecha';
+  } else if (f.fechaEvaluacion > hoy) {
+    errores.fechaEvaluacion = 'La fecha de evaluación no puede ser futura';
+  }
   const respuestas = Object.fromEntries(PREGUNTAS_EVALUACION.map(([k]) => [k, siNo(f.respuestas[k])]));
   return { date: f.fechaEvaluacion, ...respuestas, recommendedManagement: texto(f.manejo), observation: texto(f.observacionEvaluacion) };
 }

@@ -10,6 +10,7 @@ import { LIMITES } from '@/lib/upload-limits';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
+import { normalizarNombreCientifico, validarNombreCientifico } from './validacionesEspecie';
 
 const TIPOS_VEGETACION_DEFAULT: SelectOption[] = [
   { id: 1, code: 'TREE', label: 'Árbol' },
@@ -96,11 +97,9 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
-    const scName = scientificName.trim();
-    if (!scName) {
-      errs.scientificName = 'El nombre científico es obligatorio';
-    } else if (scName.length < 2) {
-      errs.scientificName = 'Debe tener al menos 2 caracteres';
+    const scError = validarNombreCientifico(scientificName);
+    if (scError) {
+      errs.scientificName = scError;
     }
 
     if (!vegetationTypeCode) {
@@ -127,7 +126,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
       .filter((n) => n.length > 0);
 
     const payload: SpeciesForm = {
-      scientificName: scientificName.trim().charAt(0).toUpperCase() + scientificName.trim().slice(1),
+      scientificName: normalizarNombreCientifico(scientificName),
       commonName: commonName.trim() || undefined,
       family: family.trim() ? family.trim().charAt(0).toUpperCase() + family.trim().slice(1) : undefined,
       vegetationTypeCode: vegetationTypeCode!,
