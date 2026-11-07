@@ -48,9 +48,20 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             onNavigate={onNavigate}
           />
         ))}
-        {grupos.map((grupo) => (
-          <SidebarGroup key={grupo.id} group={grupo} activeHref={activo} onNavigate={onNavigate} />
-        ))}
+        {grupos.map((grupo) =>
+          grupo.items.length === 1 ? (
+            <SidebarLink
+              key={grupo.id}
+              href={grupo.items[0].href}
+              label={grupo.items[0].label}
+              icon={grupo.items[0].icon}
+              active={activo === grupo.items[0].href}
+              onNavigate={onNavigate}
+            />
+          ) : (
+            <SidebarGroup key={grupo.id} group={grupo} activeHref={activo} onNavigate={onNavigate} />
+          ),
+        )}
       </nav>
 
       <SidebarUserPanel />

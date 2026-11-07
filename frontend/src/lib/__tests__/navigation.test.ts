@@ -95,6 +95,7 @@ describe('visibleNavigation', () => {
   it('a un SUPERVISOR le muestra el formulario del catastro pero no la carga por CSV', () => {
     // SPEC-103 D-03: el supervisor registra en campo, una planta a la vez.
     expect(hrefsDe('SUPERVISOR')).toEqual([
+      '/lugares',
       '/inventario-verde',
       '/inventario-verde/registrar',
       '/intervenciones',
@@ -106,8 +107,9 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('a un OPERARIO le muestra especies, intervenciones, ejemplares y frecuencias, que puede consultar', () => {
+  it('a un OPERARIO le muestra lugares, especies, intervenciones, ejemplares y frecuencias, que puede consultar', () => {
     expect(hrefsDe('OPERARIO')).toEqual([
+      '/lugares',
       '/inventario-verde',
       '/intervenciones',
       '/catastro/ejemplares',
@@ -115,11 +117,11 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('el mapa es directo para los cuatro roles; lugares, solo para quien no edita el catálogo; incidencias, riego y reportes, para quien los opera', () => {
+  it('el mapa es directo para los cuatro roles; incidencias, riego y reportes, para quien los opera', () => {
     expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/riego', '/reportes']);
     expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
-    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/lugares', '/riego', '/reportes']);
-    expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa', '/lugares']);
+    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa']);
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Lugares',
       'Catálogo botánico',

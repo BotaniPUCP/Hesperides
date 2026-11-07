@@ -175,6 +175,54 @@ describe('Sidebar', () => {
     },
   );
 
+  describe('un grupo con un solo enlace visible no es un desplegable', () => {
+    it('Intervenciones es enlace directo para todos', () => {
+      mockPathname = '/intervenciones/10';
+      render(<Sidebar />);
+
+      expect(screen.getByRole('link', { name: 'Intervenciones' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.queryByRole('button', { name: /intervenciones/i })).not.toBeInTheDocument();
+    });
+
+    it('al OPERARIO no le queda ningún desplegable: ve directo las pantallas que consulta', () => {
+      comoRol('OPERARIO', 'Operario de campo');
+      render(<Sidebar />);
+
+      const nav = screen.getByRole('navigation', { name: /principal/i });
+      expect(within(nav).queryAllByRole('button')).toHaveLength(0);
+      for (const nombre of ['Catálogo de lugares', 'Especies', 'Intervenciones', 'Ejemplares', 'Frecuencias de mantenimiento']) {
+        expect(within(nav).getByRole('link', { name: nombre })).toBeInTheDocument();
+      }
+    });
+
+    it('al SUPERVISOR solo le quedan directos los de un enlace; el resto sigue desplegable', () => {
+      comoRol('SUPERVISOR', 'Supervisor');
+      render(<Sidebar />);
+
+      expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Intervenciones' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /administración/i })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Usuarios' })).not.toBeInTheDocument();
+    });
+
+    it('a ADMIN, Lugares sigue siendo desplegable porque tiene dos enlaces', () => {
+      render(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: 'Lugares' })).toBeInTheDocument();
+    });
+
+    it('un enlace directo avisa al navegar, para cerrar el panel móvil', async () => {
+      const onNavigate = jest.fn();
+      render(<Sidebar onNavigate={onNavigate} />);
+      const link = screen.getByRole('link', { name: 'Intervenciones' });
+      link.addEventListener('click', (event) => event.preventDefault());
+
+      await userEvent.click(link);
+
+      expect(onNavigate).toHaveBeenCalled();
+    });
+  });
+
   it('enlaza catálogos, que antes no tenía ningún acceso desde la aplicación', () => {
     mockPathname = '/admin/usuarios';
     render(<Sidebar />);
