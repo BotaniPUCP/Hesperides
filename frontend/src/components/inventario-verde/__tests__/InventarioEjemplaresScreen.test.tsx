@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { InventarioEjemplaresScreen } from '../InventarioEjemplaresScreen';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { rememberedHref } from '@/lib/listMemory';
+import { saveListScroll } from '@/lib/listScroll';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { page, p01, p02, summary } from '../__fixtures__/inventario';
 
@@ -97,6 +98,17 @@ describe('InventarioEjemplaresScreen', () => {
   });
 
   describe('conservar la pantalla para regresar', () => {
+    it('recupera la posición del scroll cuando terminan de cargar los datos', async () => {
+      const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+      saveListScroll(LIST, 'type=PALM', 900);
+      window.history.replaceState(null, '', `${LIST}?type=PALM`);
+      render(<InventarioEjemplaresScreen />);
+
+      await screen.findByText('EV-000001');
+      await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 900));
+      scrollTo.mockRestore();
+    });
+
     it('reabre con los filtros, el orden, la vista y la página que trae la URL', async () => {
       window.history.replaceState(null, '', `${LIST}?search=real&type=PALM&location=Educación&sort=location&view=table&page=2`);
       render(<InventarioEjemplaresScreen />);

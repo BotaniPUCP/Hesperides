@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIncidentDetail, useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSummary } from '@/hooks/useIncidents';
 import { incidentHref } from '@/lib/incidentNavigation';
 import { rememberedHref } from '@/lib/listMemory';
+import { saveListScroll } from '@/lib/listScroll';
 import { restartTrail } from '@/lib/navigationTrail';
 import { incidentOptions, incidentPage, pendingDetail } from '../__fixtures__/incidents';
 
@@ -33,6 +34,15 @@ it('links to capture and detail with the current filters rather than switching l
   render(<IncidentsScreen />);
   expect(screen.getByRole('link', { name: 'Informar una incidencia' })).toHaveAttribute('href', '/incidencias/nueva?search=rama&status=OPEN&page=2');
   expect(screen.getByRole('link', { name: /Rama caída/ })).toHaveAttribute('href', '/incidencias/7?search=rama&status=OPEN&page=2');
+});
+
+it('recupera la posición del scroll de la lista con los mismos filtros', () => {
+  const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+  saveListScroll('/incidencias', 'search=rama&status=OPEN&page=2', 900);
+  render(<IncidentsScreen />);
+  expect(scrollTo).toHaveBeenCalledWith(0, 900);
+  scrollTo.mockRestore();
+  window.sessionStorage.clear();
 });
 
 it('shows the list when summary and filter options fail', () => {

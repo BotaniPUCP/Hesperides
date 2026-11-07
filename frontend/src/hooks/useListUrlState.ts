@@ -29,5 +29,5 @@ export function useListUrlState<K extends string>(path: string, defaults: Readon
     [path, defaults],
   );
 
-  return { values, setValues };
+  return { values, setValues, query };
 }

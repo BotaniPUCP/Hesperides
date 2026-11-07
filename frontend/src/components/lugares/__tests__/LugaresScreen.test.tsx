@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { PlaceSummary } from '@shared/types';
 import { rememberedHref } from '@/lib/listMemory';
+import { saveListScroll } from '@/lib/listScroll';
 import { placesApi } from '@/lib/places-api';
 import { LugaresScreen } from '../LugaresScreen';
 
@@ -41,6 +42,17 @@ beforeEach(() => {
 
 describe('LugaresScreen', () => {
   describe('conservar la pantalla para regresar', () => {
+    it('recupera la posición del scroll cuando terminan de cargar los datos', async () => {
+      const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+      list.mockResolvedValue([place()]);
+      saveListScroll(LIST, 'kind=INDOOR', 900);
+      window.history.replaceState(null, '', `${LIST}?kind=INDOOR`);
+      render(<LugaresScreen />);
+
+      await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 900));
+      scrollTo.mockRestore();
+    });
+
     it('reabre con la búsqueda, la categoría y el tipo que trae la URL', async () => {
       list.mockResolvedValue([]);
       window.history.replaceState(null, '', `${LIST}?search=civil&category=DEPORTE&kind=INDOOR`);

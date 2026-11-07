@@ -5,7 +5,8 @@ import { Button, Card, EmptyState, Input, LoadingSkeleton, Select, StatusBadge, 
 import { useAuth } from '@/hooks/useAuth';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSummary } from '@/hooks/useIncidents';
-import { incidentDate } from '@/lib/incidentNavigation';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
+import { incidentDate, incidentQuery } from '@/lib/incidentNavigation';
 import { IncidentDashboard, IncidentExportButton } from './IncidentDashboard';
 
 export function IncidentsScreen() {
@@ -14,6 +15,7 @@ export function IncidentsScreen() {
   const { filters, href, changeFilters } = useIncidentNavigation();
   const debouncedSearch = useDebouncedValue(filters.search, 300);
   const list = useIncidents({ ...filters, search: debouncedSearch });
+  useListScrollRestoration('/incidencias', incidentQuery(filters), !list.loading);
   const options = useIncidentOptions();
   const summary = useIncidentSummary();
   const refresh = () => { list.reload(); options.reload(); summary.reload(); };

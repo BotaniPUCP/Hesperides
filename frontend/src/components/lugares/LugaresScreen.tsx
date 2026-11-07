@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { PlaceKindCode } from '@shared/types';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { usePlaces } from '@/hooks/usePlaces';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
@@ -20,7 +21,7 @@ const DEFAULTS = { search: '', category: '', kind: '' };
  * viven en la URL para encontrarlos igual al regresar de una ficha.
  */
 export function LugaresScreen() {
-  const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
+  const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
   const [search, setSearch] = useSearchDraft(values.search, (next) => setValues({ search: next }));
   const category = values.category || null;
   const kind = oneOf(values.kind, KIND_CODES, '') || null;
@@ -30,6 +31,7 @@ export function LugaresScreen() {
     category: category ?? undefined,
     kind: kind ?? undefined,
   });
+  useListScrollRestoration(LIST_PATH, query, !loading);
 
   return (
     <div className="flex flex-col gap-4">

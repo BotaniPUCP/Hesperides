@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { InventarioVerdeScreen } from '../InventarioVerdeScreen';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { rememberedHref } from '@/lib/listMemory';
+import { saveListScroll } from '@/lib/listScroll';
 import { page, palmeraReal, palmeraReina, summary } from '../__fixtures__/inventario';
 
 const mockUseAuth = jest.fn();
@@ -41,6 +42,16 @@ afterEach(() => jest.resetAllMocks());
 
 describe('InventarioVerdeScreen', () => {
   describe('conservar la pantalla para regresar', () => {
+    it('recupera la posición del scroll cuando terminan de cargar los datos', async () => {
+      const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+      saveListScroll(LIST, 'type=PALM', 900);
+      window.history.replaceState(null, '', `${LIST}?type=PALM`);
+      render(<InventarioVerdeScreen />);
+
+      await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 900));
+      scrollTo.mockRestore();
+    });
+
     it('reabre con la búsqueda, el tipo, el orden y la página que trae la URL', async () => {
       window.history.replaceState(null, '', `${LIST}?search=real&type=PALM&sort=count:desc&page=2`);
       render(<InventarioVerdeScreen />);

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { MaintenanceFrequency } from '@shared/types';
 import { MaintenanceFrequenciesScreen } from '../MaintenanceFrequenciesScreen';
 import { rememberedHref, rememberListQuery } from '@/lib/listMemory';
+import { saveListScroll } from '@/lib/listScroll';
 import { maintenanceApi } from '@/lib/maintenance-api';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 
@@ -47,6 +48,16 @@ it('muestra la flecha a Reportes, con su pestaña y mes, solo si se llegó desde
   render(<MaintenanceFrequenciesScreen />);
 
   expect(await screen.findByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/reportes?tab=mensual&month=2026-10');
+});
+
+it('recupera la posición del scroll cuando terminan de cargar los datos', async () => {
+  const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+  saveListScroll(LIST, 'regime=IN_HOUSE', 900);
+  window.history.replaceState(null, '', `${LIST}?regime=IN_HOUSE`);
+  render(<MaintenanceFrequenciesScreen />);
+
+  await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 900));
+  scrollTo.mockRestore();
 });
 
 it('reabre con los filtros que trae la URL', async () => {

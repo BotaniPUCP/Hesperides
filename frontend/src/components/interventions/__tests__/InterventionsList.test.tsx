@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { InterventionsList } from '../InterventionsList';
 import { interventionsApi, type InterventionPage } from '@/lib/interventions-api';
 import { rememberedHref } from '@/lib/listMemory';
+import { saveListScroll } from '@/lib/listScroll';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 
 jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
@@ -30,6 +31,16 @@ beforeEach(() => {
   window.sessionStorage.clear();
   restartTrail(LIST);
   list.mockResolvedValue(onePage());
+});
+
+it('recupera la posición del scroll cuando terminan de cargar los datos', async () => {
+  const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+  saveListScroll(LIST, 'page=1', 900);
+  window.history.replaceState(null, '', `${LIST}?page=1`);
+  render(<InterventionsList />);
+
+  await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 900));
+  scrollTo.mockRestore();
 });
 
 it('reabre con el estado, las fechas y la página que trae la URL', async () => {

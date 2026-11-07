@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCatalog } from '@/hooks/useCatalog';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { BackButton, Button, EmptyState, LoadingSkeleton, Select, StatusBadge } from '@/components/ui';
 import { interventionsApi, interventionError, type InterventionPage } from '@/lib/interventions-api';
@@ -16,7 +17,7 @@ const DEFAULTS = { greenElementCode: '', status: '', from: '', to: '', page: '0'
 export function InterventionsList({ greenElementCode }: { greenElementCode?:string }) {
   const { user } = useAuth();
   const statuses = useCatalog('INTERVENTION_STATUS');
-  const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
+  const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
   const page = pageFrom(values.page);
   const status = values.status;
   const from = isoDateFrom(values.from);
@@ -25,6 +26,7 @@ export function InterventionsList({ greenElementCode }: { greenElementCode?:stri
   const [result, setResult] = useState<InterventionPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  useListScrollRestoration(LIST_PATH, query, !loading);
   useEffect(() => {
     let active = true;
     interventionsApi.list(page, status, from, to, greenElementCode).then(data => {

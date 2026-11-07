@@ -3,6 +3,7 @@
 import type { MouseEvent } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
+import { forgetListScroll } from '@/lib/listScroll';
 import { restartTrail } from '@/lib/navigationTrail';
 
 export interface SidebarLinkProps {
@@ -19,13 +20,16 @@ export interface SidebarLinkProps {
  * un lector de pantalla no ve el fondo verde. El color es `brand-50`, el que
  * SPEC-C01 reserva para los estados activos de navegación.
  *
- * Entrar por el menú empieza de cero: el enlace no lleva filtros y reinicia el
- * recorrido de la flecha de volver.
+ * Entrar por el menú empieza de cero: el enlace no lleva filtros, reinicia el
+ * recorrido de la flecha de volver y olvida la posición del scroll.
  */
 export function SidebarLink({ href, label, icon, active, nested = false, onNavigate }: SidebarLinkProps) {
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     // Ctrl o Cmd + clic abre otra pestaña: esta sigue su recorrido.
-    if (!event.ctrlKey && !event.metaKey) restartTrail(href);
+    if (!event.ctrlKey && !event.metaKey) {
+      restartTrail(href);
+      forgetListScroll(href);
+    }
     onNavigate?.();
   }
 

@@ -9,6 +9,7 @@ import type {
 } from '@shared/types';
 import { BackButton, Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { maintenanceApi } from '@/lib/maintenance-api';
@@ -35,7 +36,8 @@ export function MaintenanceFrequenciesScreen() {
   const [ruleTypes, setRuleTypes] = useState<CatalogOption[]>([]);
   const [zones, setZones] = useState<MaintenanceZoneOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const { values: filters, setValues: setFilters } = useListUrlState(FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS);
+  const { values: filters, setValues: setFilters, query } = useListUrlState(FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS);
+  useListScrollRestoration(FREQUENCIES_PATH, query, !loading);
   const [searchInput, setSearchInput] = useSearchDraft(filters.search, (search) => setFilters({ search }));
 
   const [isModalOpen, setIsModalOpen] = useState(false);

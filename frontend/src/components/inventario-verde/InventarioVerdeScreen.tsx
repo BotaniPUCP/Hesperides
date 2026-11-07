@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useInventarioVerdeSpecies, useInventarioVerdeStats } from '@/hooks/useInventarioVerde';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { oneOf, pageFrom } from '@/lib/listUrl';
@@ -17,7 +18,7 @@ const DEFAULTS = { search: '', type: 'ALL', sort: 'name:asc', page: '0' };
 export function InventarioVerdeScreen() {
   const [reloadKey] = useState(0);
 
-  const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
+  const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
   const [searchInput, setSearchInput] = useSearchDraft(values.search, (search) => setValues({ search, page: '0' }));
   const selectedType = values.type;
   const speciesSort = oneOf(values.sort, SPECIES_SORTS, 'name:asc');
@@ -39,6 +40,7 @@ export function InventarioVerdeScreen() {
     pageSize,
     reloadKey,
   });
+  useListScrollRestoration(LIST_PATH, query, !loading);
 
   function handleTypeSelect(typeCode: string) {
     const nextType = selectedType === typeCode && typeCode !== 'ALL' ? 'ALL' : typeCode;

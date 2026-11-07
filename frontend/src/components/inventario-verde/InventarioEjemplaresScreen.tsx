@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import type { Species, SpecimenSortKey, SpecimenViewMode } from '@shared/types';
 import { BackButton } from '@/components/ui';
 import { useInventarioVerdeSpecimens, useInventarioVerdeStats } from '@/hooks/useInventarioVerde';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { useRequest } from '@/hooks/useRequest';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
@@ -30,7 +31,7 @@ const DEFAULTS = {
  * viven en la URL para encontrarlos igual al regresar de una ficha.
  */
 export function InventarioEjemplaresScreen() {
-  const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
+  const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
   const [searchInput, setSearchInput] = useSearchDraft(values.search, (search) => setValues({ search, page: '0' }));
   const sortBy = oneOf(values.sort, SORT_KEYS, 'code');
   const sortDirection = oneOf(values.dir, DIRECTIONS, 'asc');
@@ -55,6 +56,7 @@ export function InventarioEjemplaresScreen() {
     page,
     pageSize: PAGE_SIZE,
   });
+  useListScrollRestoration(LIST_PATH, query, !loading);
 
   const allSpeciesReq = useRequest('all-species-catalog', () =>
     typeof inventarioVerdeApi.species === 'function'
