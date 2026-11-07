@@ -1,4 +1,4 @@
-import { apiClient, ApiError, setAccessToken } from '../api';
+import { apiClient, ApiError, setAccessToken, setPasswordChangeRequiredHandler } from '../api';
 
 describe('apiClient', () => {
   afterEach(() => {
@@ -19,6 +19,40 @@ describe('apiClient', () => {
   function cabecerasDelUltimoFetch(mock: jest.Mock): Record<string, string> {
     return (mock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
   }
+
+  describe('cambio de contraseña exigido por el backend', () => {
+    function respuesta403(message: string) {
+      return {
+        ok: false,
+        status: 403,
+        json: async () => ({ ok: false, message, data: null }),
+      };
+    }
+
+    afterEach(() => setPasswordChangeRequiredHandler(null));
+
+    it('avisa al manejador y sigue propagando el error', async () => {
+      const handler = jest.fn();
+      setPasswordChangeRequiredHandler(handler);
+      global.fetch = jest
+        .fn()
+        .mockResolvedValue(respuesta403('Password change required before using the system')) as unknown as typeof fetch;
+
+      await expect(apiClient.get('/reports/options')).rejects.toMatchObject({ status: 403 });
+
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it('no avisa ante un 403 por falta de permisos', async () => {
+      const handler = jest.fn();
+      setPasswordChangeRequiredHandler(handler);
+      global.fetch = jest.fn().mockResolvedValue(respuesta403('Forbidden')) as unknown as typeof fetch;
+
+      await expect(apiClient.get('/reports/options')).rejects.toMatchObject({ status: 403 });
+
+      expect(handler).not.toHaveBeenCalled();
+    });
+  });
 
   it('unwraps data from the response envelope', async () => {
     global.fetch = jest.fn().mockResolvedValue({

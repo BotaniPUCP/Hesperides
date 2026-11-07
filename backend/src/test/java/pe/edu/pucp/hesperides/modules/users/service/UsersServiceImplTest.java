@@ -389,12 +389,14 @@ class UsersServiceImplTest {
     void resendCredentialsRegeneratesThePasswordAndRevokesSessions() {
         User target = existingUser(7L, "OPERARIO", true);
         when(usersRepository.findById(7L)).thenReturn(Optional.of(target));
+        when(usersRepository.findActiveByEmail("admin@pucp.edu.pe"))
+                .thenReturn(Optional.of(existingUser(1L, "ADMIN", true)));
         when(temporaryPasswordGenerator.generate()).thenReturn("TempGenerada9");
         when(passwordEncoder.encode("TempGenerada9")).thenReturn("$2a$10$otro");
         when(credentialDeliveryService.deliver(any(), eq("TempGenerada9"))).thenReturn(true);
         when(usersRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        var response = service.resendCredentials(7L);
+        var response = service.resendCredentials(7L, "admin@pucp.edu.pe");
 
         assertThat(response.credentialStatus()).isEqualTo(CredentialStatus.DELIVERED);
         assertThat(target.getPasswordHash()).isEqualTo("$2a$10$otro");
@@ -406,10 +408,28 @@ class UsersServiceImplTest {
     @Test
     void resendCredentialsOnAnInactiveUserFails() {
         when(usersRepository.findById(7L)).thenReturn(Optional.of(existingUser(7L, "OPERARIO", false)));
+        when(usersRepository.findActiveByEmail("admin@pucp.edu.pe"))
+                .thenReturn(Optional.of(existingUser(1L, "ADMIN", true)));
 
-        assertThatThrownBy(() -> service.resendCredentials(7L))
+        assertThatThrownBy(() -> service.resendCredentials(7L, "admin@pucp.edu.pe"))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("Cannot send credentials to an inactive user");
+    }
+
+    @Test
+    void anAdminCannotResendTheirOwnCredentialsAndKeepsTheirPasswordAndSessions() {
+        User self = existingUser(1L, "ADMIN", true);
+        String originalHash = self.getPasswordHash();
+        when(usersRepository.findById(1L)).thenReturn(Optional.of(self));
+        when(usersRepository.findActiveByEmail("ana@pucp.edu.pe")).thenReturn(Optional.of(self));
+
+        assertThatThrownBy(() -> service.resendCredentials(1L, "ana@pucp.edu.pe"))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("You cannot resend your own credentials");
+
+        assertThat(self.getPasswordHash()).isEqualTo(originalHash);
+        assertThat(self.isMustChangePassword()).isFalse();
+        verify(refreshTokenService, never()).revokeAll(anyLong());
     }
 
     @Test

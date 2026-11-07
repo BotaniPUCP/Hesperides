@@ -1,5 +1,5 @@
 import type { FieldError, ValidationErrors } from '@shared/types';
-import { ApiError } from './api';
+import { ApiError, PASSWORD_CHANGE_REQUIRED_MESSAGE } from './api';
 
 /**
  * Traduce un fallo de la API a algo que una persona pueda leer y accionar,
@@ -44,6 +44,7 @@ const MENSAJES: Record<string, string> = {
   'Unsupported photo format': 'Usa una fotografía JPEG, PNG o WebP.',
   'Email already registered': 'Ya existe un usuario con ese correo',
   'You cannot deactivate your own account': 'No puedes desactivar tu propia cuenta.',
+  'You cannot resend your own credentials': 'No puedes reenviarte tus propias credenciales.',
   'Cannot deactivate the last active administrator':
     'Es el último administrador activo. Nombra a otro antes de desactivarlo.',
   'Cannot change the role of the last active administrator':
@@ -83,7 +84,9 @@ export function mensajeDeApiError(error: unknown): string {
     case 401:
       return 'Tu sesión expiró, vuelve a iniciar sesión.';
     case 403:
-      return 'No tienes permisos para esta acción.';
+      return error.message === PASSWORD_CHANGE_REQUIRED_MESSAGE
+        ? 'Debes cambiar tu contraseña antes de seguir usando el sistema.'
+        : 'No tienes permisos para esta acción.';
     case 404:
       return 'No se encontró el registro o no tienes acceso a él.';
     case 413:

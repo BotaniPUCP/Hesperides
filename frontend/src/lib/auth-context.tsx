@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { apiClient, ApiError, setAccessToken } from './api';
+import { apiClient, ApiError, setAccessToken, setPasswordChangeRequiredHandler } from './api';
 
 export interface SessionUser {
   id: number;
@@ -73,6 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const actual = await apiClient.get<SessionUser>('/auth/me').catch(() => null);
     setUser(actual);
   }, []);
+
+  useEffect(() => {
+    setPasswordChangeRequiredHandler(() => void refreshSession());
+    return () => setPasswordChangeRequiredHandler(null);
+  }, [refreshSession]);
 
   const logout = useCallback(async () => {
     try {

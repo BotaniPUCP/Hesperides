@@ -17,6 +17,21 @@ describe('mensajeDeApiError', () => {
     );
   });
 
+  it('distingue el cambio obligatorio de contraseña de una falta de permisos', () => {
+    expect(
+      mensajeDeApiError(new ApiError(403, 'Password change required before using the system')),
+    ).toMatch(/cambiar tu contraseña/i);
+    expect(mensajeDeApiError(new ApiError(403, 'Forbidden'))).toBe(
+      'No tienes permisos para esta acción.',
+    );
+  });
+
+  it('traduce el rechazo de reenviarse las credenciales a uno mismo', () => {
+    expect(
+      mensajeDeApiError(new ApiError(422, 'You cannot resend your own credentials')),
+    ).toMatch(/tus propias credenciales/i);
+  });
+
   it('ante un 422 desconocido no inventa un mensaje concreto', () => {
     expect(mensajeDeApiError(new ApiError(422, 'Some future rule'))).toMatch(/regla del sistema/i);
   });

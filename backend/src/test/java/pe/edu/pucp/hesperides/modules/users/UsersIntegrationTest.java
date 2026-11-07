@@ -211,6 +211,19 @@ class UsersIntegrationTest {
     // con resend-credentials, que es lo que el administrador hara.
     @Test
     @WithMockUser(username = "admin@pucp.edu.pe", authorities = "ADMIN")
+    void anAdminCannotResendTheirOwnCredentials() throws Exception {
+        Long id = idOf("admin@pucp.edu.pe");
+        int emailsBefore = greenMail.getReceivedMessages().length;
+
+        mockMvc.perform(post("/api/v1/users/" + id + "/resend-credentials"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message").value("You cannot resend your own credentials"));
+
+        assertThat(greenMail.getReceivedMessages()).hasSize(emailsBefore);
+    }
+
+    @Test
+    @WithMockUser(username = "admin@pucp.edu.pe", authorities = "ADMIN")
     void resendingCredentialsRegeneratesThePasswordAndSendsANewEmail() throws Exception {
         mockMvc.perform(post("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON).content(createBody("rebote@pucp.edu.pe")));
