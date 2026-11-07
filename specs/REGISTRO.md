@@ -20,7 +20,7 @@
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
-| SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 y 2 | —          | —      |              |
+| SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 3 | —          | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |

@@ -98,6 +98,8 @@ public class SpecimenRepository {
                 .addValue("slug", speciesSlug)
                 .addValue("location", query.location())
                 .addValue("type", query.vegetationType())
+                .addValue("critical", query.critical(), java.sql.Types.BOOLEAN)
+                .addValue("measured", query.measured(), java.sql.Types.BOOLEAN)
                 .addValue("search", LikePattern.contains(query.search()));
     }
 }

@@ -75,11 +75,14 @@ public class GreenInventoryController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) String vegetationType,
+            @RequestParam(required = false) Boolean critical,
+            @RequestParam(required = false) Boolean measured,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String direction,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
-        SpecimenQuery query = SpecimenQuery.of(search, location, vegetationType, sort, direction, page, size);
+        SpecimenQuery query = SpecimenQuery.of(search, location, vegetationType, critical, measured, sort, direction,
+                page, size);
         return ResponseEntity.ok(ApiResponse.ok("Specimens retrieved", service.allSpecimens(query)));
     }
 

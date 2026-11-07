@@ -10,8 +10,8 @@ import java.util.Set;
  * una lista cerrada porque termina en el ORDER BY: nunca se concatena lo que
  * llega del cliente.
  */
-public record SpecimenQuery(String search, String location, String vegetationType, String sort, boolean descending,
-                            int page, int size) {
+public record SpecimenQuery(String search, String location, String vegetationType, Boolean critical, Boolean measured,
+                            String sort, boolean descending, int page, int size) {
 
     public static final int MAX_PAGE_SIZE = 100;
     private static final Set<String> SORTS = Set.of("code", "reference", "location");
@@ -20,11 +20,12 @@ public record SpecimenQuery(String search, String location, String vegetationTyp
 
     /** Los ejemplares de una especie: el tipo ya lo fija la especie. */
     public static SpecimenQuery of(String search, String location, String sort, String direction, int page, int size) {
-        return of(search, location, null, sort, direction, page, size);
+        return of(search, location, null, null, null, sort, direction, page, size);
     }
 
-    public static SpecimenQuery of(String search, String location, String vegetationType, String sort,
-                                   String direction, int page, int size) {
+    /** {@code critical} y {@code measured} son independientes; nulos, no filtran (SPEC-105 §3). */
+    public static SpecimenQuery of(String search, String location, String vegetationType, Boolean critical,
+                                   Boolean measured, String sort, String direction, int page, int size) {
         String sortKey = sort == null ? "reference" : sort.toLowerCase(Locale.ROOT);
         if (!SORTS.contains(sortKey)) {
             throw new ValidationException("sort must be one of " + SORTS);
@@ -33,8 +34,8 @@ public record SpecimenQuery(String search, String location, String vegetationTyp
             throw new ValidationException("direction must be asc or desc");
         }
         PageRequestCheck.check(page, size);
-        return new SpecimenQuery(blankToNull(search), blankToNull(location), typeOrNull(vegetationType), sortKey,
-                "desc".equalsIgnoreCase(direction), page, size);
+        return new SpecimenQuery(blankToNull(search), blankToNull(location), typeOrNull(vegetationType), critical,
+                measured, sortKey, "desc".equalsIgnoreCase(direction), page, size);
     }
 
     static String blankToNull(String text) {

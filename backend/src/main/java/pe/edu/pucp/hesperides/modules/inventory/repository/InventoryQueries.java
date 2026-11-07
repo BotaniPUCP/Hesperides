@@ -94,6 +94,8 @@ final class InventoryQueries {
                AND (CAST(:location AS TEXT) IS NULL OR e.source_location = :location)
                AND (CAST(:type AS TEXT) IS NULL OR EXISTS (SELECT 1 FROM catalog_items t
                     WHERE t.id = s.species_type_item_id AND t.code = :type))
+               AND (CAST(:critical AS BOOLEAN) IS NULL OR s.is_critical = CAST(:critical AS BOOLEAN))
+               AND (CAST(:measured AS BOOLEAN) IS NULL OR (e.data_source = 'MEASURED') = CAST(:measured AS BOOLEAN))
                AND (CAST(:search AS TEXT) IS NULL OR unaccent(lower(concat_ws(' ', e.code, e.source_reference,
                     e.source_location, e.legacy_code, e.notes, s.common_name, s.scientific_name))) LIKE unaccent(lower(:search)))
             """.formatted(ACTIVE_ELEMENT);

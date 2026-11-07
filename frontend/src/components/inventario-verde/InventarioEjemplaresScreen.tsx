@@ -21,8 +21,11 @@ const SORT_KEYS: readonly SpecimenSortKey[] = ['code', 'reference', 'location'];
 const DIRECTIONS = ['asc', 'desc'] as const;
 const VIEW_MODES: readonly SpecimenViewMode[] = ['cards', 'table'];
 const DEFAULTS = {
-  search: '', location: 'ALL', type: 'ALL', sort: 'code', dir: 'asc', view: 'cards', page: '0',
+  search: '', location: 'ALL', type: 'ALL', critical: 'ALL', measured: 'ALL', sort: 'code', dir: 'asc', view: 'cards', page: '0',
 };
+
+/** «ALL» o un valor raro en la dirección no filtran. */
+const booleanFilter = (value: string) => (value === 'true' ? true : value === 'false' ? false : undefined);
 
 /**
  * Pantalla principal del Inventario de Ejemplares (Catastro Verde georreferenciado).
@@ -51,6 +54,8 @@ export function InventarioEjemplaresScreen() {
     search: values.search,
     location: values.location,
     vegetationType: values.type,
+    critical: booleanFilter(values.critical),
+    measured: booleanFilter(values.measured),
     sortBy,
     sortDirection,
     page,
@@ -93,6 +98,10 @@ export function InventarioEjemplaresScreen() {
           selectedType={values.type}
           onTypeChange={(type) => setValues({ type, page: '0' })}
           availableTypes={vegetationTypes}
+          selectedCritical={values.critical}
+          onCriticalChange={(critical) => setValues({ critical, page: '0' })}
+          selectedMeasured={values.measured}
+          onMeasuredChange={(measured) => setValues({ measured, page: '0' })}
           selectedLocation={values.location}
           onLocationChange={(location) => setValues({ location, page: '0' })}
           availableLocations={availableLocations}

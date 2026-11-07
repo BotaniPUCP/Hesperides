@@ -44,9 +44,9 @@ export function useInventarioVerdeSpecimens(
   slug: string | null | undefined,
   params: UseInventarioVerdeSpecimensParams = {},
 ) {
-  const { search = '', location = 'ALL', vegetationType, sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12 } =
+  const { search = '', location = 'ALL', vegetationType, critical, measured, sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12 } =
     params;
-  const request = { search, location, vegetationType, sortBy, sortDirection, page, size: pageSize };
+  const request = { search, location, vegetationType, critical, measured, sortBy, sortDirection, page, size: pageSize };
   const key = slug ? `${slug}:${JSON.stringify(request)}` : `all:${JSON.stringify(request)}`;
   const specimens = useRequest(
     key,

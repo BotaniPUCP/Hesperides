@@ -182,6 +182,58 @@ describe('InventarioEjemplaresScreen', () => {
     });
   });
 
+  describe('filtros de criticidad y medición', () => {
+    const critical = () => screen.findByRole('combobox', { name: /criticidad/i });
+    const measured = () => screen.findByRole('combobox', { name: /medición/i });
+
+    it('sin elegir, no filtra', async () => {
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByText('EV-000001');
+
+      expect(api.allSpecimens).toHaveBeenLastCalledWith(
+        expect.objectContaining({ critical: undefined, measured: undefined }),
+      );
+    });
+
+    it('se combinan entre sí y vuelven a la primera página', async () => {
+      api.allSpecimens.mockImplementation(async () => page([mockSpecimenGlobal1], 40, 0, 16));
+      render(<InventarioEjemplaresScreen />);
+      await screen.findByText('EV-000001');
+      await userEvent.click(screen.getByRole('button', { name: /siguiente|next/i }));
+      await waitFor(() => expect(api.allSpecimens).toHaveBeenCalledWith(expect.objectContaining({ page: 1 })));
+
+      await userEvent.selectOptions(await critical(), 'false');
+      await userEvent.selectOptions(await measured(), 'false');
+
+      await waitFor(() =>
+        expect(api.allSpecimens).toHaveBeenLastCalledWith(
+          expect.objectContaining({ critical: false, measured: false, page: 0 }),
+        ),
+      );
+    });
+
+    it('«Medidos» y «Críticas» viajan como verdadero', async () => {
+      render(<InventarioEjemplaresScreen />);
+      await userEvent.selectOptions(await critical(), 'true');
+      await userEvent.selectOptions(await measured(), 'true');
+
+      await waitFor(() =>
+        expect(api.allSpecimens).toHaveBeenLastCalledWith(
+          expect.objectContaining({ critical: true, measured: true }),
+        ),
+      );
+    });
+
+    it('restablecer los filtros también los reinicia', async () => {
+      render(<InventarioEjemplaresScreen />);
+      await userEvent.selectOptions(await critical(), 'true');
+
+      await userEvent.click(await screen.findByRole('button', { name: /Restablecer filtros/ }));
+
+      await waitFor(async () => expect(await critical()).toHaveValue('ALL'));
+    });
+  });
+
   describe('filtro por tipo de ejemplar', () => {
     const typeFilter = () => screen.findByRole('combobox', { name: /tipo de ejemplar/i });
 

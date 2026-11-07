@@ -57,6 +57,45 @@ class GreenInventoryIntegrationTest {
                 .andExpect(jsonPath("$.data.vegetationTypes[?(@.code == 'PALM')].count").value(hasItem(250)));
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "true,  true,  87",
+            "true,  false, 762",
+            "false, true,  0",
+            "false, false, 116",
+    })
+    void specimensFilterByCriticalityAndMeasurementIndependently(String critical, String measured, int expected)
+            throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("critical", critical).param("measured", measured))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page.totalElements").value(expected));
+    }
+
+    @Test
+    void eachMeasurementFilterAloneCoversItsSide() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("critical", "false"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(116));
+        mockMvc.perform(get(BASE + "/specimens").param("measured", "true"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(87));
+        mockMvc.perform(get(BASE + "/specimens"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(965));
+    }
+
+    @Test
+    void measurementFiltersCombineWithSearchAndPagination() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("critical", "false").param("measured", "false")
+                        .param("search", "cafeto").param("size", "5"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(55))
+                .andExpect(jsonPath("$.data.content", hasSize(5)))
+                .andExpect(jsonPath("$.data.content[0].speciesCommonName").value("Cafeto"));
+    }
+
+    @Test
+    void anInvalidFilterValueIsRejected() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("critical", "quizas"))
+                .andExpect(status().isBadRequest());
+    }
+
     @Test
     void speciesComeMostRepresentedFirstWithAPhotoOfTheirOwn() throws Exception {
         mockMvc.perform(get(BASE + "/species").param("size", "2"))

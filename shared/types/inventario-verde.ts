@@ -169,6 +169,9 @@ export interface SpecimenFilters {
   search?: string;
   location?: string;
   vegetationType?: string;
+  /** Independientes entre sí; sin valor, no filtran (SPEC-105 §3). */
+  critical?: boolean;
+  measured?: boolean;
   sortBy?: SpecimenSortKey;
   sortDirection?: 'asc' | 'desc';
 }
