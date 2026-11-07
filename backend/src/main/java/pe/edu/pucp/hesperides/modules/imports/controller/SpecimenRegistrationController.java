@@ -23,6 +23,7 @@ import pe.edu.pucp.hesperides.modules.imports.dto.MeasurementResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.SpecimenForm;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenRegistrationService;
 import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
+import pe.edu.pucp.hesperides.modules.inventory.controller.ManagerAuthority;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesForm;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.service.InventoryPhotoService;
@@ -98,7 +99,7 @@ public class SpecimenRegistrationController {
             @RequestPart(value = "photo", required = false) MultipartFile photo,
             @AuthenticationPrincipal UserDetails principal) {
         SpeciesResponse created = speciesService.register(
-                form, UploadedFiles.photo(photo), principal.getUsername());
+                form, UploadedFiles.photo(photo), principal.getUsername(), ManagerAuthority.isManager(principal));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Species registered", created));
     }

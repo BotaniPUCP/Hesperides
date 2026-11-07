@@ -44,7 +44,9 @@ class SpeciesRegistrationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SpeciesRegistrationService(jdbc, inventoryService, photoService, auditService);
+        SpeciesCatalogs catalogs = new SpeciesCatalogs(jdbc);
+        service = new SpeciesRegistrationService(jdbc, inventoryService, photoService, auditService,
+                catalogs, new SpeciesMeasureProfiles(catalogs));
     }
 
     @Test
@@ -65,26 +67,26 @@ class SpeciesRegistrationServiceTest {
 
     @Test
     void registerThrowsWhenScientificNameIsTooShort() {
-        SpeciesForm form = new SpeciesForm("A", "Comun", "Familia", "TREE", null, null, null, null);
-        assertThatThrownBy(() -> service.register(form, null, "admin@pucp.edu.pe"))
+        SpeciesForm form = new SpeciesForm("A", "Comun", "Familia", "TREE", null, null, null, null, null, null, null, null, null, null, null);
+        assertThatThrownBy(() -> service.register(form, null, "admin@pucp.edu.pe", true))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("al menos 2 caracteres");
     }
 
     @Test
     void registerThrowsWhenScientificNameAlreadyExists() {
-        SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "TREE", null, null, null, null);
+        SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "TREE", null, null, null, null, null, null, null, null, null, null, null);
         when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Ginkgo biloba")))
                 .thenReturn(true);
 
-        assertThatThrownBy(() -> service.register(form, null, "admin@pucp.edu.pe"))
+        assertThatThrownBy(() -> service.register(form, null, "admin@pucp.edu.pe", true))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining("ya está registrada");
     }
 
     @Test
     void registerThrowsWhenVegetationTypeIsInvalid() {
-        SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "INVALID_TYPE", null, null, null, null);
+        SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "INVALID_TYPE", null, null, null, null, null, null, null, null, null, null, null);
         when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Ginkgo biloba")))
                 .thenReturn(false);
         when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("ginkgo-biloba")))
@@ -92,7 +94,7 @@ class SpeciesRegistrationServiceTest {
         when(jdbc.query(anyString(), any(RowMapper.class), eq("INVALID_TYPE")))
                 .thenReturn(List.of());
 
-        assertThatThrownBy(() -> service.register(form, null, "admin@pucp.edu.pe"))
+        assertThatThrownBy(() -> service.register(form, null, "admin@pucp.edu.pe", true))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("Tipo de vegetación no válido");
     }
@@ -100,7 +102,7 @@ class SpeciesRegistrationServiceTest {
     @Test
     void registerSuccessfullyCreatesSpecies() {
         SpeciesForm form = new SpeciesForm("Mangus urus", "Mango", "Mangurus", "TREE", "INTRODUCED",
-                List.of("Mango", "Naranja"), "Descripcion", "Cuidados");
+                List.of("Mango", "Naranja"), "Descripcion", "Cuidados", null, null, null, null, null, null, null);
 
         when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Mangus urus")))
                 .thenReturn(false);
@@ -110,15 +112,17 @@ class SpeciesRegistrationServiceTest {
                 .thenReturn(List.of(10L));
         when(jdbc.query(anyString(), any(RowMapper.class), eq("INTRODUCED")))
                 .thenReturn(List.of(20L));
-        when(jdbc.queryForObject(anyString(), eq(Long.class), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(jdbc.queryForObject(anyString(), eq(Long.class), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(42L);
 
         SpeciesResponse mockResponse = new SpeciesResponse("mangus-urus", "Mangus urus", "Mango",
                 List.of("Mango", "Naranja"), "Mangurus", "TREE", "Árbol",
-                "INTRODUCED", "Introducida", "Descripcion", "Cuidados", 0, null, null, List.of());
+                "INTRODUCED", "Introducida", "Descripcion", "Cuidados", 0, null, null, List.of(),
+                true, null, null, null, null, null, null, true, true, 0);
         when(inventoryService.speciesBySlug("mangus-urus")).thenReturn(mockResponse);
 
-        SpeciesResponse created = service.register(form, null, "admin@pucp.edu.pe");
+        SpeciesResponse created = service.register(form, null, "admin@pucp.edu.pe", true);
 
         assertThat(created).isNotNull();
         assertThat(created.slug()).isEqualTo("mangus-urus");

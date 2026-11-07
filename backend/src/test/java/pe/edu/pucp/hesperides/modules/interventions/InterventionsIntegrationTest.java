@@ -438,6 +438,29 @@ class InterventionsIntegrationTest {
         var before=jdbc.queryForMap(measuresSql,element);
         String historySql="select count(*) from green_element_measurements where green_element_id=? and deleted_at is null";
         int historyBefore=jdbc.queryForObject(historySql,Integer.class,element);
+
+        completePruningOf(element,code);
+
+        assertThat(jdbc.queryForMap(measuresSql,element)).isEqualTo(before);
+        assertThat(jdbc.queryForObject(historySql,Integer.class,element)).isEqualTo(historyBefore);
+    }
+    @Test void specimenDetailTellsWhenItsMeasurementPredatesTheLastPruning() throws Exception {
+        long element=jdbc.queryForObject("select id from green_elements where deleted_at is null and is_active and data_source='MEASURED' and height_m is not null order by id desc limit 1",Long.class);
+        String code=jdbc.queryForObject("select code from green_elements where id=?",String.class,element);
+        var measuredAt=jdbc.queryForObject("select measured_at from green_elements where id=?",java.sql.Date.class,element);
+        mvc.perform(get("/api/v1/green-inventory/specimens/"+code)).andExpect(jsonPath("$.data.measuredBeforeLastPruning").value(false));
+
+        completePruningOf(element,code);
+
+        mvc.perform(get("/api/v1/green-inventory/specimens/"+code))
+            .andExpect(jsonPath("$.data.measuredBeforeLastPruning").value(true))
+            .andExpect(jsonPath("$.data.lastPruningDate").isNotEmpty());
+        try {
+            jdbc.update("update green_elements set measured_at=(select max(l.completed_at)::date from intervention_elements ie join intervention_locations l on l.id=ie.intervention_location_id where ie.green_element_id=?) where id=?",element,element);
+            mvc.perform(get("/api/v1/green-inventory/specimens/"+code)).andExpect(jsonPath("$.data.measuredBeforeLastPruning").value(false));
+        } finally {jdbc.update("update green_elements set measured_at=? where id=?",measuredAt,element);}
+    }
+    void completePruningOf(long element,String code) throws Exception {
         var body=plan();
         long pruningType=jdbc.queryForObject("select t.id from catalog_items t join catalog_items c on c.id=t.parent_item_id where c.code='PODA' and t.is_active and t.deleted_at is null order by t.id limit 1",Long.class);
         body.put("classItemId",jdbc.queryForObject("select parent_item_id from catalog_items where id=?",Long.class,pruningType));
@@ -448,11 +471,7 @@ class InterventionsIntegrationTest {
         assign(id,team,operator,"coordinator","COORDINADOR",0,200);
         var started=localCommand(id,local,"start","operator","OPERARIO",Map.of("version",1),200);
         var withPhoto=receivedPhoto(started,0,"operator","OPERARIO");
-
         localCommand(id,local,"complete","operator","OPERARIO",Map.of("version",withPhoto.get("version").asLong(),"executionNotes","Poda terminada"),200);
-
-        assertThat(jdbc.queryForMap(measuresSql,element)).isEqualTo(before);
-        assertThat(jdbc.queryForObject(historySql,Integer.class,element)).isEqualTo(historyBefore);
     }
     @Test void startingOneLocationKeepsOtherLocationsAssignedAndRecordsRealActor() throws Exception {
         var d=assignedPlan(true);long id=d.get("id").asLong(),a=d.get("locations").get(0).get("id").asLong();

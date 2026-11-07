@@ -38,9 +38,22 @@ export interface Species {
   imageSource: 'SPECIES' | 'SPECIMEN' | null;
   /** Las fotos genéricas en su orden (SPEC-104). Solo en la ficha; en el listado viene vacío. */
   photos: SpeciesPhoto[];
+  /** Si la altura de la especie decide cómo se atiende (SPEC-105 D-01). */
+  critical: boolean;
+  /** Promedios de la especie. Nunca son datos de un ejemplar. */
+  referenceHeightM: number | null;
+  referenceHeightSourceCode: string | null;
+  referenceHeightSourceName: string | null;
+  referenceCrownRadiusM: number | null;
+  referenceCrownRadiusSourceCode: string | null;
+  referenceCrownRadiusSourceName: string | null;
+  /** Si fuste y DAP aplican a la especie; si no, los formularios no los piden. */
+  usesTrunkHeight: boolean;
+  usesDbh: boolean;
+  unmeasuredSpecimenCount: number;
 }
 
-/** Formulario para registrar una nueva especie botánica en el catálogo. */
+/** Formulario para registrar o editar una especie botánica del catálogo. */
 export interface SpeciesForm {
   scientificName: string;
   commonName?: string;
@@ -50,6 +63,13 @@ export interface SpeciesForm {
   otherNames?: string[];
   description?: string;
   careNotes?: string;
+  critical?: boolean;
+  referenceHeightM?: number | null;
+  referenceHeightSourceCode?: string | null;
+  referenceCrownRadiusM?: number | null;
+  referenceCrownRadiusSourceCode?: string | null;
+  usesTrunkHeight?: boolean;
+  usesDbh?: boolean;
 }
 
 /** Una foto genérica de especie con su crédito. Autor, licencia y fuente faltan en una foto propia. */
@@ -89,6 +109,12 @@ export interface Specimen {
 /** Procedencia de las medidas (C-08). Solo MEASURED vale para decidir quién poda. */
 export type MeasurementSource = 'MEASURED' | 'GENERIC' | 'UNKNOWN';
 
+/** Qué se puede mostrar de un ejemplar: su medida real, el promedio de su especie o nada (SPEC-105 §5.4). */
+export type MeasurementStatus = 'MEASURED' | 'REFERENCE' | 'NOT_MEASURED';
+
+/** Quién poda (SPEC-105 §5.5). Es una propuesta: nunca bloquea nada. */
+export type PruningAssignment = 'STABLE_STAFF' | 'THIRD_PARTY' | 'FIELD_VERIFICATION';
+
 export interface MeasurementRecord {
   id: number;
   date: string;
@@ -114,6 +140,17 @@ export interface SpecimenDetail extends Specimen {
   /** Calculada por posición; nula si el ejemplar está fuera de toda sección. */
   section: { code: string; name: string } | null;
   species: Species;
+  measuredAt: string | null;
+  speciesCritical: boolean;
+  measurementStatus: MeasurementStatus;
+  /** Solo con measurementStatus = REFERENCE. */
+  referenceHeightM: number | null;
+  referenceCrownRadiusM: number | null;
+  referenceHeightSourceName: string | null;
+  referenceCrownRadiusSourceName: string | null;
+  lastPruningDate: string | null;
+  measuredBeforeLastPruning: boolean;
+  pruningAssignment: PruningAssignment;
 }
 
 export interface LocationCount {

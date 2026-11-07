@@ -3,12 +3,15 @@ import userEvent from '@testing-library/user-event';
 import { ApiError } from '@/lib/api';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { RegistroEspecieModal } from '../RegistroEspecieModal';
+import { medidasDeEspecieCritica } from '../__fixtures__/inventario';
 
 jest.mock('@/lib/inventario-verde-api', () => ({
   inventarioVerdeApi: {
     registerSpecies: jest.fn(),
   },
 }));
+
+jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { role: { code: 'COORDINADOR' } } }) }));
 
 jest.mock('@/hooks/useCatalog', () => ({
   useCatalog: (type: string) => {
@@ -86,6 +89,7 @@ describe('RegistroEspecieModal', () => {
       imageUrl: null,
       imageSource: null,
       photos: [],
+      ...medidasDeEspecieCritica,
     };
 
     jest.mocked(inventarioVerdeApi.registerSpecies).mockResolvedValue(mockNuevaEspecie);

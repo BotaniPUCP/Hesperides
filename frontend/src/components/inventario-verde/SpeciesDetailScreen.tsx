@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { BackButton, Breadcrumb, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { puedeRegistrar } from '@/components/catastro/permisos';
+import { useAuth } from '@/hooks/useAuth';
 import { useInventarioVerdeSpeciesBySlug } from '@/hooks/useInventarioVerde';
 import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { useRequest } from '@/hooks/useRequest';
@@ -18,6 +20,7 @@ const LIST_PATH = '/inventario-verde';
 
 export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const listHref = useRememberedHref(LIST_PATH);
   const { species, loading: speciesLoading, errorMessage } = useInventarioVerdeSpeciesBySlug(slug);
 
@@ -56,14 +59,24 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
 
   return (
     <div className="flex flex-col max-w-5xl mx-auto w-full space-y-6">
-      <div className="flex items-center gap-2">
-        <BackButton fallbackHref={LIST_PATH} />
-        <Breadcrumb
-          items={[
-            { label: 'Especies', href: listHref },
-            { label: species.commonName },
-          ]}
-        />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <BackButton fallbackHref={LIST_PATH} />
+          <Breadcrumb
+            items={[
+              { label: 'Especies', href: listHref },
+              { label: species.commonName },
+            ]}
+          />
+        </div>
+        {puedeRegistrar(user?.role.code) && (
+          <Link
+            href={`${LIST_PATH}/especies/${species.slug}/editar`}
+            className="surface-pill text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
+          >
+            Editar especie
+          </Link>
+        )}
       </div>
 
       {/* Cabecera taxonómica e información de la especie */}

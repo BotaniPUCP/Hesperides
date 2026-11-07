@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.pucp.hesperides.engine.pruning.PruningAssignment;
 import pe.edu.pucp.hesperides.modules.inventory.dto.InventorySummaryResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.LocationCountResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesPhotoResponse;
@@ -22,6 +23,7 @@ import pe.edu.pucp.hesperides.modules.inventory.repository.SpecimenRepository;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpecimenRow;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -84,11 +86,25 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
     public SpecimenDetailResponse specimenByCode(String code) {
         SpecimenRow row = specimenRepository.byCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Specimen not found: " + code));
+        boolean measured = "MEASURED".equals(row.dataSource());
+        String status = PruningAssignment.measurementStatus(measured, row.speciesCritical());
+        boolean reference = PruningAssignment.STATUS_REFERENCE.equals(status);
+        LocalDate lastPruning = specimenRepository.lastPruningDate(code).orElse(null);
         return new SpecimenDetailResponse(row.code(), row.sourceReference(), row.sourceLocation(), row.legacyCode(),
                 row.latitude(), row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
                 PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
                 row.trunkHeightM(), row.dbhCm(), row.crownRadiusM(), row.isBanded(), row.dataSource(),
-                specimenRepository.sectionOf(code).orElse(null), speciesBySlug(row.speciesSlug()));
+                specimenRepository.sectionOf(code).orElse(null), speciesBySlug(row.speciesSlug()), row.measuredAt(),
+                row.speciesCritical(), status, reference ? row.referenceHeightM() : null,
+                reference ? row.referenceCrownRadiusM() : null, reference ? row.referenceHeightSourceName() : null,
+                reference ? row.referenceCrownRadiusSourceName() : null, lastPruning,
+                measuredBeforePruning(measured, row.measuredAt(), lastPruning),
+                PruningAssignment.propose(row.speciesCritical(), measured, row.heightM()));
+    }
+
+    /** Una poda del mismo día no invalida la medida: pudo tomarse justo después. */
+    private static boolean measuredBeforePruning(boolean measured, LocalDate measuredAt, LocalDate lastPruning) {
+        return measured && measuredAt != null && lastPruning != null && lastPruning.isAfter(measuredAt);
     }
 
     @Override
@@ -106,7 +122,10 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
                 row.family(), row.typeCode(), row.typeLabel(), row.originCode(), row.originLabel(),
                 row.description(), row.careNotes(), row.specimenCount(),
                 PhotoUrls.species(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()),
-                PhotoUrls.speciesSource(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()), photos);
+                PhotoUrls.speciesSource(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()), photos,
+                row.critical(), row.referenceHeightM(), row.referenceHeightSourceCode(), row.referenceHeightSourceName(),
+                row.referenceCrownRadiusM(), row.referenceCrownRadiusSourceCode(), row.referenceCrownRadiusSourceName(),
+                row.usesTrunkHeight(), row.usesDbh(), row.unmeasuredSpecimenCount());
     }
 
     private SpecimenResponse toResponse(SpecimenRow row) {

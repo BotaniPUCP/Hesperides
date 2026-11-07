@@ -1,12 +1,16 @@
 package pe.edu.pucp.hesperides.modules.inventory.dto;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Formulario para dar de alta una nueva especie en el catálogo botánico.
+ * Formulario para registrar o editar una especie del catálogo botánico. Sin
+ * {@code critical}, al registrar decide el tipo y al editar se conserva (SPEC-105 §5.1).
  */
 public record SpeciesForm(
         @NotBlank(message = "El nombre científico es obligatorio")
@@ -32,6 +36,26 @@ public record SpeciesForm(
         String description,
 
         @Size(max = 2000, message = "Las notas de cuidado no pueden exceder 2000 caracteres")
-        String careNotes
+        String careNotes,
+
+        Boolean critical,
+
+        @DecimalMin(value = "0.01", message = "La altura promedio debe ser mayor que 0")
+        @DecimalMax(value = "999.99", message = "La altura promedio no puede superar 999.99 m")
+        BigDecimal referenceHeightM,
+
+        @Size(max = 50, message = "La fuente no puede exceder 50 caracteres")
+        String referenceHeightSourceCode,
+
+        @DecimalMin(value = "0.01", message = "El radio de copa promedio debe ser mayor que 0")
+        @DecimalMax(value = "999.99", message = "El radio de copa promedio no puede superar 999.99 m")
+        BigDecimal referenceCrownRadiusM,
+
+        @Size(max = 50, message = "La fuente no puede exceder 50 caracteres")
+        String referenceCrownRadiusSourceCode,
+
+        Boolean usesTrunkHeight,
+
+        Boolean usesDbh
 ) {
 }

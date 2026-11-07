@@ -859,6 +859,8 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Y** los 817 árboles y palmeras del levantamiento sin altura real entran como UNKNOWN
 - **Y** la ficha muestra claramente si el dato fue medido o estimado, con la fecha de la última medición
 
+> **Enmienda SPEC-105 (6 nov 2026):** lo que se muestra depende de la **criticidad de la especie**, no de su tipo. Un ejemplar no medido queda `UNKNOWN`: si su especie es crítica, no muestra valores; si no lo es, muestra el promedio de la especie indicado como no medido. `GENERIC` deja de escribirse.
+
 ---
 
 #### `C-09` — REQ 2.3
@@ -880,6 +882,8 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **ENTONCES** la clase de altura ('< 5 m' o '≥ 5 m') decide si la poda es con cuadrilla estable o con grúa/tercero
 - **Y** mientras la altura sea UNKNOWN, el sistema muestra una advertencia solicitando verificar la altura en campo antes de asignar quién atiende
 - **PERO** la advertencia solo se levanta cuando un supervisor registra la medición real en campo
+
+> **Enmienda SPEC-105 (6 nov 2026):** la verificación aplica solo a especies críticas. Las no críticas proponen personal estable sin evaluar su altura, y un promedio nunca decide quién poda. La propuesta está en `engine.pruning.PruningAssignment`.
 
 ---
 

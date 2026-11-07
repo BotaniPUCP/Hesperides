@@ -8,7 +8,9 @@ import { useCatalog } from '@/hooks/useCatalog';
 import { LIMITES } from '@/lib/upload-limits';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
+import { CamposMedidasEspecie } from './CamposMedidasEspecie';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
+import { aFormulario, criticaPorTipo, erroresMedidas, medidasPorTipo, type ErroresMedidas } from './medidasEspecie';
 import { normalizarNombreCientifico, validarNombreCientifico } from './validacionesEspecie';
 
 export interface RegistroEspecieModalProps {
@@ -55,6 +57,8 @@ function RegistroEspecieDialog({
   const [description, setDescription] = useState('');
   const [careNotes, setCareNotes] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
+  const [medidas, setMedidas] = useState(() => medidasPorTipo('TREE'));
+  const [erroresDeMedidas, setErroresDeMedidas] = useState<ErroresMedidas>({});
 
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -85,6 +89,8 @@ function RegistroEspecieDialog({
     setDescription('');
     setCareNotes('');
     setPhoto(null);
+    setMedidas(medidasPorTipo('TREE'));
+    setErroresDeMedidas({});
     setError(null);
     setFieldErrors({});
   }
@@ -100,8 +106,10 @@ function RegistroEspecieDialog({
       errs.vegetationTypeCode = 'Selecciona el tipo de vegetación';
     }
 
+    const errsMedidas = erroresMedidas(medidas);
     setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
+    setErroresDeMedidas(errsMedidas);
+    return Object.keys(errs).length === 0 && Object.keys(errsMedidas).length === 0;
   }
 
   function handlePreSubmit(e?: React.FormEvent) {
@@ -128,6 +136,7 @@ function RegistroEspecieDialog({
       otherNames: otherNames.length > 0 ? otherNames : undefined,
       description: description.trim() || undefined,
       careNotes: careNotes.trim() || undefined,
+      ...aFormulario(medidas),
     };
 
     try {
@@ -229,7 +238,11 @@ function RegistroEspecieDialog({
             id="vegetationType"
             label="Tipo de vegetación"
             value={vegetationTypeCode}
-            onChange={(opt) => setVegetationTypeCode(opt?.code ?? null)}
+            onChange={(opt) => {
+              const tipo = opt?.code ?? null;
+              setVegetationTypeCode(tipo);
+              setMedidas((m) => ({ ...m, critical: criticaPorTipo(tipo) }));
+            }}
             options={typeOptions}
             loading={loadingTypes}
             required
@@ -267,6 +280,8 @@ function RegistroEspecieDialog({
             helperText="Separados por comas (opcional)"
           />
         </div>
+
+        <CamposMedidasEspecie valores={medidas} onCambiar={setMedidas} errores={erroresDeMedidas} />
 
         <div className="border-t border-neutral-200/80 pt-3">
           <CampoArchivo

@@ -115,4 +115,7 @@ export const inventarioVerdeApi = {
     if (photo) data.append('photo', photo);
     return apiClient.postForm<Species>('/green-inventory/species', data).then(withSpeciesMedia);
   },
+
+  updateSpecies: (slug: string, form: SpeciesForm) =>
+    apiClient.put<Species>(`/green-inventory/species/${segment(slug)}`, form).then(withSpeciesMedia),
 };

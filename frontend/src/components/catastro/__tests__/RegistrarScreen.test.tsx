@@ -1,3 +1,4 @@
+import { medidasDeEspecieCritica } from '@/components/inventario-verde/__fixtures__/inventario';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@/lib/api';
@@ -39,6 +40,7 @@ const MOLLE = {
   slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle serrano', otherNames: [],
   family: 'Anacardiaceae', vegetationTypeCode: 'TREE', vegetationTypeName: 'Árbol', specimenCount: 3, imageUrl: null,
   imageSource: null, photos: [],
+  ...medidasDeEspecieCritica,
 };
 
 function pantalla(rol = 'SUPERVISOR') {

@@ -23,6 +23,9 @@ export function SpecimenEditModal({
   onSuccess,
 }: SpecimenEditModalProps) {
   const hoy = todayLocal();
+  // Un valor ya guardado se sigue pudiendo corregir aunque la medida ya no aplique a la especie.
+  const pideFuste = specimen.species.usesTrunkHeight || specimen.trunkHeightM !== null;
+  const pideDap = specimen.species.usesDbh || specimen.dbhCm !== null;
 
   // Estados del formulario inicializados con los valores actuales del ejemplar
   const [alturaM, setAlturaM] = useState(specimen.heightM !== null ? String(specimen.heightM) : '');
@@ -65,8 +68,8 @@ export function SpecimenEditModal({
       setErrorMessage('La altura del fuste no puede ser mayor que la altura total del ejemplar.');
       return;
     }
-    if (parsedDap !== null && parsedDap <= 0) {
-      setErrorMessage('El DAP debe ser un número positivo.');
+    if (parsedDap !== null && parsedDap < 0) {
+      setErrorMessage('El DAP no puede ser negativo.');
       return;
     }
     if (parsedCrown !== null && parsedCrown <= 0) {
@@ -198,7 +201,7 @@ export function SpecimenEditModal({
                 />
               </div>
 
-              <div>
+              {pideFuste && <div>
                 <Input
                   id="edit-specimen-trunk-height"
                   label="Altura del fuste comercial (m)"
@@ -208,9 +211,9 @@ export function SpecimenEditModal({
                   value={alturaFusteM}
                   onChange={setAlturaFusteM}
                 />
-              </div>
+              </div>}
 
-              <div>
+              {pideDap && <div>
                 <Input
                   id="edit-specimen-dap"
                   label="DAP - Diámetro del tronco (cm)"
@@ -220,7 +223,7 @@ export function SpecimenEditModal({
                   value={dapCm}
                   onChange={setDapCm}
                 />
-              </div>
+              </div>}
 
               <div>
                 <Input

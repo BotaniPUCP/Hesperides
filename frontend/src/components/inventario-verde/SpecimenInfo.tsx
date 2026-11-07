@@ -223,14 +223,14 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                       <Badge label={`Agrupación (${specimen.quantity})`} color="neutral" />
                     )}
                     {(() => {
-                      const badgeLabel = specimen.dataSource === 'MEASURED'
+                      const badgeLabel = specimen.measurementStatus === 'MEASURED'
                         ? 'Medido en campo'
-                        : specimen.dataSource === 'GENERIC'
-                        ? 'Estimado por especie'
+                        : specimen.measurementStatus === 'REFERENCE'
+                        ? 'No medido'
                         : 'Sin medir';
-                      const badgeColor = specimen.dataSource === 'MEASURED'
+                      const badgeColor = specimen.measurementStatus === 'MEASURED'
                         ? 'neutral'
-                        : specimen.dataSource === 'GENERIC'
+                        : specimen.measurementStatus === 'REFERENCE'
                         ? 'info'
                         : 'warning';
                       return <Badge label={badgeLabel} color={badgeColor} />;

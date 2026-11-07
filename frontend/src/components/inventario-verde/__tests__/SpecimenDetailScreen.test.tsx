@@ -4,7 +4,7 @@ import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
 import { catastroApi } from '@/lib/catastro-api';
 import { rememberListQuery } from '@/lib/listMemory';
-import { p01Detail } from '../__fixtures__/inventario';
+import { medidasDeEspecieCritica, p01Detail } from '../__fixtures__/inventario';
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user:null, isLoading:false }) }));
@@ -56,7 +56,8 @@ describe('SpecimenDetailScreen', () => {
   it('un ejemplar sin medir no muestra alturas y lo dice', async () => {
     api.specimen.mockResolvedValue({
       ...p01Detail, dataSource: 'UNKNOWN', heightM: null, trunkHeightM: null, dbhCm: null, crownRadiusM: null,
-      isBanded: null, section: null,
+      isBanded: null, section: null, measuredAt: null, measurementStatus: 'NOT_MEASURED',
+      pruningAssignment: 'FIELD_VERIFICATION',
     });
 
     render(<SpecimenDetailScreen code="EV-000458" />);
@@ -64,6 +65,57 @@ describe('SpecimenDetailScreen', () => {
     expect(await screen.findByText('Sin medir')).toBeInTheDocument();
     expect(screen.getByText(/Nadie ha medido este ejemplar/)).toBeInTheDocument();
     expect(screen.getByText('Fuera de las áreas verdes')).toBeInTheDocument();
+    expect(screen.queryByText('Altura total')).not.toBeInTheDocument();
+  });
+
+  it('un ejemplar no crítico sin medir muestra el promedio indicado como no medido', async () => {
+    api.specimen.mockResolvedValue({
+      ...p01Detail, dataSource: 'UNKNOWN', heightM: null, trunkHeightM: null, dbhCm: null, crownRadiusM: null,
+      isBanded: null, measuredAt: null, speciesCritical: false, measurementStatus: 'REFERENCE',
+      referenceHeightM: 3, referenceCrownRadiusM: 0.25, referenceHeightSourceName: 'Ficha botánica',
+      referenceCrownRadiusSourceName: 'Estimación del equipo', pruningAssignment: 'STABLE_STAFF',
+    });
+
+    render(<SpecimenDetailScreen code="EV-000100" />);
+
+    expect(await screen.findByText('Promedio de la especie · No medido')).toBeInTheDocument();
+    expect(screen.getByText(/^3\s*m$/)).toBeInTheDocument();
+    expect(screen.getByText(/^0[.,]25\s*m$/)).toBeInTheDocument();
+    expect(screen.getByText(/Altura: Ficha botánica/)).toBeInTheDocument();
+    expect(screen.getByText(/Radio de copa: Estimación del equipo/)).toBeInTheDocument();
+    expect(screen.queryByText('Medido en campo')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nadie ha medido este ejemplar/)).not.toBeInTheDocument();
+  });
+
+  it('avisa si la medida es anterior a la última poda', async () => {
+    api.specimen.mockResolvedValue({
+      ...p01Detail, measuredBeforeLastPruning: true, lastPruningDate: '2026-03-03',
+    });
+
+    render(<SpecimenDetailScreen code="EV-000001" />);
+
+    expect(await screen.findByText(/Medido el 1 ene 2026, antes de la poda del 3 mar 2026/)).toBeInTheDocument();
+  });
+
+  it('un valor que falta se muestra con un guion legible', async () => {
+    api.specimen.mockResolvedValue({ ...p01Detail, trunkHeightM: null });
+
+    render(<SpecimenDetailScreen code="EV-000001" />);
+
+    expect(await screen.findByText('—')).toBeInTheDocument();
+  });
+
+  it('no muestra fuste ni DAP vacíos si no aplican a la especie', async () => {
+    api.specimen.mockResolvedValue({
+      ...p01Detail, trunkHeightM: null, dbhCm: null,
+      species: { ...p01Detail.species, usesTrunkHeight: false, usesDbh: false },
+    });
+
+    render(<SpecimenDetailScreen code="EV-000001" />);
+
+    expect(await screen.findByText('Altura total')).toBeInTheDocument();
+    expect(screen.queryByText('Altura fuste')).not.toBeInTheDocument();
+    expect(screen.queryByText('DAP (tronco)')).not.toBeInTheDocument();
   });
 
   it('muestra «no encontrado» si el código no existe', async () => {
@@ -123,6 +175,16 @@ describe('SpecimenDetailScreen', () => {
       crownRadiusM: null,
       isBanded: null,
       dataSource: 'UNKNOWN' as const,
+      measurementStatus: 'NOT_MEASURED' as const,
+      measuredAt: null,
+      pruningAssignment: 'FIELD_VERIFICATION' as const,
+      speciesCritical: true,
+      referenceHeightM: null,
+      referenceCrownRadiusM: null,
+      referenceHeightSourceName: null,
+      referenceCrownRadiusSourceName: null,
+      lastPruningDate: null,
+      measuredBeforeLastPruning: false,
       section: null,
       species: {
         slug: 'mangifera-indica',
@@ -136,6 +198,7 @@ describe('SpecimenDetailScreen', () => {
         imageUrl: 'https://drive.google.com/thumbnail?id=1Xw6yHnlypBUrDWHnhtRPzfF-e-vHSzCM&sz=w1000',
         imageSource: 'SPECIMEN' as const,
         photos: [],
+        ...medidasDeEspecieCritica,
       },
     };
 

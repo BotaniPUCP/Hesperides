@@ -26,7 +26,27 @@ const EJEMPLO_SPECIMEN: SpecimenDetail = {
     imageUrl: null,
     imageSource: null,
     photos: [],
+    critical: true,
+    referenceHeightM: null,
+    referenceHeightSourceCode: null,
+    referenceHeightSourceName: null,
+    referenceCrownRadiusM: null,
+    referenceCrownRadiusSourceCode: null,
+    referenceCrownRadiusSourceName: null,
+    usesTrunkHeight: true,
+    usesDbh: true,
+    unmeasuredSpecimenCount: 0,
   },
+  measuredAt: '2026-01-01',
+  speciesCritical: true,
+  measurementStatus: 'MEASURED',
+  referenceHeightM: null,
+  referenceCrownRadiusM: null,
+  referenceHeightSourceName: null,
+  referenceCrownRadiusSourceName: null,
+  lastPruningDate: null,
+  measuredBeforeLastPruning: false,
+  pruningAssignment: 'THIRD_PARTY',
   elementTypeCode: 'INDIVIDUAL',
   elementTypeName: 'Ejemplar',
   dataSource: 'MEASURED',
@@ -51,6 +71,31 @@ const EJEMPLO_SPECIMEN: SpecimenDetail = {
 describe('SpecimenEditModal', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('acepta un DAP de 0, que es una medida real', async () => {
+    const user = userEvent.setup();
+    render(<SpecimenEditModal specimen={{ ...EJEMPLO_SPECIMEN, dbhCm: 0 }} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
+
+    expect(await screen.findByText(/Confirmar nueva medición/i)).toBeInTheDocument();
+  });
+
+  it('no pide fuste ni DAP si no aplican a la especie y no hay valor guardado', () => {
+    render(
+      <SpecimenEditModal
+        specimen={{
+          ...EJEMPLO_SPECIMEN, trunkHeightM: null, dbhCm: null,
+          species: { ...EJEMPLO_SPECIMEN.species, usesTrunkHeight: false, usesDbh: false },
+        }}
+        isOpen onClose={jest.fn()} onSuccess={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText(/Altura total/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Altura del fuste/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/DAP/i)).not.toBeInTheDocument();
   });
 
   it('no muestra el modal si isOpen es false', () => {

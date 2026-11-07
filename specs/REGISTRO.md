@@ -20,7 +20,7 @@
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
-| SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entrega 1 (retiro de la estimación) | —          | —      |              |
+| SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 y 2 | —          | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
@@ -182,10 +182,11 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V028 | `V028__align_incidents_with_osg_matrix.sql` | SPEC-201 | Catálogos OSG, campos de matriz, impactos múltiples, numeración de aprobados, propósito de acciones, comunicación y duración congelada al cierre |
 | V029 | `V029__integrate_incident_interventions_and_reviews.sql` | SPEC-201 / SPEC-200 | Vínculos N:M con intervenciones reales, corrección inicial, resumen/actor de resolución, observaciones y sustitución explícita del legado sin fabricar ejecución |
 | V030 | `V030__retire_estimated_measurements.sql` | SPEC-105 §4.1 | Retira las estimaciones guardadas como medidas reales: cada ejemplar vuelve a su última medida real o a `UNKNOWN` |
+| V031 | `V031__add_species_criticality_and_averages.sql` | SPEC-105 §4.2 | Criticidad y promedios por especie, con la fuente de cada valor, y corrección del tipo de dos especies |
 
 ### Pendientes (sin número reservado)
 
-Al 6 nov 2026 el siguiente número libre es **V031**, sujeto a comprobarlo nuevamente al
+Al 6 nov 2026 el siguiente número libre es **V032**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

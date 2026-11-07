@@ -14,6 +14,12 @@ final class InventoryQueries {
 
     private static final String ACTIVE_ELEMENT = "e.deleted_at IS NULL AND e.is_active";
 
+    /** La fuente de cada promedio: en una especie, la altura y la copa pueden venir de sitios distintos. */
+    private static final String REFERENCE_SOURCES = """
+              LEFT JOIN catalog_items hs ON hs.id = s.reference_height_source_item_id
+              LEFT JOIN catalog_items cs ON cs.id = s.reference_crown_radius_source_item_id
+            """;
+
     static final String SPECIES_COLUMNS = """
             SELECT s.slug, s.scientific_name, s.common_name, s.family, t.code AS type_code, t.label AS type_label,
                    o.code AS origin_code, o.label AS origin_label, s.description, s.care_notes,
@@ -26,11 +32,16 @@ final class InventoryQueries {
                      ORDER BY sp.sort_order LIMIT 1) AS species_photo_id,
                    (SELECT a.id FROM green_element_attachments a JOIN green_elements e ON e.id = a.green_element_id
                      WHERE e.species_id = s.id AND %1$s AND a.deleted_at IS NULL
-                     ORDER BY e.data_source = 'MEASURED' DESC, e.code, a.id DESC LIMIT 1) AS specimen_photo_id
+                     ORDER BY e.data_source = 'MEASURED' DESC, e.code, a.id DESC LIMIT 1) AS specimen_photo_id,
+                   s.is_critical, s.reference_height_m, hs.code AS height_source_code, hs.label AS height_source_label,
+                   s.reference_crown_radius_m, cs.code AS crown_source_code, cs.label AS crown_source_label,
+                   s.uses_trunk_height, s.uses_dbh,
+                   (SELECT count(*) FROM green_elements e WHERE e.species_id = s.id AND %1$s
+                       AND e.data_source <> 'MEASURED') AS unmeasured_specimen_count
               FROM species s
               JOIN catalog_items t ON t.id = s.species_type_item_id
               LEFT JOIN catalog_items o ON o.id = s.origin_item_id
-            """.formatted(ACTIVE_ELEMENT);
+            """.formatted(ACTIVE_ELEMENT) + REFERENCE_SOURCES;
 
     static final String SPECIES_FILTER = """
              WHERE s.deleted_at IS NULL AND s.is_active
@@ -70,11 +81,13 @@ final class InventoryQueries {
                    et.label AS element_type_label, s.slug,
                    (SELECT a.id FROM green_element_attachments a WHERE a.green_element_id = e.id AND a.deleted_at IS NULL
                      ORDER BY a.id DESC LIMIT 1) AS attachment_id,
-                   s.common_name AS species_common_name, s.scientific_name AS species_scientific_name
+                   s.common_name AS species_common_name, s.scientific_name AS species_scientific_name,
+                   e.measured_at, s.is_critical AS species_critical, s.reference_height_m, s.reference_crown_radius_m,
+                   hs.label AS height_source_label, cs.label AS crown_source_label
               FROM green_elements e
               JOIN species s ON s.id = e.species_id
               JOIN catalog_items et ON et.id = e.element_type_item_id
-            """;
+            """ + REFERENCE_SOURCES;
 
     static final String SPECIMEN_FILTER = """
              WHERE (CAST(:slug AS TEXT) IS NULL OR s.slug = :slug) AND %s
@@ -99,6 +112,18 @@ final class InventoryQueries {
             + SPECIMEN_FILTER;
 
     static final String SPECIMEN_BY_CODE = SPECIMEN_COLUMNS + " WHERE e.code = :code AND " + ACTIVE_ELEMENT;
+
+    /** La última poda terminada de un ejemplar: completed_at ya cuenta aunque falte aprobarla. */
+    static final String LAST_PRUNING = """
+            SELECT max(l.completed_at)::date
+              FROM intervention_elements ie
+              JOIN green_elements g ON g.id = ie.green_element_id
+              JOIN intervention_locations l ON l.id = ie.intervention_location_id
+              JOIN interventions i ON i.id = l.intervention_id
+              JOIN catalog_items c ON c.id = i.intervention_class_item_id
+             WHERE g.code = :code AND c.code = 'PODA' AND l.completed_at IS NOT NULL
+               AND ie.deleted_at IS NULL AND l.deleted_at IS NULL AND i.deleted_at IS NULL
+            """;
 
     static final String LOCATIONS = """
             SELECT e.source_location AS location, count(*) AS total

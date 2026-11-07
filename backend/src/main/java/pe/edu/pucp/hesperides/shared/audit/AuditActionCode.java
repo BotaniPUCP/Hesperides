@@ -22,6 +22,12 @@ public enum AuditActionCode {
     SPECIES_PHOTO_ADDED,
     /** Quién registró una nueva especie en el catálogo botánico. */
     SPECIES_CREATED,
+    /** SPEC-105: quién corrigió los datos de una especie. */
+    SPECIES_UPDATED,
+    /** SPEC-105: quién cambió si la altura de una especie decide cómo se atiende, de qué a qué. */
+    SPECIES_CRITICALITY_CHANGED,
+    /** SPEC-105: quién cambió el promedio de una especie, de qué a qué. */
+    SPECIES_REFERENCE_CHANGED,
     /** Catálogo de lugares: quién creó, cambió o dio de baja un lugar, una perspectiva o una foto. */
     PLACE_CREATED,
     PLACE_UPDATED,

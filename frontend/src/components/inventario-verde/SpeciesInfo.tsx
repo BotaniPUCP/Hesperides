@@ -34,6 +34,7 @@ export function SpeciesInfo({ species, availableLocations = [] }: SpeciesInfoPro
             <div className="flex flex-wrap items-center justify-between gap-2.5 mb-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge label={species.vegetationTypeName} color="brand" />
+                <Badge label={species.critical ? 'Crítica' : 'No crítica'} color={species.critical ? 'warning' : 'neutral'} />
                 {species.family && (
                   <Badge label={`Fam. ${species.family}`} color="neutral" />
                 )}
