@@ -39,7 +39,7 @@ const photo = (id: number) => ({ id, thumbnailUrl: `t${id}`, fullUrl: `f${id}`, 
 const cia: PlaceDetail = {
   code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' },
   category: { code: 'EDIFICIO', label: 'Edificio' },
-  outline: { source: 'BUILDING', buildingId: 87, zoneCode: null, featureCode: null, centerLat: -12.06, centerLon: -77.08 },
+  outline: { source: 'BUILDING', buildingIds: [87], zoneCode: null, featureCode: null, centerLat: -12.06, centerLon: -77.08 },
   aliases: ['Centro de Innovación'], children: [{ code: 'LUG-0004', name: 'Piso 2' }], mainPhotos: [photo(1)],
   perspectives: [
     { id: 10, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: 'SOUTH', landmark: null,
@@ -147,7 +147,7 @@ describe('PlaceDetailScreen', () => {
   it('un interior muestra sus fotos por vista y no tiene mapa de perspectivas', async () => {
     detail.mockResolvedValue({
       ...cia, code: 'LUG-0004', name: 'Piso 2', kind: { code: 'INDOOR', label: 'Interior' }, parent: { code: 'LUG-0001', name: 'CIA' },
-      outline: { ...cia.outline, source: 'INHERITED', buildingId: null }, perspectives: [], children: [],
+      outline: { ...cia.outline, source: 'INHERITED', buildingIds: [] }, perspectives: [], children: [],
       interior: [{ view: { code: 'CORRIDOR', label: 'Pasillo' }, photos: [photo(5)] }],
     });
     renderScreen('LUG-0004');

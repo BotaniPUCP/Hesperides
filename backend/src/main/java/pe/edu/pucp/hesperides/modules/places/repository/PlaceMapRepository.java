@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 public class PlaceMapRepository {
 
     /** Un interior no tiene centro propio: toma el de su padre. */
-    public record MapPlaceRow(String code, String name, String parentName, Long buildingId, Double lat, Double lon) {
+    public record MapPlaceRow(String code, String name, String parentName, List<Long> buildingIds, Double lat, Double lon) {
     }
 
     public record MapPerspectiveRow(long id, String placeCode, String placeName, String displayName, double lat,
@@ -22,14 +22,14 @@ public class PlaceMapRepository {
 
     public List<MapPlaceRow> places() {
         return jdbc.query("""
-                SELECT p.code, p.name, pp.name, p.building_id,
+                SELECT p.code, p.name, pp.name, %s,
                        ST_Y(ST_Centroid(COALESCE(o.geom, po.geom))), ST_X(ST_Centroid(COALESCE(o.geom, po.geom)))
                   FROM places p
                   LEFT JOIN places pp ON pp.id = p.parent_place_id AND pp.deleted_at IS NULL
                   LEFT JOIN place_outlines o ON o.place_id = p.id
                   LEFT JOIN place_outlines po ON po.place_id = p.parent_place_id
-                 WHERE p.deleted_at IS NULL ORDER BY p.code""",
-                (rs, i) -> new MapPlaceRow(rs.getString(1), rs.getString(2), rs.getString(3), rs.getObject(4, Long.class),
+                 WHERE p.deleted_at IS NULL ORDER BY p.code""".formatted(PlaceQueries.BUILDING_IDS),
+                (rs, i) -> new MapPlaceRow(rs.getString(1), rs.getString(2), rs.getString(3), SqlArrays.longs(rs.getArray(4)),
                         rs.getObject(5, Double.class), rs.getObject(6, Double.class)));
     }
 

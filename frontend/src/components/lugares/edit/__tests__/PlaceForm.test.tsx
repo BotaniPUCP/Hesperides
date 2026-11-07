@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { Map3DViewProps } from '@/components/map3d/Map3DView';
-import { sampleLayers } from '@/components/map3d/__fixtures__/mapLayers';
+import { layersWithTwoBlocks, SECOND_BLOCK_ID } from '@/components/map3d/__fixtures__/mapLayers';
 import { toSceneData } from '@/components/map3d/sceneData';
 import { ApiError } from '@/lib/api';
 import { rememberListQuery } from '@/lib/listMemory';
@@ -12,7 +12,7 @@ const replace = jest.fn();
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push, replace }) }));
 jest.mock('@/lib/places-api', () => ({ placesApi: { create: jest.fn(), update: jest.fn(), list: jest.fn() } }));
 jest.mock('@/hooks/useMapLayers', () => ({
-  useMapLayers: () => ({ data: jest.requireActual('@/components/map3d/__fixtures__/mapLayers').sampleLayers, isLoading: false }),
+  useMapLayers: () => ({ data: jest.requireActual('@/components/map3d/__fixtures__/mapLayers').layersWithTwoBlocks, isLoading: false }),
 }));
 jest.mock('@/hooks/useCatalog', () => ({
   useCatalog: () => ({ items: [{ code: 'EDIFICIO', label: 'Edificio', sortOrder: 1, isActive: true, parentCode: null }], isLoading: false, errorMessage: null }),
@@ -32,7 +32,9 @@ jest.mock('@/components/map3d/Map3DView', () => ({
 
 const create = placesApi.create as jest.MockedFunction<typeof placesApi.create>;
 const list = placesApi.list as jest.MockedFunction<typeof placesApi.list>;
-const data = toSceneData(sampleLayers);
+const update = placesApi.update as jest.MockedFunction<typeof placesApi.update>;
+const data = toSceneData(layersWithTwoBlocks);
+const marks = { setMarkedBuildings: jest.fn(), select: jest.fn() };
 
 beforeEach(() => list.mockResolvedValue([]));
 afterEach(() => jest.clearAllMocks());
@@ -55,10 +57,74 @@ describe('PlaceForm', () => {
 
     await waitFor(() => expect(create).toHaveBeenCalledWith({
       name: 'CIA', kindCode: 'OUTDOOR', categoryCode: 'EDIFICIO', parentCode: null,
-      outline: { buildingId: data.campusBuildings[0].props.id }, aliases: ['Complejo de Innovación', 'CIA nuevo'],
+      outline: { buildingIds: [data.campusBuildings[0].props.id] }, aliases: ['Complejo de Innovación', 'CIA nuevo'],
     }));
     // Con cambios hay una entrada propia en el historial: se reemplaza al salir.
     expect(replace).toHaveBeenCalledWith('/lugares/LUG-0005');
+  });
+
+  it('un lugar dibujado en varios bloques los lleva todos, marcados en el mapa', async () => {
+    create.mockResolvedValue({ code: 'LUG-0008' });
+    render(<PlaceForm />);
+    fillBasics();
+    act(() => map.onReady(marks as never));
+
+    act(() => map.onSelect({ layer: 'campusBuildings', index: 0 }));
+    act(() => map.onSelect({ layer: 'campusBuildings', index: 1 }));
+
+    const ids = [data.campusBuildings[0].props.id, SECOND_BLOCK_ID];
+    expect(marks.setMarkedBuildings).toHaveBeenLastCalledWith(ids);
+    expect(screen.getByText(/2 edificios: .*Bloque B/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar lugar' }));
+    await waitFor(() => expect(create.mock.calls[0][0].outline).toEqual({ buildingIds: ids }));
+  });
+
+  it('un edificio de la lista se puede quitar sin buscarlo en el mapa', () => {
+    render(<PlaceForm />);
+    act(() => map.onSelect({ layer: 'campusBuildings', index: 0 }));
+    act(() => map.onSelect({ layer: 'campusBuildings', index: 1 }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar Bloque B' }));
+
+    expect(screen.queryByText(/Bloque B/)).not.toBeInTheDocument();
+  });
+
+  it('un complejo toma el contorno de los lugares que contiene', async () => {
+    create.mockResolvedValue({ code: 'LUG-0009' });
+    render(<PlaceForm />);
+    fillBasics();
+
+    fireEvent.click(screen.getByRole('button', { name: 'De sus lugares internos' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar lugar' }));
+
+    await waitFor(() => expect(create.mock.calls[0][0].outline).toEqual({ fromChildren: true }));
+  });
+
+  it('al editar conserva los bloques guardados y los nombra', async () => {
+    update.mockResolvedValue(undefined as never);
+    const ids = [data.campusBuildings[0].props.id, SECOND_BLOCK_ID];
+    render(<PlaceForm place={{
+      code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' }, category: { code: 'EDIFICIO', label: 'Edificio' },
+      outline: { source: 'BUILDING', buildingIds: ids, zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
+      aliases: [], children: [], mainPhotos: [], perspectives: [], interior: [], mapView: null,
+    }} />);
+
+    expect(screen.getByText(/2 edificios: .*Bloque B/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Nombre/), { target: { value: 'CIA nuevo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar lugar' }));
+
+    await waitFor(() => expect(update.mock.calls[0][1].outline).toEqual({ buildingIds: ids }));
+  });
+
+  it('al editar un complejo conserva que su contorno sale de sus hijos', () => {
+    render(<PlaceForm place={{
+      code: 'LUG-0002', name: 'Complejo', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' }, category: { code: 'EDIFICIO', label: 'Edificio' },
+      outline: { source: 'CHILDREN', buildingIds: [], zoneCode: null, featureCode: null, centerLat: null, centerLon: null },
+      aliases: [], children: [], mainPhotos: [], perspectives: [], interior: [], mapView: null,
+    }} />);
+
+    expect(screen.getByRole('button', { name: 'De sus lugares internos' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Guardar lugar' })).toBeEnabled();
   });
 
   it('un exterior sin contorno no se puede guardar', () => {

@@ -25,6 +25,7 @@ export type CardLinkFor = (target: Target) => InfoCard['link'] | null;
 export function useMapScreenState(data: SceneData | null, person: string, linkFor?: CardLinkFor) {
   const viewer = useRef<Viewer | null>(null);
   const describeSeq = useRef(0);
+  const marked = useRef(false);
   const [saved] = useState(() => recallMapScreen(person));
   const [mode, setModeState] = useState<ModeId>(saved.mode);
   const [hidden, setHidden] = useState<Set<string>>(saved.hidden);
@@ -42,16 +43,25 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
     rememberMapScreen({ mode, hidden, visible, options, panelOpen, selected, card });
   }, [mode, hidden, visible, options, panelOpen, selected, card]);
 
+  /** Los bloques de un lugar del catálogo; cualquier otra ficha los quita. */
+  const markBuildings = useCallback((ids: readonly number[]) => {
+    if (!marked.current && ids.length === 0) return;
+    marked.current = ids.length > 0;
+    viewer.current?.setMarkedBuildings(ids);
+  }, []);
+  const clearMarks = useCallback(() => markBuildings([]), [markBuildings]);
+
   const showElement = useCallback(
     (target: Target | null) => {
       describeSeq.current++;
+      clearMarks();
       setSelected(target);
       if (!target || !data) return setCard(null);
       const element = infoFor(data, target);
       const link = element.link ?? linkFor?.(target) ?? undefined;
       setCard({ kind: 'element', card: { ...element, link } });
     },
-    [data, linkFor],
+    [data, linkFor, clearMarks],
   );
 
   const onReady = (v: Viewer) => {
@@ -69,13 +79,14 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
 
   const onGroundPick = useCallback((lat: number, lon: number) => {
     const seq = ++describeSeq.current;
+    clearMarks();
     setSelected(null);
     setCard({ kind: 'location', lat, lon, text: null, error: null });
     mapApi
       .describe(lat, lon)
       .then((d) => seq === describeSeq.current && setCard({ kind: 'location', lat, lon, text: d.text, error: null }))
       .catch((e: unknown) => seq === describeSeq.current && setCard({ kind: 'location', lat, lon, text: null, error: mensajeDeApiError(e) }));
-  }, []);
+  }, [clearMarks]);
 
   const select = (target: Target) => {
     viewer.current?.select(target, true);
@@ -104,6 +115,7 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
 
   const showCard = (content: MapCardContent) => {
     describeSeq.current++;
+    clearMarks();
     setSelected(null);
     setCard(content);
   };
@@ -115,6 +127,7 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
 
   const closeCard = () => {
     describeSeq.current++;
+    clearMarks();
     viewer.current?.select(null, false);
     setSelected(null);
     setCard(null);
@@ -123,6 +136,6 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
   return {
     viewer, viewerEpoch, mode, hidden, visible, options, compass, card, unsupported, panelOpen,
     onReady, onSelect: showElement, onGroundPick, onCompass: setCompass, onUnsupported: () => setUnsupported(true),
-    select, setMode, toggleCategory, toggleLayer, setOption, closeCard, showCard, setPanelOpen,
+    select, setMode, toggleCategory, toggleLayer, setOption, closeCard, showCard, setPanelOpen, markBuildings,
   };
 }

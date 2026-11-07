@@ -9,12 +9,14 @@ import { rememberedHref } from '@/lib/listMemory';
 import { placesApi } from '@/lib/places-api';
 import { PlaceFormFields, type PlaceFormValues } from './PlaceFormFields';
 import { OutlinePicker } from './OutlinePicker';
-import { pointOutline, type PickedOutline } from './mapPick';
+import { CHILDREN_OUTLINE, pointOutline, type PickedOutline } from './mapPick';
 
 /** El contorno guardado, para no obligar a elegirlo de nuevo al editar. */
 function currentOutline(place: PlaceDetail): PickedOutline | null {
   const o = place.outline;
-  if (o.buildingId !== null) return { outline: { buildingId: o.buildingId }, label: 'Edificio actual' };
+  // El selector nombra los edificios con el mapa; aquí basta con conservar cuáles son.
+  if (o.buildingIds.length > 0) return { outline: { buildingIds: o.buildingIds }, label: 'Edificios actuales' };
+  if (o.source === 'CHILDREN') return CHILDREN_OUTLINE;
   if (o.zoneCode) return { outline: { zoneCode: o.zoneCode }, label: `Área verde ${o.zoneCode}` };
   if (o.featureCode) return { outline: { featureCode: o.featureCode }, label: `Estacionamiento ${o.featureCode}` };
   if (o.source === 'DRAWN' && o.centerLat !== null && o.centerLon !== null) return pointOutline({ lat: o.centerLat, lon: o.centerLon });

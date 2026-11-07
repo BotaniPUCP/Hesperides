@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.places;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
 import static org.hamcrest.Matchers.hasSize;
@@ -76,7 +77,7 @@ class PlacesIntegrationTest {
     private String createInras() throws Exception {
         String body = """
                 {"name": "INRAS", "kindCode": "OUTDOOR", "categoryCode": "CENTROS_INSTITUTOS",
-                 "outline": {"buildingId": %d}, "aliases": ["Instituto de Radioastronomía"]}""".formatted(inrasBuildingId());
+                 "outline": {"buildingIds": [%d]}, "aliases": ["Instituto de Radioastronomía"]}""".formatted(inrasBuildingId());
         String json = postJson(PLACES, body).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return JsonPath.read(json, "$.data.code");
     }
@@ -144,7 +145,7 @@ class PlacesIntegrationTest {
 
         mockMvc.perform(get(PLACES + "/map")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.places[0].code").value(code))
-                .andExpect(jsonPath("$.data.places[0].buildingId").value(inrasBuildingId()))
+                .andExpect(jsonPath("$.data.places[0].buildingIds", contains((int) inrasBuildingId())))
                 .andExpect(jsonPath("$.data.places[0].lat").isNumber())
                 .andExpect(jsonPath("$.data.perspectives[0].displayName").value("Espalda de INRAS"))
                 .andExpect(jsonPath("$.data.perspectives[0].place.code").value(code))
@@ -253,6 +254,136 @@ class PlacesIntegrationTest {
 
         mockMvc.perform(get(PLACES + "/" + code))
                 .andExpect(jsonPath("$.data.perspectives[0].displayName").value("Al lado de INRAS · oeste, hacia Caseta de riego"));
+    }
+
+    /** The campus building closest to INRAS: a second block for a place drawn in several pieces. */
+    private long neighbourBuildingId() {
+        return jdbc.queryForObject("""
+                SELECT b.id FROM campus_buildings b, campus_buildings i
+                 WHERE i.source_ref = 'way/615391653' AND b.id <> i.id AND b.deleted_at IS NULL AND b.is_campus
+                 ORDER BY ST_Distance(b.footprint, i.footprint) LIMIT 1""", Long.class);
+    }
+
+    private ResultActions placeOnBuildings(String name, long... buildingIds) throws Exception {
+        String ids = java.util.Arrays.stream(buildingIds).mapToObj(Long::toString)
+                .collect(java.util.stream.Collectors.joining(", "));
+        return postJson(PLACES, """
+                {"name": "%s", "kindCode": "OUTDOOR", "categoryCode": "EDIFICIO", "outline": {"buildingIds": [%s]}}"""
+                .formatted(name, ids));
+    }
+
+    private String codeOf(ResultActions created) throws Exception {
+        return JsonPath.read(created.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(),
+                "$.data.code");
+    }
+
+    private double[] center(String code) throws Exception {
+        String json = mockMvc.perform(get(PLACES + "/" + code)).andReturn().getResponse().getContentAsString();
+        Double lat = JsonPath.read(json, "$.data.outline.centerLat");
+        Double lon = JsonPath.read(json, "$.data.outline.centerLon");
+        return lat == null ? null : new double[] {lat, lon};
+    }
+
+    @Test
+    void aPlaceCanSpanSeveralBuildings() throws Exception {
+        long a = inrasBuildingId();
+        long b = neighbourBuildingId();
+        String code = codeOf(placeOnBuildings("Pabellón partido", a, b, a));
+
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.outline.source").value("BUILDING"))
+                .andExpect(jsonPath("$.data.outline.buildingIds", org.hamcrest.Matchers.containsInAnyOrder((int) a, (int) b)));
+        mockMvc.perform(get(PLACES + "/map")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.places[0].buildingIds", org.hamcrest.Matchers.containsInAnyOrder((int) a, (int) b)));
+        Double unionCenterLat = jdbc.queryForObject("""
+                SELECT ST_Y(ST_Centroid(ST_Union(footprint))) FROM campus_buildings WHERE id IN (?, ?)""", Double.class, a, b);
+        assertThat(center(code)[0]).isCloseTo(unionCenterLat, org.assertj.core.data.Offset.offset(1e-9));
+    }
+
+    @Test
+    void aBuildingBelongsToOnlyOnePlace() throws Exception {
+        placeOnBuildings("Primero", inrasBuildingId()).andExpect(status().isCreated());
+
+        placeOnBuildings("Segundo", neighbourBuildingId(), inrasBuildingId()).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Primero")));
+    }
+
+    @Test
+    void editingAPlaceKeepsItsOwnBuildingsAndFreesTheOnesItDrops() throws Exception {
+        long a = inrasBuildingId();
+        long b = neighbourBuildingId();
+        String code = codeOf(placeOnBuildings("Bloques", a, b));
+
+        mockMvc.perform(put(PLACES + "/" + code).contentType(MediaType.APPLICATION_JSON).content("""
+                {"name": "Bloques", "kindCode": "OUTDOOR", "categoryCode": "EDIFICIO", "outline": {"buildingIds": [%d]}}"""
+                .formatted(a))).andExpect(status().isOk());
+
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.outline.buildingIds", contains((int) a)));
+        placeOnBuildings("Bloque suelto", b).andExpect(status().isCreated());
+    }
+
+    @Test
+    void deletingAPlaceFreesItsBuildings() throws Exception {
+        String code = codeOf(placeOnBuildings("Temporal", inrasBuildingId()));
+
+        mockMvc.perform(delete(PLACES + "/" + code)).andExpect(status().isOk());
+
+        placeOnBuildings("Definitivo", inrasBuildingId()).andExpect(status().isCreated());
+    }
+
+    @Test
+    void anEmptyBuildingListIsNoOutline() throws Exception {
+        placeOnBuildings("Sin bloques").andExpect(status().isUnprocessableEntity());
+    }
+
+    private ResultActions complex(String name) throws Exception {
+        return postJson(PLACES, """
+                {"name": "%s", "kindCode": "OUTDOOR", "categoryCode": "EDIFICIO", "outline": {"fromChildren": true}}"""
+                .formatted(name));
+    }
+
+    @Test
+    void aComplexTakesItsOutlineFromItsChildren() throws Exception {
+        String code = codeOf(complex("Complejo"));
+        assertThat(center(code)).isNull();
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.outline.source").value("CHILDREN"));
+
+        drawnPlace("Ala norte", LAT + OFFSET, LON, code);
+        drawnPlace("Ala sur", LAT - OFFSET, LON, code);
+
+        double[] middle = center(code);
+        assertThat(middle[0]).isCloseTo(LAT, org.assertj.core.data.Offset.offset(1e-7));
+        assertThat(middle[1]).isCloseTo(LON, org.assertj.core.data.Offset.offset(1e-7));
+        perspective(code, "BACK", LAT - 2 * OFFSET, LON).andExpect(status().isCreated());
+    }
+
+    @Test
+    void aComplexInsideAComplexAddsUpTheWholeTree() throws Exception {
+        String outer = codeOf(complex("Campus norte"));
+        String inner = codeOf(postJson(PLACES, """
+                {"name": "Facultad", "kindCode": "OUTDOOR", "categoryCode": "EDIFICIO", "parentCode": "%s",
+                 "outline": {"fromChildren": true}}""".formatted(outer)));
+        drawnPlace("Aula", LAT + OFFSET, LON, inner);
+        drawnPlace("Laboratorio", LAT - OFFSET, LON, inner);
+
+        assertThat(center(outer)[0]).isCloseTo(LAT, org.assertj.core.data.Offset.offset(1e-7));
+    }
+
+    @Test
+    void onlyAnOutdoorPlaceTakesItsOutlineFromItsChildren() throws Exception {
+        String parent = drawnPlace("Edificio", LAT, LON, null);
+
+        postJson(PLACES, """
+                {"name": "Piso 1", "kindCode": "INDOOR", "categoryCode": "PISO", "parentCode": "%s",
+                 "outline": {"fromChildren": true}}""".formatted(parent)).andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void childrenAndBuildingsAreTwoOutlinesNotOne() throws Exception {
+        postJson(PLACES, """
+                {"name": "Mezcla", "kindCode": "OUTDOOR", "categoryCode": "EDIFICIO",
+                 "outline": {"fromChildren": true, "buildingIds": [%d]}}""".formatted(inrasBuildingId()))
+                .andExpect(status().is4xxClientError());
     }
 
     @Test

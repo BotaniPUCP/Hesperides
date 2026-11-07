@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { MapLayersResponse } from '@shared/types';
 import { MapScreen } from '../MapScreen';
-import { sampleLayers } from '../__fixtures__/mapLayers';
+import { layersWithTwoBlocks, sampleLayers, SECOND_BLOCK_ID } from '../__fixtures__/mapLayers';
 import type { CameraPose } from '../viewer/cameraRig';
 import { createViewer, type Viewer, type ViewerCallbacks } from '../viewer/createViewer';
 import { useMapLayers, type UseMapLayersResult } from '@/hooks/useMapLayers';
@@ -28,7 +28,7 @@ let testNumber = 0;
 
 function fakeViewer(): jest.Mocked<Viewer> {
   return {
-    setPaint: jest.fn(), setMarkedSections: jest.fn(), sectionCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
+    setPaint: jest.fn(), setMarkedSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), pose: jest.fn(() => SAVED_POSE),
     setViewCones: jest.fn(), flyToPose: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(), setPinLatLon: jest.fn(), dispose: jest.fn(),
@@ -50,7 +50,7 @@ async function renderLoaded(data?: MapLayersResponse) {
 }
 
 const catalog: MapCatalog = {
-  places: [{ code: 'LUG-0001', name: 'Edificio de prueba', parentName: null, buildingId: 1, lat: -12.07, lon: -77.08 }],
+  places: [{ code: 'LUG-0001', name: 'Edificio de prueba', parentName: null, buildingIds: [1], lat: -12.07, lon: -77.08 }],
   perspectives: [{ id: 7, place: { code: 'LUG-0001', name: 'Edificio de prueba' }, displayName: 'Espalda de Edificio de prueba',
     lat: -12.0701, lon: -77.08, headingDeg: 0, thumbnailUrl: 'http://api/files/places/3?size=thumb' }],
 };
@@ -540,6 +540,42 @@ describe('MapScreen', () => {
 
       expect(viewer.select).toHaveBeenCalledWith({ layer: 'campusBuildings', index: 0 }, true);
       expect(screen.getByRole('link', { name: /Ver en el catálogo/ })).toHaveAttribute('href', '/lugares/LUG-0001');
+    });
+
+    describe('un lugar de varios bloques', () => {
+      const split = { code: 'LUG-0002', name: 'Pabellón partido', parentName: null, buildingIds: [1, SECOND_BLOCK_ID], lat: -12.0701, lon: -77.0801 };
+      beforeEach(() => (placesApi.map as jest.Mock).mockResolvedValue({ places: [split], perspectives: [] }));
+
+      it('al buscarlo marca todos sus bloques y lleva la cámara a su centro', async () => {
+        await renderLoaded(layersWithTwoBlocks);
+        await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+        fireEvent.change(screen.getByRole('combobox', { name: 'Buscar en el mapa' }), { target: { value: 'pabellon partido' } });
+        fireEvent.click(await screen.findByRole('option', { name: /Pabellón partido/ }));
+
+        expect(viewer.setMarkedBuildings).toHaveBeenLastCalledWith([1, SECOND_BLOCK_ID]);
+        expect(viewer.focusLatLon).toHaveBeenCalledWith(-12.0701, -77.0801);
+        expect(screen.getByRole('region', { name: 'Pabellón partido' })).toBeInTheDocument();
+      });
+
+      it('cerrar su ficha quita las marcas', async () => {
+        await renderLoaded(layersWithTwoBlocks);
+        await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+        fireEvent.change(screen.getByRole('combobox', { name: 'Buscar en el mapa' }), { target: { value: 'pabellon partido' } });
+        fireEvent.click(await screen.findByRole('option', { name: /Pabellón partido/ }));
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cerrar ficha' }));
+
+        expect(viewer.setMarkedBuildings).toHaveBeenLastCalledWith([]);
+      });
+
+      it('pulsar cualquiera de sus bloques enlaza al lugar', async () => {
+        await renderLoaded(layersWithTwoBlocks);
+        await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+
+        await act(async () => callbacks.onSelect({ layer: 'campusBuildings', index: 1 }));
+
+        expect(screen.getByRole('link', { name: /Ver en el catálogo/ })).toHaveAttribute('href', '/lugares/LUG-0002');
+      });
     });
 
     it('si el catálogo no carga, el mapa funciona igual', async () => {

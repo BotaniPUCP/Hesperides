@@ -36,6 +36,7 @@ interface ScreenActions {
   select: (target: Target) => void;
   toggleLayer: (id: ToggleId, on: boolean) => void;
   showCard: (content: MapCardContent) => void;
+  markBuildings: (ids: readonly number[]) => void;
 }
 
 /**
@@ -70,10 +71,13 @@ export function useCatalogOnMap(data: SceneData | null, catalog: MapCatalog | nu
       return showCard({ kind: 'perspective', perspective });
     }
     const place = catalog.places[target.index];
-    const building = data.campusBuildings.findIndex((b) => b.props.id === place.buildingId);
+    const single = place.buildingIds.length === 1 ? place.buildingIds[0] : null;
+    const building = data.campusBuildings.findIndex((b) => b.props.id === single);
     if (building >= 0) return s.select({ layer: 'campusBuildings', index: building });
     if (place.lat !== null && place.lon !== null) viewer.current?.focusLatLon(place.lat, place.lon);
     showCard({ kind: 'element', card: placeCard(place) });
+    // Después de la ficha: abrirla limpia las marcas de lo que estaba elegido antes.
+    if (place.buildingIds.length > 1) s.markBuildings(place.buildingIds);
   }
 
   const entries = useMemo(() => (catalog ? catalogEntries(catalog) : []), [catalog]);
