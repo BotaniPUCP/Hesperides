@@ -246,6 +246,9 @@ meses anteriores se sigue contando en el sector que la tenía entonces.
 - **Un préstamo marca la sección** mientras dura. Al terminar, la sección aparece como **«requiere
   recuperación»**: OSG presta unos 12 jardines de forma recurrente y *«esos espacios nos demandan
   mucho tiempo para recuperarlos»*.
+- **Todo jardín prestable es un lugar** (M9), con los nombres del calendario de la OSG como alias.
+  Los 19 actuales se crearon en `V035`. Cuando el sistema permita marcar una sección como
+  prestable, **exigirá crear su lugar** en la misma operación.
 
 **Sobre 1.7 — las frecuencias no son fijas.** Césped 30-45 días *según estación*; fitosanitario
 4 al año *mínimo, más si el clima lo exige*; poda mayor 1 al año. En 2026, un «verano eterno»
