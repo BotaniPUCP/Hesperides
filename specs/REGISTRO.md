@@ -188,10 +188,12 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V031 | `V031__add_species_criticality_and_averages.sql` | SPEC-105 §4.2 | Criticidad y promedios por especie, con la fuente de cada valor, y corrección del tipo de dos especies |
 | V032 | `V032__add_measurement_origin.sql` | SPEC-105 §4.3 | Origen de cada fila del historial de mediciones y la intervención que la registró |
 | V033 | `V033__create_extra_measures.sql` | SPEC-105 §4.4 | Catálogo de medidas adicionales, su asignación por especie y sus valores por medición |
+| V034 | `V034__places_span_buildings_and_children.sql` | Catálogo de lugares (cabecera SQL) | Un lugar con varios edificios (`place_buildings`) o con el contorno de sus hijos (`outline_from_children`) |
+| V035 | `V035__create_reservable_garden_places.sql` | Catálogo de lugares (cabecera SQL) · REQ 1.12 | Los 19 jardines prestables como lugares de su sección, con los alias del calendario de la OSG; el Jardín Física pasa a la DAF |
 
 ### Pendientes (sin número reservado)
 
-Al 6 nov 2026 el siguiente número libre es **V034**, sujeto a comprobarlo nuevamente al
+Al 7 nov 2026 el siguiente número libre es **V036**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

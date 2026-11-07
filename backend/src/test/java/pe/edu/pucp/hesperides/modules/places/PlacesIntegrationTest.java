@@ -70,6 +70,11 @@ class PlacesIntegrationTest {
         return jdbc.queryForObject("SELECT id FROM campus_buildings WHERE source_ref = 'way/615391653'", Long.class);
     }
 
+    /** The catalog is seeded with the reservable gardens, so a test finds its own place in the map by code. */
+    private static String onTheMap(String code, String field) {
+        return "$.data.places[?(@.code == '%s')].%s".formatted(code, field);
+    }
+
     private ResultActions postJson(String url, String body) throws Exception {
         return mockMvc.perform(post(url).contentType(MediaType.APPLICATION_JSON).content(body));
     }
@@ -144,9 +149,8 @@ class PlacesIntegrationTest {
         perspective(code, "BACK", LAT - OFFSET, LON).andExpect(status().isCreated());
 
         mockMvc.perform(get(PLACES + "/map")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.places[0].code").value(code))
-                .andExpect(jsonPath("$.data.places[0].buildingIds", contains((int) inrasBuildingId())))
-                .andExpect(jsonPath("$.data.places[0].lat").isNumber())
+                .andExpect(jsonPath(onTheMap(code, "buildingIds[*]"), contains((int) inrasBuildingId())))
+                .andExpect(jsonPath(onTheMap(code, "lat"), contains(org.hamcrest.Matchers.isA(Double.class))))
                 .andExpect(jsonPath("$.data.perspectives[0].displayName").value("Espalda de INRAS"))
                 .andExpect(jsonPath("$.data.perspectives[0].place.code").value(code))
                 .andExpect(jsonPath("$.data.perspectives[0].headingDeg").value(0.0));
@@ -294,7 +298,7 @@ class PlacesIntegrationTest {
                 .andExpect(jsonPath("$.data.outline.source").value("BUILDING"))
                 .andExpect(jsonPath("$.data.outline.buildingIds", org.hamcrest.Matchers.containsInAnyOrder((int) a, (int) b)));
         mockMvc.perform(get(PLACES + "/map")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.places[0].buildingIds", org.hamcrest.Matchers.containsInAnyOrder((int) a, (int) b)));
+                .andExpect(jsonPath(onTheMap(code, "buildingIds[*]"), org.hamcrest.Matchers.containsInAnyOrder((int) a, (int) b)));
         Double unionCenterLat = jdbc.queryForObject("""
                 SELECT ST_Y(ST_Centroid(ST_Union(footprint))) FROM campus_buildings WHERE id IN (?, ?)""", Double.class, a, b);
         assertThat(center(code)[0]).isCloseTo(unionCenterLat, org.assertj.core.data.Offset.offset(1e-9));
@@ -324,7 +328,7 @@ class PlacesIntegrationTest {
                  WHERE k.code = 'OUTDOOR' AND c.code = 'EDIFICIO' RETURNING code""", String.class, a);
 
         mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.outline.buildingIds", contains((int) a)));
-        mockMvc.perform(get(PLACES + "/map")).andExpect(jsonPath("$.data.places[0].buildingIds", contains((int) a)));
+        mockMvc.perform(get(PLACES + "/map")).andExpect(jsonPath(onTheMap(code, "buildingIds[*]"), contains((int) a)));
         placeOnBuildings("Intruso", a).andExpect(status().isConflict());
     }
 
