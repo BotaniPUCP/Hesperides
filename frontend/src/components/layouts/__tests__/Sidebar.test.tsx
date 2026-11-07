@@ -173,7 +173,7 @@ describe('Sidebar', () => {
       expect(screen.queryByRole('button', { name: 'Lugares' })).not.toBeInTheDocument();
       expect(screen.queryByRole('link', { name: 'Migrar referencias' })).not.toBeInTheDocument();
     },
-  );
+  );
 
   it('enlaza catálogos, que antes no tenía ningún acceso desde la aplicación', () => {
     mockPathname = '/admin/usuarios';
