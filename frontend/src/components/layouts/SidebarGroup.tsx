@@ -2,12 +2,13 @@
 
 import { useId, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { isActivePath, type NavGroup } from '@/lib/navigation';
+import type { NavGroup } from '@/lib/navigation';
 import { SidebarLink } from './SidebarLink';
 
 export interface SidebarGroupProps {
   group: NavGroup;
-  pathname: string;
+  /** El enlace que representa la página actual, entre todos los del menú. */
+  activeHref: string | null;
   onNavigate?: () => void;
 }
 
@@ -16,8 +17,8 @@ export interface SidebarGroupProps {
  * entra a /admin/catalogos ve dónde está sin tener que abrir nada, y el resto
  * de módulos no ocupa espacio mientras no se usan.
  */
-export function SidebarGroup({ group, pathname, onNavigate }: SidebarGroupProps) {
-  const contieneActiva = group.items.some((item) => isActivePath(pathname, item.href));
+export function SidebarGroup({ group, activeHref, onNavigate }: SidebarGroupProps) {
+  const contieneActiva = group.items.some((item) => item.href === activeHref);
   const [abierto, setAbierto] = useState(contieneActiva);
   const idLista = useId();
 
@@ -49,7 +50,7 @@ export function SidebarGroup({ group, pathname, onNavigate }: SidebarGroupProps)
                 href={item.href}
                 label={item.label}
                 icon={item.icon}
-                active={isActivePath(pathname, item.href)}
+                active={item.href === activeHref}
                 nested
                 onNavigate={onNavigate}
               />

@@ -81,6 +81,38 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /usuarios/i })).not.toHaveAttribute('aria-current');
   });
 
+  it('en Registrar especie marca solo ese enlace, no también Especies', () => {
+    mockPathname = '/inventario-verde/registrar';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('link', { name: 'Registrar especie' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Especies' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('en la ficha de una especie, sin enlace propio, marca Especies', () => {
+    mockPathname = '/inventario-verde/especies/roystonea-regia';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('link', { name: 'Especies' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('en Migrar referencias abre Catastro verde y no marca también Lugares', () => {
+    mockPathname = '/lugares/migracion';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('link', { name: 'Migrar referencias' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Lugares' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('en la ficha de un lugar marca Lugares y deja cerrado Catastro verde', () => {
+    mockPathname = '/lugares/LUG-0001';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('link', { name: 'Lugares' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
+  });
+
   it('enlaza catálogos, que antes no tenía ningún acceso desde la aplicación', () => {
     mockPathname = '/admin/usuarios';
     render(<Sidebar />);

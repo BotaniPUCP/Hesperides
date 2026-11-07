@@ -125,3 +125,13 @@ export function isActivePath(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+/**
+ * El único enlace del menú que representa la ruta: el más específico. Varios
+ * pueden coincidir, porque /inventario-verde/registrar es subruta de /inventario-verde.
+ */
+export function activeHref(pathname: string, hrefs: readonly string[]): string | null {
+  return hrefs
+    .filter((href) => isActivePath(pathname, href))
+    .reduce<string | null>((best, href) => (best === null || href.length > best.length ? href : best), null);
+}

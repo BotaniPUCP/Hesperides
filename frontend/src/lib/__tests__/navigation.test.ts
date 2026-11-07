@@ -1,4 +1,35 @@
-import { NAVIGATION, isActivePath, visibleDirectLinks, visibleNavigation } from '../navigation';
+import { NAVIGATION, activeHref, isActivePath, visibleDirectLinks, visibleNavigation } from '../navigation';
+
+describe('activeHref', () => {
+  const HREFS = ['/', '/inventario-verde', '/inventario-verde/registrar', '/lugares', '/lugares/migracion'];
+
+  it('entre dos enlaces que coinciden gana el más específico', () => {
+    expect(activeHref('/inventario-verde/registrar', HREFS)).toBe('/inventario-verde/registrar');
+    expect(activeHref('/lugares/migracion', HREFS)).toBe('/lugares/migracion');
+  });
+
+  it('el orden de los enlaces no cambia el resultado', () => {
+    expect(activeHref('/inventario-verde/registrar', [...HREFS].reverse())).toBe('/inventario-verde/registrar');
+  });
+
+  it('una subruta sin enlace propio marca su pantalla padre', () => {
+    expect(activeHref('/inventario-verde/especies/roystonea-regia', HREFS)).toBe('/inventario-verde');
+    expect(activeHref('/lugares/LUG-0001', HREFS)).toBe('/lugares');
+  });
+
+  it('el inicio solo se marca en la raíz', () => {
+    expect(activeHref('/', HREFS)).toBe('/');
+    expect(activeHref('/otra', HREFS)).toBeNull();
+  });
+
+  it('si el rol no ve el enlace específico, marca el padre que sí ve', () => {
+    expect(activeHref('/lugares/migracion', ['/', '/lugares'])).toBe('/lugares');
+  });
+
+  it('sin enlaces no hay ninguno activo', () => {
+    expect(activeHref('/lugares', [])).toBeNull();
+  });
+});
 
 describe('isActivePath', () => {
   it('marca activa la ruta exacta', () => {
