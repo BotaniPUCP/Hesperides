@@ -118,9 +118,9 @@ describe('MapScreen', () => {
 
     const card = screen.getByRole('region', { name: 'Palmera real' });
     expect(within(card).getByText('7.5 m (medida)')).toBeInTheDocument();
-    expect(within(card).getByRole('link', { name: /Ver ficha en el inventario/ })).toHaveAttribute(
+    expect(within(card).getByRole('link', { name: /Ver ficha en el catastro/ })).toHaveAttribute(
       'href',
-      '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001',
+      '/catastro/ejemplares/EV-000001',
     );
   });
 

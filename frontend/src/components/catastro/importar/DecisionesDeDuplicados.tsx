@@ -77,7 +77,7 @@ export function DecisionesDeDuplicados({ imp }: { imp: Importacion }) {
                   {d.speciesSlug ? (
                     <Link
                       className="font-mono font-bold text-brand-700 hover:text-brand-900 underline decoration-brand-300 hover:decoration-brand-700"
-                      href={`/inventario-verde/especies/${d.speciesSlug}/ejemplares/${d.duplicateOf}`}
+                      href={`/catastro/ejemplares/${d.duplicateOf}`}
                       target="_blank"
                       title="Ver ficha de ejemplar existente"
                     >

@@ -28,7 +28,7 @@ const data = {
 } as unknown as SceneData;
 
 describe('infoFor', () => {
-  it('una planta medida muestra sus medidas y enlaza a su ficha del inventario', () => {
+  it('una planta medida muestra sus medidas y enlaza a su ficha del catastro', () => {
     const info = infoFor(data, { layer: 'vegetation', index: 0 });
 
     expect(info.kind).toBe('Palmera');
@@ -36,7 +36,7 @@ describe('infoFor', () => {
     expect(info.rows).toContainEqual(['Código', 'EV-000001']);
     expect(info.rows).toContainEqual(['Altura', '7.5 m (medida)']);
     expect(info.note).toBeUndefined();
-    expect(info.link).toEqual({ href: '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001', label: 'Ver ficha en el inventario' });
+    expect(info.link).toEqual({ href: '/catastro/ejemplares/EV-000001', label: 'Ver ficha en el catastro' });
   });
 
   it('una planta sin medir avisa que su tamaño en la maqueta es ilustrativo', () => {
