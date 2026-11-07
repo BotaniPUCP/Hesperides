@@ -32,6 +32,52 @@ describe('mensajeDeApiError', () => {
     ).toMatch(/tus propias credenciales/i);
   });
 
+  describe('lugares: ningún error queda en inglés ni en el mensaje genérico', () => {
+    const GENERICOS = ['La operación no cumple una regla del sistema.', 'Revisa los datos ingresados.'];
+
+    it.each([
+      [422, 'The place has no outline to locate its perspectives'],
+      [400, 'The drawn outline is not a valid geometry'],
+      [400, 'The drawn outline is not valid GeoJSON'],
+      [422, 'The new order must list every perspective of the place exactly once; reload and try again'],
+      [422, 'Only outdoor places have perspectives; add photos to the indoor place instead'],
+      [422, 'The place already has a perspective of that side: edit it instead'],
+      [422, 'A photo belongs to a perspective or to an indoor view, not both'],
+      [422, 'Indoor views are only for indoor places'],
+      [422, 'Delete the perspectives before turning the place into an indoor one'],
+      [409, 'The place has places inside it: move or delete them first'],
+      [422, 'A place cannot be inside one of its own places'],
+      [422, 'Places can be nested at most 3 levels deep'],
+      [400, 'Give one outline source: buildings, a zone, a feature, a drawing or the places inside it'],
+      [422, 'An outdoor place needs an outline to be located on the map'],
+      [422, 'An indoor place is located by its parent and has no outline of its own'],
+      [422, 'An indoor place must be inside another place'],
+      [409, 'There is already a place named «CIA» there'],
+      [409, 'Building 87 already belongs to «Pabellón Z» (LUG-0004)'],
+      [409, 'Reference REF-0012 was already migrated or discarded'],
+      [400, 'Unknown REFERENCE_CATEGORY code: XYZ'],
+      [400, 'Unknown perspective side: TOP'],
+    ])('%i «%s»', (status, message) => {
+      const traducido = mensajeDeApiError(new ApiError(status, message));
+
+      expect(GENERICOS).not.toContain(traducido);
+      expect(traducido).not.toBe(message);
+    });
+
+    it('conserva el dato que la persona necesita para corregir', () => {
+      expect(mensajeDeApiError(new ApiError(409, 'There is already a place named «CIA» there'))).toMatch(/«CIA»/);
+      expect(mensajeDeApiError(new ApiError(409, 'Building 87 already belongs to «Pabellón Z» (LUG-0004)')))
+        .toMatch(/«Pabellón Z» \(LUG-0004\)/);
+      expect(mensajeDeApiError(new ApiError(422, 'Places can be nested at most 3 levels deep'))).toMatch(/3 niveles/);
+    });
+
+    it('un patrón no atrapa un mensaje que solo se le parece', () => {
+      expect(mensajeDeApiError(new ApiError(409, 'Building 87 is under construction'))).toBe(
+        'La operación no cumple una regla del sistema.',
+      );
+    });
+  });
+
   it('ante un 422 desconocido no inventa un mensaje concreto', () => {
     expect(mensajeDeApiError(new ApiError(422, 'Some future rule'))).toMatch(/regla del sistema/i);
   });

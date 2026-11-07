@@ -21,13 +21,15 @@ SELECT id, building_id FROM places WHERE building_id IS NOT NULL AND deleted_at 
 
 ALTER TABLE places ADD COLUMN outline_from_children BOOLEAN NOT NULL DEFAULT FALSE;
 
--- La vista lee la columna que se va: hay que quitarla primero y volver a crearla al final.
-DROP VIEW place_outlines;
+-- building_id se conserva: una rama anterior sigue leyéndolo y escribiéndolo con esta misma
+-- base. La lista manda; la columna guarda el primer edificio de la lista, y si una rama
+-- anterior guarda un lugar solo con ella, se lee como su único edificio. Cuando ninguna
+-- rama en uso la lea, una migración posterior podrá quitarla.
 ALTER TABLE places DROP CONSTRAINT chk_places_single_outline;
-ALTER TABLE places DROP COLUMN building_id;
--- Los edificios están en otra tabla: que no se mezclen con estas fuentes lo cuida el servicio.
 ALTER TABLE places ADD CONSTRAINT chk_places_single_outline
-    CHECK (num_nonnulls(zone_id, feature_id, own_geometry) + outline_from_children::int <= 1);
+    CHECK (num_nonnulls(building_id, zone_id, feature_id, own_geometry) + outline_from_children::int <= 1);
+
+DROP VIEW place_outlines;
 
 -- El contorno vigente de cada lugar. Un complejo suma el de sus hijos, y si un hijo
 -- también es complejo, el de los suyos: el árbol tiene tres niveles como mucho.
@@ -37,8 +39,10 @@ WITH RECURSIVE own AS (
            COALESCE(p.own_geometry, z.boundary, f.geom,
                     (SELECT ST_Union(b.footprint) FROM place_buildings pb
                        JOIN campus_buildings b ON b.id = pb.building_id
-                      WHERE pb.place_id = p.id AND pb.deleted_at IS NULL)) AS geom
+                      WHERE pb.place_id = p.id AND pb.deleted_at IS NULL),
+                    sb.footprint) AS geom
       FROM places p
+      LEFT JOIN campus_buildings sb ON sb.id = p.building_id
       LEFT JOIN zones z ON z.id = p.zone_id
       LEFT JOIN campus_features f ON f.id = p.feature_id
      WHERE p.deleted_at IS NULL

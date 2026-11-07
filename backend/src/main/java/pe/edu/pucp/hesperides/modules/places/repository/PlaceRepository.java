@@ -15,11 +15,6 @@ public class PlaceRepository {
     public record PlaceRow(long id, String code, String name, String kindCode, Long parentId, String parentName) {
     }
 
-    /** Los ids ya resueltos; {@code geoJson} solo si el contorno se dibujó. */
-    public record PlaceValues(String name, long kindItemId, long categoryItemId, Long parentId, List<Long> buildingIds,
-            Long zoneId, Long featureId, String geoJson, boolean fromChildren) {
-    }
-
     private static final String SELECT_ROW = """
             SELECT p.id, p.code, p.name, k.code, p.parent_place_id, pp.name FROM places p
               JOIN catalog_items k ON k.id = p.kind_item_id
@@ -46,18 +41,19 @@ public class PlaceRepository {
 
     public long insert(PlaceValues v) {
         return jdbc.queryForObject("""
-                INSERT INTO places (name, kind_item_id, category_item_id, parent_place_id, zone_id, feature_id,
-                    own_geometry, outline_from_children) VALUES (?, ?, ?, ?, ?, ?, %s, ?) RETURNING id""".formatted(GEOMETRY),
-                Long.class, v.name(), v.kindItemId(), v.categoryItemId(), v.parentId(), v.zoneId(), v.featureId(),
-                v.geoJson(), v.geoJson(), v.fromChildren());
+                INSERT INTO places (name, kind_item_id, category_item_id, parent_place_id, building_id, zone_id,
+                    feature_id, own_geometry, outline_from_children) VALUES (?, ?, ?, ?, ?, ?, ?, %s, ?) RETURNING id"""
+                .formatted(GEOMETRY), Long.class, v.name(), v.kindItemId(), v.categoryItemId(), v.parentId(),
+                v.firstBuildingId(), v.zoneId(), v.featureId(), v.geoJson(), v.geoJson(), v.fromChildren());
     }
 
     public void update(long id, PlaceValues v) {
         jdbc.update("""
-                UPDATE places SET name = ?, kind_item_id = ?, category_item_id = ?, parent_place_id = ?, zone_id = ?,
-                    feature_id = ?, own_geometry = %s, outline_from_children = ?, updated_at = CURRENT_TIMESTAMP
-                 WHERE id = ?""".formatted(GEOMETRY), v.name(), v.kindItemId(), v.categoryItemId(), v.parentId(),
-                v.zoneId(), v.featureId(), v.geoJson(), v.geoJson(), v.fromChildren(), id);
+                UPDATE places SET name = ?, kind_item_id = ?, category_item_id = ?, parent_place_id = ?, building_id = ?,
+                    zone_id = ?, feature_id = ?, own_geometry = %s, outline_from_children = ?,
+                    updated_at = CURRENT_TIMESTAMP WHERE id = ?""".formatted(GEOMETRY), v.name(), v.kindItemId(),
+                v.categoryItemId(), v.parentId(), v.firstBuildingId(), v.zoneId(), v.featureId(), v.geoJson(), v.geoJson(),
+                v.fromChildren(), id);
     }
 
     /**

@@ -14,7 +14,10 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** A place used to hold one building in a column; the upgrade moves it to the list without losing its outline. */
+/**
+ * A place used to hold one building in a column; the upgrade copies it to the list without losing its outline,
+ * and keeps the column so a branch that still reads it can run on the upgraded database.
+ */
 @Testcontainers
 class PlaceBuildingsMigrationTest {
 
@@ -88,11 +91,20 @@ class PlaceBuildingsMigrationTest {
     }
 
     @Test
-    void theSingleBuildingColumnIsGone() {
-        Integer columns = jdbc.queryForObject("""
-                SELECT count(*) FROM information_schema.columns WHERE table_name = 'places' AND column_name = 'building_id'""",
-                Integer.class);
+    void theOldColumnKeepsItsBuildingForBranchesThatStillReadIt() {
+        Long kept = jdbc.queryForObject("SELECT building_id FROM places WHERE id = ?", Long.class, buildingPlaceId);
 
-        assertThat(columns).isZero();
+        assertThat(kept).isEqualTo(inrasId);
+    }
+
+    @Test
+    void aPlaceSavedTheOldWayAfterTheUpgradeStillHasItsOutline() {
+        long savedByOldCode = insertPlace("Guardado por una rama anterior", "building_id", inrasId, null);
+
+        Boolean same = jdbc.queryForObject("""
+                SELECT ST_Equals(o.geom, b.footprint) FROM place_outlines o, campus_buildings b
+                 WHERE o.place_id = ? AND b.id = ?""", Boolean.class, savedByOldCode, inrasId);
+
+        assertThat(same).isTrue();
     }
 }

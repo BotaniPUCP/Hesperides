@@ -1,5 +1,6 @@
 import type { FieldError, ValidationErrors } from '@shared/types';
 import { ApiError, PASSWORD_CHANGE_REQUIRED_MESSAGE } from './api';
+import { PLACE_MESSAGES, PLACE_PATTERNS, type MessagePattern } from './placeErrorMessages';
 
 /**
  * Traduce un fallo de la API a algo que una persona pueda leer y accionar,
@@ -64,10 +65,19 @@ const MENSAJES: Record<string, string> = {
     'Ese ítem lo necesita el sistema para funcionar: no se puede desactivar.',
   'El padre debe pertenecer a un catálogo distinto: la jerarquía es de dos niveles':
     'La clase debe venir de otro catálogo: la jerarquía admite solo dos niveles.',
+  ...PLACE_MESSAGES,
 };
 
+/** Los mensajes que traen un dato no caben en un diccionario de textos exactos. */
+const PATRONES: readonly MessagePattern[] = [...PLACE_PATTERNS];
+
 function traducir(message: string, porDefecto: string): string {
-  return MENSAJES[message] ?? porDefecto;
+  if (MENSAJES[message]) return MENSAJES[message];
+  for (const [patron, traduccion] of PATRONES) {
+    const match = message.match(patron);
+    if (match) return traduccion(match);
+  }
+  return porDefecto;
 }
 
 export function mensajeDeApiError(error: unknown): string {

@@ -22,11 +22,15 @@ public class PlaceBuildingRepository {
         if (buildingIds.isEmpty()) {
             return Optional.empty();
         }
+        // La columna cuenta también: un lugar guardado por una rama anterior no tiene lista.
         return jdbc.query("""
-                SELECT pb.building_id, p.code, p.name FROM place_buildings pb JOIN places p ON p.id = pb.place_id
-                 WHERE pb.deleted_at IS NULL AND p.deleted_at IS NULL AND pb.building_id = ANY (?)
+                SELECT x.building_id, p.code, p.name
+                  FROM (SELECT place_id, building_id FROM place_buildings WHERE deleted_at IS NULL
+                        UNION SELECT id, building_id FROM places WHERE building_id IS NOT NULL) x
+                  JOIN places p ON p.id = x.place_id
+                 WHERE p.deleted_at IS NULL AND x.building_id = ANY (?)
                    AND (CAST(? AS BIGINT) IS NULL OR p.id <> ?)
-                 ORDER BY pb.building_id LIMIT 1""",
+                 ORDER BY x.building_id LIMIT 1""",
                 (rs, i) -> new Owner(rs.getLong(1), rs.getString(2), rs.getString(3)),
                 buildingIds.toArray(Long[]::new), exceptPlaceId, exceptPlaceId).stream().findFirst();
     }

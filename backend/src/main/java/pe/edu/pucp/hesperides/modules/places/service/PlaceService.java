@@ -15,7 +15,7 @@ import pe.edu.pucp.hesperides.modules.places.repository.PerspectiveRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceBuildingRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository.PlaceRow;
-import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository.PlaceValues;
+import pe.edu.pucp.hesperides.modules.places.repository.PlaceValues;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceTreeRepository;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;

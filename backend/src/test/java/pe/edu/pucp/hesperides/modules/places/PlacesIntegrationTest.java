@@ -301,6 +301,34 @@ class PlacesIntegrationTest {
     }
 
     @Test
+    void theFirstBuildingStaysInTheOldColumnForBranchesThatStillReadIt() throws Exception {
+        long a = inrasBuildingId();
+        String code = codeOf(placeOnBuildings("Bloques", a, neighbourBuildingId()));
+
+        assertThat(jdbc.queryForObject("SELECT building_id FROM places WHERE code = ?", Long.class, code)).isEqualTo(a);
+    }
+
+    @Test
+    void aComplexLeavesTheOldColumnEmpty() throws Exception {
+        String code = codeOf(complex("Complejo"));
+
+        assertThat(jdbc.queryForObject("SELECT building_id FROM places WHERE code = ?", Long.class, code)).isNull();
+    }
+
+    @Test
+    void aPlaceSavedByAnOlderBranchIsReadWithItsBuildingAndKeepsIt() throws Exception {
+        long a = inrasBuildingId();
+        String code = jdbc.queryForObject("""
+                INSERT INTO places (name, kind_item_id, category_item_id, building_id)
+                SELECT 'De otra rama', k.id, c.id, ? FROM catalog_items k, catalog_items c
+                 WHERE k.code = 'OUTDOOR' AND c.code = 'EDIFICIO' RETURNING code""", String.class, a);
+
+        mockMvc.perform(get(PLACES + "/" + code)).andExpect(jsonPath("$.data.outline.buildingIds", contains((int) a)));
+        mockMvc.perform(get(PLACES + "/map")).andExpect(jsonPath("$.data.places[0].buildingIds", contains((int) a)));
+        placeOnBuildings("Intruso", a).andExpect(status().isConflict());
+    }
+
+    @Test
     void aBuildingBelongsToOnlyOnePlace() throws Exception {
         placeOnBuildings("Primero", inrasBuildingId()).andExpect(status().isCreated());
 

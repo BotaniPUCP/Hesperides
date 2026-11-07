@@ -8,7 +8,7 @@ import pe.edu.pucp.hesperides.modules.places.dto.PlaceRequest;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceBuildingRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceLookupRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository;
-import pe.edu.pucp.hesperides.modules.places.repository.PlaceRepository.PlaceValues;
+import pe.edu.pucp.hesperides.modules.places.repository.PlaceValues;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.ConflictException;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
