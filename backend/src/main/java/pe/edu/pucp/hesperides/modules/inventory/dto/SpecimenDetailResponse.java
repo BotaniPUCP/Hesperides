@@ -12,5 +12,5 @@ public record SpecimenDetailResponse(String code, String sourceReference, String
                                      int quantity, String notes, String elementTypeCode, String elementTypeName,
                                      BigDecimal heightM, BigDecimal trunkHeightM, BigDecimal dbhCm,
                                      BigDecimal crownRadiusM, Boolean isBanded, String dataSource,
-                                     SectionRef section, SpeciesResponse species, String latestMeasurementNotes) {
+                                     SectionRef section, SpeciesResponse species) {
 }

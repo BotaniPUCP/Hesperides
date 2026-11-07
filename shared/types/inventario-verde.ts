@@ -114,7 +114,6 @@ export interface SpecimenDetail extends Specimen {
   /** Calculada por posición; nula si el ejemplar está fuera de toda sección. */
   section: { code: string; name: string } | null;
   species: Species;
-  latestMeasurementNotes?: string | null;
 }
 
 export interface LocationCount {

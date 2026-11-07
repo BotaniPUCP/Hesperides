@@ -740,7 +740,7 @@
 - **Avance Real Implementado:** **`100%`**
 - **Fuente / Evidencia:** Catálogo REQ 2.7; D7; Entrevista 2; Hoja de vida del ejemplar
 - **Dependencia / Bloqueante:** B-01, C-11
-- **Notas de Alcance y Realidad Técnica:** Componente `SpecimenInterventions.tsx` integrado con `GET /api/v1/interventions?greenElementCode={code}` (SPEC-200). Muestra las intervenciones vinculadas al ejemplar de forma paginada (mostrando controles solo si `totalPages > 1`) con enlace directo al detalle de cada orden de trabajo (`/intervenciones/{id}`). Se reemplazó la alerta manual intrusiva por el servicio automático de proyección dendrométrica biofísica (`SpecimenInterventionMeasurementService.java`), que estima y actualiza las medidas del ejemplar según su especie y el tipo de poda ejecutado.
+- **Notas de Alcance y Realidad Técnica:** Componente `SpecimenInterventions.tsx` integrado con `GET /api/v1/interventions?greenElementCode={code}` (SPEC-200). Muestra las intervenciones vinculadas al ejemplar de forma paginada (mostrando controles solo si `totalPages > 1`) con enlace directo al detalle de cada orden de trabajo (`/intervenciones/{id}`). La proyección automática de medidas tras una poda se retiró (SPEC-105, 6 nov 2026): guardaba estimaciones como medidas reales. Completar una poda ya no cambia las medidas del ejemplar.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
@@ -752,16 +752,11 @@
 - **Y** los controles de paginación solo se despliegan cuando existen múltiples páginas de historial (`totalPages > 1`)
 - **PERO** si el ejemplar aún no registra intervenciones asociadas, muestra un estado vacío informativo claro
 
-**ESCENARIO: Proyección y estimación dendrométrica automática post-poda por especie (sin alertas manuales)**
-- **DADO QUE** se completa o valida una intervención de poda sobre un ejemplar censado (`INT-XXXXXX`),
-- **CUANDO** el servicio de mantenimiento procesa la ejecución de la labor,
-- **ENTONCES** el sistema calcula y proyecta automáticamente las nuevas dimensiones del ejemplar cruzando el tipo de vegetación con la labor técnica (`SpecimenInterventionMeasurementService`):
-  - **Palmeras (`PALM`):** Preserva la altura intacta (meristemo apical inviolable) y aplica reducción mínima de copa (5-10% por retiro de frondas basales).
-  - **Árboles (`TREE`):** Reduce copa lateral (10-15%) y conserva altura salvo en despeje por interferencia (reducción moderada del 10%).
-  - **Arbustos y Cercos (`SHRUB`/`HEDGE`):** Aplica rebaje proporcional de copa (15-25%) y altura (10-20%).
-  - **DAP y fuste:** Permanecen inalterados en todos los casos, respetando un umbral mínimo de copa (0.50 m).
-- **Y** registra de forma automática una nueva medición en el historial (`green_element_measurements`) con la nota técnica explicativa del cálculo
-- **Y** la ficha del ejemplar exhibe de inmediato el badge ámbar «Medición estimada» y el tooltip interactivo en el historial, eliminando la necesidad de banners de alerta o checklists manuales
+**ESCENARIO: Completar una poda no estima medidas (SPEC-105)**
+- **DADO QUE** se completa una intervención de poda sobre un ejemplar censado (`INT-XXXXXX`),
+- **CUANDO** el sistema registra el cierre de la ubicación,
+- **ENTONCES** las medidas del ejemplar, su origen, su fecha y su historial no cambian
+- **Y** quien mida después registra una medición real con su fecha y responsable
 
 ---
 

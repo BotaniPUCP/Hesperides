@@ -44,7 +44,6 @@ public class InterventionsServiceImpl implements InterventionsService {
     private final InterventionEvidenceFiles evidenceFiles;
     private final InterventionReviewPolicy reviewPolicy;
     private final InterventionExecutionSchedule schedule;
-    private final SpecimenInterventionMeasurementService specimenMeasurementService;
     private final InterventionAccess access;
     private final pe.edu.pucp.hesperides.modules.incidents.repository.IncidentLinkQueries incidentLinks;
 
@@ -341,7 +340,6 @@ public class InterventionsServiceImpl implements InterventionsService {
         location.setCompletedAt(microseconds(Instant.now()));
         location.setStatusItemId(status("COMPLETED"));
         persistReview(intervention, location, user, "COMPLETED", from, null, previous);
-        specimenMeasurementService.applyInterventionEstimation(id, locationId, user.getId());
         return detail(id, user);
     }
 

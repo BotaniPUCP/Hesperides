@@ -70,8 +70,7 @@ final class InventoryQueries {
                    et.label AS element_type_label, s.slug,
                    (SELECT a.id FROM green_element_attachments a WHERE a.green_element_id = e.id AND a.deleted_at IS NULL
                      ORDER BY a.id DESC LIMIT 1) AS attachment_id,
-                   s.common_name AS species_common_name, s.scientific_name AS species_scientific_name,
-                   (SELECT m.notes FROM green_element_measurements m WHERE m.green_element_id = e.id AND m.deleted_at IS NULL ORDER BY m.measured_at DESC, m.id DESC LIMIT 1) AS latest_measurement_notes
+                   s.common_name AS species_common_name, s.scientific_name AS species_scientific_name
               FROM green_elements e
               JOIN species s ON s.id = e.species_id
               JOIN catalog_items et ON et.id = e.element_type_item_id

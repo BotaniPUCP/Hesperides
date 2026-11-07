@@ -431,6 +431,29 @@ class InterventionsIntegrationTest {
         assertThat(jdbc.queryForObject("select version from interventions where id=?",Long.class,id)).isEqualTo(2);
         assertThat(jdbc.queryForObject("select count(*) from intervention_events where intervention_id=? and action_code='PROGRESS_SAVED'",Integer.class,id)).isZero();
     }
+    @Test void completingPruningLeavesSpecimenMeasurementsUntouched() throws Exception {
+        long element=jdbc.queryForObject("select id from green_elements where deleted_at is null and is_active and data_source='MEASURED' and height_m is not null and crown_radius_m is not null order by id limit 1",Long.class);
+        String code=jdbc.queryForObject("select code from green_elements where id=?",String.class,element);
+        String measuresSql="select height_m,trunk_height_m,dbh_cm,crown_radius_m,is_banded,data_source,measured_at,measured_by_user_id from green_elements where id=?";
+        var before=jdbc.queryForMap(measuresSql,element);
+        String historySql="select count(*) from green_element_measurements where green_element_id=? and deleted_at is null";
+        int historyBefore=jdbc.queryForObject(historySql,Integer.class,element);
+        var body=plan();
+        long pruningType=jdbc.queryForObject("select t.id from catalog_items t join catalog_items c on c.id=t.parent_item_id where c.code='PODA' and t.is_active and t.deleted_at is null order by t.id limit 1",Long.class);
+        body.put("classItemId",jdbc.queryForObject("select parent_item_id from catalog_items where id=?",Long.class,pruningType));
+        body.put("typeItemId",pruningType);
+        @SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
+        rows.set(0,new LinkedHashMap<>(Map.of("clientReference",UUID.randomUUID().toString(),"elementCodes",List.of(code),"elementIds",List.of(element))));
+        var d=create(body,UUID.randomUUID().toString(),201);long id=d.get("id").asLong(),local=d.get("locations").get(0).get("id").asLong();
+        assign(id,team,operator,"coordinator","COORDINADOR",0,200);
+        var started=localCommand(id,local,"start","operator","OPERARIO",Map.of("version",1),200);
+        var withPhoto=receivedPhoto(started,0,"operator","OPERARIO");
+
+        localCommand(id,local,"complete","operator","OPERARIO",Map.of("version",withPhoto.get("version").asLong(),"executionNotes","Poda terminada"),200);
+
+        assertThat(jdbc.queryForMap(measuresSql,element)).isEqualTo(before);
+        assertThat(jdbc.queryForObject(historySql,Integer.class,element)).isEqualTo(historyBefore);
+    }
     @Test void startingOneLocationKeepsOtherLocationsAssignedAndRecordsRealActor() throws Exception {
         var d=assignedPlan(true);long id=d.get("id").asLong(),a=d.get("locations").get(0).get("id").asLong();
         var started=localCommand(id,a,"start","operator","OPERARIO",Map.of("version",1),200);
