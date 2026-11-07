@@ -7,6 +7,7 @@ import { Button, Input, Select } from '@/components/ui';
 import { useCatalog } from '@/hooks/useCatalog';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { placesApi } from '@/lib/places-api';
+import { todayLocal } from '@/lib/local-date';
 import { LIMITES, motivoDeRechazo } from '@/lib/upload-limits';
 
 export interface PhotoUploaderProps {
@@ -24,17 +25,22 @@ export function PhotoUploader({ placeCode, target, askInteriorView = false, labe
   const views = useCatalog(askInteriorView ? 'INTERIOR_VIEW' : '');
   const [open, setOpen] = useState(false);
   const [author, setAuthor] = useState('');
-  const [takenOn, setTakenOn] = useState('');
+  const [takenOn, setTakenOn] = useState(todayLocal);
   const [view, setView] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Las fotos se suben al elegirlas; lo único que se puede perder es el autor o la fecha escritos.
-  const guard = useUnsavedChangesGuard(open && (author.trim() !== '' || takenOn !== ''));
+  const guard = useUnsavedChangesGuard(open && (author.trim() !== '' || takenOn !== todayLocal()));
   const close = () => guard.confirm(() => {
     setOpen(false);
     setAuthor('');
-    setTakenOn('');
+    setTakenOn(todayLocal());
   });
+
+  function openUploader() {
+    setTakenOn(todayLocal());
+    setOpen(true);
+  }
 
   async function upload(files: File[]) {
     const rejected = files.map((f) => ({ f, why: motivoDeRechazo(f, LIMITES.foto) })).find((r) => r.why);
@@ -59,7 +65,7 @@ export function PhotoUploader({ placeCode, target, askInteriorView = false, labe
   }
 
   if (!open) {
-    return <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>{label}</Button>;
+    return <Button size="sm" variant="ghost" onClick={openUploader}>{label}</Button>;
   }
   return (
     <div className="flex flex-col gap-2 rounded-md border border-dashed border-neutral-300 p-3">
