@@ -17,6 +17,7 @@ const measurementWithNote = {
   measuredBy: 'Ana Quispe',
   notes: 'Medida con cinta tras la poda',
   origin: 'MEASURED' as const,
+  extraValues: [] as { code: string; label: string; unitCode: string; value: number }[],
 };
 
 describe('SpecimenMeasurementsModal', () => {
@@ -29,6 +30,17 @@ describe('SpecimenMeasurementsModal', () => {
     expect(screen.getByRole('tooltip')).toHaveTextContent('Medida con cinta tras la poda');
     expect(screen.queryByText(/estimaci[oó]n/i)).not.toBeInTheDocument();
     expect(screen.queryByText('Promedio de la especie')).not.toBeInTheDocument();
+  });
+
+  it('muestra las medidas adicionales de cada fila', async () => {
+    jest.mocked(catastroApi.measurements).mockResolvedValue([{
+      ...measurementWithNote,
+      extraValues: [{ code: 'STEM_COUNT', label: 'Número de tallos', unitCode: 'UNIT', value: 3 }],
+    }]);
+
+    render(<SpecimenMeasurementsModal code="EV-000001" speciesName="Palmera real" isOpen onClose={jest.fn()} />);
+
+    expect(await screen.findByText('Número de tallos: 3 und')).toBeInTheDocument();
   });
 
   it('distingue una fila del promedio de una medida real', async () => {

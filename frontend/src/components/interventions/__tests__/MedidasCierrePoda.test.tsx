@@ -60,6 +60,21 @@ describe('MedidasCierrePoda', () => {
     expect(screen.getByTestId('estado')).toHaveTextContent('"altura":"2.5"');
   });
 
+  it('pide las medidas adicionales de la especie, con su referencia como ayuda', async () => {
+    specimen.mockResolvedValue({
+      ...p01Detail, code: 'EV-1',
+      species: { ...p01Detail.species, extraMeasures: [{ code: 'STEM_COUNT', label: 'Número de tallos', unitCode: 'UNIT', referenceNote: '3 tallos' }] },
+    });
+    render(<Conjunto codigos={['EV-1']} />);
+    const grupo = within(await screen.findByRole('group', { name: /EV-1/ }));
+
+    fireEvent.click(grupo.getByRole('radio', { name: 'Medidas reales' }));
+    expect(grupo.getByText('3 tallos')).toBeInTheDocument();
+    fireEvent.change(grupo.getByLabelText(/Número de tallos/), { target: { value: '4' } });
+
+    expect(screen.getByTestId('estado')).toHaveTextContent('"adicionales":{"STEM_COUNT":"4"}');
+  });
+
   it('muestra el error de un ejemplar', async () => {
     specimen.mockResolvedValue({ ...p01Detail, code: 'EV-1' });
 

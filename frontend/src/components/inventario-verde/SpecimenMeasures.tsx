@@ -5,6 +5,8 @@ import type { PruningAssignment, SpecimenDetail } from '@shared/types';
 import { Button } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { puedeEditarEjemplar } from '@/components/catastro/permisos';
+import { fechaCorta } from './medidasEspecie';
+import { SpecimenExtraMeasures } from './SpecimenExtraMeasures';
 import { SpecimenMeasurementsModal } from './SpecimenMeasurementsModal';
 import { SpecimenUnmeasuredBlock } from './SpecimenUnmeasuredBlock';
 
@@ -26,13 +28,6 @@ const PROPUESTAS: Record<PruningAssignment, string> = {
   THIRD_PARTY: 'Tercero',
   FIELD_VERIFICATION: 'Verificar la altura en campo',
 };
-
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
-
-function fechaCorta(iso: string): string {
-  const [anio, mes, dia] = iso.split('-').map(Number);
-  return `${dia} ${MESES[mes - 1]} ${anio}`;
-}
 
 export function SpecimenMeasures({
   specimen,
@@ -169,6 +164,8 @@ export function SpecimenMeasures({
         ) : (
           <SpecimenUnmeasuredBlock specimen={specimen} onMeasure={canEdit ? onEditMeasures : undefined} />
         )}
+
+        <SpecimenExtraMeasures medidas={specimen.extraMeasures} />
 
         <div className="mt-3.5 pt-3 border-t border-neutral-100 flex items-center justify-end text-xs">
           <button

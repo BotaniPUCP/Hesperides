@@ -99,6 +99,21 @@ describe('SpecimenDetailScreen', () => {
     expect(await screen.findByRole('button', { name: /Ver historial de medidas/ })).toBeInTheDocument();
   });
 
+  it('muestra las medidas adicionales aunque el ejemplar siga sin medir', async () => {
+    api.specimen.mockResolvedValue({
+      ...p01Detail, dataSource: 'UNKNOWN', heightM: null, trunkHeightM: null, dbhCm: null, crownRadiusM: null,
+      measuredAt: null, measurementStatus: 'NOT_MEASURED',
+      extraMeasures: [{ code: 'STEM_COUNT', label: 'Número de tallos', unitCode: 'UNIT', value: 3, measuredAt: '2026-02-01' }],
+    });
+
+    render(<SpecimenDetailScreen code="EV-000100" />);
+
+    expect(await screen.findByText('Número de tallos')).toBeInTheDocument();
+    expect(screen.getByText(/^3\s*und$/)).toBeInTheDocument();
+    expect(screen.getByText(/1 feb 2026/)).toBeInTheDocument();
+    expect(screen.getByText('Sin medir')).toBeInTheDocument();
+  });
+
   it('avisa si la medida es anterior a la última poda', async () => {
     api.specimen.mockResolvedValue({
       ...p01Detail, measuredBeforeLastPruning: true, lastPruningDate: '2026-03-03',
@@ -197,6 +212,7 @@ describe('SpecimenDetailScreen', () => {
       referenceCrownRadiusSourceName: null,
       lastPruningDate: null,
       measuredBeforeLastPruning: false,
+      extraMeasures: [],
       section: null,
       species: {
         slug: 'mangifera-indica',

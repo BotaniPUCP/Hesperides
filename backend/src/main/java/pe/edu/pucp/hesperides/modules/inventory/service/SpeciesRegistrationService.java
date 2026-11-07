@@ -29,6 +29,7 @@ public class SpeciesRegistrationService {
     private final AuditService auditService;
     private final SpeciesCatalogs catalogs;
     private final SpeciesMeasureProfiles profiles;
+    private final SpeciesExtraMeasures extraMeasures;
 
     private static final java.util.regex.Pattern INVALID_BOTANICAL_CHARS =
             java.util.regex.Pattern.compile("[0-9/\\\\@#$%^&*()_+=\\[\\]{}|<>?!;:~`\"“”«»]");
@@ -113,6 +114,8 @@ public class SpeciesRegistrationService {
         if (speciesId == null) {
             throw new IllegalStateException("No se pudo obtener el ID de la especie creada");
         }
+
+        extraMeasures.assign(speciesId, form.extraMeasures());
 
         // Otros nombres comunes
         if (form.otherNames() != null) {

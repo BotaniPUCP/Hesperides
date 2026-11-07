@@ -1180,6 +1180,7 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **DADO QUE** se atiende una incidencia de poda o riesgo arbóreo,
 - **CUANDO** el sistema evalúa el árbol involucrado,
 - **ENTONCES** si el ejemplar tiene altura < 5 m el sistema propone atención por personal estable, y si tiene > 5 m propone empresa tercera con grúa
+- **Y** esa regla depende de la criticidad de la especie y no de su tipo: una especie no crítica propone personal estable sin evaluar altura (SPEC-105 §5.5)
 - **Y** para problemas de riego propone a la cuadrilla del sector correspondiente
 - **PERO** el coordinador puede cambiar la asignación sugerida antes de despacharla
 

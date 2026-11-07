@@ -74,7 +74,8 @@ public class PruningMeasurementOutcomeService {
     }
 
     private static boolean hasDimension(SpecimenForm.MeasurementForm m) {
-        return m != null && (m.heightM() != null || m.trunkHeightM() != null || m.dbhCm() != null || m.crownRadiusM() != null);
+        return m != null && (m.heightM() != null || m.trunkHeightM() != null || m.dbhCm() != null || m.crownRadiusM() != null
+                || !m.toExtraValues().isEmpty());
     }
 
     private static void requireOnePerSpecimen(List<MeasurementOutcome> outcomes) {
@@ -93,7 +94,8 @@ public class PruningMeasurementOutcomeService {
     }
 
     private static SpecimenDraft.Measurement toDraft(SpecimenForm.MeasurementForm m) {
-        return new SpecimenDraft.Measurement(m.date(), m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded());
+        return new SpecimenDraft.Measurement(m.date(), m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded(),
+                m.toExtraValues());
     }
 
     private void useAverage(Linked specimen, long interventionId, String workCode, long actorId) {

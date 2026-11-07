@@ -8,6 +8,7 @@ import { todayLocal } from '@/lib/local-date';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { LIMITES } from '@/lib/upload-limits';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
+import { unidadCorta } from './medidasEspecie';
 
 export interface SpecimenEditModalProps {
   specimen: SpecimenDetail;
@@ -36,6 +37,8 @@ export function SpecimenEditModal({
     specimen.isBanded === true ? 'si' : specimen.isBanded === false ? 'no' : ''
   );
   const [fechaMedicion, setFechaMedicion] = useState(hoy);
+  // Sin precarga: una medida adicional solo se registra si alguien la midió esta vez.
+  const [adicionales, setAdicionales] = useState<Record<string, string>>({});
   const [sourceReference, setSourceReference] = useState(specimen.sourceReference ?? '');
   const [legacyCode, setLegacyCode] = useState(specimen.legacyCode ?? '');
   const [notes, setNotes] = useState(specimen.notes ?? '');
@@ -46,6 +49,11 @@ export function SpecimenEditModal({
   const [showConfirm, setShowConfirm] = useState(false);
 
   const parseNumber = (val: string) => (val.trim() === '' ? null : Number(val.trim().replace(',', '.')));
+
+  const medidasEscritas = () => specimen.species.extraMeasures.flatMap((medida) => {
+    const valor = parseNumber(adicionales[medida.code] ?? '');
+    return valor === null ? [] : [{ code: medida.code, value: valor }];
+  });
 
   function handleRequestSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
@@ -77,8 +85,21 @@ export function SpecimenEditModal({
       return;
     }
 
+    for (const medida of specimen.species.extraMeasures) {
+      const valor = parseNumber(adicionales[medida.code] ?? '');
+      if (valor !== null && (!Number.isFinite(valor) || valor < 0)) {
+        setErrorMessage(`${medida.label} debe ser un número positivo o cero.`);
+        return;
+      }
+      if (valor !== null && medida.unitCode === 'UNIT' && !Number.isInteger(valor)) {
+        setErrorMessage(`${medida.label} debe ser un número entero.`);
+        return;
+      }
+    }
+
     const hasAnyMeasure =
-      parsedHeight !== null || parsedTrunk !== null || parsedDap !== null || parsedCrown !== null || zunchado !== '';
+      parsedHeight !== null || parsedTrunk !== null || parsedDap !== null || parsedCrown !== null || zunchado !== ''
+      || medidasEscritas().length > 0;
 
     if (hasAnyMeasure && !fechaMedicion) {
       setErrorMessage('Debes indicar la fecha en que se tomaron las mediciones.');
@@ -103,8 +124,10 @@ export function SpecimenEditModal({
     const parsedDap = parseNumber(dapCm);
     const parsedCrown = parseNumber(radioCopaM);
 
+    const extraValues = medidasEscritas();
     const hasAnyMeasure =
-      parsedHeight !== null || parsedTrunk !== null || parsedDap !== null || parsedCrown !== null || zunchado !== '';
+      parsedHeight !== null || parsedTrunk !== null || parsedDap !== null || parsedCrown !== null || zunchado !== ''
+      || extraValues.length > 0;
 
     const payload: SpecimenForm = {
       scientificName: specimen.species.scientificName,
@@ -123,6 +146,7 @@ export function SpecimenEditModal({
           dbhCm: parsedDap,
           crownRadiusM: parsedCrown,
           banded: zunchado === '' ? null : zunchado === 'si',
+          extraValues,
         }
         : null,
     };
@@ -237,6 +261,21 @@ export function SpecimenEditModal({
                 />
               </div>
             </div>
+
+            {specimen.species.extraMeasures.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {specimen.species.extraMeasures.map((medida) => (
+                  <Input
+                    key={medida.code}
+                    id={`edit-specimen-extra-${medida.code}`}
+                    label={`${medida.label} (${unidadCorta(medida.unitCode)})`}
+                    value={adicionales[medida.code] ?? ''}
+                    onChange={(valor) => setAdicionales((actuales) => ({ ...actuales, [medida.code]: valor }))}
+                    helperText={medida.referenceNote ?? undefined}
+                  />
+                ))}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
               <div className="space-y-1">

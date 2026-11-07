@@ -4,6 +4,7 @@ import type { SpecimenDetail } from '@shared/types';
 import { Input, LoadingSkeleton } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { unidadCorta } from '@/components/inventario-verde/medidasEspecie';
 import { decisionInicial, opcionesDe, type DecisionPoda } from './cierrePoda';
 
 export interface MedidasCierrePodaProps {
@@ -35,6 +36,11 @@ function CamposMedicion({ ejemplar, decision, onCambiar, hoy, disabled }: {
       {campo('copa', 'Radio de copa (m)')}
       {ejemplar.species.usesTrunkHeight && campo('fuste', 'Fuste (m)')}
       {ejemplar.species.usesDbh && campo('dap', 'DAP (cm)')}
+      {ejemplar.species.extraMeasures.map((medida) => (
+        <Input key={medida.code} id={id(medida.code)} label={`${medida.label} (${unidadCorta(medida.unitCode)})`}
+          value={decision.adicionales?.[medida.code] ?? ''} disabled={disabled} helperText={medida.referenceNote ?? undefined}
+          onChange={(valor) => onCambiar({ ...decision, adicionales: { ...decision.adicionales, [medida.code]: valor } })} />
+      ))}
     </div>
   );
 }

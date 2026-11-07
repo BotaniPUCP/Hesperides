@@ -46,7 +46,7 @@ class SpeciesRegistrationServiceTest {
     void setUp() {
         SpeciesCatalogs catalogs = new SpeciesCatalogs(jdbc);
         service = new SpeciesRegistrationService(jdbc, inventoryService, photoService, auditService,
-                catalogs, new SpeciesMeasureProfiles(catalogs));
+                catalogs, new SpeciesMeasureProfiles(catalogs), new SpeciesExtraMeasures(jdbc));
     }
 
     @Test
@@ -67,7 +67,7 @@ class SpeciesRegistrationServiceTest {
 
     @Test
     void registerThrowsWhenScientificNameIsTooShort() {
-        SpeciesForm form = new SpeciesForm("A", "Comun", "Familia", "TREE", null, null, null, null, null, null, null, null, null, null, null);
+        SpeciesForm form = new SpeciesForm("A", "Comun", "Familia", "TREE", null, null, null, null, null, null, null, null, null, null, null, null);
         assertThatThrownBy(() -> service.register(form, null, "admin@pucp.edu.pe", true))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("al menos 2 caracteres");
@@ -75,7 +75,7 @@ class SpeciesRegistrationServiceTest {
 
     @Test
     void registerThrowsWhenScientificNameAlreadyExists() {
-        SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "TREE", null, null, null, null, null, null, null, null, null, null, null);
+        SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "TREE", null, null, null, null, null, null, null, null, null, null, null, null);
         when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Ginkgo biloba")))
                 .thenReturn(true);
 
@@ -86,7 +86,7 @@ class SpeciesRegistrationServiceTest {
 
     @Test
     void registerThrowsWhenVegetationTypeIsInvalid() {
-        SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "INVALID_TYPE", null, null, null, null, null, null, null, null, null, null, null);
+        SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "INVALID_TYPE", null, null, null, null, null, null, null, null, null, null, null, null);
         when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Ginkgo biloba")))
                 .thenReturn(false);
         when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("ginkgo-biloba")))
@@ -102,7 +102,7 @@ class SpeciesRegistrationServiceTest {
     @Test
     void registerSuccessfullyCreatesSpecies() {
         SpeciesForm form = new SpeciesForm("Mangus urus", "Mango", "Mangurus", "TREE", "INTRODUCED",
-                List.of("Mango", "Naranja"), "Descripcion", "Cuidados", null, null, null, null, null, null, null);
+                List.of("Mango", "Naranja"), "Descripcion", "Cuidados", null, null, null, null, null, null, null, null);
 
         when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Mangus urus")))
                 .thenReturn(false);
@@ -119,7 +119,7 @@ class SpeciesRegistrationServiceTest {
         SpeciesResponse mockResponse = new SpeciesResponse("mangus-urus", "Mangus urus", "Mango",
                 List.of("Mango", "Naranja"), "Mangurus", "TREE", "Árbol",
                 "INTRODUCED", "Introducida", "Descripcion", "Cuidados", 0, null, null, List.of(),
-                true, null, null, null, null, null, null, true, true, 0);
+                true, null, null, null, null, null, null, true, true, 0, List.of());
         when(inventoryService.speciesBySlug("mangus-urus")).thenReturn(mockResponse);
 
         SpeciesResponse created = service.register(form, null, "admin@pucp.edu.pe", true);

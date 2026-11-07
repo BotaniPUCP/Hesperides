@@ -622,6 +622,15 @@ class InterventionsIntegrationTest {
         assertThat(jdbc.queryForObject("select data_source from green_elements where id=?",String.class,element)).isEqualTo("UNKNOWN");
         assertThat(jdbc.queryForObject("select count(*) from green_element_measurements where green_element_id=? and height_m=9 and deleted_at is null",Integer.class,element)).isEqualTo(1);
     }
+    @Test void closingWithOnlyExtraValuesKeepsTheSpecimenUnmeasured() throws Exception {
+        long element=unmeasuredSpecimen("dracaena-fragrans");String code=codeOf(element);
+        var work=startedWork("PODA",element,code);
+
+        closeWith(work,List.of(Map.of("specimenCode",code,"outcome","MEASURED","measurement",Map.of("date",todayLocal(),"extraValues",List.of(Map.of("code","STEM_COUNT","value",2))))),200);
+
+        assertThat(jdbc.queryForObject("select data_source from green_elements where id=?",String.class,element)).isEqualTo("UNKNOWN");
+        assertThat(jdbc.queryForObject("select count(*) from green_element_measurement_values v join green_element_measurements m on m.id=v.measurement_id where m.green_element_id=? and m.intervention_id=?",Integer.class,element,work.id())).isEqualTo(1);
+    }
     static String todayLocal() {return java.time.LocalDate.now().toString();}
     @Test void startingOneLocationKeepsOtherLocationsAssignedAndRecordsRealActor() throws Exception {
         var d=assignedPlan(true);long id=d.get("id").asLong(),a=d.get("locations").get(0).get("id").asLong();

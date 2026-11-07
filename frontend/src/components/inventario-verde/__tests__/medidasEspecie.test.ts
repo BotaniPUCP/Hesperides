@@ -41,7 +41,7 @@ describe('medidasEspecie', () => {
   it('acepta la coma decimal al armar el formulario', () => {
     const formulario = aFormulario({
       critical: false, alturaM: '2,5', fuenteAltura: 'BOTANICAL_SHEET', radioM: '1.5', fuenteRadio: 'TEAM_ESTIMATE',
-      usaFuste: false, usaDap: true,
+      usaFuste: false, usaDap: true, adicionales: [{ code: 'STEM_COUNT', label: 'Tallos', unitCode: 'UNIT', nota: ' 3 tallos ' }],
     });
     expect(formulario).toEqual({
       critical: false,
@@ -51,6 +51,7 @@ describe('medidasEspecie', () => {
       referenceCrownRadiusSourceCode: 'TEAM_ESTIMATE',
       usesTrunkHeight: false,
       usesDbh: true,
+      extraMeasures: [{ code: 'STEM_COUNT', referenceNote: '3 tallos' }],
     });
   });
 
@@ -64,10 +65,11 @@ describe('medidasEspecie', () => {
     const valores = medidasDe({
       ...palmeraReal, critical: false, referenceHeightM: 3, referenceHeightSourceCode: 'BOTANICAL_SHEET',
       referenceCrownRadiusM: 1.25, referenceCrownRadiusSourceCode: 'TEAM_ESTIMATE', usesTrunkHeight: false, usesDbh: false,
+      extraMeasures: [{ code: 'STEM_COUNT', label: 'Tallos', unitCode: 'UNIT', referenceNote: null }],
     });
     expect(valores).toEqual({
       critical: false, alturaM: '3', fuenteAltura: 'BOTANICAL_SHEET', radioM: '1.25', fuenteRadio: 'TEAM_ESTIMATE',
-      usaFuste: false, usaDap: false,
+      usaFuste: false, usaDap: false, adicionales: [{ code: 'STEM_COUNT', label: 'Tallos', unitCode: 'UNIT', nota: '' }],
     });
   });
 });

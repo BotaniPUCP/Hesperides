@@ -11,6 +11,7 @@ export interface MeasurementForm {
   dbhCm?: number | null;
   crownRadiusM?: number | null;
   banded?: boolean | null;
+  extraValues?: { code: string; value: number }[];
 }
 
 /** Nulo en un campo es «no se evaluó», distinto de «no». */

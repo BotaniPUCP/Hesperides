@@ -57,6 +57,31 @@ describe('aOutcomes', () => {
   });
 });
 
+describe('medidas adicionales', () => {
+  const medida = { opcion: 'MEASURED' as const, fecha: HOY, altura: '', fuste: '', dap: '', copa: '' };
+
+  it('viajan solo las escritas, y sin ellas no se agrega el campo', () => {
+    const [conValor] = aOutcomes({ 'EV-1': { ...medida, adicionales: { STEM_COUNT: '3', COVERAGE_AREA: ' ' } } });
+    expect(conValor.measurement?.extraValues).toEqual([{ code: 'STEM_COUNT', value: 3 }]);
+
+    const [sinValor] = aOutcomes({ 'EV-1': { ...medida, altura: '2' } });
+    expect(sinValor.measurement).not.toHaveProperty('extraValues');
+  });
+
+  it('por sí solas cuentan como medida', () => {
+    expect(errorDeDecision({ ...medida, adicionales: { STEM_COUNT: '3' } }, HOY)).toBeNull();
+  });
+
+  it('una en blanco no cuenta como medida', () => {
+    expect(errorDeDecision({ ...medida, adicionales: { STEM_COUNT: ' ' } }, HOY)).toBe('Indica al menos una medida.');
+  });
+
+  it('no aceptan negativos ni texto', () => {
+    expect(errorDeDecision({ ...medida, adicionales: { STEM_COUNT: '-1' } }, HOY)).toBe('Las medidas adicionales deben ser números positivos o cero.');
+    expect(errorDeDecision({ ...medida, adicionales: { STEM_COUNT: 'x' } }, HOY)).toBe('Las medidas adicionales deben ser números positivos o cero.');
+  });
+});
+
 describe('errorDeDecision', () => {
   const medida = { opcion: 'MEASURED' as const, fecha: HOY, altura: '2', fuste: '', dap: '', copa: '' };
 

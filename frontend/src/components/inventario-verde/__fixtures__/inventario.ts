@@ -14,6 +14,7 @@ export const medidasDeEspecieCritica = {
   usesTrunkHeight: true,
   usesDbh: true,
   unmeasuredSpecimenCount: 0,
+  extraMeasures: [],
 };
 
 export const palmeraReal: Species = {
@@ -79,6 +80,7 @@ export const p01Detail: SpecimenDetail = {
   lastPruningDate: null,
   measuredBeforeLastPruning: false,
   pruningAssignment: 'THIRD_PARTY',
+  extraMeasures: [],
 };
 
 export const summary: InventorySummary = {

@@ -18,5 +18,6 @@ public record SpeciesResponse(String slug, String scientificName, String commonN
                               boolean critical, BigDecimal referenceHeightM, String referenceHeightSourceCode,
                               String referenceHeightSourceName, BigDecimal referenceCrownRadiusM,
                               String referenceCrownRadiusSourceCode, String referenceCrownRadiusSourceName,
-                              boolean usesTrunkHeight, boolean usesDbh, long unmeasuredSpecimenCount) {
+                              boolean usesTrunkHeight, boolean usesDbh, long unmeasuredSpecimenCount,
+                              List<ExtraMeasureResponse> extraMeasures) {
 }

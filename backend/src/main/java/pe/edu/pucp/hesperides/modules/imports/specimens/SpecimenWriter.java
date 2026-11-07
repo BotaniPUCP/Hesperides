@@ -9,6 +9,7 @@ import pe.edu.pucp.hesperides.modules.imports.ImportAction;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.PlannedRow;
 
 import java.sql.Date;
+import java.util.Map;
 
 /**
  * Escribe un ejemplar planificado: lo crea o lo corrige, guarda su medida y su
@@ -23,6 +24,7 @@ public class SpecimenWriter {
             + "ON ct.id = ci.catalog_type_id WHERE ct.code = 'GREEN_ELEMENT_TYPE' AND ci.code = ?)";
 
     private final JdbcTemplate jdbc;
+    private final ExtraMeasureValues extraValues;
 
     /** @return id y código del ejemplar escrito */
     public Written write(PlannedRow row, Long batchId, long userId, Long measuredBy) {
@@ -75,19 +77,23 @@ public class SpecimenWriter {
      * no con measured_at, que queda nulo cuando un ejemplar vuelve al promedio.
      */
     public void recordMeasurement(long id, Measurement m, Long measuredBy, Long interventionId) {
+        Map<String, Long> measureIds = extraValues.validate(id, m.extraValues());
         Date date = Date.valueOf(m.date());
-        jdbc.update("""
-                UPDATE green_elements SET height_m = ?, trunk_height_m = ?, dbh_cm = ?, crown_radius_m = ?,
-                       is_banded = COALESCE(?, is_banded), data_source = 'MEASURED', measured_at = ?,
-                       measured_by_user_id = ?, updated_at = CURRENT_TIMESTAMP
-                 WHERE id = ? AND NOT EXISTS (SELECT 1 FROM green_element_measurements x
-                                               WHERE x.green_element_id = ? AND x.deleted_at IS NULL AND x.measured_at > ?)""",
-                m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded(), date, measuredBy, id, id, date);
-        jdbc.update("""
+        if (!m.onlyExtraValues()) {
+            jdbc.update("""
+                    UPDATE green_elements SET height_m = ?, trunk_height_m = ?, dbh_cm = ?, crown_radius_m = ?,
+                           is_banded = COALESCE(?, is_banded), data_source = 'MEASURED', measured_at = ?,
+                           measured_by_user_id = ?, updated_at = CURRENT_TIMESTAMP
+                     WHERE id = ? AND NOT EXISTS (SELECT 1 FROM green_element_measurements x
+                                                   WHERE x.green_element_id = ? AND x.deleted_at IS NULL AND x.measured_at > ?)""",
+                    m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded(), date, measuredBy, id, id, date);
+        }
+        Long measurementId = jdbc.queryForObject("""
                 INSERT INTO green_element_measurements (green_element_id, measured_at, measured_by_user_id,
                        height_m, trunk_height_m, dbh_cm, crown_radius_m, is_banded, intervention_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""", Long.class,
                 id, date, measuredBy, m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded(), interventionId);
+        extraValues.save(measurementId, m.extraValues(), measureIds);
     }
 
     /** Añade una evaluación al historial (SPEC-103 D-06): nunca reemplaza las anteriores. */

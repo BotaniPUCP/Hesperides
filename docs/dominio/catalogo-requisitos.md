@@ -292,6 +292,10 @@ la **clase de altura**, que el capataz registra en campo al capturar o interveni
 Mientras nadie la registre, el ejemplar queda **«sin clasificar»**, y el sistema pide verificarlo
 antes de proponer quién lo atiende. Nunca se asume la clase por la especie.
 
+> **Enmienda SPEC-105 (6 nov 2026):** esto rige para las **especies críticas**. Cada especie indica si
+> su altura decide cómo se atiende, sin importar su tipo. Las no críticas proponen personal estable y
+> muestran el promedio de la especie, indicado como no medido; ese promedio nunca decide quién poda.
+
 > **Un atajo que conviene pedir:** el levantamiento actual incluye evaluación dasométrica
 > (diámetro a la altura del pecho y **altura estimada**), pero lo que nos compartieron no la trae:
 > la tiene la ingeniera a cargo (3.ª entrevista). Si la comparte, la clase se deriva de ese dato y

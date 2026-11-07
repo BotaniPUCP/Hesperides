@@ -51,6 +51,25 @@ export interface Species {
   usesTrunkHeight: boolean;
   usesDbh: boolean;
   unmeasuredSpecimenCount: number;
+  /** Medidas propias de la especie. Solo en la ficha; en el listado viene vacío. */
+  extraMeasures: ExtraMeasure[];
+}
+
+/** Una medida adicional del catálogo. `referenceNote` orienta y nunca es un dato del ejemplar (SPEC-105 D-09). */
+export interface ExtraMeasure {
+  code: string;
+  label: string;
+  unitCode: string;
+  referenceNote: string | null;
+}
+
+/** El último valor registrado de una medida adicional en un ejemplar. */
+export interface SpecimenExtraMeasure {
+  code: string;
+  label: string;
+  unitCode: string;
+  value: number;
+  measuredAt: string;
 }
 
 /** Formulario para registrar o editar una especie botánica del catálogo. */
@@ -70,6 +89,8 @@ export interface SpeciesForm {
   referenceCrownRadiusSourceCode?: string | null;
   usesTrunkHeight?: boolean;
   usesDbh?: boolean;
+  /** Sin lista, se conservan las de la especie. */
+  extraMeasures?: { code: string; referenceNote?: string | null }[];
 }
 
 /** Una foto genérica de especie con su crédito. Autor, licencia y fuente faltan en una foto propia. */
@@ -127,6 +148,7 @@ export interface MeasurementRecord {
   notes?: string | null;
   /** AVERAGE guarda el promedio vigente cuando se aplicó: no es una medida real (SPEC-105 §4.3). */
   origin: 'MEASURED' | 'AVERAGE';
+  extraValues: { code: string; label: string; unitCode: string; value: number }[];
 }
 
 export interface SpecimenDetail extends Specimen {
@@ -153,6 +175,7 @@ export interface SpecimenDetail extends Specimen {
   lastPruningDate: string | null;
   measuredBeforeLastPruning: boolean;
   pruningAssignment: PruningAssignment;
+  extraMeasures: SpecimenExtraMeasure[];
 }
 
 export interface LocationCount {

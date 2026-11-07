@@ -5,6 +5,7 @@ import type { MeasurementRecord } from '@shared/types';
 import { Button, Modal } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
 import { catastroApi } from '@/lib/catastro-api';
+import { unidadCorta } from './medidasEspecie';
 
 export interface SpecimenMeasurementsModalProps {
   code: string;
@@ -165,6 +166,11 @@ export function SpecimenMeasurementsModal({
                             Por: {m.measuredBy}
                           </div>
                         )}
+                        {m.extraValues.map((extra) => (
+                          <div key={extra.code} className="text-[10px] text-neutral-600 mt-0.5">
+                            {`${extra.label}: ${Number(extra.value).toLocaleString('es-PE')} ${unidadCorta(extra.unitCode)}`}
+                          </div>
+                        ))}
                       </td>
                       <td className="py-2.5 px-3 font-mono font-bold text-neutral-900">
                         {m.heightM != null ? `${m.heightM} m` : '—'}

@@ -9,7 +9,7 @@ import { palmeraReal } from '../__fixtures__/inventario';
 const mockUseAuth = jest.fn();
 
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
-jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { updateSpecies: jest.fn() } }));
+jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { updateSpecies: jest.fn(), extraMeasures: jest.fn() } }));
 jest.mock('@/hooks/useCatalog', () => ({
   useCatalog: (type: string) => ({
     items: type === 'SPECIES_TYPE'

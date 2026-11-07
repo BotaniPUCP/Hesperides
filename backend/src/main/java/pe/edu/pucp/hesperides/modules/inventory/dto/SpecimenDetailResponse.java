@@ -2,6 +2,7 @@ package pe.edu.pucp.hesperides.modules.inventory.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * La ficha de un ejemplar. Las medidas solo valen si {@code dataSource} es
@@ -17,5 +18,6 @@ public record SpecimenDetailResponse(String code, String sourceReference, String
                                      boolean speciesCritical, String measurementStatus, BigDecimal referenceHeightM,
                                      BigDecimal referenceCrownRadiusM, String referenceHeightSourceName,
                                      String referenceCrownRadiusSourceName, LocalDate lastPruningDate,
-                                     boolean measuredBeforeLastPruning, String pruningAssignment) {
+                                     boolean measuredBeforeLastPruning, String pruningAssignment,
+                                     List<SpecimenExtraMeasureResponse> extraMeasures) {
 }

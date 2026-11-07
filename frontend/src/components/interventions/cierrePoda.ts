@@ -10,6 +10,7 @@ export interface DecisionPoda {
   fuste: string;
   dap: string;
   copa: string;
+  adicionales?: Record<string, string>;
 }
 
 export interface OpcionVisible {
@@ -26,6 +27,7 @@ export interface MeasurementOutcomeForm {
     trunkHeightM: number | null;
     dbhCm: number | null;
     crownRadiusM: number | null;
+    extraValues?: { code: string; value: number }[];
   };
 }
 
@@ -59,11 +61,13 @@ export function errorDeDecision(d: DecisionPoda, hoy: string): string | null {
   if (d.opcion !== 'MEASURED') return null;
   if (!d.fecha) return 'Indica la fecha de la medición.';
   if (d.fecha > hoy) return 'La fecha de la medición no puede ser futura.';
-  if ([d.altura, d.fuste, d.dap, d.copa].every(vacio)) return 'Indica al menos una medida.';
+  const adicionales = Object.values(d.adicionales ?? {});
+  if ([d.altura, d.fuste, d.dap, d.copa, ...adicionales].every(vacio)) return 'Indica al menos una medida.';
   if (!positivo(d.altura)) return 'La altura debe ser mayor que 0.';
   if (!positivo(d.copa)) return 'El radio de copa debe ser mayor que 0.';
   if (!noNegativo(d.fuste)) return 'El fuste no puede ser negativo.';
   if (!noNegativo(d.dap)) return 'El DAP no puede ser negativo.';
+  if (!adicionales.every(noNegativo)) return 'Las medidas adicionales deben ser números positivos o cero.';
   return null;
 }
 
@@ -82,6 +86,14 @@ export function aOutcomes(decisiones: Record<string, DecisionPoda>): Measurement
             trunkHeightM: opcional(d.fuste),
             dbhCm: opcional(d.dap),
             crownRadiusM: opcional(d.copa),
+            ...valoresAdicionales(d),
           },
         });
+}
+
+function valoresAdicionales(d: DecisionPoda) {
+  const extraValues = Object.entries(d.adicionales ?? {})
+    .filter(([, valor]) => !vacio(valor))
+    .map(([code, valor]) => ({ code, value: numero(valor) }));
+  return extraValues.length > 0 ? { extraValues } : {};
 }

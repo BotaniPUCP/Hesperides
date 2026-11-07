@@ -4,6 +4,7 @@ import { Card, Input, Select } from '@/components/ui';
 import { puedeCambiarCriticidad } from '@/components/catastro/permisos';
 import { useAuth } from '@/hooks/useAuth';
 import { useCatalog } from '@/hooks/useCatalog';
+import { CamposMedidasAdicionales } from './CamposMedidasAdicionales';
 import type { ErroresMedidas, MedidasEspecie } from './medidasEspecie';
 
 export interface CamposMedidasEspecieProps {
@@ -107,6 +108,8 @@ export function CamposMedidasEspecie({ valores, onCambiar, errores = {}, aviso }
           <Casilla id="usa-fuste" etiqueta="Se mide el fuste" marcada={valores.usaFuste} onCambiar={(usaFuste) => cambiar({ usaFuste })} />
           <Casilla id="usa-dap" etiqueta="Se mide el DAP" marcada={valores.usaDap} onCambiar={(usaDap) => cambiar({ usaDap })} />
         </fieldset>
+
+        <CamposMedidasAdicionales valores={valores.adicionales} onCambiar={(adicionales) => cambiar({ adicionales })} />
       </div>
     </Card>
   );

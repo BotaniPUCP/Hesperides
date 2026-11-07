@@ -30,6 +30,7 @@ public class SpeciesEditService {
     private final AuditService auditService;
     private final SpeciesCatalogs catalogs;
     private final SpeciesMeasureProfiles profiles;
+    private final SpeciesExtraMeasures extraMeasures;
 
     private record Current(long id, boolean critical, BigDecimal referenceHeightM, BigDecimal referenceCrownRadiusM,
                            boolean usesTrunkHeight, boolean usesDbh) {
@@ -56,6 +57,7 @@ public class SpeciesEditService {
                 profile.referenceHeightM(), profile.referenceHeightSourceId(), profile.referenceCrownRadiusM(),
                 profile.referenceCrownRadiusSourceId(), profile.usesTrunkHeight(), profile.usesDbh(), current.id());
         replaceOtherNames(current.id(), form.otherNames());
+        extraMeasures.assign(current.id(), form.extraMeasures());
         audit(current, profile, slug, scientificName);
         return inventoryService.speciesBySlug(slug);
     }

@@ -1,5 +1,12 @@
 import type { Species, SpeciesForm } from '@shared/types';
 
+export interface MedidaAdicional {
+  code: string;
+  label: string;
+  unitCode: string;
+  nota: string;
+}
+
 /**
  * Las medidas de una especie mientras se editan: textos sin convertir, porque
  * así se escriben (admiten coma decimal). Reglas en SPEC-105 §5.1.
@@ -12,6 +19,7 @@ export interface MedidasEspecie {
   fuenteRadio: string | null;
   usaFuste: boolean;
   usaDap: boolean;
+  adicionales: MedidaAdicional[];
 }
 
 export type ErroresMedidas = Partial<Record<'altura' | 'fuenteAltura' | 'radio' | 'fuenteRadio', string>>;
@@ -26,7 +34,7 @@ export function criticaPorTipo(tipo: string | null): boolean {
 export function medidasPorTipo(tipo: string | null): MedidasEspecie {
   return {
     critical: criticaPorTipo(tipo), alturaM: '', fuenteAltura: null, radioM: '', fuenteRadio: null,
-    usaFuste: true, usaDap: true,
+    usaFuste: true, usaDap: true, adicionales: [],
   };
 }
 
@@ -39,6 +47,9 @@ export function medidasDe(especie: Species): MedidasEspecie {
     fuenteRadio: especie.referenceCrownRadiusSourceCode,
     usaFuste: especie.usesTrunkHeight,
     usaDap: especie.usesDbh,
+    adicionales: especie.extraMeasures.map((m) => ({
+      code: m.code, label: m.label, unitCode: m.unitCode, nota: m.referenceNote ?? '',
+    })),
   };
 }
 
@@ -66,7 +77,7 @@ export function erroresMedidas(m: MedidasEspecie): ErroresMedidas {
 
 type CamposDeMedidas = Required<Pick<SpeciesForm,
   'critical' | 'referenceHeightM' | 'referenceHeightSourceCode' | 'referenceCrownRadiusM'
-  | 'referenceCrownRadiusSourceCode' | 'usesTrunkHeight' | 'usesDbh'>>;
+  | 'referenceCrownRadiusSourceCode' | 'usesTrunkHeight' | 'usesDbh' | 'extraMeasures'>>;
 
 export function aFormulario(m: MedidasEspecie): CamposDeMedidas {
   return {
@@ -77,5 +88,18 @@ export function aFormulario(m: MedidasEspecie): CamposDeMedidas {
     referenceCrownRadiusSourceCode: m.fuenteRadio,
     usesTrunkHeight: m.usaFuste,
     usesDbh: m.usaDap,
+    extraMeasures: m.adicionales.map((a) => ({ code: a.code, referenceNote: a.nota.trim() || null })),
   };
+}
+
+const UNIDADES: Record<string, string> = { UNIT: 'und', M: 'm', M2: 'm²', M3: 'm³' };
+
+/** Las unidades del catálogo, como se leen junto a un número. */
+export const unidadCorta = (codigo: string) => UNIDADES[codigo] ?? codigo;
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
+
+export function fechaCorta(iso: string): string {
+  const [anio, mes, dia] = iso.split('-').map(Number);
+  return `${dia} ${MESES[mes - 1]} ${anio}`;
 }

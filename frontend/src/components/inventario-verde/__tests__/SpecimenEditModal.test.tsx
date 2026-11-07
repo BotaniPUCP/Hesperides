@@ -36,7 +36,9 @@ const EJEMPLO_SPECIMEN: SpecimenDetail = {
     usesTrunkHeight: true,
     usesDbh: true,
     unmeasuredSpecimenCount: 0,
+    extraMeasures: [],
   },
+  extraMeasures: [],
   measuredAt: '2026-01-01',
   speciesCritical: true,
   measurementStatus: 'MEASURED',
@@ -71,6 +73,54 @@ const EJEMPLO_SPECIMEN: SpecimenDetail = {
 describe('SpecimenEditModal', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  const conTallos: SpecimenDetail = {
+    ...EJEMPLO_SPECIMEN,
+    species: {
+      ...EJEMPLO_SPECIMEN.species,
+      extraMeasures: [{ code: 'STEM_COUNT', label: 'Número de tallos', unitCode: 'UNIT', referenceNote: '3 tallos (rango 2–4)' }],
+    },
+  };
+
+  it('pide las medidas de la especie, con su referencia como ayuda y sin atribuirla', async () => {
+    const user = userEvent.setup();
+    mockCatastroApi.update.mockResolvedValueOnce({} as never);
+    render(<SpecimenEditModal specimen={conTallos} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+    const tallos = screen.getByLabelText(/Número de tallos/);
+    expect(tallos).toHaveValue('');
+    expect(screen.getByText('3 tallos (rango 2–4)')).toBeInTheDocument();
+
+    await user.type(tallos, '3');
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
+    await user.click(await screen.findByRole('button', { name: /Confirmar y guardar/i }));
+
+    await waitFor(() => expect(mockCatastroApi.update).toHaveBeenCalled());
+    expect(mockCatastroApi.update.mock.calls[0][1].measurement?.extraValues).toEqual([{ code: 'STEM_COUNT', value: 3 }]);
+  });
+
+  it('una medida en blanco no se envía', async () => {
+    const user = userEvent.setup();
+    mockCatastroApi.update.mockResolvedValueOnce({} as never);
+    render(<SpecimenEditModal specimen={conTallos} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
+    await user.click(await screen.findByRole('button', { name: /Confirmar y guardar/i }));
+
+    await waitFor(() => expect(mockCatastroApi.update).toHaveBeenCalled());
+    expect(mockCatastroApi.update.mock.calls[0][1].measurement?.extraValues).toEqual([]);
+  });
+
+  it('un conteo debe ser entero', async () => {
+    const user = userEvent.setup();
+    render(<SpecimenEditModal specimen={conTallos} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+    await user.type(screen.getByLabelText(/Número de tallos/), '2.5');
+    await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
+
+    expect(await screen.findByText('Número de tallos debe ser un número entero.')).toBeInTheDocument();
+    expect(mockCatastroApi.update).not.toHaveBeenCalled();
   });
 
   it('acepta un DAP de 0, que es una medida real', async () => {

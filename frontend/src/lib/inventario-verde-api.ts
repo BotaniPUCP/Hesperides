@@ -1,4 +1,5 @@
 import type {
+  ExtraMeasure,
   InventorySummary,
   LocationCount,
   Page,
@@ -119,6 +120,11 @@ export const inventarioVerdeApi = {
     if (photo) data.append('photo', photo);
     return apiClient.postForm<Species>('/green-inventory/species', data).then(withSpeciesMedia);
   },
+
+  extraMeasures: () => apiClient.get<ExtraMeasure[]>('/green-inventory/extra-measures'),
+
+  createExtraMeasure: (form: { label: string; unitCode: string }) =>
+    apiClient.post<ExtraMeasure>('/green-inventory/extra-measures', form),
 
   updateSpecies: (slug: string, form: SpeciesForm) =>
     apiClient.put<Species>(`/green-inventory/species/${segment(slug)}`, form).then(withSpeciesMedia),

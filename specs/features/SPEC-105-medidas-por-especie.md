@@ -176,6 +176,9 @@ equivale a `data_source = 'MEASURED'`; `measured=false`, a cualquier otro valor.
 `measurementStatus` es `MEASURED`, `REFERENCE` o `NOT_MEASURED`. Las referencias solo llegan con
 `REFERENCE`; en los otros dos casos son `null`, de modo que una pantalla no pueda mostrarlas por error.
 
+`SpecimenDetailResponse` también trae `measuredAt`, `lastPruningDate` y la fuente de cada promedio;
+`SpeciesResponse`, `unmeasuredSpecimenCount`, que alimenta la confirmación del §5.2.
+
 **Cada fila del historial agrega** `origin` (`MEASURED` o `AVERAGE`) y `extraValues`.
 
 **Medición de un ejemplar:** `SpecimenForm.measurement` agrega `extraValues`:
@@ -461,7 +464,8 @@ internos, en el espacio de `showOperationalRegime`, que existe pero nadie usa. L
 - **Quitar una medida adicional a una especie:** soft delete de la asignación. Sus valores siguen en el
   historial, pero ya no se piden.
 - **Desactivar una medida del catálogo con valores:** se permite y deja de ofrecerse. Su unidad no se puede
-  cambiar si tiene valores, y el nombre normalizado es único entre las activas.
+  cambiar si tiene valores, tampoco desde el catálogo general, que además la exige al crear. El nombre
+  normalizado no se repite, ni con una medida desactivada: su código se deriva de él.
 - **Valor de una medida en `UNIT`:** debe ser entero.
 - **Medida adicional que no pertenece a la especie:** error de validación.
 - **Devolución y nuevo cierre de la misma ubicación:** vuelve a preguntar. Las filas anteriores permanecen.

@@ -1,8 +1,10 @@
 package pe.edu.pucp.hesperides.modules.inventory.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -56,6 +58,17 @@ public record SpeciesForm(
 
         Boolean usesTrunkHeight,
 
-        Boolean usesDbh
+        Boolean usesDbh,
+
+        /** Sin lista, se conservan las medidas adicionales de la especie. */
+        List<@NotNull @Valid ExtraMeasure> extraMeasures
 ) {
+    public record ExtraMeasure(
+            @NotBlank(message = "La medida adicional necesita un código")
+            String code,
+
+            @Size(max = 200, message = "La referencia no puede exceder 200 caracteres")
+            String referenceNote) {
+    }
+
 }
