@@ -13,6 +13,8 @@
  * validando por su cuenta: ocultar un enlace no es una medida de seguridad.
  */
 
+import { INCIDENT_MEMBER_ROLES } from './incidentRoles';
+
 export interface NavItem {
   label: string;
   href: string;
@@ -35,7 +37,7 @@ export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
  * un desplegable con un solo ítem obliga a un clic de más.
  */
 export const DIRECT_LINKS: readonly NavItem[] = [
-  { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: ['COORDINADOR', 'SUPERVISOR'] },
+  { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: INCIDENT_MEMBER_ROLES },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
   // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.

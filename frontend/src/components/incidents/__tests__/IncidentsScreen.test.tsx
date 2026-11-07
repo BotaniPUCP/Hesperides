@@ -86,3 +86,25 @@ it('uses a route-level heading and filtered breadcrumb for capture', () => {
   expect(screen.getByRole('heading', { level: 1, name: 'Informar una incidencia' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Incidencias' })).toHaveAttribute('href', '/incidencias?search=rama&status=OPEN&page=2');
 });
+
+describe('ADMIN en incidencias', () => {
+  const summaryData = { pendingApproval: 1, pendingAttention: 2, inProgress: 0, resolved: 0, completedInterventions: 0,
+    pendingCorrection: 0, resolutionObserved: 0, validatedInterventions: 0, matrix: null };
+  beforeEach(() => {
+    jest.mocked(useAuth).mockReturnValue({ user: { id: 9, fullName: 'Ana', role: { code: 'ADMIN' } } } as ReturnType<typeof useAuth>);
+    jest.mocked(useIncidentSummary).mockReturnValue({ ...idle, data: summaryData } as unknown as ReturnType<typeof useIncidentSummary>);
+  });
+
+  it('tiene la lista, el resumen, la exportación y puede informar, como coordinación', () => {
+    render(<IncidentsScreen />);
+    expect(screen.getByText('Rama caída en puerta principal')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Tablero de incidencias' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Informar una incidencia' })).toBeInTheDocument();
+  });
+
+  it('revisa el detalle con las herramientas de coordinación', () => {
+    render(<IncidentDetailScreen id={7} />);
+    expect(screen.getByRole('button', { name: 'Enviar comentario' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Registrar incidencia oficialmente' })).toBeInTheDocument();
+  });
+});

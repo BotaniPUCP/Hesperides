@@ -30,7 +30,7 @@ public class IncidentWorkLinks {
         for (var link : links.findByIncidentIdAndDeletedAtIsNullOrderByIdAsc(id)) {
             var work = queries.detail(link.getIntervention().getId()).orElse(null);
             if (work == null) {
-                if (user == null || user.getRoleCode().equals("COORDINADOR")) result.add(new LinkedInterventionResponse(link.getId(),
+                if (user == null || IncidentRoles.manages(user.getRoleCode())) result.add(new LinkedInterventionResponse(link.getId(),
                         link.getIntervention().getId(), null, null, "UNAVAILABLE", 0,
                         new OptionResponse(link.getPurpose().getId(),link.getPurpose().getCode(),link.getPurpose().getLabel()),0,0));
                 continue;

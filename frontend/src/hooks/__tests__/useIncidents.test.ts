@@ -92,9 +92,18 @@ it('distinguishes not found from network failure and does not call restricted en
   auth.mockReturnValue({ user: { id: 2, role: { code: 'SUPERVISOR' } } } as ReturnType<typeof useAuth>);
   renderHook(() => useIncidentSummary());
   expect(api.summary).not.toHaveBeenCalled();
-  auth.mockReturnValue({ user: { id: 3, role: { code: 'ADMIN' } } } as ReturnType<typeof useAuth>);
+  auth.mockReturnValue({ user: { id: 3, role: { code: 'OPERARIO' } } } as ReturnType<typeof useAuth>);
   renderHook(() => useIncidents(filters));
   expect(api.list).not.toHaveBeenCalled();
+});
+
+it('el ADMIN consulta la lista y el resumen', async () => {
+  auth.mockReturnValue({ user: { id: 4, role: { code: 'ADMIN' } } } as ReturnType<typeof useAuth>);
+  api.summary.mockResolvedValue({} as Awaited<ReturnType<typeof incidentsApi.summary>>);
+  renderHook(() => useIncidents(filters));
+  renderHook(() => useIncidentSummary());
+  await waitFor(() => expect(api.list).toHaveBeenCalled());
+  expect(api.summary).toHaveBeenCalled();
 });
 
 it('discards data when the signed-in actor changes', async () => {

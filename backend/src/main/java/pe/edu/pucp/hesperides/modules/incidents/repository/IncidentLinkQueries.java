@@ -13,7 +13,7 @@ import java.util.Map;
 public class IncidentLinkQueries {
     private final JdbcTemplate jdbc;
     private static final String SCOPE = """
-         i.deleted_at IS NULL AND (?='COORDINADOR' OR (?='SUPERVISOR' AND
+         i.deleted_at IS NULL AND (? IN ('ADMIN','COORDINADOR') OR (?='SUPERVISOR' AND
          (i.reported_by_user_id=? OR EXISTS(SELECT 1 FROM teams t WHERE t.id=i.team_id
           AND t.is_active AND t.deleted_at IS NULL AND t.supervisor_user_id=?))))
         """;

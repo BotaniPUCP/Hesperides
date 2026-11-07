@@ -7,12 +7,13 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSummary } from '@/hooks/useIncidents';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { incidentDate, incidentQuery } from '@/lib/incidentNavigation';
+import { managesIncidents } from '@/lib/incidentRoles';
 import { IncidentDashboard, IncidentExportButton } from './IncidentDashboard';
 import { PageHeader } from '@/components/layouts/PageHeader';
 
 export function IncidentsScreen() {
   const { user } = useAuth();
-  const coordinator = user?.role.code === 'COORDINADOR';
+  const coordinator = managesIncidents(user?.role.code);
   const { filters, href, changeFilters } = useIncidentNavigation();
   const debouncedSearch = useDebouncedValue(filters.search, 300);
   const list = useIncidents({ ...filters, search: debouncedSearch });

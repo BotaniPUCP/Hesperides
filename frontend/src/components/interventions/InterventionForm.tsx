@@ -13,6 +13,7 @@ import { todayLocal } from '@/lib/local-date';
 import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { PageHeader } from '@/components/layouts/PageHeader';
+import { managesIncidents } from '@/lib/incidentRoles';
 
 const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
 const nullableNumber = (s: string) => s === '' ? null : Number(s);
@@ -25,7 +26,7 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
   const source = useRequest(origin ? `intervention-origin:${user?.id}:${origin}` : null, () => incidentsApi.detail(origin!));
   const [dirty,setDirty] = useState(false);
   const guard = useUnsavedChangesGuard(dirty);
-  const sourceAvailable = !origin || (user?.role.code === 'COORDINADOR' && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
+  const sourceAvailable = !origin || (managesIncidents(user?.role.code) && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? null);

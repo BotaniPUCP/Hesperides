@@ -169,7 +169,7 @@ public class IncidentMatrix {
         return current != null && current.getCode().equals(code) ? current : item(type, code);
     }
     private boolean availablePerson(User user) {
-        return user.isActive() && !user.isDeleted() && Set.of("COORDINADOR", "SUPERVISOR").contains(user.getRoleCode());
+        return user.isActive() && !user.isDeleted() && IncidentRoles.participates(user.getRoleCode());
     }
     private List<MatrixOptionResponse> options(String type) {
         return catalogs.findActiveByTypeCode(type).stream().map(i -> new MatrixOptionResponse(i.getId(), i.getCode(),

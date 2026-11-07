@@ -8,6 +8,7 @@ import { useIncidentDetail, useIncidentNavigation, useIncidentOptions } from '@/
 import { IncidentDetailPanel } from './IncidentDetailPanel';
 import { incidentQuery, interventionCreationHref } from '@/lib/incidentNavigation';
 import { rememberListQuery } from '@/lib/listMemory';
+import { managesIncidents } from '@/lib/incidentRoles';
 
 export interface IncidentDetailScreenProps {
   id: number;
@@ -47,7 +48,7 @@ export function IncidentDetailScreen({ id, selectedInterventionId = null }: Inci
           )}
           <IncidentDetailPanel key={id} detail={detail.data} options={options.data} optionsLoading={options.loading}
             selectedInterventionId={selectedInterventionId} createInterventionHref={interventionCreationHref(id,filters)}
-            coordinator={user?.role.code === 'COORDINADOR'} onChange={detail.updateData} onReload={reload} />
+            coordinator={managesIncidents(user?.role.code)} onChange={detail.updateData} onReload={reload} />
         </>
       )}
     </div>

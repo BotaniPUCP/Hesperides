@@ -117,8 +117,8 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('el mapa es directo para los cuatro roles; incidencias, riego y reportes, para quien los opera', () => {
-    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/riego', '/reportes']);
+  it('el mapa es directo para los cuatro roles; incidencias, riego y reportes, para quien los opera o supervisa', () => {
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
     expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
     expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
     expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa']);
@@ -131,11 +131,11 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('solo coordinación y capataces ven el acceso directo a incidencias', () => {
-    for (const role of ['COORDINADOR', 'SUPERVISOR']) {
+  it('administración, coordinación y capataces ven el acceso directo a incidencias', () => {
+    for (const role of ['ADMIN', 'COORDINADOR', 'SUPERVISOR']) {
       expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(true);
     }
-    for (const role of ['ADMIN', 'OPERARIO', 'DESCONOCIDO']) {
+    for (const role of ['OPERARIO', 'DESCONOCIDO']) {
       expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(false);
     }
   });
