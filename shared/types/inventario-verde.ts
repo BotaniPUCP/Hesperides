@@ -125,6 +125,8 @@ export interface MeasurementRecord {
   banded: boolean | null;
   measuredBy: string | null;
   notes?: string | null;
+  /** AVERAGE guarda el promedio vigente cuando se aplicó: no es una medida real (SPEC-105 §4.3). */
+  origin: 'MEASURED' | 'AVERAGE';
 }
 
 export interface SpecimenDetail extends Specimen {

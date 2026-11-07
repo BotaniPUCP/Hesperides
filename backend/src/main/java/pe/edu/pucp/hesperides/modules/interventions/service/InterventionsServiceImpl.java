@@ -29,6 +29,7 @@ import java.util.*;
 @Transactional(readOnly=true)
 public class InterventionsServiceImpl implements InterventionsService {
     private final InterventionsRepository interventions;
+    private final PruningMeasurementOutcomeService measurementOutcomes;
     private final InterventionLocationsRepository locations;
     private final InterventionElementsRepository elements;
     private final InterventionEventsRepository events;
@@ -340,6 +341,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         location.setCompletedAt(microseconds(Instant.now()));
         location.setStatusItemId(status("COMPLETED"));
         persistReview(intervention, location, user, "COMPLETED", from, null, previous);
+        measurementOutcomes.apply(id, locationId, request.measurementOutcomes(), user.getId());
         return detail(id, user);
     }
 

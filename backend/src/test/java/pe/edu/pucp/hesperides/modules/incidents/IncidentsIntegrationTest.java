@@ -111,7 +111,7 @@ class IncidentsIntegrationTest {
         } catch (java.io.IOException ex) { throw new java.io.UncheckedIOException(ex); }
         asActor(foreman,() -> workService.uploadEvidence(id,photo.evidence().id(),new MockMultipartFile("file","evidence.png","image/png",image)));
         var received=asActor(foreman,() -> workService.findById(id));
-        return asActor(foreman,() -> workService.complete(id,locationId,new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Completion(received.getVersion(),null,"Trabajo ejecutado y área revisada")));
+        return asActor(foreman,() -> workService.complete(id,locationId,new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Completion(received.getVersion(),null,"Trabajo ejecutado y área revisada",null)));
     }
     void validateWork(long id) {
         var work=asActor(coordinator,() -> workService.findById(id));

@@ -29,7 +29,11 @@ public final class InterventionRequests {
     public record Start(@NotNull @PositiveOrZero Long version) {}
     public record Completion(@NotNull @PositiveOrZero Long version,
             @DecimalMin("0") @Digits(integer=9, fraction=3) BigDecimal executedQuantity,
-            @NotBlank @Size(max=4000) String executionNotes) {}
+            @NotBlank @Size(max=4000) String executionNotes,
+            List<@NotNull @Valid MeasurementOutcome> measurementOutcomes) {}
+    /** SPEC-105 §5.3: un ejemplar que no aparece no cambia sus medidas. */
+    public record MeasurementOutcome(@NotBlank @Size(max=12) String specimenCode, @NotBlank @Size(max=10) String outcome,
+            @Valid pe.edu.pucp.hesperides.modules.imports.dto.SpecimenForm.MeasurementForm measurement) {}
     public record Review(@NotNull @PositiveOrZero Long version) {}
     public record Observation(@NotNull @PositiveOrZero Long version,
             @NotBlank @Size(max=2000) String reason) {}

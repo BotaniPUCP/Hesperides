@@ -1,6 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { todayLocal } from '@/lib/local-date';
+import { aOutcomes, errorDeDecision, type DecisionPoda } from './cierrePoda';
+import { MedidasCierrePoda } from './MedidasCierrePoda';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCatalog } from '@/hooks/useCatalog';
@@ -84,6 +87,8 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<{location:InterventionLocation; action:string} | null>(null);
+  const [pruning,setPruning]=useState<Record<string,DecisionPoda>>({});
+  const [pruningErrors,setPruningErrors]=useState<Record<string,string>>({});
   const [quantity, setQuantity] = useState('');
   const [notes, setNotes] = useState('');
   const [reason, setReason] = useState('');
@@ -126,12 +131,22 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   const teamOption = options?.teams.find(t => String(t.id) === team);
   const label = (type:string,code:string) => options?.catalogs.find(c => c.typeCode === type && c.code === code)?.label ?? code;
   const unit = (id:number|null|undefined) => options?.catalogs.find(c => c.id === id)?.label ?? '';
-  const openAction = (location:InterventionLocation,action:string) => {setSelected({location,action});setQuantity(String(location.progressQuantity ?? location.executedQuantity ?? ''));setNotes(location.executionNotes ?? '');setReason('');setError('');setNotice('');};
+  const isPruning = options?.catalogs.find(c => c.id === data.classItemId)?.code === 'PODA';
+  const pruningCodes = selected?.action === 'complete' && isPruning ? selected.location.linkedElementCodes ?? [] : [];
+  const openAction = (location:InterventionLocation,action:string) => {setPruning({});setPruningErrors({});setSelected({location,action});setQuantity(String(location.progressQuantity ?? location.executedQuantity ?? ''));setNotes(location.executionNotes ?? '');setReason('');setError('');setNotice('');};
   const submitAction = () => {
     if (!selected) return;
     const body:Record<string,unknown> = {version:data.version};
     if (selected.action === 'execution') {body.progressQuantity=quantity === '' ? null : Number(quantity);body.executionNotes=notes;}
-    if (selected.action === 'complete') {body.executedQuantity=quantity === '' ? null : Number(quantity);body.executionNotes=notes;}
+    if (selected.action === 'complete') {
+      body.executedQuantity=quantity === '' ? null : Number(quantity);body.executionNotes=notes;
+      const today=todayLocal();
+      const invalid=Object.fromEntries(Object.entries(pruning).flatMap(([code,decision]) => {const message=errorDeDecision(decision,today);return message ? [[code,message]] : [];}));
+      setPruningErrors(invalid);
+      if (Object.keys(invalid).length > 0) return;
+      const outcomes=aOutcomes(pruning);
+      if (outcomes.length > 0) body.measurementOutcomes=outcomes;
+    }
     if (selected.action === 'observe') body.reason=reason;
     if (['execution','complete'].includes(selected.action) && quantity !== '' && (!Number.isFinite(Number(quantity)) || Number(quantity) < 0)) {setError('La cantidad debe ser positiva o cero.');return;}
     if (selected.action === 'complete' && (!notes.trim() || (selected.location.unitItemId && quantity === ''))) {setError('Ingresa el reporte y la cantidad ejecutada cuando corresponda.');return;}
@@ -202,6 +217,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
           {selected.location.unitItemId && <label className="grid gap-1 text-sm">Cantidad {unit(selected.location.unitItemId)}<input type="number" min="0" step="0.001" className="h-11 rounded-md border border-neutral-200 p-2" value={quantity} onChange={e => setQuantity(e.target.value)} disabled={busy} /></label>}
           {selected.action === 'execution' && <p className="text-sm text-neutral-500">Indica el total realizado hasta ahora en esta ubicación. Cada registro conserva su cantidad, descripción y fecha en el historial.</p>}
           <label className="grid gap-1 text-sm">Reporte de ejecución<textarea className="min-h-28 rounded-md border border-neutral-200 p-2" maxLength={4000} value={notes} onChange={e => setNotes(e.target.value)} disabled={busy} /></label>
+          {pruningCodes.length > 0 && <MedidasCierrePoda codigos={pruningCodes} decisiones={pruning} onCambiar={setPruning} hoy={todayLocal()} errores={pruningErrors} disabled={busy} />}
         </>}
         {selected?.action === 'observe' && <Input id="observation-reason" label="Motivo de la observación" value={reason} onChange={setReason} required maxLength={2000} disabled={busy} />}
         {selected?.action === 'validate' && <p>Apruebas únicamente esta ubicación. El trabajo contará después de aprobarlas todas.</p>}

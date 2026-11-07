@@ -87,6 +87,18 @@ describe('SpecimenDetailScreen', () => {
     expect(screen.queryByText(/Nadie ha medido este ejemplar/)).not.toBeInTheDocument();
   });
 
+  it('un ejemplar sin medida vigente también ofrece su historial', async () => {
+    api.specimen.mockResolvedValue({
+      ...p01Detail, dataSource: 'UNKNOWN', heightM: null, trunkHeightM: null, dbhCm: null, crownRadiusM: null,
+      measuredAt: null, speciesCritical: false, measurementStatus: 'REFERENCE', referenceHeightM: 3, referenceCrownRadiusM: 1,
+      referenceHeightSourceName: 'Ficha botánica', referenceCrownRadiusSourceName: 'Ficha botánica',
+    });
+
+    render(<SpecimenDetailScreen code="EV-000100" />);
+
+    expect(await screen.findByRole('button', { name: /Ver historial de medidas/ })).toBeInTheDocument();
+  });
+
   it('avisa si la medida es anterior a la última poda', async () => {
     api.specimen.mockResolvedValue({
       ...p01Detail, measuredBeforeLastPruning: true, lastPruningDate: '2026-03-03',

@@ -111,6 +111,11 @@ export function SpecimenMeasurementsModal({
                               Vigente
                             </span>
                           )}
+                          {m.origin === 'AVERAGE' && (
+                            <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-neutral-100 text-neutral-700">
+                              Promedio de la especie
+                            </span>
+                          )}
                           {m.notes && (
                             <div className="relative group/tooltip inline-flex items-center">
                               <button

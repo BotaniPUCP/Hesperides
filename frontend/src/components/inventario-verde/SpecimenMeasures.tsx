@@ -165,19 +165,20 @@ export function SpecimenMeasures({
               </p>
             )}
 
-            <div className="mt-3.5 pt-3 border-t border-neutral-100 flex items-center justify-end text-xs">
-              <button
-                type="button"
-                onClick={() => setHistoryOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline transition-colors py-0.5"
-              >
-                <span>Ver historial de medidas →</span>
-              </button>
-            </div>
           </>
         ) : (
           <SpecimenUnmeasuredBlock specimen={specimen} onMeasure={canEdit ? onEditMeasures : undefined} />
         )}
+
+        <div className="mt-3.5 pt-3 border-t border-neutral-100 flex items-center justify-end text-xs">
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline transition-colors py-0.5"
+          >
+            <span>Ver historial de medidas →</span>
+          </button>
+        </div>
 
         {showOperationalRegime && (
           <p className="mt-3 text-xs text-neutral-600">
@@ -186,14 +187,12 @@ export function SpecimenMeasures({
         )}
       </div>
 
-      {measured && (
-        <SpecimenMeasurementsModal
-          code={specimen.code}
-          speciesName={specimen.species.commonName || specimen.species.scientificName}
-          isOpen={historyOpen}
-          onClose={() => setHistoryOpen(false)}
-        />
-      )}
+      <SpecimenMeasurementsModal
+        code={specimen.code}
+        speciesName={specimen.species.commonName || specimen.species.scientificName}
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </section>
   );
 }

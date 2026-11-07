@@ -29,7 +29,7 @@ public class SpecimenWriter {
         SpecimenDraft d = row.draft();
         Written w = row.action() == ImportAction.CREATE ? create(row, batchId, userId) : update(row);
         if (d.measurement() != null) {
-            measure(w.id(), d.measurement(), measuredBy);
+            recordMeasurement(w.id(), d.measurement(), measuredBy, null);
         }
         if (d.assessment() != null) {
             assess(w.id(), d.assessment(), measuredBy, batchId);
@@ -69,23 +69,25 @@ public class SpecimenWriter {
                 d.legacyCode(), remoteLink(d.photo()), d.notes(), d.code());
     }
 
-    /** La medición más reciente es la vigente: una fecha anterior no pisa a una posterior. */
-    private void measure(long id, Measurement m, Long measuredBy) {
+    /**
+     * La medición más reciente es la vigente: una fecha anterior a la última fila del
+     * historial entra al historial y no la reemplaza. Se compara con el historial y
+     * no con measured_at, que queda nulo cuando un ejemplar vuelve al promedio.
+     */
+    public void recordMeasurement(long id, Measurement m, Long measuredBy, Long interventionId) {
+        Date date = Date.valueOf(m.date());
         jdbc.update("""
                 UPDATE green_elements SET height_m = ?, trunk_height_m = ?, dbh_cm = ?, crown_radius_m = ?,
                        is_banded = COALESCE(?, is_banded), data_source = 'MEASURED', measured_at = ?,
                        measured_by_user_id = ?, updated_at = CURRENT_TIMESTAMP
-                 WHERE id = ? AND (measured_at IS NULL OR measured_at <= ?)""",
-                m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded(), Date.valueOf(m.date()),
-                measuredBy, id, Date.valueOf(m.date()));
-
-        // Conservar en el historial de mediciones (SPEC-103 / V027)
+                 WHERE id = ? AND NOT EXISTS (SELECT 1 FROM green_element_measurements x
+                                               WHERE x.green_element_id = ? AND x.deleted_at IS NULL AND x.measured_at > ?)""",
+                m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded(), date, measuredBy, id, id, date);
         jdbc.update("""
                 INSERT INTO green_element_measurements (green_element_id, measured_at, measured_by_user_id,
-                       height_m, trunk_height_m, dbh_cm, crown_radius_m, is_banded, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)""",
-                id, Date.valueOf(m.date()), measuredBy, m.heightM(), m.trunkHeightM(), m.dbhCm(),
-                m.crownRadiusM(), m.banded());
+                       height_m, trunk_height_m, dbh_cm, crown_radius_m, is_banded, intervention_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                id, date, measuredBy, m.heightM(), m.trunkHeightM(), m.dbhCm(), m.crownRadiusM(), m.banded(), interventionId);
     }
 
     /** Añade una evaluación al historial (SPEC-103 D-06): nunca reemplaza las anteriores. */

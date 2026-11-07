@@ -461,18 +461,168 @@ class InterventionsIntegrationTest {
         } finally {jdbc.update("update green_elements set measured_at=? where id=?",measuredAt,element);}
     }
     void completePruningOf(long element,String code) throws Exception {
+        var work=startedWork("PODA",element,code);
+        closeWith(work,null,200);
+    }
+    record StartedWork(long id,long location,long version,String code) {}
+    StartedWork startedWork(String classCode,long element,String code) throws Exception {
         var body=plan();
-        long pruningType=jdbc.queryForObject("select t.id from catalog_items t join catalog_items c on c.id=t.parent_item_id where c.code='PODA' and t.is_active and t.deleted_at is null order by t.id limit 1",Long.class);
-        body.put("classItemId",jdbc.queryForObject("select parent_item_id from catalog_items where id=?",Long.class,pruningType));
-        body.put("typeItemId",pruningType);
+        long type=jdbc.queryForObject("select t.id from catalog_items t join catalog_items c on c.id=t.parent_item_id where "+("PODA".equals(classCode)?"c.code='PODA'":"c.code<>'PODA'")+" and t.is_active and t.deleted_at is null order by t.id limit 1",Long.class);
+        body.put("classItemId",jdbc.queryForObject("select parent_item_id from catalog_items where id=?",Long.class,type));
+        body.put("typeItemId",type);
         @SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
         rows.set(0,new LinkedHashMap<>(Map.of("clientReference",UUID.randomUUID().toString(),"elementCodes",List.of(code),"elementIds",List.of(element))));
         var d=create(body,UUID.randomUUID().toString(),201);long id=d.get("id").asLong(),local=d.get("locations").get(0).get("id").asLong();
         assign(id,team,operator,"coordinator","COORDINADOR",0,200);
         var started=localCommand(id,local,"start","operator","OPERARIO",Map.of("version",1),200);
         var withPhoto=receivedPhoto(started,0,"operator","OPERARIO");
-        localCommand(id,local,"complete","operator","OPERARIO",Map.of("version",withPhoto.get("version").asLong(),"executionNotes","Poda terminada"),200);
+        return new StartedWork(id,local,withPhoto.get("version").asLong(),d.get("code").asString());
     }
+    void closeWith(StartedWork work,List<Map<String,Object>> outcomes,int expected) throws Exception {
+        var body=new LinkedHashMap<String,Object>(Map.of("version",work.version(),"executionNotes","Poda terminada"));
+        if(outcomes!=null)body.put("measurementOutcomes",outcomes);
+        localCommand(work.id(),work.location(),"complete","operator","OPERARIO",body,expected);
+    }
+    long unmeasuredSpecimen(String slug) {
+        return jdbc.queryForObject("select e.id from green_elements e join species s on s.id=e.species_id where s.slug=? and e.deleted_at is null and e.is_active and e.data_source<>'MEASURED' order by e.id limit 1",Long.class,slug);
+    }
+    String codeOf(long element) {return jdbc.queryForObject("select code from green_elements where id=?",String.class,element);}
+    void measureForReal(long element,double height,double crown) {
+        jdbc.update("update green_elements set height_m=?,crown_radius_m=?,data_source='MEASURED',measured_at=date '2026-01-01' where id=?",height,crown,element);
+        jdbc.update("insert into green_element_measurements(green_element_id,measured_at,height_m,crown_radius_m) values (?,date '2026-01-01',?,?)",element,height,crown);
+    }
+    static Map<String,Object> outcome(String code,String outcome) {return Map.of("specimenCode",code,"outcome",outcome);}
+    static Map<String,Object> measured(String code,String date,double height,double crown) {
+        return Map.of("specimenCode",code,"outcome","MEASURED","measurement",Map.of("date",date,"heightM",height,"crownRadiusM",crown));
+    }
+    @Test void realMeasurementEqualToTheAverageStaysReal() throws Exception {
+        long element=unmeasuredSpecimen("coffea-arabica");String code=codeOf(element);
+        var work=startedWork("PODA",element,code);
+
+        closeWith(work,List.of(measured(code,todayLocal(),3.0,1.0)),200);
+
+        assertThat(jdbc.queryForObject("select data_source from green_elements where id=?",String.class,element)).isEqualTo("MEASURED");
+        var row=jdbc.queryForMap("select origin,intervention_id,measured_by_user_id,height_m from green_element_measurements where green_element_id=? and deleted_at is null",element);
+        assertThat(row.get("origin")).isEqualTo("MEASURED");
+        assertThat(((Number)row.get("intervention_id")).longValue()).isEqualTo(work.id());
+        assertThat(((Number)row.get("measured_by_user_id")).longValue()).isEqualTo(operator);
+        mvc.perform(get("/api/v1/green-inventory/specimens/"+code)).andExpect(jsonPath("$.data.measurementStatus").value("MEASURED"));
+    }
+    @Test void usingTheAverageClearsTheCurrentMeasureAndKeepsTheHistory() throws Exception {
+        long element=unmeasuredSpecimen("jarava-ichu");String code=codeOf(element);
+        measureForReal(element,0.9,0.4);
+        var work=startedWork("PODA",element,code);
+
+        closeWith(work,List.of(outcome(code,"AVERAGE")),200);
+
+        var current=jdbc.queryForMap("select height_m,crown_radius_m,measured_at,measured_by_user_id,data_source from green_elements where id=?",element);
+        assertThat(current.get("height_m")).isNull();
+        assertThat(current.get("crown_radius_m")).isNull();
+        assertThat(current.get("measured_at")).isNull();
+        assertThat(current.get("measured_by_user_id")).isNull();
+        assertThat(current.get("data_source")).isEqualTo("UNKNOWN");
+        var average=jdbc.queryForMap("select height_m,trunk_height_m,crown_radius_m,notes,intervention_id from green_element_measurements where green_element_id=? and origin='AVERAGE' and deleted_at is null",element);
+        assertThat((java.math.BigDecimal)average.get("height_m")).isEqualByComparingTo("0.7");
+        assertThat((java.math.BigDecimal)average.get("crown_radius_m")).isEqualByComparingTo("0.25");
+        assertThat(average.get("trunk_height_m")).isNull();
+        assertThat((String)average.get("notes")).contains(work.code());
+        assertThat(jdbc.queryForObject("select count(*) from green_element_measurements where green_element_id=? and origin='MEASURED' and deleted_at is null",Integer.class,element)).isEqualTo(1);
+        mvc.perform(get("/api/v1/green-inventory/specimens/"+code))
+            .andExpect(jsonPath("$.data.measurementStatus").value("REFERENCE"))
+            .andExpect(jsonPath("$.data.referenceHeightM").value(0.7));
+        mvc.perform(get("/api/v1/green-inventory/specimens/"+code+"/measurements"))
+            .andExpect(jsonPath("$.data[0].origin").value("AVERAGE"))
+            .andExpect(jsonPath("$.data[1].origin").value("MEASURED"));
+
+        jdbc.update("update species set reference_height_m=0.8 where slug='jarava-ichu'");
+        try {
+            assertThat(jdbc.queryForObject("select height_m from green_element_measurements where green_element_id=? and origin='AVERAGE'",java.math.BigDecimal.class,element)).isEqualByComparingTo("0.7");
+            mvc.perform(get("/api/v1/green-inventory/specimens/"+code)).andExpect(jsonPath("$.data.referenceHeightM").value(0.8));
+        } finally {jdbc.update("update species set reference_height_m=0.7 where slug='jarava-ichu'");}
+    }
+    @Test void usingTheAverageOnANeverMeasuredSpecimenWritesNothing() throws Exception {
+        long element=unmeasuredSpecimen("leea-guineensis");String code=codeOf(element);
+        var work=startedWork("PODA",element,code);
+
+        closeWith(work,List.of(outcome(code,"AVERAGE")),200);
+
+        assertThat(jdbc.queryForObject("select count(*) from green_element_measurements where green_element_id=?",Integer.class,element)).isZero();
+    }
+    @Test void unchangedOutcomeWritesNothing() throws Exception {
+        long element=unmeasuredSpecimen("delonix-regia");String code=codeOf(element);
+        var work=startedWork("PODA",element,code);
+
+        closeWith(work,List.of(outcome(code,"UNCHANGED")),200);
+
+        assertThat(jdbc.queryForObject("select data_source from green_elements where id=?",String.class,element)).isEqualTo("UNKNOWN");
+        assertThat(jdbc.queryForObject("select count(*) from green_element_measurements where green_element_id=?",Integer.class,element)).isZero();
+    }
+    @Test void averageOnACriticalSpeciesIsRejectedAndTheCloseIsRolledBack() throws Exception {
+        long element=unmeasuredSpecimen("tipuana-tipu");String code=codeOf(element);
+        var work=startedWork("PODA",element,code);
+
+        closeWith(work,List.of(outcome(code,"AVERAGE")),422);
+
+        assertThat(jdbc.queryForObject("select completed_at from intervention_locations where id=?",java.sql.Timestamp.class,work.location())).isNull();
+        assertThat(jdbc.queryForObject("select count(*) from green_element_measurements where green_element_id=?",Integer.class,element)).isZero();
+    }
+    @Test void aFailedOutcomeDoesNotKeepEarlierOutcomesOfTheSameClose() throws Exception {
+        long good=unmeasuredSpecimen("polyscias-guilfoylei"),bad=unmeasuredSpecimen("prosopis-pallida");
+        String goodCode=codeOf(good),badCode=codeOf(bad);
+        var body=plan();
+        long type=jdbc.queryForObject("select t.id from catalog_items t join catalog_items c on c.id=t.parent_item_id where c.code='PODA' and t.is_active and t.deleted_at is null order by t.id limit 1",Long.class);
+        body.put("classItemId",jdbc.queryForObject("select parent_item_id from catalog_items where id=?",Long.class,type));
+        body.put("typeItemId",type);
+        @SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
+        rows.set(0,new LinkedHashMap<>(Map.of("clientReference",UUID.randomUUID().toString(),"elementCodes",List.of(goodCode,badCode),"elementIds",List.of(good,bad))));
+        var d=create(body,UUID.randomUUID().toString(),201);long id=d.get("id").asLong(),local=d.get("locations").get(0).get("id").asLong();
+        assign(id,team,operator,"coordinator","COORDINADOR",0,200);
+        var withPhoto=receivedPhoto(localCommand(id,local,"start","operator","OPERARIO",Map.of("version",1),200),0,"operator","OPERARIO");
+
+        closeWith(new StartedWork(id,local,withPhoto.get("version").asLong(),d.get("code").asString()),List.of(measured(goodCode,todayLocal(),2.0,0.5),outcome(badCode,"AVERAGE")),422);
+
+        assertThat(jdbc.queryForObject("select count(*) from green_element_measurements where green_element_id=?",Integer.class,good)).isZero();
+        assertThat(jdbc.queryForObject("select data_source from green_elements where id=?",String.class,good)).isEqualTo("UNKNOWN");
+    }
+    @Test void outcomesAreRejectedOutsidePruning() throws Exception {
+        long element=unmeasuredSpecimen("hibiscus-rosa-sinensis");String code=codeOf(element);
+        var work=startedWork("OTHER",element,code);
+
+        closeWith(work,List.of(measured(code,todayLocal(),2.0,1.0)),422);
+        assertThat(jdbc.queryForObject("select count(*) from green_element_measurements where green_element_id=?",Integer.class,element)).isZero();
+    }
+    @Test void outcomesAreRejectedForASpecimenOutsideTheLocation() throws Exception {
+        long element=unmeasuredSpecimen("brunfelsia-australis");
+        var work=startedWork("PODA",element,codeOf(element));
+
+        closeWith(work,List.of(outcome(codeOf(unmeasuredSpecimen("piper-aduncum")),"UNCHANGED")),422);
+    }
+    @Test void invalidOutcomesAreClientErrors() throws Exception {
+        long element=unmeasuredSpecimen("randia-aculeata");String code=codeOf(element);
+        var work=startedWork("PODA",element,code);
+
+        closeWith(work,List.of(outcome(code,"NOPE")),400);
+        closeWith(work,List.of(outcome(code,"MEASURED")),400);
+        closeWith(work,List.of(Map.of("specimenCode",code,"outcome","MEASURED","measurement",Map.of("date",todayLocal()))),400);
+        closeWith(work,List.of(measured(code,java.time.LocalDate.now().plusDays(2).toString(),2.0,1.0)),400);
+        closeWith(work,List.of(outcome(code,"UNCHANGED"),outcome(code,"UNCHANGED")),400);
+    }
+    @Test void aMeasurementOlderThanTheLastHistoryRowDoesNotReplaceTheCurrentOne() throws Exception {
+        long element=unmeasuredSpecimen("caesalpinia-gilliesii");String code=codeOf(element);
+        measureForReal(element,2.0,1.0);
+        closeWith(startedWork("PODA",element,code),List.of(outcome(code,"AVERAGE")),200);
+        var position=jdbc.queryForMap("select st_y(location) lat,st_x(location) lon from green_elements where id=?",element);
+        var form=Map.of("scientificName","Caesalpinia gilliesii","lat",position.get("lat"),"lon",position.get("lon"),
+            "measurement",Map.of("date","2026-01-02","heightM",9.0,"crownRadiusM",4.0));
+        var data=new MockMultipartFile("data","","application/json",json.writeValueAsBytes(form));
+
+        mvc.perform(multipart(org.springframework.http.HttpMethod.PUT,"/api/v1/green-inventory/specimens/"+code).file(data)
+            .with(user("coordinator@test.local").authorities(()->"COORDINADOR"))).andExpect(status().isOk());
+
+        assertThat(jdbc.queryForObject("select data_source from green_elements where id=?",String.class,element)).isEqualTo("UNKNOWN");
+        assertThat(jdbc.queryForObject("select count(*) from green_element_measurements where green_element_id=? and height_m=9 and deleted_at is null",Integer.class,element)).isEqualTo(1);
+    }
+    static String todayLocal() {return java.time.LocalDate.now().toString();}
     @Test void startingOneLocationKeepsOtherLocationsAssignedAndRecordsRealActor() throws Exception {
         var d=assignedPlan(true);long id=d.get("id").asLong(),a=d.get("locations").get(0).get("id").asLong();
         var started=localCommand(id,a,"start","operator","OPERARIO",Map.of("version",1),200);

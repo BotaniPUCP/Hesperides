@@ -11,5 +11,6 @@ public record MeasurementResponse(
         Double crownRadiusM,
         Boolean banded,
         String measuredBy,
-        String notes
+        String notes,
+        String origin
 ) {}

@@ -755,8 +755,8 @@
 **ESCENARIO: Completar una poda no estima medidas (SPEC-105)**
 - **DADO QUE** se completa una intervención de poda sobre un ejemplar censado (`INT-XXXXXX`),
 - **CUANDO** el sistema registra el cierre de la ubicación,
-- **ENTONCES** las medidas del ejemplar, su origen, su fecha y su historial no cambian
-- **Y** quien mida después registra una medición real con su fecha y responsable
+- **ENTONCES** por defecto las medidas del ejemplar, su origen, su fecha y su historial no cambian
+- **Y** quien cierra puede registrar medidas reales, o volver un ejemplar no crítico al promedio de su especie, y el historial conserva cada fila con su origen
 
 ---
 
