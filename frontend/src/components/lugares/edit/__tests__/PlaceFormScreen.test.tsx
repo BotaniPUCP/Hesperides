@@ -11,6 +11,6 @@ it('el breadcrumb del alta vuelve al catálogo con sus últimos filtros', () => 
 
   render(<PlaceFormScreen />);
 
-  expect(screen.getByRole('link', { name: 'Lugares' })).toHaveAttribute('href', '/lugares?category=DEPORTE');
+  expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toHaveAttribute('href', '/lugares?category=DEPORTE');
   window.sessionStorage.clear();
 });

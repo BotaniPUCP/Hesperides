@@ -64,7 +64,7 @@ describe('PlaceDetailScreen', () => {
       detail.mockResolvedValue(cia);
       renderScreen('LUG-0001');
 
-      const crumb = await screen.findByRole('link', { name: 'Lugares' });
+      const crumb = await screen.findByRole('link', { name: 'Catálogo de lugares' });
       expect(crumb).toHaveAttribute('href', '/lugares?category=DEPORTE&kind=OUTDOOR');
       expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/lugares?category=DEPORTE&kind=OUTDOOR');
     });

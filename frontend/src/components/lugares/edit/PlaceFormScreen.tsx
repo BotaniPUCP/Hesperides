@@ -10,7 +10,7 @@ import { useCanEditPlaces } from './useCanEditPlaces';
 export function PlaceFormScreen({ code, defaultName }: { code?: string; defaultName?: string }) {
   const canEdit = useCanEditPlaces();
   const { place, loading } = usePlace(code);
-  const catalog = { label: 'Lugares', href: useRememberedHref('/lugares') };
+  const catalog = { label: 'Catálogo de lugares', href: useRememberedHref('/lugares') };
 
   if (!canEdit) {
     return <EmptyState title="Sin permiso" description="Solo administración y coordinación editan el catálogo de lugares." />;

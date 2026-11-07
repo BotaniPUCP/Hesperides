@@ -89,7 +89,7 @@ describe('InventarioVerdeScreen', () => {
   it('muestra los totales del backend y las especies', async () => {
     render(<InventarioVerdeScreen />);
 
-    expect(screen.getByRole('heading', { name: 'Inventario de Especies' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Especies' })).toBeInTheDocument();
     expect((await screen.findAllByText('965')).length).toBeGreaterThan(0);
     expect(await screen.findByText('Palmera real')).toBeInTheDocument();
   });

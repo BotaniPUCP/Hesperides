@@ -3,7 +3,7 @@ import { LoadingSkeleton } from '@/components/ui';
 import { InventarioVerdeScreen } from '@/components/inventario-verde/InventarioVerdeScreen';
 
 export const metadata = {
-  title: 'Inventario de Especies · Inventario Verde · Hesperides',
+  title: 'Especies · Catálogo botánico · Hesperides',
   description: 'Inventario botánico y consulta de especies y ejemplares del campus PUCP.',
 };
 

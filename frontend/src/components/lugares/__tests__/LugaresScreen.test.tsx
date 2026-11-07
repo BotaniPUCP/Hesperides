@@ -154,3 +154,9 @@ describe('LugaresScreen', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument();
   });
 });
+
+it('la pantalla se llama como su enlace del menú', async () => {
+  list.mockResolvedValue([]);
+  render(<LugaresScreen />);
+  expect(await screen.findByRole('heading', { level: 1, name: 'Catálogo de lugares' })).toBeInTheDocument();
+});

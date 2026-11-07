@@ -5,7 +5,7 @@ interface PageProps {
 }
 
 export const metadata = {
-  title: 'Detalle de Especie y Ejemplares · Inventario de Especies · Hesperides',
+  title: 'Detalle de Especie y Ejemplares · Especies · Hesperides',
   description: 'Consulta de ejemplares botánicos censados por especie en el campus PUCP.',
 };
 

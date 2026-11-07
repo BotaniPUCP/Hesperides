@@ -14,7 +14,7 @@ export const ESTIMATED_CAMPUS_SPECIMENS = 3500;
  * ni pestañas duplicadas (la navegación modular se gestiona a través del menú lateral).
  */
 export function InventarioVerdeHero({
-  title = 'Inventario de Especies',
+  title = 'Especies',
   totalSpecimens,
 }: InventarioVerdeHeroProps) {
   const percentage =

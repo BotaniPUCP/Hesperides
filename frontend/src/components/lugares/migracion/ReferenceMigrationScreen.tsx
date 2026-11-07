@@ -35,9 +35,9 @@ export function ReferenceMigrationScreen() {
   const totalPages = Math.max(1, Math.ceil((queue.data?.totalGroups ?? 0) / PAGE_SIZE));
   return (
     <div className="flex flex-col gap-4">
-      <Breadcrumb items={[{ label: 'Lugares', href: '/lugares' }, { label: 'Migración de referencias' }]} />
+      <Breadcrumb items={[{ label: 'Catálogo de lugares', href: '/lugares' }, { label: 'Migrar referencias' }]} />
       <header className="surface-card">
-        <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Migración de referencias</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Migrar referencias</h1>
         <p className="mt-1 max-w-3xl text-sm text-neutral-600">
           Cada referencia antigua se enlaza a un lugar del catálogo (su nombre queda como alias) o se descarta. Las
           sugerencias miran el nombre y la cercanía en el mapa; nada se enlaza sin tu clic.

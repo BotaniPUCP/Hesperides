@@ -22,7 +22,7 @@ describe('SpeciesDetailScreen', () => {
 
     render(<SpeciesDetailScreen slug="syagrus-romanzoffiana" />);
 
-    const crumb = await screen.findByRole('link', { name: 'Inventario de Especies' });
+    const crumb = await screen.findByRole('link', { name: 'Especies' });
     expect(crumb).toHaveAttribute('href', '/inventario-verde?type=PALM&page=1');
     expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/inventario-verde?type=PALM&page=1');
     window.sessionStorage.clear();

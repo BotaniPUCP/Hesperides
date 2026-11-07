@@ -24,7 +24,7 @@ const NEW = 'new';
 export function PlaceDetailScreen({ code }: { code: string }) {
   const router = useRouter();
   const listHref = useRememberedHref(LIST_PATH);
-  const catalog = { label: 'Lugares', href: listHref };
+  const catalog = { label: 'Catálogo de lugares', href: listHref };
   const { place, loading, errorMessage, reload } = usePlace(code);
   const canEdit = useCanEditPlaces();
   const actions = usePlaceActions(place, reload);

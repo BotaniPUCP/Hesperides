@@ -3,7 +3,7 @@ import { LoadingSkeleton } from '@/components/ui';
 import { LugaresScreen } from '@/components/lugares/LugaresScreen';
 
 export const metadata = {
-  title: 'Lugares del campus · Hesperides',
+  title: 'Catálogo de lugares · Hesperides',
 };
 
 export default function LugaresPage() {

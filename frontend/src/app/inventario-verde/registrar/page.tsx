@@ -16,7 +16,7 @@ export default function RegistrarEspeciePage() {
       <div className="mx-auto max-w-4xl space-y-6">
         <Breadcrumb
           items={[
-            { label: 'Inventario de Especies', href: '/inventario-verde' },
+            { label: 'Especies', href: '/inventario-verde' },
             { label: 'Registrar especie' },
           ]}
         />

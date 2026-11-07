@@ -39,7 +39,7 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
   // Catálogo de lugares: quien solo lo consulta no tiene más pantallas en el módulo.
   // ADMIN y COORDINADOR lo ven dentro de su desplegable, junto a la migración.
-  { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['SUPERVISOR', 'OPERARIO'] },
+  { label: 'Catálogo de lugares', href: '/lugares', icon: '🏛️', roles: ['SUPERVISOR', 'OPERARIO'] },
 
   // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
   { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
@@ -72,7 +72,7 @@ export const NAVIGATION: readonly NavGroup[] = [
     id: 'intervenciones',
     label: 'Intervenciones',
     icon: '🧰',
-    items: [{ label: 'Actividades', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] }],
+    items: [{ label: 'Intervenciones', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] }],
   },
   {
     // M2 · SPEC-103. Registrar el campus es trabajo diario, no configuración.
@@ -83,8 +83,8 @@ export const NAVIGATION: readonly NavGroup[] = [
       // Inventario georreferenciado de ejemplares botánicos censados en el campus.
       { label: 'Ejemplares', href: '/catastro/ejemplares', icon: '🌳', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       // D-03: el supervisor registra por formulario (plantas, tachos, bebederos); la carga masiva es de quien coordina.
-      { label: 'Registrar ejemplar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
-      { label: 'Importar CSV', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Registrar en el catastro', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Importar al catastro', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
     ],
   },

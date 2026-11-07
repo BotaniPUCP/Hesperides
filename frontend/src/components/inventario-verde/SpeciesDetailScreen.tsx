@@ -38,7 +38,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
       <div className="flex flex-col gap-6">
         <Breadcrumb
           items={[
-            { label: 'Inventario de Especies', href: listHref },
+            { label: 'Especies', href: listHref },
             { label: 'No encontrada' },
           ]}
         />
@@ -46,7 +46,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
           title={errorMessage ? 'No se pudo cargar la especie' : 'Especie no encontrada'}
           description={errorMessage ?? 'La especie solicitada no está registrada en el inventario.'}
           action={{
-            label: 'Volver al inventario',
+            label: 'Volver a especies',
             onClick: () => router.push(listHref),
           }}
         />
@@ -60,7 +60,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
         <BackButton fallbackHref={LIST_PATH} />
         <Breadcrumb
           items={[
-            { label: 'Inventario de Especies', href: listHref },
+            { label: 'Especies', href: listHref },
             { label: species.commonName },
           ]}
         />

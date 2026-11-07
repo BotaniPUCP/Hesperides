@@ -37,7 +37,7 @@ export function LugaresScreen() {
     <div className="flex flex-col gap-4">
       <header className="surface-card flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Lugares del campus</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Catálogo de lugares</h1>
           <p className="mt-1 max-w-2xl text-sm text-neutral-600">
             Edificios, jardines, estacionamientos y complejos, con fotos desde sus alrededores para ubicar un trabajo sin
             volver al sitio.

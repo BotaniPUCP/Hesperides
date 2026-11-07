@@ -5,7 +5,7 @@ interface PageProps {
 }
 
 export const metadata = {
-  title: 'Nuevo lugar · Lugares del campus · Hesperides',
+  title: 'Nuevo lugar · Catálogo de lugares · Hesperides',
 };
 
 /** `?nombre=` llega desde la migración de referencias: el lugar que falta, ya nombrado. */

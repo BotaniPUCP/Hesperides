@@ -112,11 +112,11 @@ describe('Sidebar', () => {
       const { rerender } = render(<Sidebar />);
       expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'true');
 
-      mockPathname = '/intervenciones/10';
+      mockPathname = '/admin/usuarios';
       rerender(<Sidebar />);
 
-      expect(screen.getByRole('button', { name: /intervenciones/i })).toHaveAttribute('aria-expanded', 'true');
-      expect(screen.getByRole('link', { name: 'Actividades' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('button', { name: /administración/i })).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('link', { name: 'Usuarios' })).toHaveAttribute('aria-current', 'page');
       expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
     });
 
@@ -128,7 +128,7 @@ describe('Sidebar', () => {
       rerender(<Sidebar />);
 
       expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'true');
-      expect(screen.getByRole('link', { name: 'Importar CSV' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('link', { name: 'Importar al catastro' })).toHaveAttribute('aria-current', 'page');
     });
 
     it('respeta un grupo ajeno que la persona abrió a mano', async () => {
@@ -163,17 +163,17 @@ describe('Sidebar', () => {
   });
 
   it.each([['SUPERVISOR', 'Supervisor'], ['OPERARIO', 'Operario']])(
-    'a %s, que no migra, Lugares le queda como enlace directo y sin clic de más',
+    'a %s, que no migra, el catálogo de lugares le queda como enlace directo y sin clic de más',
     (code, label) => {
       comoRol(code, label);
       mockPathname = '/lugares/LUG-0001';
       render(<Sidebar />);
 
-      expect(screen.getByRole('link', { name: 'Lugares' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toHaveAttribute('aria-current', 'page');
       expect(screen.queryByRole('button', { name: 'Lugares' })).not.toBeInTheDocument();
       expect(screen.queryByRole('link', { name: 'Migrar referencias' })).not.toBeInTheDocument();
     },
-  );
+  );
 
   it('enlaza catálogos, que antes no tenía ningún acceso desde la aplicación', () => {
     mockPathname = '/admin/usuarios';

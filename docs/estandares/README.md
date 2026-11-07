@@ -2,7 +2,7 @@
 
 Hesperides es la fuente oficial del catastro (SPEC-103 D-12). Lo que todavía no está registrado
 entra de dos formas: por el formulario **Catastro → Registrar planta**, una planta a la vez, o por
-un archivo CSV en **Catastro → Importar CSV**. Este directorio define el formato de esos archivos.
+un archivo CSV en **Catastro verde → Importar al catastro**. Este directorio define el formato de esos archivos.
 
 | Estándar | Documento | Plantilla | Estado |
 |---|---|---|---|
@@ -44,6 +44,6 @@ un archivo CSV en **Catastro → Importar CSV**. Este directorio define el forma
 
 ## Exportar, corregir y volver a cargar
 
-**Importar CSV → Exportar ejemplares** descarga todo el catastro en el estándar. Cada fila trae su
+**Importar al catastro → Exportar ejemplares** descarga todo el catastro en el estándar. Cada fila trae su
 `codigo`: al volver a cargarla, actualiza ese ejemplar en vez de crear otro. Una celda vacía no
 borra el dato registrado, y una medición con fecha anterior a la vigente no la reemplaza.
