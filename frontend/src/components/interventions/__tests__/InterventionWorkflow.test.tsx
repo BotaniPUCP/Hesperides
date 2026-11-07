@@ -3,6 +3,7 @@ import { InterventionDetail } from '../InterventionDetail';
 import { InterventionForm } from '../InterventionForm';
 import { interventionsApi } from '@/lib/interventions-api';
 import { ApiError } from '@/lib/api';
+import { todayLocal } from '@/lib/local-date';
 import type { InterventionDetail as Detail, InterventionOptions } from '@/lib/interventions-api';
 import { incidentsApi } from '@/lib/incidents-api';
 import { approvedDetail } from '@/components/incidents/__fixtures__/incidents';
@@ -239,4 +240,16 @@ it('no habilita creación contextual si la incidencia no está registrada',async
   render(<InterventionForm fromIncident={7}/>);
   expect(await screen.findByRole('button',{name:'Guardar y volver a la incidencia'})).toBeDisabled();
   expect(interventionsApi.create).not.toHaveBeenCalled();
+});
+
+it('una intervención nueva propone hoy como fecha programada',async()=>{
+  render(<InterventionForm/>);
+  expect(screen.getByLabelText('Fecha programada')).toHaveValue(todayLocal());
+  await waitFor(()=>expect(interventionsApi.options).toHaveBeenCalled());
+});
+
+it('al editar conserva la fecha programada de la intervención',async()=>{
+  render(<InterventionForm initial={detail()}/>);
+  expect(screen.getByLabelText('Fecha programada')).toHaveValue('2026-10-23');
+  await waitFor(()=>expect(interventionsApi.options).toHaveBeenCalled());
 });

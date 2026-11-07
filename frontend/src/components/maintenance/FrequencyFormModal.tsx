@@ -12,6 +12,7 @@ import type {
   UpdateMaintenanceFrequencyRequest,
 } from '@shared/types';
 import { Button, Modal } from '@/components/ui';
+import { todayLocal } from '@/lib/local-date';
 import { buildFrequencyPayload } from './buildFrequencyPayload';
 import { RuleTypeFields, type RuleFieldsState } from './RuleTypeFields';
 import { ANNUAL_WINDOWS, toRow } from './seasons';
@@ -152,7 +153,7 @@ function FrequencyForm({
     }
   };
 
-  const creaVersionNueva = Boolean(frequencyToEdit && frequencyToEdit.validFrom < today());
+  const creaVersionNueva = Boolean(frequencyToEdit && frequencyToEdit.validFrom < todayLocal());
 
   return (
     <>
@@ -296,6 +297,3 @@ function num(value: string): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}

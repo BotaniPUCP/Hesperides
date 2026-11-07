@@ -6,14 +6,11 @@ import type { IrrigationTurn, IrrigationZone } from '@shared/types/irrigation';
 import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { irrigationApi } from '@/lib/irrigation-api';
+import { dateLocal, todayLocal } from '@/lib/local-date';
 import { IrrigationMapPicker } from './IrrigationMapPicker';
 
 const FIELD = 'h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-brand-600';
 const ALL = 'ALL';
-
-function dateLocal(day: Date) {
-  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
-}
 
 type SectionsBySector = Record<number, IrrigationZone[]>;
 
@@ -27,14 +24,14 @@ export function IrrigationTurnsScreen() {
   const [historySector, setHistorySector] = useState(ALL);
   const [search, setSearch] = useState('');
   const [turns, setTurns] = useState<IrrigationTurn[]>([]);
-  const [date, setDate] = useState(() => dateLocal(new Date()));
+  const [date, setDate] = useState(todayLocal);
   const [startedAt, setStartedAt] = useState('');
   const [finishedAt, setFinishedAt] = useState('');
   const [notes, setNotes] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 15); return dateLocal(d); });
-  const [to, setTo] = useState(() => dateLocal(new Date()));
+  const [to, setTo] = useState(todayLocal);
   const [loadingSectors, setLoadingSectors] = useState(true);
   // Cada carga recuerda para qué entrada terminó; «cargando» se deriva de
   // comparar con la entrada actual y los efectos no escriben estado al empezar.

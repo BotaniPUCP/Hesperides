@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Assessment, AssessmentForm } from '@shared/types';
 import { Button, Input, Modal } from '@/components/ui';
 import { catastroApi } from '@/lib/catastro-api';
+import { todayLocal } from '@/lib/local-date';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
 
 export interface SpecimenAssessmentModalProps {
@@ -49,7 +50,7 @@ export function SpecimenAssessmentModal({
   onClose,
   onSuccess,
 }: SpecimenAssessmentModalProps) {
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocal();
 
   const [date, setDate] = useState(hoy);
   const [respuestas, setRespuestas] = useState<Record<string, SiNo>>({});

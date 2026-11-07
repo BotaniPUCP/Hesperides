@@ -9,6 +9,7 @@ import { createClientUuid } from '@/lib/client-uuid';
 import { interventionsApi, interventionError, type InterventionDetail, type InterventionLocation, type InterventionOptions, type InterventionPlanning } from '@/lib/interventions-api';
 import { incidentsApi } from '@/lib/incidents-api';
 import { incidentAfterCreationHref, type IncidentFilters } from '@/lib/incidentNavigation';
+import { todayLocal } from '@/lib/local-date';
 import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 
@@ -27,7 +28,7 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? null);
-  const [date, setDate] = useState(initial?.scheduledDate ?? '');
+  const [date, setDate] = useState(() => initial?.scheduledDate ?? todayLocal());
   const [description, setDescription] = useState(initial?.description ?? '');
   const [reason, setReason] = useState('');
   const [findingSource,setFindingSource] = useState<number | null>(null);

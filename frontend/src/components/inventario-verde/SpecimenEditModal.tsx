@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { SpecimenDetail, SpecimenForm } from '@shared/types';
 import { Button, Input, Modal } from '@/components/ui';
 import { catastroApi } from '@/lib/catastro-api';
+import { todayLocal } from '@/lib/local-date';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { LIMITES } from '@/lib/upload-limits';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
@@ -21,7 +22,7 @@ export function SpecimenEditModal({
   onClose,
   onSuccess,
 }: SpecimenEditModalProps) {
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocal();
 
   // Estados del formulario inicializados con los valores actuales del ejemplar
   const [alturaM, setAlturaM] = useState(specimen.heightM !== null ? String(specimen.heightM) : '');

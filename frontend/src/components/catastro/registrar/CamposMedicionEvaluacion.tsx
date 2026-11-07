@@ -1,6 +1,7 @@
 'use client';
 
 import { Input } from '@/components/ui';
+import { todayLocal } from '@/lib/local-date';
 import { PREGUNTAS_EVALUACION } from './formularioPlanta';
 import { PreguntaSiNo } from './PreguntaSiNo';
 import type { RegistroPlanta } from './useRegistroPlanta';
@@ -8,7 +9,7 @@ import type { RegistroPlanta } from './useRegistroPlanta';
 function CampoFecha({ id, etiqueta, valor, onCambiar, error }: {
   id: string; etiqueta: string; valor: string; onCambiar: (v: string) => void; error?: string;
 }) {
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocal();
   return (
     <div className="space-y-1">
       <label htmlFor={id} className="block text-sm font-medium text-neutral-700">{etiqueta}</label>
