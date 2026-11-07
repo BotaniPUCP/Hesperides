@@ -105,11 +105,145 @@ describe('SpecimenEditModal', () => {
     mockCatastroApi.update.mockResolvedValueOnce({} as never);
     render(<SpecimenEditModal specimen={conTallos} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
 
+    await user.clear(screen.getByLabelText(/Altura total/i));
+    await user.type(screen.getByLabelText(/Altura total/i), '12');
     await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
     await user.click(await screen.findByRole('button', { name: /Confirmar y guardar/i }));
 
     await waitFor(() => expect(mockCatastroApi.update).toHaveBeenCalled());
     expect(mockCatastroApi.update.mock.calls[0][1].measurement?.extraValues).toEqual([]);
+  });
+
+  describe('cuándo se registra una medición', () => {
+    const guardarYConfirmar = async (user: ReturnType<typeof userEvent.setup>) => {
+      await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
+      await user.click(await screen.findByRole('button', { name: /Confirmar y guardar/i }));
+      await waitFor(() => expect(mockCatastroApi.update).toHaveBeenCalled());
+      return mockCatastroApi.update.mock.calls[0][1];
+    };
+    const verificacion = () => screen.queryByRole('checkbox', { name: /Verifiqué en campo/i });
+
+    beforeEach(() => mockCatastroApi.update.mockResolvedValue({} as never));
+
+    it('corregir solo una nota no crea una medición', async () => {
+      const user = userEvent.setup();
+      render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+      await user.type(screen.getByLabelText(/observaciones|notas/i), ' revisado');
+      await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
+
+      expect(await screen.findByText('Confirmar cambios')).toBeInTheDocument();
+      expect(screen.getByText(/no se registra una medición nueva/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Confirmar nueva medición/i)).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /Confirmar y guardar/i }));
+      await waitFor(() => expect(mockCatastroApi.update).toHaveBeenCalled());
+      expect(mockCatastroApi.update.mock.calls[0][1]).toEqual(expect.objectContaining({
+        measurement: null,
+        notes: 'Buen estado general revisado',
+      }));
+    });
+
+    it('escribir el mismo número con otro formato no es un cambio', async () => {
+      const user = userEvent.setup();
+      render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+      await user.clear(screen.getByLabelText(/Altura total/i));
+      await user.type(screen.getByLabelText(/Altura total/i), '10.0');
+
+      expect((await guardarYConfirmar(user)).measurement).toBeNull();
+    });
+
+    it('cambiar solo la fecha no crea una medición', async () => {
+      const user = userEvent.setup();
+      render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+      await user.clear(screen.getByLabelText(/Fecha de la medición/i));
+      await user.type(screen.getByLabelText(/Fecha de la medición/i), '2026-01-02');
+
+      expect((await guardarYConfirmar(user)).measurement).toBeNull();
+    });
+
+    it.each([
+      ['la altura', /Altura total/i, '12'],
+      ['el fuste', /Altura del fuste/i, '7'],
+      ['el DAP', /DAP/i, '151'],
+      ['el radio de copa', /Radio de copa/i, '4'],
+    ])('cambiar %s crea una medición', async (_campo, etiqueta, valor) => {
+      const user = userEvent.setup();
+      render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+      await user.clear(screen.getByLabelText(etiqueta));
+      await user.type(screen.getByLabelText(etiqueta), valor);
+
+      expect((await guardarYConfirmar(user)).measurement).not.toBeNull();
+    });
+
+    it('cambiar el zunchado crea una medición', async () => {
+      const user = userEvent.setup();
+      render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+      await user.selectOptions(screen.getByLabelText(/Zunchado/i), 'no');
+
+      expect((await guardarYConfirmar(user)).measurement).toEqual(expect.objectContaining({ banded: false }));
+    });
+
+    it('borrar un valor crea una medición sin ese valor', async () => {
+      const user = userEvent.setup();
+      render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+      await user.clear(screen.getByLabelText(/Radio de copa/i));
+
+      expect((await guardarYConfirmar(user)).measurement).toEqual(expect.objectContaining({ crownRadiusM: null, heightM: 10 }));
+    });
+
+    it('verificar en campo registra los mismos valores con la fecha indicada', async () => {
+      const user = userEvent.setup();
+      render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+
+      await user.click(screen.getByRole('checkbox', { name: /Verifiqué en campo/i }));
+      await user.clear(screen.getByLabelText(/Fecha de la medición/i));
+      await user.type(screen.getByLabelText(/Fecha de la medición/i), '2026-01-02');
+      await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
+
+      expect(await screen.findByText(/Confirmar nueva medición/i)).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /Confirmar y guardar/i }));
+      await waitFor(() => expect(mockCatastroApi.update).toHaveBeenCalled());
+      expect(mockCatastroApi.update.mock.calls[0][1].measurement).toEqual(expect.objectContaining({
+        date: '2026-01-02', heightM: 10, trunkHeightM: 6, dbhCm: 150, crownRadiusM: 3.23,
+      }));
+    });
+
+    it('la verificación solo se ofrece si hay medidas y no cambiaron', async () => {
+      const user = userEvent.setup();
+      const { unmount } = render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+      expect(verificacion()).toBeInTheDocument();
+
+      await user.clear(screen.getByLabelText(/Altura total/i));
+      await user.type(screen.getByLabelText(/Altura total/i), '12');
+      expect(verificacion()).not.toBeInTheDocument();
+      unmount();
+
+      render(
+        <SpecimenEditModal
+          specimen={{ ...EJEMPLO_SPECIMEN, measurementStatus: 'NOT_MEASURED', dataSource: 'UNKNOWN', heightM: null, trunkHeightM: null, dbhCm: null, crownRadiusM: null, isBanded: null }}
+          isOpen onClose={jest.fn()} onSuccess={jest.fn()}
+        />,
+      );
+      expect(verificacion()).not.toBeInTheDocument();
+    });
+
+    it('un ejemplar sin medir no crea una medición si no se escribe nada', async () => {
+      const user = userEvent.setup();
+      render(
+        <SpecimenEditModal
+          specimen={{ ...EJEMPLO_SPECIMEN, measurementStatus: 'NOT_MEASURED', dataSource: 'UNKNOWN', heightM: null, trunkHeightM: null, dbhCm: null, crownRadiusM: null, isBanded: null }}
+          isOpen onClose={jest.fn()} onSuccess={jest.fn()}
+        />,
+      );
+
+      expect((await guardarYConfirmar(user)).measurement).toBeNull();
+    });
   });
 
   it('un conteo debe ser entero', async () => {
@@ -125,8 +259,10 @@ describe('SpecimenEditModal', () => {
 
   it('acepta un DAP de 0, que es una medida real', async () => {
     const user = userEvent.setup();
-    render(<SpecimenEditModal specimen={{ ...EJEMPLO_SPECIMEN, dbhCm: 0 }} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
+    render(<SpecimenEditModal specimen={EJEMPLO_SPECIMEN} isOpen onClose={jest.fn()} onSuccess={jest.fn()} />);
 
+    await user.clear(screen.getByLabelText(/DAP/i));
+    await user.type(screen.getByLabelText(/DAP/i), '0');
     await user.click(screen.getByRole('button', { name: /Guardar cambios/i }));
 
     expect(await screen.findByText(/Confirmar nueva medición/i)).toBeInTheDocument();
@@ -177,6 +313,9 @@ describe('SpecimenEditModal', () => {
 
     expect(screen.getByText(/Actualizar Medidas · EV-000001/i)).toBeInTheDocument();
 
+    await user.clear(screen.getByLabelText(/Altura total/i));
+    await user.type(screen.getByLabelText(/Altura total/i), '12');
+
     // Hacemos clic en Guardar cambios
     const saveBtn = screen.getByRole('button', { name: /Guardar cambios/i });
     await user.click(saveBtn);
@@ -198,7 +337,7 @@ describe('SpecimenEditModal', () => {
         'EV-000001',
         expect.objectContaining({
           measurement: expect.objectContaining({
-            heightM: 10,
+            heightM: 12,
             trunkHeightM: 6,
             dbhCm: 150,
           }),
@@ -222,6 +361,8 @@ describe('SpecimenEditModal', () => {
       />
     );
 
+    await user.clear(screen.getByLabelText(/Altura total/i));
+    await user.type(screen.getByLabelText(/Altura total/i), '12');
     const saveBtn = screen.getByRole('button', { name: /Guardar cambios/i });
     await user.click(saveBtn);
 

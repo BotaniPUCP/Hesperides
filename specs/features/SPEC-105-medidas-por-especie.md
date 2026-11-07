@@ -458,6 +458,10 @@ internos, en el espacio de `showOperationalRegime`, que existe pero nadie usa. L
 - **Medición con fecha anterior a la última fila del historial, de cualquier origen:** entra al historial y
   no reemplaza la vigente. `SpecimenWriter` deja de comparar solo con `measured_at`, que queda nulo tras
   «Usar promedio».
+- **Guardar el formulario de medidas sin cambiarlas:** no crea una medición. Abre con los valores vigentes, y
+  tenerlos escritos no significa haber medido: corregir una nota o la foto no toca el historial. Para registrar
+  que una medida sigue igual (D-05) está la casilla «Verifiqué en campo», que solo aparece si hay medidas y no
+  cambiaron.
 - **Medición que solo trae medidas adicionales:** añade la fila, conserva las básicas y no cambia
   `data_source`. Una especie no pasa a Medido por contar sus tallos.
 - **Corregir el nombre científico al de otra especie activa:** 409, como al registrar.
