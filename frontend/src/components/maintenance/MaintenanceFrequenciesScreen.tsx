@@ -7,7 +7,7 @@ import type {
   MaintenanceZoneOption,
   UpdateMaintenanceFrequencyRequest,
 } from '@shared/types';
-import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { BackButton, Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
@@ -141,6 +141,7 @@ export function MaintenanceFrequenciesScreen() {
 
   return (
     <div className="space-y-6">
+      <div className="empty:hidden"><BackButton /></div>
       <div className="surface-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">

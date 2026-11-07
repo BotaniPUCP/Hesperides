@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { MaintenanceFrequency } from '@shared/types';
 import { MaintenanceFrequenciesScreen } from '../MaintenanceFrequenciesScreen';
-import { rememberedHref } from '@/lib/listMemory';
+import { rememberedHref, rememberListQuery } from '@/lib/listMemory';
 import { maintenanceApi } from '@/lib/maintenance-api';
+import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 
 jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 3, role: { code: 'SUPERVISOR' } } }) }));
@@ -31,6 +32,21 @@ beforeEach(() => {
   jest.mocked(maintenanceApi.getRuleTypes).mockResolvedValue([]);
   jest.mocked(maintenanceApi.getZones).mockResolvedValue([]);
   jest.mocked(maintenanceApi.getCompliance).mockResolvedValue([]);
+});
+
+it('muestra la flecha a Reportes, con su pestaña y mes, solo si se llegó desde allí', async () => {
+  restartTrail(LIST);
+  const { unmount } = render(<MaintenanceFrequenciesScreen />);
+  await screen.findByText('Poda');
+  expect(screen.queryByRole('link', { name: 'Volver' })).not.toBeInTheDocument();
+  unmount();
+
+  rememberListQuery('/reportes', 'tab=mensual&month=2026-10');
+  restartTrail('/reportes');
+  recordVisit(LIST);
+  render(<MaintenanceFrequenciesScreen />);
+
+  expect(await screen.findByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/reportes?tab=mensual&month=2026-10');
 });
 
 it('reabre con los filtros que trae la URL', async () => {

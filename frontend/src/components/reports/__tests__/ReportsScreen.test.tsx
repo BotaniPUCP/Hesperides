@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAuth } from '@/hooks/useAuth';
+import { rememberedHref } from '@/lib/listMemory';
 import { reportsApi } from '@/lib/reports-api';
 import { ReportsScreen } from '../ReportsScreen';
 
@@ -31,6 +32,12 @@ function as(role: string, query = '') {
 beforeEach(() => jest.clearAllMocks());
 
 describe('ReportsScreen (SPEC-202 D-13, CA-G01, CA-G03)', () => {
+  it('recuerda pestaña y filtros para que la flecha de otra pantalla regrese a ellos', () => {
+    as('ADMIN', 'tab=mensual&sectorId=2');
+    expect(rememberedHref('/reportes')).toBe('/reportes?tab=mensual&sectorId=2');
+    window.sessionStorage.clear();
+  });
+
   it('abre la pestaña de la URL dentro de su panel', () => {
     as('COORDINADOR', 'tab=semanal');
     expect(screen.getByRole('tab', { name: 'Semanal del sector' })).toHaveAttribute('aria-selected', 'true');
