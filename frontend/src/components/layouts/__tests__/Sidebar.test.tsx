@@ -106,6 +106,54 @@ describe('Sidebar', () => {
     expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
   });
 
+  describe('al pasar a otra pantalla por un enlace interno, sin recargar', () => {
+    it('abre el grupo de destino para que se vea la página actual, y cierra el de origen', () => {
+      mockPathname = '/catastro/ejemplares';
+      const { rerender } = render(<Sidebar />);
+      expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'true');
+
+      mockPathname = '/intervenciones/10';
+      rerender(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: /intervenciones/i })).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('link', { name: 'Actividades' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('moverse dentro del mismo grupo no lo cierra aunque cambie la página', () => {
+      mockPathname = '/catastro/ejemplares';
+      const { rerender } = render(<Sidebar />);
+
+      mockPathname = '/catastro/importar';
+      rerender(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('link', { name: 'Importar CSV' })).toHaveAttribute('aria-current', 'page');
+    });
+
+    it('respeta un grupo ajeno que la persona abrió a mano', async () => {
+      mockPathname = '/catastro/ejemplares';
+      const { rerender } = render(<Sidebar />);
+      await userEvent.click(screen.getByRole('button', { name: /administración/i }));
+
+      mockPathname = '/catastro/importar';
+      rerender(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: /administración/i })).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('si la persona cerró el grupo actual, navegar dentro de él no lo reabre', async () => {
+      mockPathname = '/catastro/ejemplares';
+      const { rerender } = render(<Sidebar />);
+      await userEvent.click(screen.getByRole('button', { name: /catastro verde/i }));
+
+      mockPathname = '/catastro/importar';
+      rerender(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
   it('en la ficha de un lugar abre Lugares y marca el catálogo', () => {
     mockPathname = '/lugares/LUG-0001';
     render(<Sidebar />);

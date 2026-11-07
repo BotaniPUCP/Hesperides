@@ -15,12 +15,20 @@ export interface SidebarGroupProps {
 /**
  * Módulo desplegable. Arranca abierto solo si contiene la página activa: quien
  * entra a /admin/catalogos ve dónde está sin tener que abrir nada, y el resto
- * de módulos no ocupa espacio mientras no se usan.
+ * de módulos no ocupa espacio mientras no se usan. Lo mismo al llegar o salir por
+ * un enlace de otra pantalla: el menú sigue montado y debe mostrar dónde se está.
+ * Mientras la página siga en el mismo grupo, manda lo que la persona abrió o cerró.
  */
 export function SidebarGroup({ group, activeHref, onNavigate }: SidebarGroupProps) {
   const contieneActiva = group.items.some((item) => item.href === activeHref);
   const [abierto, setAbierto] = useState(contieneActiva);
+  const [conteniaActiva, setConteniaActiva] = useState(contieneActiva);
   const idLista = useId();
+
+  if (contieneActiva !== conteniaActiva) {
+    setConteniaActiva(contieneActiva);
+    setAbierto(contieneActiva);
+  }
 
   return (
     <div>
