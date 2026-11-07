@@ -222,7 +222,8 @@ Se usa la escala nativa de Tailwind (múltiplos de 4px) sin extensión: `space-1
 | Token | Valor | Uso |
 |---|---|---|
 | `rounded-md` | 6px | `Input`, `Select`, `Button` |
-| `rounded-lg` | 8px | `Card`, `Modal` |
+| `rounded-lg` | 8px | `Modal` |
+| `rounded-2xl` | 16px | `Card` y `.surface-card`: toda tarjeta de una pantalla (§4.3) |
 | `rounded-full` | 9999px | `Badge`, `StatusBadge`, `UrgencyBadge`, avatares |
 | `shadow-xs` (Tailwind 4; antes `shadow-sm`) | sombra sutil | `Card` en reposo |
 | `shadow-lg` | sombra pronunciada | `Modal`, `Toast` (para separarse del fondo) |
@@ -304,6 +305,30 @@ una entrada. Reglas:
 
 Hoy el único grupo es **Administración**: Usuarios, Catálogos, Frecuencias de mantenimiento y
 Parámetros del sistema.
+
+### 4.3 Estructura de toda pantalla
+
+> **Añadido el 7 nov 2026.** Cada pantalla declaraba su ancho (seis medidas distintas), su título
+> (once estilos) y su breadcrumb (en 11 de 30): moverse entre módulos cambiaba todo de lugar.
+
+Toda pantalla web se ve así, de arriba abajo, y nada de esto se declara en la pantalla:
+
+| Bloque | Quién lo pone | Regla |
+|---|---|---|
+| Ancho y márgenes | `PageFrame`, desde `AppShell` y el layout público del inventario | Un solo ancho: `max-w-7xl`. Una pantalla no escribe `mx-auto max-w-*` ni su propio `<main>` |
+| Flecha y breadcrumb | `PageFrame` | Fila de altura fija: el contenido empieza siempre a la misma altura, haya flecha o no |
+| Encabezado | `PageHeader` | Título (`.page-title`), descripción y acciones a la derecha. Las fichas con foto conservan su diseño, pero su `<h1>` usa `.page-title` |
+| Bloques | La pantalla | `space-y-6` en la raíz; cada bloque es una `Card` o una `.surface-card`, nunca una tarjeta a mano |
+
+**El breadcrumb es un dato derivado.** `lib/pageTrail.ts` lo arma desde `lib/navigation.ts`: una
+pantalla nueva lo tiene al entrar al menú. Una ficha solo aporta lo que el marco no puede saber,
+con `usePageTrail` (el nombre real en vez del slug, el lugar padre). Sin sesión no se ofrece
+«Inicio», que llevaría al login.
+
+**Excepciones:** `/mapa` ocupa toda la ventana y va sin marco; `/login`, `/cambiar-password` y
+`/embed/mapa` no usan el armazón.
+
+---
 
 ## 5. Catálogo de componentes móvil (React Native)
 
@@ -503,4 +528,5 @@ proveedor de tiles de `MapView` es configuración, no literal.
 - [ ] Los componentes táctiles de pantallas de campo miden 44px o más.
 - [ ] `DataTable` probado bajo 640px: se ve como tarjetas, no con scroll horizontal.
 - [ ] Navegación completa por teclado probada en al menos un formulario y un modal.
+- [ ] La pantalla sigue la estructura de §4.3: sin ancho propio, con `PageHeader` y bloques `Card` o `.surface-card`.
 - [ ] Los tests de §12 pasan (`npm test` en `frontend/` y en `mobile/`).
