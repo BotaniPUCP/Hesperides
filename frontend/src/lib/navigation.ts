@@ -37,8 +37,9 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: ['COORDINADOR', 'SUPERVISOR'] },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // Catálogo de lugares: lo consultan todos; editarlo es de ADMIN y COORDINADOR.
-  { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+  // Catálogo de lugares: quien solo lo consulta no tiene más pantallas en el módulo.
+  // ADMIN y COORDINADOR lo ven dentro de su desplegable, junto a la migración.
+  { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['SUPERVISOR', 'OPERARIO'] },
 
   // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
   { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
@@ -47,6 +48,16 @@ export const DIRECT_LINKS: readonly NavItem[] = [
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
+  {
+    // M9. Pasar las referencias antiguas al catálogo es de quien lo edita.
+    id: 'lugares',
+    label: 'Lugares',
+    icon: '🏛️',
+    items: [
+      { label: 'Catálogo de lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Migrar referencias', href: '/lugares/migracion', icon: '🔀', roles: ['ADMIN', 'COORDINADOR'] },
+    ],
+  },
   {
     // Catálogo taxonómico botánico de especies del campus PUCP.
     id: 'inventario-verde',
@@ -75,8 +86,6 @@ export const NAVIGATION: readonly NavGroup[] = [
       { label: 'Registrar ejemplar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
       { label: 'Importar CSV', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
-      // Catálogo de lugares: pasar las referencias antiguas al catálogo es de quien lo edita.
-      { label: 'Migrar referencias', href: '/lugares/migracion', icon: '🔀', roles: ['ADMIN', 'COORDINADOR'] },
     ],
   },
   {

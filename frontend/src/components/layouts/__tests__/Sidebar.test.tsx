@@ -96,22 +96,36 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: 'Especies' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('en Migrar referencias abre Catastro verde y no marca también Lugares', () => {
+  it('Migrar referencias vive en Lugares: lo abre, marca solo ese enlace y no abre Catastro verde', () => {
     mockPathname = '/lugares/migracion';
     render(<Sidebar />);
 
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('link', { name: 'Migrar referencias' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Lugares' })).not.toHaveAttribute('aria-current');
-    expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('en la ficha de un lugar marca Lugares y deja cerrado Catastro verde', () => {
+  it('en la ficha de un lugar abre Lugares y marca el catálogo', () => {
     mockPathname = '/lugares/LUG-0001';
     render(<Sidebar />);
 
-    expect(screen.getByRole('link', { name: 'Lugares' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toHaveAttribute('aria-current', 'page');
   });
+
+  it.each([['SUPERVISOR', 'Supervisor'], ['OPERARIO', 'Operario']])(
+    'a %s, que no migra, Lugares le queda como enlace directo y sin clic de más',
+    (code, label) => {
+      comoRol(code, label);
+      mockPathname = '/lugares/LUG-0001';
+      render(<Sidebar />);
+
+      expect(screen.getByRole('link', { name: 'Lugares' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.queryByRole('button', { name: 'Lugares' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Migrar referencias' })).not.toBeInTheDocument();
+    },
+  );
 
   it('enlaza catálogos, que antes no tenía ningún acceso desde la aplicación', () => {
     mockPathname = '/admin/usuarios';

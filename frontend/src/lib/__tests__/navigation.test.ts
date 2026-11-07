@@ -58,6 +58,8 @@ function hrefsDe(rol: string): string[] {
 describe('visibleNavigation', () => {
   it('a un ADMIN le muestra inventario verde, catastro completo y las cuatro pantallas de administración', () => {
     expect(hrefsDe('ADMIN')).toEqual([
+      '/lugares',
+      '/lugares/migracion',
       '/inventario-verde',
       '/inventario-verde/registrar',
       '/intervenciones',
@@ -65,7 +67,6 @@ describe('visibleNavigation', () => {
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
-      '/lugares/migracion',
       '/admin/usuarios',
       '/admin/catalogos',
       '/admin/frecuencias',
@@ -77,6 +78,8 @@ describe('visibleNavigation', () => {
     // SPEC-003 §4 y §5.6: el backend responde 403 al resto. Mostrar el enlace
     // sería mandarlo a una pantalla que solo puede negarle el paso.
     expect(hrefsDe('COORDINADOR')).toEqual([
+      '/lugares',
+      '/lugares/migracion',
       '/inventario-verde',
       '/inventario-verde/registrar',
       '/intervenciones',
@@ -84,7 +87,6 @@ describe('visibleNavigation', () => {
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
-      '/lugares/migracion',
       '/admin/usuarios',
       '/admin/frecuencias',
     ]);
@@ -113,13 +115,13 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('el mapa y los lugares son enlaces directos para los cuatro roles; incidencias, riego y reportes, para quien los opera', () => {
-    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/lugares', '/riego', '/reportes']);
-    for (const rol of ['COORDINADOR', 'SUPERVISOR']) {
-      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/lugares', '/riego', '/reportes']);
-    }
+  it('el mapa es directo para los cuatro roles; lugares, solo para quien no edita el catálogo; incidencias, riego y reportes, para quien los opera', () => {
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/lugares', '/riego', '/reportes']);
     expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa', '/lugares']);
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
+      'Lugares',
       'Catálogo botánico',
       'Intervenciones',
       'Catastro verde',

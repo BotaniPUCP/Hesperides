@@ -5,7 +5,7 @@ describe('moduleForPath', () => {
     ['/catastro/ejemplares', 'catastro'],
     ['/catastro/ejemplares/EV-000001', 'catastro'],
     ['/catastro/importar', 'catastro'],
-    ['/lugares/migracion', 'catastro'],
+    ['/lugares/migracion', 'lugares'],
     ['/inventario-verde', 'catalogo'],
     ['/inventario-verde/registrar', 'catalogo'],
     ['/inventario-verde/especies/roystonea-regia', 'catalogo'],

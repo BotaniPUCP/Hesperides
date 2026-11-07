@@ -69,15 +69,13 @@ export const MODULE_THEMES: Readonly<Record<ModuleId, ModuleTheme>> = {
 
 /**
  * Gana la primera que coincide, así que lo específico va antes. Un ejemplar del
- * catálogo público es catastro, y «Migrar referencias» está en el menú de
- * catastro aunque su URL cuelgue de /lugares.
+ * catálogo público es catastro.
  */
 const MODULE_ROUTES: readonly (readonly [RegExp, ModuleId])[] = [
   [/^\/inventario-verde\/especies\/[^/]+\/ejemplares(\/|$)/, 'catastro'],
   [/^\/inventario-verde\/ejemplares(\/|$)/, 'catastro'],
   [/^\/inventario-verde(\/|$)/, 'catalogo'],
   [/^\/catastro(\/|$)/, 'catastro'],
-  [/^\/lugares\/migracion(\/|$)/, 'catastro'],
   [/^\/lugares(\/|$)/, 'lugares'],
   [/^\/intervenciones(\/|$)/, 'intervenciones'],
   [/^\/incidencias(\/|$)/, 'incidencias'],
