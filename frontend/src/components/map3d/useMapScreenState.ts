@@ -1,64 +1,75 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { mapApi } from '@/lib/map-api';
 import { infoFor, type InfoCard } from './infoCard';
-import { initialVisibility, LAYER_TOGGLES, PERSPECTIVES_TOGGLE, type ToggleId } from './layerList';
+import { PERSPECTIVES_TOGGLE, type ToggleId } from './layerList';
 import type { MapCardContent } from './MapInfoCard';
+import { recallMapScreen, rememberMapScreen } from './mapScreenMemory';
 import type { ViewOptions } from './MapToolbar';
 import type { ModeId } from './modes';
+import { APPLY_OPTION, applyToViewer, keptCard } from './restoreMapScreen';
 import type { SceneData } from './sceneData';
 import type { LayerId, Target } from './target';
 import type { Viewer } from './viewer/createViewer';
 
-const INITIAL_OPTIONS: ViewOptions = { night: false, shadows: true, labels: true, grayBuildings: false };
-
-const APPLY_OPTION: Record<keyof ViewOptions, (v: Viewer, on: boolean) => void> = {
-  night: (v, on) => v.setNight(on),
-  shadows: (v, on) => v.setShadows(on),
-  labels: (v, on) => v.setLabels(on),
-  grayBuildings: (v, on) => v.setGrayBuildings(on),
-};
+/** Un enlace extra para la ficha de un elemento: hoy, del edificio a su lugar en el catálogo. */
+export type CardLinkFor = (target: Target) => InfoCard['link'] | null;
 
 /**
  * El estado de la pantalla del mapa y su reflejo en el visor. El visor no es
  * React: cada cambio se guarda aquí (para pintar los controles) y se ordena al
- * visor en el mismo gesto, sin efectos que sincronicen después.
+ * visor en el mismo gesto. Solo un visor recién creado recibe el estado de golpe.
  */
-/** Un enlace extra para la ficha de un elemento: hoy, del edificio a su lugar en el catálogo. */
-export type CardLinkFor = (target: Target) => InfoCard['link'] | null;
-
-export function useMapScreenState(data: SceneData | null, linkFor?: CardLinkFor) {
+export function useMapScreenState(data: SceneData | null, person: string, linkFor?: CardLinkFor) {
   const viewer = useRef<Viewer | null>(null);
   const describeSeq = useRef(0);
-  const [mode, setModeState] = useState<ModeId>('base');
-  const [hidden, setHidden] = useState<Set<string>>(new Set());
-  const [visible, setVisible] = useState<Record<string, boolean>>(initialVisibility);
-  const [options, setOptions] = useState<ViewOptions>(INITIAL_OPTIONS);
+  const [saved] = useState(() => recallMapScreen(person));
+  const [mode, setModeState] = useState<ModeId>(saved.mode);
+  const [hidden, setHidden] = useState<Set<string>>(saved.hidden);
+  const [visible, setVisible] = useState<Record<string, boolean>>(saved.visible);
+  const [options, setOptions] = useState<ViewOptions>(saved.options);
+  const [panelOpen, setPanelOpen] = useState(saved.panelOpen);
+  const [selected, setSelected] = useState<Target | null>(saved.selected);
+  const [card, setCard] = useState<MapCardContent | null>(saved.card);
   const [compass, setCompass] = useState(0);
-  const [card, setCard] = useState<MapCardContent | null>(null);
   const [unsupported, setUnsupported] = useState(false);
+  // Cuenta los visores listos: lo que depende del visor debe repetirse cuando llega uno nuevo.
+  const [viewerEpoch, setViewerEpoch] = useState(0);
+
+  useEffect(() => {
+    rememberMapScreen({ mode, hidden, visible, options, panelOpen, selected, card });
+  }, [mode, hidden, visible, options, panelOpen, selected, card]);
 
   const showElement = useCallback(
     (target: Target | null) => {
       describeSeq.current++;
+      setSelected(target);
       if (!target || !data) return setCard(null);
-      const card = infoFor(data, target);
-      const link = card.link ?? linkFor?.(target) ?? undefined;
-      setCard({ kind: 'element', card: { ...card, link } });
+      const element = infoFor(data, target);
+      const link = element.link ?? linkFor?.(target) ?? undefined;
+      setCard({ kind: 'element', card: { ...element, link } });
     },
     [data, linkFor],
   );
 
-  const onReady = useCallback((v: Viewer) => {
+  const onReady = (v: Viewer) => {
     viewer.current = v;
-    LAYER_TOGGLES.filter((t) => !t.initiallyVisible && t.id !== PERSPECTIVES_TOGGLE)
-      .forEach((t) => v.setLayerVisible(t.id as LayerId, false));
-  }, []);
+    applyToViewer(v, { mode, hidden, visible, options });
+    if (selected && data) {
+      const kept = keptCard(data, selected, card, linkFor);
+      setCard(kept);
+      if (kept) v.select(selected, false);
+      else setSelected(null);
+    }
+    if (card?.kind === 'location') v.setPinLatLon?.(card.lat, card.lon);
+    setViewerEpoch((epoch) => epoch + 1);
+  };
 
   const onGroundPick = useCallback((lat: number, lon: number) => {
     const seq = ++describeSeq.current;
+    setSelected(null);
     setCard({ kind: 'location', lat, lon, text: null, error: null });
     mapApi
       .describe(lat, lon)
@@ -88,11 +99,12 @@ export function useMapScreenState(data: SceneData | null, linkFor?: CardLinkFor)
   /** Los conos de «Perspectivas» los pone quien tiene el catálogo, al ver este estado. */
   const toggleLayer = (id: ToggleId, on: boolean) => {
     setVisible((v) => ({ ...v, [id]: on }));
-    if (id !== PERSPECTIVES_TOGGLE) viewer.current?.setLayerVisible(id, on);
+    if (id !== PERSPECTIVES_TOGGLE) viewer.current?.setLayerVisible(id as LayerId, on);
   };
 
   const showCard = (content: MapCardContent) => {
     describeSeq.current++;
+    setSelected(null);
     setCard(content);
   };
 
@@ -104,12 +116,13 @@ export function useMapScreenState(data: SceneData | null, linkFor?: CardLinkFor)
   const closeCard = () => {
     describeSeq.current++;
     viewer.current?.select(null, false);
+    setSelected(null);
     setCard(null);
   };
 
   return {
-    viewer, mode, hidden, visible, options, compass, card, unsupported,
+    viewer, viewerEpoch, mode, hidden, visible, options, compass, card, unsupported, panelOpen,
     onReady, onSelect: showElement, onGroundPick, onCompass: setCompass, onUnsupported: () => setUnsupported(true),
-    select, setMode, toggleCategory, toggleLayer, setOption, closeCard, showCard,
+    select, setMode, toggleCategory, toggleLayer, setOption, closeCard, showCard, setPanelOpen,
   };
 }

@@ -31,6 +31,7 @@ export function useCatalogLinkFor(data: SceneData | null, catalog: MapCatalog | 
 
 interface ScreenActions {
   viewer: RefObject<Viewer | null>;
+  viewerEpoch: number;
   visible: Record<string, boolean>;
   select: (target: Target) => void;
   toggleLayer: (id: ToggleId, on: boolean) => void;
@@ -45,11 +46,11 @@ interface ScreenActions {
 export function useCatalogOnMap(data: SceneData | null, catalog: MapCatalog | null, s: ScreenActions) {
   const cones = useMemo(() => conesOf(catalog), [catalog]);
   const conesOn = Boolean(s.visible[PERSPECTIVES_TOGGLE]);
-  const { viewer, showCard } = s;
+  const { viewer, viewerEpoch, showCard } = s;
 
   useEffect(() => {
     viewer.current?.setViewCones(conesOn ? cones : []);
-  }, [viewer, conesOn, cones]);
+  }, [viewer, viewerEpoch, conesOn, cones]);
 
   const onConePick = useCallback(
     (id: number) => {

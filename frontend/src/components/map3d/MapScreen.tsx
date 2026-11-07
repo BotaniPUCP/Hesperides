@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { BackButton } from '@/components/ui/BackButton';
 import { LoadingSkeleton } from '@/components/ui';
+import { useAuth } from '@/hooks/useAuth';
 import { useMapLayers } from '@/hooks/useMapLayers';
 import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
 import { LayerToggles } from './LayerToggles';
@@ -13,7 +15,7 @@ import { MapFullscreenButton } from './MapFullscreenButton';
 import { MapInfoCard } from './MapInfoCard';
 import { MapSearch } from './MapSearch';
 import { MapToolbar } from './MapToolbar';
-import { mapScreenPose } from './mapScreenPose';
+import { mapScreenPose } from './mapScreenMemory';
 import { ModeLegend } from './ModeLegend';
 import { toSceneData } from './sceneData';
 import { buildSearchIndex, isCatalogTarget } from './searchIndex';
@@ -35,16 +37,17 @@ export function MapScreen() {
   }, [response]);
   const data = scene.data;
   const catalog = useMapCatalog();
-  const s = useMapScreenState(data, useCatalogLinkFor(data, catalog));
+  const { user } = useAuth();
+  const s = useMapScreenState(data, user?.email ?? '', useCatalogLinkFor(data, catalog));
   const onMap = useCatalogOnMap(data, catalog, s);
   const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
-  const [panelOpen, setPanelOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const focusedParamRef = useRef<string | null>(null);
+  const viewerSettled = s.viewerEpoch > 0 || s.unsupported;
 
-  // Deep-link: si llega con ?codigo=EV-XXXXXX, seleccionamos y enfocamos el ejemplar al cargar
+  // Deep-link: ?codigo=EV-XXXXXX elige el ejemplar. Espera al visor, que carga aparte: sin él no hay a quién mover la cámara.
   useEffect(() => {
-    if (!codigoParam || !data || focusedParamRef.current === codigoParam) return;
+    if (!codigoParam || !data || !viewerSettled || focusedParamRef.current === codigoParam) return;
     const normalizedParam = codigoParam.trim().toLowerCase();
     const entry = index.find((item) => item.title.toLowerCase() === normalizedParam || item.key.toLowerCase().includes(normalizedParam));
     if (entry) {
@@ -52,10 +55,13 @@ export function MapScreen() {
       if (isCatalogTarget(entry.target)) {
         onMap.pick(entry.target);
       } else {
+        if (!s.visible[entry.target.layer]) s.toggleLayer(entry.target.layer, true);
         s.select(entry.target);
       }
+      // Se consume una sola vez: regresar a esta entrada del historial debe mostrar el mapa como se dejó.
+      window.history.replaceState(window.history.state, '', window.location.pathname);
     }
-  }, [codigoParam, data, index, onMap, s]);
+  }, [codigoParam, data, index, onMap, s, viewerSettled]);
 
   if (isLoading) return <LoadingSkeleton />;
   if (scene.broken) {
@@ -93,7 +99,12 @@ export function MapScreen() {
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start gap-2 p-3">
         <div className="pointer-events-auto w-full max-w-sm space-y-2">
-          <MapSearch index={index} onPick={(e) => (isCatalogTarget(e.target) ? onMap.pick(e.target) : s.select(e.target))} />
+          <div className="flex items-center gap-2">
+            <BackButton />
+            <div className="min-w-0 flex-1">
+              <MapSearch index={index} onPick={(e) => (isCatalogTarget(e.target) ? onMap.pick(e.target) : s.select(e.target))} />
+            </div>
+          </div>
           {stale && (
             <p role="status" className="rounded-md bg-alert-warning-bg/95 px-3 py-1.5 text-xs text-alert-warning-fg shadow">
               Sin conexión: se muestra la última versión descargada del mapa.
@@ -119,13 +130,13 @@ export function MapScreen() {
         <aside className="absolute right-3 top-28 z-10 w-56 md:top-16">
           <button
             type="button"
-            aria-expanded={panelOpen}
-            onClick={() => setPanelOpen((o) => !o)}
+            aria-expanded={s.panelOpen}
+            onClick={() => s.setPanelOpen((o) => !o)}
             className="ml-auto block rounded-md bg-neutral-0/95 px-3 py-1 text-xs font-medium text-neutral-700 shadow"
           >
-            {panelOpen ? 'Ocultar capas y leyenda' : 'Capas y leyenda'}
+            {s.panelOpen ? 'Ocultar capas y leyenda' : 'Capas y leyenda'}
           </button>
-          {panelOpen && (
+          {s.panelOpen && (
             <div className="mt-2 max-h-[60vh] space-y-4 overflow-y-auto rounded-lg border border-neutral-200 bg-neutral-0/95 p-3 shadow-lg">
               <ModeLegend mode={s.mode} hidden={s.hidden} onModeChange={s.setMode} onToggleCategory={s.toggleCategory} />
               <LayerToggles visible={s.visible} onToggle={s.toggleLayer} />
