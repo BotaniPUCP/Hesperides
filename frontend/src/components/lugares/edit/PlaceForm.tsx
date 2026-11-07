@@ -5,6 +5,7 @@ import type { PlaceDetail, PlaceInput, PlaceKindCode } from '@shared/types';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { Button } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
+import { rememberedHref } from '@/lib/listMemory';
 import { placesApi } from '@/lib/places-api';
 import { PlaceFormFields, type PlaceFormValues } from './PlaceFormFields';
 import { OutlinePicker } from './OutlinePicker';
@@ -79,7 +80,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
       {outdoor && <OutlinePicker picked={picked} onPick={setPicked} />}
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={() => guard.confirm(() => guard.navigate(place ? `/lugares/${place.code}` : '/lugares'))}>
+        <Button variant="secondary" onClick={() => guard.confirm(() => guard.navigate(place ? `/lugares/${place.code}` : rememberedHref('/lugares')))}>
           Cancelar
         </Button>
         <Button type="submit" disabled={!ready} loading={saving}>

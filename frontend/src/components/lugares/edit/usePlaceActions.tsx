@@ -6,6 +6,7 @@ import type { PlaceDetail, PlacePerspective, PlacePhoto } from '@shared/types';
 import { useToast } from '@/components/ui';
 import { ConfirmActionModal } from '@/components/users/ConfirmActionModal';
 import { mensajeDeApiError } from '@/lib/api-errors';
+import { rememberedHref } from '@/lib/listMemory';
 import { placesApi } from '@/lib/places-api';
 
 interface Pending {
@@ -44,7 +45,7 @@ export function usePlaceActions(place: PlaceDetail | null, reload: () => void) {
         confirmLabel: 'Eliminar lugar',
         run: async () => {
           await placesApi.remove(code);
-          router.push('/lugares');
+          router.push(rememberedHref('/lugares'));
         },
       }),
     deletePerspective: (v: PlacePerspective) =>

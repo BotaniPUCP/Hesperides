@@ -1,6 +1,8 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { PlaceDetail } from '@shared/types';
 import { ApiError } from '@/lib/api';
+import { rememberListQuery } from '@/lib/listMemory';
+import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { placesApi } from '@/lib/places-api';
 import { PlaceMapContext } from '../map/PlaceMapContext';
 import { PlaceDetailScreen } from '../PlaceDetailScreen';
@@ -11,8 +13,9 @@ jest.mock('@/components/ui', () => ({
   ...jest.requireActual('@/components/ui'),
   useToast: () => ({ showToast: jest.fn(), dismissAll: jest.fn() }),
 }));
-jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn(), removePerspective: jest.fn() } }));
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn(), remove: jest.fn(), removePerspective: jest.fn() } }));
+const mockPush = jest.fn();
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }));
 
 const map = { show: jest.fn(), focusPerspective: jest.fn() };
 
@@ -50,6 +53,47 @@ afterEach(() => {
 });
 
 describe('PlaceDetailScreen', () => {
+  describe('regresar', () => {
+    beforeEach(() => {
+      window.sessionStorage.clear();
+      act(() => restartTrail('/lugares/LUG-0001'));
+    });
+
+    it('sin recorrido, breadcrumb y flecha llevan al catálogo con sus últimos filtros', async () => {
+      rememberListQuery('/lugares', 'category=DEPORTE&kind=OUTDOOR');
+      detail.mockResolvedValue(cia);
+      renderScreen('LUG-0001');
+
+      const crumb = await screen.findByRole('link', { name: 'Lugares' });
+      expect(crumb).toHaveAttribute('href', '/lugares?category=DEPORTE&kind=OUTDOOR');
+      expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/lugares?category=DEPORTE&kind=OUTDOOR');
+    });
+
+    it('al pasar de un lugar a otro, la flecha vuelve al lugar anterior y no al catálogo', async () => {
+      detail.mockResolvedValue(cia);
+      act(() => {
+        restartTrail('/lugares/LUG-0007');
+        recordVisit('/lugares/LUG-0001');
+      });
+      renderScreen('LUG-0001');
+
+      expect(await screen.findByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/lugares/LUG-0007');
+    });
+
+    it('al eliminar el lugar vuelve al catálogo con sus filtros', async () => {
+      mockRole.current = 'ADMIN';
+      rememberListQuery('/lugares', 'kind=INDOOR');
+      detail.mockResolvedValue(cia);
+      jest.mocked(placesApi.remove).mockResolvedValue(null as never);
+      renderScreen('LUG-0001');
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Eliminar' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Eliminar lugar' }));
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/lugares?kind=INDOOR'));
+    });
+  });
+
   it('muestra el lugar, sus alias, sus hijos y cada perspectiva con su nombre estándar', async () => {
     detail.mockResolvedValue(cia);
     renderScreen('LUG-0001');

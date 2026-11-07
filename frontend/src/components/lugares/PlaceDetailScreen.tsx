@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { PlacePerspective } from '@shared/types';
-import { Breadcrumb, Button, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { BackButton, Breadcrumb, Button, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { usePlace } from '@/hooks/usePlaces';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { PerspectiveEditor } from './edit/PerspectiveEditor';
 import { PhotoUploader } from './edit/PhotoUploader';
 import { useCanEditPlaces } from './edit/useCanEditPlaces';
@@ -16,12 +17,14 @@ import { PlaceGallery, type GalleryState } from './PlaceGallery';
 import { PlaceHeader } from './PlaceHeader';
 import { usePlaceMap } from './map/PlaceMapContext';
 
-const CATALOG = { label: 'Lugares', href: '/lugares' };
+const LIST_PATH = '/lugares';
 const NEW = 'new';
 
 /** La ficha de un lugar: foto principal, perspectivas en el mapa y fotos por vista. Quien edita, edita aquí. */
 export function PlaceDetailScreen({ code }: { code: string }) {
   const router = useRouter();
+  const listHref = useRememberedHref(LIST_PATH);
+  const catalog = { label: 'Lugares', href: listHref };
   const { place, loading, errorMessage, reload } = usePlace(code);
   const canEdit = useCanEditPlaces();
   const actions = usePlaceActions(place, reload);
@@ -45,11 +48,11 @@ export function PlaceDetailScreen({ code }: { code: string }) {
   if (!place) {
     return (
       <div className="flex flex-col gap-4">
-        <Breadcrumb items={[CATALOG, { label: 'No encontrado' }]} />
+        <Breadcrumb items={[catalog, { label: 'No encontrado' }]} />
         <EmptyState
           title={errorMessage ? 'No se pudo cargar el lugar' : 'Lugar no encontrado'}
           description={errorMessage ?? 'El lugar no está en el catálogo o fue dado de baja.'}
-          action={{ label: 'Volver al catálogo', onClick: () => router.push('/lugares') }}
+          action={{ label: 'Volver al catálogo', onClick: () => router.push(listHref) }}
         />
       </div>
     );
@@ -69,7 +72,10 @@ export function PlaceDetailScreen({ code }: { code: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <Breadcrumb items={[CATALOG, ...(place.parent ? [{ label: place.parent.name, href: `/lugares/${place.parent.code}` }] : []), { label: place.name }]} />
+      <div className="flex items-center gap-2">
+        <BackButton fallbackHref={LIST_PATH} />
+        <Breadcrumb items={[catalog, ...(place.parent ? [{ label: place.parent.name, href: `/lugares/${place.parent.code}` }] : []), { label: place.name }]} />
+      </div>
       <PlaceHeader place={place} onOpenMain={open(place.mainPhotos, place.name)} actions={headerActions} />
 
       {canEdit && (

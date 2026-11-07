@@ -1,23 +1,32 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import type { PlaceKindCode } from '@shared/types';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useListUrlState } from '@/hooks/useListUrlState';
 import { usePlaces } from '@/hooks/usePlaces';
+import { useSearchDraft } from '@/hooks/useSearchDraft';
+import { oneOf } from '@/lib/listUrl';
 import { useCanEditPlaces } from './edit/useCanEditPlaces';
 import { PlaceCard } from './PlaceCard';
-import { PlaceFilters, type KindFilter } from './PlaceFilters';
+import { PlaceFilters } from './PlaceFilters';
 
-/** El catálogo de lugares: tarjetas con buscador, categoría y tipo. */
+const LIST_PATH = '/lugares';
+const KIND_CODES: readonly (PlaceKindCode | '')[] = ['', 'OUTDOOR', 'INDOOR'];
+const DEFAULTS = { search: '', category: '', kind: '' };
+
+/**
+ * El catálogo de lugares: tarjetas con buscador, categoría y tipo. Los filtros
+ * viven en la URL para encontrarlos igual al regresar de una ficha.
+ */
 export function LugaresScreen() {
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<string | null>(null);
-  const [kind, setKind] = useState<KindFilter>(null);
-  const debounced = useDebouncedValue(search, 300);
+  const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
+  const [search, setSearch] = useSearchDraft(values.search, (next) => setValues({ search: next }));
+  const category = values.category || null;
+  const kind = oneOf(values.kind, KIND_CODES, '') || null;
   const canEdit = useCanEditPlaces();
   const { places, loading, errorMessage } = usePlaces({
-    search: debounced || undefined,
+    search: values.search || undefined,
     category: category ?? undefined,
     kind: kind ?? undefined,
   });
@@ -48,9 +57,9 @@ export function LugaresScreen() {
         search={search}
         onSearch={setSearch}
         category={category}
-        onCategory={setCategory}
+        onCategory={(next) => setValues({ category: next ?? '' })}
         kind={kind}
-        onKind={setKind}
+        onKind={(next) => setValues({ kind: next ?? '' })}
       />
 
       {errorMessage ? (

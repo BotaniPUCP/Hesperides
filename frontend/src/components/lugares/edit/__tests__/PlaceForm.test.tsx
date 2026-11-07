@@ -3,6 +3,7 @@ import type { Map3DViewProps } from '@/components/map3d/Map3DView';
 import { sampleLayers } from '@/components/map3d/__fixtures__/mapLayers';
 import { toSceneData } from '@/components/map3d/sceneData';
 import { ApiError } from '@/lib/api';
+import { rememberListQuery } from '@/lib/listMemory';
 import { placesApi } from '@/lib/places-api';
 import { PlaceForm } from '../PlaceForm';
 
@@ -117,6 +118,16 @@ describe('PlaceForm', () => {
     expect(push).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
     expect(replace).toHaveBeenCalledWith('/lugares');
+  });
+
+  it('cancelar un alta vuelve al catálogo con sus últimos filtros', () => {
+    rememberListQuery('/lugares', 'kind=INDOOR');
+    render(<PlaceForm />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(push).toHaveBeenCalledWith('/lugares?kind=INDOOR');
+    window.sessionStorage.clear();
   });
 
   it('cancelar sin haber escrito nada sale sin preguntar', () => {
