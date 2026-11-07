@@ -13,10 +13,6 @@ export default async function EditarEspeciePage({ params }: PageProps) {
   const { slug } = await params;
 
   return (
-    <main className="min-h-screen p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-4xl">
-        <EdicionEspecieScreen slug={slug} />
-      </div>
-    </main>
+    <EdicionEspecieScreen slug={slug} />
   );
 }

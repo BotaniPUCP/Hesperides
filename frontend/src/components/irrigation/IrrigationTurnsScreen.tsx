@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { irrigationApi } from '@/lib/irrigation-api';
 import { dateLocal, todayLocal } from '@/lib/local-date';
 import { IrrigationMapPicker } from './IrrigationMapPicker';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 const FIELD = 'h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-brand-600';
 const ALL = 'ALL';
@@ -162,10 +163,7 @@ export function IrrigationTurnsScreen() {
 
   return (
     <div className="space-y-6">
-      <header className="surface-card">
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Riego · Turnos por sector</h1>
-        <p className="mt-1 text-sm text-neutral-500">D-01 · Registro por uno o varios sectores. La cobertura de 15 días pertenece a D-02 y requiere validación.</p>
-      </header>
+      <PageHeader title="Riego · Turnos por sector" description="D-01 · Registro por uno o varios sectores. La cobertura de 15 días pertenece a D-02 y requiere validación." />
       {message && <div role="status" className={`rounded-lg border px-4 py-3 text-sm ${message.kind === 'success'
         ? 'bg-alert-success-bg border-alert-success-border text-alert-success-fg'
         : 'bg-alert-danger-bg border-alert-warning-border text-alert-danger-fg'}`}>{message.text}</div>}

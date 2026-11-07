@@ -10,6 +10,7 @@ import { ConfirmActionModal } from './ConfirmActionModal';
 import { UserFiltersBar } from './UserFiltersBar';
 import { UserFormModal } from './UserFormModal';
 import { UsersTable } from './UsersTable';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 /** Anexo A de SPEC-001: tres roles leen el listado, uno solo escribe. */
 const ROLES_CON_LECTURA = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
@@ -119,19 +120,8 @@ function PanelDeUsuarios({ canManage }: { canManage: boolean }) {
     (filters.search ?? '') !== '' || (filters.roleCode ?? '') !== '' || filters.teamId !== undefined;
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="surface-card flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-neutral-900">Usuarios</h1>
-          <p className="text-sm text-neutral-500">
-            Cuentas del personal con acceso al sistema de áreas verdes.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {canManage && <Button onClick={abrirAlta}>Nuevo usuario</Button>}
-        </div>
-      </header>
+    <div className="space-y-6">
+      <PageHeader title="Usuarios" description="Cuentas del personal con acceso al sistema de áreas verdes." actions={canManage && <Button onClick={abrirAlta}>Nuevo usuario</Button>} />
 
       <UserFiltersBar filters={filters} onChange={cambiarFiltros} />
 

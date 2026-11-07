@@ -11,6 +11,7 @@ import { oneOf } from '@/lib/listUrl';
 import { useCanEditPlaces } from './edit/useCanEditPlaces';
 import { PlaceCard } from './PlaceCard';
 import { PlaceFilters } from './PlaceFilters';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 const LIST_PATH = '/lugares';
 const KIND_CODES: readonly (PlaceKindCode | '')[] = ['', 'OUTDOOR', 'INDOOR'];
@@ -34,26 +35,19 @@ export function LugaresScreen() {
   useListScrollRestoration(LIST_PATH, query, !loading);
 
   return (
-    <div className="flex flex-col gap-4">
-      <header className="surface-card flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Catálogo de lugares</h1>
-          <p className="mt-1 max-w-2xl text-sm text-neutral-600">
-            Edificios, jardines, estacionamientos y complejos, con fotos desde sus alrededores para ubicar un trabajo sin
-            volver al sitio.
-          </p>
-        </div>
-        {canEdit && (
-          <div className="flex gap-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="Catálogo de lugares"
+        description="Edificios, jardines, estacionamientos y complejos, con fotos desde sus alrededores para ubicar un trabajo sin volver al sitio."
+        actions={canEdit && (<>
             <Link href="/lugares/migracion" className="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
               Migrar referencias
             </Link>
             <Link href="/lugares/nuevo" className="rounded-md bg-forest-700 px-4 py-2 text-sm font-semibold text-white hover:bg-forest-800">
               Nuevo lugar
             </Link>
-          </div>
-        )}
-      </header>
+          </>)}
+      />
 
       <PlaceFilters
         search={search}

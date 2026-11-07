@@ -70,7 +70,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
 
   return (
     <form
-      className="flex flex-col gap-5 rounded-xl border border-neutral-200 bg-neutral-0 p-5"
+      className="surface-card flex flex-col gap-5"
       onSubmit={(e) => {
         e.preventDefault();
         void save();

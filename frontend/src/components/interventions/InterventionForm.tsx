@@ -12,6 +12,7 @@ import { incidentAfterCreationHref, type IncidentFilters } from '@/lib/incidentN
 import { todayLocal } from '@/lib/local-date';
 import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
 const nullableNumber = (s: string) => s === '' ? null : Number(s);
@@ -93,10 +94,10 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
     } finally { setPending(false); }
   };
   if (!['ADMIN','COORDINADOR'].includes(user?.role.code ?? '')) return <p>No tienes permiso para planificar intervenciones.</p>;
-  return <form className="surface-card space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
+  return <div className="space-y-6"><PageHeader title={initial ? `Editar ${initial.code}` : 'Nueva intervención'} />
+  <form className="surface-card space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
     {guard.dialog}
-    <Link href={origin ? incidentAfterCreationHref(origin,null,returnFilters) : initial ? `/intervenciones/${initial.id}` : '/intervenciones'} className="text-brand-600 underline">{origin ? 'Volver a la incidencia' : 'Volver'}</Link>
-    <h1 className="text-2xl font-bold">{initial ? `Editar ${initial.code}` : 'Nueva intervención'}</h1>
+    {origin && <Link href={incidentAfterCreationHref(origin,null,returnFilters)} className="text-brand-600 underline">Volver a la incidencia</Link>}
     {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.officialCode ?? `incidencia #${origin}`}. Al guardar volverás para confirmar el vínculo; todavía no se crea una asociación.</p>}
     {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar registrada, abierta y disponible para tu cuenta.'}</p>}
     {error && <p role="alert" className="text-action-danger">{error}</p>}
@@ -139,5 +140,5 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
       <Button variant="secondary" onClick={addLocation}>Agregar ubicación</Button>
     </fieldset>
     <Button type="submit" loading={pending} disabled={!options || !sourceAvailable}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : origin ? 'Guardar y volver a la incidencia' : 'Crear intervención'}</Button>
-  </form>;
+  </form></div>;
 }

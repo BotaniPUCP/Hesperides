@@ -14,9 +14,7 @@ export default async function CatastroSpecimenDetailPage({ params }: PageProps) 
   const { codigo } = await params;
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <SpecimenDetailScreen code={codigo} />
-    </div>
+    <SpecimenDetailScreen code={codigo} />
   );
 }
 

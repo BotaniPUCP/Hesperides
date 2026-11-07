@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BackButton, Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
+import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useInventarioVerdeSpecimenByCode } from '@/hooks/useInventarioVerde';
 import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { SpecimenAssessments } from './SpecimenAssessments';
@@ -21,10 +22,12 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
   const listHref = useRememberedHref(LIST_PATH);
   const [reloadKey, setReloadKey] = useState(0);
   const { specimen, loading, errorMessage } = useInventarioVerdeSpecimenByCode(code, reloadKey);
+  // Solo aplica al llegar desde la ficha de la especie, cuyo slug está en la URL.
+  usePageTrail(specimen ? { labels: { [specimen.species.slug]: specimen.species.commonName } } : {});
 
   if (loading && !specimen) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="space-y-6">
         <LoadingSkeleton variant="card" />
       </div>
     );
@@ -32,13 +35,7 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
 
   if (!specimen) {
     return (
-      <div className="flex flex-col gap-6">
-        <Breadcrumb
-          items={[
-            { label: 'Catastro de Ejemplares', href: listHref },
-            { label: 'Ejemplar no encontrado' },
-          ]}
-        />
+      <div className="space-y-6">
         <EmptyState
           title={errorMessage ? 'No se pudo cargar el ejemplar' : 'Ejemplar no encontrado'}
           description={errorMessage ?? 'El ejemplar solicitado no está en el inventario o fue dado de baja.'}
@@ -51,18 +48,8 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
     );
   }
 
-  const breadcrumbItems = [
-    { label: 'Catastro de Ejemplares', href: listHref },
-    { label: `Ejemplar ${specimen.code}` },
-  ];
-
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="mb-4 flex items-center gap-2">
-        <BackButton fallbackHref={LIST_PATH} />
-        <Breadcrumb items={breadcrumbItems} />
-      </div>
-
+    <div className="space-y-6">
       <SpecimenInfo specimen={specimen} onSpecimenUpdated={() => setReloadKey((k) => k + 1)} />
 
       <SpecimenInterventions code={specimen.code} />

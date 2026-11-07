@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Breadcrumb, Button, EmptyState, Input, LoadingSkeleton } from '@/components/ui';
+import { Button, EmptyState, Input, LoadingSkeleton } from '@/components/ui';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useRequest } from '@/hooks/useRequest';
 import { placesApi } from '@/lib/places-api';
 import { useCanEditPlaces } from '../edit/useCanEditPlaces';
 import { MigrationGroupCard } from './MigrationGroupCard';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 const PAGE_SIZE = 20;
 
@@ -34,18 +35,11 @@ export function ReferenceMigrationScreen() {
   const p = progress.data;
   const totalPages = Math.max(1, Math.ceil((queue.data?.totalGroups ?? 0) / PAGE_SIZE));
   return (
-    <div className="flex flex-col gap-4">
-      <Breadcrumb items={[{ label: 'Catálogo de lugares', href: '/lugares' }, { label: 'Migrar referencias' }]} />
-      <header className="surface-card">
-        <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Migrar referencias</h1>
-        <p className="mt-1 max-w-3xl text-sm text-neutral-600">
-          Cada referencia antigua se enlaza a un lugar del catálogo (su nombre queda como alias) o se descarta. Las
-          sugerencias miran el nombre y la cercanía en el mapa; nada se enlaza sin tu clic.
-        </p>
-      </header>
+    <div className="space-y-6">
+      <PageHeader title="Migrar referencias" description="Cada referencia antigua se enlaza a un lugar del catálogo (su nombre queda como alias) o se descarta. Las sugerencias miran el nombre y la cercanía en el mapa; nada se enlaza sin tu clic." />
 
       {p && (
-        <div className="rounded-xl border border-neutral-200 bg-neutral-0 p-4">
+        <div className="surface-card">
           <p className="text-sm font-semibold text-neutral-800">{`${p.linked + p.discarded} de ${p.total} referencias decididas`}</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100" aria-hidden="true">
             <div className="h-full bg-brand-600" style={{ width: `${p.total ? ((p.linked + p.discarded) / p.total) * 100 : 0}%` }} />

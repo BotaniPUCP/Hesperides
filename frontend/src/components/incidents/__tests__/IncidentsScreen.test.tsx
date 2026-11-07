@@ -2,10 +2,11 @@ import { render, screen } from '@testing-library/react';
 import { IncidentsScreen } from '../IncidentsScreen';
 import { IncidentDetailScreen } from '../IncidentDetailScreen';
 import { IncidentCaptureScreen } from '../IncidentCaptureScreen';
+import { PageFrame } from '@/components/layouts/PageFrame';
 import { useAuth } from '@/hooks/useAuth';
 import { useIncidentDetail, useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSummary } from '@/hooks/useIncidents';
 import { incidentHref } from '@/lib/incidentNavigation';
-import { rememberedHref } from '@/lib/listMemory';
+import { rememberedHref, rememberListQuery } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
 import { restartTrail } from '@/lib/navigationTrail';
 import { incidentOptions, incidentPage, pendingDetail } from '../__fixtures__/incidents';
@@ -14,7 +15,8 @@ jest.mock('@/hooks/useAuth', () => ({ useAuth: jest.fn() }));
 jest.mock('@/hooks/useIncidents', () => ({
   useIncidentNavigation: jest.fn(), useIncidents: jest.fn(), useIncidentOptions: jest.fn(), useIncidentSummary: jest.fn(), useIncidentDetail: jest.fn(),
 }));
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
+let mockPathname = '/incidencias';
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }), usePathname: () => mockPathname }));
 
 const idle = { loading: false, errorMessage: null, notFound: false, reload: jest.fn(), updateData: jest.fn() };
 const filters = { search: 'rama', status: 'OPEN', page: 2 };
@@ -56,15 +58,19 @@ it('shows the list when summary and filter options fail', () => {
 
 it('keeps the detail visible when options fail and offers a breadcrumb back to the filtered list', () => {
   jest.mocked(useIncidentOptions).mockReturnValue({ ...idle, data: null, errorMessage: 'Error del servidor.' });
-  render(<IncidentDetailScreen id={7} />);
+  mockPathname = '/incidencias/7';
+  rememberListQuery('/incidencias', 'search=rama&status=OPEN&page=2');
+  render(<PageFrame><IncidentDetailScreen id={7} /></PageFrame>);
   expect(screen.getByRole('heading', { name: 'Incidencia #7' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Incidencias' })).toHaveAttribute('href', '/incidencias?search=rama&status=OPEN&page=2');
   expect(screen.getByRole('button', { name: 'Reintentar opciones' })).toBeInTheDocument();
 });
 
 it('sin recorrido, la flecha del detalle lleva a la lista filtrada', () => {
+  mockPathname = '/incidencias/7';
+  rememberListQuery('/incidencias', 'search=rama&status=OPEN&page=2');
   restartTrail('/incidencias/7');
-  render(<IncidentDetailScreen id={7} />);
+  render(<PageFrame><IncidentDetailScreen id={7} /></PageFrame>);
   expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/incidencias?search=rama&status=OPEN&page=2');
 });
 
@@ -74,7 +80,9 @@ it('recuerda sus filtros para que al regresar de una intervención no se pierdan
 });
 
 it('uses a route-level heading and filtered breadcrumb for capture', () => {
-  render(<IncidentCaptureScreen />);
+  mockPathname = '/incidencias/nueva';
+  rememberListQuery('/incidencias', 'search=rama&status=OPEN&page=2');
+  render(<PageFrame><IncidentCaptureScreen /></PageFrame>);
   expect(screen.getByRole('heading', { level: 1, name: 'Informar una incidencia' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Incidencias' })).toHaveAttribute('href', '/incidencias?search=rama&status=OPEN&page=2');
 });

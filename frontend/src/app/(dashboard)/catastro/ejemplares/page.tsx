@@ -10,10 +10,8 @@ export const metadata: Metadata = {
 
 export default function CatastroEjemplaresPage() {
   return (
-    <div className="mx-auto max-w-7xl">
-      <Suspense fallback={<LoadingSkeleton />}>
-        <InventarioEjemplaresScreen />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LoadingSkeleton />}>
+      <InventarioEjemplaresScreen />
+    </Suspense>
   );
 }

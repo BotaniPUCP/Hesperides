@@ -53,10 +53,10 @@ export function InventarioVerdeScreen() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="space-y-6">
       <InventarioVerdeHero />
 
-      <div className="bg-neutral-0 rounded-2xl border border-neutral-200/90 p-5 sm:p-6 shadow-xs">
+      <div className="surface-card">
         <VegetationTypeFilter
           types={vegetationTypes}
           selectedType={selectedType}

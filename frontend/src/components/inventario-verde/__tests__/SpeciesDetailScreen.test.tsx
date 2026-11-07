@@ -1,11 +1,15 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { SpeciesDetailScreen } from '../SpeciesDetailScreen';
+import { PageFrame } from '@/components/layouts/PageFrame';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
 import { rememberListQuery } from '@/lib/listMemory';
 import { p01, page, palmeraReina } from '../__fixtures__/inventario';
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => '/inventario-verde/especies/syagrus-romanzoffiana',
+}));
 const mockUseAuth = jest.fn(() => ({ user: null as { role: { code: string } } | null }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
 jest.mock('@/lib/inventario-verde-api', () => ({
@@ -41,7 +45,7 @@ describe('SpeciesDetailScreen', () => {
     api.speciesBySlug.mockResolvedValue(palmeraReina);
     api.locations.mockResolvedValue([]);
 
-    render(<SpeciesDetailScreen slug="syagrus-romanzoffiana" />);
+    render(<PageFrame><SpeciesDetailScreen slug="syagrus-romanzoffiana" /></PageFrame>);
 
     const crumb = await screen.findByRole('link', { name: 'Especies' });
     expect(crumb).toHaveAttribute('href', '/inventario-verde?type=PALM&page=1');

@@ -77,7 +77,7 @@ export function MonthlyFilters({ filters, invalid, options, onChange }: MonthlyF
 
   return (
     <section aria-label={FILTER_TEXTS.toggle(activeMonthlyFilters(filters))}
-      className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
+      className="surface-card space-y-3">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="sm:col-span-2 lg:col-span-3">
           <PeriodField key={`${filters.dateFrom}|${filters.dateTo}`} filters={filters} presets={presets} onChange={onChange} />

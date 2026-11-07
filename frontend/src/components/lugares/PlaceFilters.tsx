@@ -30,7 +30,7 @@ export function PlaceFilters({ search, onSearch, category, onCategory, kind, onK
   const { items, isLoading } = useCatalog(CATEGORY_CATALOG);
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-0 p-4 shadow-xs md:flex-row md:items-end">
+    <div className="surface-card flex flex-col gap-3 md:flex-row md:items-end">
       <div className="md:flex-1">
         <Input
           id="lugares-buscar"

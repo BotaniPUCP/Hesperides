@@ -46,7 +46,7 @@ export function PerspectiveList({ perspectives, focused, onFocus, onOpenPhoto, e
   );
 
   if (perspectives.length === 0) {
-    return <p className="text-sm text-neutral-500">Este lugar todavía no tiene perspectivas.</p>;
+    return <p className="surface-card text-sm text-neutral-600">Este lugar todavía no tiene perspectivas.</p>;
   }
 
   const body = (v: PlacePerspective) => (

@@ -156,12 +156,26 @@
 }
 
 /*
+ * Una lista corta no tiene barra de scroll y una larga sí: sin reservar su hueco,
+ * el ancho de la pantalla saltaría 15 px entre una y otra. El mapa no lo reserva
+ * porque no tiene marco y ocupa toda la ventana.
+ */
+html:has([data-page-frame]) {
+  scrollbar-gutter: stable;
+}
+
+/*
  * Lo que va sobre el fondo de un módulo nunca queda suelto: su trama y su color
  * cambian de una pantalla a otra, así que el texto lleva su propia superficie.
  */
 @layer components {
   .surface-card {
     @apply rounded-2xl border border-neutral-200/90 bg-neutral-0 p-5 shadow-xs;
+  }
+
+  /* SPEC-C01: el título de página es uno solo en toda la aplicación. */
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-neutral-900;
   }
 
   .surface-pill {

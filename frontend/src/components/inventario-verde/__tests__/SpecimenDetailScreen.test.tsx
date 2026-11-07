@@ -1,12 +1,16 @@
 import { render, screen, within } from '@testing-library/react';
 import { SpecimenDetailScreen } from '../SpecimenDetailScreen';
+import { PageFrame } from '@/components/layouts/PageFrame';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
 import { catastroApi } from '@/lib/catastro-api';
 import { rememberListQuery } from '@/lib/listMemory';
 import { medidasDeEspecieCritica, p01Detail } from '../__fixtures__/inventario';
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => '/catastro/ejemplares/EV-000001',
+}));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user:null, isLoading:false }) }));
 jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { specimen: jest.fn() } }));
 
@@ -29,9 +33,9 @@ describe('SpecimenDetailScreen', () => {
     rememberListQuery('/catastro/ejemplares', 'search=real&type=PALM');
     api.specimen.mockResolvedValue(p01Detail);
 
-    render(<SpecimenDetailScreen code="EV-000001" />);
+    render(<PageFrame><SpecimenDetailScreen code="EV-000001" /></PageFrame>);
 
-    const crumb = await screen.findByRole('link', { name: 'Catastro de Ejemplares' });
+    const crumb = await screen.findByRole('link', { name: 'Ejemplares' });
     expect(crumb).toHaveAttribute('href', '/catastro/ejemplares?search=real&type=PALM');
     expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/catastro/ejemplares?search=real&type=PALM');
     window.sessionStorage.clear();
@@ -49,8 +53,6 @@ describe('SpecimenDetailScreen', () => {
     expect(
       screen.getByText((_, element) => element?.tagName.toLowerCase() === 'dd' && /^7[.,]5\s*m$/.test(element.textContent?.trim() ?? ''))
     ).toBeInTheDocument();
-    const catastroLink = screen.getByRole('link', { name: 'Catastro de Ejemplares' });
-    expect(catastroLink).toHaveAttribute('href', '/catastro/ejemplares');
   });
 
   it('un ejemplar sin medir no muestra alturas y lo dice', async () => {

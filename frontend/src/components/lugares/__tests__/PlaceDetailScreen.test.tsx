@@ -15,16 +15,20 @@ jest.mock('@/components/ui', () => ({
 }));
 jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn(), remove: jest.fn(), removePerspective: jest.fn() } }));
 const mockPush = jest.fn();
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }));
+import { PageFrame } from '@/components/layouts/PageFrame';
+
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }), usePathname: () => '/lugares/LUG-0001' }));
 
 const map = { show: jest.fn(), focusPerspective: jest.fn() };
 
-/** La ficha dentro del layout de /lugares, que le da el mapa. */
+/** La ficha dentro del marco y del layout de /lugares, que le da el mapa. */
 function renderScreen(code: string) {
   return render(
-    <PlaceMapContext.Provider value={map}>
-      <PlaceDetailScreen code={code} />
-    </PlaceMapContext.Provider>,
+    <PageFrame>
+      <PlaceMapContext.Provider value={map}>
+        <PlaceDetailScreen code={code} />
+      </PlaceMapContext.Provider>
+    </PageFrame>,
   );
 }
 

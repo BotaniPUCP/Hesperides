@@ -13,11 +13,7 @@ export default async function SpecimenDetailPage({ params }: PageProps) {
   const { codigo } = await params;
 
   return (
-    <main className="min-h-screen p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-6xl">
-        <SpecimenDetailScreen code={codigo} />
-      </div>
-    </main>
+    <SpecimenDetailScreen code={codigo} />
   );
 }
 

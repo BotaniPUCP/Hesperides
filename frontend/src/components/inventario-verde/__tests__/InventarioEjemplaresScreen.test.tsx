@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { InventarioEjemplaresScreen } from '../InventarioEjemplaresScreen';
+import { PageFrame } from '@/components/layouts/PageFrame';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { rememberedHref } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
@@ -166,10 +167,10 @@ describe('InventarioEjemplaresScreen', () => {
       await waitFor(() => expect(rememberedHref(LIST)).toBe(LIST));
     });
 
-    it('muestra la flecha solo si se llegó desde otra pantalla', async () => {
-      render(<InventarioEjemplaresScreen />);
+    it('la flecha sigue el recorrido cuando se llegó desde otra pantalla', async () => {
+      window.history.replaceState(null, '', LIST);
+      render(<PageFrame><InventarioEjemplaresScreen /></PageFrame>);
       await screen.findByText('EV-000001');
-      expect(screen.queryByRole('link', { name: 'Volver' })).not.toBeInTheDocument();
 
       act(() => {
         restartTrail('/inventario-verde/especies/roystonea-regia');

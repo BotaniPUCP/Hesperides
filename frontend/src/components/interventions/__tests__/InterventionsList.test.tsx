@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { InterventionsList } from '../InterventionsList';
+import { PageFrame } from '@/components/layouts/PageFrame';
 import { interventionsApi, type InterventionPage } from '@/lib/interventions-api';
 import { rememberedHref } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
@@ -103,10 +104,11 @@ it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de c
   await waitFor(() => expect(rememberedHref(LIST)).toBe(LIST));
 });
 
-it('muestra la flecha solo si se llegó desde otra pantalla', async () => {
-  render(<InterventionsList />);
+it('la flecha va a Inicio sin recorrido y a la pantalla anterior si se llegó desde otra', async () => {
+  window.history.replaceState(null, '', LIST);
+  render(<PageFrame><InterventionsList /></PageFrame>);
   await screen.findByText('INT-000010');
-  expect(screen.queryByRole('link', { name: 'Volver' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/');
 
   act(() => {
     restartTrail('/catastro/ejemplares/EV-000001');

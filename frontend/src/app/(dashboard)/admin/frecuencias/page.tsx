@@ -8,10 +8,8 @@ export const metadata = {
 
 export default function FrecuenciasPage() {
   return (
-    <div className="mx-auto max-w-6xl">
-      <Suspense fallback={<LoadingSkeleton />}>
-        <MaintenanceFrequenciesScreen />
-      </Suspense>
-    </div>
+    <Suspense fallback={<LoadingSkeleton />}>
+      <MaintenanceFrequenciesScreen />
+    </Suspense>
   );
 }

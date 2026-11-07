@@ -7,7 +7,7 @@ import type {
   MaintenanceZoneOption,
   UpdateMaintenanceFrequencyRequest,
 } from '@shared/types';
-import { BackButton, Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
@@ -18,6 +18,7 @@ import { FrequencyFilters, type FilterState } from './FrequencyFilters';
 import { FrequencyFormModal } from './FrequencyFormModal';
 import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS } from './frequencyListState';
 import { LocationCompliancePanel } from './LocationCompliancePanel';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 interface CatalogOption {
   id: number;
@@ -143,24 +144,13 @@ export function MaintenanceFrequenciesScreen() {
 
   return (
     <div className="space-y-6">
-      <div className="empty:hidden"><BackButton /></div>
-      <div className="surface-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">
-            Frecuencias de Mantenimiento
-          </h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            Periodicidades teóricas, rangos por estación y ciclos operativos del campus.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {canManage && (
-            <Button variant="primary" onClick={handleOpenCreate}>
+      <PageHeader
+        title="Frecuencias de Mantenimiento"
+        description="Periodicidades teóricas, rangos por estación y ciclos operativos del campus."
+        actions={canManage && (<Button variant="primary" onClick={handleOpenCreate}>
               + Nueva frecuencia
-            </Button>
-          )}
-        </div>
-      </div>
+            </Button>)}
+      />
 
       {feedback && (
         <div

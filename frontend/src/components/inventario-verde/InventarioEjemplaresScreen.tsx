@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import type { Species, SpecimenSortKey, SpecimenViewMode } from '@shared/types';
-import { BackButton } from '@/components/ui';
 import { useInventarioVerdeSpecimens, useInventarioVerdeStats } from '@/hooks/useInventarioVerde';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
@@ -81,17 +80,13 @@ export function InventarioEjemplaresScreen() {
   const handleResetFilters = () => setValues(DEFAULTS);
 
   return (
-    <div className="flex flex-col">
-      <div className="mb-3 empty:hidden">
-        <BackButton />
-      </div>
-
+    <div className="space-y-6">
       <InventarioVerdeHero
         title="Catastro de Ejemplares"
         totalSpecimens={totalSpecimens}
       />
 
-      <div className="bg-neutral-0 rounded-2xl border border-neutral-200/90 p-4 sm:p-6 shadow-xs">
+      <div className="surface-card">
         <SpecimenFiltersBar
           searchValue={searchInput}
           onSearchChange={setSearchInput}

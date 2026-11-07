@@ -2,7 +2,9 @@
 
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { PageHeader } from '@/components/layouts/PageHeader';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
+import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { puedeRegistrar } from '@/components/catastro/permisos';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +21,7 @@ export function EdicionEspecieScreen({ slug }: { slug: string }) {
   const guard = useUnsavedChangesGuard(sucio);
   const fichaHref = `${LIST_PATH}/especies/${slug}`;
   const alCambiarSucio = useCallback((valor: boolean) => setSucio(valor), []);
+  usePageTrail(species ? { labels: { [slug]: species.commonName || species.scientificName } } : {});
 
   if (loading) return <LoadingSkeleton variant="card" />;
 
@@ -44,13 +47,7 @@ export function EdicionEspecieScreen({ slug }: { slug: string }) {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb
-        items={[
-          { label: 'Especies', href: LIST_PATH },
-          { label: species.commonName || species.scientificName, href: fichaHref },
-          { label: 'Editar' },
-        ]}
-      />
+      <PageHeader title={`Editar ${species.commonName || species.scientificName}`} />
       <EdicionEspecieForm
         species={species}
         onDirtyChange={alCambiarSucio}

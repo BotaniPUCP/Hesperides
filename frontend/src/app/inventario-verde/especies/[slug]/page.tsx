@@ -13,10 +13,6 @@ export default async function SpeciesDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
   return (
-    <main className="min-h-screen p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-5xl">
-        <SpeciesDetailScreen slug={slug} />
-      </div>
-    </main>
+    <SpeciesDetailScreen slug={slug} />
   );
 }

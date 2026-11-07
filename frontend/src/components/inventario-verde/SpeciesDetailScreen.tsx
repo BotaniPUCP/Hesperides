@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BackButton, Breadcrumb, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
+import { Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { puedeRegistrar } from '@/components/catastro/permisos';
 import { useAuth } from '@/hooks/useAuth';
 import { useInventarioVerdeSpeciesBySlug } from '@/hooks/useInventarioVerde';
@@ -26,10 +27,11 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
 
   const locations = useRequest(slug || null, () => inventarioVerdeApi.locations(slug));
   const availableLocations = (locations.data ?? []) as LocationCount[];
+  usePageTrail(species ? { labels: { [slug]: species.commonName } } : {});
 
   if (speciesLoading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="space-y-6">
         <LoadingSkeleton variant="card" />
         <LoadingSkeleton variant="table-row" count={3} />
       </div>
@@ -38,13 +40,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
 
   if (!species) {
     return (
-      <div className="flex flex-col gap-6">
-        <Breadcrumb
-          items={[
-            { label: 'Especies', href: listHref },
-            { label: 'No encontrada' },
-          ]}
-        />
+      <div className="space-y-6">
         <EmptyState
           title={errorMessage ? 'No se pudo cargar la especie' : 'Especie no encontrada'}
           description={errorMessage ?? 'La especie solicitada no está registrada en el inventario.'}
@@ -58,18 +54,12 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   }
 
   return (
-    <div className="flex flex-col max-w-5xl mx-auto w-full space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <BackButton fallbackHref={LIST_PATH} />
-          <Breadcrumb
-            items={[
-              { label: 'Especies', href: listHref },
-              { label: species.commonName },
-            ]}
-          />
-        </div>
-        {puedeRegistrar(user?.role.code) && (
+    <div className="space-y-6">
+      {/* Cabecera taxonómica e información de la especie */}
+      <SpeciesInfo
+        species={species}
+        availableLocations={availableLocations}
+        actions={puedeRegistrar(user?.role.code) && (
           <Link
             href={`${LIST_PATH}/especies/${species.slug}/editar`}
             className="surface-pill text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
@@ -77,10 +67,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
             Editar especie
           </Link>
         )}
-      </div>
-
-      {/* Cabecera taxonómica e información de la especie */}
-      <SpeciesInfo species={species} availableLocations={availableLocations} />
+      />
 
       {/* Tarjeta de vinculación con el Catastro Físico de Ejemplares */}
       <Card title="Presencia y Catastro de Ejemplares">

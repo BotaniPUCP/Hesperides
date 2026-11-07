@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHeader } from '@/components/layouts/PageHeader';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -11,13 +12,13 @@ export default function HomePage() {
   const { user } = useAuth();
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <Card title={`Hola, ${user?.fullName ?? ''}`}>
+    <div className="space-y-6">
+      <PageHeader
+        title={`Hola, ${user?.fullName ?? ''}`}
+        description={<>Sesión iniciada como <strong>{user?.email}</strong> con el rol <strong>{user?.role.label}</strong>.</>}
+      />
+      <Card>
         <p className="text-sm text-neutral-700">
-          Sesión iniciada como <strong>{user?.email}</strong> con el rol{' '}
-          <strong>{user?.role.label}</strong>.
-        </p>
-        <p className="mt-3 text-sm text-neutral-500">
           Elige un módulo en el menú lateral. Los demás módulos aparecerán ahí conforme se
           implementen.
         </p>

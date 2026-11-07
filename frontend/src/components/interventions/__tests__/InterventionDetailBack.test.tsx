@@ -1,11 +1,12 @@
 import { act, render, screen } from '@testing-library/react';
 import { InterventionDetail } from '../InterventionDetail';
+import { PageFrame } from '@/components/layouts/PageFrame';
 import { interventionsApi, type InterventionDetail as Detail, type InterventionOptions } from '@/lib/interventions-api';
 import { ApiError } from '@/lib/api';
 import { rememberListQuery } from '@/lib/listMemory';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }), usePathname: () => '/intervenciones/10' }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 3, role: { code: 'OPERARIO' } } }) }));
 jest.mock('@/hooks/useCatalog', () => ({ useCatalog: () => ({ items: [], isLoading: false, errorMessage: null }) }));
 jest.mock('@/components/ui', () => ({ ...jest.requireActual('@/components/ui'), useToast: () => ({ showToast: jest.fn() }) }));
@@ -32,7 +33,7 @@ beforeEach(() => {
 
 it('sin recorrido, breadcrumb y flecha llevan al listado con sus últimos filtros', async () => {
   rememberListQuery(LIST, 'status=COMPLETED&page=2');
-  render(<InterventionDetail id={10} />);
+  render(<PageFrame><InterventionDetail id={10} /></PageFrame>);
 
   const crumb = await screen.findByRole('link', { name: 'Intervenciones' });
   expect(crumb).toHaveAttribute('href', `${LIST}?status=COMPLETED&page=2`);
@@ -51,7 +52,7 @@ it.each([
     recordVisit(DETAIL);
   });
 
-  render(<InterventionDetail id={10} />);
+  render(<PageFrame><InterventionDetail id={10} /></PageFrame>);
 
   const back = await screen.findByRole('link', { name: 'Volver' });
   expect(back).toHaveAttribute('href', query ? `${origin}?${query}` : origin);

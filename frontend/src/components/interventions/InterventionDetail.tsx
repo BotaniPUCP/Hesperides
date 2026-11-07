@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useRememberedHref } from '@/hooks/useRememberedHref';
-import { BackButton, Breadcrumb, Button, Input, LoadingSkeleton, Modal, Select, StatusBadge, useToast } from '@/components/ui';
+import { Button, Input, LoadingSkeleton, Modal, Select, StatusBadge, useToast } from '@/components/ui';
 import { LIMITES, motivoDeRechazo } from '@/lib/upload-limits';
 import { interventionsApi, interventionError, type InterventionDetail as Detail, type InterventionEvidence, type InterventionLocation, type InterventionOptions } from '@/lib/interventions-api';
 import { InterventionForm } from './InterventionForm';
@@ -16,6 +16,7 @@ import { ApiError } from '@/lib/api';
 import { createClientUuid } from '@/lib/client-uuid';
 import { LocationObservations, LocationProgressHistory } from './LocationHistory';
 import { ExecutionTime } from './ExecutionTime';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 
 const actionLabels: Record<string,string> = {
   start:'Iniciar trabajo', execution:'Registrar avance', complete:'Enviar a revisión', validate:'Aprobar', observe:'Observar', reopen:'Subsanar observación',
@@ -81,6 +82,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   const listHref = useRememberedHref(LIST_PATH);
   const { showToast } = useToast();
   const [data, setData] = useState<Detail | null>(null);
+  usePageTrail(data ? { labels: { [id]: data.code } } : {});
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -154,11 +156,10 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     void mutate(() => interventionsApi.command(id,selected.location.id!,selected.action,body));
   };
   return <section className="space-y-6">
-    <div className="flex items-center gap-2"><BackButton fallbackHref={LIST_PATH} /><Breadcrumb items={[{ label: 'Intervenciones', href: listHref }, { label: data.code }]} /></div>
-    <div className="surface-card flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
+    <div className="surface-card flex flex-wrap items-center justify-between gap-3"><h1 className="page-title">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
     {error && !selected && !cancelOpen && <p role="alert" className="text-action-danger">{error}</p>}
     {notice && !selected && <p role="status">{notice}</p>}
-    <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-0 p-5">
+    <div className="surface-card space-y-2">
       <p className="font-medium">{unit(data.classItemId)}{data.typeItemId ? ` · ${unit(data.typeItemId)}` : ''}</p>
       <p>{data.description || 'Sin descripción'}</p><p>Programada: {data.scheduledDate}</p>
       <ExecutionTime work={data}/>
@@ -177,7 +178,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
       </div>
       <p className="text-sm text-neutral-500">Actualiza la información para consultar cambios guardados por otras personas. Tus acciones se guardan al confirmarlas.</p>
     </div>
-    {canAssign && <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-0 p-5"><h2 className="font-semibold">Asignación del trabajo</h2>
+    {canAssign && <div className="surface-card space-y-3"><h2 className="font-semibold">Asignación del trabajo</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         <Select id="assign-team" label="Cuadrilla" value={team} options={(options?.teams ?? []).map(t => ({id:t.id,code:String(t.id),label:t.name}))} onChange={o => {setTeam(o?.code ?? '');setAssignee('');}} />
         <Select id="assign-user" label="Persona asignada" value={assignee} options={(teamOption?.assignees ?? []).map(u => ({id:u.id,code:String(u.id),label:u.fullName}))} onChange={o => setAssignee(o?.code ?? '')} />
@@ -186,7 +187,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     <h2 className="surface-pill text-xl font-semibold">Ubicaciones</h2>
     <div className="grid gap-5 xl:grid-cols-2">{data.locations.map((location,index) => {
       const photos = data.evidences.filter(e => e.interventionLocationId === location.id);
-      return <article key={location.id} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-5">
+      return <article key={location.id} className="surface-card space-y-4">
         <div className="flex flex-wrap justify-between gap-2"><h3 className="font-semibold">Ubicación {index + 1}</h3><StatusBadge code={location.statusCode ?? ''} label={label('INTERVENTION_STATUS',location.statusCode ?? '')} /></div>
         <p>{location.locationDescription || location.description}</p>{location.description && <p>{location.description}</p>}
         <dl className="grid grid-cols-2 gap-2 text-sm"><dt>Cantidad solicitada</dt><dd>{location.requestedQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd>
@@ -205,7 +206,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
         {location.allowedActions?.includes('evidence') && <EvidenceUpload key={`new-${location.id}-${location.attemptNumber}`} work={data} location={location} onChange={refresh} />}
       </article>;
     })}</div>
-    <details className="rounded-lg border border-neutral-200 bg-neutral-0 p-4"><summary className="cursor-pointer font-semibold">Historial de la actividad</summary><ol className="mt-3 space-y-2 text-sm">{data.history.map((event,index) => <li key={index}>
+    <details className="surface-card"><summary className="cursor-pointer font-semibold">Historial de la actividad</summary><ol className="mt-3 space-y-2 text-sm">{data.history.map((event,index) => <li key={index}>
       {new Date(event.occurredAt).toLocaleString()} · {actionLabels[event.actionCode.toLowerCase()] ?? ({CREATED:'Creada',ASSIGNED:'Asignada',STARTED:'Trabajo iniciado',PROGRESS_SAVED:'Avance registrado',COMPLETED:'Enviada a revisión',VALIDATED:'Aprobada',OBSERVED:'Observada',REOPENED:'Subsanación iniciada',UPDATED:'Planificación actualizada',REPROGRAMMED:'Reprogramada',CANCELLED:'Cancelada',EVIDENCE_ANNOUNCED:'Foto pendiente',EVIDENCE_UPLOADED:'Foto recibida'} as Record<string,string>)[event.actionCode] ?? 'Actualización'}
       {event.interventionLocationId && ` · Ubicación ${data.locations.findIndex(l => l.id === event.interventionLocationId) + 1}`}{event.reason && ` · ${event.reason}`}
     </li>)}</ol></details>

@@ -8,6 +8,7 @@ import { useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSum
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { incidentDate, incidentQuery } from '@/lib/incidentNavigation';
 import { IncidentDashboard, IncidentExportButton } from './IncidentDashboard';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 export function IncidentsScreen() {
   const { user } = useAuth();
@@ -28,15 +29,9 @@ export function IncidentsScreen() {
 
   return (
     <div className="space-y-6">
-      <header className="surface-card flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Incidencias</h1>
-          <p className="mt-1 text-sm text-neutral-700">{coordinator ? 'Revisión y seguimiento de la atención.' : 'Tus envíos y las incidencias de tu cuadrilla.'}</p>
-        </div>
-        <Link href={href('/incidencias/nueva')} className="inline-flex min-h-12 items-center rounded-md bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-forest-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+      <PageHeader title="Incidencias" description={coordinator ? 'Revisión y seguimiento de la atención.' : 'Tus envíos y las incidencias de tu cuadrilla.'} actions={<Link href={href('/incidencias/nueva')} className="inline-flex min-h-12 items-center rounded-md bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-forest-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
           Informar una incidencia
-        </Link>
-      </header>
+        </Link>} />
       {coordinator && <IncidentExportButton />}
 
       {coordinator && <section aria-label="Tablero de incidencias" className="surface-card space-y-3">
