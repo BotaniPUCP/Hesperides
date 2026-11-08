@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.*;
 import pe.edu.pucp.hesperides.modules.irrigation.service.IrrigationTurnsService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
+import pe.edu.pucp.hesperides.shared.time.DailyTimeWindow;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -27,6 +28,12 @@ public class IrrigationTurnsController {
     private static final String IRRIGATION_ROLES =
         "hasAnyAuthority('" + ADMIN + "', '" + COORDINADOR + "', '" + SUPERVISOR + "')";
     private final IrrigationTurnsService service;
+
+    @GetMapping("/operating-window")
+    @PreAuthorize(IRRIGATION_ROLES)
+    public ResponseEntity<ApiResponse<DailyTimeWindow>> operatingWindow() {
+        return ResponseEntity.ok(ApiResponse.ok("Ventana horaria de riego", service.operatingWindow()));
+    }
 
     @GetMapping("/sectors")
     @PreAuthorize(IRRIGATION_ROLES)

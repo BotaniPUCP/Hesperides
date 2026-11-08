@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.irrigation.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,5 +15,7 @@ public record CreateIrrigationTurnRequest(
     LocalTime startedAt,
     LocalTime finishedAt,
     @NotEmpty List<@NotNull Long> sectionZoneIds,
-    @Size(max = 500) String notes
+    @Size(max = 500) String notes,
+    @Valid IrrigationWaterDetailsRequest waterDetails,
+    @Size(max = 50) String windowExceptionCode
 ) {}

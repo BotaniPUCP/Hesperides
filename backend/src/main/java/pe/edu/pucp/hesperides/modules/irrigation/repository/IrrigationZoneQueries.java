@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationZoneResponse;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /** zones todavía no tiene entidad JPA. SQL parametrizado sobre el catálogo existente. */
@@ -29,6 +30,35 @@ public class IrrigationZoneQueries {
 
     /** Una sección con su superficie; la superficie es nula si el mapa no la trae. */
     public record SectionWithArea(Long id, String code, String name, BigDecimal areaM2) {
+    }
+
+    public record SectionIrrigation(Long id, String code, String name, String sectorName,
+                                    BigDecimal areaM2, LocalDate lastIrrigatedOn) {}
+
+    public List<SectionIrrigation> activeGreenSectionsWithLastIrrigation(LocalDate asOf) {
+        return jdbc.query("""
+            WITH latest AS (
+                SELECT ts.section_zone_id, t.sector_zone_id, MAX(t.irrigation_date) AS last_irrigated_on
+                FROM irrigation_turns t
+                JOIN irrigation_turn_sections ts ON ts.turn_id = t.id AND ts.deleted_at IS NULL
+                WHERE t.deleted_at IS NULL AND t.irrigation_date <= ?
+                GROUP BY ts.section_zone_id, t.sector_zone_id
+            )
+            SELECT s.id, s.code, s.name, sector.name AS sector_name, s.area_m2, latest.last_irrigated_on
+            FROM zones s
+            JOIN catalog_items section_type ON section_type.id = s.zone_type_item_id AND section_type.code = 'SECTION'
+            JOIN catalog_types section_catalog ON section_catalog.id = section_type.catalog_type_id AND section_catalog.code = 'ZONE_TYPE'
+            JOIN catalog_items landscape ON landscape.id = s.landscape_type_item_id AND landscape.code = 'GREEN_AREA'
+            JOIN catalog_types landscape_catalog ON landscape_catalog.id = landscape.catalog_type_id AND landscape_catalog.code = 'LANDSCAPE_TYPE'
+            JOIN zones sector ON sector.id = s.parent_zone_id AND sector.is_active AND sector.deleted_at IS NULL
+            JOIN catalog_items sector_type ON sector_type.id = sector.zone_type_item_id AND sector_type.code = 'SECTOR'
+            JOIN catalog_types sector_catalog ON sector_catalog.id = sector_type.catalog_type_id AND sector_catalog.code = 'ZONE_TYPE'
+            LEFT JOIN latest ON latest.section_zone_id = s.id AND latest.sector_zone_id = sector.id
+            WHERE s.is_active AND s.deleted_at IS NULL
+            ORDER BY latest.last_irrigated_on NULLS FIRST, s.name, s.id
+            """, (rs, n) -> new SectionIrrigation(rs.getLong("id"), rs.getString("code"),
+                rs.getString("name"), rs.getString("sector_name"), rs.getBigDecimal("area_m2"),
+                rs.getObject("last_irrigated_on", LocalDate.class)), asOf);
     }
 
     public List<IrrigationZoneResponse> sectors() {

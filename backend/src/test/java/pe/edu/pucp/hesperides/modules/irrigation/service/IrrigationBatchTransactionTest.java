@@ -20,7 +20,9 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
 import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
+import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
+import pe.edu.pucp.hesperides.modules.catalogs.repository.CatalogItemsRepository;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.CreateIrrigationTurnRequest;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationZoneResponse;
 import pe.edu.pucp.hesperides.modules.irrigation.entity.IrrigationTurn;
@@ -49,6 +51,8 @@ class IrrigationBatchTransactionTest {
     @Autowired IrrigationTurnSectionsRepository turnSections;
     @MockitoBean IrrigationZoneQueries zones;
     @MockitoBean UsersRepository users;
+    @MockitoBean CatalogItemsRepository catalogItems;
+    @MockitoBean SystemParameterReader parameters;
 
     @Test
     void rollsBackFirstTurnWhenDatabaseRejectsSecondTurn() {
@@ -75,8 +79,8 @@ class IrrigationBatchTransactionTest {
         });
 
         LocalDate date = LocalDate.of(2026, 11, 5);
-        var first = new CreateIrrigationTurnRequest(1L, date, null, null, List.of(11L), null);
-        var second = new CreateIrrigationTurnRequest(2L, date, null, null, List.of(21L), null);
+        var first = new CreateIrrigationTurnRequest(1L, date, null, null, List.of(11L), null, null, null);
+        var second = new CreateIrrigationTurnRequest(2L, date, null, null, List.of(21L), null, null, null);
         assertThatThrownBy(() -> service.createBatch(List.of(first, second), email))
             .isInstanceOf(DataIntegrityViolationException.class);
         verify(zones).recordedSections(anyLong());

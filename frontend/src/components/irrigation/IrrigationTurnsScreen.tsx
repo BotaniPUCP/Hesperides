@@ -2,29 +2,36 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import type { IrrigationTurn, IrrigationZone } from '@shared/types/irrigation';
+import type { IrrigationOperatingWindow, IrrigationTurn, IrrigationZone } from '@shared/types/irrigation';
 import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useCatalog } from '@/hooks/useCatalog';
 import { irrigationApi } from '@/lib/irrigation-api';
 import { dateLocal, todayLocal } from '@/lib/local-date';
 import { IRRIGATION_ROLES } from '@/lib/navigation';
 import { IrrigationMapPicker } from './IrrigationMapPicker';
+import { IrrigationCoverageCard } from './IrrigationCoverageCard';
+import { IrrigationPumpReadingsCard } from './IrrigationPumpReadingsCard';
 import { PageHeader } from '@/components/layouts/PageHeader';
 
 const FIELD = 'h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-brand-600';
 const ALL = 'ALL';
+const TANKER = 'TANKER';
 
 type SectionsBySector = Record<number, IrrigationZone[]>;
+type TankerQuantities = { trips?: string; volume?: string };
 
 export function IrrigationTurnsScreen() {
   const { user } = useAuth();
   if (!IRRIGATION_ROLES.includes(user?.role?.code ?? '')) {
     return <EmptyState title="Acceso restringido" description="Tu rol no tiene acceso a Gestión de Riego." />;
   }
-  return <IrrigationTurnsContent />;
+  return <IrrigationTurnsContent canRecordPump={user?.role?.code === 'SUPERVISOR'} />;
 }
 
-function IrrigationTurnsContent() {
+function IrrigationTurnsContent({ canRecordPump }: { canRecordPump: boolean }) {
+  const sources = useCatalog('IRRIGATION_WATER_SOURCE');
+  const methods = useCatalog('IRRIGATION_METHOD');
   const [sectors, setSectors] = useState<IrrigationZone[]>([]);
   const [sectionsBySector, setSectionsBySector] = useState<SectionsBySector>({});
   const [selected, setSelected] = useState<Set<number>>(() => new Set());
@@ -35,7 +42,14 @@ function IrrigationTurnsContent() {
   const [date, setDate] = useState(todayLocal);
   const [startedAt, setStartedAt] = useState('');
   const [finishedAt, setFinishedAt] = useState('');
+  const [operatingWindow, setOperatingWindow] = useState<IrrigationOperatingWindow | null>(null);
+  const [windowLoadFailed, setWindowLoadFailed] = useState(false);
+  const [windowRevision, setWindowRevision] = useState(0);
+  const [exceptionCode, setExceptionCode] = useState('');
   const [notes, setNotes] = useState('');
+  const [sourceCode, setSourceCode] = useState('');
+  const [methodCode, setMethodCode] = useState('');
+  const [quantities, setQuantities] = useState<Record<number, TankerQuantities>>({});
   const [mapOpen, setMapOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [from, setFrom] = useState(() => { const d = new Date(); d.setDate(d.getDate() - 15); return dateLocal(d); });
@@ -51,6 +65,28 @@ function IrrigationTurnsContent() {
   const turnsQuery = `${historySector}|${from}|${to}|${refresh}`;
   const loadingSections = sectors.length > 0 && sectionsLoadedFor !== sectors;
   const loadingTurns = turnsLoadedFor !== turnsQuery;
+  const windowStart = operatingWindow?.start.slice(0, 5);
+  const windowEnd = operatingWindow?.end.slice(0, 5);
+  const outsideWindow = windowStart !== undefined && windowEnd !== undefined
+    && [startedAt, finishedAt].some((time) => time && (time < windowStart || time > windowEnd));
+  const exceptionReasons = useCatalog(outsideWindow ? 'IRRIGATION_WINDOW_EXCEPTION' : '');
+  const exceptionReason = outsideWindow ? exceptionReasons.items.find((item) => item.code === exceptionCode) : undefined;
+
+  useEffect(() => {
+    let live = true;
+    irrigationApi.operatingWindow()
+      .then((window) => {
+        if (!live) return;
+        setOperatingWindow(window);
+        setWindowLoadFailed(false);
+      })
+      .catch(() => {
+        if (!live) return;
+        setOperatingWindow(null);
+        setWindowLoadFailed(true);
+      });
+    return () => { live = false; };
+  }, [windowRevision]);
 
   useEffect(() => {
     let live = true;
@@ -103,6 +139,16 @@ function IrrigationTurnsContent() {
     sector, sections: (sectionsBySector[sector.id] ?? []).filter((s) => selected.has(s.id)),
   })).filter((group) => group.sections.length > 0);
   const selectedCount = selectedGroups.reduce((n, group) => n + group.sections.length, 0);
+  const source = sources.items.find((item) => item.code === sourceCode);
+  const method = methods.items.find((item) => item.code === methodCode);
+  const isTanker = sourceCode === TANKER;
+
+  function updateQuantity(sectorId: number, field: keyof TankerQuantities, value: string) {
+    setQuantities((previous) => ({
+      ...previous,
+      [sectorId]: { ...previous[sectorId], [field]: value },
+    }));
+  }
 
   function toggle(id: number) {
     if (!scopeIds.has(id)) return;
@@ -147,6 +193,21 @@ function IrrigationTurnsContent() {
       setMessage({ kind: 'error', text: 'La hora final debe ser posterior a la hora inicial.' });
       return;
     }
+    if (outsideWindow && !exceptionReason) {
+      setMessage({ kind: 'error', text: 'Selecciona el motivo para registrar un turno fuera del horario.' });
+      return;
+    }
+    if (!source || !method) {
+      setMessage({ kind: 'error', text: 'Selecciona la fuente de agua y el método de riego.' });
+      return;
+    }
+    if (isTanker && selectedGroups.some(({ sector }) => {
+      const quantity = quantities[sector.id];
+      return !quantity?.trips && !quantity?.volume;
+    })) {
+      setMessage({ kind: 'error', text: 'Indica los viajes o el volumen de cisterna para cada sector seleccionado.' });
+      return;
+    }
     setReviewOpen(true);
   }
 
@@ -158,10 +219,18 @@ function IrrigationTurnsContent() {
         sectorZoneId: sector.id, irrigationDate: date,
         startedAt: startedAt || null, finishedAt: finishedAt || null,
         sectionZoneIds: sections.map((s) => s.id), notes: notes.trim() || null,
+        windowExceptionCode: exceptionReason?.code ?? null,
+        waterDetails: {
+          sourceCode, methodCode,
+          tankerTrips: isTanker && quantities[sector.id]?.trips ? Number(quantities[sector.id].trips) : null,
+          tankerVolumeM3: isTanker && quantities[sector.id]?.volume ? Number(quantities[sector.id].volume) : null,
+        },
       }));
       const created = await irrigationApi.createBatch(requests);
       setReviewOpen(false);
       setSelected(new Set()); setNotes(''); setStartedAt(''); setFinishedAt('');
+      setSourceCode(''); setMethodCode(''); setQuantities({});
+      setExceptionCode('');
       if (date < from) setFrom(date);
       if (date > to) setTo(date);
       setRefresh((v) => v + 1);
@@ -169,12 +238,13 @@ function IrrigationTurnsContent() {
     } catch (error) {
       setMessage({ kind: 'error', text: error instanceof Error ? error.message : 'No se pudo guardar. No se confirmó la operación.' });
       setReviewOpen(false);
+      setWindowRevision((value) => value + 1);
     } finally { setSaving(false); }
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Riego · Turnos por sector" description="D-01 · Registro por uno o varios sectores. La cobertura de 15 días pertenece a D-02 y requiere validación." />
+      <PageHeader title="Riego · Turnos por sector" description="Registro por uno o varios sectores y seguimiento de la cobertura de riego." />
       {message && <div role="status" className={`rounded-lg border px-4 py-3 text-sm ${message.kind === 'success'
         ? 'bg-alert-success-bg border-alert-success-border text-alert-success-fg'
         : 'bg-alert-danger-bg border-alert-warning-border text-alert-danger-fg'}`}>{message.text}</div>}
@@ -209,6 +279,40 @@ function IrrigationTurnsContent() {
               <input type="time" className={FIELD} value={finishedAt} onChange={(e) => setFinishedAt(e.target.value)}/>
             </label>
           </div>
+          {operatingWindow && <p className="text-sm text-neutral-600">Horario permitido: {windowStart}–{windowEnd}.</p>}
+          {windowLoadFailed && <div role="alert" className="space-y-2 text-sm text-alert-danger-fg">
+            <p>No se pudo cargar el horario de riego.</p>
+            <Button type="button" variant="secondary" onClick={() => setWindowRevision((value) => value + 1)}>Reintentar</Button>
+          </div>}
+          {outsideWindow && <div className="space-y-2 rounded-lg border border-alert-warning-border bg-alert-warning-bg p-3">
+            <p role="status" className="text-sm text-alert-warning-fg">
+              El turno queda fuera de la ventana de riego. Puedes continuar si indicas el motivo.
+            </p>
+            <label className="block space-y-1 text-sm text-neutral-700"><span>Motivo fuera de horario</span>
+              <select required className={FIELD} value={exceptionCode} onChange={(event) => setExceptionCode(event.target.value)}>
+                <option value="">{exceptionReasons.isLoading ? 'Cargando motivos…' : 'Selecciona un motivo'}</option>
+                {exceptionReasons.items.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+              </select>
+            </label>
+            {exceptionReasons.errorMessage && <p role="alert" className="text-sm text-alert-danger-fg">No se pudieron cargar los motivos. Actualiza la página.</p>}
+          </div>}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="space-y-1 text-sm text-neutral-700"><span>Fuente de agua</span>
+              <select required className={FIELD} value={sourceCode} onChange={(event) => setSourceCode(event.target.value)}>
+                <option value="">{sources.isLoading ? 'Cargando fuentes…' : 'Selecciona una fuente'}</option>
+                {sources.items.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+              </select>
+            </label>
+            <label className="space-y-1 text-sm text-neutral-700"><span>Método de riego</span>
+              <select required className={FIELD} value={methodCode} onChange={(event) => setMethodCode(event.target.value)}>
+                <option value="">{methods.isLoading ? 'Cargando métodos…' : 'Selecciona un método'}</option>
+                {methods.items.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+              </select>
+            </label>
+          </div>
+          {(sources.errorMessage || methods.errorMessage) && (
+            <p role="alert" className="text-sm text-alert-danger-fg">No se pudieron cargar los catálogos de riego. Actualiza la página.</p>
+          )}
           <div className="rounded-lg border border-neutral-200 p-3 space-y-3">
             <label className="block space-y-1 text-sm font-semibold text-neutral-700">
               <span>Ámbito de selección</span>
@@ -256,11 +360,24 @@ function IrrigationTurnsContent() {
               </div>
             </details>
           </div>
+          {isTanker && selectedGroups.map(({ sector }) => (
+            <fieldset key={sector.id} className="grid gap-4 rounded-md border border-neutral-200 p-3 sm:grid-cols-2">
+              <legend className="px-1 text-sm font-semibold">Cisterna · {sector.name}</legend>
+              <label className="space-y-1 text-sm text-neutral-700"><span>Número de viajes</span>
+                <input type="number" min="1" max="2147483647" step="1" className={FIELD}
+                  value={quantities[sector.id]?.trips ?? ''} onChange={(event) => updateQuantity(sector.id, 'trips', event.target.value)} />
+              </label>
+              <label className="space-y-1 text-sm text-neutral-700"><span>Volumen aproximado (m³)</span>
+                <input type="number" min="0.001" max="999999999.999" step="0.001" className={FIELD}
+                  value={quantities[sector.id]?.volume ?? ''} onChange={(event) => updateQuantity(sector.id, 'volume', event.target.value)} />
+              </label>
+            </fieldset>
+          ))}
           <label className="block space-y-1 text-sm text-neutral-700"><span>Observaciones (opcional, compartidas por los turnos seleccionados)</span>
             <textarea maxLength={500} rows={3} className="w-full rounded-md border border-neutral-200 bg-neutral-0 p-3 text-neutral-900"
               value={notes} onChange={(e) => setNotes(e.target.value)}/>
           </label>
-          <Button type="submit" disabled={loadingSections || selectedCount === 0}>Revisar y guardar {selectedGroups.length} turno(s)</Button>
+          <Button type="submit" disabled={loadingSections || !operatingWindow || selectedCount === 0 || !sources.items.length || !methods.items.length}>Revisar y guardar {selectedGroups.length} turno(s)</Button>
         </form>
       </Card>
 
@@ -274,12 +391,21 @@ function IrrigationTurnsContent() {
         <div className="w-full max-w-xl rounded-xl border border-neutral-200 bg-neutral-0 p-5 text-neutral-900 shadow-xl space-y-4">
           <h2 id="riego-review-title" className="text-xl font-bold">Confirmar ejecución del riego</h2>
           <p className="text-sm text-neutral-700">Fecha: {date}. Se registrará un turno independiente por sector, con el mismo horario declarado.</p>
+          <p className="text-sm text-neutral-700">Fuente: {source?.label} · Método: {method?.label}</p>
+          {exceptionReason && <p className="text-sm text-alert-warning-fg">Fuera de horario: {exceptionReason.label}</p>}
           <div className="max-h-56 space-y-2 overflow-y-auto">
             {selectedGroups.map(({sector, sections}) => <div key={sector.id} className="flex justify-between rounded-md border border-neutral-200 p-3 text-sm">
-              <span>{sector.name}</span><strong>{sections.length} secciones regadas</strong>
+              <div>
+                <span>{sector.name}</span>
+                {isTanker && <div className="text-xs text-neutral-600">
+                  {quantities[sector.id]?.trips && <span>Viajes: {quantities[sector.id].trips} </span>}
+                  {quantities[sector.id]?.volume && <span>Volumen: {quantities[sector.id].volume} m³</span>}
+                </div>}
+              </div>
+              <strong>{sections.length} secciones regadas</strong>
             </div>)}
           </div>
-          <p className="text-xs text-neutral-500">Confirma solo secciones efectivamente atendidas. Esto NO calcula automáticamente el cumplimiento de D-02.</p>
+          <p className="text-xs text-neutral-500">Confirma solo secciones efectivamente atendidas. El registro actualiza la cobertura provisional del mes.</p>
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setReviewOpen(false)} disabled={saving}>Volver a editar</Button>
             <Button type="button" onClick={confirmSave} loading={saving}>Confirmar y guardar {selectedGroups.length} turno(s)</Button>
@@ -295,10 +421,22 @@ function IrrigationTurnsContent() {
               <span className="text-sm text-neutral-600">{turn.irrigationDate}</span></div>
             <p className="mt-1 text-sm text-neutral-700">{turn.sections.length} secciones registradas</p>
             <p className="mt-1 text-sm text-neutral-500">{turn.sections.map((s) => s.name).join(', ')}</p>
-            {turn.startedAt && <p className="mt-1 text-xs text-neutral-500">Horario declarado: {turn.startedAt.slice(0,5)}{turn.finishedAt ? `–${turn.finishedAt.slice(0,5)}` : ''}</p>}
+            {(turn.startedAt || turn.finishedAt) && <p className="mt-1 text-xs text-neutral-500">
+              {turn.startedAt && `Inicio: ${turn.startedAt.slice(0, 5)}`}
+              {turn.startedAt && turn.finishedAt && ' · '}
+              {turn.finishedAt && `Fin: ${turn.finishedAt.slice(0, 5)}`}
+            </p>}
+            {turn.windowExceptionLabel && <p className="mt-1 text-sm text-neutral-700">Fuera de horario: {turn.windowExceptionLabel}</p>}
+            {turn.waterDetails && <p className="mt-1 text-sm text-neutral-700">
+              {turn.waterDetails.sourceLabel} · {turn.waterDetails.methodLabel}
+              {turn.waterDetails.tankerTrips != null && ` · Viajes: ${turn.waterDetails.tankerTrips}`}
+              {turn.waterDetails.tankerVolumeM3 != null && ` · Volumen: ${turn.waterDetails.tankerVolumeM3} m³`}
+            </p>}
             {turn.notes && <p className="mt-2 text-sm text-neutral-700">{turn.notes}</p>}
           </article>)}</div>}
       </Card>
+      <IrrigationCoverageCard refreshToken={refresh} />
+      <IrrigationPumpReadingsCard canRecord={canRecordPump} />
     </div>
   );
 }

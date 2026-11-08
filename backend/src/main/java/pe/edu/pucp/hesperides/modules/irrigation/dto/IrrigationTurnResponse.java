@@ -13,5 +13,7 @@ public record IrrigationTurnResponse(
     LocalTime startedAt,
     LocalTime finishedAt,
     List<IrrigationZoneResponse> sections,
-    String notes
+    String notes,
+    IrrigationWaterDetailsResponse waterDetails,
+    String windowExceptionLabel
 ) {}

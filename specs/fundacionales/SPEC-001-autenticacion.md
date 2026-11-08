@@ -392,6 +392,8 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **5. Incidencias** | Ver incidencias | | L | L (envíos propios y cuadrillas que dirige) | |
 | **6. Reportes** | Generar y ver reportes de dirección/coordinación | L | L | L (solo de su cuadrilla) | |
 | **7. Gestión de Riego** | Registrar turnos individuales o por lote y consultar sectores activos, secciones e historial (nota 5) | CL | CL | CL | |
+| **7. Gestión de Riego** | Registrar y consultar lecturas diarias de bomba y reservorio (D-04) | L | L | CL | |
+| **7. Gestión de Riego** | Consultar la cobertura hídrica registrada (D-02) | L | L | L | |
 | **Configuración del sistema** (`system_parameters`) | Editar parámetros generales | CU | | | |
 
 **Resumen por rol (una línea cada uno):**

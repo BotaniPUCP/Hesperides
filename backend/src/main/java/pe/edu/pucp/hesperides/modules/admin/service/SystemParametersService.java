@@ -13,6 +13,7 @@ import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
+import pe.edu.pucp.hesperides.shared.time.DailyTimeWindow;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -40,6 +41,7 @@ public class SystemParametersService {
 
     private static final int MAX_LOGIN_ATTEMPTS = 50;
     private static final BigDecimal MAX_CAMPUS_HECTARES = new BigDecimal("100000");
+    private static final BigDecimal PUMP_FLOW_LIMIT = new BigDecimal("1000000000");
 
     /**
      * Fallback de la longitud mínima cuando la fila falta o está mal escrita.
@@ -158,6 +160,9 @@ public class SystemParametersService {
             throw new ValidationException(
                     "El número de intentos de acceso debe estar entre 1 y " + MAX_LOGIN_ATTEMPTS);
         }
+        if (code.equals(SystemParameterCodes.IRRIGATION_COVERAGE_MAX_DAYS) && value < 1) {
+            throw new ValidationException("El intervalo máximo sin riego debe ser de al menos un día");
+        }
 
         return value.toString();
     }
@@ -173,12 +178,20 @@ public class SystemParametersService {
             throw new ValidationException(
                     "Las hectáreas del campus deben estar entre 0 y " + MAX_CAMPUS_HECTARES);
         }
-        return value.stripTrailingZeros().toPlainString();
+        BigDecimal normalized = value.stripTrailingZeros();
+        if (code.equals(SystemParameterCodes.IRRIGATION_PUMP_FLOW_M3_PER_HOUR)
+                && (normalized.signum() <= 0 || normalized.compareTo(PUMP_FLOW_LIMIT) >= 0 || normalized.scale() > 3)) {
+            throw new ValidationException("El caudal debe ser positivo, con hasta nueve enteros y tres decimales");
+        }
+        if (code.equals(SystemParameterCodes.IRRIGATION_PUMP_DAILY_LIMIT_HOURS)
+                && (normalized.signum() <= 0 || normalized.compareTo(BigDecimal.valueOf(24)) > 0 || normalized.scale() > 3)) {
+            throw new ValidationException("El límite diario debe ser mayor que 0 y hasta 24 horas, con hasta tres decimales");
+        }
+        return normalized.toPlainString();
     }
 
     /**
-     * Hoy ningún parámetro de texto tiene reglas propias, pero el tipo STRING
-     * sigue soportado: el sitio donde añadirlas es este.
+     * Validate the format required by text parameters with a structured value.
      *
      * <p>Aquí vivía la validación de {@code MAIL_FROM}, y se quitó junto al
      * parámetro. Era el caso que enseñó el límite de validar texto: el regex
@@ -187,6 +200,9 @@ public class SystemParametersService {
      * proveedor lo tiene verificado, y eso no se deduce de su forma.
      */
     private String validateString(String code, String raw) {
+        if (code.equals(SystemParameterCodes.IRRIGATION_OPERATING_WINDOW) && DailyTimeWindow.parse(raw).isEmpty()) {
+            throw new ValidationException("La ventana de riego debe usar HH:mm-HH:mm, con inicio anterior al fin");
+        }
         return raw;
     }
 

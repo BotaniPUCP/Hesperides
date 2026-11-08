@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class IrrigationBatchRulesTest {
     private CreateIrrigationTurnRequest turn(long sector, long section) {
         return new CreateIrrigationTurnRequest(sector, LocalDate.of(2026,10,21),
-            null, null, List.of(section), "prueba");
+            null, null, List.of(section), "prueba", null, null);
     }
     @Test void permitsDifferentSectors() {
         assertDoesNotThrow(() -> IrrigationBatchRules.check(List.of(turn(1, 10), turn(2, 20))));
@@ -24,6 +24,6 @@ class IrrigationBatchRulesTest {
     }
     @Test void rejectsNullDate() {
         assertThrows(ValidationException.class, () -> IrrigationBatchRules.check(List.of(
-            new CreateIrrigationTurnRequest(1L, null, null, null, List.of(10L), null))));
+            new CreateIrrigationTurnRequest(1L, null, null, null, List.of(10L), null, null, null))));
     }
 }

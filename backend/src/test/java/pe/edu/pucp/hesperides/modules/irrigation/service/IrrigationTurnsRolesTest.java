@@ -9,11 +9,15 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
+import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
 import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
+import pe.edu.pucp.hesperides.modules.catalogs.repository.CatalogItemsRepository;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.CreateIrrigationTurnRequest;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationTurnResponse;
+import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationWaterDetailsRequest;
+import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationWaterDetailsResponse;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationZoneResponse;
 import pe.edu.pucp.hesperides.modules.irrigation.entity.IrrigationTurn;
 import pe.edu.pucp.hesperides.modules.irrigation.entity.IrrigationTurnSection;
@@ -23,6 +27,7 @@ import pe.edu.pucp.hesperides.modules.irrigation.repository.IrrigationZoneQuerie
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -54,12 +59,14 @@ class IrrigationTurnsRolesTest {
     @Mock IrrigationTurnSectionsRepository turnSections;
     @Mock IrrigationZoneQueries zones;
     @Mock UsersRepository users;
+    @Mock CatalogItemsRepository catalogItems;
+    @Mock SystemParameterReader parameters;
 
     private IrrigationTurnsServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new IrrigationTurnsServiceImpl(turns, turnSections, zones, users);
+        service = new IrrigationTurnsServiceImpl(turns, turnSections, zones, users, catalogItems, parameters);
     }
 
     private String login(String role, long id) {
@@ -99,7 +106,7 @@ class IrrigationTurnsRolesTest {
         IrrigationTurnResponse result = service.create(request(SECTOR_A.id(), SECTION_A.id()), email);
 
         assertThat(result).isEqualTo(new IrrigationTurnResponse(101L, SECTOR_A.id(), SECTOR_A.name(), userId,
-            DATE, START, FINISH, List.of(SECTION_A), "Riego ejecutado"));
+            DATE, START, FINISH, List.of(SECTION_A), "Riego ejecutado", null, null));
         verify(turns).save(argThat(turn -> turn.getSupervisorUserId().equals(userId)
             && turn.getSectorZoneId().equals(SECTOR_A.id()) && turn.getIrrigationDate().equals(DATE)
             && turn.getStartedAt().equals(START) && turn.getFinishedAt().equals(FINISH)
@@ -141,16 +148,49 @@ class IrrigationTurnsRolesTest {
         when(zones.recordedSections(101L)).thenReturn(List.of(SECTION_A));
         when(zones.recordedSections(102L)).thenReturn(List.of(SECTION_B));
         simulateTurnIds();
+        CatalogItem source = catalogChoice(51L, "TANKER", "Cisterna");
+        CatalogItem method = catalogChoice(52L, "HOSE", "Manguera");
+        when(catalogItems.findActiveItemByTypeAndCode("IRRIGATION_WATER_SOURCE", "TANKER")).thenReturn(Optional.of(source));
+        when(catalogItems.findActiveItemByTypeAndCode("IRRIGATION_METHOD", "HOSE")).thenReturn(Optional.of(method));
+        when(catalogItems.findAllById(List.of(51L, 52L))).thenReturn(List.of(source, method));
+        var volume = new BigDecimal("1.250");
 
         List<IrrigationTurnResponse> batch = service.createBatch(List.of(
-            request(SECTOR_A.id(), SECTION_A.id()), request(SECTOR_B.id(), SECTION_B.id())), email);
+            request(SECTOR_A.id(), SECTION_A.id(), new IrrigationWaterDetailsRequest("TANKER", "HOSE", BigDecimal.valueOf(2), null)),
+            request(SECTOR_B.id(), SECTION_B.id(), new IrrigationWaterDetailsRequest("TANKER", "HOSE", null, volume))), email);
 
         assertThat(batch).extracting(IrrigationTurnResponse::sectorZoneId).containsExactly(SECTOR_A.id(), SECTOR_B.id());
         assertThat(batch).extracting(IrrigationTurnResponse::sections)
             .containsExactly(List.of(SECTION_A), List.of(SECTION_B));
         assertThat(batch).extracting(IrrigationTurnResponse::supervisorUserId).containsOnly(42L);
+        assertThat(batch).extracting(IrrigationTurnResponse::waterDetails).containsExactly(
+            new IrrigationWaterDetailsResponse("Cisterna", "Manguera", 2, null),
+            new IrrigationWaterDetailsResponse("Cisterna", "Manguera", null, volume));
         verify(turnSections).saveAllAndFlush(argThat(details -> onlySection(details, 101L, SECTION_A.id())));
         verify(turnSections).saveAllAndFlush(argThat(details -> onlySection(details, 102L, SECTION_B.id())));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "TANKER,,",
+        "TANKER,1.5,",
+        "TANKER,0,",
+        "TANKER,,0.0001",
+        "NETWORK,1,"
+    })
+    void rejectsInvalidTankerDetailsBeforeSaving(String sourceCode, BigDecimal trips, BigDecimal volume) {
+        String email = login("ADMIN", 43L);
+        when(zones.sectors()).thenReturn(List.of(SECTOR_A));
+        when(zones.sectionsOf(SECTOR_A.id())).thenReturn(List.of(SECTION_A));
+        when(catalogItems.findActiveItemByTypeAndCode("IRRIGATION_WATER_SOURCE", sourceCode))
+            .thenReturn(Optional.of(catalogChoice(51L, sourceCode, "Fuente")));
+        when(catalogItems.findActiveItemByTypeAndCode("IRRIGATION_METHOD", "HOSE"))
+            .thenReturn(Optional.of(catalogChoice(52L, "HOSE", "Manguera")));
+        var details = new IrrigationWaterDetailsRequest(sourceCode, "HOSE", trips, volume);
+
+        assertThatThrownBy(() -> service.create(request(SECTOR_A.id(), SECTION_A.id(), details), email))
+            .isInstanceOf(ValidationException.class);
+        verifyNoInteractions(turns, turnSections);
     }
 
     @Test
@@ -166,6 +206,40 @@ class IrrigationTurnsRolesTest {
         verifyNoInteractions(turns, turnSections);
     }
 
+    @Test
+    void rejectsTheWholeBatchIfAnOutsideTurnHasNoReason() {
+        String email = login("ADMIN", 43L);
+        when(zones.sectors()).thenReturn(List.of(SECTOR_A, SECTOR_B));
+        when(zones.sectionsOf(SECTOR_A.id())).thenReturn(List.of(SECTION_A));
+        when(zones.sectionsOf(SECTOR_B.id())).thenReturn(List.of(SECTION_B));
+        var inside = new CreateIrrigationTurnRequest(1L, DATE, LocalTime.of(6, 30),
+            LocalTime.of(11, 30), List.of(11L), null, null, null);
+        var outside = new CreateIrrigationTurnRequest(2L, DATE, null,
+            LocalTime.of(11, 31), List.of(21L), null, null, null);
+
+        assertThatThrownBy(() -> service.createBatch(List.of(inside, outside), email))
+            .isInstanceOf(ValidationException.class).hasMessageContaining("06:30–11:30");
+        verifyNoInteractions(turns, turnSections);
+    }
+
+    @Test
+    void recordsAnExceptionAgainstTheConfiguredWindow() {
+        String email = login("COORDINADOR", 42L);
+        when(parameters.read("IRRIGATION_OPERATING_WINDOW")).thenReturn(Optional.of("08:00-12:00"));
+        when(zones.sectors()).thenReturn(List.of(SECTOR_A));
+        when(zones.sectionsOf(SECTOR_A.id())).thenReturn(List.of(SECTION_A));
+        when(zones.recordedSections(101L)).thenReturn(List.of(SECTION_A));
+        var reason = catalogChoice(61L, "EMERGENCY", "Emergencia");
+        when(catalogItems.findActiveItemByTypeAndCode("IRRIGATION_WINDOW_EXCEPTION", "EMERGENCY"))
+            .thenReturn(Optional.of(reason));
+        when(catalogItems.findById(61L)).thenReturn(Optional.of(reason));
+        simulateTurnIds();
+        var request = new CreateIrrigationTurnRequest(1L, DATE, START, FINISH, List.of(11L), null, null, "EMERGENCY");
+
+        assertThat(service.create(request, email).windowExceptionLabel()).isEqualTo("Emergencia");
+        verify(turns).save(argThat(turn -> Long.valueOf(61L).equals(turn.getWindowExceptionItemId())));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"OPERARIO", "OTRO"})
     void deniesSingleAndBatchCreationForUnauthorizedRoles(String role) {
@@ -178,7 +252,19 @@ class IrrigationTurnsRolesTest {
     }
 
     private static CreateIrrigationTurnRequest request(Long sectorId, Long sectionId) {
-        return new CreateIrrigationTurnRequest(sectorId, DATE, START, FINISH, List.of(sectionId), " Riego ejecutado ");
+        return request(sectorId, sectionId, null);
+    }
+
+    private static CreateIrrigationTurnRequest request(Long sectorId, Long sectionId, IrrigationWaterDetailsRequest details) {
+        return new CreateIrrigationTurnRequest(sectorId, DATE, START, FINISH, List.of(sectionId), " Riego ejecutado ", details, null);
+    }
+
+    private static CatalogItem catalogChoice(long id, String code, String label) {
+        CatalogItem item = new CatalogItem();
+        setField(item, "id", id);
+        item.setCode(code);
+        item.setLabel(label);
+        return item;
     }
 
     private static IrrigationTurn existingTurn(long turnId, long sectorId) {

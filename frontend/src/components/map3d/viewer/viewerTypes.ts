@@ -20,6 +20,7 @@ export interface Viewer {
   setPaint: (mode: ModeId, hidden: Set<string>) => void;
   /** M7: áreas registradas temporalmente, sin cambiar el modo normal del mapa. */
   setMarkedSections: (codes: readonly string[]) => void;
+  setSectionColors: (colors: ReadonlyMap<string, string>) => void;
   /** Los edificios de un lugar hecho de varios bloques; una lista vacía quita las marcas. */
   setMarkedBuildings: (ids: readonly number[]) => void;
   /** Areas del sector cuyo poligono cruza el rectangulo de pantalla (pixeles cliente). */

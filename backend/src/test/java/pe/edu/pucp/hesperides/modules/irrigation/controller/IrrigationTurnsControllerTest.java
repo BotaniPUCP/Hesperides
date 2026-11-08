@@ -54,7 +54,7 @@ class IrrigationTurnsControllerTest {
         """.formatted(TURN);
     private static final IrrigationZoneResponse SECTION = new IrrigationZoneResponse(11L, "A-1", "Sección A-1");
     private static final IrrigationTurnResponse RESPONSE = new IrrigationTurnResponse(
-        101L, 1L, "Sector A", 41L, DATE, null, null, List.of(SECTION), null);
+        101L, 1L, "Sector A", 41L, DATE, null, null, List.of(SECTION), null, null, null);
 
     @Autowired MockMvc mvc;
     @MockitoBean IrrigationTurnsService service;

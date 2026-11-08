@@ -1,7 +1,13 @@
 import { apiClient } from './api';
-import type { CreateIrrigationTurnRequest, IrrigationTurn, IrrigationZone } from '@shared/types/irrigation';
+import type { CreateIrrigationTurnRequest, IrrigationCoverage, IrrigationOperatingWindow, IrrigationTurn, IrrigationZone } from '@shared/types/irrigation';
+import type { CreateIrrigationPumpReadingRequest, IrrigationPumpReading, IrrigationPumpReadings } from '@shared/types/irrigation';
 
 export const irrigationApi = {
+  coverage: () => apiClient.get<IrrigationCoverage>('/irrigation/coverage'),
+  pumpReadings: () => apiClient.get<IrrigationPumpReadings>('/irrigation/pump-readings'),
+  createPumpReading: (payload: CreateIrrigationPumpReadingRequest) =>
+    apiClient.post<IrrigationPumpReading>('/irrigation/pump-readings', payload),
+  operatingWindow: () => apiClient.get<IrrigationOperatingWindow>('/irrigation/operating-window'),
   sectors: () => apiClient.get<IrrigationZone[]>('/irrigation/sectors'),
   sections: (sectorId: number) =>
     apiClient.get<IrrigationZone[]>(`/irrigation/sectors/${sectorId}/sections`),
