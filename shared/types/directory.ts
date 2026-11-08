@@ -77,3 +77,34 @@ export interface ContactInput {
   mobile: string | null;
   email: string | null;
 }
+
+/** Registro masivo (CSV). CREATE se crea, SKIP ya existe, ERROR impide confirmar. */
+export type DirectoryImportKind = 'organizaciones' | 'contactos';
+export type ImportRowAction = 'CREATE' | 'SKIP' | 'ERROR';
+
+export interface ImportRowIssue {
+  line: number;
+  column: string;
+  code: string;
+  detail: string | null;
+}
+
+export interface ImportPlannedRow {
+  line: number;
+  name: string | null;
+  action: ImportRowAction;
+  issues: ImportRowIssue[];
+}
+
+export interface DirectoryImportPlan {
+  kind: DirectoryImportKind;
+  rows: ImportPlannedRow[];
+  creates: number;
+  skips: number;
+  errors: number;
+}
+
+export interface DirectoryImportOutcome {
+  created: number;
+  skipped: number;
+}

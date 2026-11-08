@@ -2,6 +2,9 @@ import type {
   ContactDetail,
   ContactInput,
   ContactSummary,
+  DirectoryImportKind,
+  DirectoryImportOutcome,
+  DirectoryImportPlan,
   DirectoryPage,
   OrganizationDetail,
   OrganizationInput,
@@ -26,6 +29,7 @@ export interface ContactFilters {
 }
 
 const ORGS = '/directory/organizations';
+const IMPORTS = '/directory/imports';
 const CONTACTS = '/directory/contacts';
 const segment = encodeURIComponent;
 
@@ -74,4 +78,20 @@ export const directoryApi = {
     apiClient.post<null>(`${CONTACTS}/${segment(code)}/organizations`, { organizationCode }),
 
   deactivateContact: (code: string) => apiClient.del<null>(`${CONTACTS}/${segment(code)}`),
+
+  importTemplate: (kind: DirectoryImportKind) => apiClient.getBlob(`${IMPORTS}/templates/${segment(kind)}`),
+
+  /** No guarda nada: dice qué pasaría con cada fila. */
+  previewImport: (kind: DirectoryImportKind, file: File) =>
+    apiClient.postForm<DirectoryImportPlan>(`${IMPORTS}/${segment(kind)}/preview`, withFile(file)),
+
+  /** Todo o nada: con una fila con error responde 422 y no guarda ninguna. */
+  confirmImport: (kind: DirectoryImportKind, file: File) =>
+    apiClient.postForm<DirectoryImportOutcome>(`${IMPORTS}/${segment(kind)}/confirm`, withFile(file)),
 };
+
+function withFile(file: File): FormData {
+  const form = new FormData();
+  form.append('file', file);
+  return form;
+}

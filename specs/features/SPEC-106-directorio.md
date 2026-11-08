@@ -229,21 +229,27 @@ CREATE INDEX idx_contact_organizations_org ON contact_organizations (organizatio
 `unaccent(lower(...))` necesitan una función envoltorio inmutable. Las sugerencias de `/similar`
 pueden usar `pg_trgm`, como `PlaceSuggestionRepository`.
 
-### 4.2 Carga inicial (segunda entrega)
+### 4.2 Carga inicial: Registro masivo
 
-> **Fuera del plan de la primera entrega.** La primera entrega es el esquema, la API y las
-> pantallas. La carga empieza cuando exista la tabla de equivalencias revisada por el usuario;
-> hoy ese archivo todavía no existe.
+> **Enmienda del 8 nov 2026 (decisión del usuario):** la carga inicial entra por una sección
+> **Registro masivo** del Directorio, no por una migración ni por un script. Así la hace
+> coordinación con las mismas reglas que el alta manual, y ningún dato personal pasa por Git.
 
-- **Organizaciones** (migración propia, después de la de esquema): las del calendario de
-  reservas, unificadas con `docs/dominio/datos/directorio/equivalencias-organizaciones.csv`, más
-  las empresas de la hoja «Listas» de la matriz de incidencias de la OSG (sin «Ninguna»). La tabla
-  de equivalencias **la revisa el usuario antes** de escribir la migración.
-- **Contactos**: el script `scripts/directorio/cargar_contactos.py` lee el calendario local
-  (fuera del repositorio) y los crea por la API como un ADMIN, con las mismas validaciones que un
-  alta manual. Separa «A / B» y «A y B» en dos personas, descarta los códigos de alumno y deja
-  vacío el teléfono que no sea anexo ni celular válido. Las filas sin unidad o sin contacto se
-  ignoran (decisión del usuario sobre los datos sucios).
+- `/directorio/importar`, solo ADMIN y COORDINADOR. Se elige **Organizaciones** o
+  **Contactos**, se descarga su plantilla y se sube un CSV (UTF-8, separador `;`, listas con `|`).
+- Columnas: organizaciones `nombre;tipo;ruc;telefono;otros_nombres` (tipo «Unidad PUCP» o
+  «Empresa externa»); contactos `nombre;organizaciones;anexo;celular;correo` (organizaciones por
+  nombre, alias o código, que **deben existir**: se cargan primero).
+- **Vista previa** (`POST /api/v1/directory/imports/{kind}/preview`): no escribe; cada fila
+  sale como *Se crea*, *Ya existe, se omite* o *Error* con sus motivos (código estable + dato).
+- **Confirmación** (`POST …/{kind}/confirm`): vuelve a leer el archivo; **todo o nada**: con
+  una fila con error responde 422 y no guarda ninguna. Crea con los mismos servicios (y
+  auditoría) que el alta manual. Hasta 2000 filas por archivo.
+- «Ya existe»: una organización vigente con el mismo nombre; un contacto con el mismo nombre ya
+  vinculado a la primera organización de su fila *(decisión de diseño)*.
+- Los datos del calendario se preparan **fuera del repositorio** (tabla de equivalencias revisada
+  por el usuario, «A / B» separado en dos personas, sin códigos de alumno, filas sucias
+  ignoradas) y se suben por esta sección.
 
 ## 5. Comportamiento
 
@@ -331,6 +337,10 @@ Todos los mensajes van en español (memoria del proyecto: errores visibles en es
   edita y se da de baja.
 - `/directorio/[code]`: tarjeta de datos (nombre, tipo, RUC, teléfono, alias) y tarjeta de
   contactos con anexo, celular y correo.
+- El menú tiene un grupo **Directorio** con *Directorio*, *Registro individual* y *Registro
+  masivo*; el capataz solo ve el primero. Fondo de módulo propio (violeta, `moduleThemes.ts`).
+- `/directorio/registrar` (**Registro individual**, decisión del usuario): un único «Registrar»
+  lleva aquí; primero se elige *Organización* o *Contacto* y luego se llenan sus datos.
 - Botones «Registrar», «Editar», «Vincular» y «Dar de baja» solo para ADMIN y COORDINADOR.
 - Estados: cargando, vacío («Aún no hay organizaciones»), error y sugerencias de parecidos.
 
