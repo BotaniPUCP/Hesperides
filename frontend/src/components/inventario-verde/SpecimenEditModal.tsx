@@ -9,6 +9,7 @@ import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { LIMITES } from '@/lib/upload-limits';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
 import { unidadCorta } from './medidasEspecie';
+import { mensajeDeErrorCatastro } from '@/components/catastro/mensajes';
 
 export interface SpecimenEditModalProps {
   specimen: SpecimenDetail;
@@ -164,11 +165,7 @@ export function SpecimenEditModal({
       onClose();
     } catch (err) {
       setShowConfirm(false);
-      setErrorMessage(
-        err instanceof Error
-          ? err.message
-          : 'Ocurrió un error al actualizar las medidas del ejemplar. Intenta nuevamente.'
-      );
+      setErrorMessage(mensajeDeErrorCatastro(err));
     } finally {
       setSaving(false);
     }

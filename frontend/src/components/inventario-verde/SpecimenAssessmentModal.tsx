@@ -6,6 +6,7 @@ import { Button, Input, Modal } from '@/components/ui';
 import { catastroApi } from '@/lib/catastro-api';
 import { todayLocal } from '@/lib/local-date';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
+import { mensajeDeApiError } from '@/lib/api-errors';
 
 export interface SpecimenAssessmentModalProps {
   specimenCode: string;
@@ -119,7 +120,7 @@ export function SpecimenAssessmentModal({
       onClose();
     } catch (err: unknown) {
       setShowConfirm(false);
-      const msg = err instanceof Error ? err.message : 'Error al registrar la evaluación';
+      const msg = mensajeDeApiError(err);
       setErrorMessage(msg);
     } finally {
       setSaving(false);

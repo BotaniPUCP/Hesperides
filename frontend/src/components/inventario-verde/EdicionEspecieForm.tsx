@@ -10,6 +10,7 @@ import { CamposMedidasEspecie } from './CamposMedidasEspecie';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
 import { aFormulario, erroresMedidas, medidasDe, type ErroresMedidas } from './medidasEspecie';
 import { normalizarNombreCientifico, validarNombreCientifico } from './validacionesEspecie';
+import { mensajeDeApiError } from '@/lib/api-errors';
 
 export interface EdicionEspecieFormProps {
   species: Species;
@@ -84,7 +85,7 @@ export function EdicionEspecieForm({ species, onSaved, onCancel, onDirtyChange }
       if (err instanceof ApiError && err.status === 409) {
         setError('Ya existe una especie con este nombre científico en el catálogo.');
       } else {
-        setError(err instanceof ApiError ? err.message : 'Ocurrió un error inesperado al guardar la especie.');
+        setError(err instanceof ApiError ? mensajeDeApiError(err) : 'Ocurrió un error inesperado al guardar la especie.');
       }
     } finally {
       setConfirmando(false);

@@ -87,7 +87,9 @@ export function traducirMensajeCatastro(mensaje: string): string {
 /** Para mostrar un fallo de la API en las pantallas del catastro. */
 export function mensajeDeErrorCatastro(error: unknown): string {
   if (error instanceof ApiError && [400, 404, 409, 422].includes(error.status)) {
-    return traducirMensajeCatastro(error.message);
+    const propio = traducirMensajeCatastro(error.message);
+    // Uno que el catastro no conoce lo traduce el diccionario general; tal cual podría llegar en inglés.
+    if (propio !== error.message || error.status === 404) return propio;
   }
   return mensajeDeApiError(error);
 }

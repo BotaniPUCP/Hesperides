@@ -175,7 +175,7 @@ it('conserva el reporte tras conflicto y permite recargar la versión antes del 
   jest.mocked(interventionsApi.detail).mockResolvedValue(d);jest.mocked(interventionsApi.command).mockRejectedValueOnce(new ApiError(409,'Intervention has changed; reload before retrying'));
   render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
   fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Reporte que se conserva'}});
-  fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));await screen.findByText(/El trabajo cambió/);
+  fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));await screen.findByText(/La intervención cambió mientras la editabas/);
   jest.mocked(interventionsApi.detail).mockResolvedValue({...d,version:6});fireEvent.click(screen.getByRole('button',{name:'Actualizar información y conservar borrador'}));
   await screen.findByText(/Información actualizada/);expect(screen.getByLabelText('Reporte de ejecución')).toHaveValue('Reporte que se conserva');
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();

@@ -9,6 +9,7 @@ import { irrigationApi } from '@/lib/irrigation-api';
 import { dateLocal, todayLocal } from '@/lib/local-date';
 import { IrrigationMapPicker } from './IrrigationMapPicker';
 import { PageHeader } from '@/components/layouts/PageHeader';
+import { mensajeDeApiError } from '@/lib/api-errors';
 
 const FIELD = 'h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-neutral-900 focus:outline-hidden focus:ring-2 focus:ring-brand-600';
 const ALL = 'ALL';
@@ -156,7 +157,7 @@ export function IrrigationTurnsScreen() {
       setRefresh((v) => v + 1);
       setMessage({ kind: 'success', text: `${created.length} turno(s) guardado(s) por sector en la base de datos.` });
     } catch (error) {
-      setMessage({ kind: 'error', text: error instanceof Error ? error.message : 'No se pudo guardar. No se confirmó la operación.' });
+      setMessage({ kind: 'error', text: mensajeDeApiError(error) });
       setReviewOpen(false);
     } finally { setSaving(false); }
   }

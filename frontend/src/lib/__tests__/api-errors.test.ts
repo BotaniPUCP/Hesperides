@@ -128,3 +128,19 @@ describe('erroresDeCampo', () => {
     expect(erroresDeCampo(new Error('boom'))).toEqual([]);
   });
 });
+
+describe('errores de otros módulos', () => {
+  it('un mensaje que el backend ya escribe en español se muestra tal cual, no el genérico', () => {
+    expect(mensajeDeApiError(new ApiError(400, 'No repitas secciones en un mismo turno'))).toBe('No repitas secciones en un mismo turno');
+    expect(mensajeDeApiError(new ApiError(409, 'La especie «Ficus sp.» ya está registrada en el catálogo'))).toMatch(/«Ficus sp\.»/);
+  });
+
+  it('un mensaje en español que no está en la lista no se muestra tal cual', () => {
+    expect(mensajeDeApiError(new ApiError(422, 'Mensaje nuevo sin revisar'))).toBe('La operación no cumple una regla del sistema.');
+  });
+
+  it('traduce los errores en inglés de usuarios y fotos', () => {
+    expect(mensajeDeApiError(new ApiError(422, "Role 'JEFE' does not exist or is not active"))).toMatch(/rol elegido/);
+    expect(mensajeDeApiError(new ApiError(400, 'The photo is larger than 10 MB'))).toBe('La foto pesa más de 10 MB. Elige una más liviana.');
+  });
+});

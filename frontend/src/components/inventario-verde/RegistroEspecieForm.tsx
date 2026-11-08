@@ -13,6 +13,7 @@ import { CamposMedidasEspecie } from './CamposMedidasEspecie';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
 import { aFormulario, criticaPorTipo, erroresMedidas, medidasPorTipo, type ErroresMedidas } from './medidasEspecie';
 import { normalizarNombreCientifico, validarNombreCientifico } from './validacionesEspecie';
+import { mensajeDeApiError } from '@/lib/api-errors';
 
 const TIPOS_VEGETACION_DEFAULT: SelectOption[] = [
   { id: 1, code: 'TREE', label: 'Árbol' },
@@ -159,7 +160,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
         if (err.status === 409) {
           setError('Ya existe una especie con este nombre científico en el catálogo.');
         } else {
-          setError(err.message || 'Error al guardar la especie.');
+          setError(mensajeDeApiError(err));
         }
       } else {
         setError('Ocurrió un error inesperado al registrar la especie.');

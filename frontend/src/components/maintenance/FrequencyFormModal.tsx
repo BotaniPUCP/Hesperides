@@ -16,6 +16,7 @@ import { todayLocal } from '@/lib/local-date';
 import { buildFrequencyPayload } from './buildFrequencyPayload';
 import { RuleTypeFields, type RuleFieldsState } from './RuleTypeFields';
 import { ANNUAL_WINDOWS, toRow } from './seasons';
+import { mensajeDeApiError } from '@/lib/api-errors';
 
 interface ActivityOption {
   id: number;
@@ -147,7 +148,7 @@ function FrequencyForm({
       await onSubmit(payload);
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar la frecuencia');
+      setError(mensajeDeApiError(err));
     } finally {
       setLoading(false);
     }
