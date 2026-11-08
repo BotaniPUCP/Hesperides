@@ -30,7 +30,7 @@ const COLUMNS: DataTableColumn<ContactSummary>[] = [
 /**
  * Contactos vigentes. «Sin organización vigente» reúne a los que quedaron sin
  * unidad tras una baja, para que coordinación los reasigne (SPEC-106 §5.5).
- * Se registran desde la ficha de su organización o desde un formulario.
+ * Se registran en «Registro individual», desde la ficha de su organización o desde un formulario.
  */
 export function ContactsTab({ search, withoutOrganization, page, onChange }: ContactsTabProps) {
   const [draft, setDraft] = useSearchDraft(search, (next) => onChange({ search: next }));
@@ -53,7 +53,7 @@ export function ContactsTab({ search, withoutOrganization, page, onChange }: Con
           searchValue={draft} onSearchChange={setDraft} loading={loading}
           emptyState={<EmptyState title={search || withoutOrganization ? 'No hay contactos que coincidan' : 'Aún no hay contactos'}
             description={search || withoutOrganization ? undefined
-              : 'Regístralos desde la ficha de su organización.'} />} />
+              : 'Regístralos en «Registro individual» o desde la ficha de su organización.'} />} />
       )}
     </div>
   );

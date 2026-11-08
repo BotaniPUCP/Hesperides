@@ -1,14 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import type { OrganizationSummary } from '@shared/types';
 import { Button, DataTable, EmptyState, type DataTableColumn } from '@/components/ui';
-import { useCanMaintainDirectory, useOrganizations } from '@/hooks/useDirectory';
+import { useOrganizations } from '@/hooks/useDirectory';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { DIRECTORY_PAGE_SIZE } from '@/lib/directory-api';
-import { OrganizationFormModal } from './OrganizationFormModal';
 
 interface OrganizationsTabProps {
   search: string;
@@ -34,22 +31,18 @@ const COLUMNS: DataTableColumn<OrganizationSummary>[] = [
 
 /** Organizaciones vigentes, con buscador por nombre o alias y filtro por tipo. */
 export function OrganizationsTab({ search, typeCode, page, onChange }: OrganizationsTabProps) {
-  const canMaintain = useCanMaintainDirectory();
-  const router = useRouter();
   const [draft, setDraft] = useSearchDraft(search, (next) => onChange({ search: next }));
-  const [creating, setCreating] = useState(0);
   const { result, loading, errorMessage } = useOrganizations({ search, typeCode }, page);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Tipo de organización">
           {TYPE_FILTERS.map((t) => (
             <Button key={t.code} size="sm" variant={typeCode === t.code ? 'primary' : 'secondary'}
               onClick={() => onChange({ type: t.code })}>{t.label}</Button>
           ))}
         </div>
-        {canMaintain && <Button onClick={() => setCreating((n) => n + 1)}>Registrar organización</Button>}
       </div>
       {errorMessage ? (
         <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">
@@ -61,13 +54,6 @@ export function OrganizationsTab({ search, typeCode, page, onChange }: Organizat
           searchValue={draft} onSearchChange={setDraft} loading={loading}
           emptyState={<EmptyState title={search || typeCode ? 'No hay organizaciones que coincidan' : 'Aún no hay organizaciones'}
             description={search || typeCode ? 'Prueba con otro nombre o sigla.' : undefined} />} />
-      )}
-      {creating > 0 && (
-        <OrganizationFormModal key={creating} organization={null} onClose={() => setCreating(0)}
-          onSaved={(saved) => router.push(`/directorio/${saved.code}`)}
-          renderSimilarAction={(code) => (
-            <Link href={`/directorio/${code}`} className="text-sm font-medium text-forest-800 hover:underline">Abrir</Link>
-          )} />
       )}
     </div>
   );

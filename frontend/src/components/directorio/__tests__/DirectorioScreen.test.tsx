@@ -34,12 +34,11 @@ describe('DirectorioScreen', () => {
     expect(screen.getAllByText('Unidad PUCP').length).toBeGreaterThan(0);
   });
 
-  it('coordinación puede registrar una organización', async () => {
+  it('un solo «Registrar» lleva al registro individual, donde se elige qué registrar', async () => {
     render(<DirectorioScreen />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Registrar organización' }));
-
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Registrar' })).toHaveAttribute('href', '/directorio/registrar');
+    expect(screen.queryByRole('button', { name: /Registrar organización/ })).not.toBeInTheDocument();
   });
 
   it('el capataz solo ve y busca (CA-03)', async () => {
@@ -47,7 +46,7 @@ describe('DirectorioScreen', () => {
     render(<DirectorioScreen />);
 
     await screen.findAllByText('OIE');
-    expect(screen.queryByRole('button', { name: /Registrar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Registrar/ })).not.toBeInTheDocument();
   });
 
   it('la pestaña de contactos filtra a los que no tienen organización vigente', async () => {

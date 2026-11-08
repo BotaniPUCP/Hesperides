@@ -44,8 +44,6 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
   // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
   { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
-  // SPEC-106: el capataz lo consulta; registrar y editar es de coordinación.
-  { label: 'Directorio', href: '/directorio', icon: '📇', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
@@ -87,6 +85,17 @@ export const NAVIGATION: readonly NavGroup[] = [
       { label: 'Registrar en el catastro', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
       { label: 'Importar al catastro', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+    ],
+  },
+  {
+    // SPEC-106: el capataz consulta; registrar, uno a uno o por archivo, es de coordinación.
+    id: 'directorio',
+    label: 'Directorio',
+    icon: '📇',
+    items: [
+      { label: 'Directorio', href: '/directorio', icon: '📇', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Registro individual', href: '/directorio/registrar', icon: '➕', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Registro masivo', href: '/directorio/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
     ],
   },
   {

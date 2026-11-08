@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { useCanMaintainDirectory } from '@/hooks/useDirectory';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { oneOf } from '@/lib/listUrl';
 import { PageHeader } from '@/components/layouts/PageHeader';
@@ -16,13 +18,20 @@ const DEFAULTS = { tab: 'organizaciones', search: '', type: '', sinOrg: '', page
  */
 export function DirectorioScreen() {
   const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
+  const canMaintain = useCanMaintainDirectory();
   const tab = oneOf(values.tab, TABS, 'organizaciones');
   const page = Math.max(0, Number.parseInt(values.page, 10) || 0);
 
   return (
     <div className="space-y-6">
       <PageHeader title="Directorio"
-        description="Unidades PUCP, empresas externas y sus personas de contacto, para elegirlas en los formularios en vez de escribirlas." />
+        description="Unidades PUCP, empresas externas y sus personas de contacto, para elegirlas en los formularios en vez de escribirlas."
+        actions={canMaintain && (
+          <Link href="/directorio/registrar"
+            className="rounded-md bg-forest-700 px-4 py-2 text-sm font-semibold text-white hover:bg-forest-800">
+            Registrar
+          </Link>
+        )} />
       <div role="tablist" aria-label="Directorio" className="flex gap-2 border-b border-neutral-200">
         {TABS.map((t) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t}

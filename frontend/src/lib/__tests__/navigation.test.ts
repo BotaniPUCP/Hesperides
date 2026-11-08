@@ -67,6 +67,9 @@ describe('visibleNavigation', () => {
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
+      '/directorio',
+      '/directorio/registrar',
+      '/directorio/importar',
       '/admin/usuarios',
       '/admin/catalogos',
       '/admin/frecuencias',
@@ -87,6 +90,9 @@ describe('visibleNavigation', () => {
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
+      '/directorio',
+      '/directorio/registrar',
+      '/directorio/importar',
       '/admin/usuarios',
       '/admin/frecuencias',
     ]);
@@ -102,6 +108,7 @@ describe('visibleNavigation', () => {
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/estandares',
+      '/directorio',
       '/admin/usuarios',
       '/admin/frecuencias',
     ]);
@@ -118,15 +125,16 @@ describe('visibleNavigation', () => {
   });
 
   it('el mapa es directo para los cuatro roles; incidencias, riego y reportes, para quien los opera o supervisa', () => {
-    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes', '/directorio']);
-    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes', '/directorio']);
-    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes', '/directorio']);
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
     expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa']);
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Lugares',
       'Catálogo botánico',
       'Intervenciones',
       'Catastro verde',
+      'Directorio',
       'Administración',
     ]);
   });
@@ -149,11 +157,9 @@ describe('visibleNavigation', () => {
     expect(NAVIGATION.some((group) => group.items.some((item) => item.href === '/reportes'))).toBe(false);
   });
 
-  it('el Directorio lo ven quienes llenan formularios; el operario no (SPEC-106 §9.1)', () => {
-    for (const role of ['ADMIN', 'COORDINADOR', 'SUPERVISOR']) {
-      expect(visibleDirectLinks(role).some((item) => item.href === '/directorio')).toBe(true);
-    }
-    expect(visibleDirectLinks('OPERARIO').some((item) => item.href === '/directorio')).toBe(false);
+  it('el capataz consulta el Directorio pero no registra; el operario no lo ve (SPEC-106 §9.1)', () => {
+    expect(hrefsDe('SUPERVISOR').filter((href) => href.startsWith('/directorio'))).toEqual(['/directorio']);
+    expect(hrefsDe('OPERARIO').some((href) => href.startsWith('/directorio'))).toBe(false);
   });
 
   it('un rol desconocido no ve enlaces directos', () => {
