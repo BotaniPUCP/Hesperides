@@ -1,16 +1,22 @@
 package pe.edu.pucp.hesperides.modules.directory.imports;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportOutcome;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreview;
 
-/** Lo que devuelve el registro masivo del Directorio. */
+/** Lo que guarda y devuelve el registro masivo del Directorio. */
 public final class ImportDtos {
 
     private ImportDtos() {
     }
 
-    /** CREATE se crea; SKIP ya existe y se omite; ERROR impide confirmar el archivo. */
+    /**
+     * CREATE se crea; SKIP ya existe y se omite; OMIT no entra porque falta su
+     * organización (como una especie desconocida en el catastro); ERROR impide confirmar.
+     */
     public enum RowAction {
-        CREATE, SKIP, ERROR
+        CREATE, SKIP, OMIT, ERROR
     }
 
     /**
@@ -20,21 +26,29 @@ public final class ImportDtos {
     public record RowIssue(int line, String column, IssueCode code, String detail) {
     }
 
-    public record PlannedRow(int line, String name, RowAction action, List<RowIssue> issues) {
+    /** {@code missing}: las organizaciones de la fila que no están en el Directorio. */
+    public record PlannedRow(int line, String name, RowAction action, List<RowIssue> issues, List<String> missing) {
     }
 
-    public record ImportPlan(String kind, List<PlannedRow> rows, long creates, long skips, long errors) {
-
-        static ImportPlan of(String kind, List<PlannedRow> rows) {
-            return new ImportPlan(kind, rows, count(rows, RowAction.CREATE), count(rows, RowAction.SKIP),
-                    count(rows, RowAction.ERROR));
-        }
-
-        private static long count(List<PlannedRow> rows, RowAction action) {
-            return rows.stream().filter(r -> r.action() == action).count();
-        }
+    /** Una organización que falta y cuántas filas dejó fuera. */
+    public record MissingOrganization(String name, int rows) {
     }
 
-    public record ImportOutcome(int created, int skipped) {
+    /** Una fila revisada tal como se guarda en el lote: con lo que se pedirá crear. */
+    public record StagedRow<T>(PlannedRow row, T request) {
+    }
+
+    /** El informe del lote: lo que vio la persona es exactamente lo que se escribe al confirmar. */
+    public record DirectoryReport<T>(List<StagedRow<T>> rows) {
+    }
+
+    public record DirectoryPreview(long batchId, String kind, int totalRows, int toCreate, int toSkip, int toOmit,
+                                   int errors, List<PlannedRow> rows, List<MissingOrganization> missingOrganizations,
+                                   boolean canConfirm, LocalDateTime expiresAt) implements ImportPreview {
+    }
+
+    public record DirectoryResult(long batchId, int created, int skipped, int omitted,
+                                  List<MissingOrganization> missingOrganizations, List<String> createdCodes)
+            implements ImportOutcome {
     }
 }

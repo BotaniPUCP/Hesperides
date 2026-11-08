@@ -5,6 +5,7 @@ import java.util.List;
 import pe.edu.pucp.hesperides.modules.directory.imports.ImportDtos.PlannedRow;
 import pe.edu.pucp.hesperides.modules.directory.imports.ImportDtos.RowAction;
 import pe.edu.pucp.hesperides.modules.directory.imports.ImportDtos.RowIssue;
+import pe.edu.pucp.hesperides.modules.directory.imports.ImportDtos.StagedRow;
 
 /**
  * Una fila ya leída: lo que se pediría crear y lo que le impide hacerlo. Acumula
@@ -15,6 +16,7 @@ final class Planned<T> {
     private final int line;
     private final String name;
     private final List<RowIssue> issues = new ArrayList<>();
+    private final List<String> missing = new ArrayList<>();
     private T request;
     private boolean exists;
 
@@ -27,6 +29,11 @@ final class Planned<T> {
         issues.add(new RowIssue(line, column, code, detail));
     }
 
+    /** Una referencia que no está en el Directorio: la fila se omite, no bloquea el archivo. */
+    void missing(String reference) {
+        missing.add(reference);
+    }
+
     void markExisting() {
         exists = true;
     }
@@ -35,22 +42,24 @@ final class Planned<T> {
         request = value;
     }
 
+    /** Sin errores ni referencias faltantes: se puede seguir revisando contra lo registrado. */
     boolean ok() {
-        return issues.isEmpty();
+        return issues.isEmpty() && missing.isEmpty();
     }
 
-    T request() {
-        return request;
-    }
-
+    /** Un error pesa más que una referencia faltante: hay que corregirlo igual. */
     RowAction action() {
         if (!issues.isEmpty()) {
             return RowAction.ERROR;
         }
+        if (!missing.isEmpty()) {
+            return RowAction.OMIT;
+        }
         return exists ? RowAction.SKIP : RowAction.CREATE;
     }
 
-    PlannedRow toRow() {
-        return new PlannedRow(line, name, action(), List.copyOf(issues));
+    StagedRow<T> toStaged() {
+        PlannedRow row = new PlannedRow(line, name, action(), List.copyOf(issues), List.copyOf(missing));
+        return new StagedRow<>(row, action() == RowAction.CREATE ? request : null);
     }
 }

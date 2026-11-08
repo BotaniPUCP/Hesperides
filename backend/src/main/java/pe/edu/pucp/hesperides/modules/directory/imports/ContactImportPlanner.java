@@ -14,22 +14,54 @@ import pe.edu.pucp.hesperides.engine.directory.ContactPhones;
 import pe.edu.pucp.hesperides.engine.directory.DirectoryKey;
 import pe.edu.pucp.hesperides.modules.directory.dto.ContactRequest;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSuggestion;
+import pe.edu.pucp.hesperides.modules.directory.imports.ImportDtos.DirectoryReport;
 import pe.edu.pucp.hesperides.modules.directory.repository.DirectoryLookupRepository;
+import pe.edu.pucp.hesperides.modules.directory.repository.ImportTrailRepository;
+import pe.edu.pucp.hesperides.modules.directory.service.ContactService;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvRow;
+import tools.jackson.core.type.TypeReference;
 
 /**
- * Decide qué pasa con cada fila de un CSV de contactos, sin escribir nada. Las
+ * El estándar de contactos: decide qué pasa con cada fila y crea los nuevos. Las
  * organizaciones tienen que existir antes: se cargan primero.
  */
 @Component
 @RequiredArgsConstructor
-class ContactImportPlanner {
+class ContactImportPlanner implements DirectoryStandard<ContactRequest> {
+
+    static final String KIND = "contacts";
 
     static final List<String> COLUMNS = List.of("nombre", "organizaciones", "anexo", "celular", "correo");
 
     private final DirectoryLookupRepository lookup;
+    private final ContactService service;
+    private final ImportTrailRepository trail;
 
-    List<Planned<ContactRequest>> plan(List<CsvRow> rows) {
+    @Override
+    public String kind() {
+        return KIND;
+    }
+
+    @Override
+    public List<String> columns() {
+        return COLUMNS;
+    }
+
+    @Override
+    public String create(ContactRequest request, long batchId) {
+        String code = service.create(request);
+        trail.markContact(code, batchId);
+        return code;
+    }
+
+    @Override
+    public TypeReference<DirectoryReport<ContactRequest>> reportType() {
+        return new TypeReference<>() {
+        };
+    }
+
+    @Override
+    public List<Planned<ContactRequest>> plan(List<CsvRow> rows) {
         Set<String> seen = new HashSet<>();
         List<Planned<ContactRequest>> planned = new ArrayList<>();
         for (CsvRow row : rows) {

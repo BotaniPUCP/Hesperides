@@ -11,14 +11,20 @@ import org.springframework.stereotype.Component;
 import pe.edu.pucp.hesperides.engine.directory.DirectoryKey;
 import pe.edu.pucp.hesperides.engine.directory.RucRule;
 import pe.edu.pucp.hesperides.modules.directory.dto.OrganizationRequest;
+import pe.edu.pucp.hesperides.modules.directory.imports.ImportDtos.DirectoryReport;
 import pe.edu.pucp.hesperides.modules.directory.repository.DirectoryLookupRepository;
+import pe.edu.pucp.hesperides.modules.directory.repository.ImportTrailRepository;
 import pe.edu.pucp.hesperides.modules.directory.repository.OrganizationRepository;
+import pe.edu.pucp.hesperides.modules.directory.service.OrganizationService;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvRow;
+import tools.jackson.core.type.TypeReference;
 
-/** Decide qué pasa con cada fila de un CSV de organizaciones, sin escribir nada. */
+/** El estándar de organizaciones: decide qué pasa con cada fila y crea las nuevas. */
 @Component
 @RequiredArgsConstructor
-class OrganizationImportPlanner {
+class OrganizationImportPlanner implements DirectoryStandard<OrganizationRequest> {
+
+    static final String KIND = "organizations";
 
     static final List<String> COLUMNS = List.of("nombre", "tipo", "ruc", "telefono", "otros_nombres");
     static final String LIST_SEPARATOR = "\\|";
@@ -31,8 +37,34 @@ class OrganizationImportPlanner {
 
     private final DirectoryLookupRepository lookup;
     private final OrganizationRepository organizations;
+    private final OrganizationService service;
+    private final ImportTrailRepository trail;
 
-    List<Planned<OrganizationRequest>> plan(List<CsvRow> rows) {
+    @Override
+    public String kind() {
+        return KIND;
+    }
+
+    @Override
+    public List<String> columns() {
+        return COLUMNS;
+    }
+
+    @Override
+    public String create(OrganizationRequest request, long batchId) {
+        String code = service.create(request);
+        trail.markOrganization(code, batchId);
+        return code;
+    }
+
+    @Override
+    public TypeReference<DirectoryReport<OrganizationRequest>> reportType() {
+        return new TypeReference<>() {
+        };
+    }
+
+    @Override
+    public List<Planned<OrganizationRequest>> plan(List<CsvRow> rows) {
         Set<String> namesInFile = new HashSet<>();
         Set<String> rucsInFile = new HashSet<>();
         List<Planned<OrganizationRequest>> planned = new ArrayList<>();
