@@ -40,12 +40,13 @@ export function EstandarDelDirectorio({ kind }: { kind: DirectoryImportKind }) {
       </ul>
       <dl className="mt-3 divide-y divide-neutral-100">
         {COLUMNAS[kind].map((c) => (
-          <div key={c.nombre} className="grid gap-1 py-2 sm:grid-cols-[10rem_1fr]">
-            <dt className="font-mono text-neutral-900">
-              {c.nombre}
-              {c.obligatoria && <span className="ml-2 font-sans text-xs font-semibold text-brand-700">obligatoria</span>}
+          <div key={c.nombre} className="grid gap-1 py-2 sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-3">
+            {/* La etiqueta baja de línea en vez de montarse sobre la descripción: «organizaciones» no cabe con ella. */}
+            <dt className="flex min-w-0 flex-wrap items-baseline gap-x-2 font-mono text-neutral-900">
+              <span className="break-all">{c.nombre}</span>
+              {c.obligatoria && <span className="font-sans text-xs font-semibold text-brand-700">obligatoria</span>}
             </dt>
-            <dd className="text-neutral-700">{c.descripcion}</dd>
+            <dd className="min-w-0 break-words text-neutral-700">{c.descripcion}</dd>
           </div>
         ))}
       </dl>
