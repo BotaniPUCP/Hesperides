@@ -39,5 +39,15 @@ public enum AuditActionCode {
     PLACE_PHOTO_DELETED,
     /** Migración de referencias: quién decidió a qué lugar va cada referencia antigua, o que no es un lugar. */
     PLACE_REFERENCES_LINKED,
-    PLACE_REFERENCES_DISCARDED
+    PLACE_REFERENCES_DISCARDED,
+    /** SPEC-106: quién creó, cambió o dio de baja una organización del Directorio. */
+    ORGANIZATION_CREATED,
+    ORGANIZATION_UPDATED,
+    ORGANIZATION_DEACTIVATED,
+    /** SPEC-106: lo mismo para un contacto; el detalle dice qué campos cambiaron, nunca sus valores. */
+    CONTACT_CREATED,
+    CONTACT_UPDATED,
+    CONTACT_DEACTIVATED,
+    /** SPEC-106: a qué organización se vinculó un contacto existente. */
+    CONTACT_LINKED
 }
