@@ -192,10 +192,11 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V034 | `V034__places_span_buildings_and_children.sql` | Catálogo de lugares (cabecera SQL) | Un lugar con varios edificios (`place_buildings`) o con el contorno de sus hijos (`outline_from_children`) |
 | V035 | `V035__create_reservable_garden_places.sql` | Catálogo de lugares (cabecera SQL) · REQ 1.12 | Los 19 jardines prestables como lugares de su sección, con los alias del calendario de la OSG; el Jardín Física pasa a la DAF |
 | V036 | `V036__create_directory.sql` | SPEC-106 §4.1 | Directorio: catálogo `ORGANIZATION_TYPE`, organizaciones con alias, contactos y sus vínculos; función `directory_key` para la unicidad sin tildes |
+| V037 | `V037__add_directory_import_batches.sql` | SPEC-106 §4.2 · SPEC-103 D-04 | El Directorio entra a `import_batches` (`organizations`, `contacts`); organizaciones y contactos guardan su `import_batch_id`, nulo en el alta manual |
 
 ### Pendientes (sin número reservado)
 
-Al 8 nov 2026 el siguiente número libre es **V037**, sujeto a comprobarlo nuevamente al
+Al 8 nov 2026 el siguiente número libre es **V038**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
