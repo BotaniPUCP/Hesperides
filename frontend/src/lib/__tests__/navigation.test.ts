@@ -118,9 +118,9 @@ describe('visibleNavigation', () => {
   });
 
   it('el mapa es directo para los cuatro roles; incidencias, riego y reportes, para quien los opera', () => {
-    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/riego', '/reportes']);
-    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
-    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/riego', '/reportes', '/directorio']);
+    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes', '/directorio']);
+    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes', '/directorio']);
     expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa']);
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Lugares',
@@ -147,6 +147,13 @@ describe('visibleNavigation', () => {
     }
     expect(visibleDirectLinks('OPERARIO').some((item) => item.href === '/reportes')).toBe(false);
     expect(NAVIGATION.some((group) => group.items.some((item) => item.href === '/reportes'))).toBe(false);
+  });
+
+  it('el Directorio lo ven quienes llenan formularios; el operario no (SPEC-106 §9.1)', () => {
+    for (const role of ['ADMIN', 'COORDINADOR', 'SUPERVISOR']) {
+      expect(visibleDirectLinks(role).some((item) => item.href === '/directorio')).toBe(true);
+    }
+    expect(visibleDirectLinks('OPERARIO').some((item) => item.href === '/directorio')).toBe(false);
   });
 
   it('un rol desconocido no ve enlaces directos', () => {

@@ -7,8 +7,8 @@ import java.util.List;
 
 /** Alta o edición de un contacto. Los teléfonos llegan como se escribieron: el servicio los normaliza. */
 public record ContactRequest(
-        @NotBlank(message = "The full name is required")
-        @Size(max = 200, message = "The full name cannot exceed 200 characters")
+        @NotBlank(message = "El nombre completo es obligatorio")
+        @Size(max = 200, message = "El nombre completo no puede superar los 200 caracteres")
         String fullName,
 
         List<@NotBlank String> organizationCodes,
@@ -17,8 +17,8 @@ public record ContactRequest(
 
         String mobile,
 
-        @Email(message = "The email is not valid")
-        @Size(max = 254, message = "The email cannot exceed 254 characters")
+        @Email(message = "El correo no es válido")
+        @Size(max = 254, message = "El correo no puede superar los 254 caracteres")
         String email) {
 
     public List<String> organizationCodesOrEmpty() {

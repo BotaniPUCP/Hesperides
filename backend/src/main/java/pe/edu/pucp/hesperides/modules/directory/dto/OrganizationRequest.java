@@ -6,19 +6,19 @@ import java.util.List;
 
 /** Alta o edición de una organización. RUC y unicidad los valida el servicio. */
 public record OrganizationRequest(
-        @NotBlank(message = "The name is required")
-        @Size(max = 200, message = "The name cannot exceed 200 characters")
+        @NotBlank(message = "El nombre es obligatorio")
+        @Size(max = 200, message = "El nombre no puede superar los 200 caracteres")
         String name,
 
-        @NotBlank(message = "The type is required")
+        @NotBlank(message = "El tipo es obligatorio")
         String typeCode,
 
         String ruc,
 
-        @Size(max = 30, message = "The phone cannot exceed 30 characters")
+        @Size(max = 30, message = "El teléfono no puede superar los 30 caracteres")
         String phone,
 
-        List<@NotBlank @Size(max = 200, message = "An alias cannot exceed 200 characters") String> aliases) {
+        List<@NotBlank @Size(max = 200, message = "Un alias no puede superar los 200 caracteres") String> aliases) {
 
     public List<String> aliasesOrEmpty() {
         return aliases == null ? List.of() : aliases;
