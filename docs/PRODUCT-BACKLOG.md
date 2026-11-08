@@ -144,7 +144,7 @@
 | **L-01** | REQ 9.1 | Épica I · Lugares y perspectivas (M9) | `COORDINADOR` | disponer de un catálogo de lugares representativos del campus ... | Media | Listo ✅ | **90%** | S2 | 3 |
 | **L-02** | REQ 9.2 | Épica I · Lugares y perspectivas (M9) | `COORDINADOR` | registrar y gestionar perspectivas visuales y puntos de vista ... | Media | Listo ✅ | **90%** | S2 | 3 |
 | **L-03** | REQ 9.3 | Épica I · Lugares y perspectivas (M9) | `COORDINADOR` | filtrar y centrar automáticamente el visor de mapa 3D según el... | Media | Listo ✅ | **90%** | S2 | 3 |
-| **L-04** | REQ 9.4 | Épica I · Lugares y perspectivas (M9) | `ADMIN` | mapear y migrar intervenciones y registros históricos previame... | Media | Parcial 🔶 | **60%** | S2 | 3 |
+| **L-04** | REQ 9.4 | Épica I · Lugares y perspectivas (M9) | `ADMIN` | enlazar cada una de las 411 referencias antiguas del mapa con ... | Media | Parcial 🔶 | **60%** | S2 | 3 |
 
 ---
 
@@ -1600,22 +1600,37 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 
 #### `L-04` — REQ 9.4
 
-> **COMO ADMIN QUIERO mapear y migrar intervenciones y registros históricos previamente asociados a cuarteles hacia el nuevo modelo de lugares PARA preservar la continuidad histórica de la información.**
+> **COMO ADMIN QUIERO enlazar cada una de las 411 referencias antiguas del mapa con su lugar del nuevo catálogo, o descartarla, PARA que el campus se nombre con lugares sin perder los nombres con que la gente los conoce.**
 
 - **Módulo:** `M9` | **Tipo:** `Enabler` | **Actor:** `ADMIN`
 - **Prioridad:** `Media` | **Preparación:** `Parcial 🔶` | **Sprint:** `S2` | **Story Points:** `3 pts`
 - **Avance Real Implementado:** **`60%`**
 - **Fuente / Evidencia:** Catálogo REQ 9.4; D1; 411 referencias del catastro; ReferenceMigrationScreen
 - **Dependencia / Bloqueante:** L-01, A-04
-- **Notas de Alcance y Realidad Técnica:** HERRAMIENTA LISTA EN S2 (60%): Pantalla /lugares/migracion y servicio ReferenceMigrationService implementados; la ejecución manual de migración de las 411 filas continúa en progreso.
+- **Notas de Alcance y Realidad Técnica:** HERRAMIENTA LISTA: pantalla /lugares/migracion y servicio ReferenceMigrationService. La cola agrupa las referencias, sugiere el lugar y muestra el avance; «Crear lugar» vuelve a la cola con su búsqueda y página. Falta el trabajo manual de decidir las 411 referencias. No se reasignan intervenciones ni otros registros: ninguno apunta a las referencias, y los cuarteles forestales no forman parte del modelo (decisión del 29 sep, ver docs/dominio/README.md §5.3).
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
-**ESCENARIO: Migración asistida de cuarteles hacia lugares**
-- **DADO QUE** existen registros históricos asociados a la antigua división por cuarteles,
-- **CUANDO** el administrador ejecuta la herramienta /lugares/migrar,
-- **ENTONCES** el sistema sugiere la equivalencia territorial entre el cuartel antiguo y el nuevo lugar del campus
-- **Y** reasigna los registros preservando la trazabilidad de auditoría histórica
+**ESCENARIO: Enlazar una referencia con un lugar existente**
+- **DADO QUE** hay referencias antiguas sin decidir,
+- **CUANDO** el administrador abre /lugares/migracion y elige el lugar sugerido u otro,
+- **ENTONCES** la referencia queda enlazada a ese lugar
+- **Y** su nombre se guarda como alias del lugar, para que se le siga encontrando por él
+
+**ESCENARIO: Crear el lugar que falta**
+- **DADO QUE** una referencia no corresponde a ningún lugar del catálogo,
+- **CUANDO** el administrador elige «Crear lugar» y lo guarda o cancela,
+- **ENTONCES** vuelve a la cola con la misma búsqueda y página para enlazarla
+
+**ESCENARIO: Descartar una referencia**
+- **DADO QUE** una referencia ya no representa un lugar del campus,
+- **CUANDO** el administrador la descarta,
+- **ENTONCES** sale de la cola y cuenta como decidida en el avance
+
+**ESCENARIO: Una referencia se decide una sola vez**
+- **DADO QUE** una referencia ya fue enlazada o descartada,
+- **CUANDO** alguien intenta decidirla otra vez,
+- **ENTONCES** el sistema lo rechaza con un mensaje en español
 
 ---
 
