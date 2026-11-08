@@ -7,7 +7,6 @@ describe('motivos del registro masivo (SPEC-106)', () => {
     [{ column: 'nombre', code: 'REQUIRED', detail: null }, 'Falta «nombre».'],
     [{ column: 'tipo', code: 'UNKNOWN_TYPE', detail: 'Ministerio' }, '«Ministerio» no es un tipo válido: usa «Unidad PUCP» o «Empresa externa».'],
     [{ column: 'nombre', code: 'NAME_TAKEN', detail: 'Estudios Generales Ciencias' }, 'Ese nombre o alias ya lo usa «Estudios Generales Ciencias».'],
-    [{ column: 'organizaciones', code: 'UNKNOWN_ORGANIZATION', detail: 'Facultad X' }, '«Facultad X» no está en el directorio: regístrala primero.'],
     [{ column: 'celular', code: 'MOBILE_FORMAT', detail: null }, 'El celular debe tener 9 dígitos y empezar con 9.'],
     [{ column: 'nombre', code: 'DESCONOCIDO', detail: null }, 'Revisa «nombre».'],
   ])('traduce %o', (issue, esperado) => {

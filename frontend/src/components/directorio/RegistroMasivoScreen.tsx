@@ -1,32 +1,39 @@
 'use client';
 
-import { useState } from 'react';
-import type { DirectoryImportKind, DirectoryImportOutcome, DirectoryImportPlan } from '@shared/types';
+import type { DirectoryImportKind, DirectoryImportOutcome } from '@shared/types';
 import { Button, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { useCanMaintainDirectory } from '@/hooks/useDirectory';
-import { mensajeDeApiError } from '@/lib/api-errors';
-import { directoryApi } from '@/lib/directory-api';
-import { guardarArchivo } from '@/lib/download';
+import { EstandarDelDirectorio } from './EstandarDelDirectorio';
 import { ImportPreview } from './ImportPreview';
+import { MissingOrganizations } from './MissingOrganizations';
+import { useRegistroMasivo } from './useRegistroMasivo';
 
 const KINDS: { kind: DirectoryImportKind; title: string; description: string }[] = [
-  { kind: 'organizaciones', title: 'Organizaciones', description: 'Columnas: nombre, tipo, RUC, teléfono y otros nombres.' },
-  { kind: 'contactos', title: 'Contactos', description: 'Columnas: nombre, organizaciones, anexo, celular y correo. Carga antes sus organizaciones.' },
+  { kind: 'organizations', title: 'Organizaciones', description: 'Columnas: nombre, tipo, RUC, teléfono y otros nombres.' },
+  { kind: 'contacts', title: 'Contactos', description: 'Columnas: nombre, organizaciones, anexo, celular y correo. Carga antes sus organizaciones.' },
 ];
 
+function Resultado({ outcome }: { outcome: DirectoryImportOutcome }) {
+  return (
+    <div className="space-y-3">
+      <p role="status" className="rounded-md bg-alert-success-bg p-3 text-sm text-alert-success-fg">
+        Listo. Se registraron {outcome.created}; {outcome.skipped} ya existían
+        {outcome.omitted > 0 && ` y ${outcome.omitted} se omitieron por organización faltante`}.
+      </p>
+      <MissingOrganizations missing={outcome.missingOrganizations}
+        note="Registra esas organizaciones y vuelve a subir sus filas." />
+    </div>
+  );
+}
+
 /**
- * Registro masivo por CSV (SPEC-106): se revisa el archivo antes de guardar y es
- * todo o nada. Separador «;» y listas con «|», como en la plantilla.
+ * Registro masivo por CSV (SPEC-106 §4.2) en el ciclo común de cargas: se revisa
+ * el archivo, el servidor guarda la revisión y se confirma lo revisado. Es todo o nada.
  */
 export function RegistroMasivoScreen() {
   const canMaintain = useCanMaintainDirectory();
-  const [kind, setKind] = useState<DirectoryImportKind | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [plan, setPlan] = useState<DirectoryImportPlan | null>(null);
-  const [outcome, setOutcome] = useState<DirectoryImportOutcome | null>(null);
-  const [working, setWorking] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const imp = useRegistroMasivo();
 
   if (!canMaintain) {
     return (
@@ -36,33 +43,6 @@ export function RegistroMasivoScreen() {
     );
   }
 
-  function reset(next: { kind?: DirectoryImportKind; file?: File | null }) {
-    if (next.kind) setKind(next.kind);
-    if (next.file !== undefined) setFile(next.file);
-    setPlan(null);
-    setOutcome(null);
-    setError(null);
-  }
-
-  async function run(step: () => Promise<void>) {
-    setWorking(true);
-    setError(null);
-    try {
-      await step();
-    } catch (e) {
-      setError(mensajeDeApiError(e));
-    } finally {
-      setWorking(false);
-    }
-  }
-
-  const review = () => run(async () => setPlan(await directoryApi.previewImport(kind!, file!)));
-  const confirm = () => run(async () => {
-    setOutcome(await directoryApi.confirmImport(kind!, file!));
-    setPlan(null);
-  });
-  const template = () => run(async () => guardarArchivo(await directoryApi.importTemplate(kind!), `directorio-${kind}.csv`));
-
   return (
     <div className="space-y-6">
       <PageHeader title="Registro masivo"
@@ -70,10 +50,10 @@ export function RegistroMasivoScreen() {
       <fieldset className="grid gap-3 sm:grid-cols-2">
         <legend className="sr-only">Qué registrar</legend>
         {KINDS.map((k) => (
-          <label key={k.kind} className={`surface-card flex cursor-pointer items-start gap-3 ${kind === k.kind
+          <label key={k.kind} className={`surface-card flex cursor-pointer items-start gap-3 ${imp.kind === k.kind
             ? 'ring-2 ring-forest-700' : ''}`}>
-            <input type="radio" name="import-kind" className="mt-1" checked={kind === k.kind}
-              onChange={() => reset({ kind: k.kind })} />
+            <input type="radio" name="import-kind" className="mt-1" checked={imp.kind === k.kind}
+              onChange={() => imp.setKind(k.kind)} />
             <span>
               <span className="block font-semibold text-neutral-900">{k.title}</span>
               <span className="block text-sm text-neutral-600">{k.description}</span>
@@ -81,35 +61,31 @@ export function RegistroMasivoScreen() {
           </label>
         ))}
       </fieldset>
-      {kind && (
+      {imp.kind && (
         <section className="surface-card space-y-4" aria-label="Archivo">
+          <EstandarDelDirectorio kind={imp.kind} />
           <div className="flex flex-wrap items-end gap-3">
             <label className="text-sm font-medium text-neutral-900">
               Archivo CSV
-              <input type="file" accept=".csv,text/csv" className="mt-1 block text-sm"
-                onChange={(e) => reset({ file: e.target.files?.[0] ?? null })} />
+              <input key={imp.fileInputKey} type="file" accept=".csv,text/csv"
+                className="mt-1 block text-sm" onChange={(e) => imp.setFile(e.target.files?.[0] ?? null)} />
             </label>
-            <Button variant="secondary" onClick={template} disabled={working}>Descargar plantilla</Button>
-            <Button onClick={review} disabled={!file} loading={working && plan === null}>Revisar archivo</Button>
+            <Button variant="secondary" onClick={imp.template} disabled={imp.working}>Descargar plantilla</Button>
+            <Button onClick={imp.review} disabled={!imp.file} loading={imp.working && imp.plan === null}>Revisar archivo</Button>
           </div>
-          {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
-          {outcome && (
-            <p role="status" className="rounded-md bg-alert-success-bg p-3 text-sm text-alert-success-fg">
-              Listo. Se registraron {outcome.created} y se omitieron {outcome.skipped} que ya existían.
-            </p>
-          )}
-          {plan && (
+          {imp.error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{imp.error}</p>}
+          {imp.outcome && <Resultado outcome={imp.outcome} />}
+          {imp.plan && (
             <>
-              <ImportPreview plan={plan} />
+              <ImportPreview plan={imp.plan} />
               <div className="flex justify-end">
-                <Button onClick={confirm} loading={working} disabled={plan.errors > 0 || plan.creates === 0}>
-                  Confirmar registro
-                </Button>
+                <Button onClick={imp.confirm} loading={imp.working} disabled={!imp.canConfirm}>Confirmar registro</Button>
               </div>
             </>
           )}
         </section>
       )}
+      {imp.avisoSinGuardar}
     </div>
   );
 }

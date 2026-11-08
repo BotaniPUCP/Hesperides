@@ -1,14 +1,16 @@
 import { ApiError } from '@/lib/api';
 import { mensajeDeApiError } from '@/lib/api-errors';
+import { IMPORT_PATTERNS } from '@/lib/importErrorMessages';
+import type { MessagePattern } from '@/lib/placeErrorMessages';
 
 /**
  * Los mensajes del registro del catastro, en español. El backend los da en
  * inglés técnico (SPEC-000) y varios llevan datos (un valor, una línea), por
  * eso son reglas con patrón y no un diccionario plano como el de api-errors.
  */
-type Regla = [RegExp, (m: RegExpMatchArray) => string];
+type Regla = MessagePattern;
 
-const REGLAS: Regla[] = [
+const REGLAS: readonly Regla[] = [
   [/^«(.*)» is not a number$/, (m) => `«${m[1]}» no es un número`],
   [/^«(.*)» is not a whole number$/, (m) => `«${m[1]}» no es un número entero`],
   [/^«(.*)» is not a date YYYY-MM-DD$/, (m) => `«${m[1]}» no es una fecha AAAA-MM-DD`],
@@ -36,7 +38,6 @@ const REGLAS: Regla[] = [
   [/^The ZIP is larger than (\d+) MB/, (m) => `El ZIP de fotos supera los ${m[1]} MB descomprimido`],
   [/^«(.*)» in the ZIP is larger than (\d+) MB$/, (m) => `«${m[1]}» del ZIP pesa más de ${m[2]} MB`],
   [/^The photo is larger than (\d+) MB$/, (m) => `La foto pesa más de ${m[1]} MB`],
-  [/^Another import is in progress/, () => 'Hay otra importación en curso. Inténtalo en unos minutos'],
   [/^Another photo of this species already has order (\d+)$/, (m) => `Otra foto de esta especie ya tiene el orden ${m[1]}`],
   [/^The source must be a web link/, () => 'La fuente debe ser un enlace web (https://…)'],
   [
@@ -44,18 +45,15 @@ const REGLAS: Regla[] = [
     (m) => `La especie «${m[1]}» conserva sus fotos anteriores: ${m[2]} de ${m[3]} no se pudieron guardar`,
   ],
   [/^The file has errors/, () => 'El archivo tiene errores: corrígelos y vuelve a subirlo'],
-  [/^The preview expired/, () => 'La vista previa venció (dura una hora): vuelve a subir el archivo'],
-  [/^This import was already confirmed or expired$/, () => 'Esta carga ya se confirmó o venció'],
-  [/^Only who uploaded the file can confirm it$/, () => 'Solo quien subió el archivo puede confirmarlo'],
   [/^Decide on the possible duplicates at lines \[?([^\]]*)\]?$/, (m) => `Falta decidir los posibles duplicados de las líneas ${m[1]}`],
   [/^Unknown species: (.+?)\. /, (m) => `«${m[1]}» no está en el catálogo de especies. Pide a un administrador que la agregue`],
   [/^Possible duplicate of (.+)$/, (m) => `Podría ser el ejemplar ${m[1]}, que ya está registrado`],
   [/^The file is not a (supported|readable) image$/, () => 'El archivo no es una imagen válida (JPG o PNG)'],
   [/^Specimen not found: (.+)$/, (m) => `No existe el ejemplar ${m[1]}`],
-  [/^There is no CSV standard for/, () => 'No hay un estándar CSV para ese tipo'],
+  ...IMPORT_PATTERNS,
 ];
 
-const CAUSAS_DE_FOTO: Regla[] = [
+const CAUSAS_DE_FOTO: readonly Regla[] = [
   [/larger than (\d+) MB/i, (m) => `pesa más de ${m[1]} MB`],
   [/not an image/, () => 'el enlace no devuelve una imagen (¿está compartida públicamente?)'],
   [/^HTTP (\d+)/, (m) => `Drive respondió con error ${m[1]}`],
@@ -64,7 +62,7 @@ const CAUSAS_DE_FOTO: Regla[] = [
   [/not a (supported|readable) image/, () => 'el archivo no es una imagen válida'],
 ];
 
-function aplicar(reglas: Regla[], mensaje: string): string | null {
+function aplicar(reglas: readonly Regla[], mensaje: string): string | null {
   for (const [patron, traducir] of reglas) {
     const m = mensaje.match(patron);
     if (m) return traducir(m);

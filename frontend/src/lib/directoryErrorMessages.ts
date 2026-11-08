@@ -27,6 +27,8 @@ export const DIRECTORY_PATTERNS: readonly MessagePattern[] = [
   [/^The contact (\S+) is deactivated$/, ([, code]) => `El contacto ${code} está dado de baja.`],
   [/^The contact \S+ already belongs to «(.+)»$/, ([, name]) => `El contacto ya pertenece a «${name}».`],
   [/^The file is missing the columns: (.+)$/, ([, columns]) => `Al archivo le faltan las columnas: ${columns}. Usa la plantilla.`],
+  [/^The file has unknown columns: (.+?)\. /,
+    ([, columns]) => `El archivo tiene columnas que no son del estándar: ${columns}. Revisa cómo están escritas.`],
   [/^The file has more than (\d+) rows: split it into smaller files$/,
     ([, max]) => `El archivo tiene más de ${max} filas: divídelo en archivos más pequeños.`],
   [/^The row at line (\d+) has more cells than the header$/, ([, line]) => `La fila ${line} tiene más celdas que la cabecera.`],

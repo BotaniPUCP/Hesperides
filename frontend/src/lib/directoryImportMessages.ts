@@ -13,7 +13,6 @@ const ISSUES: Record<string, (issue: ImportRowIssue) => string> = {
   RUC_TAKEN: (i) => `Otra organización ya tiene el RUC ${i.detail}.`,
   NAME_TAKEN: (i) => `Ese nombre o alias ya lo usa «${i.detail}».`,
   DUPLICATED_IN_FILE: (i) => (i.detail ? `«${i.detail}» se repite en el archivo.` : 'Esta fila se repite en el archivo.'),
-  UNKNOWN_ORGANIZATION: (i) => `«${i.detail}» no está en el directorio: regístrala primero.`,
   EXTENSION_FORMAT: () => 'El anexo debe tener 4 dígitos.',
   MOBILE_FORMAT: () => 'El celular debe tener 9 dígitos y empezar con 9.',
   EMAIL_FORMAT: () => 'El correo no es válido.',

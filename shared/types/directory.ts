@@ -78,9 +78,12 @@ export interface ContactInput {
   email: string | null;
 }
 
-/** Registro masivo (CSV). CREATE se crea, SKIP ya existe, ERROR impide confirmar. */
-export type DirectoryImportKind = 'organizaciones' | 'contactos';
-export type ImportRowAction = 'CREATE' | 'SKIP' | 'ERROR';
+/**
+ * Registro masivo (CSV), en el ciclo común de cargas. CREATE se crea; SKIP ya
+ * existe y se omite; OMIT se omite porque falta su organización; ERROR impide confirmar.
+ */
+export type DirectoryImportKind = 'organizations' | 'contacts';
+export type ImportRowAction = 'CREATE' | 'SKIP' | 'OMIT' | 'ERROR';
 
 export interface ImportRowIssue {
   line: number;
@@ -94,17 +97,35 @@ export interface ImportPlannedRow {
   name: string | null;
   action: ImportRowAction;
   issues: ImportRowIssue[];
+  /** Las organizaciones de la fila que no están en el Directorio. */
+  missing: string[];
+}
+
+/** Una organización que falta y cuántas filas dejó fuera. */
+export interface MissingOrganization {
+  name: string;
+  rows: number;
 }
 
 export interface DirectoryImportPlan {
+  batchId: number;
   kind: DirectoryImportKind;
-  rows: ImportPlannedRow[];
-  creates: number;
-  skips: number;
+  totalRows: number;
+  toCreate: number;
+  toSkip: number;
+  toOmit: number;
   errors: number;
+  rows: ImportPlannedRow[];
+  missingOrganizations: MissingOrganization[];
+  canConfirm: boolean;
+  expiresAt: string;
 }
 
 export interface DirectoryImportOutcome {
+  batchId: number;
   created: number;
   skipped: number;
+  omitted: number;
+  missingOrganizations: MissingOrganization[];
+  createdCodes: string[];
 }

@@ -29,7 +29,7 @@ export interface ContactFilters {
 }
 
 const ORGS = '/directory/organizations';
-const IMPORTS = '/directory/imports';
+const IMPORTS = '/imports';
 const CONTACTS = '/directory/contacts';
 const segment = encodeURIComponent;
 
@@ -81,13 +81,12 @@ export const directoryApi = {
 
   importTemplate: (kind: DirectoryImportKind) => apiClient.getBlob(`${IMPORTS}/templates/${segment(kind)}`),
 
-  /** No guarda nada: dice qué pasaría con cada fila. */
+  /** No escribe en el Directorio: abre un lote con lo que pasaría con cada fila (ciclo común, SPEC-103 D-04). */
   previewImport: (kind: DirectoryImportKind, file: File) =>
     apiClient.postForm<DirectoryImportPlan>(`${IMPORTS}/${segment(kind)}/preview`, withFile(file)),
 
-  /** Todo o nada: con una fila con error responde 422 y no guarda ninguna. */
-  confirmImport: (kind: DirectoryImportKind, file: File) =>
-    apiClient.postForm<DirectoryImportOutcome>(`${IMPORTS}/${segment(kind)}/confirm`, withFile(file)),
+  /** Escribe lo revisado en el lote. Todo o nada: con una fila con error responde 422 y no guarda ninguna. */
+  confirmImport: (batchId: number) => apiClient.post<DirectoryImportOutcome>(`${IMPORTS}/${batchId}/confirm`, {}),
 };
 
 function withFile(file: File): FormData {
