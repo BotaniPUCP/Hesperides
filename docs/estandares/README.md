@@ -11,6 +11,14 @@ un archivo CSV en **Catastro verde → Importar al catastro**. Este directorio d
 | Bebederos | [bebederos.md](bebederos.md) | [plantillas/bebederos.csv](plantillas/bebederos.csv) | Disponible |
 | Fotos genéricas de especies | [fotos-especies.md](fotos-especies.md) | [plantillas/fotos-especies.csv](plantillas/fotos-especies.csv) | Disponible |
 
+El **Directorio** (SPEC-106) usa el mismo ciclo de carga para su **Registro masivo**, con sus
+propias reglas: exactamente las columnas del estándar; las de coordenadas y decimales no aplican.
+
+| Estándar del Directorio | Documento | Plantilla | Estado |
+|---|---|---|---|
+| Organizaciones | [organizaciones.md](organizaciones.md) | [plantillas/organizaciones.csv](plantillas/organizaciones.csv) | Disponible |
+| Contactos | [contactos.md](contactos.md) | [plantillas/contactos.csv](plantillas/contactos.csv) | Disponible |
+
 ## Reglas comunes
 
 - **UTF-8**, con o sin BOM.
