@@ -484,7 +484,8 @@ class MigrationSmokeTest {
         // proveedor lo tiene verificado, y esta aplicacion no puede comprobarlo.
         // Vive en SMTP_FROM, con el resto de la configuracion del proveedor.
         assertThat(codes).containsExactly(
-                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH");
+                "CAMPUS_TOTAL_HECTARES", "IRRIGATION_COVERAGE_MAX_DAYS", "IRRIGATION_OPERATING_WINDOW", "IRRIGATION_PUMP_DAILY_LIMIT_HOURS",
+                "IRRIGATION_PUMP_FLOW_M3_PER_HOUR", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH");
     }
 
     @Test
@@ -513,6 +514,6 @@ class MigrationSmokeTest {
         Integer live = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
                 Integer.class);
-        assertThat(live).isEqualTo(3);
+        assertThat(live).isEqualTo(7);
     }
 }

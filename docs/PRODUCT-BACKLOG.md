@@ -1071,6 +1071,8 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Y** el mapa resalta en semáforo ámbar o rojo las secciones que superan el intervalo máximo sin riego configurado
 - **Y** el cálculo se actualiza automáticamente con cada turno de riego validado
 
+**Piloto en M7.** Se aplica la regla provisional de SPEC-202 D-15 al turno ejecutado guardado en su sector. El cálculo usa las secciones activas de tipo `GREEN_AREA` dentro de sectores activos y pondera por su superficie positiva en el catálogo. El filtro incluye sectores como Polideportivo mientras se valida el tratamiento de riego tercerizado. Las secciones sin superficie positiva siguen en el listado y las que carecen de turnos se muestran sin historial. Si no hay riego registrado en el mes sobre superficie conocida, el porcentaje queda sin dato. El intervalo configurable muestra ámbar al alcanzarlo y rojo al superarlo.
+
 ---
 
 #### `D-03` — REQ 7.4

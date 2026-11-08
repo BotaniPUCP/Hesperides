@@ -42,11 +42,15 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   // El mapa general no marca ninguna sección por defecto. Solo M7 llama a
   // setMarkedSections; así puede hacer selección múltiple sin alterar /mapa.
   const markedSectionCodes = new Set<string>();
-  (['greenAreas', 'xerophytic', 'reserve'] as const).forEach((id) => {
+  const sectionLayers = ['greenAreas', 'xerophytic', 'reserve'] as const;
+  let sectionColors: ReadonlyMap<string, string> = new Map();
+  sectionLayers.forEach((id) => {
     const layer = poly[id];
     const originalColor = layer.options.color;
-    layer.options.color = (i) => markedSectionCodes.has(data[id][i]?.props.code)
-      ? MARKED_COLOR : originalColor(i);
+    layer.options.color = (i) => {
+      const code = data[id][i]?.props.code;
+      return markedSectionCodes.has(code) ? MARKED_COLOR : sectionColors.get(code) ?? originalColor(i);
+    };
   });
   // Un lugar puede ser varios bloques: se marcan todos, porque la selección resalta uno solo.
   const markedBuildingIds = new Set<number>();
@@ -155,9 +159,12 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     setMarkedSections(codes) {
       markedSectionCodes.clear();
       codes.forEach((code) => markedSectionCodes.add(code));
-      highlight.repaint('greenAreas');
-      highlight.repaint('xerophytic');
-      highlight.repaint('reserve');
+      sectionLayers.forEach(highlight.repaint);
+      needsRender = true;
+    },
+    setSectionColors(colors) {
+      sectionColors = colors;
+      sectionLayers.forEach(highlight.repaint);
       needsRender = true;
     },
     setMarkedBuildings(ids) {

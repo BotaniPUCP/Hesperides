@@ -105,6 +105,33 @@ class SystemParametersServiceTest {
     }
 
     @Test
+    void validatesTheIrrigationWindowBeforeUpdating() {
+        String code = "IRRIGATION_OPERATING_WINDOW";
+        SystemParameter window = parameter(code, "06:30-11:30", "STRING");
+        when(repository.findByCode(code)).thenReturn(Optional.of(window));
+
+        for (String invalid : List.of("11:30-06:30", "08:00-08:00", "06:30-24:00", "6:30-11:30")) {
+            assertThatThrownBy(() -> service.update(Map.of(code, invalid)))
+                .isInstanceOf(ValidationException.class).hasMessageContaining("HH:mm-HH:mm");
+        }
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void rejectsInvalidPumpSettings() {
+        String flow = "IRRIGATION_PUMP_FLOW_M3_PER_HOUR";
+        String limit = "IRRIGATION_PUMP_DAILY_LIMIT_HOURS";
+        when(repository.findByCode(flow)).thenReturn(Optional.of(parameter(flow, "", "DECIMAL")));
+        when(repository.findByCode(limit)).thenReturn(Optional.of(parameter(limit, "", "DECIMAL")));
+
+        for (Map<String, String> invalid : List.of(Map.of(flow, "0"), Map.of(flow, "0.0001"),
+                Map.of(flow, "1000000000"), Map.of(limit, "-1"), Map.of(limit, "24.001"))) {
+            assertThatThrownBy(() -> service.update(invalid)).isInstanceOf(ValidationException.class);
+        }
+        verify(repository, never()).save(any());
+    }
+
+    @Test
     void anUnknownCodeIsRejected() {
         assertThatThrownBy(() -> service.update(Map.of("PARAMETRO_INVENTADO", "1")))
                 .isInstanceOf(ResourceNotFoundException.class);

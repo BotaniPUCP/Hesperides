@@ -21,6 +21,7 @@
         <java.version>26</java.version>
         <aws.sdk.version>2.31.0</aws.sdk.version>
         <twelvemonkeys.version>3.12.0</twelvemonkeys.version>
+        <argLine/>
     </properties>
 
     <dependencies>
@@ -180,6 +181,26 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>resolve-mockito-agent-path</id>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Load Mockito at JVM startup and keep the JaCoCo agent supplied by prepare-agent. -->
+                    <argLine>@{argLine} "-javaagent:@{org.mockito:mockito-core:jar}"</argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>

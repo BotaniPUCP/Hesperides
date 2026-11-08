@@ -13,6 +13,10 @@ public final class SystemParameterCodes {
     public static final String PASSWORD_MIN_LENGTH = "PASSWORD_MIN_LENGTH";
     public static final String LOGIN_MAX_ATTEMPTS = "LOGIN_MAX_ATTEMPTS";
     public static final String CAMPUS_TOTAL_HECTARES = "CAMPUS_TOTAL_HECTARES";
+    public static final String IRRIGATION_OPERATING_WINDOW = "IRRIGATION_OPERATING_WINDOW";
+    public static final String IRRIGATION_PUMP_FLOW_M3_PER_HOUR = "IRRIGATION_PUMP_FLOW_M3_PER_HOUR";
+    public static final String IRRIGATION_PUMP_DAILY_LIMIT_HOURS = "IRRIGATION_PUMP_DAILY_LIMIT_HOURS";
+    public static final String IRRIGATION_COVERAGE_MAX_DAYS = "IRRIGATION_COVERAGE_MAX_DAYS";
 
     // No hay MAIL_FROM, y no debe volver: el remitente de correo solo es valido
     // si el proveedor lo tiene verificado, y esta aplicacion no puede

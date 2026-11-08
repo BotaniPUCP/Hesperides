@@ -28,6 +28,7 @@ export interface NavGroup {
 }
 
 export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
+export const IRRIGATION_ROLES: readonly string[] = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
 
 /**
  * Pantallas que van sueltas bajo Inicio, para todos los roles que las ven. Un grupo
@@ -38,8 +39,8 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: ['COORDINADOR', 'SUPERVISOR'] },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
-  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+  // M7 - Riego: registro y consulta para administrador, coordinador y supervisor.
+  { label: 'Riego', href: '/riego', icon: '💧', roles: IRRIGATION_ROLES },
   // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
   { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];

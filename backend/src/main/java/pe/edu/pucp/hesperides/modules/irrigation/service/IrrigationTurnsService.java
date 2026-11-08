@@ -3,10 +3,12 @@ package pe.edu.pucp.hesperides.modules.irrigation.service;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.CreateIrrigationTurnRequest;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationTurnResponse;
 import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationZoneResponse;
+import pe.edu.pucp.hesperides.shared.time.DailyTimeWindow;
 import java.time.LocalDate;
 import java.util.List;
 
 public interface IrrigationTurnsService {
+    DailyTimeWindow operatingWindow();
     List<IrrigationZoneResponse> sectors(String email);
     List<IrrigationZoneResponse> sections(Long sectorId, String email);
     List<IrrigationTurnResponse> list(LocalDate from, LocalDate to, Long sectorId, String email);

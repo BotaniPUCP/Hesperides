@@ -391,13 +391,16 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **5. Incidencias** | Validar cierre / observar o reabrir resolución | | V, U | | |
 | **5. Incidencias** | Ver incidencias | | L | L (envíos propios y cuadrillas que dirige) | |
 | **6. Reportes** | Generar y ver reportes de dirección/coordinación | L | L | L (solo de su cuadrilla) | |
+| **7. Gestión de Riego** | Registrar turnos individuales o por lote y consultar sectores activos, secciones e historial (nota 5) | CL | CL | CL | |
+| **7. Gestión de Riego** | Registrar y consultar lecturas diarias de bomba y reservorio (D-04) | L | L | CL | |
+| **7. Gestión de Riego** | Consultar la cobertura hídrica registrada (D-02) | L | L | L | |
 | **Configuración del sistema** (`system_parameters`) | Editar parámetros generales | CU | | | |
 
 **Resumen por rol (una línea cada uno):**
 
-- **ADMIN:** control total sobre usuarios, catálogos, catastro, contratos y parámetros del sistema; solo lectura sobre la ejecución diaria del trabajo de campo, que no le corresponde ejecutar ni validar.
+- **ADMIN:** control total sobre usuarios, catálogos, catastro, contratos y parámetros del sistema. Consulta el trabajo de campo y registra turnos en Gestión de Riego según la nota 5.
 - **COORDINADOR:** planifica y supervisa toda la operación — crea y edita intervenciones y contratos, asigna trabajo a cualquier cuadrilla, valida lo ejecutado y ve todos los equipos —, pero no administra usuarios, catálogos ni parámetros del sistema.
-- **SUPERVISOR:** dirige una cuadrilla: asigna a sus operarios el trabajo que el coordinador planificó, valida lo que su equipo ejecuta, y ve únicamente lo que concierne a su cuadrilla. Es el eslabón entre el operario y el coordinador.
+- **SUPERVISOR:** dirige una cuadrilla. Asigna a sus operarios el trabajo planificado y valida lo que ejecuta su equipo. En Gestión de Riego accede a los sectores activos según la nota 5.
 - **OPERARIO:** ejecuta las intervenciones que se le asignan y reporta incidencias; lee lo necesario para trabajar en campo (mapa, ficha de elementos, su propio historial) y no administra nada.
 
 **Notas:**
@@ -406,6 +409,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 2. El coordinador mantiene el catastro (crear/editar elementos que descubre o corrige en campo) pero no desactiva elementos: desactivar un elemento del catastro es una decisión administrativa con impacto en reportes históricos, reservada a ADMIN.
 3. El coordinador crea y actualiza contratos y proveedores porque es quien gestiona la relación operativa con los tercerizados y da seguimiento al cumplimiento. Lo que no puede es desactivar un proveedor o un contrato: dar de baja una relación comercial tiene implicaciones administrativas y queda en ADMIN.
 4. Enmienda SPEC-200 (5 nov 2026, usuario adopta la aclaración del líder): COORDINADOR y SUPERVISOR responsable validan/observan intervenciones; el supervisor solo las de sus cuadrillas activas. La aprobación de cualquiera cuenta cuando todas las ubicaciones estén aprobadas, sin segunda firma del coordinador. ADMIN/OPERARIO no aprueban. Se conserva la prohibición de aprobar ejecución, reportes o fotos propios, incluso tras cambiar de rol. El actor de cada aprobación queda en validated_by_user_id. Esta regla reemplaza la restricción anterior a solo COORDINADOR.
+5. En Gestión de Riego, ADMIN, COORDINADOR y SUPERVISOR acceden a todos los sectores activos del catálogo con independencia de su cuadrilla. Cada turno identifica al usuario que lo registra y las secciones que seleccionó. Los permisos de Reportes conservan su propio alcance.
 
 **Cómo se resuelve "solo su cuadrilla":** el alcance del supervisor y del operario se calcula contra las tablas `teams`/`team_members` de SPEC-002 (baseline V001), no contra un campo del JWT. El servicio filtra por las cuadrillas vigentes del usuario (`team_members.left_at IS NULL`), de modo que reasignar a alguien de equipo cambia su alcance en el siguiente request, sin esperar a que expire su token.
 

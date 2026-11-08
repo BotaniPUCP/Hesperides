@@ -188,10 +188,15 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V031 | `V031__add_species_criticality_and_averages.sql` | SPEC-105 §4.2 | Criticidad y promedios por especie, con la fuente de cada valor, y corrección del tipo de dos especies |
 | V032 | `V032__add_measurement_origin.sql` | SPEC-105 §4.3 | Origen de cada fila del historial de mediciones y la intervención que la registró |
 | V033 | `V033__create_extra_measures.sql` | SPEC-105 §4.4 | Catálogo de medidas adicionales, su asignación por especie y sus valores por medición |
+| V034 | `V034__places_span_buildings_and_children.sql` | Lugares | Lugares vinculados a varios edificios |
+| V035 | `V035__add_irrigation_water_details.sql` | M7 · D-01 | Catálogos de fuente de agua y método, y campos opcionales para conservar la compatibilidad con los turnos anteriores |
+| V036 | `V036__add_irrigation_operating_window.sql` | M7 · D-03 | Ventana de riego configurable y motivos de excepción en los turnos ejecutados |
+| V037 | `V037__add_irrigation_pump_readings.sql` | M7 · D-04 | Lectura diaria del horómetro y reservorio, y parámetros de caudal y límite de bombeo |
+| V038 | `V038__add_irrigation_coverage_interval.sql` | M7 · D-02 | Intervalo configurable para el semáforo provisional de cobertura |
 
 ### Pendientes (sin número reservado)
 
-Al 6 nov 2026 el siguiente número libre es **V034**, sujeto a comprobarlo nuevamente al
+El siguiente número libre es **V039**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

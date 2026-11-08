@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import pe.edu.pucp.hesperides.shared.entity.BaseEntity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -27,4 +28,14 @@ public class IrrigationTurn extends BaseEntity {
     private LocalTime finishedAt;
     @Column(length = 500)
     private String notes;
+    @Column(name = "water_source_item_id")
+    private Long waterSourceItemId;
+    @Column(name = "irrigation_method_item_id")
+    private Long irrigationMethodItemId;
+    @Column(name = "tanker_trips")
+    private Integer tankerTrips;
+    @Column(name = "tanker_volume_m3", precision = 12, scale = 3)
+    private BigDecimal tankerVolumeM3;
+    @Column(name = "window_exception_item_id")
+    private Long windowExceptionItemId;
 }
