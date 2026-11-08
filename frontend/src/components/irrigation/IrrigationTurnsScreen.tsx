@@ -7,6 +7,7 @@ import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { irrigationApi } from '@/lib/irrigation-api';
 import { dateLocal, todayLocal } from '@/lib/local-date';
+import { IRRIGATION_ROLES } from '@/lib/navigation';
 import { IrrigationMapPicker } from './IrrigationMapPicker';
 import { PageHeader } from '@/components/layouts/PageHeader';
 
@@ -17,7 +18,13 @@ type SectionsBySector = Record<number, IrrigationZone[]>;
 
 export function IrrigationTurnsScreen() {
   const { user } = useAuth();
-  const isSupervisor = user?.role?.code === 'SUPERVISOR';
+  if (!IRRIGATION_ROLES.includes(user?.role?.code ?? '')) {
+    return <EmptyState title="Acceso restringido" description="Tu rol no tiene acceso a Gestión de Riego." />;
+  }
+  return <IrrigationTurnsContent />;
+}
+
+function IrrigationTurnsContent() {
   const [sectors, setSectors] = useState<IrrigationZone[]>([]);
   const [sectionsBySector, setSectionsBySector] = useState<SectionsBySector>({});
   const [selected, setSelected] = useState<Set<number>>(() => new Set());
@@ -42,7 +49,7 @@ export function IrrigationTurnsScreen() {
   const [refresh, setRefresh] = useState(0);
   const [message, setMessage] = useState<{ kind: 'error' | 'success'; text: string } | null>(null);
   const turnsQuery = `${historySector}|${from}|${to}|${refresh}`;
-  const loadingSections = isSupervisor && sectors.length > 0 && sectionsLoadedFor !== sectors;
+  const loadingSections = sectors.length > 0 && sectionsLoadedFor !== sectors;
   const loadingTurns = turnsLoadedFor !== turnsQuery;
 
   useEffect(() => {
@@ -52,13 +59,13 @@ export function IrrigationTurnsScreen() {
       setSectors(data);
       setScope(data.length === 1 ? String(data[0].id) : ALL);
       setHistorySector(data.length === 1 ? String(data[0].id) : ALL);
-    }).catch(() => { if (live) setMessage({ kind: 'error', text: 'No se pudieron cargar tus sectores.' }); })
+    }).catch(() => { if (live) setMessage({ kind: 'error', text: 'No se pudieron cargar los sectores.' }); })
       .finally(() => { if (live) setLoadingSectors(false); });
     return () => { live = false; };
   }, []);
 
   useEffect(() => {
-    if (!isSupervisor || sectors.length === 0) return;
+    if (sectors.length === 0) return;
     let live = true;
     Promise.all(sectors.map((sector) => irrigationApi.sections(sector.id)))
       .then((groups) => {
@@ -70,13 +77,17 @@ export function IrrigationTurnsScreen() {
       .catch(() => { if (live) setMessage({ kind: 'error', text: 'No se pudieron cargar las secciones. Actualiza la página antes de registrar.' }); })
       .finally(() => { if (live) setSectionsLoadedFor(sectors); });
     return () => { live = false; };
-  }, [isSupervisor, sectors]);
+  }, [sectors]);
 
   useEffect(() => {
     let live = true;
     irrigationApi.turns(from, to, historySector !== ALL ? Number(historySector) : undefined)
       .then((data) => { if (live) setTurns(data); })
-      .catch(() => { if (live) setMessage({ kind: 'error', text: 'No se pudieron consultar los turnos.' }); })
+      .catch(() => {
+        if (!live) return;
+        setTurns([]);
+        setMessage({ kind: 'error', text: 'No se pudieron consultar los turnos.' });
+      })
       .finally(() => { if (live) setTurnsLoadedFor(turnsQuery); });
     return () => { live = false; };
     // turnsQuery resume historySector, from, to y refresh.
@@ -185,7 +196,7 @@ export function IrrigationTurnsScreen() {
         </div>
       </Card>
 
-      {isSupervisor && <Card title="Nuevo turno ejecutado">
+      <Card title="Nuevo turno ejecutado">
         <form onSubmit={prepareSave} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="space-y-1 text-sm text-neutral-700"><span>Fecha de riego</span>
@@ -202,7 +213,7 @@ export function IrrigationTurnsScreen() {
             <label className="block space-y-1 text-sm font-semibold text-neutral-700">
               <span>Ámbito de selección</span>
               <select className={FIELD} value={scope} onChange={(e) => setScope(e.target.value)} disabled={loadingSectors}>
-                <option value={ALL}>Todos mis sectores · {sectors.reduce((n, s) => n + (sectionsBySector[s.id]?.length ?? 0), 0)} secciones</option>
+                <option value={ALL}>Todos los sectores · {sectors.reduce((n, s) => n + (sectionsBySector[s.id]?.length ?? 0), 0)} secciones</option>
                 {sectors.map((s) => <option key={s.id} value={s.id}>{s.name} · {sectionsBySector[s.id]?.length ?? 0} secciones</option>)}
               </select>
             </label>
@@ -214,7 +225,7 @@ export function IrrigationTurnsScreen() {
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="secondary" onClick={selectAllInScope} disabled={loadingSections || sectionsInScope.length === 0}>Marcar todas</Button>
                 <Button type="button" variant="secondary" onClick={clearScope} disabled={loadingSections}>Limpiar ámbito</Button>
-                <Button type="button" onClick={() => setMapOpen(true)} disabled={loadingSections || sectors.length === 0}>🗺️ Seleccionar en mapa 3D</Button>
+                <Button type="button" onClick={() => setMapOpen(true)} disabled={loadingSections || !sectors.some((s) => sectionsBySector[s.id]?.length)}>🗺️ Seleccionar en mapa 3D</Button>
               </div>
             </div>
             {loadingSections ? <LoadingSkeleton /> : (
@@ -251,7 +262,7 @@ export function IrrigationTurnsScreen() {
           </label>
           <Button type="submit" disabled={loadingSections || selectedCount === 0}>Revisar y guardar {selectedGroups.length} turno(s)</Button>
         </form>
-      </Card>}
+      </Card>
 
       {mapOpen && <IrrigationMapPicker
         sectors={sectors} sectionsBySector={sectionsBySector} scope={scope}

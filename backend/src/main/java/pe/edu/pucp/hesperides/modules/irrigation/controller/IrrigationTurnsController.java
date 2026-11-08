@@ -16,29 +16,34 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 
+import static pe.edu.pucp.hesperides.shared.security.RoleCodes.ADMIN;
+import static pe.edu.pucp.hesperides.shared.security.RoleCodes.COORDINADOR;
+import static pe.edu.pucp.hesperides.shared.security.RoleCodes.SUPERVISOR;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/irrigation")
 public class IrrigationTurnsController {
-    private static final String READERS = "hasAnyAuthority('ADMIN', 'COORDINADOR', 'SUPERVISOR')";
+    private static final String IRRIGATION_ROLES =
+        "hasAnyAuthority('" + ADMIN + "', '" + COORDINADOR + "', '" + SUPERVISOR + "')";
     private final IrrigationTurnsService service;
 
     @GetMapping("/sectors")
-    @PreAuthorize(READERS)
+    @PreAuthorize(IRRIGATION_ROLES)
     public ResponseEntity<ApiResponse<List<IrrigationZoneResponse>>> sectors(
             @AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(ApiResponse.ok("Sectores accesibles", service.sectors(user.getUsername())));
     }
 
     @GetMapping("/sectors/{sectorId}/sections")
-    @PreAuthorize(READERS)
+    @PreAuthorize(IRRIGATION_ROLES)
     public ResponseEntity<ApiResponse<List<IrrigationZoneResponse>>> sections(
             @PathVariable Long sectorId, @AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(ApiResponse.ok("Secciones del sector", service.sections(sectorId, user.getUsername())));
     }
 
     @GetMapping("/turns")
-    @PreAuthorize(READERS)
+    @PreAuthorize(IRRIGATION_ROLES)
     public ResponseEntity<ApiResponse<List<IrrigationTurnResponse>>> turns(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
@@ -48,7 +53,7 @@ public class IrrigationTurnsController {
     }
 
     @GetMapping("/turns/{id}")
-    @PreAuthorize(READERS)
+    @PreAuthorize(IRRIGATION_ROLES)
     public ResponseEntity<ApiResponse<IrrigationTurnResponse>> findOne(
             @PathVariable Long id, @AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(ApiResponse.ok("Turno de riego", service.findOne(id, user.getUsername())));
@@ -56,7 +61,7 @@ public class IrrigationTurnsController {
 
     /** Un pedido registra uno o varios turnos, cada uno vinculado a su sector. */
     @PostMapping("/turns/batch")
-    @PreAuthorize("hasAuthority('SUPERVISOR')")
+    @PreAuthorize(IRRIGATION_ROLES)
     public ResponseEntity<ApiResponse<List<IrrigationTurnResponse>>> createBatch(
             @Valid @RequestBody CreateIrrigationBatchRequest request,
             @AuthenticationPrincipal UserDetails user) {
@@ -65,7 +70,7 @@ public class IrrigationTurnsController {
     }
 
     @PostMapping("/turns")
-    @PreAuthorize("hasAuthority('SUPERVISOR')")
+    @PreAuthorize(IRRIGATION_ROLES)
     public ResponseEntity<ApiResponse<IrrigationTurnResponse>> create(
             @Valid @RequestBody CreateIrrigationTurnRequest request,
             @AuthenticationPrincipal UserDetails user) {

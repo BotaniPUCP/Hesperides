@@ -84,7 +84,7 @@ export function IrrigationMapPicker({ sectors, sectionsBySector, scope, selected
     }
     const code = data[target.layer][target.index]?.props.code;
     const section = code ? sectionsByCode.get(code) : null;
-    if (!section) { setNotice('Sección fuera de tus sectores autorizados o del ámbito seleccionado.'); return; }
+    if (!section) { setNotice('La sección no está disponible para riego en el ámbito seleccionado.'); return; }
     toggle(section.id);
   };
 
@@ -173,7 +173,7 @@ export function IrrigationMapPicker({ sectors, sectionsBySector, scope, selected
               <span aria-live="polite" className="rounded-md bg-brand-50 px-2 py-1 text-sm font-semibold text-brand-700">{selected.size} seleccionadas</span></div>
             <label className="block space-y-1 text-sm text-neutral-700"><span>Sector</span>
               <select className={FIELD} value={chosenScope} onChange={(e) => setChosenScope(e.target.value)}>
-                <option value={ALL}>Todos mis sectores ({allSections.length})</option>
+                <option value={ALL}>Todos los sectores ({allSections.length})</option>
                 {sectors.map((s) => <option key={s.id} value={s.id}>{s.name} ({sectionsBySector[s.id]?.length ?? 0})</option>)}
               </select></label>
             <div className="grid grid-cols-2 gap-2">

@@ -49,6 +49,17 @@ public class IrrigationZoneQueries {
                 rs.getLong("id"), rs.getString("code"), rs.getString("name")), sectorId);
     }
 
+    /** Historical turns keep their recorded sections when a zone moves or becomes inactive. */
+    public List<IrrigationZoneResponse> recordedSections(Long turnId) {
+        return jdbc.query("""
+            SELECT z.id, z.code, z.name FROM irrigation_turn_sections ts
+            JOIN zones z ON z.id = ts.section_zone_id
+            WHERE ts.turn_id = ? AND ts.deleted_at IS NULL
+            ORDER BY z.name
+            """, (rs, n) -> new IrrigationZoneResponse(
+                rs.getLong("id"), rs.getString("code"), rs.getString("name")), turnId);
+    }
+
     /** Misma regla que {@link #sectionsOf(Long)}, con la superficie que necesitan los reportes. */
     public List<SectionWithArea> sectionsWithAreaOf(Long sectorId) {
         return jdbc.query("SELECT z.id, z.code, z.name, z.area_m2 " + SECTIONS_OF_SECTOR,

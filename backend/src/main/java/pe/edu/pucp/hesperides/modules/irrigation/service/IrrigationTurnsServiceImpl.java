@@ -16,11 +16,12 @@ import pe.edu.pucp.hesperides.modules.irrigation.repository.IrrigationTurnsRepos
 import pe.edu.pucp.hesperides.modules.irrigation.repository.IrrigationZoneQueries;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
+import pe.edu.pucp.hesperides.shared.security.RoleCodes;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,25 +37,18 @@ public class IrrigationTurnsServiceImpl implements IrrigationTurnsService {
             .orElseThrow(() -> new AccessDeniedException("Sin sesión válida"));
     }
 
-    private boolean isManager(User user) {
-        return "ADMIN".equals(user.getRoleCode()) || "COORDINADOR".equals(user.getRoleCode());
+    /** Irrigation access to active sectors is independent of team assignments. */
+    private boolean canManageIrrigation(User user) {
+        String role = user.getRoleCode();
+        return RoleCodes.ADMIN.equals(role) || RoleCodes.COORDINADOR.equals(role) || RoleCodes.SUPERVISOR.equals(role);
     }
 
     private Set<Long> accessibleSectorIds(User user) {
-        if (isManager(user)) {
-            return sectorsIds();
+        if (!canManageIrrigation(user)) {
+            return Set.of();
         }
-        if ("SUPERVISOR".equals(user.getRoleCode())) {
-            Set<Long> assigned = new HashSet<>(zones.activeSectorsOfSupervisor(user.getId()));
-            assigned.retainAll(sectorsIds());
-            return assigned;
-        }
-        return Set.of();
-    }
-
-    private Set<Long> sectorsIds() {
         return zones.sectors().stream().map(IrrigationZoneResponse::id)
-            .collect(java.util.stream.Collectors.toSet());
+            .collect(Collectors.toSet());
     }
 
     private void assertAccess(Long sectorId, User user) {
@@ -67,8 +61,7 @@ public class IrrigationTurnsServiceImpl implements IrrigationTurnsService {
     @Override
     @Transactional(readOnly = true)
     public List<IrrigationZoneResponse> sectors(String email) {
-        Set<Long> allowed = accessibleSectorIds(currentUser(email));
-        return zones.sectors().stream().filter(z -> allowed.contains(z.id())).toList();
+        return canManageIrrigation(currentUser(email)) ? zones.sectors() : List.of();
     }
 
     @Override
@@ -127,8 +120,8 @@ public class IrrigationTurnsServiceImpl implements IrrigationTurnsService {
 
     private User writer(String email) {
         User user = currentUser(email);
-        if (!"SUPERVISOR".equals(user.getRoleCode())) {
-            throw new AccessDeniedException("Solo el supervisor registra turnos");
+        if (!canManageIrrigation(user)) {
+            throw new AccessDeniedException("No autorizado para registrar turnos de riego");
         }
         return user;
     }
@@ -141,7 +134,7 @@ public class IrrigationTurnsServiceImpl implements IrrigationTurnsService {
         assertAccess(request.sectorZoneId(), user);
         Set<Long> availableSections = zones.sectionsOf(request.sectorZoneId()).stream()
             .map(IrrigationZoneResponse::id)
-            .collect(java.util.stream.Collectors.toSet());
+            .collect(Collectors.toSet());
         if (!availableSections.containsAll(request.sectionZoneIds())) {
             throw new ValidationException("Una o mas secciones no pertenecen al sector seleccionado");
         }
@@ -150,6 +143,7 @@ public class IrrigationTurnsServiceImpl implements IrrigationTurnsService {
     private IrrigationTurnResponse persistTurn(CreateIrrigationTurnRequest request, User user) {
         IrrigationTurn turn = new IrrigationTurn();
         turn.setSectorZoneId(request.sectorZoneId());
+        // The legacy column stores the user who recorded the turn, regardless of role.
         turn.setSupervisorUserId(user.getId());
         turn.setIrrigationDate(request.irrigationDate());
         turn.setStartedAt(request.startedAt());
@@ -163,7 +157,8 @@ public class IrrigationTurnsServiceImpl implements IrrigationTurnsService {
             detail.setSectionZoneId(sectionId);
             return detail;
         }).toList();
-        turnSections.saveAll(details);
+        // Flush the links before the JDBC read used to build the response.
+        turnSections.saveAllAndFlush(details);
         return toResponse(turn);
     }
 
@@ -172,11 +167,7 @@ public class IrrigationTurnsServiceImpl implements IrrigationTurnsService {
         String sectorName = sectors.stream()
             .filter(z -> z.id().equals(turn.getSectorZoneId()))
             .map(IrrigationZoneResponse::name).findFirst().orElse("Sector sin nombre");
-        Set<Long> wateredIds = turnSections.findByTurnIdAndDeletedAtIsNullOrderById(turn.getId())
-            .stream().map(IrrigationTurnSection::getSectionZoneId)
-            .collect(java.util.stream.Collectors.toSet());
-        List<IrrigationZoneResponse> wateredSections = zones.sectionsOf(turn.getSectorZoneId())
-            .stream().filter(s -> wateredIds.contains(s.id())).toList();
+        List<IrrigationZoneResponse> wateredSections = zones.recordedSections(turn.getId());
         return new IrrigationTurnResponse(turn.getId(), turn.getSectorZoneId(), sectorName,
             turn.getSupervisorUserId(), turn.getIrrigationDate(), turn.getStartedAt(),
             turn.getFinishedAt(), wateredSections, turn.getNotes());
