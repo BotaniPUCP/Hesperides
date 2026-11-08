@@ -93,6 +93,13 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `SPECIES_UPDATED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "slug": "coffea-arabica", "scientificName": "Coffea arabica" }` — quién corrigió la especie (SPEC-105) |
 | `SPECIES_CRITICALITY_CHANGED` | ADMIN, COORDINADOR | `{ "from": true, "to": false }` — decisión de seguridad: cambia quién atiende sus ejemplares (SPEC-105) |
 | `SPECIES_REFERENCE_CHANGED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "heightFrom": 3.0, "heightTo": 2.5, "crownRadiusFrom": 1.0, "crownRadiusTo": 1.0 }` — el promedio anterior y el nuevo (SPEC-105) |
+| `ORGANIZATION_CREATED` | ADMIN, COORDINADOR | `{ "name": "CF Psicología" }` (SPEC-106) | **`audit_log`** |
+| `ORGANIZATION_UPDATED` | ADMIN, COORDINADOR | `{ "fields": ["name", "aliases"] }` — qué campos cambiaron (SPEC-106) | **`audit_log`** |
+| `ORGANIZATION_DEACTIVATED` | ADMIN, COORDINADOR | `{ "name": "CF Psicología" }` (SPEC-106) | **`audit_log`** |
+| `CONTACT_CREATED` | ADMIN, COORDINADOR | `{ "organizations": 2 }` — sin nombre ni teléfonos: son datos personales (SPEC-106 §9.3) | **`audit_log`** |
+| `CONTACT_UPDATED` | ADMIN, COORDINADOR | `{ "fields": ["mobile", "organizations"] }` — qué campos cambiaron, nunca sus valores (SPEC-106) | **`audit_log`** |
+| `CONTACT_DEACTIVATED` | ADMIN, COORDINADOR | `{}` (SPEC-106) | **`audit_log`** |
+| `CONTACT_LINKED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — la organización agregada (SPEC-106) | **`audit_log`** |
 | `LOGIN_FAILED_LOCKOUT` | (sistema, sobre cualquier email) | `{ "email": "...", "attempts": 5, "windowMinutes": 15 }` | **`audit_log`** (además de logs SLF4J, sección 3.4) |
 | `REFRESH_TOKEN_REUSE_DETECTED` | (sistema, sobre cualquier usuario) | `{ "userId": ..., "tokenId": ..., "revokedChainCount": 3 }` | **`audit_log`** |
 | Login exitoso individual | — | — | **Solo SLF4J** (sección 3.4) |

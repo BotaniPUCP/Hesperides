@@ -21,6 +21,7 @@
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
 | SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 5, falta verificar en navegador | —          | —      |              |
+| SPEC-106 | Directorio de organizaciones y contactos | 🔄 En progreso | —          | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
@@ -190,10 +191,11 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V033 | `V033__create_extra_measures.sql` | SPEC-105 §4.4 | Catálogo de medidas adicionales, su asignación por especie y sus valores por medición |
 | V034 | `V034__places_span_buildings_and_children.sql` | Catálogo de lugares (cabecera SQL) | Un lugar con varios edificios (`place_buildings`) o con el contorno de sus hijos (`outline_from_children`) |
 | V035 | `V035__create_reservable_garden_places.sql` | Catálogo de lugares (cabecera SQL) · REQ 1.12 | Los 19 jardines prestables como lugares de su sección, con los alias del calendario de la OSG; el Jardín Física pasa a la DAF |
+| V036 | `V036__create_directory.sql` | SPEC-106 §4.1 | Directorio: catálogo `ORGANIZATION_TYPE`, organizaciones con alias, contactos y sus vínculos; función `directory_key` para la unicidad sin tildes |
 
 ### Pendientes (sin número reservado)
 
-Al 7 nov 2026 el siguiente número libre es **V036**, sujeto a comprobarlo nuevamente al
+Al 8 nov 2026 el siguiente número libre es **V037**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

@@ -426,7 +426,7 @@ llenan los capataces con ayuda de las ingenieras de la sección o del propio pre
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
 | 4.1 | Registro de contratos/servicios | Media | 2 | D2 | ⏭️ | 0% | No hemos visto un contrato tipo |
-| 4.2 | Registro de proveedor | Media | 2 | D2 | ✅ | 0% | 🔶 → ✅ **Solo datos básicos**, sembrados con **datos de prueba** |
+| 4.2 | Registro de proveedor | Media | 2 | D2 | ✅ | 80% | 🔶 → ✅ **Solo datos básicos**. SPEC-106 (8 nov 2026): el proveedor es una **empresa externa del Directorio** (nombre, RUC, teléfono y contactos); falta cargar las empresas de la matriz de la OSG |
 | 4.3 | Seguimiento de ejecución del servicio | **Alta** | 3 | D2 | ⏭️ | 0% | Falta un reporte de cierre del proveedor |
 | 4.4 | Carga de informe final del proveedor | Media | 2 | D2 | ⏭️ | 0% | Robert los está compilando |
 | 4.5 | Comparativo frecuencia pactada vs. real | **Alta** | 3 | D2 D5 | ⏭️ | 0% | Falta si las frecuencias están en el contrato |

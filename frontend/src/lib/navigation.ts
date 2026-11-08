@@ -44,6 +44,8 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
   // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
   { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+  // SPEC-106: el capataz lo consulta; registrar y editar es de coordinación.
+  { label: 'Directorio', href: '/directorio', icon: '📇', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
