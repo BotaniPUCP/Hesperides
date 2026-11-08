@@ -30,6 +30,7 @@ public class SpecimenImportService implements ImportHandler {
 
     private final SpecimenResolver resolver;
     private final ImportBatchGate gate;
+    private final BatchPhotoZips zips;
     private final SpecimenImportWriter writer;
 
     @Override
@@ -38,10 +39,13 @@ public class SpecimenImportService implements ImportHandler {
     }
 
     @Override
-    public ImportPreviewResponse preview(String kind, byte[] csv, String fileName, byte[] zip, String userEmail) {
+    public ImportPreviewResponse preview(String kind, ImportUpload upload, String userEmail) {
+        byte[] csv = upload.csv();
+        byte[] zip = upload.zip().get();
         Map<String, byte[]> photos = zip == null ? Map.of() : PhotoFiles.read(zip);
         SpecimenPreview preview = resolver.resolve(SpecimenCsvSchema.parse(CsvTable.parse(csv)), Set.copyOf(photos.keySet()));
-        Opened opened = gate.open(KIND, fileName, userEmail, preview, zip);
+        Opened opened = gate.open(KIND, upload.fileName(), userEmail, preview);
+        zips.keep(opened.batchId(), zip);
         return PreviewMapper.toResponse(opened.batchId(), KIND, preview, opened.expiresAt());
     }
 

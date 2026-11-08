@@ -37,6 +37,7 @@ public class FeatureImportService implements ImportHandler {
     private final FeatureResolver resolver;
     private final FeatureWriter writer;
     private final ImportBatchGate gate;
+    private final BatchPhotoZips zips;
     private final ImportPhotos photos;
     private final TransactionTemplate transaction;
 
@@ -46,12 +47,15 @@ public class FeatureImportService implements ImportHandler {
     }
 
     @Override
-    public ImportPreviewResponse preview(String kind, byte[] csv, String fileName, byte[] zip, String userEmail) {
+    public ImportPreviewResponse preview(String kind, ImportUpload upload, String userEmail) {
+        byte[] csv = upload.csv();
+        byte[] zip = upload.zip().get();
         FeatureKind k = FeatureKind.of(kind).orElseThrow(() -> new ResourceNotFoundException("There is no CSV standard for: " + kind));
         Map<String, byte[]> zipFiles = zip == null ? Map.of() : PhotoFiles.read(zip);
         FeatureCsvSchema.Parsed parsed = FeatureCsvSchema.parse(CsvTable.parse(csv), k, lookup.vocabulary());
         FeaturePreview preview = resolver.resolve(k, parsed, Set.copyOf(zipFiles.keySet()));
-        Opened opened = gate.open(kind, fileName, userEmail, preview, zip);
+        Opened opened = gate.open(kind, upload.fileName(), userEmail, preview);
+        zips.keep(opened.batchId(), zip);
         return PreviewMapper.toResponse(opened.batchId(), kind, preview, opened.expiresAt());
     }
 
@@ -67,7 +71,7 @@ public class FeatureImportService implements ImportHandler {
         List<ImportPhotos.Request> requests = rows.stream().filter(r -> r.draft().photo() != null)
                 .map(r -> new ImportPhotos.Request(r.line(), r.draft().photo())).toList();
         Map<Integer, StoredPhoto> stored = photos.store("campus-features/import-" + batchId, requests,
-                gate.zip(batchId, ImportPhotos.needsZip(requests)), warnings);
+                zips.read(batchId, ImportPhotos.needsZip(requests)), warnings);
         return transaction.execute(status -> write(batchId, preview, rows, stored, warnings, claimed.userId()));
     }
 

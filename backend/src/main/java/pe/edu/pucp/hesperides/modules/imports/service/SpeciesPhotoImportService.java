@@ -36,6 +36,7 @@ public class SpeciesPhotoImportService implements ImportHandler {
 
     private final SpecimenLookupRepository lookup;
     private final ImportBatchGate gate;
+    private final BatchPhotoZips zips;
     private final ImportPhotos photos;
     private final SpeciesPhotoRepository speciesPhotos;
     private final SpeciesPhotoSets sets;
@@ -47,11 +48,14 @@ public class SpeciesPhotoImportService implements ImportHandler {
     }
 
     @Override
-    public ImportPreviewResponse preview(String kind, byte[] csv, String fileName, byte[] zip, String userEmail) {
+    public ImportPreviewResponse preview(String kind, ImportUpload upload, String userEmail) {
+        byte[] csv = upload.csv();
+        byte[] zip = upload.zip().get();
         Map<String, byte[]> zipFiles = zip == null ? Map.of() : PhotoFiles.read(zip);
         Map<String, SpeciesRef> species = lookup.speciesByName();
         SpeciesPhotoPreview p = SpeciesPhotoPreview.of(CsvTable.parse(csv), species, Set.copyOf(zipFiles.keySet()));
-        Opened opened = gate.open(KIND, fileName, userEmail, p, zip);
+        Opened opened = gate.open(KIND, upload.fileName(), userEmail, p);
+        zips.keep(opened.batchId(), zip);
         int unknownRows = p.unknownSpecies().stream().mapToInt(s -> s.rows()).sum();
         return new ImportPreviewResponse(opened.batchId(), KIND, p.rows().size() + unknownRows, 0, p.rows().size(),
                 p.unknownSpecies().stream().map(s -> new ImportPreviewResponse.UnknownSpecies(s.name(), s.rows())).toList(),
@@ -69,7 +73,7 @@ public class SpeciesPhotoImportService implements ImportHandler {
         List<ImportPreviewResponse.Issue> warnings = new ArrayList<>();
         List<ImportPhotos.Request> requests = p.rows().stream().map(r -> new ImportPhotos.Request(r.line(), r.photo())).toList();
         Map<Integer, StoredPhoto> stored = photos.store("species/import-" + batchId, requests,
-                gate.zip(batchId, ImportPhotos.needsZip(requests)), warnings);
+                zips.read(batchId, ImportPhotos.needsZip(requests)), warnings);
         Function<Planned, String> sourceUrl = r -> ImportPhotos.sourceLink(r.photo());
         return transaction.execute(status -> {
             int saved = 0;

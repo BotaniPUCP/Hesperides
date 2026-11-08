@@ -30,6 +30,7 @@ class SpecimenImportWriter {
     private final PhotoRepository photos;
     private final ImportPhotos importPhotos;
     private final ImportBatchGate gate;
+    private final BatchPhotoZips zips;
     private final SpecimenLookupRepository lookup;
     private final TransactionTemplate transaction;
 
@@ -38,7 +39,7 @@ class SpecimenImportWriter {
         List<ImportPhotos.Request> requests = rows.stream()
                 .filter(r -> r.draft().photo() != null && !alreadyHas(r))
                 .map(r -> new ImportPhotos.Request(r.line(), r.draft().photo())).toList();
-        Map<String, byte[]> zip = gate.zip(batchId, ImportPhotos.needsZip(requests));
+        Map<String, byte[]> zip = zips.read(batchId, ImportPhotos.needsZip(requests));
         Map<Integer, StoredPhoto> stored = importPhotos.store("green-elements/import-" + batchId, requests, zip, warnings);
         return transaction.execute(status -> {
             List<String> created = new ArrayList<>();
