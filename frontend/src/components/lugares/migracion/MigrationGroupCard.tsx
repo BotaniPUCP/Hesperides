@@ -96,7 +96,7 @@ export function MigrationGroupCard({ group, onDecided }: MigrationGroupCardProps
         <Button size="sm" variant="secondary" disabled={busy} onClick={() => void decide(() => placesApi.discardReferences(group.referenceCodes))}>
           No es un lugar
         </Button>
-        <Link href={`/lugares/nuevo?nombre=${encodeURIComponent(group.name)}`} className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50">
+        <Link href={`/lugares/nuevo?nombre=${encodeURIComponent(group.name)}&desde=migracion`} className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50">
           Crear lugar
         </Link>
       </div>
