@@ -195,7 +195,7 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 
 ### Pendientes (sin número reservado)
 
-Al 8 nov 2026 el siguiente número libre es **V037** (la rama `wip/riego-m7-noviembre` usa `V036`–`V038` sin integrar: al integrarla, renumerar), sujeto a comprobarlo nuevamente al
+Al 8 nov 2026 el siguiente número libre es **V037**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
