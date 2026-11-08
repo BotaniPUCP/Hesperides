@@ -18,7 +18,11 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export function DetailFrame({ loading, notFound, errorMessage, children }:
   { loading: boolean; notFound: boolean; errorMessage: string | null; children: () => ReactNode }) {
   if (notFound) {
-    return <EmptyState title="No se encontró en el directorio" description="Revisa el código o vuelve al directorio." />;
+    return (
+      <div className="surface-card">
+        <EmptyState title="No se encontró en el directorio" description="Revisa el código o vuelve al directorio." />
+      </div>
+    );
   }
   if (errorMessage) {
     return <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{errorMessage}</p>;

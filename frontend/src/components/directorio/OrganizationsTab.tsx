@@ -35,8 +35,9 @@ export function OrganizationsTab({ search, typeCode, page, onChange }: Organizat
   const { result, loading, errorMessage } = useOrganizations({ search, typeCode }, page);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
+    <div className="surface-card space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-sm font-medium text-neutral-700">Tipo</span>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Tipo de organización">
           {TYPE_FILTERS.map((t) => (
             <Button key={t.code} size="sm" variant={typeCode === t.code ? 'primary' : 'secondary'}

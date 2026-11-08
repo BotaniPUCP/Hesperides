@@ -27,7 +27,11 @@ export function RegistroIndividualScreen() {
   const [kind, setKind] = useState<Kind | null>(null);
 
   if (!canMaintain) {
-    return <EmptyState title="Registrar en el directorio" description="Solo coordinación registra organizaciones y contactos." />;
+    return (
+      <div className="surface-card">
+        <EmptyState title="Registrar en el directorio" description="Solo coordinación registra organizaciones y contactos." />
+      </div>
+    );
   }
 
   return (

@@ -29,7 +29,11 @@ export function RegistroMasivoScreen() {
   const [error, setError] = useState<string | null>(null);
 
   if (!canMaintain) {
-    return <EmptyState title="Registro masivo" description="Solo coordinación registra organizaciones y contactos." />;
+    return (
+      <div className="surface-card">
+        <EmptyState title="Registro masivo" description="Solo coordinación registra organizaciones y contactos." />
+      </div>
+    );
   }
 
   function reset(next: { kind?: DirectoryImportKind; file?: File | null }) {

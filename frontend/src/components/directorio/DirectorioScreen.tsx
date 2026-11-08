@@ -32,12 +32,13 @@ export function DirectorioScreen() {
             Registrar
           </Link>
         )} />
-      <div role="tablist" aria-label="Directorio" className="flex gap-2 border-b border-neutral-200">
+      <div role="tablist" aria-label="Directorio"
+        className="grid auto-cols-fr grid-flow-col rounded-xl border border-neutral-200 bg-neutral-0 px-2 sm:flex sm:gap-2">
         {TABS.map((t) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t}
             onClick={() => setValues({ tab: t, search: '', type: '', sinOrg: '', page: '0' })}
-            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${tab === t
-              ? 'border-forest-700 text-forest-800' : 'border-transparent text-neutral-600 hover:text-neutral-900'}`}>
+            className={`min-h-11 border-b-2 px-3 py-2 text-sm font-semibold transition-colors sm:px-4 sm:text-base ${tab === t
+              ? 'border-brand-600 text-brand-700' : 'border-transparent text-neutral-700 hover:text-neutral-900'}`}>
             {t === 'organizaciones' ? 'Organizaciones' : 'Contactos'}
           </button>
         ))}

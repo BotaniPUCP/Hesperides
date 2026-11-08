@@ -37,7 +37,7 @@ export function ContactsTab({ search, withoutOrganization, page, onChange }: Con
   const { result, loading, errorMessage } = useContacts({ search, withoutOrganization }, page);
 
   return (
-    <div className="space-y-4">
+    <div className="surface-card space-y-4">
       <label className="flex items-center gap-2 text-sm text-neutral-800">
         <input type="checkbox" checked={withoutOrganization}
           onChange={(e) => onChange({ sinOrg: e.target.checked ? 'true' : '' })} />
