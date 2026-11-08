@@ -286,10 +286,52 @@ class DirectoryImportIntegrationTest {
         }
 
         @Test
-        void anUnknownOrganizationIsAnError() throws Exception {
-            preview("contacts", CONTACT_HEADER + "Ana Torres;Facultad Inexistente;;;\n")
-                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("UNKNOWN_ORGANIZATION"))
-                    .andExpect(jsonPath("$.data.rows[0].issues[0].detail").value("Facultad Inexistente"));
+        void anUnknownOrganizationOmitsItsRowsAndCountsThemWithoutBlockingTheFile() throws Exception {
+            existingOrganization("OIE", null);
+
+            preview("contacts", CONTACT_HEADER
+                    + "Ana Torres;Facultad Inexistente;;;\n"
+                    + "Luis Ramos;OIE;;;\n"
+                    + "Rosa Díaz;facultad inexistente;;;\n")
+                    .andExpect(jsonPath("$.data.rows[*].action", contains("OMIT", "CREATE", "OMIT")))
+                    .andExpect(jsonPath("$.data.rows[0].issues").isEmpty())
+                    .andExpect(jsonPath("$.data.rows[0].missing[0]").value("Facultad Inexistente"))
+                    .andExpect(jsonPath("$.data.toOmit").value(2))
+                    .andExpect(jsonPath("$.data.missingOrganizations[0].name").value("Facultad Inexistente"))
+                    .andExpect(jsonPath("$.data.missingOrganizations[0].rows").value(2))
+                    .andExpect(jsonPath("$.data.canConfirm").value(true));
+        }
+
+        @Test
+        void confirmingCreatesTheOthersAndReportsTheOmittedOnes() throws Exception {
+            existingOrganization("OIE", null);
+
+            previewAndConfirm("contacts", CONTACT_HEADER + "Ana Torres;Facultad Inexistente;;;\nLuis Ramos;OIE;;;\n")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.created").value(1))
+                    .andExpect(jsonPath("$.data.omitted").value(1))
+                    .andExpect(jsonPath("$.data.missingOrganizations[0].name").value("Facultad Inexistente"));
+
+            assertThat(contacts()).isEqualTo(1);
+        }
+
+        @Test
+        void aContactIsNeverCreatedWithOnlyPartOfItsOrganizations() throws Exception {
+            existingOrganization("OIE", null);
+
+            previewAndConfirm("contacts", CONTACT_HEADER + "Ana Torres;OIE|Facultad Inexistente;;;\n")
+                    .andExpect(jsonPath("$.data.created").value(0))
+                    .andExpect(jsonPath("$.data.omitted").value(1));
+
+            assertThat(contacts()).isZero();
+        }
+
+        @Test
+        void anErrorWeighsMoreThanAMissingOrganization() throws Exception {
+            preview("contacts", CONTACT_HEADER + "Ana Torres;Facultad Inexistente;;;no-es-correo\n")
+                    .andExpect(jsonPath("$.data.rows[0].action").value("ERROR"))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("EMAIL_FORMAT"))
+                    .andExpect(jsonPath("$.data.canConfirm").value(false));
         }
     }
 

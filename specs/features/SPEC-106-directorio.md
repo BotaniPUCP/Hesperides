@@ -237,16 +237,32 @@ pueden usar `pg_trgm`, como `PlaceSuggestionRepository`.
 
 - `/directorio/importar`, solo ADMIN y COORDINADOR. Se elige **Organizaciones** o
   **Contactos**, se descarga su plantilla y se sube un CSV (UTF-8, separador `;`, listas con `|`).
+  Los estándares están en `docs/estandares/` (`organizaciones.md`, `contactos.md`).
 - Columnas: organizaciones `nombre;tipo;ruc;telefono;otros_nombres` (tipo «Unidad PUCP» o
   «Empresa externa»); contactos `nombre;organizaciones;anexo;celular;correo` (organizaciones por
-  nombre, alias o código, que **deben existir**: se cargan primero).
-- **Vista previa** (`POST /api/v1/directory/imports/{kind}/preview`): no escribe; cada fila
-  sale como *Se crea*, *Ya existe, se omite* o *Error* con sus motivos (código estable + dato).
-- **Confirmación** (`POST …/{kind}/confirm`): vuelve a leer el archivo; **todo o nada**: con
-  una fila con error responde 422 y no guarda ninguna. Crea con los mismos servicios (y
-  auditoría) que el alta manual. Hasta 2000 filas por archivo.
+  nombre, alias o código; se cargan primero). Exactamente esas columnas: una que falta o una
+  desconocida rechaza el archivo.
+
+> **Enmienda del 8 nov 2026 (decisión del usuario, a partir de la revisión del analista de
+> procesos):** el registro masivo usa el **ciclo común de cargas** del catastro (SPEC-103 D-04)
+> en vez de un flujo propio.
+
+- **Vista previa** (`POST /api/v1/imports/{organizations|contacts}/preview`): no escribe en el
+  Directorio; abre un **lote** en `import_batches` con lo revisado. Cada fila sale como *Se crea*,
+  *Ya existe, se omite*, *Se omite: falta su organización* o *Error* con sus motivos (código
+  estable + dato).
+- **Confirmación** (`POST /api/v1/imports/{batchId}/confirm`): escribe **exactamente lo revisado**,
+  sin volver a leer el archivo. Solo quien abrió el lote lo confirma, dentro de la hora, una vez,
+  y una carga a la vez en todo el sistema. **Todo o nada**: con una fila con error responde 422 y
+  no guarda ninguna. Crea con los mismos servicios (y auditoría) que el alta manual y cada fila
+  creada guarda su `import_batch_id` (V037; nulo en el alta manual). Hasta 2000 filas por archivo.
 - «Ya existe»: una organización vigente con el mismo nombre; un contacto con el mismo nombre ya
-  vinculado a la primera organización de su fila *(decisión de diseño)*.
+  vinculado a la primera organización de su fila *(decisión de diseño)*. Se muestra en la
+  revisión y se omite siempre: no se decide fila por fila.
+- **Organización desconocida en contactos** *(cambio de regla del 8 nov 2026)*: ya no bloquea el
+  archivo. La fila se omite entera, aunque sus otras organizaciones existan, y se cuenta por
+  organización faltante, como una especie desconocida en el catastro. Un error de formato en la
+  misma fila pesa más: la fila queda con error.
 - Los datos del calendario se preparan **fuera del repositorio** (tabla de equivalencias revisada
   por el usuario, «A / B» separado en dos personas, sin códigos de alumno, filas sucias
   ignoradas) y se suben por esta sección.

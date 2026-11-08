@@ -92,6 +92,11 @@ class ContactImportPlanner implements DirectoryStandard<ContactRequest> {
         return p;
     }
 
+    /**
+     * Una organización que no está en el Directorio omite la fila entera, sin
+     * bloquear el archivo: un contacto con solo parte de sus organizaciones
+     * quedaría registrado a medias sin que nadie lo note.
+     */
     private List<String> organizations(CsvRow row, Planned<?> p) {
         List<String> texts = splitList(row.get("organizaciones"));
         if (texts.isEmpty()) {
@@ -100,7 +105,7 @@ class ContactImportPlanner implements DirectoryStandard<ContactRequest> {
         List<String> codes = new ArrayList<>();
         for (String text : texts) {
             lookup.organizationMatching(text).map(OrganizationSuggestion::code).ifPresentOrElse(codes::add,
-                    () -> p.fail("organizaciones", IssueCode.UNKNOWN_ORGANIZATION, text));
+                    () -> p.missing(text));
         }
         return codes.stream().distinct().toList();
     }
