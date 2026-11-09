@@ -134,7 +134,7 @@ class PlanningServiceImplTest {
         when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Tambo", Set.of(1L, 2L), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
         when(attendance.openWorks(anyLong(), anyCollection())).thenReturn(List.of(new pe.edu.pucp.hesperides.modules.planning
-                .attendance.OpenWork(81, "INT-000081", HOY.minusDays(4), HOY.minusDays(3), Set.of(1L, 2L))));
+                .attendance.OpenWork(81, "INT-000081", HOY.minusDays(4), HOY.minusDays(3), Set.of(1L, 2L), Set.of(2L))));
 
         var row = service.rows().get(0);
 

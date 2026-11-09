@@ -31,7 +31,7 @@ final class AttendanceHistory {
 
     static List<OpenRound> rounds(List<OpenWork> works) {
         return works.stream().map(w -> new OpenRound(w.interventionId(), w.code(), w.scheduledDate(),
-                w.firstStartedDate(), w.zoneIds())).toList();
+                w.firstStartedDate(), w.zoneIds(), w.pendingZoneIds())).toList();
     }
 
     /** La historia de cada jardín del conjunto; un jardín sin fechas entra con la lista vacía. */

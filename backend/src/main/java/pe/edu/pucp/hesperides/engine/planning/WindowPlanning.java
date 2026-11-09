@@ -35,10 +35,12 @@ final class WindowPlanning {
                     ? PlanningVerdict.of(PlanningState.DONE_FOR_PERIOD, null, null, rhythm)
                     : PlanningVerdict.of(PlanningState.DUE, days(today, w.end()), today, rhythm);
         }
-        Window last = windows(from, to, today).filter(w -> w.end().isBefore(today))
-                .reduce((a, b) -> b.end().isAfter(a.end()) ? b : a).orElseThrow();
-        if (!allAttendedIn(gardens, last)) {
-            return PlanningVerdict.of(PlanningState.OVERDUE, days(last.end(), today), today, rhythm);
+        // Una ventana que cerró antes de que existiera la regla no se le puede reclamar a nadie.
+        Optional<Window> last = windows(from, to, today)
+                .filter(w -> w.end().isBefore(today) && !w.end().isBefore(rule.validFrom()))
+                .reduce((a, b) -> b.end().isAfter(a.end()) ? b : a);
+        if (last.isPresent() && !allAttendedIn(gardens, last.get())) {
+            return PlanningVerdict.of(PlanningState.OVERDUE, days(last.get().end(), today), today, rhythm);
         }
         LocalDate next = windows(from, to, today).map(Window::start).filter(s -> s.isAfter(today))
                 .min(LocalDate::compareTo).orElseThrow();

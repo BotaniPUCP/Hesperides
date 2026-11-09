@@ -45,22 +45,24 @@ public class InterventionGardenAttendance implements GardenAttendanceProvider {
     @Override
     public List<OpenWork> openWorks(long activityTypeItemId, Collection<Long> zoneIds) {
         if (zoneIds.isEmpty()) return List.of();
-        record Row(long work, String code, LocalDate scheduled, long zone, LocalDate started) {
+        record Row(long work, String code, LocalDate scheduled, long zone, boolean pending, LocalDate started) {
         }
         List<Row> rows = jdbc.query(GardenAttendanceSql.OPEN_LOCATIONS, params(activityTypeItemId, zoneIds),
                 (rs, n) -> new Row(rs.getLong("work_id"), rs.getString("code"), rs.getObject("scheduled_date", LocalDate.class),
-                        rs.getLong("zone_id"), rs.getObject("started", LocalDate.class)));
+                        rs.getLong("zone_id"), rs.getBoolean("pending"), rs.getObject("started", LocalDate.class)));
         Map<Long, List<Row>> byWork = new LinkedHashMap<>();
         rows.forEach(r -> byWork.computeIfAbsent(r.work(), k -> new ArrayList<>()).add(r));
         return byWork.values().stream().map(group -> {
             Set<Long> zones = new HashSet<>();
+            Set<Long> pending = new HashSet<>();
             LocalDate first = null;
             for (Row r : group) {
                 zones.add(r.zone());
+                if (r.pending()) pending.add(r.zone());
                 if (r.started() != null && (first == null || r.started().isBefore(first))) first = r.started();
             }
             Row any = group.get(0);
-            return new OpenWork(any.work(), any.code(), any.scheduled(), first, Set.copyOf(zones));
+            return new OpenWork(any.work(), any.code(), any.scheduled(), first, Set.copyOf(zones), Set.copyOf(pending));
         }).toList();
     }
 

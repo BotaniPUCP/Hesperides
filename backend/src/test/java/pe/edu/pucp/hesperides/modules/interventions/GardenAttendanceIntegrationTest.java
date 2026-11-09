@@ -172,6 +172,7 @@ class GardenAttendanceIntegrationTest {
         var first = open.stream().filter(w -> w.interventionId() == started).findFirst().orElseThrow();
         assertThat(first.firstStartedDate()).isEqualTo(LocalDate.of(2026, 11, 5));
         assertThat(first.zoneIds()).isEqualTo(Set.of(s1, s2));
+        assertThat(first.pendingZoneIds()).isEqualTo(Set.of(s1, s2));
         assertThat(open).filteredOn(w -> w.interventionId() != started).singleElement()
                 .satisfies(w -> assertThat(w.firstStartedDate()).isNull());
         assertThat(open).noneMatch(w -> w.interventionId() == finished);

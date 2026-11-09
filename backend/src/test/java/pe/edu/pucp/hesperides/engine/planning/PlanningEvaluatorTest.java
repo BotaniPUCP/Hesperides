@@ -200,6 +200,15 @@ class PlanningEvaluatorTest {
         }
 
         @Test
+        void unaVentanaAnteriorALaReglaNoCuentaComoAtrasada() {
+            var nueva = new FrequencyRule(5L, "ANNUAL_WINDOW", null, null, 1, null, 12, 1, List.of(),
+                    LocalDate.of(2026, 6, 1), null);
+            var v = evaluar(nueva, List.of(jardin(1, LocalDate.of(2025, 3, 1))), LocalDate.of(2026, 7, 1));
+            assertThat(v.state()).isEqualTo(PlanningState.NOT_DUE);
+            assertThat(v.suggestedDate()).isEqualTo(LocalDate.of(2026, 12, 1));
+        }
+
+        @Test
         void conLaVentanaAnteriorCompletaAunNoToca() {
             var v = evaluar(ventana(12, 1), List.of(jardin(1, LocalDate.of(2025, 12, 12))), HOY);
             assertThat(v.state()).isEqualTo(PlanningState.NOT_DUE);
@@ -213,7 +222,7 @@ class PlanningEvaluatorTest {
 
         @Test
         void sinEmpezarEstaProgramada() {
-            var open = new OpenRound(81, "INT-000081", LocalDate.of(2026, 11, 12), null, Set.of(1L));
+            var open = new OpenRound(81, "INT-000081", LocalDate.of(2026, 11, 12), null, Set.of(1L), Set.of(1L));
             var v = PlanningEvaluator.evaluate(intervalo(), List.of(jardin(1, HOY.minusDays(40))), List.of(open), HOY);
             assertThat(v.state()).isEqualTo(PlanningState.SCHEDULED);
             assertThat(v.openRound().code()).isEqualTo("INT-000081");
@@ -222,7 +231,7 @@ class PlanningEvaluatorTest {
         @Test
         void empezadaEstaEnCursoYCuentaSoloJardinesDelConjunto() {
             var inicio = LocalDate.of(2026, 11, 5);
-            var open = new OpenRound(81, "INT-000081", inicio, inicio, Set.of(1L, 2L, 99L));
+            var open = new OpenRound(81, "INT-000081", inicio, inicio, Set.of(1L, 2L, 99L), Set.of(1L, 2L, 99L));
             var v = PlanningEvaluator.evaluate(intervalo(), List.of(
                     jardin(1, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 6)),
                     jardin(2, LocalDate.of(2026, 10, 1)),
@@ -234,15 +243,25 @@ class PlanningEvaluatorTest {
 
         @Test
         void conDosAbiertasMandaLaProgramadaAntes() {
-            var tarde = new OpenRound(90, "INT-000090", LocalDate.of(2026, 11, 20), null, Set.of(1L));
-            var pronto = new OpenRound(81, "INT-000081", LocalDate.of(2026, 11, 12), null, Set.of(1L));
+            var tarde = new OpenRound(90, "INT-000090", LocalDate.of(2026, 11, 20), null, Set.of(1L), Set.of(1L));
+            var pronto = new OpenRound(81, "INT-000081", LocalDate.of(2026, 11, 12), null, Set.of(1L), Set.of(1L));
             var v = PlanningEvaluator.evaluate(intervalo(), List.of(jardin(1, HOY.minusDays(40))), List.of(tarde, pronto), HOY);
             assertThat(v.openRound().interventionId()).isEqualTo(81);
         }
 
         @Test
+        void unaAbiertaSinPendientesEnElConjuntoNoLoDejaEnCurso() {
+            // «Todo el campus» sigue abierto, pero los jardines de este conjunto ya terminaron.
+            var inicio = LocalDate.of(2026, 11, 5);
+            var open = new OpenRound(81, "INT-000081", inicio, inicio, Set.of(1L, 99L), Set.of(99L));
+            var v = PlanningEvaluator.evaluate(intervalo(), List.of(jardin(1, LocalDate.of(2026, 11, 6))), List.of(open), HOY);
+            assertThat(v.state()).isEqualTo(PlanningState.NOT_DUE);
+            assertThat(v.openRound()).isNull();
+        }
+
+        @Test
         void unaAbiertaSoloDeJardinesAjenosNoCuenta() {
-            var ajena = new OpenRound(81, "INT-000081", HOY, HOY, Set.of(99L));
+            var ajena = new OpenRound(81, "INT-000081", HOY, HOY, Set.of(99L), Set.of(99L));
             var v = PlanningEvaluator.evaluate(intervalo(), List.of(jardin(1, HOY.minusDays(50))), List.of(ajena), HOY);
             assertThat(v.state()).isEqualTo(PlanningState.OVERDUE);
         }

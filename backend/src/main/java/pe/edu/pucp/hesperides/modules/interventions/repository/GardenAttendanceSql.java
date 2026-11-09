@@ -26,7 +26,8 @@ public final class GardenAttendanceSql {
 
     /** Una fila por ubicación de un trabajo con algo pendiente en las secciones pedidas. */
     public static final String OPEN_LOCATIONS = "SELECT i.id AS work_id, i.code, i.scheduled_date, " + SECTION
-            + " AS zone_id, CAST((l.started_at AT TIME ZONE 'UTC') AT TIME ZONE :tz AS date) AS started "
+            + " AS zone_id, st.code NOT IN ('COMPLETED', 'VALIDATED') AS pending, "
+            + "CAST((l.started_at AT TIME ZONE 'UTC') AT TIME ZONE :tz AS date) AS started "
             + FROM_LOCATIONS + " AND st.code <> 'CANCELLED' AND i.id IN (SELECT i.id " + FROM_LOCATIONS
             + " AND st.code NOT IN ('COMPLETED', 'VALIDATED', 'CANCELLED'))";
 

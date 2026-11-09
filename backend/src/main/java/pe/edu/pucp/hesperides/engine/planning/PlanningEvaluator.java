@@ -57,7 +57,7 @@ public final class PlanningEvaluator {
     private static PlanningVerdict openVerdict(FrequencyRule rule, List<GardenHistory> gardens, Set<Long> setZones,
                                                List<OpenRound> open, LocalDate today) {
         OpenRound round = open.stream()
-                .filter(o -> o.zoneIds().stream().anyMatch(setZones::contains))
+                .filter(o -> o.pendingZoneIds().stream().anyMatch(setZones::contains))
                 .min(Comparator.comparing(OpenRound::scheduledDate)).orElse(null);
         if (round == null) {
             return null;

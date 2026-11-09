@@ -9,5 +9,5 @@ import java.util.Set;
  * pedidas que la intervención incluye.
  */
 public record OpenWork(long interventionId, String code, LocalDate scheduledDate, LocalDate firstStartedDate,
-                       Set<Long> zoneIds) {
+                       Set<Long> zoneIds, Set<Long> pendingZoneIds) {
 }
