@@ -17,6 +17,16 @@ describe('mensajeDeApiError', () => {
     );
   });
 
+  it('muestra las reglas de conjuntos y planificación (SPEC-203)', () => {
+    expect(mensajeDeApiError(new ApiError(422, 'Ya existe un conjunto con ese nombre'))).toBe('Ya existe un conjunto con ese nombre.');
+    expect(mensajeDeApiError(new ApiError(409, 'Otra persona cambió este conjunto. Recarga para ver su versión.')))
+      .toBe('Otra persona cambió este conjunto. Recarga para ver su versión.');
+    expect(mensajeDeApiError(new ApiError(422, 'Quita primero la frecuencia propia de este conjunto')))
+      .toMatch(/frecuencia propia/);
+    expect(mensajeDeApiError(new ApiError(422, 'Solo se pueden agregar secciones: 7, 9')))
+      .toBe('Solo se pueden agregar jardines. Revisa la selección.');
+  });
+
   it('ante un 422 desconocido no inventa un mensaje concreto', () => {
     expect(mensajeDeApiError(new ApiError(422, 'Some future rule'))).toMatch(/regla del sistema/i);
   });

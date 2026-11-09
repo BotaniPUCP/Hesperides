@@ -65,8 +65,38 @@ const MENSAJES: Record<string, string> = {
     'La clase debe venir de otro catálogo: la jerarquía admite solo dos niveles.',
 };
 
+/**
+ * SPEC-203: conjuntos de áreas verdes y frecuencias por conjunto. Ya llegan en
+ * español; están aquí porque este diccionario decide qué lee el usuario.
+ */
+const MENSAJES_PLANIFICACION: Record<string, string> = {
+  'Ya existe un conjunto con ese nombre': 'Ya existe un conjunto con ese nombre.',
+  'El nombre del conjunto es obligatorio': 'Ponle un nombre al conjunto.',
+  'Elige al menos un jardín': 'Elige al menos un jardín.',
+  'Elige al menos una actividad': 'Elige al menos una actividad que se planifique en este conjunto.',
+  'Otra persona cambió este conjunto. Recarga para ver su versión.':
+    'Otra persona cambió este conjunto. Recarga para ver su versión.',
+  'Quita primero la frecuencia propia de este conjunto':
+    'Este conjunto tiene una frecuencia propia. Quítala primero desde Frecuencias.',
+  'Conjunto no encontrado': 'El conjunto no existe o ya fue dado de baja.',
+  'Elige el conjunto al que se aplica esta frecuencia': 'Elige el conjunto al que se aplica esta frecuencia.',
+  'El conjunto no existe o fue dado de baja': 'El conjunto ya no existe o fue dado de baja.',
+  'Solo una frecuencia propia de un conjunto lleva conjunto':
+    'Una frecuencia de todo el campus no lleva conjunto.',
+  'Ya existe una frecuencia vigente para esta actividad, modalidad y ámbito':
+    'Ya hay una frecuencia vigente para esta actividad, modalidad y alcance.',
+};
+
+/** Mensajes que traen datos al final («…: 7, 9»): se reconocen por su comienzo. */
+const PREFIJOS: ReadonlyArray<[string, string]> = [
+  ['Solo se pueden agregar secciones: ', 'Solo se pueden agregar jardines. Revisa la selección.'],
+  ['Actividades no válidas: ', 'Alguna actividad elegida ya no existe. Recarga la página.'],
+];
+
 function traducir(message: string, porDefecto: string): string {
-  return MENSAJES[message] ?? porDefecto;
+  const exacto = MENSAJES[message] ?? MENSAJES_PLANIFICACION[message];
+  if (exacto) return exacto;
+  return PREFIJOS.find(([prefijo]) => message.startsWith(prefijo))?.[1] ?? porDefecto;
 }
 
 export function mensajeDeApiError(error: unknown): string {
