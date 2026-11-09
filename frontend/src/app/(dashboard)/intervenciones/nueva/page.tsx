@@ -1,4 +1,6 @@
 import { InterventionForm } from '@/components/interventions/InterventionForm';
+import { PlannedInterventionForm } from '@/components/interventions/PlannedInterventionForm';
+import { plannedFrom } from '@/lib/planNavigation';
 import { incidentFilters, positiveIncidentId } from '@/lib/incidentNavigation';
 
 export const metadata = { title:'Nueva intervención · Hesperides' };
@@ -6,5 +8,7 @@ export default async function NewInterventionPage({ searchParams }: { searchPara
   const query=await searchParams ?? {};
   const filters=incidentFilters(new URLSearchParams({ search: typeof query.incidentSearch==='string' ? query.incidentSearch : '',
     status: typeof query.incidentStatus==='string' ? query.incidentStatus : '', page: typeof query.incidentPage==='string' ? query.incidentPage : '0' }));
+  const plan=plannedFrom(query);
+  if (plan) return <PlannedInterventionForm setId={plan.setId} activityId={plan.activityId} />;
   return <InterventionForm fromIncident={positiveIncidentId(query.fromIncident)} returnFilters={filters} />;
 }

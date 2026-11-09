@@ -11,12 +11,22 @@ import { incidentsApi } from '@/lib/incidents-api';
 import { incidentAfterCreationHref, type IncidentFilters } from '@/lib/incidentNavigation';
 import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
+import { RecentAttentionNotice } from './RecentAttentionNotice';
 
 const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
 const nullableNumber = (s: string) => s === '' ? null : Number(s);
+/**
+ * Más allá de estas, las ubicaciones no se dibujan como tarjetas: cada una trae
+ * listas de lugares y secciones, y un conjunto de 530 jardines congela la página.
+ * Siguen en el registro; solo se resumen (SPEC-203, Review Focus 1).
+ */
+const MAX_LOCATION_CARDS = 20;
 
-export function InterventionForm({ initial, fromIncident = null, returnFilters = { search:'',status:'',page:0 } }: {
-  initial?: InterventionDetail; fromIncident?: number | null; returnFilters?: IncidentFilters;
+/** Valores iniciales de una intervención nueva, por ejemplo desde la planificación (SPEC-203 §5.6). */
+export interface InterventionPrefill { typeId?: number; date?: string; description?: string; locations?: InterventionLocation[] }
+
+export function InterventionForm({ initial, fromIncident = null, returnFilters = { search:'',status:'',page:0 }, prefill }: {
+  initial?: InterventionDetail; fromIncident?: number | null; returnFilters?: IncidentFilters; prefill?: InterventionPrefill;
 }) {
   const { user } = useAuth();
   const origin = initial ? null : fromIncident;
@@ -26,12 +36,12 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
   const sourceAvailable = !origin || (user?.role.code === 'COORDINADOR' && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
-  const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? null);
-  const [date, setDate] = useState(initial?.scheduledDate ?? '');
-  const [description, setDescription] = useState(initial?.description ?? '');
+  const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? prefill?.typeId ?? null);
+  const [date, setDate] = useState(initial?.scheduledDate ?? prefill?.date ?? '');
+  const [description, setDescription] = useState(initial?.description ?? prefill?.description ?? '');
   const [reason, setReason] = useState('');
   const [findingSource,setFindingSource] = useState<number | null>(null);
-  const [locations, setLocations] = useState<InterventionLocation[]>(initial?.locations ?? []);
+  const [locations, setLocations] = useState<InterventionLocation[]>(initial?.locations ?? prefill?.locations ?? []);
   const [elementCodeInputs, setElementCodeInputs] = useState<Record<string,string>>({});
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -42,10 +52,14 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
     interventionsApi.options().then(o => {
       if (active) {
         setOptions(o);
-        setClassId(selected => selected || o.catalogs.find(c => c.typeCode === 'INTERVENTION_CLASS')?.id || 0);
+        // Desde la planificación llega el tipo: la clase es su madre.
+        const prefilledClass = o.catalogs.find(c => c.id === prefill?.typeId)?.parentItemId;
+        setClassId(selected => selected || prefilledClass || o.catalogs.find(c => c.typeCode === 'INTERVENTION_CLASS')?.id || 0);
       }
     }).catch(e => { if (active) setError(interventionError(e)); });
     return () => { active = false; };
+    // Las opciones se piden una vez; el tipo prellenado no cambia durante la vida del formulario.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const updateLocation = (index: number, patch: Partial<InterventionLocation>) => setLocations(rows => rows.map((row,i) => i === index ? {...row,...patch} : row));
   const addLocation = () => {
@@ -111,8 +125,11 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
         {initial && initial.scheduledDate !== date && <Input id="reschedule-reason" label="Motivo de reprogramación" value={reason} onChange={setReason} maxLength={2000} required />}
       </div>
       <Input id="work-description" label="Descripción del trabajo" value={description} onChange={setDescription} maxLength={4000} />
+      <RecentAttentionNotice typeId={typeId} typeLabel={types.find(t => t.id === typeId)?.label ?? 'esta actividad'} date={date}
+        zoneIds={locations.map(l => l.zoneId).filter((z): z is number => z !== null)}
+        onRemove={zoneId => { setDirty(true); setLocations(rows => rows.filter(l => l.zoneId !== zoneId)); }} />
       <h2 className="text-lg font-semibold">Ubicaciones de esta actividad</h2>
-      {locations.map((l,index) => <div key={l.clientReference} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
+      {locations.slice(0, MAX_LOCATION_CARDS).map((l,index) => <div key={l.clientReference} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
         <div className="flex items-center justify-between"><h3 className="font-semibold">Ubicación {index + 1}</h3><Button variant="ghost" onClick={() => { setDirty(true); setLocations(rows => rows.filter((_,i) => i !== index)); }}>Retirar ubicación {index + 1}</Button></div>
         <Select id={`place-${index}`} label="Lugar" value={l.placeId === null ? null : String(l.placeId)} options={(options?.places ?? []).map(p => ({id:p.id,code:String(p.id),label:p.name}))} onChange={o => updateLocation(index,{placeId:o?.id ?? null})} clearable />
         <Select id={`zone-${index}`} label="Sección o sector" value={l.zoneId === null ? null : String(l.zoneId)} options={(options?.zones ?? []).map(p => ({id:p.id,code:String(p.id),label:p.name}))} onChange={o => updateLocation(index,{zoneId:o?.id ?? null})} clearable />
@@ -135,6 +152,8 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
         <div className="grid gap-3 sm:grid-cols-2"><Select id={`unit-${index}`} label="Unidad de medida" value={l.unitItemId === null ? null : String(l.unitItemId)} options={catalog('MEASUREMENT_UNIT').map(c => ({...c,code:String(c.id)}))} onChange={o => updateLocation(index,{unitItemId:o?.id ?? null})} clearable />
           <label className="grid gap-1 text-sm">Cantidad solicitada<input className="h-11 rounded-md border border-neutral-200 p-2" type="number" min="0" step="0.001" value={l.requestedQuantity ?? ''} onChange={e => updateLocation(index,{requestedQuantity:nullableNumber(e.target.value)})} /></label></div>
       </div>)}
+      {locations.length > MAX_LOCATION_CARDS && <p className="text-sm text-neutral-700">
+        Y {locations.length - MAX_LOCATION_CARDS} jardines más del conjunto, sin datos propios de ubicación.</p>}
       <Button variant="secondary" onClick={addLocation}>Agregar ubicación</Button>
     </fieldset>
     <Button type="submit" loading={pending} disabled={!options || !sourceAvailable}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : origin ? 'Guardar y volver a la incidencia' : 'Crear intervención'}</Button>
