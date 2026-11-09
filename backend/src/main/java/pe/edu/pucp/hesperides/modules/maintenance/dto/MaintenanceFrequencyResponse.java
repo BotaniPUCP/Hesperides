@@ -14,8 +14,7 @@ public record MaintenanceFrequencyResponse(
         String regime,
         FrequencyRuleTypeSummary frequencyRuleType,
         String scope,
-        Long zoneId,
-        Integer targetDaysInterval,
+        Long greenAreaSetId,
         Integer minDaysInterval,
         Integer maxDaysInterval,
         Integer annualTargetCount,
@@ -63,8 +62,7 @@ public record MaintenanceFrequencyResponse(
                 (int) s.getStartMonth(),
                 (int) s.getEndMonth(),
                 s.getMinDaysInterval(),
-                s.getMaxDaysInterval(),
-                s.getTargetDaysInterval());
+                s.getMaxDaysInterval());
     }
 
     public static MaintenanceFrequencyResponse from(MaintenanceFrequency entity) {
@@ -74,8 +72,7 @@ public record MaintenanceFrequencyResponse(
                 entity.getRegime(),
                 FrequencyRuleTypeSummary.from(entity.getFrequencyRuleTypeItem()),
                 entity.getScope(),
-                entity.getZoneId(),
-                entity.getTargetDaysInterval(),
+                entity.getGreenAreaSetId(),
                 entity.getMinDaysInterval(),
                 entity.getMaxDaysInterval(),
                 entity.getAnnualTargetCount(),

@@ -42,8 +42,7 @@ final class FrequencyVersioning {
         next.setFrequencyRuleTypeItem(current.getFrequencyRuleTypeItem());
         next.setRegime(current.getRegime());
         next.setScope(current.getScope());
-        next.setZoneId(current.getZoneId());
-        next.setTargetDaysInterval(current.getTargetDaysInterval());
+        next.setGreenAreaSetId(current.getGreenAreaSetId());
         next.setMinDaysInterval(current.getMinDaysInterval());
         next.setMaxDaysInterval(current.getMaxDaysInterval());
         next.setAnnualTargetCount(current.getAnnualTargetCount());
@@ -77,15 +76,13 @@ final class FrequencyVersioning {
             s.setEndMonth(p.endMonth().shortValue());
             s.setMinDaysInterval(p.minDaysInterval());
             s.setMaxDaysInterval(p.maxDaysInterval());
-            s.setTargetDaysInterval(p.targetDaysInterval());
             f.addSeason(s);
         }
     }
 
     static SeasonalIntervalPayload toPayload(MaintenanceFrequencySeason s) {
         return new SeasonalIntervalPayload(s.getSeason(), (int) s.getStartMonth(),
-                (int) s.getEndMonth(), s.getMinDaysInterval(), s.getMaxDaysInterval(),
-                s.getTargetDaysInterval());
+                (int) s.getEndMonth(), s.getMinDaysInterval(), s.getMaxDaysInterval());
     }
 
     private static MaintenanceFrequencySeason copyOf(MaintenanceFrequencySeason s) {
@@ -95,7 +92,6 @@ final class FrequencyVersioning {
         c.setEndMonth(s.getEndMonth());
         c.setMinDaysInterval(s.getMinDaysInterval());
         c.setMaxDaysInterval(s.getMaxDaysInterval());
-        c.setTargetDaysInterval(s.getTargetDaysInterval());
         return c;
     }
 }

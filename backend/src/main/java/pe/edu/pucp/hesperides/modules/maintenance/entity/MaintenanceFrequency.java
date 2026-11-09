@@ -57,11 +57,9 @@ public class MaintenanceFrequency extends BaseEntity {
     @Column(nullable = false, length = 30)
     private String scope = "CAMPUS_WIDE";
 
-    @Column(name = "zone_id")
-    private Long zoneId;
-
-    @Column(name = "target_days_interval")
-    private Integer targetDaysInterval;
+    /** El conjunto de una regla propia (SPEC-203 D-07); nulo en las de todo el campus. */
+    @Column(name = "green_area_set_id")
+    private Long greenAreaSetId;
 
     @Column(name = "min_days_interval")
     private Integer minDaysInterval;

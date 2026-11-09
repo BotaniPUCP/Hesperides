@@ -15,6 +15,7 @@ class LocationComplianceReaderTest {
     ExecutionHistoryProvider history;
     MaintenanceFrequency frequency;
     ComplianceReader reader;
+    pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup sets;
     final LocalDate from=LocalDate.of(2026,10,1),to=LocalDate.of(2026,10,31);
     @BeforeEach void setup() {
         repository=mock(MaintenanceFrequenciesRepository.class);history=mock(ExecutionHistoryProvider.class);
@@ -27,7 +28,8 @@ class LocationComplianceReaderTest {
         when(repository.findAllCurrent()).thenReturn(List.of(frequency));
         when(repository.findVersionsOverlapping(10L,from,to)).thenReturn(List.of(frequency));
         when(history.supportsLocationHistory()).thenReturn(true);
-        reader=new ComplianceReader(repository,history);
+        sets=mock(pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup.class);
+        reader=new ComplianceReader(repository,history,sets);
     }
     LocationExecution fact(long work,long location,long zone,int day) {
         var date=LocalDate.of(2026,10,day);var physical=date.atTime(12,0).toInstant(ZoneOffset.UTC);
@@ -44,18 +46,12 @@ class LocationComplianceReaderTest {
         assertThat(report.segments().get(0).status()).isEqualTo("NOT_APPLICABLE");
         verify(history,never()).executionDates(any(),any(),any(),any());
     }
-    @Test void zoneRuleDoesNotUseExecutionsFromAnotherZone() {
-        when(frequency.getScope()).thenReturn("BY_ZONE");when(frequency.getZoneId()).thenReturn(7L);
+    @Test void setRuleOnlyUsesExecutionsInsideItsSet() {
+        when(frequency.getScope()).thenReturn("BY_SET");when(frequency.getGreenAreaSetId()).thenReturn(5L);
+        when(sets.activeZonesOf(5L)).thenReturn(java.util.Set.of(7L));
         when(history.locationExecutions(10L,"IN_HOUSE",from,to)).thenReturn(List.of(fact(1,1,7,19),fact(2,2,8,20)));
         var report=reader.evaluate(from,to,null).get(0);
         assertThat(report.locations()).hasSize(1);assertThat(report.locations().get(0).targetId()).isEqualTo(7);
-    }
-    @Test void sectorRuleDoesNotGuessHistoricalMembershipOrClaimGlobalCoverage() {
-        when(frequency.getScope()).thenReturn("BY_SECTOR");when(frequency.getZoneId()).thenReturn(99L);
-        when(history.locationExecutions(10L,"IN_HOUSE",from,to)).thenReturn(List.of(fact(1,1,7,19)));
-        var report=reader.evaluate(from,to,null).get(0);
-        assertThat(report.locations()).isEmpty();assertThat(report.segments().get(0).explanation()).contains("territorial histórica");
-        assertThat(report.scope()).isEqualTo("BY_SECTOR");
     }
     @Test void calendarOnlyProvidersRetainCompatibility() {
         when(history.supportsLocationHistory()).thenReturn(false);

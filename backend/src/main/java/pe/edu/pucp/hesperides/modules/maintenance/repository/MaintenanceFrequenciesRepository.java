@@ -79,6 +79,18 @@ public interface MaintenanceFrequenciesRepository extends JpaRepository<Maintena
     List<MaintenanceFrequency> findAllCurrent();
 
     /**
+     * Las reglas que planifican (SPEC-203 D-10): vigentes, de personal propio y
+     * con algo que cumplir. Trae las estaciones porque el Engine las necesita.
+     */
+    @Query("SELECT DISTINCT mf FROM MaintenanceFrequency mf "
+            + "JOIN FETCH mf.activityTypeItem act "
+            + "JOIN FETCH mf.frequencyRuleTypeItem frt "
+            + "LEFT JOIN FETCH mf.seasons "
+            + "WHERE mf.validTo IS NULL AND mf.active = TRUE AND mf.regime = 'IN_HOUSE' "
+            + "AND frt.code <> 'ON_DEMAND'")
+    List<MaintenanceFrequency> findCurrentInHouse();
+
+    /**
      * Detecta el choque contra el indice unico parcial antes de que lo lance la
      * base: asi el usuario recibe un 409 con un mensaje que explica el conflicto
      * en vez de un error de constraint.
@@ -88,13 +100,13 @@ public interface MaintenanceFrequenciesRepository extends JpaRepository<Maintena
             + "AND mf.activityTypeItem.id = :activityTypeItemId "
             + "AND mf.regime = :regime "
             + "AND mf.scope = :scope "
-            + "AND ((:zoneId IS NULL AND mf.zoneId IS NULL) OR (mf.zoneId = :zoneId)) "
+            + "AND ((:setId IS NULL AND mf.greenAreaSetId IS NULL) OR (mf.greenAreaSetId = :setId)) "
             + "AND (:excludeId IS NULL OR mf.id <> :excludeId)")
     Optional<MaintenanceFrequency> findDuplicateCurrent(
             @Param("activityTypeItemId") Long activityTypeItemId,
             @Param("regime") String regime,
             @Param("scope") String scope,
-            @Param("zoneId") Long zoneId,
+            @Param("setId") Long setId,
             @Param("excludeId") Long excludeId
     );
 }

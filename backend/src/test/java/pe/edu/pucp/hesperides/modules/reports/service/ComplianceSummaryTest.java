@@ -54,14 +54,16 @@ class ComplianceSummaryTest {
     }
 
     @Test
-    void outsourcedAndBySectorAreNotEvaluable() {
+    void outsourcedIsNotEvaluable() {
         var outsourced = ComplianceSummary.row(activity(1, "OUTSOURCED", "CAMPUS_WIDE", List.of()), l -> true);
-        var bySector = ComplianceSummary.row(activity(2, "IN_HOUSE", "BY_SECTOR", List.of()), l -> true);
 
         assertThat(outsourced.evaluable()).isFalse();
         assertThat(outsourced.notEvaluableReason()).isEqualTo("OUTSOURCED");
-        assertThat(bySector.evaluable()).isFalse();
-        assertThat(bySector.notEvaluableReason()).isEqualTo("BY_SECTOR");
+    }
+
+    @Test
+    void aSetRuleIsEvaluable() {
+        assertThat(ComplianceSummary.row(activity(2, "IN_HOUSE", "BY_SET", List.of()), l -> true).evaluable()).isTrue();
     }
 
     @Test

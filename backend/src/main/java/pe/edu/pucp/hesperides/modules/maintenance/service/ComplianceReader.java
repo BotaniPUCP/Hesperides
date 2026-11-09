@@ -8,6 +8,7 @@ import pe.edu.pucp.hesperides.engine.frequency.FrequencyEvaluator;
 import pe.edu.pucp.hesperides.engine.frequency.FrequencyRule;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.ComplianceResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequency;
+import pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceFrequenciesRepository;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 
@@ -31,6 +32,7 @@ public class ComplianceReader {
 
     private final MaintenanceFrequenciesRepository frequenciesRepository;
     private final ExecutionHistoryProvider executionHistory;
+    private final GreenAreaSetLookup sets;
 
     @Transactional(readOnly = true)
     public List<ComplianceResponse> evaluate(LocalDate from, LocalDate to, Long activityTypeItemId) {
@@ -64,7 +66,7 @@ public class ComplianceReader {
                 .stream()
                 .filter(f -> regime.equals(f.getRegime()))
                 .filter(f -> java.util.Objects.equals(currentVersion.getScope(),f.getScope())
-                        && java.util.Objects.equals(currentVersion.getZoneId(),f.getZoneId()))
+                        && java.util.Objects.equals(currentVersion.getGreenAreaSetId(),f.getGreenAreaSetId()))
                 .map(MaintenanceFrequency::toRule)
                 .toList();
 
@@ -91,9 +93,10 @@ public class ComplianceReader {
     private ComplianceResponse evaluateLocations(MaintenanceFrequency frequency, List<FrequencyRule> versions,
             LocalDate from, LocalDate to) {
         var groups = new LinkedHashMap<String,List<LocationExecution>>();
+        java.util.Set<Long> inSet = "BY_SET".equals(frequency.getScope())
+                ? sets.activeZonesOf(frequency.getGreenAreaSetId()) : null;
         for (var fact : executionHistory.locationExecutions(frequency.getActivityTypeItem().getId(),frequency.getRegime(),from,to)) {
-            if ("BY_SECTOR".equals(frequency.getScope())) continue;
-            if ("BY_ZONE".equals(frequency.getScope()) && !java.util.Objects.equals(frequency.getZoneId(),fact.zoneId())) continue;
+            if (inSet != null && !inSet.contains(fact.zoneId())) continue;
             groups.computeIfAbsent(fact.targetKind()+":"+fact.targetId(),key -> new ArrayList<>()).add(fact);
         }
         var locations = new ArrayList<ComplianceResponse.LocationCompliance>();
@@ -105,7 +108,7 @@ public class ComplianceReader {
             var byWork = new LinkedHashMap<Long,LocalDate>();
             for (var fact : facts) byWork.merge(fact.interventionId(),fact.executionDate(),(a,b) -> a.isAfter(b)?a:b);
             List<ComplianceResult> results;
-            if ("BY_SECTOR".equals(frequency.getScope()) || "LOCATION".equals(first.targetKind())) {
+            if ("LOCATION".equals(first.targetKind())) {
                 results = List.of(ComplianceResult.notApplicable(frequency.getId(),from,to,null,
                         "La evaluación requiere una referencia estable de lugar/sección y alcance territorial confirmado"));
             } else results = versions.isEmpty() ? List.of(ComplianceResult.notConfigured(from,to))
@@ -114,9 +117,7 @@ public class ComplianceReader {
                     results.stream().map(ComplianceResponse.Segment::from).toList()));
         }
         var summary = ComplianceResult.notApplicable(frequency.getId(),from,to,null,
-                "BY_SECTOR".equals(frequency.getScope())
-                    ? "La evaluación por sector requiere confirmar su correspondencia territorial histórica"
-                    : "El cumplimiento se evalúa por lugar atendido, sin inferir cobertura de todo el campus");
+                "El cumplimiento se evalúa por lugar atendido, sin inferir cobertura de todo el campus");
         return new ComplianceResponse(frequency.getActivityTypeItem().getId(),frequency.getActivityTypeItem().getLabel(),
                 frequency.getRegime(),frequency.getFrequencyRuleTypeItem().getCode(),from,to,
                 List.of(ComplianceResponse.Segment.from(summary)),locations,frequency.getScope());

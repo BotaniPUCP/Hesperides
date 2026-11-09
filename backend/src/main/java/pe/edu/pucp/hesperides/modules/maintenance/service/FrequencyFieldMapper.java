@@ -25,8 +25,7 @@ final class FrequencyFieldMapper {
         f.setFrequencyRuleTypeItem(ruleType);
         f.setRegime(r.regime());
         f.setScope(r.scope());
-        f.setZoneId(r.zoneId());
-        f.setTargetDaysInterval(r.targetDaysInterval());
+        f.setGreenAreaSetId(r.greenAreaSetId());
         f.setMinDaysInterval(r.minDaysInterval());
         f.setMaxDaysInterval(r.maxDaysInterval());
         f.setAnnualTargetCount(r.annualTargetCount());
@@ -45,8 +44,7 @@ final class FrequencyFieldMapper {
             CatalogItem ruleType,
             String regime,
             String scope,
-            Long zoneId,
-            Integer targetDays,
+            Long greenAreaSetId,
             Integer minDays,
             Integer maxDays,
             Integer annualCount,
@@ -61,8 +59,7 @@ final class FrequencyFieldMapper {
         target.setFrequencyRuleTypeItem(v.ruleType());
         target.setRegime(v.regime());
         target.setScope(v.scope());
-        target.setZoneId(v.zoneId());
-        target.setTargetDaysInterval(v.targetDays());
+        target.setGreenAreaSetId(v.greenAreaSetId());
         target.setMinDaysInterval(v.minDays());
         target.setMaxDaysInterval(v.maxDays());
         target.setAnnualTargetCount(v.annualCount());

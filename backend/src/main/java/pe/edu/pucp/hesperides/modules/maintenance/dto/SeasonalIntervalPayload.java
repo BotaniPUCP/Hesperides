@@ -37,9 +37,6 @@ public record SeasonalIntervalPayload(
 
         @NotNull(message = "El intervalo máximo de la estación es obligatorio")
         @Positive(message = "El intervalo máximo debe ser mayor a cero")
-        Integer maxDaysInterval,
-
-        @Positive(message = "El intervalo teórico debe ser mayor a cero")
-        Integer targetDaysInterval
+        Integer maxDaysInterval
 ) {
 }

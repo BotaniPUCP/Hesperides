@@ -27,13 +27,11 @@ public record UpdateMaintenanceFrequencyRequest(
 
         String frequencyRuleTypeCode,
 
-        @Pattern(regexp = "CAMPUS_WIDE|BY_SECTOR|BY_ZONE", message = "El ámbito debe ser CAMPUS_WIDE, BY_SECTOR o BY_ZONE")
+        @Pattern(regexp = "CAMPUS_WIDE|BY_SET", message = "La frecuencia se aplica a todo el campus o a un conjunto")
         String scope,
 
-        Long zoneId,
+        Long greenAreaSetId,
 
-        @Positive(message = "El intervalo objetivo debe ser mayor a cero")
-        Integer targetDaysInterval,
 
         @Positive(message = "El intervalo mínimo debe ser mayor a cero")
         Integer minDaysInterval,

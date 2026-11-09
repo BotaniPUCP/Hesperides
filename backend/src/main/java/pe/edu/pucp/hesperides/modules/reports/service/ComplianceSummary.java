@@ -84,8 +84,7 @@ public class ComplianceSummary {
     }
 
     static ActivityCompliance row(ComplianceResponse activity, Predicate<LocationCompliance> inTerritory) {
-        String reason = !"IN_HOUSE".equals(activity.regime()) ? "OUTSOURCED"
-                : "BY_SECTOR".equals(activity.scope()) ? "BY_SECTOR" : null;
+        String reason = !"IN_HOUSE".equals(activity.regime()) ? "OUTSOURCED" : null;
         if (reason != null) {
             return new ActivityCompliance(activity.activityTypeItemId(), activity.activityTypeLabel(),
                     activity.regime(), false, reason, 0, 0, 0, 0, List.of());
