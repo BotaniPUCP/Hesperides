@@ -88,13 +88,14 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /catálogos/i })).toHaveAttribute('href', '/admin/catalogos');
   });
 
-  it('a un OPERARIO no le muestra usuarios, catálogos ni parámetros', () => {
+  it('a un OPERARIO no le muestra usuarios, catálogos, parámetros ni la planificación', () => {
     comoRol('OPERARIO', 'Operario de campo');
-    mockPathname = '/admin/frecuencias';
+    mockPathname = '/intervenciones';
     render(<Sidebar />);
 
     const nav = screen.getByRole('navigation', { name: /principal/i });
-    expect(within(nav).getByRole('link', { name: /frecuencias/i })).toBeInTheDocument();
+    expect(within(nav).queryByRole('link', { name: /frecuencias/i })).not.toBeInTheDocument();
+    expect(within(nav).queryByRole('link', { name: /planificación/i })).not.toBeInTheDocument();
     expect(within(nav).queryByRole('link', { name: /usuarios/i })).not.toBeInTheDocument();
     expect(within(nav).queryByRole('link', { name: /catálogos/i })).not.toBeInTheDocument();
     expect(within(nav).queryByRole('link', { name: /parámetros/i })).not.toBeInTheDocument();

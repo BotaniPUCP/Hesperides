@@ -10,11 +10,9 @@ import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequency
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.SeasonalIntervalPayload;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequencyRequest;
-import pe.edu.pucp.hesperides.modules.maintenance.dto.ZoneOptionResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequency;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceFrequenciesRepository;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup;
-import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceZoneQueries;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
@@ -30,7 +28,6 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
     private final MaintenanceFrequenciesRepository frequenciesRepository;
     private final CatalogItemsRepository catalogItemsRepository;
     private final ComplianceReader complianceReader;
-    private final MaintenanceZoneQueries zoneQueries;
     private final GreenAreaSetLookup setLookup;
 
     @Override
@@ -66,7 +63,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         FrequencyScopeRules.requireNoCurrentDuplicate(frequenciesRepository, activity.getId(), r.regime(), r.scope(), r.greenAreaSetId(), null);
 
         MaintenanceFrequency f = FrequencyFieldMapper.toNewEntity(r, activity, ruleType);
-        return MaintenanceFrequencyResponse.from(frequenciesRepository.save(f));
+        return withWarnings(frequenciesRepository.save(f));
     }
 
     /**
@@ -106,7 +103,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         if (r.active() != null) target.setActive(r.active());
         if (r.seasons() != null) FrequencyVersioning.replaceSeasons(target, r.seasons());
 
-        return MaintenanceFrequencyResponse.from(frequenciesRepository.save(target));
+        return withWarnings(frequenciesRepository.save(target));
     }
 
     @Override
@@ -143,12 +140,6 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 .map(MaintenanceFrequencyResponse.FrequencyRuleTypeSummary::from).toList();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ZoneOptionResponse> getZoneOptions() {
-        return zoneQueries.activeSections();
-    }
-
     // ── apoyo ───────────────────────────────────────────────────────────────
 
     /** Mezcla lo que el request pide cambiar con lo que la version vigente ya tiene. */
@@ -170,6 +161,15 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 pick(r.estimatedDurationDays(), current.getEstimatedDurationDays()),
                 pick(r.seasonStartMonth(), FrequencyFieldMapper.toInt(current.getSeasonStartMonth())),
                 pick(r.seasonEndMonth(), FrequencyFieldMapper.toInt(current.getSeasonEndMonth())));
+    }
+
+    /** D-08: avisa, sin bloquear, si un jardín del conjunto ya sigue otra frecuencia propia de la actividad. */
+    private MaintenanceFrequencyResponse withWarnings(MaintenanceFrequency saved) {
+        var response = MaintenanceFrequencyResponse.from(saved);
+        if (saved.getGreenAreaSetId() == null) return response;
+        return response.withWarnings(FrequencyScopeRules.crossWarnings(
+                setLookup.ownRuleOverlaps(saved.getGreenAreaSetId(), saved.getActivityTypeItem().getId()),
+                saved.getActivityTypeItem().getLabel()));
     }
 
     private MaintenanceFrequency load(Long id) {

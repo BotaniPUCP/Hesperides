@@ -22,9 +22,6 @@ export function FrequencyParameters({ frequency: f }: { frequency: MaintenanceFr
               <span className="font-medium text-neutral-900">
                 {s.minDaysInterval}–{s.maxDaysInterval}d
               </span>
-              {s.targetDaysInterval ? (
-                <span className="text-neutral-400"> (teór. {s.targetDaysInterval}d)</span>
-              ) : null}
             </span>
           ))}
         </div>
@@ -33,9 +30,6 @@ export function FrequencyParameters({ frequency: f }: { frequency: MaintenanceFr
           <span className="font-medium text-neutral-900">
             {f.minDaysInterval} a {f.maxDaysInterval} días
           </span>
-          {f.targetDaysInterval && (
-            <span className="text-neutral-500 block">Teórico: cada {f.targetDaysInterval}d</span>
-          )}
         </div>
       );
 
@@ -80,9 +74,7 @@ export function scopeLabel(scope: MaintenanceFrequency['scope']): string {
   switch (scope) {
     case 'CAMPUS_WIDE':
       return 'Todo el campus';
-    case 'BY_SECTOR':
-      return 'Por sector';
     default:
-      return 'Por sección';
+      return 'Un conjunto';
   }
 }

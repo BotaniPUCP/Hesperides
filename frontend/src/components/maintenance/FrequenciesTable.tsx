@@ -1,20 +1,20 @@
 'use client';
 
 import React from 'react';
-import type { MaintenanceFrequency, MaintenanceZoneOption } from '@shared/types';
+import type { GreenAreaSetSummary, MaintenanceFrequency } from '@shared/types';
 import { Badge, Button } from '@/components/ui';
 import { FrequencyParameters, scopeLabel } from './FrequencyParameters';
 import { FrequencyRuleBadge } from './FrequencyRuleBadge';
 
 interface Props {
   frequencies: MaintenanceFrequency[];
-  zones: MaintenanceZoneOption[];
+  sets: GreenAreaSetSummary[];
   canManage: boolean;
   onEdit: (f: MaintenanceFrequency) => void;
   onDeactivate: (id: number) => void;
 }
 
-export function FrequenciesTable({ frequencies, zones, canManage, onEdit, onDeactivate }: Props) {
+export function FrequenciesTable({ frequencies, sets, canManage, onEdit, onDeactivate }: Props) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
@@ -25,7 +25,7 @@ export function FrequenciesTable({ frequencies, zones, canManage, onEdit, onDeac
             <th className="px-4 py-3">Modelo</th>
             <th className="px-4 py-3">Parámetros</th>
             <th className="px-4 py-3">Duración</th>
-            <th className="px-4 py-3">Ámbito</th>
+            <th className="px-4 py-3">Se aplica a</th>
             <th className="px-4 py-3">Vigente desde</th>
             {canManage && <th className="px-4 py-3 text-right">Acciones</th>}
           </tr>
@@ -63,12 +63,16 @@ export function FrequenciesTable({ frequencies, zones, canManage, onEdit, onDeac
               <td className="px-4 py-3 text-neutral-700">
                 {f.estimatedDurationDays ? `${f.estimatedDurationDays} días` : '—'}
               </td>
-              <td className="px-4 py-3 text-xs text-neutral-600">{scopeLabel(f.scope)}
-                {f.scope === 'BY_ZONE' && f.zoneId != null && (
-                  <span className="block font-medium text-neutral-800">
-                    {zones.find((z) => z.id === f.zoneId)?.name ?? `Sección ${f.zoneId}`}
-                  </span>
-                )}
+              <td className="px-4 py-3 text-xs text-neutral-600">
+                {f.scope === 'BY_SET' && f.greenAreaSetId != null ? (
+                  <>
+                    <span className="block font-medium text-neutral-800">
+                      {sets.find((s) => s.id === f.greenAreaSetId)?.name ?? `Conjunto ${f.greenAreaSetId}`}
+                    </span>
+                    {/* SPEC-203 §5.3: el único lugar donde se dice que el cada cuánto no es el general. */}
+                    <span className="block">propio de este conjunto</span>
+                  </>
+                ) : scopeLabel(f.scope)}
               </td>
               {/* Delata desde cuándo rige esta versión: sin eso, el historial
                   existiría en la base pero no se vería en la pantalla. */}

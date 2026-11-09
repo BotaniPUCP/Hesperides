@@ -73,7 +73,7 @@ class MaintenanceFrequencyControllerTest {
                 "Notas",
                 LocalDate.now(), null,
                 true, true,
-                Instant.now(), Instant.now());
+                Instant.now(), Instant.now(), List.of());
     }
 
     @Test
@@ -82,9 +82,22 @@ class MaintenanceFrequencyControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    /** SPEC-203 D-12: las frecuencias pasan a ser de coordinación; el campo ya no las lee. */
+    @Test
+    @WithMockUser(authorities = "SUPERVISOR")
+    void getAll_asSupervisor_isForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/maintenance/frequencies")).andExpect(status().isForbidden());
+    }
+
     @Test
     @WithMockUser(authorities = "OPERARIO")
-    void getAll_asOperario_returnsOk() throws Exception {
+    void getAll_asOperario_isForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/maintenance/frequencies")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "COORDINADOR")
+    void getAll_asCoordinador_returnsOk() throws Exception {
         MaintenanceFrequencyResponse dummy = dummyResponse();
 
         when(frequenciesService.findAll(any(), any(), any())).thenReturn(List.of(dummy));

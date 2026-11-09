@@ -1,13 +1,6 @@
-import { MaintenanceFrequenciesScreen } from '@/components/maintenance/MaintenanceFrequenciesScreen';
+import { redirect } from 'next/navigation';
 
-export const metadata = {
-  title: 'Frecuencias de Mantenimiento · Hesperides',
-};
-
-export default function FrecuenciasPage() {
-  return (
-    <div className="mx-auto max-w-6xl">
-      <MaintenanceFrequenciesScreen />
-    </div>
-  );
+/** SPEC-203 §2.3: las frecuencias se movieron a Intervenciones; la ruta antigua no rompe marcadores. */
+export default function OldFrequenciesPage() {
+  redirect('/intervenciones/frecuencias');
 }

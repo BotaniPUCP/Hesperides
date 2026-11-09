@@ -30,8 +30,17 @@ public record MaintenanceFrequencyResponse(
         boolean current,
         boolean active,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        /** Avisos al guardar, como el cruce de frecuencias propias (SPEC-203 D-08). Nunca bloquean. */
+        List<String> warnings
 ) {
+    public MaintenanceFrequencyResponse withWarnings(List<String> w) {
+        return new MaintenanceFrequencyResponse(id, activityType, regime, frequencyRuleType, scope, greenAreaSetId,
+                minDaysInterval, maxDaysInterval, annualTargetCount, coverageTargetDays, estimatedDurationDays,
+                seasonStartMonth, seasonEndMonth, seasons, notes, validFrom, validTo, current, active,
+                createdAt, updatedAt, List.copyOf(w));
+    }
+
     public record ActivityTypeSummary(
             Long id,
             String code,
@@ -87,7 +96,8 @@ public record MaintenanceFrequencyResponse(
                 entity.isCurrent(),
                 entity.isActive(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                List.of()
         );
     }
 }

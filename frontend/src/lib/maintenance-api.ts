@@ -2,7 +2,6 @@ import type {
   ComplianceReport,
   CreateMaintenanceFrequencyRequest,
   MaintenanceFrequency,
-  MaintenanceZoneOption,
   UpdateMaintenanceFrequencyRequest,
 } from '@shared/types';
 import { apiClient } from './api';
@@ -62,8 +61,6 @@ export const maintenanceApi = {
       '/maintenance/frequencies/activity-types'
     ),
 
-  /** Las secciones activas entre las que se elige el ámbito de una frecuencia por sección. */
-  getZones: () => apiClient.get<MaintenanceZoneOption[]>('/maintenance/frequencies/zones'),
 
   getRuleTypes: () =>
     apiClient.get<{ id: number; code: string; label: string }[]>(

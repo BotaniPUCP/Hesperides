@@ -33,7 +33,6 @@ export interface SeasonRow {
   season: SeasonKey;
   minDays: string;
   maxDays: string;
-  targetDays: string;
 }
 
 export function toRow(s: SeasonalInterval): SeasonRow {
@@ -42,13 +41,12 @@ export function toRow(s: SeasonalInterval): SeasonRow {
     season: s.season,
     minDays: String(s.minDaysInterval),
     maxDays: String(s.maxDaysInterval),
-    targetDays: s.targetDaysInterval != null ? String(s.targetDaysInterval) : '',
   };
 }
 
 export function newRow(used: SeasonKey[]): SeasonRow {
   const next = SEASON_ORDER.find((k) => !used.includes(k)) ?? 'PRIMAVERA';
-  return { id: `${next}-${Date.now()}`, season: next, minDays: '', maxDays: '', targetDays: '' };
+  return { id: `${next}-${Date.now()}`, season: next, minDays: '', maxDays: '' };
 }
 
 export interface SeasonParseResult {
@@ -90,18 +88,12 @@ export function parseSeasonRows(rows: SeasonRow[]): SeasonParseResult {
       return { error: `En ${meta.label}, el mínimo (${min}) no puede superar al máximo (${max})` };
     }
 
-    const target = row.targetDays ? Number.parseInt(row.targetDays, 10) : null;
-    if (target !== null && (Number.isNaN(target) || target <= 0)) {
-      return { error: `El intervalo teórico de ${meta.label} debe ser mayor a cero` };
-    }
-
     seasons.push({
       season: row.season,
       startMonth: meta.startMonth,
       endMonth: meta.endMonth,
       minDaysInterval: min,
       maxDaysInterval: max,
-      targetDaysInterval: target,
     });
   }
 

@@ -15,6 +15,11 @@ final class FrequencyScopeRules {
     private FrequencyScopeRules() {
     }
 
+    static java.util.List<String> crossWarnings(java.util.List<GreenAreaSetLookup.Overlap> overlaps, String activity) {
+        return overlaps.stream().map(o -> "La sección " + o.zoneName() + " ya sigue otra frecuencia propia de "
+                + activity + " en «" + o.otherSetName() + "»; se usará la más frecuente").toList();
+    }
+
     /**
      * Quien deja de ser propia de un conjunto suelta el conjunto: si no, la
      * versión nueva heredaría un conjunto que ya no es su alcance.

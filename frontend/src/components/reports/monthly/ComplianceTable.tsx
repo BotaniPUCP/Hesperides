@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ActivityCompliance } from '@shared/types';
 import { DataTable, type DataTableColumn } from '@/components/ui';
 import { ReportBadge } from '../charts/ReportBadge';
@@ -51,9 +50,6 @@ export function ComplianceTable({ rows, teamFiltered }: { rows: ActivityComplian
     <section aria-labelledby="monthly-compliance" className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 id="monthly-compliance" className="text-lg font-semibold text-neutral-900">{COMPLIANCE_TEXTS.title}</h3>
-        <Link href="/admin/frecuencias" className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600">
-          {COMPLIANCE_TEXTS.detailLink}
-        </Link>
       </div>
       {teamFiltered && <p className="text-sm text-neutral-700">{COMPLIANCE_TEXTS.teamDoesNotApply}</p>}
       <DataTable columns={COLUMNS} rows={rows} rowKey={(row) => row.activityTypeItemId}

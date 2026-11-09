@@ -14,7 +14,6 @@ export interface RuleFieldsState {
   seasonRows: SeasonRow[];
   minDays: string;
   maxDays: string;
-  targetDays: string;
   annualCount: string;
   windowPreset: string;
   coverageDays: string;
@@ -69,7 +68,7 @@ export function RuleTypeFields({ ruleTypeCode, state, onChange }: Props) {
             onChange={(seasonRows) => onChange({ seasonRows })}
           />
         ) : (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <label className="block">
               <span className={LABEL}>Mín. días</span>
               <input type="number" min={1} value={state.minDays}
@@ -81,14 +80,6 @@ export function RuleTypeFields({ ruleTypeCode, state, onChange }: Props) {
               <input type="number" min={1} value={state.maxDays}
                 onChange={(e) => onChange({ maxDays: e.target.value })}
                 placeholder="45" className={INPUT} />
-            </label>
-            <label className="block">
-              <span className={LABEL}>
-                Teórico <span className="font-normal text-neutral-400">(opc.)</span>
-              </span>
-              <input type="number" min={1} value={state.targetDays}
-                onChange={(e) => onChange({ targetDays: e.target.value })}
-                placeholder="21" className={INPUT} />
             </label>
           </div>
         )}

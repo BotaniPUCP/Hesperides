@@ -20,7 +20,6 @@ import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequency;
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequencySeason;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceFrequenciesRepository;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup;
-import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceZoneQueries;
 import pe.edu.pucp.hesperides.shared.entity.BaseEntity;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
@@ -53,9 +52,6 @@ class MaintenanceFrequenciesServiceImplTest {
     private ComplianceReader complianceReader;
 
     @Mock
-    private MaintenanceZoneQueries zoneQueries;
-
-    @Mock
     private GreenAreaSetLookup setLookup;
 
     private MaintenanceFrequenciesServiceImpl service;
@@ -68,7 +64,7 @@ class MaintenanceFrequenciesServiceImplTest {
     @BeforeEach
     void setUp() throws Exception {
         service = new MaintenanceFrequenciesServiceImpl(
-                frequenciesRepository, catalogItemsRepository, complianceReader, zoneQueries, setLookup);
+                frequenciesRepository, catalogItemsRepository, complianceReader, setLookup);
 
         activityItem = catalogItem(10L, "CORTE_CESPED", "Corte de césped");
         intervalDaysRuleItem = catalogItem(101L, "INTERVAL_DAYS", "Intervalo por rango de días");
@@ -184,6 +180,21 @@ class MaintenanceFrequenciesServiceImplTest {
 
             assertThat(response.scope()).isEqualTo("BY_SET");
             assertThat(response.greenAreaSetId()).isEqualTo(7L);
+        }
+
+        @Test
+        void aSetRuleThatCrossesAnotherOwnRuleWarnsWithoutBlocking() {
+            when(setLookup.isActiveSet(7L)).thenReturn(true);
+            when(setLookup.ownRuleOverlaps(7L, 10L)).thenReturn(List.of(
+                    new GreenAreaSetLookup.Overlap("Sección 113", "Pabellones")));
+            var request = new CreateMaintenanceFrequencyRequest(
+                    10L, "OUTSOURCED", "ON_DEMAND", "BY_SET", 7L,
+                    null, null, null, null, 3, null, null, null, null);
+
+            var response = service.create(request);
+
+            assertThat(response.warnings()).containsExactly(
+                    "La sección Sección 113 ya sigue otra frecuencia propia de Corte de césped en «Pabellones»; se usará la más frecuente");
         }
 
         @Test

@@ -40,7 +40,6 @@ describe('MonthlyReport (SPEC-202 §5.1, §7.4)', () => {
     expect(within(table).getByText('Antes del mínimo (1)')).toHaveClass('text-neutral-700');
     expect(within(table).queryByText(/Dentro de tolerancia/)).not.toBeInTheDocument();
     expect(within(table).getByText('Jardín Frutas')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Ver detalle por lugar' })).toHaveAttribute('href', '/admin/frecuencias');
   });
 
   it('muestra el total exacto de una lista con tope', () => {

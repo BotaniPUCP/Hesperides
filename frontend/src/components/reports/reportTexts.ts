@@ -78,7 +78,6 @@ export const MONTHLY_TEXTS = {
 
 export const COMPLIANCE_TEXTS = {
   title: 'Cumplimiento de frecuencias por actividad',
-  detailLink: 'Ver detalle por lugar',
   activity: 'Actividad',
   status: 'Estado por lugar',
   overdueTargets: 'Lugares fuera de plazo',
@@ -87,7 +86,6 @@ export const COMPLIANCE_TEXTS = {
   teamDoesNotApply: 'El filtro de cuadrilla no aplica al cumplimiento: la ejecución por lugar no registra la cuadrilla.',
   notEvaluable: {
     OUTSOURCED: 'Tercerizado: su ejecución no se registra por lugar.',
-    BY_SECTOR: 'Frecuencia por sector: aún no se evalúa por lugar.',
   },
   lastExecution: (date: string) => `última ejecución el ${date}`,
 };

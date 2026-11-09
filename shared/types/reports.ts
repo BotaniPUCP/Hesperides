@@ -30,7 +30,7 @@ export interface ReportSection { id: number; code: string; name: string; areaM2:
 export interface ReportTopList<T> { total: number; items: T[] }
 
 export type CoverageUnavailableReason = 'NO_SECTOR_ASSIGNED';
-export type NotEvaluableReason = 'OUTSOURCED' | 'BY_SECTOR';
+export type NotEvaluableReason = 'OUTSOURCED';
 
 export interface MonthlyCoverage {
   rule: string;

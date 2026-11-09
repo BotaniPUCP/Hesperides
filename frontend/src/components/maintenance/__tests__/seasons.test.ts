@@ -2,7 +2,7 @@ import { SEASONS, monthName, newRow, parseSeasonRows, toRow, type SeasonRow } fr
 import type { SeasonalInterval } from '@shared/types';
 
 function row(over: Partial<SeasonRow> = {}): SeasonRow {
-  return { id: '1', season: 'VERANO', minDays: '30', maxDays: '35', targetDays: '21', ...over };
+  return { id: '1', season: 'VERANO', minDays: '30', maxDays: '35', ...over };
 }
 
 describe('parseSeasonRows', () => {
@@ -19,7 +19,6 @@ describe('parseSeasonRows', () => {
         endMonth: 3,
         minDaysInterval: 30,
         maxDaysInterval: 35,
-        targetDaysInterval: 21,
       },
     ]);
   });
@@ -35,13 +34,6 @@ describe('parseSeasonRows', () => {
     expect(seasons).toHaveLength(2);
     expect(seasons?.[0]).toMatchObject({ season: 'VERANO', minDaysInterval: 30, maxDaysInterval: 35 });
     expect(seasons?.[1]).toMatchObject({ season: 'INVIERNO', minDaysInterval: 40, maxDaysInterval: 45 });
-  });
-
-  it('el intervalo teórico es opcional', () => {
-    const { seasons, error } = parseSeasonRows([row({ targetDays: '' })]);
-
-    expect(error).toBeUndefined();
-    expect(seasons?.[0].targetDaysInterval).toBeNull();
   });
 
   it('rechaza una lista vacía', () => {
@@ -81,24 +73,12 @@ describe('toRow', () => {
       endMonth: 9,
       minDaysInterval: 40,
       maxDaysInterval: 45,
-      targetDaysInterval: 21,
     });
 
-    expect(fila).toMatchObject({ season: 'INVIERNO', minDays: '40', maxDays: '45', targetDays: '21' });
+    expect(fila).toMatchObject({ season: 'INVIERNO', minDays: '40', maxDays: '45' });
+    expect(fila).not.toHaveProperty('targetDays');
   });
 
-  it('deja el teórico vacío cuando no hay ninguno', () => {
-    const fila = toRow({
-      season: 'VERANO',
-      startMonth: 1,
-      endMonth: 3,
-      minDaysInterval: 30,
-      maxDaysInterval: 35,
-      targetDaysInterval: null,
-    });
-
-    expect(fila.targetDays).toBe('');
-  });
 });
 
 describe('newRow', () => {

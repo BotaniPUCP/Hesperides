@@ -30,6 +30,9 @@ describe('visibleNavigation', () => {
       '/inventario-verde',
       '/inventario-verde/registrar',
       '/intervenciones',
+      '/intervenciones/planificacion',
+      '/intervenciones/conjuntos',
+      '/intervenciones/frecuencias',
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/importar',
@@ -37,7 +40,6 @@ describe('visibleNavigation', () => {
       '/lugares/migracion',
       '/admin/usuarios',
       '/admin/catalogos',
-      '/admin/frecuencias',
       '/admin/parametros',
     ]);
   });
@@ -49,13 +51,15 @@ describe('visibleNavigation', () => {
       '/inventario-verde',
       '/inventario-verde/registrar',
       '/intervenciones',
+      '/intervenciones/planificacion',
+      '/intervenciones/conjuntos',
+      '/intervenciones/frecuencias',
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
       '/lugares/migracion',
       '/admin/usuarios',
-      '/admin/frecuencias',
     ]);
   });
 
@@ -69,16 +73,14 @@ describe('visibleNavigation', () => {
       '/catastro/registrar',
       '/catastro/estandares',
       '/admin/usuarios',
-      '/admin/frecuencias',
     ]);
   });
 
-  it('a un OPERARIO le muestra especies, intervenciones, ejemplares y frecuencias, que puede consultar', () => {
+  it('a un OPERARIO le muestra especies, intervenciones y ejemplares; las frecuencias son de coordinación (SPEC-203 D-12)', () => {
     expect(hrefsDe('OPERARIO')).toEqual([
       '/inventario-verde',
       '/intervenciones',
       '/catastro/ejemplares',
-      '/admin/frecuencias',
     ]);
   });
 

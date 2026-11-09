@@ -5,33 +5,33 @@ const form: FormState = {
   regime: 'OUTSOURCED',
   ruleTypeCode: 'ON_DEMAND',
   scope: 'CAMPUS_WIDE',
-  zoneId: null,
+  greenAreaSetId: null,
   fields: {
-    bySeasons: false, seasonRows: [], minDays: '', maxDays: '', targetDays: '',
+    bySeasons: false, seasonRows: [], minDays: '', maxDays: '',
     annualCount: '', windowPreset: '', coverageDays: '',
   },
   estimatedDuration: '3', notes: '', isEditing: false,
 };
 
-it('exige elegir la sección cuando el ámbito es por sección', () => {
-  const result = buildFrequencyPayload({ ...form, scope: 'BY_ZONE' });
+it('exige elegir el conjunto cuando la frecuencia es propia de un conjunto (SPEC-203 D-07)', () => {
+  const result = buildFrequencyPayload({ ...form, scope: 'BY_SET' });
   expect(result.payload).toBeUndefined();
-  expect(result.error).toContain('Selecciona la sección');
+  expect(result.error).toContain('Elige el conjunto');
 });
 
-it('envía la sección elegida en una frecuencia por sección', () => {
-  const result = buildFrequencyPayload({ ...form, scope: 'BY_ZONE', zoneId: 7 });
+it('envía el conjunto elegido en una frecuencia propia', () => {
+  const result = buildFrequencyPayload({ ...form, scope: 'BY_SET', greenAreaSetId: 7 });
   expect(result.error).toBeUndefined();
-  expect(result.payload).toMatchObject({ scope: 'BY_ZONE', zoneId: 7 });
+  expect(result.payload).toMatchObject({ scope: 'BY_SET', greenAreaSetId: 7 });
 });
 
-it('descarta la zona si el ámbito vuelve a ser todo el campus', () => {
-  const result = buildFrequencyPayload({ ...form, scope: 'CAMPUS_WIDE', zoneId: 7 });
-  expect(result.payload).toMatchObject({ scope: 'CAMPUS_WIDE', zoneId: null });
+it('descarta el conjunto si la frecuencia vuelve a ser de todo el campus', () => {
+  const result = buildFrequencyPayload({ ...form, scope: 'CAMPUS_WIDE', greenAreaSetId: 7 });
+  expect(result.payload).toMatchObject({ scope: 'CAMPUS_WIDE', greenAreaSetId: null });
 });
 
-it('rechaza el ámbito por sector, que aún no se evalúa', () => {
-  const result = buildFrequencyPayload({ ...form, scope: 'BY_SECTOR' });
-  expect(result.payload).toBeUndefined();
-  expect(result.error).toContain('por sector');
+it('ya no envía el teórico (SPEC-203 D-06)', () => {
+  const result = buildFrequencyPayload({ ...form, ruleTypeCode: 'INTERVAL_DAYS',
+    fields: { ...form.fields, minDays: '30', maxDays: '35' } });
+  expect(result.payload).not.toHaveProperty('targetDaysInterval');
 });

@@ -61,7 +61,13 @@ export const NAVIGATION: readonly NavGroup[] = [
     id: 'intervenciones',
     label: 'Intervenciones',
     icon: '🧰',
-    items: [{ label: 'Actividades', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] }],
+    items: [
+      { label: 'Actividades', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+      // SPEC-203 D-12: planificar, armar conjuntos y fijar cada cuánto es trabajo de coordinación.
+      { label: 'Planificación preventiva', href: '/intervenciones/planificacion', icon: '📅', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Conjuntos de áreas verdes', href: '/intervenciones/conjuntos', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Frecuencias', href: '/intervenciones/frecuencias', icon: '🔁', roles: ['ADMIN', 'COORDINADOR'] },
+    ],
   },
   {
     // M2 · SPEC-103. Registrar el campus es trabajo diario, no configuración.
@@ -93,13 +99,6 @@ export const NAVIGATION: readonly NavGroup[] = [
       },
       // SPEC-003 §4: el backend responde 403 a quien no es ADMIN.
       { label: 'Catálogos', href: '/admin/catalogos', icon: '🗂️', roles: ['ADMIN'] },
-      // SPEC-101: ADMIN y COORDINADOR configuran; SUPERVISOR y OPERARIO consultan.
-      {
-        label: 'Frecuencias de mantenimiento',
-        href: '/admin/frecuencias',
-        icon: '📅',
-        roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'],
-      },
       // SPEC-003 §5.6: configuración global. Quien no es ADMIN no debe ver
       // siquiera que existe, porque enseñaría qué gobierna la validación.
       { label: 'Parámetros del sistema', href: '/admin/parametros', icon: '⚙️', roles: ['ADMIN'] },

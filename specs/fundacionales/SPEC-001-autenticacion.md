@@ -349,6 +349,10 @@ El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
 ## Anexo A — Matriz de permisos por rol × módulo × acción
 
+> **Enmienda SPEC-203 (8 nov 2026):** la planificación preventiva, sus conjuntos y las frecuencias son
+> solo de ADMIN y COORDINADOR. SUPERVISOR y OPERARIO dejan de leer las frecuencias (antes las
+> consultaban): planificar es trabajo de coordinación, no de campo (SPEC-203 D-12).
+
 > **Enmienda SPEC-201 (5 nov 2026):** en incidencias participan COORDINADOR y
 > SUPERVISOR (capataz). Solo COORDINADOR confirma el registro oficial, solicita
 > correcciones iniciales, vincula intervenciones reales, observa/reabre la resolución
@@ -381,6 +385,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **3. Intervenciones** | Registrar ejecución (iniciar/completar, subir evidencia) | | | CU (las de su cuadrilla) | CU (solo las propias asignadas) |
 | **3. Intervenciones** | Validar/observar una intervención ejecutada | | V (ver nota 4) | V (su cuadrilla; ver nota 4) | |
 | **3. Intervenciones** | Ver historial de intervenciones | L | L | L (las de su cuadrilla) | L (solo las propias) |
+| **3. Planificación preventiva** (frecuencias, conjuntos de áreas verdes, avisos del inicio) | Configurar, consultar y planificar | CRUD | CRUD | | |
 | **4. Contratos y proveedores** | Crear / editar contratos y proveedores | CUD | CU (sin desactivar, ver nota 3) | | |
 | **4. Contratos y proveedores** | Registrar y ver ejecuciones de servicio | CUD | CU | L (las de su zona) | |
 | **5. Incidencias** | Reportar una incidencia | | C | C | |

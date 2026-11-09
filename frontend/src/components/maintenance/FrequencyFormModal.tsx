@@ -1,27 +1,22 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import type {
   CreateMaintenanceFrequencyRequest,
   FrequencyRuleTypeCode,
+  GreenAreaSetSummary,
   MaintenanceFrequency,
   MaintenanceRegime,
   MaintenanceScope,
-  MaintenanceZoneOption,
   UpdateMaintenanceFrequencyRequest,
 } from '@shared/types';
 import { Button, Modal } from '@/components/ui';
 import { buildFrequencyPayload } from './buildFrequencyPayload';
+import { FrequencyActivitySelect, type ActivityOption } from './FrequencyActivitySelect';
+import { EMPTY_FIELDS, fieldsFrom, optionalText, today } from './frequencyFormState';
+import { FrequencyScopeFields } from './FrequencyScopeFields';
 import { RuleTypeFields, type RuleFieldsState } from './RuleTypeFields';
-import { ANNUAL_WINDOWS, toRow } from './seasons';
-
-interface ActivityOption {
-  id: number;
-  code: string;
-  label: string;
-  parentCode?: string | null;
-}
 
 interface RuleTypeOption {
   id: number;
@@ -35,44 +30,13 @@ interface Props {
   frequencyToEdit?: MaintenanceFrequency | null;
   activities: ActivityOption[];
   ruleTypes: RuleTypeOption[];
-  zones: MaintenanceZoneOption[];
+  sets: GreenAreaSetSummary[];
   onSubmit: (payload: CreateMaintenanceFrequencyRequest | UpdateMaintenanceFrequencyRequest) => Promise<void>;
 }
 
 const INPUT = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
 const SELECT = `${INPUT} bg-neutral-0`;
 const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
-
-const EMPTY_FIELDS: RuleFieldsState = {
-  bySeasons: false,
-  seasonRows: [],
-  minDays: '',
-  maxDays: '',
-  targetDays: '',
-  annualCount: '',
-  windowPreset: ANNUAL_WINDOWS[0].value,
-  coverageDays: '',
-};
-
-const optionalText = (value: number | null | undefined) => (value != null ? String(value) : '');
-
-function fieldsFrom(f: MaintenanceFrequency): RuleFieldsState {
-  const window = ANNUAL_WINDOWS.find(
-    (w) => w.startMonth === f.seasonStartMonth && w.endMonth === f.seasonEndMonth
-  );
-  return {
-    // Las estaciones se leen tal cual: ya no hay que adivinarlas desde el
-    // rango general, que era lo que perdía el detalle al editar.
-    bySeasons: f.seasons.length > 0,
-    seasonRows: f.seasons.map(toRow),
-    minDays: optionalText(f.minDaysInterval),
-    maxDays: optionalText(f.maxDaysInterval),
-    targetDays: optionalText(f.targetDaysInterval),
-    annualCount: optionalText(f.annualTargetCount),
-    windowPreset: window?.value ?? ANNUAL_WINDOWS[0].value,
-    coverageDays: optionalText(f.coverageTargetDays),
-  };
-}
 
 /**
  * El formulario solo existe mientras el modal está abierto, y con una key por
@@ -85,41 +49,26 @@ export function FrequencyFormModal(props: Props) {
 }
 
 function FrequencyForm({
-  isOpen, onClose, frequencyToEdit, activities, ruleTypes, zones, onSubmit,
+  isOpen, onClose, frequencyToEdit, activities, ruleTypes, sets, onSubmit,
 }: Props) {
   const f = frequencyToEdit;
   const [activityTypeItemId, setActivityTypeItemId] = useState(f ? f.activityType.id : activities[0]?.id ?? 0);
   const [regime, setRegime] = useState<MaintenanceRegime>(f ? f.regime : 'IN_HOUSE');
   const [ruleTypeCode, setRuleTypeCode] = useState<FrequencyRuleTypeCode>(f ? f.frequencyRuleType.code : 'INTERVAL_DAYS');
   const [scope, setScope] = useState<MaintenanceScope>(f ? f.scope : 'CAMPUS_WIDE');
-  const [zoneId, setZoneId] = useState<number | null>(f?.zoneId ?? null);
+  const [setId, setSetId] = useState<number | null>(f?.greenAreaSetId ?? null);
   const [fields, setFields] = useState<RuleFieldsState>(() => (f ? fieldsFrom(f) : EMPTY_FIELDS));
   const [estimatedDuration, setEstimatedDuration] = useState(optionalText(f?.estimatedDurationDays));
   const [notes, setNotes] = useState(f?.notes ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const snapshot = JSON.stringify([activityTypeItemId, regime, ruleTypeCode, scope, zoneId, fields, estimatedDuration, notes]);
+  const snapshot = JSON.stringify([activityTypeItemId, regime, ruleTypeCode, scope, setId, fields, estimatedDuration, notes]);
   const [initial] = useState(snapshot);
   const guard = useUnsavedChangesGuard(snapshot !== initial);
   const cerrar = () => guard.confirm(onClose);
 
   const patchFields = (patch: Partial<RuleFieldsState>) =>
     setFields((prev) => ({ ...prev, ...patch }));
-
-  const groupedActivities = useMemo(() => {
-    const groups: Record<string, ActivityOption[]> = {};
-    for (const act of activities) {
-      const key = act.parentCode || 'Otras actividades';
-      (groups[key] ??= []).push(act);
-    }
-    return groups;
-  }, [activities]);
-
-  const zonesBySector = useMemo(() => {
-    const groups: Record<string, MaintenanceZoneOption[]> = {};
-    for (const z of zones) (groups[z.sectorName ?? 'Sin sector'] ??= []).push(z);
-    return groups;
-  }, [zones]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,7 +79,7 @@ function FrequencyForm({
       regime,
       ruleTypeCode,
       scope,
-      zoneId,
+      greenAreaSetId: setId,
       fields,
       estimatedDuration,
       notes,
@@ -176,29 +125,8 @@ function FrequencyForm({
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className="block sm:col-span-2">
-            <span className={LABEL}>Actividad</span>
-            <select
-              value={activityTypeItemId}
-              onChange={(e) => setActivityTypeItemId(Number(e.target.value))}
-              disabled={Boolean(frequencyToEdit)}
-              className={`${SELECT} disabled:bg-neutral-100 disabled:text-neutral-500`}
-            >
-              <option value={0}>Selecciona una actividad…</option>
-              {Object.entries(groupedActivities).map(([grupo, items]) => (
-                <optgroup key={grupo} label={grupo}>
-                  {items.map((a) => (
-                    <option key={a.id} value={a.id}>{a.label}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-            {frequencyToEdit && (
-              <span className="text-xs text-neutral-500 mt-1 block">
-                La actividad es la identidad de la regla: para cambiarla, desactiva esta y crea otra.
-              </span>
-            )}
-          </label>
+          <FrequencyActivitySelect activities={activities} value={activityTypeItemId}
+            onChange={setActivityTypeItemId} locked={Boolean(frequencyToEdit)} />
 
           <label className="block">
             <span className={LABEL}>Modalidad de ejecución</span>
@@ -208,37 +136,7 @@ function FrequencyForm({
             </select>
           </label>
 
-          <label className="block">
-            <span className={LABEL}>Ámbito</span>
-            <select value={scope} onChange={(e) => setScope(e.target.value as MaintenanceScope)} className={SELECT}>
-              <option value="CAMPUS_WIDE">Todo el campus</option>
-              <option value="BY_SECTOR" disabled>Por sector (sin evaluación aún)</option>
-              <option value="BY_ZONE">Por sección</option>
-            </select>
-          </label>
-
-          {scope === 'BY_ZONE' && (
-            <label className="block sm:col-span-2">
-              <span className={LABEL}>Sección</span>
-              <select
-                value={zoneId ?? 0}
-                onChange={(e) => setZoneId(Number(e.target.value) || null)}
-                className={SELECT}
-              >
-                <option value={0}>Selecciona una sección…</option>
-                {Object.entries(zonesBySector).map(([sector, items]) => (
-                  <optgroup key={sector} label={sector}>
-                    {items.map((z) => (
-                      <option key={z.id} value={z.id}>{z.name}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <span className="text-xs text-neutral-500 mt-1 block">
-                La frecuencia se evalúa solo con las intervenciones aprobadas en esta sección.
-              </span>
-            </label>
-          )}
+          <FrequencyScopeFields scope={scope} setId={setId} sets={sets} onScope={setScope} onSet={setSetId} />
 
           <label className="block sm:col-span-2">
             <span className={LABEL}>Modelo de periodicidad</span>
@@ -271,7 +169,7 @@ function FrequencyForm({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            placeholder="Ej. Teoría 21 días; el clima de Lima lo estira a 30-45"
+            placeholder="Ej. En el verano de 2026 se cortó más seguido"
             className={INPUT}
           />
         </label>
@@ -289,13 +187,4 @@ function FrequencyForm({
     {guard.dialog}
     </>
   );
-}
-
-function num(value: string): number | null {
-  const n = Number.parseInt(value, 10);
-  return Number.isNaN(n) ? null : n;
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
 }
