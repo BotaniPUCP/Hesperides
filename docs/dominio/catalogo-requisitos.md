@@ -128,6 +128,7 @@ M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3
 > los servicios tercerizados a fase futura, solo 6.10 lo toca. No es un olvido: **no tenemos
 > información del proceso tercerizado** (ni un contrato ni un informe de proveedor), y construir
 > sobre suposiciones sería peor que esperar. D6 conserva además 6.9, de prioridad Media.
+> Las frecuencias (1.7, SPEC-203) atacan **D5** y apenas tocan D2: solo miden el trabajo del personal propio.
 >
 > ⚠️ **D1 pierde su requisito central.** Sin la integración con el mapa del cliente (2.8), Carolina
 > seguirá alimentándolo a mano. D1 se ataca desde el registro en campo (3.4, 3.7) y el tablero
@@ -187,7 +188,7 @@ M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3
 | 1.4 | Catálogo de tipos de intervención | `HAB` | 1 | — | ✅ | 100% | 9 clases → 45 tipos. Fitosanitario e Inspección con tipos provisionales (P-10) |
 | 1.5 | Catálogo de especies | `HAB` | 1 | — | ✅ | 70% | 🔒 → ✅ **90 especies** limpias (de 91 nombres), con familia y nombres alternativos **por validar**, consultables en el inventario verde. Falta la pantalla para administrarlas. Ver `docs/inventario-verde/README.md` |
 | 1.6 | Catálogo de zonas del campus | `HAB` | 1 | — | 🔶 | 40% | **Sector (5) → sección (521 + 10 xerofíticas) → subsección.** Cargado con SPEC-102; falta la pantalla de administración. Todo sale del mapa v32. Más **411 referencias** oficiales para buscar. Ver nota |
-| 1.7 | Configuración de frecuencias de mantenimiento | Media | 2 | D2 | ✅ | 20% | Especificado en SPEC-006 |
+| 1.7 | Configuración de frecuencias de mantenimiento | Media | 2 | D5 | ✅ | 70% | SPEC-101 y SPEC-203: cada cuánto por actividad, para todo el campus o un conjunto de jardines, y la planificación preventiva que dice qué toca y dónde. Falta validarlo en navegador y confirmar con el cliente que manda la estación de la última vez |
 | 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 0% | Incluye la **lista de feriados** que usa 5.11 |
 | 1.9 | Gestión de cuadrillas y asignación a sectores | **Alta** | 3 | D5 D7 | 🔶 | 0% | 3 sectores verdes (9+9+7 personas), un capataz cada uno; Polideportivo y Bosque húmedo sin cuadrilla propia. La asignación de secciones **tiene vigencia**. Falta P-15 |
 | 1.10 | Catálogo de insumos y materiales | `HAB` | 1 | — | ✅ | 0% | Lista extraída del Excel |
@@ -509,7 +510,7 @@ un fin de ciclo—, el sistema **avisa**, pero no impide.
 | 6.7 | Indicadores de rendimiento | Baja | 1 | D2 | ⏭️ | 0% | Depende de 4.10 |
 | 6.8 | Cobertura mensual del 100% de las 15.6 ha | **Alta** | 3 | D5 | 🔶 | 0% | Falta qué cuenta como zona cubierta |
 | 6.9 | Mapa de calor de intervenciones por zona | Media | 2 | D6 | ✅ | 0% | 🔶 → ✅ **Entra en nuestro modelado**, sobre el mapa propio (2.1) |
-| 6.10 | Cumplimiento de frecuencias por servicio | **Alta** | 3 | D2 D5 | ✅ | 0% | Frecuencias de SPEC-006 |
+| 6.10 | Cumplimiento de frecuencias por servicio | **Alta** | 3 | D2 D5 | ✅ | 60% | Reporte mensual (SPEC-202) con un veredicto por jardín y una sola regla por jardín (SPEC-203 §5.8). Lo tercerizado sigue «No evaluable» |
 
 ### Sobre 6.8 y 6.9 — son las métricas que el cliente ya usa
 

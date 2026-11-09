@@ -23,7 +23,7 @@
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
-| SPEC-203 | Planificación preventiva por conjuntos de áreas verdes | 📝 En spec: aprobada el 8 nov 2026 | —          | —      |              |
+| SPEC-203 | Planificación preventiva por conjuntos de áreas verdes | 🔄 En progreso: implementada, falta verificar en navegador | —          | —      |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -182,10 +182,11 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V027 | `V027__create_specimen_measurements_history.sql` | SPEC-103 §4.2 | Historial de mediciones dendrométricas del ejemplar |
 | V028 | `V028__align_incidents_with_osg_matrix.sql` | SPEC-201 | Catálogos OSG, campos de matriz, impactos múltiples, numeración de aprobados, propósito de acciones, comunicación y duración congelada al cierre |
 | V029 | `V029__integrate_incident_interventions_and_reviews.sql` | SPEC-201 / SPEC-200 | Vínculos N:M con intervenciones reales, corrección inicial, resumen/actor de resolución, observaciones y sustitución explícita del legado sin fabricar ejecución |
+| V030 | `V030__create_green_area_sets.sql` | SPEC-203 §4 | Conjuntos de áreas verdes (secciones y actividades); las reglas `BY_ZONE`/`BY_SECTOR` pasan a `BY_SET` o `CAMPUS_WIDE` en todas sus versiones; se retiran `zone_id` y el teórico |
 
 ### Pendientes (sin número reservado)
 
-Al 5 nov 2026 el siguiente número libre es **V030**, sujeto a comprobarlo nuevamente al
+Al 9 nov 2026 el siguiente número libre en `develop` es **V031** (ramas sin integrar usan V030–V037: renumerar al integrar), sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
