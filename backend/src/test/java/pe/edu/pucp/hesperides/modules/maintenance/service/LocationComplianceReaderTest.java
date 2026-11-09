@@ -48,10 +48,36 @@ class LocationComplianceReaderTest {
     }
     @Test void setRuleOnlyUsesExecutionsInsideItsSet() {
         when(frequency.getScope()).thenReturn("BY_SET");when(frequency.getGreenAreaSetId()).thenReturn(5L);
-        when(sets.activeZonesOf(5L)).thenReturn(java.util.Set.of(7L));
+        when(sets.setsContaining(any())).thenReturn(java.util.Map.of(7L,java.util.Set.of(5L)));
         when(history.locationExecutions(10L,"IN_HOUSE",from,to)).thenReturn(List.of(fact(1,1,7,19),fact(2,2,8,20)));
         var report=reader.evaluate(from,to,null).get(0);
         assertThat(report.locations()).hasSize(1);assertThat(report.locations().get(0).targetId()).isEqualTo(7);
+    }
+    /** SPEC-203 §5.8: a garden in a set with its own rule is judged only by that rule. */
+    @Test void eachGardenIsJudgedOnceByItsEffectiveRule() {
+        var activity=frequency.getActivityTypeItem();var type=mock(CatalogItem.class);when(type.getCode()).thenReturn("INTERVAL_DAYS");
+        var general=mock(MaintenanceFrequency.class);var own=mock(MaintenanceFrequency.class);
+        when(general.getId()).thenReturn(20L);when(general.getActivityTypeItem()).thenReturn(activity);when(general.getRegime()).thenReturn("IN_HOUSE");
+        when(general.getFrequencyRuleTypeItem()).thenReturn(type);when(general.getScope()).thenReturn("CAMPUS_WIDE");
+        when(general.toRule()).thenReturn(new FrequencyRule(20L,"INTERVAL_DAYS",30,35,null,null,null,null,List.of(),LocalDate.of(2026,1,1),null));
+        when(own.getId()).thenReturn(21L);when(own.getActivityTypeItem()).thenReturn(activity);when(own.getRegime()).thenReturn("IN_HOUSE");
+        when(own.getFrequencyRuleTypeItem()).thenReturn(type);when(own.getScope()).thenReturn("BY_SET");when(own.getGreenAreaSetId()).thenReturn(5L);
+        when(own.toRule()).thenReturn(new FrequencyRule(21L,"INTERVAL_DAYS",20,25,null,null,null,null,List.of(),LocalDate.of(2026,1,1),null));
+        when(repository.findAllCurrent()).thenReturn(List.of(general,own));
+        when(repository.findVersionsOverlapping(10L,from,to)).thenReturn(List.of(general,own));
+        when(sets.setsContaining(any())).thenReturn(java.util.Map.of(7L,java.util.Set.of(5L)));
+        when(history.locationExecutions(10L,"IN_HOUSE",from,to)).thenReturn(List.of(fact(1,1,7,1),fact(2,2,7,23),fact(3,3,8,1),fact(4,4,8,23)));
+
+        var reports=reader.evaluate(from,to,null);
+
+        assertThat(reports).hasSize(1);
+        var locations=reports.get(0).locations();
+        assertThat(locations).extracting(l->l.targetId()).containsExactlyInAnyOrder(7L,8L);
+        var inSet=locations.stream().filter(l->l.targetId()==7L).findFirst().orElseThrow();
+        assertThat(inSet.segments().get(0).status()).isEqualTo("ON_TARGET");
+        assertThat(inSet.segments().get(0).evaluatedWithConfigId()).isEqualTo(21L);
+        var outside=locations.stream().filter(l->l.targetId()==8L).findFirst().orElseThrow();
+        assertThat(outside.segments().get(0).status()).isEqualTo("EARLY");
     }
     @Test void calendarOnlyProvidersRetainCompatibility() {
         when(history.supportsLocationHistory()).thenReturn(false);

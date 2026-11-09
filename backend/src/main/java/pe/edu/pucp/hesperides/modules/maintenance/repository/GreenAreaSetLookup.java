@@ -4,7 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,12 +27,27 @@ public class GreenAreaSetLookup {
         return found != null && found > 0;
     }
 
-    /** Secciones activas del conjunto; una sección dada de baja ya no cuenta. */
-    public Set<Long> activeZonesOf(Long setId) {
-        return new HashSet<>(jdbc.queryForList("""
-                SELECT gz.zone_id FROM green_area_set_zones gz
-                JOIN zones z ON z.id = gz.zone_id
-                WHERE gz.set_id = ? AND gz.deleted_at IS NULL AND z.deleted_at IS NULL AND z.is_active = TRUE
-                """, Long.class, setId));
+    /** Conjuntos activos de cada sección activa: con ellos se elige la regla efectiva (SPEC-203 §5.8). */
+    public Map<Long, Set<Long>> setsContaining(Collection<Long> zoneIds) {
+        Map<Long, Set<Long>> out = new HashMap<>();
+        if (zoneIds.isEmpty()) return out;
+        jdbc.query("""
+                SELECT gz.zone_id, gz.set_id FROM green_area_set_zones gz
+                JOIN green_area_sets s ON s.id = gz.set_id AND s.deleted_at IS NULL
+                JOIN zones z ON z.id = gz.zone_id AND z.deleted_at IS NULL AND z.is_active
+                WHERE gz.deleted_at IS NULL AND gz.zone_id = ANY(?)""",
+                ps -> ps.setArray(1, ps.getConnection().createArrayOf("bigint", zoneIds.toArray())),
+                rs -> { out.computeIfAbsent(rs.getLong("zone_id"), k -> new HashSet<>()).add(rs.getLong("set_id")); });
+        return out;
+    }
+
+    /** La sección que contorna cada lugar; un lugar sin sección no aparece. */
+    public Map<Long, Long> sectionsOfPlaces(Collection<Long> placeIds) {
+        Map<Long, Long> out = new HashMap<>();
+        if (placeIds.isEmpty()) return out;
+        jdbc.query("SELECT id, zone_id FROM places WHERE zone_id IS NOT NULL AND id = ANY(?)",
+                ps -> ps.setArray(1, ps.getConnection().createArrayOf("bigint", placeIds.toArray())),
+                rs -> { out.put(rs.getLong("id"), rs.getLong("zone_id")); });
+        return out;
     }
 }

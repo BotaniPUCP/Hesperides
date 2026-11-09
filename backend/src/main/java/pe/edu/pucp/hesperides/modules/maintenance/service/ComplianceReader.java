@@ -48,9 +48,15 @@ public class ComplianceReader {
                 : frequenciesRepository.findAllCurrent();
 
         List<ComplianceResponse> out = new ArrayList<>();
+        Map<Long, List<MaintenanceFrequency>> inHouseByActivity = new LinkedHashMap<>();
         for (MaintenanceFrequency f : current) {
-            out.add(evaluateOne(f, from, to));
+            if (executionHistory.supportsLocationHistory() && "IN_HOUSE".equals(f.getRegime())) {
+                inHouseByActivity.computeIfAbsent(f.getActivityTypeItem().getId(), k -> new ArrayList<>()).add(f);
+            } else {
+                out.add(evaluateOne(f, from, to));
+            }
         }
+        inHouseByActivity.values().forEach(rules -> out.add(evaluateLocations(rules, from, to)));
         return out;
     }
 
@@ -69,10 +75,6 @@ public class ComplianceReader {
                         && java.util.Objects.equals(currentVersion.getGreenAreaSetId(),f.getGreenAreaSetId()))
                 .map(MaintenanceFrequency::toRule)
                 .toList();
-
-        if (executionHistory.supportsLocationHistory() && "IN_HOUSE".equals(regime)) {
-            return evaluateLocations(currentVersion, versions, from, to);
-        }
         List<LocalDate> executions = executionHistory.executionDates(activityId, regime, from, to);
 
         List<ComplianceResult> results = versions.isEmpty()
@@ -90,37 +92,22 @@ public class ComplianceReader {
                 currentVersion.getScope());
     }
 
-    private ComplianceResponse evaluateLocations(MaintenanceFrequency frequency, List<FrequencyRule> versions,
-            LocalDate from, LocalDate to) {
-        var groups = new LinkedHashMap<String,List<LocationExecution>>();
-        java.util.Set<Long> inSet = "BY_SET".equals(frequency.getScope())
-                ? sets.activeZonesOf(frequency.getGreenAreaSetId()) : null;
-        for (var fact : executionHistory.locationExecutions(frequency.getActivityTypeItem().getId(),frequency.getRegime(),from,to)) {
-            if (inSet != null && !inSet.contains(fact.zoneId())) continue;
-            groups.computeIfAbsent(fact.targetKind()+":"+fact.targetId(),key -> new ArrayList<>()).add(fact);
-        }
-        var locations = new ArrayList<ComplianceResponse.LocationCompliance>();
-        for (var facts : groups.values()) {
-            var first = facts.get(0);
-            // One activity in the same target may contain several execution units.
-            // Count it once, at the last physical completion there; distinct works
-            // on the same date remain distinct occurrences.
-            var byWork = new LinkedHashMap<Long,LocalDate>();
-            for (var fact : facts) byWork.merge(fact.interventionId(),fact.executionDate(),(a,b) -> a.isAfter(b)?a:b);
-            List<ComplianceResult> results;
-            if ("LOCATION".equals(first.targetKind())) {
-                results = List.of(ComplianceResult.notApplicable(frequency.getId(),from,to,null,
-                        "La evaluación requiere una referencia estable de lugar/sección y alcance territorial confirmado"));
-            } else results = versions.isEmpty() ? List.of(ComplianceResult.notConfigured(from,to))
-                    : FrequencyEvaluator.evaluateAcrossVersions(versions,new ArrayList<>(byWork.values()),from,to);
-            locations.add(new ComplianceResponse.LocationCompliance(first.targetKind(),first.targetId(),first.targetLabel(),facts,
-                    results.stream().map(ComplianceResponse.Segment::from).toList()));
-        }
-        var summary = ComplianceResult.notApplicable(frequency.getId(),from,to,null,
+    /** Una respuesta por actividad: cada jardín, juzgado con su regla efectiva (SPEC-203 §5.8). */
+    private ComplianceResponse evaluateLocations(List<MaintenanceFrequency> rules, LocalDate from, LocalDate to) {
+        MaintenanceFrequency shown = rules.stream().filter(f -> "CAMPUS_WIDE".equals(f.getScope())).findFirst()
+                .orElse(rules.get(0));
+        Long activityId = shown.getActivityTypeItem().getId();
+        List<LocationExecution> facts = executionHistory.locationExecutions(activityId, shown.getRegime(), from, to);
+        var zones = facts.stream().map(LocationExecution::zoneId).filter(java.util.Objects::nonNull).toList();
+        var places = facts.stream().map(LocationExecution::placeId).filter(java.util.Objects::nonNull).toList();
+        var inputs = new LocationComplianceGrouper.Inputs(rules,
+                frequenciesRepository.findVersionsOverlapping(activityId, from, to), facts,
+                sets.setsContaining(zones), sets.sectionsOfPlaces(places));
+        var summary = ComplianceResult.notApplicable(shown.getId(), from, to, null,
                 "El cumplimiento se evalúa por lugar atendido, sin inferir cobertura de todo el campus");
-        return new ComplianceResponse(frequency.getActivityTypeItem().getId(),frequency.getActivityTypeItem().getLabel(),
-                frequency.getRegime(),frequency.getFrequencyRuleTypeItem().getCode(),from,to,
-                List.of(ComplianceResponse.Segment.from(summary)),locations,frequency.getScope());
+        return new ComplianceResponse(activityId, shown.getActivityTypeItem().getLabel(), shown.getRegime(),
+                shown.getFrequencyRuleTypeItem().getCode(), from, to, List.of(ComplianceResponse.Segment.from(summary)),
+                LocationComplianceGrouper.evaluate(inputs, from, to), shown.getScope());
     }
 
     /**
