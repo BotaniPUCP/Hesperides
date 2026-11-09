@@ -60,8 +60,8 @@ class GreenAreaSetsMigrationTest {
         db.update("UPDATE zones SET name = ? WHERE id = ?", sectorName, section);
         List<Long> types = db.queryForList("""
                 SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id = ci.catalog_type_id
-                WHERE ct.code = 'INTERVENTION_TYPE' AND ci.deleted_at IS NULL ORDER BY ci.id LIMIT 4""", Long.class);
-        activity = Map.of("A", types.get(0), "B", types.get(1), "C", types.get(2), "D", types.get(3));
+                WHERE ct.code = 'INTERVENTION_TYPE' AND ci.deleted_at IS NULL ORDER BY ci.id LIMIT 5""", Long.class);
+        activity = Map.of("A", types.get(0), "B", types.get(1), "C", types.get(2), "D", types.get(3), "E", types.get(4));
 
         rule("A", "IN_HOUSE", "BY_ZONE", section, "DATE '2026-01-01'", "NULL", "NULL");
         rule("A", "IN_HOUSE", "BY_ZONE", section, "DATE '2025-01-01'", "DATE '2025-12-31'", "NULL");
@@ -71,6 +71,10 @@ class GreenAreaSetsMigrationTest {
         rule("C", "IN_HOUSE", "BY_SECTOR", null, "DATE '2026-01-01'", "NULL", "NULL");
         rule("A", "IN_HOUSE", "CAMPUS_WIDE", null, "DATE '2026-01-01'", "NULL", "NULL");
         rule("A", "IN_HOUSE", "BY_SECTOR", null, "DATE '2026-01-01'", "NULL", "NULL");
+        // Casos que la API no produce pero una base puede tener: no deben abortar la migración.
+        rule("E", "IN_HOUSE", "CAMPUS_WIDE", null, "DATE '2026-01-01'", "NULL", "NULL");
+        rule("E", "IN_HOUSE", "BY_SECTOR", null, "DATE '2099-01-01'", "NULL", "NULL");
+        rule("E", "OUTSOURCED", "BY_ZONE", 999_999_999L, "DATE '2026-01-01'", "NULL", "NULL");
     }
 
     private static void rule(String act, String regime, String scope, Long zone,
@@ -137,6 +141,16 @@ class GreenAreaSetsMigrationTest {
         assertThat(collided.get("scope")).isEqualTo("CAMPUS_WIDE");
         assertThat(collided.get("valid_to")).isNotNull();
         assertThat(rulesOf("A").get(2).get("valid_to")).isNull();
+    }
+
+    @Test
+    void aFutureCollidingSectorRuleAndAnOrphanZoneRuleAreRetiredInsteadOfAborting() {
+        var rows = rulesOf("E");
+        assertThat(rows.get(0).get("deleted_at")).isNull();
+        assertThat(rows.get(1).get("scope")).isEqualTo("CAMPUS_WIDE");
+        assertThat(rows.get(1).get("deleted_at")).isNotNull();
+        assertThat(rows.get(2).get("scope")).isEqualTo("CAMPUS_WIDE");
+        assertThat(rows.get(2).get("deleted_at")).isNotNull();
     }
 
     @Test

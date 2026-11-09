@@ -48,6 +48,14 @@ ALTER TABLE maintenance_frequencies ADD COLUMN green_area_set_id BIGINT REFERENC
 -- El alcance viejo se suelta antes de convertir; el nuevo se impone al final (paso 4).
 ALTER TABLE maintenance_frequencies DROP CONSTRAINT chk_freq_scope;
 
+-- ── 0. Reglas por sección cuya zona ya no existe ──
+-- V002 no puso clave foránea a zones: una regla así no tiene a qué aplicarse. Se da de
+-- baja (con un alcance válido para el CHECK nuevo) en vez de abortar la migración.
+UPDATE maintenance_frequencies f
+SET scope = 'CAMPUS_WIDE', zone_id = NULL, deleted_at = COALESCE(f.deleted_at, CURRENT_TIMESTAMP)
+WHERE f.scope IN ('BY_ZONE', 'BY_SECTOR') AND f.zone_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM zones z WHERE z.id = f.zone_id);
+
 -- ── 1 y 2. Un conjunto por cada sección o sector que tenga reglas ──
 -- Por sección: el conjunto tiene esa sección. Por sector: sus secciones activas.
 -- Todas las reglas de esa zona (cualquier actividad, régimen o versión) apuntan
@@ -100,7 +108,10 @@ FROM converted_zone_set c WHERE f.scope IN ('BY_ZONE', 'BY_SECTOR') AND f.zone_i
 
 -- ── 3. Reglas por sector sin sector: la API nunca guardó cuál era ──
 -- Si chocan con una regla general vigente, manda la general y la otra se cierra hoy.
-UPDATE maintenance_frequencies f SET valid_to = CURRENT_DATE
+-- Una que todavía no empezaba (vigencia futura) no puede cerrarse antes de abrir: se da de baja.
+UPDATE maintenance_frequencies f
+SET valid_to = CASE WHEN f.valid_from <= CURRENT_DATE THEN CURRENT_DATE END,
+    deleted_at = CASE WHEN f.valid_from > CURRENT_DATE THEN CURRENT_TIMESTAMP END
 WHERE f.scope = 'BY_SECTOR' AND f.zone_id IS NULL AND f.valid_to IS NULL AND f.deleted_at IS NULL
   AND EXISTS (SELECT 1 FROM maintenance_frequencies g
               WHERE g.scope = 'CAMPUS_WIDE' AND g.activity_type_item_id = f.activity_type_item_id

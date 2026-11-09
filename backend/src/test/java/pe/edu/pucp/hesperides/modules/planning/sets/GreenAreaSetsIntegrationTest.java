@@ -105,6 +105,20 @@ class GreenAreaSetsIntegrationTest {
     }
 
     @Test
+    void anInactiveSectionLeavesTheSetDetail() throws Exception {
+        long id = create("Inactiva " + UUID.randomUUID(), sections, 201).get("data").get("id").asLong();
+        jdbc.update("UPDATE zones SET is_active = FALSE WHERE id = ?", sections.get(1));
+        try {
+            var detail = json.readTree(mvc.perform(get("/api/v1/green-area-sets/" + id).with(as(coordinator, "COORDINADOR")))
+                    .andReturn().getResponse().getContentAsString()).get("data");
+            assertThat(detail.get("zones")).hasSize(1);
+            assertThat(detail.get("zones").get(0).get("id").asLong()).isEqualTo(sections.get(0));
+        } finally {
+            jdbc.update("UPDATE zones SET is_active = TRUE WHERE id = ?", sections.get(1));
+        }
+    }
+
+    @Test
     void aSectorCannotBeAddedAsAGarden() throws Exception {
         var error = create("Con sector " + UUID.randomUUID(), List.of(sector), 422);
         assertThat(error.get("message").asString()).isEqualTo("Solo se pueden agregar secciones: " + sector);

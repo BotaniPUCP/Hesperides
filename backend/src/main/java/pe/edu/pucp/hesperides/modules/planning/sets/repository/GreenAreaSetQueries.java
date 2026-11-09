@@ -47,7 +47,7 @@ public class GreenAreaSetQueries {
         return jdbc.query("""
                 SELECT z.id, z.code, z.name, COALESCE(p.name, z.name) AS display_name,
                        landscape.code AS landscape_code, sector.name AS sector_name
-                FROM green_area_set_zones gz JOIN zones z ON z.id = gz.zone_id AND z.deleted_at IS NULL
+                FROM green_area_set_zones gz JOIN zones z ON z.id = gz.zone_id AND z.deleted_at IS NULL AND z.is_active
                 LEFT JOIN catalog_items landscape ON landscape.id = z.landscape_type_item_id
                 LEFT JOIN zones sector ON sector.id = z.parent_zone_id
                 LEFT JOIN LATERAL (SELECT name FROM places WHERE zone_id = z.id AND deleted_at IS NULL
