@@ -79,7 +79,7 @@ export interface PlanningRow {
   daysSinceLast: number | null;
   progress: { done: number; total: number } | null;
   neverAttendedCount: number;
-  openIntervention: { id: number; code: string; scheduledDate: string } | null;
+  openIntervention: { id: number; code: string; scheduledDate: string; startedDate: string | null } | null;
   estimatedDate: string | null;
   yearCount: number | null;
   suggestedDate: string | null;

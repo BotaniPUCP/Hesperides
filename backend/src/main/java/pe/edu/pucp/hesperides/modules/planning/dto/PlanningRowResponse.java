@@ -13,6 +13,7 @@ public record PlanningRowResponse(long setId, String setName, int zoneCount, lon
                                   Progress progress, int neverAttendedCount, OpenIntervention openIntervention,
                                   LocalDate estimatedDate, Integer yearCount, LocalDate suggestedDate) {
 
-    public record OpenIntervention(long id, String code, LocalDate scheduledDate) {
+    /** {@code startedDate} es nulo mientras ningún jardín haya empezado. */
+    public record OpenIntervention(long id, String code, LocalDate scheduledDate, LocalDate startedDate) {
     }
 }

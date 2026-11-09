@@ -130,6 +130,20 @@ class PlanningServiceImplTest {
     }
 
     @Test
+    void anOpenWorkTravelsWithItsFirstStart() {
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Tambo", Set.of(1L, 2L), Set.of(CORTE))));
+        when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
+        when(attendance.openWorks(anyLong(), anyCollection())).thenReturn(List.of(new pe.edu.pucp.hesperides.modules.planning
+                .attendance.OpenWork(81, "INT-000081", HOY.minusDays(4), HOY.minusDays(3), Set.of(1L, 2L))));
+
+        var row = service.rows().get(0);
+
+        assertThat(row.state()).isEqualTo(PlanningState.IN_PROGRESS);
+        assertThat(row.openIntervention().startedDate()).isEqualTo(HOY.minusDays(3));
+        assertThat(row.openIntervention().code()).isEqualTo("INT-000081");
+    }
+
+    @Test
     void recentAttentionUsesTheMostFrequentOwnRule() {
         when(sets.activeSets()).thenReturn(List.of(
                 new SetSnapshot(5, "A", Set.of(1L), Set.of(CORTE)), new SetSnapshot(6, "B", Set.of(1L), Set.of(CORTE))));
