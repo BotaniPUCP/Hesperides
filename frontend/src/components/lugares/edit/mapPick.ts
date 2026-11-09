@@ -28,6 +28,24 @@ export interface PickedOutline {
   label: string;
 }
 
+/** El contorno de un complejo: se calcula con el de los lugares que contiene. */
+export const CHILDREN_OUTLINE: PickedOutline = {
+  outline: { fromChildren: true },
+  label: 'El de los lugares que contiene (se calcula solo)',
+};
+
+/** El nombre de un edificio en el mapa; si ya no está, su id. */
+export function buildingName(data: SceneData, id: number): string {
+  const building = data.campusBuildings.find((b) => b.props.id === id);
+  if (!building) return `Edificio ${id}`;
+  return building.props.name ?? `Edificio sin nombre (${id})`;
+}
+
+export function buildingsOutline(data: SceneData, ids: readonly number[]): PickedOutline {
+  const names = ids.map((id) => buildingName(data, id));
+  return { outline: { buildingIds: [...ids] }, label: names.length === 1 ? names[0] : `${names.length} edificios: ${names.join(', ')}` };
+}
+
 /**
  * El contorno que da un elemento pulsado en el mapa: un edificio del campus, un
  * área verde (sección o subsección) o un estacionamiento. Lo demás no tiene
@@ -35,10 +53,8 @@ export interface PickedOutline {
  */
 export function outlineFromTarget(data: SceneData, target: Target): PickedOutline | null {
   switch (target.layer) {
-    case 'campusBuildings': {
-      const b = data.campusBuildings[target.index].props;
-      return { outline: { buildingId: b.id }, label: b.name ?? `Edificio sin nombre (${b.id})` };
-    }
+    case 'campusBuildings':
+      return buildingsOutline(data, [data.campusBuildings[target.index].props.id]);
     case 'greenAreas':
     case 'xerophytic':
     case 'reserve': {
@@ -52,6 +68,21 @@ export function outlineFromTarget(data: SceneData, target: Target): PickedOutlin
     default:
       return null;
   }
+}
+
+/** Sin el edificio si ya estaba, con él si no. Sin edificios no queda contorno. */
+export function toggleBuilding(data: SceneData, ids: readonly number[], id: number): PickedOutline | null {
+  const next = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
+  return next.length === 0 ? null : buildingsOutline(data, next);
+}
+
+/**
+ * Un clic en el mapa al elegir el contorno. Los edificios se suman (un lugar
+ * puede ser varios bloques); un área verde o un estacionamiento reemplaza lo elegido.
+ */
+export function pickOnMap(current: PickedOutline | null, data: SceneData, target: Target): PickedOutline | null {
+  if (target.layer !== 'campusBuildings') return outlineFromTarget(data, target) ?? current;
+  return toggleBuilding(data, current?.outline.buildingIds ?? [], data.campusBuildings[target.index].props.id);
 }
 
 /** Un punto marcado a mano como contorno, para lo que no está dibujado en el mapa. */

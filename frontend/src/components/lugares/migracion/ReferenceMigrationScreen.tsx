@@ -1,14 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Breadcrumb, Button, EmptyState, Input, LoadingSkeleton } from '@/components/ui';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { Button, EmptyState, Input, LoadingSkeleton } from '@/components/ui';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
+import { useListUrlState } from '@/hooks/useListUrlState';
 import { useRequest } from '@/hooks/useRequest';
+import { useSearchDraft } from '@/hooks/useSearchDraft';
+import { pageFrom } from '@/lib/listUrl';
 import { placesApi } from '@/lib/places-api';
 import { useCanEditPlaces } from '../edit/useCanEditPlaces';
+import { MIGRATION_PATH } from '../edit/returnPath';
 import { MigrationGroupCard } from './MigrationGroupCard';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 const PAGE_SIZE = 20;
+const DEFAULTS = { search: '', page: '' };
 
 /**
  * La cola de migración de las referencias antiguas al catálogo. Cada grupo
@@ -17,13 +23,16 @@ const PAGE_SIZE = 20;
  */
 export function ReferenceMigrationScreen() {
   const canEdit = useCanEditPlaces();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
+  // En la URL: al volver de crear un lugar, la cola sigue en la misma búsqueda y página.
+  const { values, setValues, query } = useListUrlState(MIGRATION_PATH, DEFAULTS);
+  const [search, setSearch] = useSearchDraft(values.search, (next) => setValues({ search: next, page: '' }));
+  const page = pageFrom(values.page);
+  const setPage = (next: number) => setValues({ page: next === 0 ? '' : String(next) });
   const [version, setVersion] = useState(0);
-  const debounced = useDebouncedValue(search, 300);
-  const queue = useRequest(canEdit ? `${debounced}:${page}:${version}` : null, () =>
-    placesApi.referenceQueue(debounced, page, PAGE_SIZE),
+  const queue = useRequest(canEdit ? `${values.search}:${page}:${version}` : null, () =>
+    placesApi.referenceQueue(values.search, page, PAGE_SIZE),
   );
+  useListScrollRestoration(MIGRATION_PATH, query, !queue.loading);
   const progress = useRequest(canEdit ? `progress:${version}` : null, () => placesApi.migrationProgress());
   const refresh = () => setVersion((v) => v + 1);
 
@@ -34,18 +43,11 @@ export function ReferenceMigrationScreen() {
   const p = progress.data;
   const totalPages = Math.max(1, Math.ceil((queue.data?.totalGroups ?? 0) / PAGE_SIZE));
   return (
-    <div className="flex flex-col gap-4">
-      <Breadcrumb items={[{ label: 'Lugares', href: '/lugares' }, { label: 'Migración de referencias' }]} />
-      <header className="surface-card">
-        <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">Migración de referencias</h1>
-        <p className="mt-1 max-w-3xl text-sm text-neutral-600">
-          Cada referencia antigua se enlaza a un lugar del catálogo (su nombre queda como alias) o se descarta. Las
-          sugerencias miran el nombre y la cercanía en el mapa; nada se enlaza sin tu clic.
-        </p>
-      </header>
+    <div className="space-y-6">
+      <PageHeader title="Migrar referencias" description="Cada referencia antigua se enlaza a un lugar del catálogo (su nombre queda como alias) o se descarta. Las sugerencias miran el nombre y la cercanía en el mapa; nada se enlaza sin tu clic." />
 
       {p && (
-        <div className="rounded-xl border border-neutral-200 bg-neutral-0 p-4">
+        <div className="surface-card">
           <p className="text-sm font-semibold text-neutral-800">{`${p.linked + p.discarded} de ${p.total} referencias decididas`}</p>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100" aria-hidden="true">
             <div className="h-full bg-brand-600" style={{ width: `${p.total ? ((p.linked + p.discarded) / p.total) * 100 : 0}%` }} />
@@ -55,7 +57,7 @@ export function ReferenceMigrationScreen() {
       )}
 
       <div className="surface-card">
-        <Input id="migracion-buscar" label="Buscar" type="search" value={search} onChange={(v) => { setSearch(v); setPage(0); }}
+        <Input id="migracion-buscar" label="Buscar" type="search" value={search} onChange={setSearch}
         placeholder="Parte del nombre: gelarti, pabellón, espalda…" />
       </div>
 

@@ -65,7 +65,7 @@ export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
   if (fallo || historial === null) return null;
 
   return (
-    <div className="rounded-3xl border border-neutral-200/90 bg-neutral-0 p-6 shadow-sm">
+    <div className="surface-card">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 mb-4 border-b border-neutral-100 gap-3">
         <div className="flex items-start sm:items-center gap-2.5 min-w-0">
           <span className="p-1.5 rounded-lg bg-neutral-100 text-neutral-600 shrink-0 mt-0.5 sm:mt-0">

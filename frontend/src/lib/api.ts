@@ -27,6 +27,20 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
  */
 let accessToken: string | null = null;
 
+/** Texto con que PasswordChangeRequiredFilter distingue su 403 de una falta de permisos. */
+export const PASSWORD_CHANGE_REQUIRED_MESSAGE = 'Password change required before using the system';
+
+let passwordChangeRequiredHandler: (() => void) | null = null;
+
+/**
+ * Lo registra AuthContext. Si otro administrador regenera la clave con la pestaña
+ * abierta, la copia local de la sesión queda desactualizada y RouteGuard no
+ * desviaría a /cambiar-password: toda pantalla mostraría un error sin salida.
+ */
+export function setPasswordChangeRequiredHandler(handler: (() => void) | null): void {
+  passwordChangeRequiredHandler = handler;
+}
+
 /** La llama AuthContext al iniciar sesión y con null al cerrarla. */
 export function setAccessToken(token: string | null): void {
   accessToken = token;
@@ -134,6 +148,9 @@ async function unwrap<T>(response: Response): Promise<T> {
   const envelope = (await response.json()) as ApiResponse<T>;
 
   if (!response.ok || !envelope.ok) {
+    if (response.status === 403 && envelope.message === PASSWORD_CHANGE_REQUIRED_MESSAGE) {
+      passwordChangeRequiredHandler?.();
+    }
     throw new ApiError(response.status, envelope.message ?? 'Unexpected error', envelope.data);
   }
 

@@ -29,6 +29,7 @@ import java.util.*;
 @Transactional(readOnly=true)
 public class InterventionsServiceImpl implements InterventionsService {
     private final InterventionsRepository interventions;
+    private final PruningMeasurementOutcomeService measurementOutcomes;
     private final InterventionLocationsRepository locations;
     private final InterventionElementsRepository elements;
     private final InterventionEventsRepository events;
@@ -44,7 +45,6 @@ public class InterventionsServiceImpl implements InterventionsService {
     private final InterventionEvidenceFiles evidenceFiles;
     private final InterventionReviewPolicy reviewPolicy;
     private final InterventionExecutionSchedule schedule;
-    private final SpecimenInterventionMeasurementService specimenMeasurementService;
     private final InterventionAccess access;
     private final pe.edu.pucp.hesperides.modules.incidents.repository.IncidentLinkQueries incidentLinks;
 
@@ -341,7 +341,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         location.setCompletedAt(microseconds(Instant.now()));
         location.setStatusItemId(status("COMPLETED"));
         persistReview(intervention, location, user, "COMPLETED", from, null, previous);
-        specimenMeasurementService.applyInterventionEstimation(id, locationId, user.getId());
+        measurementOutcomes.apply(id, locationId, request.measurementOutcomes(), user.getId());
         return detail(id, user);
     }
 

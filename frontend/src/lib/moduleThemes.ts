@@ -13,6 +13,7 @@ export type ModuleId =
   | 'lugares'
   | 'incidencias'
   | 'reportes'
+  | 'directorio'
   | 'administracion';
 
 export interface ModuleTheme {
@@ -60,6 +61,11 @@ export const MODULE_THEMES: Readonly<Record<ModuleId, ModuleTheme>> = {
     night: ['#04050F', '#0C0F28', '#161B44', '#20285F'],
     nightAccent: '129, 140, 248',
   },
+  directorio: {
+    day: ['#4C2A85', '#7C4DCC', '#C4A8F0', '#F7F3FE'],
+    night: ['#07040E', '#140C26', '#221541', '#321F5C'],
+    nightAccent: '167, 139, 250',
+  },
   administracion: {
     day: ['#334155', '#64748B', '#B4BFCC', '#F8FAFC'],
     night: ['#05070B', '#0F141C', '#1B2330', '#283446'],
@@ -69,20 +75,19 @@ export const MODULE_THEMES: Readonly<Record<ModuleId, ModuleTheme>> = {
 
 /**
  * Gana la primera que coincide, así que lo específico va antes. Un ejemplar del
- * catálogo público es catastro, y «Migrar referencias» está en el menú de
- * catastro aunque su URL cuelgue de /lugares.
+ * catálogo público es catastro.
  */
 const MODULE_ROUTES: readonly (readonly [RegExp, ModuleId])[] = [
   [/^\/inventario-verde\/especies\/[^/]+\/ejemplares(\/|$)/, 'catastro'],
   [/^\/inventario-verde\/ejemplares(\/|$)/, 'catastro'],
   [/^\/inventario-verde(\/|$)/, 'catalogo'],
   [/^\/catastro(\/|$)/, 'catastro'],
-  [/^\/lugares\/migracion(\/|$)/, 'catastro'],
   [/^\/lugares(\/|$)/, 'lugares'],
   [/^\/intervenciones(\/|$)/, 'intervenciones'],
   [/^\/incidencias(\/|$)/, 'incidencias'],
   [/^\/riego(\/|$)/, 'riego'],
   [/^\/reportes(\/|$)/, 'reportes'],
+  [/^\/directorio(\/|$)/, 'directorio'],
   [/^\/admin(\/|$)/, 'administracion'],
 ];
 

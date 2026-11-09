@@ -24,8 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Testcontainers
 class GreenAreaSetsMigrationTest {
 
-    private static final String PREVIOUS_VERSION = "29";
-    private static final String SETS_VERSION = "30";
+    private static final String PREVIOUS_VERSION = "37";
+    private static final String SETS_VERSION = "38";
 
     @Container
     static final PostgreSQLContainer<?> postgres = TestDatabase.newContainer();

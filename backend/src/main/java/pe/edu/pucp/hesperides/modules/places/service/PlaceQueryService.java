@@ -70,7 +70,7 @@ public class PlaceQueryService {
     @Transactional(readOnly = true)
     public MapCatalog map() {
         return new MapCatalog(
-                mapRows.places().stream().map(p -> new MapPlace(p.code(), p.name(), p.parentName(), p.buildingId(), p.lat(), p.lon()))
+                mapRows.places().stream().map(p -> new MapPlace(p.code(), p.name(), p.parentName(), p.buildingIds(), p.lat(), p.lon()))
                         .toList(),
                 mapRows.perspectives().stream().map(v -> new MapPerspective(v.id(), new PlaceRef(v.placeCode(), v.placeName()),
                         v.displayName(), v.lat(), v.lon(), v.headingDeg(),

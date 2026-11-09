@@ -1,15 +1,14 @@
 package pe.edu.pucp.hesperides.modules.imports.service;
 
 import org.springframework.stereotype.Service;
-import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreviewResponse;
-import pe.edu.pucp.hesperides.modules.imports.dto.ImportResultResponse;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportOutcome;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreview;
 import pe.edu.pucp.hesperides.modules.imports.service.ImportBatchGate.Claimed;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 /** Lleva cada carga a quien sabe leer su estándar, según el tipo de la URL o del lote. */
 @Service
@@ -30,11 +29,11 @@ public class ImportService {
      * ZIP llega como proveedor para leerlo recién con el permiso: una segunda carga
      * se rechaza sin haber ocupado sus 250 MB.
      */
-    public ImportPreviewResponse preview(String kind, byte[] csv, String fileName, Supplier<byte[]> zip, String userEmail) {
-        return lock.run(() -> handler(kind).preview(kind, csv, fileName, zip.get(), userEmail));
+    public ImportPreview preview(String kind, ImportUpload upload, String userEmail) {
+        return lock.run(() -> handler(kind).preview(kind, upload, userEmail));
     }
 
-    public ImportResultResponse confirm(long batchId, Map<Integer, Boolean> decisions, String userEmail) {
+    public ImportOutcome confirm(long batchId, Map<Integer, Boolean> decisions, String userEmail) {
         return lock.run(() -> {
             Claimed claimed = gate.claim(batchId, userEmail);
             return handler(claimed.batch().kind()).confirm(claimed, decisions);

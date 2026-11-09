@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import type { GreenAreaSetDetail } from '@shared/types';
 import type { IrrigationZone } from '@shared/types/irrigation';
 import { SectionMapPicker } from '@/components/map3d/SectionMapPicker';
+import { PageHeader } from '@/components/layouts/PageHeader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
@@ -83,10 +84,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
 
   return (
     <section className="space-y-6">
-      <div>
-        <Link href={SETS_PATH} className="text-sm text-brand-600 underline">Volver a conjuntos</Link>
-        <h1 className="mt-2 text-2xl font-bold">{existing ? existing.name : 'Nuevo conjunto'}</h1>
-      </div>
+      <PageHeader title={existing ? existing.name : 'Nuevo conjunto'} />
       <Card>
         <div className="space-y-4">
           <Input id="set-name" label="Nombre" value={name} onChange={setName} maxLength={120} required />

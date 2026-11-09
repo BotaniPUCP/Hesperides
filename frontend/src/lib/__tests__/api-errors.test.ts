@@ -17,14 +17,65 @@ describe('mensajeDeApiError', () => {
     );
   });
 
-  it('muestra las reglas de conjuntos y planificación (SPEC-203)', () => {
-    expect(mensajeDeApiError(new ApiError(422, 'Ya existe un conjunto con ese nombre'))).toBe('Ya existe un conjunto con ese nombre.');
-    expect(mensajeDeApiError(new ApiError(409, 'Otra persona cambió este conjunto. Recarga para ver su versión.')))
-      .toBe('Otra persona cambió este conjunto. Recarga para ver su versión.');
-    expect(mensajeDeApiError(new ApiError(422, 'Quita primero la frecuencia propia de este conjunto')))
-      .toMatch(/frecuencia propia/);
-    expect(mensajeDeApiError(new ApiError(422, 'Solo se pueden agregar secciones: 7, 9')))
-      .toBe('Solo se pueden agregar jardines. Revisa la selección.');
+  it('distingue el cambio obligatorio de contraseña de una falta de permisos', () => {
+    expect(
+      mensajeDeApiError(new ApiError(403, 'Password change required before using the system')),
+    ).toMatch(/cambiar tu contraseña/i);
+    expect(mensajeDeApiError(new ApiError(403, 'Forbidden'))).toBe(
+      'No tienes permisos para esta acción.',
+    );
+  });
+
+  it('traduce el rechazo de reenviarse las credenciales a uno mismo', () => {
+    expect(
+      mensajeDeApiError(new ApiError(422, 'You cannot resend your own credentials')),
+    ).toMatch(/tus propias credenciales/i);
+  });
+
+  describe('lugares: ningún error queda en inglés ni en el mensaje genérico', () => {
+    const GENERICOS = ['La operación no cumple una regla del sistema.', 'Revisa los datos ingresados.'];
+
+    it.each([
+      [422, 'The place has no outline to locate its perspectives'],
+      [400, 'The drawn outline is not a valid geometry'],
+      [400, 'The drawn outline is not valid GeoJSON'],
+      [422, 'The new order must list every perspective of the place exactly once; reload and try again'],
+      [422, 'Only outdoor places have perspectives; add photos to the indoor place instead'],
+      [422, 'The place already has a perspective of that side: edit it instead'],
+      [422, 'A photo belongs to a perspective or to an indoor view, not both'],
+      [422, 'Indoor views are only for indoor places'],
+      [422, 'Delete the perspectives before turning the place into an indoor one'],
+      [409, 'The place has places inside it: move or delete them first'],
+      [422, 'A place cannot be inside one of its own places'],
+      [422, 'Places can be nested at most 3 levels deep'],
+      [400, 'Give one outline source: buildings, a zone, a feature, a drawing or the places inside it'],
+      [422, 'An outdoor place needs an outline to be located on the map'],
+      [422, 'An indoor place is located by its parent and has no outline of its own'],
+      [422, 'An indoor place must be inside another place'],
+      [409, 'There is already a place named «CIA» there'],
+      [409, 'Building 87 already belongs to «Pabellón Z» (LUG-0004)'],
+      [409, 'Reference REF-0012 was already migrated or discarded'],
+      [400, 'Unknown REFERENCE_CATEGORY code: XYZ'],
+      [400, 'Unknown perspective side: TOP'],
+    ])('%i «%s»', (status, message) => {
+      const traducido = mensajeDeApiError(new ApiError(status, message));
+
+      expect(GENERICOS).not.toContain(traducido);
+      expect(traducido).not.toBe(message);
+    });
+
+    it('conserva el dato que la persona necesita para corregir', () => {
+      expect(mensajeDeApiError(new ApiError(409, 'There is already a place named «CIA» there'))).toMatch(/«CIA»/);
+      expect(mensajeDeApiError(new ApiError(409, 'Building 87 already belongs to «Pabellón Z» (LUG-0004)')))
+        .toMatch(/«Pabellón Z» \(LUG-0004\)/);
+      expect(mensajeDeApiError(new ApiError(422, 'Places can be nested at most 3 levels deep'))).toMatch(/3 niveles/);
+    });
+
+    it('un patrón no atrapa un mensaje que solo se le parece', () => {
+      expect(mensajeDeApiError(new ApiError(409, 'Building 87 is under construction'))).toBe(
+        'La operación no cumple una regla del sistema.',
+      );
+    });
   });
 
   it('ante un 422 desconocido no inventa un mensaje concreto', () => {
@@ -75,5 +126,35 @@ describe('erroresDeCampo', () => {
   it('no busca campos en un error que no es 400', () => {
     expect(erroresDeCampo(new ApiError(409, 'Email already registered'))).toEqual([]);
     expect(erroresDeCampo(new Error('boom'))).toEqual([]);
+  });
+});
+
+describe('errores de otros módulos', () => {
+  it('un mensaje que el backend ya escribe en español se muestra tal cual, no el genérico', () => {
+    expect(mensajeDeApiError(new ApiError(400, 'No repitas secciones en un mismo turno'))).toBe('No repitas secciones en un mismo turno');
+    expect(mensajeDeApiError(new ApiError(409, 'La especie «Ficus sp.» ya está registrada en el catálogo'))).toMatch(/«Ficus sp\.»/);
+  });
+
+  it('un mensaje en español que no está en la lista no se muestra tal cual', () => {
+    expect(mensajeDeApiError(new ApiError(422, 'Mensaje nuevo sin revisar'))).toBe('La operación no cumple una regla del sistema.');
+  });
+
+  it('traduce los errores en inglés de usuarios y fotos', () => {
+    expect(mensajeDeApiError(new ApiError(422, "Role 'JEFE' does not exist or is not active"))).toMatch(/rol elegido/);
+    expect(mensajeDeApiError(new ApiError(400, 'The photo is larger than 10 MB'))).toBe('La foto pesa más de 10 MB. Elige una más liviana.');
+  });
+});
+
+describe('errores de conjuntos y planificación (SPEC-203)', () => {
+  it('muestra las reglas de conjuntos en español', () => {
+    expect(mensajeDeApiError(new ApiError(422, 'Ya existe un conjunto con ese nombre'))).toBe('Ya existe un conjunto con ese nombre.');
+    expect(mensajeDeApiError(new ApiError(409, 'Otra persona cambió este conjunto. Recarga para ver su versión.')))
+      .toBe('Otra persona cambió este conjunto mientras lo editabas. Recarga para ver su versión.');
+    expect(mensajeDeApiError(new ApiError(422, 'Quita primero la frecuencia propia de este conjunto'))).toMatch(/frecuencia propia/);
+  });
+
+  it('un mensaje con ids al final se reconoce por su comienzo', () => {
+    expect(mensajeDeApiError(new ApiError(422, 'Solo se pueden agregar secciones: 7, 9')))
+      .toBe('Solo se pueden agregar jardines. Revisa la selección.');
   });
 });

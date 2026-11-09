@@ -9,8 +9,6 @@ export const metadata = {
 // además puede escribir (Anexo A de SPEC-001).
 export default function UsuariosPage() {
   return (
-    <div className="mx-auto max-w-6xl">
-      <UsersAdminScreen />
-    </div>
+    <UsersAdminScreen />
   );
 }

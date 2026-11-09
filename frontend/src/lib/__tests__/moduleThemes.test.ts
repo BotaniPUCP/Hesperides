@@ -5,7 +5,7 @@ describe('moduleForPath', () => {
     ['/catastro/ejemplares', 'catastro'],
     ['/catastro/ejemplares/EV-000001', 'catastro'],
     ['/catastro/importar', 'catastro'],
-    ['/lugares/migracion', 'catastro'],
+    ['/lugares/migracion', 'lugares'],
     ['/inventario-verde', 'catalogo'],
     ['/inventario-verde/registrar', 'catalogo'],
     ['/inventario-verde/especies/roystonea-regia', 'catalogo'],
@@ -20,6 +20,10 @@ describe('moduleForPath', () => {
     ['/incidencias/7', 'incidencias'],
     ['/reportes', 'reportes'],
     ['/admin/usuarios', 'administracion'],
+    ['/directorio', 'directorio'],
+    ['/directorio/ORG-0001', 'directorio'],
+    ['/directorio/contactos/CON-0001', 'directorio'],
+    ['/directorio/registrar', 'directorio'],
   ])('%s pertenece al módulo %s', (path, module) => {
     expect(moduleForPath(path)).toBe(module);
   });

@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHeader } from '@/components/layouts/PageHeader';
 import { PlanningAlerts } from '@/components/planning/PlanningAlerts';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,15 +13,15 @@ export default function HomePage() {
   const { user } = useAuth();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      {/* SPEC-203 §5.7: encima de la bienvenida, lo preventivo atrasado o próximo. */}
+    <div className="space-y-6">
+      <PageHeader
+        title={`Hola, ${user?.fullName ?? ''}`}
+        description={<>Sesión iniciada como <strong>{user?.email}</strong> con el rol <strong>{user?.role.label}</strong>.</>}
+      />
+      {/* SPEC-203 §5.7: lo preventivo atrasado o próximo, antes que cualquier otra cosa. */}
       <PlanningAlerts />
-      <Card title={`Hola, ${user?.fullName ?? ''}`}>
+      <Card>
         <p className="text-sm text-neutral-700">
-          Sesión iniciada como <strong>{user?.email}</strong> con el rol{' '}
-          <strong>{user?.role.label}</strong>.
-        </p>
-        <p className="mt-3 text-sm text-neutral-500">
           Elige un módulo en el menú lateral. Los demás módulos aparecerán ahí conforme se
           implementen.
         </p>

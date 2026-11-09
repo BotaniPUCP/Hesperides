@@ -25,7 +25,7 @@ const create = placesApi.createPerspective as jest.MockedFunction<typeof placesA
 
 const place = {
   code: 'LUG-0001', name: 'CIA', kind: { code: 'OUTDOOR', label: 'Exterior' },
-  outline: { source: 'BUILDING', buildingId: 1, zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
+  outline: { source: 'BUILDING', buildingIds: [1], zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
   perspectives: [{ id: 3, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: 'SOUTH',
     landmark: null, lat: -12.0702, lon: -77.08, headingDeg: 0, photos: [], mapView: null }],
 } as unknown as PlaceDetail;
@@ -90,7 +90,7 @@ describe('PerspectiveEditor', () => {
     preview.mockResolvedValue({ displayName: 'Al lado de CIA · oeste' });
     create.mockResolvedValue({} as never);
     const viewer = {
-      setViewCones: jest.fn(), select: jest.fn(), focusLatLon: jest.fn(), flyToPose: jest.fn(),
+      setViewCones: jest.fn(), setMarkedBuildings: jest.fn(), select: jest.fn(), focusLatLon: jest.fn(), flyToPose: jest.fn(),
       pose: jest.fn(() => ({ position: [0, 72, 30] as [number, number, number], target: [0, 22, 0] as [number, number, number] })),
     };
     render(<PerspectiveEditor place={place} perspective={null} onClose={jest.fn()} onSaved={jest.fn()} />);

@@ -1,12 +1,23 @@
 'use client';
 
-import type { SpecimenSortKey, SpecimenViewMode } from '@shared/types';
+import type { SpecimenSortKey, SpecimenViewMode, VegetationType } from '@shared/types';
 import { Input } from '@/components/ui';
 import { SpecimenViewToggle } from './SpecimenViewToggle';
+
+const FILTER_SELECT_CLASS =
+  'w-full h-10 text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-md px-3 focus:outline-hidden focus:ring-2 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors';
 
 export interface SpecimenFiltersBarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
+  selectedType: string;
+  onTypeChange: (typeCode: string) => void;
+  availableTypes: VegetationType[];
+  /** «ALL», «true» o «false»: los dos ejes son independientes (SPEC-105 §3). */
+  selectedCritical: string;
+  onCriticalChange: (value: string) => void;
+  selectedMeasured: string;
+  onMeasuredChange: (value: string) => void;
   selectedLocation: string;
   onLocationChange: (loc: string) => void;
   availableLocations: { location: string; count: number }[];
@@ -26,6 +37,13 @@ export interface SpecimenFiltersBarProps {
 export function SpecimenFiltersBar({
   searchValue,
   onSearchChange,
+  selectedType,
+  onTypeChange,
+  availableTypes,
+  selectedCritical,
+  onCriticalChange,
+  selectedMeasured,
+  onMeasuredChange,
   selectedLocation,
   onLocationChange,
   availableLocations,
@@ -43,6 +61,9 @@ export function SpecimenFiltersBar({
 }: SpecimenFiltersBarProps) {
   const hasActiveFilters =
     Boolean(searchValue.trim()) ||
+    selectedType !== 'ALL' ||
+    selectedCritical !== 'ALL' ||
+    selectedMeasured !== 'ALL' ||
     selectedLocation !== 'ALL' ||
     sortBy !== 'code' ||
     sortDirection !== 'asc';
@@ -85,12 +106,29 @@ export function SpecimenFiltersBar({
           />
         </div>
 
+        <div className="sm:w-48 shrink-0">
+          <select
+            id="specimen-type-filter"
+            aria-label="Filtrar por tipo de ejemplar"
+            value={selectedType}
+            onChange={(e) => onTypeChange(e.target.value)}
+            className={FILTER_SELECT_CLASS}
+          >
+            <option value="ALL">Todos los tipos</option>
+            {availableTypes.map((type) => (
+              <option key={type.code} value={type.code}>
+                {type.label} ({type.count})
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="sm:w-60 shrink-0">
           <select
             id="specimen-location-filter"
             value={selectedLocation}
             onChange={(e) => onLocationChange(e.target.value)}
-            className="w-full h-10 text-xs font-semibold text-neutral-800 bg-neutral-0 border border-neutral-200/90 rounded-md px-3 focus:outline-hidden focus:ring-2 focus:ring-forest-600 cursor-pointer shadow-2xs hover:border-neutral-300 transition-colors"
+            className={FILTER_SELECT_CLASS}
           >
             <option value="ALL">Todas las ubicaciones</option>
             {availableLocations.map((loc) => (
@@ -100,6 +138,31 @@ export function SpecimenFiltersBar({
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <select
+          id="specimen-critical-filter"
+          aria-label="Filtrar por criticidad de la especie"
+          value={selectedCritical}
+          onChange={(e) => onCriticalChange(e.target.value)}
+          className={FILTER_SELECT_CLASS}
+        >
+          <option value="ALL">Críticas y no críticas</option>
+          <option value="true">Especies críticas</option>
+          <option value="false">Especies no críticas</option>
+        </select>
+        <select
+          id="specimen-measured-filter"
+          aria-label="Filtrar por medición del ejemplar"
+          value={selectedMeasured}
+          onChange={(e) => onMeasuredChange(e.target.value)}
+          className={FILTER_SELECT_CLASS}
+        >
+          <option value="ALL">Medidos y no medidos</option>
+          <option value="true">Medidos</option>
+          <option value="false">No medidos</option>
+        </select>
       </div>
 
       {/* Fila inferior: Estado a la izquierda y controles a la derecha */}

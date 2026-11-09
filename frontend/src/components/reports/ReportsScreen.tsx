@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Breadcrumb, EmptyState } from '@/components/ui';
+import { PageHeader } from '@/components/layouts/PageHeader';
+import { EmptyState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useReportNavigation, useReportOptions } from '@/hooks/useReports';
 import { allowedTabs, type ReportTab } from '@/lib/reportNavigation';
@@ -38,11 +39,7 @@ export function ReportsScreen() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: SCREEN_TEXTS.breadcrumbHome, href: '/' }, { label: SCREEN_TEXTS.title }]} />
-      <header className="surface-card space-y-2">
-        <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">{SCREEN_TEXTS.title}</h1>
-        {role === 'SUPERVISOR' && <p className="text-sm text-neutral-700">{SCREEN_TEXTS.supervisorNotice}</p>}
-      </header>
+      <PageHeader title={SCREEN_TEXTS.title} description={role === 'SUPERVISOR' && SCREEN_TEXTS.supervisorNotice} />
       {tabs.length === 0 || !tab ? (
         <EmptyState title={SCREEN_TEXTS.noAccessTitle} description={SCREEN_TEXTS.noAccessDescription} />
       ) : (

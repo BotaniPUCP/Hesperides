@@ -21,7 +21,7 @@ public final class PlaceResponses {
     }
 
     /** De dónde sale el contorno: BUILDING, ZONE, FEATURE, DRAWN o INHERITED (interiores). */
-    public record Outline(String source, Long buildingId, String zoneCode, String featureCode, Double centerLat,
+    public record Outline(String source, List<Long> buildingIds, String zoneCode, String featureCode, Double centerLat,
             Double centerLon) {
     }
 
@@ -45,7 +45,7 @@ public final class PlaceResponses {
     }
 
     /** Un lugar en el mapa: lo justo para buscarlo y llevar la cámara. */
-    public record MapPlace(String code, String name, String parentName, Long buildingId, Double lat, Double lon) {
+    public record MapPlace(String code, String name, String parentName, List<Long> buildingIds, Double lat, Double lon) {
     }
 
     /** Una perspectiva en el mapa: su cono y lo que muestra su ficha. */

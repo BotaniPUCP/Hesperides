@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PageHeader } from '@/components/layouts/PageHeader';
 import { Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
@@ -14,15 +15,10 @@ export function GreenAreaSetsScreen() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Conjuntos de áreas verdes</h1>
-          <p className="text-neutral-500">Grupos de jardines que se planifican y atienden juntos</p>
-        </div>
-        <Link href={`${SETS_PATH}/nuevo`} className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+      <PageHeader title="Conjuntos de áreas verdes" description="Grupos de jardines que se planifican y atienden juntos"
+        actions={<Link href={`${SETS_PATH}/nuevo`} className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
           Nuevo conjunto
-        </Link>
-      </div>
+        </Link>} />
       {sets.loading && <LoadingSkeleton />}
       {sets.errorMessage && <p role="alert" className="text-sm text-action-danger">{sets.errorMessage}</p>}
       {sets.data?.length === 0 && (

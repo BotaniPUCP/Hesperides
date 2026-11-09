@@ -133,7 +133,8 @@ demuestran la ampliación. Los resultados nuevos se registrarán tras ejecutar p
   propone automáticamente; si no, queda sin asignar.
 - El capataz consulta sus envíos y las incidencias de las cuadrillas que dirige
   actualmente; solo atiende/resuelve las asignadas a esas cuadrillas. Coordinación
-  consulta y atiende todas. El resto de roles no accede a esta prueba de concepto.
+  consulta y atiende todas. Administración tiene los mismos permisos que
+  coordinación en todo el módulo. El operario no accede.
 - Una incidencia admite varias intervenciones. Coordinación puede planificar
   (`ASSIGNED`) y ambos perfiles pueden registrar trabajo realizado (`COMPLETED`)
   en su alcance. El tipo de actividad es opcional y se toma del catálogo existente.

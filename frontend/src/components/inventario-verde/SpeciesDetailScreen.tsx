@@ -2,8 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
+import { Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { puedeRegistrar } from '@/components/catastro/permisos';
+import { useAuth } from '@/hooks/useAuth';
 import { useInventarioVerdeSpeciesBySlug } from '@/hooks/useInventarioVerde';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { useRequest } from '@/hooks/useRequest';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import type { LocationCount } from '@shared/types';
@@ -13,16 +17,21 @@ export interface SpeciesDetailScreenProps {
   slug: string;
 }
 
+const LIST_PATH = '/inventario-verde';
+
 export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   const router = useRouter();
+  const { user } = useAuth();
+  const listHref = useRememberedHref(LIST_PATH);
   const { species, loading: speciesLoading, errorMessage } = useInventarioVerdeSpeciesBySlug(slug);
 
   const locations = useRequest(slug || null, () => inventarioVerdeApi.locations(slug));
   const availableLocations = (locations.data ?? []) as LocationCount[];
+  usePageTrail(species ? { labels: { [slug]: species.commonName } } : {});
 
   if (speciesLoading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="space-y-6">
         <LoadingSkeleton variant="card" />
         <LoadingSkeleton variant="table-row" count={3} />
       </div>
@@ -31,19 +40,13 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
 
   if (!species) {
     return (
-      <div className="flex flex-col gap-6">
-        <Breadcrumb
-          items={[
-            { label: 'Inventario de Especies', href: '/inventario-verde' },
-            { label: 'No encontrada' },
-          ]}
-        />
+      <div className="space-y-6">
         <EmptyState
           title={errorMessage ? 'No se pudo cargar la especie' : 'Especie no encontrada'}
           description={errorMessage ?? 'La especie solicitada no está registrada en el inventario.'}
           action={{
-            label: 'Volver al inventario',
-            onClick: () => router.push('/inventario-verde'),
+            label: 'Volver a especies',
+            onClick: () => router.push(listHref),
           }}
         />
       </div>
@@ -51,16 +54,20 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   }
 
   return (
-    <div className="flex flex-col max-w-5xl mx-auto w-full space-y-6">
-      <Breadcrumb
-        items={[
-          { label: 'Inventario de Especies', href: '/inventario-verde' },
-          { label: species.commonName },
-        ]}
-      />
-
+    <div className="space-y-6">
       {/* Cabecera taxonómica e información de la especie */}
-      <SpeciesInfo species={species} availableLocations={availableLocations} />
+      <SpeciesInfo
+        species={species}
+        availableLocations={availableLocations}
+        actions={puedeRegistrar(user?.role.code) && (
+          <Link
+            href={`${LIST_PATH}/especies/${species.slug}/editar`}
+            className="surface-pill text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
+          >
+            Editar especie
+          </Link>
+        )}
+      />
 
       {/* Tarjeta de vinculación con el Catastro Físico de Ejemplares */}
       <Card title="Presencia y Catastro de Ejemplares">

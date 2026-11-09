@@ -248,6 +248,33 @@ describe('UsersAdminScreen', () => {
     expect(within(dialogo).getByText(/dejará de funcionar/i)).toBeInTheDocument();
   });
 
+  it('explica todo lo que implica reenviar y no envia nada hasta confirmar', async () => {
+    await montarYEsperar();
+
+    await userEvent.click(screen.getByRole('button', { name: /reenviar credenciales a ana torres/i }));
+
+    const dialogo = await screen.findByRole('dialog');
+    expect(within(dialogo).getByText(/contraseña temporal nueva/i)).toBeInTheDocument();
+    expect(within(dialogo).getByText(/se cerrarán sus sesiones/i)).toBeInTheDocument();
+    expect(within(dialogo).getByText(/ana@pucp\.edu\.pe/i)).toBeInTheDocument();
+    expect(within(dialogo).getByText(/deberá cambiarla/i)).toBeInTheDocument();
+    expect(usersApi.resendCredentials).not.toHaveBeenCalled();
+  });
+
+  it('no ofrece reenviar credenciales ni desactivar en la cuenta de la sesion', async () => {
+    list.mockResolvedValue(
+      pagina([usuario({ id: 1, fullName: 'Administrador Hesperides' }), usuario()]),
+    );
+    await montarYEsperar();
+
+    expect(
+      screen.queryByRole('button', { name: /reenviar credenciales a administrador/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /desactivar la cuenta de administrador/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it('cuando el filtro esconde a los desactivados, el vacio ofrece mirar ahi', async () => {
     // Sin esta salida, quien no encuentra a alguien recien dado de baja acaba
     // creandolo otra vez y se topa con un 409 confuso (§5.5).

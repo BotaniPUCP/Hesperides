@@ -5,7 +5,7 @@ interface PageProps {
 }
 
 export const metadata = {
-  title: 'Lugar · Lugares del campus · Hesperides',
+  title: 'Lugar · Catálogo de lugares · Hesperides',
 };
 
 export default async function PlacePage({ params }: PageProps) {

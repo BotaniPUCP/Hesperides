@@ -143,7 +143,7 @@ decisión hay detrás.
 | `PUT /users/{id}` | ADMIN | Nombre, apellido, correo y rol. **No** contraseña ni `is_active` |
 | `POST /users/{id}/deactivate` | ADMIN | `is_active = FALSE` + revoca refresh tokens |
 | `POST /users/{id}/reactivate` | ADMIN | Revierte. No restaura sesiones ni regenera clave |
-| `POST /users/{id}/resend-credentials` | ADMIN | Regenera clave, reenvía, revoca sesiones |
+| `POST /users/{id}/resend-credentials` | ADMIN, sobre otra cuenta | Regenera clave, reenvía, revoca sesiones |
 | `POST /users/{id}/mark-credentials-delivered` | ADMIN | Cierra un `PENDING_DELIVERY` resuelto fuera del sistema |
 | `POST /users/me/password` | Cualquier autenticado, sobre su cuenta | Único endpoint que acepta una clave escrita a mano tras el alta |
 
@@ -347,6 +347,12 @@ evolución natural si el cliente lo pide.
 - **El ADMIN intenta desactivarse a sí mismo:** 422. Sin esta regla, el único administrador puede
   dejarse fuera del sistema con un clic, y la recuperación exige un `UPDATE` manual en la base de
   datos.
+- **El ADMIN intenta reenviarse sus propias credenciales:** 422, y su fila no ofrece ese botón ni
+  el de desactivar. El reenvío le cambiaría la clave y le cerraría la sesión, y la temporal puede
+  ir a un buzón al que no tiene acceso. Su contraseña se cambia con `POST /users/me/password`.
+- **A quien tiene la pantalla abierta le regeneran la clave:** su siguiente petición recibe el 403
+  de `PasswordChangeRequiredFilter`. El frontend relee `/auth/me` y `RouteGuard` lo lleva a
+  `/cambiar-password`; ese 403 no se presenta como falta de permisos.
 - **Se intenta desactivar o degradar al último ADMIN activo:** 422. El sistema quedaría sin nadie
   capaz de crear usuarios, administrar catálogos ni editar parámetros — un estado del que no se
   sale desde la aplicación. La comprobación cuenta administradores activos **excluyendo al
@@ -450,7 +456,8 @@ ningún patrón visual nuevo que describir. Lo que no se deduce mirando la panta
   layout al llegar los datos.
 - **Las confirmaciones destructivas nombran a la persona** ("¿Desactivar la cuenta de María
   García?"). La de reenviar credenciales advierte además de que la contraseña anterior dejará
-  de funcionar: es el efecto que sorprende (§5.4).
+  de funcionar, de que se cierran sus sesiones, de a qué correo va la temporal y de que deberá
+  cambiarla al ingresar: son los efectos que sorprenden (§5.4).
 - **`/cambiar-password` no lleva navegación ni menú.** Mientras `mustChangePassword` sea `true`
   no hay ningún otro destino válido, y ofrecer enlaces que terminan en 403 sería engañoso.
 - El badge de entrega solo aparece con `credentialStatus = PENDING_DELIVERY`; `lastLogin` nulo

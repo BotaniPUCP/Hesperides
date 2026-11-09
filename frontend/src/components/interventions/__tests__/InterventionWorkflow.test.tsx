@@ -3,8 +3,11 @@ import { InterventionDetail } from '../InterventionDetail';
 import { InterventionForm } from '../InterventionForm';
 import { interventionsApi } from '@/lib/interventions-api';
 import { ApiError } from '@/lib/api';
+import { todayLocal } from '@/lib/local-date';
 import type { InterventionDetail as Detail, InterventionOptions } from '@/lib/interventions-api';
 import { incidentsApi } from '@/lib/incidents-api';
+import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { p01Detail } from '@/components/inventario-verde/__fixtures__/inventario';
 import { approvedDetail } from '@/components/incidents/__fixtures__/incidents';
 
 const push = jest.fn();
@@ -18,6 +21,7 @@ jest.mock('@/components/ui', () => {
   return {...actual,useToast:()=>({showToast:toast})};
 });
 jest.mock('@/lib/interventions-api', () => ({...jest.requireActual('@/lib/interventions-api'),interventionsApi:{detail:jest.fn(),options:jest.fn(),command:jest.fn(),create:jest.fn(),photo:jest.fn(),announce:jest.fn(),upload:jest.fn()}}));
+jest.mock('@/lib/inventario-verde-api', () => ({inventarioVerdeApi:{specimen:jest.fn()}}));
 jest.mock('@/lib/incidents-api', () => ({incidentsApi:{detail:jest.fn(),linkIntervention:jest.fn()}}));
 const options:InterventionOptions={teams:[],places:[{id:15,name:'Jardín de prueba'}],zones:[],catalogs:[
   {id:1,code:'CLASS',label:'Jardinería',typeCode:'INTERVENTION_CLASS',parentItemId:null},
@@ -97,7 +101,7 @@ it('aprueba únicamente la ubicación elegida y conserva la actividad hasta apro
   const d=detail();d.version=6;d.locations[0].statusCode='VALIDATED';d.locations[0].allowedActions=[];d.validatedLocationCount=1;
   jest.mocked(interventionsApi.command).mockResolvedValue(d);
   render(<InterventionDetail id={10}/>);
-  await screen.findByText('INT-000010');fireEvent.click(screen.getAllByRole('button',{name:'Aprobar'})[0]);
+  await screen.findByRole('heading',{name:'INT-000010'});fireEvent.click(screen.getAllByRole('button',{name:'Aprobar'})[0]);
   const modal=await screen.findByRole('dialog');expect(within(modal).getByText(/únicamente esta ubicación/)).toBeInTheDocument();
   fireEvent.click(within(modal).getByRole('button',{name:'Confirmar'}));
   await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'validate',{version:5}));
@@ -158,7 +162,7 @@ it('muestra cantidades y notas de todos los avances por ubicación e intento, in
     {id:3,actionCode:'PROGRESS_SAVED',interventionLocationId:22,actorUserId:4,attemptNumber:1,occurredAt:'2026-10-22T17:00:00Z',reason:null,progress:{quantity:9,notes:'Avance de otro jardín',unitItemId:2}},
     {id:4,actionCode:'PROGRESS_SAVED',interventionLocationId:21,actorUserId:3,actorName:'Capataz de prueba',attemptNumber:2,occurredAt:'2026-10-23T15:00:00Z',reason:null,progress:{quantity:2,notes:'Subsanación realizada',unitItemId:2}},
   ];
-  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);await screen.findByText('INT-000010');
+  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);await screen.findByRole('heading',{name:'INT-000010'});
   const location=within(screen.getAllByRole('article')[0]);const reports=within(location.getByRole('list',{name:'Avances registrados'}));
   expect(reports.getAllByRole('listitem')).toHaveLength(3);
   for(const text of ['Primera pasada','Cantidad corregida','Subsanación realizada'])expect(reports.getByText(text)).toBeInTheDocument();
@@ -171,13 +175,54 @@ it('conserva el reporte tras conflicto y permite recargar la versión antes del 
   jest.mocked(interventionsApi.detail).mockResolvedValue(d);jest.mocked(interventionsApi.command).mockRejectedValueOnce(new ApiError(409,'Intervention has changed; reload before retrying'));
   render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
   fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Reporte que se conserva'}});
-  fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));await screen.findByText(/El trabajo cambió/);
+  fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));await screen.findByText(/La intervención cambió mientras la editabas/);
   jest.mocked(interventionsApi.detail).mockResolvedValue({...d,version:6});fireEvent.click(screen.getByRole('button',{name:'Actualizar información y conservar borrador'}));
   await screen.findByText(/Información actualizada/);expect(screen.getByLabelText('Reporte de ejecución')).toHaveValue('Reporte que se conserva');
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   jest.mocked(interventionsApi.command).mockResolvedValue({...d,version:7});fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
   await waitFor(()=>expect(interventionsApi.command).toHaveBeenLastCalledWith(10,21,'complete',{version:6,executedQuantity:2,executionNotes:'Reporte que se conserva'}));
 });
+describe('medidas al cerrar una poda',()=>{
+  const conPoda=()=>{
+    role='SUPERVISOR';const d=detail();d.classItemId=8;d.locations[0].allowedActions=['complete'];d.locations[0].statusCode='IN_PROGRESS';d.locations[0].linkedElementCodes=['EV-000700'];d.locations[0].unitItemId=null;d.locations[0].progressQuantity=null;d.locations[0].executedQuantity=null;d.locations[1].allowedActions=[];
+    jest.mocked(interventionsApi.options).mockResolvedValue({...options,catalogs:[...options.catalogs,{id:8,code:'PODA',label:'Poda',typeCode:'INTERVENTION_CLASS',parentItemId:null}]});
+    jest.mocked(interventionsApi.detail).mockResolvedValue(d);jest.mocked(interventionsApi.command).mockResolvedValue({...d,version:6});
+    jest.mocked(inventarioVerdeApi.specimen).mockResolvedValue({...p01Detail,code:'EV-000700',speciesCritical:false,measurementStatus:'MEASURED'});
+    return d;
+  };
+  it('sin elegir nada, el cierre no envía medidas',async()=>{
+    conPoda();render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
+    await screen.findByRole('group',{name:/EV-000700/});
+    fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Poda terminada'}});
+    fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
+    await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'complete',{version:5,executedQuantity:null,executionNotes:'Poda terminada'}));
+  });
+  it('envía la decisión de cada ejemplar',async()=>{
+    conPoda();render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
+    const grupo=within(await screen.findByRole('group',{name:/EV-000700/}));
+    fireEvent.click(grupo.getByRole('radio',{name:'Usar promedio'}));
+    fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Poda terminada'}});
+    fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
+    await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'complete',{version:5,executedQuantity:null,executionNotes:'Poda terminada',measurementOutcomes:[{specimenCode:'EV-000700',outcome:'AVERAGE'}]}));
+  });
+  it('una medida inválida bloquea el envío y conserva el reporte',async()=>{
+    conPoda();render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
+    const grupo=within(await screen.findByRole('group',{name:/EV-000700/}));
+    fireEvent.click(grupo.getByRole('radio',{name:'Medidas reales'}));
+    fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Poda terminada'}});
+    fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
+    expect(await screen.findByText('Indica al menos una medida.')).toBeInTheDocument();
+    expect(interventionsApi.command).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Reporte de ejecución')).toHaveValue('Poda terminada');
+  });
+  it('una clase distinta de poda no pregunta por medidas',async()=>{
+    const d=conPoda();d.classItemId=1;jest.mocked(interventionsApi.detail).mockResolvedValue(d);
+    render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
+    await screen.findByLabelText('Reporte de ejecución');
+    expect(screen.queryByRole('group',{name:/EV-000700/})).not.toBeInTheDocument();
+  });
+});
+
 it('no permite crear un trabajo al capataz',()=>{
   role='SUPERVISOR';render(<InterventionForm/>);expect(screen.getByText(/No tienes permiso para planificar/)).toBeInTheDocument();expect(screen.queryByRole('button',{name:'Crear intervención'})).not.toBeInTheDocument();
 });
@@ -239,4 +284,16 @@ it('no habilita creación contextual si la incidencia no está registrada',async
   render(<InterventionForm fromIncident={7}/>);
   expect(await screen.findByRole('button',{name:'Guardar y volver a la incidencia'})).toBeDisabled();
   expect(interventionsApi.create).not.toHaveBeenCalled();
+});
+
+it('una intervención nueva propone hoy como fecha programada',async()=>{
+  render(<InterventionForm/>);
+  expect(screen.getByLabelText('Fecha programada')).toHaveValue(todayLocal());
+  await waitFor(()=>expect(interventionsApi.options).toHaveBeenCalled());
+});
+
+it('al editar conserva la fecha programada de la intervención',async()=>{
+  render(<InterventionForm initial={detail()}/>);
+  expect(screen.getByLabelText('Fecha programada')).toHaveValue('2026-10-23');
+  await waitFor(()=>expect(interventionsApi.options).toHaveBeenCalled());
 });

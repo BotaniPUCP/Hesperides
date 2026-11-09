@@ -30,6 +30,18 @@ public class AdminProtectionRules {
     }
 
     /**
+     * Reenviar regenera la clave, activa el cambio obligatorio y revoca las
+     * sesiones: hecho sobre uno mismo deja fuera a quien lo pide, y la clave
+     * temporal puede ir a un buzón al que no tiene acceso. La propia contraseña
+     * se cambia con POST /users/me/password (SPEC-100 §5.5).
+     */
+    public void refuseSelfCredentialResend(User target, User actor) {
+        if (target.getId().equals(actor.getId())) {
+            throw new BusinessRuleException("You cannot resend your own credentials");
+        }
+    }
+
+    /**
      * El conteo toma bloqueo pesimista: dos administradores desactivándose en el
      * mismo instante leerían ambos "hay otro" y el sistema quedaría sin ninguno
      * (SPEC-100 §5.6).

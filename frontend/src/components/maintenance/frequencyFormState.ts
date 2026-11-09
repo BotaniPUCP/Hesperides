@@ -29,7 +29,3 @@ export function fieldsFrom(f: MaintenanceFrequency): RuleFieldsState {
     coverageDays: optionalText(f.coverageTargetDays),
   };
 }
-
-export function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}

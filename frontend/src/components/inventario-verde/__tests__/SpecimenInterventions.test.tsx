@@ -5,6 +5,7 @@ import { interventionsApi, type InterventionPage, type InterventionSummary } fro
 import { ApiError } from '@/lib/api';
 
 let reader:{id:number;role:{code:string}} | null;
+jest.mock('next/navigation',()=>jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
 jest.mock('@/hooks/useAuth',()=>({useAuth:()=>({user:reader,isLoading:false})}));
 jest.mock('@/hooks/useCatalog',()=>({useCatalog:()=>({items:[{code:'COMPLETED',label:'Ejecutada'}],isLoading:false,errorMessage:null})}));
 jest.mock('@/lib/interventions-api',()=>({...jest.requireActual('@/lib/interventions-api'),interventionsApi:{list:jest.fn()}}));
@@ -52,6 +53,7 @@ it('limpia el historial al cambiar de lector y al cerrar sesión',async()=>{
   expect(screen.queryByText('Intervenciones del ejemplar')).not.toBeInTheDocument();
 });
 it('el listado conserva el ejemplar al filtrar por estado',async()=>{
+  window.history.replaceState(null,'','/intervenciones?greenElementCode=EV-000001');
   render(<InterventionsList greenElementCode="EV-000001"/>);await screen.findByRole('link',{name:'INT-000001'});
   fireEvent.change(screen.getByLabelText('Estado'),{target:{value:'COMPLETED'}});
   await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(0,'COMPLETED','','','EV-000001'));

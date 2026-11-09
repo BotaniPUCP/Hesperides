@@ -14,6 +14,7 @@ import { CATALOG_INTERVENTION_CLASS } from '@/lib/constants';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { CatalogItemFormModal } from './CatalogItemFormModal';
 import { CatalogItemsTable } from './CatalogItemsTable';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 /**
  * Administración de los catálogos configurables (SPEC-003). Solo ADMIN llega
@@ -96,14 +97,8 @@ export function CatalogsAdminScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6">
-      <header className="surface-card">
-        <h1 className="text-xl font-semibold text-neutral-900">Catálogos</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Las opciones que ofrecen los desplegables del sistema. Lo que cambie aquí lo ven
-          todos los usuarios.
-        </p>
-      </header>
+    <div className="space-y-6">
+      <PageHeader title="Catálogos" description="Las opciones que ofrecen los desplegables del sistema. Lo que cambie aquí lo ven todos los usuarios." />
 
       {errorTipos && (
         <p className="text-sm text-alert-danger-fg" role="alert">

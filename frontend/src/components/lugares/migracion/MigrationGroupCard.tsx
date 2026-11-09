@@ -52,7 +52,7 @@ export function MigrationGroupCard({ group, onDecided }: MigrationGroupCardProps
 
   const radioName = `lugar-${group.referenceCodes[0]}`;
   return (
-    <article className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-0 p-4">
+    <article className="surface-card flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-base font-semibold text-neutral-900">{group.name}</h3>
         {group.referenceCodes.length > 1 && <span className="text-sm font-semibold text-neutral-500">{`×${group.referenceCodes.length}`}</span>}
@@ -96,7 +96,7 @@ export function MigrationGroupCard({ group, onDecided }: MigrationGroupCardProps
         <Button size="sm" variant="secondary" disabled={busy} onClick={() => void decide(() => placesApi.discardReferences(group.referenceCodes))}>
           No es un lugar
         </Button>
-        <Link href={`/lugares/nuevo?nombre=${encodeURIComponent(group.name)}`} className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50">
+        <Link href={`/lugares/nuevo?nombre=${encodeURIComponent(group.name)}&desde=migracion`} className="rounded-md px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50">
           Crear lugar
         </Link>
       </div>

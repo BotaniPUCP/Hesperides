@@ -23,7 +23,7 @@ public interface UsersService {
 
     UserDetailResponse reactivate(Long id);
 
-    CredentialDeliveryResponse resendCredentials(Long id);
+    CredentialDeliveryResponse resendCredentials(Long id, String actorEmail);
 
     UserDetailResponse markCredentialsDelivered(Long id);
 

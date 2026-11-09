@@ -42,6 +42,8 @@ export type { StatusBadgeProps } from './StatusBadge';
 export { UrgencyBadge } from './UrgencyBadge';
 export type { UrgencyBadgeProps, UrgencyCode } from './UrgencyBadge';
 
+export { BackButton } from './BackButton';
+export type { BackButtonProps } from './BackButton';
 export { Breadcrumb } from './Breadcrumb';
 export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb';
 

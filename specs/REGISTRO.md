@@ -20,6 +20,8 @@
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
+| SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 5, falta verificar en navegador | —          | —      |              |
+| SPEC-106 | Directorio de organizaciones y contactos | 🔄 En progreso | —          | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
@@ -43,7 +45,10 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
-| SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026, aprobada; pendiente de implementar) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
+| SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
+| SPEC-004 §3.2 · C-08 · C-09 · E-03 · REQ 2.7 · Catálogo 2.2/2.11 | SPEC-105 (6 nov 2026) | Tres acciones auditables de especie. La criticidad pasa a ser de la especie y no de su tipo; `GENERIC` deja de escribirse; se retira la proyección automática de medidas tras una poda. |
+| SPEC-C01 §4.3 | Estandarización de pantallas (7 nov 2026) | Toda pantalla usa `PageFrame` (un solo ancho, fila fija de flecha y breadcrumb derivado del menú) y `PageHeader`. Las tarjetas pasan a `rounded-2xl`. |
+| SPEC-100 §3, §5.5 y §7 | Autobloqueo al reenviarse credenciales (6 nov 2026) | Un ADMIN ya no puede reenviarse sus credenciales: responde 422 y su fila no ofrece ese botón ni el de desactivar. El 403 de cambio obligatorio relee la sesión y lleva a `/cambiar-password`. La confirmación de reenvío detalla sus efectos. |
 | SPEC-C01 §3.1 | Fondos por módulo (5 nov 2026) | Se añade una paleta de fondo por módulo en `moduleThemes.ts`, como excepción a «ninguna feature introduce su propia paleta». Solo tiñe el fondo, sin rojo ni ámbar. `SpecimenBackdrop` pasa a ser `ModuleBackdrop`, montado en el armazón. |
 | Mapa de migraciones · SPEC-201 · SPEC-002 §4.8 | Integración de noviembre (5 nov 2026) | Inventario verde e incidencias usaron ambos `V027`. Inventario verde conserva `V027`; incidencias pasa a `V028` y `V029`, y sus citas se actualizan. |
 | SPEC-C01 §3.1 | SPEC-202 (4 nov 2026) | Colores de los badges de reportes sobre `Badge`, en el orden neutro → ámbar → rojo: `ON_TARGET` success, `WITHIN_TOLERANCE` warning, `OVERDUE` danger; «No evaluable», `NOT_APPLICABLE` y «Sin datos» neutral; «Regla provisional» info; variación favorable success, desfavorable danger, y sin sentido o igual neutral. No se crea ningún token ni color nuevo. En la misma fecha el equipo aprobó las decisiones pendientes de SPEC-202 y sus aclaraciones frente al código, que quedan escritas en el propio spec. |
@@ -182,11 +187,19 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V027 | `V027__create_specimen_measurements_history.sql` | SPEC-103 §4.2 | Historial de mediciones dendrométricas del ejemplar |
 | V028 | `V028__align_incidents_with_osg_matrix.sql` | SPEC-201 | Catálogos OSG, campos de matriz, impactos múltiples, numeración de aprobados, propósito de acciones, comunicación y duración congelada al cierre |
 | V029 | `V029__integrate_incident_interventions_and_reviews.sql` | SPEC-201 / SPEC-200 | Vínculos N:M con intervenciones reales, corrección inicial, resumen/actor de resolución, observaciones y sustitución explícita del legado sin fabricar ejecución |
-| V030 | `V030__create_green_area_sets.sql` | SPEC-203 §4 | Conjuntos de áreas verdes (secciones y actividades); las reglas `BY_ZONE`/`BY_SECTOR` pasan a `BY_SET` o `CAMPUS_WIDE` en todas sus versiones; se retiran `zone_id` y el teórico |
+| V030 | `V030__retire_estimated_measurements.sql` | SPEC-105 §4.1 | Retira las estimaciones guardadas como medidas reales: cada ejemplar vuelve a su última medida real o a `UNKNOWN` |
+| V031 | `V031__add_species_criticality_and_averages.sql` | SPEC-105 §4.2 | Criticidad y promedios por especie, con la fuente de cada valor, y corrección del tipo de dos especies |
+| V032 | `V032__add_measurement_origin.sql` | SPEC-105 §4.3 | Origen de cada fila del historial de mediciones y la intervención que la registró |
+| V033 | `V033__create_extra_measures.sql` | SPEC-105 §4.4 | Catálogo de medidas adicionales, su asignación por especie y sus valores por medición |
+| V034 | `V034__places_span_buildings_and_children.sql` | Catálogo de lugares (cabecera SQL) | Un lugar con varios edificios (`place_buildings`) o con el contorno de sus hijos (`outline_from_children`) |
+| V035 | `V035__create_reservable_garden_places.sql` | Catálogo de lugares (cabecera SQL) · REQ 1.12 | Los 19 jardines prestables como lugares de su sección, con los alias del calendario de la OSG; el Jardín Física pasa a la DAF |
+| V036 | `V036__create_directory.sql` | SPEC-106 §4.1 | Directorio: catálogo `ORGANIZATION_TYPE`, organizaciones con alias, contactos y sus vínculos; función `directory_key` para la unicidad sin tildes |
+| V037 | `V037__add_directory_import_batches.sql` | SPEC-106 §4.2 · SPEC-103 D-04 | El Directorio entra a `import_batches` (`organizations`, `contacts`); organizaciones y contactos guardan su `import_batch_id`, nulo en el alta manual |
+| V038 | `V038__create_green_area_sets.sql` | SPEC-203 §4 | Conjuntos de áreas verdes (secciones y actividades); las reglas `BY_ZONE`/`BY_SECTOR` pasan a `BY_SET` o `CAMPUS_WIDE` en todas sus versiones; se retiran `zone_id` y el teórico |
 
 ### Pendientes (sin número reservado)
 
-Al 9 nov 2026 el siguiente número libre en `develop` es **V031** (ramas sin integrar usan V030–V037: renumerar al integrar), sujeto a comprobarlo nuevamente al
+Al 9 nov 2026, en la rama de integración, el siguiente número libre es **V039**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

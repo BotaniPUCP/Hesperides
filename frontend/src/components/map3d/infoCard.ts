@@ -94,7 +94,7 @@ function plantCard(data: SceneData, target: Target): InfoCard {
       ['Altura', measured ? `${p.heightM} m (medida)` : null],
       ['Radio de copa', p.crownRadiusM === null ? null : `${p.crownRadiusM} m (medido)`],
     ], measured ? undefined : 'Nadie ha medido esta planta: su altura y su copa en la maqueta son ilustrativas, según la especie.'),
-    link: { href: `/inventario-verde/especies/${p.speciesSlug}/ejemplares/${p.code}`, label: 'Ver ficha en el inventario' },
+    link: { href: `/catastro/ejemplares/${p.code}`, label: 'Ver ficha en el catastro' },
   };
 }
 

@@ -1,0 +1,7 @@
+# El build solo usa pom.xml y src/: lo demás solo engorda el contexto.
+target
+.mvn/wrapper/maven-wrapper.jar
+.idea
+*.iml
+.env
+.env.*

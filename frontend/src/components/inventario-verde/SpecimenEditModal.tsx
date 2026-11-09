@@ -4,9 +4,12 @@ import { useState } from 'react';
 import type { SpecimenDetail, SpecimenForm } from '@shared/types';
 import { Button, Input, Modal } from '@/components/ui';
 import { catastroApi } from '@/lib/catastro-api';
+import { todayLocal } from '@/lib/local-date';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { LIMITES } from '@/lib/upload-limits';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
+import { unidadCorta } from './medidasEspecie';
+import { mensajeDeErrorCatastro } from '@/components/catastro/mensajes';
 
 export interface SpecimenEditModalProps {
   specimen: SpecimenDetail;
@@ -21,7 +24,10 @@ export function SpecimenEditModal({
   onClose,
   onSuccess,
 }: SpecimenEditModalProps) {
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocal();
+  // Un valor ya guardado se sigue pudiendo corregir aunque la medida ya no aplique a la especie.
+  const pideFuste = specimen.species.usesTrunkHeight || specimen.trunkHeightM !== null;
+  const pideDap = specimen.species.usesDbh || specimen.dbhCm !== null;
 
   // Estados del formulario inicializados con los valores actuales del ejemplar
   const [alturaM, setAlturaM] = useState(specimen.heightM !== null ? String(specimen.heightM) : '');
@@ -32,6 +38,9 @@ export function SpecimenEditModal({
     specimen.isBanded === true ? 'si' : specimen.isBanded === false ? 'no' : ''
   );
   const [fechaMedicion, setFechaMedicion] = useState(hoy);
+  const [verificado, setVerificado] = useState(false);
+  // Sin precarga: una medida adicional solo se registra si alguien la midió esta vez.
+  const [adicionales, setAdicionales] = useState<Record<string, string>>({});
   const [sourceReference, setSourceReference] = useState(specimen.sourceReference ?? '');
   const [legacyCode, setLegacyCode] = useState(specimen.legacyCode ?? '');
   const [notes, setNotes] = useState(specimen.notes ?? '');
@@ -42,6 +51,23 @@ export function SpecimenEditModal({
   const [showConfirm, setShowConfirm] = useState(false);
 
   const parseNumber = (val: string) => (val.trim() === '' ? null : Number(val.trim().replace(',', '.')));
+
+  const medidasEscritas = () => specimen.species.extraMeasures.flatMap((medida) => {
+    const valor = parseNumber(adicionales[medida.code] ?? '');
+    return valor === null ? [] : [{ code: medida.code, value: valor }];
+  });
+
+  // El formulario abre con las medidas vigentes: tenerlas escritas no significa haber medido.
+  const medidasCambiaron =
+    parseNumber(alturaM) !== specimen.heightM
+    || parseNumber(alturaFusteM) !== specimen.trunkHeightM
+    || parseNumber(dapCm) !== specimen.dbhCm
+    || parseNumber(radioCopaM) !== specimen.crownRadiusM
+    || (zunchado === '' ? null : zunchado === 'si') !== specimen.isBanded;
+  const tieneMedidas = [specimen.heightM, specimen.trunkHeightM, specimen.dbhCm, specimen.crownRadiusM]
+    .some((valor) => valor !== null);
+  const ofreceVerificar = tieneMedidas && !medidasCambiaron;
+  const registraMedicion = medidasCambiaron || medidasEscritas().length > 0 || (ofreceVerificar && verificado);
 
   function handleRequestSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
@@ -64,8 +90,8 @@ export function SpecimenEditModal({
       setErrorMessage('La altura del fuste no puede ser mayor que la altura total del ejemplar.');
       return;
     }
-    if (parsedDap !== null && parsedDap <= 0) {
-      setErrorMessage('El DAP debe ser un número positivo.');
+    if (parsedDap !== null && parsedDap < 0) {
+      setErrorMessage('El DAP no puede ser negativo.');
       return;
     }
     if (parsedCrown !== null && parsedCrown <= 0) {
@@ -73,15 +99,24 @@ export function SpecimenEditModal({
       return;
     }
 
-    const hasAnyMeasure =
-      parsedHeight !== null || parsedTrunk !== null || parsedDap !== null || parsedCrown !== null || zunchado !== '';
+    for (const medida of specimen.species.extraMeasures) {
+      const valor = parseNumber(adicionales[medida.code] ?? '');
+      if (valor !== null && (!Number.isFinite(valor) || valor < 0)) {
+        setErrorMessage(`${medida.label} debe ser un número positivo o cero.`);
+        return;
+      }
+      if (valor !== null && medida.unitCode === 'UNIT' && !Number.isInteger(valor)) {
+        setErrorMessage(`${medida.label} debe ser un número entero.`);
+        return;
+      }
+    }
 
-    if (hasAnyMeasure && !fechaMedicion) {
+    if (registraMedicion && !fechaMedicion) {
       setErrorMessage('Debes indicar la fecha en que se tomaron las mediciones.');
       return;
     }
 
-    if (fechaMedicion && fechaMedicion > hoy) {
+    if (registraMedicion && fechaMedicion > hoy) {
       setErrorMessage('La fecha de medición no puede ser una fecha futura.');
       return;
     }
@@ -99,8 +134,7 @@ export function SpecimenEditModal({
     const parsedDap = parseNumber(dapCm);
     const parsedCrown = parseNumber(radioCopaM);
 
-    const hasAnyMeasure =
-      parsedHeight !== null || parsedTrunk !== null || parsedDap !== null || parsedCrown !== null || zunchado !== '';
+    const extraValues = medidasEscritas();
 
     const payload: SpecimenForm = {
       scientificName: specimen.species.scientificName,
@@ -111,7 +145,7 @@ export function SpecimenEditModal({
       legacyCode: legacyCode.trim() || null,
       sourceLocation: specimen.sourceLocation,
       notes: notes.trim() || null,
-      measurement: hasAnyMeasure
+      measurement: registraMedicion
         ? {
           date: fechaMedicion,
           heightM: parsedHeight,
@@ -119,6 +153,7 @@ export function SpecimenEditModal({
           dbhCm: parsedDap,
           crownRadiusM: parsedCrown,
           banded: zunchado === '' ? null : zunchado === 'si',
+          extraValues,
         }
         : null,
     };
@@ -130,11 +165,7 @@ export function SpecimenEditModal({
       onClose();
     } catch (err) {
       setShowConfirm(false);
-      setErrorMessage(
-        err instanceof Error
-          ? err.message
-          : 'Ocurrió un error al actualizar las medidas del ejemplar. Intenta nuevamente.'
-      );
+      setErrorMessage(mensajeDeErrorCatastro(err));
     } finally {
       setSaving(false);
     }
@@ -197,7 +228,7 @@ export function SpecimenEditModal({
                 />
               </div>
 
-              <div>
+              {pideFuste && <div>
                 <Input
                   id="edit-specimen-trunk-height"
                   label="Altura del fuste comercial (m)"
@@ -207,9 +238,9 @@ export function SpecimenEditModal({
                   value={alturaFusteM}
                   onChange={setAlturaFusteM}
                 />
-              </div>
+              </div>}
 
-              <div>
+              {pideDap && <div>
                 <Input
                   id="edit-specimen-dap"
                   label="DAP - Diámetro del tronco (cm)"
@@ -219,7 +250,7 @@ export function SpecimenEditModal({
                   value={dapCm}
                   onChange={setDapCm}
                 />
-              </div>
+              </div>}
 
               <div>
                 <Input
@@ -233,6 +264,34 @@ export function SpecimenEditModal({
                 />
               </div>
             </div>
+
+            {specimen.species.extraMeasures.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {specimen.species.extraMeasures.map((medida) => (
+                  <Input
+                    key={medida.code}
+                    id={`edit-specimen-extra-${medida.code}`}
+                    label={`${medida.label} (${unidadCorta(medida.unitCode)})`}
+                    value={adicionales[medida.code] ?? ''}
+                    onChange={(valor) => setAdicionales((actuales) => ({ ...actuales, [medida.code]: valor }))}
+                    helperText={medida.referenceNote ?? undefined}
+                  />
+                ))}
+              </div>
+            )}
+
+            {ofreceVerificar && (
+              <label htmlFor="edit-specimen-verified" className="flex items-start gap-2 text-xs text-neutral-700">
+                <input
+                  id="edit-specimen-verified"
+                  type="checkbox"
+                  checked={verificado}
+                  onChange={(e) => setVerificado(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded-xs border-neutral-300"
+                />
+                <span>Verifiqué en campo: las medidas siguen igual. Se registra como una medición nueva con la fecha indicada.</span>
+              </label>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
               <div className="space-y-1">
@@ -321,63 +380,72 @@ export function SpecimenEditModal({
       {/* Pop-up modal de confirmación antes de guardar la medición */}
       <ConfirmSaveModal
         isOpen={showConfirm}
-        title="Confirmar nueva medición"
+        title={registraMedicion ? 'Confirmar nueva medición' : 'Confirmar cambios'}
         specimenCode={specimen.code}
-        subtitle="Actualización de medidas dendrométricas"
+        subtitle={registraMedicion ? 'Actualización de medidas dendrométricas' : 'Datos del ejemplar'}
         confirmLabel="Confirmar y guardar"
         cancelLabel="Revisar datos"
         isWorking={saving}
         onConfirm={() => void executeSubmit()}
         onCancel={() => setShowConfirm(false)}
       >
-        <p className="leading-relaxed text-neutral-700">
-          ¿Confirmas registrar esta nueva medición para el ejemplar{' '}
-          <strong className="text-neutral-900 font-semibold">{specimen.code}</strong>? Pasará a formar
-          parte del historial dendrométrico oficial con fecha{' '}
-          <span className="font-semibold text-neutral-900">{fechaMedicion}</span>.
-        </p>
+        {!registraMedicion ? (
+          <p className="leading-relaxed text-neutral-700">
+            Las medidas no cambian: no se registra una medición nueva para el ejemplar{' '}
+            <strong className="text-neutral-900 font-semibold">{specimen.code}</strong>.
+          </p>
+        ) : (
+          <>
+            <p className="leading-relaxed text-neutral-700">
+              ¿Confirmas registrar esta nueva medición para el ejemplar{' '}
+              <strong className="text-neutral-900 font-semibold">{specimen.code}</strong>? Pasará a formar
+              parte del historial dendrométrico oficial con fecha{' '}
+              <span className="font-semibold text-neutral-900">{fechaMedicion}</span>.
+            </p>
 
-        {/* Resumen de las métricas ingresadas usando tokens temáticos nativos */}
-        <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200 space-y-2 font-mono text-[11px]">
-          <div className="flex justify-between items-center text-neutral-600">
-            <span className="font-sans">Altura total:</span>
-            <span className="font-bold text-neutral-900">
-              {alturaM ? `${alturaM} m` : '—'}
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-neutral-600">
-            <span className="font-sans">Altura del fuste:</span>
-            <span className="font-bold text-neutral-900">
-              {alturaFusteM ? `${alturaFusteM} m` : '—'}
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-neutral-600">
-            <span className="font-sans">DAP (Tronco):</span>
-            <span className="font-bold text-neutral-900">
-              {dapCm ? `${dapCm} cm` : '—'}
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-neutral-600">
-            <span className="font-sans">Radio de copa:</span>
-            <span className="font-bold text-neutral-900">
-              {radioCopaM ? `${radioCopaM} m` : '—'}
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-neutral-600">
-            <span className="font-sans">Zunchado:</span>
-            <span className="font-bold text-neutral-900">
-              {zunchado === 'si' ? 'Con zuncho' : zunchado === 'no' ? 'Sin zuncho' : 'Sin especificar'}
-            </span>
-          </div>
-          {photo && (
-            <div className="flex justify-between items-center text-neutral-600 pt-1.5 border-t border-neutral-200">
-              <span className="font-sans">Fotografía:</span>
-              <span className="font-sans text-brand-700 font-medium truncate max-w-[150px]">
-                {photo.name}
-              </span>
+            {/* Resumen de las métricas ingresadas usando tokens temáticos nativos */}
+            <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200 space-y-2 font-mono text-[11px]">
+              <div className="flex justify-between items-center text-neutral-600">
+                <span className="font-sans">Altura total:</span>
+                <span className="font-bold text-neutral-900">
+                  {alturaM ? `${alturaM} m` : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-neutral-600">
+                <span className="font-sans">Altura del fuste:</span>
+                <span className="font-bold text-neutral-900">
+                  {alturaFusteM ? `${alturaFusteM} m` : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-neutral-600">
+                <span className="font-sans">DAP (Tronco):</span>
+                <span className="font-bold text-neutral-900">
+                  {dapCm ? `${dapCm} cm` : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-neutral-600">
+                <span className="font-sans">Radio de copa:</span>
+                <span className="font-bold text-neutral-900">
+                  {radioCopaM ? `${radioCopaM} m` : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-neutral-600">
+                <span className="font-sans">Zunchado:</span>
+                <span className="font-bold text-neutral-900">
+                  {zunchado === 'si' ? 'Con zuncho' : zunchado === 'no' ? 'Sin zuncho' : 'Sin especificar'}
+                </span>
+              </div>
+              {photo && (
+                <div className="flex justify-between items-center text-neutral-600 pt-1.5 border-t border-neutral-200">
+                  <span className="font-sans">Fotografía:</span>
+                  <span className="font-sans text-brand-700 font-medium truncate max-w-[150px]">
+                    {photo.name}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </ConfirmSaveModal>
     </>
   );

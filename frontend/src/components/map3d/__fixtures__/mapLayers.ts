@@ -90,3 +90,17 @@ export const sampleLayers: MapLayersResponse = {
     },
   },
 };
+
+/** Las mismas capas con un segundo edificio del campus, con nombre: para un lugar hecho de varios bloques. */
+export const SECOND_BLOCK_ID = 3;
+const secondBlock = building(SECOND_BLOCK_ID, true);
+export const layersWithTwoBlocks: MapLayersResponse = {
+  ...sampleLayers,
+  layers: {
+    ...sampleLayers.layers,
+    buildings: {
+      ...sampleLayers.layers.buildings,
+      features: [...sampleLayers.layers.buildings.features, { ...secondBlock, properties: { ...secondBlock.properties, name: 'Bloque B' } }],
+    },
+  },
+};

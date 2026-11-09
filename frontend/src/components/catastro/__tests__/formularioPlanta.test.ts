@@ -1,4 +1,4 @@
-import { aSpecimenForm, FORMULARIO_VACIO, type FormularioPlanta } from '../registrar/formularioPlanta';
+import { aSpecimenForm, FORMULARIO_VACIO, formularioNuevo, type FormularioPlanta } from '../registrar/formularioPlanta';
 
 const MOLLE: FormularioPlanta = { ...FORMULARIO_VACIO, especie: 'Schinus molle', lat: '-12.0702', lon: '-77.0810' };
 
@@ -52,5 +52,33 @@ describe('aSpecimenForm', () => {
 
   it('una latitud fuera de rango no se envía', () => {
     expect(aSpecimenForm({ ...MOLLE, lat: '-120' }).errores.lat).toBeDefined();
+  });
+});
+
+describe('formularioNuevo', () => {
+  const NUEVO = { ...formularioNuevo('2026-11-06'), especie: 'Schinus molle', lat: '-12.0702', lon: '-77.0810' };
+
+  it('propone hoy como fecha de medición y de evaluación', () => {
+    expect(formularioNuevo('2026-11-06')).toMatchObject({ fechaMedicion: '2026-11-06', fechaEvaluacion: '2026-11-06' });
+  });
+
+  it('la fecha propuesta por sí sola no crea una medición ni una evaluación', () => {
+    const { form, errores } = aSpecimenForm(NUEVO);
+
+    expect(errores).toEqual({});
+    expect(form).toMatchObject({ measurement: null, assessment: null });
+  });
+
+  it('una medida usa la fecha propuesta sin pedir más', () => {
+    const hoy = formularioNuevo().fechaMedicion;
+    const { form } = aSpecimenForm({ ...formularioNuevo(), especie: 'Schinus molle', lat: '-12', lon: '-77', alturaM: '5' });
+
+    expect(form?.measurement).toMatchObject({ date: hoy, heightM: 5 });
+  });
+
+  it('si la persona borra la fecha, una medición la sigue exigiendo', () => {
+    const { errores } = aSpecimenForm({ ...NUEVO, alturaM: '5', fechaMedicion: '' });
+
+    expect(errores.fechaMedicion).toBe('Una medición necesita su fecha');
   });
 });

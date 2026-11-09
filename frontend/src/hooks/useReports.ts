@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from './useAuth';
 import { useRequest } from './useRequest';
+import { rememberListQuery } from '@/lib/listMemory';
 import { reportsApi } from '@/lib/reports-api';
 import {
   allowedTabs, parseMonthly, monthlyHref, resolveTab, tabHref, type MonthlyFilters, type ReportTab,
@@ -59,6 +60,12 @@ export function useReportNavigation(role: string | null) {
   const raw = params.get('tab');
   const tab = role ? resolveTab(raw, role) : null;
   const mustReplace = tab !== null && raw !== tab;
+  const query = params.toString();
+
+  // Quien salga a Frecuencias y regrese con la flecha debe encontrar la misma pestaña y filtros.
+  useEffect(() => {
+    rememberListQuery('/reportes', query);
+  }, [query]);
 
   useEffect(() => {
     if (mustReplace && tab) router.replace(tabHref(tab), { scroll: false });

@@ -79,7 +79,7 @@ describe('ImportarScreen', () => {
     expect(screen.getByText(/4 filas/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'EV-000001' })).toHaveAttribute(
       'href',
-      '/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001',
+      '/catastro/ejemplares/EV-000001',
     );
   });
 

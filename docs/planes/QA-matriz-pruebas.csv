@@ -1,0 +1,136 @@
+﻿ID,Modulo,Prioridad,Rol,Caso / Pasos,Resultado esperado,Estado,Observaciones
+AUTH-01,AUTH,P0,Todos,Abrir `http://localhost:3000/login` en Chrome/Firefox e iniciar sesión con `admin@pucp.edu.pe`.,"Entra al sistema. En Network, el `OPTIONS` de `/auth/login` responde 200 con `Access-Control-Allow-Origin: http://localhost:3000` y `Allow-Credentials: true`.",Ok,
+AUTH-02,AUTH,P0,Todos,Intentar login con contraseña incorrecta y con correo inexistente.,Ambos responden 401 con el mismo mensaje genérico; no revela si el correo existe.,Ok,Customizar respuesta para cuando el correo sí exista
+AUTH-03,AUTH,P0,Todos,"Tras login web, abrir DevTools → Application → Cookies y ejecutar `document.cookie`.","La cookie `refresh_token` existe, está marcada `HttpOnly` y no aparece en `document.cookie`. El cuerpo del login no incluye `refreshToken`.",Ok,
+AUTH-04,AUTH,P0,Todos,"Con access token vencido, disparar 3 peticiones concurrentes desde la UI.",Se observa **un solo** `POST /auth/refresh` y las 3 peticiones se reintentan con el nuevo token.,Ok,
+AUTH-05,AUTH,P0,Todos,Hacer logout y reutilizar el refresh token capturado antes del logout.,"Logout responde 204; el refresh reutilizado responde 401; en BD, `refresh_tokens.revoked_at` no es nulo.",Ok,
+AUTH-06,AUTH,P0,ADMIN,Desactivar un usuario de prueba e intentar login y refresh con su sesión previa.,Login 401 y refresh 401; el acceso queda cortado de inmediato.,Ok,
+AUTH-07,AUTH,P1,Todos,Enviar 6 intentos fallidos seguidos para el mismo correo en menos de 15 minutos.,"El intento que supera el umbral responde 429 con mensaje de bloqueo, no 401.",Ok,"El umbral cumple, pero voy más de 10 minutos sin poder ingresar nuevamente."
+AUTH-08,AUTH,P0,Cuenta nueva,"Crear un usuario, entrar con su clave temporal y navegar a otra ruta.",El sistema lo retiene en `/cambiar-password`; cualquier otro endpoint protegido responde 403 hasta cambiarla.,Ok,
+AUTH-09,AUTH,P1,Todos,Cambiar la propia contraseña en dos navegadores con la misma cuenta.,La sesión actual se mantiene; las demás sesiones se invalidan.,Ok,
+AUTH-10,AUTH,P0,Todos,"Abrir una ruta protegida sin sesión (p. ej. `/intervenciones`), iniciar sesión y continuar.","Redirige a login y, tras entrar, vuelve a la ruta solicitada.",Ok,
+AUTH-11,AUTH,P0,Todos,Preflight desde origen permitido y desde origen ajeno (`Origin: http://sitio-cualquiera.example`).,Permitido → 200 con cabecera CORS; ajeno → 403 sin `Access-Control-Allow-Origin`.,Ok,
+AUTH-12,AUTH,P1,Todos,Usar un access token manipulado o vencido contra un endpoint protegido.,Responde 401 con el sobre de error común; no hay datos.,Ok,
+USR-01,USR,P0,ADMIN,Abrir `/admin/usuarios`.,"Lista paginada con nombre, correo, rol, cuadrilla y estado; sin `passwordHash`.",Ok,
+USR-02,USR,P0,ADMIN,Crear usuario con correo nuevo y rol OPERARIO.,"Responde 201. Si SMTP funciona, llega el correo; si no, queda `PENDING_DELIVERY` y la fila existe en BD.",Ok,
+USR-03,USR,P0,COORDINADOR / SUPERVISOR / OPERARIO,Intentar crear/editar/desactivar usuarios por API o UI.,403 con el mismo body; la UI no ofrece acciones no permitidas.,Ok,
+USR-04,USR,P1,ADMIN,Editar un usuario e intentar inyectar `password` en el body del `PUT`.,El formulario no tiene campo de contraseña y el `PUT` no cambia la clave.,Ok,
+USR-05,USR,P0,ADMIN,Desactivar un usuario con sesión activa.,"Su refresh responde 401, no quedan refresh tokens vigentes y el login posterior da 401.",Ok,
+USR-06,USR,P1,ADMIN,Reactivar el usuario desactivado e iniciar sesión.,Vuelve a entrar normalmente.,Ok,
+USR-07,USR,P1,ADMIN,Usar «Reenviar credenciales» y «Marcar como entregadas».,Reenvío genera nuevas credenciales temporales; marcar deja el estado `DELIVERED` y queda en auditoría.,Ok,
+USR-08,USR,P0,ADMIN,"Autodesactivarse, desactivar al último ADMIN y degradar al último ADMIN por `PUT`.",Las tres acciones responden 422 y no dejan el sistema sin administradores.,Ok,
+USR-09,USR,P1,ADMIN,"Combinar filtros de rol, estado, cuadrilla y búsqueda con tildes/mayúsculas.",Los filtros se combinan en AND; sin `isActive` no aparece ningún desactivado; la búsqueda es insensible a mayúsculas y tildes.,Ok,
+USR-10,USR,P0,SUPERVISOR,Listar usuarios y abrir la ficha de un usuario de otra cuadrilla.,"Solo ve su cuadrilla; la ficha ajena responde 404 (no 403, para no filtrar existencia).",Ok,
+USR-11,USR,P1,OPERARIO,Abrir listado de usuarios y luego la propia ficha.,Listado 403; ficha propia 200.,Ok,
+USR-12,USR,P0,ADMIN,"Revisar a cualquier profundidad las respuestas de `/users`, `/auth/me` y `/auth/login`.","Ningún campo `password`, `passwordHash`, `password_hash` ni `temporaryPassword`.",Ok,
+CAT-01,CAT,P1,ADMIN,"Crear un ítem, editarlo y consultarlo en `/admin/catalogos`.","Se crea, aparece en el listado y la edición persiste.",Ok,
+CAT-02,CAT,P0,COORDINADOR / SUPERVISOR / OPERARIO,Abrir `/admin/catalogos` e intentar el CRUD por API.,La UI no muestra el enlace; el backend responde 403.,Ok,
+CAT-03,CAT,P1,ADMIN,Desactivar y reactivar un ítem.,Desaparece del listado activo y vuelve al reactivarlo; no se borra físicamente.,Ok,
+CAT-04,CAT,P1,ADMIN,Crear un ítem hijo de otro y consultar la jerarquía.,El padre se muestra como raíz y el hijo cuelga de él; los catálogos planos no cambian.,Ok,
+CAT-05,CAT,P2,ADMIN,Intentar desactivar un ítem en uso por un registro existente.,El sistema lo impide o avisa con un mensaje claro; no deja datos huérfanos.,Fallo,El tipo de intervención se puede desactivar sin importar que hay intervenciones activas
+CAT-06,CAT,P1,ADMIN,"Enviar campos obligatorios vacíos, código duplicado y valores fuera de rango.",Responde 400/409/422 con mensaje por campo; no crea registros inválidos.,Ok,
+CAT-07,CAT,P2,ADMIN,Revisar auditoría tras crear/editar/desactivar.,"Cada acción deja rastro con actor, fecha y valores antes/después.",Ok,
+PAR-01,PAR,P1,ADMIN,Abrir `/admin/parametros` y editar un valor válido.,El listado carga y el cambio persiste tras recargar.,Ok,
+PAR-02,PAR,P0,COORDINADOR / SUPERVISOR / OPERARIO,Abrir la ruta e intentar leer/escribir por API.,La ruta no aparece en el sidebar y el backend responde 403.,Ok,
+PAR-03,PAR,P1,ADMIN,"Enviar valores vacíos, negativos o fuera de rango.",400/422 con mensaje; no se guarda un valor inválido.,Ok,
+PAR-04,PAR,P2,ADMIN,Cambiar la política de contraseñas y probar un cambio de clave que la incumpla.,La nueva política se aplica en el siguiente cambio de contraseña.,Ok,
+FRE-01,FRE,P1,ADMIN,Abrir `/admin/frecuencias`.,"Listado con la columna «Modelo» mostrando badge con el tipo de regla, nunca vacía.",Ok,
+FRE-02,FRE,P1,ADMIN,Crear frecuencia `INTERVAL_DAYS` con `minDaysInterval=30` y `maxDaysInterval=45`.,201; la fila aparece en el listado y persiste.,Ok,
+FRE-03,FRE,P1,ADMIN,Crear frecuencia `SEASONAL_PERIOD` con `annualTargetCount=4`.,201; se guarda la cuota anual.,Ok,
+FRE-04,FRE,P1,ADMIN,Enviar `minDaysInterval=45` y `maxDaysInterval=30`.,422 con mensaje de incoherencia.,Ok,No hay mensaje de incoherencia
+FRE-05,FRE,P1,ADMIN,"Crear dos frecuencias activas idénticas para la misma actividad, régimen y ámbito.",La segunda responde 409.,Ok,
+FRE-06,FRE,P0,OPERARIO / SUPERVISOR,OPERARIO intenta crear; SUPERVISOR intenta eliminar.,OPERARIO 403 en `POST`; SUPERVISOR 403 en `DELETE`.,Ok,
+FRE-07,FRE,P1,ADMIN,Desactivar una frecuencia.,"Asigna `deleted_at`, desaparece del listado activo y la fila física permanece en BD.",Ok,"El comportamiento corresponde a una eliminación, no a desactivar"
+FRE-09,FRE,P2,ADMIN / COORDINADOR,Consultar historial y cumplimiento de una actividad.,El historial muestra versiones y el cumplimiento respeta la vigencia de cada versión.,Ok,
+LUG-01,LUG,P1,Todos,"Abrir `/lugares`, buscar y filtrar por categoría.",Listado paginado; categorías en orden alfabético; el filtro se refleja en la URL.,Ok,
+LUG-02,LUG,P1,ADMIN / COORDINADOR,"Crear un lugar con categoría, descripción y ubicación.",Se crea con código estable y aparece en el listado.,Ok,"Después de crear, no se logra identificar el area creado"
+LUG-03,LUG,P1,ADMIN / COORDINADOR,Editar un lugar existente y recargar.,Los cambios persisten y el código/identidad no cambia.,Ok,
+LUG-04,LUG,P1,ADMIN / COORDINADOR,Subir una foto y eliminarla.,La foto se ve en la ficha; al eliminarla desaparece y el archivo se marca para purga.,Pendiente,"En Lugar, no es posible colocar otra foto como principal sin tener que eliminarlo"
+LUG-05,LUG,P1,ADMIN / COORDINADOR,Crear dos perspectivas y reordenarlas arrastrando.,El orden se guarda y se respeta al recargar.,Ok,
+LUG-06,LUG,P1,ADMIN / COORDINADOR,Guardar la vista de cámara de una perspectiva y usar «Ver en el mapa».,El mapa vuela a la vista guardada de esa perspectiva.,Ok,
+LUG-07,LUG,P2,ADMIN / COORDINADOR,Eliminar un lugar.,Soft delete; deja de aparecer en listados y no rompe referencias históricas.,Ok,
+LUG-08,LUG,P1,ADMIN / COORDINADOR,Abrir `/lugares/migracion`: enlazar una referencia y descartar otra.,"La cola baja, el progreso avanza y la decisión persiste al recargar.",Ok,"Dificultad para revisar las referencias enlazadas, no se puede filtrar"
+LUG-09,LUG,P0,SUPERVISOR / OPERARIO,Intentar crear/editar/eliminar un lugar por UI y API.,Los enlaces de edición no aparecen; el backend responde 403.,Ok,
+LUG-10,LUG,P1,ADMIN / COORDINADOR,Salir de un formulario con cambios sin guardar.,Aparece el aviso de cambios sin guardar y permite quedarse o descartar.,Ok,
+MAP-01,MAP,P1,Todos,Vaciar caché y abrir `/mapa`.,Una sola petición a `/map/layers`; no hay datos incrustados; se ve la atribución de OpenStreetMap.,Ok,
+MAP-02,MAP,P1,Todos,Recargar sin cambios.,`/map/layers` responde 304 y no se redibuja de más.,Ok,
+MAP-03,MAP,P1,Todos,Buscar un edificio y hacer clic en un punto del mapa.,El buscador encuentra el edificio y el clic muestra su detalle/descripción.,Ok,
+MAP-04,MAP,P1,Todos,Usar `/map/describe` con coordenadas conocidas.,Devuelve la descripción de ubicación esperada (edificio/sección).,Ok,
+MAP-05,MAP,P2,ADMIN,Editar una sección y recargar el mapa.,La versión incrementa y `/map/layers` responde 200 con datos nuevos.,Ok,
+MAP-07,MAP,P1,Público,Abrir `/embed/mapa`.,El mapa embebido carga sin el layout del dashboard y sin errores de consola.,Ok,
+MAP-09,MAP,P2,Todos,Medir la primera carga con caché vacía.,Tiempo aceptable y sin peticiones duplicadas en Network.,Ok,
+INV-01,INV,P1,Todos,Abrir `/inventario-verde`.,Cuadrícula de especies con una miniatura por especie; no se piden todas las fotos.,Ok,
+INV-02,INV,P1,Todos,"Buscar por nombre común, nombre científico y alias.",Devuelve la misma especie en los tres casos; insensible a tildes/mayúsculas.,Ok,
+INV-03,INV,P1,Todos,Abrir la ficha de una especie con varias fotos.,Se ve «1/N»; las flechas y el teclado recorren la galería.,Pendiente,No se puede editar una especia
+INV-04,INV,P1,Todos,Revisar una foto con licencia CC.,"Muestra autor, licencia y «Ver fuente» abre la página original.",Ok,
+INV-05,INV,P1,Todos,Abrir la ficha de un ejemplar.,"Muestra código, especie, medidas, procedencia y ubicación; sin errores si faltan datos.",Ok,
+INV-06,INV,P1,Todos,Registrar dos evaluaciones de un ejemplar y abrir su historial.,La ficha muestra la más reciente y el historial conserva ambas con fecha.,Ok,
+INV-07,INV,P1,Todos,"Filtrar el listado de ejemplares por especie, sección y estado.",Los filtros se combinan y la paginación conserva el criterio.,Ok,
+INV-08,INV,P1,ADMIN / COORDINADOR / SUPERVISOR,Registrar una especie nueva con una foto.,Se crea la especie y la foto queda asociada; aparece en el listado.,Ok,
+INV-09,INV,P1,ADMIN / COORDINADOR / SUPERVISOR,Elegir una foto de más de 25 MB en cualquiera de los puntos de subida.,El cliente avisa y no envía la petición; el backend también la rechaza con 400 si se fuerza.,Ok,
+INV-10,INV,P2,ADMIN / COORDINADOR,Importar un CSV de fotos con 2 filas para una especie que tenía 3.,La vista previa dice «reemplaza 3 por 2» y la ficha muestra «1/2».,Ok,
+INV-11,INV,P2,ADMIN / COORDINADOR,Lanzar dos vistas previas de importación a la vez.,Una responde y la otra 409; no se mezclan lotes.,Ok,
+INV-12,INV,P2,Público / sin sesión,Consultar el inventario sin autenticarse.,La lectura pública funciona según el contrato; las fotos siguen sirviéndose por su endpoint previsto.,Ok,
+CATR-01,CATR,P0,SUPERVISOR,"Abrir `/catastro/registrar`, marcar un punto en el mapa y guardar una planta.",Recibe un código `EV-000xxx` y la planta aparece en el mapa/listado.,Ok,
+CATR-02,CATR,P0,SUPERVISOR,Abrir `/catastro/importar` e intentar cargar un CSV por API.,La UI no muestra «Importar»; el backend responde 403.,Ok,
+CATR-03,CATR,P1,ADMIN / COORDINADOR,Cargar un CSV válido: vista previa y confirmación.,La vista previa muestra altas/actualizaciones y la confirmación las aplica.,Pendiente,
+CATR-04,CATR,P1,ADMIN / COORDINADOR,Cargar un CSV con una latitud vacía.,No permite confirmar; señala fila y columna del error.,Pendiente,
+CATR-05,CATR,P1,ADMIN / COORDINADOR,Cargar 4 filas de especie inexistente y 6 válidas.,Carga 6 y reporta «especie: 4» como omitidas.,Pendiente,
+CATR-06,CATR,P1,ADMIN / COORDINADOR,Cargar una palmera a 0.8 m de otra de su especie y un arbusto a 0.8 m de otro.,La palmera se marca como duplicada; el arbusto no.,Pendiente,
+CATR-07,CATR,P1,SUPERVISOR / ADMIN,Registrar una planta con foto.,"La fila de BD guarda la clave y el archivo está en el almacenamiento, no en una columna.",Ok,
+CATR-08,CATR,P1,ADMIN / COORDINADOR,"Exportar, cambiar la altura de un ejemplar y reimportar.",La vista previa muestra 1 actualización y 0 altas.,Pendiente,
+CATR-09,CATR,P2,ADMIN / COORDINADOR / SUPERVISOR,Abrir `/catastro/estandares`.,Se muestran los estándares de carga y los límites vigentes.,Ok,
+CATR-10,CATR,P2,Todos,Abrir la capa de bebederos en el mapa.,Se muestran 67 bebederos con tipo y estado.,Ok,
+RIE-01,RIE,P1,ADMIN / COORDINADOR / SUPERVISOR,Abrir `/riego`.,Lista sectores y secciones; la selección de sector filtra las secciones.,Ok,
+RIE-02,RIE,P1,SUPERVISOR,Crear un turno individual con fecha y secciones.,Se crea y aparece en el listado con su detalle.,Ok,
+RIE-03,RIE,P1,SUPERVISOR,Crear turnos por lote para varios sectores.,Se crean todos los turnos y ninguno queda duplicado.,Ok,
+RIE-04,RIE,P0,ADMIN / COORDINADOR / OPERARIO,Intentar crear un turno.,La UI no lo ofrece a quien no es SUPERVISOR; el backend responde 403.,Ok,
+RIE-05,RIE,P1,SUPERVISOR,Enviar fechas inválidas o sin secciones.,400/422 con mensaje; no se crea el turno.,Ok,
+RIE-06,RIE,P2,ADMIN / COORDINADOR,Consultar turnos por fecha y sector.,El filtro devuelve los turnos correctos y respeta la paginación.,Ok,
+INT-01,INT,P0,ADMIN / COORDINADOR,"Crear un trabajo con tres ubicaciones (sección, lugar y punto fuera de polígono).",Se crea con código de trabajo y tres IDs de ubicación estables.,Ok,Podría aparecer un minimapa para seleccionar las coordenadas más facilmente
+INT-03,INT,P0,COORDINADOR,Asignar una cuadrilla antes de iniciar.,La asignación se guarda y el supervisor la ve en su alcance.,Ok,
+INT-04,INT,P0,ADMIN,Intentar asignar o ejecutar como ADMIN.,Ambas acciones se rechazan; la planificación se conserva.,Ok,
+INT-05,INT,P0,SUPERVISOR / OPERARIO,Iniciar una ubicación.,Solo esa ubicación pasa a `IN_PROGRESS`; las demás no cambian.,Pendiente,El supervisor no puede visualizar las actividades creadas
+INT-06,INT,P0,SUPERVISOR / OPERARIO,Pedir A=2 y B=3; registrar A ejecutada 2 y B avance 1.,A y B quedan independientes; C sigue pendiente; no se sobrescribe ninguna.,Pendiente,
+INT-07,INT,P0,SUPERVISOR / OPERARIO,Completar una sola ubicación de un trabajo con varias.,El trabajo no se cierra; el resumen general deriva de los estados locales.,Pendiente,
+INT-08,INT,P0,COORDINADOR,Validar una ubicación completada.,La ubicación pasa a `VALIDATED`; el resto conserva su estado.,Pendiente,
+INT-09,INT,P0,COORDINADOR / SUPERVISOR,Observar una ubicación y reabrirla.,Se conserva el snapshot y las fotos del intento anterior; las demás ubicaciones no se tocan.,Pendiente,
+INT-10,INT,P1,ADMIN / COORDINADOR,"Cancelar antes de iniciar y, en otro trabajo, intentar cancelar después de iniciar.",Antes: cabecera y ubicaciones `CANCELLED` con historia conservada. Después: rechazo.,Pendiente,
+INT-11,INT,P1,ADMIN / COORDINADOR,Reprogramar antes de iniciar con motivo.,Se conservan ambas fechas y el motivo; no se impone un SLA de 48 h.,Ok,"SLA no fue impuesto, el cambio se realizó a menos de 48 horas"
+INT-12,INT,P1,SUPERVISOR / OPERARIO,Abrir el mismo trabajo en dos pestañas y guardar avances concurrentes.,Una recibe conflicto de versión y puede recargar sin sobrescribir a la otra.,Ok,No hubo aviso de conflicto
+INT-13,INT,P0,SUPERVISOR / OPERARIO,"Anunciar una evidencia, subirla, simular fallo y reintentar.",La foto queda recibida una sola vez; el reintento conserva la referencia y no duplica bytes.,Pendiente,
+INT-14,INT,P0,Sin sesión,Abrir la URL de una foto de intervención.,No se puede leer sin autenticación; no hay URL pública ni caché pública.,Fallo,"El acceso no está sujeto a la autentificación del hesperídes, sino a las plataformas externas"
+INT-15,INT,P0,SUPERVISOR (cuadrilla A),Intentar ver IDs/filtros de un trabajo de la cuadrilla B.,No los ve; el backend no revela la otra cuadrilla.,Pendiente,
+INT-16,INT,P1,SUPERVISOR,Registrar el mismo ejemplar en dos unidades del mismo trabajo.,El historial por ejemplar no duplica el trabajo; muestra una intervención con desglose.,Pendiente,
+INT-17,INT,P1,SUPERVISOR / OPERARIO,Repetir la creación con la misma clave y cuerpo tras perder conexión.,Se conservan IDs y se registra un único evento; no se duplica el trabajo.,Ok,
+INT-18,INT,P2,COORDINADOR,"Revisar el resumen general con A completada, B en progreso y C asignada.",El resumen es `IN_PROGRESS`; todas completadas → `COMPLETED`; todas validadas → `VALIDATED`.,Ok,
+INT-19,INT,P2,COORDINADOR,Mezclar cantidades en `UNIT` y `M2`.,Se muestran separadas; los valores nulos no se convierten en cero ni en porcentaje global.,OK,"API 201, id 3: ubicaciones (M2=183, 5.0), (UNIT=188, 2.0) y (sin unidad, nulo); quantityTotals separa 183 y 188 y conserva el nulo sin convertirlo en 0. Log: /tmp/qa-hesperides/api_run.log"
+INT-20,INT,P1,Todos,Crear/consultar una intervención con el mapa o el publicador no disponibles.,La operación se completa por listas/puntos; no depende del mapa ni del publicador.,OK,"API 201, id 4: creada solo con punto (-12.0694, -77.0796), sin placeId/zoneId ni publicador; el detalle conserva el punto. No depende del mapa."
+INC-01,INC,P0,SUPERVISOR,Crear una incidencia solo con descripción.,Se crea en `PENDING_APPROVAL`; el detalle muestra remitente y fecha de recepción.,OK,"API 201, id 9: solo descripción; estado PENDING_APPROVAL, reportedBy=Edit Capataz Demostración y createdAt presente. El detalle (UI) muestra «Enviada por» y «Recibida»."
+INC-02,INC,P0,SUPERVISOR,Crear una incidencia con foto y ubicación.,La foto se sube y la ubicación se guarda; el detalle las muestra.,OK,"API 201, id 10: coordenadas -12.0691/-77.0791 guardadas; foto image/png 200; detalle con 1 foto y coordenadas."
+INC-03,INC,P0,SUPERVISOR,Denegar el permiso de ubicación y enviar.,"La incidencia se crea igualmente, sin coordenadas y sin error bloqueante.",OK,Navegador 390 px con geolocalización denied: mensaje «No se obtuvo la ubicación…» y envío completado; incidencia #30 con lat/lon null. API equivalente: id 11. El detalle muestra remitente y fecha.
+INC-04,INC,P1,SUPERVISOR,Adjuntar 7 fotos o una foto de más de 5 MiB.,Se rechaza con mensaje claro antes de enviar; no se crea un registro parcial.,OK,"UI 390 px: 7 fotos -> «Puedes adjuntar hasta seis fotografías.»; foto >5 MiB -> «…hasta 5 MiB cada una…»; 0 previews y sin registro. API: 6ª foto 200, 7ª 422 Photo limit reached, >5 MiB 400 Invalid photo size, total 6."
+INC-05,INC,P1,SUPERVISOR / COORDINADOR,"Aplicar filtros, paginar, recargar la URL y volver con el navegador/breadcrumb.",Filtros y página viajan en la URL y se conservan al volver.,OK,"UI: search=rama&status=OPEN -> 1 resultado (#6), URL con ambos filtros; recarga y vuelta desde el detalle conservan rama/OPEN. API con size=1: total=1, totalPages=1; page=1 responde 200 (vacía). La paginación UI no es ejercitable con <20 registros y tamaño fijo 20."
+INC-06,INC,P0,COORDINADOR,Abrir `/incidencias` en una base demo limpia.,"Tablero: 2 pendientes de aprobación, 2 pendientes de atención, 2 en atención, 2 resueltas y 5 intervenciones.",OK,"API sobre demo limpia: {pendingApproval:2, pendingAttention:2, inProgress:2, resolved:2, completedInterventions:5}. La UI muestra los 5 indicadores; los totales actuales difieren porque las pruebas crearon datos QA."
+INC-07,INC,P0,COORDINADOR,Aprobar una incidencia pendiente.,Pasa a `OPEN`; se registra el aprobador y la fecha.,OK,"API POST /incidents/9/approve 200: estado OPEN, approvedBy=Coordinador Demostración, approvedAt=2026-11-05T08:48:29Z."
+INC-08,INC,P0,COORDINADOR,Planificar dos intervenciones (desmarcar «Trabajo ya realizado»).,Se crean dos trabajos vinculados; la incidencia sigue pendiente hasta iniciar o registrar ejecución.,OK,"API dos POST /incidents/9/interventions 200: works [13,14] en ASSIGNED; la incidencia permanece OPEN."
+INC-09,INC,P0,SUPERVISOR,Marcar una de las dos intervenciones como realizada.,"La incidencia pasa a «En atención», pero **no** permite resolver mientras quede otra pendiente.",OK,API completar work 13 200: incidencia IN_PROGRESS; work 13 COMPLETED y work 14 ASSIGNED. Resolver queda bloqueado (INC-16).
+INC-10,INC,P0,SUPERVISOR,Completar la segunda intervención y resolver la incidencia.,Se resuelve; el historial y el tablero suman una resuelta y dos intervenciones realizadas.,OK,"API completar work 14 y resolver 200: RESOLVED con resolvedAt; resumen {pendingApproval:4, pendingAttention:2, inProgress:2, resolved:3, completedInterventions:7}."
+INC-11,INC,P0,SUPERVISOR (otra cuadrilla),Abrir el listado y el detalle de un caso de la cuadrilla contraria.,No aparece en su listado; el detalle directo no filtra información.,OK,"API otro capataz: listado QA vacío; detalles 9 y 10 -> 404. UI: 4 tarjetas de su cuadrilla, ninguna «QA INC»; /incidencias/9 -> «Incidencia no encontrada»."
+INC-12,INC,P1,Todos,"Abrir un detalle por URL directa, recargar y volver.","El caso carga, la URL es enlazable y se conservan los filtros de origen.",OK,API GET /incidents/9 200 con 4 eventos y 2 intervenciones. UI: URL directa /incidencias/6?search=rama&status=OPEN carga y recarga; el breadcrumb conserva filtros y vuelve a la lista filtrada.
+INC-13,INC,P0,Sin sesión,Abrir la URL de una foto de incidencia.,Responde 401/403 y `Cache-Control: no-store`; no se sirve la imagen.,OK,"API sin sesión 401 y Cache-Control: no-cache, no-store, max-age=0, must-revalidate (imagen no servida). Con sesión 200 image/png y Cache-Control: no-store."
+INC-14,INC,P0,ADMIN / OPERARIO,Intentar abrir `/incidencias` y sus endpoints.,La UI no muestra el enlace y el backend responde 403.,OK,"API ADMIN 403 en `/incidents` y `/incidents/summary` (`Insufficient permissions for this action`); OPERARIO temporal (id 8) también 403 en ambos endpoints. UI: sidebar de ADMIN y OPERARIO sin «Incidencias»; `/incidencias` muestra «Sin acceso a incidencias», sin tarjetas. El OPERARIO temporal se desactivó al terminar."
+INC-15,INC,P1,SUPERVISOR,Simular error de red al enviar una foto y reintentar.,El formulario se conserva; se reintenta la foto sin volver a crear la incidencia.,OK,"UI 390 px: el primer envío crea la incidencia pero falla la foto («Sin conexión. Verifique su red.»), conserva el formulario y ofrece «Reintentar fotos pendientes»; el reintento sube la foto y abre el detalle #31. API: fallo 400 Unsupported photo format, reintento 200 con la misma clientReference, 1 foto y solo +1 incidencia."
+INC-16,INC,P0,SUPERVISOR,Intentar resolver con una intervención aún pendiente.,La acción se bloquea con mensaje; no se resuelve parcialmente.,OK,API POST /incidents/9/resolve con work 14 pendiente -> 422 Complete the interventions before resolving; la incidencia sigue IN_PROGRESS.
+INC-17,INC,P2,QA,Reiniciar el backend y repetir el SQL demo.,Los datos no se duplican ni se restablecen cambios ya hechos.,OK,Reejecución de R__seed_demo_incidents.sql con ON_ERROR_STOP=1: rc=0; antes/después 11 incidencias y 14 intervenciones (en el momento de la prueba); el incidente 9 sigue RESOLVED; sin duplicados ni reinicio.
+INC-18,INC,P1,SUPERVISOR / COORDINADOR,"Repetir captura, listado y detalle a 390 px y en tema claro/oscuro.","Sin scroll lateral; controles, badges y avisos legibles en ambos temas.",OK,"Brave/CDP con viewport real 390x844: listado, detalle y captura sin scroll lateral (scrollWidth=390); sidebar oculto y menú móvil visible; claro/oscuro aplica html.dark y cambia fondos/textos; contraste h1 17.06:1/19.28:1 y badges 6.37:1/10.39:1; controles de 48 px. Observación S3: el CTA blanco sobre brand-600 mide 3.3:1."
+UX-01,UX,P0,Los 4 roles,Iniciar sesión con cada rol y revisar el sidebar.,Cada rol ve solo sus enlaces; los grupos vacíos no aparecen.,Ok,Cumplen 
+UX-02,UX,P0,Los 4 roles,Abrir por URL directa una pantalla sin permiso.,Guard de ruta + 403 del backend; no se muestra contenido protegido.,Ok,
+UX-03,UX,P1,Todos,Alternar tema claro/oscuro en cada módulo.,"Colores, badges, tablas y formularios legibles; no hay zonas sin contraste.",Ok,
+UX-04,UX,P1,Todos,"Recorrer los módulos a 390 px, 768 px y 1440 px.",Sin scroll horizontal; tablas y tarjetas se adaptan.,Ok,
+UX-05,UX,P1,Todos,"Salir con cambios sin guardar en usuarios, catálogos, frecuencias, contraseña, lugares, catastro e importación.",Aparece una sola confirmación clara; cancelar conserva los datos.,Ok,
+UX-06,UX,P1,Todos,"Forzar errores 400, 401, 403, 404, 409, 422 y 500.",Mensaje útil y accionable; nunca pantalla en blanco ni éxito falso.,Ok,
+UX-07,UX,P0,Todos,Dejar la sesión vencer y guardar un formulario largo.,El cliente refresca y reintenta; no se pierde el formulario ni se duplica la operación.,Ok,
+UX-08,UX,P0,QA,"Crear datos y fotos, reiniciar backend y volver a entrar.",Datos y archivos persisten; las URLs privadas siguen funcionando con sesión.,Ok,En todos los tipos de entornos
+UX-09,UX,P1,Todos,Navegar solo con teclado por un formulario y un listado.,"Foco visible, orden lógico, sin trampas de foco.",Ok,
+UX-10,UX,P2,Todos,Revisar consola y Network durante los recorridos.,Sin errores de consola ni peticiones fallidas repetidas o duplicadas.,Ok,

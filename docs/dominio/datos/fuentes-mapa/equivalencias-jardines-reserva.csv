@@ -1,0 +1,20 @@
+nombre_calendario,duenio,reservas_2026,nombre_geojson,codigo_zona,observacion
+Jardín Comedor Central,DAF,129,Jardín Comedor Central,AV-0358,
+Jardín Comedor Arte Antiguo (centro),DAF,58,Jardín Comedor Arte Antiguo (centro),AV-0079,En la base la zona se llama solo «Jardín Comedor Arte Antiguo»
+Jardín Humanidades bloque A,DAF,54,Jardín Humanidades bloque A,AV-0328,En la base la zona se llama solo «Jardín Humanidades»
+Jardín DAES,DAF,51,Jardín DAES,AV-0130,
+Jardín Estudio de TV (Paredón),DAF,49,Jardín Estudio de TV (Paredón),AV-0212,
+Jardín ROSALES (FARES),DAF,49,Jardín Rosales,AV-0011,Otro nombre del mismo jardín; la sección no tiene sector asignado
+Jardín Frutas,DAF,46,Jardín Frutas,AV-0151-1,Subsección de AV-0151
+Jardín Lidera,DAF,44,Jardín Lidera,AV-0324,
+Jardín Comedor Arte Antiguo (lado EEGGCC),DAF,35,Jardín Comedor Arte Antiguo (lado EEGGCC),AV-0078,En la base la zona se llama solo «Jardín Comedor Arte Antiguo»
+Jardín Tesorería,DAF,33,Jardín Tesorería,AV-0125,
+Jardín Humanidades bloque B,DAF,19,Jardín Humanidades bloque B,AV-0201,En la base la zona se llama solo «Jardín Humanidades»
+Jardín Frutas-Lado FCCSS,DAF,15,Jardín Frutas-Lado FCCSS,AV-0151-2,Subsección de AV-0151
+Jardín Pabellón H,UNIDAD,12,Jardin H,AV-0273,«Jardin H» es otro nombre del Jardín del Pabellón H; el GeoJSON repite el polígono
+Jardín Comedor Letras,DAF,12,Jardín Comedor Letras,AV-0200,
+Jardín Física,DAF,6,Jardin física,AV-0475,Dueño confirmado: DAF; el GeoJSON dice Unidades y V035 corrige la base
+Jardín Palmeras (Gastronomía),UNIDAD,4,Jardín Palmeras (Gastronomía),AV-0481;AV-0482,Un nombre para dos polígonos: lugar compuesto con «Lado oeste» (AV-0481) y «Lado este» (AV-0482)
+Jardín Facu Sociales,UNIDAD,2,Jardín Facu Sociales,AV-0236,
+Jardín Tinkuy,DAF,1,Jardín Tinkuy,AV-0250,
+Jardín CAPU,DAF,1,Jardín CAPU,AV-0370,

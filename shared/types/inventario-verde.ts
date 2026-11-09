@@ -38,9 +38,41 @@ export interface Species {
   imageSource: 'SPECIES' | 'SPECIMEN' | null;
   /** Las fotos genéricas en su orden (SPEC-104). Solo en la ficha; en el listado viene vacío. */
   photos: SpeciesPhoto[];
+  /** Si la altura de la especie decide cómo se atiende (SPEC-105 D-01). */
+  critical: boolean;
+  /** Promedios de la especie. Nunca son datos de un ejemplar. */
+  referenceHeightM: number | null;
+  referenceHeightSourceCode: string | null;
+  referenceHeightSourceName: string | null;
+  referenceCrownRadiusM: number | null;
+  referenceCrownRadiusSourceCode: string | null;
+  referenceCrownRadiusSourceName: string | null;
+  /** Si fuste y DAP aplican a la especie; si no, los formularios no los piden. */
+  usesTrunkHeight: boolean;
+  usesDbh: boolean;
+  unmeasuredSpecimenCount: number;
+  /** Medidas propias de la especie. Solo en la ficha; en el listado viene vacío. */
+  extraMeasures: ExtraMeasure[];
 }
 
-/** Formulario para registrar una nueva especie botánica en el catálogo. */
+/** Una medida adicional del catálogo. `referenceNote` orienta y nunca es un dato del ejemplar (SPEC-105 D-09). */
+export interface ExtraMeasure {
+  code: string;
+  label: string;
+  unitCode: string;
+  referenceNote: string | null;
+}
+
+/** El último valor registrado de una medida adicional en un ejemplar. */
+export interface SpecimenExtraMeasure {
+  code: string;
+  label: string;
+  unitCode: string;
+  value: number;
+  measuredAt: string;
+}
+
+/** Formulario para registrar o editar una especie botánica del catálogo. */
 export interface SpeciesForm {
   scientificName: string;
   commonName?: string;
@@ -50,6 +82,15 @@ export interface SpeciesForm {
   otherNames?: string[];
   description?: string;
   careNotes?: string;
+  critical?: boolean;
+  referenceHeightM?: number | null;
+  referenceHeightSourceCode?: string | null;
+  referenceCrownRadiusM?: number | null;
+  referenceCrownRadiusSourceCode?: string | null;
+  usesTrunkHeight?: boolean;
+  usesDbh?: boolean;
+  /** Sin lista, se conservan las de la especie. */
+  extraMeasures?: { code: string; referenceNote?: string | null }[];
 }
 
 /** Una foto genérica de especie con su crédito. Autor, licencia y fuente faltan en una foto propia. */
@@ -89,6 +130,12 @@ export interface Specimen {
 /** Procedencia de las medidas (C-08). Solo MEASURED vale para decidir quién poda. */
 export type MeasurementSource = 'MEASURED' | 'GENERIC' | 'UNKNOWN';
 
+/** Qué se puede mostrar de un ejemplar: su medida real, el promedio de su especie o nada (SPEC-105 §5.4). */
+export type MeasurementStatus = 'MEASURED' | 'REFERENCE' | 'NOT_MEASURED';
+
+/** Quién poda (SPEC-105 §5.5). Es una propuesta: nunca bloquea nada. */
+export type PruningAssignment = 'STABLE_STAFF' | 'THIRD_PARTY' | 'FIELD_VERIFICATION';
+
 export interface MeasurementRecord {
   id: number;
   date: string;
@@ -99,6 +146,9 @@ export interface MeasurementRecord {
   banded: boolean | null;
   measuredBy: string | null;
   notes?: string | null;
+  /** AVERAGE guarda el promedio vigente cuando se aplicó: no es una medida real (SPEC-105 §4.3). */
+  origin: 'MEASURED' | 'AVERAGE';
+  extraValues: { code: string; label: string; unitCode: string; value: number }[];
 }
 
 export interface SpecimenDetail extends Specimen {
@@ -114,7 +164,18 @@ export interface SpecimenDetail extends Specimen {
   /** Calculada por posición; nula si el ejemplar está fuera de toda sección. */
   section: { code: string; name: string } | null;
   species: Species;
-  latestMeasurementNotes?: string | null;
+  measuredAt: string | null;
+  speciesCritical: boolean;
+  measurementStatus: MeasurementStatus;
+  /** Solo con measurementStatus = REFERENCE. */
+  referenceHeightM: number | null;
+  referenceCrownRadiusM: number | null;
+  referenceHeightSourceName: string | null;
+  referenceCrownRadiusSourceName: string | null;
+  lastPruningDate: string | null;
+  measuredBeforeLastPruning: boolean;
+  pruningAssignment: PruningAssignment;
+  extraMeasures: SpecimenExtraMeasure[];
 }
 
 export interface LocationCount {
@@ -132,6 +193,10 @@ export type SpecimenSortKey = 'reference' | 'code' | 'location';
 export interface SpecimenFilters {
   search?: string;
   location?: string;
+  vegetationType?: string;
+  /** Independientes entre sí; sin valor, no filtran (SPEC-105 §3). */
+  critical?: boolean;
+  measured?: boolean;
   sortBy?: SpecimenSortKey;
   sortDirection?: 'asc' | 'desc';
 }

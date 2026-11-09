@@ -1,6 +1,8 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { PlaceDetail } from '@shared/types';
 import { ApiError } from '@/lib/api';
+import { rememberListQuery } from '@/lib/listMemory';
+import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { placesApi } from '@/lib/places-api';
 import { PlaceMapContext } from '../map/PlaceMapContext';
 import { PlaceDetailScreen } from '../PlaceDetailScreen';
@@ -11,17 +13,22 @@ jest.mock('@/components/ui', () => ({
   ...jest.requireActual('@/components/ui'),
   useToast: () => ({ showToast: jest.fn(), dismissAll: jest.fn() }),
 }));
-jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn(), removePerspective: jest.fn() } }));
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock('@/lib/places-api', () => ({ placesApi: { detail: jest.fn(), remove: jest.fn(), removePerspective: jest.fn() } }));
+const mockPush = jest.fn();
+import { PageFrame } from '@/components/layouts/PageFrame';
+
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }), usePathname: () => '/lugares/LUG-0001' }));
 
 const map = { show: jest.fn(), focusPerspective: jest.fn() };
 
-/** La ficha dentro del layout de /lugares, que le da el mapa. */
+/** La ficha dentro del marco y del layout de /lugares, que le da el mapa. */
 function renderScreen(code: string) {
   return render(
-    <PlaceMapContext.Provider value={map}>
-      <PlaceDetailScreen code={code} />
-    </PlaceMapContext.Provider>,
+    <PageFrame>
+      <PlaceMapContext.Provider value={map}>
+        <PlaceDetailScreen code={code} />
+      </PlaceMapContext.Provider>
+    </PageFrame>,
   );
 }
 
@@ -32,7 +39,7 @@ const photo = (id: number) => ({ id, thumbnailUrl: `t${id}`, fullUrl: `f${id}`, 
 const cia: PlaceDetail = {
   code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' },
   category: { code: 'EDIFICIO', label: 'Edificio' },
-  outline: { source: 'BUILDING', buildingId: 87, zoneCode: null, featureCode: null, centerLat: -12.06, centerLon: -77.08 },
+  outline: { source: 'BUILDING', buildingIds: [87], zoneCode: null, featureCode: null, centerLat: -12.06, centerLon: -77.08 },
   aliases: ['Centro de Innovación'], children: [{ code: 'LUG-0004', name: 'Piso 2' }], mainPhotos: [photo(1)],
   perspectives: [
     { id: 10, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: 'SOUTH', landmark: null,
@@ -50,6 +57,47 @@ afterEach(() => {
 });
 
 describe('PlaceDetailScreen', () => {
+  describe('regresar', () => {
+    beforeEach(() => {
+      window.sessionStorage.clear();
+      act(() => restartTrail('/lugares/LUG-0001'));
+    });
+
+    it('sin recorrido, breadcrumb y flecha llevan al catálogo con sus últimos filtros', async () => {
+      rememberListQuery('/lugares', 'category=DEPORTE&kind=OUTDOOR');
+      detail.mockResolvedValue(cia);
+      renderScreen('LUG-0001');
+
+      const crumb = await screen.findByRole('link', { name: 'Catálogo de lugares' });
+      expect(crumb).toHaveAttribute('href', '/lugares?category=DEPORTE&kind=OUTDOOR');
+      expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/lugares?category=DEPORTE&kind=OUTDOOR');
+    });
+
+    it('al pasar de un lugar a otro, la flecha vuelve al lugar anterior y no al catálogo', async () => {
+      detail.mockResolvedValue(cia);
+      act(() => {
+        restartTrail('/lugares/LUG-0007');
+        recordVisit('/lugares/LUG-0001');
+      });
+      renderScreen('LUG-0001');
+
+      expect(await screen.findByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/lugares/LUG-0007');
+    });
+
+    it('al eliminar el lugar vuelve al catálogo con sus filtros', async () => {
+      mockRole.current = 'ADMIN';
+      rememberListQuery('/lugares', 'kind=INDOOR');
+      detail.mockResolvedValue(cia);
+      jest.mocked(placesApi.remove).mockResolvedValue(null as never);
+      renderScreen('LUG-0001');
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Eliminar' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Eliminar lugar' }));
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/lugares?kind=INDOOR'));
+    });
+  });
+
   it('muestra el lugar, sus alias, sus hijos y cada perspectiva con su nombre estándar', async () => {
     detail.mockResolvedValue(cia);
     renderScreen('LUG-0001');
@@ -99,7 +147,7 @@ describe('PlaceDetailScreen', () => {
   it('un interior muestra sus fotos por vista y no tiene mapa de perspectivas', async () => {
     detail.mockResolvedValue({
       ...cia, code: 'LUG-0004', name: 'Piso 2', kind: { code: 'INDOOR', label: 'Interior' }, parent: { code: 'LUG-0001', name: 'CIA' },
-      outline: { ...cia.outline, source: 'INHERITED', buildingId: null }, perspectives: [], children: [],
+      outline: { ...cia.outline, source: 'INHERITED', buildingIds: [] }, perspectives: [], children: [],
       interior: [{ view: { code: 'CORRIDOR', label: 'Pasillo' }, photos: [photo(5)] }],
     });
     renderScreen('LUG-0004');

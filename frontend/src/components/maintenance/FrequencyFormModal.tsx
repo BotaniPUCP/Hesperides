@@ -14,7 +14,9 @@ import type {
 import { Button, Modal } from '@/components/ui';
 import { buildFrequencyPayload } from './buildFrequencyPayload';
 import { FrequencyActivitySelect, type ActivityOption } from './FrequencyActivitySelect';
-import { EMPTY_FIELDS, fieldsFrom, optionalText, today } from './frequencyFormState';
+import { mensajeDeApiError } from '@/lib/api-errors';
+import { todayLocal } from '@/lib/local-date';
+import { EMPTY_FIELDS, fieldsFrom, optionalText } from './frequencyFormState';
 import { FrequencyScopeFields } from './FrequencyScopeFields';
 import { RuleTypeFields, type RuleFieldsState } from './RuleTypeFields';
 
@@ -95,13 +97,13 @@ function FrequencyForm({
       await onSubmit(payload);
       onClose();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar la frecuencia');
+      setError(mensajeDeApiError(err));
     } finally {
       setLoading(false);
     }
   };
 
-  const creaVersionNueva = Boolean(frequencyToEdit && frequencyToEdit.validFrom < today());
+  const creaVersionNueva = Boolean(frequencyToEdit && frequencyToEdit.validFrom < todayLocal());
 
   return (
     <>

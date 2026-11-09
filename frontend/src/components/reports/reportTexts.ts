@@ -106,7 +106,6 @@ export const SECTION_LIST_TEXTS = {
 
 export const SCREEN_TEXTS = {
   title: 'Reportes',
-  breadcrumbHome: 'Inicio',
   tablistLabel: 'Reportes',
   supervisorNotice: 'Datos de tus cuadrillas.',
   showing: (tab: ReportTab) => `Mostrando ${TAB_TEXTS[tab].label}`,

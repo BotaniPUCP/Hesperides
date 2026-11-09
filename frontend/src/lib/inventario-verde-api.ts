@@ -1,4 +1,5 @@
 import type {
+  ExtraMeasure,
   InventorySummary,
   LocationCount,
   Page,
@@ -22,6 +23,9 @@ export interface SpeciesParams {
 export interface SpecimenParams {
   search?: string;
   location?: string;
+  vegetationType?: string;
+  critical?: boolean;
+  measured?: boolean;
   sortBy: SpecimenSortKey;
   sortDirection: 'asc' | 'desc';
   page: number;
@@ -29,7 +33,7 @@ export interface SpecimenParams {
 }
 
 /** Arma el query string sin los filtros vacíos: el backend los toma como «todos». */
-function query(params: Record<string, string | number | undefined>): string {
+function query(params: Record<string, string | number | boolean | undefined>): string {
   const q = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== '') q.set(key, String(value));
@@ -86,6 +90,9 @@ export const inventarioVerdeApi = {
       `/green-inventory/specimens?${query({
         search: p.search?.trim(),
         location: unlessAll(p.location),
+        vegetationType: unlessAll(p.vegetationType),
+        critical: p.critical,
+        measured: p.measured,
         sort: p.sortBy,
         direction: p.sortDirection,
         page: p.page,
@@ -113,4 +120,12 @@ export const inventarioVerdeApi = {
     if (photo) data.append('photo', photo);
     return apiClient.postForm<Species>('/green-inventory/species', data).then(withSpeciesMedia);
   },
+
+  extraMeasures: () => apiClient.get<ExtraMeasure[]>('/green-inventory/extra-measures'),
+
+  createExtraMeasure: (form: { label: string; unitCode: string }) =>
+    apiClient.post<ExtraMeasure>('/green-inventory/extra-measures', form),
+
+  updateSpecies: (slug: string, form: SpeciesForm) =>
+    apiClient.put<Species>(`/green-inventory/species/${segment(slug)}`, form).then(withSpeciesMedia),
 };

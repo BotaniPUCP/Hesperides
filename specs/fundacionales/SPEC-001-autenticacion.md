@@ -395,6 +395,10 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **5. Incidencias** | Iniciar atención | | U | U (cuadrillas que dirige) | |
 | **5. Incidencias** | Validar cierre / observar o reabrir resolución | | V, U | | |
 | **5. Incidencias** | Ver incidencias | | L | L (envíos propios y cuadrillas que dirige) | |
+| **Directorio** (SPEC-106) | Crear organizaciones y contactos | C | C | | |
+| **Directorio** (SPEC-106) | Vincular un contacto existente a otra organización | C | C | | |
+| **Directorio** (SPEC-106) | Editar y dar de baja organizaciones y contactos | UD | UD | | |
+| **Directorio** (SPEC-106) | Ver y buscar organizaciones y contactos | L | L | L | |
 | **6. Reportes** | Generar y ver reportes de dirección/coordinación | L | L | L (solo de su cuadrilla) | |
 | **Configuración del sistema** (`system_parameters`) | Editar parámetros generales | CU | | | |
 

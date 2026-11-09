@@ -101,9 +101,9 @@ export function IncidentDetailPanel({ detail, options, optionsLoading, coordinat
   const resolved = incident.status.code === 'RESOLVED';
   const canWork = detail.canAttend && incident.approvedAt !== null && !resolved;
 
-  return <div className="space-y-5">
+  return <div className="space-y-6">
     <header className="surface-card flex flex-wrap items-start justify-between gap-3">
-      <div className="space-y-2"><h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">{incident.officialCode ?? `Incidencia #${incident.id}`}</h1>
+      <div className="space-y-2"><h1 className="page-title">{incident.officialCode ?? `Incidencia #${incident.id}`}</h1>
         <div className="flex flex-wrap gap-2"><StatusBadge code={incident.status.code} label={incident.status.label} />
           {incident.urgency && <UrgencyBadge code={incident.urgency.code as UrgencyCode} label={incident.urgency.label} />}
         </div>

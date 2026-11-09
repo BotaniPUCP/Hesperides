@@ -7,8 +7,6 @@ export const metadata: Metadata = {
 
 export default function RegistrarPage() {
   return (
-    <div className="mx-auto max-w-4xl">
-      <RegistrarScreen />
-    </div>
+    <RegistrarScreen />
   );
 }

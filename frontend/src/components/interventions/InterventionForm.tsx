@@ -9,6 +9,9 @@ import { createClientUuid } from '@/lib/client-uuid';
 import { interventionsApi, interventionError, type InterventionDetail, type InterventionLocation, type InterventionOptions, type InterventionPlanning } from '@/lib/interventions-api';
 import { incidentsApi } from '@/lib/incidents-api';
 import { incidentAfterCreationHref, type IncidentFilters } from '@/lib/incidentNavigation';
+import { todayLocal } from '@/lib/local-date';
+import { PageHeader } from '@/components/layouts/PageHeader';
+import { managesIncidents } from '@/lib/incidentRoles';
 import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { RecentAttentionNotice } from './RecentAttentionNotice';
@@ -40,11 +43,11 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
   const source = useRequest(origin ? `intervention-origin:${user?.id}:${origin}` : null, () => incidentsApi.detail(origin!));
   const [dirty,setDirty] = useState(false);
   const guard = useUnsavedChangesGuard(dirty);
-  const sourceAvailable = !origin || (user?.role.code === 'COORDINADOR' && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
+  const sourceAvailable = !origin || (managesIncidents(user?.role.code) && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? prefill?.typeId ?? null);
-  const [date, setDate] = useState(initial?.scheduledDate ?? prefill?.date ?? '');
+  const [date, setDate] = useState(() => initial?.scheduledDate ?? (prefill?.date || todayLocal()));
   const [description, setDescription] = useState(initial?.description ?? prefill?.description ?? '');
   const [reason, setReason] = useState('');
   const [findingSource,setFindingSource] = useState<number | null>(null);
@@ -115,10 +118,10 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
     } finally { setPending(false); }
   };
   if (!['ADMIN','COORDINADOR'].includes(user?.role.code ?? '')) return <p>No tienes permiso para planificar intervenciones.</p>;
-  return <form className="surface-card space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
+  return <div className="space-y-6"><PageHeader title={initial ? `Editar ${initial.code}` : 'Nueva intervención'} />
+  <form className="surface-card space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
     {guard.dialog}
-    <Link href={origin ? incidentAfterCreationHref(origin,null,returnFilters) : initial ? `/intervenciones/${initial.id}` : '/intervenciones'} className="text-brand-600 underline">{origin ? 'Volver a la incidencia' : 'Volver'}</Link>
-    <h1 className="text-2xl font-bold">{initial ? `Editar ${initial.code}` : 'Nueva intervención'}</h1>
+    {origin && <Link href={incidentAfterCreationHref(origin,null,returnFilters)} className="text-brand-600 underline">Volver a la incidencia</Link>}
     {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.officialCode ?? `incidencia #${origin}`}. Al guardar volverás para confirmar el vínculo; todavía no se crea una asociación.</p>}
     {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar registrada, abierta y disponible para tu cuenta.'}</p>}
     {error && <p role="alert" className="text-action-danger">{error}</p>}
@@ -166,5 +169,5 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
       <Button variant="secondary" onClick={addLocation}>Agregar ubicación</Button>
     </fieldset>
     <Button type="submit" loading={pending} disabled={!options || !sourceAvailable}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : origin ? 'Guardar y volver a la incidencia' : 'Crear intervención'}</Button>
-  </form>;
+  </form></div>;
 }

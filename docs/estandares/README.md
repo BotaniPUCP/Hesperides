@@ -2,7 +2,7 @@
 
 Hesperides es la fuente oficial del catastro (SPEC-103 D-12). Lo que todavía no está registrado
 entra de dos formas: por el formulario **Catastro → Registrar planta**, una planta a la vez, o por
-un archivo CSV en **Catastro → Importar CSV**. Este directorio define el formato de esos archivos.
+un archivo CSV en **Catastro verde → Importar al catastro**. Este directorio define el formato de esos archivos.
 
 | Estándar | Documento | Plantilla | Estado |
 |---|---|---|---|
@@ -10,6 +10,14 @@ un archivo CSV en **Catastro → Importar CSV**. Este directorio define el forma
 | Tachos | [tachos.md](tachos.md) | [plantillas/tachos.csv](plantillas/tachos.csv) | Disponible |
 | Bebederos | [bebederos.md](bebederos.md) | [plantillas/bebederos.csv](plantillas/bebederos.csv) | Disponible |
 | Fotos genéricas de especies | [fotos-especies.md](fotos-especies.md) | [plantillas/fotos-especies.csv](plantillas/fotos-especies.csv) | Disponible |
+
+El **Directorio** (SPEC-106) usa el mismo ciclo de carga para su **Registro masivo**, con sus
+propias reglas: exactamente las columnas del estándar; las de coordenadas y decimales no aplican.
+
+| Estándar del Directorio | Documento | Plantilla | Estado |
+|---|---|---|---|
+| Organizaciones | [organizaciones.md](organizaciones.md) | [plantillas/organizaciones.csv](plantillas/organizaciones.csv) | Disponible |
+| Contactos | [contactos.md](contactos.md) | [plantillas/contactos.csv](plantillas/contactos.csv) | Disponible |
 
 ## Reglas comunes
 
@@ -44,6 +52,6 @@ un archivo CSV en **Catastro → Importar CSV**. Este directorio define el forma
 
 ## Exportar, corregir y volver a cargar
 
-**Importar CSV → Exportar ejemplares** descarga todo el catastro en el estándar. Cada fila trae su
+**Importar al catastro → Exportar ejemplares** descarga todo el catastro en el estándar. Cada fila trae su
 `codigo`: al volver a cargarla, actualiza ese ejemplar en vez de crear otro. Una celda vacía no
 borra el dato registrado, y una medición con fecha anterior a la vigente no la reemplaza.

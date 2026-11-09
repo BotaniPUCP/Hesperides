@@ -4,17 +4,20 @@ import Link from 'next/link';
 import type { Species } from '@shared/types';
 import { Badge } from '@/components/ui';
 import { SpeciesCover } from './SpeciesCover';
+import type { ReactNode } from 'react';
 
 export interface SpeciesInfoProps {
   species: Species;
   availableLocations?: { location: string; count: number }[];
+  /** Lo que puede hacer quien edita, junto al conteo de ejemplares. */
+  actions?: ReactNode;
 }
 
 /**
  * Cabecera compacta y profesional para el detalle de una especie botánica.
  * Diseñada para alta densidad informativa sin ocupar espacio vertical excesivo.
  */
-export function SpeciesInfo({ species, availableLocations = [] }: SpeciesInfoProps) {
+export function SpeciesInfo({ species, availableLocations = [], actions }: SpeciesInfoProps) {
   const isNameIdentical = species.commonName.trim().toLowerCase() === species.scientificName.trim().toLowerCase();
 
   // Filtrar 'ALL' si viene en availableLocations y mostrar todos los sectores donde está presente
@@ -23,7 +26,7 @@ export function SpeciesInfo({ species, availableLocations = [] }: SpeciesInfoPro
   const hasNotesOrDescription = Boolean(species.description?.trim() || species.careNotes?.trim());
 
   return (
-    <div className="rounded-2xl border border-neutral-200/90 bg-neutral-0 p-4 sm:p-5 shadow-xs mb-5 transition-shadow">
+    <div className="surface-card">
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-start">
         <SpeciesCover species={species} />
 
@@ -34,6 +37,7 @@ export function SpeciesInfo({ species, availableLocations = [] }: SpeciesInfoPro
             <div className="flex flex-wrap items-center justify-between gap-2.5 mb-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge label={species.vegetationTypeName} color="brand" />
+                <Badge label={species.critical ? 'Crítica' : 'No crítica'} color={species.critical ? 'warning' : 'neutral'} />
                 {species.family && (
                   <Badge label={`Fam. ${species.family}`} color="neutral" />
                 )}
@@ -43,15 +47,18 @@ export function SpeciesInfo({ species, availableLocations = [] }: SpeciesInfoPro
               </div>
 
               {/* Indicador de ejemplares censados */}
-              <Badge
-                label={`${species.specimenCount} ${species.specimenCount === 1 ? 'ejemplar censado' : 'ejemplares censados'}`}
-                color="brand"
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  label={`${species.specimenCount} ${species.specimenCount === 1 ? 'ejemplar censado' : 'ejemplares censados'}`}
+                  color="brand"
+                />
+                {actions}
+              </div>
             </div>
 
             {/* Nombre común y científico */}
             <div className="flex flex-wrap items-baseline gap-2.5 mt-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
+              <h1 className="page-title">
                 {species.commonName}
               </h1>
               {!isNameIdentical && (

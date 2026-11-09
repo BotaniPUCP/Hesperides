@@ -9,8 +9,11 @@ import { useCatalog } from '@/hooks/useCatalog';
 import { LIMITES } from '@/lib/upload-limits';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
+import { CamposMedidasEspecie } from './CamposMedidasEspecie';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
+import { aFormulario, criticaPorTipo, erroresMedidas, medidasPorTipo, type ErroresMedidas } from './medidasEspecie';
 import { normalizarNombreCientifico, validarNombreCientifico } from './validacionesEspecie';
+import { mensajeDeApiError } from '@/lib/api-errors';
 
 const TIPOS_VEGETACION_DEFAULT: SelectOption[] = [
   { id: 1, code: 'TREE', label: 'Árbol' },
@@ -43,6 +46,8 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
   const [description, setDescription] = useState('');
   const [careNotes, setCareNotes] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
+  const [medidas, setMedidas] = useState(() => medidasPorTipo('TREE'));
+  const [erroresDeMedidas, setErroresDeMedidas] = useState<ErroresMedidas>({});
 
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -76,6 +81,8 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
     otherNamesText ||
     description ||
     careNotes ||
+    medidas.alturaM ||
+    medidas.radioM ||
     photo
   );
 
@@ -89,6 +96,8 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
     setDescription('');
     setCareNotes('');
     setPhoto(null);
+    setMedidas(medidasPorTipo('TREE'));
+    setErroresDeMedidas({});
     setError(null);
     setFieldErrors({});
     setRegistered(null);
@@ -106,8 +115,10 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
       errs.vegetationTypeCode = 'Selecciona el tipo de vegetación';
     }
 
+    const errsMedidas = erroresMedidas(medidas);
     setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
+    setErroresDeMedidas(errsMedidas);
+    return Object.keys(errs).length === 0 && Object.keys(errsMedidas).length === 0;
   }
 
   function handlePreSubmit(e: React.FormEvent) {
@@ -134,6 +145,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
       otherNames: otherNames.length > 0 ? otherNames : undefined,
       description: description.trim() || undefined,
       careNotes: careNotes.trim() || undefined,
+      ...aFormulario(medidas),
     };
 
     try {
@@ -148,7 +160,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
         if (err.status === 409) {
           setError('Ya existe una especie con este nombre científico en el catálogo.');
         } else {
-          setError(err.message || 'Error al guardar la especie.');
+          setError(mensajeDeApiError(err));
         }
       } else {
         setError('Ocurrió un error inesperado al registrar la especie.');
@@ -244,7 +256,9 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
             options={typeOptions}
             value={vegetationTypeCode}
             onChange={(opt) => {
-              setVegetationTypeCode(opt?.code || null);
+              const tipo = opt?.code || null;
+              setVegetationTypeCode(tipo);
+              setMedidas((m) => ({ ...m, critical: criticaPorTipo(tipo) }));
               onDirtyChange?.(true);
             }}
             required
@@ -266,6 +280,15 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
           />
         </div>
       </Card>
+
+      <CamposMedidasEspecie
+        valores={medidas}
+        onCambiar={(valores) => {
+          setMedidas(valores);
+          onDirtyChange?.(true);
+        }}
+        errores={erroresDeMedidas}
+      />
 
       <Card title="Nombres vernáculos o alternativos">
         <Input

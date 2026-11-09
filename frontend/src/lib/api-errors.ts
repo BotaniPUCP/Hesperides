@@ -1,5 +1,11 @@
 import type { FieldError, ValidationErrors } from '@shared/types';
-import { ApiError } from './api';
+import { ApiError, PASSWORD_CHANGE_REQUIRED_MESSAGE } from './api';
+import { isSpanishBackendMessage } from './backendSpanishMessages';
+import { DIRECTORY_MESSAGES, DIRECTORY_PATTERNS } from './directoryErrorMessages';
+import { IMPORT_PATTERNS } from './importErrorMessages';
+import { PLACE_MESSAGES, PLACE_PATTERNS, type MessagePattern } from './placeErrorMessages';
+import { PLANNING_MESSAGES, PLANNING_PATTERNS } from './planningErrorMessages';
+import { SHARED_MESSAGES, SHARED_PATTERNS } from './sharedErrorMessages';
 
 /**
  * Traduce un fallo de la API a algo que una persona pueda leer y accionar,
@@ -44,6 +50,7 @@ const MENSAJES: Record<string, string> = {
   'Unsupported photo format': 'Usa una fotografía JPEG, PNG o WebP.',
   'Email already registered': 'Ya existe un usuario con ese correo',
   'You cannot deactivate your own account': 'No puedes desactivar tu propia cuenta.',
+  'You cannot resend your own credentials': 'No puedes reenviarte tus propias credenciales.',
   'Cannot deactivate the last active administrator':
     'Es el último administrador activo. Nombra a otro antes de desactivarlo.',
   'Cannot change the role of the last active administrator':
@@ -63,40 +70,28 @@ const MENSAJES: Record<string, string> = {
     'Ese ítem lo necesita el sistema para funcionar: no se puede desactivar.',
   'El padre debe pertenecer a un catálogo distinto: la jerarquía es de dos niveles':
     'La clase debe venir de otro catálogo: la jerarquía admite solo dos niveles.',
+  ...PLACE_MESSAGES,
+  ...SHARED_MESSAGES,
+  ...DIRECTORY_MESSAGES,
+  ...PLANNING_MESSAGES,
 };
 
-/**
- * SPEC-203: conjuntos de áreas verdes y frecuencias por conjunto. Ya llegan en
- * español; están aquí porque este diccionario decide qué lee el usuario.
- */
-const MENSAJES_PLANIFICACION: Record<string, string> = {
-  'Ya existe un conjunto con ese nombre': 'Ya existe un conjunto con ese nombre.',
-  'El nombre del conjunto es obligatorio': 'Ponle un nombre al conjunto.',
-  'Elige al menos un jardín': 'Elige al menos un jardín.',
-  'Elige al menos una actividad': 'Elige al menos una actividad que se planifique en este conjunto.',
-  'Otra persona cambió este conjunto. Recarga para ver su versión.':
-    'Otra persona cambió este conjunto. Recarga para ver su versión.',
-  'Quita primero la frecuencia propia de este conjunto':
-    'Este conjunto tiene una frecuencia propia. Quítala primero desde Frecuencias.',
-  'Conjunto no encontrado': 'El conjunto no existe o ya fue dado de baja.',
-  'Elige el conjunto al que se aplica esta frecuencia': 'Elige el conjunto al que se aplica esta frecuencia.',
-  'El conjunto no existe o fue dado de baja': 'El conjunto ya no existe o fue dado de baja.',
-  'Solo una frecuencia propia de un conjunto lleva conjunto':
-    'Una frecuencia de todo el campus no lleva conjunto.',
-  'Ya existe una frecuencia vigente para esta actividad, modalidad y ámbito':
-    'Ya hay una frecuencia vigente para esta actividad, modalidad y alcance.',
-};
+/** Los mensajes que traen un dato no caben en un diccionario de textos exactos. */
+const PATRONES: readonly MessagePattern[] = [...PLACE_PATTERNS, ...SHARED_PATTERNS, ...DIRECTORY_PATTERNS, ...IMPORT_PATTERNS,
+  ...PLANNING_PATTERNS];
 
-/** Mensajes que traen datos al final («…: 7, 9»): se reconocen por su comienzo. */
-const PREFIJOS: ReadonlyArray<[string, string]> = [
-  ['Solo se pueden agregar secciones: ', 'Solo se pueden agregar jardines. Revisa la selección.'],
-  ['Actividades no válidas: ', 'Alguna actividad elegida ya no existe. Recarga la página.'],
-];
+/** La traducción de un mensaje conocido del backend; null si no se conoce. */
+export function traducirConocido(message: string, patrones: readonly MessagePattern[] = PATRONES): string | null {
+  if (MENSAJES[message]) return MENSAJES[message];
+  for (const [patron, traduccion] of patrones) {
+    const match = message.match(patron);
+    if (match) return traduccion(match);
+  }
+  return isSpanishBackendMessage(message) ? message : null;
+}
 
 function traducir(message: string, porDefecto: string): string {
-  const exacto = MENSAJES[message] ?? MENSAJES_PLANIFICACION[message];
-  if (exacto) return exacto;
-  return PREFIJOS.find(([prefijo]) => message.startsWith(prefijo))?.[1] ?? porDefecto;
+  return traducirConocido(message) ?? porDefecto;
 }
 
 export function mensajeDeApiError(error: unknown): string {
@@ -113,7 +108,9 @@ export function mensajeDeApiError(error: unknown): string {
     case 401:
       return 'Tu sesión expiró, vuelve a iniciar sesión.';
     case 403:
-      return 'No tienes permisos para esta acción.';
+      return error.message === PASSWORD_CHANGE_REQUIRED_MESSAGE
+        ? 'Debes cambiar tu contraseña antes de seguir usando el sistema.'
+        : 'No tienes permisos para esta acción.';
     case 404:
       return 'No se encontró el registro o no tienes acceso a él.';
     case 413:

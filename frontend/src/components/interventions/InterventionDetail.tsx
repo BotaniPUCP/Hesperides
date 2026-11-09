@@ -1,9 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { todayLocal } from '@/lib/local-date';
+import { aOutcomes, errorDeDecision, type DecisionPoda } from './cierrePoda';
+import { MedidasCierrePoda } from './MedidasCierrePoda';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCatalog } from '@/hooks/useCatalog';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { Button, Input, LoadingSkeleton, Modal, Select, StatusBadge, useToast } from '@/components/ui';
 import { LIMITES, motivoDeRechazo } from '@/lib/upload-limits';
 import { interventionsApi, interventionError, type InterventionDetail as Detail, type InterventionEvidence, type InterventionLocation, type InterventionOptions } from '@/lib/interventions-api';
@@ -12,6 +16,7 @@ import { ApiError } from '@/lib/api';
 import { createClientUuid } from '@/lib/client-uuid';
 import { LocationObservations, LocationProgressHistory } from './LocationHistory';
 import { ExecutionTime } from './ExecutionTime';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 
 const actionLabels: Record<string,string> = {
   start:'Iniciar trabajo', execution:'Registrar avance', complete:'Enviar a revisión', validate:'Aprobar', observe:'Observar', reopen:'Subsanar observación',
@@ -70,16 +75,22 @@ function EvidenceUpload({ work, location, pendingEvidence, onChange }: { work:De
   </div>;
 }
 
+const LIST_PATH = '/intervenciones';
+
 export function InterventionDetail({ id, edit = false }: { id:number; edit?:boolean }) {
   const { user } = useAuth();
+  const listHref = useRememberedHref(LIST_PATH);
   const { showToast } = useToast();
   const [data, setData] = useState<Detail | null>(null);
+  usePageTrail(data ? { labels: { [id]: data.code } } : {});
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<{location:InterventionLocation; action:string} | null>(null);
+  const [pruning,setPruning]=useState<Record<string,DecisionPoda>>({});
+  const [pruningErrors,setPruningErrors]=useState<Record<string,string>>({});
   const [quantity, setQuantity] = useState('');
   const [notes, setNotes] = useState('');
   const [reason, setReason] = useState('');
@@ -112,7 +123,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   };
   if (!Number.isSafeInteger(id) || id < 1) return <p role="alert">Intervención no válida.</p>;
   if (loading) return <LoadingSkeleton variant="card" />;
-  if (!data) return <div role="alert">{error}<Link href="/intervenciones">Volver al listado</Link></div>;
+  if (!data) return <div role="alert">{error}<Link href={listHref}>Volver al listado</Link></div>;
   if (edit) return data.startedAt || data.planningStatusCode === 'CANCELLED'
     ? <p>La planificación está cerrada. <Link href={`/intervenciones/${id}`}>Volver al detalle</Link></p>
     : <InterventionForm initial={data} />;
@@ -122,12 +133,22 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   const teamOption = options?.teams.find(t => String(t.id) === team);
   const label = (type:string,code:string) => options?.catalogs.find(c => c.typeCode === type && c.code === code)?.label ?? code;
   const unit = (id:number|null|undefined) => options?.catalogs.find(c => c.id === id)?.label ?? '';
-  const openAction = (location:InterventionLocation,action:string) => {setSelected({location,action});setQuantity(String(location.progressQuantity ?? location.executedQuantity ?? ''));setNotes(location.executionNotes ?? '');setReason('');setError('');setNotice('');};
+  const isPruning = options?.catalogs.find(c => c.id === data.classItemId)?.code === 'PODA';
+  const pruningCodes = selected?.action === 'complete' && isPruning ? selected.location.linkedElementCodes ?? [] : [];
+  const openAction = (location:InterventionLocation,action:string) => {setPruning({});setPruningErrors({});setSelected({location,action});setQuantity(String(location.progressQuantity ?? location.executedQuantity ?? ''));setNotes(location.executionNotes ?? '');setReason('');setError('');setNotice('');};
   const submitAction = () => {
     if (!selected) return;
     const body:Record<string,unknown> = {version:data.version};
     if (selected.action === 'execution') {body.progressQuantity=quantity === '' ? null : Number(quantity);body.executionNotes=notes;}
-    if (selected.action === 'complete') {body.executedQuantity=quantity === '' ? null : Number(quantity);body.executionNotes=notes;}
+    if (selected.action === 'complete') {
+      body.executedQuantity=quantity === '' ? null : Number(quantity);body.executionNotes=notes;
+      const today=todayLocal();
+      const invalid=Object.fromEntries(Object.entries(pruning).flatMap(([code,decision]) => {const message=errorDeDecision(decision,today);return message ? [[code,message]] : [];}));
+      setPruningErrors(invalid);
+      if (Object.keys(invalid).length > 0) return;
+      const outcomes=aOutcomes(pruning);
+      if (outcomes.length > 0) body.measurementOutcomes=outcomes;
+    }
     if (selected.action === 'observe') body.reason=reason;
     if (['execution','complete'].includes(selected.action) && quantity !== '' && (!Number.isFinite(Number(quantity)) || Number(quantity) < 0)) {setError('La cantidad debe ser positiva o cero.');return;}
     if (selected.action === 'complete' && (!notes.trim() || (selected.location.unitItemId && quantity === ''))) {setError('Ingresa el reporte y la cantidad ejecutada cuando corresponda.');return;}
@@ -135,11 +156,10 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     void mutate(() => interventionsApi.command(id,selected.location.id!,selected.action,body));
   };
   return <section className="space-y-6">
-    <Link className="surface-pill text-sm text-brand-600 underline" href="/intervenciones">Volver a intervenciones</Link>
-    <div className="surface-card flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
+    <div className="surface-card flex flex-wrap items-center justify-between gap-3"><h1 className="page-title">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
     {error && !selected && !cancelOpen && <p role="alert" className="text-action-danger">{error}</p>}
     {notice && !selected && <p role="status">{notice}</p>}
-    <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-0 p-5">
+    <div className="surface-card space-y-2">
       <p className="font-medium">{unit(data.classItemId)}{data.typeItemId ? ` · ${unit(data.typeItemId)}` : ''}</p>
       <p>{data.description || 'Sin descripción'}</p><p>Programada: {data.scheduledDate}</p>
       <ExecutionTime work={data}/>
@@ -158,7 +178,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
       </div>
       <p className="text-sm text-neutral-500">Actualiza la información para consultar cambios guardados por otras personas. Tus acciones se guardan al confirmarlas.</p>
     </div>
-    {canAssign && <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-0 p-5"><h2 className="font-semibold">Asignación del trabajo</h2>
+    {canAssign && <div className="surface-card space-y-3"><h2 className="font-semibold">Asignación del trabajo</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         <Select id="assign-team" label="Cuadrilla" value={team} options={(options?.teams ?? []).map(t => ({id:t.id,code:String(t.id),label:t.name}))} onChange={o => {setTeam(o?.code ?? '');setAssignee('');}} />
         <Select id="assign-user" label="Persona asignada" value={assignee} options={(teamOption?.assignees ?? []).map(u => ({id:u.id,code:String(u.id),label:u.fullName}))} onChange={o => setAssignee(o?.code ?? '')} />
@@ -167,7 +187,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     <h2 className="surface-pill text-xl font-semibold">Ubicaciones</h2>
     <div className="grid gap-5 xl:grid-cols-2">{data.locations.map((location,index) => {
       const photos = data.evidences.filter(e => e.interventionLocationId === location.id);
-      return <article key={location.id} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-5">
+      return <article key={location.id} className="surface-card space-y-4">
         <div className="flex flex-wrap justify-between gap-2"><h3 className="font-semibold">Ubicación {index + 1}</h3><StatusBadge code={location.statusCode ?? ''} label={label('INTERVENTION_STATUS',location.statusCode ?? '')} /></div>
         <p>{location.locationDescription || location.description}</p>{location.description && <p>{location.description}</p>}
         <dl className="grid grid-cols-2 gap-2 text-sm"><dt>Cantidad solicitada</dt><dd>{location.requestedQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd>
@@ -186,7 +206,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
         {location.allowedActions?.includes('evidence') && <EvidenceUpload key={`new-${location.id}-${location.attemptNumber}`} work={data} location={location} onChange={refresh} />}
       </article>;
     })}</div>
-    <details className="rounded-lg border border-neutral-200 bg-neutral-0 p-4"><summary className="cursor-pointer font-semibold">Historial de la actividad</summary><ol className="mt-3 space-y-2 text-sm">{data.history.map((event,index) => <li key={index}>
+    <details className="surface-card"><summary className="cursor-pointer font-semibold">Historial de la actividad</summary><ol className="mt-3 space-y-2 text-sm">{data.history.map((event,index) => <li key={index}>
       {new Date(event.occurredAt).toLocaleString()} · {actionLabels[event.actionCode.toLowerCase()] ?? ({CREATED:'Creada',ASSIGNED:'Asignada',STARTED:'Trabajo iniciado',PROGRESS_SAVED:'Avance registrado',COMPLETED:'Enviada a revisión',VALIDATED:'Aprobada',OBSERVED:'Observada',REOPENED:'Subsanación iniciada',UPDATED:'Planificación actualizada',REPROGRAMMED:'Reprogramada',CANCELLED:'Cancelada',EVIDENCE_ANNOUNCED:'Foto pendiente',EVIDENCE_UPLOADED:'Foto recibida'} as Record<string,string>)[event.actionCode] ?? 'Actualización'}
       {event.interventionLocationId && ` · Ubicación ${data.locations.findIndex(l => l.id === event.interventionLocationId) + 1}`}{event.reason && ` · ${event.reason}`}
     </li>)}</ol></details>
@@ -198,6 +218,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
           {selected.location.unitItemId && <label className="grid gap-1 text-sm">Cantidad {unit(selected.location.unitItemId)}<input type="number" min="0" step="0.001" className="h-11 rounded-md border border-neutral-200 p-2" value={quantity} onChange={e => setQuantity(e.target.value)} disabled={busy} /></label>}
           {selected.action === 'execution' && <p className="text-sm text-neutral-500">Indica el total realizado hasta ahora en esta ubicación. Cada registro conserva su cantidad, descripción y fecha en el historial.</p>}
           <label className="grid gap-1 text-sm">Reporte de ejecución<textarea className="min-h-28 rounded-md border border-neutral-200 p-2" maxLength={4000} value={notes} onChange={e => setNotes(e.target.value)} disabled={busy} /></label>
+          {pruningCodes.length > 0 && <MedidasCierrePoda codigos={pruningCodes} decisiones={pruning} onCambiar={setPruning} hoy={todayLocal()} errores={pruningErrors} disabled={busy} />}
         </>}
         {selected?.action === 'observe' && <Input id="observation-reason" label="Motivo de la observación" value={reason} onChange={setReason} required maxLength={2000} disabled={busy} />}
         {selected?.action === 'validate' && <p>Apruebas únicamente esta ubicación. El trabajo contará después de aprobarlas todas.</p>}

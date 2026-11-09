@@ -6,12 +6,11 @@ import pe.edu.pucp.hesperides.modules.imports.ImportRules;
 import pe.edu.pucp.hesperides.modules.imports.PlannedLine;
 import pe.edu.pucp.hesperides.modules.imports.repository.ImportBatchRepository;
 import pe.edu.pucp.hesperides.modules.imports.repository.ImportBatchRepository.Batch;
-import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository;
-import pe.edu.pucp.hesperides.modules.imports.specimens.PhotoFiles;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
-import pe.edu.pucp.hesperides.shared.storage.FileStorage;
+import pe.edu.pucp.hesperides.shared.persistence.UserIds;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
@@ -34,23 +33,18 @@ public class ImportBatchGate {
     }
 
     private final ImportBatchRepository batches;
-    private final SpecimenLookupRepository lookup;
-    private final FileStorage storage;
+    private final UserIds users;
     private final ObjectMapper json;
 
-    public Opened open(String kind, String fileName, String userEmail, Object preview, byte[] zip) {
+    public Opened open(String kind, String fileName, String userEmail, Object preview) {
         LocalDateTime expires = LocalDateTime.now().plusMinutes(ImportRules.PREVIEW_MINUTES);
-        long id = batches.create(kind, fileName, lookup.userId(userEmail), json.writeValueAsString(preview), expires);
-        if (zip != null) {
-            // El ZIP espera a la confirmación en el almacenamiento, no en la base.
-            storage.put(zipKey(id), zip, "application/zip");
-        }
+        long id = batches.create(kind, fileName, users.of(userEmail), json.writeValueAsString(preview), expires);
         return new Opened(id, expires);
     }
 
     public Claimed claim(long batchId, String userEmail) {
         Batch batch = batches.find(batchId).orElseThrow(() -> new ResourceNotFoundException("Import not found: " + batchId));
-        long userId = lookup.userId(userEmail);
+        long userId = users.of(userEmail);
         if (!"PREVIEWED".equals(batch.status())) {
             throw new BusinessRuleException("This import was already confirmed or expired");
         }
@@ -68,8 +62,9 @@ public class ImportBatchGate {
         return json.readValue(batch.report(), type);
     }
 
-    public Map<String, byte[]> zip(long batchId, boolean needed) {
-        return needed ? PhotoFiles.read(storage.read(zipKey(batchId))) : Map.of();
+    /** Para un informe genérico, como el de cada tipo del Directorio. */
+    public <T> T report(Batch batch, TypeReference<T> type) {
+        return json.readValue(batch.report(), type);
     }
 
     public void close(long batchId, Object result) {
@@ -89,9 +84,5 @@ public class ImportBatchGate {
     public static int omitted(List<? extends PlannedLine> planned, List<? extends PlannedLine> included) {
         return (int) (planned.stream().filter(PlannedLine::isPossibleDuplicate).count()
                 - included.stream().filter(PlannedLine::isPossibleDuplicate).count());
-    }
-
-    static String zipKey(long batchId) {
-        return "imports/" + batchId + "/photos.zip";
     }
 }

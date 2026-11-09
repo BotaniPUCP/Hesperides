@@ -1,7 +1,8 @@
 # Catálogo de requisitos
 
-> **Actualizado tras la 3.ª entrevista (29 de septiembre de 2026)**, con las tres entrevistas al
-> cliente como fuente. Lo que queda fuera de la primera versión, y por qué, está en
+> **Actualizado el 21 de octubre de 2026** con el avance construido (registro del catastro, galería
+> de fotos de especie y el nuevo módulo de lugares). Los requisitos salen de las tres entrevistas al
+> cliente; la última, el 29 de septiembre. Lo que queda fuera de la primera versión, y por qué, está en
 > [`fuera-de-alcance.md`](fuera-de-alcance.md).
 >
 > **Leyenda de cambios:** 🆕 nuevo · ⬆️ sube prioridad · ⬇️ baja prioridad.
@@ -13,7 +14,8 @@
 >
 > **Prioridad** es importancia para el cliente, **no** orden de construcción. Un requisito de
 > prioridad Alta puede estar bloqueado y no poder empezarse. **Peso** es su traducción numérica
-> (Alta 3 · Media 2 · Baja 1 · `HAB` 1). **Avance** es el porcentaje construido.
+> (Alta 3 · Media 2 · Baja 1 · `HAB` 1). **Avance** es el porcentaje construido, **estimado** a partir
+> de lo que hace el código, no medido contra los criterios de aceptación de cada spec.
 
 ---
 
@@ -66,31 +68,31 @@ los proveedores tercerizados y las unidades que piden atenciones. Ver
 
 | | Cantidad |
 |---|---|
-| Requisitos en la versión anterior | 72 |
-| **Requisitos nuevos** | **5** (1.12 · 2.13 · 2.14 · 3.12 · 5.11) |
-| **Total** | **77** |
+| Requisitos en la versión anterior | 77 |
+| **Requisitos nuevos** | **5** (2.15 · 9.1 · 9.2 · 9.3 · 9.4) |
+| **Total** | **82** |
 | Pasan a **fase futura** (⏭️) | **13** |
-| **En alcance de la primera versión** | **64** |
+| **En alcance de la primera versión** | **69** |
 
-**Prioridades de los 64 en alcance:**
+**Prioridades de los 69 en alcance:**
 
 | Prioridad | Cantidad |
 |---|---|
-| **Alta** | **17** (27%) |
-| Media | 30 |
-| Baja | 8 |
+| **Alta** | **17** (25%) |
+| Media | 34 |
+| Baja | 9 |
 | `HAB` habilitador | 9 |
 
-**Distribución por módulo (en alcance / total):** M1 12/12 · M2 12/14 · M3 12/12 · M4 1/10 ·
-M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3
+**Distribución por módulo (en alcance / total):** M1 12/12 · M2 13/15 · M3 12/12 · M4 1/10 ·
+M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3 · M9 4/4
 
 ### Qué se puede construir hoy
 
-| Estado | Cantidad (sobre 64) | |
+| Estado | Cantidad (sobre 69) | |
 |---|---|---|
-| **✅ Se puede** | **56** (88%) | Información suficiente |
-| **🔶 Parcial** | **7** (11%) | Se puede empezar; falta un dato para cerrarlo |
-| **🔒 Bloqueado** | **1** (2%) | Necesita algo del cliente |
+| **✅ Se puede** | **61** (88%) | Información suficiente |
+| **🔶 Parcial** | **7** (10%) | Se puede empezar; falta un dato para cerrarlo |
+| **🔒 Bloqueado** | **1** (1%) | Necesita algo del cliente |
 
 **De los 17 requisitos Alta, 14 están listos y 3 no:**
 
@@ -136,7 +138,21 @@ M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3
 
 ---
 
-## Cambios de esta versión *(25 sep 2026)*
+## Cambios de esta versión *(21 oct 2026)*
+
+Avance construido desde el 1 de octubre. Ninguna prioridad ni bloqueo cambió: solo el avance y
+cinco requisitos nuevos que ya estaban construidos sin figurar aquí.
+
+| Qué se construyó | Efecto en el catálogo |
+|---|---|
+| **Registro del catastro** por formulario y por CSV, con mediciones y evaluaciones (SPEC-103) | **2.2** 0 → 60% · **2.3** 0 → 60% · **2.7** 0 → 30% · **2.9** 0 → 100% · **2.12** 0 → 80% |
+| **Tachos y bebederos**: registro, carga por CSV y capa en el mapa (SPEC-103) | 🆕 **2.15** |
+| **Galería de fotos genéricas de especie**, de 1 a 4 por especie y con crédito (SPEC-104) | **1.5** 70 → 80% |
+| **Frecuencias de mantenimiento** con su pantalla y su evaluador de cumplimiento (SPEC-101) | **1.7** 20 → 60% |
+| **Parámetros del sistema** con su pantalla | **1.8** 0 → 60% |
+| **Lugares y perspectivas**: catálogo de lugares fotografiados desde sus alrededores, en el mapa | 🆕 módulo **M9** (9.1-9.4) · **2.4** 30 → 40% |
+
+## Cambios del 25 sep 2026
 
 | Decisión | Efecto en el catálogo |
 |---|---|
@@ -182,14 +198,14 @@ M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3
 
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
-| 1.1 | Gestión de usuarios (CRUD) | `HAB` | 1 | — | ✅ | 100% | Especificado en SPEC-100 |
+| 1.1 | Gestión de usuarios (CRUD) | `HAB` | 1 | — | ✅ | 100% | Implementado (SPEC-100) |
 | 1.2 | Gestión de roles y permisos | `HAB` | 1 | — | ✅ | 100% | **`ADMIN` incluye todos los permisos de `COORDINADOR`**. `OPERARIO` sin cuentas |
 | 1.3 | Autenticación y login | `HAB` | 1 | — | ✅ | 100% | Implementado (SPEC-001) |
 | 1.4 | Catálogo de tipos de intervención | `HAB` | 1 | — | ✅ | 100% | 9 clases → 45 tipos. Fitosanitario e Inspección con tipos provisionales (P-10) |
-| 1.5 | Catálogo de especies | `HAB` | 1 | — | ✅ | 70% | 🔒 → ✅ **90 especies** limpias (de 91 nombres), con familia y nombres alternativos **por validar**, consultables en el inventario verde. Falta la pantalla para administrarlas. Ver `docs/inventario-verde/README.md` |
-| 1.6 | Catálogo de zonas del campus | `HAB` | 1 | — | 🔶 | 40% | **Sector (5) → sección (521 + 10 xerofíticas) → subsección.** Cargado con SPEC-102; falta la pantalla de administración. Todo sale del mapa v32. Más **411 referencias** oficiales para buscar. Ver nota |
+| 1.5 | Catálogo de especies | `HAB` | 1 | — | ✅ | 80% | 🔒 → ✅ **90 especies** limpias (de 91 nombres), con familia y nombres alternativos **por validar**, consultables en el inventario verde. **Galería de 230 fotos genéricas** (1 a 4 por especie) con autor y licencia (SPEC-104). Falta la pantalla para administrarlas. Ver `docs/inventario-verde/README.md` |
+| 1.6 | Catálogo de zonas del campus | `HAB` | 1 | — | 🔶 | 40% | **Sector (5) → sección (521 + 10 xerofíticas) → subsección.** Cargado con SPEC-102; falta la pantalla de administración. Todo sale del mapa v32. Las **411 referencias** oficiales se están migrando a lugares (9.4). Ver nota |
 | 1.7 | Configuración de frecuencias de mantenimiento | Media | 2 | D5 | ✅ | 70% | SPEC-101 y SPEC-203: cada cuánto por actividad, para todo el campus o un conjunto de jardines, y la planificación preventiva que dice qué toca y dónde. Falta validarlo en navegador y confirmar con el cliente que manda la estación de la última vez |
-| 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 0% | Incluye la **lista de feriados** que usa 5.11 |
+| 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 60% | Pantalla `/admin/parametros`: política de contraseñas, intentos de inicio de sesión y hectáreas del campus. Falta la **lista de feriados** que usa 5.11 |
 | 1.9 | Gestión de cuadrillas y asignación a sectores | **Alta** | 3 | D5 D7 | 🔶 | 0% | 3 sectores verdes (9+9+7 personas), un capataz cada uno; Polideportivo y Bosque húmedo sin cuadrilla propia. La asignación de secciones **tiene vigencia**. Falta P-15 |
 | 1.10 | Catálogo de insumos y materiales | `HAB` | 1 | — | ✅ | 0% | Lista extraída del Excel |
 | 1.11 | Catálogo de unidades de medida | `HAB` | 1 | — | ✅ | 0% | und · m · m² · m³ |
@@ -231,6 +247,9 @@ meses anteriores se sigue contando en el sector que la tenía entonces.
 - **Un préstamo marca la sección** mientras dura. Al terminar, la sección aparece como **«requiere
   recuperación»**: OSG presta unos 12 jardines de forma recurrente y *«esos espacios nos demandan
   mucho tiempo para recuperarlos»*.
+- **Todo jardín prestable es un lugar** (M9), con los nombres del calendario de la OSG como alias.
+  Los 19 actuales se crearon en `V035`. Cuando el sistema permita marcar una sección como
+  prestable, **exigirá crear su lugar** en la misma operación.
 
 **Sobre 1.7 — las frecuencias no son fijas.** Césped 30-45 días *según estación*; fitosanitario
 4 al año *mínimo, más si el clima lo exige*; poda mayor 1 al año. En 2026, un «verano eterno»
@@ -243,19 +262,20 @@ obligó a cortar más seguido. **El sistema no puede asumir periodicidad constan
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
 | 2.1 | Mapa interactivo del campus | Media | 2 | D1 D6 | ✅ | 60% | 🔶 → ✅ **Mapa propio** para registro, filtros y mapa de calor. Visor 3D web en `/mapa` (SPEC-102); falta validarlo en Android |
-| 2.2 | Registro de elementos verdes en mapa | **Alta** | 3 | D3 | ✅ | 0% | Incluye la **clase de altura**: < 5 m o ≥ 5 m. Ver nota |
-| 2.3 | Ficha de cada elemento verde | Media | 2 | D3 | ✅ | 0% | 🔒 → ✅ Se infiere de `catastro campus.xlsx`. Ver nota |
-| 2.4 | Filtros y búsqueda en mapa | Media | 2 | D6 | ✅ | 30% | Por sector y por sección, con nombres reconocibles. Buscador y colores por sector hechos; faltan los filtros por periodo, clase y responsable |
+| 2.2 | Registro de elementos verdes en mapa | **Alta** | 3 | D3 | ✅ | 60% | Formulario en `/catastro/registrar` con el punto en el mapa, mediciones y evaluación (SPEC-103). Falta la **clase de altura** (< 5 m o ≥ 5 m) cuando no hay medida. Ver nota |
+| 2.3 | Ficha de cada elemento verde | Media | 2 | D3 | ✅ | 60% | 🔒 → ✅ Se infiere de `catastro campus.xlsx`. Ficha con ubicación, sección calculada, medidas, evaluaciones y foto. Faltan la clase de altura y el historial de intervenciones. Ver nota |
+| 2.4 | Filtros y búsqueda en mapa | Media | 2 | D6 | ✅ | 40% | Por sector y por sección, con nombres reconocibles. Buscador, colores por sector y capas de vegetación, tachos, bebederos y lugares hechos; faltan los filtros por periodo, clase y responsable |
 | 2.5 | Carga de capas/sectores del campus | Media | 2 | D1 | ✅ | 90% | 🔒 → ✅ El mapa v32 trae las **521 áreas verdes** (secciones) con su responsable y las 4 zonas de supervisión |
 | 2.6 | Registro de campos deportivos | Baja | 1 | D3 | ✅ | 0% | Solo como superficie; su riego no es de la sección |
-| 2.7 | Historial por elemento | Media | 2 | D7 | ✅ | 0% | |
+| 2.7 | Historial por elemento | Media | 2 | D7 | ✅ | 30% | Historial de **evaluaciones** hecho (SPEC-103). El de intervenciones espera a M3 |
 | 2.8 | Integración con el mapa interactivo existente | **Alta** | 3 | D1 | ⏭️ | 0% | 🔒 → ⏭️ **Fuera del proyecto:** sería un proyecto aparte |
-| 2.9 | Código de identificación nuevo para arbolado | **Alta** | 3 | D3 | ✅ | 0% | 🔶 → ✅ **El criterio lo define el equipo** |
+| 2.9 | Código de identificación nuevo para arbolado | **Alta** | 3 | D3 | ✅ | 100% | 🔶 → ✅ **El criterio lo define el equipo**: `EV-000001`, generado al registrar y que nunca cambia |
 | 2.10 | Conservar el código heredado como referencia | Media | 2 | D3 | ✅ | 100% | Sin índice único: hay códigos duplicados y reasignados. `legacy_code` cargado: 46 placas del catastro |
 | 2.11 | Importar el inventario botánico sin coordenadas | **Alta** | 3 | D3 | ⏭️ | 0% | 🔒 → ⏭️ **Ya no hace falta:** para decidir quién poda basta la clase de altura (2.2) |
-| 2.12 | Registro progresivo del catastro | **Alta** | 3 | D3 | ✅ | 0% | Debe funcionar con el catastro al 30% |
+| 2.12 | Registro progresivo del catastro | **Alta** | 3 | D3 | ✅ | 80% | Debe funcionar con el catastro al 30%. Formulario y carga por CSV con vista previa, duplicados y exportación para corregir (SPEC-103) |
 | **2.13** | **Importar el inventario forestal georreferenciado** | **Alta** | 3 | D3 | ✅ | 100% | 🆕 `catastro campus.xlsx`: **962 registros**, 91 especies, 6 formas biológicas. **Importado** (`V014`): 965 ejemplares, 90 especies limpias, 76 palmeras medidas. Visible en el inventario verde y en el mapa |
 | **2.14** | **Tipo de uso de cada sección** | Media | 2 | D6 | ✅ | 0% | 🆕 Los seis tipos del mapa del cliente. Ver nota |
+| **2.15** | **Tachos y bebederos del campus** | Baja | 1 | D3 | ✅ | 80% | 🆕 *(21 oct)* Ya construido (SPEC-103): registro por formulario, carga por CSV y capa en el mapa. 184 tachos y 67 bebederos cargados |
 
 ### Sobre 2.1 y 2.8 — un mapa propio, sin integración
 
@@ -275,6 +295,10 @@ la **clase de altura**, que el capataz registra en campo al capturar o interveni
 
 Mientras nadie la registre, el ejemplar queda **«sin clasificar»**, y el sistema pide verificarlo
 antes de proponer quién lo atiende. Nunca se asume la clase por la especie.
+
+> **Enmienda SPEC-105 (6 nov 2026):** esto rige para las **especies críticas**. Cada especie indica si
+> su altura decide cómo se atiende, sin importar su tipo. Las no críticas proponen personal estable y
+> muestran el promedio de la especie, indicado como no medido; ese promedio nunca decide quién poda.
 
 > **Un atajo que conviene pedir:** el levantamiento actual incluye evaluación dasométrica
 > (diámetro a la altura del pecho y **altura estimada**), pero lo que nos compartieron no la trae:
@@ -403,7 +427,7 @@ llenan los capataces con ayuda de las ingenieras de la sección o del propio pre
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
 | 4.1 | Registro de contratos/servicios | Media | 2 | D2 | ⏭️ | 0% | No hemos visto un contrato tipo |
-| 4.2 | Registro de proveedor | Media | 2 | D2 | ✅ | 0% | 🔶 → ✅ **Solo datos básicos**, sembrados con **datos de prueba** |
+| 4.2 | Registro de proveedor | Media | 2 | D2 | ✅ | 80% | 🔶 → ✅ **Solo datos básicos**. SPEC-106 (8 nov 2026): el proveedor es una **empresa externa del Directorio** (nombre, RUC, teléfono y contactos); falta cargar las empresas de la matriz de la OSG |
 | 4.3 | Seguimiento de ejecución del servicio | **Alta** | 3 | D2 | ⏭️ | 0% | Falta un reporte de cierre del proveedor |
 | 4.4 | Carga de informe final del proveedor | Media | 2 | D2 | ⏭️ | 0% | Robert los está compilando |
 | 4.5 | Comparativo frecuencia pactada vs. real | **Alta** | 3 | D2 D5 | ⏭️ | 0% | Falta si las frecuencias están en el contrato |
@@ -582,6 +606,25 @@ que al mediodía las áreas verdes estén **disponibles para los estudiantes**.
 inventario antiguo fracasaron: se perdieron, quedaron en ejemplares muertos y **se reasignaron a
 otras plantas** («un código de un eucalipto se lo puso a una palmera»). Cualquier etiqueta física
 nueva hereda ese riesgo.
+
+---
+
+## M9 · Lugares y perspectivas
+
+🆕 *(21 oct 2026)* Un **lugar** es un edificio, jardín, estacionamiento o complejo del campus. Una
+**perspectiva** es una foto tomada desde sus alrededores, con nombre automático («frente», «espalda»,
+«al lado», rumbo y el hito más cercano), para **ubicar un trabajo sin volver al sitio**. Reemplaza a
+las 411 referencias de 1.6.
+
+> Se construyó **sin un requisito previo en este catálogo**. La prioridad y el dolor de estas filas
+> son nuestra lectura, **por validar** con el jefe de sección.
+
+| ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
+|---|---|---|---|---|---|---|---|
+| **9.1** | **Catálogo de lugares** | Media | 2 | D1 D4 | ✅ | 90% | Exterior o interior, código `LUG-0001`, contorno y fotos. Alta, edición y baja para `ADMIN` y `COORDINADOR` en `/lugares` |
+| **9.2** | **Perspectivas de un lugar** | Media | 2 | D4 | ✅ | 90% | Foto con nombre automático y vista previa del nombre antes de guardar. Orden manual; se ven en lista o en carrusel |
+| **9.3** | **Lugares y perspectivas en el mapa** | Media | 2 | D1 | ✅ | 90% | Cada lugar y cada perspectiva guarda la vista con que se encuadró; «Ver en el mapa» vuela a ella |
+| **9.4** | **Migración de las referencias antiguas** | Media | 2 | D1 | ✅ | 60% | Cola de las 411 referencias con sugerencias de lugar y su avance. La herramienta está hecha; **falta migrar los datos**, que es trabajo manual |
 
 ---
 

@@ -6,20 +6,30 @@ import type {
   MaintenanceFrequency,
   UpdateMaintenanceFrequencyRequest,
 } from '@shared/types';
+import { PageHeader } from '@/components/layouts/PageHeader';
 import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
+import { useListUrlState } from '@/hooks/useListUrlState';
+import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { maintenanceApi } from '@/lib/maintenance-api';
 import { FrequenciesTable } from './FrequenciesTable';
 import { FrequencyFilters, type FilterState } from './FrequencyFilters';
 import { FrequencyFormModal } from './FrequencyFormModal';
+import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS } from './frequencyListState';
 import { useFrequencyScreenData } from './useFrequencyScreenData';
-
-const NO_FILTERS: FilterState = { search: '', regime: '', ruleType: '' };
 
 /** Configurar cada cuánto se hace cada actividad (SPEC-203 §5.3); solo ADMIN y COORDINADOR llegan aquí. */
 export function MaintenanceFrequenciesScreen() {
   const [reloadToken, setReloadToken] = useState(0);
   const { frequencies, activities, ruleTypes, sets, loading, failed } = useFrequencyScreenData(reloadToken);
-  const [filters, setFilters] = useState<FilterState>(NO_FILTERS);
+  // Los filtros viven en la URL: al volver a la pantalla, la tabla sigue filtrada.
+  const { values: filters, setValues: setFilters, query } = useListUrlState(FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS);
+  useListScrollRestoration(FREQUENCIES_PATH, query, !loading);
+  const [searchInput, setSearchInput] = useSearchDraft(filters.search, (search) => setFilters({ search }));
+  const handleFiltersChange = ({ search, ...others }: Partial<FilterState>) => {
+    if (search !== undefined) setSearchInput(search);
+    else setFilters(others);
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFrequency, setEditingFrequency] = useState<MaintenanceFrequency | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string; warnings?: string[] } | null>(null);
@@ -80,19 +90,11 @@ export function MaintenanceFrequenciesScreen() {
 
   return (
     <div className="space-y-6">
-      <div className="surface-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">Frecuencias</h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            Cada cuánto se hace cada actividad: para todo el campus o para un conjunto de jardines.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="primary" onClick={handleOpenCreate}>
-            + Nueva frecuencia
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Frecuencias"
+        description="Cada cuánto se hace cada actividad: para todo el campus o para un conjunto de jardines."
+        actions={<Button variant="primary" onClick={handleOpenCreate}>+ Nueva frecuencia</Button>}
+      />
 
       {failed && !feedback && (
         <p role="alert" className="text-sm text-action-danger">Error al cargar las frecuencias de mantenimiento</p>
@@ -120,8 +122,8 @@ export function MaintenanceFrequenciesScreen() {
       )}
 
       <FrequencyFilters
-        value={filters}
-        onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        value={{ search: searchInput, regime: filters.regime, ruleType: filters.ruleType }}
+        onChange={handleFiltersChange}
         ruleTypes={ruleTypes}
       />
 

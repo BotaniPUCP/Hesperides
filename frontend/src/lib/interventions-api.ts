@@ -1,5 +1,6 @@
 import { apiClient, ApiError } from './api';
-import { mensajeDeApiError } from './api-errors';
+import { mensajeDeApiError, traducirConocido } from './api-errors';
+import { INTERVENTION_MESSAGES, INTERVENTION_PATTERNS } from './interventionErrorMessages';
 import type { Page } from '@shared/types';
 
 export interface InterventionSummary {
@@ -88,19 +89,10 @@ export const interventionsApi = {
 export function interventionError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.status === 404) return 'La intervención o ubicación no está disponible para tu cuenta.';
+    const known = INTERVENTION_MESSAGES[error.message] ?? traducirConocido(error.message, INTERVENTION_PATTERNS);
+    if (known) return known;
+    // Un 409 que aún no tiene su propio mensaje: el aviso general sigue siendo lo más útil.
     if (error.status === 409) return 'El trabajo cambió o hay un envío en curso. Actualiza la información antes de reintentar; conserva tu texto.';
-    const messages: Record<string,string> = {
-      'A reviewer cannot approve their own execution or reporting': 'Otra persona autorizada debe aprobar el trabajo que ejecutaste o reportaste.',
-      'Execution cannot begin before the scheduled date': 'El trabajo podrá ejecutarse desde la fecha programada. Si debe adelantarse, solicita al coordinador que revise la planificación.',
-      'At least one received photo is required for this location and attempt': 'Adjunta al menos una foto recibida de esta ubicación e intento antes de continuar.',
-      'Receive all pending photos for this location before approval': 'Todavía hay fotos pendientes de subir en esta ubicación. Deben recibirse antes de aprobar.',
-      'Executed quantity is required when the location has a measurement unit': 'Ingresa la cantidad ejecutada en la unidad de esta ubicación.',
-      'A quantity requires a local measurement unit': 'Esta ubicación necesita una unidad de medida para registrar cantidades.',
-      'Team requires an active responsible supervisor': 'La cuadrilla necesita un capataz activo antes de asignar el trabajo.',
-      'Planning is closed after execution starts or cancellation': 'La planificación ya no puede editarse porque el trabajo empezó o fue cancelado.',
-      'Element code is not available': 'Uno de los códigos de ejemplar no existe o fue dado de baja. Comprueba los códigos en el inventario verde.',
-    };
-    if (messages[error.message]) return messages[error.message];
   }
   return mensajeDeApiError(error);
 }

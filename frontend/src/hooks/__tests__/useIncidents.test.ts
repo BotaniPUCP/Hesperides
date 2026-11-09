@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useAuth } from '../useAuth';
-import { useIncidentDetail, useIncidentOptions, useIncidents, useIncidentSummary } from '../useIncidents';
+import { useIncidentDetail, useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSummary } from '../useIncidents';
+import { useSearchParams } from 'next/navigation';
+import { rememberedHref } from '@/lib/listMemory';
 import { incidentsApi } from '@/lib/incidents-api';
 import { ApiError } from '@/lib/api';
 import { incidentOptions, incidentPage, pendingDetail, approvedDetail } from '@/components/incidents/__fixtures__/incidents';
@@ -20,6 +22,15 @@ beforeEach(() => {
   api.list.mockResolvedValue(incidentPage);
   api.options.mockResolvedValue(incidentOptions);
   api.detail.mockResolvedValue(pendingDetail);
+});
+
+it('recuerda los filtros de la URL para que el breadcrumb regrese a la lista filtrada', () => {
+  jest.mocked(useSearchParams).mockReturnValue(new URLSearchParams('search=rama&status=OPEN') as ReturnType<typeof useSearchParams>);
+
+  renderHook(() => useIncidentNavigation());
+
+  expect(rememberedHref('/incidencias')).toBe('/incidencias?search=rama&status=OPEN');
+  window.sessionStorage.clear();
 });
 
 it('loads the list even when options and summary fail, without refetching them for each filter', async () => {
@@ -81,9 +92,18 @@ it('distinguishes not found from network failure and does not call restricted en
   auth.mockReturnValue({ user: { id: 2, role: { code: 'SUPERVISOR' } } } as ReturnType<typeof useAuth>);
   renderHook(() => useIncidentSummary());
   expect(api.summary).not.toHaveBeenCalled();
-  auth.mockReturnValue({ user: { id: 3, role: { code: 'ADMIN' } } } as ReturnType<typeof useAuth>);
+  auth.mockReturnValue({ user: { id: 3, role: { code: 'OPERARIO' } } } as ReturnType<typeof useAuth>);
   renderHook(() => useIncidents(filters));
   expect(api.list).not.toHaveBeenCalled();
+});
+
+it('el ADMIN consulta la lista y el resumen', async () => {
+  auth.mockReturnValue({ user: { id: 4, role: { code: 'ADMIN' } } } as ReturnType<typeof useAuth>);
+  api.summary.mockResolvedValue({} as Awaited<ReturnType<typeof incidentsApi.summary>>);
+  renderHook(() => useIncidents(filters));
+  renderHook(() => useIncidentSummary());
+  await waitFor(() => expect(api.list).toHaveBeenCalled());
+  expect(api.summary).toHaveBeenCalled();
 });
 
 it('discards data when the signed-in actor changes', async () => {

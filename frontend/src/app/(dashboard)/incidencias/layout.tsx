@@ -4,10 +4,8 @@ import { IncidentAccess } from '@/components/incidents/IncidentAccess';
 
 export default function IncidentsLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto max-w-6xl">
-      <IncidentAccess>
-        <Suspense fallback={<LoadingSkeleton variant="card" count={3} />}>{children}</Suspense>
-      </IncidentAccess>
-    </div>
+    <IncidentAccess>
+      <Suspense fallback={<LoadingSkeleton variant="card" count={3} />}>{children}</Suspense>
+    </IncidentAccess>
   );
 }

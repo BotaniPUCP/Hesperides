@@ -27,6 +27,9 @@ public class SpeciesRegistrationService {
     private final GreenInventoryService inventoryService;
     private final InventoryPhotoService photoService;
     private final AuditService auditService;
+    private final SpeciesCatalogs catalogs;
+    private final SpeciesMeasureProfiles profiles;
+    private final SpeciesExtraMeasures extraMeasures;
 
     private static final java.util.regex.Pattern INVALID_BOTANICAL_CHARS =
             java.util.regex.Pattern.compile("[0-9/\\\\@#$%^&*()_+=\\[\\]{}|<>?!;:~`\"“”«»]");
@@ -51,11 +54,16 @@ public class SpeciesRegistrationService {
         }
     }
 
+    /** Sin espacios de más y con el género en mayúscula, como se escribe un binomio. */
+    static String normalizeScientificName(String input) {
+        String raw = input != null ? input.trim().replaceAll("\\s+", " ") : "";
+        validateScientificName(raw);
+        return raw.substring(0, 1).toUpperCase(Locale.ROOT) + raw.substring(1);
+    }
+
     @Transactional
-    public SpeciesResponse register(SpeciesForm form, UploadedPhoto photo, String userEmail) {
-        String rawName = form.scientificName() != null ? form.scientificName().trim().replaceAll("\\s+", " ") : "";
-        validateScientificName(rawName);
-        String scientificName = rawName.substring(0, 1).toUpperCase(Locale.ROOT) + rawName.substring(1);
+    public SpeciesResponse register(SpeciesForm form, UploadedPhoto photo, String userEmail, boolean manager) {
+        String scientificName = normalizeScientificName(form.scientificName());
 
         // Verificar unicidad de nombre científico activo
         Boolean exists = jdbc.queryForObject(
@@ -68,31 +76,9 @@ public class SpeciesRegistrationService {
         String baseSlug = toSlug(scientificName);
         String slug = resolveUniqueSlug(baseSlug);
 
-        // Resolver tipo de vegetación obligatorio desde el catálogo SPECIES_TYPE
-        Long vegetationTypeId = jdbc.query(
-                """
-                SELECT ci.id FROM catalog_items ci
-                  JOIN catalog_types ct ON ct.id = ci.catalog_type_id
-                 WHERE ct.code = 'SPECIES_TYPE' AND ci.code = ? AND ci.is_active
-                """,
-                (rs, i) -> rs.getLong(1),
-                form.vegetationTypeCode().trim()
-        ).stream().findFirst().orElseThrow(() ->
-                new ValidationException("Tipo de vegetación no válido: " + form.vegetationTypeCode()));
-
-        // Resolver procedencia / origen opcional desde el catálogo SPECIES_ORIGIN
-        Long originId = null;
-        if (form.originCode() != null && !form.originCode().isBlank()) {
-            originId = jdbc.query(
-                    """
-                    SELECT ci.id FROM catalog_items ci
-                      JOIN catalog_types ct ON ct.id = ci.catalog_type_id
-                     WHERE ct.code = 'SPECIES_ORIGIN' AND ci.code = ? AND ci.is_active
-                    """,
-                    (rs, i) -> rs.getLong(1),
-                    form.originCode().trim()
-            ).stream().findFirst().orElse(null);
-        }
+        long vegetationTypeId = catalogs.type(form.vegetationTypeCode());
+        Long originId = catalogs.origin(form.originCode());
+        SpeciesMeasureProfiles.Profile profile = profiles.forNew(form, manager);
 
         String commonName = form.commonName() != null && !form.commonName().isBlank() ? form.commonName().trim() : null;
         String family = form.family() != null && !form.family().isBlank() ? form.family().trim() : null;
@@ -101,8 +87,10 @@ public class SpeciesRegistrationService {
 
         Long speciesId = jdbc.queryForObject(
                 """
-                INSERT INTO species (scientific_name, slug, common_name, family, species_type_item_id, origin_item_id, description, care_notes, is_active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)
+                INSERT INTO species (scientific_name, slug, common_name, family, species_type_item_id, origin_item_id,
+                    description, care_notes, is_active, is_critical, reference_height_m, reference_height_source_item_id,
+                    reference_crown_radius_m, reference_crown_radius_source_item_id, uses_trunk_height, uses_dbh)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE, ?, ?, ?, ?, ?, ?, ?)
                 RETURNING id
                 """,
                 Long.class,
@@ -113,12 +101,21 @@ public class SpeciesRegistrationService {
                 vegetationTypeId,
                 originId,
                 description,
-                careNotes
+                careNotes,
+                profile.critical(),
+                profile.referenceHeightM(),
+                profile.referenceHeightSourceId(),
+                profile.referenceCrownRadiusM(),
+                profile.referenceCrownRadiusSourceId(),
+                profile.usesTrunkHeight(),
+                profile.usesDbh()
         );
 
         if (speciesId == null) {
             throw new IllegalStateException("No se pudo obtener el ID de la especie creada");
         }
+
+        extraMeasures.assign(speciesId, form.extraMeasures());
 
         // Otros nombres comunes
         if (form.otherNames() != null) {

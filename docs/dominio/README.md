@@ -756,7 +756,7 @@ Para tener sentido de escala:
 
 | Documento | Qué encontrarás |
 |---|---|
-| [`catalogo-requisitos.md`](catalogo-requisitos.md) | Los 72 requisitos por módulo, con su prioridad, el dolor que atacan y qué los bloquea |
+| [`catalogo-requisitos.md`](catalogo-requisitos.md) | Los 82 requisitos por módulo, con su prioridad, el dolor que atacan y qué los bloquea |
 | [`integracion-mapa-interactivo.md`](integracion-mapa-interactivo.md) | Qué necesitamos saber para integrarnos con el mapa que ya usan |
 | [`docs/entrevistas/02-cuestionario-segunda-reunion.md`](../entrevistas/02-cuestionario-segunda-reunion.md) | Las preguntas abiertas, con el contexto de cada una |
 | [`specs/fundacionales/SPEC-005`](../../specs/fundacionales/SPEC-005-actualizacion-modelo-operacion-real.md) | Cómo se tradujo todo esto a un modelo de datos, con las decisiones y su porqué |

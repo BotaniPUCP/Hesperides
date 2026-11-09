@@ -19,6 +19,8 @@ export interface UsersTableProps {
    * confunde, pero esconderla nunca sería suficiente para cerrarla.
    */
   canManage: boolean;
+  /** En su propia fila no se ofrece lo que el backend le rechaza a la persona (SPEC-100 §5.5). */
+  currentUserId: number | null;
   onEdit: (user: UserDetail) => void;
   onDeactivate: (user: UserDetail) => void;
   onReactivate: (user: UserDetail) => void;
@@ -53,6 +55,7 @@ export function UsersTable({
   page,
   onPageChange,
   canManage,
+  currentUserId,
   onEdit,
   onDeactivate,
   onReactivate,
@@ -118,7 +121,7 @@ export function UsersTable({
             Editar
           </Button>
 
-          {user.isActive ? (
+          {user.isActive && user.id !== currentUserId && (
             <Button
               variant="ghost"
               size="sm"
@@ -127,7 +130,9 @@ export function UsersTable({
             >
               Desactivar
             </Button>
-          ) : (
+          )}
+
+          {!user.isActive && (
             <Button
               variant="ghost"
               size="sm"
@@ -138,14 +143,16 @@ export function UsersTable({
             </Button>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={`Reenviar credenciales a ${user.fullName}`}
-            onClick={() => onResendCredentials(user)}
-          >
-            Reenviar credenciales
-          </Button>
+          {user.id !== currentUserId && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`Reenviar credenciales a ${user.fullName}`}
+              onClick={() => onResendCredentials(user)}
+            >
+              Reenviar credenciales
+            </Button>
+          )}
 
           {/* Marcar como entregada solo tiene sentido sobre algo pendiente:
               sobre una cuenta ya entregada el backend responde 422 (§3). */}

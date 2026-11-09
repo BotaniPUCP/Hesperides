@@ -81,7 +81,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Guardar conjunto' }));
 
     expect(api.update).toHaveBeenCalledWith(3, expect.objectContaining({ version: 2, zoneIds: [11] }));
-    expect(await screen.findByText('Otra persona cambió este conjunto. Recarga para ver su versión.')).toBeInTheDocument();
+    expect(await screen.findByText('Otra persona cambió este conjunto mientras lo editabas. Recarga para ver su versión.')).toBeInTheDocument();
   });
 
   it('dar de baja pide confirmación', async () => {

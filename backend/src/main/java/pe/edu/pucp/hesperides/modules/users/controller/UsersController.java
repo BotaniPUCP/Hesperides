@@ -117,9 +117,9 @@ public class UsersController {
     @PostMapping("/{id}/resend-credentials")
     @PreAuthorize(ADMIN_ONLY)
     public ResponseEntity<ApiResponse<CredentialDeliveryResponse>> resendCredentials(
-            @PathVariable Long id) {
+            @PathVariable Long id, @AuthenticationPrincipal UserDetails principal) {
 
-        CredentialDeliveryResponse result = usersService.resendCredentials(id);
+        CredentialDeliveryResponse result = usersService.resendCredentials(id, principal.getUsername());
         String message = result.credentialStatus() == CredentialStatus.DELIVERED
                 ? "Credentials sent successfully"
                 : "Credential delivery failed";

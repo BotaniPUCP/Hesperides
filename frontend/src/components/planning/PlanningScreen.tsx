@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { PageHeader } from '@/components/layouts/PageHeader';
 import { LoadingSkeleton } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
 import { planningApi } from '@/lib/planning-api';
@@ -18,10 +19,7 @@ export function PlanningScreen() {
 
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Planificación preventiva</h1>
-        <p className="text-neutral-500">Qué toca, dónde y con cuánta urgencia</p>
-      </div>
+      <PageHeader title="Planificación preventiva" description="Qué toca, dónde y con cuánta urgencia" />
       {planning.loading && <LoadingSkeleton />}
       {planning.errorMessage && <p role="alert" className="text-sm text-action-danger">{planning.errorMessage}</p>}
       {planning.data && rows.length === 0 && (

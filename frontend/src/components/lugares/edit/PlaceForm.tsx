@@ -5,15 +5,18 @@ import type { PlaceDetail, PlaceInput, PlaceKindCode } from '@shared/types';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { Button } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
+import { rememberedHref } from '@/lib/listMemory';
 import { placesApi } from '@/lib/places-api';
 import { PlaceFormFields, type PlaceFormValues } from './PlaceFormFields';
 import { OutlinePicker } from './OutlinePicker';
-import { pointOutline, type PickedOutline } from './mapPick';
+import { CHILDREN_OUTLINE, pointOutline, type PickedOutline } from './mapPick';
 
 /** El contorno guardado, para no obligar a elegirlo de nuevo al editar. */
 function currentOutline(place: PlaceDetail): PickedOutline | null {
   const o = place.outline;
-  if (o.buildingId !== null) return { outline: { buildingId: o.buildingId }, label: 'Edificio actual' };
+  // El selector nombra los edificios con el mapa; aquí basta con conservar cuáles son.
+  if (o.buildingIds.length > 0) return { outline: { buildingIds: o.buildingIds }, label: 'Edificios actuales' };
+  if (o.source === 'CHILDREN') return CHILDREN_OUTLINE;
   if (o.zoneCode) return { outline: { zoneCode: o.zoneCode }, label: `Área verde ${o.zoneCode}` };
   if (o.featureCode) return { outline: { featureCode: o.featureCode }, label: `Estacionamiento ${o.featureCode}` };
   if (o.source === 'DRAWN' && o.centerLat !== null && o.centerLon !== null) return pointOutline({ lat: o.centerLat, lon: o.centerLon });
@@ -36,7 +39,14 @@ const snapshot = (values: PlaceFormValues, picked: PickedOutline | null) => JSON
 const splitAliases = (text: string) => text.split(/[,\n]/).map((a) => a.trim()).filter(Boolean);
 
 /** Alta (sin `place`) o edición de un lugar. Al guardar abre su ficha. */
-export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; defaultName?: string }) {
+export interface PlaceFormProps {
+  place?: PlaceDetail;
+  defaultName?: string;
+  /** Un alta que llega desde otra pantalla (la migración) vuelve a ella al guardar o cancelar. */
+  returnTo?: string;
+}
+
+export function PlaceForm({ place, defaultName, returnTo }: PlaceFormProps) {
   const [values, setValues] = useState(() => initialValues(place, defaultName));
   const [picked, setPicked] = useState<PickedOutline | null>(() => (place ? currentOutline(place) : null));
   const [initial] = useState(() => snapshot(values, picked));
@@ -60,7 +70,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
     setError(null);
     try {
       const code = place ? (await placesApi.update(place.code, input), place.code) : (await placesApi.create(input)).code;
-      guard.navigate(`/lugares/${code}`);
+      guard.navigate(returnTo ? rememberedHref(returnTo) : `/lugares/${code}`);
     } catch (e) {
       setError(mensajeDeApiError(e));
       setSaving(false);
@@ -69,7 +79,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
 
   return (
     <form
-      className="flex flex-col gap-5 rounded-xl border border-neutral-200 bg-neutral-0 p-5"
+      className="surface-card flex flex-col gap-5"
       onSubmit={(e) => {
         e.preventDefault();
         void save();
@@ -79,7 +89,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
       {outdoor && <OutlinePicker picked={picked} onPick={setPicked} />}
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={() => guard.confirm(() => guard.navigate(place ? `/lugares/${place.code}` : '/lugares'))}>
+        <Button variant="secondary" onClick={() => guard.confirm(() => guard.navigate(place ? `/lugares/${place.code}` : rememberedHref(returnTo ?? '/lugares')))}>
           Cancelar
         </Button>
         <Button type="submit" disabled={!ready} loading={saving}>

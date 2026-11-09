@@ -19,8 +19,11 @@ import java.util.UUID;
 
 @RestController @RequiredArgsConstructor
 @RequestMapping("/api/v1/incidents")
-@PreAuthorize("hasAnyAuthority('COORDINADOR','SUPERVISOR')")
+@PreAuthorize(IncidentsController.MEMBERS)
 public class IncidentsController {
+    /** Administración tiene en incidencias los mismos permisos que coordinación. */
+    static final String MEMBERS = "hasAnyAuthority('ADMIN','COORDINADOR','SUPERVISOR')";
+    static final String MANAGERS = "hasAnyAuthority('ADMIN','COORDINADOR')";
     private final IncidentsService service;
     public record ApprovalRequest(@NotNull @PositiveOrZero Long version) {}
 
@@ -35,11 +38,11 @@ public class IncidentsController {
     public ResponseEntity<ApiResponse<OptionsResponse>> options(@AuthenticationPrincipal UserDetails user) {
         return ok(service.options(user.getUsername()));
     }
-    @GetMapping("/summary") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @GetMapping("/summary") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<SummaryResponse>> summary(@AuthenticationPrincipal UserDetails user) {
         return ok(service.summary(user.getUsername()));
     }
-    @GetMapping("/export") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @GetMapping("/export") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<ExportResponse>> export(@AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok().header("Cache-Control", "no-store")
                 .body(ApiResponse.ok("Matrix exported", service.export(user.getUsername())));
@@ -60,12 +63,12 @@ public class IncidentsController {
         return result.created() ? ResponseEntity.created(URI.create("/api/v1/incidents/" + result.detail().incident().id()))
                 .body(ApiResponse.ok("Incident received", result.detail())) : ok(result.detail());
     }
-    @PutMapping("/{id}") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PutMapping("/{id}") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<DetailResponse>> update(@PathVariable Long id,
             @Valid @RequestBody ReviewIncidentRequest request, @AuthenticationPrincipal UserDetails user) {
         return ok(service.update(id, request, user.getUsername()));
     }
-    @PostMapping("/{id}/approve") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PostMapping("/{id}/approve") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<DetailResponse>> approve(@PathVariable Long id,
             @Valid @RequestBody ApprovalRequest request, @AuthenticationPrincipal UserDetails user) {
         return ok(service.approve(id, request.version(), user.getUsername()));
@@ -74,7 +77,7 @@ public class IncidentsController {
     public ResponseEntity<ApiResponse<DetailResponse>> start(@PathVariable Long id, @AuthenticationPrincipal UserDetails user) {
         return ok(service.start(id, user.getUsername()));
     }
-    @PostMapping("/{id}/request-correction") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PostMapping("/{id}/request-correction") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<DetailResponse>> requestCorrection(@PathVariable Long id,
             @Valid @RequestBody ReasonRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.requestCorrection(id,request,user.getUsername()));
@@ -84,27 +87,27 @@ public class IncidentsController {
             @Valid @RequestBody CorrectionRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.resubmit(id,request,user.getUsername()));
     }
-    @PostMapping("/{id}/observe-resolution") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PostMapping("/{id}/observe-resolution") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<DetailResponse>> observeResolution(@PathVariable Long id,
             @Valid @RequestBody ReasonRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.observeResolution(id,request,user.getUsername()));
     }
-    @PostMapping("/{id}/resolve") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PostMapping("/{id}/resolve") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<DetailResponse>> resolve(@PathVariable Long id,
             @Valid @RequestBody ResolutionRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.resolve(id,request,user.getUsername()));
     }
-    @GetMapping("/{id}/intervention-options") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @GetMapping("/{id}/intervention-options") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<Page<LinkedInterventionResponse>>> interventionOptions(@PathVariable Long id,
             @RequestParam(defaultValue="") String search,@RequestParam(defaultValue="0") int page,@AuthenticationPrincipal UserDetails user) {
         return ok(service.interventionOptions(id,search,page,user.getUsername()));
     }
-    @PostMapping("/{id}/intervention-links") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PostMapping("/{id}/intervention-links") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<DetailResponse>> linkIntervention(@PathVariable Long id,
             @Valid @RequestBody LinkInterventionRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.linkIntervention(id,request,user.getUsername()));
     }
-    @PostMapping("/{id}/intervention-links/{linkId}/remove") @PreAuthorize("hasAuthority('COORDINADOR')")
+    @PostMapping("/{id}/intervention-links/{linkId}/remove") @PreAuthorize(MANAGERS)
     public ResponseEntity<ApiResponse<DetailResponse>> unlinkIntervention(@PathVariable Long id,@PathVariable Long linkId,
             @Valid @RequestBody ReasonRequest request,@AuthenticationPrincipal UserDetails user) {
         return ok(service.unlinkIntervention(id,linkId,request,user.getUsername()));

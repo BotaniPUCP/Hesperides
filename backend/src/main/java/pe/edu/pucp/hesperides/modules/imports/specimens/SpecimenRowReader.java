@@ -53,7 +53,7 @@ final class SpecimenRowReader {
         if (date == null && r.text("fecha_medicion") == null) {
             r.fail("fecha_medicion", "A measurement needs its date");
         }
-        return new SpecimenDraft.Measurement(date, height, trunk, dbh, crown, banded);
+        return new SpecimenDraft.Measurement(date, height, trunk, dbh, crown, banded, java.util.List.of());
     }
 
     private static SpecimenDraft.Assessment assessment(RowReader r) {

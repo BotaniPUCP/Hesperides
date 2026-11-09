@@ -83,15 +83,16 @@ class IncidentsIntegrationTest {
         var current=service.getById(id,email);
         return service.resolve(id,new ResolutionRequest(current.incident().version(),"Se retiró la rama, se revisó el área y quedó libre el acceso."),email);
     }
-    long planWork(long incidentId,String purpose) {
+    long planWork(long incidentId,String purpose) { return planWorkAs(incidentId,purpose,coordinator); }
+    long planWorkAs(long incidentId,String purpose,String planner) {
         long type=jdbc.queryForObject("SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='INTERVENTION_TYPE' AND ci.parent_item_id IS NOT NULL AND ci.is_active LIMIT 1",Long.class);
         long group=jdbc.queryForObject("SELECT parent_item_id FROM catalog_items WHERE id=?",Long.class,type);
         var point=new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Point(-12.07,-77.08);
         var location=new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Location(null,UUID.randomUUID(),null,null,point,List.of(),"Lugar comprobado",null,null,List.of());
         var request=new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Planning(group,type,java.time.LocalDate.now(CAMPUS_ZONE),"Acción ejecutada de prueba",null,null,null,null,List.of(location),null,null);
-        var work=asActor(coordinator,() -> workService.create(request,UUID.randomUUID()).intervention());
-        var current=service.getById(incidentId,coordinator);
-        service.linkIntervention(incidentId,new LinkInterventionRequest(current.incident().version(),work.getId(),work.getVersion(),purpose,List.of()),coordinator);
+        var work=asActor(planner,() -> workService.create(request,UUID.randomUUID()).intervention());
+        var current=service.getById(incidentId,planner);
+        service.linkIntervention(incidentId,new LinkInterventionRequest(current.incident().version(),work.getId(),work.getVersion(),purpose,List.of()),planner);
         return work.getId();
     }
     pe.edu.pucp.hesperides.modules.interventions.dto.InterventionDetailResponse finishWork(long id) {
@@ -111,7 +112,7 @@ class IncidentsIntegrationTest {
         } catch (java.io.IOException ex) { throw new java.io.UncheckedIOException(ex); }
         asActor(foreman,() -> workService.uploadEvidence(id,photo.evidence().id(),new MockMultipartFile("file","evidence.png","image/png",image)));
         var received=asActor(foreman,() -> workService.findById(id));
-        return asActor(foreman,() -> workService.complete(id,locationId,new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Completion(received.getVersion(),null,"Trabajo ejecutado y área revisada")));
+        return asActor(foreman,() -> workService.complete(id,locationId,new pe.edu.pucp.hesperides.modules.interventions.dto.InterventionRequests.Completion(received.getVersion(),null,"Trabajo ejecutado y área revisada",null)));
     }
     void validateWork(long id) {
         var work=asActor(coordinator,() -> workService.findById(id));
@@ -173,6 +174,33 @@ class IncidentsIntegrationTest {
         long outsiderId = jdbc.queryForObject("SELECT id FROM users WHERE email=?", Long.class, outsider);
         jdbc.update("INSERT INTO team_members(team_id,user_id) VALUES (?,?)", teamId, outsiderId);
         assertThatThrownBy(() -> service.start(id, outsider)).isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test void adminHasTheSameIncidentPowersAsCoordination() {
+        String admin = "admin-" + UUID.randomUUID() + "@test.invalid";
+        person(admin, "ADMIN");
+        long id = create().incident().id();
+        assertThat(service.getAll(admin, null, null, 0, 20).getContent()).anyMatch(i -> i.id() == id);
+        assertThat(service.options(admin).teams()).anyMatch(t -> t.id() == teamId);
+        var approved = service.approve(id, service.getById(id, admin).incident().version(), admin);
+        assertThat(approved.incident().approvedAt()).isNotNull();
+        assertThat(approved.canAttend()).isTrue();
+        assertThat(service.addComment(id, new CommentRequest(UUID.randomUUID(), "Revisión de administración"), admin).updates())
+                .anyMatch(u -> u.body().equals("Revisión de administración"));
+        assertThat(service.summary(admin).pendingAttention()).isPositive();
+        assertThat(service.export(admin)).isNotNull();
+        var own = service.create(capture(), UUID.randomUUID(), admin).detail();
+        assertThat(own.incident().reportedBy().id()).isNotNull();
+        long workId = planWorkAs(id, "MITIGATION", admin);
+        assertThat(service.getById(id, admin).linkedInterventions()).anyMatch(l -> l.id() == workId);
+    }
+
+    @Test void adminHttpAccessCoversCoordinationEndpoints() throws Exception {
+        var principal = user("admin@test.invalid").authorities(() -> "ADMIN");
+        mvc.perform(post("/api/v1/incidents/1/approve").with(principal).contentType(MediaType.APPLICATION_JSON).content("{\"version\":0}"))
+                .andExpect(status().is(org.hamcrest.Matchers.not(403)));
+        mvc.perform(get("/api/v1/incidents/summary").with(principal))
+                .andExpect(status().is(org.hamcrest.Matchers.not(403)));
     }
 
     @Test void retriesAreIdempotentAndDifferentPayloadIsRejected() {

@@ -144,7 +144,7 @@
 | **L-01** | REQ 9.1 | Épica I · Lugares y perspectivas (M9) | `COORDINADOR` | disponer de un catálogo de lugares representativos del campus ... | Media | Listo ✅ | **90%** | S2 | 3 |
 | **L-02** | REQ 9.2 | Épica I · Lugares y perspectivas (M9) | `COORDINADOR` | registrar y gestionar perspectivas visuales y puntos de vista ... | Media | Listo ✅ | **90%** | S2 | 3 |
 | **L-03** | REQ 9.3 | Épica I · Lugares y perspectivas (M9) | `COORDINADOR` | filtrar y centrar automáticamente el visor de mapa 3D según el... | Media | Listo ✅ | **90%** | S2 | 3 |
-| **L-04** | REQ 9.4 | Épica I · Lugares y perspectivas (M9) | `ADMIN` | mapear y migrar intervenciones y registros históricos previame... | Media | Parcial 🔶 | **60%** | S2 | 3 |
+| **L-04** | REQ 9.4 | Épica I · Lugares y perspectivas (M9) | `ADMIN` | enlazar cada una de las 411 referencias antiguas del mapa con ... | Media | Parcial 🔶 | **60%** | S2 | 3 |
 
 ---
 
@@ -740,7 +740,7 @@
 - **Avance Real Implementado:** **`100%`**
 - **Fuente / Evidencia:** Catálogo REQ 2.7; D7; Entrevista 2; Hoja de vida del ejemplar
 - **Dependencia / Bloqueante:** B-01, C-11
-- **Notas de Alcance y Realidad Técnica:** Componente `SpecimenInterventions.tsx` integrado con `GET /api/v1/interventions?greenElementCode={code}` (SPEC-200). Muestra las intervenciones vinculadas al ejemplar de forma paginada (mostrando controles solo si `totalPages > 1`) con enlace directo al detalle de cada orden de trabajo (`/intervenciones/{id}`). Se reemplazó la alerta manual intrusiva por el servicio automático de proyección dendrométrica biofísica (`SpecimenInterventionMeasurementService.java`), que estima y actualiza las medidas del ejemplar según su especie y el tipo de poda ejecutado.
+- **Notas de Alcance y Realidad Técnica:** Componente `SpecimenInterventions.tsx` integrado con `GET /api/v1/interventions?greenElementCode={code}` (SPEC-200). Muestra las intervenciones vinculadas al ejemplar de forma paginada (mostrando controles solo si `totalPages > 1`) con enlace directo al detalle de cada orden de trabajo (`/intervenciones/{id}`). La proyección automática de medidas tras una poda se retiró (SPEC-105, 6 nov 2026): guardaba estimaciones como medidas reales. Completar una poda ya no cambia las medidas del ejemplar.
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
@@ -752,16 +752,11 @@
 - **Y** los controles de paginación solo se despliegan cuando existen múltiples páginas de historial (`totalPages > 1`)
 - **PERO** si el ejemplar aún no registra intervenciones asociadas, muestra un estado vacío informativo claro
 
-**ESCENARIO: Proyección y estimación dendrométrica automática post-poda por especie (sin alertas manuales)**
-- **DADO QUE** se completa o valida una intervención de poda sobre un ejemplar censado (`INT-XXXXXX`),
-- **CUANDO** el servicio de mantenimiento procesa la ejecución de la labor,
-- **ENTONCES** el sistema calcula y proyecta automáticamente las nuevas dimensiones del ejemplar cruzando el tipo de vegetación con la labor técnica (`SpecimenInterventionMeasurementService`):
-  - **Palmeras (`PALM`):** Preserva la altura intacta (meristemo apical inviolable) y aplica reducción mínima de copa (5-10% por retiro de frondas basales).
-  - **Árboles (`TREE`):** Reduce copa lateral (10-15%) y conserva altura salvo en despeje por interferencia (reducción moderada del 10%).
-  - **Arbustos y Cercos (`SHRUB`/`HEDGE`):** Aplica rebaje proporcional de copa (15-25%) y altura (10-20%).
-  - **DAP y fuste:** Permanecen inalterados en todos los casos, respetando un umbral mínimo de copa (0.50 m).
-- **Y** registra de forma automática una nueva medición en el historial (`green_element_measurements`) con la nota técnica explicativa del cálculo
-- **Y** la ficha del ejemplar exhibe de inmediato el badge ámbar «Medición estimada» y el tooltip interactivo en el historial, eliminando la necesidad de banners de alerta o checklists manuales
+**ESCENARIO: Completar una poda no estima medidas (SPEC-105)**
+- **DADO QUE** se completa una intervención de poda sobre un ejemplar censado (`INT-XXXXXX`),
+- **CUANDO** el sistema registra el cierre de la ubicación,
+- **ENTONCES** por defecto las medidas del ejemplar, su origen, su fecha y su historial no cambian
+- **Y** quien cierra puede registrar medidas reales, o volver un ejemplar no crítico al promedio de su especie, y el historial conserva cada fila con su origen
 
 ---
 
@@ -864,6 +859,8 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **Y** los 817 árboles y palmeras del levantamiento sin altura real entran como UNKNOWN
 - **Y** la ficha muestra claramente si el dato fue medido o estimado, con la fecha de la última medición
 
+> **Enmienda SPEC-105 (6 nov 2026):** lo que se muestra depende de la **criticidad de la especie**, no de su tipo. Un ejemplar no medido queda `UNKNOWN`: si su especie es crítica, no muestra valores; si no lo es, muestra el promedio de la especie indicado como no medido. `GENERIC` deja de escribirse.
+
 ---
 
 #### `C-09` — REQ 2.3
@@ -885,6 +882,8 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **ENTONCES** la clase de altura ('< 5 m' o '≥ 5 m') decide si la poda es con cuadrilla estable o con grúa/tercero
 - **Y** mientras la altura sea UNKNOWN, el sistema muestra una advertencia solicitando verificar la altura en campo antes de asignar quién atiende
 - **PERO** la advertencia solo se levanta cuando un supervisor registra la medición real en campo
+
+> **Enmienda SPEC-105 (6 nov 2026):** la verificación aplica solo a especies críticas. Las no críticas proponen personal estable sin evaluar su altura, y un promedio nunca decide quién poda. La propuesta está en `engine.pruning.PruningAssignment`.
 
 ---
 
@@ -1181,6 +1180,7 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 - **DADO QUE** se atiende una incidencia de poda o riesgo arbóreo,
 - **CUANDO** el sistema evalúa el árbol involucrado,
 - **ENTONCES** si el ejemplar tiene altura < 5 m el sistema propone atención por personal estable, y si tiene > 5 m propone empresa tercera con grúa
+- **Y** esa regla depende de la criticidad de la especie y no de su tipo: una especie no crítica propone personal estable sin evaluar altura (SPEC-105 §5.5)
 - **Y** para problemas de riego propone a la cuadrilla del sector correspondiente
 - **PERO** el coordinador puede cambiar la asignación sugerida antes de despacharla
 
@@ -1600,22 +1600,37 @@ mantenimiento lo hace el personal estable sin importar su tamaño.
 
 #### `L-04` — REQ 9.4
 
-> **COMO ADMIN QUIERO mapear y migrar intervenciones y registros históricos previamente asociados a cuarteles hacia el nuevo modelo de lugares PARA preservar la continuidad histórica de la información.**
+> **COMO ADMIN QUIERO enlazar cada una de las 411 referencias antiguas del mapa con su lugar del nuevo catálogo, o descartarla, PARA que el campus se nombre con lugares sin perder los nombres con que la gente los conoce.**
 
 - **Módulo:** `M9` | **Tipo:** `Enabler` | **Actor:** `ADMIN`
 - **Prioridad:** `Media` | **Preparación:** `Parcial 🔶` | **Sprint:** `S2` | **Story Points:** `3 pts`
 - **Avance Real Implementado:** **`60%`**
 - **Fuente / Evidencia:** Catálogo REQ 9.4; D1; 411 referencias del catastro; ReferenceMigrationScreen
 - **Dependencia / Bloqueante:** L-01, A-04
-- **Notas de Alcance y Realidad Técnica:** HERRAMIENTA LISTA EN S2 (60%): Pantalla /lugares/migracion y servicio ReferenceMigrationService implementados; la ejecución manual de migración de las 411 filas continúa en progreso.
+- **Notas de Alcance y Realidad Técnica:** HERRAMIENTA LISTA: pantalla /lugares/migracion y servicio ReferenceMigrationService. La cola agrupa las referencias, sugiere el lugar y muestra el avance; «Crear lugar» vuelve a la cola con su búsqueda y página. Falta el trabajo manual de decidir las 411 referencias. No se reasignan intervenciones ni otros registros: ninguno apunta a las referencias, y los cuarteles forestales no forman parte del modelo (decisión del 29 sep, ver docs/dominio/README.md §5.3).
 
 **Criterios de Aceptación (Escenarios BDD / Gherkin):**
 
-**ESCENARIO: Migración asistida de cuarteles hacia lugares**
-- **DADO QUE** existen registros históricos asociados a la antigua división por cuarteles,
-- **CUANDO** el administrador ejecuta la herramienta /lugares/migrar,
-- **ENTONCES** el sistema sugiere la equivalencia territorial entre el cuartel antiguo y el nuevo lugar del campus
-- **Y** reasigna los registros preservando la trazabilidad de auditoría histórica
+**ESCENARIO: Enlazar una referencia con un lugar existente**
+- **DADO QUE** hay referencias antiguas sin decidir,
+- **CUANDO** el administrador abre /lugares/migracion y elige el lugar sugerido u otro,
+- **ENTONCES** la referencia queda enlazada a ese lugar
+- **Y** su nombre se guarda como alias del lugar, para que se le siga encontrando por él
+
+**ESCENARIO: Crear el lugar que falta**
+- **DADO QUE** una referencia no corresponde a ningún lugar del catálogo,
+- **CUANDO** el administrador elige «Crear lugar» y lo guarda o cancela,
+- **ENTONCES** vuelve a la cola con la misma búsqueda y página para enlazarla
+
+**ESCENARIO: Descartar una referencia**
+- **DADO QUE** una referencia ya no representa un lugar del campus,
+- **CUANDO** el administrador la descarta,
+- **ENTONCES** sale de la cola y cuenta como decidida en el avance
+
+**ESCENARIO: Una referencia se decide una sola vez**
+- **DADO QUE** una referencia ya fue enlazada o descartada,
+- **CUANDO** alguien intenta decidirla otra vez,
+- **ENTONCES** el sistema lo rechaza con un mensaje en español
 
 ---
 

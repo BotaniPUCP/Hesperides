@@ -11,5 +11,10 @@ public record MeasurementResponse(
         Double crownRadiusM,
         Boolean banded,
         String measuredBy,
-        String notes
-) {}
+        String notes,
+        String origin,
+        java.util.List<ExtraValue> extraValues
+) {
+    public record ExtraValue(String code, String label, String unitCode, java.math.BigDecimal value) {
+    }
+}

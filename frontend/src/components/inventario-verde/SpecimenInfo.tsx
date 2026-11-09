@@ -122,7 +122,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
   return (
     <>
       {/* TARJETA SUPERIOR HERO / ID CARD INTEGRADA */}
-      <div className="rounded-3xl border border-neutral-200/90 bg-neutral-0 shadow-xs overflow-hidden mb-6 transition-shadow hover:shadow-md">
+      <div className="rounded-2xl border border-neutral-200/90 bg-neutral-0 shadow-xs overflow-hidden">
         <div className="p-5 sm:p-7 bg-gradient-to-br from-brand-50/40 via-brand-50/10 to-transparent">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             {/* Lado Izquierdo y Centro: Foto + Bloque de Identidad */}
@@ -183,7 +183,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                 <div>
                   {/* Código principal + Referencias */}
                   <div className="flex items-baseline gap-2.5 flex-wrap">
-                    <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight font-mono whitespace-nowrap">
+                    <h1 className="page-title font-mono whitespace-nowrap">
                       {specimen.code}
                     </h1>
                     {(specimen.sourceReference || specimen.legacyCode) && (
@@ -223,19 +223,14 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                       <Badge label={`Agrupación (${specimen.quantity})`} color="neutral" />
                     )}
                     {(() => {
-                      const isEstimated = specimen.latestMeasurementNotes?.includes('Estimación por labor técnica');
-                      const badgeLabel = isEstimated
-                        ? 'Medición estimada'
-                        : specimen.dataSource === 'MEASURED'
+                      const badgeLabel = specimen.measurementStatus === 'MEASURED'
                         ? 'Medido en campo'
-                        : specimen.dataSource === 'GENERIC'
-                        ? 'Estimado por especie'
+                        : specimen.measurementStatus === 'REFERENCE'
+                        ? 'No medido'
                         : 'Sin medir';
-                      const badgeColor = isEstimated
-                        ? 'warning'
-                        : specimen.dataSource === 'MEASURED'
+                      const badgeColor = specimen.measurementStatus === 'MEASURED'
                         ? 'neutral'
-                        : specimen.dataSource === 'GENERIC'
+                        : specimen.measurementStatus === 'REFERENCE'
                         ? 'info'
                         : 'warning';
                       return <Badge label={badgeLabel} color={badgeColor} />;

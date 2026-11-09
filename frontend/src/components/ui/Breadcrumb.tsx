@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { cn } from '@/lib/cn';
 
 export interface BreadcrumbItem {
@@ -11,6 +12,16 @@ export interface BreadcrumbItem {
 export interface BreadcrumbProps {
   items: BreadcrumbItem[];
   className?: string;
+}
+
+/** Volver a un listado por el breadcrumb lo encuentra con los filtros que tenía. */
+function CrumbLink({ href, label }: { href: string; label: string }) {
+  const remembered = useRememberedHref(href);
+  return (
+    <Link href={remembered} className="text-neutral-700 font-medium transition-colors hover:text-brand-700 hover:underline">
+      {label}
+    </Link>
+  );
 }
 
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
@@ -47,12 +58,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                   {item.label}
                 </span>
               ) : (
-                <Link
-                  href={item.href}
-                  className="text-neutral-700 font-medium transition-colors hover:text-brand-700 hover:underline"
-                >
-                  {item.label}
-                </Link>
+                <CrumbLink href={item.href} label={item.label} />
               )}
             </li>
           );

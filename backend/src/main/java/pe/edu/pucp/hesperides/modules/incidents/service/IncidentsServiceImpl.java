@@ -395,7 +395,8 @@ public class IncidentsServiceImpl implements IncidentsService {
         if (!user.isActive() || !user.getRoleItem().isActive() || user.getRoleItem().isDeleted()) throw new UnauthorizedException("Session expired");
         if (!coordinator(user) && !user.getRoleCode().equals("SUPERVISOR")) throw new AccessDeniedException("Incident role required");
     }
-    private boolean coordinator(User user) { return user.getRoleCode().equals("COORDINADOR"); }
+    /** Administración tiene en incidencias los mismos permisos que coordinación. */
+    private boolean coordinator(User user) { return IncidentRoles.manages(user.getRoleCode()); }
     private void requireCoordinator(User user) { if (!coordinator(user)) throw new AccessDeniedException("Coordinator required"); }
     private List<Team> ledTeams(User user) { return teams.findBySupervisorUserIdAndActiveTrueAndDeletedAtIsNullOrderByNameAsc(user.getId()); }
     private boolean canAttend(Incident incident, User actor) {

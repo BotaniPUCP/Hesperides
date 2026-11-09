@@ -1,6 +1,7 @@
 'use client';
 
 import { Input } from '@/components/ui';
+import { todayLocal } from '@/lib/local-date';
 import { PREGUNTAS_EVALUACION } from './formularioPlanta';
 import { PreguntaSiNo } from './PreguntaSiNo';
 import type { RegistroPlanta } from './useRegistroPlanta';
@@ -8,7 +9,7 @@ import type { RegistroPlanta } from './useRegistroPlanta';
 function CampoFecha({ id, etiqueta, valor, onCambiar, error }: {
   id: string; etiqueta: string; valor: string; onCambiar: (v: string) => void; error?: string;
 }) {
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = todayLocal();
   return (
     <div className="space-y-1">
       <label htmlFor={id} className="block text-sm font-medium text-neutral-700">{etiqueta}</label>
@@ -31,7 +32,7 @@ function CampoFecha({ id, etiqueta, valor, onCambiar, error }: {
 export function CamposMedicion({ r }: { r: RegistroPlanta }) {
   const v = r.valores;
   return (
-    <details className="rounded-lg border border-neutral-200 bg-neutral-0 p-4" open={Boolean(v.alturaM || v.dapCm)}>
+    <details className="surface-card" open={Boolean(v.alturaM || v.dapCm)}>
       <summary className="cursor-pointer font-semibold text-neutral-900">Medición (opcional)</summary>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <CampoFecha id="fecha-medicion" etiqueta="Fecha de medición" valor={v.fechaMedicion}
@@ -52,7 +53,7 @@ export function CamposMedicion({ r }: { r: RegistroPlanta }) {
 export function CamposEvaluacion({ r }: { r: RegistroPlanta }) {
   const v = r.valores;
   return (
-    <details className="rounded-lg border border-neutral-200 bg-neutral-0 p-4">
+    <details className="surface-card">
       <summary className="cursor-pointer font-semibold text-neutral-900">Evaluación (opcional)</summary>
       <div className="mt-4 space-y-3">
         <CampoFecha id="fecha-evaluacion" etiqueta="Fecha de evaluación" valor={v.fechaEvaluacion}

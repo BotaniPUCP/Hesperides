@@ -24,6 +24,9 @@ import type { Viewer, ViewerCallbacks } from './viewerTypes';
 
 export type { Viewer, ViewerCallbacks } from './viewerTypes';
 
+/** Lo marcado a la vez (secciones de un turno de riego, bloques de un lugar), distinto de la selección. */
+const MARKED_COLOR = '#06B6D4';
+
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose): Viewer {
   const renderer = createRenderer();
   const textures = createTextures(renderer);
@@ -43,8 +46,13 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     const layer = poly[id];
     const originalColor = layer.options.color;
     layer.options.color = (i) => markedSectionCodes.has(data[id][i]?.props.code)
-      ? '#06B6D4' : originalColor(i);
+      ? MARKED_COLOR : originalColor(i);
   });
+  // Un lugar puede ser varios bloques: se marcan todos, porque la selección resalta uno solo.
+  const markedBuildingIds = new Set<number>();
+  const buildingColor = poly.campusBuildings.options.color;
+  poly.campusBuildings.options.color = (i) => markedBuildingIds.has(data.campusBuildings[i]?.props.id)
+    ? MARKED_COLOR : buildingColor(i);
   const points = createCampusPoints(scene, data, center);
   const foliage = createFoliageMaterials(textures);
   const vegetation = createVegetationLayer(scene, data.vegetation, foliage);
@@ -150,6 +158,12 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       highlight.repaint('greenAreas');
       highlight.repaint('xerophytic');
       highlight.repaint('reserve');
+      needsRender = true;
+    },
+    setMarkedBuildings(ids) {
+      markedBuildingIds.clear();
+      ids.forEach((id) => markedBuildingIds.add(id));
+      highlight.repaint('campusBuildings');
       needsRender = true;
     },
     sectionCodesInScreenRect(x1, y1, x2, y2, eligible) {

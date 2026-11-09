@@ -11,21 +11,71 @@ jest.mock('@/lib/inventario-verde-api', () => ({
   },
 }));
 
+const mockUseAuth = jest.fn();
+jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
+
 jest.mock('@/hooks/useCatalog', () => ({
-  useCatalog: () => ({
-    items: [
-      { id: 1, code: 'TREE', label: 'Árbol' },
-      { id: 2, code: 'PALM', label: 'Palmera' },
-    ],
+  useCatalog: (type: string) => ({
+    items: type === 'REFERENCE_VALUE_SOURCE'
+      ? [{ id: 3, code: 'BOTANICAL_SHEET', label: 'Ficha botánica' }]
+      : [
+          { id: 1, code: 'TREE', label: 'Árbol' },
+          { id: 2, code: 'PALM', label: 'Palmera' },
+          { id: 4, code: 'SHRUB', label: 'Arbusto' },
+        ],
     isLoading: false,
   }),
 }));
 
 const api = inventarioVerdeApi as jest.Mocked<typeof inventarioVerdeApi>;
 
+beforeEach(() => mockUseAuth.mockReturnValue({ user: { role: { code: 'COORDINADOR' } } }));
 afterEach(() => jest.resetAllMocks());
 
 describe('RegistroEspecieForm', () => {
+  it('un arbusto se preselecciona no crítico y exige sus promedios', async () => {
+    render(<RegistroEspecieForm />);
+    await userEvent.type(screen.getByLabelText(/Nombre científico/i), 'Testus fruticosus');
+    expect(screen.getByRole('checkbox', { name: /Especie crítica/i })).toBeChecked();
+
+    await userEvent.selectOptions(screen.getByLabelText(/Tipo de vegetación/i), 'SHRUB');
+    expect(screen.getByRole('checkbox', { name: /Especie crítica/i })).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole('button', { name: /Registrar especie/i }));
+
+    expect(await screen.findByText('Indica la altura promedio')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Confirmar y registrar/i })).not.toBeInTheDocument();
+  });
+
+  it('envía los promedios de una especie no crítica', async () => {
+    api.registerSpecies.mockResolvedValue(palmeraReal);
+    render(<RegistroEspecieForm />);
+    await userEvent.type(screen.getByLabelText(/Nombre científico/i), 'Testus fruticosus');
+    await userEvent.selectOptions(screen.getByLabelText(/Tipo de vegetación/i), 'SHRUB');
+    await userEvent.type(screen.getByLabelText(/Altura promedio/i), '2.5');
+    await userEvent.selectOptions(screen.getByLabelText(/Fuente de la altura/i), 'BOTANICAL_SHEET');
+    await userEvent.type(screen.getByLabelText(/Radio de copa promedio/i), '1,5');
+    await userEvent.selectOptions(screen.getByLabelText(/Fuente del radio/i), 'BOTANICAL_SHEET');
+
+    fireEvent.click(screen.getByRole('button', { name: /Registrar especie/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Confirmar y registrar/i }));
+
+    await waitFor(() => expect(api.registerSpecies).toHaveBeenCalledWith(
+      expect.objectContaining({
+        vegetationTypeCode: 'SHRUB', critical: false, referenceHeightM: 2.5, referenceHeightSourceCode: 'BOTANICAL_SHEET',
+        referenceCrownRadiusM: 1.5, referenceCrownRadiusSourceCode: 'BOTANICAL_SHEET', usesTrunkHeight: true, usesDbh: true,
+      }),
+      null,
+    ));
+  });
+
+  it('un supervisor no puede apartarse de la criticidad preseleccionada', async () => {
+    mockUseAuth.mockReturnValue({ user: { role: { code: 'SUPERVISOR' } } });
+    render(<RegistroEspecieForm />);
+
+    expect(screen.getByRole('checkbox', { name: /Especie crítica/i })).toBeDisabled();
+  });
+
   it('renderiza los campos botánicos obligatorios y opcionales', () => {
     render(<RegistroEspecieForm />);
 

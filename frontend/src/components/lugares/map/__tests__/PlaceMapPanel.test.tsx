@@ -17,7 +17,7 @@ jest.mock('@/components/ui', () => ({
 }));
 jest.mock('@/lib/places-api', () => ({ placesApi: { saveMapView: jest.fn(), clearMapView: jest.fn() } }));
 jest.mock('@/hooks/useMapLayers', () => ({
-  useMapLayers: () => ({ data: jest.requireActual('@/components/map3d/__fixtures__/mapLayers').sampleLayers, isLoading: false }),
+  useMapLayers: () => ({ data: jest.requireActual('@/components/map3d/__fixtures__/mapLayers').layersWithTwoBlocks, isLoading: false }),
 }));
 
 let map: Map3DViewProps;
@@ -30,7 +30,7 @@ jest.mock('@/components/map3d/Map3DView', () => ({
 
 function fakeViewer(): jest.Mocked<Viewer> {
   return {
-    setPaint: jest.fn(), setMarkedSections: jest.fn(), sectionCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
+    setPaint: jest.fn(), setMarkedSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), setViewCones: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(),
     flyToPose: jest.fn(), dispose: jest.fn(),
@@ -45,7 +45,7 @@ const view = { camera: { lat: -12.0705, lon: -77.08, heightM: 150 }, target: { l
 function place(overrides: Partial<PlaceDetail> = {}): PlaceDetail {
   return {
     code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' }, category: { code: 'EDIFICIO', label: 'Edificio' },
-    outline: { source: 'BUILDING', buildingId: 1, zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
+    outline: { source: 'BUILDING', buildingIds: [1], zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
     aliases: [], children: [], mainPhotos: [], interior: [], mapView: null,
     perspectives: [{ id: 5, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: null, landmark: null,
       lat: -12.0702, lon: -77.08, headingDeg: 0, photos: [], mapView: null }],
@@ -75,6 +75,23 @@ describe('PlaceMapPanel', () => {
     expect(viewer.select).toHaveBeenCalledWith({ layer: 'campusBuildings', index: 0 }, true);
     expect(viewer.flyToPose).not.toHaveBeenCalled();
     expect(viewer.setViewCones).toHaveBeenCalledWith([{ id: 5, lat: -12.0702, lon: -77.08, headingDeg: 0 }]);
+  });
+
+  it('un lugar de varios bloques los marca todos y encuadra su centro', () => {
+    renderPanel(place({ outline: { ...place().outline, buildingIds: [1, 3], centerLat: -12.0701, centerLon: -77.0801 } }));
+
+    expect(viewer.setMarkedBuildings).toHaveBeenLastCalledWith([1, 3]);
+    expect(viewer.select).toHaveBeenLastCalledWith(null, false);
+    expect(viewer.focusLatLon).toHaveBeenCalledWith(-12.0701, -77.0801);
+  });
+
+  it('al pasar de un lugar de varios bloques a uno de un edificio, quita las marcas', () => {
+    const { rerender } = renderPanel(place({ outline: { ...place().outline, buildingIds: [1, 3] } }));
+
+    rerender(<PlaceMapPanel place={place({ code: 'LUG-0002', name: 'Gelarti' })} focus={NO_FOCUS} onChanged={jest.fn()} />);
+
+    expect(viewer.setMarkedBuildings).toHaveBeenLastCalledWith([]);
+    expect(viewer.select).toHaveBeenLastCalledWith({ layer: 'campusBuildings', index: 0 }, true);
   });
 
   it('con vista guardada vuela a ella y solo resalta el edificio', () => {

@@ -39,6 +39,9 @@ class CatalogsServiceImplTest {
     @Mock
     private CatalogItemsRepository itemsRepository;
 
+    @Mock
+    private ExtraMeasureUnitGuard unitGuard;
+
     @InjectMocks
     private CatalogsServiceImpl service;
 

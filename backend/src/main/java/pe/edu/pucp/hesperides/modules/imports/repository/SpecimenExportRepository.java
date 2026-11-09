@@ -40,7 +40,8 @@ public class SpecimenExportRepository {
                      WHERE n.species_id = s.id AND n.deleted_at IS NULL) AS nombres_alternativos,
                    s.family AS familia, t.label AS tipo_vegetacion,
                    CASE WHEN e.quantity > 1 THEN 'Agrupación' ELSE 'Ejemplar' END AS tipo_elemento,
-                   CASE e.data_source WHEN 'MEASURED' THEN 'Medido' WHEN 'GENERIC' THEN 'Genérico'
+                   CASE WHEN e.data_source = 'MEASURED' THEN 'Medido'
+                        WHEN NOT s.is_critical THEN 'Promedio de la especie'
                         ELSE 'Sin medir' END AS origen_medidas
               FROM green_elements e
               JOIN species s ON s.id = e.species_id

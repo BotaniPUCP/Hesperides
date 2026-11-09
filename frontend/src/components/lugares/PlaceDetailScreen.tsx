@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { PlacePerspective } from '@shared/types';
-import { Breadcrumb, Button, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
+import { Button, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { usePlace } from '@/hooks/usePlaces';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { PerspectiveEditor } from './edit/PerspectiveEditor';
 import { PhotoUploader } from './edit/PhotoUploader';
 import { useCanEditPlaces } from './edit/useCanEditPlaces';
@@ -16,12 +18,13 @@ import { PlaceGallery, type GalleryState } from './PlaceGallery';
 import { PlaceHeader } from './PlaceHeader';
 import { usePlaceMap } from './map/PlaceMapContext';
 
-const CATALOG = { label: 'Lugares', href: '/lugares' };
+const LIST_PATH = '/lugares';
 const NEW = 'new';
 
 /** La ficha de un lugar: foto principal, perspectivas en el mapa y fotos por vista. Quien edita, edita aquí. */
 export function PlaceDetailScreen({ code }: { code: string }) {
   const router = useRouter();
+  const listHref = useRememberedHref(LIST_PATH);
   const { place, loading, errorMessage, reload } = usePlace(code);
   const canEdit = useCanEditPlaces();
   const actions = usePlaceActions(place, reload);
@@ -29,6 +32,10 @@ export function PlaceDetailScreen({ code }: { code: string }) {
   const [gallery, setGallery] = useState<GalleryState | null>(null);
   const [editing, setEditing] = useState<PlacePerspective | typeof NEW | null>(null);
   const map = usePlaceMap();
+  usePageTrail(place ? {
+    labels: { [place.code]: place.name },
+    parents: place.parent ? [{ label: place.parent.name, href: `/lugares/${place.parent.code}` }] : [],
+  } : {});
 
   // El mapa vive en el layout de /lugares: se le dice qué lugar mostrar y qué perspectiva resaltar.
   useEffect(() => {
@@ -44,12 +51,11 @@ export function PlaceDetailScreen({ code }: { code: string }) {
   if (loading) return <LoadingSkeleton variant="card" count={3} />;
   if (!place) {
     return (
-      <div className="flex flex-col gap-4">
-        <Breadcrumb items={[CATALOG, { label: 'No encontrado' }]} />
+      <div className="space-y-6">
         <EmptyState
           title={errorMessage ? 'No se pudo cargar el lugar' : 'Lugar no encontrado'}
           description={errorMessage ?? 'El lugar no está en el catálogo o fue dado de baja.'}
-          action={{ label: 'Volver al catálogo', onClick: () => router.push('/lugares') }}
+          action={{ label: 'Volver al catálogo', onClick: () => router.push(listHref) }}
         />
       </div>
     );
@@ -68,12 +74,11 @@ export function PlaceDetailScreen({ code }: { code: string }) {
   ) : undefined;
 
   return (
-    <div className="flex flex-col gap-5">
-      <Breadcrumb items={[CATALOG, ...(place.parent ? [{ label: place.parent.name, href: `/lugares/${place.parent.code}` }] : []), { label: place.name }]} />
+    <div className="space-y-6">
       <PlaceHeader place={place} onOpenMain={open(place.mainPhotos, place.name)} actions={headerActions} />
 
       {canEdit && (
-        <section className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-neutral-0 p-4">
+        <section className="surface-card flex flex-col gap-2">
           <h2 className="text-base font-semibold text-neutral-900">Fotos principales</h2>
           <PhotoStrip photos={place.mainPhotos} subject={`la foto principal de ${place.name}`} onOpen={open(place.mainPhotos, place.name)} onDelete={onDeletePhoto} />
           <PhotoUploader placeCode={place.code} target={{}} label="Subir foto principal" onDone={reload} />
@@ -98,7 +103,7 @@ export function PlaceDetailScreen({ code }: { code: string }) {
       )}
 
       {place.interior.map((g) => (
-        <section key={g.view.code} className="rounded-xl border border-neutral-200 bg-neutral-0 p-4">
+        <section key={g.view.code} className="surface-card">
           <h2 className="mb-2 text-base font-semibold text-neutral-900">{g.view.label}</h2>
           <PhotoStrip photos={g.photos} subject={`${g.view.label} de ${place.name}`} onOpen={open(g.photos, `${g.view.label} de ${place.name}`)} onDelete={onDeletePhoto} />
         </section>

@@ -10,7 +10,7 @@ import java.util.List;
 public record ImportPreviewResponse(long batchId, String kind, int totalRows, int toCreate, int toUpdate,
                                     List<UnknownSpecies> unknownSpecies, List<Duplicate> duplicates,
                                     List<Issue> issues, boolean decimalComma, boolean canConfirm,
-                                    LocalDateTime expiresAt, List<PhotoSet> photoSets) {
+                                    LocalDateTime expiresAt, List<PhotoSet> photoSets) implements ImportPreview {
 
     /**
      * Fotos de especie (SPEC-104 D-02): el archivo reemplaza el conjunto de cada

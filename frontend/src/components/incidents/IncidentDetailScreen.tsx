@@ -1,10 +1,14 @@
 'use client';
 
-import { Breadcrumb, Button, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { useEffect } from 'react';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
+import { Button, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useIncidentDetail, useIncidentNavigation, useIncidentOptions } from '@/hooks/useIncidents';
 import { IncidentDetailPanel } from './IncidentDetailPanel';
-import { interventionCreationHref } from '@/lib/incidentNavigation';
+import { incidentQuery, interventionCreationHref } from '@/lib/incidentNavigation';
+import { rememberListQuery } from '@/lib/listMemory';
+import { managesIncidents } from '@/lib/incidentRoles';
 
 export interface IncidentDetailScreenProps {
   id: number;
@@ -13,14 +17,21 @@ export interface IncidentDetailScreenProps {
 
 export function IncidentDetailScreen({ id, selectedInterventionId = null }: IncidentDetailScreenProps) {
   const { user } = useAuth();
-  const { listHref, filters } = useIncidentNavigation();
+  const { filters } = useIncidentNavigation();
   const detail = useIncidentDetail(id);
   const options = useIncidentOptions();
   const reload = () => { detail.reload(); options.reload(); };
+  const query = incidentQuery(filters);
+  usePageTrail({ labels: { [id]: detail.data?.incident.officialCode ?? `Incidencia #${id}` } });
+
+  // El detalle lleva en su URL los filtros de la lista. Quien salga a una
+  // intervención y regrese con la flecha debe recuperarlos.
+  useEffect(() => {
+    rememberListQuery(`/incidencias/${id}`, query);
+  }, [id, query]);
 
   return (
-    <div className="space-y-5">
-      <Breadcrumb items={[{ label: 'Incidencias', href: listHref }, { label: detail.data?.incident.officialCode ?? `Incidencia #${id}` }]} />
+    <div className="space-y-6">
       {detail.loading ? <LoadingSkeleton variant="card" count={3} /> : detail.notFound ? (
         <EmptyState title="Incidencia no encontrada" description="El registro no existe o no tienes acceso a él." />
       ) : detail.errorMessage ? (
@@ -37,7 +48,7 @@ export function IncidentDetailScreen({ id, selectedInterventionId = null }: Inci
           )}
           <IncidentDetailPanel key={id} detail={detail.data} options={options.data} optionsLoading={options.loading}
             selectedInterventionId={selectedInterventionId} createInterventionHref={interventionCreationHref(id,filters)}
-            coordinator={user?.role.code === 'COORDINADOR'} onChange={detail.updateData} onReload={reload} />
+            coordinator={managesIncidents(user?.role.code)} onChange={detail.updateData} onReload={reload} />
         </>
       )}
     </div>
