@@ -9,6 +9,10 @@ jest.mock('@/hooks/useAuth', () => ({
   useAuth: () => mockAuth,
 }));
 
+jest.mock('@/components/planning/PlanningAlerts', () => ({
+  PlanningAlerts: () => <div data-testid="planning-alerts" />,
+}));
+
 describe('HomePage', () => {
   beforeEach(() => {
     mockAuth = {
@@ -25,6 +29,12 @@ describe('HomePage', () => {
 
     expect(screen.getByText(/Administrador Hesperides/)).toBeInTheDocument();
     expect(screen.getByText('admin@pucp.edu.pe')).toBeInTheDocument();
+  });
+
+  it('muestra los avisos de planificación encima de la bienvenida (SPEC-203 §5.7)', () => {
+    render(<HomePage />);
+
+    expect(screen.getByTestId('planning-alerts')).toBeInTheDocument();
   });
 
   it('ya no lista enlaces a los módulos: la navegación vive en el sidebar', () => {

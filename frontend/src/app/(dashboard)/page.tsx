@@ -1,5 +1,6 @@
 'use client';
 
+import { PlanningAlerts } from '@/components/planning/PlanningAlerts';
 import { Card } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -11,7 +12,9 @@ export default function HomePage() {
   const { user } = useAuth();
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl space-y-4">
+      {/* SPEC-203 §5.7: encima de la bienvenida, lo preventivo atrasado o próximo. */}
+      <PlanningAlerts />
       <Card title={`Hola, ${user?.fullName ?? ''}`}>
         <p className="text-sm text-neutral-700">
           Sesión iniciada como <strong>{user?.email}</strong> con el rol{' '}
