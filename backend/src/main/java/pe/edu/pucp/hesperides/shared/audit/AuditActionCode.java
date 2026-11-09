@@ -33,5 +33,9 @@ public enum AuditActionCode {
     PLACE_PHOTO_DELETED,
     /** Migración de referencias: quién decidió a qué lugar va cada referencia antigua, o que no es un lugar. */
     PLACE_REFERENCES_LINKED,
-    PLACE_REFERENCES_DISCARDED
+    PLACE_REFERENCES_DISCARDED,
+    /** SPEC-203: quién creó, cambió o dio de baja un conjunto de áreas verdes, y con cuántos jardines. */
+    GREEN_AREA_SET_CREATED,
+    GREEN_AREA_SET_UPDATED,
+    GREEN_AREA_SET_DELETED
 }
