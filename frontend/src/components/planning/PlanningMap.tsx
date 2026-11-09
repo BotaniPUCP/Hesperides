@@ -23,7 +23,11 @@ export function PlanningMap({ setId }: { setId: number | null }) {
     try { return toSceneData(layers); } catch { return null; }
   }, [layers]);
 
-  useEffect(() => { viewer.current?.setMarkedSections(codes); }, [codes]);
+  // Al cambiar de conjunto el mapa viaja hasta él; sin conjunto se queda donde está, para no saltar mientras carga el siguiente.
+  useEffect(() => {
+    viewer.current?.setMarkedSections(codes);
+    viewer.current?.focusSections(codes);
+  }, [codes]);
 
   if (isLoading) return <LoadingSkeleton className="h-full min-h-[320px] w-full" />;
   if (!scene || !layers || unsupported) {
@@ -36,7 +40,7 @@ export function PlanningMap({ setId }: { setId: number | null }) {
   return (
     <div className="relative min-h-[320px] overflow-hidden rounded-lg bg-neutral-100 lg:h-full">
       <Map3DView data={scene}
-        onReady={(v) => { viewer.current = v; v.setMarkedSections(codes); v.setLayerVisible('supervision', false); }}
+        onReady={(v) => { viewer.current = v; v.setMarkedSections(codes); v.focusSections(codes); v.setLayerVisible('supervision', false); }}
         onUnsupported={() => setUnsupported(true)}
         onSelect={() => undefined} onGroundPick={() => undefined} onHover={() => undefined} onCompass={() => undefined} />
       <div className="pointer-events-none absolute bottom-2 left-3"><MapAttribution required={layers.attributionRequired} /></div>
