@@ -132,14 +132,12 @@ public class MaintenanceFrequency extends BaseEntity {
                         s.getStartMonth(),
                         s.getEndMonth(),
                         s.getMinDaysInterval(),
-                        s.getMaxDaysInterval(),
-                        s.getTargetDaysInterval()))
+                        s.getMaxDaysInterval()))
                 .toList();
 
         return new FrequencyRule(
                 getId(),
                 frequencyRuleTypeItem.getCode(),
-                targetDaysInterval,
                 minDaysInterval,
                 maxDaysInterval,
                 annualTargetCount,

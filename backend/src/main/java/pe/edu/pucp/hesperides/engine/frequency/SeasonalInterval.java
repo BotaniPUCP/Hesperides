@@ -8,18 +8,13 @@ package pe.edu.pucp.hesperides.engine.frequency;
  * invierno frio hubo que cortar cada 30-35 dias en vez de cada 45. Evaluar todo
  * el ano contra un unico numero reportaria incumplimiento donde hubo buena
  * gestion.
- *
- * @param targetDaysInterval el intervalo teorico o de manual, que suele diferir
- *                           del operativo: el cesped tiene teorico de 21 dias y
- *                           en la practica se corta cada 30-45
  */
 public record SeasonalInterval(
         String season,
         int startMonth,
         int endMonth,
         Integer minDaysInterval,
-        Integer maxDaysInterval,
-        Integer targetDaysInterval
+        Integer maxDaysInterval
 ) {
 
     /**

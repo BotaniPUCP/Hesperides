@@ -23,7 +23,7 @@ class LocationComplianceReaderTest {
         when(frequency.getId()).thenReturn(1L);when(frequency.getActivityTypeItem()).thenReturn(activity);
         when(frequency.getFrequencyRuleTypeItem()).thenReturn(type);when(frequency.getRegime()).thenReturn("IN_HOUSE");
         when(frequency.getScope()).thenReturn("CAMPUS_WIDE");
-        when(frequency.toRule()).thenReturn(new FrequencyRule(1L,"SEASONAL_PERIOD",null,null,null,2,null,null,null,List.of(),LocalDate.of(2026,1,1),null));
+        when(frequency.toRule()).thenReturn(new FrequencyRule(1L,"SEASONAL_PERIOD",null,null,2,null,null,null,List.of(),LocalDate.of(2026,1,1),null));
         when(repository.findAllCurrent()).thenReturn(List.of(frequency));
         when(repository.findVersionsOverlapping(10L,from,to)).thenReturn(List.of(frequency));
         when(history.supportsLocationHistory()).thenReturn(true);

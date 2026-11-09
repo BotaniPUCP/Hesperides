@@ -108,7 +108,7 @@ public class ComplianceSummary {
                 .thenComparing(OverdueTarget::label, Comparator.nullsLast(Comparator.naturalOrder())));
         return new ActivityCompliance(activity.activityTypeItemId(), activity.activityTypeLabel(), activity.regime(),
                 true, null, counts.getOrDefault(ComplianceStatus.ON_TARGET, 0),
-                counts.getOrDefault(ComplianceStatus.WITHIN_TOLERANCE, 0),
+                counts.getOrDefault(ComplianceStatus.EARLY, 0),
                 counts.getOrDefault(ComplianceStatus.OVERDUE, 0),
                 counts.getOrDefault(ComplianceStatus.NOT_APPLICABLE, 0),
                 List.copyOf(overdue.subList(0, Math.min(OVERDUE_CAP, overdue.size()))));

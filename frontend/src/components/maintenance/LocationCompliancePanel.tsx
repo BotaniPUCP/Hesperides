@@ -8,7 +8,7 @@ import { maintenanceApi } from '@/lib/maintenance-api';
 import { mensajeDeApiError } from '@/lib/api-errors';
 
 const labels:Record<ComplianceStatus,string> = {
-  ON_TARGET:'En plazo',WITHIN_TOLERANCE:'Dentro de tolerancia',OVERDUE:'Fuera de plazo',
+  ON_TARGET:'En plazo',EARLY:'Antes del mínimo',OVERDUE:'Fuera de plazo',
   NOT_APPLICABLE:'Sin evaluación aplicable',NOT_CONFIGURED:'Sin frecuencia configurada',
 };
 

@@ -22,7 +22,6 @@ import java.util.List;
 public record FrequencyRule(
         Long configId,
         String ruleTypeCode,
-        Integer targetDaysInterval,
         Integer minDaysInterval,
         Integer maxDaysInterval,
         Integer annualTargetCount,

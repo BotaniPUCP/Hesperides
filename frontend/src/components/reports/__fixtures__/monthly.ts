@@ -34,12 +34,12 @@ export const monthlyReport: MonthlyReport = {
   compliance: [
     {
       activityTypeItemId: 30, activityLabel: 'Poda de mantenimiento', regime: 'IN_HOUSE', evaluable: true, notEvaluableReason: null,
-      onTarget: 2, withinTolerance: 0, overdue: 1, notApplicable: 0,
+      onTarget: 2, early: 1, overdue: 1, notApplicable: 0,
       overdueTargets: [{ targetKind: 'ZONE', targetId: 50, label: 'Jardín Frutas', lastExecutionDate: '2026-08-30' }],
     },
     {
       activityTypeItemId: 31, activityLabel: 'Poda sanitaria', regime: 'OUTSOURCED', evaluable: false, notEvaluableReason: 'OUTSOURCED',
-      onTarget: 0, withinTolerance: 0, overdue: 0, notApplicable: 0, overdueTargets: [],
+      onTarget: 0, early: 0, overdue: 0, notApplicable: 0, overdueTargets: [],
     },
   ],
   mostAttended: { total: 1, items: [section(50, 'AV-0151', 3, '2026-10-28')] },

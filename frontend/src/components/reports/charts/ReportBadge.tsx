@@ -6,7 +6,7 @@ export type ReportBadgeKind = keyof typeof BADGE_TEXTS;
 /** SPEC-C01 §3.1 as amended by SPEC-202: neutral → amber → red, over the existing Badge. */
 const COLORS: Record<ReportBadgeKind, BadgeColor> = {
   ON_TARGET: 'success',
-  WITHIN_TOLERANCE: 'warning',
+  EARLY: 'neutral',
   OVERDUE: 'danger',
   NOT_APPLICABLE: 'neutral',
   NOT_EVALUABLE: 'neutral',

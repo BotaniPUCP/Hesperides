@@ -14,7 +14,7 @@ export const TAB_TEXTS: Record<ReportTab, { label: string; shortLabel: string }>
 /** Labels of the report badges (SPEC-C01 §3.1, amended by SPEC-202). */
 export const BADGE_TEXTS = {
   ON_TARGET: 'En objetivo',
-  WITHIN_TOLERANCE: 'Dentro de tolerancia',
+  EARLY: 'Antes del mínimo',
   OVERDUE: 'Fuera de plazo',
   NOT_APPLICABLE: 'No aplica',
   NOT_EVALUABLE: 'No evaluable',

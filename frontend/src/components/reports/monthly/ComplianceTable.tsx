@@ -15,7 +15,7 @@ function Verdicts({ row }: { row: ActivityCompliance }) {
     );
   }
   const counts = [
-    ['OVERDUE', row.overdue], ['WITHIN_TOLERANCE', row.withinTolerance],
+    ['OVERDUE', row.overdue], ['EARLY', row.early],
     ['ON_TARGET', row.onTarget], ['NOT_APPLICABLE', row.notApplicable],
   ] as const;
   const visible = counts.filter(([, count]) => count > 0);

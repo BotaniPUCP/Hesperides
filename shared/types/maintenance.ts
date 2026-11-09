@@ -31,7 +31,7 @@ export interface SeasonalInterval {
 /** Estado de cumplimiento que devuelve el motor; no es un catalogo editable. */
 export type ComplianceStatus =
   | 'ON_TARGET'
-  | 'WITHIN_TOLERANCE'
+  | 'EARLY'
   | 'OVERDUE'
   | 'NOT_APPLICABLE'
   | 'NOT_CONFIGURED';

@@ -69,13 +69,13 @@ class ComplianceSummaryTest {
         var row = ComplianceSummary.row(activity(1, "IN_HOUSE", "CAMPUS_WIDE", List.of(
                 place(10, 5, "ON_TARGET", "OVERDUE"),
                 place(11, 6, "ON_TARGET"),
-                place(12, 7, "WITHIN_TOLERANCE", "ON_TARGET"),
+                place(12, 7, "EARLY", "ON_TARGET"),
                 place(13, 8, "NOT_CONFIGURED"))), l -> true);
 
         assertThat(row.evaluable()).isTrue();
         assertThat(row.overdue()).isEqualTo(1);
         assertThat(row.onTarget()).isEqualTo(1);
-        assertThat(row.withinTolerance()).isEqualTo(1);
+        assertThat(row.early()).isEqualTo(1);
         assertThat(row.notApplicable()).isEqualTo(1);
         assertThat(row.overdueTargets()).singleElement()
                 .satisfies(t -> assertThat(t.lastExecutionDate()).isEqualTo(LocalDate.of(2026, 10, 5)));

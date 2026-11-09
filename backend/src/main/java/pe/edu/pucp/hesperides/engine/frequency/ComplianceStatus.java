@@ -11,11 +11,14 @@ package pe.edu.pucp.hesperides.engine.frequency;
  */
 public enum ComplianceStatus {
 
-    /** Se ejecuto dentro del objetivo. */
+    /** Se ejecuto dentro del rango normal, entre el minimo y el maximo. */
     ON_TARGET,
 
-    /** Se excedio el objetivo pero sin pasar el limite aceptable. */
-    WITHIN_TOLERANCE,
+    /**
+     * Se volvio a ejecutar antes del minimo (SPEC-203 D-05). No es una falta de
+     * atencion sino atencion de mas: un desperdicio que debe verse.
+     */
+    EARLY,
 
     /** Se paso del limite: es un mantenimiento vencido. */
     OVERDUE,

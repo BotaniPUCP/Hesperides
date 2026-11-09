@@ -65,7 +65,7 @@ export interface ActivityCompliance {
   evaluable: boolean;
   notEvaluableReason: NotEvaluableReason | null;
   onTarget: number;
-  withinTolerance: number;
+  early: number;
   overdue: number;
   notApplicable: number;
   overdueTargets: OverdueTarget[];

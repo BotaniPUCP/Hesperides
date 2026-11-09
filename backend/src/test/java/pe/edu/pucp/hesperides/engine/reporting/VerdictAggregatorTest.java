@@ -18,9 +18,9 @@ class VerdictAggregatorTest {
 
     @Test
     void followsTheDeclaredOrder() {
-        assertThat(VerdictAggregator.mostSevere(List.of(ON_TARGET, WITHIN_TOLERANCE))).isEqualTo(WITHIN_TOLERANCE);
+        assertThat(VerdictAggregator.mostSevere(List.of(ON_TARGET, EARLY))).isEqualTo(EARLY);
         assertThat(VerdictAggregator.mostSevere(List.of(NOT_APPLICABLE, ON_TARGET))).isEqualTo(ON_TARGET);
-        assertThat(VerdictAggregator.mostSevere(List.of(WITHIN_TOLERANCE, OVERDUE, ON_TARGET))).isEqualTo(OVERDUE);
+        assertThat(VerdictAggregator.mostSevere(List.of(EARLY, OVERDUE, ON_TARGET))).isEqualTo(OVERDUE);
     }
 
     @Test
