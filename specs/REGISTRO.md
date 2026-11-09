@@ -23,6 +23,7 @@
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
+| SPEC-203 | Planificación preventiva por conjuntos de áreas verdes | 📝 En spec: aprobada el 8 nov 2026 | —          | —      |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -42,6 +43,7 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026, aprobada; pendiente de implementar) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
 | SPEC-C01 §3.1 | Fondos por módulo (5 nov 2026) | Se añade una paleta de fondo por módulo en `moduleThemes.ts`, como excepción a «ninguna feature introduce su propia paleta». Solo tiñe el fondo, sin rojo ni ámbar. `SpecimenBackdrop` pasa a ser `ModuleBackdrop`, montado en el armazón. |
 | Mapa de migraciones · SPEC-201 · SPEC-002 §4.8 | Integración de noviembre (5 nov 2026) | Inventario verde e incidencias usaron ambos `V027`. Inventario verde conserva `V027`; incidencias pasa a `V028` y `V029`, y sus citas se actualizan. |
 | SPEC-C01 §3.1 | SPEC-202 (4 nov 2026) | Colores de los badges de reportes sobre `Badge`, en el orden neutro → ámbar → rojo: `ON_TARGET` success, `WITHIN_TOLERANCE` warning, `OVERDUE` danger; «No evaluable», `NOT_APPLICABLE` y «Sin datos» neutral; «Regla provisional» info; variación favorable success, desfavorable danger, y sin sentido o igual neutral. No se crea ningún token ni color nuevo. En la misma fecha el equipo aprobó las decisiones pendientes de SPEC-202 y sus aclaraciones frente al código, que quedan escritas en el propio spec. |

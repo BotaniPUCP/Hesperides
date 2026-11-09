@@ -1,5 +1,12 @@
 # SPEC-101 — Configuración de Frecuencias de Mantenimiento
 
+> **Enmienda SPEC-203, 8 nov 2026 (aprobada, pendiente de implementar):** la planificación
+> preventiva por conjuntos de áreas verdes reemplaza el panel de cumplimiento. D-02 cambia: el
+> alcance pasa a ser `CAMPUS_WIDE` o `BY_SET` (un conjunto guardado), y las reglas `BY_ZONE` y
+> `BY_SECTOR` se convierten. D-06 cambia: el formulario ya no pide «Teórico». La pantalla se
+> mueve a `/intervenciones/frecuencias` y solo la usan ADMIN y COORDINADOR. Ver
+> [SPEC-203](SPEC-203-planificacion-preventiva.md).
+
 > **Enmienda SPEC-200/T09, 29 oct 2026:** el usuario confirma actualizar solo los lugares
 > atendidos y conservar ambas fechas. El proveedor real IN_HOUSE entrega ejecuciones aceptadas
 > por lugar/sección; fecha física para intervalo y fecha de aprobación final para trazabilidad.
