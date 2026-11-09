@@ -86,7 +86,9 @@ public class PlanningServiceImpl implements PlanningService {
     public List<RecentAttentionResponse> recentAttention(long activity, LocalDate scheduledDate, List<Long> zoneIds) {
         var catalog = RuleCatalog.of(rules.current());
         List<SetSnapshot> all = sets.activeSets();
-        var history = AttendanceHistory.of(attendance.completions(activity, zoneIds));
+        // Lo hecho después de la fecha programada no hace «reciente» a esa fecha.
+        var history = AttendanceHistory.of(attendance.completions(activity, zoneIds).stream()
+                .filter(c -> !c.date().isAfter(scheduledDate)).toList());
         Map<Long, String> names = sets.displayNames(zoneIds);
         List<RecentAttentionResponse> out = new ArrayList<>();
         for (long zoneId : new HashSet<>(zoneIds)) {

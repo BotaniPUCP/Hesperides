@@ -36,6 +36,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const saved = warnings.length > 0;
 
   const names = useMemo(() => {
     const byId = new Map<number, string>();
@@ -123,7 +124,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
       )}
       <div className="flex flex-wrap justify-between gap-3">
         {existing ? <Button variant="ghost" onClick={remove}>Dar de baja</Button> : <span />}
-        <Button onClick={save} loading={saving}>Guardar conjunto</Button>
+        {!saved && <Button onClick={save} loading={saving}>Guardar conjunto</Button>}
       </div>
       {picking && (
         <SectionMapPicker sectors={options.sectors} sectionsBySector={options.sectionsBySector} scope="ALL"

@@ -6,6 +6,7 @@ import { interventionsApi } from '@/lib/interventions-api';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 import { planningApi } from '@/lib/planning-api';
 import { planningRow } from '@/components/planning/__fixtures__/planningFixtures';
+import type { InterventionDetail, InterventionLocation } from '@/lib/interventions-api';
 
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 1, role: { code: 'COORDINADOR' } } }) }));
 jest.mock('@/components/forms/unsaved/useUnsavedChangesGuard', () => ({
@@ -88,6 +89,30 @@ describe('Registro de intervención desde la planificación (SPEC-203 §5.6)', (
       placeId: null, location: null, elementIds: [], description: '', unitItemId: null, requestedQuantity: null }] }} />);
 
     expect(await screen.findByText(/Sección 112 ya tuvo Corte de césped/)).toBeInTheDocument();
+  });
+
+  it('una ubicación agregada a mano siempre se ve, aunque haya muchas prellenadas', async () => {
+    (greenAreaSetsApi.get as jest.Mock).mockResolvedValue({ id: 3, name: 'Grande', description: null, version: 0,
+      activities: [], warnings: [], zones: zones(25) });
+    render(<PlannedInterventionForm setId={3} activityId={30} />);
+    await screen.findByText('Y 5 jardines más del conjunto, sin datos propios de ubicación.');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Agregar ubicación' })).toBeEnabled());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Agregar ubicación' }));
+
+    expect(screen.getByRole('heading', { name: 'Ubicación 26' })).toBeInTheDocument();
+  });
+
+  it('al editar se ven todas las ubicaciones y no avisa de sus propios jardines', async () => {
+    const location = (i: number): InterventionLocation => ({ id: i, clientReference: `r${i}`, zoneId: 112, placeId: null,
+      location: null, elementIds: [], description: '', unitItemId: null, requestedQuantity: null });
+    const initial = { id: 7, code: 'INT-000007', version: 1, classItemId: 12, typeItemId: 30, scheduledDate: '2026-11-08',
+      description: '', originItemId: 1, reportedByItemId: 1, externalCode: null, requestedAt: null,
+      locations: Array.from({ length: 25 }, (_, i) => location(i + 1)) } as unknown as InterventionDetail;
+    render(<InterventionForm initial={initial} />);
+
+    expect(await screen.findByRole('heading', { name: 'Ubicación 25' })).toBeInTheDocument();
+    expect(planningApi.recentAttention).not.toHaveBeenCalled();
   });
 
   it('un conjunto de 530 jardines llega completo al registro (Review Focus 1)', async () => {

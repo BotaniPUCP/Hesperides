@@ -16,11 +16,18 @@ import { RecentAttentionNotice } from './RecentAttentionNotice';
 const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
 const nullableNumber = (s: string) => s === '' ? null : Number(s);
 /**
- * Más allá de estas, las ubicaciones no se dibujan como tarjetas: cada una trae
- * listas de lugares y secciones, y un conjunto de 530 jardines congela la página.
- * Siguen en el registro; solo se resumen (SPEC-203, Review Focus 1).
+ * Más allá de estas, los jardines que llegan prellenados de un conjunto no se dibujan
+ * como tarjetas: cada una trae listas de lugares y secciones, y 530 congelan la página.
+ * Siguen en el registro; solo se resumen. Lo que el usuario agrega o edita siempre se ve.
  */
-const MAX_LOCATION_CARDS = 20;
+const MAX_PREFILLED_CARDS = 20;
+
+function visibleCards(locations: InterventionLocation[], prefilled: Set<string>) {
+  let prefilledShown = 0;
+  const shown = locations.map((l, index) => ({ l, index }))
+    .filter(({ l }) => !prefilled.has(l.clientReference) || prefilledShown++ < MAX_PREFILLED_CARDS);
+  return { shown, hidden: locations.length - shown.length };
+}
 
 /** Valores iniciales de una intervención nueva, por ejemplo desde la planificación (SPEC-203 §5.6). */
 export interface InterventionPrefill { typeId?: number; date?: string; description?: string; locations?: InterventionLocation[] }
@@ -42,6 +49,7 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
   const [reason, setReason] = useState('');
   const [findingSource,setFindingSource] = useState<number | null>(null);
   const [locations, setLocations] = useState<InterventionLocation[]>(initial?.locations ?? prefill?.locations ?? []);
+  const [prefilledRefs] = useState(() => new Set((initial ? [] : prefill?.locations ?? []).map(l => l.clientReference)));
   const [elementCodeInputs, setElementCodeInputs] = useState<Record<string,string>>({});
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -74,6 +82,7 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
   };
   const catalog = (type: string) => options?.catalogs.filter(c => c.typeCode === type) ?? [];
   const types = catalog('INTERVENTION_TYPE').filter(t => t.parentItemId === classId);
+  const cards = visibleCards(locations, prefilledRefs);
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     const findingOrigin=options?.catalogs.find(c => c.typeCode === 'INTERVENTION_ORIGIN' && c.code === 'FINDING');
@@ -125,11 +134,11 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
         {initial && initial.scheduledDate !== date && <Input id="reschedule-reason" label="Motivo de reprogramación" value={reason} onChange={setReason} maxLength={2000} required />}
       </div>
       <Input id="work-description" label="Descripción del trabajo" value={description} onChange={setDescription} maxLength={4000} />
-      <RecentAttentionNotice typeId={typeId} typeLabel={types.find(t => t.id === typeId)?.label ?? 'esta actividad'} date={date}
+      {!initial && <RecentAttentionNotice typeId={typeId} typeLabel={types.find(t => t.id === typeId)?.label ?? 'esta actividad'} date={date}
         zoneIds={locations.map(l => l.zoneId).filter((z): z is number => z !== null)}
-        onRemove={zoneId => { setDirty(true); setLocations(rows => rows.filter(l => l.zoneId !== zoneId)); }} />
+        onRemove={zoneId => { setDirty(true); setLocations(rows => rows.filter(l => l.zoneId !== zoneId)); }} />}
       <h2 className="text-lg font-semibold">Ubicaciones de esta actividad</h2>
-      {locations.slice(0, MAX_LOCATION_CARDS).map((l,index) => <div key={l.clientReference} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
+      {cards.shown.map(({l,index}) => <div key={l.clientReference} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
         <div className="flex items-center justify-between"><h3 className="font-semibold">Ubicación {index + 1}</h3><Button variant="ghost" onClick={() => { setDirty(true); setLocations(rows => rows.filter((_,i) => i !== index)); }}>Retirar ubicación {index + 1}</Button></div>
         <Select id={`place-${index}`} label="Lugar" value={l.placeId === null ? null : String(l.placeId)} options={(options?.places ?? []).map(p => ({id:p.id,code:String(p.id),label:p.name}))} onChange={o => updateLocation(index,{placeId:o?.id ?? null})} clearable />
         <Select id={`zone-${index}`} label="Sección o sector" value={l.zoneId === null ? null : String(l.zoneId)} options={(options?.zones ?? []).map(p => ({id:p.id,code:String(p.id),label:p.name}))} onChange={o => updateLocation(index,{zoneId:o?.id ?? null})} clearable />
@@ -152,8 +161,8 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
         <div className="grid gap-3 sm:grid-cols-2"><Select id={`unit-${index}`} label="Unidad de medida" value={l.unitItemId === null ? null : String(l.unitItemId)} options={catalog('MEASUREMENT_UNIT').map(c => ({...c,code:String(c.id)}))} onChange={o => updateLocation(index,{unitItemId:o?.id ?? null})} clearable />
           <label className="grid gap-1 text-sm">Cantidad solicitada<input className="h-11 rounded-md border border-neutral-200 p-2" type="number" min="0" step="0.001" value={l.requestedQuantity ?? ''} onChange={e => updateLocation(index,{requestedQuantity:nullableNumber(e.target.value)})} /></label></div>
       </div>)}
-      {locations.length > MAX_LOCATION_CARDS && <p className="text-sm text-neutral-700">
-        Y {locations.length - MAX_LOCATION_CARDS} jardines más del conjunto, sin datos propios de ubicación.</p>}
+      {cards.hidden > 0 && <p className="text-sm text-neutral-700">
+        Y {cards.hidden} jardines más del conjunto, sin datos propios de ubicación.</p>}
       <Button variant="secondary" onClick={addLocation}>Agregar ubicación</Button>
     </fieldset>
     <Button type="submit" loading={pending} disabled={!options || !sourceAvailable}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : origin ? 'Guardar y volver a la incidencia' : 'Crear intervención'}</Button>

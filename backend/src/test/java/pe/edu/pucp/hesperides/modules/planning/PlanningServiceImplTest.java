@@ -158,6 +158,15 @@ class PlanningServiceImplTest {
     }
 
     @Test
+    void recentAttentionIgnoresWhatWasDoneAfterTheScheduledDate() {
+        when(sets.activeSets()).thenReturn(List.of());
+        when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
+        completado(1, HOY.plusDays(2));
+
+        assertThat(service.recentAttention(CORTE, HOY, List.of(1L))).isEmpty();
+    }
+
+    @Test
     void recentAttentionOfAGardenInNoSetUsesTheGeneralRule() {
         when(sets.activeSets()).thenReturn(List.of());
         when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));

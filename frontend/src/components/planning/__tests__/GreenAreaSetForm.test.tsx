@@ -67,6 +67,8 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
 
     expect(await screen.findByText('La sección Sección 113 ya sigue otra frecuencia propia')).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
+    // Ya se guardó: no se ofrece guardar otra vez, que daría 409 o «nombre repetido».
+    expect(screen.queryByRole('button', { name: 'Guardar conjunto' })).not.toBeInTheDocument();
   });
 
   it('al editar con una versión vieja explica el conflicto', async () => {
