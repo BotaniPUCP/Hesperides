@@ -1010,14 +1010,16 @@ class InterventionsIntegrationTest {
         assertThat(executionHistory.executionDates(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).isEmpty();
         assertThat(executionHistory.locationExecutions(typeId,"OUTSOURCED",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).isEmpty();
     }
-    @Test void complianceEndpointReturnsOnlyTheConfiguredZoneAndBothDatesWithoutDoubleCounting() throws Exception {
+    @Test void complianceEndpointReturnsOnlyTheConfiguredSetAndBothDatesWithoutDoubleCounting() throws Exception {
         var d=acceptedHistoryFixture();long location=d.get("locations").get(0).get("id").asLong();
         long zone=jdbc.queryForObject("select zone_id from intervention_locations where id=?",Long.class,location);
+        long set=jdbc.queryForObject("insert into green_area_sets(name) values ('Conjunto de prueba') returning id",Long.class);
+        jdbc.update("insert into green_area_set_zones(set_id,zone_id) values (?,?)",set,zone);
         long config=jdbc.queryForObject("""
-            insert into maintenance_frequencies(activity_type_item_id,frequency_rule_type_item_id,regime,scope,zone_id,annual_target_count,valid_from)
+            insert into maintenance_frequencies(activity_type_item_id,frequency_rule_type_item_id,regime,scope,green_area_set_id,annual_target_count,valid_from)
             values (?,(select i.id from catalog_items i join catalog_types t on t.id=i.catalog_type_id
-                where t.code='FREQUENCY_RULE_TYPE' and i.code='SEASONAL_PERIOD'),'IN_HOUSE','BY_ZONE',?,2,'2026-01-01') returning id
-            """,Long.class,typeId,zone);
+                where t.code='FREQUENCY_RULE_TYPE' and i.code='SEASONAL_PERIOD'),'IN_HOUSE','BY_SET',?,2,'2026-01-01') returning id
+            """,Long.class,typeId,set);
         var result=json.readTree(mvc.perform(get("/api/v1/maintenance/frequencies/compliance")
             .with(user("planner@test.local").authorities(()->"ADMIN"))
             .param("from","2026-10-19").param("to","2026-10-19").param("activityTypeItemId",Long.toString(typeId)))

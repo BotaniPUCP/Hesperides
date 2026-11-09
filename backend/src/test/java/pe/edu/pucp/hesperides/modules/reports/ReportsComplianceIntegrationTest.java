@@ -26,8 +26,8 @@ class ReportsComplianceIntegrationTest extends ReportsIntegrationSupport {
                 activity);
         jdbc.update("""
             insert into maintenance_frequencies(activity_type_item_id,frequency_rule_type_item_id,regime,scope,
-                target_days_interval,min_days_interval,max_days_interval,valid_from)
-            values (?,?,?,'CAMPUS_WIDE',7,1,10,date '2026-01-01')
+                min_days_interval,max_days_interval,valid_from)
+            values (?,?,?,'CAMPUS_WIDE',1,10,date '2026-01-01')
             """, activity, fx.item("FREQUENCY_RULE_TYPE", "INTERVAL_DAYS"), regime);
     }
 
