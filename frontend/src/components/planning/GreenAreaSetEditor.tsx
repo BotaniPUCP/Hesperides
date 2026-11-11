@@ -9,12 +9,13 @@ import { SectionMapPicker } from '@/components/map3d/SectionMapPicker';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { Button, Card, Input, Textarea } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
+import { groupActivities, type ActivityOption } from '@/components/maintenance/activityGroups';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 import { SETS_PATH } from './GreenAreaSetsScreen';
 import { gardensLabel } from './planningTexts';
 
 export interface SetOptions {
-  activities: { id: number; label: string }[];
+  activities: ActivityOption[];
   sectors: IrrigationZone[];
   sectionsBySector: Record<number, IrrigationZone[]>;
 }
@@ -38,6 +39,8 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const saved = warnings.length > 0;
+
+  const activityGroups = useMemo(() => groupActivities(options.activities), [options.activities]);
 
   const names = useMemo(() => {
     const byId = new Map<number, string>();
@@ -91,13 +94,19 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
           <Textarea id="set-description" label="Descripción (opcional)" value={description} onChange={setDescription} maxLength={2000} />
           <fieldset className="space-y-2">
             <legend className="text-sm font-medium text-neutral-900">Actividades que se planifican en este conjunto</legend>
-            <div className="grid gap-1 sm:grid-cols-2">
-              {options.activities.map((a) => (
-                <label key={a.id} className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={activityIds.has(a.id)} onChange={() => toggleActivity(a.id)} /> {a.label}
-                </label>
-              ))}
-            </div>
+            {/* El grupo solo ordena la lista: lo que se planifica es una actividad. */}
+            {activityGroups.map((group) => (
+              <div key={group.label} className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{group.label}</p>
+                <div className="grid gap-1 sm:grid-cols-2">
+                  {group.activities.map((a) => (
+                    <label key={a.id} className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={activityIds.has(a.id)} onChange={() => toggleActivity(a.id)} /> {a.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
           </fieldset>
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">

@@ -11,7 +11,8 @@ jest.mock('@/lib/green-area-sets-api', () => ({
 }));
 jest.mock('@/lib/maintenance-api', () => ({
   maintenanceApi: { getActivityTypes: jest.fn().mockResolvedValue([
-    { id: 30, code: 'CORTE_CESPED', label: 'Corte de césped' }, { id: 31, code: 'RIEGO', label: 'Riego' }]) },
+    { id: 30, code: 'CORTE_CESPED', label: 'Corte de césped', parentCode: 'Mantenimiento de jardines' },
+    { id: 31, code: 'RIEGO', label: 'Riego manual', parentCode: 'Riego' }]) },
 }));
 jest.mock('@/lib/irrigation-api', () => ({
   irrigationApi: {
@@ -44,6 +45,13 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
 
     expect(await screen.findByText('Ponle un nombre, elige al menos un jardín y una actividad.')).toBeInTheDocument();
     expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it('agrupa las actividades y el grupo no se puede marcar como actividad', async () => {
+    render(<GreenAreaSetForm />);
+    expect(await screen.findByText('Mantenimiento de jardines')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Corte de césped' })).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Mantenimiento de jardines' })).not.toBeInTheDocument();
   });
 
   it('crea el conjunto con los jardines del mapa y vuelve a la lista', async () => {
