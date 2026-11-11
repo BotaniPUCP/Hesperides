@@ -3,7 +3,7 @@
 import { format, parseISO } from 'date-fns';
 import type { GreenAreaSetSummary, MaintenanceFrequency } from '@shared/types';
 import { Badge, DataTable, type DataTableColumn } from '@/components/ui';
-import { FrequencyParameters, scopeLabel } from './FrequencyParameters';
+import { frequencySummary, scopeLabel } from './frequencySummary';
 import { FrequencyRuleTag } from './FrequencyRuleTag';
 
 interface Props {
@@ -59,16 +59,22 @@ export function FrequenciesTable({ frequencies, sets, canManage, onEdit }: Props
     },
     {
       key: 'frequency', header: 'Frecuencia',
-      render: (f) => (
-        // El dato que se busca es «cada cuánto»; el tipo y la duración lo acompañan en pequeño.
-        <span className="flex flex-col items-start gap-0.5">
-          <FrequencyParameters frequency={f} />
-          <FrequencyRuleTag ruleCode={f.frequencyRuleType.code} label={f.frequencyRuleType.label} />
-          {f.estimatedDurationDays != null && (
-            <span className="text-xs text-neutral-500">Dura {days(f.estimatedDurationDays)}</span>
-          )}
-        </span>
-      ),
+      render: (f) => {
+        // Dos niveles: la frase de «cada cuánto» manda; tipo y duración van juntos en una línea menor.
+        const { main, detail } = frequencySummary(f);
+        return (
+          <span className="flex flex-col items-start gap-0.5">
+            <span className="text-sm font-medium text-neutral-900">{main}</span>
+            {detail && <span className="text-xs text-neutral-600">{detail}</span>}
+            <span className="flex flex-wrap items-center gap-x-1.5 text-xs text-neutral-500">
+              <FrequencyRuleTag ruleCode={f.frequencyRuleType.code} label={f.frequencyRuleType.label} />
+              {f.estimatedDurationDays != null && (
+                <><span aria-hidden="true">·</span><span>dura {days(f.estimatedDurationDays)}</span></>
+              )}
+            </span>
+          </span>
+        );
+      },
     },
     { key: 'scope', header: 'Se aplica a', render: (f) => <ScopeCell frequency={f} sets={sets} /> },
     // Desde cuándo rige esta versión: sin eso el historial existiría en la base pero no se vería.
