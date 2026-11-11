@@ -42,6 +42,14 @@ describe('planningTexts (SPEC-203 §7)', () => {
     expect(lastLine(planningRow({ lastDate: null, daysSinceLast: null, neverAttendedCount: 18 }))).toBe('Sin registro previo · 18 jardines');
   });
 
+  it('con ejemplares, la tarjeta cuenta jardines y ejemplares', () => {
+    expect(lastLine(planningRow({ elementCount: 4 }))).toBe('Última vez: 30 sep (hace 39 días) · 18 jardines · 4 ejemplares');
+    expect(lastLine(planningRow({ zoneCount: 0, elementCount: 1 }))).toBe('Última vez: 30 sep (hace 39 días) · 1 ejemplar');
+    expect(stateDetail(planningRow({ state: 'DUE', days: null, neverAttendedCount: 2, elementCount: 4 })))
+      .toBe('2 jardines o ejemplares sin registro previo');
+    expect(stateDetail(planningRow({ state: 'IN_PROGRESS', days: 3, zoneCount: 0, elementCount: 9 }))).toBe('(faltan 3 ejemplares)');
+  });
+
   it('el título es la actividad en el conjunto', () => {
     expect(rowTitle(planningRow())).toBe('Corte de césped en Ingreso Riva-Agüero');
   });

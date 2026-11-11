@@ -20,11 +20,11 @@ jest.mock('@/components/map3d/Map3DView', () => ({
 const get = greenAreaSetsApi.get as jest.Mock;
 
 function fakeViewer() {
-  return { setMarkedSections: jest.fn(), focusSections: jest.fn(), setLayerVisible: jest.fn() } as unknown as jest.Mocked<Viewer>;
+  return { setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setLayerVisible: jest.fn() } as unknown as jest.Mocked<Viewer>;
 }
 
 function setWith(...codes: string[]) {
-  return { zones: codes.map((code) => ({ code })) };
+  return { zones: codes.map((code) => ({ code })), elements: [] as { code: string }[] };
 }
 
 describe('PlanningMap', () => {
@@ -35,7 +35,7 @@ describe('PlanningMap', () => {
     const viewer = fakeViewer();
     render(<PlanningMap setId={3} />);
     act(() => map.onReady?.(viewer));
-    await waitFor(() => expect(viewer.focusSections).toHaveBeenLastCalledWith(['AV-01', 'AV-02']));
+    await waitFor(() => expect(viewer.focusSections).toHaveBeenLastCalledWith(['AV-01', 'AV-02'], []));
     expect(viewer.setMarkedSections).toHaveBeenLastCalledWith(['AV-01', 'AV-02']);
   });
 
@@ -44,9 +44,18 @@ describe('PlanningMap', () => {
     const viewer = fakeViewer();
     const { rerender } = render(<PlanningMap setId={3} />);
     act(() => map.onReady?.(viewer));
-    await waitFor(() => expect(viewer.focusSections).toHaveBeenLastCalledWith(['AV-01']));
+    await waitFor(() => expect(viewer.focusSections).toHaveBeenLastCalledWith(['AV-01'], []));
     rerender(<PlanningMap setId={6} />);
-    await waitFor(() => expect(viewer.focusSections).toHaveBeenLastCalledWith(['AV-07']));
+    await waitFor(() => expect(viewer.focusSections).toHaveBeenLastCalledWith(['AV-07'], []));
+  });
+
+  it('un conjunto con ejemplares los marca y los encuadra junto a sus jardines', async () => {
+    get.mockResolvedValue({ zones: [{ code: 'AV-01' }], elements: [{ code: 'EV-000501' }] });
+    const viewer = fakeViewer();
+    render(<PlanningMap setId={3} />);
+    act(() => map.onReady?.(viewer));
+    await waitFor(() => expect(viewer.focusSections).toHaveBeenLastCalledWith(['AV-01'], ['EV-000501']));
+    expect(viewer.setMarkedSpecimens).toHaveBeenLastCalledWith(['EV-000501']);
   });
 
   it('sin conjunto no pide nada y no encuadra jardines', () => {
@@ -54,6 +63,6 @@ describe('PlanningMap', () => {
     render(<PlanningMap setId={null} />);
     act(() => map.onReady?.(viewer));
     expect(get).not.toHaveBeenCalled();
-    expect(viewer.focusSections).toHaveBeenLastCalledWith([]);
+    expect(viewer.focusSections).toHaveBeenLastCalledWith([], []);
   });
 });

@@ -12,6 +12,13 @@ import { InterventionForm, type InterventionPrefill } from './InterventionForm';
 const locationFor = (zoneId: number): InterventionLocation => ({ clientReference: createClientUuid(), zoneId, placeId: null,
   location: null, elementIds: [], description: '', unitItemId: null, requestedQuantity: null });
 
+/**
+ * Los ejemplares del conjunto van juntos en una ubicación propia: nombrarlos uno
+ * por uno daría decenas de tarjetas, y una ubicación con solo ejemplares es válida.
+ */
+const specimensLocation = (elementIds: number[]): InterventionLocation => ({ clientReference: createClientUuid(), zoneId: null,
+  placeId: null, location: null, elementIds, description: 'Ejemplares del conjunto', unitItemId: null, requestedQuantity: null });
+
 async function loadPrefill(setId: number, activityId: number) {
   const [set, rows] = await Promise.all([greenAreaSetsApi.get(setId), planningApi.rows()]);
   const row = rows.find((r) => r.setId === setId && r.activityTypeItemId === activityId) ?? null;
@@ -19,7 +26,8 @@ async function loadPrefill(setId: number, activityId: number) {
     typeId: activityId,
     date: row?.suggestedDate ?? '',
     description: `Planificada desde: ${row?.activityLabel ?? 'mantenimiento'} en ${set.name}`,
-    locations: set.zones.map((z) => locationFor(z.id)),
+    locations: [...set.zones.map((z) => locationFor(z.id)),
+      ...(set.elements.length > 0 ? [specimensLocation(set.elements.map((e) => e.id))] : [])],
   };
   return { prefill, open: row?.openIntervention ?? null };
 }

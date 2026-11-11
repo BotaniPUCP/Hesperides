@@ -41,6 +41,16 @@ function daysAgo(n: number): string {
   return n === 0 ? 'hoy' : `hace ${plural(n, 'día', 'días')}`;
 }
 
+/**
+ * Cuántos jardines y ejemplares de la fila, como se diga mejor: el avance y los
+ * «sin registro previo» cuentan las dos cosas juntas.
+ */
+function unitsLabel(row: PlanningRow, n: number): string {
+  if (row.elementCount === 0) return gardensLabel(n);
+  if (row.zoneCount === 0) return specimensLabel(n);
+  return plural(n, 'jardín o ejemplar', 'jardines o ejemplares');
+}
+
 export function rowTitle(row: PlanningRow): string {
   return `${row.activityLabel ?? 'Actividad'} en ${row.setName}`;
 }
@@ -67,11 +77,11 @@ export function stateDetail(row: PlanningRow): string {
     case 'OVERDUE':
       return window ? `(la ventana cerró hace ${plural(days, 'día', 'días')})` : `(${plural(days, 'día', 'días')} tarde)`;
     case 'DUE':
-      if (row.days === null && row.neverAttendedCount > 0) return `${gardensLabel(row.neverAttendedCount)} sin registro previo`;
+      if (row.days === null && row.neverAttendedCount > 0) return `${unitsLabel(row, row.neverAttendedCount)} sin registro previo`;
       if (quota && row.estimatedDate) return `(próxima estimada: ${shortDate(row.estimatedDate)})`;
       return days === 0 ? '(vence hoy)' : `(quedan ${plural(days, 'día', 'días')} de plazo)`;
     case 'IN_PROGRESS':
-      return `(faltan ${gardensLabel(days)})`;
+      return `(faltan ${unitsLabel(row, days)})`;
     case 'SCHEDULED':
       return row.openIntervention ? `(para el ${shortDate(row.openIntervention.scheduledDate)})` : '';
     case 'NOT_DUE':
@@ -111,8 +121,9 @@ export function lastLine(row: PlanningRow, now: Date = new Date()): string {
     const [y, m, d] = started.split('-').map(Number);
     const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
     const since = Math.round((today - Date.UTC(y, m - 1, d)) / 86_400_000);
-    return `Empezó: ${shortDate(started)} (${daysAgo(since)}) · ${row.progress.done} de ${gardensLabel(row.progress.total)}`;
+    return `Empezó: ${shortDate(started)} (${daysAgo(since)}) · ${row.progress.done} de ${unitsLabel(row, row.progress.total)}`;
   }
-  if (!row.lastDate || row.daysSinceLast === null) return `Sin registro previo · ${gardensLabel(row.zoneCount)}`;
-  return `Última vez: ${shortDate(row.lastDate)} (${daysAgo(row.daysSinceLast)}) · ${gardensLabel(row.zoneCount)}`;
+  const contents = contentsLabel(row.zoneCount, row.elementCount);
+  if (!row.lastDate || row.daysSinceLast === null) return `Sin registro previo · ${contents}`;
+  return `Última vez: ${shortDate(row.lastDate)} (${daysAgo(row.daysSinceLast)}) · ${contents}`;
 }
