@@ -50,6 +50,11 @@ describe('planningTexts (SPEC-203 §7)', () => {
     expect(stateDetail(planningRow({ state: 'IN_PROGRESS', days: 3, zoneCount: 0, elementCount: 9 }))).toBe('(faltan 3 ejemplares)');
   });
 
+  it('con uno solo, el verbo va en singular', () => {
+    expect(stateDetail(planningRow({ state: 'NOT_DUE', days: 1 }))).toBe('(falta 1 día)');
+    expect(stateDetail(planningRow({ state: 'IN_PROGRESS', days: 1 }))).toBe('(falta 1 jardín)');
+  });
+
   it('el título es la actividad en el conjunto', () => {
     expect(rowTitle(planningRow())).toBe('Corte de césped en Ingreso Riva-Agüero');
   });

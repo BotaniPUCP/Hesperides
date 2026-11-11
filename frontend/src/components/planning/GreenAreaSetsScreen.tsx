@@ -52,6 +52,11 @@ function SetCard({ set, urgent }: { set: GreenAreaSetSummary; urgent: PlanningRo
             <dt className="text-neutral-500">{set.sectorNames.length === 1 ? 'Sector' : 'Sectores'}</dt>
             <dd className="text-neutral-900">{sectorsText(set.sectorNames)}</dd>
           </>}
+          {/* Solo ejemplares que no caen en ninguna sección: no tienen sector, pero sí dónde están. */}
+          {set.sectorNames.length === 0 && !empty && <>
+            <dt className="text-neutral-500">Sector</dt>
+            <dd className="text-neutral-900">Fuera de toda sección</dd>
+          </>}
         </dl>
         <Urgent row={urgent} />
         <div className="flex flex-wrap gap-1 border-t border-neutral-200 pt-3">

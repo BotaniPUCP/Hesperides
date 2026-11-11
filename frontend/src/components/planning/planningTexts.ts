@@ -69,6 +69,9 @@ export function stateLabel(row: PlanningRow): string {
   return LABELS[row.state];
 }
 
+/** «falta 1 día», «faltan 3 días». */
+const missing = (count: number) => (count === 1 ? 'falta' : 'faltan');
+
 export function stateDetail(row: PlanningRow): string {
   const days = row.days ?? 0;
   const window = row.ruleKind === 'ANNUAL_WINDOW';
@@ -81,13 +84,13 @@ export function stateDetail(row: PlanningRow): string {
       if (quota && row.estimatedDate) return `(próxima estimada: ${shortDate(row.estimatedDate)})`;
       return days === 0 ? '(vence hoy)' : `(quedan ${plural(days, 'día', 'días')} de plazo)`;
     case 'IN_PROGRESS':
-      return `(faltan ${unitsLabel(row, days)})`;
+      return `(${missing(days)} ${unitsLabel(row, days)})`;
     case 'SCHEDULED':
       return row.openIntervention ? `(para el ${shortDate(row.openIntervention.scheduledDate)})` : '';
     case 'NOT_DUE':
       if (window) return `(la ventana abre en ${plural(days, 'día', 'días')})`;
       if (quota && row.estimatedDate) return `(próxima estimada: ${shortDate(row.estimatedDate)})`;
-      return `(faltan ${plural(days, 'día', 'días')})`;
+      return `(${missing(days)} ${plural(days, 'día', 'días')})`;
     case 'DONE_FOR_PERIOD':
       return quota ? `(${row.yearCount} de ${row.rhythm?.annualTarget} en el año)` : '(hecho en esta ventana)';
     default:

@@ -58,6 +58,15 @@ describe('GreenAreaSetsScreen (SPEC-203 §5.2)', () => {
     expect(screen.getByText('Polideportivo')).toBeInTheDocument();
   });
 
+  it('un conjunto de ejemplares sin sección dice que están fuera de toda sección', async () => {
+    list.mockResolvedValue([set({ zoneCount: 0, elementCount: 5, sectorNames: [] })]);
+
+    render(<GreenAreaSetsScreen />);
+
+    expect(await screen.findByText('5 ejemplares')).toBeInTheDocument();
+    expect(screen.getByText('Fuera de toda sección')).toBeInTheDocument();
+  });
+
   it('sin conjuntos invita a crear el primero', async () => {
     list.mockResolvedValue([]);
 
