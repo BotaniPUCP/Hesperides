@@ -154,10 +154,9 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
       onAdd: (ids) => setPlants((prev) => new Set([...prev, ...ids])) } : undefined,
   });
 
-  const markGroup = (g: SectorGroup) => {
-    if (pickGardens) setZones((prev) => new Set([...prev, ...g.sections.map((s) => s.id)]));
-    if (pickPlants) setPlants((prev) => new Set([...prev, ...g.specimens.map((e) => e.id)]));
-  };
+  // Las tarjetas marcan por tipo; el modo del mapa solo decide qué agregan el clic y el rectángulo.
+  const markGardens = (g: SectorGroup) => setZones((prev) => new Set([...prev, ...g.sections.map((s) => s.id)]));
+  const markPlants = (g: SectorGroup) => setPlants((prev) => new Set([...prev, ...g.specimens.map((e) => e.id)]));
   const clearGroup = (g: SectorGroup) => {
     const ids = new Set(g.sections.map((s) => s.id));
     const plantIds = new Set(g.specimens.map((e) => e.id));
@@ -266,8 +265,10 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                     {g.specimens.length > 0 && <Meter label="Ejemplares" chosen={chosenTrees} total={g.specimens.length} />}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Button type="button" size="sm" variant="secondary" onClick={() => markGroup(g)}>
-                      {mode === 'GARDENS' ? 'Marcar jardines' : mode === 'SPECIMENS' ? 'Marcar ejemplares' : 'Marcar todo'}</Button>
+                    {g.sections.length > 0 && <Button type="button" size="sm" variant="secondary"
+                      disabled={chosenGardens === g.sections.length} onClick={() => markGardens(g)}>Marcar jardines</Button>}
+                    {g.specimens.length > 0 && <Button type="button" size="sm" variant="secondary"
+                      disabled={chosenTrees === g.specimens.length} onClick={() => markPlants(g)}>Marcar ejemplares</Button>}
                     <Button type="button" size="sm" variant="ghost" disabled={chosenGardens + chosenTrees === 0} onClick={() => clearGroup(g)}>
                       Quitar del sector</Button>
                   </div>

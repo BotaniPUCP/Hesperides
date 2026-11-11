@@ -64,6 +64,18 @@ describe('SetMapPicker', () => {
 
     expect(within(card('Sector 1')).getByText('2 de 2')).toBeInTheDocument();
     expect(screen.getByText('Elegido: 2 jardines')).toBeInTheDocument();
+    expect(within(card('Sector 1')).getByRole('button', { name: 'Marcar jardines' })).toBeDisabled();
+  });
+
+  it('cada tarjeta ofrece marcar solo lo que tiene, sin depender del modo del mapa', async () => {
+    const { card } = setup();
+
+    expect(within(card('Fuera de toda sección')).queryByRole('button', { name: 'Marcar jardines' })).not.toBeInTheDocument();
+    expect(within(card('Sector 2')).queryByRole('button', { name: 'Marcar ejemplares' })).not.toBeInTheDocument();
+    await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Marcar ejemplares' }));
+
+    expect(screen.getByText('Elegido: 1 ejemplar')).toBeInTheDocument();
+    expect(within(card('Sector 1')).getByRole('button', { name: 'Quitar del sector' })).toBeEnabled();
   });
 
   it('buscar abre las tarjetas con coincidencias y oculta las demás', async () => {
