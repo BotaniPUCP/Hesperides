@@ -24,6 +24,7 @@ import java.util.List;
 public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequenciesService {
 
     private static final String RULE_TYPE_CATALOG = "FREQUENCY_RULE_TYPE";
+    private static final String ACTIVITY_CATALOG = "INTERVENTION_TYPE";
 
     private final MaintenanceFrequenciesRepository frequenciesRepository;
     private final CatalogItemsRepository catalogItemsRepository;
@@ -182,6 +183,9 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de actividad no encontrado"));
         if (!activity.isActive() || activity.isDeleted()) {
             throw new BusinessRuleException("El tipo de actividad seleccionado no está activo");
+        }
+        if (activity.getCatalogType() == null || !ACTIVITY_CATALOG.equals(activity.getCatalogType().getCode())) {
+            throw new BusinessRuleException("Elige una actividad concreta, no un grupo de actividades");
         }
         return activity;
     }

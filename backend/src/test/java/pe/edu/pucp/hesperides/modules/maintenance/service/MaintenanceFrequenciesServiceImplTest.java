@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
+import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogType;
 import pe.edu.pucp.hesperides.modules.catalogs.repository.CatalogItemsRepository;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequencyRequest;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
@@ -67,6 +68,7 @@ class MaintenanceFrequenciesServiceImplTest {
                 frequenciesRepository, catalogItemsRepository, complianceReader, setLookup);
 
         activityItem = catalogItem(10L, "CORTE_CESPED", "Corte de césped");
+        activityItem.setCatalogType(catalogType("INTERVENTION_TYPE"));
         intervalDaysRuleItem = catalogItem(101L, "INTERVAL_DAYS", "Intervalo por rango de días");
         seasonalRuleItem = catalogItem(102L, "SEASONAL_PERIOD", "Periodicidad estacional");
         onDemandRuleItem = catalogItem(105L, "ON_DEMAND", "A demanda");
@@ -93,6 +95,12 @@ class MaintenanceFrequenciesServiceImplTest {
         item.setLabel(label);
         item.setActive(true);
         return item;
+    }
+
+    private static CatalogType catalogType(String code) {
+        CatalogType type = new CatalogType();
+        type.setCode(code);
+        return type;
     }
 
     private void setId(BaseEntity entity, Long id) throws Exception {
@@ -338,6 +346,17 @@ class MaintenanceFrequenciesServiceImplTest {
             assertThatThrownBy(() -> service.create(crear("INTERVAL_DAYS", 30, 45, null, null, null)))
                     .isInstanceOf(BusinessRuleException.class)
                     .hasMessageContaining("no está activo");
+        }
+
+        @Test
+        @DisplayName("un grupo de actividades no se acepta como actividad")
+        void grupoDeActividades() {
+            activityItem.setCatalogType(catalogType("INTERVENTION_CLASS"));
+
+            assertThatThrownBy(() -> service.create(crear("INTERVAL_DAYS", 30, 45, null, null, null)))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("no un grupo");
+            verify(frequenciesRepository, never()).save(any());
         }
     }
 
