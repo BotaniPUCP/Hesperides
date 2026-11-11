@@ -51,7 +51,7 @@ export function FrequenciesTable({ frequencies, sets, canManage, onEdit, onDeact
     { key: 'parameters', header: 'Cada cuánto', render: (f) => <FrequencyParameters frequency={f} /> },
     {
       key: 'duration', header: 'Duración estimada', hideOnMobile: true,
-      render: (f) => (f.estimatedDurationDays ? `${f.estimatedDurationDays} días` : '—'),
+      render: (f) => (f.estimatedDurationDays ? `${f.estimatedDurationDays} ${f.estimatedDurationDays === 1 ? 'día' : 'días'}` : '—'),
     },
     { key: 'scope', header: 'Se aplica a', render: (f) => <ScopeCell frequency={f} sets={sets} /> },
     // Desde cuándo rige esta versión: sin eso el historial existiría en la base pero no se vería.

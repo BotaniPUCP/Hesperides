@@ -49,6 +49,9 @@ describe('Frecuencias por conjunto (SPEC-203 §5.3)', () => {
       ruleTypes={[{ id: 101, code: 'INTERVAL_DAYS', label: 'Intervalo por rango de días' }]} sets={sets} onSubmit={onSubmit} />);
 
     expect(screen.queryByText(/teórico/i)).not.toBeInTheDocument();
+    // Una frecuencia nueva no trae actividad elegida: se elige grupo y actividad.
+    await userEvent.selectOptions(screen.getByLabelText('Grupo de actividades'), 'Otras actividades');
+    await userEvent.selectOptions(screen.getByLabelText('Actividad'), '30');
     await userEvent.selectOptions(screen.getByLabelText('Se aplica a'), 'BY_SET');
     await userEvent.type(screen.getByLabelText(/Mín. días/), '2');
     await userEvent.type(screen.getByLabelText(/Máx. días/), '3');

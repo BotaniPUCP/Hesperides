@@ -54,7 +54,7 @@ function FrequencyForm({
   isOpen, onClose, frequencyToEdit, activities, ruleTypes, sets, onSubmit,
 }: Props) {
   const f = frequencyToEdit;
-  const [activityTypeItemId, setActivityTypeItemId] = useState(f ? f.activityType.id : activities[0]?.id ?? 0);
+  const [activityTypeItemId, setActivityTypeItemId] = useState(f ? f.activityType.id : 0);
   const [regime, setRegime] = useState<MaintenanceRegime>(f ? f.regime : 'IN_HOUSE');
   const [ruleTypeCode, setRuleTypeCode] = useState<FrequencyRuleTypeCode>(f ? f.frequencyRuleType.code : 'INTERVAL_DAYS');
   const [scope, setScope] = useState<MaintenanceScope>(f ? f.scope : 'CAMPUS_WIDE');
@@ -141,7 +141,7 @@ function FrequencyForm({
           <FrequencyScopeFields scope={scope} setId={setId} sets={sets} onScope={setScope} onSet={setSetId} />
 
           <label className="block sm:col-span-2">
-            <span className={LABEL}>Modelo de periodicidad</span>
+            <span className={LABEL}>Tipo de frecuencia</span>
             <select
               value={ruleTypeCode}
               onChange={(e) => setRuleTypeCode(e.target.value as FrequencyRuleTypeCode)}

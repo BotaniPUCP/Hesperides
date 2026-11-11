@@ -53,13 +53,13 @@ export function FrequencyFilters({ value, onChange, ruleTypes }: Props) {
         </label>
 
         <label className="block">
-          <span className={LABEL}>Modelo de periodicidad</span>
+          <span className={LABEL}>Tipo de frecuencia</span>
           <select
             value={value.ruleType}
             onChange={(e) => onChange({ ruleType: e.target.value })}
             className={`${FIELD} bg-neutral-0`}
           >
-            <option value="">Todos los modelos</option>
+            <option value="">Todos los tipos</option>
             {ruleTypes.map((r) => (
               <option key={r.id} value={r.code}>{r.label}</option>
             ))}
