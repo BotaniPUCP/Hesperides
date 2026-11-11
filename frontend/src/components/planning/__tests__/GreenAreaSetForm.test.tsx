@@ -31,7 +31,7 @@ beforeEach(() => jest.clearAllMocks());
 
 async function fillAndPick() {
   await userEvent.type(await screen.findByLabelText(/^Nombre/), 'Pabellones');
-  await userEvent.click(screen.getByRole('checkbox', { name: 'Corte de césped' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Corte de césped' }));
   await userEvent.click(screen.getByRole('button', { name: 'Elegir jardines en el mapa' }));
   await userEvent.click(await screen.findByRole('button', { name: 'Confirmar mapa' }));
 }
@@ -47,11 +47,18 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     expect(api.create).not.toHaveBeenCalled();
   });
 
-  it('agrupa las actividades y el grupo no se puede marcar como actividad', async () => {
+  it('las actividades se eligen por grupo y las elegidas se resumen abajo', async () => {
     render(<GreenAreaSetForm />);
-    expect(await screen.findByText('Mantenimiento de jardines')).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: 'Corte de césped' })).toBeInTheDocument();
-    expect(screen.queryByRole('checkbox', { name: 'Mantenimiento de jardines' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('tab', { name: 'Mantenimiento de jardines' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('button', { name: 'Riego manual' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Riego' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Riego manual' }));
+
+    expect(screen.getByRole('button', { name: 'Riego manual' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('tab', { name: 'Riego 1' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar Riego manual' }));
+    expect(screen.getByText('Todavía no eliges actividades')).toBeInTheDocument();
   });
 
   it('crea el conjunto con los jardines del mapa y vuelve a la lista', async () => {

@@ -7,11 +7,12 @@ import type { GreenAreaSetDetail } from '@shared/types';
 import type { IrrigationZone } from '@shared/types/irrigation';
 import { SectionMapPicker } from '@/components/map3d/SectionMapPicker';
 import { PageHeader } from '@/components/layouts/PageHeader';
-import { Button, Card, Input, Textarea } from '@/components/ui';
+import { Button, Card, Input } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
-import { groupActivities, type ActivityOption } from '@/components/maintenance/activityGroups';
+import type { ActivityOption } from '@/components/maintenance/activityGroups';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 import { SETS_PATH } from './GreenAreaSetsScreen';
+import { ActivityChipsPicker } from './ActivityChipsPicker';
 import { gardensLabel } from './planningTexts';
 
 export interface SetOptions {
@@ -40,8 +41,6 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const saved = warnings.length > 0;
-
-  const activityGroups = useMemo(() => groupActivities(options.activities), [options.activities]);
 
   const names = useMemo(() => {
     const byId = new Map<number, string>();
@@ -107,6 +106,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
       <PageHeader title={existing ? existing.name : 'Nuevo conjunto'} />
       <Card>
         <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-neutral-900">Jardines del conjunto</h2>
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="secondary" onClick={() => setPicking(true)}>Elegir jardines en el mapa</Button>
             <span className="text-sm text-neutral-700">
@@ -126,26 +126,17 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
         </div>
       </Card>
       <Card>
-        <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <Input id="set-name" label="Nombre" value={name} onChange={setName} maxLength={120} required />
-          <Textarea id="set-description" label="Descripción (opcional)" value={description} onChange={setDescription} maxLength={2000} />
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-neutral-900">Actividades que se planifican en este conjunto</legend>
-            {/* El grupo solo ordena la lista: lo que se planifica es una actividad. */}
-            {activityGroups.map((group) => (
-              <div key={group.label} className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{group.label}</p>
-                <div className="grid gap-1 sm:grid-cols-2">
-                  {group.activities.map((a) => (
-                    <label key={a.id} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" checked={activityIds.has(a.id)} onChange={() => toggleActivity(a.id)} /> {a.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </fieldset>
+          <Input id="set-description" label="Descripción (opcional)" value={description} onChange={setDescription}
+            maxLength={2000} placeholder="Jardines frente a la biblioteca" />
         </div>
+      </Card>
+      <Card>
+        <section aria-labelledby="set-activities" className="space-y-3">
+          <h2 id="set-activities" className="text-sm font-semibold text-neutral-900">Actividades que se planifican aquí</h2>
+          <ActivityChipsPicker activities={options.activities} selected={activityIds} onToggle={toggleActivity} />
+        </section>
       </Card>
       {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}
       {warnings.length > 0 && (
