@@ -45,6 +45,27 @@ describe('SectionMapPicker (SPEC-203 §5.2)', () => {
     expect(screen.getByRole('checkbox', { name: /Berma Norte/ })).toBeInTheDocument();
   });
 
+  it('con ejemplares, elige entre jardines y ejemplares y confirma ambos', async () => {
+    const onConfirm = jest.fn();
+    const options = [
+      { id: 501, code: 'EV-000501', displayName: 'Palmera datilera', typeLabel: 'Palmera', sectionName: 'Jardín Central', sectorId: 1, sectorName: 'Sector 1' },
+      { id: 502, code: 'EV-000502', displayName: 'Ficus', typeLabel: 'Árbol', sectionName: null, sectorId: null, sectorName: null },
+    ];
+    render(<SectionMapPicker sectors={sectors} sectionsBySector={sectionsBySector} scope="ALL" selectedIds={[11]}
+      onCancel={jest.fn()} onConfirm={onConfirm} texts={texts} specimens={{ options, selectedIds: [] }} />);
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Ejemplares' }));
+    expect(screen.queryByRole('checkbox', { name: /Berma Norte/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/fuera de toda sección/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('checkbox', { name: /Palmera datilera/ }));
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Ambos' }));
+    expect(screen.getByRole('tab', { name: 'Ejemplares (1)' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar 1 jardines y 1 ejemplares' }));
+
+    expect(onConfirm).toHaveBeenCalledWith([11], [501]);
+  });
+
   it('Riego conserva sus textos (CA-12)', () => {
     render(<IrrigationMapPicker sectors={sectors} sectionsBySector={sectionsBySector} scope="ALL" selectedIds={[11]}
       onCancel={jest.fn()} onConfirm={jest.fn()} />);
