@@ -380,7 +380,9 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
    seleccionar por área, buscador por nombre. La lista de seleccionados y el mapa siempre
    coinciden.
 3. Nombre (obligatorio, único sin distinguir mayúsculas), descripción opcional y las
-   actividades que se planifican en él (al menos una).
+   actividades que se planifican en él (al menos una). Las actividades se listan bajo el título
+   de su grupo; el grupo no es una casilla. El formulario muestra los jardines elegidos primero,
+   resumidos por sector.
 4. Guardar → si algún jardín queda bajo dos reglas propias de la misma actividad, se muestra el
    aviso de D-08 junto con la confirmación.
 
@@ -393,6 +395,9 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
   aparece esa etiqueta.
 - Sin «Teórico» (D-06).
 - Sin el panel «Cumplimiento por lugar atendido»: lo reemplaza la planificación.
+- La actividad se elige en dos pasos, grupo y luego actividad, y la tabla usa `DataTable` con
+  columnas «Actividad», «Quién la ejecuta», «Tipo de frecuencia», «Cada cuánto», «Duración
+  estimada», «Se aplica a» y «Vigente desde» (10 nov 2026).
 
 ### 5.4 Última vez de un jardín
 
