@@ -36,11 +36,39 @@ const frequency: MaintenanceFrequency = {
 
 describe('Frecuencias por conjunto (SPEC-203 §5.3)', () => {
   it('la fila de una frecuencia propia dice a qué conjunto aplica', () => {
-    render(<FrequenciesTable frequencies={[frequency]} sets={sets} canManage onEdit={jest.fn()} onDeactivate={jest.fn()} />);
+    render(<FrequenciesTable frequencies={[frequency]} sets={sets} canManage onEdit={jest.fn()} />);
 
     const row = screen.getByRole('row', { name: /Riego/ });
     expect(within(row).getByText('Campo deportivo')).toBeInTheDocument();
     expect(within(row).getByText('propio de este conjunto')).toBeInTheDocument();
+  });
+
+  it('la fila se abre con un clic o con el nombre, que también llega por teclado', async () => {
+    const onEdit = jest.fn();
+    render(<FrequenciesTable frequencies={[frequency]} sets={sets} canManage onEdit={onEdit} />);
+
+    await userEvent.click(screen.getByText('Campo deportivo'));
+    await userEvent.click(screen.getByRole('button', { name: 'Riego' }));
+
+    expect(onEdit).toHaveBeenCalledTimes(2);
+    expect(onEdit).toHaveBeenCalledWith(frequency);
+    expect(screen.getByText('01/01/2026')).toBeInTheDocument();
+  });
+
+  it('desactivar está dentro del formulario y lo cierra solo si se confirmó', async () => {
+    const onClose = jest.fn();
+    const onDeactivate = jest.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    render(<FrequencyFormModal isOpen onClose={onClose} frequencyToEdit={frequency}
+      activities={[{ id: 30, code: 'RIEGO', label: 'Riego' }]}
+      ruleTypes={[{ id: 101, code: 'INTERVAL_DAYS', label: 'Rango de días' }]} sets={sets}
+      onSubmit={jest.fn()} onDeactivate={onDeactivate} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Desactivar frecuencia' }));
+    expect(onDeactivate).toHaveBeenCalledWith(1);
+    expect(onClose).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Desactivar frecuencia' }));
+    expect(onClose).toHaveBeenCalled();
   });
 
   it('el formulario no pide «Teórico» y una frecuencia propia exige elegir el conjunto', async () => {

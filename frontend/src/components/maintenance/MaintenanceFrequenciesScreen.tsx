@@ -53,21 +53,24 @@ export function MaintenanceFrequenciesScreen() {
     setIsModalOpen(true);
   };
 
-  const handleDeactivate = async (id: number) => {
+  /** Devuelve si se desactivó, para que el formulario sepa si cerrarse. */
+  const handleDeactivate = async (id: number): Promise<boolean> => {
     const confirmado = confirm(
       '¿Deseas desactivar esta frecuencia de mantenimiento?\n\n' +
         'Se aplicará borrado lógico: la frecuencia dejará de estar activa para planificar ' +
         'intervenciones, pero se conservará en la base de datos para no perder el historial ' +
         'ni la trazabilidad.'
     );
-    if (!confirmado) return;
+    if (!confirmado) return false;
 
     try {
       await maintenanceApi.delete(id);
       setFeedback({ type: 'success', message: 'Frecuencia desactivada y retirada de la lista activa.' });
       loadData();
+      return true;
     } catch {
       setFeedback({ type: 'error', message: 'No se pudo desactivar la frecuencia' });
+      return false;
     }
   };
 
@@ -156,7 +159,6 @@ export function MaintenanceFrequenciesScreen() {
               setEditingFrequency(f);
               setIsModalOpen(true);
             }}
-            onDeactivate={handleDeactivate}
           />
         )}
       </Card>
@@ -169,6 +171,7 @@ export function MaintenanceFrequenciesScreen() {
         ruleTypes={ruleTypes}
         sets={sets}
         onSubmit={handleFormSubmit}
+        onDeactivate={handleDeactivate}
       />
     </div>
   );

@@ -34,6 +34,8 @@ interface Props {
   ruleTypes: RuleTypeOption[];
   sets: GreenAreaSetSummary[];
   onSubmit: (payload: CreateMaintenanceFrequencyRequest | UpdateMaintenanceFrequencyRequest) => Promise<void>;
+  /** Solo al editar. Devuelve si se desactivó: la persona puede cancelar la confirmación. */
+  onDeactivate?: (id: number) => Promise<boolean>;
 }
 
 const INPUT = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
@@ -51,7 +53,7 @@ export function FrequencyFormModal(props: Props) {
 }
 
 function FrequencyForm({
-  isOpen, onClose, frequencyToEdit, activities, ruleTypes, sets, onSubmit,
+  isOpen, onClose, frequencyToEdit, activities, ruleTypes, sets, onSubmit, onDeactivate,
 }: Props) {
   const f = frequencyToEdit;
   const [activityTypeItemId, setActivityTypeItemId] = useState(f ? f.activityType.id : 0);
@@ -176,7 +178,14 @@ function FrequencyForm({
           />
         </label>
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          {frequencyToEdit && onDeactivate && (
+            <Button type="button" variant="ghost" disabled={loading}
+              onClick={async () => { if (await onDeactivate(frequencyToEdit.id)) onClose(); }}>
+              Desactivar frecuencia
+            </Button>
+          )}
+          <span className="flex-1" />
           <Button type="button" variant="secondary" onClick={cerrar} disabled={loading}>
             Cancelar
           </Button>
