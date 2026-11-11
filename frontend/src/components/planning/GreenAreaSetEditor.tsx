@@ -34,7 +34,8 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
   const [description, setDescription] = useState(existing?.description ?? '');
   const [zoneIds, setZoneIds] = useState<number[]>(existing?.zones.map((z) => z.id) ?? []);
   const [activityIds, setActivityIds] = useState<Set<number>>(new Set(existing?.activities.map((a) => a.id)));
-  const [picking, setPicking] = useState(false);
+  // Un conjunto nuevo empieza por el mapa: es lo que lo define.
+  const [picking, setPicking] = useState(existing == null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
@@ -48,6 +49,22 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
     existing?.zones.forEach((z) => byId.set(z.id, z.displayName));
     return byId;
   }, [options, existing]);
+
+  const sectorOf = useMemo(() => {
+    const byId = new Map<number, string>();
+    options.sectors.forEach((sector) => (options.sectionsBySector[sector.id] ?? []).forEach((s) => byId.set(s.id, sector.name)));
+    return byId;
+  }, [options]);
+
+  /** Los jardines elegidos, por sector, para ver de un vistazo qué cubre el conjunto. */
+  const bySector = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    zoneIds.forEach((id) => {
+      const sector = sectorOf.get(id) ?? 'Sin sector';
+      groups.set(sector, [...(groups.get(sector) ?? []), names.get(id) ?? `Sección ${id}`]);
+    });
+    return [...groups];
+  }, [zoneIds, sectorOf, names]);
 
   const toggleActivity = (id: number) => setActivityIds((prev) => {
     const next = new Set(prev);
@@ -89,6 +106,26 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
     <section className="space-y-6">
       <PageHeader title={existing ? existing.name : 'Nuevo conjunto'} />
       <Card>
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="secondary" onClick={() => setPicking(true)}>Elegir jardines en el mapa</Button>
+            <span className="text-sm text-neutral-700">
+              {zoneIds.length === 1 ? '1 jardín elegido' : `${gardensLabel(zoneIds.length)} elegidos`}
+            </span>
+          </div>
+          {bySector.length > 0 && (
+            <ul className="space-y-1 text-sm">
+              {bySector.map(([sector, gardens]) => (
+                <li key={sector}>
+                  <span className="font-medium text-neutral-900">{sector} ({gardens.length}):</span>{' '}
+                  <span className="text-neutral-600">{gardens.join(' · ')}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </Card>
+      <Card>
         <div className="space-y-4">
           <Input id="set-name" label="Nombre" value={name} onChange={setName} maxLength={120} required />
           <Textarea id="set-description" label="Descripción (opcional)" value={description} onChange={setDescription} maxLength={2000} />
@@ -108,17 +145,6 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
               </div>
             ))}
           </fieldset>
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <Button variant="secondary" onClick={() => setPicking(true)}>Elegir jardines en el mapa</Button>
-              <span className="text-sm text-neutral-700">
-                {zoneIds.length === 1 ? '1 jardín elegido' : `${gardensLabel(zoneIds.length)} elegidos`}
-              </span>
-            </div>
-            {zoneIds.length > 0 && (
-              <p className="text-sm text-neutral-500">{zoneIds.map((id) => names.get(id) ?? `Sección ${id}`).join(' · ')}</p>
-            )}
-          </div>
         </div>
       </Card>
       {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}

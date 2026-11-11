@@ -92,6 +92,23 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     expect(await screen.findByText('Otra persona cambió este conjunto mientras lo editabas. Recarga para ver su versión.')).toBeInTheDocument();
   });
 
+  it('un conjunto nuevo abre el mapa de entrada y resume los jardines por sector', async () => {
+    render(<GreenAreaSetForm />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar mapa' }));
+
+    expect(screen.getByText('Sector 1 (1):')).toBeInTheDocument();
+    expect(screen.getByText('Jardín Central')).toBeInTheDocument();
+  });
+
+  it('al editar un conjunto no abre el mapa por su cuenta', async () => {
+    api.get.mockResolvedValue({ id: 3, name: 'Pabellones', description: null, version: 0, activities: [], zones: [], warnings: [] });
+    render(<GreenAreaSetForm setId={3} />);
+
+    await screen.findByRole('button', { name: 'Guardar conjunto' });
+    expect(screen.queryByRole('button', { name: 'Confirmar mapa' })).not.toBeInTheDocument();
+  });
+
   it('dar de baja pide confirmación', async () => {
     api.get.mockResolvedValue({ id: 3, name: 'Pabellones', description: null, version: 0, activities: [], zones: [], warnings: [] });
     api.remove.mockResolvedValue(null);
