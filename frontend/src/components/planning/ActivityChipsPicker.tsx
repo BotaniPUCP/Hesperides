@@ -11,8 +11,8 @@ interface Props {
 }
 
 const FOCUS = 'focus:outline-hidden focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-2';
-/** Los grupos se ven como los filtros de tipo de vegetación del Inventario verde. */
-const GROUP = 'inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs select-none transition-colors duration-150';
+/** Los grupos son pestañas, como en Directorio y Reportes; las actividades son chips. */
+const GROUP = 'inline-flex min-h-10 items-center gap-2 border-b-2 px-3 py-2 text-sm font-semibold transition-colors';
 const CHIP = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm transition-colors duration-150';
 const CHOSEN = 'border-brand-600 bg-brand-50 text-brand-900';
 
@@ -30,19 +30,18 @@ export function ActivityChipsPicker({ activities, selected, onToggle }: Props) {
 
   return (
     <div className="space-y-3">
-      <div role="tablist" aria-label="Grupos de actividades" className="flex flex-wrap gap-2">
+      <div role="tablist" aria-label="Grupos de actividades" className="flex flex-wrap gap-x-1 border-b border-neutral-200">
         {groups.map((g) => {
           const count = g.activities.filter((a) => selected.has(a.id)).length;
           const active = g.label === current;
           return (
             <button key={g.label} type="button" role="tab" aria-selected={active} onClick={() => setCurrent(g.label)}
               className={cn(GROUP, FOCUS, active
-                ? 'border-forest-800 bg-forest-800 font-semibold text-white'
-                : 'border-neutral-200 bg-neutral-0 font-medium text-neutral-700 hover:bg-neutral-100')}>
+                ? 'border-brand-600 text-brand-700'
+                : 'border-transparent text-neutral-700 hover:text-neutral-900')}>
               {g.label}
               {count > 0 && (
-                <span className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
-                  active ? 'bg-forest-700 text-white' : 'bg-neutral-100 text-neutral-600')}>{count}</span>
+                <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-900">{count}</span>
               )}
             </button>
           );

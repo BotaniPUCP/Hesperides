@@ -180,7 +180,7 @@ function FrequencyForm({
 
         <div className="flex flex-wrap items-center gap-2 pt-2">
           {frequencyToEdit && onDeactivate && (
-            <Button type="button" variant="ghost" disabled={loading}
+            <Button type="button" variant="danger" disabled={loading}
               onClick={async () => { if (await onDeactivate(frequencyToEdit.id)) onClose(); }}>
               Desactivar frecuencia
             </Button>
