@@ -444,6 +444,11 @@ en el repositorio (§4.2).
   tercerizadas incorporan `OrganizationPicker` y `ContactPicker` en sus propios specs. En
   particular, reemplazar `INCIDENT_COMPANY` y el texto «Reportado por» de incidencias se hace
   cuando se trabaje ese módulo: hoy otra rama lo está modificando.
+  > **Enmienda SPEC-107 (11 nov 2026):** el préstamo de jardines ya usa el Directorio, con
+  > `OrganizationPicker` y `ContactPicker`, y sus cuatro roles ven las organizaciones y los
+  > contactos de una reserva. «Pedido de» y «Para» quedan resueltos para reservas en SPEC-107 D-02
+  > (solicitante fijo, responsable que puede cambiar), y el vínculo gana un rol (§4.3). El capataz no mantiene el Directorio, pero sí lo consulta: los préstamos son
+  > trabajo de campo que él ejecuta.
 - **Reemplazar `RESERVATION_OWNER`** por una organización: lo hace el spec de préstamos.
 - **«Pedido de» y «Para»** (decisión del usuario): préstamos e incidencias guardan la
   organización que hace el pedido (obligatoria, con su contacto) y, **solo cuando hace falta**,

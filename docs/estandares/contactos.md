@@ -5,6 +5,10 @@ carga en **Directorio → Registro masivo → Contactos**, solo ADMIN y COORDINA
 [contactos.csv](../../backend/src/main/resources/imports/templates/contactos.csv), con una fila de ejemplo que hay que borrar
 antes de cargar. Las organizaciones se cargan primero ([organizaciones.md](organizaciones.md)).
 
+> **Pendiente (SPEC-106 §4.3, 11 nov 2026):** se agrega la columna opcional `roles` al final, un
+> rol por organización en el mismo orden, separados por `|`. Un archivo sin ella sigue valiendo.
+> Se documenta aquí cuando el código la acepte.
+
 | Columna | Obligatoria | Qué va |
 |---|---|---|
 | `nombre` | **Sí** | Nombre completo, hasta 200 caracteres |

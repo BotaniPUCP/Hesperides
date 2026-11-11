@@ -349,6 +349,11 @@ El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
 ## Anexo A — Matriz de permisos por rol × módulo × acción
 
+> **Enmienda SPEC-107 (11 nov 2026):** las reservas de jardines son un módulo propio. Los cuatro
+> roles leen la agenda, sus jardines y sus organizaciones; registrar, editar, anular, consultar
+> avisos e importar por archivo es solo de ADMIN y COORDINADOR. El operario también ve las
+> organizaciones, el solicitante y el responsable de una reserva: es lo que necesita para llegar al jardín.
+
 > **Enmienda SPEC-203 (8 nov 2026):** la planificación preventiva, sus conjuntos y las frecuencias son
 > solo de ADMIN y COORDINADOR. SUPERVISOR y OPERARIO dejan de leer las frecuencias (antes las
 > consultaban): planificar es trabajo de coordinación, no de campo (SPEC-203 D-12).
@@ -399,6 +404,8 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **Directorio** (SPEC-106) | Vincular un contacto existente a otra organización | C | C | | |
 | **Directorio** (SPEC-106) | Editar y dar de baja organizaciones y contactos | UD | UD | | |
 | **Directorio** (SPEC-106) | Ver y buscar organizaciones y contactos | L | L | L | |
+| **Reservas** (SPEC-107) | Registrar, editar, anular e importar reservas; consultar avisos de cruce y cercanía | CUDA | CUDA | | |
+| **Reservas** (SPEC-107) | Ver la agenda, sus jardines y sus organizaciones | L | L | L | L |
 | **6. Reportes** | Generar y ver reportes de dirección/coordinación | L | L | L (solo de su cuadrilla) | |
 | **Configuración del sistema** (`system_parameters`) | Editar parámetros generales | CU | | | |
 

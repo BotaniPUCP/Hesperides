@@ -11,6 +11,7 @@ export const SPANISH_BACKEND_MESSAGES: readonly RegExp[] = [
   /^El parámetro \S+ (tiene un tipo de valor no soportado: .+|debe ser un número entero|debe ser un número decimal válido|no es editable)$/,
   /^La longitud mínima de contraseña debe estar entre \d+ y \d+$/,
   /^El número de intentos de acceso debe estar entre 1 y \d+$/,
+  /^La distancia de aviso por reservas debe estar entre 0 y \d+$/,
   /^Las hectáreas del campus deben estar entre 0 y \S+$/,
   // Catálogos y medidas adicionales (SPEC-105)
   /^Ya existe un ítem con el código .+ en .+$/,

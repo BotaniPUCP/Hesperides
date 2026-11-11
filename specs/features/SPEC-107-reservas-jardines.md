@@ -274,67 +274,56 @@ metro.
 
 ## 4. Migración de base de datos
 
-Siguiente número libre en la rama (hoy V039). Propietaria: SPEC-107.
+> **Enmienda del 11 nov 2026:** la primera iteración (commit `803c623`) ya creó
+> **`V039__create_garden_reservations.sql`** con el modelo anterior (`organization_id`,
+> `contact_id` opcional), el parámetro `RESERVATION_NEARBY_METERS`, el tope de 7 días como
+> `CHECK` y el tipo de lote `reservations`. Una migración aplicada no se edita (checksum de
+> Flyway): el modelo de D-02, D-02b y D-08b llega en la **siguiente libre (hoy V040)**.
+> Propietaria: SPEC-107, con la enmienda a SPEC-106.
 
 ```sql
-CREATE SEQUENCE garden_reservation_code_seq;
+-- D-02: quien pide y quien es responsable.
+ALTER TABLE garden_reservations RENAME COLUMN organization_id TO requested_by_organization_id;
+ALTER TABLE garden_reservations RENAME COLUMN contact_id TO requester_contact_id;
+ALTER TABLE garden_reservations
+    ADD COLUMN requested_for_organization_id BIGINT REFERENCES organizations(id),
+    ADD COLUMN responsible_contact_id        BIGINT REFERENCES contacts(id);
 
-CREATE TABLE garden_reservations (
-    id                 BIGSERIAL PRIMARY KEY,
-    code               VARCHAR(20) NOT NULL UNIQUE
-                       DEFAULT 'RES-' || lpad(nextval('garden_reservation_code_seq')::text, 4, '0'),
-    place_id           BIGINT NOT NULL REFERENCES places(id),
-    requested_by_organization_id  BIGINT NOT NULL REFERENCES organizations(id),
-    requester_contact_id          BIGINT NOT NULL REFERENCES contacts(id),
-    requested_for_organization_id BIGINT REFERENCES organizations(id),
-    responsible_contact_id        BIGINT NOT NULL REFERENCES contacts(id),
-    starts_at          TIMESTAMPTZ NOT NULL,
-    ends_at            TIMESTAMPTZ NOT NULL,
-    purpose            VARCHAR(300),
-    cancelled_at       TIMESTAMPTZ,
-    cancel_reason      VARCHAR(500),
-    created_by_user_id BIGINT NOT NULL REFERENCES users(id),
-    import_batch_id    BIGINT REFERENCES import_batches(id),
-    version            BIGINT NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at         TIMESTAMP,
-    CONSTRAINT chk_reservation_period CHECK (ends_at > starts_at),
-    CONSTRAINT chk_reservation_cancel CHECK ((cancelled_at IS NULL) = (cancel_reason IS NULL)),
-    CONSTRAINT chk_reservation_for_other CHECK (requested_for_organization_id IS DISTINCT FROM requested_by_organization_id)
-);
-CREATE INDEX idx_garden_reservations_place_time ON garden_reservations (place_id, starts_at) WHERE deleted_at IS NULL;
-CREATE INDEX idx_garden_reservations_time ON garden_reservations (starts_at, ends_at) WHERE deleted_at IS NULL;
+-- Una reserva de la primera iteración sin contacto no tiene solicitante: solo pudo crearse
+-- en bases de prueba. Se da de baja en vez de inventarle uno.
+UPDATE garden_reservations SET deleted_at = CURRENT_TIMESTAMP
+ WHERE requester_contact_id IS NULL AND deleted_at IS NULL;
+UPDATE garden_reservations SET responsible_contact_id = requester_contact_id;
+
+ALTER TABLE garden_reservations
+    ADD CONSTRAINT chk_reservation_requester
+        CHECK (deleted_at IS NOT NULL OR (requester_contact_id IS NOT NULL AND responsible_contact_id IS NOT NULL)),
+    ADD CONSTRAINT chk_reservation_for_other
+        CHECK (requested_for_organization_id IS DISTINCT FROM requested_by_organization_id);
 CREATE INDEX idx_garden_reservations_requested_by ON garden_reservations (requested_by_organization_id) WHERE deleted_at IS NULL;
 CREATE INDEX idx_garden_reservations_requested_for ON garden_reservations (requested_for_organization_id) WHERE deleted_at IS NULL;
 
 -- D-02b: una fila por cada responsable que tuvo la reserva, incluido el primero.
 -- responsible_contact_id de la reserva repite la última, para leer la agenda sin agrupar.
 CREATE TABLE garden_reservation_responsibles (
-    id                  BIGSERIAL PRIMARY KEY,
-    reservation_id      BIGINT    NOT NULL REFERENCES garden_reservations(id),
-    contact_id          BIGINT    NOT NULL REFERENCES contacts(id),
-    assigned_by_user_id BIGINT    NOT NULL REFERENCES users(id),
+    id                  BIGSERIAL   PRIMARY KEY,
+    reservation_id      BIGINT      NOT NULL REFERENCES garden_reservations(id),
+    contact_id          BIGINT      NOT NULL REFERENCES contacts(id),
+    assigned_by_user_id BIGINT      NOT NULL REFERENCES users(id),
     assigned_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_reservation_responsibles ON garden_reservation_responsibles (reservation_id, assigned_at);
+INSERT INTO garden_reservation_responsibles (reservation_id, contact_id, assigned_by_user_id, assigned_at)
+SELECT id, responsible_contact_id, created_by_user_id, created_at
+  FROM garden_reservations WHERE responsible_contact_id IS NOT NULL;
 
 -- D-08b, enmienda a SPEC-106: el rol del contacto en cada organización.
 ALTER TABLE contact_organizations ADD COLUMN role VARCHAR(100);
-
-INSERT INTO system_parameters (code, label, value, value_type, description, is_editable)
-VALUES ('RESERVATION_NEARBY_METERS', 'Distancia de aviso por reservas (m)', '10', 'INTEGER',
-        'Metros desde el borde de un jardín reservado dentro de los cuales se avisa al programar trabajo', TRUE);
 ```
 
-Y `import_batches` admite el tipo nuevo, igual que hizo V037 con el Directorio:
-
-```sql
-ALTER TABLE import_batches DROP CONSTRAINT import_batches_kind_check;
-ALTER TABLE import_batches ADD CONSTRAINT import_batches_kind_check
-    CHECK (kind IN ('specimens', 'waste-bins', 'drinking-fountains', 'species-photos',
-                    'organizations', 'contacts', 'reservations'));
-```
+El `CHECK` en vez de `NOT NULL` deja vivas las filas dadas de baja sin contacto; para toda
+reserva vigente el efecto es el mismo. Antes de escribir V040, confirmar con el equipo si V039 se
+aplicó en alguna base compartida y si tiene reservas sin contacto.
 
 ## 5. Comportamiento
 
