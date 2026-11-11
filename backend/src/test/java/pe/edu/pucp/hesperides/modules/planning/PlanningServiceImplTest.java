@@ -127,7 +127,7 @@ class PlanningServiceImplTest {
 
     @Test
     void aSpecimenCountsOnItsOwnEvenInsideAnAttendedGarden() {
-        // D-13: el jardín 1 se atendió ayer, pero el ejemplar 700 nunca fue nombrado en una intervención.
+        // D-14: el jardín 1 se atendió ayer, pero el ejemplar 700 nunca fue nombrado en una intervención.
         when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Mixto", Set.of(1L), Set.of(700L), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
         completado(1, HOY.minusDays(1));

@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  * Traduce lo que entregan las intervenciones a lo que entiende el Engine.
  *
  * <p>El Engine juzga unidades atendidas sin saber qué son. Un jardín y un ejemplar
- * cuentan por separado (SPEC-203 D-13), así que cada uno es una unidad: la sección
+ * cuentan por separado (SPEC-203 D-14), así que cada uno es una unidad: la sección
  * entra con su id y el ejemplar con el suyo en negativo, para que no choquen (los
  * ids de ambas tablas son positivos).
  */

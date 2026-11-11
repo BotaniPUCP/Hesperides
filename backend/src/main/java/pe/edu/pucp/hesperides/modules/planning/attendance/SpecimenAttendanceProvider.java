@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Lo que la planificación necesita saber de los ejemplares. Un ejemplar cuenta
  * solo cuando una intervención lo nombra: atender el jardín donde está no lo da
- * por atendido (SPEC-203 D-13). Lo implementa el módulo de intervenciones.
+ * por atendido (SPEC-203 D-14). Lo implementa el módulo de intervenciones.
  */
 public interface SpecimenAttendanceProvider {
 

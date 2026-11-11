@@ -49,7 +49,7 @@ intervenciones reales y alimenta el reporte mensual. Falla en tres cosas:
 |---|---|
 | **Jardín** | Una zona de tipo `SECTION` (`zones`), de cualquier tipo de paisaje: área verde o **xerofítica** (`LANDSCAPE_TYPE = XEROPHYTIC`). Es sobre lo que recae una actividad preventiva. |
 | **Lugar** | Una referencia para ubicarse (M9). **No se planifica sobre él.** Excepción: un lugar con `places.zone_id` es un jardín popular que la gente conoce por ese nombre; se usa su nombre para mostrar el jardín, y una ubicación de intervención registrada con ese lugar cuenta para su sección. |
-| **Conjunto de áreas verdes** (conjunto) | Una lista guardada de jardines con nombre, armada desde el mapa. No coincide necesariamente con un sector ni con una zona de supervisión. Un jardín puede estar en varios conjuntos. |
+| **Conjunto de áreas verdes** (conjunto) | Una lista guardada de jardines, ejemplares o ambos, con nombre, armada desde el mapa (D-14). No coincide necesariamente con un sector ni con una zona de supervisión. Un jardín o un ejemplar puede estar en varios conjuntos. |
 | **Actividad** | Un ítem del catálogo `INTERVENTION_TYPE` (corte de césped, poda sanitaria, riego…). Es el `activity_type_item_id` de las reglas y el `intervention_type_item_id` de las intervenciones. |
 | **Regla de frecuencia** | Una fila vigente de `maintenance_frequencies` (SPEC-101). Dice cada cuánto se hace una actividad. |
 | **Última vez de un jardín** | La fecha más reciente en que el capataz marcó completado ese jardín para esa actividad (§5.4). |
@@ -186,6 +186,23 @@ Préstamos y periodos bloqueantes (REQ 1.12): todavía no existen; cuando exista
 cálculo de §5.5 en el engine para que esa regla se añada ahí. También fuera: contratistas,
 incidencias (un pedido sobre un jardín que ya está en un conjunto se resuelve con la
 planificación de ese conjunto) y notificaciones por correo.
+
+**D-14 · Un conjunto puede tener ejemplares, y cada uno cuenta por separado (10 nov 2026).**
+Decisión del usuario. La gran poda de fin de año se planifica sobre árboles concretos, no sobre
+secciones, así que un conjunto lleva jardines, ejemplares o ambos (`green_area_set_elements`,
+V040). Un ejemplar se da por atendido **solo** cuando una ubicación completada lo nombra
+(`intervention_elements`); atender el jardín donde está no lo cuenta. Para el engine, jardín y
+ejemplar son unidades iguales: la referencia sigue siendo la más antigua (D-03), y el avance y
+los «sin registro previo» cuentan las dos. La sección y el sector de un ejemplar salen de su
+posición, no se guardan: un tercio del catastro está fuera de toda sección.
+*Descartado:* dar por atendido al ejemplar cuando se atiende su jardín, porque la poda de un
+árbol no es el corte del césped que lo rodea.
+
+**D-15 · Cualquier actividad sirve para jardines y para ejemplares.**
+Las entrevistas no separan del todo: la poda aplica a árboles, pero también a arbustos dentro de
+jardines, y el control fitosanitario cubre árboles y áreas extensas. El coordinador elige; el
+sistema no restringe. Si aparecen errores reales, el catálogo podrá marcar a qué se aplica cada
+actividad.
 
 ## 3. Contratos de API
 
@@ -459,6 +476,8 @@ registro previo al principio) → `IN_PROGRESS` → `SCHEDULED` → `NOT_DUE` (m
 - fecha programada = `suggestedDate`: hoy si la fila está `DUE` u `OVERDUE`; `ref + min`
   si está `NOT_DUE`; la apertura de la ventana en `ANNUAL_WINDOW`; `estimatedDate` en la cuota;
 - una ubicación por jardín del conjunto (`zoneId`), sin cantidad;
+- si el conjunto tiene ejemplares, una ubicación más con todos ellos (`elementIds`), descrita
+  «Ejemplares del conjunto»: una tarjeta por árbol sería inmanejable (D-14);
 - descripción «Planificada desde: <actividad> en <conjunto>».
 
 **Aviso de atendido hace poco.** Cada vez que el formulario tiene tipo, fecha y ubicaciones con
