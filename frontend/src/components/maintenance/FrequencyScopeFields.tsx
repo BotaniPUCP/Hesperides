@@ -1,6 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import type { GreenAreaSetSummary, MaintenanceScope } from '@shared/types';
+import { SETS_PATH } from '@/components/planning/GreenAreaSetsScreen';
 
 const SELECT = 'w-full rounded-md border border-neutral-300 bg-neutral-0 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
 const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
@@ -34,6 +36,13 @@ export function FrequencyScopeFields({ scope, setId, sets, onScope, onSet }: Pro
           <span className="mt-1 block text-xs text-neutral-500">
             Reemplaza a la frecuencia de todo el campus solo para los jardines de este conjunto.
           </span>
+          {setId != null && (
+            // Otra pestaña: navegar aquí cerraría el formulario y se perdería lo escrito.
+            <Link href={`${SETS_PATH}/${setId}`} target="_blank" rel="noopener"
+              className="mt-1 inline-block text-xs font-medium text-brand-700 underline hover:text-brand-900">
+              Ver este conjunto en otra pestaña ↗
+            </Link>
+          )}
         </div>
       )}
     </>
