@@ -13,6 +13,7 @@ import type { ActivityOption } from '@/components/maintenance/activityGroups';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 import { SETS_PATH } from './GreenAreaSetsScreen';
 import { ActivityChipsPicker } from './ActivityChipsPicker';
+import { SelectedGardensSummary } from './SelectedGardensSummary';
 import { gardensLabel } from './planningTexts';
 
 export interface SetOptions {
@@ -113,16 +114,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
               {zoneIds.length === 1 ? '1 jardín elegido' : `${gardensLabel(zoneIds.length)} elegidos`}
             </span>
           </div>
-          {bySector.length > 0 && (
-            <ul className="space-y-1 text-sm">
-              {bySector.map(([sector, gardens]) => (
-                <li key={sector}>
-                  <span className="font-medium text-neutral-900">{sector} ({gardens.length}):</span>{' '}
-                  <span className="text-neutral-600">{gardens.join(' · ')}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <SelectedGardensSummary bySector={bySector} />
         </div>
       </Card>
       <Card>

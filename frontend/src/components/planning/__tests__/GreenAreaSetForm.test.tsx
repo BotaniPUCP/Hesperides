@@ -104,8 +104,9 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Confirmar mapa' }));
 
-    expect(screen.getByText('Sector 1 (1):')).toBeInTheDocument();
-    expect(screen.getByText('Jardín Central')).toBeInTheDocument();
+    expect(screen.getByText('Sector 1')).toBeInTheDocument();
+    expect(screen.getByText('1 jardín')).toBeInTheDocument();
+    expect(screen.getByText('Jardín Central')).toBeVisible();
   });
 
   it('al editar un conjunto no abre el mapa por su cuenta', async () => {
