@@ -12,6 +12,13 @@ export const DIRECTORY_MESSAGES: Record<string, string> = {
   'The mobile must have 9 digits and start with 9': 'El celular debe tener 9 dígitos y empezar con 9.',
   'A contact must belong to at least one active organization':
     'Un contacto debe pertenecer al menos a una organización vigente.',
+  'The roles can only name organizations in the request':
+    'Solo puedes poner un rol a organizaciones que estén en la misma petición.',
+  'Each role must name the organization it belongs to':
+    'Cada rol debe ir junto a la organización a la que pertenece.',
+  'The role cannot exceed 100 characters': 'El rol no puede superar los 100 caracteres.',
+  'The contact is not linked to that organization':
+    'El contacto no está vinculado a esa organización, así que no tiene rol que cambiar.',
   'The file has rows with errors: fix them and upload it again':
     'El archivo tiene filas con errores: corrígelas y vuelve a subirlo. No se guardó nada.',
   'The file is empty': 'El archivo está vacío.',
@@ -26,6 +33,7 @@ export const DIRECTORY_PATTERNS: readonly MessagePattern[] = [
     ([, code]) => `La organización ${code} está dada de baja. Elige otra o pide que la reactiven.`],
   [/^The contact (\S+) is deactivated$/, ([, code]) => `El contacto ${code} está dado de baja.`],
   [/^The contact \S+ already belongs to «(.+)»$/, ([, name]) => `El contacto ya pertenece a «${name}».`],
+  [/^The role cannot exceed (\d+) characters$/, ([, max]) => `El rol no puede superar los ${max} caracteres.`],
   [/^The file is missing the columns: (.+)$/, ([, columns]) => `Al archivo le faltan las columnas: ${columns}. Usa la plantilla.`],
   [/^The file has unknown columns: (.+?)\. /,
     ([, columns]) => `El archivo tiene columnas que no son del estándar: ${columns}. Revisa cómo están escritas.`],

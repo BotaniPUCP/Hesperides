@@ -37,7 +37,8 @@ import pe.edu.pucp.hesperides.modules.reservations.service.ReservationsService;
 @RequiredArgsConstructor
 public class ReservationImportPlanner {
 
-    static final List<String> COLUMNS = List.of("jardin", "organizacion", "contacto", "inicio", "fin", "motivo");
+    static final List<String> COLUMNS = List.of("jardin", "pedido_de", "solicitante", "para", "responsable",
+            "inicio", "fin", "motivo");
     static final String KIND = "reservations";
 
     private static final int MAX_PURPOSE = 300;
@@ -62,8 +63,10 @@ public class ReservationImportPlanner {
     private StagedRow planRow(CsvRow row) {
         List<RowIssue> issues = new ArrayList<>();
         String gardenText = text(row, "jardin");
-        String organizationText = text(row, "organizacion");
-        String contactText = text(row, "contacto");
+        String requestedByText = text(row, "pedido_de");
+        String requesterText = text(row, "solicitante");
+        String requestedForText = text(row, "para");
+        String responsibleText = text(row, "responsable");
         String purpose = text(row, "motivo");
         OffsetDateTime startsAt = date(row, issues, "inicio");
         OffsetDateTime endsAt = date(row, issues, "fin");
@@ -81,28 +84,43 @@ public class ReservationImportPlanner {
             }
         }
 
-        OrganizationRow organization = null;
-        if (organizationText == null) {
-            issues.add(new RowIssue(row.line(), "organizacion", IssueCode.REQUIRED, null));
-        } else {
-            OrganizationSuggestion found = directory.organizationMatching(organizationText).orElse(null);
-            if (found == null) {
-                issues.add(new RowIssue(row.line(), "organizacion", IssueCode.UNKNOWN_ORGANIZATION, organizationText));
-            } else {
-                organization = reads.organization(found.code());
+        OrganizationRow requestedBy = organization(row, issues, "pedido_de", requestedByText);
+        ContactRow requester = null;
+        if (requestedBy != null && requesterText != null) {
+            requester = reads.contactMatching(requesterText, requestedBy.id());
+            if (requester == null) {
+                issues.add(new RowIssue(row.line(), "solicitante", IssueCode.UNKNOWN_CONTACT, requesterText));
             }
+        } else if (requestedBy != null) {
+            issues.add(new RowIssue(row.line(), "solicitante", IssueCode.REQUIRED, null));
         }
 
-        ContactRow contact = null;
-        if (contactText != null) {
-            if (organization == null) {
-                // Sin organización no hay a qué vincular el contacto; el error de la organización ya está.
-                contact = null;
-            } else {
-                contact = reads.contactMatching(contactText, organization.id());
-                if (contact == null) {
-                    issues.add(new RowIssue(row.line(), "contacto", IssueCode.UNKNOWN_CONTACT, contactText));
+        OrganizationRow requestedFor = null;
+        if (requestedForText != null) {
+            if (requestedBy != null && directory.organizationMatching(requestedForText)
+                    .map(OrganizationSuggestion::code).orElse(null) instanceof String code
+                    && !code.equals(requestedBy.code())) {
+                requestedFor = reads.organization(code);
+                if (requestedFor == null) {
+                    issues.add(new RowIssue(row.line(), "para", IssueCode.UNKNOWN_ORGANIZATION, requestedForText));
                 }
+            } else if (requestedBy == null) {
+                issues.add(new RowIssue(row.line(), "para", IssueCode.UNKNOWN_ORGANIZATION, requestedForText));
+            }
+            // Igual a «Pedido de» se guarda vacío, sin error (D-02).
+        }
+
+        ContactRow responsible = null;
+        if (responsibleText == null) {
+            responsible = requester; // Responsable vacío: el solicitante (§5.4).
+        } else if (requestedBy != null) {
+            List<ContactRow> matches = reads.contactsByCodeOrName(responsibleText);
+            if (matches.isEmpty()) {
+                issues.add(new RowIssue(row.line(), "responsable", IssueCode.UNKNOWN_CONTACT, responsibleText));
+            } else if (matches.size() > 1) {
+                issues.add(new RowIssue(row.line(), "responsable", IssueCode.AMBIGUOUS_CONTACT, responsibleText));
+            } else {
+                responsible = matches.get(0);
             }
         }
 
@@ -121,18 +139,32 @@ public class ReservationImportPlanner {
         List<Warning> warnings = List.of();
         RowAction action = RowAction.ERROR;
         ReservationRequest request = null;
-        if (issues.isEmpty()) {
-            request = new ReservationRequest(garden.id(), organization.code(),
-                    contact == null ? null : contact.code(), startsAt, endsAt, purpose, null);
+        if (issues.isEmpty() && garden != null && requestedBy != null && requester != null && responsible != null) {
+            request = new ReservationRequest(garden.id(), requestedBy.code(), requester.code(),
+                    requestedFor == null ? null : requestedFor.code(), responsible.code(), startsAt, endsAt,
+                    purpose, null);
             warnings = reservations.check(garden.id(), startsAt, endsAt, null);
             action = warnings.isEmpty() ? RowAction.CREATE : RowAction.WARNING;
         }
 
         String gardenName = garden == null ? gardenText : garden.name();
-        String organizationName = organization == null ? organizationText : organization.name();
-        PlannedRow planned = new PlannedRow(row.line(), gardenName, organizationName, action, List.copyOf(issues),
+        String requestedByName = requestedBy == null ? requestedByText : requestedBy.name();
+        PlannedRow planned = new PlannedRow(row.line(), gardenName, requestedByName, action, List.copyOf(issues),
                 warnings);
         return new StagedRow(planned, action == RowAction.ERROR ? null : request);
+    }
+
+    private OrganizationRow organization(CsvRow row, List<RowIssue> issues, String column, String textValue) {
+        if (textValue == null) {
+            issues.add(new RowIssue(row.line(), column, IssueCode.REQUIRED, null));
+            return null;
+        }
+        OrganizationRow found = directory.organizationMatching(textValue)
+                .map(OrganizationSuggestion::code).map(reads::organization).orElse(null);
+        if (found == null) {
+            issues.add(new RowIssue(row.line(), column, IssueCode.UNKNOWN_ORGANIZATION, textValue));
+        }
+        return found;
     }
 
     private OffsetDateTime date(CsvRow row, List<RowIssue> issues, String column) {

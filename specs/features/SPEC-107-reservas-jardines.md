@@ -278,7 +278,8 @@ metro.
 > **`V039__create_garden_reservations.sql`** con el modelo anterior (`organization_id`,
 > `contact_id` opcional), el parámetro `RESERVATION_NEARBY_METERS`, el tope de 7 días como
 > `CHECK` y el tipo de lote `reservations`. Una migración aplicada no se edita (checksum de
-> Flyway): el modelo de D-02, D-02b y D-08b llega en la **siguiente libre (hoy V040)**.
+> Flyway): el modelo de D-02, D-02b y D-08b llegó en **V040** (rol del vínculo) y
+> **V041** (solicitante, responsable e historial), implementados el 11 nov 2026.
 > Propietaria: SPEC-107, con la enmienda a SPEC-106.
 
 ```sql
@@ -317,13 +318,12 @@ INSERT INTO garden_reservation_responsibles (reservation_id, contact_id, assigne
 SELECT id, responsible_contact_id, created_by_user_id, created_at
   FROM garden_reservations WHERE responsible_contact_id IS NOT NULL;
 
--- D-08b, enmienda a SPEC-106: el rol del contacto en cada organización.
-ALTER TABLE contact_organizations ADD COLUMN role VARCHAR(100);
+-- D-08b ya entró: el rol del vínculo lo agrega V040 (SPEC-106 §4.3).
 ```
 
 El `CHECK` en vez de `NOT NULL` deja vivas las filas dadas de baja sin contacto; para toda
-reserva vigente el efecto es el mismo. Antes de escribir V040, confirmar con el equipo si V039 se
-aplicó en alguna base compartida y si tiene reservas sin contacto.
+reserva vigente el efecto es el mismo. Al escribir V041 (11 nov 2026) la base de desarrollo
+tenía 0 reservas, así que las dos correcciones de datos no encontraron filas.
 
 ## 5. Comportamiento
 

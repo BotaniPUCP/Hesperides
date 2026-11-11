@@ -28,6 +28,8 @@ public final class ReservationImportDtos {
         GARDEN_NOT_RESERVABLE,
         UNKNOWN_ORGANIZATION,
         UNKNOWN_CONTACT,
+        /** Un nombre de contacto que coincide con dos personas: se usa su código (§5.4). */
+        AMBIGUOUS_CONTACT,
         DATE_FORMAT,
         END_BEFORE_START,
         MAX_DURATION,

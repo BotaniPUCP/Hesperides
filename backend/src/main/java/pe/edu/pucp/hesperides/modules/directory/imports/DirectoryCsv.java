@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.directory.imports;
 
+import java.util.ArrayList;
 import java.util.List;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvTable;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
@@ -16,13 +17,15 @@ final class DirectoryCsv {
     private DirectoryCsv() {
     }
 
-    static CsvTable read(byte[] csv, List<String> columns) {
+    static CsvTable read(byte[] csv, List<String> columns, List<String> optionalColumns) {
         CsvTable table = CsvTable.parse(csv);
+        List<String> allowed = new ArrayList<>(columns);
+        allowed.addAll(optionalColumns);
         List<String> missing = columns.stream().filter(c -> !table.header().contains(c)).toList();
         if (!missing.isEmpty()) {
             throw new ValidationException("The file is missing the columns: " + String.join(", ", missing));
         }
-        List<String> unknown = table.header().stream().filter(c -> !columns.contains(c)).toList();
+        List<String> unknown = table.header().stream().filter(c -> !allowed.contains(c)).toList();
         if (!unknown.isEmpty()) {
             throw new ValidationException("The file has unknown columns: " + String.join(", ", unknown)
                     + ". Check the spelling against the standard");

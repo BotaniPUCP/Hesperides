@@ -57,7 +57,7 @@ public class ContactReadRepository {
         }
         return jdbc.query(DirectoryQueries.ORGANIZATIONS_OF_CONTACTS, new MapSqlParameterSource("ids", contactIds),
                 (rs, i) -> new Link(rs.getLong("contact_id"), new OrganizationRef(rs.getString("code"),
-                        rs.getString("name"), rs.getBoolean("active"))))
+                        rs.getString("name"), rs.getBoolean("active"), rs.getString("role"))))
                 .stream().collect(Collectors.groupingBy(Link::contactId,
                         Collectors.mapping(Link::organization, Collectors.toList())));
     }

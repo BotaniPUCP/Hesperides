@@ -19,8 +19,17 @@ export interface ReservationOrganizationRef {
 export interface ReservationContactRef {
   code: string;
   fullName: string;
+  /** Rol del vínculo con la organización de la reserva (D-08b). Null sin rol. */
+  role: string | null;
   mobile: string | null;
   extension: string | null;
+}
+
+/** Una fila del historial de responsables (D-02b); solo viene en la ficha. */
+export interface ReservationResponsibleEntry {
+  contact: Pick<ReservationContactRef, 'code' | 'fullName' | 'role'>;
+  assignedAt: string;
+  assignedBy: string;
 }
 
 /**
@@ -38,8 +47,16 @@ export interface ReservationWarning {
 export interface Reservation {
   code: string;
   place: ReservationGardenRef;
-  organization: ReservationOrganizationRef;
-  contact: ReservationContactRef | null;
+  /** La organización que pide el jardín (D-02). */
+  requestedBy: ReservationOrganizationRef;
+  /** Quien hizo el pedido, de «Pedido de»; fijo. */
+  requester: ReservationContactRef;
+  /** La organización que usará el jardín; null cuando es la misma que pide. */
+  requestedFor: ReservationOrganizationRef | null;
+  /** El contacto a cargo; puede cambiar, y cada cambio deja fila en el historial. */
+  responsible: ReservationContactRef;
+  /** Solo viene lleno en la ficha (GET /{code}). */
+  responsibleHistory: ReservationResponsibleEntry[];
   startsAt: string;
   endsAt: string;
   purpose: string | null;
@@ -50,10 +67,16 @@ export interface Reservation {
   warnings: ReservationWarning[];
 }
 
+/**
+ * Al crear van los cuatro códigos; al editar `requestedByCode` y `requesterCode`
+ * no se envían, porque quiénes pidieron no cambian (D-02).
+ */
 export interface ReservationInput {
   placeId: number;
-  organizationCode: string;
-  contactCode: string | null;
+  requestedByCode?: string;
+  requesterCode?: string;
+  requestedForCode: string | null;
+  responsibleCode: string;
   startsAt: string;
   endsAt: string;
   purpose: string | null;
@@ -76,7 +99,7 @@ export interface ReservationGardenOption {
   aliases: string[];
 }
 
-/** Una organización con al menos una reserva, para el filtro (D-08). */
+/** Una organización que aparece como «Pedido de» o «Para» en alguna reserva (D-08). */
 export interface ReservationOrganizationOption {
   code: string;
   name: string;

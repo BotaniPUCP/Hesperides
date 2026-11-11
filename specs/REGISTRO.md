@@ -199,12 +199,14 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V037 | `V037__add_directory_import_batches.sql` | SPEC-106 §4.2 · SPEC-103 D-04 | El Directorio entra a `import_batches` (`organizations`, `contacts`); organizaciones y contactos guardan su `import_batch_id`, nulo en el alta manual |
 | V038 | `V038__create_green_area_sets.sql` | SPEC-203 §4 | Conjuntos de áreas verdes (secciones y actividades); las reglas `BY_ZONE`/`BY_SECTOR` pasan a `BY_SET` o `CAMPUS_WIDE` en todas sus versiones; se retiran `zone_id` y el teórico |
 | V039 | `V039__create_garden_reservations.sql` | SPEC-107 §4 | Reservas de jardines (`garden_reservations`), su correlativo `RES-####`, el parámetro `RESERVATION_NEARBY_METERS` y el tipo de lote `reservations` en el ciclo común de cargas |
+| V040 | `V040__add_contact_organization_role.sql` | SPEC-106 §4.3 | El rol del contacto en su organización (`contact_organizations.role`), parte del modelo de reservas de SPEC-107 (D-08b) |
+| V041 | `V041__reservation_requester_and_responsible.sql` | SPEC-107 §4 | El modelo de D-02 y D-02b: `requested_by_organization_id`, `requester_contact_id`, `requested_for_organization_id`, `responsible_contact_id`, el historial `garden_reservation_responsibles` y las restricciones de solicitante y «Para» distinto |
 
 ### Pendientes (sin número reservado)
 
-Al 11 nov 2026, en la rama de integración, el siguiente número libre es **V040**, sujeto a comprobarlo nuevamente al
-implementar. SPEC-107 §4 lo destina a pasar las reservas de V039 al modelo de solicitante,
-responsable y rol del contacto. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
+Al 11 nov 2026, en la rama de integración, el siguiente número libre es **V042**, sujeto a comprobarlo nuevamente al
+implementar. El modelo de solicitante, responsable y rol del contacto ya entró por V040 y V041.
+`Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
 | Trabajo | Propietaria | Depende de / tratamiento |

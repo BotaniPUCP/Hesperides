@@ -131,15 +131,21 @@ export function ReservationsScreen() {
                         <Link href={`/reservas/${reservation.code}`} className="hover:underline">
                           {reservation.place.name}
                         </Link>
-                        <span className="font-normal text-neutral-700"> · {reservation.organization.name}</span>
+                        <span className="font-normal text-neutral-700">
+                          {' '}· Pedido de {reservation.requestedBy.name}
+                          {reservation.requestedFor && ` para ${reservation.requestedFor.name}`}
+                        </span>
                       </p>
                       <p className="text-sm text-neutral-600">
-                        {reservation.contact
-                          ? `${reservation.contact.fullName}${reservation.contact.mobile
-                            ? ` · ${reservation.contact.mobile}` : ''}`
-                          : 'Sin contacto'}
-                        {reservation.purpose && ` · ${reservation.purpose}`}
+                        {reservation.responsible.fullName}
+                        {reservation.responsible.role && ` · ${reservation.responsible.role}`}
+                        {reservation.responsible.mobile && ` · ${reservation.responsible.mobile}`}
+                        {reservation.requester.code !== reservation.responsible.code
+                          && ` · Solicitó ${reservation.requester.fullName}`}
                       </p>
+                      {reservation.purpose && (
+                        <p className="text-sm text-neutral-600">{reservation.purpose}</p>
+                      )}
                       {reservation.cancelReason && (
                         <p className="text-sm text-neutral-600">Motivo de anulación: {reservation.cancelReason}</p>
                       )}

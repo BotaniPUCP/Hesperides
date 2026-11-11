@@ -25,9 +25,15 @@ import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 public class ReservationReadRepository {
 
     public record ReservationRow(String code, long placeId, String placeCode, String placeName,
-            String organizationCode, String organizationName, String contactCode, String contactName,
-            String contactMobile, String contactExtension, Instant startsAt, Instant endsAt, String purpose,
-            Instant cancelledAt, String cancelReason, long version) {
+            String requestedByCode, String requestedByName, String requestedForCode, String requestedForName,
+            String requesterCode, String requesterName, String requesterRole, String requesterMobile,
+            String requesterExtension, String responsibleCode, String responsibleName, String responsibleRole,
+            String responsibleMobile, String responsibleExtension, Instant startsAt, Instant endsAt,
+            String purpose, Instant cancelledAt, String cancelReason, long version) {
+    }
+
+    public record ResponsibleRow(String contactCode, String contactName, String contactRole,
+            Instant assignedAt, String assignedBy) {
     }
 
     public record GardenRow(long id, String code, String name, List<String> aliases) {
@@ -53,16 +59,37 @@ public class ReservationReadRepository {
             Instant endsAt, boolean here, Double distanceMeters) {
     }
 
+    /**
+     * El rol del responsable es el de su vínculo con «Para» si está vinculado a
+     * ella, si no con «Pedido de», si no ninguno (D-08b).
+     */
+    private static final String RESPONSIBLE_ROLE = """
+            COALESCE(
+                (SELECT l.role FROM contact_organizations l
+                  WHERE l.contact_id = rs.id AND l.organization_id = rf.id AND l.deleted_at IS NULL),
+                (SELECT l.role FROM contact_organizations l
+                  WHERE l.contact_id = rs.id AND l.organization_id = rb.id AND l.deleted_at IS NULL))""";
+
     private static final String SELECT_RESERVATION = """
             SELECT r.code, r.place_id, p.code AS place_code, p.name AS place_name,
-                   o.code AS organization_code, o.name AS organization_name,
-                   c.code AS contact_code, c.full_name AS contact_name, c.mobile AS contact_mobile,
-                   c.extension AS contact_extension, r.starts_at, r.ends_at, r.purpose,
-                   r.cancelled_at, r.cancel_reason, r.version
+                   rb.code AS requested_by_code, rb.name AS requested_by_name,
+                   rf.code AS requested_for_code, rf.name AS requested_for_name,
+                   rq.code AS requester_code, rq.full_name AS requester_name,
+                   (SELECT l.role FROM contact_organizations l
+                     WHERE l.contact_id = rq.id AND l.organization_id = rb.id AND l.deleted_at IS NULL)
+                       AS requester_role,
+                   rq.mobile AS requester_mobile, rq.extension AS requester_extension,
+                   rs.code AS responsible_code, rs.full_name AS responsible_name,
+            """ + RESPONSIBLE_ROLE + " AS responsible_role,\n"
+            + """
+                   rs.mobile AS responsible_mobile, rs.extension AS responsible_extension,
+                   r.starts_at, r.ends_at, r.purpose, r.cancelled_at, r.cancel_reason, r.version
               FROM garden_reservations r
               JOIN places p ON p.id = r.place_id
-              JOIN organizations o ON o.id = r.organization_id
-              LEFT JOIN contacts c ON c.id = r.contact_id""";
+              JOIN organizations rb ON rb.id = r.requested_by_organization_id
+              LEFT JOIN organizations rf ON rf.id = r.requested_for_organization_id
+              JOIN contacts rq ON rq.id = r.requester_contact_id
+              JOIN contacts rs ON rs.id = r.responsible_contact_id""";
 
     private static final String FILTERS = """
              WHERE r.deleted_at IS NULL
@@ -70,12 +97,18 @@ public class ReservationReadRepository {
                AND r.ends_at > :from
                AND r.starts_at < :to
                AND (CAST(:placeId AS BIGINT) IS NULL OR r.place_id = CAST(:placeId AS BIGINT))
-               AND (CAST(:organizationCode AS TEXT) IS NULL OR o.code = CAST(:organizationCode AS TEXT))""";
+               AND (CAST(:organizationCode AS TEXT) IS NULL
+                    OR rb.code = CAST(:organizationCode AS TEXT)
+                    OR rf.code = CAST(:organizationCode AS TEXT))""";
 
     private static final RowMapper<ReservationRow> RESERVATION = (rs, i) -> new ReservationRow(
             rs.getString("code"), rs.getLong("place_id"), rs.getString("place_code"), rs.getString("place_name"),
-            rs.getString("organization_code"), rs.getString("organization_name"), rs.getString("contact_code"),
-            rs.getString("contact_name"), rs.getString("contact_mobile"), rs.getString("contact_extension"),
+            rs.getString("requested_by_code"), rs.getString("requested_by_name"),
+            rs.getString("requested_for_code"), rs.getString("requested_for_name"),
+            rs.getString("requester_code"), rs.getString("requester_name"), rs.getString("requester_role"),
+            rs.getString("requester_mobile"), rs.getString("requester_extension"),
+            rs.getString("responsible_code"), rs.getString("responsible_name"), rs.getString("responsible_role"),
+            rs.getString("responsible_mobile"), rs.getString("responsible_extension"),
             rs.getObject("starts_at", OffsetDateTime.class).toInstant(),
             rs.getObject("ends_at", OffsetDateTime.class).toInstant(), rs.getString("purpose"),
             instant(rs, "cancelled_at"), rs.getString("cancel_reason"), rs.getLong("version"));
@@ -96,7 +129,9 @@ public class ReservationReadRepository {
             String organizationCode) {
         MapSqlParameterSource params = filterParams(from, to, includeCancelled, placeId, organizationCode);
         Long total = named.queryForObject("SELECT count(*) FROM garden_reservations r"
-                + " JOIN places p ON p.id = r.place_id JOIN organizations o ON o.id = r.organization_id " + FILTERS,
+                + " JOIN places p ON p.id = r.place_id"
+                + " JOIN organizations rb ON rb.id = r.requested_by_organization_id"
+                + " LEFT JOIN organizations rf ON rf.id = r.requested_for_organization_id " + FILTERS,
                 params, Long.class);
         return total == null ? 0 : total;
     }
@@ -105,6 +140,24 @@ public class ReservationReadRepository {
         return jdbc.query(SELECT_RESERVATION + " WHERE r.deleted_at IS NULL AND r.code = ?", RESERVATION, code)
                 .stream().findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found: " + code));
+    }
+
+    /** El historial de responsables de la ficha (D-02b), del primero al vigente. */
+    public List<ResponsibleRow> responsibleHistory(String code) {
+        return jdbc.query("""
+                SELECT c.code, c.full_name,
+                       (SELECT l.role FROM contact_organizations l
+                         WHERE l.contact_id = c.id AND l.organization_id = r.requested_by_organization_id
+                           AND l.deleted_at IS NULL) AS role,
+                       h.assigned_at, u.email AS assigned_by
+                  FROM garden_reservation_responsibles h
+                  JOIN garden_reservations r ON r.id = h.reservation_id
+                  JOIN contacts c ON c.id = h.contact_id
+                  JOIN users u ON u.id = h.assigned_by_user_id
+                 WHERE r.code = ?
+                 ORDER BY h.assigned_at""", (rs, i) -> new ResponsibleRow(rs.getString("code"),
+                rs.getString("full_name"), rs.getString("role"),
+                rs.getObject("assigned_at", OffsetDateTime.class).toInstant(), rs.getString("assigned_by")), code);
     }
 
     /**
@@ -145,6 +198,49 @@ public class ReservationReadRepository {
         return jdbc.query("SELECT id, code, name FROM organizations WHERE code = ? AND deleted_at IS NULL",
                 (rs, i) -> new OrganizationRow(rs.getLong("id"), rs.getString("code"), rs.getString("name")), code)
                 .stream().findFirst().orElse(null);
+    }
+
+    /** La organización de una reserva ya guardada: puede estar dada de baja y se sigue mostrando. */
+    public OrganizationRow organizationById(long id) {
+        return jdbc.query("SELECT id, code, name FROM organizations WHERE id = ?",
+                (rs, i) -> new OrganizationRow(rs.getLong("id"), rs.getString("code"), rs.getString("name")), id)
+                .stream().findFirst().orElse(null);
+    }
+
+    /** El responsable puede ser cualquier contacto vigente del Directorio (SPEC-107 D-02). */
+    public ContactRow contactById(long id) {
+        return jdbc.query(
+                "SELECT id, code, full_name, mobile, extension FROM contacts WHERE id = ? AND deleted_at IS NULL",
+                (rs, i) -> new ContactRow(rs.getLong("id"), rs.getString("code"), rs.getString("full_name"),
+                        rs.getString("mobile"), rs.getString("extension")), id)
+                .stream().findFirst().orElse(null);
+    }
+
+    /** El responsable del formulario llega por código, exacto (SPEC-107 §3.2). */
+    public ContactRow contactByCode(String code) {
+        String value = code == null ? null : code.strip();
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        return jdbc.query("SELECT id, code, full_name, mobile, extension FROM contacts "
+                        + "WHERE deleted_at IS NULL AND code = upper(?)",
+                (rs, i) -> new ContactRow(rs.getLong("id"), rs.getString("code"), rs.getString("full_name"),
+                        rs.getString("mobile"), rs.getString("extension")), value)
+                .stream().findFirst().orElse(null);
+    }
+
+    /** El registro masivo acepta código o nombre; el nombre ambiguo devuelve dos y la fila falla. */
+    public List<ContactRow> contactsByCodeOrName(String text) {
+        String value = text == null ? null : text.strip();
+        if (value == null || value.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.query("""
+                SELECT c.id, c.code, c.full_name, c.mobile, c.extension FROM contacts c
+                 WHERE c.deleted_at IS NULL
+                   AND (c.code = upper(btrim(?)) OR directory_key(c.full_name) = directory_key(?))""",
+                (rs, i) -> new ContactRow(rs.getLong("id"), rs.getString("code"), rs.getString("full_name"),
+                        rs.getString("mobile"), rs.getString("extension")), value, value);
     }
 
     /**
@@ -201,20 +297,25 @@ public class ReservationReadRepository {
                 .stream().findFirst().orElse(null);
     }
 
-    /** Solo las organizaciones que ya aparecen en alguna reserva (SPEC-107 D-08). */
+    /** Solo las organizaciones que ya piden o reciben alguna reserva (SPEC-107 D-08). */
     public List<OrganizationRow> organizations() {
         return jdbc.query("""
-                SELECT o.id, o.code, o.name FROM garden_reservations r
-                  JOIN organizations o ON o.id = r.organization_id
-                 WHERE r.deleted_at IS NULL
-                 GROUP BY o.id, o.code, o.name ORDER BY lower(o.name)""",
+                SELECT id, code, name FROM (
+                    SELECT o.id, o.code, o.name FROM garden_reservations r
+                      JOIN organizations o ON o.id = r.requested_by_organization_id
+                     WHERE r.deleted_at IS NULL
+                    UNION
+                    SELECT o.id, o.code, o.name FROM garden_reservations r
+                      JOIN organizations o ON o.id = r.requested_for_organization_id
+                     WHERE r.deleted_at IS NULL AND r.requested_for_organization_id IS NOT NULL) u
+                 ORDER BY lower(name)""",
                 (rs, i) -> new OrganizationRow(rs.getLong("id"), rs.getString("code"), rs.getString("name")));
     }
 
     public List<OverlapRow> overlaps(long placeId, Instant startsAt, Instant endsAt, String excludeCode) {
         return jdbc.query("""
                 SELECT r.code, r.starts_at, r.ends_at, o.name AS organization_name
-                  FROM garden_reservations r JOIN organizations o ON o.id = r.organization_id
+                  FROM garden_reservations r JOIN organizations o ON o.id = r.requested_by_organization_id
                  WHERE r.place_id = ? AND r.deleted_at IS NULL AND r.cancelled_at IS NULL
                    AND r.starts_at < ? AND r.ends_at > ?
                    AND (CAST(? AS TEXT) IS NULL OR r.code <> ?)
@@ -318,7 +419,7 @@ public class ReservationReadRepository {
                            (SELECT z.id FROM zones z WHERE z.id = p.zone_id) AS own_zone_id
                       FROM garden_reservations r
                       JOIN places p ON p.id = r.place_id
-                      JOIN organizations o ON o.id = r.organization_id
+                      JOIN organizations o ON o.id = r.requested_by_organization_id
                       LEFT JOIN place_outlines po ON po.place_id = r.place_id
                      WHERE r.deleted_at IS NULL AND r.cancelled_at IS NULL
                        AND r.starts_at < :windowEnd AND r.ends_at > :windowStart

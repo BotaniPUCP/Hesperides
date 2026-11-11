@@ -21,6 +21,7 @@ import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactDe
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactSummary;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.Page;
 import pe.edu.pucp.hesperides.modules.directory.dto.LinkRequest;
+import pe.edu.pucp.hesperides.modules.directory.dto.RoleRequest;
 import pe.edu.pucp.hesperides.modules.directory.service.ContactQueryService;
 import pe.edu.pucp.hesperides.modules.directory.service.ContactService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
@@ -73,8 +74,17 @@ public class ContactController {
     @PostMapping("/{code}/organizations")
     @PreAuthorize(DirectoryAccess.MAINTAINERS)
     public ResponseEntity<ApiResponse<Void>> link(@PathVariable String code, @Valid @RequestBody LinkRequest request) {
-        service.link(code, request.organizationCode());
+        service.link(code, request.organizationCode(), request.role());
         return ResponseEntity.ok(ApiResponse.ok("Contact linked", null));
+    }
+
+    /** Cambia solo el rol del vínculo; no toca el vínculo ni los datos (SPEC-106 §4.3). */
+    @PutMapping("/{code}/organizations/{organizationCode}")
+    @PreAuthorize(DirectoryAccess.MAINTAINERS)
+    public ResponseEntity<ApiResponse<Void>> updateLinkRole(@PathVariable String code,
+            @PathVariable String organizationCode, @RequestBody RoleRequest request) {
+        service.updateLinkRole(code, organizationCode, request == null ? null : request.role());
+        return ResponseEntity.ok(ApiResponse.ok("Contact link role updated", null));
     }
 
     @DeleteMapping("/{code}")

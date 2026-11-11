@@ -5,14 +5,16 @@ carga en **Directorio → Registro masivo → Contactos**, solo ADMIN y COORDINA
 [contactos.csv](../../backend/src/main/resources/imports/templates/contactos.csv), con una fila de ejemplo que hay que borrar
 antes de cargar. Las organizaciones se cargan primero ([organizaciones.md](organizaciones.md)).
 
-> **Pendiente (SPEC-106 §4.3, 11 nov 2026):** se agrega la columna opcional `roles` al final, un
-> rol por organización en el mismo orden, separados por `|`. Un archivo sin ella sigue valiendo.
-> Se documenta aquí cuando el código la acepte.
+> **Implementado (SPEC-106 §4.3, 11 nov 2026):** la columna opcional `roles` al final, un rol por
+> organización en el mismo orden, separados por `|`; un rol puede ir vacío. Un archivo sin ella
+> sigue valiendo; más roles que organizaciones es error de la fila. Un contacto «Ya existe» se
+> omite igual: el CSV no cambia el rol de un vínculo que ya tenía.
 
 | Columna | Obligatoria | Qué va |
 |---|---|---|
 | `nombre` | **Sí** | Nombre completo, hasta 200 caracteres |
 | `organizaciones` | **Sí** | Por nombre, alias o código (`ORG-0001`), separadas por `\|`: `Estudios Generales Ciencias\|OIE` |
+| `roles` | No | Un rol por organización, en el mismo orden y separados por `\|`: `Delegado\|Tesorero`. Vacío es sin rol; puede faltar la columna entera |
 | `anexo` | No | 4 dígitos; se aceptan espacios (`45 49`) |
 | `celular` | No | 9 dígitos que empiezan con 9; se aceptan espacios (`987 654 321`) |
 | `correo` | No | Un correo válido |
@@ -20,8 +22,8 @@ antes de cargar. Las organizaciones se cargan primero ([organizaciones.md](organ
 ## Reglas
 
 - UTF-8 (la plantilla lleva BOM para que Excel la abra bien), separador `;`.
-- La cabecera lleva **exactamente** estas cinco columnas: una que falta o una desconocida rechaza
-  el archivo.
+- La cabecera lleva las cinco columnas obligatorias: una que falta o una desconocida rechaza el
+  archivo. La sexta, `roles`, es opcional (SPEC-106 §4.3): un archivo sin ella sigue valiendo.
 - Hasta 2000 filas por archivo.
 - Un contacto con el mismo nombre ya vinculado a la primera organización de su fila **ya existe**:
   se muestra en la revisión y se omite.

@@ -39,7 +39,7 @@ export function ReservationImportPreview({ plan }: { plan: ReservationImportPlan
             <tr>
               <th className="py-2 pr-3 font-medium">Fila</th>
               <th className="py-2 pr-3 font-medium">Jardín</th>
-              <th className="py-2 pr-3 font-medium">Organización</th>
+              <th className="py-2 pr-3 font-medium">Pedido de</th>
               <th className="py-2 pr-3 font-medium">Resultado</th>
               <th className="py-2 font-medium">Motivo o aviso</th>
             </tr>

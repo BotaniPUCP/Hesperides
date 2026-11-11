@@ -100,6 +100,7 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `CONTACT_UPDATED` | ADMIN, COORDINADOR | `{ "fields": ["mobile", "organizations"] }` — qué campos cambiaron, nunca sus valores (SPEC-106) | **`audit_log`** |
 | `CONTACT_DEACTIVATED` | ADMIN, COORDINADOR | `{}` (SPEC-106) | **`audit_log`** |
 | `CONTACT_LINKED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — la organización agregada (SPEC-106) | **`audit_log`** |
+| `CONTACT_LINK_ROLE_UPDATED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — qué vínculo cambió, nunca el valor del rol (SPEC-106 §4.3) | **`audit_log`** |
 | `GARDEN_RESERVATION_CREATED` · `GARDEN_RESERVATION_UPDATED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "place": "LUG-0004" }` — el código de la reserva y el del jardín; nunca el teléfono del contacto (SPEC-107 §9) | **`audit_log`** |
 | `GARDEN_RESERVATION_CANCELLED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "place": "LUG-0004" }`; el motivo queda en `garden_reservations.cancel_reason` (SPEC-107 D-09) | **`audit_log`** |
 | `GARDEN_RESERVATION_RESPONSIBLE_CHANGED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "from": "CON-0007", "to": "CON-0019" }` — códigos de contacto, nunca nombres ni teléfonos (SPEC-107 D-02b) | **`audit_log`** |

@@ -70,7 +70,8 @@ export function ReservationDetailScreen({ code, startEditing = false }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader title={`Reserva ${reservation.code}`}
-        description={`${reservation.place.name} · ${reservation.organization.name}`}
+        description={`${reservation.place.name} · Pedido de ${reservation.requestedBy.name}
+          ${reservation.requestedFor ? ` para ${reservation.requestedFor.name}` : ''}`}
         actions={
           <>
             <Link href={`/reservas?jardin=${reservation.place.id}`}
@@ -106,20 +107,37 @@ export function ReservationDetailScreen({ code, startEditing = false }: Props) {
             </Link>
             <span className="ml-2 text-sm text-neutral-600">{reservation.place.code}</span>
           </Field>
-          <Field label="Organización">{reservation.organization.name}</Field>
-          <Field label="Contacto">
-            {reservation.contact === null ? 'Sin contacto' : (
-              <>
-                {reservation.contact.fullName}
-                {reservation.contact.mobile && (
-                  <> · <a href={`tel:${reservation.contact.mobile}`} className="text-brand-700 hover:underline">
-                    {reservation.contact.mobile}
-                  </a></>
-                )}
-                {reservation.contact.extension && ` · anexo ${reservation.contact.extension}`}
-              </>
-            )}
+          <Field label="Pedido de">
+            {reservation.requestedBy.name}
+            <span className="ml-2 text-sm text-neutral-600">
+              Solicitó {reservation.requester.fullName}
+              {reservation.requester.role && ` (${reservation.requester.role})`}
+            </span>
           </Field>
+          <Field label="Para">{reservation.requestedFor?.name ?? 'La misma organización que pide'}</Field>
+          <Field label="Responsable">
+            {reservation.responsible.fullName}
+            {reservation.responsible.role && ` · ${reservation.responsible.role}`}
+            {reservation.responsible.mobile && (
+              <> · <a href={`tel:${reservation.responsible.mobile}`} className="text-brand-700 hover:underline">
+                {reservation.responsible.mobile}
+              </a></>
+            )}
+            {reservation.responsible.extension && ` · anexo ${reservation.responsible.extension}`}
+          </Field>
+          {reservation.responsibleHistory.length > 1 && (
+            <Field label="Responsables anteriores">
+              <ul className="space-y-0.5 text-sm text-neutral-600">
+                {reservation.responsibleHistory.slice(0, -1).map((entry) => (
+                  <li key={`${entry.contact.code}-${entry.assignedAt}`}>
+                    {entry.contact.fullName}
+                    {entry.contact.role && ` (${entry.contact.role})`} — {formatDateTime(entry.assignedAt)}
+                    {' '}por {entry.assignedBy}
+                  </li>
+                ))}
+              </ul>
+            </Field>
+          )}
           <Field label="Inicio">{formatDateTime(reservation.startsAt)}</Field>
           <Field label="Fin">{formatDateTime(reservation.endsAt)}</Field>
           <Field label="Motivo">{reservation.purpose ?? '—'}</Field>

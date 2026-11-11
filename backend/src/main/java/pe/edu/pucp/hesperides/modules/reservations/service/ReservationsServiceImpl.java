@@ -36,6 +36,8 @@ import pe.edu.pucp.hesperides.modules.reservations.repository.ReservationReadRep
 import pe.edu.pucp.hesperides.modules.reservations.repository.ReservationReadRepository.OverlapRow;
 import pe.edu.pucp.hesperides.modules.reservations.repository.ReservationReadRepository.PlaceRow;
 import pe.edu.pucp.hesperides.modules.reservations.repository.ReservationReadRepository.ReservationRow;
+import pe.edu.pucp.hesperides.modules.reservations.repository.ReservationReadRepository.ResponsibleRow;
+import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ResponsibleEntry;
 import pe.edu.pucp.hesperides.modules.reservations.repository.ReservationReadRepository.WorkRow;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;
@@ -94,43 +96,47 @@ public class ReservationsServiceImpl implements ReservationsService {
                 blankToNull(organizationCode), size, page * size);
         return new Page<>(page, size,
                 reads.count(fromInstant, toInstant, includeCancelled, placeId, blankToNull(organizationCode)),
-                rows.stream().map(row -> response(row, List.of())).toList());
+                rows.stream().map(row -> response(row, List.of(), List.of())).toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public ReservationResponse get(String code) {
-        return response(reads.byCode(code), List.of());
+        return response(reads.byCode(code), history(reads.responsibleHistory(code)), List.of());
     }
 
     @Override
     @Transactional
     public ReservationResponse create(ReservationRequest request, String userEmail) {
-        Validated values = validate(request);
-        String code = persist(values, users.of(userEmail), null);
+        Validated values = validate(null, request, true);
+        long assignedBy = users.of(userEmail);
+        String code = persist(values, assignedBy, null);
         List<Warning> warnings = check(values.place().id(), toOffset(values.startsAt()), toOffset(values.endsAt()), code);
-        return response(reads.byCode(code), warnings);
+        return response(reads.byCode(code), List.of(), warnings);
     }
 
     @Override
     @Transactional
     public String createForImport(ReservationRequest request, long userId, long importBatchId) {
-        return persist(validate(request), userId, importBatchId);
+        return persist(validate(null, request, true), userId, importBatchId);
     }
 
-    private String persist(Validated values, long userId, Long importBatchId) {
+    private String persist(Validated values, long assignedBy, Long importBatchId) {
         GardenReservation reservation = new GardenReservation();
         reservation.setPlaceId(values.place().id());
-        reservation.setOrganizationId(values.organization().id());
-        reservation.setContactId(values.contact() == null ? null : values.contact().id());
+        reservation.setRequestedByOrganizationId(values.requestedBy().id());
+        reservation.setRequesterContactId(values.requester().id());
+        reservation.setRequestedForOrganizationId(values.requestedFor() == null ? null : values.requestedFor().id());
+        reservation.setResponsibleContactId(values.responsible().id());
         reservation.setStartsAt(values.startsAt());
         reservation.setEndsAt(values.endsAt());
         reservation.setPurpose(values.purpose());
-        reservation.setCreatedByUserId(userId);
+        reservation.setCreatedByUserId(assignedBy);
         reservation.setImportBatchId(importBatchId);
         reservation.setVersion(0L);
         reservations.saveAndFlush(reservation);
         String code = reservations.codeById(reservation.getId());
+        reservations.addResponsible(reservation.getId(), values.responsible().id(), assignedBy);
 
         audit.record(AuditActionCode.GARDEN_RESERVATION_CREATED, "GardenReservation", reservation.getId(),
                 java.util.Map.of("code", code, "place", values.place().code()));
@@ -142,12 +148,14 @@ public class ReservationsServiceImpl implements ReservationsService {
     public ReservationResponse update(String code, ReservationRequest request, String userEmail) {
         GardenReservation reservation = require(code);
         requireEditable(reservation);
-        Validated values = validate(request);
+        Validated values = validate(code, request, false);
         requireVersion(reservation, request.version());
 
+        long previousResponsibleId = reservation.getResponsibleContactId();
+        boolean responsibleChanged = previousResponsibleId != values.responsible().id();
         reservation.setPlaceId(values.place().id());
-        reservation.setOrganizationId(values.organization().id());
-        reservation.setContactId(values.contact() == null ? null : values.contact().id());
+        reservation.setRequestedForOrganizationId(values.requestedFor() == null ? null : values.requestedFor().id());
+        reservation.setResponsibleContactId(values.responsible().id());
         reservation.setStartsAt(values.startsAt());
         reservation.setEndsAt(values.endsAt());
         reservation.setPurpose(values.purpose());
@@ -156,8 +164,17 @@ public class ReservationsServiceImpl implements ReservationsService {
 
         audit.record(AuditActionCode.GARDEN_RESERVATION_UPDATED, "GardenReservation", reservation.getId(),
                 java.util.Map.of("code", code, "place", values.place().code()));
+        if (responsibleChanged) {
+            reservations.addResponsible(reservation.getId(), values.responsible().id(), users.of(userEmail));
+            ContactRow previousResponsible = reads.contactById(previousResponsibleId);
+            audit.record(AuditActionCode.GARDEN_RESERVATION_RESPONSIBLE_CHANGED, "GardenReservation",
+                    reservation.getId(),
+                    java.util.Map.of("code", code, "place", values.place().code(), "from",
+                            previousResponsible == null ? "" : previousResponsible.code(),
+                            "to", values.responsible().code()));
+        }
         List<Warning> warnings = check(values.place().id(), toOffset(values.startsAt()), toOffset(values.endsAt()), code);
-        return response(reads.byCode(code), warnings);
+        return response(reads.byCode(code), List.of(), warnings);
     }
 
     @Override
@@ -181,7 +198,7 @@ public class ReservationsServiceImpl implements ReservationsService {
         PlaceRow place = reads.place(reservation.getPlaceId());
         audit.record(AuditActionCode.GARDEN_RESERVATION_CANCELLED, "GardenReservation", reservation.getId(),
                 java.util.Map.of("code", code, "place", place == null ? "" : place.code()));
-        return response(reads.byCode(code), List.of());
+        return response(reads.byCode(code), List.of(), List.of());
     }
 
     @Override
@@ -271,26 +288,55 @@ public class ReservationsServiceImpl implements ReservationsService {
                 .toList();
     }
 
-    private Validated validate(ReservationRequest request) {
-        if (request == null || request.placeId() == null || request.startsAt() == null
-                || request.endsAt() == null || request.organizationCode() == null) {
-            throw new BusinessRuleException("The garden, organization, start and end are required");
+    private Validated validate(String code, ReservationRequest request, boolean creating) {
+        if (request == null || request.placeId() == null || request.startsAt() == null || request.endsAt() == null) {
+            throw new BusinessRuleException("The garden, requester, responsible, start and end are required");
         }
         Instant start = request.startsAt().toInstant();
         Instant end = request.endsAt().toInstant();
         validatePeriod(start, end);
         PlaceRow place = requirePlace(request.placeId());
-        OrganizationRow organization = reads.organization(request.organizationCode().strip());
-        if (organization == null) {
-            throw new BusinessRuleException("That organization is not active in the Directory");
+
+        // Quién pidió no cambia (D-02): si llega en una edición, se rechaza.
+        String requestedByCode = blankToNull(request.requestedByCode());
+        String requesterCode = blankToNull(request.requesterCode());
+        if (!creating && (requestedByCode != null || requesterCode != null)) {
+            throw new BusinessRuleException("Who requested the reservation cannot change: cancel it and register a new one");
         }
-        ContactRow contact = null;
-        if (request.contactCode() != null && !request.contactCode().isBlank()) {
-            contact = reads.contact(request.contactCode().strip(), organization.id());
-            if (contact == null) {
-                throw new BusinessRuleException("The contact does not belong to that organization");
+        OrganizationRow requestedBy;
+        ContactRow requester;
+        if (creating) {
+            if (requestedByCode == null || requesterCode == null) {
+                throw new BusinessRuleException("The garden, requester, responsible, start and end are required");
+            }
+            requestedBy = reads.organization(requestedByCode);
+            if (requestedBy == null) {
+                throw new BusinessRuleException("That organization is not in the Directory");
+            }
+            requester = reads.contact(requesterCode, requestedBy.id());
+            if (requester == null) {
+                throw new BusinessRuleException("The requester must belong to the organization that requests it");
+            }
+        } else {
+            GardenReservation current = require(code);
+            requestedBy = reads.organizationById(current.getRequestedByOrganizationId());
+            requester = reads.contactById(current.getRequesterContactId());
+        }
+
+        String requestedForCode = blankToNull(request.requestedForCode());
+        OrganizationRow requestedFor = null;
+        if (requestedForCode != null && !requestedForCode.equals(requestedBy.code())) {
+            requestedFor = reads.organization(requestedForCode);
+            if (requestedFor == null) {
+                throw new BusinessRuleException("That organization is not in the Directory");
             }
         }
+
+        ContactRow responsible = reads.contactByCode(request.responsibleCode());
+        if (responsible == null) {
+            throw new BusinessRuleException("A responsible contact is required");
+        }
+
         String purpose = request.purpose() == null ? null : request.purpose().strip();
         if (purpose != null && purpose.isEmpty()) {
             purpose = null;
@@ -298,7 +344,7 @@ public class ReservationsServiceImpl implements ReservationsService {
         if (purpose != null && purpose.length() > MAX_PURPOSE) {
             throw new BusinessRuleException("The purpose cannot exceed 300 characters");
         }
-        return new Validated(place, organization, contact, start, end, purpose);
+        return new Validated(place, requestedBy, requester, requestedFor, responsible, start, end, purpose);
     }
 
     private void validatePeriod(Instant start, Instant end) {
@@ -337,13 +383,18 @@ public class ReservationsServiceImpl implements ReservationsService {
         }
     }
 
-    private ReservationResponse response(ReservationRow row, List<Warning> warnings) {
+    private ReservationResponse response(ReservationRow row, List<ResponsibleEntry> history, List<Warning> warnings) {
         return new ReservationResponse(
                 row.code(),
                 new GardenRef(row.placeId(), row.placeCode(), row.placeName()),
-                new OrganizationRef(row.organizationCode(), row.organizationName()),
-                row.contactCode() == null ? null : new ContactRef(row.contactCode(), row.contactName(),
-                        row.contactMobile(), row.contactExtension()),
+                new OrganizationRef(row.requestedByCode(), row.requestedByName()),
+                new ContactRef(row.requesterCode(), row.requesterName(), row.requesterRole(),
+                        row.requesterMobile(), row.requesterExtension()),
+                row.requestedForCode() == null ? null
+                        : new OrganizationRef(row.requestedForCode(), row.requestedForName()),
+                new ContactRef(row.responsibleCode(), row.responsibleName(), row.responsibleRole(),
+                        row.responsibleMobile(), row.responsibleExtension()),
+                history,
                 toOffset(row.startsAt()),
                 toOffset(row.endsAt()),
                 row.purpose(),
@@ -351,6 +402,14 @@ public class ReservationsServiceImpl implements ReservationsService {
                 row.cancelReason(),
                 row.version(),
                 warnings);
+    }
+
+    private List<ResponsibleEntry> history(List<ResponsibleRow> rows) {
+        return rows.stream()
+                .map(r -> new ResponsibleEntry(
+                        new ContactRef(r.contactCode(), r.contactName(), r.contactRole(), null, null),
+                        r.assignedAt().atZone(zone()).toOffsetDateTime(), r.assignedBy()))
+                .toList();
     }
 
     private int nearbyMeters() {
@@ -438,7 +497,7 @@ public class ReservationsServiceImpl implements ReservationsService {
         return "MULTIPOINT(" + String.join(",", coordinates) + ")";
     }
 
-    private record Validated(PlaceRow place, OrganizationRow organization, ContactRow contact, Instant startsAt,
-            Instant endsAt, String purpose) {
+    private record Validated(PlaceRow place, OrganizationRow requestedBy, ContactRow requester,
+            OrganizationRow requestedFor, ContactRow responsible, Instant startsAt, Instant endsAt, String purpose) {
     }
 }

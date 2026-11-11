@@ -274,7 +274,7 @@ pueden usar `pg_trgm`, como `PlaceSuggestionRepository`.
 > pertenece al menos a una organización.
 
 - `contact_organizations.role VARCHAR(100)`, nulo sin rol, texto libre («Delegado», «Secretaria
-  académica»). La columna la agrega la migración de SPEC-107 (§4).
+  académica»). La columna la agrega **V040** (`V040__add_contact_organization_role.sql`).
 - Un vínculo por par contacto–organización, con **un solo rol**; para cambiarlo se edita. Juan
   Diego puede ser «Delegado» en la OIE y «Tesorero» en CF Psicología, y la ficha del contacto
   junta sus roles («Delegado · OIE», «Tesorero · CF Psicología»).
@@ -404,6 +404,14 @@ Contactos
 - vincular agrega la organización sin tocar los datos ni los otros vínculos; repetir el vínculo → 409
 - vincular a una organización dada de baja → 422
 - /similar de contactos encuentra «juan diego villasante» para «Juan Diego Villasante» en otra organización
+
+Rol del vínculo (§4.3, 11 nov 2026)
+- crear con `roles` guarda el rol del vínculo y la ficha lo muestra; un rol para una organización
+  fuera del cuerpo → 400; un rol de más de 100 caracteres → 400
+- `POST /contacts/{code}/organizations` con `role` crea el vínculo con rol
+- `PUT /contacts/{code}/organizations/{orgCode}` cambia solo el rol; con un vínculo que no existe → 422
+- `contactos.csv` con `roles` guarda un rol por organización; más roles que organizaciones es
+  error de la fila; sin la columna el archivo vale igual
 
 Permisos
 - SUPERVISOR lista y abre fichas de organizaciones y contactos (200)

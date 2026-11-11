@@ -7,8 +7,10 @@ interface Columna {
 /** Copia de `docs/estandares/reservas.md`: si cambia uno, cambia el otro. */
 const COLUMNAS: Columna[] = [
   { nombre: 'jardin', obligatoria: true, descripcion: 'Nombre del lugar, uno de sus alias o el código de una de sus secciones. Debe ser un jardín prestable.' },
-  { nombre: 'organizacion', obligatoria: true, descripcion: 'Código, nombre o alias de una organización vigente del Directorio.' },
-  { nombre: 'contacto', descripcion: 'Código o nombre de un contacto vigente vinculado a esa organización.' },
+  { nombre: 'pedido_de', obligatoria: true, descripcion: 'Código, nombre o alias de una organización vigente del Directorio: la que pide el jardín.' },
+  { nombre: 'solicitante', obligatoria: true, descripcion: 'Código o nombre de un contacto vigente vinculado a «pedido de». Si el nombre coincide con dos personas, se usa su código.' },
+  { nombre: 'para', descripcion: 'La organización que usará el jardín, cuando no es la que pide. Vacío si es la misma.' },
+  { nombre: 'responsable', descripcion: 'Código o nombre de un contacto vigente, de cualquier organización. Vacío: el solicitante.' },
   { nombre: 'inicio', obligatoria: true, descripcion: 'dd/mm/aaaa hh:mm en hora de Lima.' },
   { nombre: 'fin', obligatoria: true, descripcion: 'Posterior a inicio; la reserva no puede durar más de 7 días.' },
   { nombre: 'motivo', descripcion: 'Hasta 300 caracteres.' },
@@ -16,7 +18,8 @@ const COLUMNAS: Columna[] = [
 
 const REGLAS = [
   'UTF-8, separador punto y coma (;). La plantilla lleva BOM para que Excel la abra bien.',
-  'La cabecera lleva exactamente estas seis columnas: una que falta o una desconocida rechaza el archivo.',
+  'La cabecera lleva exactamente estas ocho columnas: una que falta o una desconocida rechaza el archivo.',
+  'Una organización o un contacto que no está en el Directorio es error de esa fila: el Directorio se carga con su propio registro masivo.',
   'Hasta 2000 filas. Una fila con error impide confirmar el archivo entero.',
   'Los cruces y el trabajo cercano avisan, pero no bloquean: la fila se crea igual.',
 ];

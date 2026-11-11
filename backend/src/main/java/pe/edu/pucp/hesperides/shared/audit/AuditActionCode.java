@@ -50,6 +50,10 @@ public enum AuditActionCode {
     CONTACT_DEACTIVATED,
     /** SPEC-106: a qué organización se vinculó un contacto existente. */
     CONTACT_LINKED,
+    /** SPEC-106 §4.3: rol del contacto en una organización (cambio de rol, sin valor). */
+    CONTACT_LINK_ROLE_UPDATED,
+    /** SPEC-107 D-02b: quién quedó a cargo de una reserva; con los códigos de contacto. */
+    GARDEN_RESERVATION_RESPONSIBLE_CHANGED,
     /** SPEC-203: quién creó, cambió o dio de baja un conjunto de áreas verdes, y con cuántos jardines. */
     GREEN_AREA_SET_CREATED,
     GREEN_AREA_SET_UPDATED,

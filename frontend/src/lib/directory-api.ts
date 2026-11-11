@@ -74,8 +74,12 @@ export const directoryApi = {
 
   updateContact: (code: string, input: ContactInput) => apiClient.put<null>(`${CONTACTS}/${segment(code)}`, input),
 
-  linkContact: (code: string, organizationCode: string) =>
-    apiClient.post<null>(`${CONTACTS}/${segment(code)}/organizations`, { organizationCode }),
+  linkContact: (code: string, organizationCode: string, role?: string | null) =>
+    apiClient.post<null>(`${CONTACTS}/${segment(code)}/organizations`, { organizationCode, role }),
+
+  /** Cambia solo el rol del vínculo; no toca el vínculo ni los datos (SPEC-106 §4.3). */
+  updateLinkRole: (code: string, organizationCode: string, role: string | null) =>
+    apiClient.put<null>(`${CONTACTS}/${segment(code)}/organizations/${segment(organizationCode)}`, { role }),
 
   deactivateContact: (code: string) => apiClient.del<null>(`${CONTACTS}/${segment(code)}`),
 

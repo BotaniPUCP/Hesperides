@@ -7,7 +7,10 @@ const mockRole = { current: 'COORDINADOR' };
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { role: { code: mockRole.current } } }) }));
 jest.mock('@/lib/directory-api', () => ({
   ...jest.requireActual('@/lib/directory-api'),
-  directoryApi: { contacts: jest.fn(), similarContacts: jest.fn(), createContact: jest.fn(), linkContact: jest.fn() },
+  directoryApi: {
+    contacts: jest.fn(), similarContacts: jest.fn(), createContact: jest.fn(),
+    linkContact: jest.fn(), updateLinkRole: jest.fn(),
+  },
 }));
 
 const api = directoryApi as jest.Mocked<typeof directoryApi>;
@@ -52,8 +55,44 @@ describe('ContactPicker', () => {
     fireEvent.change(screen.getByLabelText('Contacto'), { target: { value: 'juan diego' } });
     fireEvent.click(await screen.findByRole('button', { name: 'Vincular a CF Psicología' }));
 
+    // El vínculo se crea desde el diálogo del rol (SPEC-106 §4.3).
+    fireEvent.click(await screen.findByRole('button', { name: 'Vincular' }));
+
     await waitFor(() => expect(onChange).toHaveBeenCalledWith({ code: 'CON-0007', fullName: 'Juan Diego Villasante' }));
-    expect(api.linkContact).toHaveBeenCalledWith('CON-0007', 'ORG-0031');
+    expect(api.linkContact).toHaveBeenCalledWith('CON-0007', 'ORG-0031', null);
+    expect(api.createContact).not.toHaveBeenCalled();
+  });
+
+  it('vincular pide el rol opcional del vínculo', async () => {
+    onlyInAnotherOrganization();
+    api.linkContact.mockResolvedValue(null);
+    const onChange = jest.fn();
+    render(<ContactPicker id="c" label="Contacto" organization={PSICOLOGIA} value={null} onChange={onChange} />);
+
+    fireEvent.change(screen.getByLabelText('Contacto'), { target: { value: 'juan diego' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Vincular a CF Psicología' }));
+    fireEvent.change(await screen.findByLabelText('Rol en la organización'), { target: { value: 'Delegado' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Vincular' }));
+
+    await waitFor(() => expect(api.linkContact).toHaveBeenCalledWith('CON-0007', 'ORG-0031', 'Delegado'));
+  });
+
+  it('un contacto que ya pertenece ofrece editar su rol, no crea otro vínculo', async () => {
+    onlyInAnotherOrganization();
+    api.linkContact.mockRejectedValue({ status: 409, message: 'The contact CON-0007 already belongs to «CF Psicología»' });
+    const onChange = jest.fn();
+    render(<ContactPicker id="c" label="Contacto" organization={PSICOLOGIA} value={null} onChange={onChange} />);
+
+    fireEvent.change(screen.getByLabelText('Contacto'), { target: { value: 'juan diego' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Vincular a CF Psicología' }));
+
+    // El primer intento responde 409: el diálogo pasa a editar el rol del vínculo.
+    fireEvent.click(await screen.findByRole('button', { name: 'Vincular' }));
+    await screen.findByText(/ya pertenece a CF Psicología/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Vincular' }));
+
+    await waitFor(() => expect(api.updateLinkRole).toHaveBeenCalledWith('CON-0007', 'ORG-0031', null));
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith({ code: 'CON-0007', fullName: 'Juan Diego Villasante' }));
     expect(api.createContact).not.toHaveBeenCalled();
   });
 

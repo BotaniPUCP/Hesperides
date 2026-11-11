@@ -12,5 +12,7 @@ public enum IssueCode {
     EXTENSION_FORMAT,
     MOBILE_FORMAT,
     EMAIL_FORMAT,
-    TOO_LONG
+    TOO_LONG,
+    /** SPEC-106 §4.3: más roles que organizaciones en la fila de contactos. */
+    ROLES_TOO_MANY
 }
