@@ -56,6 +56,7 @@ export const SPANISH_BACKEND_MESSAGES: readonly RegExp[] = [
   /^La sección seleccionada no existe o no está activa$/,
   /^Solo una frecuencia por sección lleva una sección asociada$/,
   /^El tipo de actividad seleccionado no está activo$/,
+  /^Elige una actividad concreta, no un grupo de actividades$/,
   /^Ya existe una frecuencia vigente para esta actividad, modalidad y ámbito$/,
   // Reportes (SPEC-202)
   /^El tipo no pertenece a la clase elegida$/,
