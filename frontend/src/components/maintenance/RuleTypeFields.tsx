@@ -7,7 +7,7 @@ import { ANNUAL_WINDOWS, type SeasonRow, newRow } from './seasons';
 
 const INPUT = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
 const SELECT = `${INPUT} bg-neutral-0`;
-const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
+const LABEL = 'mb-1 block text-sm font-medium text-neutral-700';
 
 export interface RuleFieldsState {
   bySeasons: boolean;
@@ -36,7 +36,7 @@ export function RuleTypeFields({ ruleTypeCode, state, onChange }: Props) {
   if (ruleTypeCode === 'INTERVAL_DAYS') {
     return (
       <fieldset className="rounded-md border border-neutral-200 p-3 space-y-3">
-        <legend className="px-1 text-xs font-medium text-neutral-600">Intervalo entre ejecuciones</legend>
+        <legend className="px-1 text-sm font-medium text-neutral-700">Intervalo entre ejecuciones</legend>
 
         <div className="flex gap-4 text-sm">
           <label className="flex items-center gap-2">

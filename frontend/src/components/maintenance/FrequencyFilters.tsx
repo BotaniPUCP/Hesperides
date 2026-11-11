@@ -4,7 +4,7 @@ import React from 'react';
 import { Card } from '@/components/ui';
 
 const FIELD = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
-const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
+const LABEL = 'mb-1 block text-sm font-medium text-neutral-700';
 
 export interface FilterState {
   search: string;

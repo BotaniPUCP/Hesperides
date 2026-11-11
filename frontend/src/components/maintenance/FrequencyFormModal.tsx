@@ -40,7 +40,7 @@ interface Props {
 
 const INPUT = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
 const SELECT = `${INPUT} bg-neutral-0`;
-const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
+const LABEL = 'mb-1 block text-sm font-medium text-neutral-700';
 
 /**
  * El formulario solo existe mientras el modal está abierto, y con una key por
@@ -128,7 +128,7 @@ function FrequencyForm({
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FrequencyActivitySelect activities={activities} value={activityTypeItemId}
             onChange={setActivityTypeItemId} locked={Boolean(frequencyToEdit)} />
 

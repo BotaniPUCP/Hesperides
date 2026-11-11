@@ -88,7 +88,7 @@ describe('Frecuencias por conjunto (SPEC-203 §5.3)', () => {
     expect(onSubmit).not.toHaveBeenCalled();
 
     await userEvent.selectOptions(screen.getByLabelText('Conjunto'), '5');
-    const link = screen.getByRole('link', { name: /Ver este conjunto/ });
+    const link = screen.getByRole('link', { name: /Ver conjunto/ });
     expect(link).toHaveAttribute('href', '/intervenciones/conjuntos/5');
     expect(link).toHaveAttribute('target', '_blank');
     await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));

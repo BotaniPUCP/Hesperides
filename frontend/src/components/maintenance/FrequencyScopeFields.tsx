@@ -5,7 +5,7 @@ import type { GreenAreaSetSummary, MaintenanceScope } from '@shared/types';
 import { SETS_PATH } from '@/components/planning/GreenAreaSetsScreen';
 
 const SELECT = 'w-full rounded-md border border-neutral-300 bg-neutral-0 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
-const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
+const LABEL = 'mb-1 block text-sm font-medium text-neutral-700';
 
 interface Props {
   scope: MaintenanceScope;
@@ -39,8 +39,8 @@ export function FrequencyScopeFields({ scope, setId, sets, onScope, onSet }: Pro
           {setId != null && (
             // Otra pestaña: navegar aquí cerraría el formulario y se perdería lo escrito.
             <Link href={`${SETS_PATH}/${setId}`} target="_blank" rel="noopener"
-              className="mt-1 inline-block text-xs font-medium text-brand-700 underline hover:text-brand-900">
-              Ver este conjunto en otra pestaña ↗
+              className="mt-1 inline-block text-sm font-medium text-brand-700 underline underline-offset-2 hover:text-brand-900">
+              Ver conjunto (se abre en otra pestaña)
             </Link>
           )}
         </div>

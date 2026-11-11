@@ -6,7 +6,7 @@ import { groupActivities, groupOf, type ActivityOption } from './activityGroups'
 export type { ActivityOption } from './activityGroups';
 
 const SELECT = 'w-full rounded-md border border-neutral-300 bg-neutral-0 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden disabled:bg-neutral-100 disabled:text-neutral-500';
-const LABEL = 'mb-1 block text-xs font-medium text-neutral-600';
+const LABEL = 'mb-1 block text-sm font-medium text-neutral-700';
 
 interface Props {
   activities: ActivityOption[];
