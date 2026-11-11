@@ -42,7 +42,11 @@ reserva**. Quedan **fuera**, a propósito (decisión del usuario, 9-11 nov 2026)
 | Término | Qué es |
 |---|---|
 | **Jardín prestable** | Un **lugar** (M9) cuya sección es prestable (`zones.is_reservable`), directamente (`places.zone_id`) o a través de sus lugares hijos, como «Jardín Palmeras (Gastronomía)», que abarca dos secciones (V035). Se reserva el lugar, no la sección: así lo trata el calendario de la OSG. |
-| **Reserva** | Un uso único de un jardín prestable por una organización, entre una fecha y hora de inicio y otra de fin. No se repite. |
+| **Reserva** | Un uso único de un jardín prestable, pedido por una organización, entre una fecha y hora de inicio y otra de fin. No se repite. |
+| **Pedido de** | La organización que pide el jardín. Obligatoria y fija. |
+| **Solicitante** | El contacto de «Pedido de» que hizo el pedido. Obligatorio y fijo: la reserva siempre recuerda quién la pidió. |
+| **Para** | La organización que usará el jardín, solo cuando no es la misma que lo pide (la OIE lo pide para el CF Psicología). Opcional. |
+| **Responsable** | El contacto a cargo de la reserva: a quien se llama si hay un problema en el jardín. Cualquier contacto del Directorio; al registrar es el solicitante, y puede cambiar. |
 | **Contorno del jardín** | La unión de los polígonos de las secciones del lugar (las suyas o las de sus hijos). |
 | **Cerca** | A **10 m o menos** del contorno del jardín reservado, medidos de borde a borde. «Contiguo» es el caso de 0 m. |
 | **Estado** | Se calcula, no se guarda: **Próxima** (aún no empieza), **En curso**, **Terminada** (pasó su hora de fin) o **Anulada**. |
@@ -69,7 +73,8 @@ reserva**. Quedan **fuera**, a propósito (decisión del usuario, 9-11 nov 2026)
   el mismo día en el jardín o cerca.
 - Menú: grupo propio **Reservas** *(decisión del usuario, 11 nov 2026: es más fácil de encontrar y
   recibirá después los eventos bloqueantes de 1.12)*, con «Agenda de reservas» (cuatro roles) y
-  «Registro masivo» (ADMIN, COORDINADOR). Reutiliza `OrganizationPicker` y `ContactPicker` del Directorio.
+  «Registro masivo» (ADMIN, COORDINADOR). Reutiliza `OrganizationPicker` y `ContactPicker` del
+  Directorio, con su alta en el mismo formulario (SPEC-106 §5.2).
 
 ### 2.4 Restricciones técnicas
 
@@ -86,10 +91,26 @@ reserva**. Quedan **fuera**, a propósito (decisión del usuario, 9-11 nov 2026)
 actividad usa dos jardines, son dos reservas. *Descartado:* recurrencia y reservas de varios
 jardines.
 
-**D-02 · Organización obligatoria, contacto opcional, ambos del Directorio.** Quién reserva es una
-organización (SPEC-106); el contacto, si se indica, debe estar vinculado a esa organización. Así el
-nombre y el teléfono no se copian: salen de la ficha del contacto. *Descartado:* texto libre, que
-duplica el Directorio. *(Decisión de diseño.)*
+**D-02 · Pedido de, solicitante, para y responsable, todos del Directorio.** Decisión del usuario
+(11 nov 2026), que concreta el «Pedido de» y «Para» de SPEC-106 §9.4:
+- **Pedido de** y **solicitante** son obligatorios, y el solicitante debe estar vinculado a
+  «Pedido de». Los dos son **fijos**: si se registró mal, la reserva se anula y se registra de
+  nuevo. Así la reserva nunca pierde quién la pidió.
+- **Para** es opcional; si es la misma organización que «Pedido de», se guarda vacío.
+- **Responsable** es obligatorio y puede ser **cualquier** contacto vigente del Directorio, de la
+  organización que sea. El formulario lo propone igual al solicitante. Si después el solicitante
+  pide que el responsable sea alguien de la organización «Para», se cambia al editar; el
+  solicitante no cambia.
+- Una organización que pide por primera vez se registra **desde el mismo formulario**, con la
+  ventana de alta de los selectores (SPEC-106 §5.2), y lo mismo el contacto, sea solicitante o
+  responsable. Esa ventana crea en el Directorio: nada de la reserva es texto libre, y el nombre y
+  el teléfono salen de la ficha del contacto.
+*Descartado:* contacto opcional (versión anterior de este spec) y texto libre, que duplica el
+Directorio.
+
+**D-02b · Historial de responsables.** Decisión del usuario. Cada cambio de responsable guarda
+quién lo cambió, cuándo, el anterior y el nuevo, sin motivo, en `garden_reservation_responsibles`,
+y la ficha de la reserva muestra la lista. El responsable vigente es la última fila.
 
 **D-03 · Se reserva un lugar prestable.** La reserva guarda `place_id`. Un lugar sin sección
 prestable propia ni en sus hijos se rechaza (422). Hacer prestable una sección no es parte de
@@ -143,13 +164,22 @@ cruza, el aviso es normal (ámbar). Ninguno bloquea.
   fechas (D-06) en sus ubicaciones (crítico) o cerca de ellas.
 Ninguno impide guardar.
 
-**D-08 · ADMIN y COORDINADOR registran; todos ven, el operario también el contacto.** Decisión
-del usuario (11 nov 2026). SUPERVISOR y OPERARIO leen la agenda con la organización, el
-contacto y su teléfono; no ven el registro masivo ni los botones de edición (y el backend responde
-403). **Enmienda a SPEC-106:** el Directorio sigue cerrado al operario, pero lo que una reserva
-muestra de su organización y su contacto sí lo ve. Por eso el filtro de la agenda no usa
-`OrganizationPicker` (que llama al Directorio y daría 403): usa `GET /api/v1/reservations/organizations`,
-las organizaciones que tienen alguna reserva.
+**D-08 · ADMIN y COORDINADOR registran; todos ven, el operario también los contactos.** Decisión
+del usuario (11 nov 2026). SUPERVISOR y OPERARIO leen la agenda con las organizaciones, el
+solicitante, el responsable y sus teléfonos; no ven el registro masivo ni los botones de edición
+(y el backend responde 403). **Enmienda a SPEC-106:** el Directorio sigue cerrado al operario,
+pero lo que una reserva muestra de sus organizaciones y contactos sí lo ve. Por eso el filtro de la
+agenda no usa `OrganizationPicker` (que llama al Directorio y daría 403): usa
+`GET /api/v1/reservations/organizations`, las organizaciones que aparecen como «Pedido de» o
+«Para» en alguna reserva. Filtrar por una organización trae las reservas donde es cualquiera de
+las dos.
+
+**D-08b · El rol del contacto en su organización.** Decisión del usuario (11 nov 2026, enmienda a
+SPEC-106): el vínculo contacto–organización gana un **rol** opcional en texto libre («Delegado»,
+«Secretaria académica»). Hay un vínculo por par contacto–organización, con un solo rol; para
+cambiarlo se edita. La reserva muestra el rol del solicitante en «Pedido de» y el del responsable
+en «Para» si está vinculado a ella, si no en «Pedido de», si no ninguno. Ver SPEC-106, enmienda
+del 11 nov 2026.
 
 **D-09 · Anular, no borrar.** Una reserva se **anula** con un motivo (obligatorio, hasta 500
 caracteres) y queda en la agenda como «Anulada» cuando se piden las anuladas. Solo se anula o edita
@@ -182,23 +212,34 @@ Reserva (respuesta):
 
 ```json
 {"code":"RES-0042","place":{"id":4,"code":"LUG-0004","name":"Jardín Rosales"},
- "organization":{"code":"ORG-0031","name":"Facultad de Letras"},
- "contact":{"code":"CON-0007","fullName":"Juan Diego Villasante","mobile":"987654321","extension":null},
+ "requestedBy":{"code":"ORG-0012","name":"OIE"},
+ "requester":{"code":"CON-0007","fullName":"Juan Diego Villasante","role":"Delegado","mobile":"987654321","extension":null},
+ "requestedFor":{"code":"ORG-0031","name":"CF Psicología"},
+ "responsible":{"code":"CON-0019","fullName":"María Quispe","role":"Presidenta","mobile":"912345678","extension":null},
+ "responsibleHistory":[
+   {"contact":{"code":"CON-0007","fullName":"Juan Diego Villasante"},"assignedAt":"2026-11-10T09:12:00-05:00","assignedBy":"coordinacion@pucp.edu.pe"},
+   {"contact":{"code":"CON-0019","fullName":"María Quispe"},"assignedAt":"2026-11-11T16:40:00-05:00","assignedBy":"coordinacion@pucp.edu.pe"}],
  "startsAt":"2026-11-13T10:00:00-05:00","endsAt":"2026-11-13T14:00:00-05:00",
- "purpose":"Feria de Letras","state":"UPCOMING","cancelReason":null,"version":0,
+ "purpose":"Feria de Psicología","state":"UPCOMING","cancelReason":null,"version":1,
  "warnings":[]}
 ```
 
 `state`: `UPCOMING`, `IN_PROGRESS`, `FINISHED`, `CANCELLED`.
-`warnings` solo viene lleno en la respuesta de crear y editar.
+`requestedFor` es `null` cuando la pide y la usa la misma organización. `role` es `null` sin rol
+(D-08b). `responsibleHistory` va de la más antigua a la vigente y solo viene en la ficha
+(`GET /{code}`), no en la agenda. `warnings` solo viene lleno en la respuesta de crear y editar.
 
-Crear y editar:
+Crear:
 
 ```json
-{"placeId":4,"organizationCode":"ORG-0031","contactCode":"CON-0007",
+{"placeId":4,"requestedByCode":"ORG-0012","requesterCode":"CON-0007",
+ "requestedForCode":"ORG-0031","responsibleCode":"CON-0007",
  "startsAt":"2026-11-13T10:00:00-05:00","endsAt":"2026-11-13T14:00:00-05:00",
- "purpose":"Feria de Letras","version":0}
+ "purpose":"Feria de Psicología"}
 ```
+
+Editar: los mismos campos **sin** `requestedByCode` ni `requesterCode` (fijos, D-02), y con
+`version`. Si `responsibleCode` cambia, se agrega una fila al historial (D-02b).
 
 Avisos (`check` y `nearby`, y `warnings` al guardar):
 
@@ -217,7 +258,13 @@ metro.
 ### 3.2 Reglas de validación (422 salvo indicación)
 
 - `placeId` de un lugar vigente y prestable (D-03); si no, «Ese jardín no se puede reservar».
-- `organizationCode` de una organización vigente; `contactCode`, si viene, vinculado a ella.
+- `requestedByCode` de una organización vigente; si no, «Esa organización no está en el Directorio».
+- `requesterCode` de un contacto vigente vinculado a `requestedByCode`; si no, «El solicitante debe
+  pertenecer a la organización que pide».
+- `requestedForCode` opcional, de una organización vigente; igual a `requestedByCode` se guarda vacío.
+- `responsibleCode` de un contacto vigente, de cualquier organización; si falta, «Indica un responsable».
+- Un `requestedByCode` o `requesterCode` en la edición: «Quién pidió la reserva no cambia: anúlala
+  y regístrala de nuevo».
 - `endsAt` posterior a `startsAt`; «La reserva debe terminar después de empezar».
 - Duración máxima 7 días; «Una reserva no puede durar más de 7 días» *(decisión de diseño: evita
   reservas de meses por error de tipeo)*.
@@ -237,8 +284,10 @@ CREATE TABLE garden_reservations (
     code               VARCHAR(20) NOT NULL UNIQUE
                        DEFAULT 'RES-' || lpad(nextval('garden_reservation_code_seq')::text, 4, '0'),
     place_id           BIGINT NOT NULL REFERENCES places(id),
-    organization_id    BIGINT NOT NULL REFERENCES organizations(id),
-    contact_id         BIGINT REFERENCES contacts(id),
+    requested_by_organization_id  BIGINT NOT NULL REFERENCES organizations(id),
+    requester_contact_id          BIGINT NOT NULL REFERENCES contacts(id),
+    requested_for_organization_id BIGINT REFERENCES organizations(id),
+    responsible_contact_id        BIGINT NOT NULL REFERENCES contacts(id),
     starts_at          TIMESTAMPTZ NOT NULL,
     ends_at            TIMESTAMPTZ NOT NULL,
     purpose            VARCHAR(300),
@@ -251,10 +300,27 @@ CREATE TABLE garden_reservations (
     updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at         TIMESTAMP,
     CONSTRAINT chk_reservation_period CHECK (ends_at > starts_at),
-    CONSTRAINT chk_reservation_cancel CHECK ((cancelled_at IS NULL) = (cancel_reason IS NULL))
+    CONSTRAINT chk_reservation_cancel CHECK ((cancelled_at IS NULL) = (cancel_reason IS NULL)),
+    CONSTRAINT chk_reservation_for_other CHECK (requested_for_organization_id IS DISTINCT FROM requested_by_organization_id)
 );
 CREATE INDEX idx_garden_reservations_place_time ON garden_reservations (place_id, starts_at) WHERE deleted_at IS NULL;
 CREATE INDEX idx_garden_reservations_time ON garden_reservations (starts_at, ends_at) WHERE deleted_at IS NULL;
+CREATE INDEX idx_garden_reservations_requested_by ON garden_reservations (requested_by_organization_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_garden_reservations_requested_for ON garden_reservations (requested_for_organization_id) WHERE deleted_at IS NULL;
+
+-- D-02b: una fila por cada responsable que tuvo la reserva, incluido el primero.
+-- responsible_contact_id de la reserva repite la última, para leer la agenda sin agrupar.
+CREATE TABLE garden_reservation_responsibles (
+    id                  BIGSERIAL PRIMARY KEY,
+    reservation_id      BIGINT    NOT NULL REFERENCES garden_reservations(id),
+    contact_id          BIGINT    NOT NULL REFERENCES contacts(id),
+    assigned_by_user_id BIGINT    NOT NULL REFERENCES users(id),
+    assigned_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_reservation_responsibles ON garden_reservation_responsibles (reservation_id, assigned_at);
+
+-- D-08b, enmienda a SPEC-106: el rol del contacto en cada organización.
+ALTER TABLE contact_organizations ADD COLUMN role VARCHAR(100);
 
 INSERT INTO system_parameters (code, label, value, value_type, description, is_editable)
 VALUES ('RESERVATION_NEARBY_METERS', 'Distancia de aviso por reservas (m)', '10', 'INTEGER',
@@ -274,11 +340,20 @@ ALTER TABLE import_batches ADD CONSTRAINT import_batches_kind_check
 
 ### 5.1 Registrar una reserva
 
-1. `/reservas/nueva`: jardín (selector de jardines prestables, por nombre o alias), organización,
-   contacto opcional (solo los de esa organización), fecha y hora de inicio y de fin, motivo.
-2. Al completar jardín y horario, el formulario pide `check` y muestra los avisos debajo del
+1. `/reservas/nueva`: jardín (selector de jardines prestables, por nombre o alias), fecha y hora
+   de inicio y de fin, motivo, y en este orden (D-02):
+   - **Pedido de** (`OrganizationPicker`) y **Solicitante** (`ContactPicker` filtrado por ella);
+   - **Para** (`OrganizationPicker`, opcional, con la ayuda «Solo si la usará otra organización»);
+   - **Responsable** (`ContactPicker` sin filtro de organización). Se llena con el solicitante al
+     elegirlo y sigue al solicitante mientras el usuario no lo cambie a mano.
+   Si la organización o el contacto no existen, la ventana de alta de cada selector los registra
+   sin salir de la reserva, con el rol opcional del contacto en esa organización (SPEC-106 §5.2).
+2. En `/reservas/[codigo]`, «Pedido de» y «Solicitante» se muestran como texto, no como campos.
+   Debajo del responsable, «Responsables anteriores» lista el historial (D-02b) con fecha y quién
+   hizo el cambio; no aparece si nunca cambió.
+3. Al completar jardín y horario, el formulario pide `check` y muestra los avisos debajo del
    horario. Puede guardar igual.
-3. Guardar → la respuesta trae `warnings`; si hay, se muestran una vez más junto a la
+4. Guardar → la respuesta trae `warnings`; si hay, se muestran una vez más junto a la
    confirmación y se vuelve a la agenda.
 
 ### 5.2 Agenda
@@ -287,7 +362,8 @@ ALTER TABLE import_batches ADD CONSTRAINT import_batches_kind_check
   organización, «Incluir anuladas». Los filtros viven en la URL (como Frecuencias).
 - Agrupada por día local («Hoy», «Mañana», «jue 13 nov»). Una reserva de varios días aparece en
   el día en que empieza, con su rango completo.
-- Cada fila: horario, jardín, organización, contacto con su teléfono, estado y motivo.
+- Cada fila: horario, jardín, «Pedido de» (y «para <organización>» si la hay), el responsable con
+  su rol y su teléfono, estado y motivo. El solicitante solo se muestra si no es el responsable.
 - ADMIN y COORDINADOR ven «Nueva reserva», «Registro masivo» y, en cada fila no terminada,
   «Editar» y «Anular».
 
@@ -302,9 +378,16 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 ### 5.4 Registro masivo
 
 - Plantilla CSV (UTF-8, `;`):
-  `jardin;organizacion;contacto;inicio;fin;motivo`.
+  `jardin;pedido_de;solicitante;para;responsable;inicio;fin;motivo`.
   - `jardin`: nombre del lugar, uno de sus alias o el código de una de sus secciones.
-  - `organizacion` y `contacto`: código, nombre o alias (como en contactos de SPEC-106).
+  - `pedido_de` y `para`: código, nombre o alias de una organización; `para` puede ir vacío.
+  - `solicitante` y `responsable`: código o nombre de un contacto (como en contactos de SPEC-106);
+    el solicitante se busca entre los de `pedido_de`, el responsable en todo el Directorio.
+    `responsable` vacío es el solicitante.
+  - Una organización o un contacto que no está en el Directorio es **error de esa fila**: el
+    registro masivo no crea nada en el Directorio *(decisión de diseño: el Directorio se carga
+    con su propio registro masivo; la ventana de alta es solo del formulario)*. Un nombre de
+    contacto que coincide con dos personas también es error: se usa su código.
   - `inicio` y `fin`: `dd/mm/aaaa hh:mm` en hora de Lima.
 - Vista previa por fila: *Se crea*, *Se crea con avisos* (cruces o trabajo cercano, con el texto)
   o *Error* con su motivo. Las reglas de §3.2 son errores; los avisos de D-07 nunca lo son.
@@ -319,7 +402,10 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
   intervención en «Lado oeste» es la misma ubicación, no una cercana (RESERVED_HERE).
 - Un jardín que deja de ser prestable con reservas futuras: las reservas siguen y se muestran;
   no se pueden crear nuevas.
-- Organización dada de baja en el Directorio: sus reservas siguen visibles con su nombre.
+- Organización o contacto dado de baja en el Directorio: sus reservas siguen visibles con su
+  nombre. Al editar, un responsable dado de baja se puede conservar; uno nuevo debe estar vigente.
+- El solicitante se desvincula después de «Pedido de»: la reserva lo conserva (D-02).
+- Cambiar el responsable y volver al anterior deja dos filas nuevas en el historial.
 - Una ubicación de intervención sin sección, lugar, coordenadas ni ejemplares no participa del aviso.
 
 ## 6. Criterios de aceptación
@@ -337,11 +423,15 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 | CA-07 | Una reserva pasada sale Terminada y no se puede editar ni anular | Crear con fecha de ayer |
 | CA-08 | Un CSV con una fila de jardín no prestable no guarda nada y señala esa fila | Registro masivo |
 | CA-09 | La ficha de un lugar prestable no muestra reservas; la agenda filtrada por ese jardín, sí | Abrir el lugar y la agenda |
+| CA-10 | Pedido de OIE (Juan Diego) para CF Psicología: el responsable propuesto es Juan Diego; se cambia a María, de CF Psicología; la ficha muestra a María, a Juan Diego como solicitante y el historial con los dos | Editar la reserva |
+| CA-11 | Una organización y un contacto nuevos se registran desde la reserva sin salir del formulario, y quedan en el Directorio con su rol | Ventana de alta |
+| CA-12 | Editar no deja cambiar «Pedido de» ni el solicitante | Ficha de la reserva |
+| CA-13 | Filtrar la agenda por CF Psicología trae la reserva pedida por la OIE para ella | Agenda |
 
 ## 7. Especificación visual
 
 - Agenda: encabezado de día en negrita; filas con el horario a la izquierda (`10:00–14:00`), el
-  jardín y la organización en la línea principal, el contacto y el motivo debajo, el estado como
+  jardín y «Pedido de … para …» en la línea principal, el responsable y el motivo debajo, el estado como
   `Badge` (Próxima info, En curso success, Terminada neutral, Anulada neutral tachado).
 - Avisos: el bloque ámbar de SPEC-203 para `WARNING`; para `CRITICAL`, el mismo bloque en los
   colores de peligro (`alert-danger`), con «Atención» al inicio.
@@ -356,7 +446,10 @@ Engine
 - días locales de una reserva 23:00-01:00 son dos
 
 Reglas
-- sección no prestable → 422; contacto de otra organización → 422; fin <= inicio → 422; 8 días → 422
+- sección no prestable → 422; solicitante de otra organización → 422; sin responsable → 422; fin <= inicio → 422; 8 días → 422
+- responsable de una organización distinta a pedido de y para → se guarda
+- requestedByCode o requesterCode al editar → 422; para igual a pedido de → se guarda vacío
+- crear deja una fila en el historial; cambiar el responsable agrega otra; editar sin cambiarlo no
 - editar o anular una Terminada → 422; versión vieja → 409
 
 Cercanía (integración, PostGIS)
@@ -373,14 +466,16 @@ Permisos
 
 Registro masivo
 - jardín por alias y organización por alias se resuelven; fecha ilegible → error de esa fila; todo o nada
+- responsable vacío → el solicitante; organización o contacto desconocido → error de esa fila; nombre de contacto ambiguo → error
 ```
 
 ## 9. Propio de este spec
 
 - Acciones auditables (SPEC-004 §3.2): `GARDEN_RESERVATION_CREATED`, `GARDEN_RESERVATION_UPDATED`,
-  `GARDEN_RESERVATION_CANCELLED`, con el código de la reserva y el del jardín; nunca el teléfono
+  `GARDEN_RESERVATION_CANCELLED`, `GARDEN_RESERVATION_RESPONSIBLE_CHANGED`, con el código de la reserva y el del jardín; nunca el teléfono
   del contacto.
-- Enmiendas a anotar en `REGISTRO.md`: SPEC-106 (el operario ve organización y contacto de una
-  reserva, D-08), SPEC-102 §4 (la reserva sí guarda el contacto, ahora por el
-  Directorio), Catálogo 1.12 (préstamos cubiertos; bloqueantes y recuperación siguen pendientes),
+- Enmiendas a anotar en `REGISTRO.md`: SPEC-106 (el operario ve organizaciones y contactos de una
+  reserva, D-08; rol del contacto en cada organización y columna `roles` de `contactos.csv`, D-08b;
+  «Pedido de» y «Para» de §9.4 resueltos para reservas, D-02), SPEC-102 §4 (la reserva guarda
+  solicitante y responsable, ahora por el Directorio), Catálogo 1.12 (préstamos cubiertos; bloqueantes y recuperación siguen pendientes),
   SPEC-001 Anexo A (fila de reservas).

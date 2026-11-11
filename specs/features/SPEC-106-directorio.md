@@ -267,6 +267,32 @@ pueden usar `pg_trgm`, como `PlaceSuggestionRepository`.
   por el usuario, «A / B» separado en dos personas, sin códigos de alumno, filas sucias
   ignoradas) y se suben por esta sección.
 
+### 4.3 Rol del contacto en cada organización
+
+> **Enmienda del 11 nov 2026 (decisión del usuario, desde SPEC-107 D-08b):** el vínculo
+> contacto–organización gana un **rol** opcional. La regla de §2.5 no cambia: todo contacto
+> pertenece al menos a una organización.
+
+- `contact_organizations.role VARCHAR(100)`, nulo sin rol, texto libre («Delegado», «Secretaria
+  académica»). La columna la agrega la migración de SPEC-107 (§4).
+- Un vínculo por par contacto–organización, con **un solo rol**; para cambiarlo se edita. Juan
+  Diego puede ser «Delegado» en la OIE y «Tesorero» en CF Psicología, y la ficha del contacto
+  junta sus roles («Delegado · OIE», «Tesorero · CF Psicología»).
+- API: `POST /contacts` acepta `roles`, un objeto código de organización → rol
+  (`{"ORG-0012": "Delegado"}`), con claves solo de `organizationCodes`; `POST
+  /contacts/{code}/organizations` acepta `role`; `PUT /contacts/{code}/organizations/{orgCode}`
+  (ADMIN, COORDINADOR) cambia solo el rol, `{"role": "Tesorero"}` o `null`. Las fichas devuelven
+  `role` en cada contacto de una organización y en cada organización de un contacto.
+- La ventana de alta y «Vincular a <organización>» de §5.2 piden el rol, opcional. Vincular un
+  contacto que ya está en esa organización no crea otro vínculo: ofrece editar su rol.
+- `contactos.csv` gana la columna opcional **`roles`** al final:
+  `nombre;organizaciones;anexo;celular;correo;roles`, con un rol por organización, en el mismo
+  orden y separados por `|`; un rol puede ir vacío. Un archivo **sin** la columna sigue valiendo
+  (excepción a «exactamente esas columnas» de §4.2). Más roles que organizaciones es error de la
+  fila. Un contacto «Ya existe» se omite igual: el CSV no cambia el rol de un vínculo existente.
+- Auditoría: `CONTACT_LINK_ROLE_UPDATED` con el código del contacto y el de la organización;
+  como los demás cambios de un contacto, sin el valor (§9.2).
+
 ## 5. Comportamiento
 
 ### 5.1 Flujo principal: registrar una organización
