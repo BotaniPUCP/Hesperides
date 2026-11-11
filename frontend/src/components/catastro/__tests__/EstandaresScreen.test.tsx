@@ -26,8 +26,8 @@ describe('EstandaresScreen', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it.each(ESTANDARES.map((e) => [e.titulo, e] as const))('las columnas de %s son las de su plantilla, en su orden', (_, e) => {
-    // La plantilla es la misma que sirve el backend (un test del backend lo vigila).
-    const plantilla = readFileSync(join(__dirname, '../../../../../docs/estandares/plantillas', e.archivo), 'utf8');
+    // La plantilla es la misma que sirve el backend (se lee del mismo archivo).
+    const plantilla = readFileSync(join(__dirname, '../../../../../backend/src/main/resources/imports/templates', e.archivo), 'utf8');
     const cabecera = plantilla.split(/\r?\n/)[0].split(';');
 
     expect(e.grupos.flatMap((g) => g.columnas.map((c) => c.nombre))).toEqual(cabecera);

@@ -274,7 +274,7 @@ class SpecimenImportIntegrationTest {
 
     @Test
     void theTemplateIsTheDocumentedOne() throws Exception {
-        byte[] documented = Files.readAllBytes(Path.of("..", "docs", "estandares", "plantillas", "ejemplares.csv"));
+        byte[] documented = Files.readAllBytes(Path.of("src", "main", "resources", "imports", "templates", "ejemplares.csv"));
         mockMvc.perform(get("/api/v1/imports/templates/specimens"))
                 .andExpect(status().isOk())
                 .andExpect(content().bytes(documented));

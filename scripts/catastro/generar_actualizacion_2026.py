@@ -11,7 +11,7 @@ import json
 from fuentes import DATOS, FUENTES, RAIZ
 
 SALIDA = RAIZ / "backend/src/main/resources/db/migration/V016__seed_measurements_2026_and_fountains.sql"
-BEBEDEROS = DATOS / "fuentes-mapa/bebederos"
+BEBEDEROS = DATOS / "mapa/bebederos"
 # El cliente confirma que midió en 2026, sin día: se registra el primero de enero.
 FECHA_MEDICION = "2026-01-01"
 NOTA_BH = "Medida en «mediciones forestales - Bosque Húmedo». Fecha no registrada en la fuente."
@@ -125,6 +125,8 @@ SELECT v.code, {item('FEATURE_TYPE', 'DRINKING_FOUNTAIN')}, v.name, v.geom, v.at
 def main():
     filas = bosque_humedo()
     bebederos, total = sql_bebederos()
+    # Este texto se copia dentro de una migracion ya aplicada: conserva la ruta antigua
+    # (docs/dominio/datos, hoy docs/datos/procesados) para no cambiar su checksum en Flyway.
     partes = [
         "-- Propiedad de SPEC-103 §4.5. ARCHIVO GENERADO: no se edita a mano.\n"
         "-- Lo produce scripts/catastro/generar_actualizacion_2026.py desde docs/dominio/datos/.\n",

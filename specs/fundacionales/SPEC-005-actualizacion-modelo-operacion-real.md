@@ -770,9 +770,9 @@ con estas correcciones:
 Resultado: **411 referencias** en 24 categorías y 270 nombres distintos. Los archivos versionados son
 la fuente de la migración:
 
-- [`docs/dominio/datos/referencias-oficiales.csv`](../../docs/dominio/datos/referencias-oficiales.csv)
-- [`docs/dominio/datos/referencias-alias.csv`](../../docs/dominio/datos/referencias-alias.csv)
-- [`docs/dominio/datos/plantas-sin-especie.csv`](../../docs/dominio/datos/plantas-sin-especie.csv) — **no se carga**: queda como registro hasta decidir su tratamiento
+- [`docs/datos/procesados/referencias-oficiales.csv`](../../docs/datos/procesados/referencias-oficiales.csv)
+- [`docs/datos/procesados/referencias-alias.csv`](../../docs/datos/procesados/referencias-alias.csv)
+- [`docs/datos/procesados/plantas-sin-especie.csv`](../../docs/datos/procesados/plantas-sin-especie.csv) — **no se carga**: queda como registro hasta decidir su tratamiento
 
 **El Excel histórico contra las referencias.** De sus 75 lugares distintos, 73 coinciden por nombre
 exacto y `hallazgos` entra por alias. **`Universitaria` no está entre las referencias**: las filas
@@ -921,7 +921,7 @@ CREATE TABLE place_reference_aliases (
 CREATE INDEX idx_place_reference_aliases_reference ON place_reference_aliases(reference_id);
 
 -- Carga oficial inicial: 411 referencias y 1 alias, generados desde
--- docs/dominio/datos/referencias-*.csv.
+-- docs/datos/procesados/referencias-*.csv.
 ```
 
 **Lo que el DDL no dice:**

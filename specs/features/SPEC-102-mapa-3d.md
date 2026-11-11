@@ -130,7 +130,7 @@ GeoJSON de origen tienen coordenadas reales; cargarlos en PostGIS y proyectar en
 elimina el problema.
 
 **D-07 · El catastro se arma desde sus tres archivos, no desde la capa del HTML.**
-*(Implementado: el catastro está en la base, `V012`–`V014`, ver `docs/inventario-verde/README.md`, y el mapa lo dibuja en la capa `vegetation`. Las alturas medidas viajan desde la base; las ilustrativas las calcula el visor, `plantShape.ts`, y nunca se guardan.)* La capa de
+*(Implementado: el catastro está en la base, `V012`–`V014`, ver `docs/modulos/inventario-verde.md`, y el mapa lo dibuja en la capa `vegetation`. Las alturas medidas viajan desde la base; las ilustrativas las calcula el visor, `plantShape.ts`, y nunca se guardan.)* La capa de
 vegetación del HTML (1081 plantas) mezcla fuentes y solo 941 plantas coinciden con el catastro por
 coordenada exacta. La carga une, por coordenada exacta (< 0.2 m):
 
@@ -142,7 +142,7 @@ coordenada exacta. La carga une, por coordenada exacta (< 0.2 m):
 
 Las **128 plantas** del HTML que no aparecen en ninguno de los tres archivos (100 árboles, 23
 palmeras y 5 arbustos, todas dentro del campus y con especie) **no se cargan**: están listadas para
-revisión en [`plantas-sin-fuente.csv`](../../docs/dominio/datos/plantas-sin-fuente.csv), con su
+revisión en [`plantas-sin-fuente.csv`](../../docs/datos/procesados/plantas-sin-fuente.csv), con su
 fuente más cercana y la distancia. 109 se concentran en Universitaria (78) y Jardín Central (31); 9
 tienen su código en el catastro a 1–4 m, probablemente la misma planta medida otra vez. Tres filas
 de las mediciones tienen la longitud mal escrita (`-7,708…` por `-77,08…`: palmera 52 y cafetos 3 y
@@ -203,7 +203,7 @@ cronológica del [mapa de migraciones](../REGISTRO.md#mapa-de-migraciones):
 | V008 | Edificios (contorno, altura, pisos, fuente, categoría) y sus alias |
 | V009 | Mobiliario y elementos puntuales |
 | V010 | La versión de datos y los triggers que la incrementan |
-| V011 | La semilla, generada por `scripts/mapa/generar_semilla_mapa.py` desde `docs/dominio/datos/fuentes-mapa/` |
+| V011 | La semilla, generada por `scripts/mapa/generar_semilla_mapa.py` desde `docs/datos/procesados/mapa/` |
 
 La descripción congelada en la incidencia (§4.4) queda reservada como `V026`, después de la
 migración que crea `incidents`.
@@ -401,7 +401,7 @@ Frontend (Jest, visor simulado)
 | P-01 | Modelos de los 5 equipos Android y si el mapa debe abrir sin señal | CA-09 |
 | P-02 | Planos de edificios de la PUCP (≈ 1 semana) | Retirar la atribución de OpenStreetMap |
 | P-03 | Fuente de los 67 bebederos | Su capa |
-| P-04 | Revisión de las 128 plantas del HTML sin fuente (`docs/dominio/datos/plantas-sin-fuente.csv`) | Su carga |
+| P-04 | Revisión de las 128 plantas del HTML sin fuente (`docs/datos/procesados/plantas-sin-fuente.csv`) | Su carga |
 
 **Origen de los datos de carga:** `Documentos_Port/internos` (GeoJSON de áreas verdes, reserva,
 xerofíticas, zonas de supervisión, fauna, puertas y estacionamientos; CSV de tachos y mediciones),

@@ -1,9 +1,9 @@
 # Estándar de ejemplares (`ejemplares.csv`)
 
 Una fila es una planta, o una agrupación si `cantidad` es mayor que 1. Es el mismo formato que
-exporta el sistema. Plantilla: [plantillas/ejemplares.csv](plantillas/ejemplares.csv), con una
+exporta el sistema. Plantilla: [ejemplares.csv](../../backend/src/main/resources/imports/templates/ejemplares.csv), con una
 fila de ejemplo que hay que borrar antes de cargar. Las reglas comunes están en el
-[README](README.md).
+[README](estandares-de-carga.md).
 
 ## Identificación y ubicación
 

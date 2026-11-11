@@ -1,4 +1,4 @@
-"""Genera V014__seed_green_inventory.sql y docs/dominio/datos/ejemplares.csv desde docs/dominio/datos.
+"""Genera V014__seed_green_inventory.sql y docs/datos/procesados/ejemplares.csv desde docs/datos/procesados.
 
 Uso, desde la raíz del repositorio:
 
@@ -10,6 +10,8 @@ from fuentes import RAIZ, especies, ejemplares
 SALIDA = RAIZ / "backend/src/main/resources/db/migration/V014__seed_green_inventory.sql"
 CODIGO = "EV-{:06d}"
 
+# Este texto se copia dentro de una migracion ya aplicada: conserva la ruta antigua
+# (docs/dominio/datos, hoy docs/datos/procesados) para no cambiar su checksum en Flyway.
 CABECERA = """-- Propiedad del inventario verde (docs/inventario-verde/README.md). ARCHIVO GENERADO:
 -- no se edita a mano. Lo produce scripts/catastro/generar_semilla_catastro.py desde
 -- docs/dominio/datos/. Para cambiar un dato, se corrige la fuente y se vuelve a generar.

@@ -102,7 +102,7 @@ El perfil `dev` carga automáticamente las cuentas y los casos de demostración
 mediante Flyway, después de crear el esquema. El SQL vive en
 `backend/src/main/resources/db/dev-migration/R__seed_demo_incidents.sql`; no se
 ejecuta desde la configuración común sin dev. La guía y las cuentas para una
-**base aislada** están en [`docs/demos/incidencias.md`](docs/demos/incidencias.md).
+**base aislada** están en [`docs/modulos/demo-incidencias.md`](docs/modulos/demo-incidencias.md).
 No activar `dev` en una base real: Compose base lo usa por defecto y el override
 dev lo fuerza; producción debe seleccionar otro perfil sin ese override.
 

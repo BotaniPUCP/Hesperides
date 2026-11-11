@@ -438,7 +438,7 @@ class MigrationSmokeTest {
 
     @Test
     void theTwoDescriptionsConfirmedByTheClientAreVerbatim() {
-        // Las únicas dos que constan en material del cliente (docs/dominio/README.md
+        // Las únicas dos que constan en material del cliente (docs/dominio/negocio.md
         // §5.4). El resto son provisionales y se contrastarán con el Excel DAF-OSG.
         String canteo = jdbcTemplate.queryForObject("""
                 SELECT ci.metadata->>'description' FROM catalog_items ci

@@ -7,7 +7,7 @@
 
 | Campo | Valor |
 |-------|-------|
-| HU relacionada | A-06 (`docs/PRODUCT-BACKLOG.md`) |
+| HU relacionada | A-06 (`docs/producto/product-backlog.md`) |
 | Autor | Equipo Hesperides |
 | Plataforma | Web |
 | Sprint | S3 |

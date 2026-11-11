@@ -114,7 +114,7 @@ class DirectoryImportIntegrationTest {
         @Test
         void theTemplatesAreTheDocumentedOnes() throws Exception {
             for (String[] t : new String[][]{{"organizations", "organizaciones.csv"}, {"contacts", "contactos.csv"}}) {
-                byte[] documented = Files.readAllBytes(Path.of("..", "docs", "estandares", "plantillas", t[1]));
+                byte[] documented = Files.readAllBytes(Path.of("src", "main", "resources", "imports", "templates", t[1]));
                 mockMvc.perform(get(IMPORTS + "/templates/" + t[0])).andExpect(status().isOk())
                         .andExpect(content().bytes(documented));
             }

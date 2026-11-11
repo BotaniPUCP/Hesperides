@@ -2,7 +2,7 @@
 
 Una fila es una organización: una unidad PUCP o una empresa externa (SPEC-106 §4.2). Se carga en
 **Directorio → Registro masivo → Organizaciones**, solo ADMIN y COORDINADOR. Plantilla:
-[plantillas/organizaciones.csv](plantillas/organizaciones.csv), con una fila de ejemplo que hay que
+[organizaciones.csv](../../backend/src/main/resources/imports/templates/organizaciones.csv), con una fila de ejemplo que hay que
 borrar antes de cargar.
 
 | Columna | Obligatoria | Qué va |
@@ -24,6 +24,6 @@ borrar antes de cargar.
 
 ## Cómo se carga
 
-Sigue el ciclo común de las cargas del catastro ([README](README.md)): la revisión abre un lote en
+Sigue el ciclo común de las cargas del catastro ([README](estandares-de-carga.md)): la revisión abre un lote en
 el servidor; solo quien lo subió lo confirma, dentro de la hora; la confirmación escribe
 exactamente lo revisado, todo o nada, y cada organización creada recuerda su lote.

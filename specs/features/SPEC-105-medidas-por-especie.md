@@ -39,7 +39,7 @@ cerrar una poda. Sin estimación automática.
 | **Crítica** | Medida real | «Sin medir», sin ningún valor |
 | **No crítica** | Medida real | Promedio de la especie, indicado como no medido |
 
-Distribución inicial, según `docs/dominio/datos/ejemplares.csv` (la base real puede variar):
+Distribución inicial, según `docs/datos/procesados/ejemplares.csv` (la base real puede variar):
 
 | | Medido | No medido | Total |
 |---|---|---|---|
@@ -293,7 +293,7 @@ Se aplican por `slug`.
 
 - El promedio del agave es **por planta**, no por agrupación.
 - **Correcciones de tipo:** `matthiola-incana` y `chlorophytum-comosum` pasan a `HERB`. El tipo `SUCCULENT`
-  sigue en el catálogo. También se actualiza `docs/dominio/datos/especies.csv`.
+  sigue en el catálogo. También se actualiza `docs/datos/procesados/especies.csv`.
 - **`uses_trunk_height` y `uses_dbh`:** `FALSE` en las 12 no críticas y en la buganvilla. Las otras cuatro
   críticas de esta tabla los conservan porque pueden crecer como árboles pequeños. Son editables.
 

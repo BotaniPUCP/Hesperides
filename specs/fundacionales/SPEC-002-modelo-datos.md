@@ -112,7 +112,7 @@ Este spec no expone endpoints propios. Fija los invariantes que toda API constru
 | V003 | `V003__create_system_parameters.sql` | SPEC-002 §4.9 | ✅ Aplicada. La tabla `system_parameters` de §4.9 |
 | V004 | `V004__enable_postgis.sql` | SPEC-002 | ✅ Aplicada con SPEC-102 |
 | V005 | `V005__create_zones.sql` | SPEC-002 | ✅ Aplicada con SPEC-102, que añade contorno, reserva, tipo de paisaje y riego |
-| V012 | `V012__create_species.sql` | SPEC-002 | ✅ Aplicada con el inventario verde (docs/inventario-verde/README.md) |
+| V012 | `V012__create_species.sql` | SPEC-002 | ✅ Aplicada con el inventario verde (docs/modulos/inventario-verde.md) |
 | V013 | `V013__create_green_elements.sql` | SPEC-002 | ✅ Aplicada con el inventario verde, sin `zone_id` y con medidas (README §2) |
 | V025 | `V025__create_interventions.sql` | SPEC-200, concilia SPEC-002/005 | Implementada y probada en bases temporales; ejecución independiente por ubicación. API y base de trabajo pendientes |
 | Por asignar | Creación de contratos | SPEC-002 | Diseño histórico abajo; asignar número al implementar |

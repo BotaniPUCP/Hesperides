@@ -1,7 +1,7 @@
 # Estándar de fotos de especies (`fotos-especies.csv`)
 
 Las fotos genéricas de una especie: las que se ven en su ficha del inventario, de una a varias, con
-su crédito (SPEC-104). Plantilla: [plantillas/fotos-especies.csv](plantillas/fotos-especies.csv).
+su crédito (SPEC-104). Plantilla: [fotos-especies.csv](../../backend/src/main/resources/imports/templates/fotos-especies.csv).
 
 | Columna | Obligatoria | Qué va |
 |---|---|---|
@@ -44,4 +44,4 @@ La primera tanda de fotos no pasa por la pantalla: se deja en la carpeta `inbox/
 servidor, con este mismo CSV llamado `fotos-especies.csv`, y un administrador lanza la carga
 (`POST /api/v1/green-inventory/species-photos/load-inbox`). Cada original se borra de la bandeja al
 quedar guardada su versión reducida. Detalle en SPEC-104 D-05 y D-06 y en el
-[README de despliegue](../arquitectura/despliegue/despliegue.md).
+[README de despliegue](../arquitectura/despliegue.md).
