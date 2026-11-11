@@ -26,7 +26,7 @@ export function StatusBadge({ code, label }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium',
         // Un catálogo configurable puede crecer con codes que este spec no
         // contempla: se degrada a neutro legible en vez de quedar sin color.
         STATUS_COLORS[code] ?? UNKNOWN_STATUS,
