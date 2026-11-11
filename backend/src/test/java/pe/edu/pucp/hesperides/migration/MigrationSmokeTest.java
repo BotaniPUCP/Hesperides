@@ -119,6 +119,18 @@ class MigrationSmokeTest {
     }
 
     @Test
+    void theAnnualQuotaRuleIsNamedPlainly() {
+        // V039: el nombre anterior aludia a estaciones que esta regla no evalua.
+        String label = jdbcTemplate.queryForObject("""
+                SELECT ci.label FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'FREQUENCY_RULE_TYPE' AND ci.code = 'SEASONAL_PERIOD'
+                """, String.class);
+
+        assertThat(label).isEqualTo("Cuota anual");
+    }
+
+    @Test
     void theRoleCatalogCarriesOnlyTheFourRealRoles() {
         // El historial anterior sembraba un USER generico que una migracion
         // posterior desactivaba. El baseline declara el estado final, asi que ese
