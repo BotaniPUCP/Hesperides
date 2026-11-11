@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
 import type { GreenAreaSetSummary, MaintenanceFrequency } from '@shared/types';
-import { Badge, Button } from '@/components/ui';
+import { Badge, Button, DataTable, type DataTableColumn } from '@/components/ui';
 import { FrequencyParameters, scopeLabel } from './FrequencyParameters';
 import { FrequencyRuleBadge } from './FrequencyRuleBadge';
 
@@ -14,83 +13,65 @@ interface Props {
   onDeactivate: (id: number) => void;
 }
 
-export function FrequenciesTable({ frequencies, sets, canManage, onEdit, onDeactivate }: Props) {
+function ScopeCell({ frequency: f, sets }: { frequency: MaintenanceFrequency; sets: GreenAreaSetSummary[] }) {
+  if (f.scope !== 'BY_SET' || f.greenAreaSetId == null) return <>{scopeLabel(f.scope)}</>;
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-neutral-200 text-left text-sm">
-        <thead className="bg-neutral-50 text-neutral-600 font-medium">
-          <tr>
-            <th className="px-4 py-3">Actividad / Labor</th>
-            <th className="px-4 py-3">Modalidad</th>
-            <th className="px-4 py-3">Modelo</th>
-            <th className="px-4 py-3">Parámetros</th>
-            <th className="px-4 py-3">Duración</th>
-            <th className="px-4 py-3">Se aplica a</th>
-            <th className="px-4 py-3">Vigente desde</th>
-            {canManage && <th className="px-4 py-3 text-right">Acciones</th>}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-neutral-200">
-          {frequencies.map((f) => (
-            <tr key={f.id} className="hover:bg-neutral-50 transition-colors">
-              <td className="px-4 py-3 font-medium text-neutral-900">
-                <div>{f.activityType.label}</div>
-                {f.notes && (
-                  <div
-                    className="text-xs text-neutral-500 font-normal truncate max-w-xs"
-                    title={f.notes}
-                  >
-                    {f.notes}
-                  </div>
-                )}
-              </td>
-              <td className="px-4 py-3">
-                {f.regime === 'OUTSOURCED' ? (
-                  <Badge label="Tercerizado" color="info" />
-                ) : (
-                  <Badge label="Personal propio" color="brand" />
-                )}
-              </td>
-              <td className="px-4 py-3">
-                <FrequencyRuleBadge
-                  ruleCode={f.frequencyRuleType.code}
-                  label={f.frequencyRuleType.label}
-                />
-              </td>
-              <td className="px-4 py-3">
-                <FrequencyParameters frequency={f} />
-              </td>
-              <td className="px-4 py-3 text-neutral-700">
-                {f.estimatedDurationDays ? `${f.estimatedDurationDays} días` : '—'}
-              </td>
-              <td className="px-4 py-3 text-xs text-neutral-600">
-                {f.scope === 'BY_SET' && f.greenAreaSetId != null ? (
-                  <>
-                    <span className="block font-medium text-neutral-800">
-                      {sets.find((s) => s.id === f.greenAreaSetId)?.name ?? `Conjunto ${f.greenAreaSetId}`}
-                    </span>
-                    {/* SPEC-203 §5.3: el único lugar donde se dice que el cada cuánto no es el general. */}
-                    <span className="block">propio de este conjunto</span>
-                  </>
-                ) : scopeLabel(f.scope)}
-              </td>
-              {/* Delata desde cuándo rige esta versión: sin eso, el historial
-                  existiría en la base pero no se vería en la pantalla. */}
-              <td className="px-4 py-3 text-xs text-neutral-600">{f.validFrom}</td>
-              {canManage && (
-                <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                  <Button variant="secondary" size="sm" onClick={() => onEdit(f)}>
-                    Editar
-                  </Button>
-                  <Button variant="danger" size="sm" onClick={() => onDeactivate(f.id)}>
-                    Desactivar
-                  </Button>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <span className="block font-medium text-neutral-800">
+        {sets.find((s) => s.id === f.greenAreaSetId)?.name ?? `Conjunto ${f.greenAreaSetId}`}
+      </span>
+      {/* SPEC-203 §5.3: el único lugar donde se dice que el cada cuánto no es el general. */}
+      <span className="block text-xs text-neutral-600">propio de este conjunto</span>
+    </>
+  );
+}
+
+/** Las frecuencias vigentes, con la tabla estándar de la aplicación (tarjetas en móvil). */
+export function FrequenciesTable({ frequencies, sets, canManage, onEdit, onDeactivate }: Props) {
+  const columns: DataTableColumn<MaintenanceFrequency>[] = [
+    {
+      key: 'activity', header: 'Actividad',
+      render: (f) => (
+        <>
+          <span className="block font-medium text-neutral-900">{f.activityType.label}</span>
+          {f.notes && <span className="block max-w-xs truncate text-xs text-neutral-500" title={f.notes}>{f.notes}</span>}
+        </>
+      ),
+    },
+    {
+      key: 'regime', header: 'Quién la ejecuta',
+      render: (f) => f.regime === 'OUTSOURCED'
+        ? <Badge label="Tercerizado" color="info" />
+        : <Badge label="Personal propio" color="brand" />,
+    },
+    {
+      key: 'rule', header: 'Tipo de frecuencia',
+      render: (f) => <FrequencyRuleBadge ruleCode={f.frequencyRuleType.code} label={f.frequencyRuleType.label} />,
+    },
+    { key: 'parameters', header: 'Cada cuánto', render: (f) => <FrequencyParameters frequency={f} /> },
+    {
+      key: 'duration', header: 'Duración estimada', hideOnMobile: true,
+      render: (f) => (f.estimatedDurationDays ? `${f.estimatedDurationDays} días` : '—'),
+    },
+    { key: 'scope', header: 'Se aplica a', render: (f) => <ScopeCell frequency={f} sets={sets} /> },
+    // Desde cuándo rige esta versión: sin eso el historial existiría en la base pero no se vería.
+    { key: 'validFrom', header: 'Vigente desde', hideOnMobile: true, render: (f) => f.validFrom },
+  ];
+  if (canManage) {
+    columns.push({
+      key: 'actions', header: 'Acciones', headerClassName: 'text-right', className: 'whitespace-nowrap text-right',
+      render: (f) => (
+        <span className="inline-flex gap-2">
+          <Button variant="secondary" size="sm" onClick={() => onEdit(f)}>Editar</Button>
+          <Button variant="danger" size="sm" onClick={() => onDeactivate(f.id)}>Desactivar</Button>
+        </span>
+      ),
+    });
+  }
+
+  return (
+    <DataTable columns={columns} rows={frequencies} rowKey={(f) => f.id}
+      totalElements={frequencies.length} page={0} pageSize={Math.max(frequencies.length, 1)}
+      onPageChange={() => undefined} />
   );
 }
