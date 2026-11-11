@@ -18,8 +18,8 @@ import { createTextures } from './textures';
 import { createVegetationLayer } from './vegetation';
 import { WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { createViewCones } from './viewCones';
-import { sectionPoints } from './frameFit';
-import { sectionCodesInScreenRect } from './screenRectSections';
+import { sectionPoints, specimenPoints } from './frameFit';
+import { sectionCodesInScreenRect, specimenCodesInScreenRect } from './screenRectSections';
 import type { Viewer, ViewerCallbacks } from './viewerTypes';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
@@ -59,6 +59,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const points = createCampusPoints(scene, data, center);
   const foliage = createFoliageMaterials(textures);
   const vegetation = createVegetationLayer(scene, data.vegetation, foliage);
+  // Como las secciones: solo Conjuntos marca ejemplares; el mapa general no lo usa.
+  const markedSpecimenCodes = new Set<string>();
+  const plantColor = vegetation.color;
+  vegetation.color = (i) => markedSpecimenCodes.has(data.vegetation[i]?.props.code) ? MARKED_COLOR : plantColor(i);
   const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points, vegetation };
   const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
@@ -169,10 +173,18 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       highlight.repaint('campusBuildings');
       needsRender = true;
     },
+    setMarkedSpecimens(codes) {
+      markedSpecimenCodes.clear();
+      codes.forEach((code) => markedSpecimenCodes.add(code));
+      highlight.repaint('vegetation');
+      needsRender = true;
+    },
     sectionCodesInScreenRect: (x1, y1, x2, y2, eligible) => sectionCodesInScreenRect(data, rig.camera, renderer.domElement, x1, y1, x2, y2, eligible),
-    focusSections(codes) {
+    specimenCodesInScreenRect: (x1, y1, x2, y2, eligible) => specimenCodesInScreenRect(data, rig.camera, renderer.domElement, x1, y1, x2, y2, eligible),
+    focusSections(codes, specimenCodes = []) {
       const wanted = new Set(codes);
-      rig.focusPoints(SECTION_LAYERS.flatMap((id) => sectionPoints(data[id], wanted)));
+      rig.focusPoints([...SECTION_LAYERS.flatMap((id) => sectionPoints(data[id], wanted)),
+        ...specimenPoints(data.vegetation, new Set(specimenCodes))]);
     },
     setPaint(mode, hidden) {
       state.mode = mode;

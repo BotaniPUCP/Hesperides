@@ -15,7 +15,7 @@ it('pide la planificación y los jardines atendidos hace poco (SPEC-203 §3.2, �
 });
 
 it('lee, crea, edita y da de baja conjuntos (SPEC-203 §3.1)', () => {
-  const body = { name: 'Pabellones', description: null, zoneIds: [1], activityTypeItemIds: [30], version: 2 };
+  const body = { name: 'Pabellones', description: null, zoneIds: [1], elementIds: [], activityTypeItemIds: [30], version: 2 };
   greenAreaSetsApi.list();
   greenAreaSetsApi.get(3);
   greenAreaSetsApi.create(body);

@@ -15,11 +15,26 @@ export interface GreenAreaSetZone {
   sectorName: string | null;
 }
 
+/**
+ * Un ejemplar del catastro dentro de un conjunto. Sección y sector salen de su
+ * posición: son nulos si está en una vereda o plaza, fuera de toda sección.
+ */
+export interface GreenAreaSetElement {
+  id: number;
+  code: string;
+  displayName: string;
+  typeLabel: string | null;
+  sectionName: string | null;
+  sectorId: number | null;
+  sectorName: string | null;
+}
+
 export interface GreenAreaSetSummary {
   id: number;
   name: string;
   description: string | null;
   zoneCount: number;
+  elementCount: number;
   activities: ActivityRef[];
   version: number;
 }
@@ -31,6 +46,7 @@ export interface GreenAreaSetDetail {
   version: number;
   activities: ActivityRef[];
   zones: GreenAreaSetZone[];
+  elements: GreenAreaSetElement[];
   /** Avisos de cruce de frecuencias propias (D-08); nunca impiden guardar. */
   warnings: string[];
 }
@@ -39,6 +55,8 @@ export interface GreenAreaSetRequest {
   name: string;
   description: string | null;
   zoneIds: number[];
+  /** Un conjunto lleva jardines, ejemplares o ambos. */
+  elementIds: number[];
   activityTypeItemIds: number[];
   /** Solo al editar: la versión que se vio al abrir el formulario. */
   version?: number;
@@ -67,6 +85,7 @@ export interface PlanningRow {
   setId: number;
   setName: string;
   zoneCount: number;
+  elementCount: number;
   activityTypeItemId: number;
   activityLabel: string | null;
   ruleKind: string | null;

@@ -22,6 +22,12 @@ export function sectionPoints(sections: readonly { g: Polygon[]; props: { code: 
   return points;
 }
 
+/** Los ejemplares pedidos, como puntos del suelo para encuadrarlos. */
+export function specimenPoints(plants: readonly { p: [number, number] | number[]; props: { code: string } }[],
+  codes: ReadonlySet<string>): GroundPoint[] {
+  return plants.filter((plant) => codes.has(plant.props.code)).map((plant) => ({ x: plant.p[0], z: -plant.p[1] }));
+}
+
 export function framingTarget(points: readonly GroundPoint[], groundY: number): THREE.Vector3 {
   const xs = points.map((p) => p.x), zs = points.map((p) => p.z);
   return new THREE.Vector3((Math.min(...xs) + Math.max(...xs)) / 2, groundY, (Math.min(...zs) + Math.max(...zs)) / 2);

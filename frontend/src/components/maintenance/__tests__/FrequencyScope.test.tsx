@@ -8,7 +8,7 @@ jest.mock('@/components/forms/unsaved/useUnsavedChangesGuard', () => ({
   useUnsavedChangesGuard: () => ({ confirm: (fn: () => void) => fn(), dialog: null, navigate: jest.fn() }),
 }));
 
-const sets = [{ id: 5, name: 'Campo deportivo', description: null, zoneCount: 4, activities: [], version: 0 }];
+const sets = [{ id: 5, name: 'Campo deportivo', description: null, zoneCount: 4, elementCount: 0, activities: [], version: 0 }];
 
 const frequency: MaintenanceFrequency = {
   id: 1,

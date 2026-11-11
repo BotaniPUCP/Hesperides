@@ -15,6 +15,30 @@ function inRing(p: ScreenPoint, pts: ScreenPoint[]): boolean {
   return hit;
 }
 
+function projector(camera: THREE.PerspectiveCamera, canvasEl: HTMLCanvasElement) {
+  const canvas = canvasEl.getBoundingClientRect();
+  camera.updateMatrixWorld();
+  return (x: number, y: number): ScreenPoint => {
+    const p = new THREE.Vector3(x, WORLD_LIFT + 0.8, -y).project(camera);
+    return { x: canvas.left + (p.x + 1) * canvas.width / 2, y: canvas.top + (1 - p.y) * canvas.height / 2 };
+  };
+}
+
+/** Ejemplares elegibles cuyo punto cae dentro del rectángulo de pantalla (píxeles cliente). */
+export function specimenCodesInScreenRect(
+  data: SceneData, camera: THREE.PerspectiveCamera, canvasEl: HTMLCanvasElement,
+  x1: number, y1: number, x2: number, y2: number, eligible: readonly string[],
+): string[] {
+  const allowed = new Set(eligible);
+  const project = projector(camera, canvasEl);
+  const [left, right, top, bottom] = [Math.min(x1, x2), Math.max(x1, x2), Math.min(y1, y2), Math.max(y1, y2)];
+  return data.vegetation.filter((plant) => {
+    if (!allowed.has(plant.props.code)) return false;
+    const p = project(plant.p[0], plant.p[1]);
+    return p.x >= left && p.x <= right && p.y >= top && p.y <= bottom;
+  }).map((plant) => plant.props.code);
+}
+
 /** Áreas elegibles cuyo polígono cruza el rectángulo de pantalla (píxeles cliente). */
 export function sectionCodesInScreenRect(
   data: SceneData, camera: THREE.PerspectiveCamera, canvasEl: HTMLCanvasElement,
@@ -23,12 +47,7 @@ export function sectionCodesInScreenRect(
   const allowed = new Set(eligible);
   const found = new Set<string>();
   const bounds = { left: Math.min(x1, x2), right: Math.max(x1, x2), top: Math.min(y1, y2), bottom: Math.max(y1, y2) };
-  const canvas = canvasEl.getBoundingClientRect();
-  camera.updateMatrixWorld();
-  const project = (x: number, y: number): ScreenPoint => {
-    const p = new THREE.Vector3(x, WORLD_LIFT + 0.8, -y).project(camera);
-    return { x: canvas.left + (p.x + 1) * canvas.width / 2, y: canvas.top + (1 - p.y) * canvas.height / 2 };
-  };
+  const project = projector(camera, canvasEl);
   const inside = (p: ScreenPoint) => p.x >= bounds.left && p.x <= bounds.right && p.y >= bounds.top && p.y <= bounds.bottom;
   const corners = [
     { x: bounds.left, y: bounds.top }, { x: bounds.right, y: bounds.top },
