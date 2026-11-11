@@ -7,7 +7,7 @@ import type { MessagePattern } from './placeErrorMessages';
 export const PLANNING_MESSAGES: Record<string, string> = {
   'Ya existe un conjunto con ese nombre': 'Ya existe un conjunto con ese nombre.',
   'El nombre del conjunto es obligatorio': 'Ponle un nombre al conjunto.',
-  'Elige al menos un jardín': 'Elige al menos un jardín.',
+  'Elige al menos un jardín o un ejemplar': 'Elige al menos un jardín o un ejemplar.',
   'Elige al menos una actividad': 'Elige al menos una actividad que se planifique en este conjunto.',
   'Otra persona cambió este conjunto. Recarga para ver su versión.':
     'Otra persona cambió este conjunto mientras lo editabas. Recarga para ver su versión.',
@@ -25,4 +25,5 @@ export const PLANNING_MESSAGES: Record<string, string> = {
 export const PLANNING_PATTERNS: readonly MessagePattern[] = [
   [/^Solo se pueden agregar secciones: /, () => 'Solo se pueden agregar jardines. Revisa la selección.'],
   [/^Actividades no válidas: /, () => 'Alguna actividad elegida ya no existe. Recarga la página.'],
+  [/^Ejemplares no válidos: /, () => 'Algún ejemplar elegido fue dado de baja. Revisa la selección.'],
 ];
