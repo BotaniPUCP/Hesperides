@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetRequest;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Detail;
+import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.ElementRef;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Summary;
 import pe.edu.pucp.hesperides.modules.planning.sets.service.GreenAreaSetsService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
@@ -35,6 +36,12 @@ public class GreenAreaSetsController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<Summary>>> list() {
         return ResponseEntity.ok(ApiResponse.ok("Conjuntos de áreas verdes", service.list()));
+    }
+
+    /** Antes que /{id}: la ruta literal no debe leerse como un id. */
+    @GetMapping("/element-options")
+    public ResponseEntity<ApiResponse<List<ElementRef>>> elementOptions() {
+        return ResponseEntity.ok(ApiResponse.ok("Ejemplares disponibles", service.elementOptions()));
     }
 
     @GetMapping("/{id}")

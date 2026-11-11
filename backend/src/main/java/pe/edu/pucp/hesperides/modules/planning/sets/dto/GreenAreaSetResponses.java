@@ -15,11 +15,20 @@ public final class GreenAreaSetResponses {
                           String landscapeCode, String sectorName) {
     }
 
-    public record Summary(long id, String name, String description, int zoneCount,
+    /**
+     * Un ejemplar del catastro. La sección y el sector salen de su posición (no se
+     * guardan): son nulos si está en una vereda o plaza, fuera de toda sección.
+     */
+    public record ElementRef(long id, String code, String displayName, String typeLabel,
+                             String sectionName, Long sectorId, String sectorName) {
+    }
+
+    public record Summary(long id, String name, String description, int zoneCount, int elementCount,
                           List<ActivityRef> activities, long version) {
     }
 
     public record Detail(long id, String name, String description, long version,
-                         List<ActivityRef> activities, List<ZoneRef> zones, List<String> warnings) {
+                         List<ActivityRef> activities, List<ZoneRef> zones, List<ElementRef> elements,
+                         List<String> warnings) {
     }
 }

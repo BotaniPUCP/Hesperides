@@ -30,6 +30,11 @@ public final class GreenAreaSetRules {
         return distinct;
     }
 
+    /** Como {@link #distinctIds}, pero una lista vacía o ausente es válida. */
+    public static List<Long> optionalIds(Collection<Long> ids) {
+        return ids == null ? List.of() : ids.stream().filter(Objects::nonNull).distinct().toList();
+    }
+
     public static void rejectAny(List<Long> invalid, String prefix) {
         if (!invalid.isEmpty()) {
             throw new BusinessRuleException(prefix + invalid.stream().map(String::valueOf)

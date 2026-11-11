@@ -56,7 +56,9 @@ class GreenAreaSetsServiceImplTest {
         });
         when(queries.nonSections(anyCollection())).thenReturn(List.of());
         when(queries.invalidActivities(anyCollection())).thenReturn(List.of());
+        when(queries.invalidElements(anyCollection())).thenReturn(List.of());
         when(queries.zonesOf(anyLong())).thenReturn(List.of());
+        when(queries.elementsOf(anyLong())).thenReturn(List.of());
         when(queries.activitiesOf(anyLong())).thenReturn(List.of());
         when(queries.overlaps(anyLong())).thenReturn(List.of());
         service = new GreenAreaSetsServiceImpl(sets, queries, users, audit);
@@ -69,7 +71,7 @@ class GreenAreaSetsServiceImplTest {
     }
 
     private static GreenAreaSetRequest request(String name, List<Long> zones, List<Long> activities, Long version) {
-        return new GreenAreaSetRequest(name, null, zones, activities, version);
+        return new GreenAreaSetRequest(name, null, zones, null, activities, version);
     }
 
     private GreenAreaSet existing(long id, String name, long version) throws Exception {
@@ -107,11 +109,31 @@ class GreenAreaSetsServiceImplTest {
     }
 
     @Test
-    void aSetNeedsAtLeastOneGardenAndOneActivity() {
+    void aSetNeedsAGardenOrASpecimenAndOneActivity() {
         assertThatThrownBy(() -> service.create(request("A", List.of(), List.of(30L), null), EMAIL))
-                .hasMessage("Elige al menos un jardín");
+                .hasMessage("Elige al menos un jardín o un ejemplar");
         assertThatThrownBy(() -> service.create(request("A", List.of(1L), List.of(), null), EMAIL))
                 .hasMessage("Elige al menos una actividad");
+    }
+
+    @Test
+    void aSetOfOnlySpecimensIsValidAndKeepsThemDeduplicated() {
+        service.create(new GreenAreaSetRequest("Palmeras", null, null, List.of(501L, 501L, 502L), List.of(30L), null), EMAIL);
+
+        verify(queries).replaceElements(40L, List.of(501L, 502L));
+        verify(queries).replaceZones(40L, List.of());
+        verify(queries, never()).nonSections(anyCollection());
+    }
+
+    @Test
+    void aSpecimenThatIsNotActiveIsRejected() {
+        when(queries.invalidElements(anyCollection())).thenReturn(List.of(502L));
+
+        assertThatThrownBy(() -> service.create(
+                new GreenAreaSetRequest("Palmeras", null, List.of(1L), List.of(501L, 502L), List.of(30L), null), EMAIL))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Ejemplares no válidos: 502");
+        verify(sets, never()).save(any());
     }
 
     @Test
@@ -149,7 +171,7 @@ class GreenAreaSetsServiceImplTest {
 
         assertThat(set.getVersion()).isEqualTo(4L);
         verify(audit).record(eq(AuditActionCode.GREEN_AREA_SET_UPDATED), eq("GREEN_AREA_SET"), eq(40L),
-                eq(Map.of("zoneCount", 1)));
+                eq(Map.of("zoneCount", 1, "elementCount", 0)));
     }
 
     @Test
@@ -187,6 +209,6 @@ class GreenAreaSetsServiceImplTest {
     void creatingIsAuditedWithTheGardenCount() {
         service.create(request("Pabellones", List.of(1L, 2L), List.of(30L), null), EMAIL);
 
-        verify(audit).record(AuditActionCode.GREEN_AREA_SET_CREATED, "GREEN_AREA_SET", 40L, Map.of("zoneCount", 2));
+        verify(audit).record(AuditActionCode.GREEN_AREA_SET_CREATED, "GREEN_AREA_SET", 40L, Map.of("zoneCount", 2, "elementCount", 0));
     }
 }
