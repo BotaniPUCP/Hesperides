@@ -15,7 +15,7 @@ export function FrequencyParameters({ frequency: f }: { frequency: MaintenanceFr
   switch (f.frequencyRuleType.code) {
     case 'INTERVAL_DAYS':
       return f.seasons.length > 0 ? (
-        <div className="text-xs space-y-0.5">
+        <div className="space-y-0.5 text-sm">
           {f.seasons.map((s) => (
             <span key={s.season} className="block">
               <span className="text-neutral-500">{SEASONS[s.season]?.label ?? s.season}: </span>
@@ -26,7 +26,7 @@ export function FrequencyParameters({ frequency: f }: { frequency: MaintenanceFr
           ))}
         </div>
       ) : (
-        <div className="text-xs">
+        <div className="text-sm">
           <span className="font-medium text-neutral-900">
             {f.minDaysInterval} a {f.maxDaysInterval} días
           </span>
@@ -35,17 +35,17 @@ export function FrequencyParameters({ frequency: f }: { frequency: MaintenanceFr
 
     case 'SEASONAL_PERIOD':
       return (
-        <span className="text-xs font-medium text-neutral-900">
+        <span className="text-sm font-medium text-neutral-900">
           Mín. {f.annualTargetCount} por año
         </span>
       );
 
     case 'ANNUAL_WINDOW':
       return (
-        <div className="text-xs">
+        <div className="text-sm">
           <span className="font-medium text-neutral-900">Mín. {f.annualTargetCount} por año</span>
           {f.seasonStartMonth && f.seasonEndMonth && (
-            <span className="text-neutral-500 block">
+            <span className="block text-xs text-neutral-500">
               Ventana: {monthName(f.seasonStartMonth)}–{monthName(f.seasonEndMonth)}
             </span>
           )}
@@ -54,16 +54,16 @@ export function FrequencyParameters({ frequency: f }: { frequency: MaintenanceFr
 
     case 'COVERAGE_CYCLE':
       return (
-        <div className="text-xs">
+        <div className="text-sm">
           <span className="font-medium text-neutral-900">
             100% en {f.coverageTargetDays} días
           </span>
-          <span className="text-neutral-500 block">Ciclo rotativo continuo</span>
+          <span className="block text-xs text-neutral-500">Ciclo rotativo continuo</span>
         </div>
       );
 
     case 'ON_DEMAND':
-      return <span className="text-xs text-neutral-500">A demanda / riesgo</span>;
+      return <span className="text-sm text-neutral-700">Cuando se necesite</span>;
 
     default:
       return null;

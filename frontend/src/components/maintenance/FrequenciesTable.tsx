@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import type { GreenAreaSetSummary, MaintenanceFrequency } from '@shared/types';
 import { Badge, DataTable, type DataTableColumn } from '@/components/ui';
 import { FrequencyParameters, scopeLabel } from './FrequencyParameters';
-import { FrequencyRuleBadge } from './FrequencyRuleBadge';
+import { FrequencyRuleTag } from './FrequencyRuleTag';
 
 interface Props {
   frequencies: MaintenanceFrequency[];
@@ -60,9 +60,10 @@ export function FrequenciesTable({ frequencies, sets, canManage, onEdit }: Props
     {
       key: 'frequency', header: 'Frecuencia',
       render: (f) => (
-        <span className="flex flex-col items-start gap-1">
-          <FrequencyRuleBadge ruleCode={f.frequencyRuleType.code} label={f.frequencyRuleType.label} />
+        // El dato que se busca es «cada cuánto»; el tipo y la duración lo acompañan en pequeño.
+        <span className="flex flex-col items-start gap-0.5">
           <FrequencyParameters frequency={f} />
+          <FrequencyRuleTag ruleCode={f.frequencyRuleType.code} label={f.frequencyRuleType.label} />
           {f.estimatedDurationDays != null && (
             <span className="text-xs text-neutral-500">Dura {days(f.estimatedDurationDays)}</span>
           )}
