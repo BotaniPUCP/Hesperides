@@ -22,9 +22,9 @@ jest.mock('@/lib/irrigation-api', () => ({
     sections: jest.fn().mockResolvedValue([{ id: 11, code: 'AV-0011', name: 'Jardín Central' }]),
   },
 }));
-jest.mock('@/components/map3d/SectionMapPicker', () => ({
-  SectionMapPicker: ({ onConfirm }: { onConfirm: (ids: number[], specimenIds?: number[]) => void }) => <>
-    <button type="button" onClick={() => onConfirm([11])}>Confirmar mapa</button>
+jest.mock('../SetMapPicker', () => ({
+  SetMapPicker: ({ onConfirm }: { onConfirm: (ids: number[], specimenIds: number[]) => void }) => <>
+    <button type="button" onClick={() => onConfirm([11], [])}>Confirmar mapa</button>
     <button type="button" onClick={() => onConfirm([11], [501])}>Confirmar con ejemplar</button>
   </>,
 }));

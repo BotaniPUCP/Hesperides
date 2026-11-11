@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import type { GreenAreaSetDetail, GreenAreaSetElement } from '@shared/types';
 import type { IrrigationZone } from '@shared/types/irrigation';
-import { SectionMapPicker } from '@/components/map3d/SectionMapPicker';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { Button, Card, Input } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
@@ -14,6 +13,7 @@ import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 import { SETS_PATH } from './GreenAreaSetsScreen';
 import { ActivityChipsPicker } from './ActivityChipsPicker';
 import { SelectedGardensSummary, type SectorContents } from './SelectedGardensSummary';
+import { SetMapPicker } from './SetMapPicker';
 import { contentsLabel } from './planningTexts';
 
 export interface SetOptions {
@@ -22,13 +22,6 @@ export interface SetOptions {
   sectionsBySector: Record<number, IrrigationZone[]>;
   specimens: GreenAreaSetElement[];
 }
-
-const PICKER_TEXTS = {
-  title: 'Elegir jardines y ejemplares del conjunto · Mapa 3D',
-  description: 'Elige qué agregar, haz clic en el mapa o dibuja un rectángulo. Confirmar solo selecciona; el conjunto se guarda después.',
-  listTitle: 'Lo elegido',
-  confirmAllPrompt: (missing: number) => `¿Agregar ${missing} jardines más al conjunto?`,
-};
 
 /** Formulario de un conjunto: nombre, actividades que se planifican en él y jardines del mapa. */
 export function GreenAreaSetEditor({ options, existing }: { options: SetOptions; existing: GreenAreaSetDetail | null }) {
@@ -157,10 +150,9 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
         {!saved && <Button onClick={save} loading={saving}>Guardar conjunto</Button>}
       </div>
       {picking && (
-        <SectionMapPicker sectors={options.sectors} sectionsBySector={options.sectionsBySector} scope="ALL"
-          selectedIds={zoneIds} texts={PICKER_TEXTS} onCancel={() => setPicking(false)}
-          specimens={{ options: options.specimens, selectedIds: elementIds }}
-          onConfirm={(ids, specimenIds = []) => { setZoneIds(ids); setElementIds(specimenIds); setPicking(false); }} />
+        <SetMapPicker sectors={options.sectors} sectionsBySector={options.sectionsBySector} specimens={options.specimens}
+          selectedZoneIds={zoneIds} selectedSpecimenIds={elementIds} onCancel={() => setPicking(false)}
+          onConfirm={(ids, specimenIds) => { setZoneIds(ids); setElementIds(specimenIds); setPicking(false); }} />
       )}
     </section>
   );
