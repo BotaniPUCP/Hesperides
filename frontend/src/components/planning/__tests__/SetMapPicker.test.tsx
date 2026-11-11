@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import Link from 'next/link';
 import { SetMapPicker } from '../SetMapPicker';
 
 jest.mock('@/hooks/useMapLayers', () => ({
@@ -214,6 +215,23 @@ describe('SetMapPicker', () => {
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
 
+    it('muestra lo elegido del sector y, si no hay nada elegido, el sector entero', async () => {
+      const { card, open } = setup([21]);
+
+      await userEvent.click(within(card('Sector 2')).getByRole('button', { name: 'Ver en el mapa' }));
+      expect(screen.getByText('Viendo lo elegido en Sector 2')).toBeInTheDocument();
+
+      await open('Sector 1');
+      await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Ver en el mapa' }));
+      expect(screen.getByText('Viendo Sector 1')).toBeInTheDocument();
+    });
+
+    it('los ejemplares fuera de toda sección también se pueden ver en el mapa', async () => {
+      const { card } = setup([], [502]);
+
+      expect(within(card('Fuera de toda sección')).getByRole('button', { name: 'Ver en el mapa' })).toBeInTheDocument();
+    });
+
     it('se deja de ver con la ✕ o con el mismo botón de la tarjeta', async () => {
       const { card, open } = setup();
 
@@ -261,17 +279,25 @@ describe('SetMapPicker', () => {
       expect(onCancel).toHaveBeenCalledTimes(1);
     });
 
-    it('Escape también avisa si hay cambios, y con el aviso abierto solo lo cierra', async () => {
+    it('con el menú a la vista, un enlace también avisa si hay cambios', async () => {
       const { onCancel, open } = setup();
+      render(<Link href="/incidencias">Incidencias</Link>);
 
       await open('Sector 2');
       await userEvent.click(screen.getByRole('checkbox', { name: /Patio Sur/ }));
-      await userEvent.keyboard('{Escape}');
-      expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('link', { name: 'Incidencias' }));
 
-      await userEvent.keyboard('{Escape}');
-      expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Seguir editando' }));
+      expect(screen.getByRole('checkbox', { name: /Patio Sur/ })).toBeChecked();
       expect(onCancel).not.toHaveBeenCalled();
+    });
+
+    it('va dentro de la pantalla, no como una ventana encima', () => {
+      setup();
+
+      expect(screen.getByRole('region', { name: 'Elegir jardines y ejemplares del conjunto' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('volver a dejar lo mismo que al abrir no cuenta como cambio', async () => {

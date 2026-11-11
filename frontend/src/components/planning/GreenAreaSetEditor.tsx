@@ -133,6 +133,12 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
   return (
     <section className="space-y-6">
       <PageHeader title={existing ? existing.name : 'Nuevo conjunto'} />
+      {/* El mapa se elige dentro de la misma pantalla, con el menú a la vista; lo escrito abajo se conserva. */}
+      {picking ? (
+        <SetMapPicker sectors={options.sectors} sectionsBySector={options.sectionsBySector} specimens={options.specimens}
+          selectedZoneIds={zoneIds} selectedSpecimenIds={elementIds} onCancel={() => setPicking(false)}
+          onConfirm={(ids, specimenIds) => { setZoneIds(ids); setElementIds(specimenIds); setPicking(false); }} />
+      ) : <>
       <Card>
         <section aria-labelledby="set-contents" className="space-y-4">
           <Step n={1} id="set-contents" title="Jardines y ejemplares" hint="Lo que se atiende junto. Elígelo en el mapa o en la lista de cada sector."
@@ -180,11 +186,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
         {existing && !saved ? <Button variant="danger" onClick={remove}>Dar de baja</Button> : <span />}
         {!saved && <Button onClick={save} loading={saving}>Guardar conjunto</Button>}
       </div>
-      {picking && (
-        <SetMapPicker sectors={options.sectors} sectionsBySector={options.sectionsBySector} specimens={options.specimens}
-          selectedZoneIds={zoneIds} selectedSpecimenIds={elementIds} onCancel={() => setPicking(false)}
-          onConfirm={(ids, specimenIds) => { setZoneIds(ids); setElementIds(specimenIds); setPicking(false); }} />
-      )}
+      </>}
     </section>
   );
 }

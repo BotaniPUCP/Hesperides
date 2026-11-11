@@ -23,7 +23,8 @@ jest.mock('@/lib/irrigation-api', () => ({
   },
 }));
 jest.mock('../SetMapPicker', () => ({
-  SetMapPicker: ({ onConfirm }: { onConfirm: (ids: number[], specimenIds: number[]) => void }) => <>
+  SetMapPicker: ({ onConfirm, onCancel }: { onConfirm: (ids: number[], specimenIds: number[]) => void; onCancel: () => void }) => <>
+    <button type="button" onClick={onCancel}>Cancelar mapa</button>
     <button type="button" onClick={() => onConfirm([11], [])}>Confirmar mapa</button>
     <button type="button" onClick={() => onConfirm([11], [501])}>Confirmar con ejemplar</button>
   </>,
@@ -35,17 +36,20 @@ const contents = () => within(screen.getByRole('region', { name: 'Jardines y eje
 
 beforeEach(() => jest.clearAllMocks());
 
+/** Un conjunto nuevo empieza en el mapa: se confirma y luego se completa el resto. */
 async function fillAndPick() {
-  await userEvent.type(await screen.findByLabelText(/^Nombre/), 'Pabellones');
-  await userEvent.click(screen.getByRole('button', { name: 'Corte de césped' }));
-  await userEvent.click(screen.getByRole('button', { name: 'Elegir en el mapa' }));
   await userEvent.click(await screen.findByRole('button', { name: 'Confirmar mapa' }));
+  await userEvent.type(screen.getByLabelText(/^Nombre/), 'Pabellones');
+  await userEvent.click(screen.getByRole('button', { name: 'Corte de césped' }));
 }
+
+/** Cierra el mapa con que abre un conjunto nuevo, sin elegir nada. */
+const skipMap = async () => userEvent.click(await screen.findByRole('button', { name: 'Cancelar mapa' }));
 
 describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
   it('exige nombre, al menos un jardín y una actividad antes de llamar al servidor', async () => {
     render(<GreenAreaSetForm />);
-    await screen.findByLabelText(/^Nombre/);
+    await skipMap();
 
     await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
 
@@ -55,6 +59,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
 
   it('las actividades se eligen por grupo y las elegidas se resumen abajo', async () => {
     render(<GreenAreaSetForm />);
+    await skipMap();
     expect(await screen.findByRole('tab', { name: 'Mantenimiento de jardines' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.queryByRole('button', { name: 'Riego manual' })).not.toBeInTheDocument();
 
@@ -128,6 +133,19 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
 
     expect(api.create).toHaveBeenCalledWith(expect.objectContaining({ zoneIds: [11], elementIds: [501] }));
+  });
+
+  it('mientras se elige en el mapa el formulario se oculta, y lo escrito se conserva', async () => {
+    render(<GreenAreaSetForm />);
+    await fillAndPick();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cambiar en el mapa' }));
+    expect(screen.queryByLabelText(/^Nombre/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Guardar conjunto' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar mapa' }));
+    expect(screen.getByLabelText(/^Nombre/)).toHaveValue('Pabellones');
+    expect(screen.getByRole('button', { name: 'Corte de césped' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('al editar un conjunto no abre el mapa por su cuenta', async () => {

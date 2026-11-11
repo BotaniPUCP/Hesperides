@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as
 import type { GreenAreaSetElement } from '@shared/types';
 import type { IrrigationZone } from '@shared/types/irrigation';
 import { Button, LoadingSkeleton } from '@/components/ui';
-import { LeaveConfirmDialog } from '@/components/forms/unsaved/LeaveConfirmDialog';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { Map3DView } from '@/components/map3d/Map3DView';
 import { MapAttribution } from '@/components/map3d/MapAttribution';
 import { toSceneData, type SceneData } from '@/components/map3d/sceneData';
@@ -24,6 +24,8 @@ const OUTSIDE = 'fuera';
 const DRAG_PX = 6;
 /** Acciones de la tarjeta: pequeñas para que quepan en una fila del panel. */
 const CARD_ACTION = 'rounded-md border border-neutral-200 bg-neutral-0 px-2 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40';
+/** Botones de la barra del selector. */
+const TOOL = 'rounded-md border border-neutral-200 bg-neutral-0 px-2.5 py-1.5 text-xs font-semibold text-neutral-900 hover:bg-neutral-100';
 const MAP_CHIP = 'pointer-events-auto rounded-md bg-neutral-0 text-xs font-semibold text-neutral-900 shadow';
 
 interface SectorGroup {
@@ -92,10 +94,11 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   const [focused, setFocused] = useState<string | null>(null);
   /** Lo que la persona abrió o cerró a mano; si no tocó una tarjeta, se abre cuando tiene algo elegido. */
   const [openedByHand, setOpenedByHand] = useState<Map<string, boolean>>(new Map());
-  const [confirmLeave, setConfirmLeave] = useState(false);
+  /** Qué se está viendo en el mapa: «lo elegido en …» o el sector entero. */
+  const [focusLabel, setFocusLabel] = useState('');
   const viewer = useRef<Viewer | null>(null);
   const mapRegion = useRef<HTMLDivElement>(null);
-  const firstButton = useRef<HTMLButtonElement>(null);
+  const root = useRef<HTMLElement>(null);
   const cards = useRef(new Map<string, HTMLLIElement>());
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -127,19 +130,10 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   useEffect(() => { viewer.current?.setMarkedSections(markedCodes); }, [markedCodes]);
   useEffect(() => { viewer.current?.setMarkedSpecimens(markedPlantCodes); }, [markedPlantCodes]);
 
-  /** Cancelar pide confirmación si se cambió algo; si no, vuelve sin preguntar. */
-  const requestCancel = useCallback(() => { if (dirty) setConfirmLeave(true); else onCancel(); }, [dirty, onCancel]);
-  const escape = useRef({ requestCancel, confirmLeave });
-  useEffect(() => { escape.current = { requestCancel, confirmLeave }; }, [requestCancel, confirmLeave]);
-  useEffect(() => {
-    firstButton.current?.focus();
-    // Con el aviso abierto, Escape lo cierra el propio aviso («Seguir editando»).
-    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape' && !escape.current.confirmLeave) escape.current.requestCancel(); };
-    document.addEventListener('keydown', handleEscape);
-    const oldOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', handleEscape); document.body.style.overflow = oldOverflow; };
-  }, []);
+  // Va dentro de la pantalla, con el menú a la vista: cancelar, un enlace del menú o «Atrás» avisan si se cambió algo.
+  const guard = useUnsavedChangesGuard(dirty);
+  const requestCancel = () => guard.confirm(onCancel);
+  useEffect(() => { root.current?.scrollIntoView?.({ block: 'start' }); }, []);
 
   const unfocus = () => {
     setFocused(null);
@@ -229,25 +223,56 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     setZones((prev) => new Set([...prev].filter((id) => !ids.has(id))));
     setPlants((prev) => new Set([...prev].filter((id) => !plantIds.has(id))));
   };
+  /** Encuadra lo elegido del sector; si no hay nada elegido, el sector entero. */
   const look = (g: SectorGroup) => {
     if (focused === g.key) { unfocus(); return; }
+    const chosenSections = g.sections.filter((s) => zones.has(s.id));
+    const chosenPlants = g.specimens.filter((e) => plants.has(e.id));
+    const anyChosen = chosenSections.length + chosenPlants.length > 0;
     setFocused(g.key);
+    setFocusLabel(anyChosen ? `lo elegido en ${g.name}` : g.name);
     setNotice((n) => (n && !n.undo ? null : n));
     setOpenedByHand((prev) => new Map(prev).set(g.key, true));
-    viewer.current?.focusSections(pickGardens ? g.sections.map((s) => s.code) : [], pickPlants ? g.specimens.map((e) => e.code) : []);
+    viewer.current?.focusSections(
+      (anyChosen ? chosenSections : pickGardens ? g.sections : []).map((s) => s.code),
+      (anyChosen ? chosenPlants : pickPlants ? g.specimens : []).map((e) => e.code));
   };
   const toggleOpen = (key: string, open: boolean) => setOpenedByHand((prev) => new Map(prev).set(key, !open));
   const searching = term.trim() !== '';
   const focusedGroup = groups.find((g) => g.key === focused);
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="set-picker-title" className="fixed inset-0 z-[100] flex flex-col bg-neutral-0 text-neutral-900">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3">
-        <div><h2 id="set-picker-title" className="text-lg font-bold">Elegir jardines y ejemplares del conjunto</h2>
-          <p className="text-xs text-neutral-500">Haz clic en el mapa o dibuja un rectángulo, o márcalos en las tarjetas de cada sector. Confirmar solo selecciona; el conjunto se guarda después.</p></div>
-        <button ref={firstButton} type="button" onClick={requestCancel}
-          className="rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50">Cancelar y volver</button>
+    <section ref={root} aria-labelledby="set-picker-title"
+      className="flex h-[calc(100vh-9rem)] min-h-[560px] scroll-mt-4 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 text-neutral-900 shadow-xs">
+      <header className="flex shrink-0 items-start justify-between gap-3 border-b border-neutral-200 px-4 py-3">
+        <div className="min-w-0 flex-1"><h2 id="set-picker-title" className="text-lg font-bold">Elegir jardines y ejemplares del conjunto</h2>
+          <p className="text-xs text-neutral-500">Haz clic en el mapa, dibuja un área o márcalos en cada sector. Confirmar solo selecciona; el conjunto se guarda después.</p></div>
+        <button type="button" onClick={requestCancel}
+          className="shrink-0 rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50">Cancelar y volver</button>
       </header>
+      {/* Barra propia, sobre el mapa y no encima: cabe en una línea y siempre está, aunque no haya mapa (el modo decide qué muestran las tarjetas). */}
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-neutral-200 bg-neutral-50 px-4 py-2">
+        {scene && !unsupported && !isLoading && <>
+          <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.top(); setAreaMode(true); }}>Vista superior</button>
+          <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.fit(); }}>Ver campus</button>
+          <button type="button" onClick={() => { viewer.current?.top(); setAreaMode((v) => !v); }} aria-pressed={areaMode}
+            title={areaMode ? 'Salir de la selección múltiple' : 'Dibuja un rectángulo sobre el mapa para agregar todo lo que encierre'}
+            className={areaMode ? `${TOOL} border-brand-600 bg-brand-600 text-white hover:bg-brand-700` : TOOL}>
+            <span aria-hidden="true">{areaMode ? '✓' : '▭'}</span> Selección múltiple</button>
+        </>}
+        {/* Decide qué agregan el clic y el rectángulo, y qué muestran las tarjetas. */}
+        <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-0 px-1.5 py-1 text-xs font-semibold">
+          <span id="set-picker-mode" className="px-1 font-medium text-neutral-600">Elegir</span>
+          <div role="radiogroup" aria-labelledby="set-picker-mode" className="flex gap-1">
+            {PICK_MODES.map((m) => (
+              <button key={m.value} type="button" role="radio" aria-checked={mode === m.value} onClick={() => changeMode(m.value)}
+                className={`rounded px-2 py-0.5 ${mode === m.value ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <div ref={mapRegion} role="region" aria-label="Mapa del campus" className="relative min-h-[250px] flex-[2] overflow-hidden bg-neutral-100 md:min-h-0"
           onPointerDownCapture={onMapPointerDown} onPointerUpCapture={onMapPointerUp}
@@ -262,34 +287,11 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                 <p className="font-semibold">Mapa 3D no disponible</p>
                 <p className="mt-2 max-w-sm text-sm text-neutral-500">{errorMessage ?? 'El navegador no admite WebGL. Puedes elegir todo en las tarjetas de cada sector.'}</p>
               </div>}
-          {/* La barra va siempre: aunque no haya mapa, el modo decide qué muestran las tarjetas. */}
           <div className="pointer-events-none absolute inset-x-3 top-3 z-30 flex flex-col items-start gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {scene && !unsupported && !isLoading && <>
-                <button className={`${MAP_CHIP} px-2.5 py-2`} type="button" onClick={() => { unfocus(); viewer.current?.top(); setAreaMode(true); }}>Vista superior</button>
-                <button className={`${MAP_CHIP} px-2.5 py-2`} type="button" onClick={() => { unfocus(); viewer.current?.fit(); }}>Ver campus</button>
-                <button type="button" onClick={() => { viewer.current?.top(); setAreaMode((v) => !v); }} aria-pressed={areaMode}
-                  title={areaMode ? 'Salir de la selección múltiple' : 'Dibuja un rectángulo sobre el mapa para agregar todo lo que encierre'}
-                  className={`pointer-events-auto rounded-md px-2.5 py-2 text-xs font-semibold shadow ${areaMode ? 'bg-brand-600 text-white' : 'bg-neutral-0 text-neutral-900'}`}>
-                  <span aria-hidden="true">{areaMode ? '✓' : '▭'}</span> Selección múltiple</button>
-              </>}
-              {/* Decide qué agregan el clic y el rectángulo, y qué muestran las tarjetas. */}
-              <div className={`${MAP_CHIP} flex items-center gap-1 px-2 py-1`}>
-                <span id="set-picker-mode" className="px-1 font-medium text-neutral-600">Elegir</span>
-                <div role="radiogroup" aria-labelledby="set-picker-mode" className="flex gap-1">
-                  {PICK_MODES.map((m) => (
-                    <button key={m.value} type="button" role="radio" aria-checked={mode === m.value} onClick={() => changeMode(m.value)}
-                      className={`rounded px-2 py-1 ${mode === m.value ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}>
-                      {m.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
             {areaMode && <p className={`${MAP_CHIP} px-3 py-2 font-medium text-neutral-700`}>
               Arrastra sobre el mapa para agregar todo lo que quede dentro. Pulsa «Selección múltiple» otra vez para salir.</p>}
             {focusedGroup && <div className={`${MAP_CHIP} flex items-center gap-2 py-1 pl-3 pr-1`}>
-              <span>Viendo {focusedGroup.name}</span>
+              <span>Viendo {focusLabel}</span>
               <button type="button" onClick={unfocus} aria-label={`Dejar de ver ${focusedGroup.name}`}
                 className="rounded px-2 py-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">✕</button>
             </div>}
@@ -363,9 +365,10 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                         {ownTrees.length > 0 && <button type="button" className={CARD_ACTION}
                           disabled={chosenTrees === ownTrees.length} onClick={() => markPlants(g)}>Marcar ejemplares</button>}
                         <button type="button" className={CARD_ACTION} disabled={chosen === 0} onClick={() => clearGroup(g)}>Quitar del sector</button>
-                        {g.sections.length > 0 && <button type="button" onClick={() => look(g)} aria-pressed={isFocused}
+                        <button type="button" onClick={() => look(g)} aria-pressed={isFocused}
+                          title={chosen > 0 ? 'Encuadra lo elegido en este sector' : 'Encuadra el sector entero'}
                           className="ml-auto whitespace-nowrap text-xs font-medium text-brand-700 underline underline-offset-2">
-                          {isFocused ? 'Dejar de ver' : 'Ver en el mapa'}</button>}
+                          {isFocused ? 'Dejar de ver' : 'Ver en el mapa'}</button>
                       </div>
                       <div className="max-h-64 space-y-3 overflow-y-auto">
                         {gardens.length > 0 && <fieldset className="space-y-1"><legend className="text-xs font-medium text-neutral-500">Jardines</legend>
@@ -395,7 +398,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
           </footer>
         </aside>
       </div>
-      <LeaveConfirmDialog isOpen={confirmLeave} onStay={() => setConfirmLeave(false)} onLeave={() => { setConfirmLeave(false); onCancel(); }} />
-    </div>
+      {guard.dialog}
+    </section>
   );
 }
