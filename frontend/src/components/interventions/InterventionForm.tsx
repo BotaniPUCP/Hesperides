@@ -15,6 +15,7 @@ import { managesIncidents } from '@/lib/incidentRoles';
 import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { RecentAttentionNotice } from './RecentAttentionNotice';
+import { ReservationNearbyNotice } from './ReservationNearbyNotice';
 
 const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
 const nullableNumber = (s: string) => s === '' ? null : Number(s);
@@ -140,6 +141,7 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
       {!initial && <RecentAttentionNotice typeId={typeId} typeLabel={types.find(t => t.id === typeId)?.label ?? 'esta actividad'} date={date}
         zoneIds={locations.map(l => l.zoneId).filter((z): z is number => z !== null)}
         onRemove={zoneId => { setDirty(true); setLocations(rows => rows.filter(l => l.zoneId !== zoneId)); }} />}
+      <ReservationNearbyNotice date={date} locations={locations} />
       <h2 className="text-lg font-semibold">Ubicaciones de esta actividad</h2>
       {cards.shown.map(({l,index}) => <div key={l.clientReference} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
         <div className="flex items-center justify-between"><h3 className="font-semibold">Ubicación {index + 1}</h3><Button variant="ghost" onClick={() => { setDirty(true); setLocations(rows => rows.filter((_,i) => i !== index)); }}>Retirar ubicación {index + 1}</Button></div>

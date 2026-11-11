@@ -39,6 +39,7 @@ public class SystemParametersService {
     private static final int PASSWORD_MIN_LENGTH_CEILING = PasswordMinLengthRange.CEILING;
 
     private static final int MAX_LOGIN_ATTEMPTS = 50;
+    private static final int MAX_RESERVATION_NEARBY_METERS = 100;
     private static final BigDecimal MAX_CAMPUS_HECTARES = new BigDecimal("100000");
 
     /**
@@ -157,6 +158,12 @@ public class SystemParametersService {
                 && (value < 1 || value > MAX_LOGIN_ATTEMPTS)) {
             throw new ValidationException(
                     "El número de intentos de acceso debe estar entre 1 y " + MAX_LOGIN_ATTEMPTS);
+        }
+        // Un negativo apagaría los avisos sin que nadie lo note (SPEC-107 D-05).
+        if (code.equals(SystemParameterCodes.RESERVATION_NEARBY_METERS)
+                && (value < 0 || value > MAX_RESERVATION_NEARBY_METERS)) {
+            throw new ValidationException(
+                    "La distancia de aviso por reservas debe estar entre 0 y " + MAX_RESERVATION_NEARBY_METERS);
         }
 
         return value.toString();

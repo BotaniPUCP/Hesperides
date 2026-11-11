@@ -73,6 +73,8 @@ describe('visibleNavigation', () => {
       '/directorio',
       '/directorio/registrar',
       '/directorio/importar',
+      '/reservas',
+      '/reservas/importar',
       '/admin/usuarios',
       '/admin/catalogos',
       '/admin/parametros',
@@ -98,6 +100,8 @@ describe('visibleNavigation', () => {
       '/directorio',
       '/directorio/registrar',
       '/directorio/importar',
+      '/reservas',
+      '/reservas/importar',
       '/admin/usuarios',
     ]);
   });
@@ -113,6 +117,7 @@ describe('visibleNavigation', () => {
       '/catastro/registrar',
       '/catastro/estandares',
       '/directorio',
+      '/reservas',
       '/admin/usuarios',
     ]);
   });
@@ -123,6 +128,7 @@ describe('visibleNavigation', () => {
       '/inventario-verde',
       '/intervenciones',
       '/catastro/ejemplares',
+      '/reservas',
     ]);
   });
 
@@ -137,6 +143,7 @@ describe('visibleNavigation', () => {
       'Intervenciones',
       'Catastro verde',
       'Directorio',
+      'Reservas',
       'Administración',
     ]);
   });

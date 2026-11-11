@@ -53,5 +53,9 @@ public enum AuditActionCode {
     /** SPEC-203: quién creó, cambió o dio de baja un conjunto de áreas verdes, y con cuántos jardines. */
     GREEN_AREA_SET_CREATED,
     GREEN_AREA_SET_UPDATED,
-    GREEN_AREA_SET_DELETED
+    GREEN_AREA_SET_DELETED,
+    /** SPEC-107: quién reservó, editó o anuló un jardín; con el código de la reserva y el del jardín. */
+    GARDEN_RESERVATION_CREATED,
+    GARDEN_RESERVATION_UPDATED,
+    GARDEN_RESERVATION_CANCELLED
 }

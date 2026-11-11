@@ -21,7 +21,8 @@ public class CsvTemplates {
             "drinking-fountains", "bebederos.csv",
             "species-photos", "fotos-especies.csv",
             "organizations", "organizaciones.csv",
-            "contacts", "contactos.csv");
+            "contacts", "contactos.csv",
+            "reservations", "reservas.csv");
 
     public record Template(String fileName, byte[] content) {
     }

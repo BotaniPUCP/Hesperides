@@ -273,6 +273,10 @@ se promueve a su propia tabla.
   `DAF`, `UNIDADES`). Los 20 jardines de reserva con geometría caen al 100 % dentro de una sección:
   se marcan esas secciones, no se crean zonas. `JR-0021` se descarta: repite a `JR-0010` y no tiene
   geometría.
+  > **Enmienda SPEC-107 (11 nov 2026):** las reservas guardan organización y contacto (este último
+  > opcional) **por el Directorio** (SPEC-106). La importación del calendario de la OSG ya no es
+  > «sin nombres ni teléfonos de contacto»: el préstamo se registra en un módulo propio con esos
+  > datos. El calendario de la OSG queda solo como referencia de fechas y horarios.
 - **Subsecciones:** «Jardín Frutas» y «Jardín Frutas-Lado FCCSS» son dos subsecciones de
   `AV-0151`, con la geometría de sus jardines de reserva.
 - **Geometría:** de `areas_verdes.geojson` (WGS 84), que coincide con el HTML en sus 521 áreas

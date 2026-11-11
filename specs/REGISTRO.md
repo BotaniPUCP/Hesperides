@@ -22,6 +22,7 @@
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
 | SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 5, falta verificar en navegador | —          | —      |              |
 | SPEC-106 | Directorio de organizaciones y contactos | 🔄 En progreso | —          | —      |              |
+| SPEC-107 | Reservas de jardines | 🔄 En progreso | —          | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
@@ -45,6 +46,7 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: el operario ve la organización y el contacto de una reserva, y la reserva sí guarda el contacto (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y tres acciones auditables. |
 | SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
 | SPEC-004 §3.2 · C-08 · C-09 · E-03 · REQ 2.7 · Catálogo 2.2/2.11 | SPEC-105 (6 nov 2026) | Tres acciones auditables de especie. La criticidad pasa a ser de la especie y no de su tipo; `GENERIC` deja de escribirse; se retira la proyección automática de medidas tras una poda. |
 | SPEC-C01 §4.3 | Estandarización de pantallas (7 nov 2026) | Toda pantalla usa `PageFrame` (un solo ancho, fila fija de flecha y breadcrumb derivado del menú) y `PageHeader`. Las tarjetas pasan a `rounded-2xl`. |
@@ -196,10 +198,11 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V036 | `V036__create_directory.sql` | SPEC-106 §4.1 | Directorio: catálogo `ORGANIZATION_TYPE`, organizaciones con alias, contactos y sus vínculos; función `directory_key` para la unicidad sin tildes |
 | V037 | `V037__add_directory_import_batches.sql` | SPEC-106 §4.2 · SPEC-103 D-04 | El Directorio entra a `import_batches` (`organizations`, `contacts`); organizaciones y contactos guardan su `import_batch_id`, nulo en el alta manual |
 | V038 | `V038__create_green_area_sets.sql` | SPEC-203 §4 | Conjuntos de áreas verdes (secciones y actividades); las reglas `BY_ZONE`/`BY_SECTOR` pasan a `BY_SET` o `CAMPUS_WIDE` en todas sus versiones; se retiran `zone_id` y el teórico |
+| V039 | `V039__create_garden_reservations.sql` | SPEC-107 §4 | Reservas de jardines (`garden_reservations`), su correlativo `RES-####`, el parámetro `RESERVATION_NEARBY_METERS` y el tipo de lote `reservations` en el ciclo común de cargas |
 
 ### Pendientes (sin número reservado)
 
-Al 9 nov 2026, en la rama de integración, el siguiente número libre es **V039**, sujeto a comprobarlo nuevamente al
+Al 11 nov 2026, en la rama de integración, el siguiente número libre es **V040**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

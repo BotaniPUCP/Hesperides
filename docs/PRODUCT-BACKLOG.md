@@ -404,6 +404,11 @@
 - **Y** un préstamo marca la sección mientras dura el evento
 - **Y** al terminar el préstamo la sección aparece automáticamente con el estado 'requiere recuperación'
 
+> **Estado del REQ 1.12 (11 nov 2026, SPEC-107):** los **préstamos** quedan cubiertos por el módulo
+> de reservas de jardines, con organización y contacto del Directorio y avisos al programar
+> trabajo. Siguen **pendientes** los eventos bloqueantes (examen de admisión, fin de ciclo) y la
+> recuperación del jardín después del préstamo; A-09 conserva ese alcance y no se cierra.
+
 ---
 
 ### Épica B · Intervenciones del personal estable

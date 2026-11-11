@@ -19,6 +19,14 @@ propias reglas: exactamente las columnas del estándar; las de coordenadas y dec
 | Organizaciones | [organizaciones.md](organizaciones.md) | [plantillas/organizaciones.csv](plantillas/organizaciones.csv) | Disponible |
 | Contactos | [contactos.md](contactos.md) | [plantillas/contactos.csv](plantillas/contactos.csv) | Disponible |
 
+El **módulo de reservas** (SPEC-107) también usa el ciclo de carga para su **Registro masivo**.
+Sus fechas van en hora de Lima y sus avisos nunca bloquean; los cruces entre reservas se crean
+igualmente.
+
+| Estándar de reservas | Documento | Plantilla | Estado |
+|---|---|---|---|
+| Reservas de jardines | [reservas.md](reservas.md) | [plantillas/reservas.csv](plantillas/reservas.csv) | Disponible |
+
 ## Reglas comunes
 
 - **UTF-8**, con o sin BOM.

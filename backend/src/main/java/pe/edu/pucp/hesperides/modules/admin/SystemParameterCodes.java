@@ -39,4 +39,6 @@ public final class SystemParameterCodes {
     public static final String DUPLICATE_SHRUB_M = "DUPLICATE_SHRUB_M";
     public static final String DUPLICATE_HERB_M = "DUPLICATE_HERB_M";
     public static final String DUPLICATE_FEATURE_M = "DUPLICATE_FEATURE_M";
+    /** SPEC-107 D-05: metros desde el borde de un jardín reservado dentro de los que se avisa. */
+    public static final String RESERVATION_NEARBY_METERS = "RESERVATION_NEARBY_METERS";
 }
