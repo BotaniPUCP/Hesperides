@@ -1,29 +1,21 @@
 import { render, screen, within } from '@testing-library/react';
 import { GreenAreaSetsScreen } from '../GreenAreaSetsScreen';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
-import { planningApi } from '@/lib/planning-api';
-import { planningRow } from '../__fixtures__/planningFixtures';
 
 jest.mock('@/lib/green-area-sets-api', () => ({ greenAreaSetsApi: { list: jest.fn() } }));
-jest.mock('@/lib/planning-api', () => ({ planningApi: { rows: jest.fn() } }));
 
 const list = greenAreaSetsApi.list as jest.Mock;
-const rows = planningApi.rows as jest.Mock;
 
 const set = (over: Record<string, unknown>) => ({ id: 3, name: 'Ingreso Riva-Agüero', description: null, zoneCount: 18,
   elementCount: 0, sectorNames: ['Sector verde 01'], version: 0, updatedAt: '2026-11-10T15:00:00Z',
   activities: [{ id: 30, label: 'Corte de césped' }], ...over });
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  rows.mockResolvedValue([]);
-});
+beforeEach(() => jest.clearAllMocks());
 
 describe('GreenAreaSetsScreen (SPEC-203 §5.2)', () => {
-  it('cada tarjeta dice qué contiene, dónde está, lo más urgente y cuándo cambió', async () => {
+  it('cada tarjeta dice qué contiene, dónde está, qué se planifica y cuándo cambió', async () => {
     list.mockResolvedValue([set({ elementCount: 4, description: 'Bermas del ingreso principal',
       sectorNames: ['Sector verde 01', 'Sector verde 02', 'Sector verde 03', 'Polideportivo'] })]);
-    rows.mockResolvedValue([planningRow({ setId: 3, state: 'OVERDUE', days: 4 }), planningRow({ setId: 3, state: 'NOT_DUE', days: 9 })]);
 
     render(<GreenAreaSetsScreen />);
 
@@ -32,30 +24,27 @@ describe('GreenAreaSetsScreen (SPEC-203 §5.2)', () => {
     expect(within(card).getByText('Bermas del ingreso principal')).toBeInTheDocument();
     expect(within(card).getByText('18 jardines · 4 ejemplares')).toBeInTheDocument();
     expect(within(card).getByText('Sector verde 01, Sector verde 02, Sector verde 03 y 1 más')).toBeInTheDocument();
-    expect(await within(card).findByText('Toca, atrasada')).toBeInTheDocument();
-    expect(within(card).getByText('(4 días tarde)')).toBeInTheDocument();
     expect(within(card).getByText('Actualizado 10/11/2026')).toBeInTheDocument();
-    expect(within(card).getAllByText('Corte de césped')).toHaveLength(2);
+    expect(within(card).getByText('Actividades que se planifican')).toBeInTheDocument();
+    expect(within(card).getByText('Corte de césped')).toBeInTheDocument();
   });
 
-  it('un conjunto vacío lo advierte y uno sin filas dice que no está en la planificación', async () => {
+  it('no muestra cómo va la planificación: eso está en Planificación preventiva', async () => {
+    list.mockResolvedValue([set({})]);
+
+    render(<GreenAreaSetsScreen />);
+
+    await screen.findByRole('link', { name: /Ingreso Riva-Agüero/ });
+    expect(screen.queryByText(/Lo más urgente|Toca|Aún no toca/)).not.toBeInTheDocument();
+  });
+
+  it('un conjunto vacío lo advierte', async () => {
     list.mockResolvedValue([set({ id: 4, name: 'Antiguo', zoneCount: 0, sectorNames: [], activities: [] })]);
 
     render(<GreenAreaSetsScreen />);
 
-    expect(await screen.findByText('Nada: no aparece en la planificación')).toBeInTheDocument();
-    expect(screen.getByText('Sin actividades en la planificación')).toBeInTheDocument();
+    expect(await screen.findByText('Vacío: sus jardines y ejemplares se dieron de baja')).toBeInTheDocument();
     expect(screen.queryByText('Sector')).not.toBeInTheDocument();
-  });
-
-  it('si la planificación falla, la lista se muestra igual', async () => {
-    list.mockResolvedValue([set({ zoneCount: 1, sectorNames: ['Polideportivo'] })]);
-    rows.mockRejectedValue(new Error('sin red'));
-
-    render(<GreenAreaSetsScreen />);
-
-    expect(await screen.findByText('1 jardín')).toBeInTheDocument();
-    expect(screen.getByText('Polideportivo')).toBeInTheDocument();
   });
 
   it('un conjunto de ejemplares sin sección dice que están fuera de toda sección', async () => {

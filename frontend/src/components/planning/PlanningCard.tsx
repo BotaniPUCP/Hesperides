@@ -6,8 +6,7 @@ import { cn } from '@/lib/cn';
 import { lastLine, rhythmText, rowTitle, stateDetail, stateLabel } from './planningTexts';
 
 /** Color del estado según SPEC-C01: rojo atrasada, ámbar toca, azul abierta, verde al día. */
-/** El color de cada estado; también lo usa la lista de conjuntos. */
-export const STATE_TONE: Record<PlanningRow['state'], string> = {
+const TONE: Record<PlanningRow['state'], string> = {
   OVERDUE: 'text-action-danger',
   DUE: 'text-alert-warning-fg',
   IN_PROGRESS: 'text-info-600',
@@ -36,7 +35,7 @@ export function PlanningCard({ row, selected, onSelect }: Props) {
       <button type="button" onClick={onSelect} aria-pressed={selected} className="block w-full text-left">
         <span className="flex flex-wrap items-baseline justify-between gap-2">
           <strong className="text-neutral-900">{rowTitle(row)}</strong>
-          <span className={STATE_TONE[row.state]}>
+          <span className={TONE[row.state]}>
             <strong>{stateLabel(row)}</strong> {stateDetail(row)}
           </span>
         </span>

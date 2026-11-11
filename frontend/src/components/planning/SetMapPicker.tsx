@@ -269,9 +269,9 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                 <button className={`${MAP_CHIP} px-2.5 py-2`} type="button" onClick={() => { unfocus(); viewer.current?.top(); setAreaMode(true); }}>Vista superior</button>
                 <button className={`${MAP_CHIP} px-2.5 py-2`} type="button" onClick={() => { unfocus(); viewer.current?.fit(); }}>Ver campus</button>
                 <button type="button" onClick={() => { viewer.current?.top(); setAreaMode((v) => !v); }} aria-pressed={areaMode}
-                  title="Dibuja un rectángulo sobre el mapa para agregar lo que encierre"
+                  title={areaMode ? 'Salir de la selección múltiple' : 'Dibuja un rectángulo sobre el mapa para agregar todo lo que encierre'}
                   className={`pointer-events-auto rounded-md px-2.5 py-2 text-xs font-semibold shadow ${areaMode ? 'bg-brand-600 text-white' : 'bg-neutral-0 text-neutral-900'}`}>
-                  {areaMode ? 'Rectángulo · salir' : 'Rectángulo'}</button>
+                  <span aria-hidden="true">{areaMode ? '✓' : '▭'}</span> Selección múltiple</button>
               </>}
               {/* Decide qué agregan el clic y el rectángulo, y qué muestran las tarjetas. */}
               <div className={`${MAP_CHIP} flex items-center gap-1 px-2 py-1`}>
@@ -286,6 +286,8 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                 </div>
               </div>
             </div>
+            {areaMode && <p className={`${MAP_CHIP} px-3 py-2 font-medium text-neutral-700`}>
+              Arrastra sobre el mapa para agregar todo lo que quede dentro. Pulsa «Selección múltiple» otra vez para salir.</p>}
             {focusedGroup && <div className={`${MAP_CHIP} flex items-center gap-2 py-1 pl-3 pr-1`}>
               <span>Viendo {focusedGroup.name}</span>
               <button type="button" onClick={unfocus} aria-label={`Dejar de ver ${focusedGroup.name}`}

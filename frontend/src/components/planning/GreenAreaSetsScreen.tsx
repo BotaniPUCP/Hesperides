@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import type { GreenAreaSetSummary, PlanningRow } from '@shared/types';
+import type { GreenAreaSetSummary } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
-import { planningApi } from '@/lib/planning-api';
-import { STATE_TONE } from './PlanningCard';
-import { contentsLabel, stateDetail, stateLabel } from './planningTexts';
+import { contentsLabel } from './planningTexts';
 
 export const SETS_PATH = '/intervenciones/conjuntos';
+/** Quien llega desde el formulario de una frecuencia, en otra pestaña, vuelve a ella después de guardar. */
+export const FROM_FREQUENCY = 'frecuencia';
 
 /** Hasta aquí se nombran los sectores; el resto se resume con «y N más». */
 const SECTORS_SHOWN = 3;
@@ -21,19 +21,8 @@ function sectorsText(names: string[]): string {
   return `${names.slice(0, SECTORS_SHOWN).join(', ')} y ${names.length - SECTORS_SHOWN} más`;
 }
 
-/** Lo más urgente del conjunto en la planificación: la primera fila suya, que ya viene ordenada por urgencia. */
-function Urgent({ row }: { row: PlanningRow | undefined }) {
-  if (!row) return <p className="text-sm text-neutral-500">Sin actividades en la planificación</p>;
-  return (
-    <p className="text-sm">
-      <span className="text-neutral-600">Lo más urgente: </span>
-      <span className="font-medium text-neutral-900">{row.activityLabel ?? 'Actividad'}</span>
-      {' · '}<span className={STATE_TONE[row.state]}><strong>{stateLabel(row)}</strong> {stateDetail(row)}</span>
-    </p>
-  );
-}
-
-function SetCard({ set, urgent }: { set: GreenAreaSetSummary; urgent: PlanningRow | undefined }) {
+/** Lo que es el conjunto: qué tiene, dónde está y qué se le planifica. Cómo va su planificación se ve en Planificación preventiva. */
+function SetCard({ set }: { set: GreenAreaSetSummary }) {
   const empty = set.zoneCount + set.elementCount === 0;
   return (
     <Card>
@@ -46,7 +35,7 @@ function SetCard({ set, urgent }: { set: GreenAreaSetSummary; urgent: PlanningRo
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
           <dt className="text-neutral-500">Contiene</dt>
           <dd className={empty ? 'text-action-danger' : 'font-medium text-neutral-900'}>
-            {empty ? 'Nada: no aparece en la planificación' : contentsLabel(set.zoneCount, set.elementCount)}
+            {empty ? 'Vacío: sus jardines y ejemplares se dieron de baja' : contentsLabel(set.zoneCount, set.elementCount)}
           </dd>
           {set.sectorNames.length > 0 && <>
             <dt className="text-neutral-500">{set.sectorNames.length === 1 ? 'Sector' : 'Sectores'}</dt>
@@ -58,11 +47,13 @@ function SetCard({ set, urgent }: { set: GreenAreaSetSummary; urgent: PlanningRo
             <dd className="text-neutral-900">Fuera de toda sección</dd>
           </>}
         </dl>
-        <Urgent row={urgent} />
-        <div className="flex flex-wrap gap-1 border-t border-neutral-200 pt-3">
-          {set.activities.map((a) => (
-            <span key={a.id} className="rounded-md bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700">{a.label}</span>
-          ))}
+        <div className="space-y-1.5 border-t border-neutral-200 pt-3">
+          <p className="text-xs font-medium text-neutral-500">Actividades que se planifican</p>
+          <div className="flex flex-wrap gap-1">
+            {set.activities.map((a) => (
+              <span key={a.id} className="rounded-md bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700">{a.label}</span>
+            ))}
+          </div>
         </div>
       </Link>
     </Card>
@@ -72,9 +63,6 @@ function SetCard({ set, urgent }: { set: GreenAreaSetSummary; urgent: PlanningRo
 /** Los conjuntos de áreas verdes guardados (SPEC-203 §5.2). */
 export function GreenAreaSetsScreen() {
   const sets = useRequest('green-area-sets', () => greenAreaSetsApi.list());
-  // La planificación solo completa la tarjeta: si falla, la lista se muestra igual.
-  const rows = useRequest('green-area-sets-planning', () => planningApi.rows().catch(() => [] as PlanningRow[]));
-  const firstRow = (setId: number) => rows.data?.find((r) => r.setId === setId);
 
   return (
     <section className="space-y-6">
@@ -89,7 +77,7 @@ export function GreenAreaSetsScreen() {
           description="Crea uno eligiendo sus jardines y ejemplares en el mapa; luego aparecerá en la planificación." />
       )}
       <ul className="grid gap-3 md:grid-cols-2">
-        {sets.data?.map((set) => <li key={set.id}><SetCard set={set} urgent={firstRow(set.id)} /></li>)}
+        {sets.data?.map((set) => <li key={set.id}><SetCard set={set} /></li>)}
       </ul>
     </section>
   );

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GreenAreaSetForm } from '../GreenAreaSetForm';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
@@ -30,6 +30,8 @@ jest.mock('../SetMapPicker', () => ({
 }));
 
 const api = greenAreaSetsApi as unknown as Record<string, jest.Mock>;
+/** La parte 1 del formulario: lo elegido se resume en la insignia de su encabezado. */
+const contents = () => within(screen.getByRole('region', { name: 'Jardines y ejemplares' }));
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -70,7 +72,8 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     render(<GreenAreaSetForm />);
 
     await fillAndPick();
-    expect(screen.getByText('Elegido: 1 jardín')).toBeInTheDocument();
+    expect(contents().getAllByText('1 jardín')[0]).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cambiar en el mapa' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
 
     expect(api.create).toHaveBeenCalledWith({ name: 'Pabellones', description: null, zoneIds: [11], elementIds: [], activityTypeItemIds: [30] });
@@ -109,7 +112,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Confirmar mapa' }));
 
     expect(screen.getByText('Sector 1')).toBeInTheDocument();
-    expect(screen.getByText('1 jardín')).toBeInTheDocument();
+    expect(contents().getAllByText('1 jardín')).toHaveLength(2);
     expect(screen.getByText('Jardín Central')).toBeVisible();
   });
 
@@ -120,7 +123,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     await userEvent.type(screen.getByLabelText(/^Nombre/), 'Mixto');
     await userEvent.click(screen.getByRole('button', { name: 'Corte de césped' }));
 
-    expect(screen.getByText('Elegido: 1 jardín · 1 ejemplar')).toBeInTheDocument();
+    expect(contents().getAllByText('1 jardín · 1 ejemplar')[0]).toBeInTheDocument();
     expect(screen.getByText('EV-000501 · Palmera datilera')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
 
@@ -133,6 +136,35 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
 
     await screen.findByRole('button', { name: 'Guardar conjunto' });
     expect(screen.queryByRole('button', { name: 'Confirmar mapa' })).not.toBeInTheDocument();
+  });
+
+  it('las tres partes del formulario tienen título, y cada una dice cuánto lleva elegido', async () => {
+    render(<GreenAreaSetForm />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar mapa' }));
+
+    expect(screen.getByRole('heading', { name: 'Jardines y ejemplares' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Datos del conjunto' })).toBeInTheDocument();
+    const activities = within(screen.getByRole('region', { name: 'Actividades que se planifican aquí' }));
+    expect(activities.getByText('Ninguna elegida')).toBeInTheDocument();
+    expect(activities.getByText(/Solo estas actividades aparecen en la planificación preventiva/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Corte de césped' }));
+    expect(activities.getByText('1 elegida')).toBeInTheDocument();
+  });
+
+  it('si se creó desde una frecuencia, al guardar pide volver a esa pestaña en vez de irse', async () => {
+    window.history.pushState({}, '', '/intervenciones/conjuntos/nuevo?desde=frecuencia');
+    api.create.mockResolvedValue({ id: 9, name: 'Pabellones', warnings: [] });
+    render(<GreenAreaSetForm />);
+
+    await fillAndPick();
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
+
+    expect(await screen.findByText('Se guardó «Pabellones».')).toBeInTheDocument();
+    expect(screen.getByText(/volver al formulario de la frecuencia/)).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Guardar conjunto' })).not.toBeInTheDocument();
+    window.history.pushState({}, '', '/');
   });
 
   it('dar de baja pide confirmación', async () => {
