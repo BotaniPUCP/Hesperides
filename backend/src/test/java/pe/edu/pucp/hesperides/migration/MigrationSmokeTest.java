@@ -119,15 +119,16 @@ class MigrationSmokeTest {
     }
 
     @Test
-    void theAnnualQuotaRuleIsNamedPlainly() {
-        // V039: el nombre anterior aludia a estaciones que esta regla no evalua.
-        String label = jdbcTemplate.queryForObject("""
+    void frequencyRuleTypesHaveShortLabels() {
+        // V039: los nombres largos partian la insignia en varias lineas.
+        List<String> labels = jdbcTemplate.queryForList("""
                 SELECT ci.label FROM catalog_items ci
                 JOIN catalog_types ct ON ct.id = ci.catalog_type_id
-                WHERE ct.code = 'FREQUENCY_RULE_TYPE' AND ci.code = 'SEASONAL_PERIOD'
+                WHERE ct.code = 'FREQUENCY_RULE_TYPE' ORDER BY ci.sort_order
                 """, String.class);
 
-        assertThat(label).isEqualTo("Cuota anual");
+        assertThat(labels).containsExactly(
+                "Rango de días", "Cuota anual", "Ventana anual", "Ciclo de cobertura", "A demanda");
     }
 
     @Test
