@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/layouts/PageHeader';
 import { Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
-import { gardensLabel } from './planningTexts';
+import { contentsLabel } from './planningTexts';
 
 export const SETS_PATH = '/intervenciones/conjuntos';
 
@@ -15,7 +15,7 @@ export function GreenAreaSetsScreen() {
 
   return (
     <section className="space-y-6">
-      <PageHeader title="Conjuntos de áreas verdes" description="Grupos de jardines que se planifican y atienden juntos"
+      <PageHeader title="Conjuntos de áreas verdes" description="Grupos de jardines y ejemplares que se planifican y atienden juntos"
         actions={<Link href={`${SETS_PATH}/nuevo`} className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
           Nuevo conjunto
         </Link>} />
@@ -32,7 +32,7 @@ export function GreenAreaSetsScreen() {
               <Link href={`${SETS_PATH}/${set.id}`} className="block space-y-1">
                 <span className="block font-semibold text-neutral-900">{set.name}</span>
                 <span className="block text-sm text-neutral-500">
-                  {set.zoneCount === 0 ? 'sin jardines' : gardensLabel(set.zoneCount)}
+                  {set.zoneCount + set.elementCount === 0 ? 'vacío' : contentsLabel(set.zoneCount, set.elementCount)}
                 </span>
                 <span className="flex flex-wrap gap-1 pt-1">
                   {set.activities.map((a) => (

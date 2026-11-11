@@ -7,13 +7,15 @@ import { irrigationApi } from '@/lib/irrigation-api';
 import { maintenanceApi } from '@/lib/maintenance-api';
 import { GreenAreaSetEditor, type SetOptions } from './GreenAreaSetEditor';
 
-/** Lo que el editor necesita para elegir: actividades y las secciones agrupadas por sector. */
+/** Lo que el editor necesita para elegir: actividades, secciones por sector y ejemplares. */
 async function loadOptions(): Promise<SetOptions> {
-  const [activities, sectors] = await Promise.all([maintenanceApi.getActivityTypes(), irrigationApi.sectors()]);
+  const [activities, sectors, specimens] = await Promise.all([
+    maintenanceApi.getActivityTypes(), irrigationApi.sectors(), greenAreaSetsApi.elementOptions()]);
   const groups = await Promise.all(sectors.map((s) => irrigationApi.sections(s.id)));
   return {
     activities,
     sectors,
+    specimens,
     sectionsBySector: Object.fromEntries(sectors.map((s, i) => [s.id, groups[i]])),
   };
 }

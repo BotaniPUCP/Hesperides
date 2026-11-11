@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import type { GreenAreaSetDetail } from '@shared/types';
+import type { GreenAreaSetDetail, GreenAreaSetElement } from '@shared/types';
 import type { IrrigationZone } from '@shared/types/irrigation';
 import { SectionMapPicker } from '@/components/map3d/SectionMapPicker';
 import { PageHeader } from '@/components/layouts/PageHeader';
@@ -13,19 +13,20 @@ import type { ActivityOption } from '@/components/maintenance/activityGroups';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 import { SETS_PATH } from './GreenAreaSetsScreen';
 import { ActivityChipsPicker } from './ActivityChipsPicker';
-import { SelectedGardensSummary } from './SelectedGardensSummary';
-import { gardensLabel } from './planningTexts';
+import { SelectedGardensSummary, type SectorContents } from './SelectedGardensSummary';
+import { contentsLabel } from './planningTexts';
 
 export interface SetOptions {
   activities: ActivityOption[];
   sectors: IrrigationZone[];
   sectionsBySector: Record<number, IrrigationZone[]>;
+  specimens: GreenAreaSetElement[];
 }
 
 const PICKER_TEXTS = {
-  title: 'Elegir jardines del conjunto · Mapa 3D',
-  description: 'Haz clic en los jardines o dibuja un rectángulo. Confirmar solo selecciona; el conjunto se guarda después.',
-  listTitle: 'Jardines del conjunto',
+  title: 'Elegir jardines y ejemplares del conjunto · Mapa 3D',
+  description: 'Elige qué agregar, haz clic en el mapa o dibuja un rectángulo. Confirmar solo selecciona; el conjunto se guarda después.',
+  listTitle: 'Lo elegido',
   confirmAllPrompt: (missing: number) => `¿Agregar ${missing} jardines más al conjunto?`,
 };
 
@@ -35,6 +36,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
   const [name, setName] = useState(existing?.name ?? '');
   const [description, setDescription] = useState(existing?.description ?? '');
   const [zoneIds, setZoneIds] = useState<number[]>(existing?.zones.map((z) => z.id) ?? []);
+  const [elementIds, setElementIds] = useState<number[]>(existing?.elements.map((e) => e.id) ?? []);
   const [activityIds, setActivityIds] = useState<Set<number>>(new Set(existing?.activities.map((a) => a.id)));
   // Un conjunto nuevo empieza por el mapa: es lo que lo define.
   const [picking, setPicking] = useState(existing == null);
@@ -56,15 +58,27 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
     return byId;
   }, [options]);
 
-  /** Los jardines elegidos, por sector, para ver de un vistazo qué cubre el conjunto. */
+  const specimenById = useMemo(() => {
+    const byId = new Map<number, GreenAreaSetElement>();
+    options.specimens.forEach((e) => byId.set(e.id, e));
+    existing?.elements.forEach((e) => byId.set(e.id, e));
+    return byId;
+  }, [options, existing]);
+
+  /** Lo elegido, por sector, para ver de un vistazo qué cubre el conjunto. */
   const bySector = useMemo(() => {
-    const groups = new Map<string, string[]>();
-    zoneIds.forEach((id) => {
-      const sector = sectorOf.get(id) ?? 'Sin sector';
-      groups.set(sector, [...(groups.get(sector) ?? []), names.get(id) ?? `Sección ${id}`]);
+    const groups = new Map<string, SectorContents>();
+    const of = (sector: string) => {
+      if (!groups.has(sector)) groups.set(sector, { gardens: [], specimens: [] });
+      return groups.get(sector)!;
+    };
+    zoneIds.forEach((id) => of(sectorOf.get(id) ?? 'Sin sector').gardens.push(names.get(id) ?? `Sección ${id}`));
+    elementIds.forEach((id) => {
+      const e = specimenById.get(id);
+      of(e?.sectorName ?? 'Fuera de toda sección').specimens.push(e ? `${e.code} · ${e.displayName}` : `Ejemplar ${id}`);
     });
     return [...groups];
-  }, [zoneIds, sectorOf, names]);
+  }, [zoneIds, elementIds, sectorOf, names, specimenById]);
 
   const toggleActivity = (id: number) => setActivityIds((prev) => {
     const next = new Set(prev);
@@ -73,11 +87,11 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
   });
 
   const save = async () => {
-    if (!name.trim() || zoneIds.length === 0 || activityIds.size === 0) {
-      setError('Ponle un nombre, elige al menos un jardín y una actividad.');
+    if (!name.trim() || (zoneIds.length === 0 && elementIds.length === 0) || activityIds.size === 0) {
+      setError('Ponle un nombre, elige al menos un jardín o un ejemplar, y una actividad.');
       return;
     }
-    const body = { name: name.trim(), description: description.trim() || null, zoneIds, activityTypeItemIds: [...activityIds],
+    const body = { name: name.trim(), description: description.trim() || null, zoneIds, elementIds, activityTypeItemIds: [...activityIds],
       ...(existing ? { version: existing.version } : {}) };
     setSaving(true);
     setError(null);
@@ -107,11 +121,11 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
       <PageHeader title={existing ? existing.name : 'Nuevo conjunto'} />
       <Card>
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-neutral-900">Jardines del conjunto</h2>
+          <h2 className="text-sm font-semibold text-neutral-900">Jardines y ejemplares del conjunto</h2>
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="secondary" onClick={() => setPicking(true)}>Elegir jardines en el mapa</Button>
+            <Button variant="secondary" onClick={() => setPicking(true)}>Elegir en el mapa</Button>
             <span className="text-sm text-neutral-700">
-              {zoneIds.length === 1 ? '1 jardín elegido' : `${gardensLabel(zoneIds.length)} elegidos`}
+              {zoneIds.length + elementIds.length === 0 ? 'Nada elegido todavía' : `Elegido: ${contentsLabel(zoneIds.length, elementIds.length)}`}
             </span>
           </div>
           <SelectedGardensSummary bySector={bySector} />
@@ -145,7 +159,8 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
       {picking && (
         <SectionMapPicker sectors={options.sectors} sectionsBySector={options.sectionsBySector} scope="ALL"
           selectedIds={zoneIds} texts={PICKER_TEXTS} onCancel={() => setPicking(false)}
-          onConfirm={(ids) => { setZoneIds(ids); setPicking(false); }} />
+          specimens={{ options: options.specimens, selectedIds: elementIds }}
+          onConfirm={(ids, specimenIds = []) => { setZoneIds(ids); setElementIds(specimenIds); setPicking(false); }} />
       )}
     </section>
   );

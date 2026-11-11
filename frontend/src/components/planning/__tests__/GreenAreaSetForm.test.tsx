@@ -7,7 +7,9 @@ import { ApiError } from '@/lib/api';
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock('@/lib/green-area-sets-api', () => ({
-  greenAreaSetsApi: { get: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn() },
+  greenAreaSetsApi: { get: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(),
+    elementOptions: jest.fn().mockResolvedValue([{ id: 501, code: 'EV-000501', displayName: 'Palmera datilera',
+      typeLabel: 'Palmera', sectionName: 'Jardín Central', sectorId: 1, sectorName: 'Sector 1' }]) },
 }));
 jest.mock('@/lib/maintenance-api', () => ({
   maintenanceApi: { getActivityTypes: jest.fn().mockResolvedValue([
@@ -21,8 +23,10 @@ jest.mock('@/lib/irrigation-api', () => ({
   },
 }));
 jest.mock('@/components/map3d/SectionMapPicker', () => ({
-  SectionMapPicker: ({ onConfirm }: { onConfirm: (ids: number[]) => void }) =>
-    <button type="button" onClick={() => onConfirm([11])}>Confirmar mapa</button>,
+  SectionMapPicker: ({ onConfirm }: { onConfirm: (ids: number[], specimenIds?: number[]) => void }) => <>
+    <button type="button" onClick={() => onConfirm([11])}>Confirmar mapa</button>
+    <button type="button" onClick={() => onConfirm([11], [501])}>Confirmar con ejemplar</button>
+  </>,
 }));
 
 const api = greenAreaSetsApi as unknown as Record<string, jest.Mock>;
@@ -32,7 +36,7 @@ beforeEach(() => jest.clearAllMocks());
 async function fillAndPick() {
   await userEvent.type(await screen.findByLabelText(/^Nombre/), 'Pabellones');
   await userEvent.click(screen.getByRole('button', { name: 'Corte de césped' }));
-  await userEvent.click(screen.getByRole('button', { name: 'Elegir jardines en el mapa' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Elegir en el mapa' }));
   await userEvent.click(await screen.findByRole('button', { name: 'Confirmar mapa' }));
 }
 
@@ -43,7 +47,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
 
-    expect(await screen.findByText('Ponle un nombre, elige al menos un jardín y una actividad.')).toBeInTheDocument();
+    expect(await screen.findByText('Ponle un nombre, elige al menos un jardín o un ejemplar, y una actividad.')).toBeInTheDocument();
     expect(api.create).not.toHaveBeenCalled();
   });
 
@@ -66,10 +70,10 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     render(<GreenAreaSetForm />);
 
     await fillAndPick();
-    expect(screen.getByText('1 jardín elegido')).toBeInTheDocument();
+    expect(screen.getByText('Elegido: 1 jardín')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
 
-    expect(api.create).toHaveBeenCalledWith({ name: 'Pabellones', description: null, zoneIds: [11], activityTypeItemIds: [30] });
+    expect(api.create).toHaveBeenCalledWith({ name: 'Pabellones', description: null, zoneIds: [11], elementIds: [], activityTypeItemIds: [30] });
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/intervenciones/conjuntos'));
   });
 
@@ -88,7 +92,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
 
   it('al editar con una versión vieja explica el conflicto', async () => {
     api.get.mockResolvedValue({ id: 3, name: 'Pabellones', description: null, version: 2,
-      activities: [{ id: 30, label: 'Corte de césped' }], warnings: [],
+      activities: [{ id: 30, label: 'Corte de césped' }], warnings: [], elements: [],
       zones: [{ id: 11, code: 'AV-0011', name: 'Jardín Central', displayName: 'Jardín Central', landscapeCode: null, sectorName: null }] });
     api.update.mockRejectedValue(new ApiError(409, 'Otra persona cambió este conjunto. Recarga para ver su versión.'));
     render(<GreenAreaSetForm setId={3} />);
@@ -109,8 +113,22 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     expect(screen.getByText('Jardín Central')).toBeVisible();
   });
 
+  it('un conjunto puede mezclar jardines y ejemplares, y los envía juntos', async () => {
+    api.create.mockResolvedValue({ id: 9, warnings: [] });
+    render(<GreenAreaSetForm />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar con ejemplar' }));
+    await userEvent.type(screen.getByLabelText(/^Nombre/), 'Mixto');
+    await userEvent.click(screen.getByRole('button', { name: 'Corte de césped' }));
+
+    expect(screen.getByText('Elegido: 1 jardín · 1 ejemplar')).toBeInTheDocument();
+    expect(screen.getByText('EV-000501 · Palmera datilera')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
+
+    expect(api.create).toHaveBeenCalledWith(expect.objectContaining({ zoneIds: [11], elementIds: [501] }));
+  });
+
   it('al editar un conjunto no abre el mapa por su cuenta', async () => {
-    api.get.mockResolvedValue({ id: 3, name: 'Pabellones', description: null, version: 0, activities: [], zones: [], warnings: [] });
+    api.get.mockResolvedValue({ id: 3, name: 'Pabellones', description: null, version: 0, activities: [], zones: [], elements: [], warnings: [] });
     render(<GreenAreaSetForm setId={3} />);
 
     await screen.findByRole('button', { name: 'Guardar conjunto' });
@@ -118,7 +136,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
   });
 
   it('dar de baja pide confirmación', async () => {
-    api.get.mockResolvedValue({ id: 3, name: 'Pabellones', description: null, version: 0, activities: [], zones: [], warnings: [] });
+    api.get.mockResolvedValue({ id: 3, name: 'Pabellones', description: null, version: 0, activities: [], zones: [], elements: [], warnings: [] });
     api.remove.mockResolvedValue(null);
     const confirm = jest.spyOn(window, 'confirm').mockReturnValue(true);
     render(<GreenAreaSetForm setId={3} />);

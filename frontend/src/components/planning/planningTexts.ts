@@ -19,6 +19,18 @@ export function gardensLabel(count: number): string {
   return plural(count, 'jardín', 'jardines');
 }
 
+/** «1 ejemplar», «12 ejemplares». */
+export function specimensLabel(count: number): string {
+  return plural(count, 'ejemplar', 'ejemplares');
+}
+
+/** Lo que tiene un conjunto: «18 jardines», «4 ejemplares» o «18 jardines · 4 ejemplares». */
+export function contentsLabel(zones: number, specimens: number): string {
+  if (specimens === 0) return gardensLabel(zones);
+  if (zones === 0) return specimensLabel(specimens);
+  return `${gardensLabel(zones)} · ${specimensLabel(specimens)}`;
+}
+
 /** «30 sep» a partir de «2026-09-30», sin pasar por zonas horarias. */
 export function shortDate(iso: string): string {
   const [, month, day] = iso.split('-').map(Number);
