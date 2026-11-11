@@ -133,6 +133,33 @@ public class GreenAreaSetQueries {
         return counts;
     }
 
+    /**
+     * Los sectores que cubre cada conjunto: el padre de cada sección y, para cada
+     * ejemplar, el sector de la sección donde está (por posición).
+     */
+    public Map<Long, List<String>> sectorNames() {
+        var out = new java.util.HashMap<Long, List<String>>();
+        jdbc.query("""
+                SELECT set_id, sector_name FROM (
+                  SELECT gz.set_id, sector.name AS sector_name FROM green_area_set_zones gz
+                  JOIN zones z ON z.id = gz.zone_id AND z.deleted_at IS NULL AND z.is_active
+                  JOIN zones sector ON sector.id = z.parent_zone_id
+                  WHERE gz.deleted_at IS NULL
+                  UNION
+                  SELECT ge.set_id, sector.name FROM green_area_set_elements ge
+                  JOIN green_elements e ON e.id = ge.green_element_id AND e.deleted_at IS NULL AND e.is_active
+                  JOIN LATERAL (
+                      SELECT z.parent_zone_id FROM zones z
+                      JOIN catalog_items zt ON zt.id = z.zone_type_item_id AND zt.code = 'SECTION'
+                      WHERE z.deleted_at IS NULL AND z.is_active AND ST_Contains(z.boundary, e.location)
+                      ORDER BY z.area_m2 LIMIT 1) sec ON TRUE
+                  JOIN zones sector ON sector.id = sec.parent_zone_id
+                  WHERE ge.deleted_at IS NULL) covered
+                ORDER BY set_id, sector_name""",
+                rs -> { out.computeIfAbsent(rs.getLong("set_id"), k -> new java.util.ArrayList<>()).add(rs.getString("sector_name")); });
+        return out;
+    }
+
     public void replaceElements(long setId, List<Long> elementIds) {
         replace("green_area_set_elements", "green_element_id", setId, elementIds);
     }

@@ -44,9 +44,11 @@ public class GreenAreaSetsServiceImpl implements GreenAreaSetsService {
     public List<Summary> list() {
         Map<Long, Integer> zones = queries.activeZoneCounts();
         Map<Long, Integer> elements = queries.activeElementCounts();
+        Map<Long, List<String>> sectors = queries.sectorNames();
         return sets.findAllActive().stream().map(s -> new Summary(s.getId(), s.getName(), s.getDescription(),
                 zones.getOrDefault(s.getId(), 0), elements.getOrDefault(s.getId(), 0),
-                queries.activitiesOf(s.getId()), s.getVersion())).toList();
+                sectors.getOrDefault(s.getId(), List.of()), queries.activitiesOf(s.getId()), s.getVersion(),
+                s.getUpdatedAt())).toList();
     }
 
     @Override

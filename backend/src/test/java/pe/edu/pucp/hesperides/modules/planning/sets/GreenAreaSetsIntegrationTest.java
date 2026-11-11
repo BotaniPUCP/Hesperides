@@ -96,6 +96,10 @@ class GreenAreaSetsIntegrationTest {
         for (JsonNode row : list) if (row.get("id").asLong() == id) mine = row;
         assertThat(mine).isNotNull();
         assertThat(mine.get("zoneCount").asInt()).isEqualTo(2);
+        assertThat(mine.get("sectorNames")).hasSize(1);
+        assertThat(mine.get("sectorNames").get(0).asString()).isEqualTo(
+                jdbc.queryForObject("SELECT name FROM zones WHERE id = ?", String.class, sector));
+        assertThat(mine.get("updatedAt").asString()).isNotBlank();
         assertThat(mine.get("activities").get(0).get("id").asLong()).isEqualTo(activity);
 
         var detail = json.readTree(mvc.perform(get("/api/v1/green-area-sets/" + id).with(as(coordinator, "COORDINADOR")))

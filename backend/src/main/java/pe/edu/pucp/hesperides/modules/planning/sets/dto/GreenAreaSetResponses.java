@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.planning.sets.dto;
 
+import java.time.Instant;
 import java.util.List;
 
 /** Respuestas de SPEC-203 §3.1. */
@@ -23,8 +24,9 @@ public final class GreenAreaSetResponses {
                              String sectionName, Long sectorId, String sectorName) {
     }
 
+    /** {@code sectorNames}: los sectores que cubren sus jardines y ejemplares, por nombre. */
     public record Summary(long id, String name, String description, int zoneCount, int elementCount,
-                          List<ActivityRef> activities, long version) {
+                          List<String> sectorNames, List<ActivityRef> activities, long version, Instant updatedAt) {
     }
 
     public record Detail(long id, String name, String description, long version,
