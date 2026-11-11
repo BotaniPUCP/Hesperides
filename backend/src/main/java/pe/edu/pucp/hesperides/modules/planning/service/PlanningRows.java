@@ -16,7 +16,7 @@ final class PlanningRows {
         OpenRound round = v.openRound();
         OpenIntervention open = round == null ? null
                 : new OpenIntervention(round.interventionId(), round.code(), round.scheduledDate(), round.firstStartedDate());
-        return new PlanningRowResponse(set.id(), set.name(), set.zoneIds().size(), activity, label,
+        return new PlanningRowResponse(set.id(), set.name(), set.zoneIds().size(), set.elementIds().size(), activity, label,
                 rule == null ? null : rule.rule().ruleTypeCode(), rule != null && rule.setId() != null, v.rhythm(),
                 v.state(), v.days(), v.lastDate(), v.daysSinceLast(), v.progress(), v.neverAttendedCount(), open,
                 v.estimatedDate(), v.yearCount(), v.suggestedDate());

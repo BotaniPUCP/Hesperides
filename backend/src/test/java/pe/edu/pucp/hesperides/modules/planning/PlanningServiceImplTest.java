@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import pe.edu.pucp.hesperides.engine.frequency.FrequencyRule;
 import pe.edu.pucp.hesperides.engine.planning.PlanningState;
 import pe.edu.pucp.hesperides.modules.planning.attendance.GardenAttendanceProvider;
+import pe.edu.pucp.hesperides.modules.planning.attendance.OpenSpecimenWork;
+import pe.edu.pucp.hesperides.modules.planning.attendance.SpecimenAttendanceProvider;
+import pe.edu.pucp.hesperides.modules.planning.attendance.SpecimenCompletion;
 import pe.edu.pucp.hesperides.modules.planning.attendance.GardenCompletion;
 import pe.edu.pucp.hesperides.modules.planning.repository.PlanningSetsQueries;
 import pe.edu.pucp.hesperides.modules.planning.repository.PlanningSetsQueries.SetSnapshot;
@@ -36,8 +39,10 @@ class PlanningServiceImplTest {
     private PlanningSetsQueries sets;
     private PlanningRuleSource rules;
     private GardenAttendanceProvider attendance;
+    private SpecimenAttendanceProvider specimens;
     private PlanningServiceImpl service;
     private final List<GardenCompletion> completions = new ArrayList<>();
+    private final List<SpecimenCompletion> specimenCompletions = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -46,9 +51,12 @@ class PlanningServiceImplTest {
         attendance = mock(GardenAttendanceProvider.class);
         when(attendance.completions(anyLong(), anyCollection())).thenAnswer(inv -> completions);
         when(attendance.openWorks(anyLong(), anyCollection())).thenReturn(List.of());
+        specimens = mock(SpecimenAttendanceProvider.class);
+        when(specimens.specimenCompletions(anyLong(), anyCollection())).thenAnswer(inv -> specimenCompletions);
+        when(specimens.openSpecimenWorks(anyLong(), anyCollection())).thenReturn(List.of());
         when(sets.displayNames(anyCollection())).thenReturn(Map.of(1L, "Jardín 1", 2L, "Jardín 2"));
         var clock = Clock.fixed(HOY.atStartOfDay(ZoneId.of("America/Lima")).toInstant(), ZoneId.of("America/Lima"));
-        service = new PlanningServiceImpl(sets, rules, attendance, clock, "America/Lima");
+        service = new PlanningServiceImpl(sets, rules, attendance, specimens, clock, "America/Lima");
     }
 
     private static FrequencyRule intervalo(long id, int min, int max) {
@@ -69,7 +77,7 @@ class PlanningServiceImplTest {
 
     @Test
     void aDeclaredActivityWithTheGeneralRuleGivesARowJudgedByTheOldestGarden() {
-        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Pabellones", Set.of(1L, 2L), Set.of(CORTE))));
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Pabellones", Set.of(1L, 2L), Set.of(), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
         completado(1, HOY.minusDays(36));
         completado(2, HOY.minusDays(10));
@@ -87,7 +95,7 @@ class PlanningServiceImplTest {
 
     @Test
     void theSetsOwnRuleWinsOverTheGeneralOne() {
-        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Campo", Set.of(1L), Set.of(CORTE))));
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Campo", Set.of(1L), Set.of(), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35)), propia(CORTE, 5, intervalo(2, 20, 25))));
         completado(1, HOY.minusDays(22));
 
@@ -100,7 +108,7 @@ class PlanningServiceImplTest {
 
     @Test
     void anUndeclaredActivityGivesNoRowAndADeclaredOneWithoutRuleIsNotConfigured() {
-        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Pabellones", Set.of(1L), Set.of(CORTE))));
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Pabellones", Set.of(1L), Set.of(), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(general(PODA, intervalo(1, 30, 35))));
 
         assertThat(service.rows()).singleElement().satisfies(r -> {
@@ -111,17 +119,74 @@ class PlanningServiceImplTest {
 
     @Test
     void aSetWithoutActiveGardensGivesNoRow() {
-        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Vacío", Set.of(), Set.of(CORTE))));
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Vacío", Set.of(), Set.of(), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
 
         assertThat(service.rows()).isEmpty();
     }
 
     @Test
+    void aSpecimenCountsOnItsOwnEvenInsideAnAttendedGarden() {
+        // D-13: el jardín 1 se atendió ayer, pero el ejemplar 700 nunca fue nombrado en una intervención.
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Mixto", Set.of(1L), Set.of(700L), Set.of(CORTE))));
+        when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
+        completado(1, HOY.minusDays(1));
+
+        assertThat(service.rows()).singleElement().satisfies(r -> {
+            assertThat(r.zoneCount()).isEqualTo(1);
+            assertThat(r.elementCount()).isEqualTo(1);
+            assertThat(r.state()).isEqualTo(PlanningState.DUE);
+            assertThat(r.neverAttendedCount()).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void aSetOfOnlySpecimensIsJudgedByTheOneAttendedLongestAgo() {
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Palmeras", Set.of(), Set.of(700L, 701L), Set.of(CORTE))));
+        when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
+        specimenCompletions.add(new SpecimenCompletion(700, 1, HOY.minusDays(40)));
+        specimenCompletions.add(new SpecimenCompletion(701, 2, HOY.minusDays(5)));
+
+        assertThat(service.rows()).singleElement().satisfies(r -> {
+            assertThat(r.state()).isEqualTo(PlanningState.OVERDUE);
+            assertThat(r.days()).isEqualTo(5);
+            assertThat(r.lastDate()).isEqualTo(HOY.minusDays(40));
+        });
+    }
+
+    @Test
+    void aSpecimenWithTheSameIdAsAGardenIsADifferentUnit() {
+        // El ejemplar 1 y la sección 1 no se pisan: solo se atendió el jardín.
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Choque", Set.of(1L), Set.of(1L), Set.of(CORTE))));
+        when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
+        completado(1, HOY.minusDays(2));
+
+        assertThat(service.rows().get(0).neverAttendedCount()).isEqualTo(1);
+    }
+
+    @Test
+    void oneInterventionWithGardensAndSpecimensIsASingleOpenRound() {
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Mixto", Set.of(1L), Set.of(700L), Set.of(CORTE))));
+        when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
+        completado(1, HOY.minusDays(1));
+        when(attendance.openWorks(anyLong(), anyCollection())).thenReturn(List.of(new pe.edu.pucp.hesperides.modules.planning
+                .attendance.OpenWork(81, "INT-000081", HOY.minusDays(4), HOY.minusDays(2), Set.of(1L), Set.of())));
+        when(specimens.openSpecimenWorks(anyLong(), anyCollection())).thenReturn(List.of(
+                new OpenSpecimenWork(81, "INT-000081", HOY.minusDays(4), null, Set.of(700L), Set.of(700L))));
+
+        var row = service.rows().get(0);
+
+        assertThat(row.state()).isEqualTo(PlanningState.IN_PROGRESS);
+        assertThat(row.progress().done()).isEqualTo(1);
+        assertThat(row.progress().total()).isEqualTo(2);
+        assertThat(row.openIntervention().startedDate()).isEqualTo(HOY.minusDays(2));
+    }
+
+    @Test
     void rowsComeSortedByUrgency() {
         when(sets.activeSets()).thenReturn(List.of(
-                new SetSnapshot(5, "Al día", Set.of(1L), Set.of(CORTE)),
-                new SetSnapshot(6, "Atrasado", Set.of(2L), Set.of(CORTE))));
+                new SetSnapshot(5, "Al día", Set.of(1L), Set.of(), Set.of(CORTE)),
+                new SetSnapshot(6, "Atrasado", Set.of(2L), Set.of(), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
         completado(1, HOY.minusDays(5));
         completado(2, HOY.minusDays(50));
@@ -131,7 +196,7 @@ class PlanningServiceImplTest {
 
     @Test
     void anOpenWorkTravelsWithItsFirstStart() {
-        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Tambo", Set.of(1L, 2L), Set.of(CORTE))));
+        when(sets.activeSets()).thenReturn(List.of(new SetSnapshot(5, "Tambo", Set.of(1L, 2L), Set.of(), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
         when(attendance.openWorks(anyLong(), anyCollection())).thenReturn(List.of(new pe.edu.pucp.hesperides.modules.planning
                 .attendance.OpenWork(81, "INT-000081", HOY.minusDays(4), HOY.minusDays(3), Set.of(1L, 2L), Set.of(2L))));
@@ -146,7 +211,7 @@ class PlanningServiceImplTest {
     @Test
     void recentAttentionUsesTheMostFrequentOwnRule() {
         when(sets.activeSets()).thenReturn(List.of(
-                new SetSnapshot(5, "A", Set.of(1L), Set.of(CORTE)), new SetSnapshot(6, "B", Set.of(1L), Set.of(CORTE))));
+                new SetSnapshot(5, "A", Set.of(1L), Set.of(), Set.of(CORTE)), new SetSnapshot(6, "B", Set.of(1L), Set.of(), Set.of(CORTE))));
         when(rules.current()).thenReturn(List.of(propia(CORTE, 5, intervalo(1, 30, 35)), propia(CORTE, 6, intervalo(2, 20, 25))));
         completado(1, HOY.minusDays(3));
 

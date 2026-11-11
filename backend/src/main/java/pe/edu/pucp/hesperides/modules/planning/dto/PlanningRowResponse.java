@@ -6,8 +6,12 @@ import pe.edu.pucp.hesperides.engine.planning.Rhythm;
 
 import java.time.LocalDate;
 
-/** Una fila de planificación (SPEC-203 §3.2). {@code days} depende de {@code state}. */
-public record PlanningRowResponse(long setId, String setName, int zoneCount, long activityTypeItemId,
+/**
+ * Una fila de planificación (SPEC-203 §3.2). {@code days} depende de {@code state}. El avance
+ * y los «sin registro previo» cuentan jardines y ejemplares juntos: cada uno es una unidad.
+ */
+public record PlanningRowResponse(long setId, String setName, int zoneCount, int elementCount,
+                                  long activityTypeItemId,
                                   String activityLabel, String ruleKind, boolean ownRule, Rhythm rhythm,
                                   PlanningState state, Integer days, LocalDate lastDate, Integer daysSinceLast,
                                   Progress progress, int neverAttendedCount, OpenIntervention openIntervention,

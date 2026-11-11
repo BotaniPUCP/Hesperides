@@ -10,6 +10,7 @@ import pe.edu.pucp.hesperides.engine.planning.PlanningOrder;
 import pe.edu.pucp.hesperides.engine.planning.PlanningVerdict;
 import pe.edu.pucp.hesperides.engine.reporting.ReportPeriods;
 import pe.edu.pucp.hesperides.modules.planning.attendance.GardenAttendanceProvider;
+import pe.edu.pucp.hesperides.modules.planning.attendance.SpecimenAttendanceProvider;
 import pe.edu.pucp.hesperides.modules.planning.dto.PlanningRowResponse;
 import pe.edu.pucp.hesperides.modules.planning.dto.RecentAttentionResponse;
 import pe.edu.pucp.hesperides.modules.planning.repository.PlanningSetsQueries;
@@ -29,8 +30,8 @@ import java.util.Set;
 
 /**
  * Planificación preventiva (SPEC-203 §5.5 y §5.6). Orquesta: lee conjuntos,
- * reglas y fechas por jardín, y deja todo juicio al Engine. Consulta las fechas
- * una vez por actividad, para la unión de jardines de todos sus conjuntos.
+ * reglas y fechas por jardín y por ejemplar, y deja todo juicio al Engine. Consulta
+ * las fechas una vez por actividad, para la unión de lo que tienen sus conjuntos.
  */
 @Service
 @Transactional(readOnly = true)
@@ -39,14 +40,16 @@ public class PlanningServiceImpl implements PlanningService {
     private final PlanningSetsQueries sets;
     private final PlanningRuleSource rules;
     private final GardenAttendanceProvider attendance;
+    private final SpecimenAttendanceProvider specimens;
     private final Clock clock;
     private final ZoneId zone;
 
     public PlanningServiceImpl(PlanningSetsQueries sets, PlanningRuleSource rules, GardenAttendanceProvider attendance,
-                               Clock clock, @Value("${hesperides.maintenance.time-zone:America/Lima}") String timeZone) {
+                               SpecimenAttendanceProvider specimens, Clock clock, @Value("${hesperides.maintenance.time-zone:America/Lima}") String timeZone) {
         this.sets = sets;
         this.rules = rules;
         this.attendance = attendance;
+        this.specimens = specimens;
         this.clock = clock;
         this.zone = ZoneId.of(timeZone);
     }
@@ -58,7 +61,7 @@ public class PlanningServiceImpl implements PlanningService {
     public List<PlanningRowResponse> rows() {
         LocalDate today = ReportPeriods.today(clock, zone);
         var catalog = RuleCatalog.of(rules.current());
-        List<SetSnapshot> planned = sets.activeSets().stream().filter(s -> !s.zoneIds().isEmpty()).toList();
+        List<SetSnapshot> planned = sets.activeSets().stream().filter(s -> !s.isEmpty()).toList();
         Set<Long> activities = new HashSet<>();
         planned.forEach(s -> activities.addAll(s.activityTypeItemIds()));
         Map<Long, String> labels = sets.activityLabels(activities);
@@ -67,13 +70,17 @@ public class PlanningServiceImpl implements PlanningService {
         for (long activity : activities) {
             List<SetSnapshot> declaring = planned.stream().filter(s -> s.activityTypeItemIds().contains(activity)).toList();
             Set<Long> zones = new HashSet<>();
-            declaring.forEach(s -> zones.addAll(s.zoneIds()));
-            var history = AttendanceHistory.of(attendance.completions(activity, zones));
-            var open = AttendanceHistory.rounds(attendance.openWorks(activity, zones));
+            Set<Long> elements = new HashSet<>();
+            declaring.forEach(s -> { zones.addAll(s.zoneIds()); elements.addAll(s.elementIds()); });
+            var history = AttendanceHistory.of(attendance.completions(activity, zones),
+                    specimens.specimenCompletions(activity, elements));
+            var open = AttendanceHistory.rounds(attendance.openWorks(activity, zones),
+                    specimens.openSpecimenWorks(activity, elements));
             for (SetSnapshot set : declaring) {
                 PlanningRule rule = catalog.forSet(activity, set.id());
                 FrequencyRule frequency = rule == null ? null : rule.rule();
-                PlanningVerdict verdict = PlanningEvaluator.evaluate(frequency, history.of(set.zoneIds()), open, today);
+                PlanningVerdict verdict = PlanningEvaluator.evaluate(frequency,
+                        history.of(set.zoneIds(), set.elementIds()), open, today);
                 String label = rule != null ? rule.activityLabel() : labels.get(activity);
                 scored.add(new Scored(verdict, PlanningRows.of(set, activity, label, rule, verdict)));
             }
@@ -88,7 +95,7 @@ public class PlanningServiceImpl implements PlanningService {
         List<SetSnapshot> all = sets.activeSets();
         // Lo hecho después de la fecha programada no hace «reciente» a esa fecha.
         var history = AttendanceHistory.of(attendance.completions(activity, zoneIds).stream()
-                .filter(c -> !c.date().isAfter(scheduledDate)).toList());
+                .filter(c -> !c.date().isAfter(scheduledDate)).toList(), List.of());
         Map<Long, String> names = sets.displayNames(zoneIds);
         List<RecentAttentionResponse> out = new ArrayList<>();
         for (long zoneId : new HashSet<>(zoneIds)) {

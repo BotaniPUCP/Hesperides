@@ -31,6 +31,26 @@ public final class GardenAttendanceSql {
             + FROM_LOCATIONS + " AND st.code <> 'CANCELLED' AND i.id IN (SELECT i.id " + FROM_LOCATIONS
             + " AND st.code NOT IN ('COMPLETED', 'VALIDATED', 'CANCELLED'))";
 
+    /** Lo mismo por ejemplar: cuenta la ubicación que lo nombra, sea cual sea su sección. */
+    private static final String FROM_ELEMENTS = """
+            FROM interventions i
+            JOIN catalog_items plan ON plan.id = i.planning_status_item_id AND plan.code <> 'CANCELLED'
+            JOIN intervention_locations l ON l.intervention_id = i.id AND l.deleted_at IS NULL
+            JOIN catalog_items st ON st.id = l.status_item_id
+            JOIN intervention_elements ie ON ie.intervention_location_id = l.id AND ie.deleted_at IS NULL
+            WHERE i.deleted_at IS NULL AND i.intervention_type_item_id = :activity
+              AND ie.green_element_id = ANY(CAST(:elements AS bigint[]))""";
+
+    public static final String SPECIMEN_COMPLETIONS = "SELECT ie.green_element_id AS element_id, i.id AS work_id, "
+            + "CAST((l.completed_at AT TIME ZONE 'UTC') AT TIME ZONE :tz AS date) AS day "
+            + FROM_ELEMENTS + " AND st.code IN ('COMPLETED', 'VALIDATED') AND l.completed_at IS NOT NULL";
+
+    public static final String OPEN_SPECIMENS = "SELECT i.id AS work_id, i.code, i.scheduled_date, "
+            + "ie.green_element_id AS element_id, st.code NOT IN ('COMPLETED', 'VALIDATED') AS pending, "
+            + "CAST((l.started_at AT TIME ZONE 'UTC') AT TIME ZONE :tz AS date) AS started "
+            + FROM_ELEMENTS + " AND st.code <> 'CANCELLED' AND i.id IN (SELECT i.id " + FROM_ELEMENTS
+            + " AND st.code NOT IN ('COMPLETED', 'VALIDATED', 'CANCELLED'))";
+
     private GardenAttendanceSql() {
     }
 }
