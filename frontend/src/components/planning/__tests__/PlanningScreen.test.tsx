@@ -58,7 +58,7 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
       render(<PlanningScreen />);
 
       const card = within(await screen.findByRole('listitem'));
-      expect(card.getByText('Toca, atrasada')).toBeInTheDocument();
+      expect(card.getByText('Atrasada')).toBeInTheDocument();
       expect(card.getByText('4 días tarde')).toBeInTheDocument();
       expect(card.getByText('Corte de césped')).toBeInTheDocument();
       expect(card.getByText('Ingreso Riva-Agüero')).toBeInTheDocument();

@@ -6,19 +6,19 @@ const quota = { minDays: null, maxDays: null, seasonLabel: null, annualTarget: 4
 
 describe('planningTexts (SPEC-203 §7)', () => {
   it.each([
-    [planningRow({ state: 'OVERDUE', days: 4 }), 'Toca, atrasada', '(4 días tarde)'],
-    [planningRow({ state: 'OVERDUE', days: 1 }), 'Toca, atrasada', '(1 día tarde)'],
-    [planningRow({ state: 'DUE', days: 0 }), 'Toca', '(vence hoy)'],
-    [planningRow({ state: 'DUE', days: 4 }), 'Toca', '(quedan 4 días de plazo)'],
-    [planningRow({ state: 'DUE', days: null, neverAttendedCount: 3 }), 'Toca', '3 jardines sin registro previo'],
-    [planningRow({ state: 'NOT_DUE', days: 19 }), 'Aún no toca', '(faltan 19 días)'],
-    [planningRow({ state: 'NOT_DUE', days: 23, ruleKind: 'ANNUAL_WINDOW', rhythm: window }), 'Aún no toca', '(la ventana abre en 23 días)'],
-    [planningRow({ state: 'OVERDUE', days: 2, ruleKind: 'ANNUAL_WINDOW', rhythm: window }), 'Toca, atrasada', '(la ventana cerró hace 2 días)'],
+    [planningRow({ state: 'OVERDUE', days: 4 }), 'Atrasada', '(4 días tarde)'],
+    [planningRow({ state: 'OVERDUE', days: 1 }), 'Atrasada', '(1 día tarde)'],
+    [planningRow({ state: 'DUE', days: 0 }), 'Pendiente', '(vence hoy)'],
+    [planningRow({ state: 'DUE', days: 4 }), 'Pendiente', '(quedan 4 días de plazo)'],
+    [planningRow({ state: 'DUE', days: null, neverAttendedCount: 3 }), 'Pendiente', '3 jardines sin registro previo'],
+    [planningRow({ state: 'NOT_DUE', days: 19 }), 'Al día', '(faltan 19 días)'],
+    [planningRow({ state: 'NOT_DUE', days: 23, ruleKind: 'ANNUAL_WINDOW', rhythm: window }), 'Al día', '(la ventana abre en 23 días)'],
+    [planningRow({ state: 'OVERDUE', days: 2, ruleKind: 'ANNUAL_WINDOW', rhythm: window }), 'Atrasada', '(la ventana cerró hace 2 días)'],
     [planningRow({ state: 'IN_PROGRESS', days: 16, progress: { done: 34, total: 50 } }), 'En curso', '(faltan 16 jardines)'],
     [planningRow({ state: 'SCHEDULED', days: null, openIntervention: { id: 81, code: 'INT-000081', scheduledDate: '2026-11-12', startedDate: null } }),
       'Programada', '(para el 12 nov)'],
     [planningRow({ state: 'DUE', days: 6, ruleKind: 'SEASONAL_PERIOD', rhythm: quota, estimatedDate: '2026-11-14', yearCount: 3 }),
-      'Toca', '(próxima estimada: 14 nov)'],
+      'Pendiente', '(próxima estimada: 14 nov)'],
     [planningRow({ state: 'DONE_FOR_PERIOD', days: null, ruleKind: 'SEASONAL_PERIOD', rhythm: quota, yearCount: 4 }), 'Cumplido', '(4 de 4 en el año)'],
     [planningRow({ state: 'NOT_CONFIGURED', days: null, rhythm: null, ruleKind: null }), 'Sin frecuencia configurada', ''],
   ])('%#: %s', (row, label, detail) => {

@@ -56,11 +56,11 @@ export function rowTitle(row: PlanningRow): string {
 }
 
 const LABELS: Record<PlanningRow['state'], string> = {
-  OVERDUE: 'Toca, atrasada',
-  DUE: 'Toca',
+  OVERDUE: 'Atrasada',
+  DUE: 'Pendiente',
   IN_PROGRESS: 'En curso',
   SCHEDULED: 'Programada',
-  NOT_DUE: 'Aún no toca',
+  NOT_DUE: 'Al día',
   DONE_FOR_PERIOD: 'Cumplido',
   NOT_CONFIGURED: 'Sin frecuencia configurada',
 };

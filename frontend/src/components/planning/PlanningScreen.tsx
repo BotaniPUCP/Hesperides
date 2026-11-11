@@ -20,7 +20,7 @@ export function PlanningScreen() {
   return (
     <section className="space-y-6">
       <PageHeader title="Planificación preventiva"
-        description="Cada tarjeta es una actividad de un conjunto de áreas verdes. Su frecuencia dice si ya toca hacerla; lo más urgente va primero." />
+        description="Cada tarjeta es una actividad de un conjunto de áreas verdes. Su frecuencia dice cuándo hay que hacerla; lo más urgente va primero." />
       {planning.loading && <LoadingSkeleton />}
       {planning.errorMessage && <p role="alert" className="text-sm text-action-danger">{planning.errorMessage}</p>}
       {planning.data && rows.length === 0 && (

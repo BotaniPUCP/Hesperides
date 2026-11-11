@@ -135,8 +135,8 @@ D-06 no cambia). Un jardín **observado** por el coordinador deja de contar hast
 a completar.
 
 **D-05 · El rango de días se lee como lo normal.**
-Por debajo del mínimo es «aún no toca» (y, si alguien lo atiende igual, «atendido hace poco»).
-Entre el mínimo y el máximo es «toca». Por encima del máximo es «toca, atrasada». Esto corrige
+Por debajo del mínimo es «al día» (y, si alguien lo atiende igual, «atendido hace poco»).
+Entre el mínimo y el máximo es «pendiente». Por encima del máximo es «atrasada». Esto corrige
 el defecto del evaluador actual, que daba «en plazo» a un corte a los 10 días con un rango de
 30–35, y «dentro de tolerancia» a uno a los 33 (§5.8).
 
@@ -452,7 +452,7 @@ Con varias intervenciones abiertas, la de fecha programada más temprana.
 
 **Si no hay nada abierto**, la referencia `ref` es la **más antigua** de las últimas veces de los
 jardines del conjunto (D-03). Si algún jardín no tiene ninguna, `neverAttendedCount` lo cuenta y
-la fila es `DUE` con `days = null` y el texto «Toca · N jardines sin registro previo».
+la fila es `DUE` con `days = null` y el texto «Pendiente · N jardines sin registro previo».
 
 Con `ref`, según el tipo de regla:
 
@@ -507,7 +507,7 @@ Para ADMIN y COORDINADOR, encima de la bienvenida, dos bloques (se omite el que 
 
 - **«N conjuntos atrasados»**: filas `OVERDUE`, con el texto «<actividad> en <conjunto> — N días
   tarde».
-- **«N conjuntos tocan en los próximos 7 días»**: filas `DUE`, y `NOT_DUE` con `days ≤ 7`; en la
+- **«N conjuntos vencen en los próximos 7 días»**: filas `DUE`, y `NOT_DUE` con `days ≤ 7`; en la
   cuota anual, el texto «— próxima estimada: <fecha>».
 
 Cuenta filas, no conjuntos únicos: si un conjunto tiene dos actividades atrasadas, son dos
@@ -554,7 +554,7 @@ contando solo lo aprobado (D-04).
 | # | Criterio | Cómo verificarlo |
 |---|----------|------------------|
 | CA-01 | Un coordinador crea un conjunto seleccionando jardines en el mapa y lo encuentra en la lista con su cantidad de jardines | Crear «Prueba» con 3 secciones; la lista dice «3 jardines» |
-| CA-02 | Una fila con la última vez hace 39 días y regla 30–35 sale «Toca, atrasada (4 días tarde)» y encabeza la lista | Datos con `completed_at` controlado |
+| CA-02 | Una fila con la última vez hace 39 días y regla 30–35 sale «Atrasada (4 días tarde)» y encabeza la lista | Datos con `completed_at` controlado |
 | CA-03 | En un conjunto de 50 jardines con una intervención en marcha y 34 completados, la fila dice «En curso (34 de 50 jardines)» | Completar 34 ubicaciones como capataz |
 | CA-04 | Un jardín completado por el capataz cuenta para la planificación antes de que el coordinador lo valide, y deja de contar si lo observa | Completar, consultar, observar, consultar |
 | CA-05 | Al planificar un conjunto con un jardín cortado hace 3 días desde otro conjunto, aparece el aviso y se puede quitar el jardín | Dos conjuntos que comparten un jardín |
@@ -589,11 +589,11 @@ Botón «Planificar intervención» en `DUE`, `OVERDUE` y `NOT_DUE`; «Ver inter
 
 | `state` | Texto | Paréntesis |
 |---|---|---|
-| `OVERDUE` | Toca, atrasada | (N días tarde) · ventana: (la ventana cerró hace N días) |
-| `DUE` | Toca | (quedan N días de plazo) · (vence hoy) · (próxima estimada: 14 nov) · sin registro: «N jardines sin registro previo» |
+| `OVERDUE` | Atrasada | (N días tarde) · ventana: (la ventana cerró hace N días) |
+| `DUE` | Pendiente | (quedan N días de plazo) · (vence hoy) · (próxima estimada: 14 nov) · sin registro: «N jardines sin registro previo» |
 | `IN_PROGRESS` | En curso | (faltan N jardines) |
 | `SCHEDULED` | Programada | (para el 12 nov) |
-| `NOT_DUE` | Aún no toca | (faltan N días) · ventana: (la ventana abre en N días) |
+| `NOT_DUE` | Al día | (faltan N días) · ventana: (la ventana abre en N días) |
 | `DONE_FOR_PERIOD` | Cumplido | (4 de 4 en el año) · ventana: (hecho en esta ventana) |
 | `NOT_CONFIGURED` | Sin frecuencia configurada | — |
 

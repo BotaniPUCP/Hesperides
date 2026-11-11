@@ -35,7 +35,7 @@ describe('GreenAreaSetsScreen (SPEC-203 §5.2)', () => {
     render(<GreenAreaSetsScreen />);
 
     await screen.findByRole('link', { name: /Ingreso Riva-Agüero/ });
-    expect(screen.queryByText(/Lo más urgente|Toca|Aún no toca/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Lo más urgente|Atrasada|Pendiente|Al día/)).not.toBeInTheDocument();
   });
 
   it('un conjunto vacío lo advierte', async () => {
