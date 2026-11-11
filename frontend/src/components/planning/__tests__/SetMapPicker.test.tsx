@@ -39,7 +39,8 @@ describe('SetMapPicker', () => {
       expect(within(card('Sector 1')).getByText('1 de 1')).toBeInTheDocument();
       expect(within(card('Sector 1')).getByText('1 jardín · 1 ejemplar')).toBeInTheDocument();
       expect(within(card('Sector 2')).getByText('0 de 1')).toBeInTheDocument();
-      expect(within(card('Sector 2')).getByText('Nada elegido')).toBeInTheDocument();
+      // Un sector sin nada elegido no lleva insignia: el contador «0 de 1» ya lo dice.
+      expect(within(card('Sector 2')).queryByText('Nada elegido')).not.toBeInTheDocument();
       expect(card('Fuera de toda sección')).toBeInTheDocument();
       expect(screen.getByText('Elegido: 1 jardín · 1 ejemplar')).toBeInTheDocument();
     });

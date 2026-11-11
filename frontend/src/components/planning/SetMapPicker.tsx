@@ -269,7 +269,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
       className="flex h-[calc(100vh-9rem)] min-h-[560px] scroll-mt-4 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 text-neutral-900 shadow-xs">
       <header className="flex shrink-0 items-start justify-between gap-3 border-b border-neutral-200 px-4 py-3">
         <div className="min-w-0 flex-1"><h2 id="set-picker-title" className="text-lg font-bold">Elegir jardines y ejemplares del conjunto</h2>
-          <p className="text-xs text-neutral-500">Haz clic en el mapa, dibuja un área o márcalos en cada sector. Confirmar solo selecciona; el conjunto se guarda después.</p></div>
+          <p className="text-xs text-neutral-500">Lo elegido se guarda cuando guardes el conjunto.</p></div>
         <button type="button" onClick={requestCancel}
           className="shrink-0 rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50">Cancelar y volver</button>
       </header>
@@ -281,7 +281,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
           <button type="button" onClick={() => { viewer.current?.top(); setAreaMode((v) => !v); }} aria-pressed={areaMode}
             title={areaMode ? 'Salir de la selección múltiple' : 'Dibuja un rectángulo sobre el mapa para agregar todo lo que encierre'}
             className={areaMode ? TOOL_ON : TOOL}>
-            <span aria-hidden="true">{areaMode ? '✓' : '▭'}</span> Selección múltiple</button>
+            Selección múltiple</button>
           {areaMode && <div role="radiogroup" aria-label="Qué hace el rectángulo" className="flex rounded-md border border-neutral-200 bg-neutral-0 p-0.5 text-xs font-semibold">
             {(['add', 'remove'] as const).map((a) => (
               <button key={a} type="button" role="radio" aria-checked={areaAction === a} onClick={() => setAreaAction(a)}
@@ -321,7 +321,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
               </div>}
           <div className="pointer-events-none absolute inset-x-3 top-3 z-30 flex flex-col items-start gap-2">
             {areaMode && <p className={`${MAP_CHIP} px-3 py-2 font-medium text-neutral-700`}>
-              {removing ? 'Arrastra sobre el mapa para quitar lo elegido que quede dentro.' : 'Arrastra sobre el mapa para agregar todo lo que quede dentro.'} Pulsa <strong>Selección múltiple</strong> otra vez para salir.</p>}
+              {removing ? 'Arrastra sobre el mapa para quitar.' : 'Arrastra sobre el mapa para agregar.'}</p>}
             {focusedGroup && <div className={`${MAP_CHIP} flex items-center gap-2 py-1 pl-3 pr-1`}>
               <span>Viendo {focusLabel}</span>
               <button type="button" onClick={unfocus} aria-label={`Dejar de ver ${focusedGroup.name}`}
@@ -375,15 +375,14 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
               const isFocused = focused === g.key;
               return (
                 <li key={g.key} aria-label={g.name} ref={(el) => { if (el) cards.current.set(g.key, el); else cards.current.delete(g.key); }}
-                  className={`overflow-hidden rounded-xl border border-l-4 bg-neutral-0 shadow-xs ${chosen > 0 ? 'border-l-brand-600' : 'border-l-neutral-200'} ${isFocused ? 'border-brand-600 ring-1 ring-brand-600' : 'border-neutral-200'}`}>
+                  className={`overflow-hidden rounded-xl border bg-neutral-0 ${isFocused ? 'border-brand-600 ring-1 ring-brand-600' : 'border-neutral-200'}`}>
                   <div className={`flex items-center justify-between gap-2 px-3 py-2 ${chosen > 0 ? 'bg-brand-50' : 'bg-neutral-0'}`}>
                     <button type="button" aria-expanded={open} onClick={() => toggleOpen(g.key, open)}
                       className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-neutral-900">
                       <span aria-hidden="true" className={`text-neutral-400 transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
                       <span className="truncate" title={g.name}>{g.name}</span>
                     </button>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${chosen > 0 ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-600'}`}>
-                      {chosen > 0 ? contentsLabel(chosenGardens, chosenTrees) : 'Nada elegido'}</span>
+                    {chosen > 0 && <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">{contentsLabel(chosenGardens, chosenTrees)}</span>}
                   </div>
                   <div className="space-y-1.5 px-3 pb-2 pt-1">
                     {ownGardens.length > 0 && <Meter label="Jardines" chosen={chosenGardens} total={ownGardens.length} />}

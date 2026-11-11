@@ -164,7 +164,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     expect(screen.getByRole('heading', { name: 'Datos del conjunto' })).toBeInTheDocument();
     const activities = within(screen.getByRole('region', { name: 'Actividades que se planifican aquí' }));
     expect(activities.getByText('Ninguna elegida')).toBeInTheDocument();
-    expect(activities.getByText(/Solo estas actividades aparecen en la planificación preventiva/)).toBeInTheDocument();
+    expect(activities.getByText(/Solo estas aparecen en la planificación preventiva/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Corte de césped' }));
     expect(activities.getByText('1 elegida')).toBeInTheDocument();
@@ -179,7 +179,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
 
     expect((await screen.findByText('Pabellones', { selector: 'strong' })).parentElement).toHaveTextContent('Se guardó Pabellones.');
-    expect(screen.getByText(/volver al formulario de la frecuencia/)).toBeInTheDocument();
+    expect(screen.getByText(/Vuelve a la pestaña de la frecuencia/)).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Guardar conjunto' })).not.toBeInTheDocument();
     window.history.pushState({}, '', '/');

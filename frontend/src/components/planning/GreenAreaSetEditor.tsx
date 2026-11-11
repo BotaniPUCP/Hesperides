@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import type { GreenAreaSetDetail, GreenAreaSetElement } from '@shared/types';
 import type { IrrigationZone } from '@shared/types/irrigation';
 import { PageHeader } from '@/components/layouts/PageHeader';
-import { Button, Card, Input } from '@/components/ui';
+import { Badge, Button, Card, Input } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import type { ActivityOption } from '@/components/maintenance/activityGroups';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
@@ -22,24 +22,6 @@ export interface SetOptions {
   sectionsBySector: Record<number, IrrigationZone[]>;
   specimens: GreenAreaSetElement[];
 }
-
-/** El encabezado de cada parte del formulario, numerado para que se lean en orden. */
-function Step({ n, id, title, hint, aside }: { n: number; id: string; title: string; hint: string; aside?: ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-neutral-200 pb-3">
-      <div className="flex items-start gap-3">
-        <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">{n}</span>
-        <div>
-          <h2 id={id} className="text-base font-semibold text-neutral-900">{title}</h2>
-          <p className="text-sm text-neutral-500">{hint}</p>
-        </div>
-      </div>
-      {aside}
-    </div>
-  );
-}
-
-const badge = (on: boolean) => `whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${on ? 'bg-brand-50 text-brand-700' : 'bg-alert-warning-bg text-alert-warning-fg'}`;
 
 /** Formulario de un conjunto: nombre, actividades que se planifican en él y jardines del mapa. */
 export function GreenAreaSetEditor({ options, existing }: { options: SetOptions; existing: GreenAreaSetDetail | null }) {
@@ -92,6 +74,8 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
     return [...groups];
   }, [zoneIds, elementIds, sectorOf, names, specimenById]);
 
+  const contents = zoneIds.length + elementIds.length;
+
   const toggleActivity = (id: number) => setActivityIds((prev) => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -139,35 +123,31 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
           selectedZoneIds={zoneIds} selectedSpecimenIds={elementIds} onCancel={() => setPicking(false)}
           onConfirm={(ids, specimenIds) => { setZoneIds(ids); setElementIds(specimenIds); setPicking(false); }} />
       ) : <>
-      <Card>
-        <section aria-labelledby="set-contents" className="space-y-4">
-          <Step n={1} id="set-contents" title="Jardines y ejemplares" hint="Lo que se atiende junto. Elígelo en el mapa o en la lista de cada sector."
-            aside={<span className={badge(zoneIds.length + elementIds.length > 0)}>
-              {zoneIds.length + elementIds.length === 0 ? 'Nada elegido' : contentsLabel(zoneIds.length, elementIds.length)}</span>} />
-          <Button variant="secondary" onClick={() => setPicking(true)}>
-            {zoneIds.length + elementIds.length === 0 ? 'Elegir en el mapa' : 'Cambiar en el mapa'}</Button>
-          <SelectedGardensSummary bySector={bySector} />
-        </section>
-      </Card>
-      <Card>
-        <section aria-labelledby="set-data" className="space-y-4">
-          <Step n={2} id="set-data" title="Datos del conjunto" hint="El nombre con que aparece en la planificación y en las frecuencias." />
+      <section aria-label="Jardines y ejemplares">
+        <Card title="Jardines y ejemplares" actions={<Badge color={contents > 0 ? 'brand' : 'warning'}
+          label={contents === 0 ? 'Nada elegido' : contentsLabel(zoneIds.length, elementIds.length)} />}>
+          <div className="space-y-3">
+            <Button variant="secondary" onClick={() => setPicking(true)}>{contents === 0 ? 'Elegir en el mapa' : 'Cambiar en el mapa'}</Button>
+            <SelectedGardensSummary bySector={bySector} />
+          </div>
+        </Card>
+      </section>
+      <section aria-label="Datos del conjunto">
+        <Card title="Datos del conjunto">
           <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
             <Input id="set-name" label="Nombre" value={name} onChange={setName} maxLength={120} required />
             <Input id="set-description" label="Descripción (opcional)" value={description} onChange={setDescription}
               maxLength={2000} placeholder="Jardines frente a la biblioteca" />
           </div>
-        </section>
-      </Card>
-      <Card>
-        <section aria-labelledby="set-activities" className="space-y-4">
-          <Step n={3} id="set-activities" title="Actividades que se planifican aquí"
-            hint="Solo estas actividades aparecen en la planificación preventiva de este conjunto. Abre un grupo y marca las que correspondan."
-            aside={<span className={badge(activityIds.size > 0)}>
-              {activityIds.size === 0 ? 'Ninguna elegida' : activityIds.size === 1 ? '1 elegida' : `${activityIds.size} elegidas`}</span>} />
+        </Card>
+      </section>
+      <section aria-label="Actividades que se planifican aquí">
+        <Card title="Actividades que se planifican aquí" actions={<Badge color={activityIds.size > 0 ? 'brand' : 'warning'}
+          label={activityIds.size === 0 ? 'Ninguna elegida' : activityIds.size === 1 ? '1 elegida' : `${activityIds.size} elegidas`} />}>
+          <p className="mb-3 text-sm text-neutral-500">Solo estas aparecen en la planificación preventiva del conjunto.</p>
           <ActivityChipsPicker activities={options.activities} selected={activityIds} onToggle={toggleActivity} />
-        </section>
-      </Card>
+        </Card>
+      </section>
       {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}
       {warnings.length > 0 && (
         <div role="status" className="space-y-2 rounded-md bg-alert-warning-bg p-3 text-sm text-alert-warning-fg">
@@ -179,7 +159,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
       {savedName && (
         <div role="status" className="space-y-1 rounded-md bg-brand-50 p-3 text-sm text-brand-800">
           <p>Se guardó <strong>{savedName}</strong>.</p>
-          <p>Ya puedes cerrar esta pestaña y volver al formulario de la frecuencia: el conjunto aparece ahí para elegirlo.</p>
+          <p>Vuelve a la pestaña de la frecuencia para elegirlo.</p>
         </div>
       )}
       <div className="flex flex-wrap justify-between gap-3">

@@ -9,8 +9,6 @@ import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 
 const SELECT = 'w-full rounded-md border border-neutral-300 bg-neutral-0 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
 const LABEL = 'mb-1 block text-sm font-medium text-neutral-700';
-/** Flecha como texto, no como emoji: indica que se abre en otra pestaña. */
-const ARROW = '↗︎';
 const LINK = 'font-medium text-brand-700 underline underline-offset-2 hover:text-brand-900';
 
 interface Props {
@@ -61,10 +59,10 @@ export function FrequencyScopeFields({ scope, setId, sets, onScope, onSet }: Pro
             <label htmlFor="frequency-set" className="text-sm font-medium text-neutral-700">Conjunto de áreas verdes</label>
             {/* Otra pestaña: navegar aquí cerraría el formulario y se perdería lo escrito. */}
             <span className="flex gap-3 text-xs">
-              {chosen && <Link href={`${SETS_PATH}/${chosen.id}`} target="_blank" rel="noopener" className={LINK}>
-                Ver conjunto {ARROW}<span className="sr-only"> (se abre en otra pestaña)</span></Link>}
-              <Link href={`${SETS_PATH}/nuevo?desde=${FROM_FREQUENCY}`} target="_blank" rel="noopener" className={LINK}>
-                {options.length === 0 ? 'Crear el primer conjunto' : 'Crear conjunto'} {ARROW}<span className="sr-only"> (se abre en otra pestaña)</span></Link>
+              {chosen && <Link href={`${SETS_PATH}/${chosen.id}`} target="_blank" rel="noopener" title="Se abre en otra pestaña" className={LINK}>
+                Ver conjunto<span className="sr-only"> (se abre en otra pestaña)</span></Link>}
+              <Link href={`${SETS_PATH}/nuevo?desde=${FROM_FREQUENCY}`} target="_blank" rel="noopener" title="Se abre en otra pestaña" className={LINK}>
+                {options.length === 0 ? 'Crear el primer conjunto' : 'Crear conjunto'}<span className="sr-only"> (se abre en otra pestaña)</span></Link>
             </span>
           </div>
           <select id="frequency-set" value={setId ?? 0} onChange={(e) => onSet(Number(e.target.value) || null)} className={SELECT}>

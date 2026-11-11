@@ -50,7 +50,7 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
       rows.mockResolvedValue([planningRow()]);
       render(<PlanningScreen />);
 
-      expect(await screen.findByText(/Cada tarjeta es una actividad de un conjunto de áreas verdes/)).toBeInTheDocument();
+      expect(await screen.findByText(/Una tarjeta por cada actividad de cada conjunto de áreas verdes/)).toBeInTheDocument();
     });
 
     it('siempre tiene la misma forma: estado, actividad, conjunto y sus datos', async () => {

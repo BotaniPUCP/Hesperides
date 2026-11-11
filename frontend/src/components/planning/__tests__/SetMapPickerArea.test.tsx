@@ -60,7 +60,7 @@ describe('SetMapPicker · selección múltiple', () => {
 
     expect(screen.getByText('Elegido: 1 jardín')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Se quitó del conjunto: 1 jardín · 1 ejemplar del área dibujada.');
-    expect(screen.getByText(/para quitar lo elegido que quede dentro/)).toBeInTheDocument();
+    expect(screen.getByText('Arrastra sobre el mapa para quitar.')).toBeInTheDocument();
   });
 
   it('si en el área no había nada elegido, lo avisa', async () => {
