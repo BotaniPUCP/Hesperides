@@ -2,7 +2,7 @@
 
 Una fila es una persona de contacto y las organizaciones a las que pertenece (SPEC-106 §4.2). Se
 carga en **Directorio → Registro masivo → Contactos**, solo ADMIN y COORDINADOR. Plantilla:
-[plantillas/contactos.csv](plantillas/contactos.csv), con una fila de ejemplo que hay que borrar
+[contactos.csv](../../backend/src/main/resources/imports/templates/contactos.csv), con una fila de ejemplo que hay que borrar
 antes de cargar. Las organizaciones se cargan primero ([organizaciones.md](organizaciones.md)).
 
 | Columna | Obligatoria | Qué va |

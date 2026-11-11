@@ -6,7 +6,7 @@
 | Autor | Equipo Hesperides |
 | Plataforma | Web (la app móvil consumirá el mismo `photos` de la API) |
 | Sprint | S3 |
-| Dependencias | SPEC-103 (§6.5, D-07, D-08, D-09), SPEC-002 §5.4, inventario verde (`docs/inventario-verde/README.md`) |
+| Dependencias | SPEC-103 (§6.5, D-07, D-08, D-09), SPEC-002 §5.4, inventario verde (`docs/modulos/inventario-verde.md`) |
 
 > **Lectura obligatoria:** `specs/REGLAS.md`.
 > **Específico de este spec:** SPEC-103 D-07 (toda foto se guarda reducida en almacenamiento propio,
@@ -214,7 +214,7 @@ no muestra la licencia.
 
 1. Se reducen las 2 fotos de *Thrinax radiata* (D-11).
 2. `selecciones.csv` (la selección de Wikimedia Commons) se convierte al estándar
-   `fotos-especies.csv` y se versiona como `docs/dominio/datos/fotos-especies-creditos.csv`: es la
+   `fotos-especies.csv` y se versiona como `docs/datos/procesados/fotos-especies-creditos.csv`: es la
    fuente de los créditos.
 3. Se mueven las 230 fotos a `inbox/species-photos/` (carpeta del repo ignorada por git, montada en el
    backend en `/data/inbox`) con una copia de ese CSV llamada `fotos-especies.csv`.
@@ -314,7 +314,7 @@ Frontend
   borra lo procesado) y fija `JAVA_TOOL_OPTIONS: -Xmx${BACKEND_HEAP:-1g}`. El README de despliegue
   documenta la bandeja, el heap y por qué 2 GB obligan a una importación a la vez.
 - **`.gitignore`:** `inbox/` (los originales nunca se versionan; los créditos sí, en
-  `docs/dominio/datos/fotos-especies-creditos.csv`).
+  `docs/datos/procesados/fotos-especies-creditos.csv`).
 - **Estándar:** `docs/estandares/fotos-especies.md` y su plantilla documentan las columnas nuevas
   (`orden`, `autor`, `licencia`, `fuente`) y la regla de reemplazo del conjunto.
 - **Auditoría:** la carga inicial y cada reemplazo de conjunto se registran con `AuditService`

@@ -7,7 +7,7 @@ import { mensajeDeApiError } from '@/lib/api-errors';
 import { directoryApi } from '@/lib/directory-api';
 import { guardarArchivo } from '@/lib/download';
 
-/** Los nombres de las plantillas: los mismos de `docs/estandares/plantillas/`. */
+/** Los nombres de las plantillas: los mismos de `backend/src/main/resources/imports/templates/`. */
 const PLANTILLAS: Record<DirectoryImportKind, string> = {
   organizations: 'organizaciones.csv',
   contacts: 'contactos.csv',

@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * El inventario verde contra PostGIS real con la carga de V014: las especies
  * del catastro limpias, sus 965 ejemplares y la sección calculada por posición.
  * Todas las peticiones van sin sesión: el inventario es público por ahora
- * (docs/inventario-verde/README.md).
+ * (docs/modulos/inventario-verde.md).
  */
 @Testcontainers
 @SpringBootTest

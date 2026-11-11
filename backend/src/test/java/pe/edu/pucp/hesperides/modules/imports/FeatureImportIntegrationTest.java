@@ -173,7 +173,7 @@ class FeatureImportIntegrationTest {
     void theTemplatesAreTheDocumentedOnes() throws Exception {
         for (String[] t : new String[][]{{"waste-bins", "tachos.csv"}, {"drinking-fountains", "bebederos.csv"},
                 {"species-photos", "fotos-especies.csv"}}) {
-            byte[] documented = Files.readAllBytes(Path.of("..", "docs", "estandares", "plantillas", t[1]));
+            byte[] documented = Files.readAllBytes(Path.of("src", "main", "resources", "imports", "templates", t[1]));
             mockMvc.perform(get("/api/v1/imports/templates/" + t[0])).andExpect(content().bytes(documented));
         }
     }

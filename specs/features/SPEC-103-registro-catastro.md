@@ -6,11 +6,11 @@
 | Autor | Equipo Hesperides |
 | Plataforma | Web (el formulario móvil de C-01 reutilizará la API) |
 | Sprint | S2 |
-| Dependencias | SPEC-002 (§4.5, §5.4), SPEC-003, SPEC-102, inventario verde (`docs/inventario-verde/README.md`) |
+| Dependencias | SPEC-002 (§4.5, §5.4), SPEC-003, SPEC-102, inventario verde (`docs/modulos/inventario-verde.md`) |
 
 > **Lectura obligatoria:** `specs/REGLAS.md`.
 > **Específico de este spec:** SPEC-002 §5.4 (los archivos nunca entran a PostgreSQL), que este spec
-> implementa por primera vez · `docs/inventario-verde/README.md` (decisiones del catastro ya cargado).
+> implementa por primera vez · `docs/modulos/inventario-verde.md` (decisiones del catastro ya cargado).
 
 > **La regla de este spec: contiene lo que el código NO dice.** Mientras la feature no esté
 > implementada, este spec **sí** es la fuente de verdad y el detalle se escribe literal.
@@ -238,7 +238,7 @@ saber de qué carga vino cada dato.
 - **Palmera 56:** Excel convirtió su fuste «3,3» en la fecha 3 de marzo; se usa el CSV, que tiene el
   valor correcto.
 
-Todo se genera con los scripts de `scripts/`, desde fuentes copiadas a `docs/dominio/datos/`.
+Todo se genera con los scripts de `scripts/`, desde fuentes copiadas a `docs/datos/procesados/`.
 
 ## 5. Comportamiento
 
@@ -286,7 +286,7 @@ solo intenta las que faltan.
 - Fechas `AAAA-MM-DD`. Sí/no: `si` / `no` / vacío (= no evaluado).
 - Coordenadas WGS 84 en grados decimales; deben caer dentro del campus.
 - Cada estándar tiene un documento en `docs/estandares/` y una plantilla en
-  `docs/estandares/plantillas/`, también descargable desde el sistema.
+  `backend/src/main/resources/imports/templates/`, también descargable desde el sistema.
 
 ### 6.2 Ejemplares (`ejemplares.csv`)
 

@@ -42,8 +42,13 @@ Thumbs.db
 .superpowers/
 
 # Bandeja de carga inicial (SPEC-104 D-05): originales que la carga mueve al
-# almacenamiento. Nunca se versionan; sus creditos si, en docs/dominio/datos/.
+# almacenamiento. Nunca se versionan; sus creditos si, en docs/datos/procesados/.
 inbox/
 
 pnpm-lock.yaml
 pnpm-workspace.yaml
+
+# Originales del cliente con datos personales (contactos, telefonos, nombres de
+# trabajadores). El repositorio es publico: viven solo en cada maquina. Que contiene
+# cada uno esta en docs/datos/catalogo-de-datos.md.
+docs/datos/privados/

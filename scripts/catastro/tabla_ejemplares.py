@@ -1,4 +1,4 @@
-"""Escribe docs/dominio/datos/ejemplares.csv: los ejemplares tal como quedan en la base.
+"""Escribe docs/datos/procesados/ejemplares.csv: los ejemplares tal como quedan en la base.
 
 Sale de la misma lista que la migración de carga, en el mismo orden, así que el
 código EV de cada fila es el que tiene el ejemplar en el sistema. Usa el
