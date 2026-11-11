@@ -1,4 +1,4 @@
-import { lastLine, rhythmText, rowTitle, stateDetail, stateLabel } from '../planningTexts';
+import { historyLine, rhythmText, rowTitle, stateDetail, stateLabel } from '../planningTexts';
 import { planningRow } from '../__fixtures__/planningFixtures';
 
 const window = { minDays: null, maxDays: null, seasonLabel: null, annualTarget: 1, windowStartMonth: 12, windowEndMonth: 1 };
@@ -34,17 +34,19 @@ describe('planningTexts (SPEC-203 §7)', () => {
     expect(rhythmText(planningRow({ ruleKind: 'ANNUAL_WINDOW', rhythm: window }))).toBe('1 al año, entre diciembre y enero');
   });
 
-  it('la cuenta de jardines «X de N» solo aparece en curso', () => {
-    expect(lastLine(planningRow())).toBe('Última vez: 30 sep (hace 39 días) · 18 jardines');
-    expect(lastLine(planningRow({ state: 'IN_PROGRESS', progress: { done: 34, total: 50 },
+  it('la historia es la última vez, o el avance «X de N» si está en curso', () => {
+    expect(historyLine(planningRow())).toEqual({ label: 'Última vez', value: '30 sep (hace 39 días)' });
+    expect(historyLine(planningRow({ state: 'IN_PROGRESS', progress: { done: 34, total: 50 },
       openIntervention: { id: 81, code: 'INT-000081', scheduledDate: '2026-11-04', startedDate: '2026-11-05' } }), new Date('2026-11-08T12:00:00')))
-      .toBe('Empezó: 5 nov (hace 3 días) · 34 de 50 jardines');
-    expect(lastLine(planningRow({ lastDate: null, daysSinceLast: null, neverAttendedCount: 18 }))).toBe('Sin registro previo · 18 jardines');
+      .toEqual({ label: 'Avance', value: '34 de 50 jardines · empezó el 5 nov (hace 3 días)' });
+    expect(historyLine(planningRow({ lastDate: null, daysSinceLast: null, neverAttendedCount: 18 })))
+      .toEqual({ label: 'Última vez', value: 'Sin registro previo' });
   });
 
-  it('con ejemplares, la tarjeta cuenta jardines y ejemplares', () => {
-    expect(lastLine(planningRow({ elementCount: 4 }))).toBe('Última vez: 30 sep (hace 39 días) · 18 jardines · 4 ejemplares');
-    expect(lastLine(planningRow({ zoneCount: 0, elementCount: 1 }))).toBe('Última vez: 30 sep (hace 39 días) · 1 ejemplar');
+  it('con ejemplares, el avance y los «sin registro» cuentan jardines y ejemplares', () => {
+    expect(historyLine(planningRow({ state: 'IN_PROGRESS', zoneCount: 0, elementCount: 5, progress: { done: 1, total: 5 },
+      openIntervention: { id: 81, code: 'INT-000081', scheduledDate: '2026-11-04', startedDate: '2026-11-08' } }), new Date('2026-11-08T12:00:00')).value)
+      .toBe('1 de 5 ejemplares · empezó el 8 nov (hoy)');
     expect(stateDetail(planningRow({ state: 'DUE', days: null, neverAttendedCount: 2, elementCount: 4 })))
       .toBe('2 jardines o ejemplares sin registro previo');
     expect(stateDetail(planningRow({ state: 'IN_PROGRESS', days: 3, zoneCount: 0, elementCount: 9 }))).toBe('(faltan 3 ejemplares)');

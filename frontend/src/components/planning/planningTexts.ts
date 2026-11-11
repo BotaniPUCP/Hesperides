@@ -118,15 +118,15 @@ export function rhythmText(row: PlanningRow): string {
 }
 
 /** La segunda línea de la tarjeta: la cuenta «X de N» solo en curso. */
-export function lastLine(row: PlanningRow, now: Date = new Date()): string {
+/** La historia de la fila para la tarjeta: el avance si está en curso; si no, la última vez. */
+export function historyLine(row: PlanningRow, now: Date = new Date()): { label: string; value: string } {
   const started = row.openIntervention?.startedDate;
   if (row.state === 'IN_PROGRESS' && started && row.progress) {
     const [y, m, d] = started.split('-').map(Number);
     const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
     const since = Math.round((today - Date.UTC(y, m - 1, d)) / 86_400_000);
-    return `Empezó: ${shortDate(started)} (${daysAgo(since)}) · ${row.progress.done} de ${unitsLabel(row, row.progress.total)}`;
+    return { label: 'Avance', value: `${row.progress.done} de ${unitsLabel(row, row.progress.total)} · empezó el ${shortDate(started)} (${daysAgo(since)})` };
   }
-  const contents = contentsLabel(row.zoneCount, row.elementCount);
-  if (!row.lastDate || row.daysSinceLast === null) return `Sin registro previo · ${contents}`;
-  return `Última vez: ${shortDate(row.lastDate)} (${daysAgo(row.daysSinceLast)}) · ${contents}`;
+  if (!row.lastDate || row.daysSinceLast === null) return { label: 'Última vez', value: 'Sin registro previo' };
+  return { label: 'Última vez', value: `${shortDate(row.lastDate)} (${daysAgo(row.daysSinceLast)})` };
 }

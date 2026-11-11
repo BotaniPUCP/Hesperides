@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PlanningScreen } from '../PlanningScreen';
 import { planningApi } from '@/lib/planning-api';
@@ -19,10 +19,11 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
 
     render(<PlanningScreen />);
 
-    expect(await screen.findByText('Corte de césped en Ingreso Riva-Agüero')).toBeInTheDocument();
+    expect(await screen.findAllByText('Corte de césped')).toHaveLength(2);
+    expect(screen.getByText('Ingreso Riva-Agüero')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Planificar intervención' }))
       .toHaveAttribute('href', '/intervenciones/nueva?conjunto=3&actividad=30');
-    expect(screen.getByRole('link', { name: 'Ver intervención' })).toHaveAttribute('href', '/intervenciones/81');
+    expect(screen.getByRole('link', { name: 'Ver intervención INT-000081' })).toHaveAttribute('href', '/intervenciones/81');
     const text = document.body.textContent ?? '';
     expect(text).not.toMatch(/ronda|ritmo|propio de este conjunto/i);
   });
@@ -31,7 +32,7 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
     rows.mockResolvedValue([planningRow()]);
     render(<PlanningScreen />);
 
-    await userEvent.click(await screen.findByRole('button', { name: /Corte de césped en Ingreso Riva-Agüero/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /Ingreso Riva-Agüero/ }));
 
     expect(mockMap).toHaveBeenLastCalledWith(expect.objectContaining({ setId: 3 }));
   });
@@ -42,5 +43,38 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
 
     expect(await screen.findByText('Todavía no hay conjuntos para planificar')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ir a Conjuntos' })).toHaveAttribute('href', '/intervenciones/conjuntos');
+  });
+
+  describe('la tarjeta', () => {
+    it('explica bajo el título qué es cada tarjeta', async () => {
+      rows.mockResolvedValue([planningRow()]);
+      render(<PlanningScreen />);
+
+      expect(await screen.findByText(/Cada tarjeta es una actividad de un conjunto de áreas verdes/)).toBeInTheDocument();
+    });
+
+    it('siempre tiene la misma forma: estado, actividad, conjunto y sus datos', async () => {
+      rows.mockResolvedValue([planningRow({ state: 'OVERDUE', days: 4, elementCount: 2 })]);
+      render(<PlanningScreen />);
+
+      const card = within(await screen.findByRole('listitem'));
+      expect(card.getByText('Toca, atrasada')).toBeInTheDocument();
+      expect(card.getByText('4 días tarde')).toBeInTheDocument();
+      expect(card.getByText('Corte de césped')).toBeInTheDocument();
+      expect(card.getByText('Ingreso Riva-Agüero')).toBeInTheDocument();
+      expect(card.getByText('Última vez')).toBeInTheDocument();
+      expect(card.getByText('18 jardines · 2 ejemplares')).toBeInTheDocument();
+      expect(card.getByText('Frecuencia')).toBeInTheDocument();
+    });
+
+    it('sin frecuencia ofrece configurarla en vez de planificar', async () => {
+      rows.mockResolvedValue([planningRow({ state: 'NOT_CONFIGURED', ruleKind: null, rhythm: null, days: null })]);
+      render(<PlanningScreen />);
+
+      expect(await screen.findByText('Sin frecuencia configurada')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Configurar frecuencia' })).toHaveAttribute('href', '/intervenciones/frecuencias');
+      expect(screen.queryByRole('link', { name: 'Planificar intervención' })).not.toBeInTheDocument();
+      expect(screen.queryByText('Frecuencia')).not.toBeInTheDocument();
+    });
   });
 });
