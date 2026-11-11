@@ -178,7 +178,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
       )}
       {savedName && (
         <div role="status" className="space-y-1 rounded-md bg-brand-50 p-3 text-sm text-brand-800">
-          <p className="font-semibold">Se guardó «{savedName}».</p>
+          <p>Se guardó <strong>{savedName}</strong>.</p>
           <p>Ya puedes cerrar esta pestaña y volver al formulario de la frecuencia: el conjunto aparece ahí para elegirlo.</p>
         </div>
       )}

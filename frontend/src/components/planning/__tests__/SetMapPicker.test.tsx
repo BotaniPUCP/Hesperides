@@ -184,7 +184,7 @@ describe('SetMapPicker', () => {
       setup();
 
       expect(screen.getByText('Mapa 3D no disponible')).toBeInTheDocument();
-      expect(screen.getByRole('radiogroup', { name: 'Elegir' })).toBeInTheDocument();
+      expect(screen.getByRole('radiogroup', { name: 'Elegir:' })).toBeInTheDocument();
     });
   });
 

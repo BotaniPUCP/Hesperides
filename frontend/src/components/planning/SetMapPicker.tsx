@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { GreenAreaSetElement } from '@shared/types';
 import type { IrrigationZone } from '@shared/types/irrigation';
 import { Button, LoadingSkeleton } from '@/components/ui';
@@ -25,7 +25,11 @@ const DRAG_PX = 6;
 /** Acciones de la tarjeta: pequeñas para que quepan en una fila del panel. */
 const CARD_ACTION = 'rounded-md border border-neutral-200 bg-neutral-0 px-2 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40';
 /** Botones de la barra del selector. */
-const TOOL = 'rounded-md border border-neutral-200 bg-neutral-0 px-2.5 py-1.5 text-xs font-semibold text-neutral-900 hover:bg-neutral-100';
+const TOOL_BASE = 'rounded-md border px-2.5 py-1.5 text-xs font-semibold';
+const TOOL = `${TOOL_BASE} border-neutral-200 bg-neutral-0 text-neutral-900 hover:bg-neutral-100`;
+const TOOL_ON = `${TOOL_BASE} border-brand-600 bg-brand-600 text-white hover:bg-brand-700`;
+/** Lo que hace el rectángulo de la selección múltiple. */
+type AreaAction = 'add' | 'remove';
 const MAP_CHIP = 'pointer-events-auto rounded-md bg-neutral-0 text-xs font-semibold text-neutral-900 shadow';
 
 interface SectorGroup {
@@ -36,7 +40,7 @@ interface SectorGroup {
 }
 
 interface Notice {
-  text: string;
+  text: ReactNode;
   /** Si se puede deshacer lo que causó el aviso. */
   undo?: () => void;
 }
@@ -89,6 +93,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   const [term, setTerm] = useState('');
   const [onlySelected, setOnlySelected] = useState(false);
   const [areaMode, setAreaMode] = useState(false);
+  const [areaAction, setAreaAction] = useState<AreaAction>('add');
   const [unsupported, setUnsupported] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
@@ -163,14 +168,14 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     queueMicrotask(() => viewer.current?.select(null, false));
     if (!target) return;
     if (target.layer === 'vegetation') {
-      if (!pickPlants) { setNotice({ text: 'Estás eligiendo jardines. Cambia a «Ejemplares» o «Ambos» para agregar ejemplares.' }); return; }
+      if (!pickPlants) { setNotice({ text: <>Estás eligiendo jardines. Cambia a <strong>Ejemplares</strong> o <strong>Ambos</strong> para agregar ejemplares.</> }); return; }
       const hit = specimenByCode.get(data.vegetation[target.index]?.props.code);
       if (!hit) { setNotice({ text: 'Ese ejemplar no está disponible para conjuntos.' }); return; }
       togglePlant(hit.id, hit.group);
       showCard(hit.group.key);
       return;
     }
-    if (!pickGardens) { setNotice({ text: 'Estás eligiendo ejemplares. Cambia a «Jardines» o «Ambos» para agregar jardines.' }); return; }
+    if (!pickGardens) { setNotice({ text: <>Estás eligiendo ejemplares. Cambia a <strong>Jardines</strong> o <strong>Ambos</strong> para agregar jardines.</> }); return; }
     if (target.layer !== 'greenAreas' && target.layer !== 'xerophytic' && target.layer !== 'reserve') {
       setNotice({ text: 'Haz clic en un área verde, no en un edificio u otro elemento.' });
       return;
@@ -199,12 +204,30 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   };
 
   const zoneOfCode = useMemo(() => new Map(allSections.map((s) => [s.code, s])), [allSections]);
+  // El rectángulo agrega o quita lo que encierra. El hook es compartido con Riego y solo sabe agregar:
+  // aquí se decide qué hacer con lo que devuelve, sin cambiarlo.
+  const removing = areaAction === 'remove';
+  const removed = useRef({ gardens: 0, plants: 0 });
+  const apply = (ids: number[], current: Set<number>, set: (next: Set<number>) => void, kind: 'gardens' | 'plants') => {
+    if (!removing) { set(new Set([...current, ...ids])); return; }
+    const drop = new Set(ids);
+    removed.current[kind] = [...current].filter((id) => drop.has(id)).length;
+    set(new Set([...current].filter((id) => !drop.has(id))));
+  };
+  const onAreaNotice = (text: string) => {
+    if (!removing) { setNotice(text ? { text } : null); return; }
+    if (text.startsWith('Arrastra')) { setNotice({ text: 'Arrastra un rectángulo sobre lo que quieras quitar.' }); return; }
+    const { gardens, plants: trees } = removed.current;
+    setNotice({ text: gardens + trees === 0 ? 'En el área dibujada no había nada elegido.'
+      : `Se quitó del conjunto: ${contentsLabel(gardens, trees)} del área dibujada.` });
+  };
   const { drag, beginDrag, moveDrag, endDrag, cancelDrag } = useRectangleSelection({
     mapRegion, viewer, permittedCodes: pickGardens ? allSections.map((s) => s.code) : [], sectionsByCode: zoneOfCode,
-    onAdd: (ids) => setZones((prev) => new Set([...prev, ...ids])), onNotice: (text) => setNotice(text ? { text } : null),
+    onAdd: (ids) => apply(ids, zones, setZones, 'gardens'), onNotice: onAreaNotice,
     specimens: pickPlants ? { eligible: specimens.map((e) => e.code), byCode: new Map(specimens.map((e) => [e.code, e.id])),
-      onAdd: (ids) => setPlants((prev) => new Set([...prev, ...ids])) } : undefined,
+      onAdd: (ids) => apply(ids, plants, setPlants, 'plants') } : undefined,
   });
+  const startArea = (e: ReactPointerEvent<HTMLDivElement>) => { removed.current = { gardens: 0, plants: 0 }; beginDrag(e); };
 
   // Mover o acercar el mapa a mano deja de «ver» el sector enfocado; un clic no.
   const onMapPointerDown = (e: ReactPointerEvent) => { pointerStart.current = areaMode ? null : { x: e.clientX, y: e.clientY }; };
@@ -257,16 +280,25 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
           <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.fit(); }}>Ver campus</button>
           <button type="button" onClick={() => { viewer.current?.top(); setAreaMode((v) => !v); }} aria-pressed={areaMode}
             title={areaMode ? 'Salir de la selección múltiple' : 'Dibuja un rectángulo sobre el mapa para agregar todo lo que encierre'}
-            className={areaMode ? `${TOOL} border-brand-600 bg-brand-600 text-white hover:bg-brand-700` : TOOL}>
+            className={areaMode ? TOOL_ON : TOOL}>
             <span aria-hidden="true">{areaMode ? '✓' : '▭'}</span> Selección múltiple</button>
+          {areaMode && <div role="radiogroup" aria-label="Qué hace el rectángulo" className="flex rounded-md border border-neutral-200 bg-neutral-0 p-0.5 text-xs font-semibold">
+            {(['add', 'remove'] as const).map((a) => (
+              <button key={a} type="button" role="radio" aria-checked={areaAction === a} onClick={() => setAreaAction(a)}
+                className={`rounded px-2 py-1 ${areaAction !== a ? 'text-neutral-700 hover:bg-neutral-100'
+                  : a === 'add' ? 'bg-brand-600 text-white' : 'bg-action-danger text-white'}`}>
+                {a === 'add' ? 'Agregar' : 'Quitar'}
+              </button>
+            ))}
+          </div>}
         </>}
-        {/* Decide qué agregan el clic y el rectángulo, y qué muestran las tarjetas. */}
-        <div className="flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-0 px-1.5 py-1 text-xs font-semibold">
-          <span id="set-picker-mode" className="px-1 font-medium text-neutral-600">Elegir</span>
-          <div role="radiogroup" aria-labelledby="set-picker-mode" className="flex gap-1">
+        {/* Decide qué agregan el clic y el rectángulo, y qué muestran las tarjetas. Va aparte para que la etiqueta no parezca otra opción. */}
+        <div className="flex items-center gap-2 sm:ml-auto sm:border-l sm:border-neutral-200 sm:pl-3">
+          <span id="set-picker-mode" className="text-xs font-medium text-neutral-600">Elegir:</span>
+          <div role="radiogroup" aria-labelledby="set-picker-mode" className="flex rounded-md border border-neutral-200 bg-neutral-0 p-0.5 text-xs font-semibold">
             {PICK_MODES.map((m) => (
               <button key={m.value} type="button" role="radio" aria-checked={mode === m.value} onClick={() => changeMode(m.value)}
-                className={`rounded px-2 py-0.5 ${mode === m.value ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}>
+                className={`rounded px-2 py-1 ${mode === m.value ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}>
                 {m.label}
               </button>
             ))}
@@ -289,7 +321,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
               </div>}
           <div className="pointer-events-none absolute inset-x-3 top-3 z-30 flex flex-col items-start gap-2">
             {areaMode && <p className={`${MAP_CHIP} px-3 py-2 font-medium text-neutral-700`}>
-              Arrastra sobre el mapa para agregar todo lo que quede dentro. Pulsa «Selección múltiple» otra vez para salir.</p>}
+              {removing ? 'Arrastra sobre el mapa para quitar lo elegido que quede dentro.' : 'Arrastra sobre el mapa para agregar todo lo que quede dentro.'} Pulsa <strong>Selección múltiple</strong> otra vez para salir.</p>}
             {focusedGroup && <div className={`${MAP_CHIP} flex items-center gap-2 py-1 pl-3 pr-1`}>
               <span>Viendo {focusLabel}</span>
               <button type="button" onClick={unfocus} aria-label={`Dejar de ver ${focusedGroup.name}`}
@@ -298,8 +330,8 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
           </div>
           {areaMode && scene && !unsupported && <div className="absolute inset-0 z-20 cursor-crosshair touch-none"
             aria-label="Dibuja un rectángulo sobre el mapa para agregar lo que encierre"
-            onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={cancelDrag}>
-            {drag && <div className="pointer-events-none absolute border-2 border-brand-700 bg-brand-200/30"
+            onPointerDown={startArea} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={cancelDrag}>
+            {drag && <div className={`pointer-events-none absolute border-2 ${removing ? 'border-action-danger bg-urgency-critical-bg/50' : 'border-brand-700 bg-brand-200/30'}`}
               style={{ left: Math.min(drag.startX, drag.endX) - drag.originX, top: Math.min(drag.startY, drag.endY) - drag.originY,
                 width: Math.abs(drag.endX - drag.startX), height: Math.abs(drag.endY - drag.startY) }} />}
           </div>}

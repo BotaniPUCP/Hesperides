@@ -178,7 +178,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     await fillAndPick();
     await userEvent.click(screen.getByRole('button', { name: 'Guardar conjunto' }));
 
-    expect(await screen.findByText('Se guardó «Pabellones».')).toBeInTheDocument();
+    expect((await screen.findByText('Pabellones', { selector: 'strong' })).parentElement).toHaveTextContent('Se guardó Pabellones.');
     expect(screen.getByText(/volver al formulario de la frecuencia/)).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Guardar conjunto' })).not.toBeInTheDocument();
