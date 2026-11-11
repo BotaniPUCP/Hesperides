@@ -35,8 +35,11 @@ export interface GreenAreaSetSummary {
   description: string | null;
   zoneCount: number;
   elementCount: number;
+  /** Los sectores que cubren sus jardines y ejemplares. */
+  sectorNames: string[];
   activities: ActivityRef[];
   version: number;
+  updatedAt: string;
 }
 
 export interface GreenAreaSetDetail {

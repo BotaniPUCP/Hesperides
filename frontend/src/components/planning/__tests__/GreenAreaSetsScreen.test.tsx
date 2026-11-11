@@ -1,35 +1,61 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { GreenAreaSetsScreen } from '../GreenAreaSetsScreen';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
+import { planningApi } from '@/lib/planning-api';
+import { planningRow } from '../__fixtures__/planningFixtures';
 
 jest.mock('@/lib/green-area-sets-api', () => ({ greenAreaSetsApi: { list: jest.fn() } }));
+jest.mock('@/lib/planning-api', () => ({ planningApi: { rows: jest.fn() } }));
 
 const list = greenAreaSetsApi.list as jest.Mock;
+const rows = planningApi.rows as jest.Mock;
+
+const set = (over: Record<string, unknown>) => ({ id: 3, name: 'Ingreso Riva-Agüero', description: null, zoneCount: 18,
+  elementCount: 0, sectorNames: ['Sector verde 01'], version: 0, updatedAt: '2026-11-10T15:00:00Z',
+  activities: [{ id: 30, label: 'Corte de césped' }], ...over });
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  rows.mockResolvedValue([]);
+});
 
 describe('GreenAreaSetsScreen (SPEC-203 §5.2)', () => {
-  it('muestra cada conjunto con sus jardines y sus actividades', async () => {
-    list.mockResolvedValue([
-      { id: 3, name: 'Ingreso Riva-Agüero', description: null, zoneCount: 18, elementCount: 0, version: 0,
-        activities: [{ id: 30, label: 'Corte de césped' }] },
-      { id: 4, name: 'Antiguo', description: null, zoneCount: 0, elementCount: 0, version: 0, activities: [] },
-    ]);
+  it('cada tarjeta dice qué contiene, dónde está, lo más urgente y cuándo cambió', async () => {
+    list.mockResolvedValue([set({ elementCount: 4, description: 'Bermas del ingreso principal',
+      sectorNames: ['Sector verde 01', 'Sector verde 02', 'Sector verde 03', 'Polideportivo'] })]);
+    rows.mockResolvedValue([planningRow({ setId: 3, state: 'OVERDUE', days: 4 }), planningRow({ setId: 3, state: 'NOT_DUE', days: 9 })]);
 
     render(<GreenAreaSetsScreen />);
 
-    expect(await screen.findByText('Ingreso Riva-Agüero')).toBeInTheDocument();
-    expect(screen.getByText('18 jardines')).toBeInTheDocument();
-    expect(screen.getByText('Corte de césped')).toBeInTheDocument();
-    expect(screen.getByText('vacío')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Nuevo conjunto' })).toHaveAttribute('href', '/intervenciones/conjuntos/nuevo');
-    expect(screen.getByRole('link', { name: /Ingreso Riva-Agüero/ })).toHaveAttribute('href', '/intervenciones/conjuntos/3');
+    const card = await screen.findByRole('link', { name: /Ingreso Riva-Agüero/ });
+    expect(card).toHaveAttribute('href', '/intervenciones/conjuntos/3');
+    expect(within(card).getByText('Bermas del ingreso principal')).toBeInTheDocument();
+    expect(within(card).getByText('18 jardines · 4 ejemplares')).toBeInTheDocument();
+    expect(within(card).getByText('Sector verde 01, Sector verde 02, Sector verde 03 y 1 más')).toBeInTheDocument();
+    expect(await within(card).findByText('Toca, atrasada')).toBeInTheDocument();
+    expect(within(card).getByText('(4 días tarde)')).toBeInTheDocument();
+    expect(within(card).getByText('Actualizado 10/11/2026')).toBeInTheDocument();
+    expect(within(card).getAllByText('Corte de césped')).toHaveLength(2);
   });
 
-  it('un solo jardín se dice en singular', async () => {
-    list.mockResolvedValue([{ id: 5, name: 'Campo', description: null, zoneCount: 1, elementCount: 0, version: 0, activities: [] }]);
+  it('un conjunto vacío lo advierte y uno sin filas dice que no está en la planificación', async () => {
+    list.mockResolvedValue([set({ id: 4, name: 'Antiguo', zoneCount: 0, sectorNames: [], activities: [] })]);
+
+    render(<GreenAreaSetsScreen />);
+
+    expect(await screen.findByText('Nada: no aparece en la planificación')).toBeInTheDocument();
+    expect(screen.getByText('Sin actividades en la planificación')).toBeInTheDocument();
+    expect(screen.queryByText('Sector')).not.toBeInTheDocument();
+  });
+
+  it('si la planificación falla, la lista se muestra igual', async () => {
+    list.mockResolvedValue([set({ zoneCount: 1, sectorNames: ['Polideportivo'] })]);
+    rows.mockRejectedValue(new Error('sin red'));
 
     render(<GreenAreaSetsScreen />);
 
     expect(await screen.findByText('1 jardín')).toBeInTheDocument();
+    expect(screen.getByText('Polideportivo')).toBeInTheDocument();
   });
 
   it('sin conjuntos invita a crear el primero', async () => {
@@ -38,5 +64,6 @@ describe('GreenAreaSetsScreen (SPEC-203 §5.2)', () => {
     render(<GreenAreaSetsScreen />);
 
     expect(await screen.findByText('Todavía no hay conjuntos guardados')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Nuevo conjunto' })).toHaveAttribute('href', '/intervenciones/conjuntos/nuevo');
   });
 });
