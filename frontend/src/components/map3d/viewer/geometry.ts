@@ -60,6 +60,24 @@ export interface MergedGeometry {
   warm: Float32Array;
 }
 
+/** El prisma de un elemento: un extruido sin índice por polígono, de `base` a `base + height`. */
+export function prismParts(g: Polygon[], height: number, base: number): THREE.BufferGeometry[] {
+  const parts: THREE.BufferGeometry[] = [];
+  for (const shape of polygonShapes(g)) {
+    let geo: THREE.BufferGeometry;
+    try {
+      geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false, curveSegments: 1 });
+    } catch {
+      continue; // un anillo degenerado no debe tumbar la capa entera
+    }
+    geo.rotateX(-Math.PI / 2);
+    geo.translate(0, base, 0);
+    if (geo.index) geo = geo.toNonIndexed();
+    parts.push(geo);
+  }
+  return parts;
+}
+
 /** Extruye todos los elementos de una capa en una sola geometría (una llamada de dibujo). */
 export function merged<T>(feats: T[], shapeOf: (f: T) => Polygon[], heightOf: (f: T) => number, baseOf: (f: T) => number): MergedGeometry {
   const parts: THREE.BufferGeometry[] = [];
@@ -67,16 +85,7 @@ export function merged<T>(feats: T[], shapeOf: (f: T) => Polygon[], heightOf: (f
   let n = 0;
   feats.forEach((f) => {
     starts.push(n);
-    for (const shape of polygonShapes(shapeOf(f))) {
-      let geo: THREE.BufferGeometry;
-      try {
-        geo = new THREE.ExtrudeGeometry(shape, { depth: heightOf(f), bevelEnabled: false, curveSegments: 1 });
-      } catch {
-        continue; // un anillo degenerado no debe tumbar la capa entera
-      }
-      geo.rotateX(-Math.PI / 2);
-      geo.translate(0, baseOf(f), 0);
-      if (geo.index) geo = geo.toNonIndexed();
+    for (const geo of prismParts(shapeOf(f), heightOf(f), baseOf(f))) {
       parts.push(geo);
       n += geo.attributes.position.count;
     }
@@ -85,7 +94,12 @@ export function merged<T>(feats: T[], shapeOf: (f: T) => Polygon[], heightOf: (f
   return assemble(parts, starts, n);
 }
 
-function assemble(parts: THREE.BufferGeometry[], starts: number[], n: number): MergedGeometry {
+/**
+ * Junta las partes (sin índice, con posición y normal) en una sola geometría
+ * con su sombreado tonal. `starts` marca el primer vértice de cada elemento y
+ * cierra con el total `n`. Las partes se liberan al copiarlas.
+ */
+export function assemble(parts: THREE.BufferGeometry[], starts: number[], n: number): MergedGeometry {
   const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3), uv = new Float32Array(n * 2);
   let o = 0;
   for (const g of parts) {
@@ -105,7 +119,12 @@ function assemble(parts: THREE.BufferGeometry[], starts: number[], n: number): M
   return { geo, starts, tone, warm };
 }
 
-/** El sombreado tonal del prototipo: techo claro, laterales en degradado, base oscura. */
+/**
+ * El sombreado tonal del prototipo: techo claro y laterales en degradado. Toda
+ * cara horizontal se tiñe como techo, también la que mira abajo: el SKP trae
+ * techos invertidos, que se dibujan por las dos caras y three voltea su normal
+ * al iluminarlos. Las bases de los prismas, que miraban abajo, nunca se ven.
+ */
 function shading(pos: Float32Array, nor: Float32Array, starts: number[], n: number) {
   const tone = new Float32Array(n), warm = new Float32Array(n);
   for (let fi = 0; fi < starts.length - 1; fi++) {
@@ -116,8 +135,7 @@ function shading(pos: Float32Array, nor: Float32Array, starts: number[], n: numb
     const span = yMax - yMin || 1;
     for (let v = s0; v < s1; v++) {
       const ny = nor[v * 3 + 1], yNorm = (pos[v * 3 + 1] - yMin) / span;
-      if (ny > 0.5) { tone[v] = 1.12 + yNorm * 0.1; warm[v] = 0; }
-      else if (ny < -0.5) { tone[v] = 0.55; warm[v] = 0.95; }
+      if (Math.abs(ny) > 0.5) { tone[v] = 1.12 + yNorm * 0.1; warm[v] = 0; }
       else { tone[v] = 0.58 + yNorm * 0.28; warm[v] = Math.max(0, (1 - yNorm) * 0.9); }
     }
   }

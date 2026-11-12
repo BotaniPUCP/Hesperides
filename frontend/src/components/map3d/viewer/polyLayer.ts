@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Polygon } from '../sceneData';
 import type { PolyLayerId } from '../target';
-import { centroid, merged, type Meta } from './geometry';
+import { centroid, merged, type MergedGeometry, type Meta } from './geometry';
 import type { SceneTextures } from './textures';
 
 /** Altura a la que flota la maqueta sobre el plano de la escena (la del prototipo). */
@@ -17,6 +17,8 @@ export interface PolyLayerOptions {
   opacity?: number;
   order?: number;
   castShadow?: boolean;
+  /** Por las dos caras, con la sombra de las traseras: el SKP trae caras invertidas (D-11). */
+  doubleSided?: boolean;
 }
 
 export interface PolyLayer {
@@ -35,7 +37,8 @@ export interface PolyLayer {
   meta: Meta[];
 }
 
-function material(surface: Surface, textures: SceneTextures, opacity: number | undefined): THREE.Material {
+/** El material de cada superficie, con colores por vértice (los pinta `paintPoly`). */
+export function surfaceMaterial(surface: Surface, textures: SceneTextures, opacity?: number): THREE.Material {
   const common = { vertexColors: true, transparent: !!opacity, opacity: opacity ?? 1, depthWrite: !opacity };
   switch (surface) {
     case 'building':
@@ -57,16 +60,23 @@ function material(surface: Surface, textures: SceneTextures, opacity: number | u
   }
 }
 
+/** Sin `geometry`, cada elemento es su prisma; con ella (un tramo por elemento), se dibuja esa. */
 export function createPolyLayer(
   scene: THREE.Scene,
   id: PolyLayerId,
   shapes: Polygon[][],
   options: PolyLayerOptions,
   textures: SceneTextures,
+  geometry?: MergedGeometry,
 ): PolyLayer {
   const indices = shapes.map((_, i) => i);
-  const { geo, starts, tone, warm } = merged(indices, (i) => shapes[i], options.height, options.base);
-  const mesh = new THREE.Mesh(geo, material(options.surface, textures, options.opacity));
+  const { geo, starts, tone, warm } = geometry ?? merged(indices, (i) => shapes[i], options.height, options.base);
+  const surface = surfaceMaterial(options.surface, textures, options.opacity);
+  if (options.doubleSided) {
+    surface.side = THREE.DoubleSide;
+    surface.shadowSide = THREE.BackSide;
+  }
+  const mesh = new THREE.Mesh(geo, surface);
   mesh.position.y = WORLD_LIFT;
   mesh.receiveShadow = true;
   mesh.castShadow = !!options.castShadow;

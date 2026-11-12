@@ -4,12 +4,14 @@ import { plantShape, type PlantShape } from '../plantShape';
 import type { ScenePoint } from '../sceneData';
 import type { FoliageMaterials } from './foliageMaterials';
 import type { PointLayer } from './furniture';
+import { sunkenFloorAt, type SunkenArea } from './planModel';
 import { WORLD_LIFT } from './polyLayer';
 
 /**
  * La vegetación del catastro como instancias, con las formas y materiales del
  * prototipo v39: copa redonda, plana, alta, en cono o de palmera con borde
  * iluminado y halo, tronco en árboles y palmeras altas, y sombra de contacto.
+ * Una planta dentro de un desnivel se apoya en su piso (SPEC-108 D-09).
  */
 
 type Crown = 'ico' | 'palm' | 'cone';
@@ -51,8 +53,10 @@ export function createVegetationLayer(
   scene: THREE.Scene,
   plants: ScenePoint<VegetationProperties>[],
   materials: FoliageMaterials,
+  sunken: SunkenArea[] = [],
 ): PointLayer {
   const shapes = plants.map((p) => plantShape(p.props));
+  const floor = plants.map((p) => sunkenFloorAt(sunken, p.p[0], p.p[1]));
   const colors = shapes.map((s) => `#${new THREE.Color(s.color).offsetHSL(...s.jitter).getHexString()}`);
   const layer: PointLayer = {
     id: 'vegetation', kind: 'inst', count: plants.length, meshes: [], slots: [], items: [], scaleRange: [1, 1],
@@ -81,6 +85,7 @@ export function createVegetationLayer(
       dummy.position.set(x, 0, -y);
       dummy.rotation.set(0, (i * 2.39) % 6.28, 0);
       placeCrown(shapes[i], isWoody(plants[i].props), plants[i].props.typeCode === 'TREE');
+      dummy.position.y += floor[i];
       dummy.updateMatrix();
       mesh.setMatrixAt(k, dummy.matrix);
       mesh.setColorAt(k, new THREE.Color(colors[i]));
@@ -100,7 +105,7 @@ export function createVegetationLayer(
     trunks.forEach((i, k) => {
       const s = shapes[i];
       const radius = s.shape === 'palm' ? THREE.MathUtils.clamp(s.heightM / 45, 0.18, 0.4) : THREE.MathUtils.clamp(s.crownRadiusM / 9, 0.15, 0.45);
-      dummy.position.set(plants[i].p[0], 0, -plants[i].p[1]);
+      dummy.position.set(plants[i].p[0], floor[i], -plants[i].p[1]);
       dummy.rotation.set(0, 0, 0);
       dummy.scale.set(radius, s.shape === 'palm' ? s.heightM : s.heightM * 0.75, radius);
       dummy.updateMatrix();
@@ -113,7 +118,7 @@ export function createVegetationLayer(
   auxiliary(contact);
   shapes.forEach((s, i) => {
     const woody = isWoody(plants[i].props), palm = s.shape === 'palm';
-    dummy.position.set(plants[i].p[0], 0.05, -plants[i].p[1]);
+    dummy.position.set(plants[i].p[0], floor[i] + 0.05, -plants[i].p[1]);
     dummy.rotation.set(0, (i * 1.37) % Math.PI, 0);
     dummy.scale.set(Math.max(0.95, s.crownRadiusM * (palm ? 2.4 : woody ? 2.05 : 1.55)), 1,
       Math.max(0.75, s.crownRadiusM * (palm ? 1.7 : woody ? 1.8 : 1.35)));

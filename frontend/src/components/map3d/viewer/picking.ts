@@ -19,7 +19,7 @@ const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -WORLD_LIFT);
 
-function insideRing(x: number, y: number, ring: number[]): boolean {
+export function insideRing(x: number, y: number, ring: number[]): boolean {
   let inside = false;
   for (let i = 0, j = ring.length - 2; i < ring.length; j = i, i += 2) {
     const xi = ring[i], yi = ring[i + 1], xj = ring[j], yj = ring[j + 1];

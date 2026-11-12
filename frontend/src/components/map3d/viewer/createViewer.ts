@@ -6,13 +6,14 @@ import { scaleFurniture, type PointLayer } from './furniture';
 import { createCampusPoints } from './campusPoints';
 import { createFoliageMaterials } from './foliageMaterials';
 import { createHighlight } from './highlight';
-import { createLabels } from './labels';
+import { createLabels, type LabelKind } from './labels';
 import { createLights } from './lighting';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
 import { createPin } from './pin';
 import { bindPointer } from './pointerInput';
-import { createSceneLayers, type PaintState } from './sceneLayers';
+import type { PlanModel } from './planModel';
+import { createPlanNodes, createSceneLayers, type PaintState } from './sceneLayers';
 import { createRenderer, createStage } from './stage';
 import { createTextures } from './textures';
 import { createVegetationLayer } from './vegetation';
@@ -30,10 +31,12 @@ export type { Viewer, ViewerCallbacks } from './viewerTypes';
 const MARKED_COLOR = '#06B6D4';
 const SECTION_LAYERS = ['greenAreas', 'xerophytic', 'reserve'] as const;
 
-export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose): Viewer {
+/** Con `model`, los edificios se dibujan con las mallas del plano oficial; sin él (no llegó o falló), como prismas. */
+export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose,
+  model: PlanModel | null = null): Viewer {
   const renderer = createRenderer();
   const textures = createTextures(renderer);
-  const stage = createStage(container, renderer, data.campus, textures);
+  const stage = createStage(container, renderer, data.campus, textures, model?.sunken);
   const { scene, center } = stage;
   const coarse = window.matchMedia('(pointer: coarse)').matches;
   const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
@@ -41,7 +44,9 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true;
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
-  const poly = createSceneLayers(scene, data, textures, state);
+  const poly = createSceneLayers(scene, data, textures, state, model);
+  const planNodes = model ? createPlanNodes(scene, model, textures, stage.modelGround, state.palette) : null;
+  if (planNodes?.decoration) poly.campusBuildings.extra.push(planNodes.decoration);
   // El mapa general no marca ninguna sección por defecto. Solo M7 llama a
   // setMarkedSections; así puede hacer selección múltiple sin alterar /mapa.
   const markedSectionCodes = new Set<string>();
@@ -59,13 +64,20 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     ? MARKED_COLOR : buildingColor(i);
   const points = createCampusPoints(scene, data, center);
   const foliage = createFoliageMaterials(textures);
-  const vegetation = createVegetationLayer(scene, data.vegetation, foliage);
+  const vegetation = createVegetationLayer(scene, data.vegetation, foliage, model?.sunken);
   const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points, vegetation };
   const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
   const pin = createPin(scene);
   const cones = createViewCones(scene);
-  const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta);
+  const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta, model?.huaca);
+  /** Cada clase de etiqueta se apaga con su capa; la de la huaca, solo con el botón de etiquetas. */
+  const labelVisible = (kind: LabelKind) => {
+    if (!labelsOn) return false;
+    if (kind === 'garden') return poly.greenAreas.mesh.visible;
+    if (kind === 'gate') return points.gates.meshes[0]?.visible ?? false;
+    return kind === 'landmark' || poly.campusBuildings.mesh.visible;
+  };
   const isHidden = (t: Target) => t.layer === 'greenAreas' && state.hidden.size > 0 && poly.greenAreas.options.color(t.index) === state.palette.dimmed;
   const size = () => ({ w: container.clientWidth || 1, h: container.clientHeight || 1 });
 
@@ -80,6 +92,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     const { w, h } = size();
     stage.applyTheme(state.palette, night, w, h);
     lights.applyTheme(state.palette, night);
+    planNodes?.applyTheme(state.palette);
     relight();
     highlight.repaintAll();
     needsRender = true;
@@ -134,7 +147,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     if (flew || moved || needsRender || rig.controls.autoRotate) {
       renderer.render(scene, rig.camera);
       const { w, h } = size();
-      labels.update(rig.camera, w, h, (kind) => labelsOn && (kind === 'garden' ? poly.greenAreas.mesh.visible : kind === 'gate' ? points.gates.meshes[0]?.visible ?? false : poly.campusBuildings.mesh.visible));
+      labels.update(rig.camera, w, h, labelVisible);
       const off = rig.camera.position.clone().sub(rig.controls.target);
       cb.onCompass((Math.atan2(off.x, off.z) * 180) / Math.PI);
       needsRender = false;

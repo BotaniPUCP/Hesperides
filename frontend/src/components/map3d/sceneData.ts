@@ -63,7 +63,8 @@ function ringToPlane(ring: Position[], plane: LocalPlane): Ring {
   });
 }
 
-function polygons(geometry: GeoJsonGeometry, plane: LocalPlane): Polygon[] {
+/** Un Polygon o MultiPolygon de GeoJSON, en metros del plano local. */
+export function polygons(geometry: GeoJsonGeometry, plane: LocalPlane): Polygon[] {
   if (geometry.type === 'Polygon') {
     return [(geometry.coordinates as Position[][]).map((r) => ringToPlane(r, plane))];
   }

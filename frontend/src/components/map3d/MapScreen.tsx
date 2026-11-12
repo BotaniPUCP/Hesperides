@@ -6,6 +6,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useMapLayers } from '@/hooks/useMapLayers';
+import { usePlanModel } from '@/hooks/usePlanModel';
 import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
 import { LayerToggles } from './LayerToggles';
 import { Map3DView } from './Map3DView';
@@ -36,6 +37,8 @@ export function MapScreen() {
     }
   }, [response]);
   const data = scene.data;
+  // Llega después de las capas: mientras tanto, y si falla, los edificios son prismas.
+  const plan = usePlanModel(data?.plane ?? null);
   const catalog = useMapCatalog();
   const { user } = useAuth();
   const s = useMapScreenState(data, user?.email ?? '', useCatalogLinkFor(data, catalog));
@@ -86,6 +89,7 @@ export function MapScreen() {
       ) : (
         <Map3DView
           data={data}
+          model={plan.model}
           onReady={s.onReady}
           onUnsupported={s.onUnsupported}
           onSelect={s.onSelect}
@@ -108,6 +112,11 @@ export function MapScreen() {
           {stale && (
             <p role="status" className="rounded-md bg-alert-warning-bg/95 px-3 py-1.5 text-xs text-alert-warning-fg shadow">
               Sin conexión: se muestra la última versión descargada del mapa.
+            </p>
+          )}
+          {plan.failed && !s.unsupported && (
+            <p role="status" className="rounded-md bg-alert-warning-bg/95 px-3 py-1.5 text-xs text-alert-warning-fg shadow">
+              No se pudo cargar el modelo del plano; los edificios se ven como bloques.
             </p>
           )}
         </div>

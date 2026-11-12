@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { SceneData } from '../sceneData';
 import type { Meta } from './geometry';
+import type { PlanModel } from './planModel';
 import { WORLD_LIFT } from './polyLayer';
 
 /**
@@ -8,7 +9,8 @@ import { WORLD_LIFT } from './polyLayer';
  * prototipo v39. Se colocan por prioridad y se ocultan si se pisan con otra.
  */
 
-type LabelKind = 'building' | 'garden' | 'gate';
+/** `landmark`: un lugar del plano, como la huaca; se ve como un jardín pero no se apaga con las áreas verdes. */
+export type LabelKind = 'building' | 'garden' | 'gate' | 'landmark';
 
 interface Anchor {
   el: HTMLDivElement;
@@ -22,15 +24,21 @@ interface Anchor {
   on: boolean;
 }
 
+const GARDEN_CLASS = 'text-[11.5px] font-semibold text-[#E0FFE8] [text-shadow:0_0_3px_rgba(0,0,0,.7),0_1px_2px_rgba(0,0,0,.8)]';
 const CLASS: Record<LabelKind, string> = {
   building: 'text-[12px] font-semibold text-[#5A1080]',
-  garden: 'text-[11.5px] font-semibold text-[#E0FFE8] [text-shadow:0_0_3px_rgba(0,0,0,.7),0_1px_2px_rgba(0,0,0,.8)]',
+  garden: GARDEN_CLASS,
   gate: 'text-[11px] font-semibold text-[#5A6C99]',
+  landmark: GARDEN_CLASS,
 };
 /** Alturas sobre el suelo de la maqueta, que está elevado WORLD_LIFT metros. */
 const ROOF_CLEARANCE_M = 3;
 const GARDEN_LABEL_M = 1.5;
 const GATE_LABEL_M = 8.5;
+/** La de la huaca va 2 m sobre lo más alto de sus muros, con la prioridad y el alcance de la página aprobada. */
+const LANDMARK_LABEL_M = 2;
+const LANDMARK_PRIORITY = 5e5;
+const LANDMARK_MAX_DISTANCE_M = 1500;
 const HALO = '[text-shadow:0_0_2px_#fff,0_0_3px_#fff,0_0_5px_#fff]';
 
 /** «Facultad de Psicología» → «Psicología»: en la maqueta sobra el prefijo. */
@@ -43,11 +51,11 @@ export interface Labels {
   dispose: () => void;
 }
 
-export function createLabels(root: HTMLElement, data: SceneData, buildingMeta: Meta[], greenMeta: Meta[]): Labels {
+export function createLabels(root: HTMLElement, data: SceneData, buildingMeta: Meta[], greenMeta: Meta[], huaca?: PlanModel['huaca'] | null): Labels {
   const anchors: Anchor[] = [];
   const add = (text: string, kind: LabelKind, v: THREE.Vector3, priority: number, maxDistance: number, dy = 0) => {
     const el = document.createElement('div');
-    el.className = `pointer-events-none absolute left-0 top-0 whitespace-nowrap ${CLASS[kind]} ${kind === 'garden' ? '' : HALO}`;
+    el.className = `pointer-events-none absolute left-0 top-0 whitespace-nowrap ${CLASS[kind]} ${kind === 'garden' || kind === 'landmark' ? '' : HALO}`;
     el.style.visibility = 'hidden';
     el.textContent = text;
     root.appendChild(el);
@@ -67,6 +75,9 @@ export function createLabels(root: HTMLElement, data: SceneData, buildingMeta: M
     }
   });
   data.gates.forEach((g) => add(g.props.name ?? 'Puerta', 'gate', new THREE.Vector3(g.p[0], WORLD_LIFT + GATE_LABEL_M, -g.p[1]), 1e9, 2200, 4));
+  if (huaca) {
+    add(huaca.label, 'landmark', new THREE.Vector3(huaca.x, WORLD_LIFT + huaca.y + LANDMARK_LABEL_M, huaca.z), LANDMARK_PRIORITY, LANDMARK_MAX_DISTANCE_M);
+  }
   anchors.sort((a, b) => b.priority - a.priority);
 
   const projected = new THREE.Vector3();

@@ -5,6 +5,8 @@ import { layersWithTwoBlocks, sampleLayers, SECOND_BLOCK_ID } from '../__fixture
 import type { CameraPose } from '../viewer/cameraRig';
 import { createViewer, type Viewer, type ViewerCallbacks } from '../viewer/createViewer';
 import { useMapLayers, type UseMapLayersResult } from '@/hooks/useMapLayers';
+import { usePlanModel } from '@/hooks/usePlanModel';
+import type { PlanModel } from '../viewer/planModel';
 import { mapApi } from '@/lib/map-api';
 import { ApiError } from '@/lib/api';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
@@ -15,11 +17,13 @@ jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigatio
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: mockUser }) }));
 jest.mock('../viewer/createViewer', () => ({ createViewer: jest.fn() }));
 jest.mock('@/hooks/useMapLayers', () => ({ useMapLayers: jest.fn() }));
+jest.mock('@/hooks/usePlanModel', () => ({ usePlanModel: jest.fn() }));
 jest.mock('@/lib/map-api', () => ({ mapApi: { describe: jest.fn() } }));
 jest.mock('@/lib/places-api', () => ({ placesApi: { map: jest.fn() } }));
 
 const mockedCreate = createViewer as jest.MockedFunction<typeof createViewer>;
 const mockedLayers = useMapLayers as jest.MockedFunction<typeof useMapLayers>;
+const mockedPlan = usePlanModel as jest.MockedFunction<typeof usePlanModel>;
 const mockedDescribe = mapApi.describe as jest.MockedFunction<typeof mapApi.describe>;
 
 // Cada test es una persona distinta: la memoria del mapa es por persona, así no se cuela de un test a otro.
@@ -60,6 +64,7 @@ beforeEach(() => {
   mockUser = { email: `persona-${testNumber}@pucp.edu.pe` };
   restartTrail('/mapa');
   (placesApi.map as jest.Mock).mockResolvedValue(catalog);
+  mockedPlan.mockReturnValue({ model: null, failed: false });
   viewer = fakeViewer();
   mockedCreate.mockImplementation((_c, _l, _d, cb) => {
     callbacks = cb;
@@ -233,6 +238,29 @@ describe('MapScreen', () => {
     render(<MapScreen />);
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(2));
     expect(mockedCreate.mock.calls[1][4]).toEqual(SAVED_POSE);
+  });
+
+  it('abre con prismas y, cuando llega el modelo del plano, rearma el visor con él sin mover la cámara', async () => {
+    const { rerender } = await renderLoaded();
+    expect(mockedCreate.mock.calls[0][5]).toBeNull();
+
+    const model = { buildings: new Map() } as unknown as PlanModel;
+    mockedPlan.mockReturnValue({ model, failed: false });
+    rerender(<MapScreen />);
+
+    await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(2));
+    expect(viewer.dispose).toHaveBeenCalled();
+    expect(mockedCreate.mock.calls[1][5]).toBe(model);
+    expect(mockedCreate.mock.calls[1][4]).toEqual(SAVED_POSE);
+    expect(screen.queryByText(/modelo del plano/)).not.toBeInTheDocument();
+  });
+
+  it('si el modelo del plano no carga, avisa y los edificios siguen como bloques', async () => {
+    mockedPlan.mockReturnValue({ model: null, failed: true });
+    await renderLoaded();
+
+    expect(screen.getByText('No se pudo cargar el modelo del plano; los edificios se ven como bloques.')).toHaveAttribute('role', 'status');
+    expect(mockedCreate.mock.calls[0][5]).toBeNull();
   });
 
   describe('al volver a la pantalla se ve como se dejó', () => {
