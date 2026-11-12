@@ -46,6 +46,73 @@ export function shortName(name: string): string {
   return name.replace(/^Facultad de /, '').replace(/^Departamento de /, 'Depto. ').replace(/^Sección /, '').replace(/\s*\(.*\)\s*$/, '').trim();
 }
 
+/** Ancho máximo de una etiqueta; un nombre que entra completo puede llegar hasta la tolerancia. */
+export const LABEL_MAX_PX = 160;
+export const LABEL_TOLERANCE_PX = 190;
+const LABEL_FONT = '600 12px Inter, "Segoe UI", system-ui, sans-serif';
+const CONNECTORS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'en', 'a', 'al', 'con', 'para', 'por']);
+/** Abreviaturas de uso común en la PUCP; en un nombre en mayúsculas se escriben en mayúsculas. */
+const ABBREVIATIONS: [RegExp, string][] = [
+  [/\bestudios generales\b/i, 'EE.GG.'], [/\bdepartamento académico de\b/i, 'Dpto.'], [/\bdepartamento académico\b/i, 'Dpto.'],
+  [/\bdepartamento de\b/i, 'Dpto.'], [/\bdepartamento\b/i, 'Dpto.'], [/\blaboratorio de\b/i, 'Lab.'], [/\blaboratorio\b/i, 'Lab.'],
+  [/\binstituto de\b/i, 'Inst.'], [/\binstituto\b/i, 'Inst.'], [/\binvestigaci(ón|ones)\b/i, 'Inv.'], [/\bingeniería\b/i, 'Ing.'],
+  [/\basociación\b/i, 'Asoc.'], [/\bservicios\b/i, 'Serv.'], [/\buniversitaria\b/i, 'Univ.'],
+];
+
+function abbreviate(text: string): string {
+  const upper = text === text.toUpperCase();
+  return ABBREVIATIONS.reduce((s, [re, ab]) => s.replace(re, upper ? ab.toUpperCase() : ab), text).replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Acorta un nombre largo según el ancho medido (D-12): lo que cabe se queda; luego abreviaturas
+ * (y el nombre abreviado entero si cabe en la tolerancia); la primera parte antes de un
+ * separador; y por último palabras enteras con «…», sin dejar un conector colgando.
+ */
+export function trimLabel(text: string, measure: (t: string) => number): string {
+  if (measure(text) <= LABEL_MAX_PX) return text;
+  const abbreviated = abbreviate(text);
+  if (measure(abbreviated) <= LABEL_TOLERANCE_PX) return abbreviated;
+  const first = abbreviated.split(/\s+\/\s+|,\s+|:\s+|\s+[-+]\s+|\s+\(/)[0].trim();
+  const split = first.length >= 6 && first !== abbreviated;
+  if (split && measure(first) <= LABEL_MAX_PX) return first;
+  const base = split ? first : abbreviated;
+  const words = base.split(/\s+/);
+  const cut = (limit: number): string[] => {
+    const put: string[] = [];
+    for (const w of words) {
+      if (measure([...put, w].join(' ') + '…') > limit) break;
+      put.push(w);
+    }
+    while (put.length > 1 && CONNECTORS.has(put[put.length - 1].toLowerCase())) put.pop();
+    return put;
+  };
+  const significant = (ws: string[]) => ws.filter((w) => !CONNECTORS.has(w.toLowerCase())).length;
+  let put = cut(LABEL_MAX_PX);
+  if (significant(put) < 2) {
+    if (measure(base) <= LABEL_TOLERANCE_PX) return base;
+    put = cut(LABEL_TOLERANCE_PX);
+  }
+  let short = put.join(' ');
+  if (!short) {
+    short = words[0];
+    while (short.length > 1 && measure(short + '…') > LABEL_MAX_PX) short = short.slice(0, -1);
+  }
+  return short.replace(/[\s,:;/+-]+$/, '') + '…';
+}
+
+/** Medidor de ancho con la fuente de la etiqueta; null si no hay canvas (p. ej. jsdom). */
+function canvasMeasure(): ((t: string) => number) | null {
+  try {
+    const ctx = document.createElement('canvas').getContext('2d');
+    if (!ctx) return null;
+    ctx.font = LABEL_FONT;
+    return (t) => ctx.measureText(t).width;
+  } catch {
+    return null;
+  }
+}
+
 export interface Labels {
   update: (camera: THREE.Camera, width: number, height: number, visible: (kind: LabelKind) => boolean) => void;
   dispose: () => void;
@@ -53,6 +120,7 @@ export interface Labels {
 
 export function createLabels(root: HTMLElement, data: SceneData, buildingMeta: Meta[], greenMeta: Meta[], huaca?: PlanModel['huaca'] | null): Labels {
   const anchors: Anchor[] = [];
+  let disposed = false;
   const add = (text: string, kind: LabelKind, v: THREE.Vector3, priority: number, maxDistance: number, dy = 0) => {
     const el = document.createElement('div');
     el.className = `pointer-events-none absolute left-0 top-0 whitespace-nowrap ${CLASS[kind]} ${kind === 'garden' || kind === 'landmark' ? '' : HALO}`;
@@ -80,6 +148,19 @@ export function createLabels(root: HTMLElement, data: SceneData, buildingMeta: M
   }
   anchors.sort((a, b) => b.priority - a.priority);
 
+  // Con la fuente ya cargada se mide el ancho real; sin fuentes web ni canvas quedan los nombres completos.
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      const measure = disposed ? null : canvasMeasure();
+      if (!measure) return;
+      for (const a of anchors) {
+        if (a.kind !== 'building' && a.kind !== 'garden') continue;
+        const short = trimLabel(a.el.textContent ?? '', measure);
+        if (short !== a.el.textContent) { a.el.textContent = short; a.w = 0; a.h = 0; }
+      }
+    }, () => {});
+  }
+
   const projected = new THREE.Vector3();
   return {
     update(camera, width, height, visible) {
@@ -103,6 +184,6 @@ export function createLabels(root: HTMLElement, data: SceneData, buildingMeta: M
         if (show !== a.on) { a.el.style.visibility = show ? 'visible' : 'hidden'; a.on = show; }
       }
     },
-    dispose: () => anchors.forEach((a) => a.el.remove()),
+    dispose: () => { disposed = true; anchors.forEach((a) => a.el.remove()); },
   };
 }
