@@ -1,0 +1,33 @@
+{
+  "name": "hesperides-video-flujos",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Video de los flujos de Hesperides para el cliente, presentado por Hespo.",
+  "scripts": {
+    "estudio": "remotion studio src/index.ts",
+    "prueba": "vitest run",
+    "tipos": "tsc --noEmit",
+    "render": "remotion render src/index.ts VideoFlujos out/hespo-flujos.mp4 --codec=h264",
+    "fotogramas": "tsx scripts/fotogramas.ts",
+    "capturas": "tsx scripts/capturas.ts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.540",
+    "@remotion/cli": "4.0.540",
+    "@remotion/google-fonts": "4.0.540",
+    "@remotion/media-utils": "4.0.540",
+    "@remotion/renderer": "4.0.540",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.540"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.1.12",
+    "playwright-core": "1.64.1",
+    "tsx": "4.23.15",
+    "typescript": "5.5.4",
+    "vitest": "3.2.7"
+  }
+}
