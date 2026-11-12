@@ -74,13 +74,27 @@ vec3 lookFloor(float row, vec2 f, vec2 aa, out float glass) {
   return mix(far, near, detail);
 }
 
-vec3 lookAlbedo(float row, vec2 f, out float glass) {
+// La escena aclara los oscuros y entibia todo (luz cálida, exposición y ACES). Se invierte esa curva para que
+// el color de la ficha sea el que se ve en pantalla; LOOK_GAIN se midió en una cara vertical al sol (SPEC-109 D-07).
+const vec3 LOOK_GAIN = vec3(1.33, 1.25, 1.10);
+vec3 lookToAlbedo(vec3 t) {
+  t = clamp(t, 0.0, 0.97);
+  vec3 a = 2.43 * t - 2.51, b = 0.59 * t - 0.03, c = 0.14 * t;
+  vec3 x = (-b - sqrt(max(b * b - 4.0 * a * c, 0.0))) / (2.0 * a);
+  return x / LOOK_GAIN;
+}
+
+vec3 lookDisplay(float row, vec2 f, out float glass) {
   vec2 aa = max(fwidth(f), vec2(1e-4));
   vec4 t5 = lookTexel(row, 5.0), t6 = lookTexel(row, 6.0);
   glass = 0.0;
   if (f.y < t6.a) return t6.rgb;
   if (t5.z > -0.5 && f.y < t5.y) return lookFloor(t5.z, f, aa, glass);
   return lookFloor(row, f, aa, glass);
+}
+
+vec3 lookAlbedo(float row, vec2 f, out float glass) {
+  return lookToAlbedo(lookDisplay(row, f, glass));
 }
 `;
 
@@ -96,5 +110,5 @@ if (vLookRow > -0.5) {
 /** El vidrio refleja un poco; muros, losas y techos quedan mates (D-13). */
 export const LOOK_ROUGHNESS_FRAGMENT = /* glsl */ `
 #include <roughnessmap_fragment>
-roughnessFactor = mix(roughnessFactor, 0.22, lookGlass);
+roughnessFactor = mix(roughnessFactor, 0.5, lookGlass);
 `;

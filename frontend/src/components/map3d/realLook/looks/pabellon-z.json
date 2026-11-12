@@ -1,0 +1,74 @@
+{
+  "planKey": "60bae298-0d82-48c5-bed9-1122a52c9b8d",
+  "name": "Pabellón Z",
+  "folder": "Pabellon-Z",
+  "photos": ["exterior-frente.jpg", "lado.jpg", "detras.jpg", "interior.jpg"],
+  "notes": "Frente = torre curva del oeste (sol de las 17:13 sobre la cara curva). lado = fachada de vidrio norte (tomada un minuto después de detras, del lado este; el paño blanco queda a la izquierda, al este). La cara sur de la barra sur no tiene foto: copia la fachada de vidrio. Las caras al patio salen de interior.jpg.",
+  "zones": [
+    {
+      "id": "barra-norte",
+      "roof": "#e3e1db",
+      "plinth": { "color": "#5f6266", "heightM": 0.35 },
+      "faces": {
+        "N": {
+          "kind": "curtain", "wall": "#ebe9e3", "glass": "#4a5159", "frame": "#383c42", "floorM": 3.4, "moduleM": 1.5, "frameM": 0.08,
+          "ground": { "kind": "windows", "wall": "#ebe9e3", "glass": "#3a3e43", "frame": "#2c2e31", "heightM": 3.8, "sillM": 0.5, "windowM": 2.4, "widthM": 2.2, "moduleM": 3.0 }
+        },
+        "S": {
+          "kind": "ribbon", "wall": "#e9e7e1", "glass": "#6e7173", "frame": "#dcd9d0", "floorM": 3.4, "sillM": 1.0, "windowM": 2.1,
+          "moduleM": 6.0, "frameM": 0.45, "band": { "color": "#cdc8bb", "heightM": 0.45 }
+        },
+        "other": {
+          "kind": "windows", "wall": "#ebe9e3", "glass": "#3b4148", "frame": "#2b2b2b", "floorM": 3.4, "sillM": 0.9, "windowM": 1.9, "widthM": 1.1, "moduleM": 3.2
+        }
+      }
+    },
+    {
+      "id": "barra-sur",
+      "where": { "north": [0, 0.33], "east": [0, 0.75] },
+      "roof": "#e3e1db",
+      "plinth": { "color": "#5f6266", "heightM": 0.35 },
+      "faces": {
+        "S": {
+          "kind": "curtain", "wall": "#ebe9e3", "glass": "#4a5159", "frame": "#383c42", "floorM": 3.4, "moduleM": 1.5, "frameM": 0.08,
+          "ground": { "kind": "windows", "wall": "#ebe9e3", "glass": "#3a3e43", "frame": "#2c2e31", "heightM": 3.8, "sillM": 0.5, "windowM": 2.4, "widthM": 2.2, "moduleM": 3.0 }
+        },
+        "N": {
+          "kind": "ribbon", "wall": "#e9e7e1", "glass": "#6e7173", "frame": "#dcd9d0", "floorM": 3.4, "sillM": 1.0, "windowM": 2.1,
+          "moduleM": 6.0, "frameM": 0.45, "band": { "color": "#b98b6d", "heightM": 0.9 }
+        },
+        "other": {
+          "kind": "windows", "wall": "#ebe9e3", "glass": "#3b4148", "frame": "#2b2b2b", "floorM": 3.4, "sillM": 0.9, "windowM": 1.9, "widthM": 1.1, "moduleM": 3.2
+        }
+      }
+    },
+    {
+      "id": "torre-curva-oeste",
+      "where": { "east": [0, 0.17], "north": [0.3, 0.85] },
+      "roof": "#e8e6e0",
+      "plinth": { "color": "#5f6266", "heightM": 0.5 },
+      "faces": {
+        "W": {
+          "kind": "windows", "wall": "#f0efea", "glass": "#5e5247", "frame": "#2d2a28", "floorM": 1.7, "sillM": 0.4, "windowM": 1.0, "widthM": 1.9, "moduleM": 2.25, "frameM": 0.07
+        },
+        "NW": { "sameAs": "W" },
+        "SW": { "sameAs": "W" },
+        "other": {
+          "kind": "windows", "wall": "#f0efea", "glass": "#3b4148", "frame": "#2b2b2b", "floorM": 3.4, "sillM": 0.9, "windowM": 1.9, "widthM": 0.9, "moduleM": 4.5
+        }
+      }
+    },
+    {
+      "id": "cuerpo-redondo-este",
+      "where": { "east": [0.72, 1], "north": [0.15, 0.55] },
+      "roof": "#e8e6e0",
+      "plinth": { "color": "#5f6266", "heightM": 0.35 },
+      "faces": {
+        "other": {
+          "kind": "windows", "wall": "#eeede8", "glass": "#3b4148", "frame": "#2b2b2b", "floorM": 3.4, "sillM": 0.8, "windowM": 2.0, "widthM": 1.0, "moduleM": 2.6,
+          "band": { "color": "#e2e0d9", "heightM": 0.3 }
+        }
+      }
+    }
+  ]
+}
