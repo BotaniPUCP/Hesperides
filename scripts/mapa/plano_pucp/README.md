@@ -4,8 +4,10 @@ Herramientas para la muda de edificios: llevar el plano oficial de la PUCP
 (`PUCP_BASE_FINAL.dwg`, recibido como modelo de SketchUp) al mapa del sistema, que
 hoy dibuja los edificios de OpenStreetMap.
 
-Nada de esto modifica la base de datos ni las migraciones: lee el plano, lo ubica,
-lo separa en edificios y lo compara con lo que el sistema ya tiene.
+Los scripts de la tabla de abajo no modifican la base de datos ni las migraciones: leen el
+plano, lo ubican, lo separan en edificios y lo comparan con lo que el sistema ya tiene.
+Los dos generadores de la sección «Generar el modelo y la migración» (SPEC-108) sí escriben
+archivos del repositorio.
 
 ## Datos
 
@@ -18,6 +20,10 @@ plano-pucp-datos/
   export/    campus_pucp.glb, campus_pucp_lineas.dxf, resumen.json   (export del .skp)
   trabajo/   todo lo que producen estos scripts
 ```
+
+Los generadores y los tests que necesitan el plano leen `export/campus_pucp.glb` y
+`trabajo/transformacion.npz` de esa carpeta (`PLANO_PUCP_DATOS`, por defecto
+`../plano-pucp-datos`). Si faltan, esos tests se saltan.
 
 Del export solo sirven el **GLB** (modelo 3D, completo) y el **DXF** (líneas con sus
 capas). El **OBJ** del mismo export está 1000 veces más chico que el campus real: no se
@@ -47,6 +53,25 @@ Desde la raíz del repositorio, con el Python de ese entorno:
 
 `dibujar.py salida.png [px_por_m] [xmin ymin xmax ymax]` dibuja en PNG el plano ya
 ubicado sobre OSM, para revisar a ojo sin otras herramientas.
+
+## Generar el modelo y la migración (SPEC-108)
+
+El orden importa: la migración se genera con los mismos datos que el modelo.
+
+1. `generar_modelo.py` arma el GLB y el manifiesto en `backend/src/main/resources/mapa/`.
+2. `generar_migracion.py` escribe `backend/src/main/resources/db/migration/V040__group_buildings_by_plan.sql`.
+
+La migración se genera **una sola vez y no se regenera una vez publicada**: si una relación
+cambia, se regenera el modelo y se escribe una migración nueva solo con la diferencia. Nunca
+se ejecuta `scripts/mapa/generar_semilla_mapa.py` (reescribiría `V011`).
+
+## Tests
+
+Con el Python del entorno, desde la raíz del repositorio (tarda cerca de 1,5 minutos):
+
+```bash
+$PY -I -X utf8 -m unittest discover -s scripts/mapa/plano_pucp/pruebas -v
+```
 
 ## Lo que hay que saber del plano
 

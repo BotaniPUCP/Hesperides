@@ -6,6 +6,7 @@
 | Autor | Luis (`luisenriowo`), con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android (SPEC-102) |
 | Sprint | — |
+| Estado | Implementada; falta la verificación en navegador (INV-10, CA-14) |
 | Dependencias | SPEC-102 (lo enmienda), relaciones del SKP (rama `3d-test/relaciones-edificios-skp-completo`), catálogo de lugares (V018, V034) |
 
 > **Lectura obligatoria:** `specs/REGLAS.md`.
@@ -14,7 +15,7 @@
 > §7.1 (módulos de `components/map3d/`); `scripts/mapa/plano_pucp/README.md` (cómo se ubicó el plano).
 
 > **La regla de este spec: contiene lo que el código NO dice.**
-> Mientras la feature no esté implementada, este spec es la fuente de verdad.
+> Mientras la feature no esté verificada en navegador, este spec es la fuente de verdad.
 
 ---
 
@@ -158,8 +159,9 @@ patios.
 **D-08 · Lo bajo del SKP se dibuja como suelo.** Pasan a un nodo de suelo, con el material del zócalo y
 la textura proyectada según la orientación de cada cara:
 - todo lo que está entero al ras (|z| ≤ 0,6 m);
-- dentro de un desnivel o un patio, y hasta 2 m de su borde, todo lo que no supera 2 m de alto: pisos,
-  gradas, rampas, muros de contención, barandas y taludes.
+- dentro de un desnivel o un patio, y hasta 2 m del borde de un desnivel, todo lo que no supera 2 m de
+  alto: pisos, gradas, rampas, muros de contención, barandas y taludes. **La franja de 2 m rodea solo los
+  desniveles, no los patios** (como en la página de comparación aprobada).
 
 Se descarta lo que coincide con el zócalo fuera de un desnivel, porque titila contra él, y lo que ya
 cubre el fondo del plano.
@@ -167,7 +169,7 @@ cubre el fondo del plano.
   pisos, las gradas y las rampas.
 
 **D-09 · Los desniveles se ven.** Son 27 zonas y 4411 m² donde el suelo del plano baja de −0,3 m, como
-el jardín hundido del CIA (−7,8 m) o el patio de Estudios Generales Letras (−2,1 m).
+el jardín hundido del CIA (−8,4 m según los datos del plano, con pisos a −8,0 y −8,4 m) o el patio de Estudios Generales Letras (−2,1 m).
 - **El zócalo y las capas del suelo** se abren solo donde hay piso debajo: 4351 m².
 - **Cada abertura es una caja cerrada,** con muros hasta un fondo a −10,5 m. Así una rendija entre dos
   niveles muestra suelo y no cielo.
@@ -231,7 +233,7 @@ Corregirlo mueve secciones, sectores y zonas de supervisión, así que va en un 
 | Endpoint | Autorización | Qué resuelve |
 |---|---|---|
 | `GET /api/v1/map/layers` | `ADMIN`, `COORDINADOR`, `SUPERVISOR`, `OPERARIO` | Las capas. Cada edificio trae `parentId`, `planKey`, `baseM` y `codes` |
-| `GET /api/v1/map/models/buildings` | Igual | El GLB del plano (`model/gltf-binary`), con `ETag` |
+| `GET /api/v1/map/models/buildings` | Igual | El GLB del plano (`model/gltf-binary`), con `ETag` débil |
 | `GET /api/v1/map/models/buildings/manifest` | Igual | Anclaje del modelo, nodos y polígonos de los desniveles |
 
 Propiedades de un edificio principal en `/layers`:
@@ -247,7 +249,7 @@ Propiedades de un edificio principal en `/layers`:
 
 Un edificio agrupado trae `"parentId": 40`, y su `planKey` y `codes` vienen nulos.
 
-Manifiesto (dentro del sobre `{ok, message, data}`):
+Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 
 ```json
 {
@@ -255,23 +257,39 @@ Manifiesto (dentro del sobre `{ok, message, data}`):
   "anchor": { "lat": -12.06959406, "lon": -77.08018610 },
   "nodes": { "6f1c…": "edificio", "suelo": "suelo", "jardin-hundido": "suelo", "muros-desnivel": "suelo",
              "fondo-desnivel": "suelo", "huaca-muro": "huaca", "huaca-tope": "huaca", "decoracion": "decoracion" },
-  "sunken": [{ "type": "Polygon", "coordinates": [[[-77.0812, -12.0731], "…"]] }]
+  "groundOnly": ["8be4…", "…"],
+  "sunken": [{ "polygon": { "type": "Polygon", "coordinates": [[[-77.0812, -12.0731], "…"]] }, "floorM": -8.4 }],
+  "huaca": { "label": "Camino Prehispánico", "at": [-12.0728, -77.0811, 4.9] }
 }
 ```
+
+- `groundOnly` lista las entradas (`plan_key`) cuyo modelo es todo suelo, como las dos rampas de «Entrada
+  Parking subterráneo». Cuentan como edificio principal, pero el visor no les dibuja prisma ni malla.
+- `sunken` trae, por desnivel, su polígono y la cota de su piso (`floorM`).
+- `huaca` trae la etiqueta y el punto donde se coloca (latitud, longitud y altura en metros).
 
 ### 3.1 Decisiones que el código no explica
 
 - **El GLB va sin el sobre `{ok, message, data}`** porque es un binario. Los errores sí lo usan (INV-1).
 - **El modelo tiene su propio `ETag`** (hash del archivo), aparte de la versión de datos. El modelo
   cambia solo con un despliegue; las capas, con cada edición.
+- **El GLB sale con `ETag` débil `W/"<sha256>"`** para que el servidor pueda comprimirlo (con un `ETag`
+  fuerte no lo comprime: de 7,6 MB baja a unos 1,8 MB). El manifiesto y la versión usan el hash fuerte.
+  Un proxy que exija `ETag` fuerte no revalidaría y descargaría de nuevo.
+- **`/describe` nombra solo a los principales** (filtro de cercanía): un punto dentro de un grupo se
+  describe con el nombre del grupo.
+- **Si el visor no puede comprobar la versión del modelo** (sin red o sesión vencida), conserva el que ya
+  leyó en memoria; solo dibuja prismas si nunca lo obtuvo (CA-13).
 - **`LAYERS_FORMAT` pasa a 3:** una copia guardada antes, sin `parentId`, no debe recibir 304.
 - **El modelo está en metros locales** (x este, z = −norte) alrededor de `anchor`. El visor lo ubica con
   `projection.ts`, igual que las capas.
 
 ## 4. Migración de base de datos
 
-**`Vnext__group_buildings_by_plan.sql`**: toma el siguiente número libre al implementar. En las ramas
-remotas ya están usados V039, V040 (dos veces) y V041. El archivo es **generado** por
+**`V040__group_buildings_by_plan.sql`**: el siguiente número libre de esta rama (REGLAS §4: sin huecos). Las
+ramas `feature/spec-107-reservas-jardines` y `feature/conjuntos-con-ejemplares`, todavía sin integrar,
+también usan V040–V044. **Quien integre en segundo lugar renumera el archivo que aún no se publicó**
+(REGLAS §5.4), junto con su fila en `specs/REGISTRO.md` y las citas de este spec. El archivo es **generado** por
 `scripts/mapa/plano_pucp/generar_migracion.py` y no se edita a mano ni se regenera una vez publicado.
 
 ```sql
@@ -420,10 +438,15 @@ Visor
 | P-06 | **Edificio 95:** el mapa lo llama «Comedor de Arte Antiguo», pero está a 7 m de Estudios Generales Ciencias |
 | P-07 | **Huacas 20 y 64:** no están en la capa L6 del plano y no se dibujan |
 | P-08 | **Los archivos de la vista unificada en `public/`** (`campus.glb`, `portable.js`, pilotos) se pueden descargar sin sesión |
+| P-09 | **Las dos rampas «Entrada Parking subterráneo»** se dibujan solo como suelo (`groundOnly`) y no se pueden cliquear en 3D; siguen en la búsqueda y la cercanía. Decide Luis si deben ser clicables |
+| P-10 | **Páginas de equivalencias (`map3d/equivalence/*`):** el banco de trabajo y la vista unificada leen `campusBuildings` y ya no ven a los edificios agrupados. Jean Piero decide si las adapta |
+| P-11 | **Principales nuevos «Desconocido_*»:** quedan con `is_inferred_name = false`, aunque el nombre es un marcador. Nicolás o Jean Piero deciden su nombre real o si deben marcarse como deducidos |
+| P-12 | **Pabellón C (relación del código 2):** queda fuera por D-05. Nicolás confirma que no debe volver |
 
 ### 9.2 Para el equipo
 
-- **V040** quedó usada dos veces en ramas distintas (rol de contacto y elementos de conjuntos).
+- **V040–V044** también existen en `feature/spec-107-reservas-jardines` y `feature/conjuntos-con-ejemplares`,
+  sin integrar. Quien integre segundo renumera su migración sin publicar (§4).
 - **El desfase de 3,5 m de las capas del cliente** espera su propio cambio (D-15).
 
 ### 9.3 Lo que no se versiona

@@ -97,6 +97,11 @@ local no evita la licencia**: va con los datos, no con el lugar donde se guardan
 usen, el mapa muestra «© colaboradores de OpenStreetMap». Los planos de la PUCP llegan en una
 semana; al cargarlos, `source` pasa a `PUCP` y la atribución desaparece para esos edificios.
 
+> **Enmienda (SPEC-108 D-14, 12 nov 2026).** «Enmendado por SPEC-108, 12 nov 2026»: los planos ya
+> llegaron y los edificios del campus se dibujan con sus modelos (`source = 'PUCP'` cuando la geometría es
+> del plano). **La atribución se queda**: siguen en OpenStreetMap los 255 edificios del entorno y los
+> principales sin pieza del plano, y la licencia va con los datos.
+
 **D-04 · El algoritmo de cercanía vive en el Engine del backend.** Así web y Android describen una
 ubicación exactamente igual, y la descripción que se guarda en una incidencia es reproducible. Es
 el del prototipo, sin cambios de criterio:
@@ -241,6 +246,11 @@ Semilla: los 417 edificios de OpenStreetMap; el vocabulario del prototipo (74 ed
 término, 12 deducidos) como `name` e `is_inferred_name`; sus 12 categorías como `BUILDING_CATEGORY`;
 sus 178 alias como `campus_building_aliases`.
 
+> **Enmienda (SPEC-108 §4, 12 nov 2026).** «Enmendado por SPEC-108, 12 nov 2026»: `campus_buildings` gana
+> `parent_building_id`, `plan_key` y `base_m` (migración `V040__group_buildings_by_plan.sql`), y aparece
+> `campus_building_codes` con los códigos oficiales del plano. Los edificios del campus se agrupan bajo 133
+> principales; los 71 agrupados conservan su `id`, alias y lugares. Ver SPEC-108 D-02.
+
 ### 4.2 Mobiliario
 
 ```sql
@@ -364,6 +374,11 @@ La del prototipo v39: misma escena, colores, día/noche, leyenda y buscador. Cam
 | `hooks/useMapLayers.ts` | Descarga condicional y copia local |
 | `MapScreen.tsx` y sus paneles | La pantalla: buscador, barra, leyenda, capas, ficha, atribución, listas sin WebGL |
 
+> **Enmienda (SPEC-108 §2.2, 12 nov 2026).** «Enmendado por SPEC-108, 12 nov 2026»: `viewer/` dibuja los
+> modelos del plano con suelo, desniveles y huaca; `viewer/labels.ts` recorta los nombres por ancho
+> medido; `viewer/planModel.ts` y el hook `hooks/usePlanModel.ts` (en `src/hooks/`) leen el modelo y su manifiesto; `infoCard.ts` y
+> `searchIndex.ts` conocen los códigos y los grupos. Detalle en SPEC-108.
+
 ---
 
 ## 8. Tests
@@ -403,7 +418,7 @@ Frontend (Jest, visor simulado)
 | # | Qué falta | Bloquea |
 |---|---|---|
 | P-01 | Modelos de los 5 equipos Android y si el mapa debe abrir sin señal | CA-09 |
-| P-02 | Planos de edificios de la PUCP (≈ 1 semana) | Retirar la atribución de OpenStreetMap |
+| P-02 | Planos de edificios de la PUCP (≈ 1 semana) | ~~Retirar la atribución de OpenStreetMap~~ Los planos llegaron (SPEC-108, 12 nov 2026), pero la atribución se queda (enmendado por SPEC-108, 12 nov 2026) |
 | P-03 | Fuente de los 67 bebederos | Su capa |
 | P-04 | Revisión de las 128 plantas del HTML sin fuente (`docs/datos/procesados/plantas-sin-fuente.csv`) | Su carga |
 
