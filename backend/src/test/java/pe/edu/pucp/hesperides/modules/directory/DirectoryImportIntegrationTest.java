@@ -327,6 +327,36 @@ class DirectoryImportIntegrationTest {
         }
 
         @Test
+        void rolesAreSavedPerOrganizationAndAnExtraRoleIsARowError() throws Exception {
+            existingOrganization("OIE", null);
+            existingOrganization("CF Psicología", null);
+            String good = "Juan Diego Villasante;OIE|CF Psicología;4549;;jdv@pucp.edu.pe;Delegado|\n";
+
+            preview("contacts", "nombre;organizaciones;anexo;celular;correo;roles\n"
+                    + good
+                    + "Ana Torres;OIE;;;;Tesorero|Sobra\n")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.rows[1].issues[0].code").value("ROLES_TOO_MANY"))
+                    .andExpect(jsonPath("$.data.canConfirm").value(false));
+
+            previewAndConfirm("contacts", "nombre;organizaciones;anexo;celular;correo;roles\n" + good)
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.created").value(1));
+
+            assertThat(jdbc.queryForObject("""
+                    SELECT co.role FROM contact_organizations co
+                      JOIN contacts c ON c.id = co.contact_id AND c.deleted_at IS NULL
+                      JOIN organizations o ON o.id = co.organization_id
+                     WHERE c.full_name = 'Juan Diego Villasante' AND o.name = 'OIE'""", String.class))
+                    .isEqualTo("Delegado");
+            assertThat(jdbc.queryForObject("""
+                    SELECT role FROM contact_organizations
+                     WHERE contact_id = (SELECT id FROM contacts WHERE full_name = 'Juan Diego Villasante')
+                       AND organization_id = (SELECT id FROM organizations WHERE name = 'CF Psicología')""",
+                    String.class)).isNull();
+        }
+
+        @Test
         void anErrorWeighsMoreThanAMissingOrganization() throws Exception {
             preview("contacts", CONTACT_HEADER + "Ana Torres;Facultad Inexistente;;;no-es-correo\n")
                     .andExpect(jsonPath("$.data.rows[0].action").value("ERROR"))

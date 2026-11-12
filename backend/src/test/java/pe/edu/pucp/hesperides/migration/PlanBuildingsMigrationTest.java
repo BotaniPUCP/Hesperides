@@ -27,8 +27,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Testcontainers
 class PlanBuildingsMigrationTest {
 
-    private static final String PREVIOUS_VERSION = "39";
-    private static final String PLAN_VERSION = "40";
+    private static final String PREVIOUS_VERSION = "44";
+    private static final String PLAN_VERSION = "45";
     /** Uno de los 13 edificios del mapa que agrupa Artes Escénicas (C51). */
     private static final String ARTES_ESCENICAS_REF = "way/294601873";
     /** Otro de los 13, sin nombre, alias ni lugares: se puede borrar sin tocar nada más. */

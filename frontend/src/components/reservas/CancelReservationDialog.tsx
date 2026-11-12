@@ -52,8 +52,8 @@ function CancelForm({ reservation, onClose, onCancelled }:
   return (
     <div className="space-y-4">
       <p className="text-sm text-neutral-700">
-        {reservation.place.name} · {reservation.organization.name}. La reserva no se borra: queda como
-        anulada y se puede consultar.
+        {reservation.place.name} · Pedido de {reservation.requestedBy.name}. La reserva no se borra:
+        queda como anulada y se puede consultar.
       </p>
       <Textarea id="cancel-reason" label="Motivo de la anulación" value={reason} onChange={setReason}
         required maxLength={500} rows={3} helperText="Hasta 500 caracteres." />

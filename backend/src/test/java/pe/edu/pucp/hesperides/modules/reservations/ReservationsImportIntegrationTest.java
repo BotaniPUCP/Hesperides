@@ -44,9 +44,9 @@ import pe.edu.pucp.hesperides.support.TestDatabase;
 class ReservationsImportIntegrationTest {
 
     private static final String IMPORTS = "/api/v1/imports";
-    private static final String HEADER = "jardin;organizacion;contacto;inicio;fin;motivo\n";
+    private static final String HEADER = "jardin;pedido_de;solicitante;para;responsable;fecha;inicio;fin;motivo\n";
     private static final ZoneId LIMA = ZoneId.of("America/Lima");
-    private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm");
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/uuuu");
 
     @Container
     static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
@@ -66,7 +66,6 @@ class ReservationsImportIntegrationTest {
 
     private LocalDate day;
     private long rosalesId;
-    private long nonReservableId;
 
     @BeforeEach
     void data() {
@@ -78,23 +77,50 @@ class ReservationsImportIntegrationTest {
         day = LocalDate.now(LIMA).plusDays(2);
         rosalesId = jdbc.queryForObject("""
                 SELECT id FROM places WHERE name = 'Jardín Rosales' AND deleted_at IS NULL""", Long.class);
-        nonReservableId = jdbc.queryForObject("""
+        jdbc.update("""
                 INSERT INTO places (name, kind_item_id, category_item_id)
                 SELECT 'Lugar no prestable', k.id, c.id FROM catalog_items k
                   JOIN catalog_types kt ON kt.id = k.catalog_type_id AND kt.code = 'PLACE_KIND' AND k.code = 'OUTDOOR'
                   CROSS JOIN (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id = ci.catalog_type_id
-                               WHERE ct.code = 'REFERENCE_CATEGORY' LIMIT 1) c
-                RETURNING id""", Long.class);
+                               WHERE ct.code = 'REFERENCE_CATEGORY' LIMIT 1) c""");
+        organization("Facultad de Letras", "Letras");
+        organization("CF Psicología", null);
+        long letras = jdbc.queryForObject(
+                "SELECT id FROM organizations WHERE name = 'Facultad de Letras'", Long.class);
+        long psicologia = jdbc.queryForObject(
+                "SELECT id FROM organizations WHERE name = 'CF Psicología'", Long.class);
+        contact("Juan Diego Villasante", letras, "Delegado");
+        contact("María Quispe", psicologia, null);
+        // Dos personas con el mismo nombre en organizaciones distintas: el nombre ambiguo falla la fila.
+        contact("Pedro Solari", letras, null);
+        long other = jdbc.queryForObject("""
+                INSERT INTO organizations (name, type_item_id)
+                SELECT 'Facultad de Ciencias', i.id FROM catalog_items i
+                  JOIN catalog_types t ON t.id = i.catalog_type_id
+                 WHERE t.code = 'ORGANIZATION_TYPE' AND i.code = 'PUCP_UNIT' RETURNING id""", Long.class);
+        contact("Pedro Solari", other, null);
+    }
+
+    private void organization(String name, String alias) {
         jdbc.update("""
                 INSERT INTO organizations (name, type_item_id)
-                SELECT 'Facultad de Letras', i.id FROM catalog_items i JOIN catalog_types t ON t.id = i.catalog_type_id
-                 WHERE t.code = 'ORGANIZATION_TYPE' AND i.code = 'PUCP_UNIT'""");
-        jdbc.update("""
-                INSERT INTO organization_aliases (organization_id, alias)
-                SELECT id, 'Letras' FROM organizations WHERE name = 'Facultad de Letras'""");
+                SELECT ?, i.id FROM catalog_items i JOIN catalog_types t ON t.id = i.catalog_type_id
+                 WHERE t.code = 'ORGANIZATION_TYPE' AND i.code = 'PUCP_UNIT'""", name);
+        if (alias != null) {
+            jdbc.update("INSERT INTO organization_aliases (organization_id, alias) "
+                    + "SELECT id, ? FROM organizations WHERE name = ?", alias, name);
+        }
+    }
+
+    private void contact(String fullName, long organizationId, String role) {
+        long contactId = jdbc.queryForObject(
+                "INSERT INTO contacts (full_name) VALUES (?) RETURNING id", Long.class, fullName);
+        jdbc.update("INSERT INTO contact_organizations (contact_id, organization_id, role) VALUES (?, ?, ?)",
+                contactId, organizationId, role);
     }
 
     private ResultActions preview(String csv) throws Exception {
+        csv = csv.replace("{fecha}", DATE.format(day));
         MockMultipartFile file = new MockMultipartFile("file", "reservas.csv", "text/csv",
                 csv.getBytes(StandardCharsets.UTF_8));
         return mockMvc.perform(multipart(IMPORTS + "/reservations/preview").file(file));
@@ -113,12 +139,20 @@ class ReservationsImportIntegrationTest {
         return jdbc.queryForObject("SELECT count(*) FROM garden_reservations WHERE deleted_at IS NULL", Integer.class);
     }
 
-    private String row(String garden, String organization, String start, String end) {
-        return garden + ";" + organization + ";;" + start + ";" + end + ";Feria\n";
+    private static String row(String garden, String requestedBy, String requester, String requestedFor,
+            String responsible, String start, String end) {
+        return rowOn(null, garden, requestedBy, requester, requestedFor, responsible, start, end);
     }
 
-    private String when(int hour) {
-        return WHEN.format(day.atTime(hour, 0));
+    /** Sin fecha, la fila usa el día de la prueba: preview() reemplaza {fecha}. */
+    private static String rowOn(String date, String garden, String requestedBy, String requester,
+            String requestedFor, String responsible, String start, String end) {
+        return garden + ";" + requestedBy + ";" + requester + ";" + requestedFor + ";" + responsible
+                + ";" + (date == null ? "{fecha}" : date) + ";" + start + ";" + end + ";Feria\n";
+    }
+
+    private static String when(int hour) {
+        return String.format("%02d:00", hour);
     }
 
     @Nested
@@ -137,7 +171,8 @@ class ReservationsImportIntegrationTest {
 
         @Test
         void thePreviewResolvesTheGardenAliasAndTheOrganizationAliasWithoutWriting() throws Exception {
-            preview(HEADER + row("Jardín ROSALES (FARES)", "Letras", when(10), when(14)))
+            preview(HEADER + row("Jardín ROSALES (FARES)", "Letras", "Juan Diego Villasante", "", "",
+                    when(10), when(14)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.kind").value("reservations"))
                     .andExpect(jsonPath("$.data.rows[*].action", contains("CREATE")))
@@ -151,8 +186,23 @@ class ReservationsImportIntegrationTest {
         }
 
         @Test
+        void anEmptyResponsibleBecomesTheRequester() throws Exception {
+            preview(HEADER + row("Jardín Rosales", "Facultad de Letras", "Juan Diego Villasante", "", "",
+                    when(10), when(14)))
+                    .andExpect(jsonPath("$.data.rows[0].action").value("CREATE"));
+        }
+
+        @Test
+        void aResponsibleFromAnotherOrganizationIsCreated() throws Exception {
+            preview(HEADER + row("Jardín Rosales", "Facultad de Letras", "Juan Diego Villasante",
+                    "CF Psicología", "María Quispe", when(10), when(14)))
+                    .andExpect(jsonPath("$.data.rows[0].action").value("CREATE"));
+        }
+
+        @Test
         void aGardenThatIsNotReservableIsAnErrorWithItsLineAndColumn() throws Exception {
-            preview(HEADER + row("Lugar no prestable", "Letras", when(10), when(14)))
+            preview(HEADER + row("Lugar no prestable", "Letras", "Juan Diego Villasante", "", "",
+                    when(10), when(14)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.rows[0].issues[0].line").value(2))
                     .andExpect(jsonPath("$.data.rows[0].issues[0].column").value("jardin"))
@@ -163,35 +213,66 @@ class ReservationsImportIntegrationTest {
         @Test
         void anUnknownGardenOrOrganizationIsAnError() throws Exception {
             preview(HEADER
-                    + row("Jardín Inventado", "Letras", when(10), when(14))
-                    + row("Jardín Rosales", "Organización Inventada", when(10), when(14)))
+                    + row("Jardín Inventado", "Letras", "Juan Diego Villasante", "", "", when(10), when(14))
+                    + row("Jardín Rosales", "Organización Inventada", "Juan Diego Villasante", "", "",
+                            when(10), when(14)))
                     .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("UNKNOWN_GARDEN"))
                     .andExpect(jsonPath("$.data.rows[1].issues[0].code").value("UNKNOWN_ORGANIZATION"))
                     .andExpect(jsonPath("$.data.errors").value(2));
         }
 
         @Test
+        void aRequesterOutsideTheRequestingOrganizationIsAnError() throws Exception {
+            preview(HEADER + row("Jardín Rosales", "Letras", "María Quispe", "", "", when(10), when(14)))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].column").value("solicitante"))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("UNKNOWN_CONTACT"));
+        }
+
+        @Test
+        void anUnknownResponsibleIsAnErrorAndAnAmbiguousNameToo() throws Exception {
+            preview(HEADER
+                    + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "Nadie",
+                            when(10), when(14))
+                    + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "Pedro Solari",
+                            when(10), when(14)))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("UNKNOWN_CONTACT"))
+                    .andExpect(jsonPath("$.data.rows[1].issues[0].code").value("AMBIGUOUS_CONTACT"))
+                    .andExpect(jsonPath("$.data.errors").value(2));
+        }
+
+        @Test
         void anUnreadableDateIsAnErrorOfThatRow() throws Exception {
-            preview(HEADER + row("Jardín Rosales", "Letras", "2026-11-13 10:00", when(14)))
+            preview(HEADER + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
+                    "10.00", when(14)))
                     .andExpect(jsonPath("$.data.rows[0].issues[0].column").value("inicio"))
                     .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("DATE_FORMAT"))
                     .andExpect(jsonPath("$.data.errors").value(1));
         }
 
         @Test
-        void aReservationThatIsTooLongIsAnError() throws Exception {
-            preview(HEADER + row("Jardín Rosales", "Letras", when(10),
-                    WHEN.format(day.plusDays(8).atTime(10, 0))))
-                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("MAX_DURATION"));
+        void anUnreadableDayIsAnErrorOfThatRow() throws Exception {
+            preview(HEADER + rowOn("2026-11-13", "Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
+                    when(10), when(14)))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].column").value("fecha"))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("DATE_FORMAT"));
+        }
+
+        @Test
+        void aReservationThatWouldCrossMidnightEndsBeforeItStarts() throws Exception {
+            preview(HEADER + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
+                    when(22), when(1)))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].column").value("fin"))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("END_BEFORE_START"));
         }
 
         @Test
         void overlappingReservationsArePreviewedAsCreatedWithWarnings() throws Exception {
-            long batch = batchIdOf(preview(HEADER + row("Jardín Rosales", "Letras", when(10), when(14)))
-                    .andExpect(jsonPath("$.data.rows[0].action").value("CREATE")));
+            long batch = batchIdOf(preview(HEADER + row("Jardín Rosales", "Letras", "Juan Diego Villasante",
+                    "", "", when(10), when(14))).andExpect(jsonPath("$.data.rows[0].action").value("CREATE")));
             confirm(batch).andExpect(status().isOk());
 
-            preview(HEADER + row("Jardín Rosales", "Letras", when(11), when(13)))
+            preview(HEADER + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
+                    when(11), when(13)))
                     .andExpect(jsonPath("$.data.rows[0].action").value("WARNING"))
                     .andExpect(jsonPath("$.data.rows[0].warnings[0].kind").value("OVERLAPPING_RESERVATION"))
                     .andExpect(jsonPath("$.data.toWarning").value(1))
@@ -205,8 +286,10 @@ class ReservationsImportIntegrationTest {
         @Test
         void confirmingCreatesTheReviewedRowsAndRemembersTheirBatch() throws Exception {
             long batch = batchIdOf(preview(HEADER
-                    + row("Jardín ROSALES (FARES)", "Letras", when(10), when(14))
-                    + row("Jardín Rosales", "Facultad de Letras", when(15), when(17))));
+                    + row("Jardín ROSALES (FARES)", "Letras", "Juan Diego Villasante", "", "",
+                            when(10), when(14))
+                    + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
+                            when(15), when(17))));
 
             confirm(batch).andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.batchId").value(batch))
@@ -222,8 +305,8 @@ class ReservationsImportIntegrationTest {
         @Test
         void aFileWithOneErrorSavesNothing() throws Exception {
             long batch = batchIdOf(preview(HEADER
-                    + row("Jardín Rosales", "Letras", when(10), when(14))
-                    + row("Lugar no prestable", "Letras", when(10), when(14)))
+                    + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "", when(10), when(14))
+                    + row("Lugar no prestable", "Letras", "Juan Diego Villasante", "", "", when(10), when(14)))
                     .andExpect(jsonPath("$.data.canConfirm").value(false)));
 
             confirm(batch).andExpect(status().isUnprocessableEntity());
@@ -233,8 +316,8 @@ class ReservationsImportIntegrationTest {
         @Test
         void aPastReservationIsAllowedAndComesOutFinished() throws Exception {
             LocalDate past = day.minusDays(4);
-            long batch = batchIdOf(preview(HEADER + row("Jardín Rosales", "Letras",
-                    WHEN.format(past.atTime(10, 0)), WHEN.format(past.atTime(14, 0)))));
+            long batch = batchIdOf(preview(HEADER + rowOn(DATE.format(past), "Jardín Rosales", "Letras",
+                    "Juan Diego Villasante", "", "", when(10), when(14))));
             confirm(batch).andExpect(status().isOk());
 
             assertThat(jdbc.queryForObject("SELECT starts_at FROM garden_reservations", java.time.OffsetDateTime.class))

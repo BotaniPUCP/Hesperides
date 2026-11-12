@@ -2,7 +2,7 @@ import { ReservationDetailScreen } from '@/components/reservas/ReservationDetail
 
 interface PageProps {
   params: Promise<{ codigo: string }>;
-  searchParams: Promise<{ editar?: string }>;
+  searchParams: Promise<{ editar?: string; creada?: string }>;
 }
 
 export const metadata = {
@@ -11,6 +11,6 @@ export const metadata = {
 
 export default async function ReservationPage({ params, searchParams }: PageProps) {
   const { codigo } = await params;
-  const { editar } = await searchParams;
-  return <ReservationDetailScreen code={codigo} startEditing={editar === '1'} />;
+  const { editar, creada } = await searchParams;
+  return <ReservationDetailScreen code={codigo} startEditing={editar === '1'} created={creada === '1'} />;
 }

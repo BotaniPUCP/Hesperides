@@ -33,6 +33,12 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
   const [fullName, setFullName] = useState(contact?.fullName ?? initialName);
   const [organizations, setOrganizations] = useState<OrganizationRef[]>(
     contact ? contact.organizations.filter((o) => o.active) : initialOrganizations);
+  /** El rol del contacto en cada organización (D-08b), escrito a mano; vacío es sin rol. */
+  const [roles, setRoles] = useState<Record<string, string>>(() =>
+    Object.fromEntries((contact ? contact.organizations.filter((o) => o.active) : initialOrganizations)
+      .filter((o) => o.role).map((o) => [o.code, o.role!])));
+  /** Se abre con el «+»: el buscador de organizaciones solo aparece cuando hace falta. */
+  const [addingOrganization, setAddingOrganization] = useState(false);
   const [extension, setExtension] = useState(contact?.extension ?? '');
   const [mobile, setMobile] = useState(contact?.mobile ?? '');
   const [email, setEmail] = useState(contact?.email ?? '');
@@ -40,8 +46,11 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
   const [error, setError] = useState<string | null>(null);
   const similar = useSimilarContacts(fullName, contact === null);
 
-  const addOrganization = (o: OrganizationRef | null) =>
-    o && setOrganizations((current) => (current.some((c) => c.code === o.code) ? current : [...current, o]));
+  const addOrganization = (o: OrganizationRef | null) => {
+    if (!o) return;
+    setOrganizations((current) => (current.some((c) => c.code === o.code) ? current : [...current, o]));
+    setAddingOrganization(false);
+  };
 
   async function save() {
     if (fullName.trim() === '') {
@@ -54,7 +63,8 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
     }
     setSaving(true);
     setError(null);
-    const input = { fullName: fullName.trim(), organizationCodes: organizations.map((o) => o.code),
+    const rolesRecord = Object.fromEntries(organizations.map((o) => [o.code, roles[o.code]?.trim() || null]));
+    const input = { fullName: fullName.trim(), organizationCodes: organizations.map((o) => o.code), roles: rolesRecord,
       extension: orNull(extension), mobile: orNull(mobile), email: orNull(email) };
     try {
       const code = contact
@@ -77,16 +87,36 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
           renderAction={(item) => renderSimilarAction?.(similar.find((s) => s.code === item.code) as ContactSummary)} />
         <div className="space-y-2">
           <p className="text-sm font-medium text-neutral-900">Organizaciones</p>
-          <ul className="flex flex-wrap gap-2">
+          <ul className="flex flex-wrap items-center gap-2">
             {organizations.map((o) => (
-              <li key={o.code} className="flex items-center gap-1 rounded-full bg-neutral-100 px-3 py-1 text-sm">
-                {o.name}
-                <button type="button" aria-label={`Quitar ${o.name}`} className="text-neutral-600 hover:text-neutral-900"
+              <li key={o.code} className="flex items-center gap-1 rounded-full bg-neutral-100 pl-3 pr-1 py-1 text-sm">
+                <span>{o.name}</span>
+                <input
+                  aria-label={`Rol en ${o.name}`}
+                  placeholder="Rol (opcional)"
+                  value={roles[o.code] ?? ''}
+                  onChange={(e) => setRoles((current) => ({ ...current, [o.code]: e.target.value }))}
+                  maxLength={100}
+                  className="w-36 rounded-full border border-neutral-200 bg-neutral-0 px-2 py-0.5 text-xs text-neutral-900 placeholder:text-neutral-500"
+                />
+                <button type="button" aria-label={`Quitar ${o.name}`} className="px-1 text-neutral-600 hover:text-neutral-900"
                   onClick={() => setOrganizations((current) => current.filter((c) => c.code !== o.code))}>×</button>
               </li>
             ))}
+            {/* El «+» abre el buscador de organizaciones; la alta en el mismo formulario vive dentro (§5.2). */}
+            <li>
+              <button type="button" aria-label="Añadir organización" aria-expanded={addingOrganization}
+                title="Agregar organización"
+                onClick={() => setAddingOrganization((current) => !current)}
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-300 bg-neutral-0 text-lg leading-none text-neutral-700 hover:border-neutral-500 hover:text-neutral-900">
+                +
+              </button>
+            </li>
           </ul>
-          <OrganizationPicker id="contact-org" label="Agregar organización" value={null} onChange={addOrganization} />
+          {addingOrganization && (
+            <OrganizationPicker id="contact-org" label="Agregar organización" value={null} autoFocusSearch
+              onChange={addOrganization} />
+          )}
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input id="contact-extension" label="Anexo" value={extension} onChange={setExtension} inputMode="numeric"

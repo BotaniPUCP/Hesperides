@@ -484,9 +484,11 @@ class MigrationSmokeTest {
         // proveedor lo tiene verificado, y esta aplicacion no puede comprobarlo.
         // Vive en SMTP_FROM, con el resto de la configuracion del proveedor.
         // RESERVATION_NEARBY_METERS es de SPEC-107: 10 m desde el borde del jardín.
+        // RESERVATION_CONFIRMATION_MINUTES es la enmienda del seguimiento de uso:
+        // 20 minutos antes del fin en que ya no se acepta confirmar.
         assertThat(codes).containsExactly(
                 "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH",
-                "RESERVATION_NEARBY_METERS");
+                "RESERVATION_CONFIRMATION_MINUTES", "RESERVATION_NEARBY_METERS");
     }
 
     @Test
@@ -515,6 +517,7 @@ class MigrationSmokeTest {
         Integer live = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
                 Integer.class);
-        assertThat(live).isEqualTo(4);
+        // Tres sembradas por V003, la de cercanía por V039 y la de confirmación por V043.
+        assertThat(live).isEqualTo(5);
     }
 }

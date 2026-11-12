@@ -18,6 +18,7 @@ const COLUMNAS: Record<DirectoryImportKind, Columna[]> = {
   contacts: [
     { nombre: 'nombre', obligatoria: true, descripcion: 'Nombre completo, hasta 200 caracteres.' },
     { nombre: 'organizaciones', obligatoria: true, descripcion: 'Por nombre, alias o código, separadas por «|». Si una no está en el Directorio, la fila se omite entera.' },
+    { nombre: 'roles', descripcion: 'Opcional: un rol por organización, en el mismo orden y separados por «|». Un rol puede ir vacío; el archivo puede omitir la columna entera.' },
     { nombre: 'anexo', descripcion: '4 dígitos; se aceptan espacios.' },
     { nombre: 'celular', descripcion: '9 dígitos que empiezan con 9; se aceptan espacios.' },
     { nombre: 'correo', descripcion: 'Un correo válido.' },
@@ -27,6 +28,7 @@ const COLUMNAS: Record<DirectoryImportKind, Columna[]> = {
 const REGLAS = [
   'UTF-8, separador punto y coma (;). Un archivo separado por comas se rechaza.',
   'La cabecera lleva exactamente estas columnas: una que falta o una desconocida rechaza el archivo.',
+  'En contactos, la columna «roles» es la excepción: si falta, el archivo vale igual.',
   'Hasta 2000 filas. Lo que ya existe se muestra y se omite; nada se guarda hasta confirmar.',
 ];
 

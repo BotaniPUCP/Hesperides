@@ -20,11 +20,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.CancelRequest;
+import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ConfirmationRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.GardenOption;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.OrganizationOption;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.Page;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ReservationRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ReservationResponse;
+import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.UsageRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.Warning;
 import pe.edu.pucp.hesperides.modules.reservations.service.ReservationsService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
@@ -118,5 +120,23 @@ public class ReservationsController {
             @RequestBody CancelRequest request, @AuthenticationPrincipal UserDetails principal) {
         return ResponseEntity.ok(ApiResponse.ok("Reservation cancelled",
                 service.cancel(code, request, principal.getUsername())));
+    }
+
+    /** Enmienda del 11 nov 2026: la confirmación de uso la anota solo coordinación. */
+    @PutMapping("/{code}/confirmation")
+    @PreAuthorize(ReservationAccess.MAINTAINERS)
+    public ResponseEntity<ApiResponse<ReservationResponse>> confirm(@PathVariable String code,
+            @RequestBody ConfirmationRequest request, @AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.ok("Reservation confirmation updated",
+                service.confirm(code, request, principal.getUsername())));
+    }
+
+    /** Enmienda del 11 nov 2026: la marca de uso también es del capataz. */
+    @PutMapping("/{code}/usage")
+    @PreAuthorize(ReservationAccess.USAGE_RECORDERS)
+    public ResponseEntity<ApiResponse<ReservationResponse>> recordUsage(@PathVariable String code,
+            @RequestBody UsageRequest request, @AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.ok("Reservation usage updated",
+                service.recordUsage(code, request, principal.getUsername())));
     }
 }

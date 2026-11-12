@@ -14,14 +14,17 @@ public final class DirectoryResponses {
     public record Page<T>(int page, int size, long total, List<T> items) {
     }
 
-    /** {@code active}: una organización dada de baja sigue apareciendo en lo que ya la usaba. */
-    public record OrganizationRef(String code, String name, boolean active) {
+    /** {@code active}: una organización dada de baja sigue apareciendo en lo que ya la usaba.
+     *  {@code role}: el rol del contacto en esa organización (D-08b), nulo sin rol. */
+    public record OrganizationRef(String code, String name, boolean active, String role) {
     }
 
     public record OrganizationSummary(String code, String name, CodeLabel type, String phone, int contactCount) {
     }
 
-    public record ContactCard(String code, String fullName, String extension, String mobile, String email) {
+    /** Un contacto de una organización: la ficha muestra su rol (D-08b), nulo sin rol. */
+    public record ContactCard(String code, String fullName, String extension, String mobile, String email,
+            String role) {
     }
 
     public record OrganizationDetail(String code, String name, CodeLabel type, String ruc, String phone,

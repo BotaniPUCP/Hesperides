@@ -68,8 +68,10 @@ class ReservationsIntegrationTest {
     private long userId;
     private long rosalesId;
     private long rosalesZoneId;
-    private String organization;
-    private String contact;
+    private String requestedBy;
+    private String requester;
+    private String requestedFor;
+    private String otherResponsible;
 
     @BeforeEach
     void data() {
@@ -78,17 +80,26 @@ class ReservationsIntegrationTest {
                 SELECT id FROM places WHERE name = 'Jardín Rosales' AND parent_place_id IS NULL
                    AND deleted_at IS NULL""", Long.class);
         rosalesZoneId = jdbc.queryForObject("SELECT zone_id FROM places WHERE id = ?", Long.class, rosalesId);
-        organization = jdbc.queryForObject("""
+        requestedBy = organization("Facultad de Letras");
+        requestedFor = organization("CF Psicología");
+        requester = contact("Juan Diego Villasante", "987654321", requestedBy, "Delegado");
+        otherResponsible = contact("María Quispe", "912345678", requestedFor, "Presidenta");
+    }
+
+    private String organization(String name) {
+        return jdbc.queryForObject("""
                 INSERT INTO organizations (name, type_item_id)
-                SELECT 'Facultad de Letras', i.id FROM catalog_items i JOIN catalog_types t ON t.id = i.catalog_type_id
-                 WHERE t.code = 'ORGANIZATION_TYPE' AND i.code = 'PUCP_UNIT' RETURNING code""", String.class);
-        long contactId = jdbc.queryForObject("""
-                INSERT INTO contacts (full_name, mobile) VALUES ('Juan Diego Villasante', '987654321') RETURNING id""",
-                Long.class);
-        contact = jdbc.queryForObject("SELECT code FROM contacts WHERE id = ?", String.class, contactId);
+                SELECT ?, i.id FROM catalog_items i JOIN catalog_types t ON t.id = i.catalog_type_id
+                 WHERE t.code = 'ORGANIZATION_TYPE' AND i.code = 'PUCP_UNIT' RETURNING code""", String.class, name);
+    }
+
+    private String contact(String fullName, String mobile, String organizationCode, String role) {
+        long contactId = jdbc.queryForObject("INSERT INTO contacts (full_name, mobile) VALUES (?, ?) RETURNING id",
+                Long.class, fullName, mobile);
         jdbc.update("""
-                INSERT INTO contact_organizations (contact_id, organization_id)
-                SELECT ?, id FROM organizations WHERE code = ?""", contactId, organization);
+                INSERT INTO contact_organizations (contact_id, organization_id, role)
+                SELECT ?, id, ? FROM organizations WHERE code = ?""", contactId, role, organizationCode);
+        return jdbc.queryForObject("SELECT code FROM contacts WHERE id = ?", String.class, contactId);
     }
 
     private long account(String email) {
@@ -103,15 +114,21 @@ class ReservationsIntegrationTest {
         return day.atTime(hour, 0).atZone(LIMA).toOffsetDateTime();
     }
 
-    private static String body(long placeId, String organization, String contact, OffsetDateTime start,
-            OffsetDateTime end, String purpose, Long version) {
-        String contactValue = contact == null ? "null" : "\"" + contact + "\"";
-        String versionValue = version == null ? "null" : version.toString();
+    /** Crear: los cuatro códigos; `version` nula. */
+    private static String createBody(long placeId, String requestedBy, String requester, String requestedFor,
+            String responsible, OffsetDateTime start, OffsetDateTime end, String purpose) {
         return """
-                {"placeId":%d,"organizationCode":"%s","contactCode":%s,"startsAt":"%s","endsAt":"%s",
-                 "purpose":%s,"version":%s}"""
-                .formatted(placeId, organization, contactValue, start, end,
-                        purpose == null ? "null" : "\"" + purpose + "\"", versionValue);
+                {"placeId":%d,"requestedByCode":"%s","requesterCode":"%s","requestedForCode":%s,
+                 "responsibleCode":"%s","startsAt":"%s","endsAt":"%s","purpose":%s,"version":null}"""
+                .formatted(placeId, requestedBy, requester,
+                        requestedFor == null ? "null" : "\"" + requestedFor + "\"", responsible, start, end,
+                        purpose == null ? "null" : "\"" + purpose + "\"");
+    }
+
+    /** Editar: solo el responsable y la versión (D-02c). */
+    private static String editBody(String responsible, Long version) {
+        return "{\"responsibleCode\":\"%s\",\"version\":%s}"
+                .formatted(responsible, version == null ? "null" : version.toString());
     }
 
     private ResultActions create(String body) throws Exception {
@@ -119,7 +136,7 @@ class ReservationsIntegrationTest {
     }
 
     private ResultActions create(long placeId, OffsetDateTime start, OffsetDateTime end) throws Exception {
-        return create(body(placeId, organization, contact, start, end, "Feria", null));
+        return create(createBody(placeId, requestedBy, requester, null, requester, start, end, "Feria"));
     }
 
     private static String codeOf(ResultActions result) throws Exception {
@@ -136,8 +153,11 @@ class ReservationsIntegrationTest {
             String code = codeOf(create(rosalesId, at(day, 10), at(day, 14))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.data.place.name").value("Jardín Rosales"))
-                    .andExpect(jsonPath("$.data.organization.code").value(organization))
-                    .andExpect(jsonPath("$.data.contact.code").value(contact))
+                    .andExpect(jsonPath("$.data.requestedBy.code").value(requestedBy))
+                    .andExpect(jsonPath("$.data.requester.code").value(requester))
+                    .andExpect(jsonPath("$.data.requestedFor").doesNotExist())
+                    .andExpect(jsonPath("$.data.responsible.code").value(requester))
+                    .andExpect(jsonPath("$.data.responsibleHistory").isEmpty())
                     .andExpect(jsonPath("$.data.state").value("UPCOMING"))
                     .andExpect(jsonPath("$.data.version").value(0))
                     .andExpect(jsonPath("$.data.warnings").isEmpty()));
@@ -184,12 +204,12 @@ class ReservationsIntegrationTest {
         }
 
         @Test
-        void aReservationCannotLastMoreThanSevenDays() throws Exception {
+        void aReservationStartsAndEndsOnTheSameDay() throws Exception {
             LocalDate day = LocalDate.now(LIMA).plusDays(2);
 
-            create(rosalesId, at(day, 10), at(day.plusDays(7), 11))
+            create(rosalesId, at(day, 22), at(day.plusDays(1), 1))
                     .andExpect(status().isUnprocessableEntity())
-                    .andExpect(jsonPath("$.message").value("A reservation cannot last more than 7 days"));
+                    .andExpect(jsonPath("$.message").value("A reservation starts and ends on the same day"));
         }
 
         @Test
@@ -209,17 +229,45 @@ class ReservationsIntegrationTest {
         }
 
         @Test
-        void aContactFromAnotherOrganizationIsRejected() throws Exception {
-            String other = jdbc.queryForObject("""
-                    INSERT INTO organizations (name, type_item_id)
-                    SELECT 'Facultad de Ciencias', i.id FROM catalog_items i
-                      JOIN catalog_types t ON t.id = i.catalog_type_id
-                     WHERE t.code = 'ORGANIZATION_TYPE' AND i.code = 'PUCP_UNIT' RETURNING code""", String.class);
+        void aRequesterFromAnotherOrganizationIsRejected() throws Exception {
+            String other = organization("Facultad de Ciencias");
             LocalDate day = LocalDate.now(LIMA).plusDays(2);
 
-            create(body(rosalesId, other, contact, at(day, 10), at(day, 14), "Feria", null))
+            create(createBody(rosalesId, other, requester, null, requester, at(day, 10), at(day, 14), "Feria"))
                     .andExpect(status().isUnprocessableEntity())
-                    .andExpect(jsonPath("$.message").value("The contact does not belong to that organization"));
+                    .andExpect(jsonPath("$.message")
+                            .value("The requester must belong to the organization that requests it"));
+        }
+
+        @Test
+        void aReservationNeedsAResponsible() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+
+            mockMvc.perform(post(RESERVATIONS).contentType(MediaType.APPLICATION_JSON)
+                            .content(createBody(rosalesId, requestedBy, requester, null, "CON-9999",
+                                    at(day, 10), at(day, 14), "Feria")))
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value("A responsible contact is required"));
+        }
+
+        @Test
+        void aResponsibleFromAnyOrganizationIsSaved() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+
+            create(createBody(rosalesId, requestedBy, requester, requestedFor, otherResponsible,
+                    at(day, 10), at(day, 14), "Feria"))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.data.responsible.code").value(otherResponsible))
+                    .andExpect(jsonPath("$.data.responsible.role").value("Presidenta"));
+        }
+
+        @Test
+        void aRequestedForEqualToRequestedByIsSavedEmpty() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+
+            create(createBody(rosalesId, requestedBy, requester, requestedBy, requester, at(day, 10), at(day, 14), "Feria"))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.data.requestedFor").doesNotExist());
         }
 
         @Test
@@ -228,12 +276,98 @@ class ReservationsIntegrationTest {
             String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
 
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(body(rosalesId, organization, contact, at(day, 11), at(day, 15), "Cambio", 0L)))
+                            .content(editBody(otherResponsible, 0L)))
                     .andExpect(status().isOk());
 
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(body(rosalesId, organization, contact, at(day, 12), at(day, 16), "Otra", 0L)))
+                            .content(editBody(requester, 0L)))
                     .andExpect(status().isConflict());
+        }
+    }
+
+    @Nested
+    class RequesterAndResponsible {
+
+        @Test
+        void onlyTheResponsibleChangesOnEdit() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            for (String field : java.util.List.of("\"placeId\":%d".formatted(rosalesId),
+                    "\"requestedByCode\":\"%s\"".formatted(requestedBy),
+                    "\"requesterCode\":\"%s\"".formatted(requester),
+                    "\"requestedForCode\":\"%s\"".formatted(requestedFor),
+                    "\"startsAt\":\"%s\"".formatted(at(day, 11)),
+                    "\"endsAt\":\"%s\"".formatted(at(day, 15)),
+                    "\"purpose\":\"Otro\"")) {
+                mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
+                                .content("{" + field + ",\"responsibleCode\":\"%s\",\"version\":0}"
+                                        .formatted(requester)))
+                        .andExpect(status().isUnprocessableEntity())
+                        .andExpect(jsonPath("$.message").value(
+                                "Only the responsible can change: cancel the reservation and register a new one"));
+            }
+        }
+
+        @Test
+        void theDetailCarriesTheSectionsOfTheGardenForTheMap() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.place.sectionCodes").isNotEmpty());
+        }
+
+        @Test
+        void creatingLeavesOneHistoryRowAndChangingTheResponsibleAddsAnother() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            assertThat(historyCount(code)).isEqualTo(1);
+
+            mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
+                            .content(editBody(otherResponsible, 0L)))
+                    .andExpect(status().isOk());
+
+            assertThat(historyCount(code)).isEqualTo(2);
+            assertThat(jdbc.queryForObject(
+                    "SELECT responsible_contact_id FROM garden_reservations WHERE code = ?",
+                    Long.class, code))
+                    .isEqualTo(jdbc.queryForObject("SELECT id FROM contacts WHERE code = ?",
+                            Long.class, otherResponsible));
+
+            // Editar sin cambiar el responsable no agrega filas.
+            mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
+                            .content(editBody(otherResponsible, 1L)))
+                    .andExpect(status().isOk());
+            assertThat(historyCount(code)).isEqualTo(2);
+        }
+
+        @Test
+        void theDetailShowsTheResponsibleHistoryWithWhoChangedIt() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            // «Para» se fija al crear: el rol del responsable se lee en esa organización (D-08b).
+            String code = codeOf(create(createBody(rosalesId, requestedBy, requester, requestedFor, requester,
+                    at(day, 10), at(day, 14), "Feria")).andExpect(status().isCreated()));
+
+            mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
+                            .content(editBody(otherResponsible, 0L)))
+                    .andExpect(status().isOk());
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.responsible.code").value(otherResponsible))
+                    .andExpect(jsonPath("$.data.responsible.role").value("Presidenta"))
+                    .andExpect(jsonPath("$.data.responsibleHistory", org.hamcrest.Matchers.hasSize(2)))
+                    .andExpect(jsonPath("$.data.responsibleHistory[0].contact.code").value(requester))
+                    .andExpect(jsonPath("$.data.responsibleHistory[1].contact.code").value(otherResponsible))
+                    .andExpect(jsonPath("$.data.responsibleHistory[1].assignedBy").value("reservas@pucp.edu.pe"));
+        }
+
+        private int historyCount(String code) {
+            return jdbc.queryForObject("""
+                    SELECT count(*) FROM garden_reservation_responsibles h
+                      JOIN garden_reservations r ON r.id = h.reservation_id
+                     WHERE r.code = ?""", Integer.class, code);
         }
     }
 
@@ -248,7 +382,7 @@ class ReservationsIntegrationTest {
                     .andExpect(jsonPath("$.data.state").value("FINISHED")));
 
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(body(rosalesId, organization, contact, at(day, 11), at(day, 15), "x", 0L)))
+                            .content(editBody(requester, 0L)))
                     .andExpect(status().isUnprocessableEntity())
                     .andExpect(jsonPath("$.message").value("This reservation already finished or was cancelled"));
 
@@ -279,6 +413,189 @@ class ReservationsIntegrationTest {
                             .param("includeCancelled", "true"))
                     .andExpect(jsonPath("$.data.items[*].code", contains(code)))
                     .andExpect(jsonPath("$.data.items[0].state").value("CANCELLED"));
+        }
+    }
+
+    @Nested
+    class Followup {
+
+        /** Reserva en curso creada directo en la base, con horario relativo a ahora. */
+        private String inProgress(java.time.Duration startedAgo, java.time.Duration endsIn) {
+            OffsetDateTime start = OffsetDateTime.now(ZoneOffset.UTC).minus(startedAgo);
+            OffsetDateTime end = OffsetDateTime.now(ZoneOffset.UTC).plus(endsIn);
+            return jdbc.queryForObject("""
+                    INSERT INTO garden_reservations (place_id, requested_by_organization_id, requester_contact_id,
+                        responsible_contact_id, starts_at, ends_at, purpose, created_by_user_id)
+                    SELECT ?, ro.id, rq.id, rs.id, ?, ?, 'Feria', ?
+                      FROM organizations ro, contacts rq, contacts rs
+                     WHERE ro.code = ? AND rq.code = ? AND rs.code = ? RETURNING code""",
+                    String.class, rosalesId, start, end, userId, requestedBy, requester, requester);
+        }
+
+        private ResultActions confirm(String code, String body) throws Exception {
+            return mockMvc.perform(put(RESERVATIONS + "/" + code + "/confirmation")
+                    .contentType(MediaType.APPLICATION_JSON).content(body));
+        }
+
+        private ResultActions usage(String code, String body) throws Exception {
+            return mockMvc.perform(put(RESERVATIONS + "/" + code + "/usage")
+                    .contentType(MediaType.APPLICATION_JSON).content(body));
+        }
+
+        @Test
+        void aCoordinatorConfirmsTheUseAndTheHistoryKeepsIt() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.useConfirmed").value(true))
+                    .andExpect(jsonPath("$.data.canConfirm").value(true))
+                    .andExpect(jsonPath("$.data.version").value(1));
+
+            assertThat(jdbc.queryForObject(
+                    "SELECT count(*) FROM garden_reservation_confirmations h"
+                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
+                    Integer.class, code)).isEqualTo(1);
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.useConfirmed").value(true))
+                    .andExpect(jsonPath("$.data.confirmationHistory", org.hamcrest.Matchers.hasSize(1)))
+                    .andExpect(jsonPath("$.data.confirmationHistory[0].value").value(true))
+                    .andExpect(jsonPath("$.data.confirmationHistory[0].by").value("reservas@pucp.edu.pe"));
+        }
+
+        @Test
+        void unconfirmingAddsAnotherHistoryRow() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isOk());
+            confirm(code, "{\"confirmed\":false,\"version\":1}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.useConfirmed").value(false));
+
+            assertThat(jdbc.queryForObject(
+                    "SELECT count(*) FROM garden_reservation_confirmations h"
+                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
+                    Integer.class, code)).isEqualTo(2);
+        }
+
+        @Test
+        void confirmingWithAStaleVersionConflicts() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isOk());
+            confirm(code, "{\"confirmed\":false,\"version\":0}").andExpect(status().isConflict());
+        }
+
+        @Test
+        void theConfirmationClosesMinutesBeforeTheEnd() throws Exception {
+            // Fin en 10 min con corte de 20: el plazo cerró hace 10 minutos.
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(10));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}")
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value(
+                            "The confirmation window is closed: it closes 20 minutes before the reservation ends"));
+        }
+
+        @Test
+        void theUsageClosesMinutesBeforeTheEndToo() throws Exception {
+            // Fin en 10 min con corte de 20: dentro del horario, pero tras el corte.
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(10));
+
+            usage(code, "{\"used\":true,\"version\":0}")
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value(
+                            "The usage window is closed: it closes 20 minutes before the reservation ends"));
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.usageState").value("NOT_IN_USE"))
+                    .andExpect(jsonPath("$.data.canRecordUsage").value(false));
+        }
+
+        @Test
+        @WithMockUser(username = "reservas@pucp.edu.pe", authorities = "SUPERVISOR")
+        void aSupervisorCannotConfirmButCanRecordUsage() throws Exception {
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(90));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isForbidden());
+
+            usage(code, "{\"used\":true,\"version\":0}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.spaceUsed").value(true))
+                    .andExpect(jsonPath("$.data.usageState").value("IN_USE"))
+                    .andExpect(jsonPath("$.data.canRecordUsage").value(true));
+
+            assertThat(jdbc.queryForObject(
+                    "SELECT count(*) FROM garden_reservation_usages h"
+                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
+                    Integer.class, code)).isEqualTo(1);
+        }
+
+        @Test
+        void usageIsRecordedOnlyWhileTheScheduleIsRunning() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String upcoming = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+            usage(upcoming, "{\"used\":true,\"version\":0}")
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value("The space is marked as used once the reservation starts"));
+
+            LocalDate past = LocalDate.now(LIMA).minusDays(2);
+            String finished = codeOf(create(rosalesId, at(past, 10), at(past, 14))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.data.state").value("FINISHED")));
+            usage(finished, "{\"used\":true,\"version\":0}")
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value("This reservation already finished or was cancelled"));
+
+            mockMvc.perform(get(RESERVATIONS + "/" + finished))
+                    .andExpect(jsonPath("$.data.usageState").value("NOT_USED"));
+        }
+
+        @Test
+        @WithMockUser(username = "reservas@pucp.edu.pe", authorities = "OPERARIO")
+        void anOperatorCannotRecordUsageButReadsTheFields() throws Exception {
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(90));
+
+            usage(code, "{\"used\":true,\"version\":0}").andExpect(status().isForbidden());
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.usageState").value("NOT_IN_USE"))
+                    .andExpect(jsonPath("$.data.canRecordUsage").value(true));
+        }
+
+        @Test
+        void markingAndUnmarkingTheUsageLeavesTwoHistoryRows() throws Exception {
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(90));
+
+            usage(code, "{\"used\":true,\"version\":0}").andExpect(status().isOk());
+            usage(code, "{\"used\":false,\"version\":1}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.spaceUsed").value(false))
+                    .andExpect(jsonPath("$.data.usageState").value("NOT_IN_USE"));
+
+            assertThat(jdbc.queryForObject(
+                    "SELECT count(*) FROM garden_reservation_usages h"
+                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
+                    Integer.class, code)).isEqualTo(2);
+        }
+
+        @Test
+        void aMarkedUsageOfAFinishedReservationShowsUsed() throws Exception {
+            String code = inProgress(java.time.Duration.ofHours(3), java.time.Duration.ofMinutes(30));
+            usage(code, "{\"used\":true,\"version\":0}").andExpect(status().isOk());
+
+            jdbc.update("""
+                    UPDATE garden_reservations SET starts_at = now() - interval '5 hours',
+                        ends_at = now() - interval '1 hour' WHERE code = ?""", code);
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.state").value("FINISHED"))
+                    .andExpect(jsonPath("$.data.usageState").value("USED"));
         }
     }
 
@@ -474,20 +791,25 @@ class ReservationsIntegrationTest {
 
         @Test
         @WithMockUser(username = "reservas@pucp.edu.pe", authorities = "OPERARIO")
-        void theOperatorAlsoSeesTheContactOfAReservation() throws Exception {
+        void theOperatorAlsoSeesTheOrganizationsAndContactsOfAReservation() throws Exception {
             LocalDate day = LocalDate.now(LIMA).plusDays(2);
             String code = jdbc.queryForObject("""
-                    INSERT INTO garden_reservations (place_id, organization_id, contact_id, starts_at, ends_at,
+                    INSERT INTO garden_reservations (place_id, requested_by_organization_id, requester_contact_id,
+                        requested_for_organization_id, responsible_contact_id, starts_at, ends_at,
                         purpose, created_by_user_id)
-                    SELECT ?, o.id, c.id, ?, ?, 'Feria', ?
-                      FROM organizations o, contacts c WHERE o.code = ? AND c.code = ? RETURNING code""",
-                    String.class, rosalesId, at(day, 10), at(day, 14), userId, organization, contact);
+                    SELECT ?, ro.id, rq.id, rf.id, rs.id, ?, ?, 'Feria', ?
+                      FROM organizations ro, organizations rf, contacts rq, contacts rs
+                     WHERE ro.code = ? AND rf.code = ? AND rq.code = ? AND rs.code = ? RETURNING code""",
+                    String.class, rosalesId, at(day, 10), at(day, 14), userId,
+                    requestedBy, requestedFor, requester, otherResponsible);
 
             mockMvc.perform(get(RESERVATIONS + "/" + code))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.organization.name").value("Facultad de Letras"))
-                    .andExpect(jsonPath("$.data.contact.fullName").value("Juan Diego Villasante"))
-                    .andExpect(jsonPath("$.data.contact.mobile").value("987654321"));
+                    .andExpect(jsonPath("$.data.requestedBy.name").value("Facultad de Letras"))
+                    .andExpect(jsonPath("$.data.requestedFor.name").value("CF Psicología"))
+                    .andExpect(jsonPath("$.data.requester.fullName").value("Juan Diego Villasante"))
+                    .andExpect(jsonPath("$.data.requester.mobile").value("987654321"))
+                    .andExpect(jsonPath("$.data.responsible.fullName").value("María Quispe"));
         }
     }
 }

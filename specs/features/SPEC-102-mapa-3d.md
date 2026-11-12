@@ -247,7 +247,7 @@ término, 12 deducidos) como `name` e `is_inferred_name`; sus 12 categorías com
 sus 178 alias como `campus_building_aliases`.
 
 > **Enmienda (SPEC-108 §4, 12 nov 2026).** «Enmendado por SPEC-108, 12 nov 2026»: `campus_buildings` gana
-> `parent_building_id`, `plan_key` y `base_m` (migración `V040__group_buildings_by_plan.sql`), y aparece
+> `parent_building_id`, `plan_key` y `base_m` (migración `V045__group_buildings_by_plan.sql`), y aparece
 > `campus_building_codes` con los códigos oficiales del plano. Los edificios del campus se agrupan bajo 133
 > principales; los 71 agrupados conservan su `id`, alias y lugares. Ver SPEC-108 D-02.
 

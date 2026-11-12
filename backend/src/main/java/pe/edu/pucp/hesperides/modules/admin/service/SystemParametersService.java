@@ -40,6 +40,8 @@ public class SystemParametersService {
 
     private static final int MAX_LOGIN_ATTEMPTS = 50;
     private static final int MAX_RESERVATION_NEARBY_METERS = 100;
+    /** Un día: una reserva dura máximo siete, y el corte no puede superar la mitad del plazo útil. */
+    private static final int MAX_CONFIRMATION_MINUTES = 1440;
     private static final BigDecimal MAX_CAMPUS_HECTARES = new BigDecimal("100000");
 
     /**
@@ -164,6 +166,14 @@ public class SystemParametersService {
                 && (value < 0 || value > MAX_RESERVATION_NEARBY_METERS)) {
             throw new ValidationException(
                     "La distancia de aviso por reservas debe estar entre 0 y " + MAX_RESERVATION_NEARBY_METERS);
+        }
+        // Más de un día no tiene sentido: una reserva dura máximo siete, y una
+        // confirmación que cerrara al registrarla no serviría de nada.
+        if (code.equals(SystemParameterCodes.RESERVATION_CONFIRMATION_MINUTES)
+                && (value < 0 || value > MAX_CONFIRMATION_MINUTES)) {
+            throw new ValidationException(
+                    "El corte de las marcas de uso debe estar entre 0 y " + MAX_CONFIRMATION_MINUTES
+                            + " minutos");
         }
 
         return value.toString();

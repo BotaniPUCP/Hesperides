@@ -55,13 +55,13 @@ final class DirectoryQueries {
 
     /** Organizaciones de varios contactos a la vez, para no consultar una por fila. */
     static final String ORGANIZATIONS_OF_CONTACTS = """
-            SELECT co.contact_id, o.code, o.name, o.deleted_at IS NULL AS active
+            SELECT co.contact_id, o.code, o.name, o.deleted_at IS NULL AS active, co.role
               FROM contact_organizations co JOIN organizations o ON o.id = co.organization_id
              WHERE co.deleted_at IS NULL AND co.contact_id IN (:ids)
              ORDER BY o.deleted_at IS NOT NULL, lower(o.name)""";
 
     static final String CONTACTS_OF_ORGANIZATION = """
-            SELECT c.code, c.full_name, c.extension, c.mobile, c.email
+            SELECT c.code, c.full_name, c.extension, c.mobile, c.email, co.role
               FROM contact_organizations co JOIN contacts c ON c.id = co.contact_id AND c.deleted_at IS NULL
              WHERE co.organization_id = :id AND co.deleted_at IS NULL ORDER BY lower(c.full_name)""";
 

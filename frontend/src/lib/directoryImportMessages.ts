@@ -16,6 +16,7 @@ const ISSUES: Record<string, (issue: ImportRowIssue) => string> = {
   EXTENSION_FORMAT: () => 'El anexo debe tener 4 dígitos.',
   MOBILE_FORMAT: () => 'El celular debe tener 9 dígitos y empezar con 9.',
   EMAIL_FORMAT: () => 'El correo no es válido.',
+  ROLES_TOO_MANY: () => 'Hay más roles que organizaciones: deja un espacio vacío por cada organización sin rol.',
 };
 
 export function issueMessage(issue: ImportRowIssue): string {

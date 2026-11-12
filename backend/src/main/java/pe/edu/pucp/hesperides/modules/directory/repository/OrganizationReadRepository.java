@@ -41,7 +41,7 @@ public class OrganizationReadRepository {
     public List<ContactCard> contacts(long organizationId) {
         return jdbc.query(DirectoryQueries.CONTACTS_OF_ORGANIZATION, new MapSqlParameterSource("id", organizationId),
                 (rs, i) -> new ContactCard(rs.getString("code"), rs.getString("full_name"), rs.getString("extension"),
-                        rs.getString("mobile"), rs.getString("email")));
+                        rs.getString("mobile"), rs.getString("email"), rs.getString("role")));
     }
 
     private static MapSqlParameterSource filter(String search, String typeCode) {

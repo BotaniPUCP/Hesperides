@@ -61,9 +61,12 @@ function OrganizationView({ organization, reload }: { organization: Organization
           <ul className="divide-y divide-neutral-100">
             {organization.contacts.map((c) => (
               <li key={c.code} className="flex flex-wrap justify-between gap-2 py-2">
-                <Link href={`/directorio/contactos/${c.code}`} className="font-medium text-forest-800 hover:underline">
-                  {c.fullName}
-                </Link>
+                <span className="flex items-center gap-2">
+                  <Link href={`/directorio/contactos/${c.code}`} className="font-medium text-forest-800 hover:underline">
+                    {c.fullName}
+                  </Link>
+                  {c.role && <span className="text-sm text-neutral-600">{c.role}</span>}
+                </span>
                 <span className="text-sm text-neutral-600">
                   {[c.extension && `Anexo ${c.extension}`, c.mobile, c.email].filter(Boolean).join(' · ') || 'Sin teléfono ni correo'}
                 </span>

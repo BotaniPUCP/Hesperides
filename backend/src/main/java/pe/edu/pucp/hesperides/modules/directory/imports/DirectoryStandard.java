@@ -16,6 +16,11 @@ interface DirectoryStandard<T> {
 
     List<String> columns();
 
+    /** Columnas que el archivo puede traer pero no necesita; vacío si todas son obligatorias. */
+    default List<String> optionalColumns() {
+        return List.of();
+    }
+
     /** Revisa sin escribir nada. */
     List<Planned<T>> plan(List<CsvRow> rows);
 

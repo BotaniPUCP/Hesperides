@@ -56,7 +56,8 @@ public class DirectoryImportHandler implements ImportHandler {
     }
 
     private <T> DirectoryPreview preview(DirectoryStandard<T> standard, ImportUpload upload, String userEmail) {
-        List<StagedRow<T>> staged = standard.plan(DirectoryCsv.read(upload.csv(), standard.columns()).rows())
+        List<StagedRow<T>> staged = standard
+                .plan(DirectoryCsv.read(upload.csv(), standard.columns(), standard.optionalColumns()).rows())
                 .stream().map(Planned::toStaged).toList();
         Opened opened = gate.open(standard.kind(), upload.fileName(), userEmail, new DirectoryReport<>(staged));
         List<PlannedRow> rows = staged.stream().map(StagedRow::row).toList();

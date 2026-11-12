@@ -2,39 +2,43 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import type { Reservation } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
-import { Badge, Button, EmptyState, LoadingSkeleton } from '@/components/ui';
-import { useCanMaintainReservations, useReservation } from '@/hooks/useReservations';
-import { formatDay, formatDateTime, isEditable, stateColor, stateLabel } from '@/lib/reservation-format';
+import { Button, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { SectionsFocusMap } from '@/components/map3d/SectionsFocusMap';
+import { useCanMaintainReservations, useCanRecordUsage, useReservation, useReservationCheck } from '@/hooks/useReservations';
+import { formatDay, isEditable } from '@/lib/reservation-format';
 import { CancelReservationDialog } from './CancelReservationDialog';
-import { ReservationForm } from './ReservationForm';
+import { ReservationDetails } from './ReservationDetails';
+import { ResponsibleChangeForm } from './ResponsibleChangeForm';
 import { ReservationWarnings } from './ReservationWarnings';
 
 interface Props {
   code: string;
   startEditing?: boolean;
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="grid gap-0.5 py-2 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-3">
-      <dt className="text-sm font-medium text-neutral-600">{label}</dt>
-      <dd className="min-w-0 break-words text-neutral-900">{children}</dd>
-    </div>
-  );
+  /** La reserva acaba de crearse: banner de confirmación y avisos del horario (§5.1). */
+  created?: boolean;
 }
 
 /** La ficha de una reserva (SPEC-107 §5.2). Editar es en línea, solo ADMIN y COORDINADOR. */
-export function ReservationDetailScreen({ code, startEditing = false }: Props) {
+export function ReservationDetailScreen({ code, startEditing = false, created = false }: Props) {
   const router = useRouter();
   const canMaintain = useCanMaintainReservations();
-  const { reservation, loading, errorMessage, notFound, updateData } = useReservation(code);
+  const canRecordUsage = useCanRecordUsage();
+  // Las respuestas de cambiar, confirmar o anular no traen historiales ni secciones: se pide la ficha entera.
+  const { reservation, loading, errorMessage, notFound, reload } = useReservation(code);
   const [editing, setEditing] = useState(startEditing);
   const [cancelling, setCancelling] = useState(false);
   const [warnings, setWarnings] = useState<Reservation['warnings']>([]);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Al llegar de un alta, los avisos al guardar se consultan con los datos de la
+  // propia reserva: son derivados y salen iguales a los del formulario (§5.1).
+  const justCreated = useReservationCheck(created && reservation !== null && isEditable(reservation.state)
+    ? { placeId: reservation.place.id, startsAt: reservation.startsAt, endsAt: reservation.endsAt,
+        excludeCode: reservation.code }
+    : null);
 
   function leaveEditing() {
     setEditing(false);
@@ -56,11 +60,11 @@ export function ReservationDetailScreen({ code, startEditing = false }: Props) {
       <div className="space-y-6">
         <PageHeader title={`Editar ${reservation.code}`}
           description={`${reservation.place.name} · ${formatDay(reservation.startsAt.slice(0, 10), true)}`} />
-        <ReservationForm initial={reservation} onCancel={leaveEditing}
+        <ResponsibleChangeForm reservation={reservation} onCancel={leaveEditing}
           onSaved={(saved) => {
-            updateData(saved);
-            setWarnings(saved.warnings);
-            setNotice(`Reserva ${saved.code} actualizada.`);
+            reload();
+            setWarnings([]);
+            setNotice(`Responsable de ${saved.code} actualizado.`);
             leaveEditing();
           }} />
       </div>
@@ -70,9 +74,16 @@ export function ReservationDetailScreen({ code, startEditing = false }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader title={`Reserva ${reservation.code}`}
-        description={`${reservation.place.name} · ${reservation.organization.name}`}
+        description={`${reservation.place.name} · Pedido de ${reservation.requestedBy.name}
+          ${reservation.requestedFor ? ` para ${reservation.requestedFor.name}` : ''}`}
         actions={
           <>
+            {canMaintain && (
+              <Link href="/reservas/nueva"
+                className="rounded-md border border-neutral-200 bg-neutral-0 px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50">
+                Nueva reserva
+              </Link>
+            )}
             <Link href={`/reservas?jardin=${reservation.place.id}`}
               className="rounded-md border border-neutral-200 bg-neutral-0 px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50">
               Ver en la agenda
@@ -86,50 +97,31 @@ export function ReservationDetailScreen({ code, startEditing = false }: Props) {
           </>
         } />
 
+      {created && (
+        <p role="status" className="rounded-md bg-alert-success-bg p-3 text-sm text-alert-success-fg">
+          Reserva {reservation.code} registrada para {reservation.place.name}.
+        </p>
+      )}
       {notice && (
         <p role="status" className="rounded-md bg-alert-success-bg p-3 text-sm text-alert-success-fg">{notice}</p>
       )}
-      {warnings.length > 0 && <ReservationWarnings warnings={warnings} title="Avisos al guardar" />}
+      {(warnings.length > 0 ? warnings : created ? justCreated.warnings : []).length > 0 && (
+        <ReservationWarnings warnings={warnings.length > 0 ? warnings : justCreated.warnings}
+          title="Avisos al guardar" />
+      )}
 
-      <section className="surface-card">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge label={stateLabel(reservation.state)} color={stateColor(reservation.state)}
-            className={reservation.state === 'CANCELLED' ? 'line-through' : undefined} />
-          {reservation.state === 'CANCELLED' && reservation.cancelReason && (
-            <span className="text-sm text-neutral-600">Motivo: {reservation.cancelReason}</span>
-          )}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <ReservationDetails reservation={reservation} canMaintain={canMaintain}
+          canRecordUsage={canRecordUsage} updateData={reload} />
+        <div className="h-[360px] lg:h-auto lg:min-h-[480px]">
+          <SectionsFocusMap codes={reservation.place.sectionCodes} />
         </div>
-        <dl className="mt-3 divide-y divide-neutral-100">
-          <Field label="Jardín">
-            <Link href={`/lugares/${reservation.place.code}`} className="text-brand-700 hover:underline">
-              {reservation.place.name}
-            </Link>
-            <span className="ml-2 text-sm text-neutral-600">{reservation.place.code}</span>
-          </Field>
-          <Field label="Organización">{reservation.organization.name}</Field>
-          <Field label="Contacto">
-            {reservation.contact === null ? 'Sin contacto' : (
-              <>
-                {reservation.contact.fullName}
-                {reservation.contact.mobile && (
-                  <> · <a href={`tel:${reservation.contact.mobile}`} className="text-brand-700 hover:underline">
-                    {reservation.contact.mobile}
-                  </a></>
-                )}
-                {reservation.contact.extension && ` · anexo ${reservation.contact.extension}`}
-              </>
-            )}
-          </Field>
-          <Field label="Inicio">{formatDateTime(reservation.startsAt)}</Field>
-          <Field label="Fin">{formatDateTime(reservation.endsAt)}</Field>
-          <Field label="Motivo">{reservation.purpose ?? '—'}</Field>
-        </dl>
-      </section>
+      </div>
 
       <CancelReservationDialog reservation={cancelling ? reservation : null}
         onClose={() => setCancelling(false)}
         onCancelled={(cancelled) => {
-          updateData(cancelled);
+          reload();
           setWarnings([]);
           setNotice(`Reserva ${cancelled.code} anulada.`);
         }} />

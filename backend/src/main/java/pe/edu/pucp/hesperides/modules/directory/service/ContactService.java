@@ -1,6 +1,7 @@
 package pe.edu.pucp.hesperides.modules.directory.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +23,15 @@ import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 /**
  * Altas, cambios, bajas y vínculos de contactos. Nombre, anexo, celular y correo
  * son datos personales: ni la auditoría ni los mensajes de error los repiten.
+ * El rol del vínculo (D-08b) es el único dato del vínculo, y la auditoría lo
+ * trata como el resto: dice que cambió, no a qué.
  */
 @Service
 @RequiredArgsConstructor
 public class ContactService {
 
     private static final String ENTITY = "Contact";
+    private static final int MAX_ROLE = 100;
 
     private final ContactRepository contacts;
     private final ActiveRecords active;
@@ -37,8 +41,9 @@ public class ContactService {
     public String create(ContactRequest request) {
         ContactValues values = resolve(request);
         List<Long> organizationIds = organizationIds(request);
+        Map<Long, String> roles = linkRoles(request, organizationIds);
         Created created = contacts.insert(values);
-        organizationIds.forEach(organizationId -> contacts.link(created.id(), organizationId));
+        contacts.replaceLinks(created.id(), organizationIds, roles);
         audit.record(AuditActionCode.CONTACT_CREATED, ENTITY, created.id(),
                 Map.of("organizations", organizationIds.size()));
         return created.code();
@@ -49,25 +54,39 @@ public class ContactService {
         ContactRow current = active.contact(code);
         ContactValues values = resolve(request);
         List<Long> organizationIds = organizationIds(request);
+        Map<Long, String> roles = linkRoles(request, organizationIds);
         List<String> changed = changedFields(current, values);
         if (!organizationIds.stream().sorted().toList().equals(contacts.organizationIds(current.id()))) {
             changed.add("organizations");
         }
         contacts.update(current.id(), values);
-        contacts.replaceLinks(current.id(), organizationIds);
+        contacts.replaceLinks(current.id(), organizationIds, roles);
         audit.record(AuditActionCode.CONTACT_UPDATED, ENTITY, current.id(), Map.of("fields", changed));
     }
 
     /** Agrega una organización sin tocar los datos ni los demás vínculos (SPEC-106 §3.1). */
     @Transactional
-    public void link(String code, String organizationCode) {
+    public void link(String code, String organizationCode, String role) {
         ContactRow contact = active.contact(code);
         OrganizationRow organization = active.organization(organizationCode);
         if (contacts.organizationIds(contact.id()).contains(organization.id())) {
             throw new DuplicateResourceException("The contact " + code + " already belongs to «" + organization.name() + "»");
         }
-        contacts.link(contact.id(), organization.id());
+        contacts.link(contact.id(), organization.id(), linkRole(role));
         audit.record(AuditActionCode.CONTACT_LINKED, ENTITY, contact.id(), Map.of("organization", organizationCode));
+    }
+
+    /** Cambia solo el rol de un vínculo que ya existe; el rol viene nulo o con texto (D-08b). */
+    @Transactional
+    public void updateLinkRole(String code, String organizationCode, String role) {
+        ContactRow contact = active.contact(code);
+        OrganizationRow organization = active.organization(organizationCode);
+        if (!contacts.organizationIds(contact.id()).contains(organization.id())) {
+            throw new BusinessRuleException("The contact is not linked to that organization");
+        }
+        contacts.updateLinkRole(contact.id(), organization.id(), linkRole(role));
+        audit.record(AuditActionCode.CONTACT_LINK_ROLE_UPDATED, ENTITY, contact.id(),
+                Map.of("organization", organizationCode));
     }
 
     @Transactional
@@ -95,6 +114,45 @@ public class ContactService {
             throw new BusinessRuleException("A contact must belong to at least one active organization");
         }
         return codes.stream().map(active::organization).map(OrganizationRow::id).toList();
+    }
+
+    /**
+     * El rol de cada vínculo del alta o la edición (D-08b): las claves de
+     * {@code roles} deben ser organizaciones del mismo cuerpo; el valor vacío
+     * significa sin rol. Una clave desconocida es una petición mal armada.
+     */
+    private Map<Long, String> linkRoles(ContactRequest request, List<Long> organizationIds) {
+        Map<String, String> roles = request.roles();
+        if (roles == null || roles.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, String> byId = new HashMap<>();
+        for (Map.Entry<String, String> entry : roles.entrySet()) {
+            String code = entry.getKey() == null ? null : entry.getKey().strip();
+            if (code == null || code.isEmpty()) {
+                throw new ValidationException("Each role must name the organization it belongs to");
+            }
+            if (!request.organizationCodesOrEmpty().contains(code)) {
+                throw new ValidationException("The roles can only name organizations in the request");
+            }
+            String role = linkRole(entry.getValue());
+            if (role != null) {
+                byId.put(active.organization(code).id(), role);
+            }
+        }
+        return byId;
+    }
+
+    /** Un rol sin espacios que valga; vacío es sin rol, y más largo que la columna, rechazo. */
+    private static String linkRole(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String role = raw.strip();
+        if (role.length() > MAX_ROLE) {
+            throw new ValidationException("The role cannot exceed " + MAX_ROLE + " characters");
+        }
+        return role;
     }
 
     private static List<String> changedFields(ContactRow current, ContactValues values) {

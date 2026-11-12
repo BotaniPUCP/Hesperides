@@ -5,17 +5,20 @@ import type { MessagePattern } from './placeErrorMessages';
  * propósito; traducir es trabajo del frontend (SPEC-000, SPEC-C02 §6).
  */
 export const RESERVATION_MESSAGES: Record<string, string> = {
-  'The garden, organization, start and end are required':
-    'Elige el jardín, la organización y las horas de inicio y fin.',
+  'The garden, requester, responsible, start and end are required':
+    'Elige el jardín, quién pide, el solicitante y el responsable, y las horas de inicio y fin.',
   'The garden, start and end are required':
     'Elige el jardín y las horas de inicio y fin para consultar los avisos.',
   'That garden cannot be reserved': 'Ese jardín no se puede reservar.',
-  'That organization is not active in the Directory':
-    'La organización no está vigente en el Directorio. Elige otra o pide a coordinación que la registre.',
-  'The contact does not belong to that organization':
-    'El contacto no pertenece a esa organización. Elige otro o déjalo vacío.',
+  'That organization is not in the Directory':
+    'Esa organización no está en el Directorio. Elige otra o pide a coordinación que la registre.',
+  'The requester must belong to the organization that requests it':
+    'El solicitante debe pertenecer a la organización que pide. Elige otro o registra el vínculo en el Directorio.',
+  'A responsible contact is required': 'Indica un responsable.',
+  'Only the responsible can change: cancel the reservation and register a new one':
+    'Al editar solo cambia el responsable: para otro jardín u horario, anula esta reserva y registra una nueva.',
   'The reservation must end after it starts': 'La reserva debe terminar después de empezar.',
-  'A reservation cannot last more than 7 days': 'Una reserva no puede durar más de 7 días.',
+  'A reservation starts and ends on the same day': 'Una reserva va de una hora a otra del mismo día.',
   'The purpose cannot exceed 300 characters': 'El motivo no puede superar los 300 caracteres.',
   'This reservation already finished or was cancelled':
     'Esta reserva ya terminó o fue anulada: solo se puede consultar.',
@@ -26,6 +29,8 @@ export const RESERVATION_MESSAGES: Record<string, string> = {
     'El motivo de la anulación no puede superar los 500 caracteres.',
   'The date range ends before it starts': 'La fecha final no puede ser anterior a la inicial.',
   'The scheduled date is required': 'Indica la fecha programada.',
+  'The space is marked as used once the reservation starts':
+    'El espacio se marca en uso a partir de la hora de inicio de la reserva.',
   'Each point must be lat,lon': 'Cada punto debe escribirse como latitud,longitud.',
   'A point is outside the valid latitude or longitude':
     'Un punto tiene una latitud o longitud fuera del rango válido.',
@@ -33,6 +38,10 @@ export const RESERVATION_MESSAGES: Record<string, string> = {
 
 /** Los mensajes que traen un dato no caben en un diccionario de textos exactos. */
 export const RESERVATION_PATTERNS: readonly MessagePattern[] = [
+  [/^The confirmation window is closed: it closes (\d+) minutes before the reservation ends$/,
+    (match) => `El plazo de confirmación ya cerró: solo se confirma hasta ${match[1]} minutos antes del fin de la reserva.`],
+  [/^The usage window is closed: it closes (\d+) minutes before the reservation ends$/,
+    (match) => `Ya no se puede marcar el uso: el corte es ${match[1]} minutos antes del fin de la reserva.`],
   [/^The file is missing the columns: (.+)$/,
     (match) => `Al archivo le faltan columnas: ${match[1]}.`],
   [/^The file has unknown columns: (.+?)\. Check the spelling against the standard$/,

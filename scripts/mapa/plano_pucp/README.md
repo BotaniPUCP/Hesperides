@@ -59,7 +59,7 @@ ubicado sobre OSM, para revisar a ojo sin otras herramientas.
 El orden importa: la migración se genera con los mismos datos que el modelo.
 
 1. `generar_modelo.py` arma el GLB y el manifiesto en `backend/src/main/resources/mapa/`.
-2. `generar_migracion.py` escribe `backend/src/main/resources/db/migration/V040__group_buildings_by_plan.sql`.
+2. `generar_migracion.py` escribe `backend/src/main/resources/db/migration/V045__group_buildings_by_plan.sql`.
 
 La migración se genera **una sola vez y no se regenera una vez publicada**: si una relación
 cambia, se regenera el modelo y se escribe una migración nueva solo con la diferencia. Nunca

@@ -295,10 +295,9 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 
 ## 4. Migración de base de datos
 
-**`V040__group_buildings_by_plan.sql`**: el siguiente número libre de esta rama (REGLAS §4: sin huecos). Dos
-ramas sin integrar chocan con ella (revisado el 12 nov 2026 en `origin`): `feature/spec-107-reservas-jardines`
-tiene V040–V044, y `feature/conjuntos-con-ejemplares` tiene V039–V041, cuya V039 ya choca con la V039 de esta
-base. **Quien integre en segundo lugar renumera el archivo que aún no se publicó** (REGLAS §5.4). El archivo
+**`V045__group_buildings_by_plan.sql`**. Nació como V040 en `feature/spec-108-edificios-del-plano`; al integrarse
+con reservas (`integra/12-noviembre`, 12 nov 2026) pasó a V045, porque `feature/spec-107-reservas-jardines` ya tenía
+V040–V044 aplicadas en bases de trabajo y esta era una sola. Una base que aplicó la V040 del plano se recrea. El archivo
 es **generado** por `scripts/mapa/plano_pucp/generar_migracion.py` y no se edita a mano ni se regenera una vez
 publicado.
 
@@ -308,7 +307,7 @@ Si esta migración se renumera, cambian:
 - `PREVIOUS_VERSION` y `PLAN_VERSION` en `backend/src/test/java/pe/edu/pucp/hesperides/migration/PlanBuildingsMigrationTest.java`;
 - la ruta del paso 2 en `scripts/mapa/plano_pucp/README.md`;
 - en `specs/REGISTRO.md`, la fila del mapa de migraciones, el siguiente número libre y la fila de pendientes;
-- esta sección (§4) y la enmienda de SPEC-102 §4.1 que cita `V040__group_buildings_by_plan.sql`.
+- esta sección (§4) y la enmienda de SPEC-102 §4.1 que cita `V045__group_buildings_by_plan.sql`.
 
 ```sql
 -- Propiedad de SPEC-108. ARCHIVO GENERADO: no se edita a mano ni se regenera.
@@ -478,9 +477,8 @@ Visor
 
 ### 9.2 Para el equipo
 
-- **Números de migración:** `feature/spec-107-reservas-jardines` tiene V040–V044 y
-  `feature/conjuntos-con-ejemplares` V039–V041 (su V039 ya choca con la de esta base); las dos están sin
-  integrar. Quien integre segundo renumera su migración sin publicar; §4 lista qué cambia.
+- **Números de migración:** la migración del plano es V045 desde la integración del 12 nov 2026 (§4). Quien
+  aplicó la antigua V040 del plano recrea su base de trabajo.
 - **El desfase de 3,5 m de las capas del cliente** espera su propio cambio (D-15).
 
 ### 9.3 Lo que no se versiona

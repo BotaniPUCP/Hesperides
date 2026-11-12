@@ -16,6 +16,8 @@ export interface OrganizationPickerProps {
   onChange: (value: OrganizationRef | null) => void;
   helperText?: string;
   errorMessage?: string;
+  /** Enfoca el buscador al montarse, cuando el picker se abre bajo demanda (botón «+»). */
+  autoFocusSearch?: boolean;
 }
 
 const RESULTS = 8;
@@ -24,7 +26,8 @@ const RESULTS = 8;
  * Elegir una organización del Directorio en vez de escribir su nombre (SPEC-106 §5.2).
  * Coordinación puede registrarla ahí mismo; el capataz solo busca y elige.
  */
-export function OrganizationPicker({ id, label, value, onChange, helperText, errorMessage }: OrganizationPickerProps) {
+export function OrganizationPicker({ id, label, value, onChange, helperText, errorMessage,
+  autoFocusSearch = false }: OrganizationPickerProps) {
   const canRegister = useCanMaintainDirectory();
   const [text, setText] = useState('');
   const [registering, setRegistering] = useState(false);
@@ -45,7 +48,7 @@ export function OrganizationPicker({ id, label, value, onChange, helperText, err
   return (
     <div className="space-y-2">
       <Input id={id} label={label} value={text} onChange={setText} type="search" helperText={helperText}
-        errorMessage={errorMessage} autoComplete="off" />
+        errorMessage={errorMessage} autoComplete="off" autoFocus={autoFocusSearch} />
       {settled && (
         <PickerResults empty={result.items.length === 0}
           emptyText={canRegister ? `«${text.trim()}» no está en el directorio.`

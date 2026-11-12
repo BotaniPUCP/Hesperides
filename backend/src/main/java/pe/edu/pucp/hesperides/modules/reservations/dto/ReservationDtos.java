@@ -9,37 +9,75 @@ public final class ReservationDtos {
     private ReservationDtos() {
     }
 
-    public record GardenRef(long id, String code, String name) {
+    /** `sectionCodes` solo viene lleno en la ficha: el mapa enfoca esas secciones. */
+    public record GardenRef(long id, String code, String name, java.util.List<String> sectionCodes) {
     }
 
     public record OrganizationRef(String code, String name) {
     }
 
-    public record ContactRef(String code, String fullName, String mobile, String extension) {
+    /** Un contacto de una reserva, con el rol de su vínculo (D-08b); nulo sin rol. */
+    public record ContactRef(String code, String fullName, String role, String mobile, String extension) {
+    }
+
+    /** Una fila del historial de responsables (D-02b): quién quedó a cargo y quién lo asignó. */
+    public record ResponsibleEntry(ContactRef contact, OffsetDateTime assignedAt, String assignedBy) {
+    }
+
+    /** Una fila del historial de confirmaciones o de usos (enmienda del 11 nov 2026). */
+    public record FollowupEntry(boolean value, OffsetDateTime at, String by) {
     }
 
     /**
      * {@code warnings} solo viene lleno al crear y editar; en las lecturas es una
      * lista vacía para que el frontend no tenga que distinguir la forma.
+     * {@code responsibleHistory} solo viene lleno en la ficha; en la agenda va vacío.
+     * Lo mismo los historiales de confirmación y de uso (enmienda del 11 nov 2026).
+     * {@code usageState} se calcula con el reloj; {@code canConfirm} y
+     * {@code canRecordUsage} dicen si la ventana de cada marca está abierta ahora.
      */
     public record ReservationResponse(
             String code,
             GardenRef place,
-            OrganizationRef organization,
-            ContactRef contact,
+            OrganizationRef requestedBy,
+            ContactRef requester,
+            OrganizationRef requestedFor,
+            ContactRef responsible,
+            List<ResponsibleEntry> responsibleHistory,
+            List<FollowupEntry> confirmationHistory,
+            List<FollowupEntry> usageHistory,
             OffsetDateTime startsAt,
             OffsetDateTime endsAt,
             String purpose,
             String state,
             String cancelReason,
+            boolean useConfirmed,
+            boolean spaceUsed,
+            String usageState,
+            boolean canConfirm,
+            boolean canRecordUsage,
             long version,
             List<Warning> warnings) {
     }
 
+    /** El cuerpo de confirmar o desconfirmar el uso del solicitante (enmienda del 11 nov 2026). */
+    public record ConfirmationRequest(boolean confirmed, Long version) {
+    }
+
+    /** El cuerpo de marcar o desmarcar el uso del espacio (enmienda del 11 nov 2026). */
+    public record UsageRequest(boolean used, Long version) {
+    }
+
+    /**
+     * Al crear van los cuatro códigos; al editar {@code requestedByCode} y
+     * {@code requesterCode} llegan nulos, porque quiénes pidieron no cambian (D-02).
+     */
     public record ReservationRequest(
             Long placeId,
-            String organizationCode,
-            String contactCode,
+            String requestedByCode,
+            String requesterCode,
+            String requestedForCode,
+            String responsibleCode,
             OffsetDateTime startsAt,
             OffsetDateTime endsAt,
             String purpose,
@@ -68,7 +106,7 @@ public final class ReservationDtos {
     public record GardenOption(long id, String code, String name, List<String> aliases) {
     }
 
-    /** Una organización con al menos una reserva, para el filtro (D-08). */
+    /** Las organizaciones que aparecen como «Pedido de» o «Para» en alguna reserva (D-08). */
     public record OrganizationOption(String code, String name) {
     }
 }

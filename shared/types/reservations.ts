@@ -3,12 +3,17 @@
 /** El estado se calcula en el backend; nunca se guarda. */
 export type ReservationState = 'UPCOMING' | 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
 
+/** El uso del espacio se deriva de las marcas guardadas y del reloj (enmienda 11 nov 2026). */
+export type ReservationUsage = 'NOT_RECORDED' | 'IN_USE' | 'NOT_IN_USE' | 'USED' | 'NOT_USED';
+
 export type ReservationSeverity = 'CRITICAL' | 'WARNING';
 
 export interface ReservationGardenRef {
   id: number;
   code: string;
   name: string;
+  /** Las secciones del jardín; solo vienen llenas en la ficha, para enfocar el mapa. */
+  sectionCodes: string[];
 }
 
 export interface ReservationOrganizationRef {
@@ -19,8 +24,24 @@ export interface ReservationOrganizationRef {
 export interface ReservationContactRef {
   code: string;
   fullName: string;
+  /** Rol del vínculo con la organización de la reserva (D-08b). Null sin rol. */
+  role: string | null;
   mobile: string | null;
   extension: string | null;
+}
+
+/** Una fila del historial de responsables (D-02b); solo viene en la ficha. */
+export interface ReservationResponsibleEntry {
+  contact: Pick<ReservationContactRef, 'code' | 'fullName' | 'role'>;
+  assignedAt: string;
+  assignedBy: string;
+}
+
+/** Una fila del historial de confirmaciones o de usos; solo viene en la ficha. */
+export interface ReservationFollowupEntry {
+  value: boolean;
+  at: string;
+  by: string;
 }
 
 /**
@@ -38,22 +59,48 @@ export interface ReservationWarning {
 export interface Reservation {
   code: string;
   place: ReservationGardenRef;
-  organization: ReservationOrganizationRef;
-  contact: ReservationContactRef | null;
+  /** La organización que pide el jardín (D-02). */
+  requestedBy: ReservationOrganizationRef;
+  /** Quien hizo el pedido, de «Pedido de»; fijo. */
+  requester: ReservationContactRef;
+  /** La organización que usará el jardín; null cuando es la misma que pide. */
+  requestedFor: ReservationOrganizationRef | null;
+  /** El contacto a cargo; puede cambiar, y cada cambio deja fila en el historial. */
+  responsible: ReservationContactRef;
+  /** Solo viene lleno en la ficha (GET /{code}). */
+  responsibleHistory: ReservationResponsibleEntry[];
+  /** Solo vienen llenos en la ficha (GET /{code}); en la agenda van vacíos. */
+  confirmationHistory: ReservationFollowupEntry[];
+  usageHistory: ReservationFollowupEntry[];
   startsAt: string;
   endsAt: string;
   purpose: string | null;
   state: ReservationState;
   cancelReason: string | null;
+  /** El solicitante confirmó que usará el jardín (enmienda 11 nov 2026). */
+  useConfirmed: boolean;
+  /** El encargado marcó que el espacio está siendo usado. */
+  spaceUsed: boolean;
+  /** El uso derivado: las marcas más el reloj. */
+  usageState: ReservationUsage;
+  /** Si las ventanas de cada marca están abiertas ahora mismo. */
+  canConfirm: boolean;
+  canRecordUsage: boolean;
   version: number;
   /** Solo viene lleno al crear y editar. */
   warnings: ReservationWarning[];
 }
 
+/**
+ * Al crear van los cuatro códigos; al editar `requestedByCode` y `requesterCode`
+ * no se envían, porque quiénes pidieron no cambian (D-02).
+ */
 export interface ReservationInput {
   placeId: number;
-  organizationCode: string;
-  contactCode: string | null;
+  requestedByCode?: string;
+  requesterCode?: string;
+  requestedForCode: string | null;
+  responsibleCode: string;
   startsAt: string;
   endsAt: string;
   purpose: string | null;
@@ -76,7 +123,7 @@ export interface ReservationGardenOption {
   aliases: string[];
 }
 
-/** Una organización con al menos una reserva, para el filtro (D-08). */
+/** Una organización que aparece como «Pedido de» o «Para» en alguna reserva (D-08). */
 export interface ReservationOrganizationOption {
   code: string;
   name: string;

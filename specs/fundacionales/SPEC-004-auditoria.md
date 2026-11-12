@@ -100,9 +100,12 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `CONTACT_UPDATED` | ADMIN, COORDINADOR | `{ "fields": ["mobile", "organizations"] }` — qué campos cambiaron, nunca sus valores (SPEC-106) | **`audit_log`** |
 | `CONTACT_DEACTIVATED` | ADMIN, COORDINADOR | `{}` (SPEC-106) | **`audit_log`** |
 | `CONTACT_LINKED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — la organización agregada (SPEC-106) | **`audit_log`** |
+| `CONTACT_LINK_ROLE_UPDATED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — qué vínculo cambió, nunca el valor del rol (SPEC-106 §4.3) | **`audit_log`** |
 | `GARDEN_RESERVATION_CREATED` · `GARDEN_RESERVATION_UPDATED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "place": "LUG-0004" }` — el código de la reserva y el del jardín; nunca el teléfono del contacto (SPEC-107 §9) | **`audit_log`** |
 | `GARDEN_RESERVATION_CANCELLED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "place": "LUG-0004" }`; el motivo queda en `garden_reservations.cancel_reason` (SPEC-107 D-09) | **`audit_log`** |
 | `GARDEN_RESERVATION_RESPONSIBLE_CHANGED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "from": "CON-0007", "to": "CON-0019" }` — códigos de contacto, nunca nombres ni teléfonos (SPEC-107 D-02b) | **`audit_log`** |
+| `GARDEN_RESERVATION_CONFIRMATION_CHANGED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "from": false, "to": true }` — de qué a qué, sin datos del solicitante (SPEC-107, enmienda del seguimiento de uso) | **`audit_log`** |
+| `GARDEN_RESERVATION_USAGE_CHANGED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "code": "RES-0042", "from": false, "to": true }` — de qué a qué (SPEC-107, enmienda del seguimiento de uso) | **`audit_log`** |
 | `CONTACT_LINK_ROLE_UPDATED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — el vínculo cuyo rol cambió, sin el valor (SPEC-106 §4.3) | **`audit_log`** |
 | `GREEN_AREA_SET_CREATED` · `GREEN_AREA_SET_UPDATED` | ADMIN, COORDINADOR | `{ "zoneCount": 18 }` — cuántos jardines quedaron en el conjunto, no la lista (SPEC-203 §9) | **`audit_log`** |
 | `GREEN_AREA_SET_DELETED` | ADMIN, COORDINADOR | `{}` — el id del conjunto basta | **`audit_log`** |

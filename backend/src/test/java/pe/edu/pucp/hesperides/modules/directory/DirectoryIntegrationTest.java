@@ -404,6 +404,58 @@ class DirectoryIntegrationTest {
             mockMvc.perform(get(CONTACTS).param("q", "villasante")).andExpect(jsonPath("$.data.items", hasSize(0)));
             mockMvc.perform(get(CONTACTS + "/" + contact)).andExpect(jsonPath("$.data.active").value(false));
         }
+
+        @Test
+        void creatingWithRolesSavesTheLinkRole() throws Exception {
+            String oie = createOrg("OIE");
+            String psicologia = createOrg("CF Psicología");
+
+            String contact = codeOf(send(post(CONTACTS), """
+                    {"fullName":"Juan Diego Villasante","organizationCodes":["%s","%s"],
+                     "roles":{"%s":"Delegado"}}""".formatted(oie, psicologia, oie)).andExpect(status().isCreated()));
+
+            // La ficha ordena por nombre: «CF Psicología» antes que «OIE».
+            mockMvc.perform(get(CONTACTS + "/" + contact))
+                    .andExpect(jsonPath("$.data.organizations[0].role").value(org.hamcrest.Matchers.nullValue()))
+                    .andExpect(jsonPath("$.data.organizations[0].code").value(psicologia))
+                    .andExpect(jsonPath("$.data.organizations[1].role").value("Delegado"))
+                    .andExpect(jsonPath("$.data.organizations[1].code").value(oie));
+        }
+
+        @Test
+        void aRoleForAnOrganizationOutsideTheBodyIsRejected() throws Exception {
+            String oie = createOrg("OIE");
+            String other = createOrg("DAF");
+
+            send(post(CONTACTS), """
+                    {"fullName":"Juan Diego","organizationCodes":["%s"],"roles":{"%s":"Delegado"}}"""
+                    .formatted(oie, other)).andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void aRoleLongerThanTheColumnIsRejected() throws Exception {
+            String org = createOrg("OIE");
+            String role = "r".repeat(101);
+
+            send(post(CONTACTS), """
+                    {"fullName":"Juan Diego","organizationCodes":["%s"],"roles":{"%s":"%s"}}"""
+                    .formatted(org, org, role)).andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void anEditReplacesTheRoles() throws Exception {
+            String oie = createOrg("OIE");
+            String contact = codeOf(send(post(CONTACTS), """
+                    {"fullName":"Juan Diego Villasante","organizationCodes":["%s"],"roles":{"%s":"Delegado"}}"""
+                    .formatted(oie, oie)).andExpect(status().isCreated()));
+
+            send(put(CONTACTS + "/" + contact), """
+                    {"fullName":"Juan Diego Villasante","organizationCodes":["%s"],"roles":{"%s":"Secretaria académica"}}"""
+                    .formatted(oie, oie)).andExpect(status().isOk());
+
+            mockMvc.perform(get(CONTACTS + "/" + contact))
+                    .andExpect(jsonPath("$.data.organizations[0].role").value("Secretaria académica"));
+        }
     }
 
     @Nested
@@ -450,6 +502,49 @@ class DirectoryIntegrationTest {
             mockMvc.perform(delete(CONTACTS + "/" + contact)).andExpect(status().isOk());
 
             send(post(CONTACTS + "/" + contact + "/organizations"), "{\"organizationCode\":\"" + daf + "\"}")
+                    .andExpect(status().isUnprocessableEntity());
+        }
+
+        @Test
+        void linkingWithARoleSavesIt() throws Exception {
+            String oie = createOrg("OIE");
+            String psicologia = createOrg("CF Psicología");
+            String contact = createContact("Juan Diego Villasante", oie);
+
+            send(post(CONTACTS + "/" + contact + "/organizations"),
+                    "{\"organizationCode\":\"%s\",\"role\":\"Tesorero\"}".formatted(psicologia))
+                    .andExpect(status().isOk());
+
+            mockMvc.perform(get(CONTACTS + "/" + contact))
+                    .andExpect(jsonPath("$.data.organizations[0].code").value(psicologia))
+                    .andExpect(jsonPath("$.data.organizations[0].role").value("Tesorero"));
+        }
+
+        @Test
+        void updatingTheLinkRoleChangesOnlyTheRole() throws Exception {
+            String oie = createOrg("OIE");
+            String contact = codeOf(send(post(CONTACTS), contactBody("Juan Diego Villasante", "4549", null, oie))
+                    .andExpect(status().isCreated()));
+
+            send(put(CONTACTS + "/" + contact + "/organizations/" + oie), "{\"role\":\"Delegado\"}")
+                    .andExpect(status().isOk());
+            mockMvc.perform(get(CONTACTS + "/" + contact))
+                    .andExpect(jsonPath("$.data.organizations[0].role").value("Delegado"))
+                    .andExpect(jsonPath("$.data.extension").value("4549"));
+
+            send(put(CONTACTS + "/" + contact + "/organizations/" + oie), "{\"role\":null}")
+                    .andExpect(status().isOk());
+            mockMvc.perform(get(CONTACTS + "/" + contact))
+                    .andExpect(jsonPath("$.data.organizations[0].role").doesNotExist())
+                    .andExpect(jsonPath("$.data.organizations[0].code").value(oie));
+        }
+
+        @Test
+        void updatingTheRoleOfAnUnlinkedOrganizationIsRejected() throws Exception {
+            String contact = createContact("Juan Diego Villasante", createOrg("OIE"));
+            String daf = createOrg("DAF");
+
+            send(put(CONTACTS + "/" + contact + "/organizations/" + daf), "{\"role\":\"Delegado\"}")
                     .andExpect(status().isUnprocessableEntity());
         }
     }
@@ -501,6 +596,8 @@ class DirectoryIntegrationTest {
             mockMvc.perform(delete(CONTACTS + "/CON-0001")).andExpect(status().isForbidden());
             mockMvc.perform(get(CONTACTS + "/similar").param("fullName", "juan")).andExpect(status().isForbidden());
             send(post(CONTACTS + "/CON-0001/organizations"), "{\"organizationCode\":\"ORG-0001\"}")
+                    .andExpect(status().isForbidden());
+            send(put(CONTACTS + "/CON-0001/organizations/ORG-0001"), "{\"role\":\"Delegado\"}")
                     .andExpect(status().isForbidden());
         }
 

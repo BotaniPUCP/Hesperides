@@ -48,7 +48,7 @@ sorpresa que un principio fundacional cambió.
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
 | SPEC-102 D-03, §4.1, §7.1 y P-02 | SPEC-108 (implementada, 12 nov 2026) | Los edificios del mapa pasan a los modelos del plano oficial (SKP), agrupados según las relaciones de Nicolás y con los nombres y excepciones de Jean Piero. Hay un edificio principal por relación (133), y los 71 edificios del mapa que comparten relación se agrupan bajo él sin borrarse (`parent_building_id`). Los códigos oficiales quedan en `campus_building_codes`. El modelo lo sirve el backend con sesión. Se conservan el acabado y las luces de hoy. Patios vacíos, desniveles visibles, huaca con textura de tapial y etiquetas recortadas por ancho. **La atribución a OpenStreetMap se queda.** El Pabellón C no entra. Ya aplicado a SPEC-102 (D-03, §4.1, §7.1 y P-02). |
-| SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: guardan quién las pide (organización y solicitante, fijos), para quién son (opcional) y un responsable que puede cambiar, con su historial; el operario ve todo eso (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El vínculo contacto–organización gana un rol opcional y `contactos.csv` la columna `roles` (SPEC-106 §4.3). El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y cinco acciones auditables. |
+| SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: guardan quién las pide (organización y solicitante, fijos), para quién son (opcional) y un responsable que puede cambiar, con su historial; el operario ve todo eso (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El vínculo contacto–organización gana un rol opcional y `contactos.csv` la columna `roles` (SPEC-106 §4.3). Enmienda del seguimiento de uso (SPEC-107 D-12): `use_confirmed` y `space_used` con sus historiales y el parámetro `RESERVATION_CONFIRMATION_MINUTES` — el corte de 20 minutos antes del fin cierra la confirmación y también la marca de uso (V044) —, y dos acciones auditables más. El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y siete acciones auditables. |
 | SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
 | SPEC-004 §3.2 · C-08 · C-09 · E-03 · REQ 2.7 · Catálogo 2.2/2.11 | SPEC-105 (6 nov 2026) | Tres acciones auditables de especie. La criticidad pasa a ser de la especie y no de su tipo; `GENERIC` deja de escribirse; se retira la proyección automática de medidas tras una poda. |
 | SPEC-C01 §4.3 | Estandarización de pantallas (7 nov 2026) | Toda pantalla usa `PageFrame` (un solo ancho, fila fija de flecha y breadcrumb derivado del menú) y `PageHeader`. Las tarjetas pasan a `rounded-2xl`. |
@@ -201,17 +201,22 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V037 | `V037__add_directory_import_batches.sql` | SPEC-106 §4.2 · SPEC-103 D-04 | El Directorio entra a `import_batches` (`organizations`, `contacts`); organizaciones y contactos guardan su `import_batch_id`, nulo en el alta manual |
 | V038 | `V038__create_green_area_sets.sql` | SPEC-203 §4 | Conjuntos de áreas verdes (secciones y actividades); las reglas `BY_ZONE`/`BY_SECTOR` pasan a `BY_SET` o `CAMPUS_WIDE` en todas sus versiones; se retiran `zone_id` y el teórico |
 | V039 | `V039__create_garden_reservations.sql` | SPEC-107 §4 | Reservas de jardines (`garden_reservations`), su correlativo `RES-####`, el parámetro `RESERVATION_NEARBY_METERS` y el tipo de lote `reservations` en el ciclo común de cargas |
-| V040 | `V040__group_buildings_by_plan.sql` | SPEC-108 §4 | Edificios del plano: `parent_building_id`, `plan_key` y `base_m` en `campus_buildings`, tabla `campus_building_codes`, 133 principales, 71 agrupados y 127 códigos. Generada por `scripts/mapa/plano_pucp/generar_migracion.py`; no se regenera una vez publicada |
+| V040 | `V040__add_contact_organization_role.sql` | SPEC-106 §4.3 | El rol del contacto en su organización (`contact_organizations.role`), parte del modelo de reservas de SPEC-107 (D-08b) |
+| V041 | `V041__reservation_requester_and_responsible.sql` | SPEC-107 §4 | El modelo de D-02 y D-02b: `requested_by_organization_id`, `requester_contact_id`, `requested_for_organization_id`, `responsible_contact_id`, el historial `garden_reservation_responsibles` y las restricciones de solicitante y «Para» distinto |
+| V042 | `V042__reservation_attendance.sql` | SPEC-107 §4 | Primera iteración del seguimiento: una columna `attendance` NOT_RECORDED/USED/NO_SHOW. Aplicada el 11 nov 2026 y retirada del repo el mismo día al cambiar el diseño a las dos marcas de V043 (una migración aplicada no se edita) |
+| V043 | `V043__reservation_use_confirmation_and_usage.sql` | SPEC-107 §4 · D-12 | Retira `attendance` y trae el seguimiento de uso: `use_confirmed`, `space_used`, los historiales `garden_reservation_confirmations` y `garden_reservation_usages`, y el parámetro `RESERVATION_CONFIRMATION_MINUTES` |
+| V044 | `V044__usage_mark_shares_confirmation_cutoff.sql` | SPEC-107 §4 · D-12 | Corrección del usuario: la tolerancia del corte aplica también a la marca de uso; se generaliza label y descripción del parámetro (el código no se renombra) |
+| V045 | `V045__group_buildings_by_plan.sql` | SPEC-108 §4 | Edificios del plano: `parent_building_id`, `plan_key` y `base_m` en `campus_buildings`, tabla `campus_building_codes`, 133 principales, 71 agrupados y 127 códigos. Generada por `scripts/mapa/plano_pucp/generar_migracion.py`; no se regenera una vez publicada. Nació como V040 en `feature/spec-108-edificios-del-plano` y pasó a V045 al integrarse con reservas (12 nov 2026) |
 
 ### Pendientes (sin número reservado)
 
-Al 12 nov 2026, en la rama `feature/spec-108-edificios-del-plano`, V040 es de SPEC-108 y el siguiente número libre es **V041**.
-Ojo: dos ramas sin integrar chocan con esta numeración (revisado en `origin`): `feature/spec-107-reservas-jardines`
-tiene V040–V044, y `feature/conjuntos-con-ejemplares` tiene V039–V041, cuya V039 ya choca con la V039 de esta base.
-Quien integre en segundo lugar renumera su archivo sin publicar (REGLAS §5.4), con su fila y sus citas; SPEC-108 §4
-lista qué cambia si se renumera V040.
-Antes de esta rama, SPEC-107 §4 destinaba V040 a pasar las reservas de V039 al modelo de solicitante,
-responsable y rol del contacto. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
+Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V046**, sujeto a
+comprobarlo nuevamente al implementar. El modelo de solicitante, responsable y rol del contacto entró por V040 y V041;
+el seguimiento del uso del jardín por V043 y su corrección del corte por V044 (la V042 fue aplicada y retirada el
+mismo día). Los edificios del plano (SPEC-108) entraron por V045: nacieron como V040 y se renumeraron al integrarse
+con reservas, porque reservas ya tenía cinco migraciones aplicadas en bases de trabajo y el plano una sola.
+Una base que ya aplicó la V040 del plano se recrea (o se restaura desde un respaldo previo a esa migración).
+`Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
 | Trabajo | Propietaria | Depende de / tratamiento |
@@ -222,7 +227,7 @@ Los números en citas históricas de otros specs no autorizan reutilizar version
 | Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
 | Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
 | Metas del resumen de reportes (dos filas en `system_parameters`, sin tablas) | SPEC-202 §4 | Solo datos; se numera al implementar el módulo de reportes |
-| Edificios del plano: grupos, códigos oficiales y base (generada) | SPEC-108 §4 | La genera `scripts/mapa/plano_pucp/generar_migracion.py` y no se regenera una vez publicada. Verificada en web el 12 nov 2026; falta el WebView de Android (SPEC-108 P-14). Ver la fila V040 del mapa de migraciones |
+| Edificios del plano: grupos, códigos oficiales y base (generada) | SPEC-108 §4 | La genera `scripts/mapa/plano_pucp/generar_migracion.py` y no se regenera una vez publicada. Verificada en web el 12 nov 2026; falta el WebView de Android (SPEC-108 P-14). Ver la fila V045 del mapa de migraciones |
 | Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
 
 Las antiguas pendientes `add_execution_tracking_to_interventions`,

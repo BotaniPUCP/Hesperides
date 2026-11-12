@@ -41,4 +41,6 @@ public final class SystemParameterCodes {
     public static final String DUPLICATE_FEATURE_M = "DUPLICATE_FEATURE_M";
     /** SPEC-107 D-05: metros desde el borde de un jardín reservado dentro de los que se avisa. */
     public static final String RESERVATION_NEARBY_METERS = "RESERVATION_NEARBY_METERS";
+    /** SPEC-107 (enmienda 11 nov 2026): minutos antes del fin en que ya no se acepta confirmar el uso. */
+    public static final String RESERVATION_CONFIRMATION_MINUTES = "RESERVATION_CONFIRMATION_MINUTES";
 }

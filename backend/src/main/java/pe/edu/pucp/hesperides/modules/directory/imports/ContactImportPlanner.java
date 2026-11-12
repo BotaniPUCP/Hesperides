@@ -4,8 +4,10 @@ import static pe.edu.pucp.hesperides.modules.directory.imports.OrganizationImpor
 import static pe.edu.pucp.hesperides.modules.directory.imports.OrganizationImportPlanner.splitList;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -32,6 +34,10 @@ class ContactImportPlanner implements DirectoryStandard<ContactRequest> {
     static final String KIND = "contacts";
 
     static final List<String> COLUMNS = List.of("nombre", "organizaciones", "anexo", "celular", "correo");
+    /** SPEC-106 §4.3: un rol por organización, en el mismo orden y separados por «|»; puede faltar la columna. */
+    static final List<String> OPTIONAL_COLUMNS = List.of("roles");
+
+    private static final int MAX_ROLE = 100;
 
     private final DirectoryLookupRepository lookup;
     private final ContactService service;
@@ -45,6 +51,11 @@ class ContactImportPlanner implements DirectoryStandard<ContactRequest> {
     @Override
     public List<String> columns() {
         return COLUMNS;
+    }
+
+    @Override
+    public List<String> optionalColumns() {
+        return OPTIONAL_COLUMNS;
     }
 
     @Override
@@ -79,6 +90,7 @@ class ContactImportPlanner implements DirectoryStandard<ContactRequest> {
             p.fail("nombre", IssueCode.TOO_LONG, null);
         }
         List<String> organizationCodes = organizations(row, p);
+        Map<String, String> roles = roles(row, p, organizationCodes);
         String extension = phone(row, p, "anexo", true);
         String mobile = phone(row, p, "celular", false);
         String email = blankToNull(row.get("correo"));
@@ -88,7 +100,7 @@ class ContactImportPlanner implements DirectoryStandard<ContactRequest> {
         if (p.ok()) {
             checkExisting(p, name, organizationCodes.getFirst(), seen);
         }
-        p.request(new ContactRequest(name, organizationCodes, extension, mobile, email));
+        p.request(new ContactRequest(name, organizationCodes, roles, extension, mobile, email));
         return p;
     }
 
@@ -110,8 +122,37 @@ class ContactImportPlanner implements DirectoryStandard<ContactRequest> {
         return codes.stream().distinct().toList();
     }
 
-    /** Los teléfonos no se repiten en el detalle del error: son datos personales. */
-    private static String phone(CsvRow row, Planned<?> p, String column, boolean isExtension) {
+    /**
+     * Los roles de la fila (D-08b): uno por organización, en el mismo orden,
+     * separados por «|»; un rol puede ir vacío. Más roles que organizaciones es
+     * error; el contacto «Ya existe» se omite igual, así que su rol no cambia.
+     */
+    private Map<String, String> roles(CsvRow row, Planned<ContactRequest> p, List<String> organizationCodes) {
+        String cell = blankToNull(row.get("roles"));
+        if (cell == null) {
+            return Map.of();
+        }
+        List<String> parts = new ArrayList<>(Arrays.stream(cell.split("\\|")).toList());
+        if (parts.size() > organizationCodes.size()) {
+            p.fail("roles", IssueCode.ROLES_TOO_MANY, null);
+            return Map.of();
+        }
+        Map<String, String> roles = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < parts.size(); i++) {
+            String role = parts.get(i).strip();
+            if (role.isEmpty()) {
+                continue;
+            }
+            if (role.length() > MAX_ROLE) {
+                p.fail("roles", IssueCode.TOO_LONG, null);
+                return Map.of();
+            }
+            roles.put(organizationCodes.get(i), role);
+        }
+        return roles;
+    }
+
+    /** Los teléfonos no se repiten en el detalle del error: son datos personales. */    private static String phone(CsvRow row, Planned<?> p, String column, boolean isExtension) {
         String phone = ContactPhones.normalize(row.get(column));
         if (phone == null) {
             return null;

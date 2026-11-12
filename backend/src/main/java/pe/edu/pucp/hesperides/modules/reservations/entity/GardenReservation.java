@@ -29,11 +29,21 @@ public class GardenReservation extends BaseEntity {
     @Column(name = "place_id", nullable = false)
     private Long placeId;
 
-    @Column(name = "organization_id", nullable = false)
-    private Long organizationId;
+    /** La organización que pide el jardín (D-02); fija: solo se corrige anulando y volviendo a registrar. */
+    @Column(name = "requested_by_organization_id", nullable = false)
+    private Long requestedByOrganizationId;
 
-    @Column(name = "contact_id")
-    private Long contactId;
+    /** El contacto de «Pedido de» que hizo el pedido (D-02); fijo como el pedido. */
+    @Column(name = "requester_contact_id", nullable = false)
+    private Long requesterContactId;
+
+    /** La organización que usará el jardín, solo cuando no es la que pide (D-02). */
+    @Column(name = "requested_for_organization_id")
+    private Long requestedForOrganizationId;
+
+    /** El contacto a cargo: puede cambiar, y cada cambio deja una fila en el historial (D-02b). */
+    @Column(name = "responsible_contact_id", nullable = false)
+    private Long responsibleContactId;
 
     @Column(name = "starts_at", nullable = false)
     private Instant startsAt;
@@ -43,6 +53,14 @@ public class GardenReservation extends BaseEntity {
 
     @Column(name = "purpose")
     private String purpose;
+
+    /** El solicitante confirmó que usará el jardín; se anota hasta el corte (enmienda 11 nov 2026). */
+    @Column(name = "use_confirmed", nullable = false)
+    private boolean useConfirmed;
+
+    /** El encargado marcó que el espacio está siendo usado; solo dentro del horario. */
+    @Column(name = "space_used", nullable = false)
+    private boolean spaceUsed;
 
     @Column(name = "cancelled_at")
     private Instant cancelledAt;

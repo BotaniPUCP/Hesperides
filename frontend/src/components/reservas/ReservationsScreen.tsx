@@ -4,15 +4,14 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { Reservation } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
-import { Badge, Button, EmptyState, LoadingSkeleton, Select } from '@/components/ui';
-import { useCanMaintainReservations, useReservationGardens, useReservationOrganizations, useReservations } from '@/hooks/useReservations';
+import { Button, EmptyState, LoadingSkeleton, Select } from '@/components/ui';
+import { useCanMaintainReservations, useCanRecordUsage, useReservationGardens, useReservationOrganizations, useReservations } from '@/hooks/useReservations';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { isoDateFrom, pageFrom } from '@/lib/listUrl';
-import {
-  addDays, dayHeading, formatSchedule, isEditable, reservationDay, stateColor, stateLabel, todayInLima,
-} from '@/lib/reservation-format';
+import { addDays, dayHeading, reservationDay, todayInLima } from '@/lib/reservation-format';
 import { RESERVATIONS_PAGE_SIZE } from '@/lib/reservations-api';
 import { CancelReservationDialog } from './CancelReservationDialog';
+import { ReservationCard } from './ReservationCard';
 
 const LIST_PATH = '/reservas';
 const DEFAULTS = { desde: '', hasta: '', jardin: '', organizacion: '', anuladas: '', page: '0' };
@@ -36,6 +35,7 @@ function groupByDay(items: Reservation[]): [string, Reservation[]][] {
 export function ReservationsScreen() {
   const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
   const canMaintain = useCanMaintainReservations();
+  const canRecordUsage = useCanRecordUsage();
   const today = todayInLima();
   const from = isoDateFrom(values.desde) || today;
   const to = isoDateFrom(values.hasta) || addDays(today, DEFAULT_DAYS);
@@ -122,40 +122,15 @@ export function ReservationsScreen() {
               <h2 className="text-base font-bold text-neutral-900">{dayHeading(day)}</h2>
               <ul className="space-y-2">
                 {reservations.map((reservation) => (
-                  <li key={reservation.code} className="surface-card flex flex-wrap items-start gap-3">
-                    <p className="w-40 shrink-0 font-medium text-neutral-900">
-                      {formatSchedule(reservation.startsAt, reservation.endsAt)}
-                    </p>
-                    <div className="min-w-0 flex-1 basis-56">
-                      <p className="font-semibold text-neutral-900">
-                        <Link href={`/reservas/${reservation.code}`} className="hover:underline">
-                          {reservation.place.name}
-                        </Link>
-                        <span className="font-normal text-neutral-700"> · {reservation.organization.name}</span>
-                      </p>
-                      <p className="text-sm text-neutral-600">
-                        {reservation.contact
-                          ? `${reservation.contact.fullName}${reservation.contact.mobile
-                            ? ` · ${reservation.contact.mobile}` : ''}`
-                          : 'Sin contacto'}
-                        {reservation.purpose && ` · ${reservation.purpose}`}
-                      </p>
-                      {reservation.cancelReason && (
-                        <p className="text-sm text-neutral-600">Motivo de anulación: {reservation.cancelReason}</p>
-                      )}
-                    </div>
-                    <Badge label={stateLabel(reservation.state)} color={stateColor(reservation.state)}
-                      className={reservation.state === 'CANCELLED' ? 'line-through' : undefined} />
-                    {canMaintain && isEditable(reservation.state) && (
-                      <div className="flex gap-1">
-                        <Link href={`/reservas/${reservation.code}?editar=1`}
-                          className="inline-flex h-8 items-center rounded-md px-3 text-sm text-brand-700 hover:bg-neutral-50">
-                          Editar
-                        </Link>
-                        <Button size="sm" variant="ghost" onClick={() => setCancelling(reservation)}>Anular</Button>
-                      </div>
-                    )}
-                  </li>
+                  <ReservationCard key={reservation.code} reservation={reservation}
+                    canMaintain={canMaintain} canRecordUsage={canRecordUsage}
+                    onCancel={setCancelling}
+                    onUsageChanged={(saved) => {
+                      setVersion((v) => v + 1);
+                      setNotice(saved.spaceUsed
+                        ? `Reserva ${saved.code} marcada en uso.`
+                        : `Se quitó la marca de uso de ${saved.code}.`);
+                    }} />
                 ))}
               </ul>
             </section>

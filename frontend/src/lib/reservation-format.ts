@@ -1,4 +1,4 @@
-import type { ReservationState } from '@shared/types';
+import type { ReservationState, ReservationUsage } from '@shared/types';
 
 /**
  * Fechas de una reserva (SPEC-107 §2.4): el backend las manda con el desfase de
@@ -93,4 +93,29 @@ export function stateColor(state: ReservationState): 'info' | 'success' | 'neutr
 /** Una reserva se puede editar o anular mientras no terminó ni se anuló (D-09). */
 export function isEditable(state: ReservationState): boolean {
   return state === 'UPCOMING' || state === 'IN_PROGRESS';
+}
+
+/** El uso del espacio, en español (enmienda del 11 nov 2026). */
+const USAGE_LABELS: Record<ReservationUsage, string> = {
+  NOT_RECORDED: 'Sin uso registrado',
+  IN_USE: 'En uso',
+  NOT_IN_USE: 'No se está usando',
+  USED: 'Usada',
+  NOT_USED: 'No usada',
+};
+
+const USAGE_COLORS: Record<ReservationUsage, 'success' | 'warning' | 'neutral'> = {
+  NOT_RECORDED: 'neutral',
+  IN_USE: 'success',
+  NOT_IN_USE: 'warning',
+  USED: 'success',
+  NOT_USED: 'neutral',
+};
+
+export function usageLabel(usage: ReservationUsage): string {
+  return USAGE_LABELS[usage];
+}
+
+export function usageColor(usage: ReservationUsage): 'success' | 'warning' | 'neutral' {
+  return USAGE_COLORS[usage];
 }

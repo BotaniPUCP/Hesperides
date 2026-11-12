@@ -54,6 +54,7 @@ function ContactView({ contact, reload }: { contact: ContactDetail; reload: () =
         <ul className="space-y-1">
           {contact.organizations.map((o) => (
             <li key={o.code} className="flex items-center gap-2">
+              {o.role && <span className="text-sm text-neutral-600">{o.role}</span>}
               <Link href={`/directorio/${o.code}`} className="text-forest-800 hover:underline">{o.name}</Link>
               {!o.active && <InactiveBadge label="Dada de baja" />}
             </li>

@@ -44,19 +44,20 @@ describe('reservations-api', () => {
   });
 
   it('crea, edita y anula con los cuerpos documentados', () => {
-    const body = {
-      placeId: 4, organizationCode: 'ORG-0031', contactCode: null,
+    const createBody = {
+      placeId: 4, requestedByCode: 'ORG-0012', requesterCode: 'CON-0007',
+      requestedForCode: 'ORG-0031', responsibleCode: 'CON-0007',
       startsAt: '2026-11-13T10:00:00-05:00', endsAt: '2026-11-13T14:00:00-05:00',
       purpose: 'Feria', version: null,
     };
-    reservationsApi.create(body);
-    reservationsApi.update('RES-0042', { ...body, version: 0 });
-    reservationsApi.cancel('RES-0042', 'Suspensión de clases', 0);
+    reservationsApi.create(createBody);
+    reservationsApi.changeResponsible('RES-0042', 'CON-0019', 1);
+    reservationsApi.cancel('RES-0042', 'Suspensión de clases', 1);
 
-    expect(apiClient.post).toHaveBeenCalledWith('/reservations', body);
-    expect(apiClient.put).toHaveBeenCalledWith('/reservations/RES-0042', { ...body, version: 0 });
+    expect(apiClient.post).toHaveBeenCalledWith('/reservations', createBody);
+    expect(apiClient.put).toHaveBeenCalledWith('/reservations/RES-0042', { responsibleCode: 'CON-0019', version: 1 });
     expect(apiClient.post).toHaveBeenCalledWith('/reservations/RES-0042/cancel',
-      { reason: 'Suspensión de clases', version: 0 });
+      { reason: 'Suspensión de clases', version: 1 });
   });
 
   it('resuelve jardines, organizaciones del filtro, plantilla y registro masivo', () => {

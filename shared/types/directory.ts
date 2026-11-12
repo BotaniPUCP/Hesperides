@@ -19,6 +19,8 @@ export interface OrganizationRef {
   code: string;
   name: string;
   active: boolean;
+  /** Rol del contacto en esa organización (D-08b). Solo en los listados del contacto. */
+  role?: string | null;
 }
 
 export interface OrganizationSummary {
@@ -35,6 +37,8 @@ export interface ContactCard {
   extension: string | null;
   mobile: string | null;
   email: string | null;
+  /** Rol del contacto en la organización que se está viendo (D-08b). */
+  role?: string | null;
 }
 
 export interface OrganizationDetail {
@@ -73,6 +77,8 @@ export interface OrganizationInput {
 export interface ContactInput {
   fullName: string;
   organizationCodes: string[];
+  /** Rol por organización, solo para las de `organizationCodes` (D-08b). */
+  roles?: Record<string, string | null>;
   extension: string | null;
   mobile: string | null;
   email: string | null;

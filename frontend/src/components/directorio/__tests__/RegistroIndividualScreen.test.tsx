@@ -53,7 +53,8 @@ describe('RegistroIndividualScreen', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: /Contacto/ }));
     fireEvent.change(screen.getByLabelText(/^Nombre completo/), { target: { value: 'Xiomara Torres' } });
-    fireEvent.change(screen.getByLabelText('Agregar organización'), { target: { value: 'oie' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir organización' }));
+    fireEvent.change(await screen.findByLabelText('Agregar organización'), { target: { value: 'oie' } });
     fireEvent.click(await screen.findByRole('button', { name: 'OIE' }));
     fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
 
