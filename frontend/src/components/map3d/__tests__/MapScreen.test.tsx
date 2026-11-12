@@ -201,6 +201,25 @@ describe('MapScreen', () => {
     expect(screen.getByRole('region', { name: 'AV-0001' })).toBeInTheDocument();
   });
 
+  it('sin WebGL no descarga el modelo del plano', async () => {
+    mockedCreate.mockImplementation(() => {
+      throw new Error('Error creating WebGL context.');
+    });
+    await renderLoaded();
+    await screen.findByRole('status');
+
+    // Las listas no usan el modelo: bajar sus 7,6 MB no serviría de nada.
+    expect(mockedPlan).toHaveBeenCalledWith(expect.anything(), false);
+    expect(mockedPlan).not.toHaveBeenCalledWith(expect.anything(), true);
+  });
+
+  it('con WebGL pide el modelo del plano cuando el visor queda listo', async () => {
+    await renderLoaded();
+
+    expect(mockedPlan.mock.calls.find(([plane]) => plane)?.[1]).toBe(false);
+    await waitFor(() => expect(mockedPlan).toHaveBeenLastCalledWith(expect.anything(), true));
+  });
+
   it('atribuye OpenStreetMap solo mientras se muestran sus edificios', async () => {
     await renderLoaded();
     expect(screen.getByRole('link', { name: /OpenStreetMap/ })).toHaveAttribute('href', 'https://www.openstreetmap.org/copyright');

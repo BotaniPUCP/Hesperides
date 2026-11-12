@@ -21,6 +21,17 @@ function card(kind: string, title: string, rows: [string, string | null | undefi
   return { kind, title, rows: rows.filter((r): r is [string, string] => r[1] != null && r[1] !== ''), note };
 }
 
+/** Hasta esta altura un principal es solo suelo (las rampas de `groundOnly` del manifiesto): «Altura 0 m» no informa nada. */
+const GROUND_ONLY_MAX_HEIGHT_M = 0.1;
+
+const comparable = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+
+/** Los alias, sin los que repiten el nombre (sin distinguir mayúsculas ni tildes): ya está en el título. */
+function otherNames(name: string | null, aliases: readonly string[] | null | undefined): string | undefined {
+  const own = name == null ? null : comparable(name);
+  return aliases?.filter((alias) => comparable(alias) !== own).join(', ');
+}
+
 function zoneCard(data: SceneData, target: Target, kind: string): InfoCard {
   const list = target.layer === 'xerophytic' ? data.xerophytic : target.layer === 'reserve' ? data.reserve : data.greenAreas;
   const p = list[target.index].props;
@@ -41,6 +52,7 @@ function buildingCard(data: SceneData, target: Target): InfoCard {
   const list = target.layer === 'contextBuildings' ? data.contextBuildings : data.campusBuildings;
   const p = list[target.index].props;
   const estimated = p.heightM == null;
+  const groundOnly = p.heightM != null && p.heightM <= GROUND_ONLY_MAX_HEIGHT_M;
   const children = target.layer === 'campusBuildings' ? (data.groupedBuildings ?? []).filter((c) => c.props.parentId === p.id) : [];
   const count = children.length;
   return card(
@@ -49,9 +61,9 @@ function buildingCard(data: SceneData, target: Target): InfoCard {
     [
       ['Categoría', p.category],
       ['Nombre', p.inferredName ? 'Deducido, sin confirmar' : null],
-      ['Altura', `${p.heightM ?? DEFAULT_BUILDING_HEIGHT_M} m${estimated ? ' (estimada)' : ''}`],
+      ['Altura', groundOnly ? null : `${p.heightM ?? DEFAULT_BUILDING_HEIGHT_M} m${estimated ? ' (estimada)' : ''}`],
       ['Pisos', p.levels == null ? null : String(p.levels)],
-      ['También se le dice', p.aliases?.join(', ')],
+      ['También se le dice', otherNames(p.name, p.aliases)],
       ['Códigos oficiales', p.codes?.map((c) => `${c.code} · ${c.label}`).join('; ')],
       [`Agrupa ${count} ${count === 1 ? 'edificio' : 'edificios'} del mapa`, count ? children.map((c) => c.props.name ?? 'Sin nombre').join(', ') : null],
     ],
@@ -119,7 +131,7 @@ export function infoFor(data: SceneData, target: Target): InfoCard {
     }
     case 'references': {
       const p = data.references[target.index].props;
-      return card(p.category, p.name, [['Código', p.code], ['También se le dice', p.aliases?.join(', ')]]);
+      return card(p.category, p.name, [['Código', p.code], ['También se le dice', otherNames(p.name, p.aliases)]]);
     }
     case 'parking':
       return featureCard(data, target, 'Estacionamiento');

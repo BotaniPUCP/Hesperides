@@ -58,13 +58,17 @@ async function loadPlanModel(plane: LocalPlane): Promise<PlanModel> {
  * el backend con sesión (D-06), ubicado en el plano de las capas. Nunca lanza:
  * una sesión vencida, un 404 o un 500, la red o un archivo ilegible terminan en
  * `failed`, y el mapa se dibuja como hoy.
+ *
+ * Con `canDownload` en false no pide nada (ni el manifiesto ni el GLB) y solo
+ * entrega el modelo ya leído en la sesión: la pantalla espera a saber que hay
+ * WebGL, porque sin él se ven las listas y bajar 7,6 MB no serviría de nada.
  */
-export function usePlanModel(plane: LocalPlane | null): UsePlanModelResult {
+export function usePlanModel(plane: LocalPlane | null, canDownload = true): UsePlanModelResult {
   // Se guarda con su plano: un resultado de otro plano no se entrega.
   const [state, setState] = useState<{ plane: LocalPlane | null } & UsePlanModelResult>({ plane: null, ...PENDING });
 
   useEffect(() => {
-    if (!plane) return;
+    if (!plane || !canDownload) return;
     let current = true;
     loadPlanModel(plane)
       .then((model) => current && setState({ plane, model, failed: false }))
@@ -72,7 +76,7 @@ export function usePlanModel(plane: LocalPlane | null): UsePlanModelResult {
     return () => {
       current = false;
     };
-  }, [plane]);
+  }, [plane, canDownload]);
 
   if (!plane) return PENDING;
   if (state.plane === plane) return { model: state.model, failed: state.failed };

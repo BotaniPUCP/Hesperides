@@ -391,6 +391,37 @@ describe('usePlanModel', () => {
     expect(mockedModel).not.toHaveBeenCalled();
   });
 
+  it('mientras no puede descargar no pide nada, y pide el modelo cuando puede', async () => {
+    mockedManifest.mockResolvedValue(manifestWith());
+    mockedModel.mockResolvedValue(glbBlob());
+    const somewhere = new LocalPlane(...newOrigin());
+
+    const { result, rerender } = renderHook(({ canDownload }) => usePlanModel(somewhere, canDownload), {
+      initialProps: { canDownload: false },
+    });
+    await act(async () => undefined);
+    expect(result.current).toEqual({ model: null, failed: false });
+    expect(mockedManifest).not.toHaveBeenCalled();
+    expect(mockedModel).not.toHaveBeenCalled();
+
+    rerender({ canDownload: true });
+    await waitFor(() => expect(result.current.model).not.toBeNull());
+  });
+
+  it('sin poder descargar entrega igual el modelo ya leído en la sesión', async () => {
+    const origin = newOrigin();
+    mockedManifest.mockResolvedValue(manifestWith({ version: 'v1' }));
+    mockedModel.mockResolvedValue(glbBlob());
+    const model = await firstVisit(origin);
+
+    const { result } = renderHook(() => usePlanModel(new LocalPlane(...origin), false));
+
+    // La segunda visita abre ya con el modelo: el primer visor no pasa por los prismas.
+    expect(result.current).toEqual({ model, failed: false });
+    await act(async () => undefined);
+    expect(mockedManifest).not.toHaveBeenCalled();
+  });
+
   it('entrega el modelo cuando el manifiesto y el GLB llegan', async () => {
     mockedManifest.mockResolvedValue(manifestWith());
     mockedModel.mockResolvedValue(glbBlob());

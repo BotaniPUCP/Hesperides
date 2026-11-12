@@ -37,11 +37,12 @@ export function MapScreen() {
     }
   }, [response]);
   const data = scene.data;
-  // Llega después de las capas: mientras tanto, y si falla, los edificios son prismas.
-  const plan = usePlanModel(data?.plane ?? null);
   const catalog = useMapCatalog();
   const { user } = useAuth();
   const s = useMapScreenState(data, user?.email ?? '', useCatalogLinkFor(data, catalog));
+  // Llega después de las capas: mientras tanto, y si falla, los edificios son prismas. Se descarga
+  // solo cuando un visor quedó listo (hay WebGL): sin WebGL se ven las listas y el modelo no sirve.
+  const plan = usePlanModel(data?.plane ?? null, s.viewerEpoch > 0);
   const onMap = useCatalogOnMap(data, catalog, s);
   const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
   const root = useRef<HTMLDivElement>(null);
