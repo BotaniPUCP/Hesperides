@@ -1,0 +1,36 @@
+{
+  "timeZone": "America/Lima",
+  "defaults": {
+    "weekStart": "2026-11-09",
+    "monthly": { "dateFrom": "2026-11-01", "dateTo": "2026-11-30" },
+    "directionMonth": "2026-10"
+  },
+  "sectors": [
+    { "id": 1, "code": "SEC-VERDE-01", "name": "Sector verde 01" },
+    { "id": 2, "code": "SEC-VERDE-02", "name": "Sector verde 02" },
+    { "id": 3, "code": "SEC-VERDE-03", "name": "Sector verde 03" },
+    { "id": 4, "code": "SEC-POLIDEPORT", "name": "Sector Polideportivo" }
+  ],
+  "teams": [
+    { "id": 1, "code": "CUAD-01", "name": "Cuadrilla sector 01", "sectorId": 1 },
+    { "id": 2, "code": "CUAD-02", "name": "Cuadrilla sector 02", "sectorId": 2 },
+    { "id": 3, "code": "CUAD-03", "name": "Cuadrilla sector 03", "sectorId": 3 }
+  ],
+  "classes": [
+    { "id": 12, "code": "PODA", "label": "Poda", "types": [
+      { "id": 30, "code": "PODA_MANTENIMIENTO", "label": "Poda de mantenimiento" },
+      { "id": 31, "code": "PODA_SANITARIA", "label": "Poda sanitaria" }
+    ] },
+    { "id": 13, "code": "MANT_JARDINES", "label": "Mantenimiento de jardines", "types": [
+      { "id": 41, "code": "DESHIERBO", "label": "Deshierbo" },
+      { "id": 42, "code": "CORTE_CESPED", "label": "Corte de césped" },
+      { "id": 43, "code": "ABONADO", "label": "Abonado" }
+    ] },
+    { "id": 14, "code": "RIEGO", "label": "Riego", "types": [
+      { "id": 50, "code": "RIEGO_MANUAL", "label": "Riego manual" }
+    ] },
+    { "id": 15, "code": "FITOSANITARIO", "label": "Fitosanitario", "types": [
+      { "id": 60, "code": "CONTROL_PLAGAS", "label": "Control de plagas" }
+    ] }
+  ]
+}

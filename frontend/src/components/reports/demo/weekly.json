@@ -1,0 +1,93 @@
+{
+  "week": { "weekStart": "2026-10-26", "weekEnd": "2026-11-01", "timeZone": "America/Lima",
+            "inProgress": false, "cutoffDate": "2026-11-01" },
+  "scope": "SECTOR",
+  "sector": { "id": 2, "code": "SEC-VERDE-02", "name": "Sector verde 02", "totalSections": 118, "totalAreaM2": 40600.00 },
+  "teams": [ { "id": 2, "name": "Cuadrilla sector 02", "supervisorName": "Capataz de demostración" } ],
+  "interventions": {
+    "approved": 14, "approvedPreviousWeek": 11, "pendingApproval": 3, "pendingPhotos": 2,
+    "byType": [
+      { "classLabel": "Mantenimiento de jardines", "typeItemId": 41, "typeLabel": "Deshierbo", "approved": 5,
+        "places": ["Jardín Frutas", "Jardín de Letras", "Pontódromo"] },
+      { "classLabel": "Mantenimiento de jardines", "typeItemId": 42, "typeLabel": "Corte de césped", "approved": 4,
+        "places": ["Explanada de Ciencias", "Jardín de la Biblioteca"] },
+      { "classLabel": "Poda", "typeItemId": 30, "typeLabel": "Poda de mantenimiento", "approved": 3,
+        "places": ["Jardín de Física", "Pontódromo"] },
+      { "classLabel": "Mantenimiento de jardines", "typeItemId": 43, "typeLabel": "Abonado", "approved": 1,
+        "places": ["Jardín Frutas"] },
+      { "classLabel": "Fitosanitario", "typeItemId": 60, "typeLabel": "Control de plagas", "approved": 1,
+        "places": ["Jardín de Letras"] }
+    ],
+    "items": {
+      "total": 14,
+      "items": [
+        { "id": 120, "code": "INT-000120", "classLabel": "Poda", "typeLabel": "Poda de mantenimiento",
+          "lastExecutionDate": "2026-10-31", "approvedOn": "2026-10-31",
+          "places": [ { "kind": "ZONE", "id": 77, "label": "Jardín de Física" } ] },
+        { "id": 119, "code": "INT-000119", "classLabel": "Mantenimiento de jardines", "typeLabel": "Deshierbo",
+          "lastExecutionDate": "2026-10-30", "approvedOn": "2026-10-31",
+          "places": [ { "kind": "ZONE", "id": 50, "label": "Jardín Frutas" }, { "kind": "PLACE", "id": 7, "label": "Pontódromo" } ] },
+        { "id": 117, "code": "INT-000117", "classLabel": "Mantenimiento de jardines", "typeLabel": "Corte de césped",
+          "lastExecutionDate": "2026-10-30", "approvedOn": "2026-10-30",
+          "places": [ { "kind": "ZONE", "id": 52, "label": "Explanada de Ciencias" } ] },
+        { "id": 115, "code": "INT-000115", "classLabel": "Fitosanitario", "typeLabel": "Control de plagas",
+          "lastExecutionDate": "2026-10-29", "approvedOn": "2026-10-30",
+          "places": [ { "kind": "ZONE", "id": 51, "label": "Jardín de Letras" } ] },
+        { "id": 112, "code": "INT-000112", "classLabel": "Mantenimiento de jardines", "typeLabel": "Deshierbo",
+          "lastExecutionDate": "2026-10-28", "approvedOn": "2026-10-29",
+          "places": [ { "kind": "ZONE", "id": 51, "label": "Jardín de Letras" } ] },
+        { "id": 110, "code": "INT-000110", "classLabel": "Mantenimiento de jardines", "typeLabel": "Corte de césped",
+          "lastExecutionDate": "2026-10-27", "approvedOn": "2026-10-28",
+          "places": [ { "kind": "ZONE", "id": 79, "label": "Jardín de la Biblioteca" } ] },
+        { "id": 108, "code": "INT-000108", "classLabel": "Poda", "typeLabel": "Poda de mantenimiento",
+          "lastExecutionDate": "2026-10-27", "approvedOn": "2026-10-27",
+          "places": [ { "kind": "PLACE", "id": 7, "label": "Pontódromo" } ] },
+        { "id": 106, "code": "INT-000106", "classLabel": "Mantenimiento de jardines", "typeLabel": "Abonado",
+          "lastExecutionDate": "2026-10-26", "approvedOn": "2026-10-27",
+          "places": [ { "kind": "ZONE", "id": 50, "label": "Jardín Frutas" } ] }
+      ]
+    }
+  },
+  "attendedSections": { "rule": "PROVISIONAL_ONE_APPROVED_PER_SECTION", "covered": 9, "total": 118, "percent": 7.6 },
+  "irrigation": {
+    "rule": "PROVISIONAL_ONE_TURN_PER_SECTION",
+    "turns": 3, "irrigatedSections": 115, "totalSections": 118, "percent": 97.5,
+    "notIrrigated": {
+      "total": 3,
+      "items": [
+        { "sectionId": 81, "code": "AV-0330", "name": "Jardín del Tontódromo", "lastIrrigatedOn": null },
+        { "sectionId": 77, "code": "AV-0302", "name": "Jardín de Física", "lastIrrigatedOn": "2026-10-12" },
+        { "sectionId": 80, "code": "AV-0325", "name": "Jardín de Educación", "lastIrrigatedOn": "2026-10-19" }
+      ]
+    }
+  },
+  "incidents": {
+    "asOf": "2026-11-01", "open": 4, "pendingApproval": 1, "unlocatedInScope": 2,
+    "items": {
+      "total": 5,
+      "items": [
+        { "id": 12, "description": "Rama sobre la vía peatonal frente al Pontódromo, con riesgo de caída sobre los estudiantes.",
+          "locationReference": "Pontódromo", "urgency": { "code": "HIGH", "label": "Alta" },
+          "status": { "code": "IN_PROGRESS", "label": "En atención" }, "teamName": "Cuadrilla sector 02",
+          "reportedOn": "2026-10-29", "daysOpen": 3, "locatedBy": "COORDINATES" },
+        { "id": 15, "description": "Fuga de agua en el aspersor del Jardín de Física.",
+          "locationReference": "Jardín de Física", "urgency": { "code": "HIGH", "label": "Alta" },
+          "status": { "code": "OPEN", "label": "Pendiente de atención" }, "teamName": "Cuadrilla sector 02",
+          "reportedOn": "2026-10-31", "daysOpen": 1, "locatedBy": "COORDINATES" },
+        { "id": 9, "description": "Acumulación de hojarasca junto a la Biblioteca Central.",
+          "locationReference": "Biblioteca Central", "urgency": { "code": "MEDIUM", "label": "Media" },
+          "status": { "code": "OPEN", "label": "Pendiente de atención" }, "teamName": "Cuadrilla sector 02",
+          "reportedOn": "2026-10-22", "daysOpen": 10, "locatedBy": "TEAM" },
+        { "id": 14, "description": "Césped seco en la explanada después del evento del sábado.",
+          "locationReference": "Explanada de Ciencias", "urgency": { "code": "LOW", "label": "Baja" },
+          "status": { "code": "IN_PROGRESS", "label": "En atención" }, "teamName": "Cuadrilla sector 02",
+          "reportedOn": "2026-10-27", "daysOpen": 5, "locatedBy": "COORDINATES" },
+        { "id": 16, "description": "Arbusto dañado por un vehículo de carga.",
+          "locationReference": "Jardín de Letras", "urgency": null,
+          "status": { "code": "PENDING_APPROVAL", "label": "Pendiente de aprobación" }, "teamName": null,
+          "reportedOn": "2026-11-01", "daysOpen": 0, "locatedBy": "COORDINATES" }
+      ]
+    }
+  },
+  "generatedAt": "2026-11-04T15:00:00Z"
+}
