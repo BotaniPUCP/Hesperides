@@ -94,17 +94,26 @@ EOF
   echo "Sesión $s arriba: $rama @ $commit"
 }
 
-abajo() {
+detener_frontend() {
   if [ -f "$pid" ]; then
     if command -v taskkill > /dev/null; then taskkill //PID "$(cat "$pid")" //T //F > /dev/null 2>&1 || true
     else kill "$(cat "$pid")" 2> /dev/null || true; fi
     rm -f "$pid" "$pid.msys"
   fi
+  # En Windows, el servidor de Next sobrevive al árbol de npm: se detiene todo lo que corre
+  # desde este worktree, y nada más.
+  if command -v powershell.exe > /dev/null; then
+    powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \$_.CommandLine -like '*\\.worktrees\\video-$s\\*' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force -ErrorAction SilentlyContinue }" || true
+  fi
+}
+
+abajo() {
+  detener_frontend
   if [ -e "$wt" ]; then
     compose down --volumes --rmi local || true
-    git -C "$raiz" worktree remove --force "$wt"
+    git -C "$raiz" worktree remove --force "$wt" || { rm -rf "$wt" && git -C "$raiz" worktree prune; }
   fi
-  rm -f "$entorno" "$nombres"
+  rm -f "$entorno" "$nombres" "$log"
   echo "Sesión $s abajo"
 }
 

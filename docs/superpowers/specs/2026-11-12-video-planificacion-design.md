@@ -26,7 +26,7 @@ Se mantienen CE-02 a CE-09 del primer video, aplicados a este. Cambian o se agre
 |---|----------|-------------------|
 | CE-01 | El MP4 dura entre 3:30 y 4:30, en 1920×1080 a 30 fps, con video H.264 y audio AAC | `npx remotion ffprobe` sobre `out/hespo-planificacion.mp4` |
 | CE-10 | El primer video se sigue generando igual: sus pruebas pasan y su duración no cambia | `npm run prueba` y `ffprobe` sobre `out/hespo-flujos.mp4` regenerado |
-| CE-11 | Cada captura registra la rama y el commit de la que salió | `public/capturas/planificacion/medidas.json` |
+| CE-11 | Cada captura registra la rama y el commit de la que salió | `public/capturas/planificacion/origen.json` |
 | CE-12 | Las capturas no muestran personas reales: organizaciones, contactos y teléfonos son de demostración | Revisión de cada captura (sección 4.2) |
 
 ## 3. Enfoque
@@ -66,8 +66,8 @@ Donde aparece «Hesperides» (r2), `textoVoz` dice «Hespérides», como en el p
 | Id | Frase | Hespo | En pantalla |
 |----|-------|-------|-------------|
 | f1 | Empecemos por las frecuencias. | Entra caminando | Lista de frecuencias |
-| f2 | Una frecuencia dice cada cuánto se hace una actividad, como el corte de césped: cada 30 a 35 días. | Salta a la fila de Corte de césped y la señala | Se resalta «Cada 30 a 35 días» |
-| f3 | Se puede definir de varias formas: cada cierto número de días, distinto según la estación, unas veces al año o dentro de una temporada. | Señala la columna Frecuencia | Se resaltan filas con «Según la estación», «Mín. 2 veces al año» y «1 vez entre marzo y mayo» |
+| f2 | Una frecuencia dice cada cuánto se hace una actividad, como el deshierbo de los jardines: cada 30 a 35 días. | Salta a la fila de Deshierbo y la señala | Se resalta «Cada 30 a 35 días» |
+| f3 | Se puede definir de varias formas: cada cierto número de días, distinto según la estación, unas veces al año o dentro de una temporada. | Señala la columna Frecuencia | Se resaltan las filas con «Según la estación» (Canteo), «Mín. 2 veces al año» y «1 vez entre mar y may» |
 | f4 | Al abrirla, se elige si rige en todo el campus o solo en algunas áreas, y si la hace personal propio o un servicio tercerizado. | Pulsa la fila | Se abre la frecuencia; se resaltan «Se aplica a» y la modalidad de ejecución |
 | f5 | Si se cambia, rige desde hoy, y los reportes de meses anteriores mantienen la frecuencia de su momento. | Señala el aviso junto a los botones | Aviso «El cambio rige desde hoy…» |
 
@@ -155,7 +155,7 @@ así:
 
 | Sesión | Escenario |
 |--------|-----------|
-| A | Frecuencia «Corte de césped», cada 30 a 35 días, en todo el campus y con personal propio, vigente desde hace dos meses; otras frecuencias de ejemplo para f3 si la base no las trae. Conjunto principal de 6 jardines contiguos, cortados hace 39 días salvo uno, que otro conjunto cortó hace 3 días. Otro conjunto que vence en los próximos 7 días, para el segundo bloque del inicio. |
+| A | Frecuencia «Deshierbo» (actividad del catálogo del cliente; no existe «Corte de césped»), cada 30 a 35 días, en todo el campus y con personal propio, vigente desde hace dos meses; otras tres de ejemplo para f3 (Canteo según la estación, Aplicación estacional y Fertilización), que en la tabla alfabética quedan junto a Deshierbo. Conjunto principal de 6 jardines contiguos, deshierbados hace 39 días salvo uno, que otro conjunto atendió hace 3 días. Otro conjunto que vence en los próximos 7 días, para el segundo bloque del inicio. |
 | B | En otros jardines prestables, una reserva de mañana (Próxima), una en curso y una terminada hoy (la captura debe hacerse de día). La de mañana de 10:00 a 14:00 en el jardín del video se registra durante la captura (r5–r8). Una intervención programada para mañana en una sección a menos de 10 m de ese jardín, para los avisos de r7 y r9. |
 
 Los nombres de los conjuntos y las secciones exactas se eligen en el plan, midiendo distancias
