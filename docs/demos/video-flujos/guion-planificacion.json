@@ -1,0 +1,344 @@
+{
+  "voz": "es-PE-CamilaNeural",
+  "escenas": [
+    {
+      "id": "inicio",
+      "frases": [
+        {
+          "id": "i1",
+          "texto": "¡Hola de nuevo! Soy Hespo.",
+          "hespo": {
+            "x": 420,
+            "pose": "saluda"
+          }
+        },
+        {
+          "id": "i2",
+          "texto": "La vez pasada vimos las plantas y las incidencias del campus.",
+          "hespo": {
+            "x": 960,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "i3",
+          "texto": "Hoy les muestro cómo se planifica su mantenimiento, y cómo no chocar con los jardines prestados.",
+          "hespo": {
+            "x": 960,
+            "pose": "presenta"
+          }
+        },
+        {
+          "id": "i4",
+          "texto": "Son tres partes: las frecuencias, la planificación y las reservas.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "i5",
+          "texto": "¡Vamos!",
+          "hespo": {
+            "x": 2120,
+            "pose": "quieto"
+          }
+        }
+      ]
+    },
+    {
+      "id": "frecuencias",
+      "frases": [
+        {
+          "id": "f1",
+          "texto": "Empecemos por las frecuencias.",
+          "hespo": {
+            "x": 430,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "f2",
+          "texto": "Una frecuencia dice cada cuánto se hace una actividad, como el corte de césped: cada 30 a 35 días.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "f3",
+          "texto": "Se puede definir de varias formas: cada cierto número de días, distinto según la estación, unas veces al año o dentro de una temporada.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "f4",
+          "texto": "Al abrirla, se elige si rige en todo el campus o solo en algunas áreas, y si la hace personal propio o un servicio tercerizado.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "f5",
+          "texto": "Si se cambia, rige desde hoy, y los reportes de meses anteriores mantienen la frecuencia de su momento.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        }
+      ]
+    },
+    {
+      "id": "planificacion",
+      "frases": [
+        {
+          "id": "p1",
+          "texto": "Ahora, la planificación.",
+          "hespo": {
+            "x": 430,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "p2",
+          "texto": "Primero se arman los conjuntos: grupos de jardines que se atienden juntos.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p3",
+          "texto": "Se eligen en el mapa: con un clic se agrega un jardín, y arrastrando con la tecla Control se eligen varios a la vez.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p4",
+          "texto": "Luego, una planificación une el conjunto con su actividad y su frecuencia.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p5",
+          "texto": "Con eso, el sistema junta lo que antes se calculaba a mano: cuándo fue la última vez, cada cuánto toca y cuánto falta.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p6",
+          "texto": "Apenas coordinación entra al sistema, el inicio le muestra los conjuntos atrasados y los que vencen en los próximos siete días.",
+          "hespo": {
+            "x": 960,
+            "pose": "presenta"
+          }
+        },
+        {
+          "id": "p7",
+          "texto": "Desde ahí, pasa a la planificación.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p8",
+          "texto": "Las tarjetas se ordenan por urgencia, primero lo atrasado, y se pueden filtrar por conjunto, actividad o estado.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p9",
+          "texto": "Al elegir una, el mapa ilumina sus jardines.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p10",
+          "texto": "Si una parte del conjunto ya se atendió, por ejemplo desde otro conjunto, la tarjeta lo dice y propone solo lo que falta.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p11",
+          "texto": "Con un botón, el registro de la intervención llega lleno: la actividad, la fecha y los jardines.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "p12",
+          "texto": "Se revisa, se ajusta si hace falta, y quien decide es coordinación.",
+          "hespo": {
+            "x": 960,
+            "pose": "asiente"
+          }
+        },
+        {
+          "id": "p13",
+          "texto": "Al guardar, la tarjeta pasa a programada, y cuando el capataz empieza, muestra cuántos jardines faltan.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reservas",
+      "frases": [
+        {
+          "id": "r1",
+          "texto": "Y ahora, las reservas de jardines.",
+          "hespo": {
+            "x": 430,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "r2",
+          "texto": "La universidad presta algunos jardines para actividades, y Hesperides registra quién usa cada uno, qué día y de qué hora a qué hora.",
+          "textoVoz": "La universidad presta algunos jardines para actividades, y Hespérides registra quién usa cada uno, qué día y de qué hora a qué hora.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "r3",
+          "texto": "La agenda los muestra por día, con el estado de cada reserva: próxima, en curso o terminada.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "r4",
+          "texto": "Se puede filtrar por jardín o por organización, y cada tarjeta lleva a su ficha.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "r5",
+          "texto": "Para registrar una, coordinación elige el jardín, el horario y la organización que lo pide, con la persona que hizo el pedido.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "r6",
+          "texto": "El responsable es a quien se llama si pasa algo en el jardín: al principio es quien lo pidió, y se puede cambiar.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "r7",
+          "texto": "Si ese día hay trabajo programado en el jardín o cerca de él, el sistema avisa antes de guardar.",
+          "hespo": {
+            "x": 960,
+            "pose": "sorpresa"
+          }
+        },
+        {
+          "id": "r8",
+          "texto": "Al guardar, se abre la ficha de la reserva, con el jardín iluminado en el mapa.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "r9",
+          "texto": "Y funciona también al revés: al programar un trabajo, el sistema avisa si ese día hay una reserva en el jardín o a diez metros o menos.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "r10",
+          "texto": "Ningún aviso impide guardar: solo ayudan a decidir.",
+          "hespo": {
+            "x": 960,
+            "pose": "pulgar"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "frases": [
+        {
+          "id": "c1",
+          "texto": "Así se planifica el cuidado del campus.",
+          "hespo": {
+            "x": 960,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "c2",
+          "texto": "La frecuencia dice cada cuánto.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "c3",
+          "texto": "El conjunto, dónde.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "c4",
+          "texto": "La planificación, qué toca.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "c5",
+          "texto": "Y la reserva, cuándo no molestar.",
+          "hespo": {
+            "x": 960,
+            "pose": "senala"
+          }
+        },
+        {
+          "id": "c6",
+          "texto": "¡Gracias por acompañarme! Nos vemos en el campus.",
+          "hespo": {
+            "x": 2120,
+            "pose": "saluda",
+            "espera": 0.6
+          }
+        }
+      ]
+    }
+  ]
+}

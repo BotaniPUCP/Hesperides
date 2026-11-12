@@ -1,4 +1,5 @@
 import datos from '../guion.json';
+import datosPlanificacion from '../guion-planificacion.json';
 
 export const POSES = ['quieto', 'saluda', 'senala', 'presenta', 'pulgar', 'sorpresa', 'asiente', 'salta'] as const;
 export type Pose = (typeof POSES)[number];
@@ -33,3 +34,6 @@ export type Escena = { id: EscenaId; frases: Frase[] };
 export type Guion = { voz: string; escenas: Escena[] };
 
 export const guion = datos as Guion;
+
+/** Segundo video: frecuencias, planificación y reservas de jardines. */
+export const guionPlanificacion = datosPlanificacion as Guion;
