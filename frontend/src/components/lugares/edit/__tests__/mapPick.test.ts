@@ -1,5 +1,5 @@
 import { toSceneData } from '@/components/map3d/sceneData';
-import { layersWithTwoBlocks, sampleLayers, SECOND_BLOCK_ID } from '@/components/map3d/__fixtures__/mapLayers';
+import { layersWithGroups, CHILD_IDS, layersWithTwoBlocks, sampleLayers, SECOND_BLOCK_ID } from '@/components/map3d/__fixtures__/mapLayers';
 import { LocalPlane } from '@/components/map3d/projection';
 import { buildingsOutline, CHILDREN_OUTLINE, headingBetween, outlineFromTarget, pickOnMap } from '../mapPick';
 
@@ -98,5 +98,13 @@ describe('pickOnMap: un lugar puede ser varios bloques', () => {
 
   it('un complejo toma el contorno de sus hijos', () => {
     expect(CHILDREN_OUTLINE.outline).toEqual({ fromChildren: true });
+  });
+});
+
+describe('contorno con un edificio agrupado', () => {
+  it('un lugar con el id de un hijo dibuja el nombre de su propio edificio', () => {
+    const picked = buildingsOutline(toSceneData(layersWithGroups), [CHILD_IDS[0]]);
+    expect(picked.label).toBe('CEMDUC');
+    expect(picked.outline).toEqual({ buildingIds: [CHILD_IDS[0]] });
   });
 });

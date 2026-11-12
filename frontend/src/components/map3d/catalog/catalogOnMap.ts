@@ -1,5 +1,6 @@
 import type { MapCatalog, MapPerspective, MapPlace } from '@shared/types';
 import type { InfoCard } from '../infoCard';
+import type { SceneData } from '../sceneData';
 import { normalize, type SearchEntry } from '../searchIndex';
 
 /**
@@ -36,6 +37,18 @@ export function catalogEntries(catalog: MapCatalog): SearchEntry[] {
 /** El lugar del catálogo al que pertenece ese edificio, si lo hay: un edificio es de un solo lugar. */
 export function placeOfBuilding(catalog: MapCatalog | null, buildingId: number): MapPlace | null {
   return catalog?.places.find((p) => p.buildingIds.includes(buildingId)) ?? null;
+}
+
+/** El lugar de un edificio principal: el ligado a él o, si no, a alguno de sus edificios agrupados. */
+export function placeOfPrincipal(catalog: MapCatalog | null, data: Pick<SceneData, 'groupedBuildings'>, principalId: number): MapPlace | null {
+  const own = placeOfBuilding(catalog, principalId);
+  if (own) return own;
+  for (const child of data.groupedBuildings) {
+    if (child.props.parentId !== principalId) continue;
+    const place = placeOfBuilding(catalog, child.props.id);
+    if (place) return place;
+  }
+  return null;
 }
 
 export function catalogLink(place: MapPlace): NonNullable<InfoCard['link']> {
