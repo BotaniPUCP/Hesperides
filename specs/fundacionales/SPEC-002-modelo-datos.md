@@ -135,7 +135,7 @@ updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 deleted_at  TIMESTAMP
 ```
 
-- `deleted_at IS NULL` significa "vigente". **Nunca se ejecuta `DELETE`.**
+- `deleted_at IS NULL` significa que la fila no se ha eliminado lógicamente. No equivale necesariamente a `is_active = TRUE`: esta última columna controla la disponibilidad operativa. **Nunca se ejecuta `DELETE`.**
 
 **En SQL estas tres columnas se repiten en cada `CREATE TABLE`** — PostgreSQL no tiene herencia de columnas utilizable para esto (`INHERITS` rompe índices y claves foráneas). La repetición es física e inevitable.
 
@@ -196,7 +196,7 @@ public class GreenElement extends BaseEntity {
 | `BaseEntity` | `id`, `createdAt`, `updatedAt`, `deletedAt` | Toda entidad de dominio | Este spec |
 | `Auditable extends BaseEntity` | Además `createdByUserId` y `updatedByUserId` | Solo las siete tablas de la sección 4.2 de SPEC-004 | SPEC-004 |
 | Ninguna | — | `AuditLog`, que es append-only y no tiene `updatedAt` ni `deletedAt` | SPEC-004 |
-- Los índices de unicidad que deben convivir con el soft delete son **parciales**: `WHERE deleted_at IS NULL`. Así un código liberado por borrado lógico puede reutilizarse.
+- Los índices de unicidad que deben convivir con el soft delete son **parciales** (`WHERE deleted_at IS NULL`) salvo que una identidad histórica no deba reutilizarse. En `species`, `scientific_name` es único entre las fichas vigentes y `slug` es único en todo el historial.
 - Toda FK a catálogo se nombra `<concepto>_item_id` y referencia `catalog_items(id)`.
 - Todas las FK son `ON DELETE RESTRICT` implícito (el default de PostgreSQL). Coherente con soft delete: nada se borra en cascada porque nada se borra.
 
@@ -278,6 +278,7 @@ CREATE INDEX idx_zones_boundary ON zones USING GIST(boundary);
 CREATE TABLE species (
     id                  BIGSERIAL PRIMARY KEY,
     scientific_name     VARCHAR(150) NOT NULL,
+    slug                VARCHAR(150) NOT NULL,
     common_name         VARCHAR(150),
     family              VARCHAR(100),
     species_type_item_id BIGINT NOT NULL REFERENCES catalog_items(id),
@@ -288,24 +289,39 @@ CREATE TABLE species (
     is_active           BOOLEAN NOT NULL DEFAULT TRUE,
     created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at          TIMESTAMP
+    deleted_at          TIMESTAMP,
+    CONSTRAINT chk_species_slug CHECK (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$')
 );
 
 CREATE UNIQUE INDEX idx_species_scientific_name_active
     ON species(scientific_name) WHERE deleted_at IS NULL;
+-- Final schema: V036 replaces V012's partial slug index with permanent reservation.
+CREATE UNIQUE INDEX idx_species_slug_historical ON species(slug);
 CREATE INDEX idx_species_common_name ON species(common_name);
 ```
 
 | Campo | Tipo | Nulo | Notas |
 |---|---|---|---|
 | `scientific_name` | VARCHAR(150) | No | Nombre binomial. Único entre vigentes. |
+| `slug` | VARCHAR(150) | No | Identidad de la ruta pública. Único incluyendo fichas con baja lógica; no se reasigna ni cambia al editar el nombre (SPEC-105). |
 | `common_name` | VARCHAR(150) | Sí | Nombre de uso corriente en campo. |
 | `family` | VARCHAR(100) | Sí | Familia botánica. |
 | `species_type_item_id` | BIGINT | No | FK a catálogo `SPECIES_TYPE` (árbol, arbusto, herbácea, césped…). |
 | `origin_item_id` | BIGINT | Sí | FK a catálogo `SPECIES_ORIGIN` (nativa, introducida…). |
 | `attributes` | JSONB | Sí | **Escape hatch deliberado.** El cliente aún no ha dicho qué atributos lleva una especie. Los que se confirmen y se usen para filtrar o reportar se promueven a columnas propias en una migración posterior; los ocasionales se quedan aquí. Ver la nota de pendiente. |
+| `is_active` | BOOLEAN | No | `TRUE` al crear. Determina si la especie puede asignarse a ejemplares nuevos; no indica si quedan ejemplares en el campus. |
+| `deleted_at` | TIMESTAMP | Sí | Marca de baja lógica. Se conserva `NULL` si la especie inactiva todavía tiene ejemplares vigentes que la referencian. |
 
 > ⚠️ **Pendiente del cliente:** el **listado real de especies presentes en el campus y el conjunto de atributos que el cliente necesita registrar por especie** (¿altura esperada?, ¿requerimiento hídrico?, ¿época de floración?, ¿tolerancia a poda?). Mientras no llegue, la tabla queda vacía y `attributes` absorbe lo que aparezca. **No** se siembra ninguna especie de ejemplo: una lista inventada en la base es indistinguible de la lista oficial para quien la consulte después.
+
+**Ciclo de vida de la especie:** una especie nueva nace con `is_active = TRUE` y `deleted_at = NULL`. `is_active = FALSE` la retira de nuevas asignaciones, pero no elimina ni desactiva los ejemplares que la referencian. Si todavía hay ejemplares vigentes, la fila permanece sin `deleted_at` para conservar la ficha botánica necesaria para esas relaciones. Si no hay ejemplares vigentes y la especie se da de baja, se marca también `deleted_at`; la fila no se borra físicamente. La baja es definitiva: no se ofrece una operación de reactivación.
+
+El nombre científico puede reutilizarse después de la baja lógica: la nueva ficha obtiene un `id`
+nuevo y se mantiene el índice único parcial de nombres. No se reactiva ni se reutiliza la ficha anterior,
+cuyas relaciones, fotos e historial siguen asociados a su ID. Los slugs no se reutilizan: el generador
+consulta todas las fichas históricas y la restricción única cubre también las eliminadas. Editar el
+nombre científico de una ficha existente conserva el slug (SPEC-105), por lo que una ruta histórica no
+puede resolverse accidentalmente contra una ficha nueva.
 
 ### 4.5 V013 — Catastro verde georreferenciado (núcleo del Sprint 1)
 
@@ -340,8 +356,7 @@ CREATE TABLE green_elements (
         CHECK (location IS NOT NULL OR area IS NOT NULL)
 );
 
-CREATE UNIQUE INDEX idx_green_elements_code_active
-    ON green_elements(code) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX idx_green_elements_code_historical ON green_elements(code);
 CREATE INDEX idx_green_elements_zone_id ON green_elements(zone_id);
 CREATE INDEX idx_green_elements_species_id ON green_elements(species_id);
 CREATE INDEX idx_green_elements_element_type ON green_elements(element_type_item_id);
@@ -369,7 +384,7 @@ CREATE INDEX idx_green_element_attachments_element
 
 | Campo de `green_elements` | Tipo | Nulo | Notas |
 |---|---|---|---|
-| `code` | VARCHAR(40) | No | Código de inventario. Único entre vigentes. Es el que irá en el QR de la fase futura. |
+| `code` | VARCHAR(40) | No | Código de inventario permanente, único en todo el historial y nunca reutilizado. Es el que irá en el QR de la fase futura. |
 | `zone_id` | BIGINT | No | Zona a la que pertenece. Todo elemento está en una zona. |
 | `element_type_item_id` | BIGINT | No | FK a catálogo `GREEN_ELEMENT_TYPE`: árbol, jardín, césped, campo deportivo. |
 | `species_id` | BIGINT | Sí | Nulable: un césped o un campo deportivo no siempre corresponde a una especie única del catálogo. |
@@ -378,6 +393,10 @@ CREATE INDEX idx_green_element_attachments_element
 | `area` | GEOMETRY(Polygon, 4326) | Sí | Para elementos de superficie (jardín, césped, campo). |
 | `quantity` | INTEGER | Sí | Para elementos agrupados ("este macizo tiene 40 plantas"). |
 | `registered_by_user_id` | BIGINT | No | Trazabilidad: quién dio de alta el elemento. |
+| `is_active` | BOOLEAN | No | `TRUE` al crear. Indica si el ejemplar pertenece al inventario operativo actual. |
+| `deleted_at` | TIMESTAMP | Sí | En la baja definitiva del ejemplar se establece junto con `is_active = FALSE`; la fila y sus relaciones históricas se conservan. |
+
+La baja definitiva de un ejemplar no borra ni modifica sus mediciones, evaluaciones, fotos o intervenciones. Los listados operativos y el mapa lo excluyen; las consultas históricas pueden resolver sus datos identificativos y relaciones por ID o por el código permanente. El `GET /:id` ordinario de una fila con `deleted_at IS NOT NULL` sigue respondiendo 404, conforme a INV-02; los endpoints explícitos de historial siguen accesibles por código.
 
 **Por qué `location` y `area` son dos columnas y no una `GEOMETRY(Geometry, 4326)` genérica:** con dos columnas tipadas, PostGIS valida el tipo geométrico al insertar y el índice GIST de cada una es específico. Una columna genérica aceptaría una `LineString` por error y obligaría a filtrar por `ST_GeometryType` en cada consulta. El `CHECK` garantiza que al menos una está poblada; ambas pobladas es válido y útil (un árbol singular con su copa proyectada).
 
@@ -963,7 +982,12 @@ Se decidió para on-premise y se mantiene tras el paso a AWS. Razones que siguen
 green_elements → intervention_elements → interventions
 ```
 
-Una fila de `intervention_elements` es un hecho inmutable: "esta intervención tocó este elemento". El historial de un elemento es el `SELECT` de sus `interventions` ordenadas por `completed_at`. Las incidencias entran al mismo historial por `incidents.intervention_id`.
+Una fila de `intervention_elements` registra el hecho "esta intervención tocó este elemento" y nunca se reasigna a otro ID. Si una edición permitida de la planificación retira explícitamente una asociación, se conserva la fila con baja lógica y una nueva asociación usa otra fila. El historial de un elemento es el `SELECT` de sus `interventions` ordenadas por `completed_at`. Las incidencias entran al mismo historial por `incidents.intervention_id`.
+
+La FK histórica se resuelve por `green_elements.id`; el código permanente también identifica una sola
+fila en todo el historial. Dar de baja un ejemplar no modifica ni retira sus asociaciones; la consulta
+por ID o código sigue incluyendo intervenciones planificadas y validadas aunque el ejemplar tenga
+`is_active = FALSE` o `deleted_at IS NOT NULL`.
 
 Se descartó una tabla de historial denormalizada (con el tipo y la fecha copiados) porque introduce dos fuentes de verdad: corregir la fecha de una intervención dejaría el historial mintiendo. Si el volumen lo exigiera —no se prevé en el orden de magnitud de un campus— la solución es una vista materializada refrescada al validar la intervención, no una tabla escrita a mano.
 
@@ -986,12 +1010,12 @@ Se descartó una tabla `attachments` única y polimórfica (con `entity_type` + 
 
 #### 5.2.5 Índices parciales para convivir con el soft delete
 
-`UNIQUE (code)` a secas impediría reutilizar el código de un elemento dado de baja lógicamente, que es un requisito operativo real (se retira un árbol, se planta otro en el mismo sitio). Por eso todo índice único de este spec lleva `WHERE deleted_at IS NULL`.
+El código de `green_elements` identifica una ficha histórica y nunca se reutiliza ni se modifica. La baja no libera el código: un ejemplar nuevo recibe otro código de la secuencia. La BD lo impone con un índice único global (`idx_green_elements_code_historical`) y un trigger que impide cambiar el código; V037 aborta si ya existen duplicados históricos. La unicidad parcial sigue siendo apropiada para otras identidades reutilizables, pero no para códigos de ejemplares ni para slugs de especies.
 
 #### 5.2.6 Fuera de alcance confirmado
 
 - **Módulo 7 — Vivero:** el cliente **no ha confirmado el alcance**. No se define ninguna tabla. Cuando se confirme, entra por su propio spec con rango `V2XX`. Se anticipa que reutilizará `species`, `zones` y el patrón de catálogos, y que eso no obliga a modificar nada de lo definido aquí.
-- **Módulo 8 — QR público:** fase futura, prioridad baja. No se define tabla `qr_codes`. `green_elements.code` es único entre vigentes, que es la única precondición que el QR necesita del modelo de datos.
+- **Módulo 8 — QR público:** fase futura, prioridad baja. No se define tabla `qr_codes`. `green_elements.code` identifica de forma única y permanente un ejemplar, incluso después de su baja lógica.
 
 ### 5.3 Reglas que la base de datos hace cumplir vs. las que hace cumplir el servicio
 
@@ -1003,7 +1027,8 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 | Una incidencia tiene elemento o coordenada | **BD** | `CHECK chk_incidents_location` |
 | `end_date >= start_date` en contratos | **BD** | `CHECK chk_contracts_dates` |
 | Cantidad de insumo positiva | **BD** | `CHECK quantity > 0` |
-| Código único entre elementos vigentes | **BD** | índice único parcial |
+| Código permanente, único entre todos los ejemplares y no modificable | **BD** | índice único global y trigger de inmutabilidad (V037) |
+| No eliminar físicamente ni reactivar especies/ejemplares | **BD** | triggers de protección (V037); los servicios usan baja lógica |
 | Validador y fecha de validación van juntos | **BD** | `CHECK chk_interventions_validation` |
 | El flujo de estados de incidencia respeta el orden | **Servicio** | Los estados son filas de catálogo; la BD no conoce las transiciones válidas. `incident_status_history` deja el rastro. |
 | Coordinador o capataz responsable valida una intervención, sin autoaprobación | **Servicio** | La FK apunta a `users`, no a un rol. La autorización es de SPEC-001. |
@@ -1015,7 +1040,9 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 - **Elemento sin geometría:** rechazado por el `CHECK`. No existe elemento sin ubicar.
 - **Zona sin polígono:** permitido. Una zona puede crearse administrativamente antes de digitalizar su contorno; los elementos se le asignan igual por `zone_id`.
 - **Ciclo en la jerarquía de zonas** (`A` padre de `B`, `B` padre de `A`): la BD no lo impide. Lo valida el servicio al guardar, recorriendo los ancestros. Sin esa validación, cualquier consulta recursiva del árbol cuelga.
-- **Especie eliminada lógicamente con elementos vivos que la referencian:** la FK sigue siendo válida (la fila existe). El servicio impide dar de baja una especie con elementos vigentes; si el cliente lo exige, se desactiva con `is_active = FALSE`, que la oculta de los desplegables sin romper las fichas históricas.
+- **Baja de especie con ejemplares vigentes:** el servicio no establece `deleted_at`. Cambia `is_active` a `FALSE`; la especie deja de ofrecerse en asignaciones nuevas, pero continúa resolviéndose en las fichas y relaciones históricas. Sus ejemplares no cambian de estado. SPEC-103 define que la especie sigue visible en el catálogo si conserva ejemplares vigentes.
+- **Baja lógica de especie sin ejemplares vigentes:** se establece `is_active = FALSE` y `deleted_at`; la fila se conserva, pero queda fuera de las consultas normales conforme a INV-02. La baja no se reactiva.
+- **Baja de ejemplar:** se establecen `is_active = FALSE` y `deleted_at` en la misma operación. Las FK y los datos históricos permanecen; las consultas operativas lo excluyen.
 - **Contrato vencido con ejecuciones pendientes:** permitido. `contracts.status_item_id` pasa a `EXPIRED`, las `contract_executions` en `PLANNED` quedan como no ejecutadas y así aparecen en el comparativo de frecuencia pactada vs. real. Es precisamente el dato que el reporte necesita mostrar.
 - **Dos usuarios editan el mismo elemento a la vez:** bloqueo optimista por `@Version` o comparación de `updated_at`. Lo define SPEC-C03; el modelo lo soporta porque `updated_at` es obligatorio en toda tabla.
 - **Coordenadas fuera del campus:** la BD las acepta (4326 admite cualquier punto del planeta). El servicio advierte si el punto cae fuera del polígono del campus — pendiente de que el cliente entregue ese polígono.
@@ -1039,7 +1066,7 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 | CA-08 | Los catálogos confirmados están sembrados, exactos y completos | `SELECT ci.code, ci.label FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='INTERVENTION_TYPE' ORDER BY ci.sort_order;` devuelve exactamente 6 filas: Poda, Control fitosanitario, Corte de césped, Resiembra, Decoración, Remoción de terreno. Lo mismo con `INCIDENT_STATUS` → 4 filas (Reportada, En evaluación, En atención, Resuelta) y `URGENCY_LEVEL` → 4 filas (Baja, Media, Alta, Crítica). |
 | CA-09 | Los cuatro roles del dominio existen y el genérico está desactivado | `SELECT ci.code, ci.is_active FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='ROLE' ORDER BY ci.sort_order;` devuelve ADMIN (`t`), COORDINADOR (`t`), SUPERVISOR (`t`), OPERARIO (`t`) y USER (`f`). |
 | CA-10 | Ningún dato pendiente del cliente fue inventado | `SELECT count(*) FROM zones;`, `SELECT count(*) FROM species;` y `SELECT count(*) FROM system_parameters;` devuelven **0** en una base recién migrada. `SELECT ct.code, count(ci.id) FROM catalog_types ct LEFT JOIN catalog_items ci ON ci.catalog_type_id=ct.id WHERE ct.code IN ('ZONE_TYPE','SPECIES_TYPE','SPECIES_ORIGIN','ELEMENT_CONDITION','SUPPLY_TYPE','MEASUREMENT_UNIT','SERVICE_TYPE','FREQUENCY','INCIDENT_TYPE') GROUP BY 1;` devuelve **0** en cada uno. |
-| CA-11 | Los índices únicos respetan el soft delete | Insertar un elemento con `code='TEST-1'`; marcarlo con `UPDATE green_elements SET deleted_at = NOW() WHERE code='TEST-1'`; insertar otro elemento con el mismo `code='TEST-1'` → **funciona**. Insertar un tercero sin borrar el segundo → **falla** por índice único. |
+| CA-11 | Los códigos de ejemplar se reservan históricamente | Insertar un elemento con `code='TEST-1'`, darlo de baja e intentar insertar otro o cambiar el código de la ficha histórica → **falla**. Una inserción sin código recibe otro valor de la secuencia. |
 | CA-12 | Existen los índices espaciales GIST | `SELECT indexname FROM pg_indexes WHERE schemaname='public' AND indexdef LIKE '%USING gist%' ORDER BY 1;` incluye `idx_zones_boundary`, `idx_green_elements_location`, `idx_green_elements_area` e `idx_incidents_location`. |
 | CA-13 | Ninguna tabla usa un tipo ENUM de PostgreSQL | `SELECT typname FROM pg_type WHERE typtype='e';` devuelve **0 filas**. Todo tipo/estado/prioridad es una fila de `catalog_items`. |
 | CA-14 | El historial de intervenciones de un elemento se obtiene con una sola consulta | `SELECT i.code, i.scheduled_date, ci.label FROM interventions i JOIN intervention_elements ie ON ie.intervention_id=i.id JOIN catalog_items ci ON ci.id=i.intervention_type_item_id WHERE ie.green_element_id = :id AND i.deleted_at IS NULL ORDER BY i.scheduled_date DESC;` se ejecuta sin error sobre la base vacía (devuelve 0 filas) y no requiere ninguna tabla de historial adicional. |
@@ -1073,8 +1100,10 @@ Los CHECK que la BD hace cumplir (§5.3)
 - intervención con validador pero sin fecha de validación → falla
 
 Soft delete e índices parciales
-- dar de baja un elemento y reutilizar su code en uno nuevo → permitido (§5.2.5)
-- el mismo code duplicado entre elementos vigentes → falla
+- dar de baja un elemento y crear otro con el mismo code → falla; el alta normal asigna un code distinto
+- modificar el code histórico o eliminar físicamente una especie/ejemplar → falla
+- restaurar o reactivar una especie/ejemplar dado de baja → falla
+- el mismo code duplicado en cualquier estado → falla
 
 Geometría
 - las columnas son SRID 4326; ST_Area/ST_Distance sobre geography devuelven metros
@@ -1112,8 +1141,8 @@ Lo general está en [`REGLAS.md` §0](../REGLAS.md). Propio del modelo de datos:
   `verified_by_user_id`.
 
 **Puntos de extensión.** El vivero (módulo 7) y el QR (módulo 8) entran por su propio spec sin
-modificar ninguna tabla de aquí; la única precondición del QR es que `green_elements.code` sea
-único entre vigentes. `species.attributes` (JSONB) absorbe los atributos que el cliente aún no
+modificar ninguna tabla de aquí; la única precondición del QR es que `green_elements.code` identifique
+de forma única y permanente un ejemplar. `species.attributes` (JSONB) absorbe los atributos que el cliente aún no
 ha definido: los que se confirmen y se usen para filtrar o reportar se promueven a columna
 propia en una `V1XX`. El JSONB no es el destino final de un atributo consolidado.
 

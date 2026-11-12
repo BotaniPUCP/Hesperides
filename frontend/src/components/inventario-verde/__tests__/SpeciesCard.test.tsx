@@ -26,6 +26,17 @@ describe('SpeciesCard', () => {
     expect(screen.getByText('Palmera')).toBeInTheDocument();
   });
 
+  it('identifica visualmente una especie inactiva del catálogo', () => {
+    render(<SpeciesCard species={{ ...palmeraReal, isActive: false }} />);
+    expect(screen.getByText('Inactiva')).toBeInTheDocument();
+  });
+
+  it('no interpreta como inactiva una respuesta que no trae el estado', () => {
+    render(<SpeciesCard species={{ ...palmeraReal, isActive: undefined as unknown as boolean }} />);
+    expect(screen.getByText('Estado no disponible')).toBeInTheDocument();
+    expect(screen.queryByText('Inactiva')).not.toBeInTheDocument();
+  });
+
   it('muestra el placeholder si la especie no tiene foto', () => {
     const withoutImg: Species = { ...palmeraReal, imageUrl: null };
     render(<SpeciesCard species={withoutImg} />);

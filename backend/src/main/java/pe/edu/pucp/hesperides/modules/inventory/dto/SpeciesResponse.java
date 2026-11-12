@@ -10,7 +10,7 @@ import java.util.List;
  * uno de sus ejemplares) o nulo si no hay ninguna. {@code photos} trae todas las
  * genéricas solo en la ficha; en el listado viene vacío (SPEC-104 §3).
  */
-public record SpeciesResponse(String slug, String scientificName, String commonName, List<String> otherNames,
+public record SpeciesResponse(String slug, boolean isActive, String scientificName, String commonName, List<String> otherNames,
                               String family, String vegetationTypeCode, String vegetationTypeName,
                               String originCode, String originName, String description, String careNotes,
                               long specimenCount, String imageUrl, String imageSource,

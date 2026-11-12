@@ -13,9 +13,11 @@ jest.mock('@/lib/catastro-api', () => ({
 const mockCatastroApi = catastroApi as jest.Mocked<typeof catastroApi>;
 
 const EJEMPLO_SPECIMEN: SpecimenDetail = {
+  id: 1,
   code: 'EV-000001',
   species: {
     slug: 'palmera-real',
+    isActive: true,
     scientificName: 'Roystonea regia',
     commonName: 'Palmera real',
     otherNames: [],

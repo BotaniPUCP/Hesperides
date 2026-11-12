@@ -11,6 +11,7 @@ import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;
 import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
+import pe.edu.pucp.hesperides.shared.text.SpeciesNameKey;
 
 import java.text.Normalizer;
 import java.util.Locale;
@@ -30,35 +31,15 @@ public class SpeciesRegistrationService {
     private final SpeciesCatalogs catalogs;
     private final SpeciesMeasureProfiles profiles;
     private final SpeciesExtraMeasures extraMeasures;
-
-    private static final java.util.regex.Pattern INVALID_BOTANICAL_CHARS =
-            java.util.regex.Pattern.compile("[0-9/\\\\@#$%^&*()_+=\\[\\]{}|<>?!;:~`\"“”«»]");
+    private final SpeciesSlugAllocator slugAllocator;
 
     public static void validateScientificName(String scientificName) {
-        if (scientificName == null || scientificName.isBlank()) {
-            throw new ValidationException("El nombre científico es obligatorio");
-        }
-        String cleaned = scientificName.trim().replaceAll("\\s+", " ");
-        if (cleaned.length() < 2) {
-            throw new ValidationException("El nombre científico debe tener al menos 2 caracteres");
-        }
-        if (cleaned.length() > 150) {
-            throw new ValidationException("El nombre científico no puede exceder 150 caracteres");
-        }
-        if (INVALID_BOTANICAL_CHARS.matcher(cleaned).find()) {
-            throw new ValidationException("El nombre científico no debe contener números, barras (/) ni caracteres especiales no botánicos");
-        }
-        String[] words = cleaned.split(" ");
-        if (words.length < 2) {
-            throw new ValidationException("El nombre científico debe incluir al menos género y epíteto específico (ej. «Jacaranda mimosifolia» o «Ficus sp.»)");
-        }
+        ScientificNameNormalizer.validate(scientificName);
     }
 
-    /** Sin espacios de más y con el género en mayúscula, como se escribe un binomio. */
-    static String normalizeScientificName(String input) {
-        String raw = input != null ? input.trim().replaceAll("\\s+", " ") : "";
-        validateScientificName(raw);
-        return raw.substring(0, 1).toUpperCase(Locale.ROOT) + raw.substring(1);
+    /** NFC, espacios canónicos, capitalización y validación de formato científico. */
+    public static String normalizeScientificName(String input) {
+        return ScientificNameNormalizer.normalize(input);
     }
 
     @Transactional
@@ -66,15 +47,15 @@ public class SpeciesRegistrationService {
         String scientificName = normalizeScientificName(form.scientificName());
 
         // Verificar unicidad de nombre científico activo
-        Boolean exists = jdbc.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM species WHERE lower(scientific_name) = lower(?) AND deleted_at IS NULL)",
-                Boolean.class, scientificName);
-        if (Boolean.TRUE.equals(exists)) {
+        String nameKey = SpeciesNameKey.key(scientificName);
+        boolean exists = jdbc.queryForList(
+                        "SELECT scientific_name FROM species WHERE deleted_at IS NULL", String.class)
+                .stream().anyMatch(existing -> SpeciesNameKey.key(existing).equals(nameKey));
+        if (exists) {
             throw new DuplicateResourceException("La especie «" + scientificName + "» ya está registrada en el catálogo");
         }
 
-        String baseSlug = toSlug(scientificName);
-        String slug = resolveUniqueSlug(baseSlug);
+        String slug = slugAllocator.allocate(toSlug(scientificName));
 
         long vegetationTypeId = catalogs.type(form.vegetationTypeCode());
         Long originId = catalogs.origin(form.originCode());
@@ -157,15 +138,4 @@ public class SpeciesRegistrationService {
         return slug;
     }
 
-    private String resolveUniqueSlug(String baseSlug) {
-        String slug = baseSlug;
-        int count = 1;
-        while (Boolean.TRUE.equals(jdbc.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM species WHERE slug = ? AND deleted_at IS NULL)",
-                Boolean.class, slug))) {
-            count++;
-            slug = baseSlug + "-" + count;
-        }
-        return slug;
-    }
 }

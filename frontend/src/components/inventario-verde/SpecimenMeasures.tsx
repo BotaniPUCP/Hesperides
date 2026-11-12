@@ -167,7 +167,12 @@ export function SpecimenMeasures({
 
         <SpecimenExtraMeasures medidas={specimen.extraMeasures} />
 
-        <div className="mt-3.5 pt-3 border-t border-neutral-100 flex items-center justify-end text-xs">
+        <div className={`mt-3.5 pt-3 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center ${showOperationalRegime ? 'sm:justify-between' : 'sm:justify-end'} gap-2 text-xs`}>
+          {showOperationalRegime && (
+            <p className="text-neutral-600">
+              Atención propuesta: <strong className="font-semibold">{PROPUESTAS[specimen.pruningAssignment]}</strong>
+            </p>
+          )}
           <button
             type="button"
             onClick={() => setHistoryOpen(true)}
@@ -177,11 +182,6 @@ export function SpecimenMeasures({
           </button>
         </div>
 
-        {showOperationalRegime && (
-          <p className="mt-3 text-xs text-neutral-600">
-            Atención propuesta: <strong className="font-semibold">{PROPUESTAS[specimen.pruningAssignment]}</strong>
-          </p>
-        )}
       </div>
 
       <SpecimenMeasurementsModal

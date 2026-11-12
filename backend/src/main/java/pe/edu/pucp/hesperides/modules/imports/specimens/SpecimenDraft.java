@@ -9,7 +9,7 @@ import java.util.List;
  * depende de la base (especie, código, campus, duplicados, foto) se resuelve
  * después, en la vista previa.
  */
-public record SpecimenDraft(int line, String code, String scientificName, double lat, double lon, int quantity,
+public record SpecimenDraft(int line, String code, String scientificName, double lat, double lon, Integer quantity,
                             String sourceReference, String legacyCode, String sourceLocation,
                             Measurement measurement, Assessment assessment, String photo, String notes) {
 

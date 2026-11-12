@@ -27,7 +27,7 @@ public class SpeciesRepository {
             splitNames(rs.getString("other_names")), rs.getString("family"), rs.getString("type_code"),
             rs.getString("type_label"), rs.getString("origin_code"), rs.getString("origin_label"),
             rs.getString("description"), rs.getString("care_notes"), rs.getLong("specimen_count"),
-            rs.getString("photo_url"), rs.getObject("species_photo_id", Long.class),
+            rs.getString("photo_url"), rs.getBoolean("is_active"), rs.getObject("species_photo_id", Long.class),
             rs.getObject("specimen_photo_id", Long.class), rs.getBoolean("is_critical"),
             rs.getBigDecimal("reference_height_m"), rs.getString("height_source_code"),
             rs.getString("height_source_label"), rs.getBigDecimal("reference_crown_radius_m"),
@@ -44,6 +44,18 @@ public class SpeciesRepository {
 
     public long count(SpeciesQuery query) {
         Long total = jdbc.queryForObject(InventoryQueries.SPECIES_COUNT, filter(query), Long.class);
+        return total == null ? 0 : total;
+    }
+
+    /** Active species only: this query feeds selectors for new specimen registrations. */
+    public List<SpeciesRow> assignable(SpeciesQuery query) {
+        return jdbc.query(InventoryQueries.SPECIES_ASSIGNABLE_PAGE, filter(query)
+                .addValue("limit", query.size())
+                .addValue("offset", (long) query.page() * query.size()), ROW);
+    }
+
+    public long countAssignable(SpeciesQuery query) {
+        Long total = jdbc.queryForObject(InventoryQueries.SPECIES_ASSIGNABLE_COUNT, filter(query), Long.class);
         return total == null ? 0 : total;
     }
 

@@ -10,6 +10,7 @@ import { SpecimenAssessmentModal } from './SpecimenAssessmentModal';
 
 export interface SpecimenAssessmentsProps {
   code: string;
+  refreshKey?: number;
 }
 
 const HALLAZGOS: [keyof Assessment, string][] = [
@@ -35,12 +36,13 @@ const fecha = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString('es-PE', { dateStyle: 'medium' });
 
 /** El historial de evaluaciones (SPEC-103 D-06): la primera es la vigente. */
-export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
+export function SpecimenAssessments({ code, refreshKey = 0 }: SpecimenAssessmentsProps) {
   const { user } = useAuth();
   const canAssess = puedeRegistrar(user?.role.code);
   const [historial, setHistorial] = useState<Assessment[] | null>(null);
-  const [fallo, setFallo] = useState(false);
+  const [falloPara, setFalloPara] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const requestKey = `${code}:${refreshKey}`;
 
   useEffect(() => {
     let vigente = true;
@@ -53,16 +55,16 @@ export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
       })
       .catch(() => {
         if (vigente) {
-          setFallo(true);
+          setFalloPara(requestKey);
         }
       });
     return () => {
       vigente = false;
     };
-  }, [code]);
+  }, [code, refreshKey, requestKey]);
 
   // La ficha vale sin el historial: si no carga, simplemente no se muestra.
-  if (fallo || historial === null) return null;
+  if (falloPara === requestKey || historial === null) return null;
 
   return (
     <div className="surface-card">

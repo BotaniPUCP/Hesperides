@@ -28,6 +28,12 @@ public enum AuditActionCode {
     SPECIES_CRITICALITY_CHANGED,
     /** SPEC-105: quién cambió el promedio de una especie, de qué a qué. */
     SPECIES_REFERENCE_CHANGED,
+    /** Baja manual definitiva de una especie, conforme a SPEC-103. */
+    SPECIES_SOFT_DELETED,
+    /** Baja automática de una especie inactiva al quedar sin ejemplares vigentes. */
+    SPECIES_AUTO_SOFT_DELETED,
+    /** Baja definitiva de un ejemplar, conforme a SPEC-103. */
+    GREEN_ELEMENT_SOFT_DELETED,
     /** Catálogo de lugares: quién creó, cambió o dio de baja un lugar, una perspectiva o una foto. */
     PLACE_CREATED,
     PLACE_UPDATED,

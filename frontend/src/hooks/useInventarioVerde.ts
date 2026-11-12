@@ -28,8 +28,9 @@ export function useInventarioVerdeSpecies(params: UseInventarioVerdeSpeciesParam
   };
 }
 
-export function useInventarioVerdeSpeciesBySlug(slug: string | null | undefined) {
-  const { data, loading, errorMessage, notFound } = useRequest(slug || null, () =>
+export function useInventarioVerdeSpeciesBySlug(slug: string | null | undefined, reloadKey?: number) {
+  const queryKey = slug ? (reloadKey === undefined ? slug : `${slug}:${reloadKey}`) : null;
+  const { data, loading, errorMessage, notFound } = useRequest(queryKey, () =>
     inventarioVerdeApi.speciesBySlug(slug as string),
   );
   return { species: data as Species | null, loading, errorMessage, notFound };
@@ -71,8 +72,14 @@ export function useInventarioVerdeSpecimens(
   };
 }
 
-export function useInventarioVerdeSpecimenByCode(code: string | null | undefined, reloadKey?: number) {
-  const queryKey = code ? (reloadKey !== undefined ? `${code}:${reloadKey}` : code) : null;
+export function useInventarioVerdeSpecimenByCode(
+  code: string | null | undefined,
+  reloadKey?: number,
+  focusRevision?: number,
+) {
+  const queryKey = code
+    ? `${code}:${reloadKey ?? 0}:${focusRevision ?? 0}`
+    : null;
   const { data, loading, errorMessage, notFound } = useRequest(
     queryKey,
     () => inventarioVerdeApi.specimen(code as string),

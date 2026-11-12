@@ -8,23 +8,27 @@ import { Button, LoadingSkeleton, StatusBadge } from '@/components/ui';
 import { interventionsApi, interventionError, type InterventionOptions, type InterventionPage } from '@/lib/interventions-api';
 
 export interface SpecimenInterventionsProps {
+  id: number;
   code: string;
+  refreshKey?: number;
 }
 
 /** The public specimen remains accessible without requesting private work history. */
-export function SpecimenInterventions({ code }: SpecimenInterventionsProps) {
+export function SpecimenInterventions({ id, code, refreshKey = 0 }: SpecimenInterventionsProps) {
   const { user, isLoading } = useAuth();
   if (isLoading || !user || !['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'].includes(user.role.code)) return null;
   // A session, role or specimen change must never display the previous reader's page.
   return (
     <AuthorizedHistory
-      key={`${user.id}:${user.role.code}:${code}`}
+      key={`${user.id}:${user.role.code}:${id}`}
+      id={id}
       code={code}
+      refreshKey={refreshKey}
     />
   );
 }
 
-function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
+function AuthorizedHistory({ id, code, refreshKey = 0 }: SpecimenInterventionsProps) {
   const statuses = useCatalog('INTERVENTION_STATUS');
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [page, setPage] = useState(0);
@@ -51,7 +55,7 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
   useEffect(() => {
     let active = true;
     interventionsApi
-      .list(page, '', '', '', code)
+      .list(page, '', '', '', undefined, id)
       .then((data) => {
         if (active) {
           setResult(data);
@@ -67,7 +71,7 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
     return () => {
       active = false;
     };
-  }, [code, page, revision]);
+  }, [id, page, revision, refreshKey]);
 
   const navigate = (value: number) => {
     setLoading(true);
@@ -106,6 +110,7 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
 
 
   const totalCount = result?.page.totalElements ?? 0;
+  const historyHref = `/intervenciones?${new URLSearchParams({ greenElementId: String(id), greenElementCode: code })}`;
 
   return (
     <div className="surface-card">
@@ -134,6 +139,9 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-center shrink-0">
+          <Link href={historyHref} className="text-xs font-semibold text-brand-700 hover:underline">
+            Ver listado completo
+          </Link>
           {!loading && !error && totalCount > 0 && (
             <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-700 whitespace-nowrap">
               {totalCount} {totalCount === 1 ? 'registro' : 'registros'}

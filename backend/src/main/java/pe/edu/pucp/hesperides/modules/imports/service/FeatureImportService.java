@@ -73,6 +73,7 @@ public class FeatureImportService implements ImportHandler {
 
     private ImportResultResponse write(long batchId, FeaturePreview preview, List<PlannedFeature> rows,
                                        Map<Integer, StoredPhoto> stored, List<ImportPreviewResponse.Issue> warnings, long userId) {
+        photos.deleteAfterRollback(stored);
         List<String> created = new ArrayList<>();
         int updated = 0;
         for (PlannedFeature row : rows) {

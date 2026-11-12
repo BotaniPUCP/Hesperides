@@ -28,7 +28,10 @@ public final class SpecimenCsvSchema {
     /** El orden del archivo exportado: el estándar y, al final, las informativas. */
     public static final List<String> EXPORT_COLUMNS = exportColumns();
 
-    public record Parsed(List<SpecimenDraft> drafts, List<Issue> issues, boolean decimalComma) {
+    public record Parsed(int totalRows, List<SpecimenDraft> drafts, List<Issue> issues, boolean decimalComma) {
+        public Parsed(List<SpecimenDraft> drafts, List<Issue> issues, boolean decimalComma) {
+            this(drafts.size(), drafts, issues, decimalComma);
+        }
     }
 
     private SpecimenCsvSchema() {
@@ -54,7 +57,7 @@ public final class SpecimenCsvSchema {
     public static Parsed parse(CsvTable table) {
         List<Issue> issues = new ArrayList<>(headerIssues(table.header()));
         if (!issues.isEmpty()) {
-            return new Parsed(List.of(), issues, false);
+            return new Parsed(table.rows().size(), List.of(), issues, false);
         }
         List<SpecimenDraft> drafts = new ArrayList<>();
         boolean comma = false;
@@ -66,12 +69,17 @@ public final class SpecimenCsvSchema {
                 drafts.add(draft);
             }
         }
-        return new Parsed(drafts, issues, comma);
+        return new Parsed(table.rows().size(), drafts, issues, comma);
     }
 
     private static List<Issue> headerIssues(List<String> header) {
         List<Issue> issues = new ArrayList<>();
+        Set<String> seen = new java.util.HashSet<>();
         for (String column : header) {
+            if (!seen.add(column)) {
+                issues.add(new Issue(1, column, "Repeated column in the header"));
+                continue;
+            }
             if (!COLUMNS.contains(column) && !INFORMATIVE.contains(column)) {
                 issues.add(new Issue(1, column, "Unknown column. Check the spelling against the standard"));
             }

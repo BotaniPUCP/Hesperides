@@ -129,7 +129,7 @@ sequenceDiagram
     DB-->>C: healthy
     C->>BE: start
     BE->>BE: validar variables obligatorias (fail fast)
-    BE->>DB: Flyway migrate (V001…V017)
+    BE->>DB: Flyway migrate (V001…V037)
     BE->>BE: Hibernate ddl-auto=validate
     C->>FE: start
 ```

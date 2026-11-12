@@ -38,6 +38,12 @@ public class SpeciesPhotoSets {
      */
     public boolean replace(long speciesId, String slug, List<Planned> set, Map<Integer, StoredPhoto> stored,
                            Function<Planned, String> sourceUrl, long userId, List<Issue> warnings) {
+        if (!repository.lockActiveSpecies(speciesId)) {
+            set.stream().map(r -> stored.get(r.line())).filter(Objects::nonNull).forEach(this::discard);
+            warnings.add(new Issue(set.get(0).line(), "foto", "Species «" + slug
+                    + "» is inactive; its existing photos were kept"));
+            return false;
+        }
         long missing = set.stream().filter(r -> !stored.containsKey(r.line())).count();
         if (missing > 0) {
             set.stream().map(r -> stored.get(r.line())).filter(Objects::nonNull).forEach(this::discard);

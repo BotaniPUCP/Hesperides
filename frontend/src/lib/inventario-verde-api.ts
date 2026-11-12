@@ -70,6 +70,14 @@ export const inventarioVerdeApi = {
       )
       .then((r) => mapPage(r, withSpeciesMedia)),
 
+  /** Especies elegibles para altas nuevas; nunca incluye especies inactivas. */
+  assignableSpecies: (p: SpeciesParams) =>
+    apiClient
+      .get<Page<Species>>(
+        `/green-inventory/species/assignable?${query({ search: p.search?.trim(), vegetationType: unlessAll(p.vegetationType), page: p.page, size: p.size })}`,
+      )
+      .then((r) => mapPage(r, withSpeciesMedia)),
+
   speciesBySlug: (slug: string) =>
     apiClient.get<Species>(`/green-inventory/species/${segment(slug)}`).then(withSpeciesMedia),
 
@@ -128,4 +136,10 @@ export const inventarioVerdeApi = {
 
   updateSpecies: (slug: string, form: SpeciesForm) =>
     apiClient.put<Species>(`/green-inventory/species/${segment(slug)}`, form).then(withSpeciesMedia),
+
+  deactivateSpecies: (slug: string, reason: string) =>
+    apiClient.patch<void>(`/green-inventory/species/${segment(slug)}/deactivate`, { reason }),
+
+  deactivateSpecimen: (code: string, reason: string) =>
+    apiClient.patch<void>(`/green-inventory/specimens/${segment(code)}/deactivate`, { reason }),
 };

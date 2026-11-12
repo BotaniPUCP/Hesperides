@@ -127,10 +127,11 @@ auditoría conserva cada cambio. *Descartado:* control de versión, que aquí ag
 | Endpoint | Autorización | Qué resuelve |
 |---|---|---|
 | `POST /api/v1/green-inventory/species` | ADMIN, COORDINADOR, SUPERVISOR | Registra, con los campos nuevos |
-| `PUT /api/v1/green-inventory/species/{slug}` | ADMIN, COORDINADOR, SUPERVISOR | **Nuevo.** Edita. Solo ADMIN y COORDINADOR cambian `critical` |
-| `GET /api/v1/green-inventory/species/{slug}` | Como hoy | Agrega el perfil de medidas |
+| `PUT /api/v1/green-inventory/species/{slug}` | ADMIN, COORDINADOR, SUPERVISOR | **Nuevo.** Edita solo especies activas. Las inactivas no admiten edición (SPEC-103 D-11). Solo ADMIN y COORDINADOR cambian `critical` |
+| `GET /api/v1/green-inventory/species/{slug}` | Como hoy | Agrega el perfil de medidas y conserva `isActive`; las especies inactivas que siguen visibles por tener ejemplares vigentes se consultan conforme a SPEC-103 D-11 |
 | `GET /api/v1/green-inventory/specimens` | Como hoy | Agrega `critical` y `measured` |
 | `GET /api/v1/green-inventory/specimens/{code}` | Como hoy | Agrega el estado y la referencia |
+| `GET /api/v1/green-inventory/specimens/{code}/measurements` | Público (como el inventario) | Historial disponible por el código permanente incluso después de la baja lógica |
 | `POST /api/v1/green-inventory/extra-measures` | ADMIN, COORDINADOR | **Nuevo.** Crea una medida adicional |
 | `GET /api/v1/green-inventory/extra-measures` | Autenticado | **Nuevo.** Las medidas activas, para elegir |
 | Completar ubicación de intervención (SPEC-200) | Como hoy | Agrega `measurementOutcomes` |
@@ -152,7 +153,7 @@ auditoría conserva cada cambio. *Descartado:* control de versión, que aquí ag
 }
 ```
 
-**Perfil en `SpeciesResponse`:** los mismos campos, y en `extraMeasures` además `label` y `unitCode`.
+**Perfil en `SpeciesResponse`:** los mismos campos, `isActive` (solo lectura) y, en `extraMeasures`, además `label` y `unitCode`. `SpeciesForm` no acepta `isActive`: la baja se ejecuta únicamente por la operación definida en SPEC-103. Una ficha inactiva se consulta, pero no se puede editar por API, formulario, CSV o carga de fotos; la baja no se revierte al editar. Cambiar el nombre científico de una ficha activa conserva el slug; tras la baja lógica del registro, el nombre puede crear una ficha nueva con ID y slug históricos no reutilizados (SPEC-002 y SPEC-103).
 
 **Filtros del listado:** `critical=true|false` y `measured=true|false`. Ausentes, no filtran. `measured=true`
 equivale a `data_source = 'MEASURED'`; `measured=false`, a cualquier otro valor.
@@ -161,6 +162,7 @@ equivale a `data_source = 'MEASURED'`; `measured=false`, a cualquier otro valor.
 
 ```json
 {
+  "id": 123,
   "speciesCritical": false,
   "measurementStatus": "REFERENCE",
   "referenceHeightM": 3.0,
@@ -172,6 +174,12 @@ equivale a `data_source = 'MEASURED'`; `measured=false`, a cualquier otro valor.
   ]
 }
 ```
+
+`id` identifica de forma inmutable el ejemplar; `code` es su código operativo permanente y no se
+reutiliza tras una baja. Se consulta el historial por ID para mantener la identidad referencial,
+incluida la última poda que determina si la medición actual es anterior a una intervención.
+Las consultas de historial por código resuelven también ejemplares dados de baja; las operaciones de
+escritura siguen requiriendo que el ejemplar esté vigente.
 
 `measurementStatus` es `MEASURED`, `REFERENCE` o `NOT_MEASURED`. Las referencias solo llegan con
 `REFERENCE`; en los otros dos casos son `null`, de modo que una pantalla no pueda mostrarlas por error.

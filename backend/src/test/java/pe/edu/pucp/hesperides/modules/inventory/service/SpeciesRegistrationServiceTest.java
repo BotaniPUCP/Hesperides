@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,6 +40,8 @@ class SpeciesRegistrationServiceTest {
     private InventoryPhotoService photoService;
     @Mock
     private AuditService auditService;
+    @Mock
+    private SpeciesSlugAllocator slugAllocator;
 
     private SpeciesRegistrationService service;
 
@@ -46,7 +49,7 @@ class SpeciesRegistrationServiceTest {
     void setUp() {
         SpeciesCatalogs catalogs = new SpeciesCatalogs(jdbc);
         service = new SpeciesRegistrationService(jdbc, inventoryService, photoService, auditService,
-                catalogs, new SpeciesMeasureProfiles(catalogs), new SpeciesExtraMeasures(jdbc));
+                catalogs, new SpeciesMeasureProfiles(catalogs), new SpeciesExtraMeasures(jdbc), slugAllocator);
     }
 
     @Test
@@ -76,8 +79,7 @@ class SpeciesRegistrationServiceTest {
     @Test
     void registerThrowsWhenScientificNameAlreadyExists() {
         SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "TREE", null, null, null, null, null, null, null, null, null, null, null, null);
-        when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Ginkgo biloba")))
-                .thenReturn(true);
+        when(jdbc.queryForList(anyString(), eq(String.class))).thenReturn(List.of("  GINKGO   BILOBA "));
 
         assertThatThrownBy(() -> service.register(form, null, "admin@pucp.edu.pe", true))
                 .isInstanceOf(DuplicateResourceException.class)
@@ -87,10 +89,8 @@ class SpeciesRegistrationServiceTest {
     @Test
     void registerThrowsWhenVegetationTypeIsInvalid() {
         SpeciesForm form = new SpeciesForm("Ginkgo biloba", "Comun", "Familia", "INVALID_TYPE", null, null, null, null, null, null, null, null, null, null, null, null);
-        when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Ginkgo biloba")))
-                .thenReturn(false);
-        when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("ginkgo-biloba")))
-                .thenReturn(false);
+        when(jdbc.queryForList(anyString(), eq(String.class))).thenReturn(List.of());
+        when(slugAllocator.allocate("ginkgo-biloba")).thenReturn("ginkgo-biloba");
         when(jdbc.query(anyString(), any(RowMapper.class), eq("INVALID_TYPE")))
                 .thenReturn(List.of());
 
@@ -102,12 +102,10 @@ class SpeciesRegistrationServiceTest {
     @Test
     void registerSuccessfullyCreatesSpecies() {
         SpeciesForm form = new SpeciesForm("Mangus urus", "Mango", "Mangurus", "TREE", "INTRODUCED",
-                List.of("Mango", "Naranja"), "Descripcion", "Cuidados", null, null, null, null, null, null, null, null);
+                List.of("Mango", "Naranja", "O’Árbol × especial"), "Descripcion", "Cuidados", null, null, null, null, null, null, null, null);
 
-        when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("Mangus urus")))
-                .thenReturn(false);
-        when(jdbc.queryForObject(anyString(), eq(Boolean.class), eq("mangus-urus")))
-                .thenReturn(false);
+        when(jdbc.queryForList(anyString(), eq(String.class))).thenReturn(List.of());
+        when(slugAllocator.allocate("mangus-urus")).thenReturn("mangus-urus");
         when(jdbc.query(anyString(), any(RowMapper.class), eq("TREE")))
                 .thenReturn(List.of(10L));
         when(jdbc.query(anyString(), any(RowMapper.class), eq("INTRODUCED")))
@@ -116,7 +114,7 @@ class SpeciesRegistrationServiceTest {
                 any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(42L);
 
-        SpeciesResponse mockResponse = new SpeciesResponse("mangus-urus", "Mangus urus", "Mango",
+        SpeciesResponse mockResponse = new SpeciesResponse("mangus-urus", true, "Mangus urus", "Mango",
                 List.of("Mango", "Naranja"), "Mangurus", "TREE", "Árbol",
                 "INTRODUCED", "Introducida", "Descripcion", "Cuidados", 0, null, null, List.of(),
                 true, null, null, null, null, null, null, true, true, 0, List.of());
@@ -126,6 +124,7 @@ class SpeciesRegistrationServiceTest {
 
         assertThat(created).isNotNull();
         assertThat(created.slug()).isEqualTo("mangus-urus");
+        verify(jdbc).update(contains("INSERT INTO species_common_names"), eq(42L), eq("O’Árbol × especial"));
         verify(auditService).record(eq(AuditActionCode.SPECIES_CREATED), eq("Species"), eq(42L), any());
     }
 }

@@ -19,7 +19,8 @@ public class CsvTemplates {
             "specimens", "ejemplares.csv",
             "waste-bins", "tachos.csv",
             "drinking-fountains", "bebederos.csv",
-            "species-photos", "fotos-especies.csv");
+            "species-photos", "fotos-especies.csv",
+            "species", "especies.csv");
 
     public record Template(String fileName, byte[] content) {
     }

@@ -2,14 +2,17 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { usePageTrail } from '@/components/layouts/PageTrailContext';
-import { Card, EmptyState, LoadingSkeleton } from '@/components/ui';
-import { puedeRegistrar } from '@/components/catastro/permisos';
+import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { puedeDarDeBaja, puedeRegistrar } from '@/components/catastro/permisos';
 import { useAuth } from '@/hooks/useAuth';
 import { useInventarioVerdeSpeciesBySlug } from '@/hooks/useInventarioVerde';
 import { useRememberedHref } from '@/hooks/useRememberedHref';
+import { useFocusRevision } from '@/hooks/useFocusRevision';
 import { useRequest } from '@/hooks/useRequest';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { DefinitiveDeactivationModal } from './DefinitiveDeactivationModal';
 import type { LocationCount } from '@shared/types';
 import { SpeciesInfo } from './SpeciesInfo';
 
@@ -22,10 +25,13 @@ const LIST_PATH = '/inventario-verde';
 export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const [reloadKey, setReloadKey] = useState(0);
+  const [deactivationOpen, setDeactivationOpen] = useState(false);
   const listHref = useRememberedHref(LIST_PATH);
-  const { species, loading: speciesLoading, errorMessage } = useInventarioVerdeSpeciesBySlug(slug);
+  const focusRevision = useFocusRevision();
+  const { species, loading: speciesLoading, errorMessage } = useInventarioVerdeSpeciesBySlug(slug, focusRevision + reloadKey);
 
-  const locations = useRequest(slug || null, () => inventarioVerdeApi.locations(slug));
+  const locations = useRequest(slug ? `${slug}:${focusRevision}` : null, () => inventarioVerdeApi.locations(slug));
   const availableLocations = (locations.data ?? []) as LocationCount[];
   usePageTrail(species ? { labels: { [slug]: species.commonName } } : {});
 
@@ -59,13 +65,22 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
       <SpeciesInfo
         species={species}
         availableLocations={availableLocations}
-        actions={puedeRegistrar(user?.role.code) && (
-          <Link
-            href={`${LIST_PATH}/especies/${species.slug}/editar`}
-            className="surface-pill text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
-          >
-            Editar especie
-          </Link>
+        actions={(
+          <>
+            {puedeRegistrar(user?.role.code) && species.isActive === true && (
+              <Link
+                href={`${LIST_PATH}/especies/${species.slug}/editar`}
+                className="surface-pill text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
+              >
+                Editar especie
+              </Link>
+            )}
+            {puedeDarDeBaja(user?.role.code) && species.isActive === true && (
+              <Button variant="danger" size="sm" onClick={() => setDeactivationOpen(true)}>
+                Dar de baja
+              </Button>
+            )}
+          </>
         )}
       />
 
@@ -111,6 +126,19 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
           </div>
         </div>
       </Card>
+
+      {deactivationOpen && (
+        <DefinitiveDeactivationModal
+          entityLabel={species.commonName || species.scientificName}
+          onCancel={() => setDeactivationOpen(false)}
+          onConfirm={async (reason) => {
+            await inventarioVerdeApi.deactivateSpecies(species.slug, reason);
+            setDeactivationOpen(false);
+            if (species.specimenCount === 0) router.push(listHref);
+            else setReloadKey((key) => key + 1);
+          }}
+        />
+      )}
     </div>
   );
 }

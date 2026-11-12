@@ -1,15 +1,14 @@
 # Estándar de ejemplares (`ejemplares.csv`)
 
 Una fila es una planta, o una agrupación si `cantidad` es mayor que 1. Es el mismo formato que
-exporta el sistema. Plantilla: [plantillas/ejemplares.csv](plantillas/ejemplares.csv), con una
-fila de ejemplo que hay que borrar antes de cargar. Las reglas comunes están en el
+exporta el sistema. Plantilla: [plantillas/ejemplares.csv](plantillas/ejemplares.csv), con dos filas de ejemplo (una completa con medidas y evaluación, y otra solo con obligatorios) que hay que borrar antes de cargar. Las reglas comunes están en el
 [README](README.md).
 
 ## Identificación y ubicación
 
 | Columna | Obligatoria | Qué va |
 |---|---|---|
-| `codigo` | No | Vacía: planta nueva, el sistema le asigna `EV-000123`. Con un código: corrige ese ejemplar, que debe existir |
+| `codigo` | No | Vacía: planta nueva, el sistema le asigna un código nuevo. Con un código vigente: corrige ese ejemplar. Un código dado de baja es histórico y no se puede reusar para crear ni corregir |
 | `nombre_cientifico` | **Sí** | Como figura en el catálogo de especies, o uno de sus nombres alternativos. Una especie que no está se omite |
 | `latitud` | **Sí** | Grados decimales, negativa en Lima (`-12.069520`) |
 | `longitud` | **Sí** | Grados decimales, negativa en Lima (`-77.080110`) |
@@ -74,3 +73,8 @@ se ignoran: la especie se decide solo por `nombre_cientifico`.
 
 `origen_medidas` dice `Medido`, `Sin medir` o `Promedio de la especie`. En este último caso las
 celdas de medidas salen vacías: el promedio vive en la especie y no es una medida del ejemplar.
+
+Una fila nueva solo puede vincularse a una especie activa; los selectores de formulario e importación
+no ofrecen especies inactivas, y el servidor rechaza también una asociación explícita inválida. Una
+corrección de un ejemplar existente puede conservar el vínculo con su especie inactiva si no cambia
+esa relación.

@@ -63,6 +63,8 @@ export const NAVIGATION: readonly NavGroup[] = [
     items: [
       { label: 'Especies', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       { label: 'Registrar especie', href: '/inventario-verde/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Importar especies', href: '/inventario-verde/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Estándar de especies', href: '/inventario-verde/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
     ],
   },
   {

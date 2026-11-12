@@ -25,6 +25,10 @@ export interface InputProps {
   list?: string;
   onFocus?: () => void;
   onBlur?: () => void;
+  role?: HTMLAttributes<HTMLInputElement>['role'];
+  'aria-controls'?: string;
+  'aria-expanded'?: boolean;
+  'aria-autocomplete'?: 'none' | 'inline' | 'list' | 'both';
 }
 
 export function Input({
@@ -49,6 +53,10 @@ export function Input({
   list,
   onFocus,
   onBlur,
+  role,
+  'aria-controls': ariaControls,
+  'aria-expanded': ariaExpanded,
+  'aria-autocomplete': ariaAutocomplete,
 }: InputProps) {
   const hasError = Boolean(errorMessage);
   const describedBy = hasError ? `${id}-error` : helperText ? `${id}-helper` : undefined;
@@ -74,6 +82,7 @@ export function Input({
         )}
         <input
           id={id}
+          role={role}
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
@@ -90,6 +99,9 @@ export function Input({
           aria-required={required || undefined}
           aria-invalid={hasError || undefined}
           aria-describedby={describedBy}
+          aria-controls={ariaControls}
+          aria-expanded={ariaExpanded}
+          aria-autocomplete={ariaAutocomplete}
           className={cn(
             'w-full rounded-md border bg-neutral-0 px-3 text-base text-neutral-900',
             size === 'lg' ? 'h-12' : 'h-10',

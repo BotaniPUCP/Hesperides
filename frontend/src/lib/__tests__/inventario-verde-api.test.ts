@@ -79,3 +79,11 @@ describe('inventarioVerdeApi: filtro por tipo de ejemplar', () => {
     expect(mockedGet.mock.calls[0][0]).not.toContain('vegetationType');
   });
 });
+
+describe('inventarioVerdeApi: especies asignables', () => {
+  it('consulta la ruta que excluye las especies inactivas', async () => {
+    mockedGet.mockResolvedValue(page([palmeraReal]));
+    await inventarioVerdeApi.assignableSpecies({ search: 'palmera', page: 0, size: 8 });
+    expect(mockedGet.mock.calls[0][0]).toContain('/green-inventory/species/assignable?');
+  });
+});

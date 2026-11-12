@@ -157,7 +157,11 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
       setConfirmOpen(false);
       if (err instanceof ApiError) {
         if (err.status === 409) {
-          setError('Ya existe una especie con este nombre científico en el catálogo.');
+          setError(null);
+          setFieldErrors((current) => ({
+            ...current,
+            scientificName: 'Ya existe una especie con este nombre científico en el catálogo.',
+          }));
         } else {
           setError(err.message || 'Error al guardar la especie.');
         }
@@ -221,7 +225,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
               placeholder="Ej. Delonix regia, Jacaranda mimosifolia"
               required
               errorMessage={fieldErrors.scientificName}
-              helperText="Género y epíteto específico con nomenclatura binomial"
+              helperText="El formato se normaliza automáticamente; no se verifica la taxonomía"
             />
           </div>
 
@@ -289,7 +293,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
         errores={erroresDeMedidas}
       />
 
-      <Card title="Nombres vernáculos o alternativos">
+      <Card title="Nombres alternativos o vernáculos">
         <Input
           id="other-names"
           label="Otros nombres comunes (separados por coma)"

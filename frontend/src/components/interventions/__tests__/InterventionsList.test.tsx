@@ -92,6 +92,17 @@ it('filtrar no pierde el ejemplar por el que se llegó', async () => {
   await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, '', '', '2026-10-31', 'EV-000001'));
 });
 
+it('filtrar conserva la identidad inmutable cuando el código puede reutilizarse', async () => {
+  window.history.replaceState(null, '', `${LIST}?greenElementId=42&greenElementCode=EV-000001`);
+  render(<InterventionsList greenElementCode="EV-000001" greenElementId="42" />);
+  await screen.findByText('INT-000010');
+
+  fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'COMPLETED' } });
+
+  await waitFor(() => expect(window.location.search).toBe('?greenElementCode=EV-000001&greenElementId=42&status=COMPLETED'));
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, 'COMPLETED', '', '', undefined, '42'));
+});
+
 it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de cero', async () => {
   window.history.replaceState(null, '', `${LIST}?from=2026-10-01&page=2`);
   render(<InterventionsList />);

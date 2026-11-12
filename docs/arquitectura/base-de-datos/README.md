@@ -196,13 +196,13 @@ En estricta observancia de `REGLAS.md` (§5.4, INV-3, INV-4) y `SPEC-002` (§4.1
    ```
 4. **Política de Borrado Lógico (*Soft Delete*):**
    * Queda terminantemente prohibida la ejecución de sentencias SQL `DELETE` sobre tablas transaccionales de dominio.
-   * `deleted_at IS NULL` denota vigencia activa. Una fila con fecha asignada se considera archivada.
+   * `deleted_at IS NULL` denota que la fila no tiene baja lógica; no equivale a `is_active = TRUE`. Esta última columna controla su disponibilidad operativa. Una fila con `deleted_at` asignado se considera archivada.
    * En la capa JPA, toda entidad extiende la clase abstracta `@MappedSuperclass` `BaseEntity` y declara la anotación de exclusión global:
      ```java
      @SQLRestriction("deleted_at IS NULL")
      ```
 5. **Índices de Unicidad Parciales:**
-   * Toda restricción de unicidad de negocio convive con el borrado lógico mediante cláusulas `WHERE deleted_at IS NULL`. Esto permite la reactivación o reutilización de códigos operacionales liberados (ej. `idx_green_elements_code_active`).
+   * Las identidades operativas reutilizables usan índices parciales `WHERE deleted_at IS NULL`. Los códigos de ejemplares y `species.slug` son identidades históricas: unicidad global, sin reutilización (V036–V037; SPEC-002 §§4.4–4.5).
 6. **Desacoplamiento de Catálogos:**
    * Cualquier clave foránea que refiera a tipologías, clasificaciones o estados se nombra con el sufijo `_item_id` y apunta formalmente a `catalog_items(id)`.
 7. **Integridad Referencial con Eliminación Restringida:**
@@ -689,7 +689,7 @@ El rendimiento del motor PostgreSQL 16 con PostGIS se garantiza mediante cuatro 
 
 | Tipo de Índice | Estructura / Algoritmo | Propósito Arquitectural | Ejemplos de Implementación en Esquema |
 | :--- | :--- | :--- | :--- |
-| **Único Parcial** | B-Tree con predicado `WHERE deleted_at IS NULL` | Garantiza unicidad operativa en códigos y nombres vigentes, permitiendo la reactivación tras borrado lógico. | `idx_green_elements_code_active`, `idx_zones_code_active`, `idx_users_email_active` |
+| **Único** | B-Tree parcial (`WHERE deleted_at IS NULL`) o global, según identidad | Los códigos de ejemplares y slugs de especies reservan sus valores históricos; otros códigos operativos pueden liberarse según su ciclo de vida. | Parciales: `idx_zones_code_active`, `idx_users_email_active`; globales: `idx_green_elements_code_historical`, `idx_species_slug_historical` |
 | **Geoespacial** | **GIST (Generalized Search Tree)** | Acelera drásticamente operaciones de proximidad (`ST_DWithin`), contención (`ST_Contains`) e intersección (`ST_Intersects`) a complejidad $O(\log N)$. | `idx_zones_boundary`, `idx_green_elements_location`, `idx_incidents_location` |
 | **Claves Foráneas** | B-Tree convencional | Evita escaneos secuenciales (*Seq Scans*) en operaciones frecuentes de `JOIN` relacional y verificaciones de integridad referencial. | `idx_interventions_zone_id`, `idx_green_elements_species_id`, `idx_incidents_green_element` |
 | **Compuesto de Estado** | B-Tree multicolumna | Optimiza los filtros predeterminados de las pantallas de gestión operativa en frontend. | `idx_interventions_status_date (status_item_id, scheduled_date)` |

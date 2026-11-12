@@ -81,7 +81,7 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `CATALOG_ITEM_UPDATED` | ADMIN | `{ "label": { "before": "Plaga", "after": "Plaga o vector" } }` | **`audit_log`** |
 | `CATALOG_ITEM_DEACTIVATED` | ADMIN | `{ "typeCode": "...", "code": "...", "isActive": { "before": true, "after": false } }` | **`audit_log`** |
 | `CATALOG_ITEM_ACTIVATED` | ADMIN | ídem, invertido | **`audit_log`** |
-| `GREEN_ELEMENT_SOFT_DELETED` | ADMIN | `{ "code": "ARB-0123", "reason": "..." }` | **`audit_log`** |
+| `GREEN_ELEMENT_SOFT_DELETED` | ADMIN, COORDINADOR | `{ "code": "EV-000123", "isActive": { "before": true, "after": false }, "deletedAt": { "before": null, "after": "..." }, "reason": "..." }` | **`audit_log`** |
 | `GREEN_ELEMENT_EDITED` | ADMIN, COORDINADOR | Solo campos cambiados (ver §3.3): `{ "conditionItemId": { "before": 4, "after": 2 } }` | **`audit_log`** (además de `updated_by_user_id`, sección 4.3, que dice *quién* sin el detalle del cambio) |
 | `ZONE_EDITED` | ADMIN, COORDINADOR | Campos cambiados | **`audit_log`** |
 | `CONTRACT_CREATED` | ADMIN | `{ "contractNumber": "...", "providerId": ..., "amount": ... }` | **`audit_log`** |
@@ -90,6 +90,8 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `SYSTEM_PARAMETER_CHANGED` | ADMIN | `{ "code": "...", "value": { "before": "...", "after": "..." } }` | **`audit_log`** |
 | `SPECIES_PHOTOS_REPLACED` | ADMIN, COORDINADOR (carga CSV) · ADMIN (bandeja) | `{ "photos": 3 }` — cuántas fotos quedaron en el conjunto de la especie (SPEC-104 D-02) | **`audit_log`** |
 | `SPECIES_PHOTO_ADDED` | ADMIN, COORDINADOR | `{ "photoId": 41 }` — la foto agregada al final por formulario (SPEC-104 D-03) | **`audit_log`** |
+| `SPECIES_SOFT_DELETED` | ADMIN, COORDINADOR | Baja manual: `{ "slug": "jacaranda-mimosifolia", "isActive": { "before": true, "after": false }, "deletedAt": { "before": null, "after": "<fecha o null>" }, "reason": "...", "activeSpecimenCount": 12 }` | **`audit_log`** |
+| `SPECIES_AUTO_SOFT_DELETED` | ADMIN, COORDINADOR | Baja lógica automática de una especie previamente inactiva: `{ "slug": "jacaranda-mimosifolia", "isActive": { "before": false, "after": false }, "deletedAt": { "before": null, "after": "..." }, "specimenId": 123, "specimenCode": "EV-000123", "reason": "NO_ACTIVE_SPECIMENS_REMAIN" }` | **`audit_log`** |
 | `SPECIES_UPDATED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "slug": "coffea-arabica", "scientificName": "Coffea arabica" }` — quién corrigió la especie (SPEC-105) |
 | `SPECIES_CRITICALITY_CHANGED` | ADMIN, COORDINADOR | `{ "from": true, "to": false }` — decisión de seguridad: cambia quién atiende sus ejemplares (SPEC-105) |
 | `SPECIES_REFERENCE_CHANGED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "heightFrom": 3.0, "heightTo": 2.5, "crownRadiusFrom": 1.0, "crownRadiusTo": 1.0 }` — el promedio anterior y el nuevo (SPEC-105) |
@@ -154,20 +156,21 @@ La línea que separa ambos destinos: **`audit_log` es para reconstruir una decis
 > `V001` y en `V002`–`V003`, y lo pendiente se reserva desde `V004`. La numeración es cronológica y
 > su fuente única es el **mapa de migraciones** de [`REGISTRO.md`](../REGISTRO.md#mapa-de-migraciones).
 
-Este spec es fundacional (trazabilidad transversal, no una HU de feature) y usa:
+Este spec es fundacional (trazabilidad transversal, no una HU de feature). La reserva histórica de
+`V021` quedó ocupada por `V021__add_place_map_view.sql` en el mapa actual. `V036` materializa la tabla
+`audit_log` y persiste los eventos explícitos de `AuditService`; las columnas de autoría descritas en
+§4.2 y el API de lectura de §8 siguen siendo pendientes independientes.
 
-```
-V021__create_audit_log.sql
-```
+La tabla materializada no significa que toda la matriz de §3.2 ya emita eventos: a 12 nov 2026,
+`AuditActionCode` todavía no incluye `CATALOG_ITEM_*`, `GREEN_ELEMENT_EDITED`, `ZONE_EDITED`,
+`CONTRACT_*`, `LOGIN_FAILED_LOCKOUT` ni `REFRESH_TOKEN_REUSE_DETECTED`; sus emisores también están
+pendientes. Los siete eventos de ciclo de vida/ficha de especie añadidos por SPEC-103/105 sí están
+enumerados en `AuditActionCode` y sus bajas se persisten en la transacción de dominio.
 
-**Va después de `V020`, no antes:** §4.2 añade `created_by_user_id`/`updated_by_user_id` a tablas
-que crean `V005`, `V012`, `V013` y `V017`–`V019` (SPEC-002). Si corriera antes, el `ALTER TABLE` fallaría sobre tablas
-inexistentes. Mientras tanto, `LoggingAuditService` registra las acciones en el log de la aplicación.
-
-### 4.1 V021 — Tabla `audit_log`
+### 4.1 V036 — Tabla `audit_log`
 
 ```sql
--- V021__create_audit_log.sql
+-- Materializada en el repositorio por V036__species_lifecycle_and_audit_log.sql
 -- Bitácora de acciones administrativas sensibles. Append-only por diseño
 -- (ver sección 6): no lleva updated_at ni deleted_at, a diferencia de toda
 -- otra tabla del proyecto (excepción deliberada a REGLAS.md §5.4).
@@ -196,7 +199,7 @@ CREATE INDEX idx_audit_log_created_at ON audit_log(created_at DESC);
 | Campo | Tipo | Nulo | Notas |
 |---|---|---|---|
 | `action` | VARCHAR(60) | No | Valor de `AuditActionCode` (sección 3.1), p. ej. `USER_DEACTIVATED`. No es FK a catálogo — es una constante de código. |
-| `entity_type` | VARCHAR(60) | No | Nombre lógico de la entidad afectada: `User`, `CatalogItem`, `GreenElement`, `Contract`, `SystemParameter`. Se fija como el `simpleName()` de la entidad JPA, no el nombre de tabla, para que sea estable si la tabla física cambia de nombre. |
+| `entity_type` | VARCHAR(60) | No | Nombre lógico de la entidad afectada: `User`, `CatalogItem`, `Species`, `GreenElement`, `Contract`, `SystemParameter`. Se fija como el `simpleName()` de la entidad JPA, no el nombre de tabla, para que sea estable si la tabla física cambia de nombre. |
 | `entity_id` | BIGINT | Sí | PK de la fila afectada en su tabla de dominio. Nulable porque `LOGIN_FAILED_LOCKOUT` no tiene una fila de dominio asociada (el sujeto es un email, no una entidad persistida con id propio en ese momento). |
 | `user_id` | BIGINT | Sí | Quién ejecutó la acción. **Nulable deliberadamente**: `LOGIN_FAILED_LOCKOUT` ocurre antes de que exista una sesión autenticada — no hay un `user_id` que asignarle sin inventarlo. `ON DELETE` no se declara (RESTRICT implícito, igual que el resto del esquema): un usuario nunca se borra físicamente (soft delete en `users`), así que la FK nunca queda huérfana. |
 | `ip_address` | VARCHAR(45) | Sí | Dirección IP de origen del request (IPv4 o IPv6; 45 caracteres cubre IPv6 completa). Nulable para acciones sin origen HTTP (si en el futuro un job programado ejecutara una acción auditable, sección 4.4). |
@@ -205,7 +208,10 @@ CREATE INDEX idx_audit_log_created_at ON audit_log(created_at DESC);
 
 **Por qué no hay `entity_id` tipado por tabla con FK real:** a diferencia de `green_element_attachments` o `intervention_evidences` (SPEC-002 §5.2.4), donde el dominio fuerza una FK real porque la integridad referencial es crítica para el reporte de cumplimiento, `audit_log` registra acciones sobre **más de diez tipos de entidad distintos** (`User`, `CatalogItem`, `GreenElement`, `Zone`, `Contract`, `SystemParameter`…). Una FK real exigiría una columna nulable por cada tipo de entidad posible (`user_id_ref`, `green_element_id_ref`, `contract_id_ref`, …) que crece con cada módulo nuevo, o una tabla de auditoría por módulo, que fragmenta la vista unificada que el cliente pidió explícitamente ("trazabilidad completa"). Se acepta la falta de integridad referencial declarativa en `entity_id` porque `audit_log` es un registro histórico de solo lectura, no una tabla operativa: una fila que sobrevive a la fila que describe (por ejemplo, si algún día se permitiera un borrado físico de emergencia en otra tabla) sigue siendo información válida — "esto pasó en tal fecha" no deja de ser cierto porque la entidad ya no exista. Es la misma familia de decisión que la tabla polimórfica que SPEC-002 §5.2.4 rechazó para evidencia fotográfica, pero aquí el cálculo es el opuesto: allí una foto huérfana es el error que el sistema existe para evitar; aquí una fila de auditoría que sobrevive a su entidad es exactamente el objetivo (el registro no debe depender de que el dato auditado siga vivo).
 
-### 4.2 V021 (continuación) — columnas `created_by_user_id` / `updated_by_user_id`
+### 4.2 Columnas `created_by_user_id` / `updated_by_user_id` (pendiente)
+
+Estas columnas y el listener de JPA de §5 siguen definidos aquí, pero no forman parte de V036 ni de la
+implementación de bajas de SPEC-103. No deben interpretarse como una migración ya ejecutada.
 
 **Criterio para decidir qué tabla las recibe:** se añaden solo donde **(a)** la tabla es editable después de su creación por más de un tipo de usuario a lo largo del tiempo, **y (b)** no tiene ya una columna de autoría específica que cubra la misma pregunta con más precisión. Se excluyen explícitamente las tablas append-only (nunca se "edita" una fila, solo se inserta la siguiente) y las que ya tienen su propia columna de autoría por acción de negocio.
 
@@ -227,7 +233,7 @@ CREATE INDEX idx_audit_log_created_at ON audit_log(created_at DESC);
 | `users`, `refresh_tokens` | **No** | `users` se audita por acción específica (`USER_CREATED`, `USER_DEACTIVATED`, `USER_ROLE_CHANGED`) en `audit_log`, más preciso que un `updated_by_user_id` genérico que no diría *qué* cambió. `refresh_tokens` es append-only por rotación (SPEC-001 §4.2). |
 
 ```sql
--- Continuación de V021__create_audit_log.sql
+-- Contrato de columnas de autoría previsto por este spec; no se añade en V036.
 
 ALTER TABLE zones
     ADD COLUMN created_by_user_id BIGINT REFERENCES users(id),
@@ -262,6 +268,10 @@ No se declara `ON DELETE` explícito (RESTRICT implícito de PostgreSQL, consist
 ---
 
 ## 5. El mecanismo automático (Spring Data JPA Auditing)
+
+**Estado en el código:** V036 implementa la escritura transaccional de `AuditService.record(...)` en
+`audit_log`. La superclase `Auditable`, `AuditorAware` y las columnas genéricas de §4.2 todavía no
+están implementadas; esta sección conserva su diseño para una entrega posterior.
 
 ### 5.1 Piezas
 
@@ -339,7 +349,7 @@ public class AuditingJpaConfig {
 
 El prompt del cliente exige trazabilidad, no una excepción a mitad de una migración de datos o de un job programado. `SpringSecurityAuditorAware.getCurrentAuditor()` **nunca lanza** ni devuelve `Optional.empty()` (que forzaría `created_by_user_id NULL` en una inserción nueva, perdiendo la distinción entre "sin usuario porque el sistema lo hizo" y "sin usuario porque la fila es anterior a esta migración"). En su lugar, resuelve a un **usuario de sistema reservado**:
 
-- Se siembra en la misma migración `V021` una fila en `users` con `id` conocido (o, más robusto: un valor constante `0` que **no** es una fila real de `users`, ver alternativa abajo) representando "Sistema / proceso automático". Esta spec elige la segunda opción — **`SYSTEM_AUDITOR_ID = 0` sin fila real en `users`** — para no ensuciar la tabla de usuarios reales (que además tiene índice único de `email` y necesitaría un email de relleno) ni exponer una cuenta de sistema en el listado de usuarios de administración (Anexo A de SPEC-001, módulo 1.1).
+- Alternativa de diseño no adoptada: sembrar en la migración de autoría una fila en `users` con ID conocido (o usar el valor constante `0`) para representar «Sistema / proceso automático». La regla final de abajo mantiene `NULL`, sin fila de relleno ni FK inválida.
 - Esto exige que `created_by_user_id`/`updated_by_user_id`, y `audit_log.user_id`, **no** tengan la FK como `NOT NULL` combinada con una restricción que impida `0` — de hecho ya son nulables (sección 4.2), así que la implementación real preferida es: `AuditorAware` devuelve `Optional.empty()` cuando no hay usuario, y la columna queda `NULL`, **excepto** que el propio código de arranque (migraciones de datos, jobs) que sabe que corre sin contexto de seguridad puede, si necesita dejar constancia explícita de que "el sistema" hizo el cambio (no una ausencia de dato), envolver la operación en un `Authentication` de sistema sintético antes de guardar. Se documenta así porque un valor mágico `0` referenciando una fila inexistente rompería la FK `REFERENCES users(id)`; la alternativa más simple y consistente con el resto del esquema (columnas de autoría nulables en toda tabla de SPEC-002 cuando el actor puede no existir, ver `incident_status_history.from_status_item_id`) es:
 
 **Regla final:** `AuditorAware<Long>.getCurrentAuditor()` devuelve `Optional.empty()` cuando no hay `Authentication` válida en el `SecurityContextHolder` (migración, job programado, arranque de la aplicación). Spring Data JPA Auditing, al recibir `Optional.empty()`, simplemente **no puebla** `@CreatedBy`/`@LastModifiedBy` — dejando la columna `NULL`, tal como ya está prevista (`created_by_user_id BIGINT` nulable, sin `NOT NULL`, sección 4.2). No hay excepción, no hay abort de la migración, no hay valor inventado: **`NULL` en `created_by_user_id` significa "el sistema, no una persona"**, exactamente el mismo lenguaje que ya usa el esquema para "sin autor humano" (p. ej. `zones.boundary NULL` = "aún no digitalizado", SPEC-002 §4.3). Un `audit_log.user_id NULL` se interpreta igual (sección 4.1, ya documentado ahí para `LOGIN_FAILED_LOCKOUT`).
@@ -402,8 +412,9 @@ Por la misma razón, la lista de campos auditables por entidad (qué campos SÍ 
 
 ## 8. Contratos de API
 
-**Aún no implementados** (solo existe `LoggingAuditService`): este spec es la fuente de verdad.
-Sobre e errores según INV-1 y SPEC-C02.
+La persistencia de `AuditService.record(...)` en `audit_log` está implementada por V036 y participa
+en la transacción de dominio. Las rutas de lectura siguientes todavía no están implementadas; este
+spec sigue siendo su fuente de verdad. Sobre y errores según INV-1 y SPEC-C02.
 
 | Endpoint | Autorización | Qué hace |
 |---|---|---|
@@ -457,6 +468,17 @@ El riesgo real no es el volumen agregado proyectado arriba, sino que la sección
 3. `AuditService` arma la fila de `audit_log` con `user_id` = el ADMIN autenticado (resuelto igual que cualquier otro punto de la aplicación, vía `SecurityContextHolder`), `ip_address` del request actual, y guarda.
 4. Meses después, otro administrador (o el mismo) entra a `/admin/audit-log`, filtra por `entityType=User&entityId=45`, y ve la fila con quién, cuándo y el cambio exacto.
 
+Las bajas de especies y ejemplares siguen el mismo principio: una fila append-only identifica al actor
+(`user_id`), el momento (`created_at`), la entidad y el motivo (`changes.reason`). La baja de un
+ejemplar establece `is_active = FALSE` y `deleted_at` en una sola transacción. La baja manual de una
+especie registra `SPECIES_SOFT_DELETED`; si conserva ejemplares vigentes, `deleted_at` permanece `NULL`,
+y si no conserva ninguno, se establece. Cuando la baja del último ejemplar vigente de una especie
+previamente inactiva causa su baja lógica, `SPECIES_AUTO_SOFT_DELETED` y
+`GREEN_ELEMENT_SOFT_DELETED` se insertan en `audit_log` en la misma transacción, con el mismo `user_id`
+y el ejemplar causante. La fila de especie se bloquea antes del conteo y actualización para evitar
+duplicados automáticos ante solicitudes concurrentes. No existe una acción de reactivación de especies
+ni de ejemplares (SPEC-001, SPEC-002 y SPEC-103).
+
 ### 10.2 Flujos alternativos
 
 - **La acción de negocio falla después de auditar (o antes):** `AuditService.record(...)` se invoca **después** de que la transacción de negocio confirma el cambio (o dentro de la misma transacción `@Transactional`, para que un rollback del cambio de negocio también revierta la fila de auditoría — no debe quedar una fila de `audit_log` describiendo un cambio que nunca se aplicó). Se prioriza esta segunda opción (misma transacción) precisamente para evitar el escenario de una bitácora que miente por una falla parcial.
@@ -478,7 +500,7 @@ El riesgo real no es el volumen agregado proyectado arriba, sino que la sección
 
 | # | Criterio | Método de verificación |
 |---|----------|----------------------|
-| CA-01 | La migración V021 corre limpia y no colisiona con V001-V020 | `SELECT version, description, success FROM flyway_schema_history WHERE version = '019';` devuelve una fila con `success = t`. `SELECT count(*) FROM flyway_schema_history WHERE version = '012';` devuelve exactamente **1**. |
+| CA-01 | V036 crea la tabla sin alterar migraciones previas | `SELECT version, description, success FROM flyway_schema_history WHERE version = '036';` devuelve una fila con `success = t`; V001–V035 conservan sus checksums y `audit_log` existe. |
 | CA-02 | `audit_log` existe y es append-only por esquema (sin `updated_at`/`deleted_at`) | `SELECT column_name FROM information_schema.columns WHERE table_name = 'audit_log' ORDER BY column_name;` devuelve exactamente `action, changes, created_at, entity_id, entity_type, id, ip_address, user_id` — **sin** `updated_at` ni `deleted_at`. |
 | CA-03 | Las columnas de autoría genérica existen solo donde corresponde | `SELECT table_name, column_name FROM information_schema.columns WHERE column_name IN ('created_by_user_id','updated_by_user_id') ORDER BY 1,2;` devuelve exactamente: `contracts.updated_by_user_id`, `green_elements.updated_by_user_id`, `providers.created_by_user_id`, `providers.updated_by_user_id`, `species.created_by_user_id`, `species.updated_by_user_id`, `supplies.created_by_user_id`, `supplies.updated_by_user_id`, `system_parameters.updated_by_user_id`, `zones.created_by_user_id`, `zones.updated_by_user_id` — **11 filas**, ninguna en `interventions`, `incidents`, `users`, `catalog_items` ni en las tablas de evidencia/adjuntos. |
 | CA-04 | Desactivar un usuario genera exactamente una fila en `audit_log` con el diff correcto | Ejecutar `PATCH /api/v1/users/{id}/deactivate` (o el endpoint equivalente de SPEC-1XX de usuarios) autenticado como ADMIN. Luego `SELECT action, entity_type, entity_id, changes FROM audit_log WHERE action = 'USER_DEACTIVATED' AND entity_id = {id} ORDER BY created_at DESC LIMIT 1;` devuelve una fila con `changes` conteniendo `{"isActive": {"before": true, "after": false}}`. |
@@ -489,6 +511,8 @@ El riesgo real no es el volumen agregado proyectado arriba, sino que la sección
 | CA-09 | `entityId` sin `entityType` es rechazado | `GET /api/v1/audit-log?entityId=45` (autenticado como ADMIN) devuelve `400` con un error de validación referenciando `entityId`. |
 | CA-10 | Ningún dato sensible aparece en `audit_log.changes` | `SELECT count(*) FROM audit_log WHERE changes::text ILIKE '%password%' OR changes::text ILIKE '%token_hash%' OR changes::text ILIKE '%refresh_token%';` devuelve **0** tras ejercitar el flujo completo (crear usuario, cambiar rol, login fallido con bloqueo). |
 | CA-11 | Un job/migración sin usuario autenticado no falla y dejar `NULL` en las columnas de autoría | Ejecutar una operación de datos fuera de un request HTTP autenticado (p. ej. un script de carga inicial de `zones` corrido directamente contra el `Service` en un test, sin `SecurityContext` poblado) inserta la fila con `created_by_user_id IS NULL`, sin lanzar excepción. `SELECT count(*) FROM zones WHERE created_by_user_id IS NULL;` es mayor a 0 tras ese escenario, y la aplicación sigue respondiendo con normalidad (no hay `500` ni caída del proceso). |
+| CA-12 | Las bajas de especies y ejemplares dejan actor, fecha y motivo | Como ADMIN o COORDINADOR, dar de baja una especie y un ejemplar. `audit_log` debe contener una fila por acción con `user_id`, `created_at`, la entidad/código, el motivo y el diff de estado. La baja de una especie con ejemplares vigentes registra `deletedAt` sin cambio; la de un ejemplar registra `isActive: true → false` y `deletedAt: null → fecha`. |
+| CA-13 | La baja automática se audita de forma atómica | Al dar de baja el último ejemplar de una especie inactiva, `GREEN_ELEMENT_SOFT_DELETED` y `SPECIES_AUTO_SOFT_DELETED` aparecen en la misma transacción, con el mismo `user_id`; la segunda incluye el ID/código causante y `NO_ACTIVE_SPECIMENS_REMAIN`. Si la auditoría falla, no queda aplicado ninguno de los cambios. |
 
 ---
 

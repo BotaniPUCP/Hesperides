@@ -65,3 +65,34 @@ export const ESTANDAR_FOTOS_ESPECIES: GrupoDeColumnas[] = [
     ],
   },
 ];
+
+export const ESTANDAR_ESPECIES_GRUPOS: GrupoDeColumnas[] = [
+  {
+    titulo: 'Identificación y botánica',
+    nota: 'Si el nombre científico ya está en el catálogo, la fila actualiza esa especie; si no existe, la crea.',
+    columnas: [
+      { nombre: 'nombre_cientifico', obligatoria: true, descripcion: 'Binomio botánico (género y epíteto), ej. Jacaranda mimosifolia' },
+      { nombre: 'nombre_comun', obligatoria: false, descripcion: 'Nombre común principal en el campus (hasta 150 caracteres)' },
+      { nombre: 'nombres_alternativos', obligatoria: false, descripcion: 'Otros nombres comunes separados por | (ej. Guaranguay|Tarco)' },
+      { nombre: 'familia', obligatoria: false, descripcion: 'Familia botánica (ej. Bignoniaceae, Fabaceae)' },
+      { nombre: 'tipo_vegetacion', obligatoria: false, descripcion: 'Obligatoria al crear una especie nueva: Árbol, Arbusto, Cubresuelo, Macetones (herbáceas), Palmera, Planta herbácea, Planta suculenta, Seto (cerco vivo) o Trepadora' },
+      { nombre: 'origen', obligatoria: false, descripcion: 'Introducida o Nativa' },
+      { nombre: 'descripcion', obligatoria: false, descripcion: 'Descripción morfológica y botánica general' },
+      { nombre: 'notas_cuidado', obligatoria: false, descripcion: 'Recomendaciones de riego, poda, suelo y manejo' },
+    ],
+  },
+  {
+    titulo: 'Criticidad y medidas de referencia (SPEC-105)',
+    nota: 'Una especie no crítica requiere altura y radio de copa promedio junto con su fuente.',
+    columnas: [
+      { nombre: 'es_critica', obligatoria: false, descripcion: 'si o no. Vacía al crear: si en árboles y palmeras, no en el resto' },
+      { nombre: 'altura_promedio_m', obligatoria: false, descripcion: 'Altura total promedio de referencia en metros (mayor que 0 y menor que 200)' },
+      { nombre: 'fuente_altura', obligatoria: false, descripcion: 'Obligatoria si se indica altura_promedio_m: Ficha botánica, Estimación del equipo o Muestra en el campus' },
+      { nombre: 'radio_copa_promedio_m', obligatoria: false, descripcion: 'Radio de copa promedio de referencia en metros (mayor que 0 y menor que 100)' },
+      { nombre: 'fuente_radio_copa', obligatoria: false, descripcion: 'Obligatoria si se indica radio_copa_promedio_m: Ficha botánica, Estimación del equipo o Muestra en el campus' },
+      { nombre: 'usa_altura_fuste', obligatoria: false, descripcion: 'si o no: indica si en sus ejemplares se mide altura de fuste' },
+      { nombre: 'usa_dap', obligatoria: false, descripcion: 'si o no: indica si en sus ejemplares se mide DAP' },
+    ],
+  },
+  foto,
+];

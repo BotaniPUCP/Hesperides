@@ -28,7 +28,7 @@ Toda feature las cumple. No se re-justifican en cada spec.
 | INV-1 | **Toda** respuesta HTTP usa el sobre `{ok, message, data}`, incluido el servicio Flask. Nunca un body desnudo | SPEC-C02 §3 |
 | INV-2 | Tipos, estados, roles, prioridades y categorías son filas de `catalog_items`. **Prohibido** un `enum` de dominio en Java o `@Enumerated` | SPEC-003 |
 | INV-3 | Toda entidad JPA extiende `BaseEntity`. No redeclara `id`, `createdAt`, `updatedAt` ni `deletedAt` | SPEC-002 §4.1 |
-| INV-4 | Soft delete siempre (`deleted_at`). Nunca un `DELETE` físico. Los índices únicos llevan `WHERE deleted_at IS NULL` | §5.4 · SPEC-002 §5.2.5 |
+| INV-4 | Los registros de dominio usan baja lógica (`deleted_at`), nunca `DELETE` físico; las bitácoras append-only no se borran ni actualizan. Las identidades reutilizables usan índices parciales `WHERE deleted_at IS NULL`; las históricas —incluidos `species.slug` y `green_elements.code`— conservan unicidad global y no se reutilizan | §5.4 · SPEC-002 §§4.4–4.5/5.2.5 · SPEC-004 §6 |
 | INV-5 | La matriz del **Anexo A de SPEC-001** gobierna la autorización de todos los endpoints. No se reinterpreta por spec | SPEC-001 Anexo A |
 | INV-6 | La lógica de negocio vive en el Service. El Controller parsea, valida y delega | SPEC-000 §1 |
 | INV-7 | Validación en backend con Bean Validation, no solo en frontend. Nunca SQL concatenado: JPA o query parametrizada | §5.2 |

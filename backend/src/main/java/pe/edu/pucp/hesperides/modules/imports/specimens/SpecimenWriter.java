@@ -7,6 +7,8 @@ import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenDraft.Assessment
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenDraft.Measurement;
 import pe.edu.pucp.hesperides.modules.imports.ImportAction;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.PlannedRow;
+import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
+import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
 import java.sql.Date;
 import java.util.Map;
@@ -44,6 +46,7 @@ public class SpecimenWriter {
 
     private Written create(PlannedRow row, Long batchId, long userId) {
         SpecimenDraft d = row.draft();
+        requireAssignableSpecies(row.speciesId());
         return jdbc.queryForObject("""
                 INSERT INTO green_elements (element_type_item_id, species_id, location, quantity, source_reference,
                     source_location, legacy_code, photo_url, notes, registered_by_user_id, import_batch_id)
@@ -51,24 +54,44 @@ public class SpecimenWriter {
                 , ?, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?, ?, ?, ?, ?, ?, ?, ?)
                 RETURNING id, code""",
                 (rs, i) -> new Written(rs.getLong(1), rs.getString(2)),
-                type(d), row.speciesId(), d.lon(), d.lat(), d.quantity(), d.sourceReference(), d.sourceLocation(),
+                type(d), row.speciesId(), d.lon(), d.lat(), quantity(d), d.sourceReference(), d.sourceLocation(),
                 d.legacyCode(), remoteLink(d.photo()), d.notes(), userId, batchId);
     }
 
     /** Una celda vacía no borra: deja el dato como estaba (estándar §6.2). */
     private Written update(PlannedRow row) {
         SpecimenDraft d = row.draft();
-        return jdbc.queryForObject("""
-                UPDATE green_elements SET species_id = ?, location = ST_SetSRID(ST_MakePoint(?, ?), 4326), quantity = ?,
-                       element_type_item_id = """ + ELEMENT_TYPE + """
-                       , source_reference = COALESCE(?, source_reference),
+        Long currentSpeciesId = jdbc.query("""
+                SELECT species_id FROM green_elements WHERE code = ? AND deleted_at IS NULL FOR UPDATE
+                """, (rs, i) -> rs.getObject(1, Long.class), d.code()).stream().findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Specimen not found: " + d.code()));
+        if (!java.util.Objects.equals(currentSpeciesId, row.speciesId())) {
+            requireAssignableSpecies(row.speciesId());
+        }
+        String sql = """
+                UPDATE green_elements SET species_id = ?, location = ST_SetSRID(ST_MakePoint(?, ?), 4326),
+                       quantity = COALESCE(?, quantity),
+                       element_type_item_id = COALESCE(%s, element_type_item_id),
+                       source_reference = COALESCE(?, source_reference),
                        source_location = COALESCE(?, source_location), legacy_code = COALESCE(?, legacy_code),
                        photo_url = COALESCE(?, photo_url), notes = COALESCE(?, notes), updated_at = CURRENT_TIMESTAMP
                  WHERE code = ? AND deleted_at IS NULL
-                RETURNING id, code""",
+                RETURNING id, code
+                """.formatted(ELEMENT_TYPE);
+        return jdbc.queryForObject(sql,
                 (rs, i) -> new Written(rs.getLong(1), rs.getString(2)),
-                row.speciesId(), d.lon(), d.lat(), d.quantity(), type(d), d.sourceReference(), d.sourceLocation(),
+                row.speciesId(), d.lon(), d.lat(), d.quantity(), d.quantity() == null ? null : type(d),
+                d.sourceReference(), d.sourceLocation(),
                 d.legacyCode(), remoteLink(d.photo()), d.notes(), d.code());
+    }
+
+    private void requireAssignableSpecies(long speciesId) {
+        boolean active = jdbc.query("""
+                SELECT is_active FROM species WHERE id = ? AND deleted_at IS NULL FOR UPDATE
+                """, (rs, i) -> rs.getBoolean(1), speciesId).stream().findFirst().orElse(false);
+        if (!active) {
+            throw new BusinessRuleException("Los ejemplares nuevos solo pueden vincularse a especies activas");
+        }
     }
 
     /**
@@ -81,7 +104,9 @@ public class SpecimenWriter {
         Date date = Date.valueOf(m.date());
         if (!m.onlyExtraValues()) {
             jdbc.update("""
-                    UPDATE green_elements SET height_m = ?, trunk_height_m = ?, dbh_cm = ?, crown_radius_m = ?,
+                    UPDATE green_elements SET height_m = COALESCE(?, height_m),
+                           trunk_height_m = COALESCE(?, trunk_height_m),
+                           dbh_cm = COALESCE(?, dbh_cm), crown_radius_m = COALESCE(?, crown_radius_m),
                            is_banded = COALESCE(?, is_banded), data_source = 'MEASURED', measured_at = ?,
                            measured_by_user_id = ?, updated_at = CURRENT_TIMESTAMP
                      WHERE id = ? AND NOT EXISTS (SELECT 1 FROM green_element_measurements x
@@ -109,7 +134,11 @@ public class SpecimenWriter {
     }
 
     private static String type(SpecimenDraft d) {
-        return d.quantity() > 1 ? "GROUP" : "INDIVIDUAL";
+        return quantity(d) > 1 ? "GROUP" : "INDIVIDUAL";
+    }
+
+    private static int quantity(SpecimenDraft d) {
+        return d.quantity() == null ? 1 : d.quantity();
     }
 
     /** Solo un enlace es dato de origen; un nombre de archivo del ZIP no. */

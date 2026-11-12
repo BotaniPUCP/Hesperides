@@ -19,6 +19,7 @@ export const medidasDeEspecieCritica = {
 
 export const palmeraReal: Species = {
   slug: 'roystonea-regia',
+  isActive: true,
   scientificName: 'Roystonea regia',
   commonName: 'Palmera real',
   otherNames: [],
@@ -59,6 +60,7 @@ export const p02: Specimen = { ...p01, code: 'EV-000002', sourceReference: 'p02'
 
 export const p01Detail: SpecimenDetail = {
   ...p01,
+  id: 1,
   legacyCode: null,
   elementTypeCode: 'INDIVIDUAL',
   elementTypeName: 'Ejemplar',

@@ -21,14 +21,20 @@ export interface BuscadorDeEspecieProps {
  */
 export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieProps) {
   const [texto, setTexto] = useState(valor);
+  const [reintentos, setReintentos] = useState(0);
   // La respuesta guarda el texto que la produjo: así «buscando» y las opciones se
   // derivan en el render y el efecto solo escribe estado al resolver la promesa.
-  const [respuesta, setRespuesta] = useState<{ texto: string; opciones: Species[] } | null>(null);
+  const [respuesta, setRespuesta] = useState<{
+    texto: string;
+    reintentos: number;
+    opciones: Species[];
+    fallo: boolean;
+  } | null>(null);
 
   const buscado = useDebouncedValue(texto, ESPERA_MS);
   const elegida = valor !== '' && texto === valor;
   const consultable = buscado.trim().length >= 2 && buscado !== valor;
-  const respondida = respuesta?.texto === buscado;
+  const respondida = respuesta?.texto === buscado && respuesta.reintentos === reintentos;
   const opciones = consultable && respondida ? (respuesta?.opciones ?? []) : [];
   const buscando = consultable && !respondida;
 
@@ -36,18 +42,18 @@ export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieP
     if (!consultable) return;
     let vigente = true;
     inventarioVerdeApi
-      .species({ search: buscado, page: 0, size: SUGERENCIAS })
+      .assignableSpecies({ search: buscado, page: 0, size: SUGERENCIAS })
       .then((p) => {
-        if (vigente) setRespuesta({ texto: buscado, opciones: p.content });
+        if (vigente) setRespuesta({ texto: buscado, reintentos, opciones: p.content, fallo: false });
       })
       .catch(() => {
-        if (vigente) setRespuesta({ texto: buscado, opciones: [] });
+        if (vigente) setRespuesta({ texto: buscado, reintentos, opciones: [], fallo: true });
       });
 
     return () => {
       vigente = false;
     };
-  }, [buscado, consultable]);
+  }, [buscado, consultable, reintentos]);
 
   function elegir(s: Species) {
     setTexto(s.scientificName);
@@ -55,7 +61,8 @@ export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieP
   }
 
   const mostrarLista = !elegida && texto.trim().length >= 2 && opciones.length > 0;
-  const mostrarSinResultados = !elegida && !buscando && texto.trim().length >= 2 && opciones.length === 0;
+  const mostrarSinResultados = !elegida && respondida && !respuesta?.fallo && texto.trim().length >= 2 && opciones.length === 0;
+  const mostrarError = !elegida && respondida && respuesta?.fallo === true;
 
   return (
     <div className="relative">
@@ -72,6 +79,12 @@ export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieP
         errorMessage={error}
         helperText={elegida ? 'Especie seleccionada del catálogo' : 'Escribe al menos dos letras y elige de la lista'}
       />
+
+      {buscando && (
+        <p role="status" className="mt-1 text-sm text-neutral-500" aria-live="polite">
+          Buscando especies…
+        </p>
+      )}
 
       {mostrarLista && (
         <ul
@@ -107,6 +120,19 @@ export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieP
           <p className="text-neutral-600">
             No se encontró ninguna especie con «<strong className="text-neutral-900">{buscado}</strong>». Verifica el nombre o regístrala desde el Catálogo botánico.
           </p>
+        </div>
+      )}
+
+      {mostrarError && (
+        <div role="alert" className="absolute z-20 mt-1 w-full rounded-md border border-alert-danger-border bg-alert-danger-bg p-3 text-sm text-alert-danger-fg shadow-lg">
+          <p>No se pudo cargar la lista de especies.</p>
+          <button
+            type="button"
+            onClick={() => setReintentos((actual) => actual + 1)}
+            className="mt-1 font-semibold underline underline-offset-2"
+          >
+            Reintentar búsqueda
+          </button>
         </div>
       )}
     </div>

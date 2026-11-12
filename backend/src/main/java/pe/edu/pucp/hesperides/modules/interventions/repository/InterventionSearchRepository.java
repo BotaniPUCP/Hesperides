@@ -32,9 +32,10 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
               and (cast(:place as bigint) is null or l.place_id=:place)
               and (cast(:localStatus as varchar) is null or ls.code=:localStatus)
               and (cast(:elementCode as varchar) is null or exists(select 1 from intervention_elements ec
-                join green_elements g on g.id=ec.green_element_id
                 where ec.intervention_location_id=l.id and ec.deleted_at is null
-                  and g.code=:elementCode and g.deleted_at is null))
+                  and ec.green_element_id=(select target.id from green_elements target
+                    where target.code=:elementCode
+                    order by (target.deleted_at is null) desc, target.id desc limit 1)))
               and (cast(:element as bigint) is null or exists(select 1 from intervention_elements e
                 where e.intervention_location_id=l.id and e.green_element_id=:element and e.deleted_at is null)))
         """;

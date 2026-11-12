@@ -7,6 +7,7 @@ un archivo CSV en **Catastro verde → Importar al catastro**. Este directorio d
 | Estándar | Documento | Plantilla | Estado |
 |---|---|---|---|
 | Ejemplares (árboles, palmeras, arbustos…) | [ejemplares.md](ejemplares.md) | [plantillas/ejemplares.csv](plantillas/ejemplares.csv) | Disponible |
+| Especies botánicas | [especies.md](especies.md) | [plantillas/especies.csv](plantillas/especies.csv) | Disponible |
 | Tachos | [tachos.md](tachos.md) | [plantillas/tachos.csv](plantillas/tachos.csv) | Disponible |
 | Bebederos | [bebederos.md](bebederos.md) | [plantillas/bebederos.csv](plantillas/bebederos.csv) | Disponible |
 | Fotos genéricas de especies | [fotos-especies.md](fotos-especies.md) | [plantillas/fotos-especies.csv](plantillas/fotos-especies.csv) | Disponible |
@@ -39,8 +40,12 @@ un archivo CSV en **Catastro verde → Importar al catastro**. Este directorio d
    su especie puede ser la misma. La distancia depende del tipo: árbol 1.5 m, palmera 1 m,
    arbusto, seto o trepadora 0.5 m, herbáceas, suculentas, cubresuelos y macetones 0.3 m. Para
    tachos y bebederos es 1 m, contra otro del mismo tipo.
-5. **Confirmación.** Escribe exactamente lo que mostró la vista previa, todo o nada. La vista
-   previa vence a la hora.
+5. **Confirmación.** La vista previa vence a la hora. Para ejemplares, el primer clic en «Confirmar
+   carga» solo pide al servidor el resumen exacto después de las decisiones de duplicados; no escribe.
+   El modal muestra las altas y actualizaciones. La confirmación definitiva envía el fingerprint de ese
+   plan; cambiar archivo, asociación o decisión invalida el resumen. El servidor verifica nuevamente
+   las versiones y guarda todo en una transacción; los reintentos de un lote confirmado devuelven el
+   resultado guardado. Los otros estándares conservan su confirmación previa.
 
 ## Exportar, corregir y volver a cargar
 

@@ -12,10 +12,10 @@ import { isoDateFrom, pageFrom } from '@/lib/listUrl';
 import { PageHeader } from '@/components/layouts/PageHeader';
 
 const LIST_PATH = '/intervenciones';
-// greenElementCode lo fija el enlace de entrada; va aquí para que filtrar no lo borre de la URL.
-const DEFAULTS = { greenElementCode: '', status: '', from: '', to: '', page: '0' };
+// La identidad estable y el código visible los fija el enlace; los filtros no deben perderlos.
+const DEFAULTS = { greenElementCode: '', greenElementId: '', status: '', from: '', to: '', page: '0' };
 
-export function InterventionsList({ greenElementCode }: { greenElementCode?:string }) {
+export function InterventionsList({ greenElementCode, greenElementId }: { greenElementCode?:string; greenElementId?:string }) {
   const { user } = useAuth();
   const statuses = useCatalog('INTERVENTION_STATUS');
   const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
@@ -30,12 +30,15 @@ export function InterventionsList({ greenElementCode }: { greenElementCode?:stri
   useListScrollRestoration(LIST_PATH, query, !loading);
   useEffect(() => {
     let active = true;
-    interventionsApi.list(page, status, from, to, greenElementCode).then(data => {
+    const request = greenElementId
+      ? interventionsApi.list(page, status, from, to, undefined, greenElementId)
+      : interventionsApi.list(page, status, from, to, greenElementCode);
+    request.then(data => {
       if (active) { setResult(data); setError(''); }
     }).catch(e => { if (active) setError(interventionError(e)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [page, status, from, to, revision, greenElementCode]);
+  }, [page, status, from, to, revision, greenElementCode, greenElementId]);
   const reload = () => { setLoading(true); setRevision(n => n + 1); };
   const change = (patch: Partial<typeof DEFAULTS>) => { setLoading(true); setValues({ ...patch, page: '0' }); };
   const goToPage = (next: number) => { setLoading(true); setValues({ page: String(next) }); };

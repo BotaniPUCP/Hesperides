@@ -34,8 +34,15 @@ public class PhotoRepository {
                 .stream().findFirst().orElseThrow(() -> new ResourceNotFoundException("Specimen not found: " + code));
     }
 
+    /** Permanent codes can resolve historical reads after logical deactivation. */
+    public long historicalElementId(String code) {
+        return jdbc.query("SELECT id FROM green_elements WHERE code = ?", (rs, i) -> rs.getLong(1), code)
+                .stream().findFirst().orElseThrow(() -> new ResourceNotFoundException("Specimen not found: " + code));
+    }
+
     public long speciesId(String slug) {
-        return jdbc.query("SELECT id FROM species WHERE slug = ? AND deleted_at IS NULL", (rs, i) -> rs.getLong(1), slug)
+        return jdbc.query("SELECT id FROM species WHERE slug = ? AND is_active AND deleted_at IS NULL FOR UPDATE",
+                        (rs, i) -> rs.getLong(1), slug)
                 .stream().findFirst().orElseThrow(() -> new ResourceNotFoundException("Species not found: " + slug));
     }
 

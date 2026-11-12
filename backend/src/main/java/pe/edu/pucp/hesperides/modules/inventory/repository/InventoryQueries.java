@@ -33,7 +33,7 @@ final class InventoryQueries {
                    (SELECT a.id FROM green_element_attachments a JOIN green_elements e ON e.id = a.green_element_id
                      WHERE e.species_id = s.id AND %1$s AND a.deleted_at IS NULL
                      ORDER BY e.data_source = 'MEASURED' DESC, e.code, a.id DESC LIMIT 1) AS specimen_photo_id,
-                   s.is_critical, s.reference_height_m, hs.code AS height_source_code, hs.label AS height_source_label,
+                    s.is_active, s.is_critical, s.reference_height_m, hs.code AS height_source_code, hs.label AS height_source_label,
                    s.reference_crown_radius_m, cs.code AS crown_source_code, cs.label AS crown_source_label,
                    s.uses_trunk_height, s.uses_dbh,
                    (SELECT count(*) FROM green_elements e WHERE e.species_id = s.id AND %1$s
@@ -44,7 +44,10 @@ final class InventoryQueries {
             """.formatted(ACTIVE_ELEMENT) + REFERENCE_SOURCES;
 
     static final String SPECIES_FILTER = """
-             WHERE s.deleted_at IS NULL AND s.is_active
+             WHERE s.deleted_at IS NULL
+               AND (s.is_active OR EXISTS (SELECT 1 FROM green_elements visible_element
+                    WHERE visible_element.species_id = s.id AND visible_element.is_active
+                      AND visible_element.deleted_at IS NULL))
                AND (CAST(:type AS TEXT) IS NULL OR t.code = :type)
                AND (CAST(:search AS TEXT) IS NULL OR unaccent(lower(concat_ws(' ', s.scientific_name, s.common_name,
                     s.family, (SELECT string_agg(n.name, ' ') FROM species_common_names n
@@ -58,10 +61,27 @@ final class InventoryQueries {
     static final String SPECIES_COUNT = "SELECT count(*) FROM species s JOIN catalog_items t"
             + " ON t.id = s.species_type_item_id" + SPECIES_FILTER;
 
-    static final String SPECIES_BY_SLUG = SPECIES_COLUMNS + " WHERE s.slug = :slug AND s.deleted_at IS NULL";
+    static final String SPECIES_ASSIGNABLE_FILTER = """
+             WHERE s.deleted_at IS NULL AND s.is_active
+               AND (CAST(:type AS TEXT) IS NULL OR t.code = :type)
+               AND (CAST(:search AS TEXT) IS NULL OR unaccent(lower(concat_ws(' ', s.scientific_name, s.common_name,
+                    s.family, (SELECT string_agg(n.name, ' ') FROM species_common_names n
+                               WHERE n.species_id = s.id AND n.deleted_at IS NULL)))) LIKE unaccent(lower(:search)))
+            """;
+    static final String SPECIES_ASSIGNABLE_PAGE = "SELECT * FROM (" + SPECIES_COLUMNS + SPECIES_ASSIGNABLE_FILTER + ") x"
+            + " ORDER BY specimen_count DESC, common_name LIMIT :limit OFFSET :offset";
+    static final String SPECIES_ASSIGNABLE_COUNT = "SELECT count(*) FROM species s JOIN catalog_items t"
+            + " ON t.id = s.species_type_item_id" + SPECIES_ASSIGNABLE_FILTER;
+
+    static final String SPECIES_BY_SLUG = SPECIES_COLUMNS + " WHERE s.slug = :slug AND s.deleted_at IS NULL"
+            + " AND (s.is_active OR EXISTS (SELECT 1 FROM green_elements visible_element"
+            + " WHERE visible_element.species_id = s.id AND visible_element.is_active AND visible_element.deleted_at IS NULL))";
 
     static final String TOTALS = """
-            SELECT (SELECT count(*) FROM species WHERE deleted_at IS NULL AND is_active) AS species,
+            SELECT (SELECT count(*) FROM species s WHERE s.deleted_at IS NULL
+                      AND (s.is_active OR EXISTS (SELECT 1 FROM green_elements active_element
+                           WHERE active_element.species_id = s.id AND active_element.is_active
+                             AND active_element.deleted_at IS NULL))) AS species,
                    (SELECT count(*) FROM green_elements e WHERE %s) AS specimens
             """.formatted(ACTIVE_ELEMENT);
 
@@ -69,13 +89,16 @@ final class InventoryQueries {
             SELECT t.code, t.label, count(e.id) AS total
               FROM catalog_items t JOIN catalog_types ct ON ct.id = t.catalog_type_id AND ct.code = 'SPECIES_TYPE'
               LEFT JOIN species s ON s.species_type_item_id = t.id AND s.deleted_at IS NULL
+                    AND (s.is_active OR EXISTS (SELECT 1 FROM green_elements visible_element
+                         WHERE visible_element.species_id = s.id AND visible_element.is_active
+                           AND visible_element.deleted_at IS NULL))
               LEFT JOIN green_elements e ON e.species_id = s.id AND %s
              WHERE t.is_active
              GROUP BY t.code, t.label, t.sort_order ORDER BY t.sort_order
             """.formatted(ACTIVE_ELEMENT);
 
     static final String SPECIMEN_COLUMNS = """
-            SELECT e.code, e.source_reference, e.source_location, e.legacy_code, ST_Y(e.location) AS lat,
+            SELECT e.id, e.code, e.source_reference, e.source_location, e.legacy_code, ST_Y(e.location) AS lat,
                    ST_X(e.location) AS lon, e.photo_url, e.quantity, e.notes, e.height_m, e.trunk_height_m, e.dbh_cm,
                    e.crown_radius_m, e.is_banded, e.data_source, et.code AS element_type_code,
                    et.label AS element_type_label, s.slug,
@@ -123,7 +146,7 @@ final class InventoryQueries {
               JOIN intervention_locations l ON l.id = ie.intervention_location_id
               JOIN interventions i ON i.id = l.intervention_id
               JOIN catalog_items c ON c.id = i.intervention_class_item_id
-             WHERE g.code = :code AND c.code = 'PODA' AND l.completed_at IS NOT NULL
+              WHERE g.id = :id AND c.code = 'PODA' AND l.completed_at IS NOT NULL
                AND ie.deleted_at IS NULL AND l.deleted_at IS NULL AND i.deleted_at IS NULL
             """;
 

@@ -52,6 +52,19 @@ describe('useInventarioVerde', () => {
     expect(api.speciesBySlug).toHaveBeenCalledWith('roystonea-regia');
   });
 
+  it('vuelve a cargar la especie cuando cambia la clave de revalidación', async () => {
+    api.speciesBySlug.mockResolvedValue(palmeraReal);
+    const { result, rerender } = renderHook(
+      ({ revision }) => useInventarioVerdeSpeciesBySlug('roystonea-regia', revision),
+      { initialProps: { revision: 0 } },
+    );
+    await waitFor(() => expect(result.current.species).toEqual(palmeraReal));
+
+    rerender({ revision: 1 });
+    await waitFor(() => expect(api.speciesBySlug).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.species).toEqual(palmeraReal));
+  });
+
   it('distingue una especie inexistente de un error de red', async () => {
     api.speciesBySlug.mockRejectedValueOnce(new ApiError(404, 'Species not found: x'));
     const { result } = renderHook(() => useInventarioVerdeSpeciesBySlug('x'));

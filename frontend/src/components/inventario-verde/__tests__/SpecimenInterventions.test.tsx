@@ -16,19 +16,30 @@ function page(code='INT-000001',number=0):InterventionPage {
 beforeEach(()=>{jest.clearAllMocks();reader={id:1,role:{code:'SUPERVISOR'}};jest.mocked(interventionsApi.list).mockResolvedValue(page());});
 
 it('la ficha pública no solicita ni muestra trabajos privados sin sesión',()=>{
-  reader=null;render(<SpecimenInterventions code="EV-000001"/>);
+  reader=null;render(<SpecimenInterventions id={1} code="EV-000001"/>);
   expect(interventionsApi.list).not.toHaveBeenCalled();expect(screen.queryByText('Intervenciones del ejemplar')).not.toBeInTheDocument();
 });
 it('muestra cada actividad y conserva el ejemplar al paginar',async()=>{
-  render(<SpecimenInterventions code="EV-000001"/>);
+  render(<SpecimenInterventions id={1} code="EV-000001"/>);
   const link=await screen.findByRole('link',{name:'INT-000001'});expect(link).toHaveAttribute('href','/intervenciones/1');
+  expect(screen.getByRole('link',{name:'Ver listado completo'})).toHaveAttribute('href','/intervenciones?greenElementId=1&greenElementCode=EV-000001');
   expect(screen.getAllByRole('listitem')).toHaveLength(1);
   fireEvent.click(screen.getByRole('button',{name:'Siguiente'}));
-  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','','EV-000001'));
+  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,1));
+});
+it('revalida el historial al recuperar el foco y conserva la página actual',async()=>{
+  const view=render(<SpecimenInterventions id={1} code="EV-000001" refreshKey={0}/>);
+  await screen.findByRole('link',{name:'INT-000001'});
+  fireEvent.click(screen.getByRole('button',{name:'Siguiente'}));
+  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,1));
+
+  view.rerender(<SpecimenInterventions id={1} code="EV-000001" refreshKey={1}/>);
+  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,1));
+  expect(interventionsApi.list).toHaveBeenCalledTimes(3);
 });
 it('distingue ausencia de trabajos autorizados de un fallo recuperable',async()=>{
   jest.mocked(interventionsApi.list).mockRejectedValueOnce(new ApiError(503,'Unavailable'));
-  render(<SpecimenInterventions code="EV-000001"/>);
+  render(<SpecimenInterventions id={1} code="EV-000001"/>);
   await screen.findByRole('alert');expect(screen.queryByText(/No hay intervenciones vinculadas/)).not.toBeInTheDocument();
   jest.mocked(interventionsApi.list).mockResolvedValue({content:[],page:{number:0,size:20,totalElements:0,totalPages:0}});
   fireEvent.click(screen.getByRole('button',{name:'Reintentar historial'}));
@@ -37,19 +48,19 @@ it('distingue ausencia de trabajos autorizados de un fallo recuperable',async()=
 it('descarta respuestas tardías del ejemplar anterior',async()=>{
   let resolveFirst!:(value:InterventionPage)=>void;
   jest.mocked(interventionsApi.list).mockImplementationOnce(()=>new Promise(resolve=>{resolveFirst=resolve;})).mockResolvedValueOnce(page('INT-NUEVA'));
-  const view=render(<SpecimenInterventions code="EV-000001"/>);
-  view.rerender(<SpecimenInterventions code="EV-000002"/>);
+  const view=render(<SpecimenInterventions id={1} code="EV-000001"/>);
+  view.rerender(<SpecimenInterventions id={2} code="EV-000002"/>);
   await screen.findByRole('link',{name:'INT-NUEVA'});
   await act(async()=>resolveFirst(page('INT-ANTERIOR')));
   expect(screen.queryByRole('link',{name:'INT-ANTERIOR'})).not.toBeInTheDocument();
 });
 it('limpia el historial al cambiar de lector y al cerrar sesión',async()=>{
-  const view=render(<SpecimenInterventions code="EV-000001"/>);await screen.findByRole('link',{name:'INT-000001'});
+  const view=render(<SpecimenInterventions id={1} code="EV-000001"/>);await screen.findByRole('link',{name:'INT-000001'});
   jest.mocked(interventionsApi.list).mockResolvedValue({content:[],page:{number:0,size:20,totalElements:0,totalPages:0}});
-  reader={id:2,role:{code:'OPERARIO'}};view.rerender(<SpecimenInterventions code="EV-000001"/>);
+  reader={id:2,role:{code:'OPERARIO'}};view.rerender(<SpecimenInterventions id={1} code="EV-000001"/>);
   expect(screen.queryByRole('link',{name:'INT-000001'})).not.toBeInTheDocument();
   await screen.findByText(/No hay intervenciones vinculadas/);
-  reader=null;view.rerender(<SpecimenInterventions code="EV-000001"/>);
+  reader=null;view.rerender(<SpecimenInterventions id={1} code="EV-000001"/>);
   expect(screen.queryByText('Intervenciones del ejemplar')).not.toBeInTheDocument();
 });
 it('el listado conserva el ejemplar al filtrar por estado',async()=>{

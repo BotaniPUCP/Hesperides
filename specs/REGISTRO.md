@@ -18,7 +18,7 @@
 | SPEC-100 | Gestión de usuarios       | 👀 En revisión  | —          | S1     |              |
 | SPEC-101 | Frecuencias de mantenimiento | 🔄 En progreso  | —          | S1     |              |
 | SPEC-102 | Mapa 3D del campus | 🔄 En progreso | —    | S2     |              |
-| SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
+| SPEC-103 | Registro del catastro y estándares de carga | 🔄 En progreso: catálogo, altas/bajas, import/export; falta revisión visual final | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
 | SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 5, falta verificar en navegador | —          | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
@@ -43,6 +43,7 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-002 §4.4–§4.5/§5.2.5 · SPEC-004 §3.2/§4.1 · SPEC-103 D-10–D-13 · SPEC-200 §3.3 | Ciclo de vida e historial de especies y ejemplares (12 nov 2026) | `V036` reserva slugs y materializa `audit_log`; `V037` reserva los códigos de ejemplares y bloquea borrado físico, reactivación y cambio de código. Bajas y auditoría transaccional implementadas. La base persistente de trabajo permanece en V035: V036–V037 no se han aplicado allí. |
 | SPEC-004 §3.2 · C-08 · C-09 · E-03 · REQ 2.7 · Catálogo 2.2/2.11 | SPEC-105 (6 nov 2026) | Tres acciones auditables de especie. La criticidad pasa a ser de la especie y no de su tipo; `GENERIC` deja de escribirse; se retira la proyección automática de medidas tras una poda. |
 | SPEC-C01 §4.3 | Estandarización de pantallas (7 nov 2026) | Toda pantalla usa `PageFrame` (un solo ancho, fila fija de flecha y breadcrumb derivado del menú) y `PageHeader`. Las tarjetas pasan a `rounded-2xl`. |
 | SPEC-100 §3, §5.5 y §7 | Autobloqueo al reenviarse credenciales (6 nov 2026) | Un ADMIN ya no puede reenviarse sus credenciales: responde 422 y su fila no ofrece ese botón ni el de desactivar. El 403 de cambio obligatorio relee la sesión y lleva a `/cambiar-password`. La confirmación de reenvío detalla sus efectos. |
@@ -179,7 +180,7 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V022 | `V022__add_perspective_map_view.sql` | Catálogo de lugares (cabecera SQL) | Vista de cámara guardada para cada perspectiva |
 | V023 | `V023__add_perspective_sort_order.sql` | Catálogo de lugares (cabecera SQL) | Orden manual de las perspectivas de un lugar |
 | V024 | `V024__create_irrigation_turns.sql` | M7 riego | Turnos de riego y sus secciones |
-| V025 | `V025__create_interventions.sql` | SPEC-200 §4 | Núcleo multiubicación: seis tablas, código interno y catálogos ausentes; probado en bases temporales, no aplicado a la base de trabajo |
+| V025 | `V025__create_interventions.sql` | SPEC-200 §4 | Núcleo multiubicación: seis tablas, código interno y catálogos ausentes |
 | V026 | `V026__create_incident_workflow.sql` | SPEC-201 | Incidencias: captura mínima, aprobación, trabajos vinculados (`incident_interventions`), historial y fotos privadas |
 | V027 | `V027__create_specimen_measurements_history.sql` | SPEC-103 §4.2 | Historial de mediciones dendrométricas del ejemplar |
 | V028 | `V028__align_incidents_with_osg_matrix.sql` | SPEC-201 | Catálogos OSG, campos de matriz, impactos múltiples, numeración de aprobados, propósito de acciones, comunicación y duración congelada al cierre |
@@ -188,10 +189,14 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V031 | `V031__add_species_criticality_and_averages.sql` | SPEC-105 §4.2 | Criticidad y promedios por especie, con la fuente de cada valor, y corrección del tipo de dos especies |
 | V032 | `V032__add_measurement_origin.sql` | SPEC-105 §4.3 | Origen de cada fila del historial de mediciones y la intervención que la registró |
 | V033 | `V033__create_extra_measures.sql` | SPEC-105 §4.4 | Catálogo de medidas adicionales, su asignación por especie y sus valores por medición |
+| V034 | `V034__places_span_buildings_and_children.sql` | Lugares | Relación entre lugares y edificios, contornos derivados de lugares hijos y compatibilidad temporal con `places.building_id` |
+| V035 | `V035__add_species_import_kind.sql` | SPEC-103 §6.6 · SPEC-105 §5.1 | Habilita `species` en `import_batches`, agrega `species.import_batch_id` y siembra `SPECIES_ORIGIN.NATIVE` si falta |
+| V036 | `V036__species_lifecycle_and_audit_log.sql` | SPEC-002 §4.4 · SPEC-004 §4.1 | Falla si hay slugs históricos duplicados; sustituye el índice parcial de slug por unicidad global y crea `audit_log` más cuatro índices. Verificar duplicados antes de desplegar. Probada en PostGIS efímero; **no aplicada a la base persistente V035** |
+| V037 | `V037__reserve_specimen_codes_and_history.sql` | SPEC-002 §4.5/§5.2.5 · SPEC-103 | Falla ante códigos duplicados o filas activas con `deleted_at`; impone códigos permanentes, altas activas, no `DELETE`/reactivación/cambio de código y `RESTRICT` para mediciones. `V036V037UpgradeTest` prueba V035→V037 y abortos del preflight en PostGIS efímero; no aplicada a la base persistente |
 
 ### Pendientes (sin número reservado)
 
-Al 6 nov 2026 el siguiente número libre es **V034**, sujeto a comprobarlo nuevamente al
+Al 12 nov 2026 el siguiente número libre es **V038**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
@@ -203,7 +208,7 @@ Los números en citas históricas de otros specs no autorizan reutilizar version
 | Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
 | Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
 | Metas del resumen de reportes (dos filas en `system_parameters`, sin tablas) | SPEC-202 §4 | Solo datos; se numera al implementar el módulo de reportes |
-| Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
+| Cobertura, protección y consulta de auditoría global | SPEC-004 §3.2/§4/§6/§8 | `audit_log` y `AuditService` persisten el subconjunto definido en SPEC-004 que ya tiene `AuditActionCode`/emisores desde V036; faltan otros eventos/columnas genéricas, el API/pantalla de lectura y la separación de rol de BD que haga cumplir `REVOKE UPDATE, DELETE`. El historial de dominio de SPEC-200 no la sustituye |
 
 Las antiguas pendientes `add_execution_tracking_to_interventions`,
 `add_unspecified_evidence_moment` y `add_deferred_upload_and_map_publication` quedan

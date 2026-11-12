@@ -24,6 +24,12 @@ public class SpeciesPhotoRepository {
 
     private final JdbcTemplate jdbc;
 
+    /** Serialize gallery edits with definitive species deactivation. */
+    public boolean lockActiveSpecies(long speciesId) {
+        return !jdbc.query("SELECT id FROM species WHERE id=? AND is_active AND deleted_at IS NULL FOR UPDATE",
+                (rs, i) -> rs.getLong(1), speciesId).isEmpty();
+    }
+
     public List<SpeciesPhoto> active(String slug) {
         return jdbc.query("""
                 SELECT p.id, p.author, p.license, p.source_page_url FROM species_photos p

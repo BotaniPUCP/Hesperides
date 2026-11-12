@@ -9,6 +9,8 @@ import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;
 import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
+import pe.edu.pucp.hesperides.shared.exception.ConflictException;
+import pe.edu.pucp.hesperides.shared.text.SpeciesNameKey;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
 import java.math.BigDecimal;
@@ -32,13 +34,16 @@ public class SpeciesEditService {
     private final SpeciesMeasureProfiles profiles;
     private final SpeciesExtraMeasures extraMeasures;
 
-    private record Current(long id, boolean critical, BigDecimal referenceHeightM, BigDecimal referenceCrownRadiusM,
+    private record Current(long id, boolean active, boolean critical, BigDecimal referenceHeightM, BigDecimal referenceCrownRadiusM,
                            boolean usesTrunkHeight, boolean usesDbh) {
     }
 
     @Transactional
     public SpeciesResponse update(String slug, SpeciesForm form, boolean manager) {
         Current current = current(slug);
+        if (!current.active()) {
+            throw new ConflictException("La especie está inactiva y no puede editarse ni reactivarse");
+        }
         String scientificName = SpeciesRegistrationService.normalizeScientificName(form.scientificName());
         requireNameIsFree(scientificName, current.id());
         long typeId = catalogs.type(form.vegetationTypeCode());
@@ -64,9 +69,9 @@ public class SpeciesEditService {
 
     private Current current(String slug) {
         return jdbc.query("""
-                SELECT id, is_critical, reference_height_m, reference_crown_radius_m, uses_trunk_height, uses_dbh
-                  FROM species WHERE slug = ? AND deleted_at IS NULL""",
-                (rs, i) -> new Current(rs.getLong("id"), rs.getBoolean("is_critical"),
+                SELECT id, is_active, is_critical, reference_height_m, reference_crown_radius_m, uses_trunk_height, uses_dbh
+                  FROM species WHERE slug = ? AND deleted_at IS NULL FOR UPDATE""",
+                (rs, i) -> new Current(rs.getLong("id"), rs.getBoolean("is_active"), rs.getBoolean("is_critical"),
                         rs.getBigDecimal("reference_height_m"), rs.getBigDecimal("reference_crown_radius_m"),
                         rs.getBoolean("uses_trunk_height"), rs.getBoolean("uses_dbh")), slug)
                 .stream().findFirst()
@@ -74,11 +79,12 @@ public class SpeciesEditService {
     }
 
     private void requireNameIsFree(String scientificName, long id) {
-        Boolean taken = jdbc.queryForObject("""
-                SELECT EXISTS (SELECT 1 FROM species
-                                WHERE lower(scientific_name) = lower(?) AND id <> ? AND deleted_at IS NULL)""",
-                Boolean.class, scientificName, id);
-        if (Boolean.TRUE.equals(taken)) {
+        String nameKey = SpeciesNameKey.key(scientificName);
+        boolean taken = jdbc.queryForList("""
+                SELECT scientific_name FROM species WHERE id <> ? AND deleted_at IS NULL""",
+                        String.class, id)
+                .stream().anyMatch(existing -> SpeciesNameKey.key(existing).equals(nameKey));
+        if (taken) {
             throw new DuplicateResourceException("La especie «" + scientificName + "» ya está registrada en el catálogo");
         }
     }

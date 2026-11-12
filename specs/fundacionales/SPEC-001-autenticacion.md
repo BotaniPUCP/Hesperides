@@ -156,8 +156,9 @@ token. Sin ella, "cerrar sesión" solo borraría el token del cliente y cualquie
 seguiría entrando hasta que expirase.
 
 **El índice único de `email` es parcial (`WHERE deleted_at IS NULL`):** libera el correo si la
-cuenta se da de baja lógica y hay que reutilizarlo. Mismo patrón que SPEC-002 aplica en todas
-sus tablas (INV-4).
+cuenta se da de baja lógica y hay que reutilizarlo. Es una identidad operativa reutilizable; las
+identidades históricas que deben permanecer reservadas (como `species.slug`) conservan unicidad
+global conforme a SPEC-002 §4.4 e INV-4.
 
 **`client_type` es un `CHECK` de dos valores, no un catálogo:** es metadato del sistema, no un
 dato de negocio que el cliente amplíe desde la UI. Misma excepción consciente a INV-2 que
@@ -362,7 +363,7 @@ El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 
 Esta matriz gobierna la autorización (`@PreAuthorize` o equivalente) de **todos** los endpoints de negocio del proyecto, no solo los de este spec. Se documenta aquí porque SPEC-001 es quien define el mecanismo de roles; cada SPEC-1XX de feature debe implementar exactamente estas reglas sobre sus propios controllers, sin reinterpretarlas.
 
-Convención: **C** = crear, **L** = leer/listar, **U** = actualizar, **D** = desactivar (soft delete), **V** = validar/aprobar (acción de negocio, no CRUD), **A** = asignar. Celda vacía = sin acceso; el intento responde 403.
+Convención: **C** = crear, **L** = leer/listar, **U** = actualizar, **D** = dar de baja según el ciclo de vida definido por la feature (sin borrado físico), **V** = validar/aprobar (acción de negocio, no CRUD), **A** = asignar. Celda vacía = sin acceso; el intento responde 403.
 
 La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervisor** dirige su cuadrilla, y el **coordinador** planifica sobre todas las cuadrillas. El operario reporta a su supervisor y el supervisor al coordinador; por eso el coordinador ve todos los equipos y el supervisor solo el suyo.
 
@@ -374,7 +375,10 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 | **1.1 Equipos** | Ver cuadrillas | L | L (todas) | L (la suya) | L (la suya) |
 | **1.2 Roles y catálogos** | Administrar `catalog_types`/`catalog_items` | CUD | | | |
 | **1.2 Roles y catálogos** | Leer catálogos (para llenar selects) | L | L | L | L |
-| **2. Catastro** (`zones`, `species`, `green_elements`) | Crear / editar / desactivar elementos | CUD | CU (sin desactivar, ver nota 2) | | |
+| **2. Catastro** (`zones`) | Crear / editar zonas | CU | CU | | |
+| **2. Catastro** (`zones`) | Dar de baja zonas | D | | | |
+| **2. Catastro** (`species`, `green_elements`) | Crear / editar especies y ejemplares (SPEC-103/105) | CU | CU | CU | |
+| **2. Catastro** (`species`, `green_elements`) | Dar de baja definitiva especies y ejemplares | D | D (ver nota 2) | | |
 | **2. Catastro** | Ver mapa y ficha de elementos | L | L | L | L (solo lectura, sin edición) |
 | **3. Intervenciones** | Crear / editar una intervención | CU | CU | | |
 | **3. Intervenciones** | Asignar una intervención | | A (a cualquier cuadrilla) | A (dentro de su cuadrilla) | |
@@ -403,7 +407,7 @@ La operación de campo tiene tres niveles: el **operario** ejecuta, el **supervi
 **Notas:**
 
 1. El coordinador ve el listado completo de usuarios y de cuadrillas porque planifica sobre todas ellas y necesita saber a qué supervisor dirigirse; sigue sin poder crear, editar ni desactivar cuentas, que es acción exclusivamente administrativa. El supervisor ve solo a los miembros de su propia cuadrilla.
-2. El coordinador mantiene el catastro (crear/editar elementos que descubre o corrige en campo) pero no desactiva elementos: desactivar un elemento del catastro es una decisión administrativa con impacto en reportes históricos, reservada a ADMIN.
+2. El COORDINADOR puede dar de baja especies y ejemplares; la baja de zonas sigue reservada a ADMIN. SUPERVISOR puede crear/corregir especies y ejemplares en formulario según SPEC-103/105, pero no cargar CSV ni dar bajas. La baja de especies/ejemplares es definitiva y se registra con motivo en auditoría; no hay operación de reactivación. Las reglas de visibilidad y persistencia de especies y ejemplares son las de SPEC-002 y SPEC-103.
 3. El coordinador crea y actualiza contratos y proveedores porque es quien gestiona la relación operativa con los tercerizados y da seguimiento al cumplimiento. Lo que no puede es desactivar un proveedor o un contrato: dar de baja una relación comercial tiene implicaciones administrativas y queda en ADMIN.
 4. Enmienda SPEC-200 (5 nov 2026, usuario adopta la aclaración del líder): COORDINADOR y SUPERVISOR responsable validan/observan intervenciones; el supervisor solo las de sus cuadrillas activas. La aprobación de cualquiera cuenta cuando todas las ubicaciones estén aprobadas, sin segunda firma del coordinador. ADMIN/OPERARIO no aprueban. Se conserva la prohibición de aprobar ejecución, reportes o fotos propios, incluso tras cambiar de rol. El actor de cada aprobación queda en validated_by_user_id. Esta regla reemplaza la restricción anterior a solo COORDINADOR.
 

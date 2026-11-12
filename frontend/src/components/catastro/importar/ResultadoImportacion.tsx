@@ -31,6 +31,11 @@ export function ResultadoImportacion({ imp }: { imp: Importacion }) {
               <strong>{r.omittedDuplicates}</strong> posibles duplicados omitidos
             </li>
           )}
+          {imp.kind === 'species' && (r.omittedInactiveSpecies ?? 0) > 0 && (
+            <li>
+              <strong>{r.omittedInactiveSpecies}</strong> filas de especies inactivas omitidas; no se editaron ni reactivaron
+            </li>
+          )}
         </ul>
 
         {r.unknownSpecies.length > 0 && (
@@ -44,7 +49,7 @@ export function ResultadoImportacion({ imp }: { imp: Importacion }) {
         {r.photoWarnings.length > 0 && (
           <section aria-labelledby="fotos-no-guardadas">
             <h3 id="fotos-no-guardadas" className="font-semibold text-urgency-medium-fg">
-              Fotos que no se guardaron (el ejemplar sí)
+              Fotos que no se guardaron ({imp.kind === 'species' ? 'la especie sí' : 'el ejemplar sí'})
             </h3>
             <ul className="list-disc pl-5">
               {r.photoWarnings.map((w) => (

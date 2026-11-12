@@ -7,7 +7,7 @@ import pe.edu.pucp.hesperides.modules.imports.csv.CsvTable;
 import pe.edu.pucp.hesperides.modules.imports.csv.Issue;
 import pe.edu.pucp.hesperides.modules.imports.csv.PhotoReference;
 import pe.edu.pucp.hesperides.modules.imports.csv.RowReader;
-import pe.edu.pucp.hesperides.modules.imports.repository.SpeciesNames;
+import pe.edu.pucp.hesperides.shared.text.SpeciesNameKey;
 import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository.SpeciesRef;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.SpeciesCount;
 
@@ -69,7 +69,7 @@ public record SpeciesPhotoPreview(List<Planned> rows, List<SpeciesCount> unknown
                 r.fail("fuente", "The source must be a web link (https://…)");
             }
             if (!r.ok()) continue;
-            SpeciesRef ref = species.get(SpeciesNames.key(name));
+            SpeciesRef ref = species.get(SpeciesNameKey.key(name));
             if (ref == null) {
                 unknown.merge(name.trim(), 1, Integer::sum);
                 continue;

@@ -58,12 +58,13 @@ export interface InterventionOptions {
 export type InterventionPage = Page<InterventionSummary>;
 const base = '/interventions';
 export const interventionsApi = {
-  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string) => {
+  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string, greenElementId?: number | string) => {
     const query = new URLSearchParams({ page: String(page), size: '20' });
     if (status) query.set('statusCode', status);
     if (dateFrom) query.set('dateFrom', dateFrom);
     if (dateTo) query.set('dateTo', dateTo);
     if (greenElementCode !== undefined) query.set('greenElementCode', greenElementCode);
+    if (greenElementId !== undefined) query.set('greenElementId', String(greenElementId));
     return apiClient.get<InterventionPage>(`${base}?${query}`);
   },
   detail: (id: number) => apiClient.get<InterventionDetail>(`${base}/${id}`),

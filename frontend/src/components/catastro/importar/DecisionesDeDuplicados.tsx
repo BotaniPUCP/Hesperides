@@ -12,6 +12,7 @@ import type { Importacion } from './useImportacion';
 export function DecisionesDeDuplicados({ imp }: { imp: Importacion }) {
   const duplicados = imp.vista?.duplicates ?? [];
   const pendientes = imp.pendientes;
+  const disabled = imp.reanalizando || imp.summaryLoading || imp.confirmationOpen || imp.fase === 'confirmando';
 
   return (
     <section aria-labelledby="posibles-duplicados" className="space-y-3 pt-1">
@@ -33,6 +34,7 @@ export function DecisionesDeDuplicados({ imp }: { imp: Importacion }) {
           <Button
             size="sm"
             variant="secondary"
+            disabled={disabled}
             onClick={() => imp.decidirTodos(true)}
           >
             Ingresar todos
@@ -40,6 +42,7 @@ export function DecisionesDeDuplicados({ imp }: { imp: Importacion }) {
           <Button
             size="sm"
             variant="secondary"
+            disabled={disabled}
             onClick={() => imp.decidirTodos(false)}
           >
             Omitir todos
@@ -109,6 +112,7 @@ export function DecisionesDeDuplicados({ imp }: { imp: Importacion }) {
                   <input
                     type="radio"
                     name={nombre}
+                    disabled={disabled}
                     checked={decision === true}
                     onChange={() => imp.decidir(d.line, true)}
                     className="accent-brand-600 h-4 w-4 cursor-pointer"
@@ -119,6 +123,7 @@ export function DecisionesDeDuplicados({ imp }: { imp: Importacion }) {
                   <input
                     type="radio"
                     name={nombre}
+                    disabled={disabled}
                     checked={decision === false}
                     onChange={() => imp.decidir(d.line, false)}
                     className="accent-neutral-700 h-4 w-4 cursor-pointer"

@@ -430,15 +430,20 @@ El detalle local incluye `linkedElementCodes` para mostrar asociaciones guardada
 proyección informativa, no otro campo editable de persistencia. El formulario añade códigos
 sin retirar las asociaciones existentes por ID.
 
-Listado privado: `greenElementCode` es un filtro opcional exacto de 1–100 caracteres,
-alternativo al conocimiento de IDs internos. Se combina con los demás filtros en la misma
-ubicación activa y se aplica antes de paginar, dentro del alcance del lector. Una actividad con
-el mismo ejemplar en varios lugares aparece una sola vez. Código sin trabajos autorizados →
-página vacía; no se distinguen códigos inexistentes de trabajos ajenos. No inferir asociaciones
-por pertenecer al mismo jardín, especie o coordenadas. La API pública del inventario no cambia.
+Listado privado: `greenElementId` es el filtro exacto del ejemplar y `greenElementCode` el filtro
+opcional exacto de 1–100 caracteres; los códigos son únicos en todo el historial y no se reutilizan.
+El filtro por ID o código no excluye asociaciones porque el ejemplar esté inactivo o dado de baja.
+Ambos filtros se combinan con el alcance del lector y los demás filtros en una misma ubicación activa
+antes de paginar. Una actividad con
+el mismo ejemplar en varios lugares aparece una sola vez. Sin trabajos autorizados → página vacía;
+no se distinguen IDs/códigos inexistentes de trabajos ajenos. No inferir asociaciones por pertenecer
+al mismo jardín, especie o coordenadas. La API pública del inventario añade el ID a la ficha vigente.
 
 La ficha pública muestra el historial solo a ADMIN/C/S/O con sesión y enlaza el detalle privado
-y `/intervenciones?greenElementCode=...`; el listado conserva el filtro al paginar/cambiar estado.
+y `/intervenciones?greenElementId=...&greenElementCode=...`; el listado conserva ambos valores al
+paginar/cambiar estado. Las asociaciones se conservan al dar de baja el ejemplar y al editar otros
+campos de una intervención; solo se retiran por una edición explícita de planificación antes del inicio.
+Al confirmar la baja desde la ficha, el enlace de salida abre ese listado por el ID histórico del ejemplar.
 Al cerrar sesión o cambiar de lector/ejemplar se descarta el historial anterior.
 
 Asignación global:

@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation';
 import type { SpeciesPhoto, SpecimenDetail } from '@shared/types';
 import { Badge, Button, ImagePlaceholder } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { puedeEditarEjemplar, esPersonalOperativo } from '@/components/catastro/permisos';
+import { puedeDarDeBaja, puedeEditarEjemplar, esPersonalOperativo } from '@/components/catastro/permisos';
 import { SpecimenMeasures } from './SpecimenMeasures';
 import { SpeciesPhotoViewer } from './SpeciesPhotoViewer';
 import { SpecimenEditModal } from './SpecimenEditModal';
+import { DefinitiveDeactivationModal } from './DefinitiveDeactivationModal';
+import { SpeciesStatusBadge } from './SpeciesStatusBadge';
+import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 
 export interface SpecimenInfoProps {
   specimen: SpecimenDetail;
@@ -47,12 +50,14 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
   const router = useRouter();
   const { user } = useAuth();
   const canEdit = puedeEditarEjemplar(user?.role.code);
+  const canDeactivate = puedeDarDeBaja(user?.role.code);
   const canViewInternalData = esPersonalOperativo(user?.role.code);
 
   const [imageError, setImageError] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deactivationOpen, setDeactivationOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleUpdateSuccess = () => {
@@ -216,6 +221,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                   {/* Fila de etiquetas de clasificación y estado */}
                   <div className="flex flex-wrap items-center gap-2 mt-2.5">
                     <Badge label={species.vegetationTypeName} color="brand" />
+                    <SpeciesStatusBadge isActive={species.isActive} inactiveLabel="Especie inactiva" />
                     {species.family && (
                       <Badge label={`Fam. ${species.family}`} color="neutral" />
                     )}
@@ -285,7 +291,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
             </div>
 
             {/* Lado Derecho: Acciones Contextuales y Enlace Original */}
-            <div className="flex flex-row sm:flex-col items-stretch sm:items-end justify-start gap-2.5 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-neutral-200/60">
+            <div className="flex flex-row flex-wrap sm:flex-col items-stretch sm:items-end justify-start gap-2.5 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-neutral-200/60">
               {canEdit && (
                 <div className="w-full sm:w-auto">
                   <Button
@@ -300,6 +306,13 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                     }
                   >
                     Actualizar medidas
+                  </Button>
+                </div>
+              )}
+              {canDeactivate && (
+                <div className="w-full sm:w-auto">
+                  <Button variant="danger" size="sm" fullWidth onClick={() => setDeactivationOpen(true)}>
+                    Dar de baja
                   </Button>
                 </div>
               )}
@@ -430,6 +443,21 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
           isOpen={editModalOpen}
           onClose={() => setEditModalOpen(false)}
           onSuccess={handleUpdateSuccess}
+        />
+      )}
+      {deactivationOpen && (
+        <DefinitiveDeactivationModal
+          entityLabel={`Ejemplar ${specimen.code}`}
+          onCancel={() => setDeactivationOpen(false)}
+          onConfirm={async (reason) => {
+            await inventarioVerdeApi.deactivateSpecimen(specimen.code, reason);
+            setDeactivationOpen(false);
+            const history = new URLSearchParams({
+              greenElementId: String(specimen.id),
+              greenElementCode: specimen.code,
+            });
+            router.push(`/intervenciones?${history.toString()}`);
+          }}
         />
       )}
     </>

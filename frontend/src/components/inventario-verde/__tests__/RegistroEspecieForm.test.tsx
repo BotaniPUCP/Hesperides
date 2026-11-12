@@ -129,6 +129,19 @@ describe('RegistroEspecieForm', () => {
     expect(onSuccess).toHaveBeenCalledWith(palmeraReal);
   });
 
+  it('normaliza un nombre de una palabra antes del alta manual', async () => {
+    api.registerSpecies.mockResolvedValue(palmeraReal);
+    render(<RegistroEspecieForm />);
+    await userEvent.type(screen.getByLabelText(/Nombre científico/i), 'mANGO');
+
+    fireEvent.click(screen.getByRole('button', { name: /Registrar especie/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Confirmar y registrar/i }));
+
+    await waitFor(() => expect(api.registerSpecies).toHaveBeenCalledWith(
+      expect.objectContaining({ scientificName: 'Mango' }), null,
+    ));
+  });
+
   it('informa si el nombre científico ya se encuentra registrado (409 Conflict)', async () => {
     api.registerSpecies.mockRejectedValue(new ApiError(409, 'Conflict'));
 
@@ -141,5 +154,19 @@ describe('RegistroEspecieForm', () => {
     expect(
       await screen.findByText('Ya existe una especie con este nombre científico en el catálogo.'),
     ).toBeInTheDocument();
+  });
+
+  it('permite enviar un nombre reutilizable cuando el backend acepta la ficha nueva', async () => {
+    api.registerSpecies.mockResolvedValue({ ...palmeraReal, scientificName: 'Rosa repetita', slug: 'rosa-repetita-2' });
+    render(<RegistroEspecieForm />);
+
+    await userEvent.type(screen.getByLabelText(/Nombre científico/i), 'Rosa repetita');
+    fireEvent.click(screen.getByRole('button', { name: /Registrar especie/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Confirmar y registrar/i }));
+
+    await waitFor(() => expect(api.registerSpecies).toHaveBeenCalledWith(
+      expect.objectContaining({ scientificName: 'Rosa repetita' }), null,
+    ));
+    expect(await screen.findByText(/Especie registrada exitosamente/i)).toBeInTheDocument();
   });
 });

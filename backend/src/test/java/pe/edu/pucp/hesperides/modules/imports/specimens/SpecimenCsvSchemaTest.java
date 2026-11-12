@@ -41,7 +41,7 @@ class SpecimenCsvSchemaTest {
 
         assertThat(d.measurement()).isNull();
         assertThat(d.assessment()).isNull();
-        assertThat(d.quantity()).isEqualTo(1);
+        assertThat(d.quantity()).isNull();
     }
 
     @Test
@@ -95,6 +95,27 @@ class SpecimenCsvSchemaTest {
             assertThat(i.line()).isEqualTo(1);
             assertThat(i.column()).isEqualTo("altura");
         });
+    }
+
+    @Test
+    void aRepeatedColumnHeaderIsRejectedInsteadOfSilentlyTakingTheLastValue() {
+        var parsed = SpecimenCsvSchema.parse(CsvTable.parse(
+                "nombre_cientifico;latitud;longitud;latitud\nRoystonea regia;-12;-77;-11\n"
+                        .getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(parsed.issues()).singleElement().satisfies(i -> {
+            assertThat(i.line()).isEqualTo(1);
+            assertThat(i.column()).isEqualTo("latitud");
+        });
+    }
+
+    @Test
+    void totalRowsCountsRowsRejectedByCellValidation() {
+        var parsed = parse(";Roystonea regia;norte;-77.079;;;;\n;Tipuana tipu;-12.070;-77.080;;;;\n");
+
+        assertThat(parsed.totalRows()).isEqualTo(2);
+        assertThat(parsed.drafts()).hasSize(1);
+        assertThat(parsed.issues()).hasSize(1);
     }
 
     @Test

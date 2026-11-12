@@ -7,12 +7,16 @@ const CARGAN_CSV = ['ADMIN', 'COORDINADOR'];
 const REGISTRAN = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
 const EDITAN_EJEMPLAR = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
 const CAMBIAN_CRITICIDAD = ['ADMIN', 'COORDINADOR'];
+const DAN_DE_BAJA = ['ADMIN', 'COORDINADOR'];
 
 export const puedeCargarCsv = (rol?: string) => CARGAN_CSV.includes(rol ?? '');
 
 export const puedeRegistrar = (rol?: string) => REGISTRAN.includes(rol ?? '');
 
 export const puedeEditarEjemplar = (rol?: string) => EDITAN_EJEMPLAR.includes(rol ?? '');
+
+/** Solo ADMIN y COORDINADOR pueden dar bajas definitivas (SPEC-001/103). */
+export const puedeDarDeBaja = (rol?: string) => DAN_DE_BAJA.includes(rol ?? '');
 
 /** Cambiar la criticidad de una especie es una decisión de seguridad (SPEC-105 §3.1). */
 export const puedeCambiarCriticidad = (rol?: string) => CAMBIAN_CRITICIDAD.includes(rol ?? '');

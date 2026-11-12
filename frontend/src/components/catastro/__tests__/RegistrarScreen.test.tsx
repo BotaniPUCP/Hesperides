@@ -1,5 +1,5 @@
 import { medidasDeEspecieCritica } from '@/components/inventario-verde/__fixtures__/inventario';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@/lib/api';
 import { catastroApi } from '@/lib/catastro-api';
@@ -22,7 +22,7 @@ jest.mock('@/hooks/useCatalog', () => ({
   }),
 }));
 jest.mock('@/lib/inventario-verde-api', () => ({
-  inventarioVerdeApi: { species: jest.fn(), registerSpecies: jest.fn() },
+  inventarioVerdeApi: { species: jest.fn(), assignableSpecies: jest.fn(), registerSpecies: jest.fn() },
 }));
 // El visor 3D no corre en jsdom: un botón hace de clic en el suelo.
 jest.mock('../registrar/MapaSelector', () => ({
@@ -37,7 +37,7 @@ jest.mock('@/hooks/useDebouncedValue', () => ({ useDebouncedValue: <T,>(v: T) =>
 const register = jest.mocked(catastroApi.register);
 
 const MOLLE = {
-  slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle serrano', otherNames: [],
+  slug: 'schinus-molle', isActive: true, scientificName: 'Schinus molle', commonName: 'Molle serrano', otherNames: [],
   family: 'Anacardiaceae', vegetationTypeCode: 'TREE', vegetationTypeName: 'Árbol', specimenCount: 3, imageUrl: null,
   imageSource: null, photos: [],
   ...medidasDeEspecieCritica,
@@ -49,7 +49,7 @@ function pantalla(rol = 'SUPERVISOR') {
 }
 
 async function elegirMolleYPunto() {
-  jest.mocked(inventarioVerdeApi.species).mockResolvedValue({
+  jest.mocked(inventarioVerdeApi.assignableSpecies).mockResolvedValue({
     content: [MOLLE], page: { number: 0, size: 8, totalElements: 1, totalPages: 1 },
   });
   await userEvent.type(screen.getByLabelText(/Especie/), 'molle');
@@ -58,7 +58,10 @@ async function elegirMolleYPunto() {
 }
 
 describe('RegistrarScreen', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.mocked(inventarioVerdeApi.assignableSpecies).mockReset();
+  });
 
   it('el operario no registra', () => {
     pantalla('OPERARIO');
@@ -88,6 +91,42 @@ describe('RegistrarScreen', () => {
       false,
     );
     expect(await screen.findByText('EV-000966')).toBeInTheDocument();
+  });
+
+  it('muestra que está buscando especies mientras espera la API', async () => {
+    jest.mocked(inventarioVerdeApi.assignableSpecies).mockReturnValue(new Promise(() => {}));
+    pantalla();
+
+    fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'molle' } });
+
+    expect(screen.getByRole('status')).toHaveTextContent('Buscando especies…');
+  });
+
+  it('distingue un error de carga de una búsqueda sin resultados y permite reintentar', async () => {
+    jest.mocked(inventarioVerdeApi.assignableSpecies)
+      .mockRejectedValueOnce(new Error('API no disponible'))
+      .mockResolvedValueOnce({ content: [MOLLE], page: { number: 0, size: 8, totalElements: 1, totalPages: 1 } });
+    pantalla();
+
+    fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'molle' } });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar la lista de especies.');
+    expect(screen.queryByText(/No se encontró ninguna especie/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Reintentar búsqueda' }));
+    expect(await screen.findByRole('button', { name: /Schinus molle/ })).toBeInTheDocument();
+    expect(inventarioVerdeApi.assignableSpecies).toHaveBeenCalledTimes(2);
+  });
+
+  it('muestra que no hay resultados solo cuando la búsqueda termina sin error', async () => {
+    jest.mocked(inventarioVerdeApi.assignableSpecies).mockResolvedValue({
+      content: [], page: { number: 0, size: 8, totalElements: 0, totalPages: 0 },
+    });
+    pantalla();
+
+    fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'no existe' } });
+
+    expect(await screen.findByRole('region', { name: 'Sin resultados de especie' })).toHaveTextContent('No se encontró ninguna especie');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('un posible duplicado pregunta y, si es otra planta, reenvía confirmando', async () => {

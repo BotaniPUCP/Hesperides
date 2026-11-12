@@ -220,7 +220,7 @@ function RegistroEspecieDialog({
             placeholder="ej. Jacaranda mimosifolia"
             required
             errorMessage={fieldErrors.scientificName}
-            helperText="Formato binomial en latín (Género + epíteto)"
+            helperText="El formato se normaliza automáticamente; no se verifica la taxonomía"
           />
 
           <Input
@@ -262,7 +262,7 @@ function RegistroEspecieDialog({
         <div className="grid gap-4 sm:grid-cols-2">
           <Select
             id="origin"
-            label="Procedencia / Origen"
+            label="Origen / Procedencia"
             value={originCode}
             onChange={(opt) => setOriginCode(opt?.code ?? null)}
             options={originOptions}
@@ -273,7 +273,7 @@ function RegistroEspecieDialog({
 
           <Input
             id="otherNames"
-            label="Nombres alternativos"
+            label="Nombres alternativos o vernáculos"
             value={otherNamesText}
             onChange={setOtherNamesText}
             placeholder="ej. Tarco, Gualanday"
