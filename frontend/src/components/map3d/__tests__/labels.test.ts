@@ -102,6 +102,7 @@ describe('createLabels con recorte', () => {
       font: '',
       measureText: (t: string) => ({ width: t.length * 7 }),
     } as unknown as CanvasRenderingContext2D);
+    jest.spyOn(window, 'getComputedStyle').mockReturnValue({ font: '600 12px Test' } as unknown as CSSStyleDeclaration);
     const root = document.createElement('div');
     createLabels(root, longData, buildingMeta, []);
     await Promise.resolve();
@@ -111,6 +112,19 @@ describe('createLabels con recorte', () => {
     const building = texts.find((t) => t.startsWith('Lab.'));
     expect(building).toBeDefined();
     expect(building!.length * 7).toBeLessThanOrEqual(LABEL_TOLERANCE_PX);
+  });
+
+  it('mide con la fuente calculada de la etiqueta', async () => {
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { ready: Promise.resolve() } });
+    const used: string[] = [];
+    const ctx = { font: '', measureText: (t: string) => { used.push(ctx.font); return { width: t.length * 7 }; } };
+    jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(ctx as unknown as CanvasRenderingContext2D);
+    jest.spyOn(window, 'getComputedStyle').mockReturnValue({ font: 'italic 500 13px "Fuente Rara"' } as unknown as CSSStyleDeclaration);
+    createLabels(document.createElement('div'), longData, buildingMeta, []);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(used.length).toBeGreaterThan(0);
+    expect(new Set(used)).toEqual(new Set(['italic 500 13px "Fuente Rara"']));
   });
 
   it('sin canvas ni fuentes deja los nombres completos y no escribe en consola', () => {

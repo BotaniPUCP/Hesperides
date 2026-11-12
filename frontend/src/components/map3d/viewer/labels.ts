@@ -49,7 +49,6 @@ export function shortName(name: string): string {
 /** Ancho máximo de una etiqueta; un nombre que entra completo puede llegar hasta la tolerancia. */
 export const LABEL_MAX_PX = 160;
 export const LABEL_TOLERANCE_PX = 190;
-const LABEL_FONT = '600 12px Inter, "Segoe UI", system-ui, sans-serif';
 const CONNECTORS = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'en', 'a', 'al', 'con', 'para', 'por']);
 /** Abreviaturas de uso común en la PUCP; en un nombre en mayúsculas se escriben en mayúsculas. */
 const ABBREVIATIONS: [RegExp, string][] = [
@@ -101,12 +100,21 @@ export function trimLabel(text: string, measure: (t: string) => number): string 
   return short.replace(/[\s,:;/+-]+$/, '') + '…';
 }
 
-/** Medidor de ancho con la fuente de la etiqueta; null si no hay canvas (p. ej. jsdom). */
-function canvasMeasure(): ((t: string) => number) | null {
+/** La fuente con la que se dibuja la etiqueta; vacía si el navegador no la calcula (p. ej. jsdom). */
+function drawnFont(el: HTMLElement): string {
+  const cs = getComputedStyle(el);
+  if (cs.font) return cs.font;
+  if (!cs.fontSize || !cs.fontFamily) return '';
+  return [cs.fontStyle, cs.fontWeight, cs.fontSize, cs.fontFamily].filter(Boolean).join(' ');
+}
+
+/** Medidor de ancho con la fuente indicada; null si no hay canvas o fuente (p. ej. jsdom). */
+function canvasMeasure(font: string): ((t: string) => number) | null {
+  if (!font) return null;
   try {
     const ctx = document.createElement('canvas').getContext('2d');
     if (!ctx) return null;
-    ctx.font = LABEL_FONT;
+    ctx.font = font;
     return (t) => ctx.measureText(t).width;
   } catch {
     return null;
@@ -151,10 +159,14 @@ export function createLabels(root: HTMLElement, data: SceneData, buildingMeta: M
   // Con la fuente ya cargada se mide el ancho real; sin fuentes web ni canvas quedan los nombres completos.
   if (typeof document !== 'undefined' && document.fonts?.ready) {
     document.fonts.ready.then(() => {
-      const measure = disposed ? null : canvasMeasure();
-      if (!measure) return;
+      if (disposed) return;
+      // Se mide con la fuente con que se dibuja cada clase de etiqueta, no con una fija.
+      const measures = new Map<LabelKind, ((t: string) => number) | null>();
       for (const a of anchors) {
         if (a.kind !== 'building' && a.kind !== 'garden') continue;
+        if (!measures.has(a.kind)) measures.set(a.kind, canvasMeasure(drawnFont(a.el)));
+        const measure = measures.get(a.kind);
+        if (!measure) continue;
         const short = trimLabel(a.el.textContent ?? '', measure);
         if (short !== a.el.textContent) { a.el.textContent = short; a.w = 0; a.h = 0; }
       }

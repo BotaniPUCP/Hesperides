@@ -203,13 +203,14 @@ usuario del 12 nov 2026. Los modelos del SKP necesitan dos correcciones que no c
   pero la sombra la proyectan las caras traseras. Si no, cada techo se sombrea a sí mismo y salen rayas.
 
 **D-12 · Los nombres de las etiquetas se recortan por ancho medido.** Se mide con la fuente de la
-etiqueta (600 12px Inter) y se aplica en este orden:
+etiqueta y se aplica en este orden:
 1. Abreviaturas de uso en la PUCP: «EE.GG.», «Dpto.», «Lab.», «Inst.», «Ing.», «Inv.», «Asoc.», «Serv.»,
    «Univ.». En un nombre en mayúsculas se escriben en mayúsculas.
 2. Hasta 160 px queda tal cual. Si apenas se pasa, hasta 190 px, queda entero.
 3. Si no, la primera parte antes de « / », «, », «: », « - », « + » o « (», si dice algo.
 4. Si no, palabras enteras con «…», sin dejar un conector colgando.
 
+El ancho se mide con la fuente calculada de la propia etiqueta, y la app no carga Inter.
 Se aplica a todo el mapa: edificios y jardines, en la app y en la propuesta. El nombre completo sigue en
 el tooltip y en la ficha.
 - *Medido el 12 nov 2026:* de 148 nombres, 36 se acortan y 16 llevan «…»; la etiqueta más ancha mide 179 px.
@@ -379,7 +380,7 @@ Los edificios agrupados no se dibujan por separado.
 | CA-08 | Desniveles | Junto al CIA se ve el desnivel con su fondo, rampas y muros del color del suelo; por ninguna rendija se ve el cielo |
 | CA-09 | Huaca | El Camino Prehispánico se ve con muros de tapial ocre y la etiqueta «Camino Prehispánico» |
 | CA-10 | Acabado | Barniz y luces iguales a los de hoy, sin manchas ni rayas en los techos de los modelos |
-| CA-11 | Etiquetas | Ninguna etiqueta pasa de 190 px; «Estudios Generales Ciencias» se lee «EE.GG. Ciencias» |
+| CA-11 | Etiquetas | Ninguna etiqueta pasa de 190 px; los nombres largos se recortan según el ancho medido con la fuente con la que se dibujan (con Inter, «Estudios Generales Ciencias» se lee «EE.GG. Ciencias»; con la fuente del sistema de Windows entra completo) |
 | CA-12 | Seguridad | Sin sesión, `/api/v1/map/models/buildings` responde 401 |
 | CA-13 | Sin modelo | Con el endpoint del modelo caído, el mapa abre con prismas |
 | CA-14 | Navegador (INV-10) | `/mapa` en web y en Android, claro y oscuro: se ve como la página de comparación aprobada |
