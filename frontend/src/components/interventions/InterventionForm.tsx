@@ -53,7 +53,9 @@ export function InterventionForm({ initial, fromIncident = null, returnFilters =
   const [findingSource,setFindingSource] = useState<number | null>(null);
   const [locations, setLocations] = useState<InterventionLocation[]>(initial?.locations ?? prefill?.locations ?? []);
   const [prefilledRefs] = useState(() => new Set((initial ? [] : prefill?.locations ?? []).map(l => l.clientReference)));
-  const [elementCodeInputs, setElementCodeInputs] = useState<Record<string,string>>({});
+  // Los códigos que trae una ubicación prellenada (por ejemplo, los ejemplares de un conjunto) se ven y se editan en su caja.
+  const [elementCodeInputs, setElementCodeInputs] = useState<Record<string,string>>(() => Object.fromEntries((initial ? [] : prefill?.locations ?? [])
+    .filter(l => l.elementCodes?.length).map(l => [l.clientReference, l.elementCodes!.join(', ')])));
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [uncertain, setUncertain] = useState(false);

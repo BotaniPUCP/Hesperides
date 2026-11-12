@@ -15,9 +15,11 @@ const locationFor = (zoneId: number): InterventionLocation => ({ clientReference
 /**
  * Los ejemplares del conjunto van juntos en una ubicación propia: nombrarlos uno
  * por uno daría decenas de tarjetas, y una ubicación con solo ejemplares es válida.
+ * Van por código para que se vean en la caja «Agregar ejemplares por código» y se
+ * puedan quitar antes de guardar.
  */
-const specimensLocation = (elementIds: number[]): InterventionLocation => ({ clientReference: createClientUuid(), zoneId: null,
-  placeId: null, location: null, elementIds, description: 'Ejemplares del conjunto', unitItemId: null, requestedQuantity: null });
+const specimensLocation = (codes: string[]): InterventionLocation => ({ clientReference: createClientUuid(), zoneId: null,
+  placeId: null, location: null, elementIds: [], elementCodes: codes, description: 'Ejemplares del conjunto', unitItemId: null, requestedQuantity: null });
 
 async function loadPrefill(setId: number, activityId: number) {
   const [set, rows] = await Promise.all([greenAreaSetsApi.get(setId), planningApi.rows()]);
@@ -27,7 +29,7 @@ async function loadPrefill(setId: number, activityId: number) {
     date: row?.suggestedDate ?? '',
     description: `Planificada desde: ${row?.activityLabel ?? 'mantenimiento'} en ${set.name}`,
     locations: [...set.zones.map((z) => locationFor(z.id)),
-      ...(set.elements.length > 0 ? [specimensLocation(set.elements.map((e) => e.id))] : [])],
+      ...(set.elements.length > 0 ? [specimensLocation(set.elements.map((e) => e.code))] : [])],
   };
   return { prefill, open: row?.openIntervention ?? null };
 }

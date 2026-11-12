@@ -61,19 +61,43 @@ describe('Registro de intervención desde la planificación (SPEC-203 §5.6)', (
     expect(body.locations.map((l: { zoneId: number }) => l.zoneId)).toEqual([112, 113]);
   });
 
-  it('los ejemplares del conjunto llegan juntos en una ubicación propia', async () => {
+  it('los ejemplares del conjunto llegan juntos en una ubicación propia, con sus códigos en la caja', async () => {
     (greenAreaSetsApi.get as jest.Mock).mockResolvedValue({ id: 3, name: 'Mixto', description: null, version: 0,
       activities: [], warnings: [], zones: zones(1),
       elements: [{ id: 501, code: 'EV-000501' }, { id: 502, code: 'EV-000502' }] });
     render(<PlannedInterventionForm setId={3} activityId={30} />);
 
     expect(await screen.findByRole('heading', { name: 'Ubicación 2' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Agregar ejemplares por código/, { selector: '#elements-1' })).toHaveValue('EV-000501, EV-000502');
     await userEvent.click(screen.getByRole('button', { name: 'Crear intervención' }));
 
     await waitFor(() => expect(interventionsApi.create).toHaveBeenCalled());
     const body = (interventionsApi.create as jest.Mock).mock.calls[0][0];
     expect(body.locations).toHaveLength(2);
-    expect(body.locations[1]).toMatchObject({ zoneId: null, elementIds: [501, 502], description: 'Ejemplares del conjunto' });
+    expect(body.locations[1]).toMatchObject({ zoneId: null, elementCodes: ['EV-000501', 'EV-000502'], description: 'Ejemplares del conjunto' });
+  });
+
+  it('quitar un código de la caja lo saca de la intervención', async () => {
+    (greenAreaSetsApi.get as jest.Mock).mockResolvedValue({ id: 3, name: 'Mixto', description: null, version: 0,
+      activities: [], warnings: [], zones: zones(1),
+      elements: [{ id: 501, code: 'EV-000501' }, { id: 502, code: 'EV-000502' }] });
+    render(<PlannedInterventionForm setId={3} activityId={30} />);
+
+    const box = await screen.findByLabelText(/Agregar ejemplares por código/, { selector: '#elements-1' });
+    await waitFor(() => expect(box).toBeEnabled());
+    await userEvent.clear(box);
+    await userEvent.type(box, 'EV-000502');
+    await userEvent.click(screen.getByRole('button', { name: 'Crear intervención' }));
+
+    await waitFor(() => expect(interventionsApi.create).toHaveBeenCalled());
+    expect((interventionsApi.create as jest.Mock).mock.calls[0][0].locations[1].elementCodes).toEqual(['EV-000502']);
+  });
+
+  it('las ubicaciones de jardines no traen códigos en su caja', async () => {
+    render(<PlannedInterventionForm setId={3} activityId={30} />);
+
+    expect(await screen.findByRole('heading', { name: 'Ubicación 1' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Agregar ejemplares por código/, { selector: '#elements-0' })).toHaveValue('');
   });
 
   it('avisa del jardín atendido hace poco y deja quitarlo o mantenerlo', async () => {
