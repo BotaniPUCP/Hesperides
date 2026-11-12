@@ -68,7 +68,8 @@ reserva**. Quedan **fuera**, a propósito (decisión del usuario, 9-11 nov 2026)
 
 ### 2.3 Frontend web
 
-- `/reservas` — agenda (lista por día). `/reservas/nueva`, `/reservas/[codigo]` — formulario.
+- `/reservas` — agenda (lista por día). `/reservas/nueva` — formulario. `/reservas/[codigo]` — ficha
+  con mapa; `?editar=1` abre el cambio de responsable.
 - `/reservas/importar` — registro masivo, con el mismo flujo de pantalla que
   `/directorio/importar`.
 - La ficha del lugar **no** muestra reservas: viven solo en su módulo *(decisión del usuario, 11 nov
@@ -120,6 +121,11 @@ Directorio.
 **D-02b · Historial de responsables.** Decisión del usuario. Cada cambio de responsable guarda
 quién lo cambió, cuándo, el anterior y el nuevo, sin motivo, en `garden_reservation_responsibles`,
 y la ficha de la reserva muestra la lista. El responsable vigente es la última fila.
+
+**D-02c · Editar es cambiar el responsable.** Decisión del usuario (12 nov 2026). Jardín, fecha,
+horario, «Pedido de», solicitante, «Para» y motivo quedan fijos al registrar: otro jardín u otra
+hora es otra reserva, que se registra después de anular esta. El backend rechaza la edición que
+trae cualquiera de esos campos (422). *Descartado:* editar todos los datos (primera iteración).
 
 **D-03 · Se reserva un lugar prestable.** La reserva guarda `place_id`. Un lugar sin sección
 prestable propia ni en sus hijos se rechaza (422). Hacer prestable una sección no es parte de
@@ -285,8 +291,12 @@ Crear:
  "purpose":"Feria de Psicología"}
 ```
 
-Editar: los mismos campos **sin** `requestedByCode` ni `requesterCode` (fijos, D-02), y con
-`version`. Si `responsibleCode` cambia, se agrega una fila al historial (D-02b).
+Editar (D-02c): solo `{"responsibleCode":"CON-0019","version":1}`. Cualquier otro campo responde
+422 «Only the responsible can change: cancel the reservation and register a new one». Si el
+responsable cambia, se agrega una fila al historial (D-02b); si es el mismo, nada cambia.
+
+La ficha (`GET /{code}`) trae además `place.sectionCodes`: las secciones del jardín, para que el
+mapa lo enfoque. En la agenda y en las respuestas de escritura van vacías.
 
 Avisos (`check` y `nearby`, y `warnings` al guardar):
 
@@ -444,7 +454,10 @@ tenía 0 reservas, así que las dos correcciones de datos no encontraron filas.
      elegirlo y sigue al solicitante mientras el usuario no lo cambie a mano.
    Si la organización o el contacto no existen, la ventana de alta de cada selector los registra
    sin salir de la reserva, con el rol opcional del contacto en esa organización (SPEC-106 §5.2).
-2. En `/reservas/[codigo]`, «Pedido de» y «Solicitante» se muestran como texto, no como campos.
+2. En `/reservas/[codigo]` (la ficha) los datos van a la izquierda y el **mapa 3D** a la derecha,
+   encuadrando el jardín con sus secciones iluminadas; en pantallas angostas, el mapa va debajo.
+   «Editar» abre un formulario donde todo se lee como texto y solo el **responsable** es un campo
+   (D-02c); al guardar o cancelar se vuelve a la ficha.
    Debajo del responsable, «Responsables anteriores» lista el historial (D-02b) con fecha y quién
    hizo el cambio; no aparece si nunca cambió.
    Debajo del motivo, dos bloques de seguimiento (enmienda del 11 nov 2026):
@@ -470,8 +483,10 @@ tenía 0 reservas, así que las dos correcciones de datos no encontraron filas.
 - Por defecto: desde hoy, 30 días hacia adelante, sin anuladas. Filtros: rango de fechas, jardín,
   organización, «Incluir anuladas». Los filtros viven en la URL (como Frecuencias).
 - Agrupada por día local («Hoy», «Mañana», «jue 13 nov»).
-- Cada fila: horario, jardín, «Pedido de» (y «para <organización>» si la hay), el responsable con
-  su rol y su teléfono, estado y, solo si está anulada, el motivo de anulación. La agenda **no**
+- **Toda la tarjeta lleva a la ficha** (decisión del usuario, 12 nov 2026); «Editar», «Anular» y
+  «Marcar en uso» siguen siendo botones propios.
+- Cada fila: horario, jardín, «Pedido de» (y «para <organización>» si la hay), «Responsable:» con
+  su nombre, su rol y su teléfono, estado y, solo si está anulada, el motivo de anulación. La agenda **no**
   muestra al solicitante ni el motivo del pedido: eso queda en la ficha (decisión del usuario,
   11 nov 2026).
 - En cada fila no anulada, los chips del seguimiento (enmienda del 11 nov 2026), visibles para
@@ -550,7 +565,8 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 | CA-09 | La ficha de un lugar prestable no muestra reservas; la agenda filtrada por ese jardín, sí | Abrir el lugar y la agenda |
 | CA-10 | Pedido de OIE (Juan Diego) para CF Psicología: el responsable propuesto es Juan Diego; se cambia a María, de CF Psicología; la ficha muestra a María, a Juan Diego como solicitante y el historial con los dos | Editar la reserva |
 | CA-11 | Una organización y un contacto nuevos se registran desde la reserva sin salir del formulario, y quedan en el Directorio con su rol | Ventana de alta |
-| CA-12 | Editar no deja cambiar «Pedido de» ni el solicitante | Ficha de la reserva |
+| CA-12 | Editar solo deja cambiar el responsable; jardín, horario, «Pedido de», «Para» y motivo se leen como texto, y la API los rechaza | Ficha de la reserva |
+| CA-14 | Desde la agenda, un clic en la tarjeta abre la ficha, con el mapa 3D encuadrando el jardín | Agenda → ficha |
 | CA-13 | Filtrar la agenda por CF Psicología trae la reserva pedida por la OIE para ella | Agenda |
 | CA-14 | Un coordinador confirma el uso de una reserva Próxima: ficha y agenda muestran «Confirmada» y queda en el historial con fecha y quién | `PUT /{code}/confirmation` |
 | CA-15 | Dentro del horario, el capataz marca «en uso» desde la agenda y la fila pasa a «En uso»; si no marca, la fila muestra «No se está usando» y al terminar queda «No usada» | Agenda de hoy |
@@ -561,7 +577,7 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 ## 7. Especificación visual
 
 - Agenda: encabezado de día en negrita; filas con el horario a la izquierda (`10:00–14:00`), el
-  jardín y «Pedido de … para …» en la línea principal, el responsable con su rol y teléfono debajo
+  jardín y «Pedido de … para …» en la línea principal, «Responsable: <nombre> · <teléfono>» debajo
   (sin solicitante ni motivo), el estado como
   `Badge` (Próxima info, En curso success, Terminada neutral, Anulada neutral tachado), y los
   chips del seguimiento: «Confirmada» info y el uso derivado (En uso success, No se está usando

@@ -12,6 +12,8 @@ export interface ReservationGardenRef {
   id: number;
   code: string;
   name: string;
+  /** Las secciones del jardín; solo vienen llenas en la ficha, para enfocar el mapa. */
+  sectionCodes: string[];
 }
 
 export interface ReservationOrganizationRef {

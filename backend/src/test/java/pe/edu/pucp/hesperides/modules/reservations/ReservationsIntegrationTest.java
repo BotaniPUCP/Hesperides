@@ -125,15 +125,10 @@ class ReservationsIntegrationTest {
                         purpose == null ? "null" : "\"" + purpose + "\"");
     }
 
-    /** Editar: sin `requestedByCode` ni `requesterCode` (D-02), con `version`. */
-    private static String editBody(long placeId, String requestedFor, String responsible, OffsetDateTime start,
-            OffsetDateTime end, String purpose, Long version) {
-        return """
-                {"placeId":%d,"requestedForCode":%s,"responsibleCode":"%s","startsAt":"%s","endsAt":"%s",
-                 "purpose":%s,"version":%s}"""
-                .formatted(placeId, requestedFor == null ? "null" : "\"" + requestedFor + "\"",
-                        responsible, start, end,
-                        purpose == null ? "null" : "\"" + purpose + "\"", version == null ? "null" : version.toString());
+    /** Editar: solo el responsable y la versión (D-02c). */
+    private static String editBody(String responsible, Long version) {
+        return "{\"responsibleCode\":\"%s\",\"version\":%s}"
+                .formatted(responsible, version == null ? "null" : version.toString());
     }
 
     private ResultActions create(String body) throws Exception {
@@ -281,11 +276,11 @@ class ReservationsIntegrationTest {
             String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
 
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(editBody(rosalesId, null, requester, at(day, 11), at(day, 15), "Cambio", 0L)))
+                            .content(editBody(otherResponsible, 0L)))
                     .andExpect(status().isOk());
 
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(editBody(rosalesId, null, requester, at(day, 12), at(day, 16), "Otra", 0L)))
+                            .content(editBody(requester, 0L)))
                     .andExpect(status().isConflict());
         }
     }
@@ -294,19 +289,33 @@ class ReservationsIntegrationTest {
     class RequesterAndResponsible {
 
         @Test
-        void whoRequestedCannotChangeOnEdit() throws Exception {
+        void onlyTheResponsibleChangesOnEdit() throws Exception {
             LocalDate day = LocalDate.now(LIMA).plusDays(2);
             String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
 
-            mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {"placeId":%d,"requestedByCode":"%s","requesterCode":"%s","responsibleCode":"%s",
-                                     "startsAt":"%s","endsAt":"%s","purpose":"x","version":0}"""
-                                    .formatted(rosalesId, requestedBy, requester, requester,
-                                            at(day, 11), at(day, 15))))
-                    .andExpect(status().isUnprocessableEntity())
-                    .andExpect(jsonPath("$.message")
-                            .value("Who requested the reservation cannot change: cancel it and register a new one"));
+            for (String field : java.util.List.of("\"placeId\":%d".formatted(rosalesId),
+                    "\"requestedByCode\":\"%s\"".formatted(requestedBy),
+                    "\"requesterCode\":\"%s\"".formatted(requester),
+                    "\"requestedForCode\":\"%s\"".formatted(requestedFor),
+                    "\"startsAt\":\"%s\"".formatted(at(day, 11)),
+                    "\"endsAt\":\"%s\"".formatted(at(day, 15)),
+                    "\"purpose\":\"Otro\"")) {
+                mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
+                                .content("{" + field + ",\"responsibleCode\":\"%s\",\"version\":0}"
+                                        .formatted(requester)))
+                        .andExpect(status().isUnprocessableEntity())
+                        .andExpect(jsonPath("$.message").value(
+                                "Only the responsible can change: cancel the reservation and register a new one"));
+            }
+        }
+
+        @Test
+        void theDetailCarriesTheSectionsOfTheGardenForTheMap() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.place.sectionCodes").isNotEmpty());
         }
 
         @Test
@@ -317,8 +326,7 @@ class ReservationsIntegrationTest {
             assertThat(historyCount(code)).isEqualTo(1);
 
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(editBody(rosalesId, requestedFor, otherResponsible, at(day, 11), at(day, 15),
-                                    "Cambio", 0L)))
+                            .content(editBody(otherResponsible, 0L)))
                     .andExpect(status().isOk());
 
             assertThat(historyCount(code)).isEqualTo(2);
@@ -330,8 +338,7 @@ class ReservationsIntegrationTest {
 
             // Editar sin cambiar el responsable no agrega filas.
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(editBody(rosalesId, requestedFor, otherResponsible, at(day, 12), at(day, 16),
-                                    "Otro", 1L)))
+                            .content(editBody(otherResponsible, 1L)))
                     .andExpect(status().isOk());
             assertThat(historyCount(code)).isEqualTo(2);
         }
@@ -339,11 +346,12 @@ class ReservationsIntegrationTest {
         @Test
         void theDetailShowsTheResponsibleHistoryWithWhoChangedIt() throws Exception {
             LocalDate day = LocalDate.now(LIMA).plusDays(2);
-            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+            // «Para» se fija al crear: el rol del responsable se lee en esa organización (D-08b).
+            String code = codeOf(create(createBody(rosalesId, requestedBy, requester, requestedFor, requester,
+                    at(day, 10), at(day, 14), "Feria")).andExpect(status().isCreated()));
 
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(editBody(rosalesId, requestedFor, otherResponsible, at(day, 11), at(day, 15),
-                                    "Cambio", 0L)))
+                            .content(editBody(otherResponsible, 0L)))
                     .andExpect(status().isOk());
 
             mockMvc.perform(get(RESERVATIONS + "/" + code))
@@ -374,7 +382,7 @@ class ReservationsIntegrationTest {
                     .andExpect(jsonPath("$.data.state").value("FINISHED")));
 
             mockMvc.perform(put(RESERVATIONS + "/" + code).contentType(MediaType.APPLICATION_JSON)
-                            .content(editBody(rosalesId, null, requester, at(day, 11), at(day, 15), "x", 0L)))
+                            .content(editBody(requester, 0L)))
                     .andExpect(status().isUnprocessableEntity())
                     .andExpect(jsonPath("$.message").value("This reservation already finished or was cancelled"));
 

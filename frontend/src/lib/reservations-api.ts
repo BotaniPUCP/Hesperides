@@ -65,8 +65,9 @@ export const reservationsApi = {
 
   create: (input: ReservationInput) => apiClient.post<Reservation>(RESERVATIONS, input),
 
-  update: (code: string, input: ReservationInput) =>
-    apiClient.put<Reservation>(`${RESERVATIONS}/${segment(code)}`, input),
+  /** Editar solo cambia el responsable: otro jardín u horario es otra reserva (D-02c). */
+  changeResponsible: (code: string, responsibleCode: string, version: number) =>
+    apiClient.put<Reservation>(`${RESERVATIONS}/${segment(code)}`, { responsibleCode, version }),
 
   cancel: (code: string, reason: string, version: number) =>
     apiClient.post<Reservation>(`${RESERVATIONS}/${segment(code)}/cancel`, { reason, version }),
