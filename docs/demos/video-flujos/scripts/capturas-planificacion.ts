@@ -8,7 +8,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { Locator, Page } from 'playwright-core';
-import { mediodiaLimaHace } from './escenario/fechas';
+import { cabenReservasDeHoy, horaLimaHoy, HORAS_RESERVAS_DE_HOY, mediodiaLimaHace } from './escenario/fechas';
 import { abrirNavegador, BASE, crearApi, crearSesionDeCapturas, nuevaPagina, punto, union, type Api, type Capturar } from './navegador';
 
 const COORDINADOR = 'coordinador@demo.invalid';
@@ -169,6 +169,85 @@ async function escenarioA() {
     x39, x28, x3,
   });
   console.log(`Escenario A listo: frecuencia ${frecuencia.id}, intervenciones ${x39}, ${x28}, ${x3}`);
+}
+
+/** Organizaciones y contactos de demostración: nunca personas reales (spec §4.2). */
+const ORGANIZACION = 'Organización de demostración';
+const INVITADA = 'Organización invitada de demostración';
+const CONTACTOS = [
+  { nombre: 'Ana Ejemplo', movil: '900 000 001', organizacion: ORGANIZACION },
+  { nombre: 'Bruno Ejemplo', movil: '900 000 002', organizacion: INVITADA },
+];
+export const JARDIN_RESERVADO = 'Jardín Rosales';
+/** Otros jardines prestables para las reservas que ya están en la agenda. */
+const JARDINES_AGENDA = { terminada: 'Jardín Comedor Central', enCurso: 'Jardín Física', proxima: 'Jardín Frutas' };
+const MOTIVO = 'Actividad de demostración';
+
+type Codigo = { code: string };
+type Pagina<T> = { items: T[] };
+
+/** La sección que recibe el trabajo cercano al jardín reservado, elegida en la base (sesion-b.sql). */
+function seccionCercana(jardin: number): { id: number; nombre: string; metros: number } {
+  const resultado = spawnSync('docker', ['exec', '-i', 'hespo-video-b-db', 'psql', '-U', 'hesperides', '-d', 'hesperides', '-At', '-v', `jardin=${jardin}`], {
+    input: readFileSync('scripts/escenario/sesion-b.sql', 'utf-8'),
+    encoding: 'utf-8',
+  });
+  if (resultado.status !== 0) throw new Error(`sesion-b.sql falló: ${resultado.stderr.trim()}`);
+  const fila = resultado.stdout.trim();
+  if (!fila) throw new Error(`No hay ninguna sección a entre 3 y 9 m de ${JARDIN_RESERVADO}`);
+  const [id, nombre, metros] = fila.split(';');
+  return { id: Number(id), nombre, metros: Number(metros) };
+}
+
+async function escenarioB() {
+  const ahora = new Date();
+  if (!cabenReservasDeHoy(ahora)) {
+    throw new Error('La sesión B necesita correr entre las 04:00 y las 21:59 de Lima: arma reservas en curso y terminadas de hoy');
+  }
+  const coordinador = await crearApi(COORDINADOR);
+  const organizaciones = await coordinador<Pagina<{ name: string }>>('GET', '/directory/organizations');
+  if (organizaciones.items.some((o) => o.name === ORGANIZACION)) {
+    throw new Error('La base ya tiene el escenario B: baja y vuelve a levantar la sesión (bash scripts/sesion.sh abajo b)');
+  }
+
+  const codigoDe: Record<string, string> = {};
+  for (const nombre of [ORGANIZACION, INVITADA]) {
+    codigoDe[nombre] = (await coordinador<Codigo>('POST', '/directory/organizations', { name: nombre, typeCode: 'PUCP_UNIT', aliases: [] })).code;
+  }
+  for (const contacto of CONTACTOS) {
+    codigoDe[contacto.nombre] = (await coordinador<Codigo>('POST', '/directory/contacts', {
+      fullName: contacto.nombre, organizationCodes: [codigoDe[contacto.organizacion]], roles: {}, mobile: contacto.movil,
+    })).code;
+  }
+
+  const jardines = await coordinador<{ id: number; name: string }[]>('GET', '/reservations/gardens');
+  const jardin = (nombre: string) => unico(jardines.filter((j) => j.name === nombre), `jardín prestable «${nombre}»`).id;
+  const seccion = seccionCercana(jardin(JARDIN_RESERVADO));
+
+  // Trabajo programado para mañana a unos metros del jardín: los avisos de r7 y r9.
+  const opciones = await coordinador<Opciones>('GET', '/interventions/options');
+  const { item } = catalogo(opciones);
+  const manana = mediodiaLimaHace(-1, ahora).slice(0, 10);
+  await coordinador('POST', '/interventions', {
+    classItemId: item('INTERVENTION_CLASS', 'Mantenimiento de jardines'),
+    typeItemId: item('INTERVENTION_TYPE', 'Deshierbo'),
+    scheduledDate: manana,
+    description: 'Deshierbo de demostración',
+    originItemId: item('INTERVENTION_ORIGIN', 'Mantenimiento'),
+    locations: [{ clientReference: randomUUID(), zoneId: seccion.id }],
+  });
+
+  // La agenda: una terminada y una en curso de hoy, y una de mañana, en otros jardines.
+  const reservar = (nombre: string, desde: string, hasta: string) => coordinador('POST', '/reservations', {
+    placeId: jardin(nombre), requestedByCode: codigoDe[ORGANIZACION], requesterCode: codigoDe['Ana Ejemplo'],
+    responsibleCode: codigoDe['Ana Ejemplo'],
+    startsAt: desde, endsAt: hasta, purpose: MOTIVO,
+  });
+  const { enCurso, terminada } = HORAS_RESERVAS_DE_HOY;
+  await reservar(JARDINES_AGENDA.terminada, horaLimaHoy(terminada.desde, ahora), horaLimaHoy(terminada.hasta, ahora));
+  await reservar(JARDINES_AGENDA.enCurso, horaLimaHoy(enCurso.desde, ahora), horaLimaHoy(enCurso.hasta, ahora));
+  await reservar(JARDINES_AGENDA.proxima, `${manana}T08:00:00-05:00`, `${manana}T09:30:00-05:00`);
+  console.log(`Escenario B listo: trabajo cercano en ${seccion.nombre}, a ${seccion.metros} m de ${JARDIN_RESERVADO}`);
 }
 
 const ALTO_VENTANA = 627;
@@ -344,6 +423,122 @@ async function capturasA(page: Page, capturar: Capturar) {
   });
 }
 
+/** Quita el foco del campo activo: un campo de hora enfocado se ve con su número seleccionado. */
+async function soltarFoco(page: Page) {
+  await page.locator('h1').first().click();
+  await page.waitForTimeout(300);
+}
+
+const subir = (page: Page) => page.evaluate(() => window.scrollTo(0, 0));
+const bajarAlFinal = (page: Page) => page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+/** Elige una sugerencia de un selector del Directorio: escribe y pulsa la que empieza con `nombre`. */
+async function elegirDelDirectorio(page: Page, campo: string, escrito: string, nombre: string) {
+  await page.locator(campo).click();
+  await page.locator(campo).fill(escrito);
+  await page.getByRole('button', { name: new RegExp(`^${nombre}`) }).first().click();
+  await page.waitForTimeout(800);
+}
+
+async function capturasB(page: Page, capturar: Capturar) {
+  const coordinador = await crearApi(COORDINADOR);
+  const jardines = await coordinador<{ id: number; name: string }[]>('GET', '/reservations/gardens');
+  const reservado = unico(jardines.filter((j) => j.name === JARDIN_RESERVADO), `jardín prestable «${JARDIN_RESERVADO}»`).id;
+  const seccion = seccionCercana(reservado);
+  const manana = mediodiaLimaHace(-1, new Date()).slice(0, 10);
+
+  // La agenda: arriba los filtros y «Nueva reserva»; más abajo los días y los estados.
+  await page.goto(`${BASE}/reservas`);
+  await page.getByText('Hoy', { exact: true }).waitFor();
+  const selectores = page.locator('main select');
+  const nuevaReserva = page.getByRole('link', { name: 'Nueva reserva' }).or(page.getByRole('button', { name: 'Nueva reserva' })).first();
+  await capturar(page, 'reservas-agenda', {
+    filtroJardin: await union(page.getByText('Jardín', { exact: true }), selectores.nth(0)),
+    filtroOrganizacion: await union(page.getByText('Organización', { exact: true }), selectores.nth(1)),
+    nuevaReserva,
+  });
+  const fila = page.locator('main li', { has: page.getByRole('link', { name: JARDINES_AGENDA.enCurso, exact: true }) });
+  await bajarHasta(page, page.getByText('Mañana', { exact: true }).locator('xpath=following::li[1]'));
+  await capturar(page, 'reservas-agenda-dias', {
+    fila,
+    horario: fila.locator('p').first(),
+    jardin: fila.getByRole('link', { name: JARDINES_AGENDA.enCurso, exact: true }),
+    pedidoDe: fila.getByText(`· Pedido de ${ORGANIZACION}`),
+    encabezadoHoy: page.getByText('Hoy', { exact: true }),
+    encabezadoManana: page.getByText('Mañana', { exact: true }),
+    estadoProxima: page.getByText('Próxima', { exact: true }).first(),
+    estadoEnCurso: page.getByText('En curso', { exact: true }).first(),
+    estadoTerminada: page.getByText('Terminada', { exact: true }).first(),
+  });
+
+  // La nueva reserva, campo por campo, en el orden en que los nombra la frase r5.
+  await subir(page);
+  await nuevaReserva.click();
+  const jardin = page.locator('#reservation-garden');
+  await jardin.waitFor();
+  const campoJardin = () => union(page.locator('label[for="reservation-garden"]'), jardin);
+  await capturar(page, 'reserva-nueva-0', { jardin: await campoJardin() });
+  await jardin.selectOption(String(reservado));
+  await soltarFoco(page);
+  await capturar(page, 'reserva-nueva-1', { jardin: await campoJardin() });
+
+  const horario = () => union(page.locator('label', { hasText: /^Fecha/ }), page.locator('label', { hasText: /^Hora de fin/ }));
+  const avisos = page.getByText('Avisos de este horario', { exact: true }).locator('..');
+  await page.locator('main input[type=date]').fill(manana);
+  await page.locator('main input[type=time]').nth(0).fill('10:00');
+  await page.locator('main input[type=time]').nth(1).fill('14:00');
+  await soltarFoco(page);
+  await page.getByText(/tiene trabajo por hacer/).waitFor();
+  await bajarAlFinal(page);
+  await capturar(page, 'reserva-nueva-2', { horario: await horario(), avisos });
+
+  await subir(page);
+  await elegirDelDirectorio(page, '#reservation-requested-by', 'Organización de dem', ORGANIZACION);
+  await soltarFoco(page);
+  const pedidoDe = () => union(page.getByText('Pedido de', { exact: true }), page.getByText(ORGANIZACION, { exact: true }).first());
+  await capturar(page, 'reserva-nueva-3', { pedidoDe: await pedidoDe() });
+  await elegirDelDirectorio(page, '#reservation-requester', 'Ana', 'Ana Ejemplo');
+  await soltarFoco(page);
+  await capturar(page, 'reserva-nueva-4', {
+    pedidoDe: await pedidoDe(),
+    solicitante: await union(page.getByText('Solicitante', { exact: true }), page.getByText('Ana Ejemplo', { exact: true }).nth(0)),
+    responsable: await union(page.getByText('Responsable', { exact: true }), page.getByText('Ana Ejemplo', { exact: true }).nth(1)),
+  });
+
+  await page.locator('#reservation-purpose').fill(MOTIVO);
+  await soltarFoco(page);
+  await bajarAlFinal(page);
+  const registrar = page.getByRole('button', { name: 'Registrar reserva' });
+  await capturar(page, 'reserva-nueva-5', { avisos, guardar: registrar });
+
+  // La ficha: el banner de registro y el jardín en el mapa.
+  await registrar.click();
+  await page.waitForURL(/\/reservas\/RES-/);
+  const banner = page.getByText(/^Reserva RES-\d+ registrada para/);
+  await banner.waitFor();
+  await page.waitForTimeout(5000);
+  await page.evaluate(() => window.scrollTo(0, 180));
+  await page.waitForTimeout(800);
+  await capturar(page, 'reserva-ficha', { banner, mapa: page.locator('main canvas').first() });
+
+  // Al revés: el registro de un trabajo de mañana junto al jardín avisa de la reserva.
+  await page.goto(`${BASE}/intervenciones/nueva`);
+  const listas = page.locator('main select');
+  await listas.nth(0).selectOption({ label: 'Mantenimiento de jardines' });
+  await listas.nth(1).selectOption({ label: 'Deshierbo' });
+  await page.locator('main input[type=date]').first().fill(manana);
+  await page.getByRole('button', { name: 'Agregar ubicación' }).click();
+  await page.locator('main select', { has: page.locator('option', { hasText: new RegExp(`^${seccion.nombre}$`) }) }).first().selectOption({ label: seccion.nombre });
+  await soltarFoco(page);
+  const aviso = page.getByText(new RegExp(`${JARDIN_RESERVADO} está reservado`)).first();
+  await aviso.waitFor();
+  await subir(page);
+  await capturar(page, 'intervencion-aviso-reserva', { aviso });
+  const crear = page.getByRole('button', { name: 'Crear intervención' });
+  await crear.scrollIntoViewIfNeeded();
+  await capturar(page, 'intervencion-aviso-reserva-pie', { guardar: crear });
+}
+
 // Programa principal: al final, para que las constantes de arriba ya existan.
 const valor = (nombre: string) => {
   const i = process.argv.indexOf(`--${nombre}`);
@@ -357,12 +552,14 @@ const paso = valor('paso') ?? 'todo';
 const commit = execFileSync('git', ['-C', `../../../.worktrees/video-${sesion}`, 'rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
 
 if (sesion === 'a' && paso !== 'capturas') await escenarioA();
+if (sesion === 'b' && paso !== 'capturas') await escenarioB();
 
 if (paso !== 'escenario') {
   const { capturar, guardar } = crearSesionDeCapturas(sesion);
   const navegador = await abrirNavegador();
   try {
     if (sesion === 'a') await capturasA(await nuevaPagina(navegador, COORDINADOR), capturar);
+    if (sesion === 'b') await capturasB(await nuevaPagina(navegador, COORDINADOR), capturar);
   } finally {
     await navegador.close();
   }
