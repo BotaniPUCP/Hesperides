@@ -1,0 +1,26 @@
+{
+  "planKey": "e1692786-56ac-4841-ba1b-a020a7e90117",
+  "name": "Departamento Académico de Teología",
+  "folder": "departamento-teologia",
+  "photos": [
+    "lado.jpg"
+  ],
+  "notes": "Volúmenes de ladrillo con marco de concreto (lado.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b5b2ab",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a5705f",
+          "photo": {
+            "tile": "teologia",
+            "widthM": 8,
+            "heightM": 5.0
+          }
+        }
+      }
+    }
+  ]
+}

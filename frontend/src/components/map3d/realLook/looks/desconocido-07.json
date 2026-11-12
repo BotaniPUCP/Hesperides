@@ -1,0 +1,26 @@
+{
+  "planKey": "e82375f3-02dc-461a-98ea-67b4a9244f12",
+  "name": "Desconocido_07",
+  "folder": "Desconocido_07",
+  "photos": [
+    "detras - no hay edificios-eneste-lado-3.jpg"
+  ],
+  "notes": "Talleres de tableros OSB con marcos grises, puertas de madera y banda alta translúcida (detras…-3.jpg, sin el auto).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#9e9b95",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#7d6a55",
+          "photo": {
+            "tile": "desconocido-07",
+            "widthM": 7,
+            "heightM": 3.8
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "planKey": "8c67359a-fb2d-4f1d-aa54-53860a6ad71b",
+  "name": "Química",
+  "folder": "Facultad-quimica",
+  "photos": [
+    "IMG_20261111_151559.jpg"
+  ],
+  "notes": "Dos pisos de paneles beige verdoso con bandas de ventanas (IMG_20261111_151559.jpg, a la izquierda del árbol); el seto se reemplaza por el color del muro.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c9c6b8",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#d3cfb6",
+          "photo": {
+            "tile": "quimica",
+            "widthM": 13,
+            "heightM": 6.2
+          }
+        }
+      }
+    }
+  ]
+}

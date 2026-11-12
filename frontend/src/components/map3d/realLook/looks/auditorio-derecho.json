@@ -1,0 +1,26 @@
+{
+  "planKey": "11900083-39e3-4786-93ec-73e89a4e8c3a",
+  "name": "Auditorio de Derecho",
+  "folder": "auditorio-derecho",
+  "photos": [
+    "lado1.jpg"
+  ],
+  "notes": "Muro gris verdoso redondeado con ventanal oscuro (lado1.jpg); el alero de concreto del ingreso no está en el modelo.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c4c5c1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#7f8a83",
+          "photo": {
+            "tile": "auditorio-derecho",
+            "widthM": 9,
+            "heightM": 8.0
+          }
+        }
+      }
+    }
+  ]
+}

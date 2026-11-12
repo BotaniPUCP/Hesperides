@@ -1,0 +1,26 @@
+{
+  "planKey": "d7b50529-7b3f-4d7e-9220-2205bbf2f43b",
+  "name": "Facultad de Ciencias Sociales (código 18)",
+  "folder": "facultad-ciencias-sociales",
+  "photos": [
+    "frente2.jpg"
+  ],
+  "notes": "Volumen blanco con bandas de ventanas oscuras en tres pisos (frente2.jpg). Por confirmar el emparejamiento (Anexo A, fila 71).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d9d9d6",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ededeb",
+          "photo": {
+            "tile": "ciencias-sociales",
+            "widthM": 30,
+            "heightM": 10
+          }
+        }
+      }
+    }
+  ]
+}

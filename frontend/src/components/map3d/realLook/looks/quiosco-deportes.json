@@ -1,0 +1,26 @@
+{
+  "planKey": "33b071d8-fe09-4a97-9940-00eaee009335",
+  "name": "Quiosco (Deportes)",
+  "folder": "QUIOSCO (DEPORTES)",
+  "photos": [
+    "lado.jpg"
+  ],
+  "notes": "Caseta clara con vitrinas y toldo (lado.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#cfcdc8",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#dedbd3",
+          "photo": {
+            "tile": "quiosco-deportes",
+            "widthM": 6,
+            "heightM": 3.0
+          }
+        }
+      }
+    }
+  ]
+}

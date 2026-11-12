@@ -1,0 +1,26 @@
+{
+  "planKey": "0f4a0884-4540-4524-b04e-9f809059a045",
+  "name": "Talleres T-55 al T-71 (Escultura), C30, C35, C26",
+  "folder": "C30, C35, C26 · Izquierda 120 · SKP C-3886, C-3880, C-4061, C-1",
+  "photos": [
+    "detras.jpg"
+  ],
+  "notes": "Paneles blancos con franja alta de celosías grises y ventanas enrejadas (detras.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b9b7b1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ecedeb",
+          "photo": {
+            "tile": "c30",
+            "widthM": 9,
+            "heightM": 4.0
+          }
+        }
+      }
+    }
+  ]
+}

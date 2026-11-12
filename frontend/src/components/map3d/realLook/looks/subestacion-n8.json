@@ -1,0 +1,26 @@
+{
+  "planKey": "7ae47916-549e-40c2-b918-9c43d305e19d",
+  "name": "Sub-estación N-8",
+  "folder": "Sub-estación N-8",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Ladrillo con marco de concreto blanco, rejillas negras y puerta metálica (frente.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#dcdbd7",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ab6b58",
+          "photo": {
+            "tile": "subestacion-n8",
+            "widthM": 6,
+            "heightM": 3.0
+          }
+        }
+      }
+    }
+  ]
+}

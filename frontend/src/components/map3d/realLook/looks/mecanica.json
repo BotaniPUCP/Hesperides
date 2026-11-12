@@ -1,0 +1,26 @@
+{
+  "planKey": "2a8d1db4-2115-4823-b339-437aaa09a6e1",
+  "name": "Sección Ingeniería Mecánica",
+  "folder": "Facultad_Mecanica",
+  "photos": [
+    "espalda2.jpg"
+  ],
+  "notes": "Base de ladrillo con banda de ventanas y concreto arriba (espalda2.jpg); FRENTE.jpg (796 px) muestra el mismo ladrillo con marcos gris verdoso.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b2afa8",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a1715f",
+          "photo": {
+            "tile": "mecanica",
+            "widthM": 20,
+            "heightM": 6.0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "planKey": "38278886-283c-434d-ab74-506bb6813522",
+  "name": "Edificio Administrativo / Maestranza",
+  "folder": "Edificio Administrativo  Maestranza",
+  "photos": [
+    "espalda-lado-opuesto-a-sala-cuna-3.jpg",
+    "lado-del-edificio-alto-2.jpg"
+  ],
+  "notes": "Dos sistemas: el edificio alto de concreto con paneles azules y grises y ventanas (lado-del-edificio-alto-2.jpg, desde el segundo piso, sin los autos) y los bloques bajos de ladrillo con marco de concreto (espalda…-3.jpg). Se separan por cota (hasta 7 m, ladrillo), así que los primeros pisos del edificio alto también llevan ladrillo.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b9b6ae",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a9a6a0",
+          "photo": {
+            "tile": "maestranza-alto",
+            "widthM": 12,
+            "heightM": 17
+          },
+          "startM": 3.0
+        }
+      }
+    },
+    {
+      "id": "bloques-bajos",
+      "where": {
+        "heightM": [
+          0,
+          7.0
+        ]
+      },
+      "roof": "#b9b6ae",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#b06a55",
+          "photo": {
+            "tile": "maestranza-bajo",
+            "widthM": 14,
+            "heightM": 6.5
+          }
+        }
+      }
+    }
+  ]
+}

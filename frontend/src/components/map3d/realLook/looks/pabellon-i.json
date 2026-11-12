@@ -1,0 +1,26 @@
+{
+  "planKey": "23a5dd73-3a98-4f6b-bb79-9591250d9ae3",
+  "name": "Pabellón I: Facultad de Arte y Diseño",
+  "folder": "Pabellon_I",
+  "photos": [
+    "lado de edificio sin escalera.jpg"
+  ],
+  "notes": "Paneles grises con arriostres en X y bandas de ventanas en dos pisos (lado de edificio sin escalera.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c8c9ca",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#cfd2d4",
+          "photo": {
+            "tile": "pabellon-i",
+            "widthM": 18,
+            "heightM": 7.6
+          }
+        }
+      }
+    }
+  ]
+}

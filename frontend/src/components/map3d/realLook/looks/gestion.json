@@ -1,0 +1,26 @@
+{
+  "planKey": "83345054-8c5a-4888-9d28-8fe667ba998f",
+  "name": "Facultad de Gestión y Alta Dirección",
+  "folder": "facultad-gestion",
+  "photos": [
+    "lado.jpg"
+  ],
+  "notes": "Paños de ladrillo y concreto gris verdoso con ventanas en dos pisos (lado.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c2c0ba",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a9a99c",
+          "photo": {
+            "tile": "gestion",
+            "widthM": 13,
+            "heightM": 6.3
+          }
+        }
+      }
+    }
+  ]
+}

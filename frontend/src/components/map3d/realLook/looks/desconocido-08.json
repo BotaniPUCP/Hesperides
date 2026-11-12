@@ -1,0 +1,26 @@
+{
+  "planKey": "9d9846b2-72fd-420b-8dad-6b03f84fc8ef",
+  "name": "Desconocido_08",
+  "folder": "Desconocido_08",
+  "photos": [
+    "interior.jpg"
+  ],
+  "notes": "Solo hay foto de interior y se toma como exterior (D-08): murete de ladrillo de 1,1 m; encima, el comedor está abierto bajo techo y se pinta en la sombra del alero.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#6f5a48",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#5f5a54",
+          "photo": {
+            "tile": "desconocido-08",
+            "widthM": 9,
+            "heightM": 1.1
+          }
+        }
+      }
+    }
+  ]
+}

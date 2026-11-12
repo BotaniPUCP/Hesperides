@@ -1,0 +1,26 @@
+{
+  "planKey": "038127d1-6099-4dfa-979c-9130b8916f21",
+  "name": "Tiendecita Verde",
+  "folder": "TIENDECITA VERDE",
+  "photos": [
+    "lado-frente.jpg"
+  ],
+  "notes": "Muros blancos con marcos de madera, letrero pintado y pérgola de madera (lado-frente.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#6e4e3a",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ecebe6",
+          "photo": {
+            "tile": "tiendecita-verde",
+            "widthM": 5,
+            "heightM": 3.0
+          }
+        }
+      }
+    }
+  ]
+}

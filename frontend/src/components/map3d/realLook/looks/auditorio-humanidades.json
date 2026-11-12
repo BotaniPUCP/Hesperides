@@ -1,0 +1,26 @@
+{
+  "planKey": "3ff11b67-d756-46a5-a2c2-54a294e50313",
+  "name": "Auditorio de Humanidades",
+  "folder": "auditorio-humanidades",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Ladrillo con banda granate (frente.jpg, 480 px). La otra foto de la carpeta (frente-lado-frente-a-educacion.png) muestra Estudios Generales Letras, no el auditorio: no se usa.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b8b5ae",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a8513f",
+          "photo": {
+            "tile": "auditorio-humanidades",
+            "widthM": 4,
+            "heightM": 5.0
+          }
+        }
+      }
+    }
+  ]
+}

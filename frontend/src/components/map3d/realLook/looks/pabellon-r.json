@@ -1,0 +1,26 @@
+{
+  "planKey": "568cf341-f016-402f-b41b-b594693591a1",
+  "name": "Pabellón R: Facultad de Educación (aulas)",
+  "folder": "Pabellón R Facultad de Educación (aulas)",
+  "photos": [
+    "lado.jpg"
+  ],
+  "notes": "Marco de concreto con antepechos de ladrillo y ventanas en dos pisos (lado.jpg); los árboles delante se reemplazan por el concreto.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#bdbbb5",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a9a7a1",
+          "photo": {
+            "tile": "pabellon-r",
+            "widthM": 16,
+            "heightM": 7.0
+          }
+        }
+      }
+    }
+  ]
+}

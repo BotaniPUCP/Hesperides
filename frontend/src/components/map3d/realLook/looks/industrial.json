@@ -1,0 +1,26 @@
+{
+  "planKey": "be3bdfcc-7e3a-4f45-a995-4d82caa7025f",
+  "name": "Sección Ingeniería Industrial",
+  "folder": "Pabellon Industrial",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Volumen blanco con ventanas oscuras y zócalo azul (ala izquierda de frente.jpg; la foto mide 516 px y se ve borrosa).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#cfcfcb",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#eeeeec",
+          "photo": {
+            "tile": "industrial",
+            "widthM": 4.5,
+            "heightM": 6.8
+          }
+        }
+      }
+    }
+  ]
+}

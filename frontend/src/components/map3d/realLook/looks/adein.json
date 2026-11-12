@@ -1,0 +1,26 @@
+{
+  "planKey": "00229847-d553-4964-96dd-f28b65a793f2",
+  "name": "ADEIN y Programa de Pasantías en Energías Renovables",
+  "folder": "(ADEIN) Y PROGRAMA DE PASANTÍAS EN ENERGÍAS RENOVABLES",
+  "photos": [
+    "detras.jpg"
+  ],
+  "notes": "Caseta de paneles rojo óxido con ventanas enrejadas; el tramo de detras.jpg va en todas las caras (las otras dos fotos muestran el mismo panel).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#a7a39b",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#8e4b42",
+          "photo": {
+            "tile": "adein",
+            "widthM": 5.5,
+            "heightM": 2.8
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "planKey": "41eec3bc-c9f0-46df-8e39-4aa72c7b0410",
+  "name": "Sub-estación N-11",
+  "folder": "Sub-estacion-n11",
+  "photos": [
+    "detras.jpg"
+  ],
+  "notes": "Paneles blancos con ventanitas enrejadas y pilastras de enchape azul (detras.jpg). Sin malla en el modelo: se pinta su prisma.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d2d1cd",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e6e4df",
+          "photo": {
+            "tile": "subestacion-n11",
+            "widthM": 7,
+            "heightM": 3.5
+          }
+        }
+      }
+    }
+  ]
+}

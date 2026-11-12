@@ -1,0 +1,26 @@
+{
+  "planKey": "a3d4665c-9adc-4749-a0af-6613e4149543",
+  "name": "Física",
+  "folder": "Facultad_Fisica",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Marco de concreto con paños de ladrillo y ventanas (el ala derecha de frente.jpg; la foto mide 542 px y se ve borrosa).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b5b2aa",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a49c8d",
+          "photo": {
+            "tile": "fisica",
+            "widthM": 5,
+            "heightM": 10
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "planKey": "25bf0615-4675-4c77-b99d-5766862b302f",
+  "name": "Arte Antiguo, C31",
+  "folder": "C31 · Izquierda 123 · SKP C-4013, C-3956",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Paneles blancos, puertas y ventanas enrejadas bajo celosía oscura (frente.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b9b7b1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ecedeb",
+          "photo": {
+            "tile": "c31",
+            "widthM": 12,
+            "heightM": 3.4
+          }
+        }
+      }
+    }
+  ]
+}

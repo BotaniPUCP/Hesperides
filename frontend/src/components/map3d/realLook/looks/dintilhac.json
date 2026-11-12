@@ -1,0 +1,26 @@
+{
+  "planKey": "1d3cfcb0-06c4-43b2-923f-610c5dcfb260",
+  "name": "Tesorería General (Dintilhac)",
+  "folder": "dintilhac",
+  "photos": [
+    "detras1.jpg"
+  ],
+  "notes": "Marco de concreto con paños de ladrillo y bandas de ventanas en dos pisos (detras1.jpg); la fachada blanca del Centro Dintilhac (frente.jpg, 551 px) es un volumen pequeño que el tramo no distingue.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b8b5ae",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a9a59d",
+          "photo": {
+            "tile": "dintilhac",
+            "widthM": 18,
+            "heightM": 7.0
+          }
+        }
+      }
+    }
+  ]
+}

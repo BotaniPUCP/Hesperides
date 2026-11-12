@@ -1,0 +1,26 @@
+{
+  "planKey": "d9793065-b718-4803-983a-9b7cac4f770b",
+  "name": "Facultad de Ciencias y Artes de la Comunicación",
+  "folder": "facultad-ciencias-artes-comunicaciones",
+  "photos": [
+    "frente2.jpg"
+  ],
+  "notes": "Ladrillo con marco de concreto y bandas de ventanas en tres pisos (frente2.jpg); los árboles delante se reemplazan por el ladrillo.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b9b6af",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a8705f",
+          "photo": {
+            "tile": "comunicaciones",
+            "widthM": 18,
+            "heightM": 9.5
+          }
+        }
+      }
+    }
+  ]
+}

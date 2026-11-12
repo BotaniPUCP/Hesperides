@@ -1,0 +1,26 @@
+{
+  "planKey": "912a2ee9-64e9-4ea2-be0f-e42e6f8e4491",
+  "name": "Laboratorios de Hidráulica y de Mecánica de Suelos, Departamento de Arquitectura",
+  "folder": "Laboratorio-Hidraulica-mecanica_suelos",
+  "photos": [
+    "Frente2.jpg"
+  ],
+  "notes": "Naves de ladrillo con marco de concreto y portones verde petróleo (Frente2.jpg); las bóvedas de los hastiales no están en el modelo: sobre el tramo, ladrillo.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#9a9893",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a86b55",
+          "photo": {
+            "tile": "lab-hidraulica",
+            "widthM": 12,
+            "heightM": 5.0
+          }
+        }
+      }
+    }
+  ]
+}

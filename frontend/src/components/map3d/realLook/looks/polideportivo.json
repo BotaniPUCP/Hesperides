@@ -2,31 +2,40 @@
   "planKey": "a0c57ec0-18b7-4a69-a4aa-b200fa9420e3",
   "name": "Polideportivo",
   "folder": "polideportivo",
-  "photos": ["frente.jpg", "lado-hacia-eeggll.jpg", "detras-lado-hacia-aulas-moviles.jpg", "otro-lado.jpg"],
-  "notes": "El coliseo (sobre 7 m) es de paneles azules con una franja de celosías grises abajo. Abajo: hacia EE.GG.LL. (sur, −174°) muro blanco con ventanas cuadradas pequeñas; hacia las aulas móviles (oeste, −120°) enchape verde; el frente del ingreso, con enchape azul, se supone al norte (bloque ancho); el otro lado, con el anexo blanco y de granito gris, al este.",
+  "photos": [
+    "detras-lado-hacia-aulas-moviles.jpg",
+    "lado-hacia-eeggll.jpg"
+  ],
+  "notes": "Coliseo azul con franja de celosías y base blanca con ventanas pequeñas (lado-hacia-eeggll.jpg, sur); hacia las aulas móviles (oeste), enchape verde bajo el azul (detras-lado-hacia-aulas-moviles.jpg).",
   "zones": [
     {
-      "id": "coliseo",
+      "id": "edificio",
       "roof": "#c9cacb",
       "faces": {
+        "W": {
+          "kind": "photo",
+          "wall": "#2e4683",
+          "photo": {
+            "tile": "poli-oeste",
+            "widthM": 30,
+            "heightM": 12
+          }
+        },
+        "NW": {
+          "sameAs": "W"
+        },
+        "SW": {
+          "sameAs": "W"
+        },
         "other": {
-          "kind": "ribbon", "wall": "#2e4683", "glass": "#9aa0a6", "frame": "#7c8288", "floorM": 40, "sillM": 7.0, "windowM": 1.7, "moduleM": 4.0, "frameM": 0.14
+          "kind": "photo",
+          "wall": "#2e4683",
+          "photo": {
+            "tile": "poli-sur",
+            "widthM": 35,
+            "heightM": 12
+          }
         }
-      }
-    },
-    {
-      "id": "base",
-      "where": { "heightM": [0, 7.0] },
-      "roof": "#d4d4d2",
-      "plinth": { "color": "#8e8f8c", "heightM": 0.3 },
-      "faces": {
-        "S": { "kind": "windows", "wall": "#dfddd6", "glass": "#2b2e33", "frame": "#c0c0bc", "floorM": 7.0, "sillM": 3.3, "windowM": 0.6, "widthM": 0.6, "moduleM": 1.6 },
-        "SW": { "sameAs": "S" },
-        "W": { "kind": "blind", "wall": "#7e9b85", "band": { "color": "#728f79", "heightM": 0.04 }, "floorM": 0.6 },
-        "NW": { "sameAs": "W" },
-        "N": { "kind": "blind", "wall": "#2c3f72", "band": { "color": "#26386a", "heightM": 0.04 }, "floorM": 0.6 },
-        "NE": { "sameAs": "N" },
-        "other": { "kind": "windows", "wall": "#e2e1dc", "glass": "#2b2e33", "frame": "#c0c0bc", "floorM": 3.5, "sillM": 1.4, "windowM": 1.1, "widthM": 0.8, "moduleM": 4.5 }
       }
     }
   ]

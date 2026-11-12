@@ -1,0 +1,26 @@
+{
+  "planKey": "ba27bbc0-4e80-4cf8-ae10-d67e7ad5925e",
+  "name": "CIGA (Pulso PUCP), C47",
+  "folder": "CIGA-Pulso-pucp",
+  "photos": [
+    "lado-directament-frente-a-ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA).jpg"
+  ],
+  "notes": "Paneles claros con banda alta de vidrio oscuro y ventanas enrejadas (lado-directament…jpg, la vista más larga y limpia).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b8b4ab",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e3e0d8",
+          "photo": {
+            "tile": "ciga-pulso",
+            "widthM": 14,
+            "heightM": 3.4
+          }
+        }
+      }
+    }
+  ]
+}

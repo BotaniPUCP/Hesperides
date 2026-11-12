@@ -93,12 +93,12 @@ vec3 lookPhoto(float row, vec2 f, out bool outside) {
   vec4 t5 = lookTexel(row, 5.0), t7 = lookTexel(row, 7.0);
   vec2 q = vec2((f.x - t4.z) / t4.x, (f.y - t5.y) / t1.a);
   outside = t4.y < 0.5 && (q.x < 0.0 || q.x > 1.0 || q.y < 0.0);
-  if (outside || q.y > 1.0) return t0.rgb;
+  if (outside || q.y > 1.0 || q.y < 0.0) return t0.rgb;
   vec2 uv = t7.xy + t7.zw * vec2(t4.y < 0.5 ? q.x : fract(q.x), clamp(q.y, 0.0, 1.0));
   vec3 c = textureGrad(lookAtlas, uv, dFdx(q) * t7.zw, dFdy(q) * t7.zw).rgb;
   // el color clave (magenta) marca cielo y follaje: ahí la cara toma lo que sigue fuera del tramo
   outside = c.r - c.g > 0.22 && c.b - c.g > 0.22;
-  return c;
+  return outside ? t0.rgb : c;
 }
 
 vec3 lookFace(float row, vec2 f, vec2 aa, out float glass) {

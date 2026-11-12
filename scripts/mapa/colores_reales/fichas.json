@@ -1,0 +1,1165 @@
+{
+  "adein": {
+    "planKey": "00229847-d553-4964-96dd-f28b65a793f2",
+    "name": "ADEIN y Programa de Pasantías en Energías Renovables",
+    "folder": "(ADEIN) Y PROGRAMA DE PASANTÍAS EN ENERGÍAS RENOVABLES",
+    "roof": "#a7a39b",
+    "wall": "#8e4b42",
+    "faces": {
+      "other": "adein"
+    },
+    "notes": "Caseta de paneles rojo óxido con ventanas enrejadas; el tramo de detras.jpg va en todas las caras (las otras dos fotos muestran el mismo panel)."
+  },
+  "arqueologia-a": {
+    "planKey": "f5e7a188-3cd8-48d3-8a3c-5b2aaba1bd97",
+    "name": "Arqueología A / CIGA",
+    "folder": "ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA)",
+    "roof": "#9d9a93",
+    "wall": "#dcdad3",
+    "faces": {
+      "other": "arqueologia-a"
+    },
+    "notes": "Paneles prefabricados claros; el testero de frente2.jpg, con su ventana enrejada, va en todas las caras."
+  },
+  "arqueologia-c": {
+    "planKey": "3aa466cc-3cff-46f6-925b-e3f566a83966",
+    "name": "Arqueología C y Sala de Música y Coro",
+    "folder": "ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO",
+    "roof": "#8e857b",
+    "wall": "#e6e3da",
+    "faces": {
+      "other": "arqueologia-c"
+    },
+    "notes": "Frente casi frontal (frente.jpg): paneles claros, puerta doble y ventanas enrejadas; va en todas las caras."
+  },
+  "educacion-1": {
+    "name": "Facultad de Educación (código 35)",
+    "folder": "Ambos edificios-facultad-de-educacion",
+    "roof": "#c9c7c1",
+    "wall": "#e3e2dd",
+    "faces": {
+      "other": "educacion"
+    },
+    "notes": "Marco de concreto blanco con paños de ladrillo y bandas de ventanas en dos pisos (frente-hacia-eeggll-2.jpg); la carpeta cubre los dos edificios de Educación, que son iguales.",
+    "planKey": "6d51e9a1-7ff7-4b21-b472-bef79a5060aa"
+  },
+  "educacion-2": {
+    "name": "Facultad de Educación (código 38)",
+    "folder": "Ambos edificios-facultad-de-educacion",
+    "roof": "#c9c7c1",
+    "wall": "#e3e2dd",
+    "faces": {
+      "other": "educacion"
+    },
+    "notes": "Igual que el otro edificio de Educación (misma carpeta, mismo sistema).",
+    "planKey": "3c57c32e-6c9a-48d6-bdf9-041ded0059a4"
+  },
+  "arte-nuevo": {
+    "name": "Arte Nuevo",
+    "folder": "Arte Nuevo",
+    "roof": "#b9b7b1",
+    "wall": "#b5b2aa",
+    "faces": {
+      "other": "arte-nuevo"
+    },
+    "notes": "Concreto caravista en paneles con ventanales en retícula y un piso alto vidriado (espalda-hacia-educacion-1.jpg, la vista más limpia); va en todas las caras.",
+    "planKey": "0a7071c5-cea5-4a6d-85be-ffda94010175"
+  },
+  "artes-escenicas": {
+    "name": "Artes Escénicas / FARES",
+    "folder": "Artes Escénicas  Facultad de Artes Escénicas (FARES)",
+    "roof": "#a9a69f",
+    "wall": "#d9cfb4",
+    "faces": {
+      "other": "artes-escenicas"
+    },
+    "notes": "Casetas de paneles beige con banda alta de ventanas bajo techo de fibrocemento; es el tipo que más se repite en las fotos de la carpeta. Los contenedores azules y las casetas blancas con hastial azul no se distinguen en el modelo: llevan el mismo tramo.",
+    "planKey": "403f4c21-8155-474c-8339-7499bbac5976"
+  },
+  "arte-antiguo-c17": {
+    "name": "Arte Antiguo (C17, C19, C20, C22, C25, C27, C28, C29)",
+    "folder": "C17, C19, C20, C22, C25, C27, C28, C29 · Izquierda 117 · SKP C-4848, C-4825, C-19, C-4876, C-4826",
+    "roof": "#bab6ae",
+    "wall": "#ecedeb",
+    "faces": {
+      "other": "arte-antiguo"
+    },
+    "zones": [
+      {
+        "id": "L-norte",
+        "where": {
+          "north": [
+            0.8,
+            1
+          ],
+          "east": [
+            0,
+            0.75
+          ]
+        },
+        "roof": "#b8b3a9",
+        "wall": "#cdc5b3",
+        "faces": {
+          "other": {
+            "pattern": {
+              "kind": "ribbon",
+              "wall": "#cdc5b3",
+              "glass": "#3d4246",
+              "frame": "#26292c",
+              "floorM": 3.9,
+              "sillM": 2.45,
+              "windowM": 1.0,
+              "moduleM": 1.1,
+              "frameM": 0.1
+            }
+          }
+        }
+      },
+      {
+        "id": "L-oeste",
+        "where": {
+          "east": [
+            0,
+            0.1
+          ],
+          "north": [
+            0.3,
+            1
+          ]
+        },
+        "roof": "#b8b3a9",
+        "wall": "#cdc5b3",
+        "faces": {
+          "other": {
+            "pattern": {
+              "kind": "ribbon",
+              "wall": "#cdc5b3",
+              "glass": "#3d4246",
+              "frame": "#26292c",
+              "floorM": 3.9,
+              "sillM": 2.45,
+              "windowM": 1.0,
+              "moduleM": 1.1,
+              "frameM": 0.1
+            }
+          }
+        }
+      }
+    ],
+    "notes": "Casetas de paneles blancos con ventanas enrejadas (lado-doblando-la-esquina…jpg, la vista más limpia). La L beige del lado de Dintilhac (norte y oeste) no tiene una vista enderezable: lleva el patrón con sus colores medidos.",
+    "planKey": "b17ac48c-a511-4307-9455-2c81bd0f21e0"
+  },
+  "c18": {
+    "name": "Servicios higiénicos (Facultad de Arte), C18",
+    "folder": "C18 · Izquierda 124 · SKP C-5037, C-5032",
+    "roof": "#b3b0a9",
+    "wall": "#efefec",
+    "faces": {
+      "other": "c18"
+    },
+    "notes": "Muro blanco con zócalo gris, puerta y ventanas altas (detras.jpg, casi frontal).",
+    "planKey": "80af8752-4fff-44e4-9a6f-a0d128cc9e18"
+  },
+  "c21": {
+    "name": "Arte Antiguo, C21",
+    "folder": "C21 · Izquierda 118 · SKP C-3883, C-3918",
+    "roof": "#c9c8c3",
+    "wall": "#eeeeeb",
+    "faces": {
+      "other": "c21"
+    },
+    "notes": "Paneles blancos con franja de celosías grises, puertas y ventana (frente.jpg); el follaje delante se reemplaza por el color del muro.",
+    "planKey": "541a9f54-016e-4197-b62f-c2932e43b2b6"
+  },
+  "c24": {
+    "name": "Aula/Taller I-117 (Pintura), C24",
+    "folder": "C24 · Izquierda 122 · SKP C-3902, C-3882",
+    "roof": "#b3b0a9",
+    "wall": "#ecece9",
+    "faces": {
+      "other": "c24"
+    },
+    "notes": "Muro blanco con zócalo gris y puerta (frente.jpg).",
+    "planKey": "e6f2bed2-5baf-4dea-bb63-385be50ae9bc"
+  },
+  "c30": {
+    "name": "Talleres T-55 al T-71 (Escultura), C30, C35, C26",
+    "folder": "C30, C35, C26 · Izquierda 120 · SKP C-3886, C-3880, C-4061, C-1",
+    "roof": "#b9b7b1",
+    "wall": "#ecedeb",
+    "faces": {
+      "other": "c30"
+    },
+    "notes": "Paneles blancos con franja alta de celosías grises y ventanas enrejadas (detras.jpg).",
+    "planKey": "0f4a0884-4540-4524-b04e-9f809059a045"
+  },
+  "c31": {
+    "name": "Arte Antiguo, C31",
+    "folder": "C31 · Izquierda 123 · SKP C-4013, C-3956",
+    "roof": "#b9b7b1",
+    "wall": "#ecedeb",
+    "faces": {
+      "other": "c31"
+    },
+    "notes": "Paneles blancos, puertas y ventanas enrejadas bajo celosía oscura (frente.jpg).",
+    "planKey": "25bf0615-4675-4c77-b99d-5766862b302f"
+  },
+  "c32": {
+    "name": "Aula/Taller I-111, I-201 al I-203, C32",
+    "folder": "C32 · Izquierda 121 · SKP C-3894, C-3907",
+    "roof": "#b9b7b1",
+    "wall": "#ecedeb",
+    "faces": {
+      "other": "c32"
+    },
+    "notes": "Paneles blancos con franja de celosías, ventanas enrejadas y puertas (frente.jpg).",
+    "planKey": "a1adcd30-c1d2-41a6-8e2d-4b9549babfb5"
+  },
+  "c45": {
+    "name": "Arqueología, C45",
+    "folder": "C45 · Izquierda 59 · SKP C-129",
+    "roof": "#8a7f74",
+    "wall": "#e4e0d6",
+    "faces": {
+      "other": "c45"
+    },
+    "notes": "Caseta de paneles claros con ventanas enrejadas y puerta doble (frente-a-ARQUEOLOGÍA C…jpg, casi frontal).",
+    "planKey": "3dfcb7ca-5d19-45ad-9bbb-de84034b1fe5"
+  },
+  "ciga-pulso": {
+    "name": "CIGA (Pulso PUCP), C47",
+    "folder": "CIGA-Pulso-pucp",
+    "roof": "#b8b4ab",
+    "wall": "#e3e0d8",
+    "faces": {
+      "other": "ciga-pulso"
+    },
+    "notes": "Paneles claros con banda alta de vidrio oscuro y ventanas enrejadas (lado-directament…jpg, la vista más larga y limpia).",
+    "planKey": "ba27bbc0-4e80-4cf8-ae10-d67e7ad5925e"
+  },
+  "cise": {
+    "name": "CISE",
+    "folder": "Centro de Investigaciones y Servicios Educativos (CISE)",
+    "roof": "#9d968c",
+    "wall": "#ddd6c8",
+    "faces": {
+      "other": "cise"
+    },
+    "notes": "Caseta de paneles beige con ventanas enrejadas y techo de fibrocemento (lado-mas-cerca-hacia-educacion.jpg).",
+    "planKey": "ef79b3e2-ba4d-4015-b580-5ed00d8dba51"
+  },
+  "comedor-central": {
+    "name": "Comedor Central",
+    "folder": "Comedor-central",
+    "roof": "#d8d6d0",
+    "wall": "#c9c7bb",
+    "faces": {
+      "other": "comedor-central"
+    },
+    "notes": "Muro gris claro con ventanas cuadradas y puerta (lado1.jpg); la carpa blanca de la terraza no está en el modelo.",
+    "planKey": "df5f87ed-a1f7-4fa6-ae35-b7f423f61806"
+  },
+  "deposito-limpieza": {
+    "name": "Depósito de limpieza, archivo de historias / Gabinete de proyectos patrimoniales",
+    "folder": "DEPÓSITO DE LIMPIEZA, ARCHIVO DE HISTORIAS  GABINETE DE PROYECTOS PATRIMONIALES",
+    "roof": "#4a4b4c",
+    "wall": "#ddd5c0",
+    "faces": {
+      "other": "deposito-limpieza"
+    },
+    "notes": "Paneles beige con ventanales de vidrio oscuro bajo techo de calamina oscura (frente-a-artes-2.jpg).",
+    "planKey": "e34a7c5b-8a10-4a94-b5e3-e636d56d42bd"
+  },
+  "dpto-sociales": {
+    "name": "Departamento Académico de Ciencias Sociales",
+    "folder": "Departamento Académico de Ciencias Sociales",
+    "roof": "#e0dfdb",
+    "wall": "#f2f2f0",
+    "faces": {
+      "other": "dpto-sociales"
+    },
+    "notes": "Volumen blanco con bandas de ventanas (lado-frente-a-derecho.jpg, 565 px: se ve algo borroso); sobre el tramo, blanco.",
+    "planKey": "e1a3bc92-d6e4-47e6-9619-59f25d6d1639"
+  },
+  "deposito-rural": {
+    "name": "Depósito de Rural",
+    "folder": "Depósito de Rural",
+    "roof": "#a29c94",
+    "wall": "#8c9196",
+    "faces": {
+      "other": "deposito-rural"
+    },
+    "notes": "Jaula de malla con marco metálico gris bajo calamina (imagen.jpg); lo que se ve a través de la malla queda tal cual.",
+    "planKey": "a8412f57-3ef4-4ffd-8bbd-45f3982a34fa"
+  },
+  "desconocido-07": {
+    "name": "Desconocido_07",
+    "folder": "Desconocido_07",
+    "roof": "#9e9b95",
+    "wall": "#7d6a55",
+    "faces": {
+      "other": "desconocido-07"
+    },
+    "notes": "Talleres de tableros OSB con marcos grises, puertas de madera y banda alta translúcida (detras…-3.jpg, sin el auto).",
+    "planKey": "e82375f3-02dc-461a-98ea-67b4a9244f12"
+  },
+  "desconocido-08": {
+    "name": "Desconocido_08",
+    "folder": "Desconocido_08",
+    "roof": "#6f5a48",
+    "wall": "#5f5a54",
+    "faces": {
+      "other": "desconocido-08"
+    },
+    "notes": "Solo hay foto de interior y se toma como exterior (D-08): murete de ladrillo de 1,1 m; encima, el comedor está abierto bajo techo y se pinta en la sombra del alero.",
+    "planKey": "9d9846b2-72fd-420b-8dad-6b03f84fc8ef"
+  },
+  "desconocido-12": {
+    "name": "Desconocido_12",
+    "folder": "Desconocido_12",
+    "roof": "#c9c6bf",
+    "wall": "#9c5a52",
+    "faces": {
+      "other": "desconocido-12"
+    },
+    "notes": "Galpón abierto cerrado con planchas onduladas rojas bajo estructura metálica (frente.jpg). Sin malla en el modelo: se pinta su prisma (D-09b).",
+    "planKey": "40fbf3b7-a3a7-4919-98fa-284e5476c4b9"
+  },
+  "maestranza": {
+    "name": "Edificio Administrativo / Maestranza",
+    "folder": "Edificio Administrativo  Maestranza",
+    "roof": "#b9b6ae",
+    "wall": "#a9a6a0",
+    "faces": {
+      "other": {
+        "tile": "maestranza-alto",
+        "start": 3.0
+      }
+    },
+    "zones": [
+      {
+        "id": "bloques-bajos",
+        "where": {
+          "heightM": [
+            0,
+            7.0
+          ]
+        },
+        "wall": "#b06a55",
+        "faces": {
+          "other": "maestranza-bajo"
+        }
+      }
+    ],
+    "notes": "Dos sistemas: el edificio alto de concreto con paneles azules y grises y ventanas (lado-del-edificio-alto-2.jpg, desde el segundo piso, sin los autos) y los bloques bajos de ladrillo con marco de concreto (espalda…-3.jpg). Se separan por cota (hasta 7 m, ladrillo), así que los primeros pisos del edificio alto también llevan ladrillo.",
+    "planKey": "38278886-283c-434d-ab74-506bb6813522"
+  },
+  "etnomusicologia": {
+    "name": "Instituto de Etnomusicología / Departamento de Ciencias Contables",
+    "folder": "Etnomusicologia-departamento_ciencias_contables",
+    "roof": "#c6c4be",
+    "wall": "#e7e5df",
+    "faces": {
+      "other": "etnomusicologia"
+    },
+    "notes": "Paneles claros con juntas oscuras y ventanas de vidrio bronce (Lado1.jpg, casi frontal).",
+    "planKey": "af3c0f81-cfe7-470e-8a18-48060a89933f"
+  },
+  "educacion-r102": {
+    "name": "Facultad de Educación (Aula R102)",
+    "folder": "FACULTAD DE EDUCACIÓN (AULA R102)",
+    "roof": "#bdbab2",
+    "wall": "#b4705e",
+    "faces": {
+      "other": "educacion-r102"
+    },
+    "notes": "Muro de ladrillo con remate de concreto (frente-a-facultad-educacion-dos-edificios.jpg, sin los casilleros de la otra foto).",
+    "planKey": "773eacb8-6e7f-4c6f-9e05-b67fcb17d92d"
+  },
+  "arquitectura": {
+    "name": "Facultad de Arquitectura y Urbanismo",
+    "folder": "Facultad-Arquitectura",
+    "roof": "#b8b6b0",
+    "wall": "#b3b1aa",
+    "faces": {
+      "other": "arquitectura"
+    },
+    "notes": "Concreto expuesto con galerías de barandas negras y bandas de ventanas (vista-interior-3.jpg, el patio); las fachadas exteriores de las fotos lado, tapadas por árboles y celosías, son del mismo concreto.",
+    "planKey": "b0dc2ef8-504d-46a4-ac00-730fc0e1ab48"
+  },
+  "quimica": {
+    "name": "Química",
+    "folder": "Facultad-quimica",
+    "roof": "#c9c6b8",
+    "wall": "#d3cfb6",
+    "faces": {
+      "other": "quimica"
+    },
+    "notes": "Dos pisos de paneles beige verdoso con bandas de ventanas (IMG_20261111_151559.jpg, a la izquierda del árbol); el seto se reemplaza por el color del muro.",
+    "planKey": "8c67359a-fb2d-4f1d-aa54-53860a6ad71b"
+  },
+  "civil": {
+    "name": "Sección Ingeniería Civil",
+    "folder": "Facultad_Civil",
+    "roof": "#b5b2aa",
+    "wall": "#9a8f80",
+    "faces": {
+      "other": "civil"
+    },
+    "notes": "Concreto con bandas de ladrillo y ventanas enrejadas en dos pisos (frente.jpeg, 1105 px).",
+    "planKey": "2643a26d-e46b-4ae9-ad6d-89639dcef770"
+  },
+  "fisica": {
+    "name": "Física",
+    "folder": "Facultad_Fisica",
+    "roof": "#b5b2aa",
+    "wall": "#a49c8d",
+    "faces": {
+      "other": "fisica"
+    },
+    "notes": "Marco de concreto con paños de ladrillo y ventanas (el ala derecha de frente.jpg; la foto mide 542 px y se ve borrosa).",
+    "planKey": "a3d4665c-9adc-4749-a0af-6613e4149543"
+  },
+  "mecanica": {
+    "name": "Sección Ingeniería Mecánica",
+    "folder": "Facultad_Mecanica",
+    "roof": "#b2afa8",
+    "wall": "#a1715f",
+    "faces": {
+      "other": "mecanica"
+    },
+    "notes": "Base de ladrillo con banda de ventanas y concreto arriba (espalda2.jpg); FRENTE.jpg (796 px) muestra el mismo ladrillo con marcos gris verdoso.",
+    "planKey": "2a8d1db4-2115-4823-b339-437aaa09a6e1"
+  },
+  "apoyo-rural": {
+    "name": "Grupo de Apoyo al Sector Rural (oficinas)",
+    "folder": "GRUPO DE APOYO AL SECTOR RURAL (OFICINAS)",
+    "roof": "#6f5a4a",
+    "wall": "#9a8a76",
+    "faces": {
+      "other": "apoyo-rural"
+    },
+    "notes": "Bloques de tierra con zócalo y viga rojo óxido (frente.jpg).",
+    "planKey": "9baa19ac-bc66-4955-a5a1-8fa6024b3c93"
+  },
+  "gimnasio": {
+    "name": "Gimnasio / CEMDUC",
+    "folder": "Gimnasio",
+    "roof": "#c8c6c1",
+    "wall": "#e3dfd5",
+    "faces": {
+      "other": "gimnasio"
+    },
+    "notes": "Paneles crema con banda alta de ventanas, puertas y zócalo gris (espalda2.jpg); la cúpula del polideportivo de fondo no es parte del edificio.",
+    "planKey": "ad3d6c9f-02a5-4646-a34e-b907f99241ce"
+  },
+  "maquinaria-pesada": {
+    "name": "Laboratorio de Maquinaria Pesada + SS.HH.",
+    "folder": "LABORATORIO DE MAQUINARIA PESADA + SS.HH",
+    "roof": "#a9adb0",
+    "wall": "#8e9398",
+    "faces": {
+      "other": "maquinaria-pesada"
+    },
+    "notes": "Galpón de calamina gris con portones plegables de chapa y paños translúcidos (detras-no hay edificios….jpg); sobre el tramo, calamina gris.",
+    "planKey": "2bb94091-bd63-429f-84b8-c203f766549f"
+  },
+  "labcert": {
+    "name": "Laboratorio de Certificación (LABCERT)",
+    "folder": "Labcert",
+    "roof": "#d3d2ce",
+    "wall": "#ecebe8",
+    "faces": {
+      "other": "labcert"
+    },
+    "notes": "Muro blanco con banda de ventanas y zócalo gris (labcert.jpg); quedan las sombras de las palmeras, que son reales.",
+    "planKey": "428087f1-a7b8-41b1-9a04-2f7972723964"
+  },
+  "lab-hidraulica": {
+    "name": "Laboratorios de Hidráulica y de Mecánica de Suelos, Departamento de Arquitectura",
+    "folder": "Laboratorio-Hidraulica-mecanica_suelos",
+    "roof": "#9a9893",
+    "wall": "#a86b55",
+    "faces": {
+      "other": "lab-hidraulica"
+    },
+    "notes": "Naves de ladrillo con marco de concreto y portones verde petróleo (Frente2.jpg); las bóvedas de los hastiales no están en el modelo: sobre el tramo, ladrillo.",
+    "planKey": "912a2ee9-64e9-4ea2-be0f-e42e6f8e4491"
+  },
+  "invernadero": {
+    "name": "Prototipo invernadero (Grupo de Apoyo al Sector Rural)",
+    "folder": "PROTOTIPO INVERNADERO (GRUPO DE APOYO AL SECTOR RURAL)",
+    "roof": "#b9bebc",
+    "wall": "#b9bfbd",
+    "faces": {
+      "other": "invernadero"
+    },
+    "notes": "Estructura de madera rojiza con paños de policarbonato (lado-detras.jpg).",
+    "planKey": "e9461126-748f-4e02-88fa-9f72c58bfd17"
+  },
+  "invernadero-inteligente": {
+    "name": "Prototipo invernadero inteligente",
+    "folder": "PROTOTIPO INVERNADERO INTELIGENTE (GRUPO DE APOYO AL SECTOR RURAL)",
+    "roof": "#8d8a85",
+    "wall": "#6f7472",
+    "faces": {
+      "other": "invernadero-inteligente"
+    },
+    "notes": "Marco metálico verde agua con malla y vidrios oscuros (lado2.jpg).",
+    "planKey": "323a6e7d-0804-48dc-84f7-5cf7f4b664c4"
+  },
+  "prototipo-sshh": {
+    "name": "Prototipo SS.HH.",
+    "folder": "PROTOTIPO SS.HH. (GRUPO DE APOYO AL SECTOR RURAL)",
+    "roof": "#d0d0cd",
+    "wall": "#e9e9e7",
+    "faces": {
+      "other": "prototipo-sshh"
+    },
+    "notes": "Muro blanco con puerta y zócalo gris oscuro (frente-largo.jpg).",
+    "planKey": "5eca98e4-c503-496a-ae01-09af0dd494fc"
+  },
+  "sumaq-wasi-2": {
+    "name": "Prototipo vivienda bioclimática Sumaq Wasi 2",
+    "folder": "PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 2(GRUPO DE APOYO AL SECTOR RURAL)",
+    "roof": "#7a4f3e",
+    "wall": "#e8e7e2",
+    "faces": {
+      "other": "sumaq-wasi-2"
+    },
+    "notes": "Casa de muros blancos tarrajeados con puerta y ventanas de madera y techo a dos aguas rojizo (frente.jpg).",
+    "planKey": "3e2eae3d-f493-47bb-a3d6-666a1cfca72e"
+  },
+  "sumaq-wasi-1": {
+    "name": "Prototipo vivienda bioclimática Sumaq Wasi 1",
+    "folder": "PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 1(GRUPO DE APOYO AL SECTOR RURAL)",
+    "roof": "#a59f93",
+    "wall": "#6b4a33",
+    "faces": {
+      "other": "sumaq-wasi-1"
+    },
+    "notes": "Casa de tablas de madera con puertas en espiga y ventanas angostas (lado der.jpg).",
+    "planKey": "9b3e73d7-34ca-4a93-9065-ca0b6c635945"
+  },
+  "industrial": {
+    "name": "Sección Ingeniería Industrial",
+    "folder": "Pabellon Industrial",
+    "roof": "#cfcfcb",
+    "wall": "#eeeeec",
+    "faces": {
+      "other": "industrial"
+    },
+    "notes": "Volumen blanco con ventanas oscuras y zócalo azul (ala izquierda de frente.jpg; la foto mide 516 px y se ve borrosa).",
+    "planKey": "be3bdfcc-7e3a-4f45-a995-4d82caa7025f"
+  },
+  "pabellon-i": {
+    "name": "Pabellón I: Facultad de Arte y Diseño",
+    "folder": "Pabellon_I",
+    "roof": "#c8c9ca",
+    "wall": "#cfd2d4",
+    "faces": {
+      "other": "pabellon-i"
+    },
+    "notes": "Paneles grises con arriostres en X y bandas de ventanas en dos pisos (lado de edificio sin escalera.jpg).",
+    "planKey": "23a5dd73-3a98-4f6b-bb79-9591250d9ae3"
+  },
+  "minas": {
+    "name": "Sección Ingeniería de Minas",
+    "folder": "Pabellon_Minas",
+    "roof": "#b0ada6",
+    "wall": "#a8705e",
+    "faces": {
+      "other": "minas"
+    },
+    "notes": "Base de ladrillo con banda de ventanas enrejadas y concreto arriba (espalda1.jpg).",
+    "planKey": "31829026-44bf-404f-9ad6-5c4ed311ca96"
+  },
+  "pabellon-r": {
+    "name": "Pabellón R: Facultad de Educación (aulas)",
+    "folder": "Pabellón R Facultad de Educación (aulas)",
+    "roof": "#bdbbb5",
+    "wall": "#a9a7a1",
+    "faces": {
+      "other": "pabellon-r"
+    },
+    "notes": "Marco de concreto con antepechos de ladrillo y ventanas en dos pisos (lado.jpg); los árboles delante se reemplazan por el concreto.",
+    "planKey": "568cf341-f016-402f-b41b-b594693591a1"
+  },
+  "pabellon-h": {
+    "name": "Pabellón H (Facultad de Letras y Ciencias Humanas)",
+    "folder": "Pabellon-H",
+    "roof": "#d6d3cb",
+    "wall": "#d3cfc2",
+    "faces": {
+      "other": {
+        "tile": "pabellon-h",
+        "start": 3.0
+      }
+    },
+    "notes": "Fachada curva beige con bandas horizontales de ventanas (frente.jpg), desde 3 m para dejar fuera a la gente y las bicicletas; debajo, beige. Por confirmar el emparejamiento (Anexo A, fila 45).",
+    "planKey": "80d344a8-1c7d-40eb-aa62-718b483bc480"
+  },
+  "quiosco-deportes": {
+    "name": "Quiosco (Deportes)",
+    "folder": "QUIOSCO (DEPORTES)",
+    "roof": "#cfcdc8",
+    "wall": "#dedbd3",
+    "faces": {
+      "other": "quiosco-deportes"
+    },
+    "notes": "Caseta clara con vitrinas y toldo (lado.jpg).",
+    "planKey": "33b071d8-fe09-4a97-9940-00eaee009335"
+  },
+  "snack-sociales": {
+    "name": "Snack (Frutería Sociales)",
+    "folder": "SNACK (FRUTERÍA SOCIALES)",
+    "roof": "#b9b6ae",
+    "wall": "#ddd5bf",
+    "faces": {
+      "other": "snack-sociales"
+    },
+    "notes": "Muro crema del lado de atrás (detras.jpg): las vistas del mostrador tienen gente delante y no se usan.",
+    "planKey": "0172ad66-8eff-420d-8659-8007941c351c"
+  },
+  "subestacion-n11": {
+    "name": "Sub-estación N-11",
+    "folder": "Sub-estacion-n11",
+    "roof": "#d2d1cd",
+    "wall": "#e6e4df",
+    "faces": {
+      "other": "subestacion-n11"
+    },
+    "notes": "Paneles blancos con ventanitas enrejadas y pilastras de enchape azul (detras.jpg). Sin malla en el modelo: se pinta su prisma.",
+    "planKey": "41eec3bc-c9f0-46df-8e39-4aa72c7b0410"
+  },
+  "subestacion-n2": {
+    "name": "Sub-estación N-2",
+    "folder": "Sub-estacion-n2",
+    "roof": "#b3b0aa",
+    "wall": "#a9a6a0",
+    "faces": {
+      "other": "subestacion-n2"
+    },
+    "notes": "Ladrillo con marco de concreto y rejilla metálica (Detras.jpg, sin el tanque de la derecha).",
+    "planKey": "704d440c-77d9-4e5e-aff0-b795e6b506b1"
+  },
+  "subestacion-n8": {
+    "name": "Sub-estación N-8",
+    "folder": "Sub-estación N-8",
+    "roof": "#dcdbd7",
+    "wall": "#ab6b58",
+    "faces": {
+      "other": "subestacion-n8"
+    },
+    "notes": "Ladrillo con marco de concreto blanco, rejillas negras y puerta metálica (frente.jpg).",
+    "planKey": "7ae47916-549e-40c2-b918-9c43d305e19d"
+  },
+  "tiendecita-verde": {
+    "name": "Tiendecita Verde",
+    "folder": "TIENDECITA VERDE",
+    "roof": "#6e4e3a",
+    "wall": "#ecebe6",
+    "faces": {
+      "other": "tiendecita-verde"
+    },
+    "notes": "Muros blancos con marcos de madera, letrero pintado y pérgola de madera (lado-frente.jpg).",
+    "planKey": "038127d1-6099-4dfa-979c-9130b8916f21"
+  },
+  "auditorio-derecho": {
+    "name": "Auditorio de Derecho",
+    "folder": "auditorio-derecho",
+    "roof": "#c4c5c1",
+    "wall": "#7f8a83",
+    "faces": {
+      "other": "auditorio-derecho"
+    },
+    "notes": "Muro gris verdoso redondeado con ventanal oscuro (lado1.jpg); el alero de concreto del ingreso no está en el modelo.",
+    "planKey": "11900083-39e3-4786-93ec-73e89a4e8c3a"
+  },
+  "auditorio-humanidades": {
+    "name": "Auditorio de Humanidades",
+    "folder": "auditorio-humanidades",
+    "roof": "#b8b5ae",
+    "wall": "#a8513f",
+    "faces": {
+      "other": "auditorio-humanidades"
+    },
+    "notes": "Ladrillo con banda granate (frente.jpg, 480 px). La otra foto de la carpeta (frente-lado-frente-a-educacion.png) muestra Estudios Generales Letras, no el auditorio: no se usa.",
+    "planKey": "3ff11b67-d756-46a5-a2c2-54a294e50313"
+  },
+  "tinkuy": {
+    "name": "Tinkuy",
+    "folder": "TInkuy",
+    "roof": "#b3b0a8",
+    "wall": "#aba8a0",
+    "faces": {
+      "other": "tinkuy"
+    },
+    "notes": "Concreto caravista con vanos angostos, listones color óxido arriba y la puerta de enchape azul (interior-2.jpg, vista del patio que se ve desde fuera).",
+    "planKey": "bf91920d-0d33-43b2-afc2-6c7048f0e3e7"
+  },
+  "aula-movil-psicologia": {
+    "name": "Aulas móviles Psicología",
+    "folder": "aula-movil-psicologia",
+    "roof": "#c3c4c3",
+    "wall": "#ddd8c6",
+    "faces": {
+      "other": "aula-movil-psicologia"
+    },
+    "notes": "Módulo prefabricado crema de dos pisos con ventanales (frente.jpg); la escalera exterior no está en el modelo.",
+    "planKey": "b8811ba2-310a-4701-806c-2b385175a201"
+  },
+  "aulas-moviles-b": {
+    "name": "Aulas móviles (B)",
+    "folder": "aula-moviles-B",
+    "roof": "#c7c9cc",
+    "wall": "#d7d9dc",
+    "faces": {
+      "other": "aulas-moviles-b"
+    },
+    "notes": "Módulos prefabricados grises con arriostres en X, ventanas y equipos de aire (lado-edificio1.jpg).",
+    "planKey": "8ec02178-b752-40cc-a4b5-a2f462b04528"
+  },
+  "comedor-arte-antiguo": {
+    "name": "Caseta Comedor Generales Ciencias (Comedor de arte antiguo)",
+    "folder": "comedor-artes-antiguo-eeggcc",
+    "roof": "#a7a39b",
+    "wall": "#5c3f2e",
+    "faces": {
+      "other": "comedor-arte-antiguo"
+    },
+    "notes": "Pabellón de madera oscura con cruces en diagonal, vidrio y base de ladrillo (lado2.jpg). Sin malla en el modelo: se pinta su prisma. Por confirmar el emparejamiento (Anexo A, fila 63).",
+    "planKey": "b9a4a553-9c25-45f2-b2fc-43592ab2b917"
+  },
+  "complejo-sociales": {
+    "name": "Facultad de Ciencias Sociales (complejo, código 61)",
+    "folder": "complejo-sociales",
+    "roof": "#c4c3bf",
+    "wall": "#bdbbb5",
+    "faces": {
+      "other": {
+        "tile": "sociales-alto",
+        "start": 12
+      }
+    },
+    "notes": "El bloque alto con celosías verticales blancas y acentos rojos (detras.jpg) va desde 12 m; debajo, el concreto de los volúmenes bajos. Por confirmar el emparejamiento (Anexo A, fila 64).",
+    "planKey": "8f79b2cc-6701-4f4e-87f7-13db06a89a48"
+  },
+  "teologia": {
+    "name": "Departamento Académico de Teología",
+    "folder": "departamento-teologia",
+    "roof": "#b5b2ab",
+    "wall": "#a5705f",
+    "faces": {
+      "other": "teologia"
+    },
+    "notes": "Volúmenes de ladrillo con marco de concreto (lado.jpg).",
+    "planKey": "e1692786-56ac-4841-ba1b-a020a7e90117"
+  },
+  "dintilhac": {
+    "name": "Tesorería General (Dintilhac)",
+    "folder": "dintilhac",
+    "roof": "#b8b5ae",
+    "wall": "#a9a59d",
+    "faces": {
+      "other": "dintilhac"
+    },
+    "notes": "Marco de concreto con paños de ladrillo y bandas de ventanas en dos pisos (detras1.jpg); la fachada blanca del Centro Dintilhac (frente.jpg, 551 px) es un volumen pequeño que el tramo no distingue.",
+    "planKey": "1d3cfcb0-06c4-43b2-923f-610c5dcfb260"
+  },
+  "eeggcc": {
+    "name": "Estudios Generales Ciencias",
+    "folder": "eeggcc",
+    "roof": "#d2cdc4",
+    "wall": "#c9ae9c",
+    "faces": {
+      "other": "eeggcc"
+    },
+    "notes": "Concreto rosado y bloque claro con vanos de ventanas en tres pisos (lado.jpg).",
+    "planKey": "a340e861-14e1-4091-b10d-b6d696c5d70d"
+  },
+  "faci": {
+    "name": "Facultad de Ciencias e Ingeniería",
+    "folder": "faci",
+    "roof": "#c3c5c8",
+    "wall": "#c5c8cc",
+    "faces": {
+      "other": {
+        "tile": "faci",
+        "start": 2.0
+      }
+    },
+    "notes": "Muros grises con pilastras gris oscuro y bandas de ventanas (lado.jpg, sin la escalera). La foto faci-frente.png viene rayada a mano y no se usa.",
+    "planKey": "f7ea6a43-0556-419d-92e5-9ad3a7caf21b"
+  },
+  "comunicaciones": {
+    "name": "Facultad de Ciencias y Artes de la Comunicación",
+    "folder": "facultad-ciencias-artes-comunicaciones",
+    "roof": "#b9b6af",
+    "wall": "#a8705f",
+    "faces": {
+      "other": "comunicaciones"
+    },
+    "notes": "Ladrillo con marco de concreto y bandas de ventanas en tres pisos (frente2.jpg); los árboles delante se reemplazan por el ladrillo.",
+    "planKey": "d9793065-b718-4803-983a-9b7cac4f770b"
+  },
+  "ciencias-sociales": {
+    "name": "Facultad de Ciencias Sociales (código 18)",
+    "folder": "facultad-ciencias-sociales",
+    "roof": "#d9d9d6",
+    "wall": "#ededeb",
+    "faces": {
+      "other": "ciencias-sociales"
+    },
+    "notes": "Volumen blanco con bandas de ventanas oscuras en tres pisos (frente2.jpg). Por confirmar el emparejamiento (Anexo A, fila 71).",
+    "planKey": "d7b50529-7b3f-4d7e-9220-2205bbf2f43b"
+  },
+  "gestion": {
+    "name": "Facultad de Gestión y Alta Dirección",
+    "folder": "facultad-gestion",
+    "roof": "#c2c0ba",
+    "wall": "#a9a99c",
+    "faces": {
+      "other": "gestion"
+    },
+    "notes": "Paños de ladrillo y concreto gris verdoso con ventanas en dos pisos (lado.jpg).",
+    "planKey": "83345054-8c5a-4888-9d28-8fe667ba998f"
+  },
+  "letras-ch": {
+    "name": "Facultad de Letras y Ciencias Humanas (código 32)",
+    "folder": "facultad-letras-ciencias-humanas",
+    "roof": "#d5d5d2",
+    "wall": "#e7e7e5",
+    "faces": {
+      "other": "letras-ch"
+    },
+    "notes": "Bandas blancas con ventanas y base de ladrillo (detras-frente-a-psicologia-3.jpg); los árboles delante se reemplazan por blanco. Por confirmar el emparejamiento (Anexo A, fila 73).",
+    "planKey": "c657216b-dded-46da-91bd-57fd0fc3b60e"
+  },
+  "psicologia": {
+    "name": "Facultad de Psicología (Pabellón S)",
+    "folder": "facultad-psicologia",
+    "roof": "#b9b6af",
+    "wall": "#a76d5c",
+    "faces": {
+      "other": "psicologia"
+    },
+    "notes": "Ladrillo con marco de concreto, ventanales y puerta roja (psicologia-frente-2.jpg).",
+    "planKey": "d365388a-3f19-4c17-aae2-7364f59c4fbe"
+  },
+  "fotocopiado-letras": {
+    "name": "Centro de fotocopiado (adyacente a EE.GG.LL.)",
+    "folder": "fotocopiado-letras-eeggll",
+    "roof": "#cfcbc1",
+    "wall": "#ebe8e0",
+    "faces": {
+      "other": "fotocopiado-letras"
+    },
+    "notes": "Muro blanco ciego del costado (IMG_20261111_141133.jpg): las vitrinas del frente tienen gente delante.",
+    "planKey": "e5641098-e855-4be9-8e70-8672e1561630"
+  },
+  "gelarti": {
+    "name": "Gelarti",
+    "folder": "heladeria-gelarti",
+    "roof": "#3a3b3c",
+    "wall": "#e7e3d8",
+    "faces": {
+      "other": "gelarti"
+    },
+    "notes": "Caseta crema con vidrio, interior rosado y alero oscuro (frente-lado.jpg).",
+    "planKey": "5d0c3da2-1334-4c77-bb3a-54364ffa1417"
+  },
+  "sala-cuna": {
+    "name": "Sala Cuna",
+    "folder": "sala cuna",
+    "roof": "#cfcfcc",
+    "wall": "#ebebe9",
+    "faces": {
+      "other": "sala-cuna"
+    },
+    "notes": "Muros blancos con ventanas y zócalo gris (espalda-hacia-educacion.jpg).",
+    "planKey": "44a6cf1a-c7af-486a-b402-ea978a94fbe9"
+  },
+  "facultad-derecho": {
+    "name": "Facultad de Derecho",
+    "folder": "facuttad-derecho",
+    "roof": "#d8d6cf",
+    "wall": "#eeeeea",
+    "faces": {
+      "other": "derecho-ala"
+    },
+    "zones": [
+      {
+        "id": "bloque-entrada",
+        "where": {
+          "north": [
+            0,
+            0.42
+          ],
+          "east": [
+            0.45,
+            1
+          ],
+          "heightM": [
+            0,
+            7.6
+          ]
+        },
+        "wall": "#8e9083",
+        "roof": "#cfcdc4",
+        "faces": {
+          "other": "derecho-entrada"
+        }
+      },
+      {
+        "id": "torre",
+        "where": {
+          "heightM": [
+            7.6,
+            30
+          ]
+        },
+        "wall": "#cbc8be",
+        "roof": "#cbc8be",
+        "faces": {
+          "E": {
+            "pattern": {
+              "kind": "curtain",
+              "wall": "#cbc8be",
+              "glass": "#7e929c",
+              "frame": "#69727a",
+              "floorM": 3.6,
+              "moduleM": 1.4,
+              "frameM": 0.07
+            }
+          },
+          "NE": {
+            "sameAs": "E"
+          },
+          "other": {
+            "pattern": {
+              "kind": "ribbon",
+              "wall": "#cdc9bd",
+              "glass": "#47525a",
+              "frame": "#3a3d40",
+              "floorM": 3.6,
+              "sillM": 1.0,
+              "windowM": 1.3,
+              "moduleM": 1.8,
+              "frameM": 0.06
+            }
+          }
+        }
+      }
+    ],
+    "notes": "Frente = sur (la torre queda detrás y a la derecha en frente1.jpg). Alas blancas con ventanas (frente2.jpg), el bloque de entrada gris verdoso (frente1.jpg). La torre de concreto y vidrio no tiene una vista enderezable sin árboles ni el filo delante: lleva el patrón con sus colores medidos.",
+    "planKey": "c315d792-aa51-4f25-b2fd-77adf2729a99"
+  },
+  "pabellon-z": {
+    "name": "Pabellón Z",
+    "folder": "Pabellon-Z",
+    "roof": "#e3e1db",
+    "wall": "#ebe9e3",
+    "faces": {
+      "N": "z-vidrio",
+      "S": "z-patio",
+      "other": "z-blanco"
+    },
+    "zones": [
+      {
+        "id": "barra-sur",
+        "where": {
+          "north": [
+            0,
+            0.33
+          ],
+          "east": [
+            0,
+            0.75
+          ]
+        },
+        "faces": {
+          "S": "z-vidrio",
+          "N": "z-patio",
+          "other": "z-blanco"
+        }
+      },
+      {
+        "id": "torre-curva-oeste",
+        "where": {
+          "east": [
+            0,
+            0.17
+          ],
+          "north": [
+            0.3,
+            0.85
+          ]
+        },
+        "faces": {
+          "W": {
+            "pattern": {
+              "kind": "windows",
+              "wall": "#f0efea",
+              "glass": "#5e5247",
+              "frame": "#2d2a28",
+              "floorM": 1.7,
+              "sillM": 0.4,
+              "windowM": 1.0,
+              "widthM": 1.9,
+              "moduleM": 2.25,
+              "frameM": 0.07
+            }
+          },
+          "NW": {
+            "sameAs": "W"
+          },
+          "SW": {
+            "sameAs": "W"
+          },
+          "other": "z-blanco"
+        }
+      },
+      {
+        "id": "cuerpo-redondo-este",
+        "where": {
+          "east": [
+            0.72,
+            1
+          ],
+          "north": [
+            0.15,
+            0.55
+          ]
+        },
+        "faces": {
+          "other": "z-blanco"
+        }
+      }
+    ],
+    "notes": "Fachada de vidrio al norte (lado.jpg), galerías al patio (interior.jpg) y muros blancos con ventanas en los testeros y el cuerpo redondo (detras.jpg). La cara curva del oeste, tapada por palmeras en exterior-frente.jpg, lleva el patrón con sus colores medidos. La cara sur de la barra sur no tiene foto: copia el vidrio (SPEC-109 §8, P-02).",
+    "planKey": "60bae298-0d82-48c5-bed9-1122a52c9b8d"
+  },
+  "pabellon-v": {
+    "name": "Pabellón V",
+    "folder": "PabellonV",
+    "roof": "#d2cfc6",
+    "wall": "#dcd5c2",
+    "faces": {
+      "E": {
+        "pattern": {
+          "kind": "blind",
+          "wall": "#a7a99b"
+        }
+      },
+      "NE": {
+        "sameAs": "E"
+      },
+      "NW": {
+        "sameAs": "E"
+      },
+      "other": "v-crema"
+    },
+    "zones": [
+      {
+        "id": "volumen-curvo-oeste",
+        "where": {
+          "east": [
+            0,
+            0.14
+          ]
+        },
+        "wall": "#d6b36b",
+        "roof": "#d4c08e",
+        "faces": {
+          "other": "v-ocre"
+        }
+      }
+    ],
+    "notes": "Bloque crema con ventanas (Lado2.jpg, el árbol se reemplaza por crema), testeros gris verdoso ciegos y el volumen curvo ocre del oeste (Lado1_2.jpg).",
+    "planKey": "46c7455f-fc26-43e3-b407-7d4637c3a6de"
+  },
+  "polideportivo": {
+    "name": "Polideportivo",
+    "folder": "polideportivo",
+    "roof": "#c9cacb",
+    "wall": "#2e4683",
+    "faces": {
+      "W": "poli-oeste",
+      "NW": {
+        "sameAs": "W"
+      },
+      "SW": {
+        "sameAs": "W"
+      },
+      "other": "poli-sur"
+    },
+    "notes": "Coliseo azul con franja de celosías y base blanca con ventanas pequeñas (lado-hacia-eeggll.jpg, sur); hacia las aulas móviles (oeste), enchape verde bajo el azul (detras-lado-hacia-aulas-moviles.jpg).",
+    "planKey": "a0c57ec0-18b7-4a69-a4aa-b200fa9420e3"
+  },
+  "eeggll": {
+    "name": "Estudios Generales Letras",
+    "folder": "eeggll",
+    "roof": "#dcdad4",
+    "wall": "#e4e0d5",
+    "faces": {
+      "other": "eeggll"
+    },
+    "notes": "Bloque crema con bandas de ventanas de marco blanco en tres pisos (lado-hacia-polideportivo-2.jpg, casi frontal); los árboles delante se reemplazan por crema.",
+    "planKey": "7f886877-7663-451f-a5cf-55047ed97c79"
+  },
+  "fotocopiado-z": {
+    "name": "Centro de fotocopiado (adyacente a Pabellón Z)",
+    "folder": "fotocopiado-z",
+    "roof": "#a9a6a0",
+    "wall": "#e9e8e3",
+    "faces": {
+      "other": "fotocopiado-z"
+    },
+    "notes": "Caseta de paneles blancos con ventanales de aluminio y techo de fibrocemento (ladofrente-1.jpg).",
+    "planKey": "cb1dbda1-6c1a-4853-967b-9f90c8c47df4"
+  },
+  "biblioteca-central": {
+    "name": "Biblioteca Central",
+    "folder": "bibblioteca-central",
+    "roof": "#a9a69e",
+    "wall": "#a8a69f",
+    "faces": {
+      "E": {
+        "tile": "biblioteca-frente",
+        "once": -8.8,
+        "start": 1.7,
+        "beyond": "biblioteca-detras"
+      },
+      "NE": {
+        "sameAs": "E"
+      },
+      "SE": {
+        "sameAs": "E"
+      },
+      "other": "biblioteca-detras"
+    },
+    "notes": "Frente al este, hacia el jardín D12 (AV-0333; lo confirmó Jean Piero): las caras al este llevan una vez el centro de frente-visto-desde-el-jardind12-grande.jpg, centrado en la torre de la entrada y cortado sobre las cabezas de la gente; fuera de él, y en las demás caras, el tramo enderezado de espalda-opuesto-de-delante.jpg (columnas a plomo). frente-visto-desde-el-jardind12-grande.jpg se iguala en color con espalda-opuesto-de-delante.jpg; su cielo y follaje toman el otro tramo.",
+    "planKey": "91277172-4ff8-45d2-a22c-4c508c86f196"
+  },
+  "desconocido-13": {
+    "name": "Desconocido_13",
+    "folder": "Desconocido_13",
+    "roof": "#a9a69d",
+    "wall": "#9d9a92",
+    "faces": {
+      "other": {
+        "pattern": {
+          "kind": "blind",
+          "wall": "#9d9a92"
+        }
+      }
+    },
+    "notes": "Losa de concreto a ras del césped con rejillas (esta-bajo-tierra.jpg): no tiene fachada que enderezar; va el color del concreto medido en la foto. Por confirmar cuál de los dos Desconocido_13 es (Anexo A, fila 24).",
+    "planKey": "3441937e-1f8c-498a-bc30-36956d1da1d8",
+    "photos": [
+      "esta-bajo-tierra.jpg",
+      "solo se ve-eltecho-desde-el-piso.jpg"
+    ]
+  }
+}

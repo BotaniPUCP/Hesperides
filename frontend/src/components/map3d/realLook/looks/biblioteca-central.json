@@ -3,20 +3,18 @@
   "name": "Biblioteca Central",
   "folder": "bibblioteca-central",
   "photos": [
-    "frente.jpg",
-    "detras.jpg",
-    "lado.jpg"
+    "espalda-opuesto-de-delante.jpg",
+    "frente-visto-desde-el-jardind12-grande.jpg"
   ],
-  "notes": "El frente mira al este, hacia el jardín D12 (AV-0333, a 110 m al este, a la misma latitud; lo confirmó Jean Piero). Las caras al este llevan una vez el centro de frente.jpg (torre de la entrada y alas cercanas, 17,4 × 8,05 m desde 1,7 m de altura, cortado sobre las cabezas de la gente en la puerta a 19 px por metro medidos en la torre de 10 m), centrado en la torre del modelo (1 m al sur del centro del edificio); fuera de él, y en las demás caras, el tramo enderezado de detras.jpg (11,25 × 13,74 m, columnas a plomo), la única foto sin árboles delante. frente.jpg se iguala en color con detras.jpg: está sobresaturada. lado.jpg confirma el mismo sistema en las otras caras. El cielo y el follaje del tramo del frente se marcan con color clave y toman el tramo de detras.jpg.",
+  "notes": "Frente al este, hacia el jardín D12 (AV-0333; lo confirmó Jean Piero): las caras al este llevan una vez el centro de frente-visto-desde-el-jardind12-grande.jpg, centrado en la torre de la entrada y cortado sobre las cabezas de la gente; fuera de él, y en las demás caras, el tramo enderezado de espalda-opuesto-de-delante.jpg (columnas a plomo). frente-visto-desde-el-jardind12-grande.jpg se iguala en color con espalda-opuesto-de-delante.jpg; su cielo y follaje toman el otro tramo.",
   "zones": [
     {
-      "id": "biblioteca",
+      "id": "edificio",
       "roof": "#a9a69e",
       "faces": {
         "E": {
           "kind": "photo",
           "wall": "#a8a69f",
-          "offsetM": -8.8,
           "photo": {
             "tile": "biblioteca-frente",
             "widthM": 17.4,
@@ -28,10 +26,11 @@
               "photo": {
                 "tile": "biblioteca-detras",
                 "widthM": 11.25,
-                "heightM": 13.74
+                "heightM": 15.3
               }
             }
           },
+          "offsetM": -8.8,
           "startM": 1.7
         },
         "NE": {
@@ -46,7 +45,7 @@
           "photo": {
             "tile": "biblioteca-detras",
             "widthM": 11.25,
-            "heightM": 13.74
+            "heightM": 15.3
           }
         }
       }

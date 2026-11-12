@@ -1,0 +1,26 @@
+{
+  "planKey": "31829026-44bf-404f-9ad6-5c4ed311ca96",
+  "name": "Sección Ingeniería de Minas",
+  "folder": "Pabellon_Minas",
+  "photos": [
+    "espalda1.jpg"
+  ],
+  "notes": "Base de ladrillo con banda de ventanas enrejadas y concreto arriba (espalda1.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b0ada6",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a8705e",
+          "photo": {
+            "tile": "minas",
+            "widthM": 18,
+            "heightM": 6.5
+          }
+        }
+      }
+    }
+  ]
+}

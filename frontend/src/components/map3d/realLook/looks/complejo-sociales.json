@@ -1,0 +1,27 @@
+{
+  "planKey": "8f79b2cc-6701-4f4e-87f7-13db06a89a48",
+  "name": "Facultad de Ciencias Sociales (complejo, código 61)",
+  "folder": "complejo-sociales",
+  "photos": [
+    "detras.jpg"
+  ],
+  "notes": "El bloque alto con celosías verticales blancas y acentos rojos (detras.jpg) va desde 12 m; debajo, el concreto de los volúmenes bajos. Por confirmar el emparejamiento (Anexo A, fila 64).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c4c3bf",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#bdbbb5",
+          "photo": {
+            "tile": "sociales-alto",
+            "widthM": 40,
+            "heightM": 18
+          },
+          "startM": 12
+        }
+      }
+    }
+  ]
+}

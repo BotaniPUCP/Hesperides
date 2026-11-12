@@ -1,0 +1,26 @@
+{
+  "planKey": "f5e7a188-3cd8-48d3-8a3c-5b2aaba1bd97",
+  "name": "Arqueología A / CIGA",
+  "folder": "ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA)",
+  "photos": [
+    "frente2.jpg"
+  ],
+  "notes": "Paneles prefabricados claros; el testero de frente2.jpg, con su ventana enrejada, va en todas las caras.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#9d9a93",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#dcdad3",
+          "photo": {
+            "tile": "arqueologia-a",
+            "widthM": 6,
+            "heightM": 3.2
+          }
+        }
+      }
+    }
+  ]
+}

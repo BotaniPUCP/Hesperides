@@ -5,7 +5,7 @@
 | HU relacionada | SPEC-102 (mapa 3D), sobre el modelo de SPEC-108 |
 | Autor | Jean Piero, con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android |
-| Estado | Tanda 1 implementada el 12 nov 2026: motor, botón, Anexo A y 9 fichas, verificadas en navegador de día y de noche. Falta que Jean Piero revise el Anexo A y el criterio de color antes de la tanda 2 |
+| Estado | 12 nov 2026: los 80 edificios fotografiados llevan tramos de sus fotos (D-15), verificado en navegador. Pendiente: revisión del Anexo A, la Huaca y dónde servir el atlas (P-08) |
 | Dependencias | SPEC-108 (modelo del plano, `plan_key`, `edificios-plano.glb`), rama `feature/spec-108-edificios-del-plano` |
 
 > **Lectura obligatoria:** `specs/REGLAS.md` y SPEC-108 §2 (de dónde sale el modelo).
@@ -163,6 +163,21 @@ repositorio. Se versionan las fichas y la tabla carpeta → `plan_key`.
 `plan_key` (con el nombre de V040 y la razón del emparejamiento) y **Jean Piero la revisa**. Un error
 ahí pinta un edificio con los colores de otro.
 
+**D-15 · Fotos reales en vez de patrones** *(pedido de Jean Piero tras la tanda 1)*. Los patrones de D-04
+no se parecían a las fotos. Ahora cada cara lleva un **tramo de su propia foto**: se marcan las cuatro
+esquinas de un paño de fachada, se le quita la perspectiva (`scripts/mapa/colores_reales/enderezar.py`) y
+se repite a lo largo del muro a escala real (`kind: "photo"`). Un tramo puede ir **una sola vez**, centrado
+en un punto del muro, con otro tramo fuera de él (el frente de la Biblioteca). Las caras sin foto toman el
+tramo de la cara más parecida (D-06). En las fotos:
+- el **cielo** (claro y unido al borde de arriba) se marca con color clave y la cara toma el color del muro;
+- el **follaje** (verde que domina) se rellena por filas con la continuación de la banda de la fachada;
+- una foto sobresaturada se iguala en color con otra del mismo edificio;
+- la gente se deja fuera recortando el tramo.
+
+Todos los tramos van en un atlas de 4096 px de ancho (`frontend/public/models/real-look/atlas.jpg`). Las
+fichas se escriben en forma compacta en `scripts/mapa/colores_reales/fichas.json` y `fichas.py` genera los
+JSON del visor. Los patrones de D-04 quedan para lo que ninguna foto muestra bien.
+
 ## 4. Entrega por tandas
 
 Decisión de Jean Piero (12 nov 2026):
@@ -241,4 +256,9 @@ Jean Piero.
 | P-04 | **Lo que el patrón no dibuja:** celosías rojas verticales de Pabellón V, murales (Arte Antiguo, Tinkuy), letreros, el filo de concreto de Derecho como volumen aparte y los hastiales rojos de las casetas de Arte Antiguo | Aceptado: son franjas o piezas sueltas, no ritmos de fachada |
 | P-05 | **Huaca (D-09b):** su carpeta todavía no pinta los nodos `huaca-muro` y `huaca-tope`; hoy conservan su textura de tapial | Tanda 2 |
 | P-06 | **CA-08 en Android:** medido solo en la laptop (96,5 cps en rosado y 97,5 en real, girando). Falta el `WebView` de un Android de gama media | Abierto |
+| P-08 | **El atlas se sirve desde `frontend/public`:** se descarga sin sesión, a diferencia del modelo. Conviene servirlo desde el backend con sesión, como `edificios-plano.glb` | Abierto |
+| P-09 | **Restos de árboles y postes en algunos tramos:** el follaje oscuro o gris y los troncos no se detectan como verde y quedan pintados en el muro (EE.GG.LL., Letras, Pabellón V) | Abierto: mejorar con mejores fotos o con máscaras a mano (`tapar`) |
+| P-10 | **Caras con patrón y no con foto:** la torre de Derecho, la cara curva oeste de Pabellón Z, la L beige de Arte Antiguo y Desconocido_13 no tienen una vista enderezable | Abierto |
+| P-11 | **Fotos chicas** (500–800 px): frente de la Biblioteca, Física, Industrial, Auditorio de Humanidades, Dpto. de Ciencias Sociales; se ven borrosas de cerca | Mejora con fotos de mayor resolución |
+| P-12 | **Fotos que no son de su carpeta:** `auditorio-humanidades/frente-lado-frente-a-educacion.png` muestra EE.GG.LL.; `faci/faci-frente.png` viene rayada | No se usan |
 | P-07 | **Las fotos no traen GPS ni rumbo** (EXIF sin GPS en las 289): la orientación sale de los nombres, de los vecinos, de la hora y de las sombras | Informativo |

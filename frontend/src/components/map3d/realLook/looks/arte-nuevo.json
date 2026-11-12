@@ -1,0 +1,26 @@
+{
+  "planKey": "0a7071c5-cea5-4a6d-85be-ffda94010175",
+  "name": "Arte Nuevo",
+  "folder": "Arte Nuevo",
+  "photos": [
+    "espalda-hacia-educacion-1.jpg"
+  ],
+  "notes": "Concreto caravista en paneles con ventanales en retícula y un piso alto vidriado (espalda-hacia-educacion-1.jpg, la vista más limpia); va en todas las caras.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b9b7b1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#b5b2aa",
+          "photo": {
+            "tile": "arte-nuevo",
+            "widthM": 14,
+            "heightM": 12.7
+          }
+        }
+      }
+    }
+  ]
+}

@@ -3,42 +3,76 @@
   "name": "Arte Antiguo (C17, C19, C20, C22, C25, C27, C28, C29)",
   "folder": "C17, C19, C20, C22, C25, C27, C28, C29 · Izquierda 117 · SKP C-4848, C-4825, C-19, C-4876, C-4826",
   "photos": [
-    "casetas-frente-a-dintilhac-lado L-01.jpg", "casetas-frente-a-dintilhac-lado L-02.jpg", "casetas-frente-a-dintilhac-lado L-03.jpg",
-    "frente-a-dintilhac.jpg", "frente-a-pabellon-I-edificio-con-escalera.jpg", "frente-a-pabellon-I-edificio-sin-escalera.jpg",
-    "lado-cercano-a-comedor-artes-antiguo-01.jpg", "lado-doblando-la-esquina-frente-a-edificio-sin-escalera.jpg",
-    "cuadrado-interno-derecha.jpg", "cuadrado-interno-izquierda.jpg"
+    "lado-doblando-la-esquina-frente-a-edificio-sin-escalera.jpg"
   ],
-  "notes": "Casetas de paneles prefabricados con una banda alta de ventanas enrejadas bajo techos de fibrocemento. Las de la L de los lados norte y oeste (Dintilhac queda a −27°) son beige con zócalo rojo; el resto, blanco. Los murales del lado del comedor no se dibujan.",
+  "notes": "Casetas de paneles blancos con ventanas enrejadas (lado-doblando-la-esquina…jpg, la vista más limpia). La L beige del lado de Dintilhac (norte y oeste) no tiene una vista enderezable: lleva el patrón con sus colores medidos.",
   "zones": [
     {
-      "id": "casetas-blancas",
+      "id": "edificio",
       "roof": "#bab6ae",
-      "plinth": { "color": "#c6c3bc", "heightM": 0.15 },
       "faces": {
         "other": {
-          "kind": "ribbon", "wall": "#ecedeb", "glass": "#4a4f53", "frame": "#2e3134", "floorM": 3.9, "sillM": 2.55, "windowM": 0.95, "moduleM": 1.2, "frameM": 0.07
+          "kind": "photo",
+          "wall": "#ecedeb",
+          "photo": {
+            "tile": "arte-antiguo",
+            "widthM": 10,
+            "heightM": 3.0
+          }
         }
       }
     },
     {
       "id": "L-norte",
-      "where": { "north": [0.8, 1], "east": [0, 0.75] },
+      "where": {
+        "north": [
+          0.8,
+          1
+        ],
+        "east": [
+          0,
+          0.75
+        ]
+      },
       "roof": "#b8b3a9",
-      "plinth": { "color": "#a45a4f", "heightM": 0.22 },
       "faces": {
         "other": {
-          "kind": "ribbon", "wall": "#cdc5b3", "glass": "#3d4246", "frame": "#26292c", "floorM": 3.9, "sillM": 2.45, "windowM": 1.0, "moduleM": 1.1, "frameM": 0.1
+          "kind": "ribbon",
+          "wall": "#cdc5b3",
+          "glass": "#3d4246",
+          "frame": "#26292c",
+          "floorM": 3.9,
+          "sillM": 2.45,
+          "windowM": 1.0,
+          "moduleM": 1.1,
+          "frameM": 0.1
         }
       }
     },
     {
       "id": "L-oeste",
-      "where": { "east": [0, 0.1], "north": [0.3, 1] },
+      "where": {
+        "east": [
+          0,
+          0.1
+        ],
+        "north": [
+          0.3,
+          1
+        ]
+      },
       "roof": "#b8b3a9",
-      "plinth": { "color": "#a45a4f", "heightM": 0.22 },
       "faces": {
         "other": {
-          "kind": "ribbon", "wall": "#cdc5b3", "glass": "#3d4246", "frame": "#26292c", "floorM": 3.9, "sillM": 2.45, "windowM": 1.0, "moduleM": 1.1, "frameM": 0.1
+          "kind": "ribbon",
+          "wall": "#cdc5b3",
+          "glass": "#3d4246",
+          "frame": "#26292c",
+          "floorM": 3.9,
+          "sillM": 2.45,
+          "windowM": 1.0,
+          "moduleM": 1.1,
+          "frameM": 0.1
         }
       }
     }

@@ -1,0 +1,26 @@
+{
+  "planKey": "0172ad66-8eff-420d-8659-8007941c351c",
+  "name": "Snack (Frutería Sociales)",
+  "folder": "SNACK (FRUTERÍA SOCIALES)",
+  "photos": [
+    "detras.jpg"
+  ],
+  "notes": "Muro crema del lado de atrás (detras.jpg): las vistas del mostrador tienen gente delante y no se usan.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b9b6ae",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ddd5bf",
+          "photo": {
+            "tile": "snack-sociales",
+            "widthM": 6,
+            "heightM": 2.6
+          }
+        }
+      }
+    }
+  ]
+}

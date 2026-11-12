@@ -1,0 +1,26 @@
+{
+  "planKey": "af3c0f81-cfe7-470e-8a18-48060a89933f",
+  "name": "Instituto de Etnomusicología / Departamento de Ciencias Contables",
+  "folder": "Etnomusicologia-departamento_ciencias_contables",
+  "photos": [
+    "Lado1.jpg"
+  ],
+  "notes": "Paneles claros con juntas oscuras y ventanas de vidrio bronce (Lado1.jpg, casi frontal).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c6c4be",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e7e5df",
+          "photo": {
+            "tile": "etnomusicologia",
+            "widthM": 7.5,
+            "heightM": 4.2
+          }
+        }
+      }
+    }
+  ]
+}

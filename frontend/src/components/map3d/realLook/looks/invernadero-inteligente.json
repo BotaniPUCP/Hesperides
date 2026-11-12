@@ -1,0 +1,26 @@
+{
+  "planKey": "323a6e7d-0804-48dc-84f7-5cf7f4b664c4",
+  "name": "Prototipo invernadero inteligente",
+  "folder": "PROTOTIPO INVERNADERO INTELIGENTE (GRUPO DE APOYO AL SECTOR RURAL)",
+  "photos": [
+    "lado2.jpg"
+  ],
+  "notes": "Marco metálico verde agua con malla y vidrios oscuros (lado2.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#8d8a85",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#6f7472",
+          "photo": {
+            "tile": "invernadero-inteligente",
+            "widthM": 4.5,
+            "heightM": 3.0
+          }
+        }
+      }
+    }
+  ]
+}

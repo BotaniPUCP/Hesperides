@@ -3,51 +3,21 @@
   "name": "Tinkuy",
   "folder": "TInkuy",
   "photos": [
-    "espalda.jpg",
-    "lado-hacia-area verde D12 AV-0333.jpg",
-    "lado-hacia-comedor-letras-1.jpg",
-    "interior-1.jpg",
-    "interior-2.jpg",
-    "interior-3.jpg",
-    "interior-4.jpg"
+    "interior-2.jpg"
   ],
-  "notes": "Concreto caravista en todas las caras, con un ritmo de listones verticales color óxido entre vanos angostos de vidrio; hacia el patio (interior-4) el mismo ritmo dentro de una retícula de concreto. Las fotos «interior» son del patio, que se ve desde afuera: se usan (D-08). El mural de interior-3 no se dibuja. Los dos pisos bajos son concreto con vanos angostos y espaciados (interior-1, interior-2); los listones van arriba.",
+  "notes": "Concreto caravista con vanos angostos, listones color óxido arriba y la puerta de enchape azul (interior-2.jpg, vista del patio que se ve desde fuera).",
   "zones": [
     {
-      "id": "tinkuy",
+      "id": "edificio",
       "roof": "#b3b0a8",
-      "plinth": {
-        "color": "#9a978f",
-        "heightM": 0.3
-      },
       "faces": {
         "other": {
-          "kind": "windows",
+          "kind": "photo",
           "wall": "#aba8a0",
-          "glass": "#8a5b3f",
-          "frame": "#a29f97",
-          "floorM": 3.75,
-          "sillM": 0.5,
-          "windowM": 2.5,
-          "widthM": 0.55,
-          "moduleM": 1.15,
-          "frameM": 0.05,
-          "band": {
-            "color": "#a3a098",
-            "heightM": 0.45
-          },
-          "ground": {
-            "kind": "windows",
-            "wall": "#aba8a0",
-            "glass": "#3e4447",
-            "frame": "#a29f97",
-            "heightM": 7.5,
-            "floorM": 3.75,
-            "sillM": 0.8,
-            "windowM": 2.4,
-            "widthM": 0.5,
-            "moduleM": 2.6,
-            "frameM": 0.05
+          "photo": {
+            "tile": "tinkuy",
+            "widthM": 10,
+            "heightM": 11
           }
         }
       }
