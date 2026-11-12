@@ -11,8 +11,7 @@ export const planningApi = {
       `${path}/recent-attention?activityTypeItemId=${activityTypeItemId}&date=${date}&zoneIds=${zoneIds.join(',')}`),
   /** SPEC-203 §3.4: qué frecuencia se planifica en cada conjunto. */
   assignments: {
-    list: (ruleKey?: string) =>
-      apiClient.get<PlanningAssignment[]>(`${path}/assignments${ruleKey ? `?ruleKey=${encodeURIComponent(ruleKey)}` : ''}`),
+    list: () => apiClient.get<PlanningAssignment[]>(`${path}/assignments`),
     create: (body: PlanningAssignmentRequest) => apiClient.post<PlanningAssignment>(`${path}/assignments`, body),
     change: (id: number, body: PlanningAssignmentRequest) => apiClient.put<PlanningAssignment>(`${path}/assignments/${id}`, body),
     remove: (id: number) => apiClient.del<null>(`${path}/assignments/${id}`),

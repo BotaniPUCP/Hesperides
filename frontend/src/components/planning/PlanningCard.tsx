@@ -19,7 +19,7 @@ const TONE: Record<PlanningRow['state'], BadgeColor> = {
 
 const PLANNABLE: PlanningRow['state'][] = ['OVERDUE', 'DUE', 'NOT_DUE'];
 export const NEW_PLANNING_PATH = '/intervenciones/planificacion/nueva';
-export const planningPath = (assignmentId: number) => `/intervenciones/planificacion/${assignmentId}`;
+const planningPath = (assignmentId: number) => `/intervenciones/planificacion/${assignmentId}`;
 
 /** Con avance parcial, el registro llega solo con lo que falta (se puede sumar el resto allí). */
 export function planHref(row: PlanningRow): string {

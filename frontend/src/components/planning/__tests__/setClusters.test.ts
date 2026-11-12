@@ -57,6 +57,31 @@ describe('setClusters', () => {
     expect(setClusters(data, ['A', 'B', 'C'], [])).toEqual([{ zoneCodes: ['A', 'B', 'C'], specimenCodes: [] }]);
   });
 
+  /** Una manzana de jardines contiguos: `n` cuadrados de 10 m pegados, desde x. */
+  const block = (prefix: string, x: number, n: number) => Array.from({ length: n }, (_, i) => square(`${prefix}-${i}`, x + i * 12, 0));
+
+  it('una zona que cabe en un encuadre queda en una sola vista, aunque la cruce una calle', () => {
+    // Dos manzanas de unos 200 m separadas por una calle de 40 m: 440 m en total.
+    const zona = [...block('N', 0, 17), ...block('S', 240, 17)];
+    const data = { ...scene(), greenAreas: zona } as unknown as SceneData;
+
+    expect(setClusters(data, zona.map((g) => g.props.code), [])).toHaveLength(1);
+  });
+
+  it('si hay que partir, se parte por una separación y nunca por el medio de una manzana', () => {
+    // Tres manzanas de unos 200 m con calles de 40 m: 680 m, no caben en una vista.
+    const zona = [...block('A', 0, 17), ...block('B', 240, 17), ...block('C', 480, 17)];
+    const data = { ...scene(), greenAreas: zona } as unknown as SceneData;
+
+    const groups = setClusters(data, zona.map((g) => g.props.code), []);
+
+    expect(groups).toHaveLength(2);
+    for (const prefix of ['A', 'B', 'C']) {
+      const holding = groups.filter((g) => g.zoneCodes.some((code) => code.startsWith(`${prefix}-`)));
+      expect(holding).toHaveLength(1);
+    }
+  });
+
   it('lo que no está en el mapa no se agrupa', () => {
     expect(setClusters(scene(), ['NO-EXISTE'], ['TAMPOCO'])).toEqual([]);
   });

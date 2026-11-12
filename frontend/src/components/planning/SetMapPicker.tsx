@@ -249,7 +249,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     };
   }, []);
   /**
-   * La capa de la selección múltiple tapa el mapa para dibujar el rectángulo, y así también se
+   * La capa del rectángulo (Ctrl + arrastrar) tapa el mapa para dibujarlo, y así también se
    * comía la rueda: se la pasa al lienzo del mapa para que acercar y alejar siga funcionando.
    * Va como escucha nativa no pasiva, para que la rueda no desplace además la página.
    */

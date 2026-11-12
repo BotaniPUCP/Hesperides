@@ -3,7 +3,7 @@
 import type { MaintenanceScope } from '@shared/types';
 import { FrequencyChoice } from './FrequencyChoice';
 
-export const PLANNING_PATH = '/intervenciones/planificacion';
+const PLANNING_PATH = '/intervenciones/planificacion';
 
 /** Planificación con la actividad de una frecuencia ya filtrada; allí «Ver todas» quita el filtro. */
 export const planningOfActivity = (activityId: number) => `${PLANNING_PATH}?actividad=${activityId}`;

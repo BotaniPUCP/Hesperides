@@ -244,7 +244,9 @@ salió de las entrevistas (riego intensivo en algunas áreas).
 **D-18 · Un conjunto disperso se recorre por grupos.**
 Encuadrar un conjunto repartido por todo el campus muestra el campus entero. El mapa agrupa
 sus jardines y ejemplares por cercanía (borde a borde, 60 m); como la cercanía encadena, un grupo
-más ancho que 250 m se parte en bloques de 250 m. Se recorre con «Anterior ·
+más ancho que 500 m (medio campus) se reparte siguiendo sus separaciones naturales: se juntan
+primero las partes más cercanas mientras quepan, sin una grilla que corte una zona por la mitad.
+Se recorre con «Anterior ·
 Siguiente · Ver todo», del grupo más grande al más chico. Con un solo grupo no aparece. Se usa
 en el mapa de Planificación y en «Ver en el mapa» del conjunto. No toca el visor: solo lo
 encuadra. En Planificación, sobre el mapa, una línea dice qué conjunto muestra («En el mapa:

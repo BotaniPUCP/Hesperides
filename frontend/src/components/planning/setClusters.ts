@@ -10,21 +10,24 @@ export interface SetCluster {
 export const CLUSTER_GAP_M = 60;
 
 /**
- * Lo más ancho (en metros, en cualquier dirección) que puede ser un grupo. La cercanía encadena:
- * jardines seguidos de punta a punta del campus quedan en un solo grupo y encuadrarlo es ver el
- * campus entero. Un grupo más ancho se parte en bloques de este tamaño.
+ * Lo más ancho (en metros, en cualquier dirección) que puede ser un grupo: más o menos medio campus.
+ * La cercanía encadena: jardines seguidos de punta a punta del campus quedan en un solo grupo y
+ * encuadrarlo es ver el campus entero. Un grupo más ancho se reparte siguiendo sus separaciones.
  */
-export const MAX_GROUP_SPAN_M = 250;
+export const MAX_GROUP_SPAN_M = 500;
 
 const LAYERS = ['greenAreas', 'xerophytic', 'reserve'] as const;
 
-interface Unit {
+/** Lo que ocupa algo en el plano, en metros. */
+interface Box { minX: number; maxX: number; minZ: number; maxZ: number }
+
+interface Unit extends Box {
   kind: 'zone' | 'specimen';
   code: string;
-  minX: number; maxX: number; minZ: number; maxZ: number;
 }
 
-function gap(a: Unit, b: Unit): number {
+/** Distancia de borde a borde entre dos rectángulos; cero si se tocan. */
+function gap(a: Box, b: Box): number {
   const dx = Math.max(0, a.minX - b.maxX, b.minX - a.maxX);
   const dz = Math.max(0, a.minZ - b.maxZ, b.minZ - a.maxZ);
   return Math.hypot(dx, dz);
@@ -77,23 +80,33 @@ export function setClusters(scene: SceneData, zoneCodes: readonly string[], spec
     (b.zoneCodes.length + b.specimenCodes.length) - (a.zoneCodes.length + a.specimenCodes.length));
 }
 
-/** Un grupo más ancho que {@link MAX_GROUP_SPAN_M} se parte en bloques; cada unidad va al de su centro. */
+const union = (a: Box, b: Box): Box => ({
+  minX: Math.min(a.minX, b.minX), maxX: Math.max(a.maxX, b.maxX), minZ: Math.min(a.minZ, b.minZ), maxZ: Math.max(a.maxZ, b.maxZ),
+});
+const span = (b: Box) => Math.max(b.maxX - b.minX, b.maxZ - b.minZ);
+
+/**
+ * Un grupo más ancho que {@link MAX_GROUP_SPAN_M} se reparte siguiendo sus separaciones naturales
+ * (calles, espacios entre jardines), no con una grilla que cortaría una zona por la mitad: se parte
+ * de cada unidad sola y se van juntando las dos partes más cercanas mientras el resultado quepa.
+ */
 function splitWide(group: Unit[]): Unit[][] {
-  const minX = Math.min(...group.map((u) => u.minX));
-  const maxX = Math.max(...group.map((u) => u.maxX));
-  const minZ = Math.min(...group.map((u) => u.minZ));
-  const maxZ = Math.max(...group.map((u) => u.maxZ));
-  const cols = Math.ceil((maxX - minX) / MAX_GROUP_SPAN_M);
-  const rows = Math.ceil((maxZ - minZ) / MAX_GROUP_SPAN_M);
-  if (cols <= 1 && rows <= 1) return [group];
-  const cells = new Map<string, Unit[]>();
-  for (const u of group) {
-    const col = Math.min(cols - 1, Math.max(0, Math.floor(((u.minX + u.maxX) / 2 - minX) / MAX_GROUP_SPAN_M)));
-    const row = Math.min(rows - 1, Math.max(0, Math.floor(((u.minZ + u.maxZ) / 2 - minZ) / MAX_GROUP_SPAN_M)));
-    const key = `${row}:${col}`;
-    cells.set(key, [...(cells.get(key) ?? []), u]);
+  if (span(group.reduce<Box>((b, u) => union(b, u), group[0])) <= MAX_GROUP_SPAN_M) return [group];
+  const parts = group.map((u) => ({ units: [u], box: { minX: u.minX, maxX: u.maxX, minZ: u.minZ, maxZ: u.maxZ } }));
+  for (;;) {
+    let best: { gap: number; i: number; j: number; box: Box } | null = null;
+    for (let i = 0; i < parts.length; i++) {
+      for (let j = i + 1; j < parts.length; j++) {
+        const d = gap(parts[i].box, parts[j].box);
+        if (best && d >= best.gap) continue;
+        const merged = union(parts[i].box, parts[j].box);
+        if (span(merged) <= MAX_GROUP_SPAN_M) best = { gap: d, i, j, box: merged };
+      }
+    }
+    if (!best) return parts.map((p) => p.units);
+    parts[best.i] = { units: [...parts[best.i].units, ...parts[best.j].units], box: best.box };
+    parts.splice(best.j, 1);
   }
-  return [...cells.values()];
 }
 
 function toCluster(group: Unit[]): SetCluster {

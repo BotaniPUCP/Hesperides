@@ -82,7 +82,7 @@ export interface PlanningRhythm {
   windowEndMonth: number | null;
 }
 
-/** Una tarjeta de planificación: una frecuencia asignada a un conjunto. */
+/** Una tarjeta de planificación: una actividad planificada en un conjunto, con la frecuencia que la rige. */
 export interface PlanningRow {
   setId: number;
   setName: string;
