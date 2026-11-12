@@ -483,8 +483,10 @@ class MigrationSmokeTest {
         // MAIL_FROM no esta y no debe volver: un remitente solo vale si el
         // proveedor lo tiene verificado, y esta aplicacion no puede comprobarlo.
         // Vive en SMTP_FROM, con el resto de la configuracion del proveedor.
+        // Las dos metas del resumen de reportes salen de V035 (SPEC-202 §4).
         assertThat(codes).containsExactly(
-                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH");
+                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH",
+                "REPORT_COVERAGE_TARGET_PERCENT", "REPORT_IRRIGATION_TARGET_PERCENT");
     }
 
     @Test
@@ -513,6 +515,6 @@ class MigrationSmokeTest {
         Integer live = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
                 Integer.class);
-        assertThat(live).isEqualTo(3);
+        assertThat(live).isEqualTo(5);
     }
 }

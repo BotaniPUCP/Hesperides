@@ -13,6 +13,9 @@ public final class SystemParameterCodes {
     public static final String PASSWORD_MIN_LENGTH = "PASSWORD_MIN_LENGTH";
     public static final String LOGIN_MAX_ATTEMPTS = "LOGIN_MAX_ATTEMPTS";
     public static final String CAMPUS_TOTAL_HECTARES = "CAMPUS_TOTAL_HECTARES";
+    /** Metas del resumen de dirección de los reportes (SPEC-202 §4), de 1 a 100. */
+    public static final String REPORT_COVERAGE_TARGET_PERCENT = "REPORT_COVERAGE_TARGET_PERCENT";
+    public static final String REPORT_IRRIGATION_TARGET_PERCENT = "REPORT_IRRIGATION_TARGET_PERCENT";
 
     // No hay MAIL_FROM, y no debe volver: el remitente de correo solo es valido
     // si el proveedor lo tiene verificado, y esta aplicacion no puede
