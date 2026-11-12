@@ -87,19 +87,29 @@ vec3 lookToAlbedo(vec3 t) {
 
 // Un tramo de foto repetido a lo largo del muro; sobre su alto, el color del muro. El gradiente se toma
 // de las coordenadas sin envolver para que el corte de cada repetición no deje una costura.
-vec3 lookPhoto(float row, vec2 f) {
+// outside: el punto cae fuera de un tramo que no se repite (casilla del módulo en 0).
+vec3 lookPhoto(float row, vec2 f, out bool outside) {
   vec4 t0 = lookTexel(row, 0.0), t1 = lookTexel(row, 1.0), t4 = lookTexel(row, 4.0);
   vec4 t5 = lookTexel(row, 5.0), t7 = lookTexel(row, 7.0);
-  float h = f.y - t5.y;
-  if (h > t1.a) return t0.rgb;
-  vec2 q = vec2((f.x - t4.z) / t4.x, clamp(h / t1.a, 0.0, 1.0));
-  vec2 uv = t7.xy + t7.zw * vec2(fract(q.x), q.y);
-  return textureGrad(lookAtlas, uv, dFdx(q) * t7.zw, dFdy(q) * t7.zw).rgb;
+  vec2 q = vec2((f.x - t4.z) / t4.x, (f.y - t5.y) / t1.a);
+  outside = t4.y < 0.5 && (q.x < 0.0 || q.x > 1.0 || q.y < 0.0);
+  if (outside || q.y > 1.0) return t0.rgb;
+  vec2 uv = t7.xy + t7.zw * vec2(t4.y < 0.5 ? q.x : fract(q.x), clamp(q.y, 0.0, 1.0));
+  vec3 c = textureGrad(lookAtlas, uv, dFdx(q) * t7.zw, dFdy(q) * t7.zw).rgb;
+  // el color clave (magenta) marca cielo y follaje: ahí la cara toma lo que sigue fuera del tramo
+  outside = c.r - c.g > 0.22 && c.b - c.g > 0.22;
+  return c;
 }
 
 vec3 lookFace(float row, vec2 f, vec2 aa, out float glass) {
-  if (lookTexel(row, 0.0).a > 3.5) { glass = 0.0; return lookPhoto(row, f); }
-  return lookFloor(row, f, aa, glass);
+  if (lookTexel(row, 0.0).a < 3.5) return lookFloor(row, f, aa, glass);
+  glass = 0.0;
+  bool outside;
+  vec3 c = lookPhoto(row, f, outside);
+  float beyond = lookTexel(row, 2.0).a;
+  if (!outside || beyond < -0.5) return c;
+  if (lookTexel(beyond, 0.0).a > 3.5) return lookPhoto(beyond, f, outside);
+  return lookFloor(beyond, f, aa, glass);
 }
 
 vec3 lookDisplay(float row, vec2 f, out float glass) {

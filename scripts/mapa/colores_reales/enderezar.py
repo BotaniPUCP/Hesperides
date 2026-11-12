@@ -42,12 +42,47 @@ def enderezar(foto, t):
     return im
 
 
+def igualar(im, referencia, peso=0.8):
+    """Lleva media y desvío de cada canal hacia los de la referencia: dos fotos del mismo ladrillo con distinta luz
+    o distinto procesado del teléfono terminan del mismo color."""
+    a, r = np.asarray(im, float), np.asarray(referencia, float)
+    ma, sa = a.mean((0, 1)), a.std((0, 1)) + 1e-6
+    mr, sr = r.mean((0, 1)), r.std((0, 1))
+    b = (a - ma) / sa * sr + mr
+    return Image.fromarray(np.clip(a * (1 - peso) + b * peso, 0, 255).astype(np.uint8))
+
+
+CLAVE = (255, 0, 255)
+
+
+def fondo(im):
+    """Lo que no es edificio en un tramo: cielo (claro y sin color) y follaje (verde que domina). Se pinta con el
+    color clave, que el shader reemplaza por lo que sigue fuera del tramo; se ensancha 2 px por el filtrado."""
+    a = np.asarray(im, float) / 255
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    hi, lo = a.max(-1), a.min(-1)
+    cielo = (hi > 0.82) & (hi - lo < 0.12)
+    verde = (g > r + 0.04) & (g > b + 0.02)
+    m = cielo | verde
+    for _ in range(2):
+        m = m | np.roll(m, 1, 0) | np.roll(m, -1, 0) | np.roll(m, 1, 1) | np.roll(m, -1, 1)
+    return m
+
+
 def main(tramos_json, raiz, atlas_jpg, atlas_json):
     tramos = json.loads(Path(tramos_json).read_text(encoding='utf-8'))
     imagenes = {}
     for clave, t in tramos.items():
         foto = ImageOps.exif_transpose(Image.open(Path(raiz) / t['foto'])).convert('RGB')
         imagenes[clave] = enderezar(foto, t)
+    mascaras = {clave: fondo(imagenes[clave]) for clave, t in tramos.items() if t.get('quitarFondo')}
+    for clave, t in tramos.items():
+        if 'igualarA' in t:
+            imagenes[clave] = igualar(imagenes[clave], imagenes[t['igualarA']])
+    for clave, m in mascaras.items():
+        a = np.asarray(imagenes[clave]).copy()
+        a[m] = CLAVE
+        imagenes[clave] = Image.fromarray(a)
     # estantes: de izquierda a derecha, una fila nueva cuando no cabe
     x = y = alto_fila = 0
     lugares = {}

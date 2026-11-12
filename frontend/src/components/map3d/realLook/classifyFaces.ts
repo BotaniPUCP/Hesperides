@@ -64,10 +64,12 @@ function outward(footprint: Polygon[], cx: number, cn: number, east: number, nor
   return ahead && !behind ? [-east, -north] : [east, north];
 }
 
-function writeTriangle(p: Float32Array, t: number, row: number, tangent: [number, number] | null, out: FaceAttributes) {
+/** La u se mide desde el centro de la caja del edificio: así un tramo que no se repite se ubica en la ficha. */
+function writeTriangle(p: Float32Array, t: number, row: number, tangent: [number, number] | null, box: Box, out: FaceAttributes) {
+  const cx = (box.x0 + box.x1) / 2, cn = (box.n0 + box.n1) / 2;
   for (let v = t; v < t + 3; v++) {
     out.row[v] = row;
-    out.face[v * 2] = tangent ? p[v * 3] * tangent[0] - p[v * 3 + 2] * tangent[1] : p[v * 3];
+    out.face[v * 2] = tangent ? (p[v * 3] - cx) * tangent[0] + (-p[v * 3 + 2] - cn) * tangent[1] : p[v * 3];
     out.face[v * 2 + 1] = p[v * 3 + 1];
   }
 }
@@ -86,13 +88,13 @@ export function classifyBuilding(p: Float32Array, from: number, to: number, foot
     const cn = -(az + p[t * 3 + 5] + p[t * 3 + 8]) / 3;
     const zone = zoneAt(zones, box, cx, cn, cy);
     if (Math.abs(ny / len) > HORIZONTAL_NY) {
-      writeTriangle(p, t, zone.roof, null, out);
+      writeTriangle(p, t, zone.roof, null, box, out);
       continue;
     }
     const h = Math.hypot(nx, nz) || 1;
     const [east, north] = outward(footprint, cx, cn, nx / h, -nz / h);
     // tangente horizontal del muro, en (este, norte), hacia la derecha de quien lo mira desde afuera: la u sigue al
     // muro sin saltos entre sus triángulos, y la foto no queda en espejo
-    writeTriangle(p, t, zone.sides[sideOf(east, north)], [-north, east], out);
+    writeTriangle(p, t, zone.sides[sideOf(east, north)], [-north, east], box, out);
   }
 }

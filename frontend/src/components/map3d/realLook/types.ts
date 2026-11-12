@@ -28,6 +28,10 @@ export interface PhotoTile {
   tile: string;
   widthM: number;
   heightM: number;
+  /** false: el tramo va una sola vez, desde `offsetM` (metros desde el centro del edificio a lo largo del muro). */
+  repeat?: boolean;
+  /** Lo que lleva la cara fuera de un tramo que no se repite; sin esto, el color del muro. */
+  beyond?: FacePattern;
 }
 
 /** Dónde quedó cada tramo en el atlas: x, y, ancho y alto en coordenadas de textura. */

@@ -69,5 +69,30 @@
     ],
     "anchoM": 11.25,
     "recorteArriba": 100
+  },
+  "biblioteca-frente": {
+    "foto": "bibblioteca-central/frente.jpg",
+    "quad": [
+      [
+        140,
+        130
+      ],
+      [
+        470,
+        130
+      ],
+      [
+        470,
+        283
+      ],
+      [
+        140,
+        283
+      ]
+    ],
+    "anchoM": 17.4,
+    "altoM": 8.05,
+    "igualarA": "biblioteca-detras",
+    "quitarFondo": true
   }
 }

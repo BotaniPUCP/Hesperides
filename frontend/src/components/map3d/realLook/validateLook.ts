@@ -23,6 +23,10 @@ function checkPhoto(key: string, where: string, p: FacePattern, atlas: PhotoAtla
   if (!p.photo) throw new LookError(key, `${where}: una cara «photo» necesita su tramo`);
   if (!atlas[p.photo.tile]) throw new LookError(key, `${where}: el tramo «${p.photo.tile}» no está en el atlas`);
   if (!(p.photo.widthM > 0 && p.photo.heightM > 0)) throw new LookError(key, `${where}: el tramo debe tener ancho y alto positivos`);
+  const beyond = p.photo.beyond;
+  if (beyond?.photo?.beyond) throw new LookError(key, `${where}: lo que sigue a un tramo no puede tener otro «beyond»`);
+  if (beyond?.ground) throw new LookError(key, `${where}: lo que sigue a un tramo no lleva primer piso propio`);
+  if (beyond) checkPhoto(key, `${where} (fuera del tramo)`, beyond, atlas);
 }
 
 function checkPattern(key: string, where: string, p: FacePattern, atlas: PhotoAtlas) {

@@ -64,6 +64,8 @@ function encode(p: FacePattern, plinth: Zone['plinth'], startM: number, groundRo
   if (p.photo) {
     row[TEXEL.widthM] = p.photo.widthM;
     row[TEXEL.floorM] = p.photo.heightM;
+    row[TEXEL.moduleM] = p.photo.repeat === false ? 0 : 1;
+    row[TEXEL.sillM] = -1;
     row.splice(TEXEL.atlas, 4, ...atlas[p.photo.tile]);
   }
   return row;
@@ -84,12 +86,19 @@ function rowStore() {
   return { rows, add };
 }
 
+/** Un tramo de foto que no se repite apunta, en la casilla del alféizar, a la fila de lo que sigue fuera de él. */
+function photoRow(add: (r: Row) => number, p: FacePattern, plinth: Zone['plinth'], start: number, groundRow: number, atlas: PhotoAtlas): number {
+  const row = encode(p, plinth, start, groundRow, atlas);
+  if (p.photo?.beyond) row[TEXEL.sillM] = add(encode(p.photo.beyond, plinth, p.photo.beyond.startM ?? 0, -1, atlas));
+  return add(row);
+}
+
 function faceRow(add: (r: Row) => number, p: FacePattern, plinth: Zone['plinth'], atlas: PhotoAtlas): number {
   const start = p.startM ?? 0;
-  if (!p.ground) return add(encode(p, plinth, start, -1, atlas));
+  if (!p.ground) return photoRow(add, p, plinth, start, -1, atlas);
   const { heightM, ...ground } = p.ground;
   const groundRow = add(encode({ ...ground, floorM: ground.floorM ?? heightM }, plinth, start, -1, atlas));
-  return add(encode(p, plinth, start + heightM, groundRow, atlas));
+  return photoRow(add, p, plinth, start + heightM, groundRow, atlas);
 }
 
 /** Las fichas ya validadas, llevadas a filas; `atlas` ubica los tramos de foto. */
