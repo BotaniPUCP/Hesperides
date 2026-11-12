@@ -52,3 +52,8 @@ pnpm-workspace.yaml
 # trabajadores). El repositorio es publico: viven solo en cada maquina. Que contiene
 # cada uno esta en docs/datos/catalogo-de-datos.md.
 docs/datos/privados/
+
+# Plano oficial PUCP (SPEC-108): el export del cliente vive solo en cada maquina;
+# el modelo del mapa se genera desde el. Tampoco las capturas del navegador.
+campus_pucp_export.zip
+.playwright-mcp/
