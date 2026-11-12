@@ -20,7 +20,15 @@ export type Frase = {
   };
 };
 
-export type EscenaId = 'inicio' | 'especies' | 'ejemplares' | 'incidencias' | 'cierre';
+export type EscenaId =
+  | 'inicio'
+  | 'especies'
+  | 'ejemplares'
+  | 'incidencias'
+  | 'cierre'
+  | 'frecuencias'
+  | 'planificacion'
+  | 'reservas';
 export type Escena = { id: EscenaId; frases: Frase[] };
 export type Guion = { voz: string; escenas: Escena[] };
 

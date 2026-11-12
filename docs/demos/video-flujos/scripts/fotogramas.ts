@@ -1,6 +1,6 @@
 /**
  * Renderiza los fotogramas clave de cada frase para revisarlos.
- * Uso: npm run fotogramas -- [--escena inicio] [--momentos e4:0.7,e6:0.13]
+ * Uso: npm run fotogramas -- [--video VideoPlanificacion] [--escena inicio] [--momentos e4:0.7,e6:0.13]
  * `--momentos` revisa un instante exacto de una frase, como una pulsación.
  */
 import { mkdirSync } from 'node:fs';
@@ -15,20 +15,21 @@ const valor = (nombre: string) => {
 };
 
 const escenaPedida = valor('escena');
+const video = valor('video') ?? 'VideoFlujos';
 const serveUrl = await bundle({ entryPoint: path.resolve('src/index.ts') });
-const composition = await selectComposition({ serveUrl, id: 'VideoFlujos' });
+const composition = await selectComposition({ serveUrl, id: video });
 const linea = composition.props.linea as Linea;
 
 const momentos = valor('momentos');
 if (momentos) {
-  mkdirSync('out/momentos', { recursive: true });
+  mkdirSync(`out/momentos/${video}`, { recursive: true });
   const tramos = linea.escenas.flatMap((e) => e.frases);
   for (const momento of momentos.split(',')) {
     const [id, fraccion] = momento.split(':');
     const tramo = tramos.find((t) => t.frase.id === id);
     if (!tramo) throw new Error(`No existe la frase ${id}`);
     const frame = tramo.desde + Math.round(Number(fraccion) * tramo.frames);
-    const output = `out/momentos/${id}-${fraccion}.png`;
+    const output = `out/momentos/${video}/${id}-${fraccion}.png`;
     await renderStill({ composition, serveUrl, output, frame, inputProps: composition.props });
     console.log(`${output} (fotograma ${frame})`);
   }
@@ -39,9 +40,9 @@ const escena = linea.escenas.find((e) => e.id === escenaPedida);
 if (escenaPedida && !escena) throw new Error(`No existe la escena ${escenaPedida}`);
 const ids = new Set((escena ? [escena] : linea.escenas).flatMap((e) => e.frases.map((f) => f.frase.id)));
 
-mkdirSync('out/fotogramas', { recursive: true });
+mkdirSync(`out/fotogramas/${video}`, { recursive: true });
 for (const { id, frame, momento } of framesClave(linea).filter((c) => ids.has(c.id))) {
-  const output = `out/fotogramas/${id}-${momento}.png`;
+  const output = `out/fotogramas/${video}/${id}-${momento}.png`;
   await renderStill({ composition, serveUrl, output, frame, inputProps: composition.props });
   console.log(`${output} (fotograma ${frame})`);
 }

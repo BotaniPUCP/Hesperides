@@ -111,6 +111,14 @@ class GenerarVoz(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(s.textos, ["Adiós"])
 
 
+class Argumentos(unittest.TestCase):
+    def test_guion_por_defecto_y_elegido(self):
+        self.assertEqual(gv._leer_argumentos([]).guion, "guion.json")
+        elegidos = gv._leer_argumentos(["--guion", "guion-planificacion.json", "--salida", "public/voz/planificacion"])
+        self.assertEqual(elegidos.guion, "guion-planificacion.json")
+        self.assertEqual(elegidos.salida, "public/voz/planificacion")
+
+
 class Lectura(unittest.TestCase):
     def test_lee_acentos_en_utf8(self):
         with tempfile.TemporaryDirectory() as carpeta:

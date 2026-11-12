@@ -118,17 +118,18 @@ async def _voces_disponibles() -> list[str]:
     return [voz["ShortName"] for voz in await edge_tts.list_voices()]
 
 
-def _leer_argumentos() -> argparse.Namespace:
+def _leer_argumentos(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--guion", default="guion.json", help="Guion del video, relativo al proyecto")
     parser.add_argument("--voz", help="Reemplaza la voz del guion")
     parser.add_argument("--salida", default="public/voz", help="Carpeta de los audios")
     parser.add_argument("--solo", help="Identificadores separados por coma")
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 async def _principal() -> int:
     argumentos = _leer_argumentos()
-    guion = cargar_guion(RAIZ / "guion.json")
+    guion = cargar_guion(RAIZ / argumentos.guion)
     if argumentos.voz:
         guion["voz"] = argumentos.voz
 
