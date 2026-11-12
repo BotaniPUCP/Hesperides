@@ -156,7 +156,7 @@ así:
 | Sesión | Escenario |
 |--------|-----------|
 | A | Frecuencia «Corte de césped», cada 30 a 35 días, en todo el campus y con personal propio, vigente desde hace dos meses; otras frecuencias de ejemplo para f3 si la base no las trae. Conjunto principal de 6 jardines contiguos, cortados hace 39 días salvo uno, que otro conjunto cortó hace 3 días. Otro conjunto que vence en los próximos 7 días, para el segundo bloque del inicio. |
-| B | Reservas de un jardín prestable: una de mañana de 10:00 a 14:00 (Próxima), una en curso y una terminada hoy (la captura debe hacerse de día). Una intervención programada para mañana en una sección a menos de 10 m del jardín, para los avisos de r7 y r9. |
+| B | En otros jardines prestables, una reserva de mañana (Próxima), una en curso y una terminada hoy (la captura debe hacerse de día). La de mañana de 10:00 a 14:00 en el jardín del video se registra durante la captura (r5–r8). Una intervención programada para mañana en una sección a menos de 10 m de ese jardín, para los avisos de r7 y r9. |
 
 Los nombres de los conjuntos y las secciones exactas se eligen en el plan, midiendo distancias
 en la base. Cada captura se revisa antes de usarla.
