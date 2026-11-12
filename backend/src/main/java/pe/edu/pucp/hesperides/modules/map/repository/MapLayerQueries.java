@@ -52,11 +52,20 @@ final class MapLayerQueries {
             + "LEFT JOIN place_references p ON p.id = r.parent_reference_id "
             + "WHERE r.deleted_at IS NULL AND r.is_active";
 
+    /**
+     * Un edificio agrupado trae el id de su principal en {@code parentId}; solo un
+     * principal trae {@code planKey} (el nodo del modelo) y los códigos oficiales
+     * de la leyenda del plano (SPEC-108 §3). Sin códigos, {@code codes} es nulo.
+     */
     static final String BUILDINGS = COLLECTION_OPEN
             + feature("b.footprint", "'id', b.id, 'name', b.name, 'inferredName', b.is_inferred_name, "
                     + "'category', c.label, 'campus', b.is_campus, 'heightM', b.height_m, 'levels', b.levels, "
-                    + "'source', b.source, 'aliases', (SELECT json_agg(a.alias ORDER BY a.alias) "
-                    + "FROM campus_building_aliases a WHERE a.building_id = b.id AND a.deleted_at IS NULL)", "b.id")
+                    + "'baseM', b.base_m, 'source', b.source, 'parentId', b.parent_building_id, "
+                    + "'planKey', b.plan_key, 'aliases', (SELECT json_agg(a.alias ORDER BY a.alias) "
+                    + "FROM campus_building_aliases a WHERE a.building_id = b.id AND a.deleted_at IS NULL), "
+                    + "'codes', (SELECT json_agg(json_build_object('code', bc.code, 'label', bc.official_label) "
+                    + "ORDER BY bc.code) FROM campus_building_codes bc "
+                    + "WHERE bc.building_id = b.id AND bc.deleted_at IS NULL)", "b.id")
             + COLLECTION_CLOSE
             + "FROM campus_buildings b LEFT JOIN catalog_items c ON c.id = b.category_item_id "
             + "WHERE b.deleted_at IS NULL AND b.is_active";

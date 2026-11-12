@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,10 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pe.edu.pucp.hesperides.modules.map.dto.BuildingModelManifest;
 import pe.edu.pucp.hesperides.modules.map.dto.DescribeLocationRequest;
 import pe.edu.pucp.hesperides.modules.map.dto.LocationDescriptionResponse;
 import pe.edu.pucp.hesperides.modules.map.dto.MapLayersResponse;
 import pe.edu.pucp.hesperides.modules.map.dto.MapVersionResponse;
+import pe.edu.pucp.hesperides.modules.map.service.BuildingModelService;
 import pe.edu.pucp.hesperides.modules.map.service.LocationDescriptionService;
 import pe.edu.pucp.hesperides.modules.map.service.MapLayersService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
@@ -35,10 +38,13 @@ public class MapController {
      * forma (la capa de vegetación, por ejemplo) recibiría 304 y el visor
      * fallaría al leerla. Se incrementa cada vez que cambian las capas o sus campos.
      */
-    static final int LAYERS_FORMAT = 2;
+    static final int LAYERS_FORMAT = 3;
+
+    private static final MediaType GLTF_BINARY = new MediaType("model", "gltf-binary");
 
     private final MapLayersService layersService;
     private final LocationDescriptionService descriptionService;
+    private final BuildingModelService modelService;
 
     @GetMapping("/version")
     @PreAuthorize(READERS)
@@ -68,6 +74,33 @@ public class MapController {
 
     private static String etag(long dataVersion) {
         return "\"" + dataVersion + "-f" + LAYERS_FORMAT + "\"";
+    }
+
+    /**
+     * El GLB del plano (SPEC-108 D-06). Va sin el sobre porque es un binario; los
+     * errores sí lo llevan. Solo cambia con un despliegue, así que su etiqueta es
+     * el hash del archivo y no la versión de datos de las capas.
+     */
+    @GetMapping("/models/buildings")
+    @PreAuthorize(READERS)
+    public ResponseEntity<byte[]> buildingModel(
+            @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) String ifNoneMatch) {
+        String etag = modelService.etag();
+        if (etag.equals(ifNoneMatch)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(etag).build();
+        }
+        return ResponseEntity.ok()
+                .contentType(GLTF_BINARY)
+                .eTag(etag)
+                .cacheControl(CacheControl.noCache())
+                .body(modelService.model());
+    }
+
+    @GetMapping("/models/buildings/manifest")
+    @PreAuthorize(READERS)
+    public ResponseEntity<ApiResponse<BuildingModelManifest>> buildingModelManifest() {
+        return ResponseEntity.ok(ApiResponse.ok("Manifiesto del modelo obtenido",
+                new BuildingModelManifest(modelService.manifestJson())));
     }
 
     @PostMapping("/describe")

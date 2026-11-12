@@ -20,9 +20,12 @@ public class ProximityDataRepository {
             + "WHERE z.deleted_at IS NULL AND z.is_active AND z.boundary IS NOT NULL ORDER BY z.id";
 
     // Solo los del campus: los del entorno se dibujan como contexto, pero ninguna
-    // incidencia del campus debe describirse por un edificio de la calle.
+    // incidencia del campus debe describirse por un edificio de la calle. Y solo
+    // los principales: un edificio agrupado queda dentro de la huella de su
+    // principal, que es el que se nombra (SPEC-108 §5.3).
     private static final String BUILDINGS = "SELECT b.id, b.name, ST_AsGeoJSON(b.footprint, 8) AS geom "
-            + "FROM campus_buildings b WHERE b.deleted_at IS NULL AND b.is_active AND b.is_campus ORDER BY b.id";
+            + "FROM campus_buildings b WHERE b.deleted_at IS NULL AND b.is_active AND b.is_campus "
+            + "AND b.parent_building_id IS NULL ORDER BY b.id";
 
     private static final String PLACES = "SELECT r.name, c.label AS category, ST_Y(r.location) AS lat, "
             + "ST_X(r.location) AS lon FROM place_references r JOIN catalog_items c ON c.id = r.category_item_id "

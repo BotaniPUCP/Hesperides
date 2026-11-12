@@ -57,6 +57,12 @@ spring:
       mail.smtp.writetimeout: 5000
 server:
   port: ${BACKEND_PORT:8080}
+  # Para el modelo de edificios del plano (SPEC-108 D-06): pesa unos 7,6 MB y gzip
+  # lo deja en unos 1,8 MB. La lista reemplaza la de Tomcat por defecto.
+  compression:
+    enabled: true
+    mime-types: model/gltf-binary
+    min-response-size: 2048
 
 # SPEC-200: provisional workflow details, independent from the mandatory-photo rule.
 interventions:
