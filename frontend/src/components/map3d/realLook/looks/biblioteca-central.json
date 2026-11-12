@@ -1,0 +1,20 @@
+{
+  "planKey": "91277172-4ff8-45d2-a22c-4c508c86f196",
+  "name": "Biblioteca Central",
+  "folder": "bibblioteca-central",
+  "photos": ["frente.jpg", "lado.jpg", "detras.jpg"],
+  "notes": "Las tres fotos muestran el mismo sistema en todas las caras: paños de ladrillo caravista entre losas y columnas de concreto expuesto, con bandas de ventanas de marco blanco. El color del ladrillo se toma de detras.jpg (cielo nublado, sin sol directo); frente.jpg está sobresaturada.",
+  "zones": [
+    {
+      "id": "biblioteca",
+      "roof": "#b4b1a9",
+      "plinth": { "color": "#9d9b94", "heightM": 0.6 },
+      "faces": {
+        "other": {
+          "kind": "windows", "wall": "#bd7868", "glass": "#3e4448", "frame": "#e6e6e2", "floorM": 3.4, "sillM": 1.3, "windowM": 1.2,
+          "widthM": 3.2, "moduleM": 5.2, "offsetM": 0.6, "frameM": 0.09, "band": { "color": "#a8a69f", "heightM": 0.55 }
+        }
+      }
+    }
+  ]
+}

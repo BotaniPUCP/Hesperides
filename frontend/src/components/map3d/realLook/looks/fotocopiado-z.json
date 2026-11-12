@@ -1,0 +1,19 @@
+{
+  "planKey": "cb1dbda1-6c1a-4853-967b-9f90c8c47df4",
+  "name": "Centro de fotocopiado (adyacente a Pabellón Z)",
+  "folder": "fotocopiado-z",
+  "photos": ["ladofrente-1.jpg", "ladofrente-2.jpg"],
+  "notes": "Caseta de paneles prefabricados blancos bajo techo de fibrocemento. El frente tiene dos ventanales de aluminio; el lado es ciego (ladofrente-2), y la cara de atrás copia al lado.",
+  "zones": [
+    {
+      "id": "caseta",
+      "roof": "#a9a6a0",
+      "plinth": { "color": "#bdbab3", "heightM": 0.12 },
+      "faces": {
+        "other": {
+          "kind": "windows", "wall": "#e9e8e3", "glass": "#5b6266", "frame": "#b5b8b8", "floorM": 2.7, "sillM": 0.85, "windowM": 1.0, "widthM": 2.6, "moduleM": 3.4, "offsetM": 0.5, "frameM": 0.05
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "planKey": "46c7455f-fc26-43e3-b407-7d4637c3a6de",
+  "name": "Pabellón V",
+  "folder": "PabellonV",
+  "photos": ["Frente.jpg", "Lado1.jpg", "Lado1_2.jpg", "Lado2.jpg"],
+  "notes": "Bloque largo crema con bandas de ventanas de marco blanco y zócalo oscuro; los testeros son muros ciegos gris verdoso (Lado2, y el del rótulo en Lado1). El extremo oeste es el volumen curvo ocre de balcones y escalera (Lado1_2). Las celosías rojas verticales de los testeros no se dibujan: son una franja angosta que el patrón no representa.",
+  "zones": [
+    {
+      "id": "bloque",
+      "roof": "#d2cfc6",
+      "plinth": { "color": "#3d4042", "heightM": 0.4 },
+      "faces": {
+        "E": { "kind": "blind", "wall": "#a7a99b" },
+        "NE": { "sameAs": "E" },
+        "NW": { "sameAs": "E" },
+        "other": {
+          "kind": "windows", "wall": "#dcd5c2", "glass": "#56606a", "frame": "#ececea", "floorM": 3.5, "sillM": 0.9, "windowM": 1.5, "widthM": 3.6, "moduleM": 4.2, "frameM": 0.07
+        }
+      }
+    },
+    {
+      "id": "volumen-curvo-oeste",
+      "where": { "east": [0, 0.14] },
+      "roof": "#d4c08e",
+      "plinth": { "color": "#3d4042", "heightM": 0.4 },
+      "faces": {
+        "other": {
+          "kind": "windows", "wall": "#d6b36b", "glass": "#4a545c", "frame": "#ececea", "floorM": 3.5, "sillM": 1.0, "windowM": 1.2, "widthM": 0.9, "moduleM": 3.0
+        }
+      }
+    }
+  ]
+}

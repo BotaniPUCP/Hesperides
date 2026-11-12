@@ -5,7 +5,7 @@
 | HU relacionada | SPEC-102 (mapa 3D), sobre el modelo de SPEC-108 |
 | Autor | Jean Piero, con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android |
-| Estado | Diseño aprobado en conversación el 12 nov 2026; falta el plan |
+| Estado | Tanda 1 implementada el 12 nov 2026: motor, botón, Anexo A y 9 fichas, verificadas en navegador de día y de noche. Falta que Jean Piero revise el Anexo A y el criterio de color antes de la tanda 2 |
 | Dependencias | SPEC-108 (modelo del plano, `plan_key`, `edificios-plano.glb`), rama `feature/spec-108-edificios-del-plano` |
 
 > **Lectura obligatoria:** `specs/REGLAS.md` y SPEC-108 §2 (de dónde sale el modelo).
@@ -34,7 +34,7 @@ mapa que se vuelve lento al activar el modo, o un clic o un resaltado que deja d
 
 | Pieza | Dónde está |
 |---|---|
-| Fotos de los edificios (81 carpetas, 293 fotos, tomadas el 11 y 12 nov 2026) | `C:\Users\ElNicolays\Downloads\Edificios\edificios-pucp`, **fuera del repositorio** |
+| Fotos de los edificios (80 carpetas, 289 fotos, tomadas entre el 10 y el 12 nov 2026) | `C:\Users\ElNicolays\Downloads\Edificios\edificios-pucp`, **fuera del repositorio** |
 | Modelo de los edificios: un nodo por principal, nombre = `plan_key` | `backend/src/main/resources/mapa/edificios-plano.glb` y su manifiesto |
 | Nombre, códigos y huella de cada `plan_key` | `backend/src/main/resources/db/migration/V040__group_buildings_by_plan.sql` |
 | Cómo se arman los edificios en la escena | `frontend/src/components/map3d/viewer/planModel.ts` (`mergedBuildings`) y `sceneLayers.ts` |
@@ -174,6 +174,13 @@ Decisión de Jean Piero (12 nov 2026):
 2. **Tandas siguientes:** el resto de las fichas, en grupos, con los ajustes que salgan de la revisión
    anterior.
 
+**Tanda 1 (hecha):** Pabellón Z, Facultad de Derecho, Biblioteca Central, Arte Antiguo (C17…C29),
+Centro de fotocopiado de Pabellón Z, Estudios Generales Letras, Polideportivo, Pabellón V y Tinkuy.
+
+**Calibración (D-07):** la escena entibia y aclara todo (luz cálida, exposición 1,4 y ACES). El shader
+invierte esa curva (`LOOK_GAIN` en `lookShader.ts`) para que el color de la ficha sea el que se ve en
+pantalla en una cara vertical al sol: medido, #4a5159 se ve (79, 81, 84) y #ebe9e3 se ve (234, 232, 226).
+
 Cada tanda se puede integrar sola: los edificios que todavía no tienen ficha se ven con la paleta de hoy
 (D-09). Los casos de §8 que sigan abiertos no bloquean una tanda; quedan anotados.
 
@@ -192,7 +199,7 @@ ni se versiona con las fotos.
 
 | # | Criterio |
 |---|---|
-| CA-01 | La tabla carpeta → `plan_key` cubre las 81 carpetas, y Jean Piero la aprobó antes de pintar |
+| CA-01 | La tabla carpeta → `plan_key` cubre las 80 carpetas (Anexo A), y Jean Piero la aprobó antes de pintar |
 | CA-02 | Con «Colores reales» activo, cada edificio con ficha muestra sus colores y su patrón de ventanas; los demás, la paleta de hoy |
 | CA-03 | Al desactivar el botón, el mapa queda idéntico al de hoy (rosado o gris) |
 | CA-04 | La opción se recuerda al volver al mapa, como las demás de la barra |
@@ -228,4 +235,10 @@ Jean Piero.
 
 | # | Caso | Estado |
 |---|---|---|
-| P-01 | — | — |
+| P-01 | **Anexo A, filas «por confirmar»:** Desconocido_13 (cuál de los dos), Pabellón H (`80d344a8`), Facultad de Letras y Ciencias Humanas (`c657216b`), las dos Facultades de Ciencias Sociales y el comedor de arte antiguo | Lo revisa Jean Piero antes de la tanda 2 |
+| P-02 | **Pabellón Z, cara sur de la barra sur:** ninguna foto la muestra; copia la fachada de vidrio norte (D-06) | Abierto |
+| P-03 | **Polideportivo:** el frente con enchape azul se supuso al norte (bloque ancho) y el anexo de granito al este; las fotos no traen GPS ni sombras que lo fijen | Abierto |
+| P-04 | **Lo que el patrón no dibuja:** celosías rojas verticales de Pabellón V, murales (Arte Antiguo, Tinkuy), letreros, el filo de concreto de Derecho como volumen aparte y los hastiales rojos de las casetas de Arte Antiguo | Aceptado: son franjas o piezas sueltas, no ritmos de fachada |
+| P-05 | **Huaca (D-09b):** su carpeta todavía no pinta los nodos `huaca-muro` y `huaca-tope`; hoy conservan su textura de tapial | Tanda 2 |
+| P-06 | **CA-08 en Android:** medido solo en la laptop (96,5 cps en rosado y 97,5 en real, girando). Falta el `WebView` de un Android de gama media | Abierto |
+| P-07 | **Las fotos no traen GPS ni rumbo** (EXIF sin GPS en las 289): la orientación sale de los nombres, de los vecinos, de la hora y de las sombras | Informativo |

@@ -1,0 +1,47 @@
+{
+  "planKey": "c315d792-aa51-4f25-b2fd-77adf2729a99",
+  "name": "Facultad de Derecho",
+  "folder": "facuttad-derecho",
+  "photos": ["frente1.jpg", "frente2.jpg", "frente3.jpg", "lado1.jpg", "derecho-interior-1.jpg", "derecho-interior-2.jpg", "desde_adentro.jpg", "derecho-conexion-auditorio.jpg"],
+  "notes": "Frente = sur: en frente1 la torre queda detrás y a la derecha, y la torre está al noreste de la huella. La torre (sobre 7,5 m) es de concreto caravista con muro cortina al este; sus caras oeste y norte llevan bandas de ventanas, como se ve desde el patio (derecho-interior-1). Los bloques bajos del patio son blancos con galerías (desde_adentro); el bloque de la entrada es gris verdoso.",
+  "zones": [
+    {
+      "id": "bloques-bajos",
+      "roof": "#d8d6cf",
+      "plinth": { "color": "#7d7f7a", "heightM": 0.3 },
+      "faces": {
+        "other": {
+          "kind": "windows", "wall": "#eeeeea", "glass": "#4a5560", "frame": "#2b2e30", "floorM": 3.3, "sillM": 0.9, "windowM": 1.5, "widthM": 1.6, "moduleM": 3.0
+        }
+      }
+    },
+    {
+      "id": "bloque-entrada",
+      "where": { "north": [0, 0.42], "east": [0.45, 1], "heightM": [0, 7.6] },
+      "roof": "#cfcdc4",
+      "plinth": { "color": "#6f716b", "heightM": 0.3 },
+      "faces": {
+        "S": {
+          "kind": "windows", "wall": "#8e9083", "glass": "#4d575e", "frame": "#e8e8e4", "floorM": 3.4, "sillM": 0.9, "windowM": 1.6, "widthM": 2.4, "moduleM": 7.0, "offsetM": 2.0, "frameM": 0.08
+        },
+        "other": { "sameAs": "S" }
+      }
+    },
+    {
+      "id": "torre",
+      "where": { "heightM": [7.6, 30] },
+      "roof": "#cbc8be",
+      "faces": {
+        "E": {
+          "kind": "curtain", "wall": "#cbc8be", "glass": "#7e929c", "frame": "#69727a", "floorM": 3.6, "moduleM": 1.4, "frameM": 0.07
+        },
+        "NE": { "sameAs": "E" },
+        "S": { "kind": "blind", "wall": "#c9c6bb", "band": { "color": "#bfbcb1", "heightM": 0.05 }, "floorM": 0.9 },
+        "W": {
+          "kind": "ribbon", "wall": "#cdc9bd", "glass": "#47525a", "frame": "#3a3d40", "floorM": 3.6, "sillM": 1.0, "windowM": 1.3, "moduleM": 1.8, "frameM": 0.06
+        },
+        "other": { "sameAs": "W" }
+      }
+    }
+  ]
+}
