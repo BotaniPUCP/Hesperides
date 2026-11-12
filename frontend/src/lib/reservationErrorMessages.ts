@@ -15,8 +15,8 @@ export const RESERVATION_MESSAGES: Record<string, string> = {
   'The requester must belong to the organization that requests it':
     'El solicitante debe pertenecer a la organización que pide. Elige otro o registra el vínculo en el Directorio.',
   'A responsible contact is required': 'Indica un responsable.',
-  'Who requested the reservation cannot change: cancel it and register a new one':
-    'Quién pidió la reserva no cambia: anúlala y regístrala de nuevo.',
+  'Only the responsible can change: cancel the reservation and register a new one':
+    'Al editar solo cambia el responsable: para otro jardín u horario, anula esta reserva y registra una nueva.',
   'The reservation must end after it starts': 'La reserva debe terminar después de empezar.',
   'A reservation starts and ends on the same day': 'Una reserva va de una hora a otra del mismo día.',
   'The purpose cannot exceed 300 characters': 'El motivo no puede superar los 300 caracteres.',

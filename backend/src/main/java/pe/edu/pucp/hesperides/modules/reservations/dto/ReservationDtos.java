@@ -9,7 +9,8 @@ public final class ReservationDtos {
     private ReservationDtos() {
     }
 
-    public record GardenRef(long id, String code, String name) {
+    /** `sectionCodes` solo viene lleno en la ficha: el mapa enfoca esas secciones. */
+    public record GardenRef(long id, String code, String name, java.util.List<String> sectionCodes) {
     }
 
     public record OrganizationRef(String code, String name) {
