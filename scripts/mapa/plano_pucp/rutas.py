@@ -17,3 +17,7 @@ DATOS = Path(os.environ.get('PLANO_PUCP_DATOS', RAIZ.parent / 'plano-pucp-datos'
 ENTRADA = DATOS / 'export'
 TRABAJO = DATOS / 'trabajo'
 TRABAJO.mkdir(parents=True, exist_ok=True)
+EQUIVALENCIAS = RAIZ / 'frontend/src/components/map3d/equivalence'
+MODELO_SKP = RAIZ / 'frontend/public/models/equivalence/campus.glb'
+RECURSOS_MAPA = RAIZ / 'backend/src/main/resources/mapa'
+MIGRACIONES = RAIZ / 'backend/src/main/resources/db/migration'
