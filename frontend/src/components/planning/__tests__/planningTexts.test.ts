@@ -35,12 +35,17 @@ describe('planningTexts (SPEC-203 §7)', () => {
   });
 
   it('la historia es la última vez, o el avance «X de N» si está en curso', () => {
-    expect(historyLine(planningRow())).toEqual({ label: 'Última vez', value: '30 sep (hace 39 días)' });
+    expect(historyLine(planningRow(), new Date('2026-11-08T12:00:00'))).toEqual({ label: 'Última vez', value: '30 sep (hace 39 días)' });
     expect(historyLine(planningRow({ state: 'IN_PROGRESS', progress: { done: 34, total: 50 },
       openIntervention: { id: 81, code: 'INT-000081', scheduledDate: '2026-11-04', startedDate: '2026-11-05' } }), new Date('2026-11-08T12:00:00')))
       .toEqual({ label: 'Avance', value: '34 de 50 jardines · empezó el 5 nov (hace 3 días)' });
     expect(historyLine(planningRow({ lastDate: null, daysSinceLast: null, neverAttendedCount: 18 })))
       .toEqual({ label: 'Última vez', value: 'Sin registro previo' });
+  });
+
+  it('una última vez de otro año dice el año, para no leerse como de este', () => {
+    expect(historyLine(planningRow({ lastDate: '2025-07-22', daysSinceLast: 478 }), new Date('2026-11-12T12:00:00')).value)
+      .toBe('22 jul 2025 (hace 478 días)');
   });
 
   it('con ejemplares, el avance y los «sin registro» cuentan jardines y ejemplares', () => {

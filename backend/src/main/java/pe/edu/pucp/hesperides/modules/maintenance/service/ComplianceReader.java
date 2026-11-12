@@ -71,8 +71,7 @@ public class ComplianceReader {
                 .findVersionsOverlapping(activityId, from, to)
                 .stream()
                 .filter(f -> regime.equals(f.getRegime()))
-                .filter(f -> java.util.Objects.equals(currentVersion.getScope(),f.getScope())
-                        && java.util.Objects.equals(currentVersion.getGreenAreaSetId(),f.getGreenAreaSetId()))
+                .filter(f -> java.util.Objects.equals(currentVersion.getRuleKey(), f.getRuleKey()))
                 .map(MaintenanceFrequency::toRule)
                 .toList();
         List<LocalDate> executions = executionHistory.executionDates(activityId, regime, from, to);
@@ -102,7 +101,7 @@ public class ComplianceReader {
         var places = facts.stream().map(LocationExecution::placeId).filter(java.util.Objects::nonNull).toList();
         var inputs = new LocationComplianceGrouper.Inputs(rules,
                 frequenciesRepository.findVersionsOverlapping(activityId, from, to), facts,
-                sets.setsContaining(zones), sets.sectionsOfPlaces(places));
+                sets.assignedRulesByZone(activityId, zones), sets.sectionsOfPlaces(places));
         var summary = ComplianceResult.notApplicable(shown.getId(), from, to, null,
                 "El cumplimiento se evalúa por lugar atendido, sin inferir cobertura de todo el campus");
         return new ComplianceResponse(activityId, shown.getActivityTypeItem().getLabel(), shown.getRegime(),

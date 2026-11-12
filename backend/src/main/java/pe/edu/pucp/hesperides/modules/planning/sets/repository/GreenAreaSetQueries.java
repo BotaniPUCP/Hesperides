@@ -3,7 +3,7 @@ package pe.edu.pucp.hesperides.modules.planning.sets.repository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.ActivityRef;
+import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.TypeCount;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.ElementRef;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.ZoneRef;
 
@@ -20,8 +20,6 @@ import java.util.Map;
 public class GreenAreaSetQueries {
 
     /** Una sección del conjunto que ya sigue otra regla propia de la misma actividad (D-08). */
-    public record OwnRuleOverlap(String zoneName, String activityLabel, String otherSetName) {
-    }
 
     private static final String ACTIVE_SECTION = """
             SELECT z.id FROM zones z JOIN catalog_items ci ON ci.id = z.zone_type_item_id
@@ -105,13 +103,6 @@ public class GreenAreaSetQueries {
                 rs.getString("sector_name"));
     }
 
-    public List<ActivityRef> activitiesOf(long setId) {
-        return jdbc.query("""
-                SELECT ci.id, ci.label FROM green_area_set_activities ga JOIN catalog_items ci ON ci.id = ga.activity_type_item_id
-                WHERE ga.set_id = :set AND ga.deleted_at IS NULL ORDER BY ci.label""",
-                Map.of("set", setId), (rs, n) -> new ActivityRef(rs.getLong("id"), rs.getString("label")));
-    }
-
     /** Secciones activas por conjunto: una sección dada de baja no cuenta (Review Focus 5). */
     public Map<Long, Integer> activeZoneCounts() {
         var counts = new java.util.HashMap<Long, Integer>();
@@ -133,31 +124,27 @@ public class GreenAreaSetQueries {
         return counts;
     }
 
-    /**
-     * Los sectores que cubre cada conjunto: el padre de cada sección y, para cada
-     * ejemplar, el sector de la sección donde está (por posición).
-     */
-    public Map<Long, List<String>> sectorNames() {
-        var out = new java.util.HashMap<Long, List<String>>();
+    /** Los ejemplares activos de cada conjunto por tipo, del más numeroso al menos. */
+    public Map<Long, List<TypeCount>> specimenTypes() {
+        var out = new java.util.HashMap<Long, List<TypeCount>>();
         jdbc.query("""
-                SELECT set_id, sector_name FROM (
-                  SELECT gz.set_id, sector.name AS sector_name FROM green_area_set_zones gz
-                  JOIN zones z ON z.id = gz.zone_id AND z.deleted_at IS NULL AND z.is_active
-                  JOIN zones sector ON sector.id = z.parent_zone_id
-                  WHERE gz.deleted_at IS NULL
-                  UNION
-                  SELECT ge.set_id, sector.name FROM green_area_set_elements ge
-                  JOIN green_elements e ON e.id = ge.green_element_id AND e.deleted_at IS NULL AND e.is_active
-                  JOIN LATERAL (
-                      SELECT z.parent_zone_id FROM zones z
-                      JOIN catalog_items zt ON zt.id = z.zone_type_item_id AND zt.code = 'SECTION'
-                      WHERE z.deleted_at IS NULL AND z.is_active AND ST_Contains(z.boundary, e.location)
-                      ORDER BY z.area_m2 LIMIT 1) sec ON TRUE
-                  JOIN zones sector ON sector.id = sec.parent_zone_id
-                  WHERE ge.deleted_at IS NULL) covered
-                ORDER BY set_id, sector_name""",
-                rs -> { out.computeIfAbsent(rs.getLong("set_id"), k -> new java.util.ArrayList<>()).add(rs.getString("sector_name")); });
+                SELECT ge.set_id, COALESCE(t.label, 'Sin tipo') AS type_label, COUNT(*) AS n
+                FROM green_area_set_elements ge
+                JOIN green_elements e ON e.id = ge.green_element_id AND e.deleted_at IS NULL AND e.is_active
+                LEFT JOIN species s ON s.id = e.species_id
+                LEFT JOIN catalog_items t ON t.id = s.species_type_item_id
+                WHERE ge.deleted_at IS NULL
+                GROUP BY ge.set_id, COALESCE(t.label, 'Sin tipo')
+                ORDER BY ge.set_id, n DESC, type_label""",
+                rs -> { out.computeIfAbsent(rs.getLong("set_id"), k -> new java.util.ArrayList<>())
+                        .add(new TypeCount(rs.getString("type_label"), rs.getInt("n"))); });
         return out;
+    }
+
+    /** Un conjunto dado de baja deja de planificarse: sus asignaciones se quitan con él. */
+    public void retireAssignments(long setId) {
+        jdbc.update("UPDATE planning_assignments SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP"
+                + " WHERE set_id = :set AND deleted_at IS NULL", Map.of("set", setId));
     }
 
     public void replaceElements(long setId, List<Long> elementIds) {
@@ -168,37 +155,11 @@ public class GreenAreaSetQueries {
         replace("green_area_set_zones", "zone_id", setId, zoneIds);
     }
 
-    public void replaceActivities(long setId, List<Long> activityIds) {
-        replace("green_area_set_activities", "activity_type_item_id", setId, activityIds);
-    }
-
     private void replace(String table, String column, long setId, List<Long> ids) {
         var params = Map.of("set", setId, "ids", ids.toArray(Long[]::new));
         jdbc.update("UPDATE " + table + " SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP"
                 + " WHERE set_id = :set AND deleted_at IS NULL", params);
         jdbc.update("INSERT INTO " + table + " (set_id, " + column + ") SELECT :set, id FROM unnest(CAST(:ids AS bigint[])) AS id",
                 params);
-    }
-
-    public boolean hasCurrentOwnRule(long setId) {
-        return Boolean.TRUE.equals(jdbc.queryForObject("""
-                SELECT EXISTS (SELECT 1 FROM maintenance_frequencies WHERE green_area_set_id = :set
-                  AND valid_to IS NULL AND deleted_at IS NULL)""", Map.of("set", setId), Boolean.class));
-    }
-
-    public List<OwnRuleOverlap> overlaps(long setId) {
-        return jdbc.query("""
-                SELECT DISTINCT z.name AS zone_name, ci.label AS activity, other.name AS other_set
-                FROM maintenance_frequencies mine
-                JOIN green_area_set_zones gz ON gz.set_id = mine.green_area_set_id AND gz.deleted_at IS NULL
-                JOIN green_area_set_zones oz ON oz.zone_id = gz.zone_id AND oz.set_id <> gz.set_id AND oz.deleted_at IS NULL
-                JOIN green_area_sets other ON other.id = oz.set_id AND other.deleted_at IS NULL
-                JOIN maintenance_frequencies theirs ON theirs.green_area_set_id = other.id
-                  AND theirs.activity_type_item_id = mine.activity_type_item_id
-                  AND theirs.valid_to IS NULL AND theirs.deleted_at IS NULL
-                JOIN zones z ON z.id = gz.zone_id JOIN catalog_items ci ON ci.id = mine.activity_type_item_id
-                WHERE mine.green_area_set_id = :set AND mine.valid_to IS NULL AND mine.deleted_at IS NULL
-                ORDER BY 1, 2, 3""", Map.of("set", setId),
-                (rs, n) -> new OwnRuleOverlap(rs.getString("zone_name"), rs.getString("activity"), rs.getString("other_set")));
     }
 }

@@ -9,7 +9,8 @@ public final class GreenAreaSetResponses {
     private GreenAreaSetResponses() {
     }
 
-    public record ActivityRef(long id, String label) {
+    /** Cuántos ejemplares de un tipo (Palmera, Árbol…) tiene un conjunto. */
+    public record TypeCount(String label, int count) {
     }
 
     public record ZoneRef(long id, String code, String name, String displayName,
@@ -24,13 +25,16 @@ public final class GreenAreaSetResponses {
                              String sectionName, Long sectorId, String sectorName) {
     }
 
-    /** {@code sectorNames}: los sectores que cubren sus jardines y ejemplares, por nombre. */
+    /**
+     * Un conjunto en la lista. {@code specimenTypes}: sus ejemplares por tipo, del más
+     * numeroso al menos. Qué se planifica en él se ve en Planificación, no aquí.
+     */
     public record Summary(long id, String name, String description, int zoneCount, int elementCount,
-                          List<String> sectorNames, List<ActivityRef> activities, long version, Instant updatedAt) {
+                          List<TypeCount> specimenTypes, long version, Instant updatedAt) {
     }
 
     public record Detail(long id, String name, String description, long version,
-                         List<ActivityRef> activities, List<ZoneRef> zones, List<ElementRef> elements,
+                         List<ZoneRef> zones, List<ElementRef> elements,
                          List<String> warnings) {
     }
 }

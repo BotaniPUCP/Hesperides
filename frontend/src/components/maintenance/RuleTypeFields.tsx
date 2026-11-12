@@ -7,6 +7,8 @@ import { ANNUAL_WINDOWS, type SeasonRow, newRow } from './seasons';
 
 const INPUT = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
 const SELECT = `${INPUT} bg-neutral-0`;
+/** Los días y cuotas son de dos o tres cifras: una caja angosta se lee mejor que una a todo el ancho. */
+export const NUMBER = INPUT.replace('w-full', 'w-28');
 const LABEL = 'mb-1 block text-sm font-medium text-neutral-700';
 
 export interface RuleFieldsState {
@@ -68,18 +70,18 @@ export function RuleTypeFields({ ruleTypeCode, state, onChange }: Props) {
             onChange={(seasonRows) => onChange({ seasonRows })}
           />
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-4">
             <label className="block">
               <span className={LABEL}>Mín. días</span>
               <input type="number" min={1} value={state.minDays}
                 onChange={(e) => onChange({ minDays: e.target.value })}
-                placeholder="30" className={INPUT} />
+                placeholder="30" className={NUMBER} />
             </label>
             <label className="block">
               <span className={LABEL}>Máx. días</span>
               <input type="number" min={1} value={state.maxDays}
                 onChange={(e) => onChange({ maxDays: e.target.value })}
-                placeholder="45" className={INPUT} />
+                placeholder="45" className={NUMBER} />
             </label>
           </div>
         )}
@@ -93,7 +95,7 @@ export function RuleTypeFields({ ruleTypeCode, state, onChange }: Props) {
         <span className={LABEL}>Cuota anual mínima</span>
         <input type="number" min={1} value={state.annualCount}
           onChange={(e) => onChange({ annualCount: e.target.value })}
-          placeholder="4" className={INPUT} />
+          placeholder="4" className={NUMBER} />
         <span className="text-xs text-neutral-500 mt-1 block">
           Número mínimo de ejecuciones al año. En periodos más cortos se prorratea.
         </span>
@@ -108,7 +110,7 @@ export function RuleTypeFields({ ruleTypeCode, state, onChange }: Props) {
           <span className={LABEL}>Cuota anual</span>
           <input type="number" min={1} value={state.annualCount}
             onChange={(e) => onChange({ annualCount: e.target.value })}
-            placeholder="1" className={INPUT} />
+            placeholder="1" className={NUMBER} />
         </label>
         <label className="block">
           <span className={LABEL}>Ventana</span>
@@ -133,7 +135,7 @@ export function RuleTypeFields({ ruleTypeCode, state, onChange }: Props) {
         <span className={LABEL}>Días para cubrir el 100%</span>
         <input type="number" min={1} value={state.coverageDays}
           onChange={(e) => onChange({ coverageDays: e.target.value })}
-          placeholder="15" className={INPUT} />
+          placeholder="15" className={NUMBER} />
       </label>
     );
   }

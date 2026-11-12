@@ -1,14 +1,13 @@
 'use client';
 
 import { format, parseISO } from 'date-fns';
-import type { GreenAreaSetSummary, MaintenanceFrequency } from '@shared/types';
+import type { MaintenanceFrequency } from '@shared/types';
 import { Badge, DataTable, type DataTableColumn } from '@/components/ui';
 import { frequencySummary, scopeLabel } from './frequencySummary';
 import { FrequencyRuleTag } from './FrequencyRuleTag';
 
 interface Props {
   frequencies: MaintenanceFrequency[];
-  sets: GreenAreaSetSummary[];
   canManage: boolean;
   /** Abrir una frecuencia para editarla o desactivarla. */
   onEdit: (f: MaintenanceFrequency) => void;
@@ -16,17 +15,9 @@ interface Props {
 
 const days = (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`;
 
-function ScopeCell({ frequency: f, sets }: { frequency: MaintenanceFrequency; sets: GreenAreaSetSummary[] }) {
-  if (f.scope !== 'BY_SET' || f.greenAreaSetId == null) return <>{scopeLabel(f.scope)}</>;
-  return (
-    <>
-      <span className="block font-medium text-neutral-800">
-        {sets.find((s) => s.id === f.greenAreaSetId)?.name ?? `Conjunto ${f.greenAreaSetId}`}
-      </span>
-      {/* SPEC-203 §5.3: el único lugar donde se dice que el cada cuánto no es el general. */}
-      <span className="block text-xs text-neutral-500">propio de este conjunto</span>
-    </>
-  );
+/** Dónde rige. La frecuencia es de su actividad: dónde se usa se ve en Planificación, no aquí. */
+function ScopeCell({ frequency: f }: { frequency: MaintenanceFrequency }) {
+  return <span className="block text-neutral-800">{scopeLabel(f.scope)}</span>;
 }
 
 /**
@@ -34,7 +25,7 @@ function ScopeCell({ frequency: f, sets }: { frequency: MaintenanceFrequency; se
  * se abre con un clic; editar y desactivar están dentro, así la tabla no
  * necesita una columna de botones que la obliga a desplazarse de lado.
  */
-export function FrequenciesTable({ frequencies, sets, canManage, onEdit }: Props) {
+export function FrequenciesTable({ frequencies, canManage, onEdit }: Props) {
   const columns: DataTableColumn<MaintenanceFrequency>[] = [
     {
       key: 'activity', header: 'Actividad',
@@ -76,7 +67,7 @@ export function FrequenciesTable({ frequencies, sets, canManage, onEdit }: Props
         );
       },
     },
-    { key: 'scope', header: 'Se aplica a', render: (f) => <ScopeCell frequency={f} sets={sets} /> },
+    { key: 'scope', header: 'Se aplica a', render: (f) => <ScopeCell frequency={f} /> },
     // Desde cuándo rige esta versión: sin eso el historial existiría en la base pero no se vería.
     {
       key: 'validFrom', header: 'Vigente desde', hideOnMobile: true, className: 'whitespace-nowrap',

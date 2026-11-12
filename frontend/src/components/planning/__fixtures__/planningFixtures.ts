@@ -22,6 +22,8 @@ export function planningRow(over: Partial<PlanningRow> = {}): PlanningRow {
     estimatedDate: null,
     yearCount: null,
     suggestedDate: '2026-11-08',
+    assignmentId: 71,
+    ruleKey: 'regla-corte',
     ...over,
   };
 }

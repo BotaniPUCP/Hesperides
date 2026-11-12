@@ -1217,10 +1217,13 @@ class InterventionsIntegrationTest {
         long set=jdbc.queryForObject("insert into green_area_sets(name) values ('Conjunto de prueba') returning id",Long.class);
         jdbc.update("insert into green_area_set_zones(set_id,zone_id) values (?,?)",set,zone);
         long config=jdbc.queryForObject("""
-            insert into maintenance_frequencies(activity_type_item_id,frequency_rule_type_item_id,regime,scope,green_area_set_id,annual_target_count,valid_from)
+            insert into maintenance_frequencies(activity_type_item_id,frequency_rule_type_item_id,regime,scope,annual_target_count,valid_from)
             values (?,(select i.id from catalog_items i join catalog_types t on t.id=i.catalog_type_id
-                where t.code='FREQUENCY_RULE_TYPE' and i.code='SEASONAL_PERIOD'),'IN_HOUSE','BY_SET',?,2,'2026-01-01') returning id
-            """,Long.class,typeId,set);
+                where t.code='FREQUENCY_RULE_TYPE' and i.code='SEASONAL_PERIOD'),'IN_HOUSE','BY_SET',2,'2026-01-01') returning id
+            """,Long.class,typeId);
+        // SPEC-203 §3.4: la regla para conjuntos rige en los jardines del conjunto al que se asigna.
+        jdbc.update("insert into planning_assignments(set_id,activity_type_item_id,frequency_rule_key) select ?,?,rule_key from maintenance_frequencies where id=?",
+            set,typeId,config);
         var result=json.readTree(mvc.perform(get("/api/v1/maintenance/frequencies/compliance")
             .with(user("planner@test.local").authorities(()->"ADMIN"))
             .param("from","2026-10-19").param("to","2026-10-19").param("activityTypeItemId",Long.toString(typeId)))

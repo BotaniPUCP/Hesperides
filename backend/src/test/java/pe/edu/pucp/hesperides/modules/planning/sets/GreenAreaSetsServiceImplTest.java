@@ -7,7 +7,6 @@ import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetRequest;
 import pe.edu.pucp.hesperides.modules.planning.sets.entity.GreenAreaSet;
 import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetQueries;
-import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetQueries.OwnRuleOverlap;
 import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetsRepository;
 import pe.edu.pucp.hesperides.modules.planning.sets.service.GreenAreaSetsServiceImpl;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
@@ -55,12 +54,9 @@ class GreenAreaSetsServiceImplTest {
             return s;
         });
         when(queries.nonSections(anyCollection())).thenReturn(List.of());
-        when(queries.invalidActivities(anyCollection())).thenReturn(List.of());
         when(queries.invalidElements(anyCollection())).thenReturn(List.of());
         when(queries.zonesOf(anyLong())).thenReturn(List.of());
         when(queries.elementsOf(anyLong())).thenReturn(List.of());
-        when(queries.activitiesOf(anyLong())).thenReturn(List.of());
-        when(queries.overlaps(anyLong())).thenReturn(List.of());
         service = new GreenAreaSetsServiceImpl(sets, queries, users, audit);
     }
 
@@ -70,8 +66,8 @@ class GreenAreaSetsServiceImplTest {
         f.set(entity, id);
     }
 
-    private static GreenAreaSetRequest request(String name, List<Long> zones, List<Long> activities, Long version) {
-        return new GreenAreaSetRequest(name, null, zones, null, activities, version);
+    private static GreenAreaSetRequest request(String name, List<Long> zones, Long version) {
+        return new GreenAreaSetRequest(name, null, zones, null, version);
     }
 
     private GreenAreaSet existing(long id, String name, long version) throws Exception {
@@ -85,40 +81,40 @@ class GreenAreaSetsServiceImplTest {
 
     @Test
     void theNameIsTrimmedAndTheZonesDeduplicated() {
-        service.create(request("  Pabellones ", List.of(112L, 112L, 113L), List.of(30L), null), EMAIL);
+        service.create(request("  Pabellones ", List.of(112L, 112L, 113L), null), EMAIL);
 
         verify(sets).save(argThat(s -> s.getName().equals("Pabellones") && s.getCreatedByUserId() == 3L));
         verify(queries).replaceZones(40L, List.of(112L, 113L));
-        verify(queries).replaceActivities(40L, List.of(30L));
     }
 
     @Test
     void aNameTakenByAnActiveSetIsRejectedIgnoringCase() {
         when(sets.existsActiveNameIgnoringCase("pabellones", null)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create(request("pabellones", List.of(1L), List.of(30L), null), EMAIL))
+        assertThatThrownBy(() -> service.create(request("pabellones", List.of(1L), null), EMAIL))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("Ya existe un conjunto con ese nombre");
     }
 
     @Test
     void aBlankNameIsRejected() {
-        assertThatThrownBy(() -> service.create(request("   ", List.of(1L), List.of(30L), null), EMAIL))
+        assertThatThrownBy(() -> service.create(request("   ", List.of(1L), null), EMAIL))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("El nombre del conjunto es obligatorio");
     }
 
     @Test
-    void aSetNeedsAGardenOrASpecimenAndOneActivity() {
-        assertThatThrownBy(() -> service.create(request("A", List.of(), List.of(30L), null), EMAIL))
+    void aSetNeedsAGardenOrASpecimenButNoActivity() {
+        assertThatThrownBy(() -> service.create(request("A", List.of(), null), EMAIL))
                 .hasMessage("Elige al menos un jardín o un ejemplar");
-        assertThatThrownBy(() -> service.create(request("A", List.of(1L), List.of(), null), EMAIL))
-                .hasMessage("Elige al menos una actividad");
+        // Qué se planifica en él se asigna en Planificación (SPEC-203 §3.4).
+        service.create(request("A", List.of(1L), null), EMAIL);
+        verify(sets).save(any(GreenAreaSet.class));
     }
 
     @Test
     void aSetOfOnlySpecimensIsValidAndKeepsThemDeduplicated() {
-        service.create(new GreenAreaSetRequest("Palmeras", null, null, List.of(501L, 501L, 502L), List.of(30L), null), EMAIL);
+        service.create(new GreenAreaSetRequest("Palmeras", null, null, List.of(501L, 501L, 502L), null), EMAIL);
 
         verify(queries).replaceElements(40L, List.of(501L, 502L));
         verify(queries).replaceZones(40L, List.of());
@@ -130,7 +126,7 @@ class GreenAreaSetsServiceImplTest {
         when(queries.invalidElements(anyCollection())).thenReturn(List.of(502L));
 
         assertThatThrownBy(() -> service.create(
-                new GreenAreaSetRequest("Palmeras", null, List.of(1L), List.of(501L, 502L), List.of(30L), null), EMAIL))
+                new GreenAreaSetRequest("Palmeras", null, List.of(1L), List.of(501L, 502L), null), EMAIL))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("Ejemplares no válidos: 502");
         verify(sets, never()).save(any());
@@ -140,25 +136,17 @@ class GreenAreaSetsServiceImplTest {
     void onlySectionsCanBeAdded() {
         when(queries.nonSections(anyCollection())).thenReturn(List.of(7L, 9L));
 
-        assertThatThrownBy(() -> service.create(request("A", List.of(7L, 9L, 12L), List.of(30L), null), EMAIL))
+        assertThatThrownBy(() -> service.create(request("A", List.of(7L, 9L, 12L), null), EMAIL))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("Solo se pueden agregar secciones: 7, 9");
         verify(sets, never()).save(any());
     }
 
     @Test
-    void unknownActivitiesAreRejected() {
-        when(queries.invalidActivities(anyCollection())).thenReturn(List.of(99L));
-
-        assertThatThrownBy(() -> service.create(request("A", List.of(1L), List.of(99L), null), EMAIL))
-                .hasMessage("Actividades no válidas: 99");
-    }
-
-    @Test
     void updatingWithAnOldVersionConflicts() throws Exception {
         existing(40L, "Pabellones", 3L);
 
-        assertThatThrownBy(() -> service.update(40L, request("Pabellones", List.of(1L), List.of(30L), 2L), EMAIL))
+        assertThatThrownBy(() -> service.update(40L, request("Pabellones", List.of(1L), 2L), EMAIL))
                 .isInstanceOf(ConflictException.class)
                 .hasMessage("Otra persona cambió este conjunto. Recarga para ver su versión.");
     }
@@ -167,21 +155,11 @@ class GreenAreaSetsServiceImplTest {
     void updatingAdvancesTheVersion() throws Exception {
         var set = existing(40L, "Pabellones", 3L);
 
-        service.update(40L, request("Pabellones", List.of(1L), List.of(30L), 3L), EMAIL);
+        service.update(40L, request("Pabellones", List.of(1L), 3L), EMAIL);
 
         assertThat(set.getVersion()).isEqualTo(4L);
         verify(audit).record(eq(AuditActionCode.GREEN_AREA_SET_UPDATED), eq("GREEN_AREA_SET"), eq(40L),
                 eq(Map.of("zoneCount", 1, "elementCount", 0)));
-    }
-
-    @Test
-    void aSetWithItsOwnCurrentRuleCannotBeDeleted() throws Exception {
-        existing(40L, "Pabellones", 3L);
-        when(queries.hasCurrentOwnRule(40L)).thenReturn(true);
-
-        assertThatThrownBy(() -> service.delete(40L))
-                .isInstanceOf(BusinessRuleException.class)
-                .hasMessage("Quita primero la frecuencia propia de este conjunto");
     }
 
     @Test
@@ -191,23 +169,14 @@ class GreenAreaSetsServiceImplTest {
         service.delete(40L);
 
         assertThat(set.isDeleted()).isTrue();
+        // Un conjunto dado de baja deja de planificarse.
+        verify(queries).retireAssignments(40L);
         verify(audit).record(eq(AuditActionCode.GREEN_AREA_SET_DELETED), eq("GREEN_AREA_SET"), eq(40L), any());
     }
 
     @Test
-    void crossingOwnRulesProduceAWarning() throws Exception {
-        existing(40L, "Ruta de ingreso", 0L);
-        when(queries.overlaps(40L)).thenReturn(List.of(new OwnRuleOverlap("Sección 113", "Corte de césped", "Pabellones")));
-
-        var detail = service.update(40L, request("Ruta de ingreso", List.of(113L), List.of(30L), 0L), EMAIL);
-
-        assertThat(detail.warnings()).containsExactly(
-                "La sección Sección 113 ya sigue otra frecuencia propia de Corte de césped en «Pabellones»; se usará la más frecuente");
-    }
-
-    @Test
     void creatingIsAuditedWithTheGardenCount() {
-        service.create(request("Pabellones", List.of(1L, 2L), List.of(30L), null), EMAIL);
+        service.create(request("Pabellones", List.of(1L, 2L), null), EMAIL);
 
         verify(audit).record(AuditActionCode.GREEN_AREA_SET_CREATED, "GREEN_AREA_SET", 40L, Map.of("zoneCount", 2, "elementCount", 0));
     }

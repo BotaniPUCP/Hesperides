@@ -42,7 +42,7 @@ final class FrequencyVersioning {
         next.setFrequencyRuleTypeItem(current.getFrequencyRuleTypeItem());
         next.setRegime(current.getRegime());
         next.setScope(current.getScope());
-        next.setGreenAreaSetId(current.getGreenAreaSetId());
+        next.setRuleKey(current.getRuleKey());
         next.setMinDaysInterval(current.getMinDaysInterval());
         next.setMaxDaysInterval(current.getMaxDaysInterval());
         next.setAnnualTargetCount(current.getAnnualTargetCount());

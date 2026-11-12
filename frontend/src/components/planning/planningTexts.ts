@@ -31,10 +31,11 @@ export function contentsLabel(zones: number, specimens: number): string {
   return `${gardensLabel(zones)} · ${specimensLabel(specimens)}`;
 }
 
-/** «30 sep» a partir de «2026-09-30», sin pasar por zonas horarias. */
-export function shortDate(iso: string): string {
-  const [, month, day] = iso.split('-').map(Number);
-  return `${day} ${SHORT_MONTHS[month - 1]}`;
+/** «30 sep» a partir de «2026-09-30» (con el año si no es el de hoy), sin pasar por zonas horarias. */
+export function shortDate(iso: string, now: Date = new Date()): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  // De otro año se dice cuál: «22 jul» de hace más de un año se leería como de este.
+  return year === now.getFullYear() ? `${day} ${SHORT_MONTHS[month - 1]}` : `${day} ${SHORT_MONTHS[month - 1]} ${year}`;
 }
 
 function daysAgo(n: number): string {
@@ -55,7 +56,7 @@ export function rowTitle(row: PlanningRow): string {
   return `${row.activityLabel ?? 'Actividad'} en ${row.setName}`;
 }
 
-const LABELS: Record<PlanningRow['state'], string> = {
+export const STATE_LABELS: Record<PlanningRow['state'], string> = {
   OVERDUE: 'Atrasada',
   DUE: 'Pendiente',
   IN_PROGRESS: 'En curso',
@@ -66,7 +67,7 @@ const LABELS: Record<PlanningRow['state'], string> = {
 };
 
 export function stateLabel(row: PlanningRow): string {
-  return LABELS[row.state];
+  return STATE_LABELS[row.state];
 }
 
 /** «falta 1 día», «faltan 3 días». */
@@ -125,8 +126,8 @@ export function historyLine(row: PlanningRow, now: Date = new Date()): { label: 
     const [y, m, d] = started.split('-').map(Number);
     const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
     const since = Math.round((today - Date.UTC(y, m - 1, d)) / 86_400_000);
-    return { label: 'Avance', value: `${row.progress.done} de ${unitsLabel(row, row.progress.total)} · empezó el ${shortDate(started)} (${daysAgo(since)})` };
+    return { label: 'Avance', value: `${row.progress.done} de ${unitsLabel(row, row.progress.total)} · empezó el ${shortDate(started, now)} (${daysAgo(since)})` };
   }
   if (!row.lastDate || row.daysSinceLast === null) return { label: 'Última vez', value: 'Sin registro previo' };
-  return { label: 'Última vez', value: `${shortDate(row.lastDate)} (${daysAgo(row.daysSinceLast)})` };
+  return { label: 'Última vez', value: `${shortDate(row.lastDate, now)} (${daysAgo(row.daysSinceLast)})` };
 }

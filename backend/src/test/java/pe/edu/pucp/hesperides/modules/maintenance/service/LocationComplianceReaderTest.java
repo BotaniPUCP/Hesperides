@@ -17,13 +17,15 @@ class LocationComplianceReaderTest {
     ComplianceReader reader;
     pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup sets;
     final LocalDate from=LocalDate.of(2026,10,1),to=LocalDate.of(2026,10,31);
+    /** La regla para conjuntos asignada en Planificación al conjunto del jardín 7 (SPEC-203 §3.4). */
+    static final java.util.UUID OWN=java.util.UUID.randomUUID(),GENERAL=java.util.UUID.randomUUID();
     @BeforeEach void setup() {
         repository=mock(MaintenanceFrequenciesRepository.class);history=mock(ExecutionHistoryProvider.class);
         frequency=mock(MaintenanceFrequency.class);var activity=mock(CatalogItem.class);var type=mock(CatalogItem.class);
         when(activity.getId()).thenReturn(10L);when(activity.getLabel()).thenReturn("Activity");when(type.getCode()).thenReturn("SEASONAL_PERIOD");
         when(frequency.getId()).thenReturn(1L);when(frequency.getActivityTypeItem()).thenReturn(activity);
         when(frequency.getFrequencyRuleTypeItem()).thenReturn(type);when(frequency.getRegime()).thenReturn("IN_HOUSE");
-        when(frequency.getScope()).thenReturn("CAMPUS_WIDE");
+        when(frequency.getScope()).thenReturn("CAMPUS_WIDE");when(frequency.getRuleKey()).thenReturn(GENERAL);
         when(frequency.toRule()).thenReturn(new FrequencyRule(1L,"SEASONAL_PERIOD",null,null,2,null,null,null,List.of(),LocalDate.of(2026,1,1),null));
         when(repository.findAllCurrent()).thenReturn(List.of(frequency));
         when(repository.findVersionsOverlapping(10L,from,to)).thenReturn(List.of(frequency));
@@ -46,26 +48,26 @@ class LocationComplianceReaderTest {
         assertThat(report.segments().get(0).status()).isEqualTo("NOT_APPLICABLE");
         verify(history,never()).executionDates(any(),any(),any(),any());
     }
-    @Test void setRuleOnlyUsesExecutionsInsideItsSet() {
-        when(frequency.getScope()).thenReturn("BY_SET");when(frequency.getGreenAreaSetId()).thenReturn(5L);
-        when(sets.setsContaining(any())).thenReturn(java.util.Map.of(7L,java.util.Set.of(5L)));
+    @Test void setRuleOnlyUsesExecutionsInsideTheSetsItIsAssignedTo() {
+        when(frequency.getScope()).thenReturn("BY_SET");when(frequency.getRuleKey()).thenReturn(OWN);
+        when(sets.assignedRulesByZone(org.mockito.ArgumentMatchers.eq(10L),any())).thenReturn(java.util.Map.of(7L,java.util.Set.of(OWN)));
         when(history.locationExecutions(10L,"IN_HOUSE",from,to)).thenReturn(List.of(fact(1,1,7,19),fact(2,2,8,20)));
         var report=reader.evaluate(from,to,null).get(0);
         assertThat(report.locations()).hasSize(1);assertThat(report.locations().get(0).targetId()).isEqualTo(7);
     }
-    /** SPEC-203 §5.8: a garden in a set with its own rule is judged only by that rule. */
+    /** SPEC-203 §5.8: a garden in a set assigned a rule for sets is judged only by that rule. */
     @Test void eachGardenIsJudgedOnceByItsEffectiveRule() {
         var activity=frequency.getActivityTypeItem();var type=mock(CatalogItem.class);when(type.getCode()).thenReturn("INTERVAL_DAYS");
         var general=mock(MaintenanceFrequency.class);var own=mock(MaintenanceFrequency.class);
         when(general.getId()).thenReturn(20L);when(general.getActivityTypeItem()).thenReturn(activity);when(general.getRegime()).thenReturn("IN_HOUSE");
-        when(general.getFrequencyRuleTypeItem()).thenReturn(type);when(general.getScope()).thenReturn("CAMPUS_WIDE");
+        when(general.getFrequencyRuleTypeItem()).thenReturn(type);when(general.getScope()).thenReturn("CAMPUS_WIDE");when(general.getRuleKey()).thenReturn(GENERAL);
         when(general.toRule()).thenReturn(new FrequencyRule(20L,"INTERVAL_DAYS",30,35,null,null,null,null,List.of(),LocalDate.of(2026,1,1),null));
         when(own.getId()).thenReturn(21L);when(own.getActivityTypeItem()).thenReturn(activity);when(own.getRegime()).thenReturn("IN_HOUSE");
-        when(own.getFrequencyRuleTypeItem()).thenReturn(type);when(own.getScope()).thenReturn("BY_SET");when(own.getGreenAreaSetId()).thenReturn(5L);
+        when(own.getFrequencyRuleTypeItem()).thenReturn(type);when(own.getScope()).thenReturn("BY_SET");when(own.getRuleKey()).thenReturn(OWN);
         when(own.toRule()).thenReturn(new FrequencyRule(21L,"INTERVAL_DAYS",20,25,null,null,null,null,List.of(),LocalDate.of(2026,1,1),null));
         when(repository.findAllCurrent()).thenReturn(List.of(general,own));
         when(repository.findVersionsOverlapping(10L,from,to)).thenReturn(List.of(general,own));
-        when(sets.setsContaining(any())).thenReturn(java.util.Map.of(7L,java.util.Set.of(5L)));
+        when(sets.assignedRulesByZone(org.mockito.ArgumentMatchers.eq(10L),any())).thenReturn(java.util.Map.of(7L,java.util.Set.of(OWN)));
         when(history.locationExecutions(10L,"IN_HOUSE",from,to)).thenReturn(List.of(fact(1,1,7,1),fact(2,2,7,23),fact(3,3,8,1),fact(4,4,8,23)));
 
         var reports=reader.evaluate(from,to,null);

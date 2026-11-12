@@ -14,6 +14,8 @@ export const SPANISH_BACKEND_MESSAGES: readonly RegExp[] = [
   /^Las hectáreas del campus deben estar entre 0 y \S+$/,
   // Catálogos y medidas adicionales (SPEC-105)
   /^Ya existe un ítem con el código .+ en .+$/,
+  // SPEC-203 §3.4: nombra el conjunto y la actividad; se muestra tal cual.
+  /^«.+» ya tiene una planificación de .+\. Edítala en vez de crear otra\.$/,
   /^Una medida adicional (necesita su unidad|no se puede repetir( en la misma medición)?)$/,
   /^La unidad no se puede cambiar: esta medida ya tiene valores registrados$/,
   /^La medida «.+» (no pertenece a esta especie|debe ser un número entero)$/,

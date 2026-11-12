@@ -34,34 +34,31 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
     @Override
     @Transactional(readOnly = true)
     public List<MaintenanceFrequencyResponse> findAll(String regime, Long activityTypeItemId, Boolean active) {
-        return frequenciesRepository.searchCurrent(regime, activityTypeItemId, active)
-                .stream().map(MaintenanceFrequencyResponse::from).toList();
+        return withAssignedSets(frequenciesRepository.searchCurrent(regime, activityTypeItemId, active));
     }
 
     @Override
     @Transactional(readOnly = true)
     public MaintenanceFrequencyResponse findById(Long id) {
-        return MaintenanceFrequencyResponse.from(load(id));
+        return withAssignedSets(List.of(load(id))).get(0);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<MaintenanceFrequencyResponse> findHistory(Long activityTypeItemId, String regime) {
-        return frequenciesRepository.findHistory(activityTypeItemId, regime)
-                .stream().map(MaintenanceFrequencyResponse::from).toList();
+        return withAssignedSets(frequenciesRepository.findHistory(activityTypeItemId, regime));
     }
 
     @Override
     @Transactional
     public MaintenanceFrequencyResponse create(CreateMaintenanceFrequencyRequest r) {
-        FrequencyScopeRules.validate(r.scope(), r.greenAreaSetId(), setLookup);
         CatalogItem activity = loadActivity(r.activityTypeItemId());
         CatalogItem ruleType = loadRuleType(r.frequencyRuleTypeCode());
 
         FrequencyRuleValidator.validate(r.frequencyRuleTypeCode(), r.minDaysInterval(),
                 r.maxDaysInterval(), r.annualTargetCount(), r.coverageTargetDays(),
                 r.seasonStartMonth(), r.seasonEndMonth(), r.seasons());
-        FrequencyScopeRules.requireNoCurrentDuplicate(frequenciesRepository, activity.getId(), r.regime(), r.scope(), r.greenAreaSetId(), null);
+        FrequencyScopeRules.requireNoCurrentDuplicate(frequenciesRepository, activity.getId(), r.regime(), r.scope(), null);
 
         MaintenanceFrequency f = FrequencyFieldMapper.toNewEntity(r, activity, ruleType);
         return withWarnings(frequenciesRepository.save(f));
@@ -81,7 +78,6 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         }
 
         FrequencyFieldMapper.ResolvedFields fields = resolve(r, current);
-        FrequencyScopeRules.validate(fields.scope(), fields.greenAreaSetId(), setLookup);
         List<SeasonalIntervalPayload> seasons = r.seasons() != null
                 ? r.seasons()
                 : current.getSeasons().stream().map(FrequencyVersioning::toPayload).toList();
@@ -90,7 +86,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 fields.maxDays(), fields.annualCount(), fields.coverageDays(),
                 fields.windowStart(), fields.windowEnd(), seasons);
         FrequencyScopeRules.requireNoCurrentDuplicate(frequenciesRepository, current.getActivityTypeItem().getId(), fields.regime(),
-                fields.scope(), fields.greenAreaSetId(), current.getId());
+                fields.scope(), current.getId());
 
         MaintenanceFrequency target = current;
         if (FrequencyVersioning.requiresNewVersion(current)) {
@@ -154,7 +150,6 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 ruleType,
                 pick(r.regime(), current.getRegime()),
                 pick(r.scope(), current.getScope()),
-                FrequencyScopeRules.resolveSetId(r, current),
                 pick(r.minDaysInterval(), current.getMinDaysInterval()),
                 pick(r.maxDaysInterval(), current.getMaxDaysInterval()),
                 pick(r.annualTargetCount(), current.getAnnualTargetCount()),
@@ -164,13 +159,17 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 pick(r.seasonEndMonth(), FrequencyFieldMapper.toInt(current.getSeasonEndMonth())));
     }
 
-    /** D-08: avisa, sin bloquear, si un jardín del conjunto ya sigue otra frecuencia propia de la actividad. */
+    /** Lo guardado, con a cuántos conjuntos está asignada y el aviso si eso cambia su planificación. */
     private MaintenanceFrequencyResponse withWarnings(MaintenanceFrequency saved) {
-        var response = MaintenanceFrequencyResponse.from(saved);
-        if (saved.getGreenAreaSetId() == null) return response;
-        return response.withWarnings(FrequencyScopeRules.crossWarnings(
-                setLookup.ownRuleOverlaps(saved.getGreenAreaSetId(), saved.getActivityTypeItem().getId()),
-                saved.getActivityTypeItem().getLabel()));
+        var response = withAssignedSets(List.of(saved)).get(0);
+        return response.withWarnings(FrequencyScopeRules.regimeWarnings(saved.getRegime(), response.assignedSetCount()));
+    }
+
+    /** Cada frecuencia con a cuántos conjuntos está asignada su regla (SPEC-203). */
+    private List<MaintenanceFrequencyResponse> withAssignedSets(List<MaintenanceFrequency> frequencies) {
+        var counts = setLookup.assignedSetCounts(frequencies.stream().map(MaintenanceFrequency::getRuleKey).toList());
+        return frequencies.stream().map(f -> MaintenanceFrequencyResponse.from(f)
+                .withAssignedSetCount(counts.getOrDefault(f.getRuleKey(), 0))).toList();
     }
 
     private MaintenanceFrequency load(Long id) {

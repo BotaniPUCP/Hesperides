@@ -47,6 +47,6 @@ export function scopeLabel(scope: MaintenanceFrequency['scope']): string {
     case 'CAMPUS_WIDE':
       return 'Todo el campus';
     default:
-      return 'Un conjunto';
+      return 'Solo algunas áreas';
   }
 }

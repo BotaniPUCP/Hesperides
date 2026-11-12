@@ -1,8 +1,9 @@
 /** SPEC-203: conjuntos de áreas verdes y planificación preventiva. Espejo de los DTO del backend. */
 
-export interface ActivityRef {
-  id: number;
+/** Cuántos ejemplares de un tipo (Palmera, Árbol…) tiene un conjunto. */
+export interface TypeCount {
   label: string;
+  count: number;
 }
 
 export interface GreenAreaSetZone {
@@ -35,9 +36,8 @@ export interface GreenAreaSetSummary {
   description: string | null;
   zoneCount: number;
   elementCount: number;
-  /** Los sectores que cubren sus jardines y ejemplares. */
-  sectorNames: string[];
-  activities: ActivityRef[];
+  /** Sus ejemplares por tipo, del más numeroso al menos. */
+  specimenTypes: TypeCount[];
   version: number;
   updatedAt: string;
 }
@@ -47,10 +47,9 @@ export interface GreenAreaSetDetail {
   name: string;
   description: string | null;
   version: number;
-  activities: ActivityRef[];
   zones: GreenAreaSetZone[];
   elements: GreenAreaSetElement[];
-  /** Avisos de cruce de frecuencias propias (D-08); nunca impiden guardar. */
+  /** Avisos al guardar; nunca impiden guardar. */
   warnings: string[];
 }
 
@@ -60,7 +59,6 @@ export interface GreenAreaSetRequest {
   zoneIds: number[];
   /** Un conjunto lleva jardines, ejemplares o ambos. */
   elementIds: number[];
-  activityTypeItemIds: number[];
   /** Solo al editar: la versión que se vio al abrir el formulario. */
   version?: number;
 }
@@ -84,6 +82,7 @@ export interface PlanningRhythm {
   windowEndMonth: number | null;
 }
 
+/** Una tarjeta de planificación: una frecuencia asignada a un conjunto. */
 export interface PlanningRow {
   setId: number;
   setName: string;
@@ -105,6 +104,9 @@ export interface PlanningRow {
   estimatedDate: string | null;
   yearCount: number | null;
   suggestedDate: string | null;
+  assignmentId: number;
+  /** La regla asignada; null si la asignación quedó sin frecuencia. */
+  ruleKey: string | null;
 }
 
 export interface RecentAttention {
@@ -113,4 +115,22 @@ export interface RecentAttention {
   lastDate: string;
   daysSinceLast: number;
   minDays: number;
+}
+
+/** Qué frecuencia se planifica en un conjunto (SPEC-203 §3.4). */
+export interface PlanningAssignment {
+  id: number;
+  setId: number;
+  setName: string;
+  activityTypeItemId: number;
+  activityLabel: string;
+  /** La regla, no una versión; null si quedó sin frecuencia. */
+  ruleKey: string | null;
+  warnings: string[];
+}
+
+export interface PlanningAssignmentRequest {
+  /** Solo al asignar; al cambiar una asignación se ignora. */
+  setId?: number;
+  frequencyId: number;
 }

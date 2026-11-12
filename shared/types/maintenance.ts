@@ -8,6 +8,7 @@ export type FrequencyRuleTypeCode =
 export type MaintenanceRegime = 'IN_HOUSE' | 'OUTSOURCED';
 
 /** Todo el campus o un conjunto de áreas verdes (SPEC-203 D-07). */
+/** `BY_SET`: una regla para conjuntos, que se asigna a cada uno en Planificación. */
 export type MaintenanceScope = 'CAMPUS_WIDE' | 'BY_SET';
 
 export type SeasonKey = 'VERANO' | 'OTONO' | 'INVIERNO' | 'PRIMAVERA';
@@ -54,8 +55,8 @@ export interface MaintenanceFrequency {
   regime: MaintenanceRegime;
   frequencyRuleType: FrequencyRuleTypeSummary;
   scope: MaintenanceScope;
-  /** El conjunto de una frecuencia propia; null en las de todo el campus. */
-  greenAreaSetId: number | null;
+  /** La regla, compartida por todas sus versiones; a ella apuntan las asignaciones de Planificación. */
+  ruleKey: string;
   minDaysInterval: number | null;
   maxDaysInterval: number | null;
   annualTargetCount: number | null;
@@ -74,7 +75,9 @@ export interface MaintenanceFrequency {
   active: boolean;
   createdAt: string;
   updatedAt: string;
-  /** Avisos al guardar, como el cruce de frecuencias propias (SPEC-203 D-08). */
+  /** A cuántos conjuntos está asignada en Planificación (SPEC-203 §3.4). */
+  assignedSetCount: number;
+  /** Avisos al guardar, como que una regla asignada pasó a tercerizada. */
   warnings?: string[];
 }
 
@@ -83,7 +86,6 @@ export interface CreateMaintenanceFrequencyRequest {
   regime: MaintenanceRegime;
   frequencyRuleTypeCode: FrequencyRuleTypeCode;
   scope: MaintenanceScope;
-  greenAreaSetId?: number | null;
   minDaysInterval?: number | null;
   maxDaysInterval?: number | null;
   annualTargetCount?: number | null;
@@ -104,7 +106,6 @@ export interface UpdateMaintenanceFrequencyRequest {
   regime?: MaintenanceRegime;
   frequencyRuleTypeCode?: FrequencyRuleTypeCode;
   scope?: MaintenanceScope;
-  greenAreaSetId?: number | null;
   minDaysInterval?: number | null;
   maxDaysInterval?: number | null;
   annualTargetCount?: number | null;

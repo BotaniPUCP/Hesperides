@@ -1,16 +1,13 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { MaintenanceFrequency } from '@shared/types';
 import { FrequenciesTable } from '../FrequenciesTable';
-import { FrequencyFormModal } from '../FrequencyFormModal';
-import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
+import { FrequencyForm } from '../FrequencyForm';
 
-jest.mock('@/lib/green-area-sets-api', () => ({ greenAreaSetsApi: { list: jest.fn() } }));
+const mockNavigate = jest.fn();
 jest.mock('@/components/forms/unsaved/useUnsavedChangesGuard', () => ({
-  useUnsavedChangesGuard: () => ({ confirm: (fn: () => void) => fn(), dialog: null, navigate: jest.fn() }),
+  useUnsavedChangesGuard: () => ({ confirm: (fn: () => void) => fn(), dialog: null, navigate: mockNavigate }),
 }));
-
-const sets = [{ id: 5, name: 'Campo deportivo', description: null, zoneCount: 4, elementCount: 0, sectorNames: ['Sector 1'], activities: [], version: 0, updatedAt: '2026-11-10T12:00:00Z' }];
 
 const frequency: MaintenanceFrequency = {
   id: 1,
@@ -18,7 +15,7 @@ const frequency: MaintenanceFrequency = {
   regime: 'IN_HOUSE',
   frequencyRuleType: { id: 101, code: 'INTERVAL_DAYS', label: 'Intervalo por rango de días' },
   scope: 'BY_SET',
-  greenAreaSetId: 5,
+  ruleKey: 'regla-riego',
   minDaysInterval: 2,
   maxDaysInterval: 3,
   annualTargetCount: null,
@@ -34,125 +31,113 @@ const frequency: MaintenanceFrequency = {
   active: true,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
+  assignedSetCount: 2,
 };
 
-describe('Frecuencias por conjunto (SPEC-203 §5.3)', () => {
-  it('la fila de una frecuencia propia dice a qué conjunto aplica', () => {
-    render(<FrequenciesTable frequencies={[frequency]} sets={sets} canManage onEdit={jest.fn()} />);
+const activities = [{ id: 30, code: 'RIEGO', label: 'Riego' }];
+const ruleTypes = [{ id: 101, code: 'INTERVAL_DAYS', label: 'Intervalo por rango de días' }];
 
-    const row = screen.getByRole('row', { name: /Riego/ });
-    expect(within(row).getByText('Campo deportivo')).toBeInTheDocument();
-    expect(within(row).getByText('propio de este conjunto')).toBeInTheDocument();
+beforeEach(() => jest.clearAllMocks());
+
+describe('Frecuencias: dónde rigen (SPEC-203 D-16)', () => {
+  describe('la tabla', () => {
+    it('dice dónde rige, sin nombrar conjuntos: dónde se usa se ve en Planificación', () => {
+      render(<FrequenciesTable frequencies={[frequency]} canManage onEdit={jest.fn()} />);
+
+      const row = screen.getByRole('row', { name: /Riego/ });
+      expect(within(row).getByText('Solo algunas áreas')).toBeInTheDocument();
+      expect(within(row).queryByRole('link')).not.toBeInTheDocument();
+      expect(within(row).queryByText(/conjunto/i)).not.toBeInTheDocument();
+    });
+
+    it('la fila se abre con un clic o con el nombre, que también llega por teclado', async () => {
+      const onEdit = jest.fn();
+      render(<FrequenciesTable frequencies={[frequency]} canManage onEdit={onEdit} />);
+
+      await userEvent.click(screen.getByText('Solo algunas áreas'));
+      await userEvent.click(screen.getByRole('button', { name: 'Riego' }));
+
+      expect(onEdit).toHaveBeenCalledTimes(2);
+      expect(onEdit).toHaveBeenCalledWith(frequency);
+      expect(screen.getByText('01/01/2026')).toBeInTheDocument();
+    });
   });
 
-  it('la fila se abre con un clic o con el nombre, que también llega por teclado', async () => {
-    const onEdit = jest.fn();
-    render(<FrequenciesTable frequencies={[frequency]} sets={sets} canManage onEdit={onEdit} />);
+  describe('el formulario, en su propia página', () => {
+    it('no es un pop-up y «solo algunas áreas» no pide elegirlas aquí', async () => {
+      const onSubmit = jest.fn().mockResolvedValue(undefined);
+      render(<FrequencyForm activities={activities} ruleTypes={ruleTypes} onSubmit={onSubmit} />);
 
-    await userEvent.click(screen.getByText('Campo deportivo'));
-    await userEvent.click(screen.getByRole('button', { name: 'Riego' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByText(/teórico/i)).not.toBeInTheDocument();
+      await userEvent.selectOptions(screen.getByLabelText('Grupo de actividades'), 'Otras actividades');
+      await userEvent.selectOptions(screen.getByLabelText('Actividad'), '30');
+      // Por defecto: personal propio y solo algunas áreas, con radios a la vista.
+      expect(screen.getByRole('radio', { name: 'Personal propio PUCP' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'Solo algunas áreas' })).toBeChecked();
+      expect(screen.getByText('Las áreas se eligen al crear cada planificación.')).toBeInTheDocument();
+      expect(screen.queryByLabelText(/Conjunto de áreas verdes/)).not.toBeInTheDocument();
+      await userEvent.type(screen.getByLabelText(/Mín. días/), '2');
+      await userEvent.type(screen.getByLabelText(/Máx. días/), '3');
+      await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));
 
-    expect(onEdit).toHaveBeenCalledTimes(2);
-    expect(onEdit).toHaveBeenCalledWith(frequency);
-    expect(screen.getByText('01/01/2026')).toBeInTheDocument();
-  });
-
-  it('desactivar está dentro del formulario y lo cierra solo si se confirmó', async () => {
-    const onClose = jest.fn();
-    const onDeactivate = jest.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-    render(<FrequencyFormModal isOpen onClose={onClose} frequencyToEdit={frequency}
-      activities={[{ id: 30, code: 'RIEGO', label: 'Riego' }]}
-      ruleTypes={[{ id: 101, code: 'INTERVAL_DAYS', label: 'Rango de días' }]} sets={sets}
-      onSubmit={jest.fn()} onDeactivate={onDeactivate} />);
-
-    await userEvent.click(screen.getByRole('button', { name: 'Desactivar frecuencia' }));
-    expect(onDeactivate).toHaveBeenCalledWith(1);
-    expect(onClose).not.toHaveBeenCalled();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Desactivar frecuencia' }));
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it('el formulario no pide «Teórico» y una frecuencia propia exige elegir el conjunto', async () => {
-    const onSubmit = jest.fn().mockResolvedValue(undefined);
-    render(<FrequencyFormModal isOpen onClose={jest.fn()} activities={[{ id: 30, code: 'RIEGO', label: 'Riego' }]}
-      ruleTypes={[{ id: 101, code: 'INTERVAL_DAYS', label: 'Intervalo por rango de días' }]} sets={sets} onSubmit={onSubmit} />);
-
-    expect(screen.queryByText(/teórico/i)).not.toBeInTheDocument();
-    // Una frecuencia nueva no trae actividad elegida: se elige grupo y actividad.
-    await userEvent.selectOptions(screen.getByLabelText('Grupo de actividades'), 'Otras actividades');
-    await userEvent.selectOptions(screen.getByLabelText('Actividad'), '30');
-    await userEvent.selectOptions(screen.getByLabelText('Se aplica a'), 'BY_SET');
-    await userEvent.type(screen.getByLabelText(/Mín. días/), '2');
-    await userEvent.type(screen.getByLabelText(/Máx. días/), '3');
-    await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));
-    expect(await screen.findByText(/Elige el conjunto/)).toBeInTheDocument();
-    expect(onSubmit).not.toHaveBeenCalled();
-
-    await userEvent.selectOptions(screen.getByLabelText('Conjunto de áreas verdes'), '5');
-    const link = screen.getByRole('link', { name: /Ver conjunto/ });
-    expect(link).toHaveAttribute('href', '/intervenciones/conjuntos/5');
-    expect(link).toHaveAttribute('target', '_blank');
-    await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'BY_SET', greenAreaSetId: 5 }));
-  });
-
-  describe('elegir el conjunto', () => {
-    const openNew = async (withSets = sets) => {
-      render(<FrequencyFormModal isOpen onClose={jest.fn()} activities={[{ id: 30, code: 'RIEGO', label: 'Riego' }]}
-        ruleTypes={[{ id: 101, code: 'INTERVAL_DAYS', label: 'Intervalo por rango de días' }]} sets={withSets} onSubmit={jest.fn()} />);
-      await userEvent.selectOptions(screen.getByLabelText('Se aplica a'), 'BY_SET');
-    };
-
-    it('dice en una línea qué es un conjunto y cada opción muestra qué contiene', async () => {
-      await openNew();
-
-      expect(screen.getByRole('option', { name: 'Un conjunto de áreas verdes' })).toBeInTheDocument();
-      expect(screen.getByText(/Grupo de jardines y ejemplares/)).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: 'Campo deportivo · 4 jardines' })).toBeInTheDocument();
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'BY_SET' }));
+      expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('greenAreaSetId');
+      expect(mockNavigate).toHaveBeenCalledWith('/intervenciones/frecuencias');
     });
 
-    it('ofrece crear el conjunto primero, en otra pestaña para no perder lo escrito', async () => {
-      await openNew();
+    it('todo el campus y tercerizado se eligen con un clic', async () => {
+      const onSubmit = jest.fn().mockResolvedValue(undefined);
+      render(<FrequencyForm activities={activities} ruleTypes={ruleTypes} onSubmit={onSubmit} />);
+      await userEvent.selectOptions(screen.getByLabelText('Grupo de actividades'), 'Otras actividades');
+      await userEvent.selectOptions(screen.getByLabelText('Actividad'), '30');
 
-      const create = screen.getByRole('link', { name: /Crear conjunto/ });
-      expect(create).toHaveAttribute('href', '/intervenciones/conjuntos/nuevo?desde=frecuencia');
-      expect(create).toHaveAttribute('target', '_blank');
+      await userEvent.click(screen.getByRole('radio', { name: 'Todo el campus' }));
+      await userEvent.click(screen.getByRole('radio', { name: 'Servicio tercerizado' }));
+      expect(screen.getByText('Las tercerizadas no se planifican.')).toBeInTheDocument();
+      await userEvent.type(screen.getByLabelText(/Mín. días/), '2');
+      await userEvent.type(screen.getByLabelText(/Máx. días/), '3');
+      await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));
+
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'CAMPUS_WIDE', regime: 'OUTSOURCED' }));
     });
 
-    it('un conjunto vacío se nota en la lista', async () => {
-      await openNew([...sets, { ...sets[0], id: 6, name: 'Antiguo', zoneCount: 0, sectorNames: [] }]);
+    it('al editar avisa que el cambio vale para todas las planificaciones que la usan', () => {
+      render(<FrequencyForm frequencyToEdit={frequency} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
 
-      expect(screen.getByRole('option', { name: 'Antiguo · vacío' })).toBeInTheDocument();
+      expect(screen.getByRole('note')).toHaveTextContent('Esta frecuencia se usa en 2 planificaciones: el cambio vale para todas.');
+      expect(screen.getByRole('link', { name: 'Ver en Planificación' }))
+        .toHaveAttribute('href', '/intervenciones/planificacion?actividad=30');
     });
 
-    it('sin conjuntos invita a crear el primero', async () => {
-      await openNew([]);
+    it('si no la usa ninguna planificación, no avisa', () => {
+      render(<FrequencyForm frequencyToEdit={{ ...frequency, assignedSetCount: 0 }} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
 
-      expect(screen.getByRole('option', { name: 'Todavía no hay conjuntos' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /Crear el primer conjunto/ })).toBeInTheDocument();
+      expect(screen.queryByRole('note')).not.toBeInTheDocument();
     });
 
-    it('al volver a la pestaña recarga la lista y elige el conjunto recién creado', async () => {
-      const created = { ...sets[0], id: 8, name: 'Ingreso principal', zoneCount: 2, elementCount: 3 };
-      (greenAreaSetsApi.list as jest.Mock).mockResolvedValue([...sets, created]);
-      await openNew();
+    it('desactivar está dentro y vuelve a la lista solo si se confirmó', async () => {
+      const onDeactivate = jest.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+      render(<FrequencyForm frequencyToEdit={frequency} activities={activities} ruleTypes={ruleTypes}
+        onSubmit={jest.fn()} onDeactivate={onDeactivate} />);
 
-      await act(async () => { window.dispatchEvent(new Event('focus')); });
+      await userEvent.click(screen.getByRole('button', { name: 'Desactivar frecuencia' }));
+      expect(onDeactivate).toHaveBeenCalledWith(frequency);
+      expect(mockNavigate).not.toHaveBeenCalled();
 
-      expect(screen.getByLabelText('Conjunto de áreas verdes')).toHaveValue('8');
-      expect(screen.getByRole('option', { name: 'Ingreso principal · 2 jardines · 3 ejemplares' })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Desactivar frecuencia' }));
+      expect(mockNavigate).toHaveBeenCalledWith('/intervenciones/frecuencias');
     });
 
-    it('si ya había uno elegido, al volver no lo cambia', async () => {
-      (greenAreaSetsApi.list as jest.Mock).mockResolvedValue([...sets, { ...sets[0], id: 8, name: 'Otro' }]);
-      await openNew();
-      await userEvent.selectOptions(screen.getByLabelText('Conjunto de áreas verdes'), '5');
+    it('si el servidor rechaza, se queda en la página y lo dice', async () => {
+      const onSubmit = jest.fn().mockRejectedValue(new Error('Ya existe una frecuencia vigente de todo el campus para esta actividad y modalidad'));
+      render(<FrequencyForm frequencyToEdit={{ ...frequency, scope: 'CAMPUS_WIDE' }} activities={activities}
+        ruleTypes={ruleTypes} onSubmit={onSubmit} />);
 
-      await act(async () => { window.dispatchEvent(new Event('focus')); });
+      await userEvent.click(screen.getByRole('button', { name: 'Guardar versión' }));
 
-      expect(screen.getByLabelText('Conjunto de áreas verdes')).toHaveValue('5');
-      expect(screen.getByRole('option', { name: /Otro/ })).toBeInTheDocument();
+      expect(await screen.findByRole('alert')).toBeInTheDocument();
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 });

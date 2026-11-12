@@ -88,6 +88,8 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `CONTRACT_EDITED` | ADMIN | Campos cambiados (fechas, monto, alcance) | **`audit_log`** |
 | `CONTRACT_TERMINATED` | ADMIN | `{ "statusItemId": { "before": ..., "after": ... }, "reason": "..." }` | **`audit_log`** |
 | `SYSTEM_PARAMETER_CHANGED` | ADMIN | `{ "code": "...", "value": { "before": "...", "after": "..." } }` | **`audit_log`** |
+| `PLANNING_ASSIGNMENT_CREATED` · `PLANNING_ASSIGNMENT_UPDATED` | ADMIN, COORDINADOR | `{ "setId": 3, "frequencyId": 12, "activityTypeItemId": 30 }` — qué frecuencia quedó asignada al conjunto (SPEC-203 D-16) | **`audit_log`** |
+| `PLANNING_ASSIGNMENT_DELETED` | ADMIN, COORDINADOR | `{ "setId": 3, "activityTypeItemId": 30 }` — qué dejó de planificarse en el conjunto | **`audit_log`** |
 | `SPECIES_PHOTOS_REPLACED` | ADMIN, COORDINADOR (carga CSV) · ADMIN (bandeja) | `{ "photos": 3 }` — cuántas fotos quedaron en el conjunto de la especie (SPEC-104 D-02) | **`audit_log`** |
 | `SPECIES_PHOTO_ADDED` | ADMIN, COORDINADOR | `{ "photoId": 41 }` — la foto agregada al final por formulario (SPEC-104 D-03) | **`audit_log`** |
 | `SPECIES_UPDATED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "slug": "coffea-arabica", "scientificName": "Coffea arabica" }` — quién corrigió la especie (SPEC-105) |

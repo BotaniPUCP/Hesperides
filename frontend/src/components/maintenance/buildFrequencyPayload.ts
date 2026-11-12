@@ -13,8 +13,6 @@ export interface FormState {
   regime: MaintenanceRegime;
   ruleTypeCode: FrequencyRuleTypeCode;
   scope: MaintenanceScope;
-  /** Solo cuenta cuando la frecuencia es propia de un conjunto. */
-  greenAreaSetId: number | null;
   fields: RuleFieldsState;
   estimatedDuration: string;
   notes: string;
@@ -39,9 +37,6 @@ function num(value: string): number | null {
  * cortesía de la interfaz, nunca la garantía.
  */
 export function buildFrequencyPayload(s: FormState): BuildResult {
-  if (s.scope === 'BY_SET' && !s.greenAreaSetId) {
-    return { error: 'Elige el conjunto al que se aplica esta frecuencia' };
-  }
   if (!s.isEditing && !s.activityTypeItemId) {
     return { error: 'Selecciona el tipo de actividad' };
   }
@@ -98,7 +93,6 @@ export function buildFrequencyPayload(s: FormState): BuildResult {
       regime: s.regime,
       frequencyRuleTypeCode: s.ruleTypeCode,
       scope: s.scope,
-      greenAreaSetId: s.scope === 'BY_SET' ? s.greenAreaSetId : null,
       minDaysInterval: min,
       maxDaysInterval: max,
       annualTargetCount: annual,

@@ -12,14 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Lo que la planificación lee de los conjuntos: sus secciones y ejemplares activos y sus actividades. */
+/** Lo que la planificación lee de los conjuntos: sus secciones y ejemplares activos. */
 @Repository
 @RequiredArgsConstructor
 public class PlanningSetsQueries {
 
     /** Un conjunto activo con solo sus secciones y ejemplares vigentes: lo dado de baja no cuenta. */
-    public record SetSnapshot(long id, String name, Set<Long> zoneIds, Set<Long> elementIds,
-                              Set<Long> activityTypeItemIds) {
+    public record SetSnapshot(long id, String name, Set<Long> zoneIds, Set<Long> elementIds) {
 
         /** Sin jardines ni ejemplares no hay nada que planificar. */
         public boolean isEmpty() {
@@ -33,7 +32,6 @@ public class PlanningSetsQueries {
         Map<Long, String> names = new LinkedHashMap<>();
         Map<Long, Set<Long>> zones = new HashMap<>();
         Map<Long, Set<Long>> elements = new HashMap<>();
-        Map<Long, Set<Long>> activities = new HashMap<>();
         jdbc.query("SELECT id, name FROM green_area_sets WHERE deleted_at IS NULL ORDER BY lower(name)",
                 rs -> { names.put(rs.getLong("id"), rs.getString("name")); });
         jdbc.query("""
@@ -47,13 +45,9 @@ public class PlanningSetsQueries {
                 WHERE ge.deleted_at IS NULL""",
                 rs -> { elements.computeIfAbsent(rs.getLong("set_id"), k -> new HashSet<>())
                         .add(rs.getLong("green_element_id")); });
-        jdbc.query("SELECT set_id, activity_type_item_id FROM green_area_set_activities WHERE deleted_at IS NULL",
-                rs -> { activities.computeIfAbsent(rs.getLong("set_id"), k -> new HashSet<>())
-                        .add(rs.getLong("activity_type_item_id")); });
         return names.entrySet().stream().map(e -> new SetSnapshot(e.getKey(), e.getValue(),
                 Set.copyOf(zones.getOrDefault(e.getKey(), Set.of())),
-                Set.copyOf(elements.getOrDefault(e.getKey(), Set.of())),
-                Set.copyOf(activities.getOrDefault(e.getKey(), Set.of())))).toList();
+                Set.copyOf(elements.getOrDefault(e.getKey(), Set.of())))).toList();
     }
 
     /** Nombre de cada actividad: la fila «sin frecuencia configurada» no tiene regla de donde sacarlo. */

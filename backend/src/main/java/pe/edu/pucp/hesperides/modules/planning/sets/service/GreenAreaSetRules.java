@@ -1,6 +1,5 @@
 package pe.edu.pucp.hesperides.modules.planning.sets.service;
 
-import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetQueries.OwnRuleOverlap;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 
 import java.util.Collection;
@@ -40,11 +39,5 @@ public final class GreenAreaSetRules {
             throw new BusinessRuleException(prefix + invalid.stream().map(String::valueOf)
                     .collect(Collectors.joining(", ")));
         }
-    }
-
-    /** D-08: un aviso, nunca un bloqueo, cuando un jardín queda bajo dos reglas propias. */
-    public static List<String> crossWarnings(List<OwnRuleOverlap> overlaps) {
-        return overlaps.stream().map(o -> "La sección " + o.zoneName() + " ya sigue otra frecuencia propia de "
-                + o.activityLabel() + " en «" + o.otherSetName() + "»; se usará la más frecuente").toList();
     }
 }

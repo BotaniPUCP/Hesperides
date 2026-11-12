@@ -24,12 +24,9 @@ const OUTSIDE = 'fuera';
 const DRAG_PX = 6;
 /** Acciones de la tarjeta: pequeñas para que quepan en una fila del panel. */
 const CARD_ACTION = 'rounded-md border border-neutral-200 bg-neutral-0 px-2 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40';
-/** Botones de la barra del selector. */
-const TOOL_BASE = 'rounded-md border px-2.5 py-1.5 text-xs font-semibold';
+/** Herramientas que flotan sobre el mapa. */
+const TOOL_BASE = 'pointer-events-auto rounded-md border px-2.5 py-1.5 text-xs font-semibold shadow';
 const TOOL = `${TOOL_BASE} border-neutral-200 bg-neutral-0 text-neutral-900 hover:bg-neutral-100`;
-const TOOL_ON = `${TOOL_BASE} border-brand-600 bg-brand-600 text-white hover:bg-brand-700`;
-/** Lo que hace el rectángulo de la selección múltiple. */
-type AreaAction = 'add' | 'remove';
 const MAP_CHIP = 'pointer-events-auto rounded-md bg-neutral-0 text-xs font-semibold text-neutral-900 shadow';
 
 interface SectorGroup {
@@ -92,8 +89,8 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   const [mode, setMode] = useState<PickMode>(() => initialMode(selectedZoneIds, selectedSpecimenIds));
   const [term, setTerm] = useState('');
   const [onlySelected, setOnlySelected] = useState(false);
-  const [areaMode, setAreaMode] = useState(false);
-  const [areaAction, setAreaAction] = useState<AreaAction>('add');
+  /** Ctrl (o ⌘) apretado: el mapa deja de girar y el arrastre dibuja un rectángulo. */
+  const [ctrlHeld, setCtrlHeld] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
@@ -204,33 +201,72 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   };
 
   const zoneOfCode = useMemo(() => new Map(allSections.map((s) => [s.code, s])), [allSections]);
-  // El rectángulo agrega o quita lo que encierra. El hook es compartido con Riego y solo sabe agregar:
-  // aquí se decide qué hacer con lo que devuelve, sin cambiarlo.
-  const removing = areaAction === 'remove';
-  const removed = useRef({ gardens: 0, plants: 0 });
-  const apply = (ids: number[], current: Set<number>, set: (next: Set<number>) => void, kind: 'gardens' | 'plants') => {
-    if (!removing) { set(new Set([...current, ...ids])); return; }
-    const drop = new Set(ids);
-    removed.current[kind] = [...current].filter((id) => drop.has(id)).length;
-    set(new Set([...current].filter((id) => !drop.has(id))));
-  };
-  const onAreaNotice = (text: string) => {
-    if (!removing) { setNotice(text ? { text } : null); return; }
-    if (text.startsWith('Arrastra')) { setNotice({ text: 'Arrastra un rectángulo sobre lo que quieras quitar.' }); return; }
-    const { gardens, plants: trees } = removed.current;
-    setNotice({ text: gardens + trees === 0 ? 'En el área dibujada no había nada elegido.'
-      : `Se quitó del conjunto: ${contentsLabel(gardens, trees)} del área dibujada.` });
+  // Ctrl + arrastrar dibuja un rectángulo. Si todo lo que encierra ya estaba elegido, lo quita;
+  // si no, agrega lo que falta. El hook es compartido con Riego y solo sabe «agregar»: aquí se
+  // juntan los jardines y ejemplares que devuelve y se decide con los dos a la vez.
+  const inRect = useRef<{ gardens: number[]; plants: number[] }>({ gardens: [], plants: [] });
+  const onRectResult = (text: string) => {
+    const { gardens, plants: trees } = inRect.current;
+    inRect.current = { gardens: [], plants: [] };
+    if (text.startsWith('Arrastra')) { setNotice({ text: 'Mantén Ctrl y arrastra un rectángulo sobre el mapa.' }); return; }
+    if (gardens.length + trees.length === 0) { setNotice({ text: 'El rectángulo no encerró nada que se pueda elegir.' }); return; }
+    const before = { zones, plants };
+    const allChosen = gardens.every((id) => zones.has(id)) && trees.every((id) => plants.has(id));
+    if (allChosen) {
+      const dropZones = new Set(gardens);
+      const dropPlants = new Set(trees);
+      setZones(new Set([...zones].filter((id) => !dropZones.has(id))));
+      setPlants(new Set([...plants].filter((id) => !dropPlants.has(id))));
+      setNotice({ text: `Se quitó del conjunto: ${contentsLabel(gardens.length, trees.length)}.`,
+        undo: () => { setZones(before.zones); setPlants(before.plants); setNotice(null); } });
+      return;
+    }
+    const newGardens = gardens.filter((id) => !zones.has(id));
+    const newPlants = trees.filter((id) => !plants.has(id));
+    setZones(new Set([...zones, ...newGardens]));
+    setPlants(new Set([...plants, ...newPlants]));
+    setNotice({ text: `Se agregó al conjunto: ${contentsLabel(newGardens.length, newPlants.length)}. Arrastra otra vez sobre lo mismo para quitarlo.` });
   };
   const { drag, beginDrag, moveDrag, endDrag, cancelDrag } = useRectangleSelection({
     mapRegion, viewer, permittedCodes: pickGardens ? allSections.map((s) => s.code) : [], sectionsByCode: zoneOfCode,
-    onAdd: (ids) => apply(ids, zones, setZones, 'gardens'), onNotice: onAreaNotice,
+    onAdd: (ids) => { inRect.current.gardens = ids; }, onNotice: onRectResult,
     specimens: pickPlants ? { eligible: specimens.map((e) => e.code), byCode: new Map(specimens.map((e) => [e.code, e.id])),
-      onAdd: (ids) => apply(ids, plants, setPlants, 'plants') } : undefined,
+      onAdd: (ids) => { inRect.current.plants = ids; } } : undefined,
   });
-  const startArea = (e: ReactPointerEvent<HTMLDivElement>) => { removed.current = { gardens: 0, plants: 0 }; beginDrag(e); };
+  /** La capa del rectángulo sigue mientras se arrastra, aunque se suelte Ctrl antes de soltar el clic. */
+  const selecting = (ctrlHeld || drag !== null) && Boolean(scene) && !unsupported;
+  const startArea = (e: ReactPointerEvent<HTMLDivElement>) => { inRect.current = { gardens: [], plants: [] }; beginDrag(e); };
+  useEffect(() => {
+    const track = (e: KeyboardEvent) => setCtrlHeld(e.ctrlKey || e.metaKey);
+    const release = () => setCtrlHeld(false);
+    window.addEventListener('keydown', track);
+    window.addEventListener('keyup', track);
+    window.addEventListener('blur', release);
+    return () => {
+      window.removeEventListener('keydown', track);
+      window.removeEventListener('keyup', track);
+      window.removeEventListener('blur', release);
+    };
+  }, []);
+  /**
+   * La capa de la selección múltiple tapa el mapa para dibujar el rectángulo, y así también se
+   * comía la rueda: se la pasa al lienzo del mapa para que acercar y alejar siga funcionando.
+   * Va como escucha nativa no pasiva, para que la rueda no desplace además la página.
+   */
+  const areaLayer = useCallback((layer: HTMLDivElement | null) => {
+    if (!layer) return;
+    const forward = (e: WheelEvent) => {
+      const canvas = mapRegion.current?.querySelector('canvas');
+      if (!canvas) return;
+      e.preventDefault();
+      canvas.dispatchEvent(new WheelEvent('wheel', e));
+    };
+    layer.addEventListener('wheel', forward, { passive: false });
+    return () => layer.removeEventListener('wheel', forward);
+  }, []);
 
   // Mover o acercar el mapa a mano deja de «ver» el sector enfocado; un clic no.
-  const onMapPointerDown = (e: ReactPointerEvent) => { pointerStart.current = areaMode ? null : { x: e.clientX, y: e.clientY }; };
+  const onMapPointerDown = (e: ReactPointerEvent) => { pointerStart.current = selecting ? null : { x: e.clientX, y: e.clientY }; };
   const onMapPointerUp = (e: ReactPointerEvent) => {
     const start = pointerStart.current;
     pointerStart.current = null;
@@ -273,65 +309,56 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
         <button type="button" onClick={requestCancel}
           className="shrink-0 rounded-md border border-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50">Cancelar y volver</button>
       </header>
-      {/* Barra propia, sobre el mapa y no encima: cabe en una línea y siempre está, aunque no haya mapa (el modo decide qué muestran las tarjetas). */}
-      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-neutral-200 bg-neutral-50 px-4 py-2">
-        {scene && !unsupported && !isLoading && <>
-          <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.top(); setAreaMode(true); }}>Vista superior</button>
-          <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.fit(); }}>Ver campus</button>
-          <button type="button" onClick={() => { viewer.current?.top(); setAreaMode((v) => !v); }} aria-pressed={areaMode}
-            title={areaMode ? 'Salir de la selección múltiple' : 'Dibuja un rectángulo sobre el mapa para agregar todo lo que encierre'}
-            className={areaMode ? TOOL_ON : TOOL}>
-            Selección múltiple</button>
-          {areaMode && <div role="radiogroup" aria-label="Qué hace el rectángulo" className="flex rounded-md border border-neutral-200 bg-neutral-0 p-0.5 text-xs font-semibold">
-            {(['add', 'remove'] as const).map((a) => (
-              <button key={a} type="button" role="radio" aria-checked={areaAction === a} onClick={() => setAreaAction(a)}
-                className={`rounded px-2 py-1 ${areaAction !== a ? 'text-neutral-700 hover:bg-neutral-100'
-                  : a === 'add' ? 'bg-brand-600 text-white' : 'bg-action-danger text-white'}`}>
-                {a === 'add' ? 'Agregar' : 'Quitar'}
-              </button>
-            ))}
-          </div>}
-        </>}
-        {/* Decide qué agregan el clic y el rectángulo, y qué muestran las tarjetas. Va aparte para que la etiqueta no parezca otra opción. */}
-        <div className="flex items-center gap-2 sm:ml-auto sm:border-l sm:border-neutral-200 sm:pl-3">
-          <span id="set-picker-mode" className="text-xs font-medium text-neutral-600">Elegir:</span>
-          <div role="radiogroup" aria-labelledby="set-picker-mode" className="flex rounded-md border border-neutral-200 bg-neutral-0 p-0.5 text-xs font-semibold">
-            {PICK_MODES.map((m) => (
-              <button key={m.value} type="button" role="radio" aria-checked={mode === m.value} onClick={() => changeMode(m.value)}
-                className={`rounded px-2 py-1 ${mode === m.value ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}>
-                {m.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <div ref={mapRegion} role="region" aria-label="Mapa del campus" className="relative min-h-[250px] flex-[2] overflow-hidden bg-neutral-100 md:min-h-0"
           onPointerDownCapture={onMapPointerDown} onPointerUpCapture={onMapPointerUp}
-          onWheelCapture={() => { if (focused && !areaMode) unfocus(); }}>
+          onWheelCapture={() => { if (focused && !selecting) unfocus(); }}>
           {isLoading ? <div className="p-6"><LoadingSkeleton /></div>
             : scene && layers && !unsupported ? <Map3DView data={scene}
               onReady={(v) => { viewer.current = v; v.setMarkedSections(markedCodes); v.setMarkedSpecimens(markedPlantCodes); v.setLayerVisible('supervision', false); }}
               onUnsupported={() => setUnsupported(true)}
-              onSelect={(target) => { if (!areaMode) onMapPick(target, scene); }}
+              onSelect={(target) => { if (!selecting) onMapPick(target, scene); }}
               onGroundPick={() => undefined} onHover={() => undefined} onCompass={() => undefined} />
               : <div className="flex h-full flex-col items-center justify-center p-8 text-center">
                 <p className="font-semibold">Mapa 3D no disponible</p>
                 <p className="mt-2 max-w-sm text-sm text-neutral-500">{errorMessage ?? 'El navegador no admite WebGL. Puedes elegir todo en las tarjetas de cada sector.'}</p>
               </div>}
+          {/* Las herramientas flotan sobre el mapa; el modo va siempre, aunque no haya mapa: decide qué muestran las tarjetas. */}
           <div className="pointer-events-none absolute inset-x-3 top-3 z-30 flex flex-col items-start gap-2">
-            {areaMode && <p className={`${MAP_CHIP} px-3 py-2 font-medium text-neutral-700`}>
-              {removing ? 'Arrastra sobre el mapa para quitar.' : 'Arrastra sobre el mapa para agregar.'}</p>}
+            <div className="flex w-full flex-wrap items-start justify-between gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {scene && !unsupported && !isLoading && <>
+                  <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.top(); }}>Vista superior</button>
+                  <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.fit(); }}>Ver campus</button>
+                  {/* Cómo elegir varios, siempre a la vista: no hay botón que active un modo. */}
+                  <span className={`${MAP_CHIP} px-2.5 py-1.5 font-medium text-neutral-600`}>
+                    <kbd className="rounded border border-neutral-300 bg-neutral-50 px-1 font-sans">Ctrl</kbd> + arrastrar: elegir o quitar varios
+                  </span>
+                </>}
+              </div>
+              {/* Decide qué agregan el clic y el rectángulo, y qué muestran las tarjetas. Va aparte para que la etiqueta no parezca otra opción. */}
+              <div className={`${MAP_CHIP} flex items-center gap-2 border border-neutral-200 py-0.5 pl-2.5 pr-0.5`}>
+                <span id="set-picker-mode" className="font-medium text-neutral-600">Elegir:</span>
+                <div role="radiogroup" aria-labelledby="set-picker-mode" className="flex">
+                  {PICK_MODES.map((m) => (
+                    <button key={m.value} type="button" role="radio" aria-checked={mode === m.value} onClick={() => changeMode(m.value)}
+                      className={`rounded px-2 py-1 ${mode === m.value ? 'bg-brand-600 text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
             {focusedGroup && <div className={`${MAP_CHIP} flex items-center gap-2 py-1 pl-3 pr-1`}>
               <span>Viendo {focusLabel}</span>
               <button type="button" onClick={unfocus} aria-label={`Dejar de ver ${focusedGroup.name}`}
                 className="rounded px-2 py-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">✕</button>
             </div>}
           </div>
-          {areaMode && scene && !unsupported && <div className="absolute inset-0 z-20 cursor-crosshair touch-none"
-            aria-label="Dibuja un rectángulo sobre el mapa para agregar lo que encierre"
+          {selecting && <div ref={areaLayer} className="absolute inset-0 z-20 cursor-crosshair touch-none"
+            aria-label="Dibuja un rectángulo para elegir o quitar lo que encierre"
             onPointerDown={startArea} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={cancelDrag}>
-            {drag && <div className={`pointer-events-none absolute border-2 ${removing ? 'border-action-danger bg-urgency-critical-bg/50' : 'border-brand-700 bg-brand-200/30'}`}
+            {drag && <div className="pointer-events-none absolute border-2 border-brand-700 bg-brand-200/30"
               style={{ left: Math.min(drag.startX, drag.endX) - drag.originX, top: Math.min(drag.startY, drag.endY) - drag.originY,
                 width: Math.abs(drag.endX - drag.startX), height: Math.abs(drag.endY - drag.startY) }} />}
           </div>}

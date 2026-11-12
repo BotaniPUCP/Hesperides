@@ -51,11 +51,13 @@ intervenciones reales y alimenta el reporte mensual. Falla en tres cosas:
 | **Lugar** | Una referencia para ubicarse (M9). **No se planifica sobre él.** Excepción: un lugar con `places.zone_id` es un jardín popular que la gente conoce por ese nombre; se usa su nombre para mostrar el jardín, y una ubicación de intervención registrada con ese lugar cuenta para su sección. |
 | **Conjunto de áreas verdes** (conjunto) | Una lista guardada de jardines, ejemplares o ambos, con nombre, armada desde el mapa (D-14). No coincide necesariamente con un sector ni con una zona de supervisión. Un jardín o un ejemplar puede estar en varios conjuntos. |
 | **Actividad** | Un ítem del catálogo `INTERVENTION_TYPE` (corte de césped, poda sanitaria, riego…). Es el `activity_type_item_id` de las reglas y el `intervention_type_item_id` de las intervenciones. |
-| **Regla de frecuencia** | Una fila vigente de `maintenance_frequencies` (SPEC-101). Dice cada cuánto se hace una actividad. |
+| **Regla de frecuencia** | Una fila vigente de `maintenance_frequencies` (SPEC-101). Dice cada cuánto se hace una actividad. Se aplica a **todo el campus** o a **conjuntos**; las de conjuntos no nombran ninguno (D-16). |
+| **Asignación** | Qué regla se planifica en un conjunto: conjunto + regla (y su actividad). Se hace en Planificación; cada asignación es una tarjeta (D-16). |
 | **Última vez de un jardín** | La fecha más reciente en que el capataz marcó completado ese jardín para esa actividad (§5.4). |
 
 En la interfaz **nunca** se usan las palabras «ronda», «ritmo», «alcance» ni «scope». Se dice
-«conjunto», «cada 30–35 días» y «propio de este conjunto» solo en la pantalla de reglas.
+«conjunto», «cada 30–35 días», «Suele realizarse» y «Solo algunas áreas». Frecuencias no nombra
+conjuntos: la frecuencia es de su actividad (D-19).
 
 ### 2.2 Backend
 
@@ -161,10 +163,8 @@ Cuando un jardín está en dos conjuntos con regla propia para la misma activida
 «atendido hace poco» usa la de menor mínimo. Es preferible atender de más que de menos. Al
 guardar un conjunto o una regla que produce ese cruce, el sistema lo advierte (sin bloquear).
 
-**D-09 · Cada conjunto declara qué actividades se planifican en él.**
-Si toda regla general aplicara a todo conjunto, un conjunto de bermas aparecería también en
-poda mayor. El coordinador marca, al guardar el conjunto, las actividades que se planifican
-ahí. Una regla propia del conjunto implica su actividad.
+**D-09 · ~~Cada conjunto declara qué actividades se planifican en él.~~** Reemplazada por D-16
+(11 nov 2026): el conjunto ya no lleva actividades; qué se planifica en él es una asignación.
 
 **D-10 · La planificación solo considera reglas de personal propio (`IN_HOUSE`).**
 Las intervenciones no registran régimen y no hay datos del trabajo tercerizado (Catálogo, D2).
@@ -204,6 +204,50 @@ jardines, y el control fitosanitario cubre árboles y áreas extensas. El coordi
 sistema no restringe. Si aparecen errores reales, el catálogo podrá marcar a qué se aplica cada
 actividad.
 
+**D-16 · El conjunto dice dónde; la planificación asigna qué y cada cuánto (11 nov 2026).**
+Decisión del equipo: elegir qué se planifica es parte de crear la planificación, no del
+conjunto. Cada ventana responde una sola pregunta:
+- **Conjuntos**: dónde (jardines y ejemplares). Sin actividades.
+- **Frecuencias**: cada cuánto, por actividad. «Se aplica a» es **Todo el campus** o **Solo
+  algunas áreas** (por defecto), sin elegir cuáles (D-19). Una de todo el campus por actividad
+  y modalidad; de solo algunas áreas, las que hagan falta (riego normal, riego intensivo).
+- **Planificación**: une un conjunto con una actividad y, de las frecuencias de esa actividad,
+  dice cuál rige allí. Una planificación por conjunto y actividad: dos darían estados que se
+  contradicen. Cada una es una tarjeta; el cálculo del estado no cambia (§5.5).
+La frecuencia se edita solo en Frecuencias y el cambio vale para todas las planificaciones que
+la usan (al editar se avisa cuántas y se enlaza a Planificación); dónde se usa se decide solo
+en Planificación. Solo se planifican frecuencias de personal propio y con
+periodicidad (D-10): las tercerizadas y a demanda se ven, pero no se pueden elegir. Desactivar
+una regla asignada avisa cuántas tarjetas quedan «Sin frecuencia configurada»; las asignaciones
+no se borran solas. Eliminar un conjunto quita sus asignaciones.
+*Descartado:* elegir el conjunto en Frecuencias y la actividad en Planificación, porque la
+combinación conjunto + actividad quedaba en dos ventanas.
+
+**D-17 · La asignación sigue a la regla, no a una versión.**
+Editar una frecuencia abre una versión nueva (fila nueva, SPEC-101). Cada regla tiene una clave
+(`maintenance_frequencies.rule_key`) que comparten todas sus versiones; la asignación apunta a
+ella. La regla efectiva de un jardín en los reportes (§5.8) sale de las asignaciones de los
+conjuntos que lo contienen.
+
+**D-19 · La frecuencia es de la actividad; la planificación la usa en un conjunto (12 nov 2026).**
+Observación del PO: una frecuencia no se asocia directo a un conjunto. El modelo de datos ya era
+conjunto → actividad → frecuencia (`planning_assignments` guarda conjunto y actividad, y cuál
+frecuencia de esa actividad rige); lo que cambia es cómo se presenta:
+- Nueva planificación pide conjunto, luego actividad, y muestra las frecuencias de esa
+  actividad con la de todo el campus propuesta.
+- Frecuencias no muestra a qué conjuntos se aplica; «Conjuntos» pasa a «Solo algunas áreas».
+- En la tarjeta, «Frecuencia» pasa a «Suele realizarse»; «Cambiar frecuencia» y «Quitar» pasan a
+  «Editar» y «Eliminar».
+*Descartado:* una sola frecuencia por actividad, porque perdería la variación por zona que
+salió de las entrevistas (riego intensivo en algunas áreas).
+
+**D-18 · Un conjunto disperso se recorre por grupos.**
+Encuadrar un conjunto repartido por todo el campus muestra el campus entero. El mapa agrupa
+sus jardines y ejemplares por cercanía (borde a borde, 60 m) y se recorre con «Anterior ·
+Siguiente · Ver todo», del grupo más grande al más chico. Con un solo grupo no aparece. Se usa
+en el mapa de Planificación y en «Ver en el mapa» del conjunto. No toca el visor: solo lo
+encuadra.
+
 ## 3. Contratos de API
 
 Sobre `{ok, message, data}` (INV-1) y envolturas de error de SPEC-C02, no se repiten.
@@ -213,26 +257,27 @@ Sobre `{ok, message, data}` (INV-1) y envolturas de error de SPEC-C02, no se rep
 | `GET /api/v1/green-area-sets` | ADMIN, COORDINADOR | Lista de conjuntos activos |
 | `GET /api/v1/green-area-sets/{id}` | ADMIN, COORDINADOR | Un conjunto con sus jardines |
 | `POST /api/v1/green-area-sets` | ADMIN, COORDINADOR | Crea un conjunto |
-| `PUT /api/v1/green-area-sets/{id}` | ADMIN, COORDINADOR | Edita nombre, jardines y actividades |
+| `PUT /api/v1/green-area-sets/{id}` | ADMIN, COORDINADOR | Edita nombre, jardines y ejemplares |
 | `DELETE /api/v1/green-area-sets/{id}` | ADMIN, COORDINADOR | Baja lógica |
 | `GET /api/v1/maintenance/planning` | ADMIN, COORDINADOR | Filas de planificación ordenadas por urgencia |
 | `GET /api/v1/maintenance/planning/recent-attention` | ADMIN, COORDINADOR | Jardines atendidos antes del mínimo, para el registro de intervención |
-| `/api/v1/maintenance/frequencies/**` | ADMIN, COORDINADOR (antes también SUPERVISOR y OPERARIO en lectura) | Reglas, con alcance por conjunto |
+| `GET/POST /api/v1/maintenance/planning/assignments`, `PUT/DELETE …/{id}` | ADMIN, COORDINADOR | Asignaciones de reglas a conjuntos (§3.4) |
+| `/api/v1/maintenance/frequencies/**` | ADMIN, COORDINADOR (antes también SUPERVISOR y OPERARIO en lectura) | Reglas, con alcance todo el campus o conjuntos y a cuántos conjuntos están asignadas |
 
 ### 3.1 Conjuntos
 
 `GET /api/v1/green-area-sets`
 
 ```json
-[{"id":3,"name":"Ingreso Riva-Agüero","description":null,"zoneCount":18,
-  "activities":[{"id":30,"label":"Corte de césped"}],"version":2}]
+[{"id":3,"name":"Ingreso Riva-Agüero","description":null,"zoneCount":18,"elementCount":15,
+  "specimenTypes":[{"label":"Palmera","count":12},{"label":"Árbol","count":3}],
+  "version":2,"updatedAt":"2026-11-10T15:00:00Z"}]
 ```
 
 `GET /api/v1/green-area-sets/{id}`
 
 ```json
 {"id":3,"name":"Ingreso Riva-Agüero","description":null,"version":2,
- "activities":[{"id":30,"label":"Corte de césped"}],
  "zones":[{"id":112,"code":"SE-0112","name":"Sección 112","displayName":"Jardín de la Entrada Principal",
            "landscapeCode":"GREEN_AREA","sectorName":"Sector 2"}]}
 ```
@@ -245,11 +290,11 @@ builder si hay un criterio mejor).
 
 ```json
 {"name":"Ingreso Riva-Agüero","description":null,"zoneIds":[112,113,118],
- "activityTypeItemIds":[30],"version":2}
+ "elementIds":[501],"version":2}
 ```
 
-`version` solo en `PUT` (control optimista, 409 si cambió). Respuesta: el detalle, más
-`warnings` (lista de textos) cuando hay cruce de reglas propias (D-08).
+`version` solo en `PUT` (control optimista, 409 si cambió). Respuesta: el detalle, con
+`warnings` (lista de textos, hoy vacía).
 
 ### 3.2 Planificación
 
@@ -266,7 +311,7 @@ horaria configurada. Para pruebas el builder puede inyectar un `Clock`.
   "progress":null,"neverAttendedCount":0,
   "openIntervention":null,
   "estimatedDate":null,"yearCount":null,
-  "suggestedDate":"2026-11-08"}]
+  "suggestedDate":"2026-11-08","assignmentId":71,"ruleKey":"6f0c…"}]
 ```
 
 - `state`: `NOT_DUE`, `DUE`, `OVERDUE`, `IN_PROGRESS`, `SCHEDULED`, `DONE_FOR_PERIOD` (§5.5).
@@ -276,6 +321,7 @@ horaria configurada. Para pruebas el builder puede inyectar un `Clock`.
 - `openIntervention`: `{"id":81,"code":"INT-000081","scheduledDate":"2026-11-05"}` con
   `IN_PROGRESS` o `SCHEDULED`.
 - `suggestedDate`: la fecha que el registro de intervención propone (§5.6).
+- `assignmentId`, `ruleKey`: la asignación de la tarjeta y su regla (nula si quedó sin frecuencia).
 
 ### 3.3 Atendido hace poco
 
@@ -285,12 +331,23 @@ horaria configurada. Para pruebas el builder puede inyectar un `Clock`.
 [{"zoneId":113,"displayName":"Sección 113","lastDate":"2026-11-05","daysSinceLast":3,"minDays":30}]
 ```
 
-### 3.4 Decisiones que el código no explica
+### 3.4 Asignaciones
+
+`POST /api/v1/maintenance/planning/assignments` — `{"setId":3,"frequencyId":12}` → 201 con
+`{"id":71,"setId":3,"setName":"…","activityTypeItemId":30,"activityLabel":"…","ruleKey":"…","warnings":[]}`.
+`PUT …/{id}` — `{"frequencyId":14}`: cambia la regla; debe ser de la misma actividad (422 si no).
+`DELETE …/{id}`: baja lógica. `GET …?ruleKey=` filtra por regla.
+- 409 si el conjunto ya tiene una asignación de esa actividad: se cambia, no se duplica.
+- 422 si la frecuencia no es la versión vigente, es tercerizada o es a demanda (D-10).
+- `warnings` avisa, sin bloquear, si un jardín del conjunto está en otro conjunto con otra
+  regla de la misma actividad (D-08).
+
+### 3.5 Decisiones que el código no explica
 
 - La planificación se calcula al pedirla; no se guarda. Son a lo sumo unos cientos de filas
   (conjuntos × actividades) y el cálculo es aritmética sobre una consulta agregada.
-- `DELETE` de un conjunto con una regla propia vigente responde 422: primero se quita la regla.
-  Así nunca queda una regla apuntando a un conjunto dado de baja.
+- `DELETE` de un conjunto quita sus asignaciones (D-16): un conjunto dado de baja deja de
+  planificarse.
 - `zoneIds` que no sean secciones activas → 422 con la lista de ids rechazados.
 
 ## 4. Migración de base de datos
@@ -375,6 +432,19 @@ Producción no tiene reglas sembradas (solo `dev-migration/R__seed_demo_reports.
 usuario pudo crearlas desde la pantalla: por eso la conversión es obligatoria y no un borrado.
 El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_id`.
 
+### 4.1 V041 — asignaciones (D-16, D-17)
+
+1. `maintenance_frequencies.rule_key UUID NOT NULL DEFAULT gen_random_uuid()`: las versiones
+   existentes de una misma regla (misma actividad, modalidad, alcance y conjunto) comparten clave.
+2. Fuera `chk_freq_set_required` y el índice único por conjunto; nuevos índices: una regla de
+   todo el campus vigente por actividad y modalidad, y una versión vigente por regla.
+   `green_area_set_id` se conserva para el histórico, sin uso.
+3. `planning_assignments (set_id, activity_type_item_id, frequency_rule_key)` con una activa por
+   conjunto y actividad.
+4. Conversión sin perder tarjetas: cada actividad de un conjunto pasa a una asignación a la regla
+   de todo el campus de personal propio (o sin regla); cada regla propia de un conjunto pasa a
+   ser su asignación y manda sobre la anterior. `green_area_set_activities` deja de usarse.
+
 ## 5. Comportamiento
 
 ### 5.1 Flujo principal: planificar la semana
@@ -392,31 +462,66 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
 
 ### 5.2 Flujo: crear un conjunto
 
-1. `/intervenciones/conjuntos` → «Nuevo conjunto».
-2. Abre el selector de jardines sobre el mapa: clic para agregar o quitar, arrastre para
-   seleccionar por área, buscador por nombre. La lista de seleccionados y el mapa siempre
-   coinciden.
-3. Nombre (obligatorio, único sin distinguir mayúsculas), descripción opcional y las
-   actividades que se planifican en él (al menos una). Nombre y descripción van en una fila. Las
-   actividades se eligen por grupo: el grupo muestra cuántas lleva elegidas y sus actividades se
-   marcan como chips; las elegidas se resumen abajo y se quitan con un clic. El grupo nunca se
-   elige. El formulario muestra los jardines elegidos primero, resumidos por sector.
-4. Guardar → si algún jardín queda bajo dos reglas propias de la misma actividad, se muestra el
-   aviso de D-08 junto con la confirmación.
+1. `/intervenciones/conjuntos` → «+ Nuevo conjunto».
+2. Abre el selector de jardines sobre el mapa: clic para agregar o quitar, **Ctrl + arrastrar**
+   para elegir varios (si todo lo que encierra el rectángulo ya estaba elegido, lo quita, con
+   «Deshacer»; si no, agrega lo que falta), buscador por nombre. No hay botón de selección
+   múltiple; la rueda acerca y aleja también con Ctrl apretado. La lista de seleccionados y el
+   mapa siempre coinciden.
+3. Nombre (obligatorio, único sin distinguir mayúsculas) y descripción opcional, en una fila.
+   Sin actividades (D-16). Lo elegido se resume por tipo: los jardines, y los ejemplares de cada
+   tipo (Palmera, Árbol…); «Ver en el mapa» lo muestra recorrido por grupos (D-18).
+   El título dice qué se hace («Nuevo conjunto de áreas verdes», «Editar conjunto de áreas
+   verdes») sin repetir el nombre, que se pide en «Datos del conjunto». «Cambiar jardines y
+   ejemplares» (abre el selector) y «Ver en el mapa / Ocultar mapa» (solo mirar) son botones
+   distintos, con su ícono y a cada lado.
+4. Los botones van donde en el resto del sistema, al pie del formulario: «Eliminar conjunto» a la
+   izquierda; «Cancelar» y «Guardar conjunto» a la derecha. Guardar vuelve a la lista.
+5. La tarjeta de cada conjunto dice qué contiene y sus ejemplares por tipo, sin sector ni
+   planificación. Al pie, alineados entre tarjetas: «Eliminar» (con confirmación) y «Ver en el
+   mapa».
 
 ### 5.3 Flujo: configurar cada cuánto
 
 `/intervenciones/frecuencias` mantiene la pantalla de SPEC-101 con tres cambios:
 
-- Nuevo campo «Se aplica a»: **Todo el campus** o **Un conjunto** (selector de conjuntos). Las
-  filas con conjunto muestran la etiqueta «propio de este conjunto». Es el único lugar donde
-  aparece esa etiqueta.
+- «Se aplica a» y «Modalidad de ejecución» se eligen con radios; por defecto **Solo algunas
+  áreas** y **Personal propio**. «Solo algunas áreas» no pide elegirlas: se eligen al crear cada
+  planificación (D-19). La tabla no nombra conjuntos. Al editar una frecuencia que se usa, un
+  aviso dice «Esta frecuencia se usa en N planificaciones: el cambio vale para todas» con
+  «Ver en Planificación» (filtrada por su actividad).
+- Desactivar pide confirmación en una ventana del sistema, no en la alerta del navegador; igual
+  que eliminar una planificación y eliminar un conjunto.
+- Crear y editar una frecuencia es una página propia (`/intervenciones/frecuencias/nueva` y
+  `/{id}`), no un pop-up; al guardar vuelve a la lista con el aviso.
 - Sin «Teórico» (D-06).
 - Sin el panel «Cumplimiento por lugar atendido»: lo reemplaza la planificación.
 - La actividad se elige en dos pasos, grupo y luego actividad. La tabla usa `DataTable` con
   columnas «Actividad», «Quién la ejecuta», «Frecuencia» (tipo, cada cuánto y duración),
   «Se aplica a» y «Vigente desde»; la fila se abre con un clic y «Desactivar» está dentro del
   formulario (10 nov 2026).
+
+### 5.3.1 Flujo: nueva planificación
+
+1. Planificación → «+ Nueva planificación» → `/intervenciones/planificacion/nueva`.
+2. Se elige el conjunto y la actividad; luego aparecen las frecuencias de esa actividad, con la
+   de todo el campus propuesta. Las tercerizadas y a demanda se ven desactivadas.
+3. Si el conjunto ya tiene esa actividad, se avisa y se edita esa planificación; si ya tiene la
+   misma frecuencia, se dice y no hay nada que guardar.
+4. Cada tarjeta lleva botones del sistema: «Editar» (`/intervenciones/planificacion/{id}`, con
+   conjunto y actividad fijos) y «Eliminar» (con confirmación) a la izquierda; a la derecha
+   «Planificar intervención», «Ver intervención» o, sin frecuencia, «Completar planificación».
+   Sus datos dicen «Última vez», «Contiene» y «Suele realizarse».
+
+### 5.3.2 Filtros de la planificación
+
+- Buscar conjunto (por nombre, sin distinguir mayúsculas ni tildes), Actividad y Estado. Las
+  opciones salen de las tarjetas que hay.
+- Los filtros van en la URL (`?conjunto=&actividad=&estado=`). «Ver en Planificación», desde una
+  frecuencia, abre la planificación con su actividad puesta.
+- Con algún filtro se lee «Mostrando X de Y planificaciones» y «Ver todas» los quita.
+- El número de planificaciones que usan una frecuencia cuenta solo las que tienen tarjeta: un
+  conjunto que se quedó sin jardines ni ejemplares activos no aparece, así que tampoco cuenta.
 
 ### 5.4 Última vez de un jardín
 

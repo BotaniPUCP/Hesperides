@@ -10,6 +10,7 @@ import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetRequest;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Detail;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.ElementRef;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Summary;
+import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.TypeCount;
 import pe.edu.pucp.hesperides.modules.planning.sets.entity.GreenAreaSet;
 import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetQueries;
 import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetsRepository;
@@ -35,8 +36,7 @@ public class GreenAreaSetsServiceImpl implements GreenAreaSetsService {
     private final UsersRepository users;
     private final AuditService audit;
 
-    private record Validated(String name, String description, List<Long> zoneIds, List<Long> elementIds,
-                             List<Long> activityIds) {
+    private record Validated(String name, String description, List<Long> zoneIds, List<Long> elementIds) {
     }
 
     @Override
@@ -44,11 +44,10 @@ public class GreenAreaSetsServiceImpl implements GreenAreaSetsService {
     public List<Summary> list() {
         Map<Long, Integer> zones = queries.activeZoneCounts();
         Map<Long, Integer> elements = queries.activeElementCounts();
-        Map<Long, List<String>> sectors = queries.sectorNames();
+        Map<Long, List<TypeCount>> types = queries.specimenTypes();
         return sets.findAllActive().stream().map(s -> new Summary(s.getId(), s.getName(), s.getDescription(),
                 zones.getOrDefault(s.getId(), 0), elements.getOrDefault(s.getId(), 0),
-                sectors.getOrDefault(s.getId(), List.of()), queries.activitiesOf(s.getId()), s.getVersion(),
-                s.getUpdatedAt())).toList();
+                types.getOrDefault(s.getId(), List.of()), s.getVersion(), s.getUpdatedAt())).toList();
     }
 
     @Override
@@ -86,9 +85,7 @@ public class GreenAreaSetsServiceImpl implements GreenAreaSetsService {
     @Transactional
     public void delete(long id) {
         GreenAreaSet set = load(id);
-        if (queries.hasCurrentOwnRule(id)) {
-            throw new BusinessRuleException("Quita primero la frecuencia propia de este conjunto");
-        }
+        queries.retireAssignments(id);
         set.softDelete();
         sets.save(set);
         audit.record(AuditActionCode.GREEN_AREA_SET_DELETED, ENTITY, id, Map.of());
@@ -101,19 +98,17 @@ public class GreenAreaSetsServiceImpl implements GreenAreaSetsService {
         if (zones.isEmpty() && elements.isEmpty()) {
             throw new BusinessRuleException("Elige al menos un jardín o un ejemplar");
         }
-        List<Long> activities = GreenAreaSetRules.distinctIds(r.activityTypeItemIds(), "Elige al menos una actividad");
         if (!zones.isEmpty()) {
             GreenAreaSetRules.rejectAny(queries.nonSections(zones), "Solo se pueden agregar secciones: ");
         }
         if (!elements.isEmpty()) {
             GreenAreaSetRules.rejectAny(queries.invalidElements(elements), "Ejemplares no válidos: ");
         }
-        GreenAreaSetRules.rejectAny(queries.invalidActivities(activities), "Actividades no válidas: ");
         if (sets.existsActiveNameIgnoringCase(name, excludeId)) {
             throw new BusinessRuleException("Ya existe un conjunto con ese nombre");
         }
         String description = r.description() == null || r.description().isBlank() ? null : r.description().trim();
-        return new Validated(name, description, zones, elements, activities);
+        return new Validated(name, description, zones, elements);
     }
 
     private GreenAreaSet persist(GreenAreaSet set, Validated v) {
@@ -122,14 +117,12 @@ public class GreenAreaSetsServiceImpl implements GreenAreaSetsService {
         GreenAreaSet saved = sets.save(set);
         queries.replaceZones(saved.getId(), v.zoneIds());
         queries.replaceElements(saved.getId(), v.elementIds());
-        queries.replaceActivities(saved.getId(), v.activityIds());
         return saved;
     }
 
     private Detail detail(GreenAreaSet s) {
-        return new Detail(s.getId(), s.getName(), s.getDescription(), s.getVersion(), queries.activitiesOf(s.getId()),
-                queries.zonesOf(s.getId()), queries.elementsOf(s.getId()),
-                GreenAreaSetRules.crossWarnings(queries.overlaps(s.getId())));
+        return new Detail(s.getId(), s.getName(), s.getDescription(), s.getVersion(),
+                queries.zonesOf(s.getId()), queries.elementsOf(s.getId()), List.of());
     }
 
     private static Map<String, Object> counts(Validated v) {

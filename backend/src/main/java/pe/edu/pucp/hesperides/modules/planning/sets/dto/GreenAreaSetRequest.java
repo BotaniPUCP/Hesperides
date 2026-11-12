@@ -14,6 +14,5 @@ public record GreenAreaSetRequest(
         @Size(max = 2000, message = "La descripción no puede pasar de 2000 caracteres") String description,
         List<Long> zoneIds,
         List<Long> elementIds,
-        List<Long> activityTypeItemIds,
         @PositiveOrZero Long version) {
 }

@@ -10,8 +10,8 @@ FROM zones z
 WHERE t.code = 'DEMO-INC-1' AND t.deleted_at IS NULL AND t.zone_id IS NULL
   AND z.code = 'SEC-VERDE-02' AND z.deleted_at IS NULL;
 
--- 2. Three frequencies: one evaluable by place, one outsourced and one for a set of the
---    sector's sections (SPEC-203 D-07). The set is created once and reused.
+-- 2. Three frequencies: one evaluable by place, one outsourced and one for sets (SPEC-203),
+--    assigned in planning to a set of the sector's sections. The set is created once and reused.
 INSERT INTO green_area_sets (name, description)
 SELECT 'Sector verde 02 (demostración)', 'Conjunto de demostración de reportes (SPEC-202)'
 WHERE NOT EXISTS (SELECT 1 FROM green_area_sets WHERE name = 'Sector verde 02 (demostración)' AND deleted_at IS NULL);
@@ -25,18 +25,9 @@ WHERE s.name = 'Sector verde 02 (demostración)' AND s.deleted_at IS NULL
   AND NOT EXISTS (SELECT 1 FROM green_area_set_zones gz WHERE gz.set_id = s.id AND gz.zone_id = child.id
                   AND gz.deleted_at IS NULL);
 
-INSERT INTO green_area_set_activities (set_id, activity_type_item_id)
-SELECT s.id, activity.id
-FROM green_area_sets s
-JOIN catalog_types activity_type ON activity_type.code = 'INTERVENTION_TYPE'
-JOIN catalog_items activity ON activity.catalog_type_id = activity_type.id AND activity.code = 'RIEGO_MANUAL'
-WHERE s.name = 'Sector verde 02 (demostración)' AND s.deleted_at IS NULL
-  AND NOT EXISTS (SELECT 1 FROM green_area_set_activities ga WHERE ga.set_id = s.id
-                  AND ga.activity_type_item_id = activity.id AND ga.deleted_at IS NULL);
-
 INSERT INTO maintenance_frequencies (activity_type_item_id, frequency_rule_type_item_id, regime, scope,
-    green_area_set_id, min_days_interval, max_days_interval, valid_from, notes)
-SELECT activity.id, rule.id, f.regime, f.scope, demo_set.id, 1, 10, DATE '2026-01-01',
+    min_days_interval, max_days_interval, valid_from, notes)
+SELECT activity.id, rule.id, f.regime, f.scope, 1, 10, DATE '2026-01-01',
        'Frecuencia de demostración de reportes (SPEC-202)'
 FROM (VALUES
     ('PODA_MANTENIMIENTO', 'IN_HOUSE', 'CAMPUS_WIDE'),
@@ -48,12 +39,22 @@ JOIN catalog_items activity ON activity.catalog_type_id = activity_type.id
     AND activity.code = f.type_code AND activity.deleted_at IS NULL
 JOIN catalog_types rule_type ON rule_type.code = 'FREQUENCY_RULE_TYPE'
 JOIN catalog_items rule ON rule.catalog_type_id = rule_type.id AND rule.code = 'INTERVAL_DAYS'
-LEFT JOIN green_area_sets demo_set ON f.scope = 'BY_SET'
-    AND demo_set.name = 'Sector verde 02 (demostración)' AND demo_set.deleted_at IS NULL
 WHERE NOT EXISTS (SELECT 1 FROM maintenance_frequencies m
     WHERE m.activity_type_item_id = activity.id AND m.regime = f.regime AND m.scope = f.scope
-      AND COALESCE(m.green_area_set_id, 0) = COALESCE(demo_set.id, 0)
       AND m.deleted_at IS NULL AND m.valid_to IS NULL);
+
+-- The demo set plans RIEGO_MANUAL with the frequency for sets (SPEC-203 §3.4).
+INSERT INTO planning_assignments (set_id, activity_type_item_id, frequency_rule_key)
+SELECT s.id, f.activity_type_item_id, f.rule_key
+FROM green_area_sets s
+JOIN catalog_types activity_type ON activity_type.code = 'INTERVENTION_TYPE'
+JOIN catalog_items activity ON activity.catalog_type_id = activity_type.id AND activity.code = 'RIEGO_MANUAL'
+JOIN maintenance_frequencies f ON f.activity_type_item_id = activity.id AND f.scope = 'BY_SET' AND f.regime = 'IN_HOUSE'
+    AND f.valid_to IS NULL AND f.deleted_at IS NULL
+WHERE s.name = 'Sector verde 02 (demostración)' AND s.deleted_at IS NULL
+  AND NOT EXISTS (SELECT 1 FROM planning_assignments pa WHERE pa.set_id = s.id
+                  AND pa.activity_type_item_id = activity.id AND pa.deleted_at IS NULL)
+LIMIT 1;
 
 -- 3. Twelve works. Each location names its sector and the n-th section of that sector by code.
 --    m0 is the first day of the current month and p0 the first day of the previous one.

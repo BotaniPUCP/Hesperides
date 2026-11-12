@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { PlanningRow } from '@shared/types';
-import { Badge, type BadgeColor } from '@/components/ui';
+import { Badge, Button, type BadgeColor } from '@/components/ui';
 import { cn } from '@/lib/cn';
 import { contentsLabel, historyLine, rhythmText, stateDetail, stateLabel } from './planningTexts';
 
@@ -18,7 +18,8 @@ const TONE: Record<PlanningRow['state'], BadgeColor> = {
 };
 
 const PLANNABLE: PlanningRow['state'][] = ['OVERDUE', 'DUE', 'NOT_DUE'];
-const FREQUENCIES_PATH = '/intervenciones/frecuencias';
+export const NEW_PLANNING_PATH = '/intervenciones/planificacion/nueva';
+export const planningPath = (assignmentId: number) => `/intervenciones/planificacion/${assignmentId}`;
 
 export function planHref(row: PlanningRow): string {
   return `/intervenciones/nueva?conjunto=${row.setId}&actividad=${row.activityTypeItemId}`;
@@ -28,13 +29,15 @@ interface Props {
   row: PlanningRow;
   selected: boolean;
   onSelect: () => void;
+  /** Eliminar la planificación; la pantalla confirma y recarga. */
+  onRemove?: () => void;
 }
 
 /**
  * Una actividad de un conjunto y cuándo hay que hacerla (SPEC-203 §7). Todas las tarjetas
  * tienen la misma forma: actividad y conjunto a la izquierda, estado a la derecha, tres datos y una acción.
  */
-export function PlanningCard({ row, selected, onSelect }: Props) {
+export function PlanningCard({ row, selected, onSelect, onRemove }: Props) {
   const history = historyLine(row);
   const rhythm = rhythmText(row);
   const detail = stateDetail(row).replace(/^\((.*)\)$/, '$1');
@@ -55,10 +58,10 @@ export function PlanningCard({ row, selected, onSelect }: Props) {
         <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 rounded-md bg-neutral-50 px-3 py-2 text-xs sm:grid-cols-3">
           <Datum label={history.label} value={history.value} />
           <Datum label="Contiene" value={contentsLabel(row.zoneCount, row.elementCount)} />
-          {rhythm && <Datum label="Frecuencia" value={rhythm} />}
+          {rhythm && <Datum label="Suele realizarse" value={rhythm} />}
         </dl>
       </button>
-      <Action row={row} />
+      <Actions row={row} onRemove={onRemove} />
     </li>
   );
 }
@@ -72,17 +75,31 @@ function Datum({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** La única acción de la tarjeta, siempre abajo: planificar, ver lo abierto o configurar la frecuencia. */
-function Action({ row }: { row: PlanningRow }) {
+/**
+ * Abajo, siempre igual: a la izquierda cambiar o quitar la asignación; a la derecha
+ * la acción principal (planificar, ver lo abierto o elegir la frecuencia).
+ */
+function Actions({ row, onRemove }: { row: PlanningRow; onRemove?: () => void }) {
+  const router = useRouter();
+  const change = planningPath(row.assignmentId);
+  const where = `${row.activityLabel ?? 'la actividad'} en ${row.setName}`;
   let action = null;
   if (row.openIntervention) {
-    action = <Link href={`/intervenciones/${row.openIntervention.id}`} className="text-xs font-semibold text-brand-700 underline">
-      Ver intervención {row.openIntervention.code}</Link>;
+    const { id, code } = row.openIntervention;
+    action = <Button variant="secondary" size="sm" onClick={() => router.push(`/intervenciones/${id}`)}>Ver intervención {code}</Button>;
   } else if (PLANNABLE.includes(row.state)) {
-    action = <Link href={planHref(row)} className="inline-block rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700">
-      Planificar intervención</Link>;
+    action = <Button size="sm" onClick={() => router.push(planHref(row))}>Planificar intervención</Button>;
   } else if (row.state === 'NOT_CONFIGURED') {
-    action = <Link href={FREQUENCIES_PATH} className="text-xs font-semibold text-brand-700 underline">Configurar frecuencia</Link>;
+    action = <Button size="sm" onClick={() => router.push(change)}>Completar planificación</Button>;
   }
-  return action && <div className="flex justify-end border-t border-neutral-200 px-4 py-2">{action}</div>;
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 px-4 py-2">
+      {row.state !== 'NOT_CONFIGURED' && (
+        <Button variant="secondary" size="sm" aria-label={`Editar la planificación de ${where}`} onClick={() => router.push(change)}>
+          Editar</Button>
+      )}
+      {onRemove && <Button variant="ghost" size="sm" aria-label={`Eliminar la planificación de ${where}`} onClick={onRemove}>Eliminar</Button>}
+      <span className="ml-auto">{action}</span>
+    </div>
+  );
 }
