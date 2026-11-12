@@ -67,10 +67,10 @@ se ejecuta `scripts/mapa/generar_semilla_mapa.py` (reescribiría `V011`).
 
 ## Tests
 
-Con el Python del entorno, desde la raíz del repositorio (tarda cerca de 1,5 minutos):
+Con el Python del entorno de la sección «Preparación», desde la raíz del repositorio (tarda cerca de 1,5 minutos):
 
 ```bash
-$PY -I -X utf8 -m unittest discover -s scripts/mapa/plano_pucp/pruebas -v
+../plano-pucp-datos/.venv/Scripts/python -I -X utf8 -m unittest discover -s scripts/mapa/plano_pucp/pruebas -v
 ```
 
 ## Lo que hay que saber del plano

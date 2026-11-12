@@ -442,6 +442,7 @@ Visor
 | P-10 | **Páginas de equivalencias (`map3d/equivalence/*`):** el banco de trabajo y la vista unificada leen `campusBuildings` y ya no ven a los edificios agrupados. Jean Piero decide si las adapta |
 | P-11 | **Principales nuevos «Desconocido_*»:** quedan con `is_inferred_name = false`, aunque el nombre es un marcador. Nicolás o Jean Piero deciden su nombre real o si deben marcarse como deducidos |
 | P-12 | **Pabellón C (relación del código 2):** queda fuera por D-05. Nicolás confirma que no debe volver |
+| P-13 | **Test heredado `frontend/src/lib/__tests__/rawApiMessages.test.ts` en rojo:** señala tres usos del `error.message` crudo en las herramientas de equivalencias: `frontend/src/components/map3d/equivalence/EquivalenceWorkbench.tsx:80`, `frontend/src/components/map3d/equivalence/portableApp.ts:93` y `frontend/src/components/map3d/equivalence/UnifiedWorkbench.tsx:38`. Viene del commit 662eb6e y esta rama no toca esos archivos. Jean Piero decide si los adapta o los excluye del test |
 
 ### 9.2 Para el equipo
 
