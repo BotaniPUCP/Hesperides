@@ -23,7 +23,7 @@
 | SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 5, falta verificar en navegador | —          | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
-| SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
+| SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 2 (Semanal, Mensual y Resumen para OSG con gráficos y datos de demostración); falta verificar en navegador real por rol | —          | S4     |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
 
@@ -188,10 +188,12 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V031 | `V031__add_species_criticality_and_averages.sql` | SPEC-105 §4.2 | Criticidad y promedios por especie, con la fuente de cada valor, y corrección del tipo de dos especies |
 | V032 | `V032__add_measurement_origin.sql` | SPEC-105 §4.3 | Origen de cada fila del historial de mediciones y la intervención que la registró |
 | V033 | `V033__create_extra_measures.sql` | SPEC-105 §4.4 | Catálogo de medidas adicionales, su asignación por especie y sus valores por medición |
+| V034 | `V034__places_span_buildings_and_children.sql` | Catálogo de lugares (cabecera SQL) | Un lugar con varios edificios (`place_buildings`) o con el contorno de sus hijos |
+| V035 | `V035__seed_report_targets.sql` | SPEC-202 §4 | Metas del resumen de reportes: `REPORT_COVERAGE_TARGET_PERCENT` y `REPORT_IRRIGATION_TARGET_PERCENT` (100), editables de 1 a 100 |
 
 ### Pendientes (sin número reservado)
 
-Al 6 nov 2026 el siguiente número libre es **V034**, sujeto a comprobarlo nuevamente al
+Al 12 nov 2026 el siguiente número libre es **V036**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
@@ -202,7 +204,6 @@ Los números en citas históricas de otros specs no autorizan reutilizar version
 | Contratos y proveedores | SPEC-002 §4.7 | Intervenciones; definir la FK cuando ambas tablas existan |
 | Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
 | Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
-| Metas del resumen de reportes (dos filas en `system_parameters`, sin tablas) | SPEC-202 §4 | Solo datos; se numera al implementar el módulo de reportes |
 | Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
 
 Las antiguas pendientes `add_execution_tracking_to_interventions`,
