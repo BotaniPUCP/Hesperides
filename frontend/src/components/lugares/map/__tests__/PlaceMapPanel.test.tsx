@@ -31,7 +31,7 @@ jest.mock('@/components/map3d/Map3DView', () => ({
 function fakeViewer(): jest.Mocked<Viewer> {
   return {
     setPaint: jest.fn(), setMarkedSections: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
-    setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), fit: jest.fn(), top: jest.fn(),
+    setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), setRealColors: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), setViewCones: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(),
     flyToPose: jest.fn(), dispose: jest.fn(),
     pose: jest.fn(() => ({ position: [10, 222, 30] as [number, number, number], target: [0, 22, 0] as [number, number, number] })),

@@ -5,6 +5,7 @@ export interface ViewOptions {
   shadows: boolean;
   labels: boolean;
   grayBuildings: boolean;
+  realColors: boolean;
 }
 
 export interface MapToolbarProps {
@@ -22,6 +23,7 @@ const OPTION_LABELS: Record<keyof ViewOptions, string> = {
   shadows: 'Sombras',
   labels: 'Nombres',
   grayBuildings: 'Edificios grises',
+  realColors: 'Colores reales',
 };
 
 const button = 'rounded-md bg-neutral-0/95 px-2 py-1 text-xs text-neutral-700 shadow hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600';

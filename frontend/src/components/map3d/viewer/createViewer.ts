@@ -22,6 +22,8 @@ import { createViewCones } from './viewCones';
 import { sectionPoints } from './frameFit';
 import { sectionCodesInScreenRect } from './screenRectSections';
 import type { Viewer, ViewerCallbacks } from './viewerTypes';
+import { BUILDING_LOOKS } from '../realLook/looks';
+import { createRealColors, NEUTRAL, setEdgesForRealColors } from '../realLook/realColors';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
 
@@ -62,6 +64,11 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const buildingColor = poly.campusBuildings.options.color;
   poly.campusBuildings.options.color = (i) => markedBuildings.has(i)
     ? MARKED_COLOR : buildingColor(i);
+  const realColors = createRealColors(poly.campusBuildings, data.campusBuildings.map((b) => ({ planKey: b.props.planKey ?? null, g: b.g })), BUILDING_LOOKS);
+  const paletteColor = poly.campusBuildings.options.color;
+  // En modo real el edificio con ficha se pinta neutro: el shader pone su color, y el resaltado lo tiñe.
+  poly.campusBuildings.options.color = (i) => realColors.enabled() && realColors.hasLook(i) && !markedBuildings.has(i)
+    ? NEUTRAL : paletteColor(i);
   const points = createCampusPoints(scene, data, center);
   const foliage = createFoliageMaterials(textures);
   const vegetation = createVegetationLayer(scene, data.vegetation, foliage, model?.sunken);
@@ -217,6 +224,12 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     },
     setLabels: (on) => { labelsOn = on; needsRender = true; },
     setGrayBuildings: (v) => { gray = v; applyTheme(); },
+    setRealColors(on) {
+      realColors.setEnabled(on);
+      setEdgesForRealColors(poly.campusBuildings.extra, on);
+      highlight.repaint('campusBuildings');
+      needsRender = true;
+    },
     fit: rig.fit, top: rig.top, north: rig.north, toggleSpin: rig.toggleSpin, pose: rig.pose, flyToPose: rig.flyToPose,
     setViewCones(list) {
       cones.set(list.map((c) => { const p = data.plane.toPlane(c.lat, c.lon); return { id: c.id, x: p.x, z: -p.y, headingDeg: c.headingDeg }; }));
