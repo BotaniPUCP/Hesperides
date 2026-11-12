@@ -487,9 +487,11 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
 
 - «Se aplica a» y «Modalidad de ejecución» se eligen con radios; por defecto **Solo algunas
   áreas** y **Personal propio**. «Solo algunas áreas» no pide elegirlas: se eligen al crear cada
-  planificación (D-19). La tabla no nombra conjuntos. Al editar una frecuencia que se usa, un
-  aviso dice «Esta frecuencia se usa en N planificaciones: el cambio vale para todas» con
-  «Ver en Planificación» (filtrada por su actividad).
+  planificación (D-19). La tabla no nombra conjuntos. Al editar, un solo aviso junto a los
+  botones dice «El cambio rige desde hoy y se aplica a las N planificaciones que usan esta
+  frecuencia (ver en Planificación). Los reportes de meses anteriores mantienen la frecuencia
+  vigente en su momento.»; la segunda frase solo si ya rigió días (D-17). El tipo y su intervalo van en la
+  columna izquierda; la duración y las notas, en la derecha.
 - Desactivar pide confirmación en una ventana del sistema, no en la alerta del navegador; igual
   que eliminar una planificación y eliminar un conjunto.
 - Crear y editar una frecuencia es una página propia (`/intervenciones/frecuencias/nueva` y

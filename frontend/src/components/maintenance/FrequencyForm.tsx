@@ -88,21 +88,6 @@ export function FrequencyForm({ frequencyToEdit, activities, ruleTypes, onSubmit
   return (
     <Card>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {creaVersionNueva && (
-          <div className="rounded-md border border-alert-warning-border bg-alert-warning-bg p-3 text-xs text-alert-warning-fg">
-            Los periodos ya evaluados conservan la configuración anterior. Al guardar se crea una
-            versión nueva vigente desde hoy, y el historial anterior queda intacto.
-          </div>
-        )}
-        {/* Editar una frecuencia cambia todas las planificaciones que la usan: se avisa antes de guardar. */}
-        {f && f.assignedSetCount > 0 && (
-          <div role="note" className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
-            Esta frecuencia se usa en {planningsLabel(f.assignedSetCount)}: el cambio vale para {f.assignedSetCount === 1 ? 'ella' : 'todas'}.{' '}
-            <Link href={planningOfActivity(f.activityType.id)} className="font-medium text-brand-700 underline underline-offset-2">
-              Ver en Planificación</Link>
-          </div>
-        )}
-
         {error && <div role="alert" className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{error}</div>}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -115,27 +100,33 @@ export function FrequencyForm({ frequencyToEdit, activities, ruleTypes, onSubmit
 
           <FrequencyScopeFields scope={scope} onScope={setScope} />
 
-          <label className="block">
-            <span className={LABEL}>Tipo de frecuencia</span>
-            <select value={ruleTypeCode} onChange={(e) => setRuleTypeCode(e.target.value as FrequencyRuleTypeCode)} className={SELECT}>
-              {ruleTypes.map((r) => <option key={r.id} value={r.code}>{r.label}</option>)}
-            </select>
-          </label>
+          {/* El tipo y cada cuánto, juntos a la izquierda; la duración y las notas a la derecha: las dos columnas se llenan. */}
+          <div className="space-y-4">
+            <label className="block">
+              <span className={LABEL}>Tipo de frecuencia</span>
+              <select value={ruleTypeCode} onChange={(e) => setRuleTypeCode(e.target.value as FrequencyRuleTypeCode)} className={SELECT}>
+                {ruleTypes.map((r) => <option key={r.id} value={r.code}>{r.label}</option>)}
+              </select>
+            </label>
+            <RuleTypeFields ruleTypeCode={ruleTypeCode} state={fields} onChange={patchFields} />
+          </div>
 
-          <label className="block">
-            <span className={LABEL}>Duración estimada (días)</span>
-            <input type="number" min={1} value={estimatedDuration} onChange={(e) => setEstimatedDuration(e.target.value)}
-              placeholder="3" className={NUMBER} />
-          </label>
+          <div className="space-y-4">
+            <label className="block">
+              <span className={LABEL}>Duración estimada (días)</span>
+              <input type="number" min={1} value={estimatedDuration} onChange={(e) => setEstimatedDuration(e.target.value)}
+                placeholder="3" className={NUMBER} />
+            </label>
+            <label className="block">
+              <span className={LABEL}>Notas</span>
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4}
+                placeholder="Ej. En el verano de 2026 se cortó más seguido" className={INPUT} />
+            </label>
+          </div>
         </div>
 
-        <RuleTypeFields ruleTypeCode={ruleTypeCode} state={fields} onChange={patchFields} />
-
-        <label className="block">
-          <span className={LABEL}>Notas</span>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
-            placeholder="Ej. En el verano de 2026 se cortó más seguido" className={INPUT} />
-        </label>
+        {/* Qué pasa al guardar, junto al botón que lo hace: un solo aviso. */}
+        {f && <SaveNotice frequency={f} newVersion={creaVersionNueva} />}
 
         <div className="flex flex-wrap items-center gap-2 pt-2">
           {f && onDeactivate && (
@@ -153,5 +144,24 @@ export function FrequencyForm({ frequencyToEdit, activities, ruleTypes, onSubmit
       </form>
       {guard.dialog}
     </Card>
+  );
+}
+
+/**
+ * Lo que cambia al guardar una frecuencia que ya existe. Rige desde hoy para todas las
+ * planificaciones que la usan; si ya evaluó días, esos siguen con la versión anterior (SPEC-203 D-17).
+ */
+function SaveNotice({ frequency: f, newVersion }: { frequency: MaintenanceFrequency; newVersion: boolean }) {
+  const used = f.assignedSetCount;
+  if (!newVersion && used === 0) return null;
+  const plannings = used === 1 ? 'la planificación que usa' : `las ${planningsLabel(used)} que usan`;
+  return (
+    <p role="note" className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
+      {used > 0 ? <>
+        El cambio rige desde hoy y se aplica a {plannings} esta frecuencia{' '}
+        (<Link href={planningOfActivity(f.activityType.id)} className="font-medium text-brand-700 underline underline-offset-2">ver en Planificación</Link>).
+      </> : 'El cambio rige desde hoy.'}
+      {newVersion && ' Los reportes de meses anteriores mantienen la frecuencia vigente en su momento.'}
+    </p>
   );
 }

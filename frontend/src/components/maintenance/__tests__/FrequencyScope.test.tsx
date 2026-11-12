@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import type { MaintenanceFrequency } from '@shared/types';
 import { FrequenciesTable } from '../FrequenciesTable';
 import { FrequencyForm } from '../FrequencyForm';
+import { todayLocal } from '@/lib/local-date';
 
 const mockNavigate = jest.fn();
 jest.mock('@/components/forms/unsaved/useUnsavedChangesGuard', () => ({
@@ -102,16 +103,38 @@ describe('Frecuencias: dónde rigen (SPEC-203 D-16)', () => {
       expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'CAMPUS_WIDE', regime: 'OUTSOURCED' }));
     });
 
-    it('al editar avisa que el cambio vale para todas las planificaciones que la usan', () => {
+    it('al editar, un solo aviso junto a los botones dice desde cuándo rige y que el pasado no cambia', () => {
       render(<FrequencyForm frequencyToEdit={frequency} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
 
-      expect(screen.getByRole('note')).toHaveTextContent('Esta frecuencia se usa en 2 planificaciones: el cambio vale para todas.');
-      expect(screen.getByRole('link', { name: 'Ver en Planificación' }))
-        .toHaveAttribute('href', '/intervenciones/planificacion?actividad=30');
+      const notes = screen.getAllByRole('note');
+      expect(notes).toHaveLength(1);
+      expect(notes[0]).toHaveTextContent('El cambio rige desde hoy y se aplica a las 2 planificaciones que usan esta frecuencia (ver en Planificación). '
+        + 'Los reportes de meses anteriores mantienen la frecuencia vigente en su momento.');
+      expect(screen.getByRole('link', { name: 'ver en Planificación' })).toHaveAttribute('href', '/intervenciones/planificacion?actividad=30');
+      // Va después de los campos, justo antes de guardar.
+      const save = screen.getByRole('button', { name: 'Guardar versión' });
+      expect(notes[0].compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(screen.getByLabelText('Notas').compareDocumentPosition(notes[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
-    it('si no la usa ninguna planificación, no avisa', () => {
+    it('sin planificaciones que la usen, dice solo desde cuándo rige', () => {
       render(<FrequencyForm frequencyToEdit={{ ...frequency, assignedSetCount: 0 }} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
+
+      expect(screen.getByRole('note')).toHaveTextContent(/^El cambio rige desde hoy\. Los reportes de meses anteriores/);
+      expect(screen.queryByRole('link', { name: 'ver en Planificación' })).not.toBeInTheDocument();
+    });
+
+    it('una frecuencia creada hoy no tiene meses anteriores: no los menciona', () => {
+      const today = todayLocal();
+      render(<FrequencyForm frequencyToEdit={{ ...frequency, validFrom: today, assignedSetCount: 1 }} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
+
+      expect(screen.getByRole('note')).toHaveTextContent('El cambio rige desde hoy y se aplica a la planificación que usa esta frecuencia (ver en Planificación).');
+      expect(screen.getByRole('note')).not.toHaveTextContent('meses anteriores');
+    });
+
+    it('creada hoy y sin planificaciones, no hay nada que avisar', () => {
+      const today = todayLocal();
+      render(<FrequencyForm frequencyToEdit={{ ...frequency, validFrom: today, assignedSetCount: 0 }} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
 
       expect(screen.queryByRole('note')).not.toBeInTheDocument();
     });
