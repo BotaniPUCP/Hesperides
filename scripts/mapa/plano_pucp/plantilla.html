@@ -1,0 +1,739 @@
+<title>Plano PUCP vs mapa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: mesa de trabajo cartográfica. El mapa ocupa el centro; el panel de casos vive a la derecha (abajo en el teléfono). */
+:root {
+  --bg: #eef2ee;
+  --surface: #ffffff;
+  --map: #f9fbf8;
+  --ink: #16201a;
+  --muted: #5a685f;
+  --line: #d5ddd6;
+  --brand: #02591f;
+  --brand-ink: #ffffff;
+  --osm: #2a63c4;
+  --osm-muted: #a3afbd;
+  --plan: #16201a;
+  --huaca: #8a5a2b;
+  --jardin: #5f9e5f;
+  --capa0: #7c8794;
+  --muro: #b3261e;
+  /* Tipos de caso */
+  --t-coincide: #2f8f55;
+  --t-desplazado: #0f8a8c;
+  --t-forma: #c07c00;
+  --t-plano_agrupa: #4f56c9;
+  --t-osm_agrupa: #c2547a;
+  --t-mixto: #8a6a3a;
+  --t-solo_osm: #d23c30;
+  --t-solo_plano: #7b3fc0;
+  /* Alturas */
+  --h1: #f5e3a3; --h2: #efb45c; --h3: #dd7c3a; --h4: #b54a2c; --h5: #7a2a1f;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d120f; --surface: #151c17; --map: #101612; --ink: #e3eae4; --muted: #95a49a; --line: #28332b;
+    --brand: #5cc488; --brand-ink: #07140c; --osm: #72a7ff; --osm-muted: #4b5866; --plan: #e3eae4;
+    --huaca: #cb9b6b; --jardin: #7cbc7c; --capa0: #7f8c99; --muro: #ff7569;
+    --t-coincide: #52c47f; --t-desplazado: #3cc6c8; --t-forma: #f0b13d; --t-plano_agrupa: #8e95ff;
+    --t-osm_agrupa: #f07fa6; --t-mixto: #c9a36a; --t-solo_osm: #ff6b5d; --t-solo_plano: #c08cf5;
+    --h1: #4c3d18; --h2: #7f5c20; --h3: #b6722c; --h4: #e28e47; --h5: #ffc583;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d120f; --surface: #151c17; --map: #101612; --ink: #e3eae4; --muted: #95a49a; --line: #28332b;
+  --brand: #5cc488; --brand-ink: #07140c; --osm: #72a7ff; --osm-muted: #4b5866; --plan: #e3eae4;
+  --huaca: #cb9b6b; --jardin: #7cbc7c; --capa0: #7f8c99; --muro: #ff7569;
+  --t-coincide: #52c47f; --t-desplazado: #3cc6c8; --t-forma: #f0b13d; --t-plano_agrupa: #8e95ff;
+  --t-osm_agrupa: #f07fa6; --t-mixto: #c9a36a; --t-solo_osm: #ff6b5d; --t-solo_plano: #c08cf5;
+  --h1: #4c3d18; --h2: #7f5c20; --h3: #b6722c; --h4: #e28e47; --h5: #ffc583;
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+.app {
+  height: 100%; box-sizing: border-box; display: grid; grid-template-rows: auto 1fr; gap: 12px;
+  padding-block: 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+h1 { font-family: var(--font-head); font-weight: 600; font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); min-width: 0; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 12px; min-height: 0; }
+
+/* Mapa */
+.map { position: relative; min-height: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--map); }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; outline: none; }
+canvas.arrastrando { cursor: grabbing; }
+canvas.sobre-divisor { cursor: ew-resize; }
+canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--brand); }
+.overlay { position: absolute; display: flex; gap: 6px; pointer-events: none; }
+.overlay > * { pointer-events: auto; }
+.top-left { top: 10px; left: 10px; right: 64px; flex-wrap: wrap; }
+.top-right { top: 10px; right: 10px; flex-direction: column; }
+.bottom-right { bottom: 10px; right: 10px; }
+.modos { display: flex; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 2px; }
+.modos button, .zoom button {
+  font: 500 13px/1 var(--font-body); color: var(--ink); background: transparent; border: 0; border-radius: 6px; padding: 7px 10px; cursor: pointer;
+}
+.modos button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+.modos button:focus-visible, .zoom button:focus-visible, .chip:focus-visible, .fila:focus-visible, input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.zoom { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 2px; }
+.zoom button { width: 34px; height: 32px; padding: 0; font-size: 16px; }
+.zoom button.texto { font-size: 11px; }
+.leyenda { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 4px; font-size: 12px; max-width: 240px; }
+.leyenda div { display: flex; align-items: center; gap: 8px; }
+.leyenda .nota { display: block; }
+.muestra { width: 18px; height: 0; border-top: 3px solid; flex: none; }
+.muestra.relleno { height: 10px; border: 1.5px solid; border-radius: 2px; }
+.tooltip {
+  position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; font-size: 12px; max-width: 260px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.12); z-index: 3;
+}
+.tooltip strong { display: block; font-size: 13px; margin-bottom: 2px; }
+
+/* Panel */
+.panel { min-height: 0; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; }
+.panel section { padding: 14px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.panel section:last-child { border-bottom: 0; }
+h2 { font-family: var(--font-head); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin: 0; }
+dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 5px 12px; }
+dt { color: var(--muted); }
+dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; overflow-wrap: anywhere; }
+.nota { color: var(--muted); font-size: 12px; margin: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--font-body); color: var(--ink); background: transparent;
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.chip[aria-pressed="true"] { border-color: var(--ink); background: var(--bg); }
+.punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+input[type="search"] {
+  width: 100%; box-sizing: border-box; font: 400 13px var(--font-body); color: var(--ink); background: var(--map);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+}
+.lista { display: grid; gap: 2px; max-height: 360px; overflow-y: auto; margin: 0 -6px; padding: 0 6px; }
+.fila {
+  display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 10px; text-align: left; width: 100%;
+  font: inherit; color: var(--ink); background: transparent; border: 0; border-radius: 6px; padding: 7px 8px; cursor: pointer;
+}
+.fila:hover { background: var(--bg); }
+.fila[aria-current="true"] { background: var(--bg); box-shadow: inset 3px 0 0 var(--brand); }
+.fila .nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fila .dato { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.vacio { color: var(--muted); font-size: 13px; padding: 8px; }
+.detalle h3 { font-family: var(--font-head); font-size: 1.05rem; font-weight: 600; margin: 0; text-wrap: balance; }
+.estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.capas { display: grid; gap: 4px; }
+.capas label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.capas .grupo { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.capas input { accent-color: var(--brand); width: 15px; height: 15px; margin: 0; }
+.capas .linea { width: 16px; height: 0; border-top: 2.5px solid; flex: none; }
+code { font-size: 12px; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+
+@media (max-width: 880px) {
+  html, body { height: auto; }
+  .app { height: auto; }
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  .map { height: 64vh; min-height: 380px; }
+  .panel { overflow: visible; }
+  .leyenda { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Plano PUCP vs mapa</h1>
+    <p>El plano <code>PUCP_BASE_FINAL</code> (exportado desde SketchUp) ubicado sobre los edificios de OpenStreetMap que hoy usa Hesperides.</p>
+  </header>
+  <div class="workspace">
+    <div class="map" id="mapa">
+      <canvas id="lienzo" tabindex="0" aria-label="Mapa del campus: arrastra para moverte, rueda o pellizco para acercar, haz clic en un edificio para ver su caso"></canvas>
+      <div class="overlay top-left">
+        <div class="modos" role="group" aria-label="Forma de ver el plano">
+          <button type="button" id="modo-casos" data-modo="casos">Casos</button>
+          <button type="button" id="modo-cortina" data-modo="cortina">Cortina</button>
+          <button type="button" id="modo-superponer" data-modo="superponer">Superponer</button>
+          <button type="button" id="modo-alturas" data-modo="alturas">Alturas</button>
+        </div>
+      </div>
+      <div class="overlay top-right">
+        <div class="zoom">
+          <button type="button" id="acercar" aria-label="Acercar">+</button>
+          <button type="button" id="alejar" aria-label="Alejar">−</button>
+          <button type="button" id="encuadrar" class="texto" aria-label="Ver todo el campus">Todo</button>
+        </div>
+      </div>
+      <div class="overlay bottom-right"><div class="leyenda" id="leyenda"></div></div>
+      <div class="tooltip" id="tooltip" hidden></div>
+    </div>
+
+    <aside class="panel">
+      <section class="detalle" id="detalle" hidden></section>
+
+      <section>
+        <h2>Casos</h2>
+        <div class="chips" id="filtros" role="group" aria-label="Filtrar por tipo de caso"></div>
+        <input type="search" id="buscar" placeholder="Buscar por nombre, código del plano u OSM" aria-label="Buscar caso">
+        <div class="lista" id="lista"></div>
+        <p class="nota">Un edificio del plano y uno de OpenStreetMap se relacionan si al menos la mitad de uno queda dentro del otro. Coinciden si su superposición (IoU) llega al 75 %; están desplazados si centrarlos sube el IoU al menos 10 puntos y la distancia entre centros es de 2 m o más.</p>
+      </section>
+
+      <section>
+        <h2>Ubicación del plano</h2>
+        <dl id="ubicacion"></dl>
+        <p class="nota">Ajuste por ICP de las huellas de edificios del plano contra los contornos de OpenStreetMap del campus. El plano está en metros reales: dejar la escala libre da 1,00044.</p>
+      </section>
+
+      <section>
+        <h2>Capas</h2>
+        <div class="capas" id="capas"></div>
+      </section>
+
+      <section>
+        <h2>Lo que muestra el plano</h2>
+        <p class="nota">El plano trae <span id="con-volumen"></span>, separados uniendo las piezas 3D del modelo que se superponen en planta. El suelo del modelo está en z = 91,44 m: alturas y bases se miden desde ahí, y una base negativa es un sótano o una plaza hundida. En OpenStreetMap, una altura de 8 m sin pisos registrados es estimada.</p>
+        <p class="nota">La huella del plano es la proyección de todo el volumen (aleros y techos incluidos), por eso suele ser algo mayor que la de OpenStreetMap. Las alturas salen del modelo 3D (GLB); el DXF de líneas vino incompleto en altura. Hay además dos restos de geometría suelta 50 a 95 m al este del muro, sin área.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+(() => {
+  'use strict';
+  const D = JSON.parse(document.getElementById('datos').textContent);
+  const n1 = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  const n2 = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  const n0 = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 0 });
+  const pct = new Intl.NumberFormat('es-PE', { style: 'percent', maximumFractionDigits: 0 });
+  const signo = (v, f = n1) => (v < 0 ? '−' : '') + f.format(Math.abs(v));
+  const alto = (v) => `${n1.format(v)} m`;
+
+  const TIPOS = {
+    coincide: { texto: 'Coincide', explica: 'El mismo edificio en las dos fuentes, con casi la misma huella.' },
+    desplazado: { texto: 'Desplazado', explica: 'Misma forma en otra posición: al centrarlo sobre OpenStreetMap la superposición mejora mucho.' },
+    forma: { texto: 'Forma distinta', explica: 'El mismo edificio con otra huella: anexos, aleros o un contorno dibujado distinto.' },
+    plano_agrupa: { texto: 'El plano agrupa varios', explica: 'Un solo bloque del plano cubre varios edificios de OpenStreetMap. Es candidato a lugar combinado: los nombres, alias y lugares de esos edificios tendrían que decidir si se unen.' },
+    osm_agrupa: { texto: 'OSM agrupa varios', explica: 'Un edificio de OpenStreetMap corresponde a varias piezas del plano.' },
+    mixto: { texto: 'Mixto', explica: 'Varios edificios del plano y varios de OpenStreetMap se cruzan entre sí.' },
+    solo_osm: { texto: 'No está en el plano', explica: 'Edificio de OpenStreetMap sin nada del plano encima: puede estar demolido, no haberse construido o faltar en el plano.' },
+    solo_plano: { texto: 'Solo en el plano', explica: 'Edificio del plano sin equivalente en OpenStreetMap: puede ser nuevo o algo que OpenStreetMap no dibujó.' },
+  };
+  const ORDEN = Object.keys(TIPOS);
+  const CLASES_ALTO = [[0, 5], [5, 10], [10, 20], [20, 30], [30, Infinity]];
+  const claseAlto = (h) => CLASES_ALTO.findIndex(([a, b]) => (h ?? 0) >= a && (h ?? 0) < b);
+
+  // ---------- Datos ----------
+  const cajaDe = (anillos) => {
+    const c = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const a of anillos) for (const [x, y] of a) {
+      if (x < c[0]) c[0] = x; if (y < c[1]) c[1] = y; if (x > c[2]) c[2] = x; if (y > c[3]) c[3] = y;
+    }
+    return c;
+  };
+  const trazoAnillos = (anillos, p = new Path2D()) => {
+    for (const a of anillos) {
+      a.forEach(([x, y], j) => (j ? p.lineTo(x, y) : p.moveTo(x, y)));
+      p.closePath();
+    }
+    return p;
+  };
+  const trazoSegmentos = (plano) => {
+    const p = new Path2D();
+    for (let i = 0; i < plano.length; i += 4) { p.moveTo(plano[i], plano[i + 1]); p.lineTo(plano[i + 2], plano[i + 3]); }
+    return p;
+  };
+
+  const casoPorNumero = new Map(D.casos.map((c) => [c.numero, c]));
+  const unidadPorCodigo = new Map(D.edificios_plano.map((u) => [u.codigo, u]));
+  for (const c of D.casos) {
+    c.unidades = []; c.edificiosOsm = [];
+    c.trazoPlano = new Path2D(); c.trazoOsm = new Path2D();
+    const nombres = [...new Set(c.nombres)];
+    c.titulo = nombres.length ? nombres.join(' · ') : c.plano.length ? `Edificio ${c.plano.join(', ')} del plano` : c.osm.join(', ');
+    c.busqueda = [c.titulo, ...c.plano, ...c.osm].join(' ');
+  }
+  const T = { entorno: new Path2D(), campus: new Path2D(), unidades: new Path2D(), hundidos: new Path2D() };
+  T.osmTipo = Object.fromEntries(ORDEN.map((k) => [k, new Path2D()]));
+  T.planoTipo = Object.fromEntries(ORDEN.map((k) => [k, new Path2D()]));
+  T.alturas = CLASES_ALTO.map(() => new Path2D());
+  for (const b of D.osm) {
+    b.caja = cajaDe(b.anillos);
+    b.trazo = trazoAnillos(b.anillos);
+    b.c = casoPorNumero.get(b.caso) || null;
+    (b.campus ? T.campus : T.entorno).addPath(b.trazo);
+    if (b.c) { b.c.edificiosOsm.push(b); b.c.trazoOsm.addPath(b.trazo); T.osmTipo[b.c.tipo].addPath(b.trazo); }
+  }
+  for (const u of D.edificios_plano) {
+    u.caja = cajaDe(u.anillos);
+    u.trazo = trazoAnillos(u.anillos);
+    u.c = casoPorNumero.get(u.caso) || null;
+    T.unidades.addPath(u.trazo);
+    T.alturas[claseAlto(u.alto)].addPath(u.trazo);
+    if (u.base < -1) T.hundidos.addPath(u.trazo);
+    if (u.c) { u.c.unidades.push(u); u.c.trazoPlano.addPath(u.trazo); T.planoTipo[u.c.tipo].addPath(u.trazo); }
+  }
+  for (const c of D.casos) {
+    const anillos = [...c.unidades.flatMap((u) => u.anillos), ...c.edificiosOsm.flatMap((b) => b.anillos)];
+    c.cajaMapa = cajaDe(anillos);
+  }
+  for (const capa of Object.keys(D.plano)) T[capa] = trazoSegmentos(D.plano[capa]);
+  T.limite = trazoAnillos(D.limite);
+  const conteo = Object.fromEntries(ORDEN.map((k) => [k, D.casos.filter((c) => c.tipo === k).length]));
+  const cajaCampus = cajaDe([...D.limite, ...D.edificios_plano.flatMap((u) => u.anillos)]);
+
+  // ---------- Estado ----------
+  const CAPAS = [
+    { grupo: 'Plano PUCP' },
+    { id: 'unidades', texto: 'Edificios y casetas del plano', token: 'plan', on: true },
+    { id: 'muro', texto: 'Muro límite (L5)', token: 'muro', on: true },
+    { id: 'huacas', texto: 'Huacas (L6)', token: 'huaca', on: true },
+    { id: 'jardineria', texto: 'Jardinería (L2)', token: 'jardin', on: false },
+    { id: 'capa0', texto: 'Detalles de la capa 0', token: 'capa0', on: false },
+    { grupo: 'Mapa actual (OpenStreetMap)' },
+    { id: 'osm', texto: 'Edificios del campus', token: 'osm', on: true },
+    { id: 'entorno', texto: 'Edificios del entorno', token: 'osm-muted', on: true },
+    { id: 'limite', texto: 'Límite del campus en Hesperides', token: 'brand', on: true },
+  ];
+  const capas = Object.fromEntries(CAPAS.filter((c) => c.id).map((c) => [c.id, c.on]));
+  let modo = 'casos';
+  let divisor = 0.5;
+  let filtro = 'todos';
+  let seleccionado = null;
+  let encima = null;
+  const vista = { cx: 0, cy: 0, s: 1 };
+
+  const mapa = document.getElementById('mapa');
+  const lienzo = document.getElementById('lienzo');
+  const ctx = lienzo.getContext('2d');
+  const tooltip = document.getElementById('tooltip');
+  let W = 0, H = 0, dpr = 1;
+
+  let tokens = null;
+  const NOMBRES_TOKEN = ['map', 'surface', 'ink', 'muted', 'line', 'brand', 'osm', 'osm-muted', 'plan', 'huaca', 'jardin',
+    'capa0', 'muro', 'h1', 'h2', 'h3', 'h4', 'h5', ...ORDEN.map((k) => `t-${k}`)];
+  const leerTokens = () => {
+    const cs = getComputedStyle(document.documentElement);
+    tokens = Object.fromEntries(NOMBRES_TOKEN.map((k) => [k, cs.getPropertyValue('--' + k).trim()]));
+  };
+  const alCambiarTema = () => { leerTokens(); dibujar(); };
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', alCambiarTema);
+  new MutationObserver(alCambiarTema).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+
+  // ---------- Dibujo ----------
+  const aPantalla = (x, y) => [(x - vista.cx) * vista.s + W / 2, -(y - vista.cy) * vista.s + H / 2];
+  const aMundo = (px, py) => [(px - W / 2) / vista.s + vista.cx, -(py - H / 2) / vista.s + vista.cy];
+  const transformarMundo = () => ctx.setTransform(vista.s * dpr, 0, 0, -vista.s * dpr,
+    (W / 2 - vista.cx * vista.s) * dpr, (H / 2 + vista.cy * vista.s) * dpr);
+  const trazar = (trazo, color, px, guion) => {
+    ctx.strokeStyle = color; ctx.lineWidth = px / vista.s;
+    ctx.setLineDash(guion ? guion.map((v) => v / vista.s) : []);
+    ctx.stroke(trazo);
+  };
+  const rellenar = (trazo, color, alfa) => {
+    ctx.globalAlpha = alfa; ctx.fillStyle = color; ctx.fill(trazo, 'evenodd'); ctx.globalAlpha = 1;
+  };
+
+  function contextoPlano(t, apagado) {
+    ctx.globalAlpha = apagado ? 0.45 : 1;
+    if (capas.jardineria) trazar(T.jardineria, t.jardin, 1);
+    if (capas.capa0) trazar(T.capa0, t.capa0, 0.8);
+    if (capas.huacas) trazar(T.huacas, t.huaca, 1);
+    if (capas.muro) trazar(T.muro, t.muro, 1.4);
+    ctx.globalAlpha = 1;
+  }
+  function dibujarActual(t) {
+    if (capas.entorno) { rellenar(T.entorno, t['osm-muted'], 0.35); trazar(T.entorno, t['osm-muted'], 1); }
+    if (capas.osm) { rellenar(T.campus, t.osm, 0.16); trazar(T.campus, t.osm, 1.4); }
+    if (capas.limite) trazar(T.limite, t.brand, 2, [7, 5]);
+  }
+  function dibujarPlano(t) {
+    contextoPlano(t, false);
+    if (capas.unidades) trazar(T.unidades, t.plan, 1.3);
+  }
+  function dibujarCasos(t) {
+    if (capas.entorno) { rellenar(T.entorno, t['osm-muted'], 0.3); trazar(T.entorno, t['osm-muted'], 1); }
+    if (capas.limite) trazar(T.limite, t.brand, 2, [7, 5]);
+    contextoPlano(t, true);
+    if (capas.osm) for (const k of ORDEN) {
+      const color = t[`t-${k}`];
+      rellenar(T.osmTipo[k], color, k === 'coincide' ? 0.16 : 0.3);
+      trazar(T.osmTipo[k], color, 0.8);
+    }
+    if (capas.unidades) for (const k of ORDEN) {
+      if (k === 'solo_plano') rellenar(T.planoTipo[k], t[`t-${k}`], 0.18);
+      trazar(T.planoTipo[k], t[`t-${k}`], k === 'coincide' ? 1.3 : 2);
+    }
+  }
+  function dibujarAlturas(t) {
+    if (capas.entorno) trazar(T.entorno, t['osm-muted'], 1);
+    if (capas.osm) trazar(T.campus, t['osm-muted'], 1);
+    if (capas.limite) trazar(T.limite, t.brand, 2, [7, 5]);
+    contextoPlano(t, true);
+    T.alturas.forEach((trazo, i) => rellenar(trazo, t[`h${i + 1}`], 0.9));
+    trazar(T.unidades, t.ink, 0.7);
+    trazar(T.hundidos, t['t-solo_plano'], 2.2, [6, 3]);
+  }
+  function recortado(x0, x1, fn) {
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.beginPath(); ctx.rect(x0, 0, x1 - x0, H); ctx.clip();
+    transformarMundo(); fn();
+    ctx.restore();
+  }
+  function etiqueta(texto, x, y, t, alineacion = 'left') {
+    ctx.font = '600 12px Inter, "Segoe UI", system-ui, sans-serif';
+    const w = ctx.measureText(texto).width + 14;
+    const x0 = alineacion === 'right' ? x - w : x;
+    ctx.fillStyle = t.surface; ctx.strokeStyle = t.line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(x0, y, w, 22, 6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = t.ink; ctx.textBaseline = 'middle'; ctx.fillText(texto, x0 + 7, y + 11.5);
+  }
+  function dibujarEscala(t) {
+    const objetivo = 110 / vista.s;
+    const base = 10 ** Math.floor(Math.log10(objetivo));
+    const metros = [1, 2, 5, 10].map((m) => m * base).filter((m) => m <= objetivo).pop() || base;
+    const px = metros * vista.s, x = 14, y = H - 18;
+    ctx.strokeStyle = t.ink; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x, y); ctx.lineTo(x + px, y); ctx.lineTo(x + px, y - 5); ctx.stroke();
+    ctx.font = '500 12px Inter, "Segoe UI", system-ui, sans-serif'; ctx.fillStyle = t.ink; ctx.textBaseline = 'bottom';
+    ctx.fillText(`${n0.format(metros)} m`, x + px + 6, y + 1);
+    const nx = 22, ny = H - 52;
+    ctx.beginPath(); ctx.moveTo(nx, ny - 14); ctx.lineTo(nx + 6, ny + 2); ctx.lineTo(nx, ny - 2); ctx.lineTo(nx - 6, ny + 2); ctx.closePath();
+    ctx.fillStyle = t.ink; ctx.fill();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('N', nx, ny - 15); ctx.textAlign = 'left';
+  }
+
+  let cuadroPendiente = 0;
+  function dibujar() { if (!cuadroPendiente) cuadroPendiente = requestAnimationFrame(() => { cuadroPendiente = 0; pintar(); }); }
+  function pintar() {
+    if (!tokens) leerTokens();
+    const t = tokens;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = t.map; ctx.fillRect(0, 0, lienzo.width, lienzo.height);
+    if (modo === 'cortina') {
+      const dx = divisor * W;
+      recortado(0, dx, () => dibujarActual(t));
+      recortado(dx, W, () => dibujarPlano(t));
+    } else {
+      transformarMundo();
+      if (modo === 'superponer') { dibujarActual(t); dibujarPlano(t); }
+      else if (modo === 'alturas') dibujarAlturas(t);
+      else dibujarCasos(t);
+    }
+    transformarMundo();
+    const marcar = (c, color, px) => {
+      if (!c) return;
+      for (const trazo of [c.trazoOsm, c.trazoPlano]) { trazar(trazo, t.surface, px + 3); trazar(trazo, color, px); }
+    };
+    if (encima && encima !== seleccionado) marcar(encima, t.ink, 1.8);
+    marcar(seleccionado, t.brand, 3);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.setLineDash([]);
+    if (modo === 'cortina') {
+      const dx = divisor * W;
+      ctx.strokeStyle = t.ink; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(dx, 0); ctx.lineTo(dx, H); ctx.stroke();
+      ctx.fillStyle = t.surface; ctx.beginPath(); ctx.arc(dx, H / 2, 15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = t.ink; ctx.font = '600 13px Inter, "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('‹ ›', dx, H / 2 + 1); ctx.textAlign = 'left';
+      etiqueta('Mapa actual', dx - 8, 54, t, 'right');
+      etiqueta('Plano PUCP', dx + 8, 54, t, 'left');
+    }
+    dibujarEscala(t);
+  }
+
+  // ---------- Encuadre ----------
+  function encuadrar(caja, margen = 30, maxS = 6) {
+    const w = Math.max(caja[2] - caja[0], 1), h = Math.max(caja[3] - caja[1], 1);
+    vista.s = Math.min((W - margen * 2) / w, (H - margen * 2) / h, maxS);
+    vista.cx = (caja[0] + caja[2]) / 2; vista.cy = (caja[1] + caja[3]) / 2;
+    dibujar();
+  }
+  function zoomEn(px, py, factor) {
+    const [mx, my] = aMundo(px, py);
+    vista.s = Math.min(Math.max(vista.s * factor, 0.15), 40);
+    vista.cx = mx - (px - W / 2) / vista.s; vista.cy = my + (py - H / 2) / vista.s;
+    dibujar();
+  }
+  function ajustarTamano() {
+    const r = mapa.getBoundingClientRect();
+    const primero = W === 0;
+    dpr = window.devicePixelRatio || 1; W = r.width; H = r.height;
+    lienzo.width = Math.round(W * dpr); lienzo.height = Math.round(H * dpr);
+    if (primero) encuadrar(cajaCampus, 24); else dibujar();
+  }
+  new ResizeObserver(ajustarTamano).observe(mapa);
+
+  // ---------- Qué hay bajo el puntero ----------
+  const dentroDe = (x, y, anillos) => {
+    let dentro = false;
+    for (const a of anillos) for (let i = 0, j = a.length - 1; i < a.length; j = i++) {
+      const [xi, yi] = a[i], [xj, yj] = a[j];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) dentro = !dentro;
+    }
+    return dentro;
+  };
+  const enCaja = (x, y, c) => x >= c[0] && x <= c[2] && y >= c[1] && y <= c[3];
+  function tocar(px, py) {
+    const [x, y] = aMundo(px, py);
+    const lado = modo === 'cortina' ? (px < divisor * W ? 'osm' : 'plano') : null;
+    if (capas.unidades && lado !== 'osm') {
+      for (const u of D.edificios_plano) if (enCaja(x, y, u.caja) && dentroDe(x, y, u.anillos)) return { c: u.c, u };
+    }
+    if (modo !== 'alturas' && capas.osm && lado !== 'plano') {
+      for (const b of D.osm) if (b.c && enCaja(x, y, b.caja) && dentroDe(x, y, b.anillos)) return { c: b.c, b };
+    }
+    return null;
+  }
+  const textoAlturas = (c) => {
+    const osm = c.alto_osm_medido ? alto(c.alto_osm_medido) : c.edificiosOsm.length ? 'estimada' : null;
+    const plano = c.alto_plano ? alto(c.alto_plano) : c.unidades.length ? 'sin volumen' : null;
+    return [plano && `plano ${plano}`, osm && `OSM ${osm}`].filter(Boolean).join(' · ');
+  };
+  function mostrarTooltip(hit, px, py) {
+    if (!hit) { tooltip.hidden = true; return; }
+    const c = hit.c;
+    tooltip.innerHTML = '<strong></strong><span class="estado"><span class="punto"></span><span class="tipo"></span></span><div class="t-1"></div><div class="t-2"></div>';
+    tooltip.querySelector('strong').textContent = c.titulo;
+    tooltip.querySelector('.punto').style.background = `var(--t-${c.tipo})`;
+    tooltip.querySelector('.tipo').textContent = `Caso ${c.numero} · ${TIPOS[c.tipo].texto}`;
+    tooltip.querySelector('.t-1').textContent = hit.u
+      ? `${hit.u.codigo}: ${hit.u.tipo} de ${n0.format(hit.u.area)} m²${hit.u.alto ? `, ${alto(hit.u.alto)} de alto` : ''}${hit.u.base < -1 ? `, base ${signo(hit.u.base)} m` : ''}`
+      : c.iou !== undefined ? `Superposición ${pct.format(c.iou)}` : '';
+    tooltip.querySelector('.t-2').textContent = textoAlturas(c);
+    tooltip.hidden = false;
+    const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+    tooltip.style.left = `${Math.min(px + 14, W - tw - 8)}px`;
+    tooltip.style.top = `${py + 14 + th > H ? py - th - 10 : py + 14}px`;
+  }
+
+  // ---------- Puntero ----------
+  const punteros = new Map();
+  let arrastre = null;
+  let pellizco = null;
+  const local = (ev) => { const r = lienzo.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+  const cercaDelDivisor = (px) => modo === 'cortina' && Math.abs(px - divisor * W) < 16;
+
+  lienzo.addEventListener('pointerdown', (ev) => {
+    lienzo.setPointerCapture(ev.pointerId);
+    const [px, py] = local(ev);
+    punteros.set(ev.pointerId, [px, py]);
+    if (punteros.size === 2) {
+      const [a, b] = [...punteros.values()];
+      pellizco = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: vista.s };
+      arrastre = null; return;
+    }
+    arrastre = { px, py, cx: vista.cx, cy: vista.cy, divisor: cercaDelDivisor(px), movido: false };
+    lienzo.classList.add('arrastrando');
+  });
+  lienzo.addEventListener('pointermove', (ev) => {
+    const [px, py] = local(ev);
+    if (punteros.has(ev.pointerId)) punteros.set(ev.pointerId, [px, py]);
+    if (pellizco && punteros.size === 2) {
+      const [a, b] = [...punteros.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      zoomEn((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (pellizco.s * d / pellizco.d) / vista.s);
+      return;
+    }
+    if (arrastre) {
+      const dx = px - arrastre.px, dy = py - arrastre.py;
+      if (Math.abs(dx) + Math.abs(dy) > 3) arrastre.movido = true;
+      if (arrastre.divisor) divisor = Math.min(Math.max(px / W, 0.04), 0.96);
+      else { vista.cx = arrastre.cx - dx / vista.s; vista.cy = arrastre.cy + dy / vista.s; }
+      tooltip.hidden = true; dibujar(); return;
+    }
+    lienzo.classList.toggle('sobre-divisor', cercaDelDivisor(px));
+    const hit = tocar(px, py);
+    const c = hit ? hit.c : null;
+    if (c !== encima) { encima = c; dibujar(); }
+    mostrarTooltip(hit, px, py);
+  });
+  const soltar = (ev) => {
+    punteros.delete(ev.pointerId);
+    if (punteros.size < 2) pellizco = null;
+    if (arrastre && !arrastre.movido && !arrastre.divisor) {
+      const [px, py] = local(ev);
+      const hit = tocar(px, py);
+      seleccionar(hit ? hit.c : null, false);
+    }
+    arrastre = null;
+    lienzo.classList.remove('arrastrando');
+  };
+  lienzo.addEventListener('pointerup', soltar);
+  lienzo.addEventListener('pointercancel', soltar);
+  lienzo.addEventListener('pointerleave', () => { if (!arrastre) { encima = null; tooltip.hidden = true; dibujar(); } });
+  lienzo.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const [px, py] = local(ev);
+    zoomEn(px, py, Math.exp(-ev.deltaY * (ev.deltaMode === 1 ? 0.05 : 0.0016)));
+  }, { passive: false });
+  lienzo.addEventListener('keydown', (ev) => {
+    const paso = 60 / vista.s;
+    const acciones = {
+      '+': () => zoomEn(W / 2, H / 2, 1.4), '=': () => zoomEn(W / 2, H / 2, 1.4), '-': () => zoomEn(W / 2, H / 2, 1 / 1.4),
+      '0': () => encuadrar(cajaCampus, 24), ArrowLeft: () => { vista.cx -= paso; dibujar(); },
+      ArrowRight: () => { vista.cx += paso; dibujar(); }, ArrowUp: () => { vista.cy += paso; dibujar(); },
+      ArrowDown: () => { vista.cy -= paso; dibujar(); }, Escape: () => seleccionar(null, false),
+    };
+    if (acciones[ev.key]) { ev.preventDefault(); acciones[ev.key](); }
+  });
+  document.getElementById('acercar').addEventListener('click', () => zoomEn(W / 2, H / 2, 1.5));
+  document.getElementById('alejar').addEventListener('click', () => zoomEn(W / 2, H / 2, 1 / 1.5));
+  document.getElementById('encuadrar').addEventListener('click', () => encuadrar(cajaCampus, 24));
+
+  // ---------- Modos y leyenda ----------
+  const botonesModo = [...document.querySelectorAll('[data-modo]')];
+  function ponerModo(m) {
+    modo = m;
+    for (const b of botonesModo) b.setAttribute('aria-pressed', String(b.dataset.modo === m));
+    pintarLeyenda(); dibujar();
+  }
+  botonesModo.forEach((b) => b.addEventListener('click', () => ponerModo(b.dataset.modo)));
+
+  function pintarLeyenda() {
+    const el = document.getElementById('leyenda');
+    const linea = (token, texto) => `<div><span class="muestra" style="border-color:var(--${token})"></span>${texto}</div>`;
+    const caja = (token, texto) => `<div><span class="muestra relleno" style="border-color:var(--${token});background:color-mix(in srgb, var(--${token}) 30%, transparent)"></span>${texto}</div>`;
+    const partes = {
+      casos: [...ORDEN.map((k) => caja(`t-${k}`, TIPOS[k].texto)),
+        '<span class="nota">Relleno: edificio de OSM · contorno: edificio del plano</span>'],
+      cortina: [caja('osm', 'Izquierda: OpenStreetMap'), linea('plan', 'Derecha: plano PUCP'), '<span class="nota">Arrastra la línea central</span>'],
+      superponer: [caja('osm', 'Edificios de OpenStreetMap'), linea('plan', 'Edificios del plano PUCP'), linea('muro', 'Muro límite del plano'), linea('brand', 'Límite del campus en Hesperides')],
+      alturas: [...CLASES_ALTO.map(([a, b], i) => caja(`h${i + 1}`, b === Infinity ? `${a} m o más` : `${a} a ${b} m de alto`)),
+        linea('t-solo_plano', 'Base bajo el suelo (hundido)')],
+    };
+    el.innerHTML = partes[modo].join('');
+  }
+
+  // ---------- Panel ----------
+  const a = D.alineacion;
+  document.getElementById('ubicacion').innerHTML = [
+    ['Escala', '1 : 1'],
+    ['Giro', `${signo(a.giro_grados, n2)}°`],
+    ['Desplazamiento', `${signo(a.traslacion_m[0])} m E · ${signo(a.traslacion_m[1])} m N`],
+    ['Error mediano', `${n2.format(a.distancia_huella_plano_a_osm_m.mediana)} m`],
+    ['Error p90', `${n1.format(a.distancia_huella_plano_a_osm_m.p90)} m`],
+  ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  const del = (tipo) => D.edificios_plano.filter((u) => u.tipo === tipo);
+  document.getElementById('con-volumen').textContent =
+    `${del('edificio').length} edificios y ${del('caseta').length} casetas; ` +
+    `${del('edificio').filter((u) => u.alto).length} y ${del('caseta').filter((u) => u.alto).length} de ellos tienen volumen y altura`;
+
+  const filtros = document.getElementById('filtros');
+  filtros.innerHTML = [['todos', 'Todos', D.casos.length], ...ORDEN.map((k) => [k, TIPOS[k].texto, conteo[k]])]
+    .map(([k, texto, n]) => `<button type="button" class="chip" data-filtro="${k}" aria-pressed="${k === filtro}">` +
+      (k === 'todos' ? '' : `<span class="punto" style="background:var(--t-${k})"></span>`) + `${texto} <span>${n}</span></button>`).join('');
+  filtros.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-filtro]');
+    if (!b) return;
+    filtro = b.dataset.filtro;
+    for (const c of filtros.children) c.setAttribute('aria-pressed', String(c.dataset.filtro === filtro));
+    pintarLista();
+  });
+  const normalizar = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const buscar = document.getElementById('buscar');
+  buscar.addEventListener('input', () => pintarLista());
+
+  const lista = document.getElementById('lista');
+  const datoFila = (c) => c.iou !== undefined ? pct.format(c.iou) : `${n0.format(c.area_plano || c.area_osm)} m²`;
+  function pintarLista() {
+    const q = normalizar(buscar.value.trim());
+    const visibles = D.casos.filter((c) => (filtro === 'todos' || c.tipo === filtro) && (!q || normalizar(c.busqueda).includes(q)));
+    lista.innerHTML = '';
+    if (!visibles.length) { lista.innerHTML = '<div class="vacio">Ningún caso coincide con la búsqueda en este filtro.</div>'; return; }
+    const frag = document.createDocumentFragment();
+    for (const c of visibles) {
+      const fila = document.createElement('button');
+      fila.type = 'button'; fila.className = 'fila';
+      fila.setAttribute('aria-current', String(c === seleccionado));
+      const punto = document.createElement('span');
+      punto.className = 'punto'; punto.style.background = `var(--t-${c.tipo})`;
+      const nombre = document.createElement('span'); nombre.className = 'nombre';
+      nombre.textContent = `${c.numero}. ${c.titulo}`;
+      const dato = document.createElement('span'); dato.className = 'dato'; dato.textContent = datoFila(c);
+      fila.append(punto, nombre, dato);
+      fila.addEventListener('click', () => seleccionar(c, true));
+      c.fila = fila;
+      frag.append(fila);
+    }
+    lista.append(frag);
+  }
+
+  const detalle = document.getElementById('detalle');
+  function seleccionar(c, encuadrarlo) {
+    seleccionado = c;
+    for (const f of lista.children) f.setAttribute('aria-current', 'false');
+    if (c?.fila && c.fila.isConnected) {
+      c.fila.setAttribute('aria-current', 'true');
+      if (!encuadrarlo) c.fila.scrollIntoView({ block: 'nearest' });
+    }
+    if (!c) { detalle.hidden = true; dibujar(); return; }
+    const filas = [];
+    if (c.unidades.length) {
+      filas.push(['Edificios del plano', c.unidades.map((u) =>
+        `${u.codigo}${u.alto ? ` (${alto(u.alto)})` : ''}`).join(', ')]);
+    }
+    if (c.edificiosOsm.length) {
+      filas.push(['Edificios de OSM', c.edificiosOsm.map((b) => b.nombre || b.id).join(', ')]);
+    }
+    filas.push(['Área en planta', [c.area_plano && `plano ${n0.format(c.area_plano)} m²`, c.area_osm && `OSM ${n0.format(c.area_osm)} m²`]
+      .filter(Boolean).join(' · ')]);
+    if (c.iou !== undefined) filas.push(['Superposición (IoU)', pct.format(c.iou)]);
+    if (c.desplazamiento_m !== undefined) {
+      filas.push(['Distancia entre centros', `${n1.format(c.desplazamiento_m)} m`]);
+      filas.push(['IoU al centrarlo', pct.format(c.iou_centrado)]);
+    }
+    if (c.unidades.length) filas.push(['Altura en el plano', c.alto_plano ? alto(c.alto_plano) : 'Sin volumen']);
+    if (c.edificiosOsm.length) {
+      filas.push(['Altura en OSM', c.alto_osm_medido ? `${alto(c.alto_osm_medido)} (medida)` : '8 m estimados']);
+    }
+    if (c.base_plano !== undefined && c.base_plano !== null) {
+      filas.push(['Base en el plano', c.base_plano < -1 ? `${signo(c.base_plano)} m: hundido` : 'A nivel del suelo']);
+    }
+    if (c.osm_fuera_del_campus.length) filas.push(['Fuera del campus en OSM', c.osm_fuera_del_campus.join(', ')]);
+    detalle.innerHTML = `<h2>Caso ${c.numero}</h2><h3></h3>
+      <span class="estado"><span class="punto" style="background:var(--t-${c.tipo})"></span>${TIPOS[c.tipo].texto}</span>
+      <p class="nota"></p><dl></dl>`;
+    detalle.querySelector('h3').textContent = c.titulo;
+    detalle.querySelector('.nota').textContent = TIPOS[c.tipo].explica;
+    detalle.querySelector('dl').append(...filas.flatMap(([k, v]) => {
+      const dt = document.createElement('dt'); dt.textContent = k;
+      const dd = document.createElement('dd'); dd.textContent = v;
+      return [dt, dd];
+    }));
+    detalle.hidden = false;
+    if (encuadrarlo) {
+      const k = c.cajaMapa, m = 40;
+      encuadrar([k[0] - m, k[1] - m, k[2] + m, k[3] + m], 30, 8);
+      if (window.matchMedia('(max-width: 880px)').matches) mapa.scrollIntoView({ block: 'start' });
+    }
+    dibujar();
+  }
+
+  const contCapas = document.getElementById('capas');
+  for (const c of CAPAS) {
+    if (c.grupo) { const g = document.createElement('div'); g.className = 'grupo'; g.textContent = c.grupo; contCapas.append(g); continue; }
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox'; input.id = `capa-${c.id}`; input.checked = capas[c.id];
+    input.addEventListener('change', () => { capas[c.id] = input.checked; dibujar(); });
+    const linea = document.createElement('span'); linea.className = 'linea'; linea.style.borderColor = `var(--${c.token})`;
+    label.append(input, linea, document.createTextNode(c.texto));
+    contCapas.append(label);
+  }
+
+  leerTokens();
+  pintarLista();
+  ponerModo('casos');
+})();
+</script>

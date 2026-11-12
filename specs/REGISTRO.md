@@ -23,6 +23,7 @@
 | SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 5, falta verificar en navegador | —          | —      |              |
 | SPEC-106 | Directorio de organizaciones y contactos | 🔄 En progreso | —          | —      |              |
 | SPEC-107 | Reservas de jardines | 🔄 En progreso | —          | —      |              |
+| SPEC-108 | Edificios del plano oficial en el mapa | 📝 En spec | Luis       | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
@@ -46,6 +47,7 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-102 D-03, §4.1, §7.1 y P-02 | SPEC-108 (en spec, 12 nov 2026) | Los edificios del mapa pasan a los modelos del plano oficial (SKP), agrupados según las relaciones de Nicolás y con los nombres y excepciones de Jean Piero. Hay un edificio principal por relación (133), y los 71 edificios del mapa que comparten relación se agrupan bajo él sin borrarse (`parent_building_id`). Los códigos oficiales quedan en `campus_building_codes`. El modelo lo sirve el backend con sesión. Se conservan el acabado y las luces de hoy. Patios vacíos, desniveles visibles, huaca con textura de tapial y etiquetas recortadas por ancho. **La atribución a OpenStreetMap se queda.** El Pabellón C no entra. Se aplica a SPEC-102 al implementarse. |
 | SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: guardan quién las pide (organización y solicitante, fijos), para quién son (opcional) y un responsable que puede cambiar, con su historial; el operario ve todo eso (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El vínculo contacto–organización gana un rol opcional y `contactos.csv` la columna `roles` (SPEC-106 §4.3). El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y cinco acciones auditables. |
 | SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
 | SPEC-004 §3.2 · C-08 · C-09 · E-03 · REQ 2.7 · Catálogo 2.2/2.11 | SPEC-105 (6 nov 2026) | Tres acciones auditables de especie. La criticidad pasa a ser de la especie y no de su tipo; `GENERIC` deja de escribirse; se retira la proyección automática de medidas tras una poda. |
@@ -215,6 +217,7 @@ Los números en citas históricas de otros specs no autorizan reutilizar version
 | Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
 | Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
 | Metas del resumen de reportes (dos filas en `system_parameters`, sin tablas) | SPEC-202 §4 | Solo datos; se numera al implementar el módulo de reportes |
+| Edificios del plano: grupos, códigos oficiales y base (generada) | SPEC-108 §4 | La genera `scripts/mapa/plano_pucp/generar_migracion.py` y no se regenera una vez publicada. Toma el siguiente número libre al implementar. Ojo: V040 ya está usada dos veces en ramas distintas |
 | Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
 
 Las antiguas pendientes `add_execution_tracking_to_interventions`,
