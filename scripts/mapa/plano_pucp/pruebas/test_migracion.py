@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from generar_migracion import main  # noqa: E402
+from generar_migracion import DDL, main  # noqa: E402
 from rutas import EQUIVALENCIAS, FUENTES, TRABAJO  # noqa: E402
 
 DATOS = [EQUIVALENCIAS / 'final-relations.json', FUENTES / 'edificios-osm.geojson',
@@ -46,6 +46,13 @@ class PruebasMigracion(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 main('042', carpeta)
             self.assertEqual([p.name for p in carpeta.iterdir()], ['V041__group_buildings_by_plan.sql'])
+
+    def test_indices_unicos_solo_cuentan_filas_vivas(self):
+        # INV-4: un borrado lógico libera la clave para otra fila
+        unicos = re.findall(r'^CREATE UNIQUE INDEX .*$', DDL, re.M)
+        self.assertEqual(len(unicos), 2)
+        for indice in unicos:
+            self.assertIn('deleted_at IS NULL', indice)
 
     @unittest.skipUnless(all(p.exists() for p in DATOS), 'faltan los datos')
     def test_sql(self):

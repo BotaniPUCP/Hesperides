@@ -11,6 +11,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import pe.edu.pucp.hesperides.support.TestDatabase;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -170,6 +173,28 @@ class PlanBuildingsMigrationTest {
         assertThat(count("""
                 SELECT count(*) FROM buildings_before o JOIN campus_buildings b ON b.id = o.id
                  WHERE b.source_ref IS DISTINCT FROM o.source_ref""")).isZero();
+    }
+
+    @Test
+    void unBorradoLogicoLiberaSuPlanKey() throws SQLException {
+        // INV-4: la unicidad solo cuenta las filas vivas. Se prueba en una transacción
+        // que se deshace, para no cambiar la base que leen los demás tests.
+        String copy = """
+                INSERT INTO campus_buildings (source, plan_key, name, is_campus, footprint)
+                SELECT source, plan_key, name, is_campus, footprint FROM campus_buildings WHERE id = """ + libraryId;
+        try (Connection c = db.getDataSource().getConnection(); Statement s = c.createStatement()) {
+            c.setAutoCommit(false);
+            try {
+                s.execute("SAVEPOINT duplicate");
+                assertThatThrownBy(() -> s.executeUpdate(copy)).hasMessageContaining("uq_campus_buildings_plan_key");
+                s.execute("ROLLBACK TO SAVEPOINT duplicate");
+
+                s.executeUpdate("UPDATE campus_buildings SET deleted_at = CURRENT_TIMESTAMP WHERE id = " + libraryId);
+                assertThat(s.executeUpdate(copy)).isEqualTo(1);
+            } finally {
+                c.rollback();
+            }
+        }
     }
 
     @Test

@@ -10,7 +10,7 @@ ALTER TABLE campus_buildings
     ADD COLUMN parent_building_id BIGINT REFERENCES campus_buildings(id),
     ADD COLUMN plan_key           VARCHAR(64),
     ADD COLUMN base_m             NUMERIC(6, 2);
-CREATE UNIQUE INDEX uq_campus_buildings_plan_key ON campus_buildings(plan_key) WHERE plan_key IS NOT NULL;
+CREATE UNIQUE INDEX uq_campus_buildings_plan_key ON campus_buildings(plan_key) WHERE plan_key IS NOT NULL AND deleted_at IS NULL;
 CREATE INDEX idx_campus_buildings_parent ON campus_buildings(parent_building_id);
 
 CREATE TABLE campus_building_codes (
