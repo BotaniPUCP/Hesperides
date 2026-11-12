@@ -25,7 +25,8 @@ export type CardLinkFor = (target: Target) => InfoCard['link'] | null;
 export function useMapScreenState(data: SceneData | null, person: string, linkFor?: CardLinkFor) {
   const viewer = useRef<Viewer | null>(null);
   const describeSeq = useRef(0);
-  const marked = useRef(false);
+  // Los bloques marcados de un lugar: un visor nuevo (al llegar el modelo del plano) debe volver a marcarlos.
+  const markedIds = useRef<readonly number[]>([]);
   const [saved] = useState(() => recallMapScreen(person));
   const [mode, setModeState] = useState<ModeId>(saved.mode);
   const [hidden, setHidden] = useState<Set<string>>(saved.hidden);
@@ -45,8 +46,8 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
 
   /** Los bloques de un lugar del catálogo; cualquier otra ficha los quita. */
   const markBuildings = useCallback((ids: readonly number[]) => {
-    if (!marked.current && ids.length === 0) return;
-    marked.current = ids.length > 0;
+    if (markedIds.current.length === 0 && ids.length === 0) return;
+    markedIds.current = ids;
     viewer.current?.setMarkedBuildings(ids);
   }, []);
   const clearMarks = useCallback(() => markBuildings([]), [markBuildings]);
@@ -74,6 +75,7 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
       else setSelected(null);
     }
     if (card?.kind === 'location') v.setPinLatLon?.(card.lat, card.lon);
+    if (markedIds.current.length > 0) v.setMarkedBuildings(markedIds.current);
     setViewerEpoch((epoch) => epoch + 1);
   };
 

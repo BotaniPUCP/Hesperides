@@ -244,12 +244,14 @@ describe('MapScreen', () => {
     const { rerender } = await renderLoaded();
     expect(mockedCreate.mock.calls[0][5]).toBeNull();
 
+    const prisms = viewer;
+    viewer = fakeViewer();
     const model = { buildings: new Map() } as unknown as PlanModel;
     mockedPlan.mockReturnValue({ model, failed: false });
     rerender(<MapScreen />);
 
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(2));
-    expect(viewer.dispose).toHaveBeenCalled();
+    expect(prisms.dispose).toHaveBeenCalled();
     expect(mockedCreate.mock.calls[1][5]).toBe(model);
     expect(mockedCreate.mock.calls[1][4]).toEqual(SAVED_POSE);
     expect(screen.queryByText(/modelo del plano/)).not.toBeInTheDocument();
@@ -582,6 +584,23 @@ describe('MapScreen', () => {
 
         expect(viewer.setMarkedBuildings).toHaveBeenLastCalledWith([1, SECOND_BLOCK_ID]);
         expect(viewer.focusLatLon).toHaveBeenCalledWith(-12.0701, -77.0801);
+        expect(screen.getByRole('region', { name: 'Pabellón partido' })).toBeInTheDocument();
+      });
+
+      it('si el modelo del plano llega con su ficha abierta, el visor nuevo vuelve a marcar sus bloques', async () => {
+        const { rerender } = await renderLoaded(layersWithTwoBlocks);
+        await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+        fireEvent.change(screen.getByRole('combobox', { name: 'Buscar en el mapa' }), { target: { value: 'pabellon partido' } });
+        fireEvent.click(await screen.findByRole('option', { name: /Pabellón partido/ }));
+
+        const prisms = viewer;
+        viewer = fakeViewer();
+        mockedPlan.mockReturnValue({ model: { buildings: new Map() } as unknown as PlanModel, failed: false });
+        rerender(<MapScreen />);
+
+        await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(2));
+        expect(prisms.dispose).toHaveBeenCalled();
+        expect(viewer.setMarkedBuildings).toHaveBeenCalledWith([1, SECOND_BLOCK_ID]);
         expect(screen.getByRole('region', { name: 'Pabellón partido' })).toBeInTheDocument();
       });
 

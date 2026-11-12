@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import type { BuildingModelManifest, BuildingProperties, VegetationProperties } from '@shared/types';
 import { sampleLayers } from '../__fixtures__/mapLayers';
 import { LocalPlane } from '../projection';
@@ -356,13 +356,30 @@ describe('nodos del modelo', () => {
 });
 
 describe('usePlanModel', () => {
+  // El modelo leído queda en memoria por origen del plano: cada prueba usa el suyo para no heredar el de otra.
+  let site = 0;
+  const newOrigin = (): [number, number] => [-12 - ++site * 0.01, -77.08];
+  const glbBlob = () => ({ arrayBuffer: () => Promise.resolve(glb([{ name: 'k1', positions: Array.from(corner) }])) }) as Blob;
+
   afterEach(() => jest.clearAllMocks());
+
+  /** Primera visita: descarga y lee el modelo; devuelve el modelo y desmonta. */
+  async function firstVisit(origin: [number, number]) {
+    const visit = new LocalPlane(...origin);
+    const first = renderHook(() => usePlanModel(visit));
+    await waitFor(() => expect(first.result.current.model).not.toBeNull());
+    const model = first.result.current.model;
+    first.unmount();
+    jest.clearAllMocks();
+    return model;
+  }
 
   it('no lanza: con un 401 al descargar el modelo devuelve { model: null, failed: true }', async () => {
     mockedManifest.mockResolvedValue(manifestWith());
     mockedModel.mockRejectedValue(new ApiError(401, 'Session expired'));
+    const somewhere = new LocalPlane(...newOrigin());
 
-    const { result } = renderHook(() => usePlanModel(plane));
+    const { result } = renderHook(() => usePlanModel(somewhere));
 
     await waitFor(() => expect(result.current).toEqual({ model: null, failed: true }));
   });
@@ -375,14 +392,65 @@ describe('usePlanModel', () => {
   });
 
   it('entrega el modelo cuando el manifiesto y el GLB llegan', async () => {
-    const file = glb([{ name: 'k1', positions: Array.from(corner) }]);
     mockedManifest.mockResolvedValue(manifestWith());
-    mockedModel.mockResolvedValue({ arrayBuffer: () => Promise.resolve(file) } as Blob);
+    mockedModel.mockResolvedValue(glbBlob());
+    const somewhere = new LocalPlane(...newOrigin());
 
-    const { result } = renderHook(() => usePlanModel(plane));
+    const { result } = renderHook(() => usePlanModel(somewhere));
 
     await waitFor(() => expect(result.current.model).not.toBeNull());
     expect(result.current.failed).toBe(false);
     expect(result.current.model?.buildings.get('k1')).toHaveLength(18);
+  });
+
+  it('una segunda visita al mismo plano abre ya con el modelo leído y no vuelve a descargar el GLB', async () => {
+    const origin = newOrigin();
+    mockedManifest.mockResolvedValue(manifestWith({ version: 'v1' }));
+    mockedModel.mockResolvedValue(glbBlob());
+    const model = await firstVisit(origin);
+
+    const again = new LocalPlane(...origin);
+    const { result } = renderHook(() => usePlanModel(again));
+
+    expect(result.current).toEqual({ model, failed: false });
+    await waitFor(() => expect(mockedManifest).toHaveBeenCalledTimes(1));
+    await act(async () => undefined);
+    expect(result.current.model).toBe(model);
+    expect(mockedModel).not.toHaveBeenCalled();
+  });
+
+  it('si cambió la versión del modelo, lo vuelve a descargar', async () => {
+    const origin = newOrigin();
+    mockedManifest.mockResolvedValue(manifestWith({ version: 'v1' }));
+    mockedModel.mockResolvedValue(glbBlob());
+    const old = await firstVisit(origin);
+    mockedManifest.mockResolvedValue(manifestWith({ version: 'v2' }));
+
+    const again = new LocalPlane(...origin);
+    const { result } = renderHook(() => usePlanModel(again));
+
+    // Mientras pregunta, se ve el que ya tenía; después, el nuevo.
+    expect(result.current.model).toBe(old);
+    await waitFor(() => {
+      expect(result.current.model).not.toBeNull();
+      expect(result.current.model).not.toBe(old);
+    });
+    expect(mockedModel).toHaveBeenCalledTimes(1);
+  });
+
+  it('si no puede preguntar la versión, se queda con el modelo que ya leyó en la sesión', async () => {
+    const origin = newOrigin();
+    mockedManifest.mockResolvedValue(manifestWith({ version: 'v1' }));
+    mockedModel.mockResolvedValue(glbBlob());
+    const model = await firstVisit(origin);
+    mockedManifest.mockRejectedValue(new TypeError('Failed to fetch'));
+
+    const again = new LocalPlane(...origin);
+    const { result } = renderHook(() => usePlanModel(again));
+
+    await waitFor(() => expect(mockedManifest).toHaveBeenCalledTimes(1));
+    await act(async () => undefined);
+    expect(result.current).toEqual({ model, failed: false });
+    expect(mockedModel).not.toHaveBeenCalled();
   });
 });
