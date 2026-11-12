@@ -60,6 +60,31 @@ describe('validateLooks', () => {
   });
 });
 
+describe('caras de foto', () => {
+  const photoFace: FacePattern = { kind: 'photo', wall: '#a8a69f', photo: { tile: 't1', widthM: 12, heightM: 16 } };
+  const withPhoto = look({ zones: [{ id: 'base', roof: '#cccccc', faces: { other: photoFace } }] });
+
+  it('valida que el tramo exista en el atlas', () => {
+    expect(() => validateLooks([withPhoto], new Set(['k1']), { t1: [0, 0, 0.5, 1] })).not.toThrow();
+    expect(() => validateLooks([withPhoto], new Set(['k1']), {})).toThrow(/atlas/);
+  });
+
+  it('una cara de foto sin tramo falla', () => {
+    const bad = look({ zones: [{ id: 'base', roof: '#cccccc', faces: { other: { kind: 'photo', wall: '#a8a69f' } } }] });
+    expect(() => validateLooks([bad], new Set(['k1']), {})).toThrow(/tramo/);
+  });
+
+  it('guarda el tamaño real del tramo y su lugar en el atlas', () => {
+    const table = buildLookTable([withPhoto], { t1: [0.25, 0, 0.5, 1] });
+    const row = table.zones.get('k1')![0].sides.N;
+    const at = (i: number) => table.data[row * ROW_TEXELS * 4 + i];
+    expect(at(TEXEL.kind)).toBe(4);
+    expect(at(TEXEL.widthM)).toBe(12);
+    expect(at(TEXEL.floorM)).toBe(16);
+    expect([at(TEXEL.atlas), at(TEXEL.atlas + 1), at(TEXEL.atlas + 2), at(TEXEL.atlas + 3)]).toEqual([0.25, 0, 0.5, 1]);
+  });
+});
+
 describe('buildLookTable', () => {
   it('da una fila por cara distinta, el techo como muro ciego, y resuelve las copias', () => {
     const table = buildLookTable([look()]);

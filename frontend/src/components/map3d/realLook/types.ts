@@ -12,9 +12,10 @@ export type FaceKey = Side | 'other';
 
 /**
  * blind: muro ciego · windows: ventanas sueltas · ribbon: banda corrida de vidrio
- * por piso · curtain: muro cortina con retícula de perfiles.
+ * por piso · curtain: muro cortina con retícula de perfiles · photo: un tramo de
+ * fachada enderezado de una foto, repetido a lo largo del muro a escala real.
  */
-export const PATTERN_KINDS = ['blind', 'windows', 'ribbon', 'curtain'] as const;
+export const PATTERN_KINDS = ['blind', 'windows', 'ribbon', 'curtain', 'photo'] as const;
 export type PatternKind = (typeof PATTERN_KINDS)[number];
 
 export interface Band {
@@ -22,8 +23,20 @@ export interface Band {
   heightM: number;
 }
 
+/** Un tramo del atlas de fotos y su tamaño real: se repite cada `widthM` a lo largo del muro. */
+export interface PhotoTile {
+  tile: string;
+  widthM: number;
+  heightM: number;
+}
+
+/** Dónde quedó cada tramo en el atlas: x, y, ancho y alto en coordenadas de textura. */
+export type PhotoAtlas = Record<string, [number, number, number, number]>;
+
 export interface FacePattern {
   kind: PatternKind;
+  /** Solo en `photo`: el tramo; sobre su alto, la cara toma `wall`. */
+  photo?: PhotoTile;
   wall: string;
   glass?: string;
   frame?: string;

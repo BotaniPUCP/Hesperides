@@ -91,7 +91,8 @@ export function classifyBuilding(p: Float32Array, from: number, to: number, foot
     }
     const h = Math.hypot(nx, nz) || 1;
     const [east, north] = outward(footprint, cx, cn, nx / h, -nz / h);
-    // tangente horizontal del muro, en (este, norte): la coordenada u sigue al muro sin saltos entre sus triángulos
-    writeTriangle(p, t, zone.sides[sideOf(east, north)], [north, -east], out);
+    // tangente horizontal del muro, en (este, norte), hacia la derecha de quien lo mira desde afuera: la u sigue al
+    // muro sin saltos entre sus triángulos, y la foto no queda en espejo
+    writeTriangle(p, t, zone.sides[sideOf(east, north)], [-north, east], out);
   }
 }

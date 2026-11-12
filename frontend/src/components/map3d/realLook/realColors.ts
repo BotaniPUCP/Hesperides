@@ -4,7 +4,7 @@ import type { PolyLayer } from '../viewer/polyLayer';
 import { classifyBuilding, type FaceAttributes } from './classifyFaces';
 import { createLookMaterial } from './lookMaterial';
 import { buildLookTable } from './lookTable';
-import type { BuildingLook } from './types';
+import type { BuildingLook, PhotoAtlas } from './types';
 import { validateLooks } from './validateLook';
 
 /** El color con que `paintPoly` pinta un edificio con ficha en modo real: neutro, para que el resaltado lo tiña. */
@@ -52,14 +52,21 @@ function materialGroups(starts: number[], looked: boolean[]): { start: number; c
   return groups;
 }
 
+export interface PhotoSource {
+  atlas: PhotoAtlas;
+  url: string;
+  /** Llega el atlas: hay que redibujar. */
+  onLoad: () => void;
+}
+
 /**
  * Prepara el modo real sobre la capa de edificios (SPEC-109): valida las fichas,
  * clasifica las caras una sola vez y deja listos los dos materiales.
  */
-export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], looks: BuildingLook[]): RealColors {
+export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], looks: BuildingLook[], photos: PhotoSource): RealColors {
   const planKeys = new Set(buildings.map((b) => b.planKey).filter((k): k is string => !!k));
-  validateLooks(looks, planKeys);
-  const table = buildLookTable(looks);
+  validateLooks(looks, planKeys, photos.atlas);
+  const table = buildLookTable(looks, photos.atlas);
   const geometry = layer.mesh.geometry as THREE.BufferGeometry;
   const positions = geometry.attributes.position.array as Float32Array;
   const n = positions.length / 3;
@@ -73,7 +80,7 @@ export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], 
   geometry.setAttribute('aLookFace', new THREE.BufferAttribute(out.face, 2));
   geometry.setAttribute('aTone', new THREE.BufferAttribute(layer.tone, 1));
   const today = layer.mesh.material as THREE.Material;
-  const real = createLookMaterial(table);
+  const real = createLookMaterial(table, photos.url, photos.onLoad);
   const groups = materialGroups(layer.starts, looked);
   let on = false;
   return {

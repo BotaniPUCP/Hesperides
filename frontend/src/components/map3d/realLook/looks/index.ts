@@ -1,4 +1,5 @@
-import type { BuildingLook } from '../types';
+import type { BuildingLook, PhotoAtlas } from '../types';
+import atlas from './atlas.json';
 import arteAntiguoC17 from './arte-antiguo-c17.json';
 import bibliotecaCentral from './biblioteca-central.json';
 import eeggll from './eeggll.json';
@@ -19,3 +20,7 @@ const files: unknown[] = [
 ];
 
 export const BUILDING_LOOKS = files as BuildingLook[];
+
+/** Los tramos de foto enderezados (los genera `scripts/mapa/colores_reales/enderezar.py`). */
+export const PHOTO_ATLAS = atlas as unknown as PhotoAtlas;
+export const PHOTO_ATLAS_URL = '/models/real-look/atlas.jpg';

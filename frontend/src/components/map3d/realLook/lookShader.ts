@@ -24,6 +24,7 @@ vTone = aTone;
 
 export const LOOK_FRAGMENT_HEAD = /* glsl */ `
 uniform sampler2D lookTable;
+uniform sampler2D lookAtlas;
 uniform float lookRows;
 varying float vLookRow;
 varying vec2 vLookFace;
@@ -84,13 +85,30 @@ vec3 lookToAlbedo(vec3 t) {
   return x / LOOK_GAIN;
 }
 
+// Un tramo de foto repetido a lo largo del muro; sobre su alto, el color del muro. El gradiente se toma
+// de las coordenadas sin envolver para que el corte de cada repetición no deje una costura.
+vec3 lookPhoto(float row, vec2 f) {
+  vec4 t0 = lookTexel(row, 0.0), t1 = lookTexel(row, 1.0), t4 = lookTexel(row, 4.0);
+  vec4 t5 = lookTexel(row, 5.0), t7 = lookTexel(row, 7.0);
+  float h = f.y - t5.y;
+  if (h > t1.a) return t0.rgb;
+  vec2 q = vec2((f.x - t4.z) / t4.x, clamp(h / t1.a, 0.0, 1.0));
+  vec2 uv = t7.xy + t7.zw * vec2(fract(q.x), q.y);
+  return textureGrad(lookAtlas, uv, dFdx(q) * t7.zw, dFdy(q) * t7.zw).rgb;
+}
+
+vec3 lookFace(float row, vec2 f, vec2 aa, out float glass) {
+  if (lookTexel(row, 0.0).a > 3.5) { glass = 0.0; return lookPhoto(row, f); }
+  return lookFloor(row, f, aa, glass);
+}
+
 vec3 lookDisplay(float row, vec2 f, out float glass) {
   vec2 aa = max(fwidth(f), vec2(1e-4));
-  vec4 t5 = lookTexel(row, 5.0), t6 = lookTexel(row, 6.0);
+  vec4 t0 = lookTexel(row, 0.0), t5 = lookTexel(row, 5.0), t6 = lookTexel(row, 6.0);
   glass = 0.0;
-  if (f.y < t6.a) return t6.rgb;
-  if (t5.z > -0.5 && f.y < t5.y) return lookFloor(t5.z, f, aa, glass);
-  return lookFloor(row, f, aa, glass);
+  if (t0.a < 3.5 && f.y < t6.a) return t6.rgb;
+  if (t5.z > -0.5 && f.y < t5.y) return lookFace(t5.z, f, aa, glass);
+  return lookFace(row, f, aa, glass);
 }
 
 vec3 lookAlbedo(float row, vec2 f, out float glass) {

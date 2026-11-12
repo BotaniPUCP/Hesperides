@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { BUILDING_LOOKS } from '../looks';
+import { BUILDING_LOOKS, PHOTO_ATLAS } from '../looks';
 import { buildLookTable } from '../lookTable';
 import { validateLooks } from '../validateLook';
 
@@ -13,11 +13,11 @@ function planKeysOfMigration(): Set<string> {
 describe('fichas de apariencia del repositorio', () => {
   it('todas son válidas y apuntan a edificios de V040', () => {
     expect(BUILDING_LOOKS.length).toBeGreaterThan(0);
-    expect(() => validateLooks(BUILDING_LOOKS, planKeysOfMigration())).not.toThrow();
+    expect(() => validateLooks(BUILDING_LOOKS, planKeysOfMigration(), PHOTO_ATLAS)).not.toThrow();
   });
 
   it('caben en la tabla del shader', () => {
-    const table = buildLookTable(BUILDING_LOOKS);
+    const table = buildLookTable(BUILDING_LOOKS, PHOTO_ATLAS);
     expect(table.zones.size).toBe(BUILDING_LOOKS.length);
     expect(table.data.every(Number.isFinite)).toBe(true);
   });

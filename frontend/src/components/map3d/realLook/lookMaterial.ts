@@ -15,13 +15,20 @@ export function lookTexture(table: LookTable): THREE.DataTexture {
   return texture;
 }
 
-/** El material del modo real: el de un edificio, mate, con el patrón de la ficha de cada cara. */
-export function createLookMaterial(table: LookTable): THREE.MeshStandardMaterial {
+/** El atlas de tramos de foto; hasta que llega, un gris neutro. `onLoad` pide redibujar. */
+function atlasTexture(url: string, onLoad: () => void): THREE.Texture {
+  const texture = new THREE.TextureLoader().load(url, onLoad);
+  texture.anisotropy = 8;
+  return texture;
+}
+
+/** El material del modo real: el de un edificio, mate, con el patrón o la foto de cada cara. */
+export function createLookMaterial(table: LookTable, atlasUrl: string, onAtlas: () => void): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial({
     vertexColors: true, roughness: MATTE_ROUGHNESS, metalness: 0, envMapIntensity: 0.35,
     side: THREE.DoubleSide, shadowSide: THREE.BackSide,
   });
-  const uniforms = { lookTable: { value: lookTexture(table) }, lookRows: { value: table.rows } };
+  const uniforms = { lookTable: { value: lookTexture(table) }, lookAtlas: { value: atlasTexture(atlasUrl, onAtlas) }, lookRows: { value: table.rows } };
   // fwidth en WebGL1; en WebGL2 ya viene. Los tipos de three 0.147 solo lo declaran en ShaderMaterial.
   Object.assign(material, { extensions: { derivatives: true } });
   material.onBeforeCompile = (shader) => {
