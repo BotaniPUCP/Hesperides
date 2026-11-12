@@ -2,7 +2,6 @@ package pe.edu.pucp.hesperides.engine.reservations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -39,27 +38,24 @@ class ReservationPeriodTest {
     }
 
     @Test
-    void sevenDaysIsAllowedAndMoreIsNot() {
-        assertThat(ReservationPeriod.withinMaximumDuration(START, START.plus(Duration.ofDays(7)))).isTrue();
-        assertThat(ReservationPeriod.withinMaximumDuration(START, START.plus(Duration.ofDays(7)).plusSeconds(1)))
-                .isFalse();
+    void aReservationGoesFromOneHourToAnotherOnTheSameDay() {
+        assertThat(ReservationPeriod.withinOneDay(START, END, LIMA)).isTrue();
     }
 
     @Test
-    void aReservationFrom2300To0100CoversTwoLocalDays() {
+    void aReservationThatCrossesMidnightIsNotOneDay() {
         Instant start = Instant.parse("2026-11-14T04:00:00Z"); // 13 nov 23:00 en Lima
         Instant end = Instant.parse("2026-11-14T06:00:00Z");   // 14 nov 01:00 en Lima
 
-        assertThat(ReservationPeriod.firstDay(start, LIMA)).isEqualTo(LocalDate.of(2026, 11, 13));
-        assertThat(ReservationPeriod.lastDay(start, end, LIMA)).isEqualTo(LocalDate.of(2026, 11, 14));
-        assertThat(ReservationPeriod.localDayCount(start, end, LIMA)).isEqualTo(2);
+        assertThat(ReservationPeriod.withinOneDay(start, end, LIMA)).isFalse();
     }
 
     @Test
-    void aReservationThatEndsAtMidnightDoesNotWorkTheNextDay() {
-        Instant start = Instant.parse("2026-11-14T05:00:00Z"); // 14 nov 00:00 en Lima
-        Instant end = Instant.parse("2026-11-14T07:00:00Z");   // 14 nov 02:00 en Lima
+    void aReservationThatEndsExactlyAtMidnightStaysInItsDay() {
+        Instant start = Instant.parse("2026-11-13T23:00:00Z"); // 13 nov 18:00 en Lima
+        Instant end = Instant.parse("2026-11-14T05:00:00Z");   // 14 nov 00:00 en Lima
 
-        assertThat(ReservationPeriod.lastDay(start, end, LIMA)).isEqualTo(LocalDate.of(2026, 11, 14));
+        assertThat(ReservationPeriod.withinOneDay(start, end, LIMA)).isTrue();
+        assertThat(ReservationPeriod.day(start, LIMA)).isEqualTo(LocalDate.of(2026, 11, 13));
     }
 }

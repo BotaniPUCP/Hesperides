@@ -11,14 +11,15 @@ const COLUMNAS: Columna[] = [
   { nombre: 'solicitante', obligatoria: true, descripcion: 'Código o nombre de un contacto vigente vinculado a «pedido de». Si el nombre coincide con dos personas, se usa su código.' },
   { nombre: 'para', descripcion: 'La organización que usará el jardín, cuando no es la que pide. Vacío si es la misma.' },
   { nombre: 'responsable', descripcion: 'Código o nombre de un contacto vigente, de cualquier organización. Vacío: el solicitante.' },
-  { nombre: 'inicio', obligatoria: true, descripcion: 'dd/mm/aaaa hh:mm en hora de Lima.' },
-  { nombre: 'fin', obligatoria: true, descripcion: 'Posterior a inicio; la reserva no puede durar más de 7 días.' },
+  { nombre: 'fecha', obligatoria: true, descripcion: 'dd/mm/aaaa. Una reserva es de un solo día.' },
+  { nombre: 'inicio', obligatoria: true, descripcion: 'hh:mm en hora de Lima.' },
+  { nombre: 'fin', obligatoria: true, descripcion: 'hh:mm, posterior a inicio el mismo día.' },
   { nombre: 'motivo', descripcion: 'Hasta 300 caracteres.' },
 ];
 
 const REGLAS = [
   'UTF-8, separador punto y coma (;). La plantilla lleva BOM para que Excel la abra bien.',
-  'La cabecera lleva exactamente estas ocho columnas: una que falta o una desconocida rechaza el archivo.',
+  'La cabecera lleva exactamente estas nueve columnas: una que falta o una desconocida rechaza el archivo.',
   'Una organización o un contacto que no está en el Directorio es error de esa fila: el Directorio se carga con su propio registro masivo.',
   'Hasta 2000 filas. Una fila con error impide confirmar el archivo entero.',
   'Los cruces y el trabajo cercano avisan, pero no bloquean: la fila se crea igual.',

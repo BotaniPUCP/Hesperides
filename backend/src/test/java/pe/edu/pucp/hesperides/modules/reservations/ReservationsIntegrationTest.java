@@ -209,12 +209,12 @@ class ReservationsIntegrationTest {
         }
 
         @Test
-        void aReservationCannotLastMoreThanSevenDays() throws Exception {
+        void aReservationStartsAndEndsOnTheSameDay() throws Exception {
             LocalDate day = LocalDate.now(LIMA).plusDays(2);
 
-            create(rosalesId, at(day, 10), at(day.plusDays(7), 11))
+            create(rosalesId, at(day, 22), at(day.plusDays(1), 1))
                     .andExpect(status().isUnprocessableEntity())
-                    .andExpect(jsonPath("$.message").value("A reservation cannot last more than 7 days"));
+                    .andExpect(jsonPath("$.message").value("A reservation starts and ends on the same day"));
         }
 
         @Test

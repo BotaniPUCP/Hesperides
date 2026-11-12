@@ -18,7 +18,7 @@ export const RESERVATION_MESSAGES: Record<string, string> = {
   'Who requested the reservation cannot change: cancel it and register a new one':
     'Quién pidió la reserva no cambia: anúlala y regístrala de nuevo.',
   'The reservation must end after it starts': 'La reserva debe terminar después de empezar.',
-  'A reservation cannot last more than 7 days': 'Una reserva no puede durar más de 7 días.',
+  'A reservation starts and ends on the same day': 'Una reserva va de una hora a otra del mismo día.',
   'The purpose cannot exceed 300 characters': 'El motivo no puede superar los 300 caracteres.',
   'This reservation already finished or was cancelled':
     'Esta reserva ya terminó o fue anulada: solo se puede consultar.',

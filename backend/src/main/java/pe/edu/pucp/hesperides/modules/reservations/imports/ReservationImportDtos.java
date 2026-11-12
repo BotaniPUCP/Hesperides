@@ -32,7 +32,6 @@ public final class ReservationImportDtos {
         AMBIGUOUS_CONTACT,
         DATE_FORMAT,
         END_BEFORE_START,
-        MAX_DURATION,
         TOO_LONG
     }
 

@@ -42,7 +42,7 @@ reserva**. Quedan **fuera**, a propósito (decisión del usuario, 9-11 nov 2026)
 | Término | Qué es |
 |---|---|
 | **Jardín prestable** | Un **lugar** (M9) cuya sección es prestable (`zones.is_reservable`), directamente (`places.zone_id`) o a través de sus lugares hijos, como «Jardín Palmeras (Gastronomía)», que abarca dos secciones (V035). Se reserva el lugar, no la sección: así lo trata el calendario de la OSG. |
-| **Reserva** | Un uso único de un jardín prestable, pedido por una organización, entre una fecha y hora de inicio y otra de fin. No se repite. |
+| **Reserva** | Un uso único de un jardín prestable, pedido por una organización, **un solo día, de una hora a otra** (de 10:00 a 14:00). No se repite. |
 | **Pedido de** | La organización que pide el jardín. Obligatoria y fija. |
 | **Solicitante** | El contacto de «Pedido de» que hizo el pedido. Obligatorio y fijo: la reserva siempre recuerda quién la pidió. |
 | **Para** | La organización que usará el jardín, solo cuando no es la misma que lo pide (la OIE lo pide para el CF Psicología). Opcional. |
@@ -90,6 +90,11 @@ reserva**. Quedan **fuera**, a propósito (decisión del usuario, 9-11 nov 2026)
 **D-01 · Una reserva es única y de un solo jardín.** Decisión del usuario: no se repite. Si una
 actividad usa dos jardines, son dos reservas. *Descartado:* recurrencia y reservas de varios
 jardines.
+
+**D-01b · Una reserva es de un solo día, de una hora a otra.** Decisión del usuario (11 nov 2026):
+se registra una fecha, una hora de inicio y una de fin posterior, y no cruza la medianoche. Una
+actividad de dos días son dos reservas. Reemplaza el tope de 7 días de la primera
+iteración. *Descartado:* reservas de varios días.
 
 **D-02 · Pedido de, solicitante, para y responsable, todos del Directorio.** Decisión del usuario
 (11 nov 2026), que concreta el «Pedido de» y «Para» de SPEC-106 §9.4:
@@ -140,7 +145,7 @@ se valida en `SystemParametersService`: un negativo apagaría los avisos sin que
 Decisión del usuario (11 nov 2026). Una intervención dura varios días, y el capataz marca cada
 jardín completado al cerrar su jornada; no se sabe qué día ni a qué hora se trabaja cada uno. Por
 eso una intervención coincide con una reserva cuando:
-1. su fecha programada es igual o anterior al **último día** (en Lima) de la reserva, y
+1. su fecha programada es igual o anterior al **día** (en Lima) de la reserva, y
 2. alguna de sus ubicaciones en el jardín reservado o cerca de él (D-03b) **no estaba completada
    antes de que empiece la reserva** (`completed_at` nulo o posterior a `starts_at`).
 Ejemplo: poda de lunes a viernes en A, B y C; reserva el miércoles junto a B. Si B se completó el
@@ -266,8 +271,8 @@ metro.
 - Un `requestedByCode` o `requesterCode` en la edición: «Quién pidió la reserva no cambia: anúlala
   y regístrala de nuevo».
 - `endsAt` posterior a `startsAt`; «La reserva debe terminar después de empezar».
-- Duración máxima 7 días; «Una reserva no puede durar más de 7 días» *(decisión de diseño: evita
-  reservas de meses por error de tipeo)*.
+- Inicio y fin el mismo día en Lima (D-01b); si no, «Una reserva va de una hora a otra del mismo
+  día».
 - `purpose` opcional, hasta 300 caracteres.
 - Editar o anular una Terminada o Anulada: «Esta reserva ya terminó o fue anulada».
 - `version` vieja: 409 «Otra persona cambió esta reserva. Recarga para ver su versión.»
@@ -349,8 +354,7 @@ tenía 0 reservas, así que las dos correcciones de datos no encontraron filas.
 
 - Por defecto: desde hoy, 30 días hacia adelante, sin anuladas. Filtros: rango de fechas, jardín,
   organización, «Incluir anuladas». Los filtros viven en la URL (como Frecuencias).
-- Agrupada por día local («Hoy», «Mañana», «jue 13 nov»). Una reserva de varios días aparece en
-  el día en que empieza, con su rango completo.
+- Agrupada por día local («Hoy», «Mañana», «jue 13 nov»).
 - Cada fila: horario, jardín, «Pedido de» (y «para <organización>» si la hay), el responsable con
   su rol y su teléfono, estado y motivo. El solicitante solo se muestra si no es el responsable.
 - ADMIN y COORDINADOR ven «Nueva reserva», «Registro masivo» y, en cada fila no terminada,
@@ -367,7 +371,7 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 ### 5.4 Registro masivo
 
 - Plantilla CSV (UTF-8, `;`):
-  `jardin;pedido_de;solicitante;para;responsable;inicio;fin;motivo`.
+  `jardin;pedido_de;solicitante;para;responsable;fecha;inicio;fin;motivo`.
   - `jardin`: nombre del lugar, uno de sus alias o el código de una de sus secciones.
   - `pedido_de` y `para`: código, nombre o alias de una organización; `para` puede ir vacío.
   - `solicitante` y `responsable`: código o nombre de un contacto (como en contactos de SPEC-106);
@@ -377,7 +381,8 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
     registro masivo no crea nada en el Directorio *(decisión de diseño: el Directorio se carga
     con su propio registro masivo; la ventana de alta es solo del formulario)*. Un nombre de
     contacto que coincide con dos personas también es error: se usa su código.
-  - `inicio` y `fin`: `dd/mm/aaaa hh:mm` en hora de Lima.
+  - `fecha`: `dd/mm/aaaa`; `inicio` y `fin`: `hh:mm` en hora de Lima, el fin posterior al inicio
+    (una sola fecha por fila: no puede cruzar la medianoche, D-01b).
 - Vista previa por fila: *Se crea*, *Se crea con avisos* (cruces o trabajo cercano, con el texto)
   o *Error* con su motivo. Las reglas de §3.2 son errores; los avisos de D-07 nunca lo son.
 - Confirmación todo o nada, como el Directorio; cada reserva guarda su `import_batch_id`.
@@ -385,8 +390,8 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 
 ### 5.5 Casos límite
 
-- Reserva que empieza a las 23:00 y termina a la 01:00: abarca dos días locales; ambos cuentan
-  para D-06.
+- Reserva de 23:00 a 01:00: se rechaza (D-01b); se registran dos, de 23:00 a 23:59 y de 00:00 a
+  01:00.
 - Una reserva de «Jardín Palmeras (Gastronomía)» mide la cercanía desde las dos secciones; una
   intervención en «Lado oeste» es la misma ubicación, no una cercana (RESERVED_HERE).
 - Un jardín que deja de ser prestable con reservas futuras: las reservas siguen y se muestran;
@@ -432,10 +437,10 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 Engine
 - estado: antes de inicio UPCOMING, entre inicio y fin IN_PROGRESS, en el fin FINISHED, anulada CANCELLED
 - cruce: [10,14) y [13,15) se cruzan; [10,14) y [14,16) no
-- días locales de una reserva 23:00-01:00 son dos
+- 10:00-14:00 es un día; 23:00-01:00 no; 18:00-00:00 sí, y su día es el de inicio
 
 Reglas
-- sección no prestable → 422; solicitante de otra organización → 422; sin responsable → 422; fin <= inicio → 422; 8 días → 422
+- sección no prestable → 422; solicitante de otra organización → 422; sin responsable → 422; fin <= inicio → 422; de un día al siguiente → 422
 - responsable de una organización distinta a pedido de y para → se guarda
 - requestedByCode o requesterCode al editar → 422; para igual a pedido de → se guarda vacío
 - crear deja una fila en el historial; cambiar el responsable agrega otra; editar sin cambiarlo no

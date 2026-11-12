@@ -15,14 +15,15 @@ antes de cargar.
 | `solicitante` | **Sí** | Código o nombre de un contacto vigente **vinculado a `pedido_de`**. Si el nombre coincide con dos personas, se usa su código |
 | `para` | No | La organización que usará el jardín, cuando no es la que pide; vacío si es la misma |
 | `responsable` | No | Código o nombre de un contacto vigente, de cualquier organización. Vacío: el solicitante |
-| `inicio` | **Sí** | `dd/mm/aaaa hh:mm` en hora de Lima |
-| `fin` | **Sí** | Posterior a `inicio`; la reserva no puede durar más de 7 días |
+| `fecha` | **Sí** | `dd/mm/aaaa`. Una reserva es de un solo día |
+| `inicio` | **Sí** | `hh:mm` en hora de Lima (`9:00` o `09:00`) |
+| `fin` | **Sí** | `hh:mm`, posterior a `inicio` el mismo día: de 23:00 a 01:00 son dos filas |
 | `motivo` | No | Hasta 300 caracteres |
 
 ## Reglas
 
 - UTF-8 (la plantilla lleva BOM para que Excel la abra bien), separador `;`.
-- La cabecera lleva **exactamente** estas ocho columnas: una que falta o una desconocida rechaza
+- La cabecera lleva **exactamente** estas nueve columnas: una que falta o una desconocida rechaza
   el archivo, porque una columna mal escrita perdería sus datos en silencio.
 - Una organización o un contacto que no está en el Directorio es **error de esa fila**: el registro
   masivo no crea nada en el Directorio; se carga con su propio registro masivo.

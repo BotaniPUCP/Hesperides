@@ -44,9 +44,9 @@ import pe.edu.pucp.hesperides.support.TestDatabase;
 class ReservationsImportIntegrationTest {
 
     private static final String IMPORTS = "/api/v1/imports";
-    private static final String HEADER = "jardin;pedido_de;solicitante;para;responsable;inicio;fin;motivo\n";
+    private static final String HEADER = "jardin;pedido_de;solicitante;para;responsable;fecha;inicio;fin;motivo\n";
     private static final ZoneId LIMA = ZoneId.of("America/Lima");
-    private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm");
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/uuuu");
 
     @Container
     static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
@@ -120,6 +120,7 @@ class ReservationsImportIntegrationTest {
     }
 
     private ResultActions preview(String csv) throws Exception {
+        csv = csv.replace("{fecha}", DATE.format(day));
         MockMultipartFile file = new MockMultipartFile("file", "reservas.csv", "text/csv",
                 csv.getBytes(StandardCharsets.UTF_8));
         return mockMvc.perform(multipart(IMPORTS + "/reservations/preview").file(file));
@@ -140,12 +141,18 @@ class ReservationsImportIntegrationTest {
 
     private static String row(String garden, String requestedBy, String requester, String requestedFor,
             String responsible, String start, String end) {
-        return garden + ";" + requestedBy + ";" + requester + ";" + requestedFor + ";" + responsible
-                + ";" + start + ";" + end + ";Feria\n";
+        return rowOn(null, garden, requestedBy, requester, requestedFor, responsible, start, end);
     }
 
-    private String when(int hour) {
-        return WHEN.format(day.atTime(hour, 0));
+    /** Sin fecha, la fila usa el día de la prueba: preview() reemplaza {fecha}. */
+    private static String rowOn(String date, String garden, String requestedBy, String requester,
+            String requestedFor, String responsible, String start, String end) {
+        return garden + ";" + requestedBy + ";" + requester + ";" + requestedFor + ";" + responsible
+                + ";" + (date == null ? "{fecha}" : date) + ";" + start + ";" + end + ";Feria\n";
+    }
+
+    private static String when(int hour) {
+        return String.format("%02d:00", hour);
     }
 
     @Nested
@@ -236,17 +243,26 @@ class ReservationsImportIntegrationTest {
         @Test
         void anUnreadableDateIsAnErrorOfThatRow() throws Exception {
             preview(HEADER + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
-                    "2026-11-13 10:00", when(14)))
+                    "10.00", when(14)))
                     .andExpect(jsonPath("$.data.rows[0].issues[0].column").value("inicio"))
                     .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("DATE_FORMAT"))
                     .andExpect(jsonPath("$.data.errors").value(1));
         }
 
         @Test
-        void aReservationThatIsTooLongIsAnError() throws Exception {
+        void anUnreadableDayIsAnErrorOfThatRow() throws Exception {
+            preview(HEADER + rowOn("2026-11-13", "Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
+                    when(10), when(14)))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].column").value("fecha"))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("DATE_FORMAT"));
+        }
+
+        @Test
+        void aReservationThatWouldCrossMidnightEndsBeforeItStarts() throws Exception {
             preview(HEADER + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
-                    when(10), WHEN.format(day.plusDays(8).atTime(10, 0))))
-                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("MAX_DURATION"));
+                    when(22), when(1)))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].column").value("fin"))
+                    .andExpect(jsonPath("$.data.rows[0].issues[0].code").value("END_BEFORE_START"));
         }
 
         @Test
@@ -300,8 +316,8 @@ class ReservationsImportIntegrationTest {
         @Test
         void aPastReservationIsAllowedAndComesOutFinished() throws Exception {
             LocalDate past = day.minusDays(4);
-            long batch = batchIdOf(preview(HEADER + row("Jardín Rosales", "Letras", "Juan Diego Villasante", "", "",
-                    WHEN.format(past.atTime(10, 0)), WHEN.format(past.atTime(14, 0)))));
+            long batch = batchIdOf(preview(HEADER + rowOn(DATE.format(past), "Jardín Rosales", "Letras",
+                    "Juan Diego Villasante", "", "", when(10), when(14))));
             confirm(batch).andExpect(status().isOk());
 
             assertThat(jdbc.queryForObject("SELECT starts_at FROM garden_reservations", java.time.OffsetDateTime.class))

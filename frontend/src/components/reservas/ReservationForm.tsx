@@ -13,6 +13,7 @@ import { useCanMaintainReservations, useReservationCheck, useReservationGardens 
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { inputFromIso, isoFromInput, todayInLima } from '@/lib/reservation-format';
 import { reservationsApi } from '@/lib/reservations-api';
+import { ReservationTimeField as TimeField } from './ReservationTimeField';
 import { ReservationWarnings } from './ReservationWarnings';
 
 interface Props {
@@ -22,8 +23,11 @@ interface Props {
   onCancel?: () => void;
 }
 
-const DEFAULT_START = `${todayInLima()}T09:00`;
-const DEFAULT_END = `${todayInLima()}T11:00`;
+const DEFAULT_START = '09:00';
+const DEFAULT_END = '11:00';
+/** `aaaa-mm-ddThh:mm` partido en su día y su hora: una reserva es de un solo día (D-01). */
+const dayOf = (local: string) => local.slice(0, 10);
+const timeOf = (local: string) => local.slice(11, 16);
 
 const toPick = (contact: ReservationContactPickSource): ContactPick =>
   ({ code: contact.code, fullName: contact.fullName });
@@ -57,15 +61,16 @@ export function ReservationForm({ initial, onSaved, onCancel }: Props) {
     initial === undefined ? null : toPick(initial.responsible));
   /** El responsable sigue al solicitante hasta que el usuario lo cambia a mano (D-02). */
   const [responsibleTouched, setResponsibleTouched] = useState(initial !== undefined);
-  const [starts, setStarts] = useState(initial ? inputFromIso(initial.startsAt) : DEFAULT_START);
-  const [ends, setEnds] = useState(initial ? inputFromIso(initial.endsAt) : DEFAULT_END);
+  const [day, setDay] = useState(initial ? dayOf(inputFromIso(initial.startsAt)) : todayInLima());
+  const [startTime, setStartTime] = useState(initial ? timeOf(inputFromIso(initial.startsAt)) : DEFAULT_START);
+  const [endTime, setEndTime] = useState(initial ? timeOf(inputFromIso(initial.endsAt)) : DEFAULT_END);
   const [purpose, setPurpose] = useState(initial?.purpose ?? '');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [created, setCreated] = useState<Reservation | null>(null);
 
-  const startsAt = starts === '' ? null : isoFromInput(starts);
-  const endsAt = ends === '' ? null : isoFromInput(ends);
+  const startsAt = day === '' || startTime === '' ? null : isoFromInput(`${day}T${startTime}`);
+  const endsAt = day === '' || endTime === '' ? null : isoFromInput(`${day}T${endTime}`);
   const checkable = placeId !== null && startsAt !== null && endsAt !== null && endsAt > startsAt;
   const check = useReservationCheck(checkable
     ? { placeId, startsAt, endsAt, excludeCode: initial?.code }
@@ -96,8 +101,8 @@ export function ReservationForm({ initial, onSaved, onCancel }: Props) {
       return;
     }
     if (responsible === null) { setError('Indica un responsable.'); return; }
-    if (startsAt === null || endsAt === null) { setError('Indica la fecha y hora de inicio y de fin.'); return; }
-    if (endsAt <= startsAt) { setError('La reserva debe terminar después de empezar.'); return; }
+    if (startsAt === null || endsAt === null) { setError('Indica la fecha, la hora de inicio y la de fin.'); return; }
+    if (endsAt <= startsAt) { setError('La hora de fin debe ser posterior a la de inicio: la reserva es de un solo día.'); return; }
 
     const sameOrganization = requestedFor?.code === requestedBy?.code;
     const body = {
@@ -190,19 +195,10 @@ export function ReservationForm({ initial, onSaved, onCancel }: Props) {
           <ContactPicker id="reservation-responsible" label="Responsable" organization={null}
             searchEverywhere value={responsible} onChange={chooseResponsible} />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-1 text-sm font-medium text-neutral-700">
-            Inicio<span className="ml-0.5 text-action-danger">*</span>
-            <input type="datetime-local" required value={starts}
-              onChange={(event) => setStarts(event.target.value)}
-              className="h-10 rounded-md border border-neutral-200 bg-neutral-0 px-3 text-base text-neutral-900" />
-          </label>
-          <label className="grid gap-1 text-sm font-medium text-neutral-700">
-            Fin<span className="ml-0.5 text-action-danger">*</span>
-            <input type="datetime-local" required value={ends}
-              onChange={(event) => setEnds(event.target.value)}
-              className="h-10 rounded-md border border-neutral-200 bg-neutral-0 px-3 text-base text-neutral-900" />
-          </label>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <TimeField label="Fecha" type="date" value={day} onChange={setDay} />
+          <TimeField label="Hora de inicio" type="time" value={startTime} onChange={setStartTime} />
+          <TimeField label="Hora de fin" type="time" value={endTime} onChange={setEndTime} />
         </div>
         <Textarea id="reservation-purpose" label="Motivo" value={purpose} onChange={setPurpose}
           maxLength={300} rows={3} helperText="Opcional, hasta 300 caracteres." />

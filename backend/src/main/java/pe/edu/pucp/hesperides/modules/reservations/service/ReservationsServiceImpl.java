@@ -220,7 +220,7 @@ public class ReservationsServiceImpl implements ReservationsService {
                     overlap.code(), null));
         }
         for (WorkRow work : reads.pendingWork(place.id(), start,
-                ReservationPeriod.lastDay(start, end, zone()), nearbyMeters(), timeZone)) {
+                ReservationPeriod.day(start, zone()), nearbyMeters(), timeZone)) {
             boolean here = work.here();
             String where = here ? place.name()
                     : work.locationName() == null ? place.name() : work.locationName();
@@ -351,8 +351,8 @@ public class ReservationsServiceImpl implements ReservationsService {
         if (!end.isAfter(start)) {
             throw new BusinessRuleException("The reservation must end after it starts");
         }
-        if (!ReservationPeriod.withinMaximumDuration(start, end)) {
-            throw new BusinessRuleException("A reservation cannot last more than 7 days");
+        if (!ReservationPeriod.withinOneDay(start, end, zone())) {
+            throw new BusinessRuleException("A reservation starts and ends on the same day");
         }
     }
 

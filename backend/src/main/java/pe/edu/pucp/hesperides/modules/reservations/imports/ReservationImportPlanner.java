@@ -1,6 +1,7 @@
 package pe.edu.pucp.hesperides.modules.reservations.imports;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -11,7 +12,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import pe.edu.pucp.hesperides.engine.reservations.ReservationPeriod;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSuggestion;
 import pe.edu.pucp.hesperides.modules.directory.repository.DirectoryLookupRepository;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvRow;
@@ -38,11 +38,14 @@ import pe.edu.pucp.hesperides.modules.reservations.service.ReservationsService;
 public class ReservationImportPlanner {
 
     static final List<String> COLUMNS = List.of("jardin", "pedido_de", "solicitante", "para", "responsable",
-            "inicio", "fin", "motivo");
+            "fecha", "inicio", "fin", "motivo");
     static final String KIND = "reservations";
 
     private static final int MAX_PURPOSE = 300;
-    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm")
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/uuuu")
+            .withResolverStyle(ResolverStyle.STRICT);
+    // «9:00» y «09:00» valen: así lo escribe Excel según la configuración regional.
+    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("H:mm")
             .withResolverStyle(ResolverStyle.STRICT);
 
     private final ReservationReadRepository reads;
@@ -68,8 +71,11 @@ public class ReservationImportPlanner {
         String requestedForText = text(row, "para");
         String responsibleText = text(row, "responsable");
         String purpose = text(row, "motivo");
-        OffsetDateTime startsAt = date(row, issues, "inicio");
-        OffsetDateTime endsAt = date(row, issues, "fin");
+        LocalDate day = parsed(row, issues, "fecha", DATE, LocalDate::from);
+        LocalTime startTime = parsed(row, issues, "inicio", TIME, LocalTime::from);
+        LocalTime endTime = parsed(row, issues, "fin", TIME, LocalTime::from);
+        OffsetDateTime startsAt = at(day, startTime);
+        OffsetDateTime endsAt = at(day, endTime);
 
         PlaceRow garden = null;
         if (gardenText == null) {
@@ -125,10 +131,9 @@ public class ReservationImportPlanner {
         }
 
         if (startsAt != null && endsAt != null) {
+            // Una sola fecha por fila: la reserva no puede cruzar la medianoche (D-01).
             if (!endsAt.isAfter(startsAt)) {
                 issues.add(new RowIssue(row.line(), "fin", IssueCode.END_BEFORE_START, null));
-            } else if (!ReservationPeriod.withinMaximumDuration(startsAt.toInstant(), endsAt.toInstant())) {
-                issues.add(new RowIssue(row.line(), "fin", IssueCode.MAX_DURATION, null));
             }
         }
 
@@ -167,19 +172,23 @@ public class ReservationImportPlanner {
         return found;
     }
 
-    private OffsetDateTime date(CsvRow row, List<RowIssue> issues, String column) {
+    private static <T> T parsed(CsvRow row, List<RowIssue> issues, String column, DateTimeFormatter format,
+            java.time.temporal.TemporalQuery<T> query) {
         String raw = text(row, column);
         if (raw == null) {
             issues.add(new RowIssue(row.line(), column, IssueCode.REQUIRED, null));
             return null;
         }
         try {
-            LocalDateTime local = LocalDateTime.parse(raw, DATE_TIME);
-            return local.atZone(ZoneId.of(timeZone)).toOffsetDateTime();
+            return format.parse(raw, query);
         } catch (DateTimeParseException ex) {
             issues.add(new RowIssue(row.line(), column, IssueCode.DATE_FORMAT, raw));
             return null;
         }
+    }
+
+    private OffsetDateTime at(LocalDate day, LocalTime time) {
+        return day == null || time == null ? null : day.atTime(time).atZone(ZoneId.of(timeZone)).toOffsetDateTime();
     }
 
     private static String text(CsvRow row, String column) {

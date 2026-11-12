@@ -15,9 +15,11 @@ const ISSUES: Record<string, (issue: ReservationImportRowIssue) => string> = {
       : `«${issue.detail}» no es un contacto del Directorio.`,
   AMBIGUOUS_CONTACT: (issue) =>
     `«${issue.detail}» coincide con más de una persona: usa su código.`,
-  DATE_FORMAT: (issue) => `«${issue.detail}» no es una fecha válida: usa dd/mm/aaaa hh:mm.`,
-  END_BEFORE_START: () => 'La hora de fin debe ser posterior a la de inicio.',
-  MAX_DURATION: () => 'Una reserva no puede durar más de 7 días.',
+  DATE_FORMAT: (issue) =>
+    issue.column === 'fecha'
+      ? `«${issue.detail}» no es una fecha válida: usa dd/mm/aaaa.`
+      : `«${issue.detail}» no es una hora válida: usa hh:mm.`,
+  END_BEFORE_START: () => 'La hora de fin debe ser posterior a la de inicio: la reserva es de un solo día.',
   TOO_LONG: (issue) => `«${issue.column}» es demasiado largo.`,
 };
 
