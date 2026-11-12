@@ -41,3 +41,25 @@ export function formatPeriod(fromIso: string, toIso: string): string {
     : format(from, sameYear ? "d 'de' MMMM" : "d 'de' MMMM 'de' yyyy", { locale: es });
   return `Del ${start} al ${formatDate(toIso)}`;
 }
+
+/** «octubre de 2026» for a «2026-10» month. */
+export function formatMonth(month: string): string {
+  return format(parseISO(`${month}-01`), "MMMM 'de' yyyy", { locale: es });
+}
+
+/** «octubre», for the comparison against the previous month. */
+export function formatMonthName(month: string): string {
+  return format(parseISO(`${month}-01`), 'MMMM', { locale: es });
+}
+
+/** «oct», for a chart axis. */
+export function formatMonthShort(month: string): string {
+  return format(parseISO(`${month}-01`), 'MMM', { locale: es }).replace('.', '');
+}
+
+/** A signed variation with its arrow: «▲ 4,8», «▼ 2», «= 0». */
+export function formatDelta(delta: number, unit: 'PERCENT' | 'COUNT'): string {
+  const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '=';
+  const size = Math.abs(delta);
+  return `${arrow} ${unit === 'PERCENT' ? ONE_DECIMAL.format(size) : INTEGER.format(size)}`;
+}
