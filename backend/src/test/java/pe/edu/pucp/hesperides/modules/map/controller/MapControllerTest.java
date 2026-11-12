@@ -51,6 +51,10 @@ class MapControllerTest {
     // Lo exige SecurityConfig/PasswordChangeRequiredFilter en el slice.
     @MockitoBean private UsersRepository usersRepository;
 
+    private String weakEtag() {
+        return "W/" + modelService.etag();
+    }
+
     @Test
     void withoutASessionTheModelIs401() throws Exception {
         mockMvc.perform(get("/api/v1/map/models/buildings"))
@@ -66,11 +70,12 @@ class MapControllerTest {
 
     @Test
     @WithMockUser(authorities = "OPERARIO")
-    void theModelIsServedAsBinaryGltfWithItsEtag() throws Exception {
+    void theModelIsServedAsBinaryGltfWithAWeakEtag() throws Exception {
+        // Débil: Tomcat no comprime una respuesta con ETag fuerte (R15).
         MockHttpServletResponse response = mockMvc.perform(get("/api/v1/map/models/buildings"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("model/gltf-binary"))
-                .andExpect(header().string(HttpHeaders.ETAG, modelService.etag()))
+                .andExpect(header().string(HttpHeaders.ETAG, weakEtag()))
                 .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache"))
                 .andReturn().getResponse();
 
@@ -80,14 +85,26 @@ class MapControllerTest {
 
     @Test
     @WithMockUser(authorities = "SUPERVISOR")
-    void aCopyWithTheCurrentEtagGetsA304WithoutBody() throws Exception {
+    void theWeakEtagTheServerSentGetsA304WithoutBody() throws Exception {
         MockHttpServletResponse response = mockMvc.perform(get("/api/v1/map/models/buildings")
-                        .header(HttpHeaders.IF_NONE_MATCH, modelService.etag()))
+                        .header(HttpHeaders.IF_NONE_MATCH, weakEtag()))
                 .andExpect(status().isNotModified())
-                .andExpect(header().string(HttpHeaders.ETAG, modelService.etag()))
+                .andExpect(header().string(HttpHeaders.ETAG, weakEtag()))
                 .andReturn().getResponse();
 
         assertThat(response.getContentAsByteArray()).isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "OPERARIO")
+    void theStrongFormOfTheSameEtagAlsoGetsA304() throws Exception {
+        // La comparación de If-None-Match es débil (RFC 9110 §13.1.2): con o sin W/
+        // es la misma etiqueta, venga sola o en una lista.
+        mockMvc.perform(get("/api/v1/map/models/buildings").header(HttpHeaders.IF_NONE_MATCH, modelService.etag()))
+                .andExpect(status().isNotModified());
+        mockMvc.perform(get("/api/v1/map/models/buildings")
+                        .header(HttpHeaders.IF_NONE_MATCH, "\"otro\", " + modelService.etag()))
+                .andExpect(status().isNotModified());
     }
 
     @Test

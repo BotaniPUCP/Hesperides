@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -124,6 +125,8 @@ class MapIntegrationTest {
         MockHttpServletResponse response = mockMvc.perform(get("/api/v1/map/models/buildings"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("model/gltf-binary"))
+                // Débil, para que Tomcat lo comprima (R15).
+                .andExpect(header().string(HttpHeaders.ETAG, startsWith("W/\"")))
                 .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache"))
                 .andReturn().getResponse();
         assertThat(new String(response.getContentAsByteArray(), 0, 4, StandardCharsets.US_ASCII)).isEqualTo("glTF");

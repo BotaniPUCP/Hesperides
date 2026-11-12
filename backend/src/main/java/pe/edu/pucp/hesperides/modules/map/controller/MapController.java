@@ -3,6 +3,7 @@ package pe.edu.pucp.hesperides.modules.map.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
+import org.springframework.http.ETag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -80,13 +81,17 @@ public class MapController {
      * El GLB del plano (SPEC-108 D-06). Va sin el sobre porque es un binario; los
      * errores sí lo llevan. Solo cambia con un despliegue, así que su etiqueta es
      * el hash del archivo y no la versión de datos de las capas.
+     *
+     * La etiqueta es débil: Tomcat no comprime una respuesta con ETag fuerte, y con
+     * gzip el GLB baja de 7,6 MB a 1,8 MB. Es además lo correcto: comprimido o no,
+     * los bytes cambian pero el modelo es el mismo.
      */
     @GetMapping("/models/buildings")
     @PreAuthorize(READERS)
     public ResponseEntity<byte[]> buildingModel(
             @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) String ifNoneMatch) {
-        String etag = modelService.etag();
-        if (etag.equals(ifNoneMatch)) {
+        String etag = "W/" + modelService.etag();
+        if (matchesWeakly(ifNoneMatch, ETag.create(etag))) {
             return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(etag).build();
         }
         return ResponseEntity.ok()
@@ -94,6 +99,12 @@ public class MapController {
                 .eTag(etag)
                 .cacheControl(CacheControl.noCache())
                 .body(modelService.model());
+    }
+
+    /** Comparación débil (RFC 9110 §13.1.2): con o sin {@code W/}, es la misma etiqueta. */
+    private static boolean matchesWeakly(String ifNoneMatch, ETag current) {
+        return ifNoneMatch != null && ETag.parse(ifNoneMatch).stream()
+                .anyMatch(candidate -> candidate.isWildcard() || candidate.compare(current, false));
     }
 
     @GetMapping("/models/buildings/manifest")
