@@ -13,12 +13,14 @@ import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import pe.edu.pucp.hesperides.modules.map.dto.LocationDescriptionResponse;
 import pe.edu.pucp.hesperides.modules.map.service.BuildingModelService;
 import pe.edu.pucp.hesperides.modules.map.service.LocationDescriptionService;
 import pe.edu.pucp.hesperides.modules.map.service.MapLayersService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -26,6 +28,8 @@ import java.net.http.HttpResponse;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.Mockito.when;
 
 /**
  * La compresión la hace Tomcat, no Spring MVC: solo se prueba con un servidor de
@@ -75,9 +79,46 @@ class BuildingModelCompressionTest {
         assertThat(response.body()).isEqualTo(modelService.model());
     }
 
+    @Test
+    void largeJsonWithoutAStrongEtagTravelsGzipped() throws Exception {
+        String text = "A 20 m del pabellón, frente al jardín. ".repeat(100);
+        when(descriptionService.describe(anyDouble(), anyDouble()))
+                .thenReturn(new LocationDescriptionResponse(null, null, null, null, 0, text));
+
+        HttpResponse<byte[]> response = client.send(HttpRequest.newBuilder(url("/api/v1/map/describe"))
+                .header("Accept-Encoding", "gzip")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"lat\":-12.07,\"lon\":-77.08}"))
+                .build(), HttpResponse.BodyHandlers.ofByteArray());
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.headers().firstValue("Content-Encoding")).hasValue("gzip");
+        assertThat(new String(gunzip(response.body()), StandardCharsets.UTF_8)).contains(text);
+    }
+
+    @Test
+    void theManifestKeepsItsStrongEtagAndIsRevalidatedWith304() throws Exception {
+        // Tomcat no comprime una respuesta con ETag fuerte: el manifiesto viaja entero
+        // la primera vez y luego se revalida sin cuerpo.
+        HttpResponse<byte[]> first = client.send(HttpRequest.newBuilder(url("/api/v1/map/models/buildings/manifest"))
+                .header("Accept-Encoding", "gzip").build(), HttpResponse.BodyHandlers.ofByteArray());
+        assertThat(first.statusCode()).isEqualTo(200);
+        assertThat(first.headers().firstValue("ETag")).hasValue(modelService.etag());
+        assertThat(first.headers().firstValue("Cache-Control")).hasValue("no-cache");
+
+        HttpResponse<byte[]> again = client.send(HttpRequest.newBuilder(url("/api/v1/map/models/buildings/manifest"))
+                .header("Accept-Encoding", "gzip")
+                .header("If-None-Match", modelService.etag()).build(), HttpResponse.BodyHandlers.ofByteArray());
+        assertThat(again.statusCode()).isEqualTo(304);
+        assertThat(again.body()).isEmpty();
+    }
+
+    private URI url(String path) {
+        return URI.create("http://localhost:" + port + path);
+    }
+
     private HttpResponse<byte[]> getModel(String acceptEncoding) throws IOException, InterruptedException {
-        HttpRequest.Builder request = HttpRequest.newBuilder(
-                URI.create("http://localhost:" + port + "/api/v1/map/models/buildings"));
+        HttpRequest.Builder request = HttpRequest.newBuilder(url("/api/v1/map/models/buildings"));
         if (acceptEncoding != null) {
             request.header("Accept-Encoding", acceptEncoding);
         }

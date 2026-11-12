@@ -107,11 +107,26 @@ public class MapController {
                 .anyMatch(candidate -> candidate.isWildcard() || candidate.compare(current, false));
     }
 
+    /**
+     * El manifiesto (unos 225 kB) se pide en cada visita para comparar su
+     * {@code version} con el modelo ya leído. Con su etiqueta y {@code no-cache}
+     * el navegador lo guarda y lo revalida: si no cambió, responde 304 sin cuerpo
+     * y el navegador entrega su copia. La etiqueta es la del GLB, la misma que el
+     * manifiesto declara como {@code version}; la comparación es débil, como la del GLB.
+     */
     @GetMapping("/models/buildings/manifest")
     @PreAuthorize(READERS)
-    public ResponseEntity<ApiResponse<BuildingModelManifest>> buildingModelManifest() {
-        return ResponseEntity.ok(ApiResponse.ok("Manifiesto del modelo obtenido",
-                new BuildingModelManifest(modelService.manifestJson())));
+    public ResponseEntity<ApiResponse<BuildingModelManifest>> buildingModelManifest(
+            @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) String ifNoneMatch) {
+        String etag = modelService.etag();
+        if (matchesWeakly(ifNoneMatch, ETag.create(etag))) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(etag).build();
+        }
+        return ResponseEntity.ok()
+                .eTag(etag)
+                .cacheControl(CacheControl.noCache())
+                .body(ApiResponse.ok("Manifiesto del modelo obtenido",
+                        new BuildingModelManifest(modelService.manifestJson())));
     }
 
     @PostMapping("/describe")

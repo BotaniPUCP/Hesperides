@@ -127,4 +127,33 @@ class MapControllerTest {
                 .andExpect(jsonPath("$.data.manifest.nodes").isMap())
                 .andExpect(jsonPath("$.data.manifest.sunken").isArray());
     }
+
+    @Test
+    @WithMockUser(authorities = "OPERARIO")
+    void theManifestCarriesTheModelEtagAndIsRevalidated() throws Exception {
+        // Sin ETag ni Cache-Control propios, Spring Security pondría no-store y el
+        // navegador volvería a bajar los ~225 kB en cada visita.
+        String etag = mockMvc.perform(get("/api/v1/map/models/buildings/manifest"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ETAG, modelService.etag()))
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-cache"))
+                .andReturn().getResponse().getHeader(HttpHeaders.ETAG);
+
+        MockHttpServletResponse notModified = mockMvc.perform(get("/api/v1/map/models/buildings/manifest")
+                        .header(HttpHeaders.IF_NONE_MATCH, etag))
+                .andExpect(status().isNotModified())
+                .andExpect(header().string(HttpHeaders.ETAG, modelService.etag()))
+                .andReturn().getResponse();
+        assertThat(notModified.getContentAsByteArray()).isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPERVISOR")
+    void theManifestComparesEtagsWeakly() throws Exception {
+        mockMvc.perform(get("/api/v1/map/models/buildings/manifest").header(HttpHeaders.IF_NONE_MATCH, weakEtag()))
+                .andExpect(status().isNotModified());
+        mockMvc.perform(get("/api/v1/map/models/buildings/manifest").header(HttpHeaders.IF_NONE_MATCH, "\"otro\""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.manifest.version").exists());
+    }
 }
