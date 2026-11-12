@@ -1,4 +1,4 @@
-import { historyLine, rhythmText, rowTitle, stateDetail, stateLabel } from '../planningTexts';
+import { historyLine, partialProgress, pendingLabel, rhythmText, rowTitle, stateDetail, stateLabel } from '../planningTexts';
 import { planningRow } from '../__fixtures__/planningFixtures';
 
 const window = { minDays: null, maxDays: null, seasonLabel: null, annualTarget: 1, windowStartMonth: 12, windowEndMonth: 1 };
@@ -41,6 +41,38 @@ describe('planningTexts (SPEC-203 §7)', () => {
       .toEqual({ label: 'Avance', value: '34 de 50 jardines · empezó el 5 nov (hace 3 días)' });
     expect(historyLine(planningRow({ lastDate: null, daysSinceLast: null, neverAttendedCount: 18 })))
       .toEqual({ label: 'Última vez', value: 'Sin registro previo' });
+  });
+
+  describe('avance parcial', () => {
+    const partial = { zoneCount: 4, elementCount: 0, upToDateCount: 2, pendingZoneIds: [3, 4],
+      lastDates: [{ date: '2026-11-12', count: 2 }, { date: '2026-11-02', count: 2 }] };
+
+    it('dice cuántas unidades están al día y cuántas faltan', () => {
+      expect(partialProgress(planningRow(partial))).toEqual({ upToDate: 2, total: 4, pending: 2 });
+    });
+
+    it('no hay avance parcial si están todas, ninguna, o la fila ya muestra su avance en curso', () => {
+      expect(partialProgress(planningRow({ ...partial, upToDateCount: 4 }))).toBeNull();
+      expect(partialProgress(planningRow({ ...partial, upToDateCount: 0 }))).toBeNull();
+      expect(partialProgress(planningRow({ ...partial, upToDateCount: null }))).toBeNull();
+      expect(partialProgress(planningRow({ ...partial, state: 'IN_PROGRESS' }))).toBeNull();
+    });
+
+    it('lo que falta se dice por tipo', () => {
+      expect(pendingLabel(planningRow({ pendingZoneIds: [1, 2], pendingElementIds: [] }))).toBe('2 jardines');
+      expect(pendingLabel(planningRow({ pendingZoneIds: [], pendingElementIds: [9] }))).toBe('1 ejemplar');
+      expect(pendingLabel(planningRow({ pendingZoneIds: [1], pendingElementIds: [8, 9] }))).toBe('1 jardín y 2 ejemplares');
+    });
+
+    it('con fechas distintas, la última vez dice cada fecha con cuántas unidades', () => {
+      expect(historyLine(planningRow(partial), new Date('2026-11-12T12:00:00')))
+        .toEqual({ label: 'Última vez', value: 'hoy (2) · 2 nov (2)' });
+      expect(historyLine(planningRow({ lastDates: [{ date: '2026-11-10', count: 1 }, { date: null, count: 3 }] }), new Date('2026-11-12T12:00:00')).value)
+        .toBe('10 nov (1) · sin registro (3)');
+      expect(historyLine(planningRow({ lastDates: [
+        { date: '2026-11-10', count: 1 }, { date: '2026-11-01', count: 1 }, { date: '2026-10-01', count: 1 }, { date: null, count: 1 }] }),
+      new Date('2026-11-12T12:00:00')).value).toBe('10 nov (1) · 1 nov (1) · 1 oct (1) · …');
+    });
   });
 
   it('una última vez de otro año dice el año, para no leerse como de este', () => {

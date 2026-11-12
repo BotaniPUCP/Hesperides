@@ -13,6 +13,7 @@ import { planningApi } from '@/lib/planning-api';
 import { NEW_PLANNING_PATH, PlanningCard } from './PlanningCard';
 import { filterRows, PLANNING_FILTERS, PlanningFilters } from './PlanningFilters';
 import { PlanningMap } from './PlanningMap';
+import { contentsLabel, partialProgress, pendingLabel } from './planningTexts';
 
 const PATH = '/intervenciones/planificacion';
 const NEW_LINK = 'rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700';
@@ -33,6 +34,7 @@ export function PlanningScreen() {
   const rows = filterRows(all, filters);
   const filtered = Object.values(filters).some(Boolean);
   const selectedRow = rows.find((r) => `${r.setId}:${r.activityTypeItemId}` === selected) ?? null;
+  const partialSelected = selectedRow !== null && partialProgress(selectedRow) !== null;
 
   const remove = async (row: PlanningRow) => {
     const confirmed = await ask({
@@ -88,8 +90,20 @@ export function PlanningScreen() {
                 onRemove={() => remove(row)} />;
             })}
           </ul>
-          <div className="lg:sticky lg:top-4 lg:h-[70vh]">
-            <PlanningMap setId={selectedRow?.setId ?? null} />
+          <div className="flex flex-col gap-2 lg:sticky lg:top-4 lg:h-[70vh]">
+            {/* Qué conjunto está en el mapa; sin tarjeta elegida, cómo verlo. */}
+            <p aria-live="polite" className="rounded-md border border-neutral-200 bg-neutral-0 px-3 py-2 text-sm text-neutral-700 shadow-xs">
+              {selectedRow ? <>En el mapa: <strong className="text-neutral-900">{selectedRow.setName}</strong>
+                {' · '}{contentsLabel(selectedRow.zoneCount, selectedRow.elementCount)}</>
+                : 'Elige una tarjeta para ver su conjunto en el mapa.'}
+            </p>
+            <div className="min-h-0 flex-1">
+              {/* Una tarjeta nueva empieza resaltando lo que falta: la clave reinicia el mapa al cambiar de fila. */}
+              <PlanningMap key={selected ?? 'ninguna'} setId={selectedRow?.setId ?? null}
+                pendingZoneIds={partialSelected ? selectedRow.pendingZoneIds : null}
+                pendingElementIds={partialSelected ? selectedRow.pendingElementIds : null}
+                pendingLabel={partialSelected ? pendingLabel(selectedRow) : ''} />
+            </div>
           </div>
         </div>
       )}

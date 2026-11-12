@@ -46,7 +46,7 @@ function daysAgo(n: number): string {
  * Cuántos jardines y ejemplares de la fila, como se diga mejor: el avance y los
  * «sin registro previo» cuentan las dos cosas juntas.
  */
-function unitsLabel(row: PlanningRow, n: number): string {
+export function unitsLabel(row: PlanningRow, n: number): string {
   if (row.elementCount === 0) return gardensLabel(n);
   if (row.zoneCount === 0) return specimensLabel(n);
   return plural(n, 'jardín o ejemplar', 'jardines o ejemplares');
@@ -118,7 +118,26 @@ export function rhythmText(row: PlanningRow): string {
   }
 }
 
-/** La segunda línea de la tarjeta: la cuenta «X de N» solo en curso. */
+/**
+ * Cuando solo una parte del conjunto quedó al día: cuántas unidades lo están, de cuántas, y las
+ * que faltan. Null si están todas al día, ninguna, o la fila ya muestra su avance (en curso).
+ */
+export function partialProgress(row: PlanningRow): { upToDate: number; total: number; pending: number } | null {
+  const total = row.zoneCount + row.elementCount;
+  const upToDate = row.upToDateCount;
+  if (upToDate === null || upToDate === 0 || upToDate >= total || row.state === 'IN_PROGRESS') return null;
+  return { upToDate, total, pending: total - upToDate };
+}
+
+/** Lo que falta, por tipo: «2 jardines», «3 ejemplares», «1 jardín y 2 ejemplares». */
+export function pendingLabel(row: PlanningRow): string {
+  const zones = row.pendingZoneIds.length;
+  const specimens = row.pendingElementIds.length;
+  if (specimens === 0) return gardensLabel(zones);
+  if (zones === 0) return specimensLabel(specimens);
+  return `${gardensLabel(zones)} y ${specimensLabel(specimens)}`;
+}
+
 /** La historia de la fila para la tarjeta: el avance si está en curso; si no, la última vez. */
 export function historyLine(row: PlanningRow, now: Date = new Date()): { label: string; value: string } {
   const started = row.openIntervention?.startedDate;
@@ -127,6 +146,13 @@ export function historyLine(row: PlanningRow, now: Date = new Date()): { label: 
     const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
     const since = Math.round((today - Date.UTC(y, m - 1, d)) / 86_400_000);
     return { label: 'Avance', value: `${row.progress.done} de ${unitsLabel(row, row.progress.total)} · empezó el ${shortDate(started, now)} (${daysAgo(since)})` };
+  }
+  // Atendidos en fechas distintas: cada fecha con cuántos, para que no parezca que no se hizo nada.
+  if (row.lastDates.length > 1) {
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const when = (date: string | null) => (date === null ? 'sin registro' : date === today ? 'hoy' : shortDate(date, now));
+    const shown = row.lastDates.slice(0, 3).map((d) => `${when(d.date)} (${d.count})`);
+    return { label: 'Última vez', value: shown.join(' · ') + (row.lastDates.length > 3 ? ' · …' : '') };
   }
   if (!row.lastDate || row.daysSinceLast === null) return { label: 'Última vez', value: 'Sin registro previo' };
   return { label: 'Última vez', value: `${shortDate(row.lastDate, now)} (${daysAgo(row.daysSinceLast)})` };

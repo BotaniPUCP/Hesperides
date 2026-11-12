@@ -61,6 +61,52 @@ describe('Registro de intervención desde la planificación (SPEC-203 §5.6)', (
     expect(body.locations.map((l: { zoneId: number }) => l.zoneId)).toEqual([112, 113]);
   });
 
+  describe('con avance parcial, solo lo que falta', () => {
+    const mixed = () => (greenAreaSetsApi.get as jest.Mock).mockResolvedValue({ id: 3, name: 'Mixto', description: null, version: 0,
+      activities: [], warnings: [],
+      zones: [{ id: 112, code: 'AV-112', name: 'Sección 112', displayName: 'Sección 112', landscapeCode: null, sectorName: null },
+        { id: 113, code: 'AV-113', name: 'Sección 113', displayName: 'Sección 113', landscapeCode: null, sectorName: null }],
+      elements: [{ id: 501, code: 'EV-000501' }, { id: 502, code: 'EV-000502' }] });
+
+    it('propone solo el jardín y el ejemplar que faltan, y deja incluir todo el conjunto', async () => {
+      mixed();
+      (planningApi.rows as jest.Mock).mockResolvedValue([planningRow({ suggestedDate: '2026-11-08', elementCount: 2, zoneCount: 2,
+        upToDateCount: 2, pendingZoneIds: [113], pendingElementIds: [502] })]);
+      render(<PlannedInterventionForm setId={3} activityId={30} onlyPending />);
+
+      expect(await screen.findByText(/Se propone solo lo que falta: 1 jardín · 1 ejemplar./)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Agregar ejemplares por código/, { selector: '#elements-1' })).toHaveValue('EV-000502');
+      await userEvent.click(screen.getByRole('button', { name: 'Crear intervención' }));
+      await waitFor(() => expect(interventionsApi.create).toHaveBeenCalled());
+      const body = (interventionsApi.create as jest.Mock).mock.calls[0][0];
+      expect(body.locations.map((l: { zoneId: number | null }) => l.zoneId)).toEqual([113, null]);
+      expect(body.locations[1].elementCodes).toEqual(['EV-000502']);
+    });
+
+    it('«Incluir todo el conjunto» vuelve a armar el registro con todo', async () => {
+      mixed();
+      (planningApi.rows as jest.Mock).mockResolvedValue([planningRow({ elementCount: 2, zoneCount: 2,
+        upToDateCount: 2, pendingZoneIds: [113], pendingElementIds: [502] })]);
+      render(<PlannedInterventionForm setId={3} activityId={30} onlyPending />);
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Incluir todo el conjunto' }));
+
+      expect(screen.queryByText(/Se propone solo lo que falta/)).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Ubicación 3' })).toBeInTheDocument();
+      expect(screen.getByLabelText(/Agregar ejemplares por código/, { selector: '#elements-2' })).toHaveValue('EV-000501, EV-000502');
+    });
+
+    it('si no falta nada que recortar, llega el conjunto entero sin aviso', async () => {
+      mixed();
+      (planningApi.rows as jest.Mock).mockResolvedValue([planningRow({ elementCount: 2, zoneCount: 2,
+        upToDateCount: 0, pendingZoneIds: [112, 113], pendingElementIds: [501, 502] })]);
+      render(<PlannedInterventionForm setId={3} activityId={30} onlyPending />);
+
+      expect(await screen.findByRole('heading', { name: 'Ubicación 3' })).toBeInTheDocument();
+      expect(screen.queryByText(/Se propone solo lo que falta/)).not.toBeInTheDocument();
+    });
+  });
+
   it('los ejemplares del conjunto llegan juntos en una ubicación propia, con sus códigos en la caja', async () => {
     (greenAreaSetsApi.get as jest.Mock).mockResolvedValue({ id: 3, name: 'Mixto', description: null, version: 0,
       activities: [], warnings: [], zones: zones(1),

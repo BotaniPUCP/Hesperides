@@ -12,7 +12,7 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/lib/planning-api', () => ({ planningApi: { rows: jest.fn(), assignments: { remove: jest.fn() } } }));
 const mockMap = jest.fn();
 jest.mock('../PlanningMap', () => ({
-  PlanningMap: (props: { setId: number | null }) => { mockMap(props); return <div data-testid="map" />; },
+  PlanningMap: (props: { setId: number | null; pendingZoneIds?: number[] | null }) => { mockMap(props); return <div data-testid="map" />; },
 }));
 
 const rows = planningApi.rows as jest.Mock;
@@ -40,13 +40,15 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
     expect(text).not.toMatch(/ronda|ritmo|propio de este conjunto/i);
   });
 
-  it('al elegir una fila el mapa ilumina sus jardines', async () => {
+  it('al elegir una fila el mapa ilumina sus jardines y dice qué conjunto es', async () => {
     rows.mockResolvedValue([planningRow()]);
     render(<PlanningScreen />);
+    expect(await screen.findByText('Elige una tarjeta para ver su conjunto en el mapa.')).toBeInTheDocument();
 
     await userEvent.click(await screen.findByRole('button', { name: /^Corte de césped en Ingreso Riva-Agüero/ }));
 
     expect(mockMap).toHaveBeenLastCalledWith(expect.objectContaining({ setId: 3 }));
+    expect(screen.getByText(/En el mapa:/)).toHaveTextContent('En el mapa: Ingreso Riva-Agüero · 18 jardines');
   });
 
   it('sin planificaciones invita a crear una', async () => {
@@ -149,6 +151,51 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
 
       expect(await screen.findByText('Ninguna planificación coincide con los filtros.')).toBeInTheDocument();
       expect(screen.queryByText('Todavía no hay planificaciones')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('avance parcial: solo una parte del conjunto quedó al día', () => {
+    const partial = () => planningRow({ zoneCount: 4, state: 'OVERDUE', days: 6, ruleKind: 'INTERVAL_DAYS',
+      upToDateCount: 2, pendingZoneIds: [13, 14], lastDate: '2026-11-02', daysSinceLast: 10,
+      lastDates: [{ date: '2026-11-12', count: 2 }, { date: '2026-11-02', count: 2 }] });
+
+    it('la tarjeta dice cuánto está al día, dónde está el atraso y cada fecha', async () => {
+      rows.mockResolvedValue([partial()]);
+      render(<PlanningScreen />);
+
+      const card = within(await screen.findByRole('listitem'));
+      expect(card.getByText('Al día: 2 de 4 jardines')).toBeInTheDocument();
+      expect(card.getByRole('progressbar', { name: 'Al día' })).toHaveAttribute('aria-valuenow', '2');
+      expect(card.getByText('6 días tarde en 2 jardines')).toBeInTheDocument();
+      expect(card.getByText(/2 nov \(2\)/)).toBeInTheDocument();
+    });
+
+    it('planificar propone solo lo que falta', async () => {
+      rows.mockResolvedValue([partial()]);
+      render(<PlanningScreen />);
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Planificar los 2 pendientes' }));
+
+      expect(mockPush).toHaveBeenCalledWith('/intervenciones/nueva?conjunto=3&actividad=30&pendientes=1');
+    });
+
+    it('al elegirla, el mapa recibe lo que falta para resaltarlo', async () => {
+      rows.mockResolvedValue([partial()]);
+      render(<PlanningScreen />);
+
+      await userEvent.click(await screen.findByRole('button', { name: /^Corte de césped en Ingreso Riva-Agüero/ }));
+
+      expect(mockMap).toHaveBeenLastCalledWith(expect.objectContaining({ setId: 3, pendingZoneIds: [13, 14], pendingElementIds: [], pendingLabel: '2 jardines' }));
+    });
+
+    it('sin avance parcial todo queda como siempre', async () => {
+      rows.mockResolvedValue([planningRow({ state: 'OVERDUE', days: 4, upToDateCount: 0, pendingZoneIds: [1] })]);
+      render(<PlanningScreen />);
+
+      const card = within(await screen.findByRole('listitem'));
+      expect(card.queryByText(/^Al día:/)).not.toBeInTheDocument();
+      expect(card.getByText('4 días tarde')).toBeInTheDocument();
+      expect(card.getByRole('button', { name: 'Planificar intervención' })).toBeInTheDocument();
     });
   });
 

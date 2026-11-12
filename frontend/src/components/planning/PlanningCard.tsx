@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import type { PlanningRow } from '@shared/types';
 import { Badge, Button, type BadgeColor } from '@/components/ui';
 import { cn } from '@/lib/cn';
-import { contentsLabel, historyLine, rhythmText, stateDetail, stateLabel } from './planningTexts';
+import { contentsLabel, historyLine, partialProgress, pendingLabel, rhythmText, stateDetail, stateLabel, unitsLabel } from './planningTexts';
 
 /** Color del estado según SPEC-C01: rojo atrasada, ámbar pendiente, azul abierta, verde al día. */
 const TONE: Record<PlanningRow['state'], BadgeColor> = {
@@ -21,9 +21,14 @@ const PLANNABLE: PlanningRow['state'][] = ['OVERDUE', 'DUE', 'NOT_DUE'];
 export const NEW_PLANNING_PATH = '/intervenciones/planificacion/nueva';
 export const planningPath = (assignmentId: number) => `/intervenciones/planificacion/${assignmentId}`;
 
+/** Con avance parcial, el registro llega solo con lo que falta (se puede sumar el resto allí). */
 export function planHref(row: PlanningRow): string {
-  return `/intervenciones/nueva?conjunto=${row.setId}&actividad=${row.activityTypeItemId}`;
+  const base = `/intervenciones/nueva?conjunto=${row.setId}&actividad=${row.activityTypeItemId}`;
+  return partialProgress(row) ? `${base}&pendientes=1` : base;
 }
+
+/** Con intervalo, el atraso es de las unidades que faltan: «6 días tarde en 2 jardines». */
+const DELAY_IN_UNITS: (string | null)[] = ['INTERVAL_DAYS', 'COVERAGE_CYCLE'];
 
 interface Props {
   row: PlanningRow;
@@ -40,7 +45,10 @@ interface Props {
 export function PlanningCard({ row, selected, onSelect, onRemove }: Props) {
   const history = historyLine(row);
   const rhythm = rhythmText(row);
-  const detail = stateDetail(row).replace(/^\((.*)\)$/, '$1');
+  const partial = partialProgress(row);
+  const baseDetail = stateDetail(row).replace(/^\((.*)\)$/, '$1');
+  const detail = partial && (row.state === 'OVERDUE' || row.state === 'DUE') && DELAY_IN_UNITS.includes(row.ruleKind)
+    ? `${baseDetail} en ${pendingLabel(row)}` : baseDetail;
   return (
     <li className={cn('rounded-lg border bg-neutral-0 text-sm', selected ? 'border-brand-600 ring-1 ring-brand-600' : 'border-neutral-200')}>
       <button type="button" onClick={onSelect} aria-pressed={selected} className="block w-full p-4 text-left">
@@ -60,6 +68,16 @@ export function PlanningCard({ row, selected, onSelect, onRemove }: Props) {
           <Datum label="Contiene" value={contentsLabel(row.zoneCount, row.elementCount)} />
           {rhythm && <Datum label="Suele realizarse" value={rhythm} />}
         </dl>
+        {/* Avance parcial: cuánto del conjunto ya está al día, como la barra de una intervención en curso. */}
+        {partial && (
+          <span className="mt-2 flex items-center gap-3 text-xs">
+            <span className="whitespace-nowrap font-medium text-neutral-800">Al día: {partial.upToDate} de {unitsLabel(row, partial.total)}</span>
+            <span role="progressbar" aria-label="Al día" aria-valuemin={0} aria-valuemax={partial.total} aria-valuenow={partial.upToDate}
+              className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200">
+              <span className="block h-full rounded-full bg-brand-600" style={{ width: `${(100 * partial.upToDate) / partial.total}%` }} />
+            </span>
+          </span>
+        )}
       </button>
       <Actions row={row} onRemove={onRemove} />
     </li>
@@ -88,7 +106,9 @@ function Actions({ row, onRemove }: { row: PlanningRow; onRemove?: () => void })
     const { id, code } = row.openIntervention;
     action = <Button variant="secondary" size="sm" onClick={() => router.push(`/intervenciones/${id}`)}>Ver intervención {code}</Button>;
   } else if (PLANNABLE.includes(row.state)) {
-    action = <Button size="sm" onClick={() => router.push(planHref(row))}>Planificar intervención</Button>;
+    const partial = partialProgress(row);
+    action = <Button size="sm" onClick={() => router.push(planHref(row))}>
+      {partial ? `Planificar ${partial.pending === 1 ? 'el pendiente' : `los ${partial.pending} pendientes`}` : 'Planificar intervención'}</Button>;
   } else if (row.state === 'NOT_CONFIGURED') {
     action = <Button size="sm" onClick={() => router.push(change)}>Completar planificación</Button>;
   }

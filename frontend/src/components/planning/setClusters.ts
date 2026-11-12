@@ -9,6 +9,13 @@ export interface SetCluster {
 /** Dos unidades a menos de esta distancia (en metros, borde a borde) quedan en el mismo grupo. */
 export const CLUSTER_GAP_M = 60;
 
+/**
+ * Lo más ancho (en metros, en cualquier dirección) que puede ser un grupo. La cercanía encadena:
+ * jardines seguidos de punta a punta del campus quedan en un solo grupo y encuadrarlo es ver el
+ * campus entero. Un grupo más ancho se parte en bloques de este tamaño.
+ */
+export const MAX_GROUP_SPAN_M = 250;
+
 const LAYERS = ['greenAreas', 'xerophytic', 'reserve'] as const;
 
 interface Unit {
@@ -61,13 +68,37 @@ export function setClusters(scene: SceneData, zoneCodes: readonly string[], spec
       if (gap(units[i], units[j]) <= maxGap) parent[find(i)] = find(j);
     }
   }
-  const groups = new Map<number, SetCluster>();
+  const byRoot = new Map<number, Unit[]>();
   units.forEach((u, i) => {
     const root = find(i);
-    const g = groups.get(root) ?? { zoneCodes: [], specimenCodes: [] };
-    (u.kind === 'zone' ? g.zoneCodes : g.specimenCodes).push(u.code);
-    groups.set(root, g);
+    byRoot.set(root, [...(byRoot.get(root) ?? []), u]);
   });
-  return [...groups.values()].sort((a, b) =>
+  return [...byRoot.values()].flatMap(splitWide).map(toCluster).sort((a, b) =>
     (b.zoneCodes.length + b.specimenCodes.length) - (a.zoneCodes.length + a.specimenCodes.length));
+}
+
+/** Un grupo más ancho que {@link MAX_GROUP_SPAN_M} se parte en bloques; cada unidad va al de su centro. */
+function splitWide(group: Unit[]): Unit[][] {
+  const minX = Math.min(...group.map((u) => u.minX));
+  const maxX = Math.max(...group.map((u) => u.maxX));
+  const minZ = Math.min(...group.map((u) => u.minZ));
+  const maxZ = Math.max(...group.map((u) => u.maxZ));
+  const cols = Math.ceil((maxX - minX) / MAX_GROUP_SPAN_M);
+  const rows = Math.ceil((maxZ - minZ) / MAX_GROUP_SPAN_M);
+  if (cols <= 1 && rows <= 1) return [group];
+  const cells = new Map<string, Unit[]>();
+  for (const u of group) {
+    const col = Math.min(cols - 1, Math.max(0, Math.floor(((u.minX + u.maxX) / 2 - minX) / MAX_GROUP_SPAN_M)));
+    const row = Math.min(rows - 1, Math.max(0, Math.floor(((u.minZ + u.maxZ) / 2 - minZ) / MAX_GROUP_SPAN_M)));
+    const key = `${row}:${col}`;
+    cells.set(key, [...(cells.get(key) ?? []), u]);
+  }
+  return [...cells.values()];
+}
+
+function toCluster(group: Unit[]): SetCluster {
+  return {
+    zoneCodes: group.filter((u) => u.kind === 'zone').map((u) => u.code),
+    specimenCodes: group.filter((u) => u.kind === 'specimen').map((u) => u.code),
+  };
 }

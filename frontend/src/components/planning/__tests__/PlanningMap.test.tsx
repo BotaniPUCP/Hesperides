@@ -1,4 +1,5 @@
-import { act, render, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { Map3DViewProps } from '@/components/map3d/Map3DView';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
@@ -56,6 +57,44 @@ describe('PlanningMap', () => {
     act(() => map.onReady?.(viewer));
     await waitFor(() => expect(viewer.focusSections).toHaveBeenLastCalledWith(['AV-01'], ['EV-000501']));
     expect(viewer.setMarkedSpecimens).toHaveBeenLastCalledWith(['EV-000501']);
+  });
+
+  describe('con avance parcial', () => {
+    const comedor = { zones: [{ id: 11, code: 'AV-11' }, { id: 12, code: 'AV-12' }, { id: 13, code: 'AV-13' }],
+      elements: [{ id: 501, code: 'EV-501' }, { id: 502, code: 'EV-502' }] };
+
+    it('resalta solo lo que falta y lo dice', async () => {
+      get.mockResolvedValue(comedor);
+      const viewer = fakeViewer();
+      render(<PlanningMap setId={3} pendingZoneIds={[13]} pendingElementIds={[502]} pendingLabel="1 jardín y 1 ejemplar" />);
+      act(() => map.onReady?.(viewer));
+
+      expect(await screen.findByText('Resaltado: lo que falta (1 jardín y 1 ejemplar)')).toBeInTheDocument();
+      await waitFor(() => expect(viewer.setMarkedSections).toHaveBeenLastCalledWith(['AV-13']));
+      expect(viewer.setMarkedSpecimens).toHaveBeenLastCalledWith(['EV-502']);
+    });
+
+    it('deja ver el conjunto entero y volver a lo que falta', async () => {
+      get.mockResolvedValue(comedor);
+      const viewer = fakeViewer();
+      render(<PlanningMap setId={3} pendingZoneIds={[13]} pendingElementIds={[]} pendingLabel="1 jardín" />);
+      act(() => map.onReady?.(viewer));
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Ver todo el conjunto' }));
+      expect(screen.getByText('Resaltado: todo el conjunto')).toBeInTheDocument();
+      await waitFor(() => expect(viewer.setMarkedSections).toHaveBeenLastCalledWith(['AV-11', 'AV-12', 'AV-13']));
+
+      await userEvent.click(screen.getByRole('button', { name: 'Ver solo lo que falta' }));
+      await waitFor(() => expect(viewer.setMarkedSections).toHaveBeenLastCalledWith(['AV-13']));
+    });
+
+    it('sin avance parcial no hay aviso de qué se resalta', async () => {
+      get.mockResolvedValue(comedor);
+      render(<PlanningMap setId={3} />);
+      await waitFor(() => expect(get).toHaveBeenCalled());
+
+      expect(screen.queryByRole('group', { name: 'Qué se resalta' })).not.toBeInTheDocument();
+    });
   });
 
   it('sin conjunto no pide nada y no encuadra jardines', () => {

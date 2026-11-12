@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.engine.frequency.FrequencyRule;
 import pe.edu.pucp.hesperides.engine.planning.EffectiveRule;
+import pe.edu.pucp.hesperides.engine.planning.GardenHistory;
 import pe.edu.pucp.hesperides.engine.planning.PlanningEvaluator;
 import pe.edu.pucp.hesperides.engine.planning.PlanningOrder;
 import pe.edu.pucp.hesperides.engine.planning.PlanningVerdict;
+import pe.edu.pucp.hesperides.engine.planning.UnitBreakdown;
 import pe.edu.pucp.hesperides.engine.reporting.ReportPeriods;
 import pe.edu.pucp.hesperides.modules.planning.attendance.GardenAttendanceProvider;
 import pe.edu.pucp.hesperides.modules.planning.attendance.SpecimenAttendanceProvider;
@@ -86,10 +88,11 @@ public class PlanningServiceImpl implements PlanningService {
                 SetSnapshot set = planned.get(a.setId());
                 PlanningRule rule = catalog.byKey(a.ruleKey());
                 FrequencyRule frequency = rule == null ? null : rule.rule();
-                PlanningVerdict verdict = PlanningEvaluator.evaluate(frequency,
-                        history.of(set.zoneIds(), set.elementIds()), open, today);
+                List<GardenHistory> units = history.of(set.zoneIds(), set.elementIds());
+                PlanningVerdict verdict = PlanningEvaluator.evaluate(frequency, units, open, today);
                 String label = rule != null ? rule.activityLabel() : a.activityLabel();
-                scored.add(new Scored(verdict, PlanningRows.of(set, a, label, rule, verdict)));
+                scored.add(new Scored(verdict, PlanningRows.of(set, a, label, rule, verdict,
+                        UnitBreakdown.of(frequency, units, today))));
             }
         }
         return scored.stream().sorted(Comparator.comparing(Scored::verdict, PlanningOrder.COMPARATOR))

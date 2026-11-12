@@ -64,15 +64,15 @@ export function SetMap({ zoneCodes, specimenCodes, className = '' }: Props) {
         onUnsupported={() => setUnsupported(true)}
         onSelect={() => undefined} onGroundPick={() => undefined} onHover={() => undefined} onCompass={() => undefined} />
       {clusters.length > 1 && (
-        <div role="group" aria-label="Recorrer el conjunto por grupos" className={`${CHIP} absolute left-3 top-3 z-30 flex items-center gap-1 py-1 pl-3 pr-1`}>
-          <span aria-live="polite" className="pr-2">
+        <div role="group" aria-label="Recorrer el conjunto por grupos" className={`${CHIP} absolute left-3 right-3 top-3 z-30 flex w-fit max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-1 py-1 pl-3 pr-1`}>
+          <span aria-live="polite" className="whitespace-nowrap pr-2">
             {index < 0 ? `Todo · ${clusters.length} grupos` : `Grupo ${index + 1} de ${clusters.length} · ${contentsLabel(focus.zoneCodes.length, focus.specimenCodes.length)}`}
           </span>
-          <button type="button" className="rounded px-2 py-1 hover:bg-neutral-100" disabled={index <= 0}
+          <button type="button" className="whitespace-nowrap rounded px-2 py-1 hover:bg-neutral-100" disabled={index <= 0}
             onClick={() => go(Math.max(0, index - 1))}>‹ Anterior</button>
-          <button type="button" className="rounded px-2 py-1 hover:bg-neutral-100" disabled={index >= clusters.length - 1}
+          <button type="button" className="whitespace-nowrap rounded px-2 py-1 hover:bg-neutral-100" disabled={index >= clusters.length - 1}
             onClick={() => go(index < 0 ? 0 : index + 1)}>Siguiente ›</button>
-          <button type="button" className="rounded px-2 py-1 hover:bg-neutral-100" aria-pressed={index < 0}
+          <button type="button" className="whitespace-nowrap rounded px-2 py-1 hover:bg-neutral-100" aria-pressed={index < 0}
             onClick={() => go(index < 0 ? 0 : -1)}>{index < 0 ? 'Por grupos' : 'Ver todo'}</button>
         </div>
       )}

@@ -128,6 +128,13 @@ class PlanningAssignmentsIntegrationTest {
         assertThat(row.get("ruleKey").asString()).isEqualTo(created.get("ruleKey").asString());
         assertThat(row.get("rhythm").get("minDays").asInt()).isEqualTo(5);
         assertThat(row.get("ownRule").asBoolean()).isTrue();
+        // Su único jardín nunca se atendió: falta, y así lo dice el desglose por unidad.
+        long garden = jdbc.queryForObject("SELECT zone_id FROM green_area_set_zones WHERE set_id = ?", Long.class, set);
+        assertThat(row.get("upToDateCount").asInt()).isZero();
+        assertThat(row.get("pendingZoneIds").get(0).asLong()).isEqualTo(garden);
+        assertThat(row.get("pendingElementIds")).isEmpty();
+        assertThat(row.get("lastDates").get(0).get("date").isNull()).isTrue();
+        assertThat(row.get("lastDates").get(0).get("count").asInt()).isEqualTo(1);
     }
 
     @Test
@@ -166,6 +173,83 @@ class PlanningAssignmentsIntegrationTest {
 
         assertThat(jdbc.queryForObject("SELECT valid_to IS NOT NULL FROM maintenance_frequencies WHERE id = ?", Boolean.class, forSets)).isTrue();
         assertThat(rowOfMySet().get("rhythm").get("minDays").asInt()).isEqualTo(10);
+    }
+
+    /**
+     * Lo que promete el aviso al editar: «El cambio rige desde hoy y se aplica a las planificaciones
+     * que usan esta frecuencia. Los reportes de meses anteriores mantienen la frecuencia vigente en su momento».
+     */
+    @Test
+    void editingAppliesFromTodayToThePlanningAndPastReportsKeepTheVersionInEffectThen() throws Exception {
+        assign(forSets, 201);
+        jdbc.update("UPDATE maintenance_frequencies SET valid_from = DATE '2026-01-01', created_at = TIMESTAMP '2026-01-01' WHERE id = ?", forSets);
+
+        send(put("/api/v1/maintenance/frequencies/" + forSets).with(user("a@test.local").authorities(() -> "ADMIN")),
+                Map.of("minDaysInterval", 10, "maxDaysInterval", 12), 200);
+        long current = jdbc.queryForObject("""
+                SELECT id FROM maintenance_frequencies
+                WHERE rule_key = (SELECT rule_key FROM maintenance_frequencies WHERE id = ?) AND valid_to IS NULL""",
+                Long.class, forSets);
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate lastMonth = today.minusMonths(1).withDayOfMonth(1);
+        attended(lastMonth.plusDays(9));
+
+        // La planificación toma el cambio hoy mismo.
+        assertThat(current).isNotEqualTo(forSets);
+        assertThat(rowOfMySet().get("rhythm").get("minDays").asInt()).isEqualTo(10);
+
+        // El jardín del conjunto, atendido el mes pasado, se juzga ese mes entero con la versión
+        // anterior; un periodo que cruza el cambio se parte en dos tramos, cada uno con la suya.
+        assertThat(versionsJudgingMyGarden(lastMonth, lastMonth.withDayOfMonth(lastMonth.lengthOfMonth()))).containsOnly(forSets);
+        assertThat(versionsJudgingMyGarden(today.minusDays(3), today)).containsExactly(forSets, current);
+    }
+
+    /**
+     * Una intervención de personal propio que completó el jardín del conjunto ese día (11:00 en Lima) y
+     * quedó aprobada: los reportes solo cuentan trabajo aprobado (SPEC-200 D-06); la planificación, el completado.
+     */
+    private void attended(java.time.LocalDate day) {
+        for (String email : List.of("c@test.local", "v@test.local")) {
+            jdbc.update("""
+                    INSERT INTO users(email, password_hash, first_name, last_name, role_item_id)
+                    SELECT ?, 'test', 'Coordinación', 'Test',
+                           (SELECT id FROM catalog_items WHERE code = 'COORDINADOR'
+                              AND catalog_type_id = (SELECT id FROM catalog_types WHERE code = 'ROLE'))
+                    WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = ?)""", email, email);
+        }
+        long work = jdbc.queryForObject("""
+                INSERT INTO interventions (intervention_class_item_id, intervention_type_item_id, planning_status_item_id,
+                    created_by_user_id, scheduled_date, origin_item_id, reported_by_item_id)
+                SELECT a.parent_item_id, a.id, st.id, u.id, ?, o.id, n.id
+                FROM catalog_items a, users u,
+                     catalog_items st JOIN catalog_types stt ON stt.id = st.catalog_type_id AND stt.code = 'INTERVENTION_STATUS',
+                     catalog_items o JOIN catalog_types ot ON ot.id = o.catalog_type_id AND ot.code = 'INTERVENTION_ORIGIN',
+                     catalog_items n JOIN catalog_types nt ON nt.id = n.catalog_type_id AND nt.code = 'INCIDENT_SOURCE'
+                WHERE a.id = ? AND u.email = 'c@test.local' AND st.code = 'ASSIGNED' AND o.code = 'MAINTENANCE' AND n.code = 'NONE'
+                RETURNING id""", Long.class, day, activity);
+        jdbc.update("""
+                INSERT INTO intervention_locations (intervention_id, client_reference, zone_id, status_item_id, attempt_number,
+                    started_at, completed_at, validated_at, executed_by_user_id, validated_by_user_id)
+                SELECT ?, gen_random_uuid(), gz.zone_id, st.id, 1, ?::timestamp, ?::timestamp, ?::timestamp, u.id, v.id
+                FROM green_area_set_zones gz, users u, users v,
+                     catalog_items st JOIN catalog_types t ON t.id = st.catalog_type_id AND t.code = 'INTERVENTION_STATUS'
+                WHERE gz.set_id = ? AND st.code = 'VALIDATED' AND u.email = 'c@test.local' AND v.email = 'v@test.local'""",
+                work, day + " 13:00", day + " 16:00", day + " 18:00", set);
+    }
+
+    /** Con qué versión de la regla se juzgó, tramo por tramo, el jardín de mi conjunto en el periodo. */
+    private List<Long> versionsJudgingMyGarden(java.time.LocalDate from, java.time.LocalDate to) throws Exception {
+        JsonNode rows = send(get("/api/v1/maintenance/frequencies/compliance").param("from", from.toString())
+                .param("to", to.toString()).param("activityTypeItemId", Long.toString(activity)), null, 200).get("data");
+        List<Long> ids = new java.util.ArrayList<>();
+        for (JsonNode row : rows) {
+            if (!"IN_HOUSE".equals(row.get("regime").asString())) continue;
+            for (JsonNode location : row.get("locations")) {
+                for (JsonNode segment : location.get("segments")) ids.add(segment.get("evaluatedWithConfigId").asLong());
+            }
+        }
+        assertThat(ids).as("el jardín del conjunto aparece en el cumplimiento").isNotEmpty();
+        return ids;
     }
 
     @Test

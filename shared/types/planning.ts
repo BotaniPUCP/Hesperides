@@ -107,6 +107,13 @@ export interface PlanningRow {
   assignmentId: number;
   /** La regla asignada; null si la asignación quedó sin frecuencia. */
   ruleKey: string | null;
+  /** Cuántas unidades (jardines y ejemplares) están al día por sí solas; null sin frecuencia. */
+  upToDateCount: number | null;
+  /** Cuántas unidades se atendieron por última vez en cada fecha, de la más reciente a la más antigua; null = nunca. */
+  lastDates: { date: string | null; count: number }[];
+  /** Las que faltan: les toca, están atrasadas o nunca se atendieron. */
+  pendingZoneIds: number[];
+  pendingElementIds: number[];
 }
 
 export interface RecentAttention {

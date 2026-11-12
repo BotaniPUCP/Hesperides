@@ -9,6 +9,6 @@ export default async function NewInterventionPage({ searchParams }: { searchPara
   const filters=incidentFilters(new URLSearchParams({ search: typeof query.incidentSearch==='string' ? query.incidentSearch : '',
     status: typeof query.incidentStatus==='string' ? query.incidentStatus : '', page: typeof query.incidentPage==='string' ? query.incidentPage : '0' }));
   const plan=plannedFrom(query);
-  if (plan) return <PlannedInterventionForm setId={plan.setId} activityId={plan.activityId} />;
+  if (plan) return <PlannedInterventionForm setId={plan.setId} activityId={plan.activityId} onlyPending={plan.onlyPending} />;
   return <InterventionForm fromIncident={positiveIncidentId(query.fromIncident)} returnFilters={filters} />;
 }

@@ -243,10 +243,13 @@ salió de las entrevistas (riego intensivo en algunas áreas).
 
 **D-18 · Un conjunto disperso se recorre por grupos.**
 Encuadrar un conjunto repartido por todo el campus muestra el campus entero. El mapa agrupa
-sus jardines y ejemplares por cercanía (borde a borde, 60 m) y se recorre con «Anterior ·
+sus jardines y ejemplares por cercanía (borde a borde, 60 m); como la cercanía encadena, un grupo
+más ancho que 250 m se parte en bloques de 250 m. Se recorre con «Anterior ·
 Siguiente · Ver todo», del grupo más grande al más chico. Con un solo grupo no aparece. Se usa
 en el mapa de Planificación y en «Ver en el mapa» del conjunto. No toca el visor: solo lo
-encuadra.
+encuadra. En Planificación, sobre el mapa, una línea dice qué conjunto muestra («En el mapa:
+Sector verde 02 · 247 jardines») o, sin tarjeta elegida, «Elige una tarjeta para ver su conjunto
+en el mapa».
 
 ## 3. Contratos de API
 
@@ -322,6 +325,9 @@ horaria configurada. Para pruebas el builder puede inyectar un `Clock`.
   `IN_PROGRESS` o `SCHEDULED`.
 - `suggestedDate`: la fecha que el registro de intervención propone (§5.6).
 - `assignmentId`, `ruleKey`: la asignación de la tarjeta y su regla (nula si quedó sin frecuencia).
+- `upToDateCount`, `lastDates`, `pendingZoneIds`, `pendingElementIds`: el desglose por unidad de
+  §5.5.1 (cuántas están al día, cuántas se atendieron por última vez en cada fecha y cuáles
+  faltan). Nulo y vacíos si la fila no tiene frecuencia.
 
 ### 3.3 Atendido hace poco
 
@@ -538,6 +544,23 @@ configurada) del mayor `completed_at` entre las ubicaciones de intervención que
 Cuenta cualquier origen (mantenimiento o hallazgo): un corte es un corte. Una ubicación que
 apunta a un **sector** completo no cuenta para sus secciones: no se infiere cobertura (SPEC-101,
 enmienda T09).
+
+### 5.5.1 Avance parcial (12 nov 2026)
+
+La fila se juzga por la unidad atendida hace más tiempo (abajo): si se regaron 2 de 4 jardines,
+sigue atrasada por los otros 2. Para que ese avance no se pierda, cada unidad (jardín o ejemplar)
+se juzga además por sí sola, con la misma regla y el mismo motor, como si fuera un conjunto de
+una unidad y sin intervenciones abiertas. Está **al día** si todavía no le toca (`NOT_DUE`) o ya
+cumplió su periodo (`DONE_FOR_PERIOD`); si no, **falta**. Con eso, cuando solo una parte está al
+día (y la fila no está en curso):
+
+- la tarjeta dice «Al día: 2 de 4 jardines» con una barra, y con intervalo el atraso dice dónde
+  está: «6 días tarde en 2 jardines»;
+- «Última vez» da cada fecha con cuántas unidades: «hoy (2) · 2 nov (2)» (hasta tres fechas y «…»;
+  las nunca atendidas, «sin registro (N)»);
+- al elegir la tarjeta, el mapa resalta solo lo que falta, con «Ver todo el conjunto»;
+- el botón es «Planificar los 2 pendientes» y el registro llega solo con eso
+  (`/intervenciones/nueva?conjunto=&actividad=&pendientes=1`), con «Incluir todo el conjunto».
 
 ### 5.5 Estado de una fila (conjunto × actividad)
 
