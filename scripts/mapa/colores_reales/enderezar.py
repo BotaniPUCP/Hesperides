@@ -1,7 +1,8 @@
 """Endereza tramos de fachada de las fotos y los junta en un atlas (prueba de SPEC-109 con fotos reales).
 
 Uso, desde la raíz del repositorio:
-  python scripts/mapa/colores_reales/enderezar.py scripts/mapa/colores_reales/tramos.json <carpeta edificios-pucp> \n    frontend/public/models/real-look/atlas.jpg frontend/src/components/map3d/realLook/looks/atlas.json
+  python scripts/mapa/colores_reales/enderezar.py scripts/mapa/colores_reales/tramos.json <carpeta edificios-pucp>
+    frontend/public/models/real-look/atlas.jpg frontend/src/components/map3d/realLook/looks/atlas.json
 tramos.json: {"id": {"foto": "carpeta/archivo.jpg", "quad": [[x,y] TL, TR, BR, BL], "anchoM": 12, "altoM": 16}}
 """
 import json
