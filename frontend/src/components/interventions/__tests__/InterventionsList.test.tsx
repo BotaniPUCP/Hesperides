@@ -20,7 +20,7 @@ const LIST = '/intervenciones';
 const list = jest.mocked(interventionsApi.list);
 const onePage = (totalPages = 3) => ({
   content: [{
-    id: 10, code: 'INT-000010', statusCode: 'COMPLETED', scheduledDate: '2026-10-23', completedLocationCount: 1,
+    id: 10, code: 'INT-000010', activityTitle: 'Jardinería · Poda', statusCode: 'COMPLETED', scheduledDate: '2026-10-23', completedLocationCount: 1,
     locationCount: 2, validatedLocationCount: 0, pendingEvidenceCount: 0, approvedForCounting: false,
   }],
   page: { number: 0, size: 12, totalElements: 30, totalPages },
@@ -48,7 +48,7 @@ it('reabre con el estado, las fechas y la página que trae la URL', async () => 
   window.history.replaceState(null, '', `${LIST}?status=COMPLETED&from=2026-10-01&to=2026-10-31&page=2`);
   render(<InterventionsList />);
 
-  await waitFor(() => expect(list).toHaveBeenCalledWith(2, 'COMPLETED', '2026-10-01', '2026-10-31', undefined));
+  await waitFor(() => expect(list).toHaveBeenCalledWith(2, 'COMPLETED', '2026-10-01', '2026-10-31', undefined, undefined));
   expect(await screen.findByText('Página 3 de 3')).toBeInTheDocument();
   expect(screen.getByLabelText('Desde')).toHaveValue('2026-10-01');
 });
@@ -57,7 +57,7 @@ it('una fecha o página manipuladas en la URL no llegan al backend', async () =>
   window.history.replaceState(null, '', `${LIST}?from=ayer&to=2026-13&page=-3`);
   render(<InterventionsList />);
 
-  await waitFor(() => expect(list).toHaveBeenCalledWith(0, '', '', '', undefined));
+  await waitFor(() => expect(list).toHaveBeenCalledWith(0, '', '', '', undefined, true));
 });
 
 it('lleva los filtros a la URL, vuelve a la primera página y los recuerda', async () => {
@@ -78,7 +78,7 @@ it('pasar de página queda en la URL', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
 
   await waitFor(() => expect(window.location.search).toBe('?page=1'));
-  await waitFor(() => expect(list).toHaveBeenLastCalledWith(1, '', '', '', undefined));
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(1, '', '', '', undefined, true));
 });
 
 it('filtrar no pierde el ejemplar por el que se llegó', async () => {
@@ -89,7 +89,7 @@ it('filtrar no pierde el ejemplar por el que se llegó', async () => {
   fireEvent.change(screen.getByLabelText('Hasta'), { target: { value: '2026-10-31' } });
 
   await waitFor(() => expect(window.location.search).toBe('?greenElementCode=EV-000001&to=2026-10-31'));
-  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, '', '', '2026-10-31', 'EV-000001'));
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, '', '', '2026-10-31', 'EV-000001', true));
 });
 
 it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de cero', async () => {
@@ -100,7 +100,7 @@ it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de c
   act(() => window.history.pushState(null, '', LIST));
 
   await waitFor(() => expect(screen.getByLabelText('Desde')).toHaveValue(''));
-  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, '', '', '', undefined));
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, '', '', '', undefined, true));
   await waitFor(() => expect(rememberedHref(LIST)).toBe(LIST));
 });
 
@@ -116,4 +116,29 @@ it('la flecha va a Inicio sin recorrido y a la pantalla anterior si se llegó de
   });
 
   expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', '/catastro/ejemplares/EV-000001');
+});
+
+it('muestra el nombre de actividad como enlace y conserva el c?digo secundario',async()=>{
+  render(<InterventionsList/>);
+  const link=await screen.findByRole('link',{name:'Jardiner\u00eda \u00b7 Poda'});
+  expect(link).toHaveAttribute('href','/intervenciones/10');
+  expect(screen.getByText('INT-000010').closest('a')).toBeNull();
+});
+it('inicia en activas y permite consultar inactivas o todas reiniciando la p?gina',async()=>{
+  window.history.replaceState(null,'',`${LIST}?page=2`);
+  render(<InterventionsList/>);
+  await waitFor(()=>expect(list).toHaveBeenLastCalledWith(2,'','','',undefined,true));
+  fireEvent.change(screen.getByLabelText('Mostrar'),{target:{value:'inactive'}});
+  await waitFor(()=>expect(list).toHaveBeenLastCalledWith(0,'','','',undefined,false));
+  expect(window.location.search).toBe('?activity=inactive');
+  fireEvent.change(screen.getByLabelText('Mostrar'),{target:{value:'all'}});
+  await waitFor(()=>expect(list).toHaveBeenLastCalledWith(0,'','','',undefined,undefined));
+});
+it('un estado expl?cito sigue siendo accesible y cambiar el grupo limpia ese estado',async()=>{
+  window.history.replaceState(null,'',`${LIST}?status=COMPLETED`);
+  render(<InterventionsList/>);
+  await waitFor(()=>expect(list).toHaveBeenLastCalledWith(0,'COMPLETED','','',undefined,undefined));
+  expect(screen.getByLabelText('Mostrar')).toHaveValue('all');
+  fireEvent.change(screen.getByLabelText('Mostrar'),{target:{value:'active'}});
+  await waitFor(()=>expect(list).toHaveBeenLastCalledWith(0,'','','',undefined,true));
 });

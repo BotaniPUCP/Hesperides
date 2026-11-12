@@ -22,6 +22,9 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
           and (cast(:team as bigint) is null or i.team_id=:team)
           and (cast(:assignee as bigint) is null or i.assigned_to_user_id=:assignee)
           and (cast(:status as varchar) is null or a.status_code=:status)
+          and (cast(:active as boolean) is null
+            or (:active=true and a.status_code not in ('COMPLETED','VALIDATED','CANCELLED'))
+            or (:active=false and a.status_code in ('COMPLETED','VALIDATED','CANCELLED')))
           and (cast(:dateFrom as date) is null or i.scheduled_date>=:dateFrom)
           and (cast(:dateTo as date) is null or i.scheduled_date<=:dateTo)
           and (cast(:incidentId as bigint) is null or exists(select 1 from incident_intervention_links il
@@ -45,5 +48,5 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
         @Param("assignee") Long assignee,@Param("status") String status,@Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo,@Param("zone") Long zone,@Param("place") Long place,
         @Param("localStatus") String localStatus,@Param("element") Long element,
-        @Param("elementCode") String elementCode,@Param("incidentId") Long incidentId,Pageable pageable);
+        @Param("elementCode") String elementCode,@Param("incidentId") Long incidentId,@Param("active") Boolean active,Pageable pageable);
 }

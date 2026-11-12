@@ -2,9 +2,16 @@ import type { ModeId } from '../modes';
 import type { LayerId, Target } from '../target';
 import type { CameraPose } from './cameraRig';
 import type { ViewCone } from './viewCones';
+import type { Polygon } from '../sceneData';
 
 /** Lo que el visor avisa a la interfaz React. */
 export interface ViewerCallbacks {
+  /** Opt-in specimen brush; other maps keep their normal camera gestures. */
+  specimenSweep?: {
+    enabled:()=>boolean;
+    onSelect:(target:Target)=>void;
+    onState:(position:{clientX:number;clientY:number}|null)=>void;
+  };
   onSelect: (target: Target | null) => void;
   onGroundPick: (lat: number, lon: number) => void;
   /** Cualquier clic con punto (suelo, área verde, edificio): para marcar una ubicación. */
@@ -17,6 +24,10 @@ export interface ViewerCallbacks {
 
 /** Las operaciones que la interfaz React ordena al visor. */
 export interface Viewer {
+  setMarkedVegetation?: (codes:readonly string[])=>void;
+  /** Optional restrictions and reference outline; unused by the general map. */
+  setEligibleSections?: (codes:readonly string[]|null) => void;
+  setReferenceOutline?: (polygons:Polygon[],focus:boolean) => void;
   setPaint: (mode: ModeId, hidden: Set<string>) => void;
   /** M7: áreas registradas temporalmente, sin cambiar el modo normal del mapa. */
   setMarkedSections: (codes: readonly string[]) => void;

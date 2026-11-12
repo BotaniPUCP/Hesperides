@@ -1,9 +1,10 @@
 import { apiClient, ApiError } from './api';
 import { mensajeDeApiError } from './api-errors';
 import type { Page } from '@shared/types';
+import type { GeoJsonGeometry } from '@shared/types';
 
 export interface InterventionSummary {
-  id: number; code: string; version: number; classItemId: number; typeItemId: number | null;
+  id: number; code: string; activityTitle?: string; version: number; classItemId: number; typeItemId: number | null;
   scheduledDate: string; planningStatusCode: string; statusCode: string;
   teamId: number | null; assignedToUserId: number | null; startedAt: string | null;
   completedAt: string | null; validatedAt: string | null;
@@ -19,6 +20,7 @@ export interface InterventionLocation {
   elementCodes?: string[]; linkedElementCodes?: string[];
   statusCode?: string; executionNotes?: string | null; rejectionReason?: string | null;
   attemptNumber?: number; executedByUserId?: number | null; allowedActions?: string[];
+  zoneSelectionRevision?: string | null; zoneBoundary?: GeoJsonGeometry;
 }
 export interface InterventionEvidence {
   id: number; interventionLocationId: number; attemptNumber: number;
@@ -35,6 +37,7 @@ export interface InterventionHistoryEvent {
   };
 }
 export interface InterventionDetail extends InterventionSummary {
+  campusSelectionRevision?:string|null;
   incidentIntegrationAvailable?: boolean;
   sourceIncidents?: { id: number; code: string | null; statusCode: string }[];
   description: string | null; locations: InterventionLocation[]; evidences: InterventionEvidence[];
@@ -43,14 +46,33 @@ export interface InterventionDetail extends InterventionSummary {
   executionBlockedUntil?: string | null;
   history: InterventionHistoryEvent[];
   quantityTotals: { unitItemId: number; requestedQuantity: number | null; progressQuantity: number | null; executedQuantity: number | null }[];
+  plannedSurfaceM2?: number | null;
 }
+export interface InterventionZone {
+  id:number; code:string; name:string; geometryValid:boolean; geometry:GeoJsonGeometry;
+  areaM2:number; point:{latitude:number;longitude:number}; polygonCount:number;
+}
+export interface CampusSpecimen {
+  id:number;code:string;name:string;point:{latitude:number;longitude:number};typeCode:string;
+  scientificName:string;heightM:number|null;crownRadiusM:number|null;quantity:number;
+}
+export interface CampusOptions {selectionRevision:string;zones:InterventionZone[];specimens:CampusSpecimen[];}
+export interface InterventionZoneOptions {
+  place:{id:number;code:string;name:string;geometryValid:boolean;geometry:GeoJsonGeometry|null};
+  datasetRevision:string; reviewVersion:number; reviewed:boolean; current:boolean;
+  selectionRevision:string|null; zones:InterventionZone[]; candidates:InterventionZone[];
+  reviewedAt:string|null; reviewedByUserId:number|null;
+}
+export interface ZoneSelection {placeId:number;zoneId:number;zoneSelectionRevision:string;}
+export interface ZonePreview {surfaceM2:number;zones:InterventionZone[];}
 export interface InterventionPlanning {
+  campusSelectionRevision?:string|null;
   classItemId: number; typeItemId: number | null; scheduledDate: string; description: string | null;
   locations: InterventionLocation[]; version?: number; rescheduleReason?: string;
   originItemId?: number; reportedByItemId?: number; externalCode?: string | null; requestedAt?: string | null;
 }
 export interface InterventionOptions {
-  places: {id:number; name:string}[];
+  places: {id:number; code?:string; name:string}[];
   zones: {id:number; name:string}[];
   teams: { id: number; name: string; responsibleSupervisorUserId: number | null; assignees: { id: number; fullName: string }[] }[];
   catalogs: { id: number; code: string; label: string; typeCode: string; parentItemId: number | null }[];
@@ -58,8 +80,11 @@ export interface InterventionOptions {
 export type InterventionPage = Page<InterventionSummary>;
 const base = '/interventions';
 export const interventionsApi = {
-  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string) => {
+  campusOptions:()=>apiClient.get<CampusOptions>(`${base}/campus-selection`),
+  campusPreview:(selectionRevision:string,zoneIds:number[],specimenIds:number[])=>apiClient.post<{surfaceM2:number;areaCount:number;specimenCount:number}>(`${base}/campus-selection/preview`,{selectionRevision,zoneIds,specimenIds}),
+  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string, active?: boolean) => {
     const query = new URLSearchParams({ page: String(page), size: '20' });
+    if (active !== undefined) query.set('active', String(active));
     if (status) query.set('statusCode', status);
     if (dateFrom) query.set('dateFrom', dateFrom);
     if (dateTo) query.set('dateTo', dateTo);
@@ -68,6 +93,10 @@ export const interventionsApi = {
   },
   detail: (id: number) => apiClient.get<InterventionDetail>(`${base}/${id}`),
   options: () => apiClient.get<InterventionOptions>(`${base}/options`),
+  zoneOptions: (placeId:number) => apiClient.get<InterventionZoneOptions>(`${base}/places/${placeId}/zones`),
+  previewZones: (selections:ZoneSelection[]) => apiClient.post<ZonePreview>(`${base}/zone-selection/preview`,{selections}),
+  reviewZones: (placeId:number,body:{datasetRevision:string;version:number;zoneIds:number[];multipartAcknowledged:number[];reason:string}) =>
+    apiClient.put<InterventionZoneOptions>(`${base}/places/${placeId}/zones`,body),
   create: (body: InterventionPlanning, key: string) => apiClient.postWithKey<InterventionDetail>(base, body, key),
   update: (id: number, body: InterventionPlanning) => apiClient.put<InterventionDetail>(`${base}/${id}`, body),
   assign: (id: number, version: number, teamId: number, assignedToUserId: number) =>
@@ -87,9 +116,12 @@ export const interventionsApi = {
 
 export function interventionError(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.status === 409 && /campus/i.test(error.message)) return 'El inventario cambió. Actualiza el mapa y revisa la selección antes de guardar.';
+    if (error.status === 409 && /zone|spatial/i.test(error.message)) return 'Las zonas o sus asociaciones cambiaron. Actualiza las zonas y confirma la selección antes de guardar.';
     if (error.status === 404) return 'La intervención o ubicación no está disponible para tu cuenta.';
     if (error.status === 409) return 'El trabajo cambió o hay un envío en curso. Actualiza la información antes de reintentar; conserva tu texto.';
     const messages: Record<string,string> = {
+      'Scheduled date cannot be in the past': 'La fecha programada debe ser hoy o una fecha futura.',
       'A reviewer cannot approve their own execution or reporting': 'Otra persona autorizada debe aprobar el trabajo que ejecutaste o reportaste.',
       'Execution cannot begin before the scheduled date': 'El trabajo podrá ejecutarse desde la fecha programada. Si debe adelantarse, solicita al coordinador que revise la planificación.',
       'At least one received photo is required for this location and attempt': 'Adjunta al menos una foto recibida de esta ubicación e intento antes de continuar.',

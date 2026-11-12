@@ -21,7 +21,7 @@
 | SPEC-103 | Registro del catastro y estándares de carga | 📝 En spec | —    | S2     |              |
 | SPEC-104 | Galería de fotos de especie | 🔄 En progreso | —          | S3     |              |
 | SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 5, falta verificar en navegador | —          | —      |              |
-| SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
+| SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: §2.12 reemplaza el flujo por lugares con mapa único, áreas de todo el campus y ejemplares seleccionables. V036 conserva datos y contratos anteriores. Pendientes revisión visual, R5 y R6; la selección fina de ejemplares se refinará posteriormente. | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
 
@@ -43,6 +43,10 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-200 §2.11 · Rediseño R1/R2 | Aclaración y capturas del usuario (11 nov 2026) | Solo zonas directamente asociadas al lugar, sin expansión al nivel 2. Biblioteca Central: AV-0174, AV-0377, AV-0378, AV-0380 y AV-0381; confirmación visual del usuario y prueba del motor contra las otras 526 zonas del inventario. R3/R4 aún pendientes; no modifica Lugares ni Mapa general. |
+| SPEC-200 §2.11.6 · R3 | Backend del rediseño (11 nov 2026) | V035: revisiones y enlaces directos con historial; consulta, revisión y cálculo previo de superficie; guardado derivado por zona y geometría histórica. Contrato antiguo compatible y transición explícita sin convertir cantidades sobre el mismo ID. Suite completa de 923 pruebas aprobada y 24 comprobaciones finales tras añadir preview. V035 aplicada localmente durante R4 después de respaldo. |
+| SPEC-200 §2.11.7 · R4 | Selector web del rediseño (11 nov 2026) | Registro por lugar y zonas completas, contador sin lista de códigos, cambio desde edificios registrados, superficie del servidor y edición compatible. Biblioteca Central: cinco asociaciones persistidas, 1712,49 m² y guardado/reintento/edición comprobados por API (INT-000017 cancelada). Usuario confirma que el mapa funciona; pendiente revisión visual de las correcciones. Ver informe R4. |
+| SPEC-200 §2.12 | Cambio posterior confirmado por el usuario y su líder (11 nov 2026) | Mapa único, áreas de todo el campus y ejemplares independientes; elimina lugares y vecindad del flujo nuevo. Últimas cinco áreas y «Mostrar más» para áreas/ejemplares, árboles visibles, m² solo de áreas. V036 aplicada tras respaldo, pruebas y guardado real comprobados; INT-000018 cancelada al terminar. Falta revisión visual del nuevo flujo. |
 | SPEC-004 §3.2 · C-08 · C-09 · E-03 · REQ 2.7 · Catálogo 2.2/2.11 | SPEC-105 (6 nov 2026) | Tres acciones auditables de especie. La criticidad pasa a ser de la especie y no de su tipo; `GENERIC` deja de escribirse; se retira la proyección automática de medidas tras una poda. |
 | SPEC-C01 §4.3 | Estandarización de pantallas (7 nov 2026) | Toda pantalla usa `PageFrame` (un solo ancho, fila fija de flecha y breadcrumb derivado del menú) y `PageHeader`. Las tarjetas pasan a `rounded-2xl`. |
 | SPEC-100 §3, §5.5 y §7 | Autobloqueo al reenviarse credenciales (6 nov 2026) | Un ADMIN ya no puede reenviarse sus credenciales: responde 422 y su fila no ofrece ese botón ni el de desactivar. El 403 de cambio obligatorio relee la sesión y lleva a `/cambiar-password`. La confirmación de reenvío detalla sus efectos. |
@@ -188,10 +192,13 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V031 | `V031__add_species_criticality_and_averages.sql` | SPEC-105 §4.2 | Criticidad y promedios por especie, con la fuente de cada valor, y corrección del tipo de dos especies |
 | V032 | `V032__add_measurement_origin.sql` | SPEC-105 §4.3 | Origen de cada fila del historial de mediciones y la intervención que la registró |
 | V033 | `V033__create_extra_measures.sql` | SPEC-105 §4.4 | Catálogo de medidas adicionales, su asignación por especie y sus valores por medición |
+| V034 | `V034__places_span_buildings_and_children.sql` | Catálogo de lugares | Lugares con varios edificios y contornos derivados de sus hijos; ya presente en la rama base del rediseño |
+| V035 | `V035__intervention_place_zone_selections.sql` | SPEC-200 §2.11.6 · R3 | Revisiones y asociaciones directas lugar–zona; geometría histórica y revisión opcionales por ubicación, sin conversión ni siembra de IDs locales |
+| V036 | `V036__intervention_campus_selection.sql` | SPEC-200 §2.12 | Revisión opcional de selección global y áreas con geometría histórica sin lugar; conserva el flujo anterior y sus datos |
 
 ### Pendientes (sin número reservado)
 
-Al 6 nov 2026 el siguiente número libre es **V034**, sujeto a comprobarlo nuevamente al
+Al 11 nov 2026 el siguiente número libre es **V037**, sujeto a comprobarlo nuevamente al
 implementar. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

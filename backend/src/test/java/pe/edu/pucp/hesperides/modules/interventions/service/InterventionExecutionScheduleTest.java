@@ -9,6 +9,13 @@ import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import static org.assertj.core.api.Assertions.*;
 
 class InterventionExecutionScheduleTest {
+    @Test void planningUsesTheCampusDayAndAllowsTodayOrFuture() {
+        var policy=new InterventionExecutionSchedule(Clock.fixed(Instant.parse("2026-11-06T00:30:00Z"),ZoneId.of("America/Lima")));
+        assertThatThrownBy(()->policy.requirePlanningDate(LocalDate.of(2026,11,4))).isInstanceOf(BusinessRuleException.class).hasMessage("Scheduled date cannot be in the past");
+        assertThatCode(()->policy.requirePlanningDate(LocalDate.of(2026,11,5))).doesNotThrowAnyException();
+        assertThatCode(()->policy.requirePlanningDate(LocalDate.of(2026,11,6))).doesNotThrowAnyException();
+    }
+
     @Test void midnightUtcDoesNotStartTheNextCampusDay() {
         var policy=new InterventionExecutionSchedule(Clock.fixed(Instant.parse("2026-11-06T00:30:00Z"),ZoneId.of("America/Lima")));
         assertThat(policy.canExecute(LocalDate.of(2026,11,5))).isTrue();

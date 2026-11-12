@@ -42,6 +42,11 @@ public class InterventionLocation extends BaseEntity {
     private Long unitItemId;
     @Column(name = "requested_quantity")
     private BigDecimal requestedQuantity;
+    @Column(name = "zone_selection_revision")
+    private String zoneSelectionRevision;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "zone_boundary_snapshot", columnDefinition = "jsonb")
+    private Map<String,Object> zoneBoundarySnapshot;
     @Column(name = "progress_quantity")
     private BigDecimal progressQuantity;
     @Column(name = "executed_quantity")

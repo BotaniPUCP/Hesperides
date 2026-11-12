@@ -12,6 +12,7 @@ import java.time.LocalDate;
 public class InterventionSummaryResponse {
     private Long id;
     private String code;
+    private String activityTitle;
     private Long version;
     private Long classItemId;
     private Long typeItemId;

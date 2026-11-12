@@ -6,7 +6,7 @@
 | Autor | Propuesta elaborada con Codex para revisión del equipo |
 | Estado | En progreso: núcleo/web probados; T08 y T09 local implementados con validación visual pendiente; T10 requiere conciliar contrato con incidencias |
 | Fecha | 22 oct 2026 |
-| Revisión | Ejecución multiubicación normalizada en contratos y esquema; evidencias de actas 004, 009 y 010 |
+| Revisión | §2.12 reemplaza el flujo por lugares: mapa único, áreas de todo el campus y ejemplares individuales; R5 implementado, R6 pendiente |
 | Plataforma | Web; contrato de evidencias preparado para un futuro cliente Android |
 | Sprint | S2, sujeto a planificación del equipo |
 | Dependencias | SPEC-001, SPEC-002 §4.6, SPEC-003, SPEC-004, SPEC-005, SPEC-101, SPEC-102, SPEC-C01, SPEC-C02, SPEC-C03 |
@@ -21,6 +21,13 @@
 > El proveedor real de frecuencias evalúa lugares explícitos; la integración con incidencias y
 > la evaluación territorial histórica por sector siguen pendientes. Las referencias
 > antiguas a «SPEC-2XX de intervenciones» corresponden ahora a este documento.
+
+> **Rediseño solicitado el 10 nov 2026:** §2.11 define el comportamiento nuevo y su
+> compatibilidad. R1 está documentada y R2 incorpora un motor aislado y herramientas de
+> revisión, con Biblioteca Central verificada y otros lugares pendientes. No están implementados el
+> selector 3D ni el filtro activo/inactivo. Los contratos
+> y el esquema actuales de §3–§4 siguen describiendo la versión existente y deberán
+> adaptarse en etapas posteriores, sin modificar migraciones publicadas.
 
 ## 1. Objetivo
 
@@ -296,6 +303,204 @@ T10 no se habilita hasta conciliar ese contrato y probar ambos módulos juntos.
   permisos de planificación ya definidos. No se amplían los permisos del capataz.
 
 Estas correcciones reutilizan el esquema vigente y sus eventos. No necesitan una migración nueva.
+
+### 2.11 Rediseño de actividad, lugares y zonas verdes — 10 nov 2026
+
+**Procedencia y alcance.** Reglas indicadas directamente por el usuario en esta conversación,
+incluidas sus aclaraciones sobre títulos y polígonos completos. El 11 nov precisó que
+solo se permiten zonas directamente asociadas al lugar, sustituyendo los dos niveles.
+No se atribuyen a las actas antiguas ni al Excel AS IS. El usuario autorizó comenzar por
+R1 (definición del contrato); este apartado no equivale a código, migración o prueba visual.
+En los puntos del formulario nuevo que cambien, estas reglas sustituyen la presentación
+anterior una vez implementado el rediseño. Los registros y clientes actuales conservan
+su compatibilidad durante la transición.
+
+**Base de trabajo comprobada.** Antes de editar se consultó el remoto. La rama de trabajo
+`modulo-intervenciones` y `origin/feature/lugar-varios-edificios` coincidían en `fc2c1a3`,
+sin commits exclusivos en ninguno de los lados y con la carpeta limpia. Cualquier etapa
+posterior debe volver a comprobar la referencia más reciente de esa rama; no asumir que
+esta comprobación acredita versiones futuras.
+
+#### 2.11.1 Reglas confirmadas del formulario y la presentación
+
+| Tema | Comportamiento del rediseño |
+|------|----------------------------|
+| Identidad y título | El título visible es el nombre de la actividad, no el código INT. Se usa la etiqueta del tipo de actividad; si un registro histórico no tiene tipo, se muestra la clase como alternativa. El código se conserva como identificador y referencia secundaria. No se renombra el módulo completo a «Actividad». |
+| Uno o varios lugares | Una intervención conserva una actividad y puede abarcar varios lugares. Los nombres de los lugares se muestran debajo del título, sin convertirlos en parte obligatoria del nombre de la actividad. |
+| Terminología | Las tarjetas de selección se presentan como «Lugares», con acción «Agregar lugar», en lugar de «Ubicaciones». Esto no autoriza a renombrar tablas ni a cambiar IDs de registros existentes. |
+| Lugar de referencia | Cada tarjeta permite elegir un lugar vigente mediante un desplegable del catálogo de la base de datos. No crea lugares nuevos desde Intervenciones. |
+| Mapa integrado | Elegir el lugar muestra un mapa 3D dentro de la tarjeta, con las funciones pertinentes del mapa existente. El lugar queda resaltado y las zonas verdes parten sin seleccionar. El tono del resaltado se verificará contra el visor actual; rosa fue una referencia recordada, no un color confirmado. |
+| Selección | Solo se eligen zonas verdes completas, según sus polígonos oficiales. No se dibujan contornos ni se selecciona una porción de una zona. No se selecciona el edificio como superficie de trabajo. |
+| Cercanía | Se permiten exclusivamente zonas directamente asociadas al lugar elegido, conforme a §2.11.2. No se amplía la selección a vecinas de esas zonas. |
+| Cambio de lugar | Se actualizan el lugar de referencia, el resaltado y las zonas elegibles en la misma tarjeta. Para evitar mantener zonas del lugar anterior, el contrato propuesto limpia esa selección y recalcula la superficie; este detalle es una decisión de implementación explicitada, no una confirmación adicional del usuario. |
+| Ejemplares | Se retira del formulario nuevo el selector manual de ejemplares y la entrada de sus códigos. No se eliminan ejemplares del catastro ni asociaciones históricas. No se infieren asociaciones nuevas por estar dentro de un polígono. |
+| Coordenadas | No se introducen manualmente. La referencia geográfica se obtiene de las geometrías de las zonas elegidas, por unidad de ejecución. |
+| Superficie | Se calcula y actualiza al seleccionar o desmarcar zonas. La unidad es siempre m² y no se puede editar. Unidad y cantidad solicitada dejan de ser parámetros manuales del formulario nuevo. |
+| Estados | Se distinguen mediante colores o iconos y conservan siempre su texto. Se reutilizan los componentes y tokens compartidos de SPEC-C01; no se cambian los estados de negocio solo para colorearlos. |
+| Listado | Se incorpora un filtro Activas / Inactivas / Todas y se muestran Activas por defecto. La condición de pertenencia sigue pendiente en §2.11.3. Inactiva no significa eliminada ni baja lógica. |
+
+#### 2.11.2 Regla de vecindad confirmada
+
+- Regla vigente (11 nov): únicamente las zonas completas directamente asociadas al lugar.
+  «Nivel 1» describe ese entorno inmediato; no implica un cálculo de distancia métrica.
+- No se incorporan vecinas indirectas ni se amplía la elegibilidad al seleccionar una zona.
+  Esta regla sustituye expresamente la anterior expansión a dos niveles.
+- La referencia es el lugar completo: se contemplan lugares con varios edificios o
+  contorno obtenido de sus hijos, conforme a la rama base. No reducirlos al primer edificio.
+- Una parte pequeña de la zona puede estar junto al lugar: si se confirma su asociación,
+  se permite seleccionar el polígono completo. No exigir un porcentaje de contacto.
+- Veredas o paredes pueden separar los polígonos. No considerar suficiente la igualdad
+  «vecina = polígonos que se tocan» ni sustituir la regla por un radio arbitrario.
+
+**Avance R2.** `ZoneNeighborhood` devuelve únicamente asociaciones directas revisadas;
+no descubre vecinos por metros ni por contacto de polígonos. Se incorporan exportación SQL
+de solo lectura, preparación y validación de una revisión con huella del inventario,
+revisor y fecha. Una relación pendiente no equivale a ausencia de vecinos.
+El usuario confirmó para Biblioteca Central (`LUG-0001`) las zonas `AV-0174`, `AV-0377`,
+`AV-0378`, `AV-0380` y `AV-0381`. El motor y el verificador se prueban con ese caso real;
+los demás lugares necesitan asociaciones revisadas. Los códigos EV de ejemplares no se
+incluyen en esta selección. Se usan códigos AV únicos: el código del mapa «C 42» se repite.
+Fuente, mantenimiento, zonas multipartes y procedimiento en
+[informe R2](../../docs/planes/SPEC-200-R2-vecindad.md). El motor todavía no participa en el
+flujo de producción; no se ha creado una tabla de asociaciones ni elegido un umbral métrico.
+
+El servidor será la autoridad para devolver las zonas elegibles y validar las seleccionadas.
+La interfaz mostrará disponibilidad, selección y bloqueo usando esa misma regla. Una
+petición directa no podrá guardar una zona no asociada aunque el navegador permita enviar su ID.
+Si falta información de vecindad o geometría, se informará la carencia; no se inventará
+un vínculo de cercanía ni una superficie igual a cero para aparentar un resultado válido.
+
+#### 2.11.3 Decisión pendiente: significado de activo/inactivo
+
+**Confirmado:** filtro sencillo y vista predeterminada de las actividades activas.
+**No confirmado:** si una actividad deja de estar activa al terminar físicamente o después
+de su aprobación. La pregunta se planteó, pero el usuario todavía no eligió una alternativa.
+
+Propuesta para revisar: activas = PLANNED, ASSIGNED, IN_PROGRESS, COMPLETED y OBSERVED;
+inactivas = VALIDATED y CANCELLED. Así, una intervención enviada a revisión permanece
+visible y una observación/subsanación no queda oculta. La alternativa de excluir COMPLETED
+desde la finalización física cambia ese comportamiento y debe confirmarse explícitamente.
+No implementar esta clasificación como regla aprobada ni usar `deleted_at` para simularla.
+Cuando se acuerde, el filtro se aplicará en backend antes de paginar y calcular totales.
+
+#### 2.11.4 Compatibilidad y contrato técnico propuesto para R3
+
+- La tarjeta agrupa un lugar de referencia y sus zonas verdes seleccionadas. La ejecución,
+  avances, cantidades, fotos, intentos, finalización y revisión deben seguir siendo
+  independientes por zona atendida. La representación exacta en DTO/tablas se resolverá
+  en R3; no se impone una migración desde esta etapa documental.
+- El cliente enviará identificadores; el backend comprobará vigencia, permisos, vecindad
+  y geometría, y calculará la superficie. No confiar en coordenadas, m² o elegibilidad
+  calculados exclusivamente en el navegador. Los valores calculados se mostrarán como
+  información de solo lectura.
+- Evitar seleccionar o contar dos veces la misma zona dentro de la actividad, incluso
+  si es elegible desde dos lugares. No sumar el área del edificio ni superponer superficies
+  como si fueran superficies nuevas. R3 definirá el cálculo geográfico y la precisión.
+- Se propone conservar la superficie utilizada al programar para evitar que una edición
+  posterior del mapa reescriba silenciosamente el historial; su persistencia se decide en R3.
+- No convertir cantidades antiguas en m², recalcular datos históricos, borrar asociaciones
+  de ejemplares ni exigir campos nuevos para leer registros anteriores. La edición de un
+  registro anterior necesita una transición explícita, no una conversión silenciosa.
+- Revisar en R3 los efectos sobre medidas tras poda, historial del ejemplar, frecuencias
+  y reportes. La retirada del selector de ejemplares no autoriza a eliminar esas funciones
+  para registros que ya tengan asociaciones, ni a fabricar asociaciones para registros nuevos.
+- Reutilizar la integración actual con incidencias de SPEC-201 y sus servicios. El rediseño
+  no crea otra relación, no cambia el cierre de incidencias ni sus permisos.
+- Reutilizar el visor 3D y la selección de polígonos existentes. Prever montaje diferido
+  de los visores por tarjeta y liberación de recursos sin perder la selección. Si el visor
+  no carga, ofrecer una lista accesible con las mismas zonas autorizadas y validaciones,
+  conforme a REGLAS §0.1; no habilitar zonas lejanas como alternativa.
+
+#### 2.11.5 Criterios de aceptación del rediseño (todavía no implementados)
+
+| ID | Comprobación requerida |
+|----|-----------------------|
+| R-CA-01 | La actividad encabeza el listado y el detalle; código y nombres de uno o varios lugares se conservan como información secundaria. |
+| R-CA-02 | Elegir un lugar registrado muestra y resalta su contorno completo; las zonas parten desmarcadas. |
+| R-CA-03 | Solo las zonas directamente asociadas al lugar son elegibles; las demás se rechazan tanto en la interfaz como en la API. |
+| R-CA-04 | Seleccionar una zona no habilita otras zonas, aunque sean vecinas o estén asociadas a otro lugar. |
+| R-CA-05 | Solo se seleccionan polígonos completos. Superficie en m² y referencia geográfica se calculan automáticamente, sin campos manuales. |
+| R-CA-06 | Cambiar el lugar actualiza su mapa y elegibilidad; el contrato de limpieza propuesto impide conservar accidentalmente selección del lugar anterior. |
+| R-CA-07 | Varias tarjetas mantienen su selección independiente; una zona repetida no duplica superficie ni ejecución. |
+| R-CA-08 | Registro anterior conserva cantidades, unidades, asociaciones de ejemplares, fotos, avances e historial; no se altera al consultar el formulario nuevo. |
+| R-CA-09 | Estados son distinguibles con texto y señales visuales en temas claro/oscuro. |
+| R-CA-10 | Activas por defecto y cambios de filtro conservan paginación y totales correctos, después de confirmar §2.11.3. |
+| R-CA-11 | Incidencias, medidas tras poda, frecuencias y reportes conservan sus contratos; los cambios necesarios se identifican y verifican en R3. |
+| R-CA-12 | Probar en navegador real con Biblioteca Central, un lugar de varios edificios y varias tarjetas. La alternativa accesible respeta la misma vecindad. |
+
+R1 se completa con esta definición y su trazabilidad. R2 prepara la vecindad; R3 concreta
+persistencia/backend y compatibilidad; R4 implementa el selector; R5 cambia listado/estados;
+R6 verifica integración y recorrido visual. Esta secuencia de rediseño no renumera las
+etapas y tareas T01–T11 de la implementación histórica.
+
+#### 2.11.6 Contrato R3: asociaciones persistentes y planificación derivada
+
+V035 añade `intervention_place_zone_reviews`, `intervention_place_zone_links` y dos
+columnas opcionales a `intervention_locations`: `zone_selection_revision` y
+`zone_boundary_snapshot`. No modifica lugares/zonas fuente ni convierte registros antiguos.
+Las revisiones anteriores se retiran lógicamente y conservan actor, fecha, motivo y enlaces.
+Las zonas multipartes requieren confirmación explícita registrada en el enlace.
+
+| Operación | Permisos | Contrato |
+|---|---|---|
+| `GET /interventions/places/{placeId}/zones` | ADMIN/C/S/O activos | Contorno completo, huella del inventario, versión de revisión, zonas directamente asociadas y token vigente. Sin revisión vigente: zonas vacías. Candidatos para revisar solo ADMIN/C. |
+| `PUT /interventions/places/{placeId}/zones` | ADMIN/C activos | `datasetRevision`, `version`, `zoneIds`, `multipartAcknowledged` y `reason`; reemplazo atómico con historial. 409 si versión o geometrías cambiaron. |
+| `POST /interventions/zone-selection/preview` | ADMIN/C activos | `selections: [{placeId,zoneId,zoneSelectionRevision}]`; devuelve `surfaceM2` de la unión y zonas, sin crear registros. Misma validación que el guardado. |
+| `POST /interventions` / `PUT /interventions/{id}` | Permisos actuales | Cada ubicación nueva por zona envía `placeId`, `zoneId`, UUID estable y `zoneSelectionRevision`. Una ubicación por zona; agrupación visual por lugar en R4. |
+
+El modo nuevo rechaza coordenadas, unidades, cantidades solicitadas y ejemplares enviados
+manualmente. Valida la asociación mediante el motor R2 y deriva punto interior, unidad M2,
+superficie geodésica y copia GeoJSON del polígono. El token de selección también cambia al
+revisar asociaciones, aunque no cambie la geometría. Una zona repetida en la actividad se
+rechaza incluso si es elegible desde dos lugares. No se amplía al nivel 2.
+
+El área por zona es `ST_Area(boundary::geography)`, redondeada a dos decimales. El detalle
+añade `plannedSurfaceM2` para la unión de geometrías guardadas, sin contar superposiciones.
+Los totales solicitados M2 combinan esa unión con cantidades M2 antiguas cuando sea preciso;
+no convierten las unidades antiguas ni infieren su superficie. Avances y ejecución conservan
+sus cantidades registradas por zona. Cambios posteriores del mapa no reescriben snapshots.
+
+Sin el campo nuevo se conserva el contrato anterior y su idempotencia. No se puede degradar
+una ubicación nueva ni convertir una antigua a m² sobre su mismo ID. Una transición antes
+del inicio retira explícitamente la anterior y crea otra unidad, manteniendo el historial.
+Fechas, permisos de ejecución/aprobación, fotos, catastro, frecuencias e integración con
+incidencias conservan los servicios existentes; no se fabrican asociaciones de ejemplares.
+
+Tipos exactos de respuesta, errores, cálculo y compatibilidad en el
+[contrato R3](../../docs/planes/SPEC-200-R3-asociaciones-y-planificacion.md). La migración se
+prueba en bases desechables; su existencia no acredita que esté aplicada en otra base.
+La implementación del selector y su verificación posterior se registran en §2.11.7.
+
+#### 2.11.7 Selector web R4
+
+El registro nuevo agrupa las zonas por lugar registrado. Al elegir otro lugar se eliminan
+las selecciones de esa tarjeta y se consultan sus asociaciones vigentes; una respuesta
+anterior que llegue tarde no puede habilitar zonas del lugar anterior. Solo se admiten
+zonas completas revisadas directamente para ese lugar, sin expansión por proximidad.
+
+El mapa 3D reutiliza el visor existente con contorno del lugar, zonas seleccionadas
+resaltadas y zonas no autorizadas atenuadas. Tras la prueba del usuario se retira la lista
+inferior de códigos/casillas y se muestra un contador de áreas seleccionadas. Marcar y
+desmarcar se realiza desde el mapa. Sin WebGL se indica que el mapa no está disponible.
+Solo se monta un visor a la vez, conservando las selecciones de las demás tarjetas.
+Pulsar otro edificio registrado cambia el lugar del desplegable, limpia las áreas anteriores
+y consulta las del nuevo lugar. Árboles y edificios no cuentan como áreas de ejecución.
+Un edificio sin lugar registrado muestra un aviso; no se crea automáticamente.
+
+No se ingresan ejemplares, coordenadas, unidad ni cantidad solicitada en el flujo nuevo.
+La consulta previa del servidor muestra la superficie en m²; al guardar, el servidor deriva
+coordenadas, geometría histórica y cantidades. Una zona repetida en otra tarjeta se bloquea.
+Una revisión pendiente o desactualizada impide guardar; una selección existente cuya
+revisión cambió exige confirmación explícita o retirar las zonas que dejaron de estar disponibles.
+
+Los registros anteriores conservan el formulario compatible y sus unidades/valores.
+No se convierten silenciosamente a m². La edición por zonas conserva UUID e ID de cada
+ubicación persistida; un reintento de creación incierto conserva cuerpo y clave originales.
+
+Durante R4 se respaldó la base habitual y se aplicó V035. Se registraron únicamente las
+cinco asociaciones de Biblioteca Central confirmadas por el usuario. La inspección visual
+no se declara aprobada: Computer Use detuvo el acceso al no poder verificar la URL de Chrome.
+Ver [comprobaciones y límites de R4](../../docs/planes/SPEC-200-R4-selector-web.md).
 
 ## 3. Contratos de API
 
@@ -1046,9 +1251,66 @@ T08 añade historial por ejemplar y T09 cumplimiento local con ambas fechas (§2
 No se declara terminada la evaluación histórica por sector, incidencias, Android ni publicación.
 La base de trabajo no se migra como parte de esta entrega.
 
+### 2.12 Cambio de alcance: mapa único por áreas verdes y ejemplares (11 nov 2026)
+
+Confirmación directa del usuario con su líder: esta sección reemplaza para las nuevas
+planificaciones las restricciones de lugares, asociaciones directas y proximidad de §2.11.
+Las decisiones previas se conservan como historia y para leer/editar registros existentes.
+
+- Un único mapa del campus, sin tarjetas de lugar, desplegable de lugares ni «Agregar lugar».
+- Cualquier área verde completa activa con geometría válida puede seleccionarse; no se
+  exige un lugar registrado ni revisión de vecindad. Se incluyen áreas xerofíticas.
+- Los ejemplares activos se muestran y se seleccionan individualmente. Elegir un área no
+  añade sus ejemplares y elegir un ejemplar no añade el área donde se encuentra.
+- Se habilitan clic, resaltado y retirada de ejemplares; el primer refinamiento de selección
+  múltiple se describe a continuación. Otros ajustes de precisión pueden realizarse después.
+- Refinamiento confirmado: mantener el botón izquierdo sobre un ejemplar durante 2 segundos
+  activa selección por barrido. La mano cerrada y «Arrastra» aparecen junto al cursor;
+  recorrer otros ejemplares los agrega sin duplicarlos ni desmarcar los elegidos. No hay
+  rectángulo y no se seleccionan jardines mediante este gesto. Al soltar se termina y
+  vuelve el control de la cámara; el clic simple sigue disponible. Mover antes de 2 segundos
+  cancela la espera y conserva el arrastre normal del mapa. Cancelar el puntero, perder
+  foco o pulsar Escape también cancela el gesto.
+- Se listan solo objetivos seleccionados con nombres legibles: inicialmente las cinco
+  áreas más recientes (si no hay áreas, los últimos cinco ejemplares); «Mostrar más» expande la lista completa
+  y «Mostrar menos» restaura el resumen. «Ver en mapa» centra el objetivo; «Retirar» lo desmarca.
+  Los códigos siguen siendo internos, no el nombre principal presentado al usuario.
+- Contadores separados de áreas y ejemplares. La superficie es la unión geográfica de
+  las áreas elegidas, en m², sin duplicar superposiciones. Seleccionar solo ejemplares es
+  válido y muestra 0 m²; no se inventan superficies para árboles o plantas.
+- En la interfaz el contador denomina las áreas «jardines». La superficie acumulada en
+  m² se muestra debajo de los contadores y encima de la lista de objetivos seleccionados.
+  La instrucción breve junto al mapa es: «Mantén pulsado un ejemplar 2 segundos y arrastra
+  sobre otros para seleccionarlos.» No se añade un tutorial modal obligatorio.
+- Por objetivo se conserva una ubicación de ejecución independiente, con avances, fotos,
+  finalización y revisión existentes. Área y ejemplar de una misma zona son objetivos
+  distintos únicamente si el usuario eligió ambos de forma explícita.
+
+Contrato: `GET /interventions/campus-selection` devuelve inventario vigente y revisión;
+`POST /interventions/campus-selection/preview` recibe revisión, IDs de áreas y ejemplares.
+Solo ADMIN/COORDINADOR planifican. Crear/editar envía `campusSelectionRevision`; el servidor
+valida disponibilidad y duplicados y deriva geometrías, coordenadas y cantidades. Ningún
+campo manual de unidad, cantidad o coordenadas se agrega al nuevo formulario.
+
+V036 agrega una revisión opcional en la actividad y permite geometría histórica de área
+sin lugar. No convierte ni borra registros previos, revisiones de vecindad ni enlaces con
+incidencias. Los registros previos conservan el editor compatible; las nuevas actividades
+usan el mapa único y mantienen UUID/ID de sus objetivos al editar.
+
+Ver [implementación y validación del mapa único](../../docs/planes/SPEC-200-mapa-unico-campus.md).
+
 ### Ajuste de tiempos de ejecución (5 nov 2026)
 
 El resumen expone `elapsedSeconds`: desde el primer inicio real de las ubicaciones activas
 hasta su última finalización, cuando todas están terminadas o aprobadas. Conserva el inicio
 original durante subsanaciones. Incluye pausas, no suma ejecuciones simultáneas ni añade
 la espera posterior para aprobación. Sin finalizar, el valor es null. No registra tiempo efectivo manual.
+
+
+#### Fecha de creación (2026-11-12)
+
+Las intervenciones nuevas solo se programan para hoy o una fecha futura según el día civil de Lima. El formulario y el backend aplican la regla. Los reintentos idempotentes exitosos conservan su resultado; esta restricción de creación no modifica planes antiguos al editarlos.
+
+#### Presentación y filtro de actividades (R5, 2026-11-12)
+
+El título principal se compone de clase y tipo; el código queda como referencia secundaria. Los estados incluyen texto, color e ícono. La web muestra activas por defecto; COMPLETED, VALIDATED y CANCELLED son inactivas y OBSERVED sigue activa. Se ofrecen ambos grupos y todas las actividades. El filtro se aplica antes de paginar y conserva los permisos existentes.

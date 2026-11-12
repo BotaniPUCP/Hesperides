@@ -19,6 +19,7 @@ import { createVegetationLayer } from './vegetation';
 import { WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { createViewCones } from './viewCones';
 import type { Viewer, ViewerCallbacks } from './viewerTypes';
+import { ringLines, centroid } from './geometry';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
 
@@ -42,11 +43,12 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   // El mapa general no marca ninguna sección por defecto. Solo M7 llama a
   // setMarkedSections; así puede hacer selección múltiple sin alterar /mapa.
   const markedSectionCodes = new Set<string>();
+  let eligibleSectionCodes:Set<string>|null=null;
   (['greenAreas', 'xerophytic', 'reserve'] as const).forEach((id) => {
     const layer = poly[id];
     const originalColor = layer.options.color;
-    layer.options.color = (i) => markedSectionCodes.has(data[id][i]?.props.code)
-      ? MARKED_COLOR : originalColor(i);
+    layer.options.color = (i) => eligibleSectionCodes && !eligibleSectionCodes.has(data[id][i]?.props.code)
+      ? state.palette.dimmed : markedSectionCodes.has(data[id][i]?.props.code) ? MARKED_COLOR : originalColor(i);
   });
   // Un lugar puede ser varios bloques: se marcan todos, porque la selección resalta uno solo.
   const markedBuildingIds = new Set<number>();
@@ -56,9 +58,17 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const points = createCampusPoints(scene, data, center);
   const foliage = createFoliageMaterials(textures);
   const vegetation = createVegetationLayer(scene, data.vegetation, foliage);
+  const markedVegetation=new Set<string>();
+  const vegetationColor=vegetation.color;
+  vegetation.color=i=>markedVegetation.has(data.vegetation[i]?.props.code)?MARKED_COLOR:vegetationColor(i);
   const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points, vegetation };
   const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
+  let referenceOutline:THREE.LineSegments<THREE.BufferGeometry,THREE.LineBasicMaterial>|null=null;
+  const clearReference = () => {
+    if(!referenceOutline)return;
+    scene.remove(referenceOutline);referenceOutline.geometry.dispose();referenceOutline.material.dispose();referenceOutline=null;
+  };
   const pin = createPin(scene);
   const cones = createViewCones(scene);
   const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta);
@@ -90,7 +100,36 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   }
 
   const dom = renderer.domElement;
+  let sweepPrevious:{x:number;y:number}|null=null;
+  let controlsBeforeSweep=true;
+  const swept=new Set<number>();
+  const sweepAt=(x:number,y:number)=>{
+    const previous=sweepPrevious??{x,y};
+    const steps=Math.max(1,Math.min(64,Math.ceil(Math.hypot(x-previous.x,y-previous.y)/8)));
+    for(let n=1;n<=steps;n++) {
+      const hit=pick(previous.x+(x-previous.x)*n/steps,previous.y+(y-previous.y)*n/steps,dom,rig.camera,pickables,isHidden);
+      if(hit?.target.layer==='vegetation'&&!swept.has(hit.target.index)) {
+        swept.add(hit.target.index);cb.specimenSweep?.onSelect(hit.target);
+      }
+    }
+    sweepPrevious={x,y};needsRender=true;
+  };
   const unbind = bindPointer(dom, {
+    ...(cb.specimenSweep?{sweep:{
+      enabled:()=>cb.specimenSweep!.enabled(),
+      canStart:(x:number,y:number)=>pick(x,y,dom,rig.camera,pickables,isHidden)?.target.layer==='vegetation',
+      onStart:(x:number,y:number)=>{
+        controlsBeforeSweep=rig.controls.enabled;rig.controls.enabled=false;
+        sweepPrevious=null;swept.clear();dom.style.cursor='grabbing';
+        pin.hide();highlight.setSelected(null);highlight.setHover(null);
+        cb.specimenSweep!.onState({clientX:x,clientY:y});sweepAt(x,y);
+      },
+      onMove:(x:number,y:number)=>{cb.specimenSweep!.onState({clientX:x,clientY:y});sweepAt(x,y);},
+      onEnd:()=>{
+        rig.controls.enabled=controlsBeforeSweep;dom.style.cursor='';sweepPrevious=null;swept.clear();
+        cb.specimenSweep!.onState(null);needsRender=true;
+      },
+    }}:{}),
     onPress: () => { rig.cancelFlight(); rig.controls.autoRotate = false; },
     onClick(x, y) {
       const cone = cb.onViewConePick ? cones.hitTest(x, y, dom, rig.camera) : null;
@@ -124,7 +163,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   let frame = 0, lastDistance = 0;
   const loop = (now: number) => {
     frame = requestAnimationFrame(loop);
-    const flew = rig.step(now), moved = rig.controls.update();
+    const flew = rig.step(now), moved = sweepPrevious?false:rig.controls.update();
     const distance = rig.camera.position.distanceTo(rig.controls.target);
     if (Math.abs(distance - lastDistance) / Math.max(lastDistance, 1) > 0.04) { scaleFurniture(Object.values(points), distance); lastDistance = distance; }
     if (flew || moved || needsRender || rig.controls.autoRotate) {
@@ -152,6 +191,25 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   };
 
   return {
+    setMarkedVegetation(codes) {
+      markedVegetation.clear();codes.forEach(c=>markedVegetation.add(c));
+      highlight.repaint('vegetation');needsRender=true;
+    },
+    setEligibleSections(codes) {
+      eligibleSectionCodes=codes===null?null:new Set(codes);
+      (['greenAreas','xerophytic','reserve'] as const).forEach(id=>highlight.repaint(id));
+      needsRender=true;
+    },
+    setReferenceOutline(polygons,focus) {
+      clearReference();
+      if(polygons.length) {
+        referenceOutline=new THREE.LineSegments(ringLines([polygons],p=>p,()=>WORLD_LIFT+0.3),
+          new THREE.LineBasicMaterial({color:state.palette.accent,depthTest:false,depthWrite:false}));
+        referenceOutline.renderOrder=100;scene.add(referenceOutline);
+        if(focus)rig.focus(centroid(polygons),0);
+      }
+      needsRender=true;
+    },
     setMarkedSections(codes) {
       markedSectionCodes.clear();
       codes.forEach((code) => markedSectionCodes.add(code));
@@ -275,6 +333,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     dispose() {
+      clearReference();
       cancelAnimationFrame(frame);
       observer.disconnect();
       unbind();

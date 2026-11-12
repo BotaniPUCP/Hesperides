@@ -76,7 +76,7 @@ public class InterventionReferencesRepository {
             """);
     }
     public List<Map<String,Object>> placeOptions() {
-        return jdbc.queryForList("select id,name from places where deleted_at is null order by name,id");
+        return jdbc.queryForList("select id,code,name from places where deleted_at is null order by name,id");
     }
     public List<Map<String,Object>> zoneOptions() {
         return jdbc.queryForList("select id,name from zones where is_active and deleted_at is null order by name,id");

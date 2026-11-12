@@ -46,6 +46,7 @@ class InterventionsIntegrationTest {
     @Autowired pe.edu.pucp.hesperides.modules.maintenance.service.ExecutionHistoryProvider executionHistory;
     @Autowired org.springframework.context.ApplicationContext applicationContext;
     @MockitoSpyBean FileStorage storage;
+    @MockitoSpyBean pe.edu.pucp.hesperides.modules.interventions.service.InterventionExecutionSchedule schedule;
     long planner, coordinator, supervisor, operator, otherSupervisor, otherOperator, team, otherTeam, classId, typeId;
 
     @BeforeEach void data() {
@@ -70,7 +71,7 @@ class InterventionsIntegrationTest {
     }
     Map<String,Object> plan() {
         var body=new LinkedHashMap<String,Object>();
-        body.put("classItemId",classId); body.put("typeItemId",typeId); body.put("scheduledDate","2026-10-23");
+        body.put("classItemId",classId); body.put("typeItemId",typeId); body.put("scheduledDate",java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
         body.put("locations",new ArrayList<>(List.of(location(-12.1,-77.1),location(-12.2,-77.2),location(-12.3,-77.3))));
         return body;
     }
@@ -92,6 +93,41 @@ class InterventionsIntegrationTest {
         assertThat(d.get("completedAt").isNull()).isTrue();
         assertThat(java.time.Duration.between(java.time.Instant.parse(d.get("createdAt").asString()),java.time.Instant.now()).abs().getSeconds()).isLessThan(20);
     }
+    @Test void activityTitlesAndActiveFilterApplyBeforePagination() throws Exception {
+        for(var state:List.of("PLANNED","OBSERVED","COMPLETED","VALIDATED","CANCELLED")) {
+            var created=create(plan(),UUID.randomUUID().toString(),201);
+            long id=created.get("id").asLong();
+            String expected=jdbc.queryForObject("select label from catalog_items where id=?",String.class,classId)
+                +" \u00b7 "+jdbc.queryForObject("select label from catalog_items where id=?",String.class,typeId);
+            assertThat(created.get("activityTitle").asString()).isEqualTo(expected);
+            var planning=Set.of("PLANNED","CANCELLED").contains(state)?state:"ASSIGNED";
+            jdbc.update("update interventions set planning_status_item_id=(select id from catalog_items where code=? and catalog_type_id=(select id from catalog_types where code='INTERVENTION_STATUS')) where id=?",planning,id);
+            if(!state.equals("CANCELLED"))jdbc.update("update intervention_locations set status_item_id=(select id from catalog_items where code=? and catalog_type_id=(select id from catalog_types where code='INTERVENTION_STATUS')) where intervention_id=?",state,id);
+        }
+        for(boolean active:List.of(true,false)) {
+            var response=json.readTree(mvc.perform(get("/api/v1/interventions").param("active",String.valueOf(active)).param("size","1"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
+            assertThat(response.get("page").get("totalElements").asInt()).isEqualTo(active?2:3);
+            assertThat(response.get("content").size()).isEqualTo(1);
+            assertThat(response.get("content").get(0).get("activityTitle").asString()).contains(" \u00b7 ");
+            boolean inactive=Set.of("COMPLETED","VALIDATED","CANCELLED").contains(response.get("content").get(0).get("statusCode").asString());
+            assertThat(inactive).isEqualTo(!active);
+        }
+    }
+
+    @Test void cannotCreatePastPlansButCanReplayAnExistingSubmissionAfterItsDate() throws Exception {
+        var body=plan();var key=UUID.randomUUID().toString();
+        var first=create(body,key,201);
+        var yesterday=java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).minusDays(1).toString();
+        body.put("scheduledDate",yesterday);
+        create(body,UUID.randomUUID().toString(),422);
+        body.put("scheduledDate",first.get("scheduledDate").asString());
+        // Advance the planning policy while preserving the original retry payload.
+        doThrow(new pe.edu.pucp.hesperides.shared.exception.BusinessRuleException("Scheduled date cannot be in the past"))
+            .when(schedule).requirePlanningDate(java.time.LocalDate.parse(first.get("scheduledDate").asString()));
+        assertThat(create(body,key,200).get("id").asLong()).isEqualTo(first.get("id").asLong());
+    }
+
     @Test void idempotentRetryDoesNotDuplicateAndChangedBodyConflicts() throws Exception {
         var body=plan(); var key=UUID.randomUUID().toString(); var first=create(body,key,201);
         assertThat(create(body,key,200).get("id").asLong()).isEqualTo(first.get("id").asLong());
@@ -126,11 +162,11 @@ class InterventionsIntegrationTest {
         var refs=jdbc.queryForList("select id,client_reference from intervention_locations where intervention_id=? order by id",id);
         @SuppressWarnings("unchecked") var locations=(List<Map<String,Object>>)body.get("locations");
         for(int i=0;i<3;i++)locations.get(i).put("id",refs.get(i).get("id"));
-        body.put("version",0);body.put("scheduledDate","2026-10-24");
+        body.put("version",0);body.put("scheduledDate",java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).plusDays(1).toString());
         mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isUnprocessableEntity());
         body.put("rescheduleReason","Crew availability");
         mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isOk());
-        assertThat(jdbc.queryForObject("select details->>'previousDate' from intervention_events where action_code='REPROGRAMMED' and intervention_id=?",String.class,id)).isEqualTo("2026-10-23");
+        assertThat(jdbc.queryForObject("select details->>'previousDate' from intervention_events where action_code='REPROGRAMMED' and intervention_id=?",String.class,id)).isEqualTo(java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
     }
     @Test void corsAllowsIdempotencyHeader() throws Exception {
         mvc.perform(options("/api/v1/interventions").header("Origin","http://localhost:3000").header("Access-Control-Request-Method","POST").header("Access-Control-Request-Headers","Content-Type,Idempotency-Key"))
