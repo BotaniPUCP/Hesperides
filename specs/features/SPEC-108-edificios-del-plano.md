@@ -6,7 +6,7 @@
 | Autor | Luis (`luisenriowo`), con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android (SPEC-102) |
 | Sprint | — |
-| Estado | Implementada; falta la verificación en navegador (INV-10, CA-14) |
+| Estado | Implementada y verificada en web el 12 nov 2026 (12 de 13 criterios; CA-11 se corrigió después). Falta el `WebView` real de Android (CA-14, P-14) |
 | Dependencias | SPEC-102 (lo enmienda), relaciones del SKP (rama `3d-test/relaciones-edificios-skp-completo`), catálogo de lugares (V018, V034) |
 
 > **Lectura obligatoria:** `specs/REGLAS.md`.
@@ -235,7 +235,7 @@ Corregirlo mueve secciones, sectores y zonas de supervisión, así que va en un 
 |---|---|---|
 | `GET /api/v1/map/layers` | `ADMIN`, `COORDINADOR`, `SUPERVISOR`, `OPERARIO` | Las capas. Cada edificio trae `parentId`, `planKey`, `baseM` y `codes` |
 | `GET /api/v1/map/models/buildings` | Igual | El GLB del plano (`model/gltf-binary`), con `ETag` débil |
-| `GET /api/v1/map/models/buildings/manifest` | Igual | Anclaje del modelo, nodos y polígonos de los desniveles |
+| `GET /api/v1/map/models/buildings/manifest` | Igual | Anclaje del modelo, nodos y polígonos de los desniveles, con `ETag` fuerte (el del GLB) y 304 |
 
 Propiedades de un edificio principal en `/layers`:
 
@@ -256,14 +256,17 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 {
   "version": "sha256 del GLB",
   "anchor": { "lat": -12.06959406, "lon": -77.08018610 },
-  "nodes": { "6f1c…": "edificio", "suelo": "suelo", "jardin-hundido": "suelo", "muros-desnivel": "suelo",
-             "fondo-desnivel": "suelo", "huaca-muro": "huaca", "huaca-tope": "huaca", "decoracion": "decoracion" },
+  "nodes": { "6f1c…": "edificio", "suelo": "suelo", "jardin-hundido": "jardin", "muros-desnivel": "muro",
+             "fondo-desnivel": "muro", "huaca-muro": "huaca-muro", "huaca-tope": "huaca-tope",
+             "decoracion": "decoracion" },
   "groundOnly": ["8be4…", "…"],
   "sunken": [{ "polygon": { "type": "Polygon", "coordinates": [[[-77.0812, -12.0731], "…"]] }, "floorM": -8.4 }],
   "huaca": { "label": "Camino Prehispánico", "at": [-12.0728, -77.0811, 4.9] }
 }
 ```
 
+- `nodes` da el tipo de cada nodo del GLB: `edificio` (uno por principal con pieza del SKP, con su
+  `plan_key` como nombre), `suelo`, `jardin`, `muro`, `huaca-muro`, `huaca-tope` y `decoracion`.
 - `groundOnly` lista las entradas (`plan_key`) cuyo modelo es todo suelo, como las dos rampas de «Entrada
   Parking subterráneo». Cuentan como edificio principal, pero el visor no les dibuja prisma ni malla.
 - `sunken` trae, por desnivel, su polígono y la cota de su piso (`floorM`).
@@ -277,6 +280,11 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 - **El GLB sale con `ETag` débil `W/"<sha256>"`** para que el servidor pueda comprimirlo (con un `ETag`
   fuerte no lo comprime: de 7,6 MB baja a unos 1,8 MB). El manifiesto y la versión usan el hash fuerte.
   Un proxy que exija `ETag` fuerte no revalidaría y descargaría de nuevo.
+- **El manifiesto se revalida:** lleva el `ETag` del GLB (igual a su `version`) y `Cache-Control: no-cache`,
+  y responde 304 si `If-None-Match` coincide. Sin eso, Spring Security le pondría `no-store` y el navegador
+  bajaría sus 225 kB en cada visita. Con `ETag` fuerte, Tomcat no lo comprime.
+- **Sin WebGL no se descarga el modelo:** la pantalla lo pide cuando un visor quedó listo. Sin WebGL se ven
+  las listas, que no lo usan.
 - **`/describe` nombra solo a los principales** (filtro de cercanía): un punto dentro de un grupo se
   describe con el nombre del grupo.
 - **Si el visor no puede comprobar la versión del modelo** (sin red o sesión vencida), conserva el que ya
@@ -287,11 +295,20 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 
 ## 4. Migración de base de datos
 
-**`V040__group_buildings_by_plan.sql`**: el siguiente número libre de esta rama (REGLAS §4: sin huecos). Las
-ramas `feature/spec-107-reservas-jardines` y `feature/conjuntos-con-ejemplares`, todavía sin integrar,
-también usan V040–V044. **Quien integre en segundo lugar renumera el archivo que aún no se publicó**
-(REGLAS §5.4), junto con su fila en `specs/REGISTRO.md` y las citas de este spec. El archivo es **generado** por
-`scripts/mapa/plano_pucp/generar_migracion.py` y no se edita a mano ni se regenera una vez publicado.
+**`V040__group_buildings_by_plan.sql`**: el siguiente número libre de esta rama (REGLAS §4: sin huecos). Dos
+ramas sin integrar chocan con ella (revisado el 12 nov 2026 en `origin`): `feature/spec-107-reservas-jardines`
+tiene V040–V044, y `feature/conjuntos-con-ejemplares` tiene V039–V041, cuya V039 ya choca con la V039 de esta
+base. **Quien integre en segundo lugar renumera el archivo que aún no se publicó** (REGLAS §5.4). El archivo
+es **generado** por `scripts/mapa/plano_pucp/generar_migracion.py` y no se edita a mano ni se regenera una vez
+publicado.
+
+Si esta migración se renumera, cambian:
+
+- el nombre del archivo (`git mv`; el SQL no lleva su número dentro);
+- `PREVIOUS_VERSION` y `PLAN_VERSION` en `backend/src/test/java/pe/edu/pucp/hesperides/migration/PlanBuildingsMigrationTest.java`;
+- la ruta del paso 2 en `scripts/mapa/plano_pucp/README.md`;
+- en `specs/REGISTRO.md`, la fila del mapa de migraciones, el siguiente número libre y la fila de pendientes;
+- esta sección (§4) y la enmienda de SPEC-102 §4.1 que cita `V040__group_buildings_by_plan.sql`.
 
 ```sql
 -- Propiedad de SPEC-108. ARCHIVO GENERADO: no se edita a mano ni se regenera.
@@ -385,6 +402,16 @@ Los edificios agrupados no se dibujan por separado.
 | CA-13 | Sin modelo | Con el endpoint del modelo caído, el mapa abre con prismas |
 | CA-14 | Navegador (INV-10) | `/mapa` en web y en Android, claro y oscuro: se ve como la página de comparación aprobada |
 
+**Verificación en navegador (12 nov 2026).** En web (Chromium, 1440×900 y 390×844, claro y oscuro, con una
+base aislada) pasaron 12 de los 13 criterios que se ven en pantalla (CA-02 a CA-14); CA-01 se comprobó en la
+base. CA-11 no pasó: la app dibuja las etiquetas con la fuente del sistema y no con Inter, y el recorte medía
+con Inter. Se corrigió midiendo con la fuente calculada de cada etiqueta (commit `cc12646`) y CA-11 se reescribió.
+
+- El cambio de `cc12646` (medir con la fuente calculada) no se volvió a comprobar en navegador.
+- Los lugares de Biblioteca Central (CA-02) no se vieron en pantalla: la semilla de desarrollo no liga
+  lugares a edificios. Los cubre `PlanBuildingsMigrationTest`.
+- Falta el `WebView` real de Android (CA-14): P-14.
+
 ## 7. Especificación visual
 
 - La referencia es la página de comparación aprobada, del lado «Propuesta» con acabado «Brillante»
@@ -392,7 +419,8 @@ Los edificios agrupados no se dibujan por separado.
 - Colores, luces, cielo, texturas del zócalo y del césped, árboles y etiquetas: los del visor de hoy.
   Novedades: la huaca (D-10), el suelo de los modelos (D-08) y los desniveles (D-09).
 - Ficha del edificio: agrega «Códigos oficiales» (código y etiqueta). En un grupo, agrega «Agrupa N
-  edificios del mapa», con sus nombres.
+  edificios del mapa», con sus nombres. No muestra la altura de las rampas que son solo suelo (0,1 m o
+  menos) ni, en «También se le dice», los alias que repiten el nombre (sin distinguir mayúsculas ni tildes).
 - Móvil: la misma vista dentro del `WebView`.
 
 ## 8. Tests
@@ -405,6 +433,7 @@ Migración (Testcontainers: base en la versión anterior → la nueva)
 - 127 códigos, sin el 2; cada uno en un principal
 - source_ref de los edificios reutilizados no cambia
 - si falta un edificio del mapa esperado, la migración falla y la tabla queda como estaba
+- un borrado lógico libera su plan_key (INV-4)
 
 Generador (scripts, se ejecutan a mano)
 - el GLB tiene un nodo por principal con pieza del SKP, más suelo, desniveles, huaca y decoración
@@ -415,6 +444,7 @@ Generador (scripts, se ejecutan a mano)
 API
 - /layers: un principal trae planKey y codes; un agrupado, parentId; el ETag termina en -f3
 - /models/buildings: 401 sin sesión, 200 con sesión y ETag; 304 con If-None-Match vigente
+- /models/buildings/manifest: 200 con el ETag del GLB y no-cache; 304 con If-None-Match vigente
 
 Cercanía
 - solo compite el principal: un punto dentro de un grupo se describe con el nombre del grupo
@@ -427,7 +457,7 @@ Visor
 
 ## 9. Propio de este spec
 
-### 9.1 Pendientes para Nicolás o Jean Piero
+### 9.1 Pendientes para Nicolás, Jean Piero o Luis
 
 | # | Qué revisar |
 |---|---|
@@ -444,11 +474,13 @@ Visor
 | P-11 | **Principales nuevos «Desconocido_*»:** quedan con `is_inferred_name = false`, aunque el nombre es un marcador. Nicolás o Jean Piero deciden su nombre real o si deben marcarse como deducidos |
 | P-12 | **Pabellón C (relación del código 2):** queda fuera por D-05. Nicolás confirma que no debe volver |
 | P-13 | **Test heredado `frontend/src/lib/__tests__/rawApiMessages.test.ts` en rojo:** señala tres usos del `error.message` crudo en las herramientas de equivalencias: `frontend/src/components/map3d/equivalence/EquivalenceWorkbench.tsx:80`, `frontend/src/components/map3d/equivalence/portableApp.ts:93` y `frontend/src/components/map3d/equivalence/UnifiedWorkbench.tsx:38`. Viene del commit 662eb6e y esta rama no toca esos archivos. Jean Piero decide si los adapta o los excluye del test |
+| P-14 | **`WebView` real de Android (CA-14):** la verificación del 12 nov 2026 fue solo en web. Falta abrir `/mapa` en el `WebView` de un Android real, en claro y oscuro. Lo verifica Luis |
 
 ### 9.2 Para el equipo
 
-- **V040–V044** también existen en `feature/spec-107-reservas-jardines` y `feature/conjuntos-con-ejemplares`,
-  sin integrar. Quien integre segundo renumera su migración sin publicar (§4).
+- **Números de migración:** `feature/spec-107-reservas-jardines` tiene V040–V044 y
+  `feature/conjuntos-con-ejemplares` V039–V041 (su V039 ya choca con la de esta base); las dos están sin
+  integrar. Quien integre segundo renumera su migración sin publicar; §4 lista qué cambia.
 - **El desfase de 3,5 m de las capas del cliente** espera su propio cambio (D-15).
 
 ### 9.3 Lo que no se versiona

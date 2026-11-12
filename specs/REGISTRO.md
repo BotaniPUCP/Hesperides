@@ -23,7 +23,7 @@
 | SPEC-105 | Especies críticas, edición de especies y medidas por especie | 🔄 En progreso: entregas 1 a 5, falta verificar en navegador | —          | —      |              |
 | SPEC-106 | Directorio de organizaciones y contactos | 🔄 En progreso | —          | —      |              |
 | SPEC-107 | Reservas de jardines | 🔄 En progreso | —          | —      |              |
-| SPEC-108 | Edificios del plano oficial en el mapa | 🔄 En progreso: implementada, falta verificar en navegador | Luis       | —      |              |
+| SPEC-108 | Edificios del plano oficial en el mapa | 🔄 En progreso: implementada y verificada en web (12 nov 2026, 12 de 13; CA-11 corregido después); falta el WebView de Android (CA-14) | Luis       | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
@@ -206,8 +206,10 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 ### Pendientes (sin número reservado)
 
 Al 12 nov 2026, en la rama `feature/spec-108-edificios-del-plano`, V040 es de SPEC-108 y el siguiente número libre es **V041**.
-Ojo: las ramas sin integrar `feature/spec-107-reservas-jardines` y `feature/conjuntos-con-ejemplares` también usan
-V040–V044. Quien integre en segundo lugar renumera su archivo sin publicar (REGLAS §5.4), con su fila y sus citas.
+Ojo: dos ramas sin integrar chocan con esta numeración (revisado en `origin`): `feature/spec-107-reservas-jardines`
+tiene V040–V044, y `feature/conjuntos-con-ejemplares` tiene V039–V041, cuya V039 ya choca con la V039 de esta base.
+Quien integre en segundo lugar renumera su archivo sin publicar (REGLAS §5.4), con su fila y sus citas; SPEC-108 §4
+lista qué cambia si se renumera V040.
 Antes de esta rama, SPEC-107 §4 destinaba V040 a pasar las reservas de V039 al modelo de solicitante,
 responsable y rol del contacto. `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
@@ -220,7 +222,7 @@ Los números en citas históricas de otros specs no autorizan reutilizar version
 | Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
 | Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
 | Metas del resumen de reportes (dos filas en `system_parameters`, sin tablas) | SPEC-202 §4 | Solo datos; se numera al implementar el módulo de reportes |
-| Edificios del plano: grupos, códigos oficiales y base (generada) | SPEC-108 §4 | La genera `scripts/mapa/plano_pucp/generar_migracion.py` y no se regenera una vez publicada. Pendiente de verificar en navegador. Ver la fila V040 del mapa de migraciones |
+| Edificios del plano: grupos, códigos oficiales y base (generada) | SPEC-108 §4 | La genera `scripts/mapa/plano_pucp/generar_migracion.py` y no se regenera una vez publicada. Verificada en web el 12 nov 2026; falta el WebView de Android (SPEC-108 P-14). Ver la fila V040 del mapa de migraciones |
 | Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
 
 Las antiguas pendientes `add_execution_tracking_to_interventions`,
