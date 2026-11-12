@@ -54,6 +54,14 @@ public class GardenReservation extends BaseEntity {
     @Column(name = "purpose")
     private String purpose;
 
+    /** El solicitante confirmó que usará el jardín; se anota hasta el corte (enmienda 11 nov 2026). */
+    @Column(name = "use_confirmed", nullable = false)
+    private boolean useConfirmed;
+
+    /** El encargado marcó que el espacio está siendo usado; solo dentro del horario. */
+    @Column(name = "space_used", nullable = false)
+    private boolean spaceUsed;
+
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 

@@ -6,15 +6,18 @@ import { useState, type ReactNode } from 'react';
 import type { Reservation } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { Badge, Button, EmptyState, LoadingSkeleton } from '@/components/ui';
-import { useCanMaintainReservations, useReservation } from '@/hooks/useReservations';
-import { formatDay, formatDateTime, isEditable, stateColor, stateLabel } from '@/lib/reservation-format';
+import { useCanMaintainReservations, useCanRecordUsage, useReservation, useReservationCheck } from '@/hooks/useReservations';
+import { formatDay, formatDateTime, isEditable, stateColor, stateLabel, usageLabel } from '@/lib/reservation-format';
 import { CancelReservationDialog } from './CancelReservationDialog';
+import { FollowupBlock } from './FollowupBlock';
 import { ReservationForm } from './ReservationForm';
 import { ReservationWarnings } from './ReservationWarnings';
 
 interface Props {
   code: string;
   startEditing?: boolean;
+  /** La reserva acaba de crearse: banner de confirmación y avisos del horario (§5.1). */
+  created?: boolean;
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -26,15 +29,35 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+/** Por qué no se puede marcar el uso, según dónde esté el reloj (D-12). */
+function usageBlockedText(reservation: Reservation): string {
+  if (reservation.state === 'FINISHED' || reservation.state === 'CANCELLED') {
+    return 'La reserva terminó o fue anulada: el uso quedó registrado como está.';
+  }
+  if (reservation.state === 'UPCOMING') {
+    return 'El espacio se marca en uso a partir de la hora de inicio de la reserva.';
+  }
+  // En curso tras el corte: la misma tolerancia que la confirmación.
+  return 'Ya no se puede marcar el uso: el corte es minutos antes del fin de la reserva.';
+}
+
 /** La ficha de una reserva (SPEC-107 §5.2). Editar es en línea, solo ADMIN y COORDINADOR. */
-export function ReservationDetailScreen({ code, startEditing = false }: Props) {
+export function ReservationDetailScreen({ code, startEditing = false, created = false }: Props) {
   const router = useRouter();
   const canMaintain = useCanMaintainReservations();
+  const canRecordUsage = useCanRecordUsage();
   const { reservation, loading, errorMessage, notFound, updateData } = useReservation(code);
   const [editing, setEditing] = useState(startEditing);
   const [cancelling, setCancelling] = useState(false);
   const [warnings, setWarnings] = useState<Reservation['warnings']>([]);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Al llegar de un alta, los avisos al guardar se consultan con los datos de la
+  // propia reserva: son derivados y salen iguales a los del formulario (§5.1).
+  const justCreated = useReservationCheck(created && reservation !== null && isEditable(reservation.state)
+    ? { placeId: reservation.place.id, startsAt: reservation.startsAt, endsAt: reservation.endsAt,
+        excludeCode: reservation.code }
+    : null);
 
   function leaveEditing() {
     setEditing(false);
@@ -74,6 +97,12 @@ export function ReservationDetailScreen({ code, startEditing = false }: Props) {
           ${reservation.requestedFor ? ` para ${reservation.requestedFor.name}` : ''}`}
         actions={
           <>
+            {canMaintain && (
+              <Link href="/reservas/nueva"
+                className="rounded-md border border-neutral-200 bg-neutral-0 px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50">
+                Nueva reserva
+              </Link>
+            )}
             <Link href={`/reservas?jardin=${reservation.place.id}`}
               className="rounded-md border border-neutral-200 bg-neutral-0 px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50">
               Ver en la agenda
@@ -87,10 +116,18 @@ export function ReservationDetailScreen({ code, startEditing = false }: Props) {
           </>
         } />
 
+      {created && (
+        <p role="status" className="rounded-md bg-alert-success-bg p-3 text-sm text-alert-success-fg">
+          Reserva {reservation.code} registrada para {reservation.place.name}.
+        </p>
+      )}
       {notice && (
         <p role="status" className="rounded-md bg-alert-success-bg p-3 text-sm text-alert-success-fg">{notice}</p>
       )}
-      {warnings.length > 0 && <ReservationWarnings warnings={warnings} title="Avisos al guardar" />}
+      {(warnings.length > 0 ? warnings : created ? justCreated.warnings : []).length > 0 && (
+        <ReservationWarnings warnings={warnings.length > 0 ? warnings : justCreated.warnings}
+          title="Avisos al guardar" />
+      )}
 
       <section className="surface-card">
         <div className="flex flex-wrap items-center gap-2">
@@ -141,6 +178,38 @@ export function ReservationDetailScreen({ code, startEditing = false }: Props) {
           <Field label="Inicio">{formatDateTime(reservation.startsAt)}</Field>
           <Field label="Fin">{formatDateTime(reservation.endsAt)}</Field>
           <Field label="Motivo">{reservation.purpose ?? '—'}</Field>
+          <Field label="Confirmación del solicitante">
+            <FollowupBlock
+              entries={reservation.confirmationHistory}
+              value={reservation.useConfirmed}
+              labelOn="El solicitante confirmó el uso"
+              labelOff="Sin confirmación del solicitante"
+              buttonLabel="Registrar confirmación"
+              buttonOff="Quitar confirmación"
+              open={reservation.canConfirm}
+              blockedText="El plazo de confirmación ya cerró: solo se confirma antes del corte."
+              canChange={canMaintain}
+              version={reservation.version}
+              onChanged={updateData}
+              code={reservation.code}
+              kind="confirmation" />
+          </Field>
+          <Field label="Uso del espacio">
+            <FollowupBlock
+              entries={reservation.usageHistory}
+              value={reservation.spaceUsed}
+              labelOn="El espacio está siendo usado"
+              labelOff={usageLabel(reservation.usageState)}
+              buttonLabel="Marcar en uso"
+              buttonOff="Quitar marca de uso"
+              open={reservation.canRecordUsage}
+              blockedText={usageBlockedText(reservation)}
+              canChange={canRecordUsage}
+              version={reservation.version}
+              onChanged={updateData}
+              code={reservation.code}
+              kind="usage" />
+          </Field>
         </dl>
       </section>
 

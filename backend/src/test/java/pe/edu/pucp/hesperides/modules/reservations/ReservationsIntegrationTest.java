@@ -409,6 +409,189 @@ class ReservationsIntegrationTest {
     }
 
     @Nested
+    class Followup {
+
+        /** Reserva en curso creada directo en la base, con horario relativo a ahora. */
+        private String inProgress(java.time.Duration startedAgo, java.time.Duration endsIn) {
+            OffsetDateTime start = OffsetDateTime.now(ZoneOffset.UTC).minus(startedAgo);
+            OffsetDateTime end = OffsetDateTime.now(ZoneOffset.UTC).plus(endsIn);
+            return jdbc.queryForObject("""
+                    INSERT INTO garden_reservations (place_id, requested_by_organization_id, requester_contact_id,
+                        responsible_contact_id, starts_at, ends_at, purpose, created_by_user_id)
+                    SELECT ?, ro.id, rq.id, rs.id, ?, ?, 'Feria', ?
+                      FROM organizations ro, contacts rq, contacts rs
+                     WHERE ro.code = ? AND rq.code = ? AND rs.code = ? RETURNING code""",
+                    String.class, rosalesId, start, end, userId, requestedBy, requester, requester);
+        }
+
+        private ResultActions confirm(String code, String body) throws Exception {
+            return mockMvc.perform(put(RESERVATIONS + "/" + code + "/confirmation")
+                    .contentType(MediaType.APPLICATION_JSON).content(body));
+        }
+
+        private ResultActions usage(String code, String body) throws Exception {
+            return mockMvc.perform(put(RESERVATIONS + "/" + code + "/usage")
+                    .contentType(MediaType.APPLICATION_JSON).content(body));
+        }
+
+        @Test
+        void aCoordinatorConfirmsTheUseAndTheHistoryKeepsIt() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.useConfirmed").value(true))
+                    .andExpect(jsonPath("$.data.canConfirm").value(true))
+                    .andExpect(jsonPath("$.data.version").value(1));
+
+            assertThat(jdbc.queryForObject(
+                    "SELECT count(*) FROM garden_reservation_confirmations h"
+                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
+                    Integer.class, code)).isEqualTo(1);
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.useConfirmed").value(true))
+                    .andExpect(jsonPath("$.data.confirmationHistory", org.hamcrest.Matchers.hasSize(1)))
+                    .andExpect(jsonPath("$.data.confirmationHistory[0].value").value(true))
+                    .andExpect(jsonPath("$.data.confirmationHistory[0].by").value("reservas@pucp.edu.pe"));
+        }
+
+        @Test
+        void unconfirmingAddsAnotherHistoryRow() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isOk());
+            confirm(code, "{\"confirmed\":false,\"version\":1}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.useConfirmed").value(false));
+
+            assertThat(jdbc.queryForObject(
+                    "SELECT count(*) FROM garden_reservation_confirmations h"
+                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
+                    Integer.class, code)).isEqualTo(2);
+        }
+
+        @Test
+        void confirmingWithAStaleVersionConflicts() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isOk());
+            confirm(code, "{\"confirmed\":false,\"version\":0}").andExpect(status().isConflict());
+        }
+
+        @Test
+        void theConfirmationClosesMinutesBeforeTheEnd() throws Exception {
+            // Fin en 10 min con corte de 20: el plazo cerró hace 10 minutos.
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(10));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}")
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value(
+                            "The confirmation window is closed: it closes 20 minutes before the reservation ends"));
+        }
+
+        @Test
+        void theUsageClosesMinutesBeforeTheEndToo() throws Exception {
+            // Fin en 10 min con corte de 20: dentro del horario, pero tras el corte.
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(10));
+
+            usage(code, "{\"used\":true,\"version\":0}")
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value(
+                            "The usage window is closed: it closes 20 minutes before the reservation ends"));
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.usageState").value("NOT_IN_USE"))
+                    .andExpect(jsonPath("$.data.canRecordUsage").value(false));
+        }
+
+        @Test
+        @WithMockUser(username = "reservas@pucp.edu.pe", authorities = "SUPERVISOR")
+        void aSupervisorCannotConfirmButCanRecordUsage() throws Exception {
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(90));
+
+            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isForbidden());
+
+            usage(code, "{\"used\":true,\"version\":0}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.spaceUsed").value(true))
+                    .andExpect(jsonPath("$.data.usageState").value("IN_USE"))
+                    .andExpect(jsonPath("$.data.canRecordUsage").value(true));
+
+            assertThat(jdbc.queryForObject(
+                    "SELECT count(*) FROM garden_reservation_usages h"
+                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
+                    Integer.class, code)).isEqualTo(1);
+        }
+
+        @Test
+        void usageIsRecordedOnlyWhileTheScheduleIsRunning() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            String upcoming = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
+            usage(upcoming, "{\"used\":true,\"version\":0}")
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value("The space is marked as used once the reservation starts"));
+
+            LocalDate past = LocalDate.now(LIMA).minusDays(2);
+            String finished = codeOf(create(rosalesId, at(past, 10), at(past, 14))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.data.state").value("FINISHED")));
+            usage(finished, "{\"used\":true,\"version\":0}")
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.message").value("This reservation already finished or was cancelled"));
+
+            mockMvc.perform(get(RESERVATIONS + "/" + finished))
+                    .andExpect(jsonPath("$.data.usageState").value("NOT_USED"));
+        }
+
+        @Test
+        @WithMockUser(username = "reservas@pucp.edu.pe", authorities = "OPERARIO")
+        void anOperatorCannotRecordUsageButReadsTheFields() throws Exception {
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(90));
+
+            usage(code, "{\"used\":true,\"version\":0}").andExpect(status().isForbidden());
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.usageState").value("NOT_IN_USE"))
+                    .andExpect(jsonPath("$.data.canRecordUsage").value(true));
+        }
+
+        @Test
+        void markingAndUnmarkingTheUsageLeavesTwoHistoryRows() throws Exception {
+            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(90));
+
+            usage(code, "{\"used\":true,\"version\":0}").andExpect(status().isOk());
+            usage(code, "{\"used\":false,\"version\":1}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.spaceUsed").value(false))
+                    .andExpect(jsonPath("$.data.usageState").value("NOT_IN_USE"));
+
+            assertThat(jdbc.queryForObject(
+                    "SELECT count(*) FROM garden_reservation_usages h"
+                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
+                    Integer.class, code)).isEqualTo(2);
+        }
+
+        @Test
+        void aMarkedUsageOfAFinishedReservationShowsUsed() throws Exception {
+            String code = inProgress(java.time.Duration.ofHours(3), java.time.Duration.ofMinutes(30));
+            usage(code, "{\"used\":true,\"version\":0}").andExpect(status().isOk());
+
+            jdbc.update("""
+                    UPDATE garden_reservations SET starts_at = now() - interval '5 hours',
+                        ends_at = now() - interval '1 hour' WHERE code = ?""", code);
+
+            mockMvc.perform(get(RESERVATIONS + "/" + code))
+                    .andExpect(jsonPath("$.data.state").value("FINISHED"))
+                    .andExpect(jsonPath("$.data.usageState").value("USED"));
+        }
+    }
+
+    @Nested
     class Proximity {
 
         @Test

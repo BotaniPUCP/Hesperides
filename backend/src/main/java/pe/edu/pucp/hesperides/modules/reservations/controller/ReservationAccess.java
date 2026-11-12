@@ -9,6 +9,12 @@ final class ReservationAccess {
     /** Registrar, editar y anular es de coordinación; el capataz y el operario solo leen. */
     static final String MAINTAINERS = "hasAnyAuthority('ADMIN', 'COORDINADOR')";
 
+    /**
+     * Marcar que el espacio está en uso también es del capataz, que es quien ve
+     * el jardín (enmienda del 11 nov 2026); el operario solo lee.
+     */
+    static final String USAGE_RECORDERS = "hasAnyAuthority('ADMIN', 'COORDINADOR', 'SUPERVISOR')";
+
     private ReservationAccess() {
     }
 }

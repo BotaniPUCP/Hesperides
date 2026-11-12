@@ -29,7 +29,12 @@ public class ReservationReadRepository {
             String requesterCode, String requesterName, String requesterRole, String requesterMobile,
             String requesterExtension, String responsibleCode, String responsibleName, String responsibleRole,
             String responsibleMobile, String responsibleExtension, Instant startsAt, Instant endsAt,
-            String purpose, Instant cancelledAt, String cancelReason, long version) {
+            String purpose, Instant cancelledAt, String cancelReason, long version,
+            boolean useConfirmed, boolean spaceUsed) {
+    }
+
+    /** Una fila del historial de confirmaciones o de usos (enmienda del 11 nov 2026). */
+    public record FollowupRow(boolean value, Instant changedAt, String changedBy) {
     }
 
     public record ResponsibleRow(String contactCode, String contactName, String contactRole,
@@ -83,7 +88,8 @@ public class ReservationReadRepository {
             """ + RESPONSIBLE_ROLE + " AS responsible_role,\n"
             + """
                    rs.mobile AS responsible_mobile, rs.extension AS responsible_extension,
-                   r.starts_at, r.ends_at, r.purpose, r.cancelled_at, r.cancel_reason, r.version
+                   r.starts_at, r.ends_at, r.purpose, r.cancelled_at, r.cancel_reason, r.version,
+                   r.use_confirmed, r.space_used
               FROM garden_reservations r
               JOIN places p ON p.id = r.place_id
               JOIN organizations rb ON rb.id = r.requested_by_organization_id
@@ -111,7 +117,8 @@ public class ReservationReadRepository {
             rs.getString("responsible_mobile"), rs.getString("responsible_extension"),
             rs.getObject("starts_at", OffsetDateTime.class).toInstant(),
             rs.getObject("ends_at", OffsetDateTime.class).toInstant(), rs.getString("purpose"),
-            instant(rs, "cancelled_at"), rs.getString("cancel_reason"), rs.getLong("version"));
+            instant(rs, "cancelled_at"), rs.getString("cancel_reason"), rs.getLong("version"),
+            rs.getBoolean("use_confirmed"), rs.getBoolean("space_used"));
 
     private final JdbcTemplate jdbc;
     private final NamedParameterJdbcTemplate named;
@@ -158,6 +165,33 @@ public class ReservationReadRepository {
                  ORDER BY h.assigned_at""", (rs, i) -> new ResponsibleRow(rs.getString("code"),
                 rs.getString("full_name"), rs.getString("role"),
                 rs.getObject("assigned_at", OffsetDateTime.class).toInstant(), rs.getString("assigned_by")), code);
+    }
+
+    private static final RowMapper<FollowupRow> FOLLOWUP = (rs, i) -> new FollowupRow(
+            rs.getBoolean("value"),
+            rs.getObject("changed_at", OffsetDateTime.class).toInstant(),
+            rs.getString("changed_by"));
+
+    /** El historial de confirmaciones de la ficha, del primero al vigente (enmienda 11 nov 2026). */
+    public List<FollowupRow> confirmationHistory(String code) {
+        return jdbc.query("""
+                SELECT h.confirmed AS value, h.changed_at, u.email AS changed_by
+                  FROM garden_reservation_confirmations h
+                  JOIN garden_reservations r ON r.id = h.reservation_id
+                  JOIN users u ON u.id = h.changed_by_user_id
+                 WHERE r.code = ?
+                 ORDER BY h.changed_at""", FOLLOWUP, code);
+    }
+
+    /** El historial de marcas de uso de la ficha, del primero al vigente (enmienda 11 nov 2026). */
+    public List<FollowupRow> usageHistory(String code) {
+        return jdbc.query("""
+                SELECT h.used AS value, h.changed_at, u.email AS changed_by
+                  FROM garden_reservation_usages h
+                  JOIN garden_reservations r ON r.id = h.reservation_id
+                  JOIN users u ON u.id = h.changed_by_user_id
+                 WHERE r.code = ?
+                 ORDER BY h.changed_at""", FOLLOWUP, code);
     }
 
     /**

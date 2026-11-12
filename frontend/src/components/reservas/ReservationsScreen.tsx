@@ -5,11 +5,14 @@ import { useMemo, useState } from 'react';
 import type { Reservation } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { Badge, Button, EmptyState, LoadingSkeleton, Select } from '@/components/ui';
-import { useCanMaintainReservations, useReservationGardens, useReservationOrganizations, useReservations } from '@/hooks/useReservations';
+import { useCanMaintainReservations, useCanRecordUsage, useReservationGardens, useReservationOrganizations, useReservations } from '@/hooks/useReservations';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { isoDateFrom, pageFrom } from '@/lib/listUrl';
+import { mensajeDeApiError } from '@/lib/api-errors';
+import { reservationsApi } from '@/lib/reservations-api';
 import {
   addDays, dayHeading, formatSchedule, isEditable, reservationDay, stateColor, stateLabel, todayInLima,
+  usageColor, usageLabel,
 } from '@/lib/reservation-format';
 import { RESERVATIONS_PAGE_SIZE } from '@/lib/reservations-api';
 import { CancelReservationDialog } from './CancelReservationDialog';
@@ -17,6 +20,40 @@ import { CancelReservationDialog } from './CancelReservationDialog';
 const LIST_PATH = '/reservas';
 const DEFAULTS = { desde: '', hasta: '', jardin: '', organizacion: '', anuladas: '', page: '0' };
 const DEFAULT_DAYS = 30;
+
+/**
+ * El botón rápido de la agenda (enmienda del 11 nov 2026): marcar o desmarcar
+ * el uso del espacio sin entrar a la ficha, solo dentro del horario.
+ */
+function QuickUseButton({ code, used, version, onChanged }: {
+  code: string; used: boolean; version: number; onChanged: (reservation: Reservation) => void;
+}) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function toggle() {
+    setError(null);
+    setPending(true);
+    try {
+      onChanged(await reservationsApi.recordUsage(code, !used, version));
+    } catch (e) {
+      setError(mensajeDeApiError(e));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="w-full space-y-1">
+      <Button size="sm" variant={used ? 'ghost' : 'secondary'} disabled={pending} onClick={toggle}>
+        {used ? 'Quitar marca de uso' : 'Marcar en uso'}
+      </Button>
+      {error && (
+        <p role="alert" className="rounded-md bg-alert-danger-bg p-2 text-sm text-alert-danger-fg">{error}</p>
+      )}
+    </div>
+  );
+}
 
 function groupByDay(items: Reservation[]): [string, Reservation[]][] {
   const groups = new Map<string, Reservation[]>();
@@ -36,6 +73,7 @@ function groupByDay(items: Reservation[]): [string, Reservation[]][] {
 export function ReservationsScreen() {
   const { values, setValues } = useListUrlState(LIST_PATH, DEFAULTS);
   const canMaintain = useCanMaintainReservations();
+  const canRecordUsage = useCanRecordUsage();
   const today = todayInLima();
   const from = isoDateFrom(values.desde) || today;
   const to = isoDateFrom(values.hasta) || addDays(today, DEFAULT_DAYS);
@@ -140,18 +178,29 @@ export function ReservationsScreen() {
                         {reservation.responsible.fullName}
                         {reservation.responsible.role && ` · ${reservation.responsible.role}`}
                         {reservation.responsible.mobile && ` · ${reservation.responsible.mobile}`}
-                        {reservation.requester.code !== reservation.responsible.code
-                          && ` · Solicitó ${reservation.requester.fullName}`}
                       </p>
-                      {reservation.purpose && (
-                        <p className="text-sm text-neutral-600">{reservation.purpose}</p>
-                      )}
                       {reservation.cancelReason && (
                         <p className="text-sm text-neutral-600">Motivo de anulación: {reservation.cancelReason}</p>
                       )}
                     </div>
                     <Badge label={stateLabel(reservation.state)} color={stateColor(reservation.state)}
                       className={reservation.state === 'CANCELLED' ? 'line-through' : undefined} />
+                    {reservation.state !== 'CANCELLED' && (
+                      <div className="flex flex-wrap items-center gap-1">
+                        {reservation.useConfirmed && <Badge label="Confirmada" color="info" />}
+                        <Badge label={usageLabel(reservation.usageState)} color={usageColor(reservation.usageState)} />
+                      </div>
+                    )}
+                    {canRecordUsage && reservation.canRecordUsage && (
+                      <QuickUseButton code={reservation.code} used={reservation.spaceUsed}
+                        version={reservation.version}
+                        onChanged={(saved) => {
+                          setVersion((v) => v + 1);
+                          setNotice(saved.spaceUsed
+                            ? `Reserva ${saved.code} marcada en uso.`
+                            : `Se quitó la marca de uso de ${saved.code}.`);
+                        }} />
+                    )}
                     {canMaintain && isEditable(reservation.state) && (
                       <div className="flex gap-1">
                         <Link href={`/reservas/${reservation.code}?editar=1`}

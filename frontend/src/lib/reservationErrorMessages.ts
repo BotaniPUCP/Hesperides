@@ -29,6 +29,8 @@ export const RESERVATION_MESSAGES: Record<string, string> = {
     'El motivo de la anulación no puede superar los 500 caracteres.',
   'The date range ends before it starts': 'La fecha final no puede ser anterior a la inicial.',
   'The scheduled date is required': 'Indica la fecha programada.',
+  'The space is marked as used once the reservation starts':
+    'El espacio se marca en uso a partir de la hora de inicio de la reserva.',
   'Each point must be lat,lon': 'Cada punto debe escribirse como latitud,longitud.',
   'A point is outside the valid latitude or longitude':
     'Un punto tiene una latitud o longitud fuera del rango válido.',
@@ -36,6 +38,10 @@ export const RESERVATION_MESSAGES: Record<string, string> = {
 
 /** Los mensajes que traen un dato no caben en un diccionario de textos exactos. */
 export const RESERVATION_PATTERNS: readonly MessagePattern[] = [
+  [/^The confirmation window is closed: it closes (\d+) minutes before the reservation ends$/,
+    (match) => `El plazo de confirmación ya cerró: solo se confirma hasta ${match[1]} minutos antes del fin de la reserva.`],
+  [/^The usage window is closed: it closes (\d+) minutes before the reservation ends$/,
+    (match) => `Ya no se puede marcar el uso: el corte es ${match[1]} minutos antes del fin de la reserva.`],
   [/^The file is missing the columns: (.+)$/,
     (match) => `Al archivo le faltan columnas: ${match[1]}.`],
   [/^The file has unknown columns: (.+?)\. Check the spelling against the standard$/,

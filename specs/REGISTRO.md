@@ -46,7 +46,7 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
-| SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: guardan quién las pide (organización y solicitante, fijos), para quién son (opcional) y un responsable que puede cambiar, con su historial; el operario ve todo eso (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El vínculo contacto–organización gana un rol opcional y `contactos.csv` la columna `roles` (SPEC-106 §4.3). El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y cinco acciones auditables. |
+| SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: guardan quién las pide (organización y solicitante, fijos), para quién son (opcional) y un responsable que puede cambiar, con su historial; el operario ve todo eso (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El vínculo contacto–organización gana un rol opcional y `contactos.csv` la columna `roles` (SPEC-106 §4.3). Enmienda del seguimiento de uso (SPEC-107 D-12): `use_confirmed` y `space_used` con sus historiales y el parámetro `RESERVATION_CONFIRMATION_MINUTES` — el corte de 20 minutos antes del fin cierra la confirmación y también la marca de uso (V044) —, y dos acciones auditables más. El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y siete acciones auditables. |
 | SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
 | SPEC-004 §3.2 · C-08 · C-09 · E-03 · REQ 2.7 · Catálogo 2.2/2.11 | SPEC-105 (6 nov 2026) | Tres acciones auditables de especie. La criticidad pasa a ser de la especie y no de su tipo; `GENERIC` deja de escribirse; se retira la proyección automática de medidas tras una poda. |
 | SPEC-C01 §4.3 | Estandarización de pantallas (7 nov 2026) | Toda pantalla usa `PageFrame` (un solo ancho, fila fija de flecha y breadcrumb derivado del menú) y `PageHeader`. Las tarjetas pasan a `rounded-2xl`. |
@@ -201,11 +201,16 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V039 | `V039__create_garden_reservations.sql` | SPEC-107 §4 | Reservas de jardines (`garden_reservations`), su correlativo `RES-####`, el parámetro `RESERVATION_NEARBY_METERS` y el tipo de lote `reservations` en el ciclo común de cargas |
 | V040 | `V040__add_contact_organization_role.sql` | SPEC-106 §4.3 | El rol del contacto en su organización (`contact_organizations.role`), parte del modelo de reservas de SPEC-107 (D-08b) |
 | V041 | `V041__reservation_requester_and_responsible.sql` | SPEC-107 §4 | El modelo de D-02 y D-02b: `requested_by_organization_id`, `requester_contact_id`, `requested_for_organization_id`, `responsible_contact_id`, el historial `garden_reservation_responsibles` y las restricciones de solicitante y «Para» distinto |
+| V042 | `V042__reservation_attendance.sql` | SPEC-107 §4 | Primera iteración del seguimiento: una columna `attendance` NOT_RECORDED/USED/NO_SHOW. Aplicada el 11 nov 2026 y retirada del repo el mismo día al cambiar el diseño a las dos marcas de V043 (una migración aplicada no se edita) |
+| V043 | `V043__reservation_use_confirmation_and_usage.sql` | SPEC-107 §4 · D-12 | Retira `attendance` y trae el seguimiento de uso: `use_confirmed`, `space_used`, los historiales `garden_reservation_confirmations` y `garden_reservation_usages`, y el parámetro `RESERVATION_CONFIRMATION_MINUTES` |
+| V044 | `V044__usage_mark_shares_confirmation_cutoff.sql` | SPEC-107 §4 · D-12 | Corrección del usuario: la tolerancia del corte aplica también a la marca de uso; se generaliza label y descripción del parámetro (el código no se renombra) |
 
 ### Pendientes (sin número reservado)
 
-Al 11 nov 2026, en la rama de integración, el siguiente número libre es **V042**, sujeto a comprobarlo nuevamente al
-implementar. El modelo de solicitante, responsable y rol del contacto ya entró por V040 y V041.
+Al 11 nov 2026, en la rama de integración, el siguiente número libre es **V045**, sujeto a comprobarlo nuevamente al
+implementar. El modelo de solicitante, responsable y rol del contacto entró por V040 y V041; el
+seguimiento del uso del jardín por V043 y su corrección del corte por V044 (la V042 fue aplicada
+y retirada el mismo día).
 `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

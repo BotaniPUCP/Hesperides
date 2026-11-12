@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 import type { OrganizationRef, Reservation } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
@@ -10,11 +9,11 @@ import { OrganizationPicker } from '@/components/directorio/OrganizationPicker';
 import { Button, Select, Textarea } from '@/components/ui';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { useCanMaintainReservations, useReservationCheck, useReservationGardens } from '@/hooks/useReservations';
+import { ReservationWarnings } from './ReservationWarnings';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { inputFromIso, isoFromInput, todayInLima } from '@/lib/reservation-format';
 import { reservationsApi } from '@/lib/reservations-api';
 import { ReservationTimeField as TimeField } from './ReservationTimeField';
-import { ReservationWarnings } from './ReservationWarnings';
 
 interface Props {
   initial?: Reservation;
@@ -67,10 +66,11 @@ export function ReservationForm({ initial, onSaved, onCancel }: Props) {
   const [purpose, setPurpose] = useState(initial?.purpose ?? '');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
-  const [created, setCreated] = useState<Reservation | null>(null);
 
   const startsAt = day === '' || startTime === '' ? null : isoFromInput(`${day}T${startTime}`);
   const endsAt = day === '' || endTime === '' ? null : isoFromInput(`${day}T${endTime}`);
+  /** Fin no posterior al inicio: se resalta en vivo, además del aviso superior al guardar. */
+  const rangeInvalid = startsAt !== null && endsAt !== null && endsAt <= startsAt;
   const checkable = placeId !== null && startsAt !== null && endsAt !== null && endsAt > startsAt;
   const check = useReservationCheck(checkable
     ? { placeId, startsAt, endsAt, excludeCode: initial?.code }
@@ -126,31 +126,14 @@ export function ReservationForm({ initial, onSaved, onCancel }: Props) {
         onSaved(saved);
       } else {
         setDirty(false);
-        setCreated(saved);
+        // La confirmación es la ficha misma, con su banner y los avisos del horario.
+        guard.navigate(`/reservas/${saved.code}?creada=1`);
       }
     } catch (e) {
       setError(mensajeDeApiError(e));
     } finally {
       setPending(false);
     }
-  }
-
-  if (created !== null) {
-    return (
-      <div className="surface-card space-y-4">
-        {guard.dialog}
-        <p role="status" className="rounded-md bg-alert-success-bg p-3 text-sm text-alert-success-fg">
-          Reserva {created.code} registrada para {created.place.name}.
-        </p>
-        <ReservationWarnings warnings={created.warnings} title="Avisos al guardar" />
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => guard.navigate('/reservas')}>Volver a la agenda</Button>
-          <Link href={`/reservas/${created.code}`} className="inline-flex h-10 items-center px-4 text-brand-700 underline">
-            Ver la ficha
-          </Link>
-        </div>
-      </div>
-    );
   }
 
   const gardenOptions = gardens.map((garden) => ({
@@ -197,8 +180,10 @@ export function ReservationForm({ initial, onSaved, onCancel }: Props) {
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <TimeField label="Fecha" type="date" value={day} onChange={setDay} />
-          <TimeField label="Hora de inicio" type="time" value={startTime} onChange={setStartTime} />
-          <TimeField label="Hora de fin" type="time" value={endTime} onChange={setEndTime} />
+          <TimeField label="Hora de inicio" type="time" value={startTime} onChange={setStartTime}
+            errorMessage={rangeInvalid ? 'Debe ser anterior a la hora de fin.' : undefined} />
+          <TimeField label="Hora de fin" type="time" value={endTime} onChange={setEndTime}
+            errorMessage={rangeInvalid ? 'La hora de fin debe ser posterior a la de inicio.' : undefined} />
         </div>
         <Textarea id="reservation-purpose" label="Motivo" value={purpose} onChange={setPurpose}
           maxLength={300} rows={3} helperText="Opcional, hasta 300 caracteres." />

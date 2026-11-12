@@ -37,6 +37,8 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
   const [roles, setRoles] = useState<Record<string, string>>(() =>
     Object.fromEntries((contact ? contact.organizations.filter((o) => o.active) : initialOrganizations)
       .filter((o) => o.role).map((o) => [o.code, o.role!])));
+  /** Se abre con el «+»: el buscador de organizaciones solo aparece cuando hace falta. */
+  const [addingOrganization, setAddingOrganization] = useState(false);
   const [extension, setExtension] = useState(contact?.extension ?? '');
   const [mobile, setMobile] = useState(contact?.mobile ?? '');
   const [email, setEmail] = useState(contact?.email ?? '');
@@ -44,8 +46,11 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
   const [error, setError] = useState<string | null>(null);
   const similar = useSimilarContacts(fullName, contact === null);
 
-  const addOrganization = (o: OrganizationRef | null) =>
-    o && setOrganizations((current) => (current.some((c) => c.code === o.code) ? current : [...current, o]));
+  const addOrganization = (o: OrganizationRef | null) => {
+    if (!o) return;
+    setOrganizations((current) => (current.some((c) => c.code === o.code) ? current : [...current, o]));
+    setAddingOrganization(false);
+  };
 
   async function save() {
     if (fullName.trim() === '') {
@@ -82,7 +87,7 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
           renderAction={(item) => renderSimilarAction?.(similar.find((s) => s.code === item.code) as ContactSummary)} />
         <div className="space-y-2">
           <p className="text-sm font-medium text-neutral-900">Organizaciones</p>
-          <ul className="flex flex-wrap gap-2">
+          <ul className="flex flex-wrap items-center gap-2">
             {organizations.map((o) => (
               <li key={o.code} className="flex items-center gap-1 rounded-full bg-neutral-100 pl-3 pr-1 py-1 text-sm">
                 <span>{o.name}</span>
@@ -98,8 +103,20 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
                   onClick={() => setOrganizations((current) => current.filter((c) => c.code !== o.code))}>×</button>
               </li>
             ))}
+            {/* El «+» abre el buscador de organizaciones; la alta en el mismo formulario vive dentro (§5.2). */}
+            <li>
+              <button type="button" aria-label="Añadir organización" aria-expanded={addingOrganization}
+                title="Agregar organización"
+                onClick={() => setAddingOrganization((current) => !current)}
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-300 bg-neutral-0 text-lg leading-none text-neutral-700 hover:border-neutral-500 hover:text-neutral-900">
+                +
+              </button>
+            </li>
           </ul>
-          <OrganizationPicker id="contact-org" label="Agregar organización" value={null} onChange={addOrganization} />
+          {addingOrganization && (
+            <OrganizationPicker id="contact-org" label="Agregar organización" value={null} autoFocusSearch
+              onChange={addOrganization} />
+          )}
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input id="contact-extension" label="Anexo" value={extension} onChange={setExtension} inputMode="numeric"

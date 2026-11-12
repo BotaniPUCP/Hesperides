@@ -1,5 +1,6 @@
 import {
   addDays, dayHeading, formatSchedule, isoFromInput, inputFromIso, reservationDay, stateLabel,
+  usageLabel,
 } from '../reservation-format';
 
 describe('reservation-format', () => {
@@ -37,5 +38,13 @@ describe('reservation-format', () => {
     expect(stateLabel('IN_PROGRESS')).toBe('En curso');
     expect(stateLabel('FINISHED')).toBe('Terminada');
     expect(stateLabel('CANCELLED')).toBe('Anulada');
+  });
+
+  it('nombra el uso del espacio tal como lo lee la persona (enmienda 11 nov 2026)', () => {
+    expect(usageLabel('NOT_RECORDED')).toBe('Sin uso registrado');
+    expect(usageLabel('IN_USE')).toBe('En uso');
+    expect(usageLabel('NOT_IN_USE')).toBe('No se está usando');
+    expect(usageLabel('USED')).toBe('Usada');
+    expect(usageLabel('NOT_USED')).toBe('No usada');
   });
 });

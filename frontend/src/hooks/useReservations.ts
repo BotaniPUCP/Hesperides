@@ -17,9 +17,18 @@ import { useRequest } from './useRequest';
 /** Igual que ReservationAccess.MAINTAINERS: los otros dos roles solo leen (D-08). */
 const MAINTAINERS = ['ADMIN', 'COORDINADOR'];
 
+/** Igual que ReservationAccess.USAGE_RECORDERS: el capataz marca el uso del espacio. */
+const USAGE_RECORDERS = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
+
 export function useCanMaintainReservations(): boolean {
   const { user } = useAuth();
   return user !== null && MAINTAINERS.includes(user.role.code);
+}
+
+/** Quién puede marcar «en uso»: también el capataz (enmienda del 11 nov 2026). */
+export function useCanRecordUsage(): boolean {
+  const { user } = useAuth();
+  return user !== null && USAGE_RECORDERS.includes(user.role.code);
 }
 
 const EMPTY_PAGE: ReservationPage = { page: 0, size: 0, total: 0, items: [] };

@@ -71,6 +71,14 @@ export const reservationsApi = {
   cancel: (code: string, reason: string, version: number) =>
     apiClient.post<Reservation>(`${RESERVATIONS}/${segment(code)}/cancel`, { reason, version }),
 
+  /** El solicitante confirmó (o retiró) que usará el jardín (enmienda 11 nov 2026). */
+  confirmUse: (code: string, confirmed: boolean, version: number) =>
+    apiClient.put<Reservation>(`${RESERVATIONS}/${segment(code)}/confirmation`, { confirmed, version }),
+
+  /** El encargado marca (o retira) que el espacio está en uso. */
+  recordUsage: (code: string, used: boolean, version: number) =>
+    apiClient.put<Reservation>(`${RESERVATIONS}/${segment(code)}/usage`, { used, version }),
+
   /** Avisos antes de guardar (D-07, primer sentido). */
   check: ({ placeId, startsAt, endsAt, excludeCode }: ReservationCheckQuery) =>
     apiClient.get<ReservationWarning[]>(`${RESERVATIONS}/check?${query({

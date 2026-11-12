@@ -13,15 +13,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.pucp.hesperides.engine.reservations.ReservationFollowup;
 import pe.edu.pucp.hesperides.engine.reservations.ReservationPeriod;
 import pe.edu.pucp.hesperides.engine.reservations.ReservationState;
 import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
 import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.CancelRequest;
+import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ConfirmationRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ContactRef;
+import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.FollowupEntry;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.GardenOption;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.GardenRef;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.OrganizationOption;
+import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.UsageRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.OrganizationRef;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.Page;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ReservationRequest;
@@ -96,13 +100,14 @@ public class ReservationsServiceImpl implements ReservationsService {
                 blankToNull(organizationCode), size, page * size);
         return new Page<>(page, size,
                 reads.count(fromInstant, toInstant, includeCancelled, placeId, blankToNull(organizationCode)),
-                rows.stream().map(row -> response(row, List.of(), List.of())).toList());
+                rows.stream().map(row -> response(row, List.of(), List.of(), List.of(), List.of())).toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public ReservationResponse get(String code) {
-        return response(reads.byCode(code), history(reads.responsibleHistory(code)), List.of());
+        return response(reads.byCode(code), history(reads.responsibleHistory(code)),
+                followups(reads.confirmationHistory(code)), followups(reads.usageHistory(code)), List.of());
     }
 
     @Override
@@ -112,7 +117,7 @@ public class ReservationsServiceImpl implements ReservationsService {
         long assignedBy = users.of(userEmail);
         String code = persist(values, assignedBy, null);
         List<Warning> warnings = check(values.place().id(), toOffset(values.startsAt()), toOffset(values.endsAt()), code);
-        return response(reads.byCode(code), List.of(), warnings);
+        return response(reads.byCode(code), List.of(), List.of(), List.of(), warnings);
     }
 
     @Override
@@ -174,7 +179,7 @@ public class ReservationsServiceImpl implements ReservationsService {
                             "to", values.responsible().code()));
         }
         List<Warning> warnings = check(values.place().id(), toOffset(values.startsAt()), toOffset(values.endsAt()), code);
-        return response(reads.byCode(code), List.of(), warnings);
+        return response(reads.byCode(code), List.of(), List.of(), List.of(), warnings);
     }
 
     @Override
@@ -198,7 +203,76 @@ public class ReservationsServiceImpl implements ReservationsService {
         PlaceRow place = reads.place(reservation.getPlaceId());
         audit.record(AuditActionCode.GARDEN_RESERVATION_CANCELLED, "GardenReservation", reservation.getId(),
                 java.util.Map.of("code", code, "place", place == null ? "" : place.code()));
-        return response(reads.byCode(code), List.of(), List.of());
+        return response(reads.byCode(code), List.of(), List.of(), List.of(), List.of());
+    }
+
+    @Override
+    @Transactional
+    public ReservationResponse confirm(String code, ConfirmationRequest request, String userEmail) {
+        GardenReservation reservation = require(code);
+        if (request == null || request.version() == null) {
+            throw new ValidationException("Version is required");
+        }
+        ReservationState state = ReservationPeriod.state(reservation.getStartsAt(), reservation.getEndsAt(),
+                reservation.getCancelledAt(), Instant.now());
+        int minutes = confirmationMinutes();
+        if (!ReservationFollowup.canConfirm(state, reservation.getEndsAt(), Instant.now(), minutes)) {
+            if (state == ReservationState.FINISHED || state == ReservationState.CANCELLED) {
+                throw new BusinessRuleException("This reservation already finished or was cancelled");
+            }
+            throw new BusinessRuleException("The confirmation window is closed: it closes "
+                    + minutes + " minutes before the reservation ends");
+        }
+        requireVersion(reservation, request.version());
+        if (reservation.isUseConfirmed() == request.confirmed()) {
+            return response(reads.byCode(code), List.of(), List.of(), List.of(), List.of());
+        }
+        reservation.setUseConfirmed(request.confirmed());
+        reservation.setVersion(reservation.getVersion() + 1);
+        reservations.saveAndFlush(reservation);
+        reservations.addConfirmation(reservation.getId(), request.confirmed(), users.of(userEmail));
+
+        audit.record(AuditActionCode.GARDEN_RESERVATION_CONFIRMATION_CHANGED, "GardenReservation",
+                reservation.getId(), java.util.Map.of("code", code,
+                        "from", !request.confirmed(), "to", request.confirmed()));
+        return response(reads.byCode(code), List.of(), List.of(), List.of(), List.of());
+    }
+
+    @Override
+    @Transactional
+    public ReservationResponse recordUsage(String code, UsageRequest request, String userEmail) {
+        GardenReservation reservation = require(code);
+        if (request == null || request.version() == null) {
+            throw new ValidationException("Version is required");
+        }
+        Instant now = Instant.now();
+        ReservationState state = ReservationPeriod.state(reservation.getStartsAt(), reservation.getEndsAt(),
+                reservation.getCancelledAt(), now);
+        if (state == ReservationState.FINISHED || state == ReservationState.CANCELLED) {
+            throw new BusinessRuleException("This reservation already finished or was cancelled");
+        }
+        int minutes = confirmationMinutes();
+        if (!ReservationFollowup.canRecordUsage(reservation.getStartsAt(), reservation.getEndsAt(),
+                reservation.getCancelledAt(), now, minutes)) {
+            if (state == ReservationState.UPCOMING) {
+                throw new BusinessRuleException("The space is marked as used once the reservation starts");
+            }
+            throw new BusinessRuleException("The usage window is closed: it closes "
+                    + minutes + " minutes before the reservation ends");
+        }
+        requireVersion(reservation, request.version());
+        if (reservation.isSpaceUsed() == request.used()) {
+            return response(reads.byCode(code), List.of(), List.of(), List.of(), List.of());
+        }
+        reservation.setSpaceUsed(request.used());
+        reservation.setVersion(reservation.getVersion() + 1);
+        reservations.saveAndFlush(reservation);
+        reservations.addUsage(reservation.getId(), request.used(), users.of(userEmail));
+
+        audit.record(AuditActionCode.GARDEN_RESERVATION_USAGE_CHANGED, "GardenReservation",
+                reservation.getId(), java.util.Map.of("code", code,
+                        "from", !request.used(), "to", request.used()));
+        return response(reads.byCode(code), List.of(), List.of(), List.of(), List.of());
     }
 
     @Override
@@ -383,7 +457,11 @@ public class ReservationsServiceImpl implements ReservationsService {
         }
     }
 
-    private ReservationResponse response(ReservationRow row, List<ResponsibleEntry> history, List<Warning> warnings) {
+    private ReservationResponse response(ReservationRow row, List<ResponsibleEntry> history,
+            List<FollowupEntry> confirmations, List<FollowupEntry> usages, List<Warning> warnings) {
+        Instant now = Instant.now();
+        ReservationState state = ReservationPeriod.state(row.startsAt(), row.endsAt(), row.cancelledAt(), now);
+        int minutes = confirmationMinutes();
         return new ReservationResponse(
                 row.code(),
                 new GardenRef(row.placeId(), row.placeCode(), row.placeName()),
@@ -395,13 +473,26 @@ public class ReservationsServiceImpl implements ReservationsService {
                 new ContactRef(row.responsibleCode(), row.responsibleName(), row.responsibleRole(),
                         row.responsibleMobile(), row.responsibleExtension()),
                 history,
+                confirmations,
+                usages,
                 toOffset(row.startsAt()),
                 toOffset(row.endsAt()),
                 row.purpose(),
-                ReservationPeriod.state(row.startsAt(), row.endsAt(), row.cancelledAt(), Instant.now()).name(),
+                state.name(),
                 row.cancelReason(),
+                row.useConfirmed(),
+                row.spaceUsed(),
+                ReservationFollowup.usageDisplay(state, row.spaceUsed()).name(),
+                ReservationFollowup.canConfirm(state, row.endsAt(), now, minutes),
+                ReservationFollowup.canRecordUsage(row.startsAt(), row.endsAt(), row.cancelledAt(), now, minutes),
                 row.version(),
                 warnings);
+    }
+
+    private List<FollowupEntry> followups(List<ReservationReadRepository.FollowupRow> rows) {
+        return rows.stream()
+                .map(r -> new FollowupEntry(r.value(), toOffset(r.changedAt()), r.changedBy()))
+                .toList();
     }
 
     private List<ResponsibleEntry> history(List<ResponsibleRow> rows) {
@@ -415,6 +506,12 @@ public class ReservationsServiceImpl implements ReservationsService {
     private int nearbyMeters() {
         return Math.max(0, Math.min(100, parameters.readInt(
                 SystemParameterCodes.RESERVATION_NEARBY_METERS, 10)));
+    }
+
+    /** El corte de confirmación, acotado como su pantalla de parámetros (0 a un día). */
+    private int confirmationMinutes() {
+        return Math.max(0, Math.min(1440, parameters.readInt(
+                SystemParameterCodes.RESERVATION_CONFIRMATION_MINUTES, 20)));
     }
 
     private OffsetDateTime toOffset(Instant instant) {
