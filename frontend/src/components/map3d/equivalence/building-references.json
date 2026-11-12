@@ -1,0 +1,139 @@
+{
+  "24": {
+    "aliases": [
+      "Tesorería General",
+      "Dintilhac"
+    ]
+  },
+  "7": {
+    "aliases": [
+      "CETAM",
+      "FABCORE",
+      "Ingeniería Mecatrónica"
+    ]
+  },
+  "C37": {
+    "aliases": [
+      "CFCOM",
+      "CFCO",
+      "Tambo Actoral",
+      "TUC",
+      "Tambo Actoral (TUC)"
+    ]
+  },
+  "46": {
+    "name": "Laboratorio de Certificación",
+    "aliases": [
+      "LABCERT",
+      "Laboratorio de certificación"
+    ]
+  },
+  "36": {
+    "name": "Pabellón R: Facultad de Educación (aulas)",
+    "aliases": [
+      "Pabellón R",
+      "Facultad de Educación (aulas)"
+    ]
+  },
+  "C39": {
+    "name": "Centro de Investigaciones y Servicios Educativos (CISE)",
+    "aliases": [
+      "CISE",
+      "Centro de Investigaciones y Servicios Educativos",
+      "Centro de Investigación y Servicios Educativos",
+      "Sala de estudio (Fac. de Educación)",
+      "Aula informática (Fac. de Educación)",
+      "Servicio de impresión",
+      "Autoservicio de impresión",
+      "REA",
+      "Representantes estudiantiles ante la asamblea universitaria",
+      "Mi Campus",
+      "Comisión Especial para la Intervención Frente al Hostigamiento Sexual",
+      "ISA",
+      "ISA Perú",
+      "CIEE",
+      "IFSA",
+      "IFSA Perú",
+      "Hallazgos",
+      "IDU"
+    ]
+  },
+  "39": {
+    "aliases": [
+      "Oficina de Logística",
+      "Oficina de Servicios Generales",
+      "Oficina de Seguridad Integral",
+      "Almacén Central",
+      "Maestranza",
+      "EULEN",
+      "Sindicato único y empleado de obreros",
+      "Sindicato PUCP",
+      "Dirección de Gestión del Talento Humano"
+    ],
+    "floors": [
+      {
+        "floor": "7",
+        "places": []
+      },
+      {
+        "floor": "6",
+        "places": [
+          "Dirección de Infraestructura",
+          "Oficina de Obras y Proyectos"
+        ]
+      },
+      {
+        "floor": "5",
+        "places": [
+          "Oficina de Mantenimiento",
+          "Oficina de Tesorería",
+          "Dirección de Comunicación Institucional (DCI)",
+          "Oficina de Contraloría"
+        ]
+      },
+      {
+        "floor": "4",
+        "places": [
+          "Dirección de Comunicación Institucional (DCI)"
+        ]
+      },
+      {
+        "floor": "3",
+        "places": [
+          "Oficina de Eventos y Viajes",
+          "Oficina Secretaría General",
+          "Oficina Legal",
+          "Sala de Reuniones"
+        ]
+      },
+      {
+        "floor": "2",
+        "places": [
+          "Oficina de Contabilidad",
+          "Oficina de Presupuestos",
+          "Sala de Reuniones"
+        ]
+      },
+      {
+        "floor": "1",
+        "places": [
+          "Dirección de Recursos Humanos"
+        ]
+      },
+      {
+        "floor": "S",
+        "places": [
+          "Archivo General",
+          "Archivo de Escuela de Posgrado"
+        ]
+      }
+    ]
+  },
+  "C47": {
+    "aliases": [
+      "PULSO PUCP",
+      "Almacén y depósito (Especialidad de Arqueología)",
+      "Oficinas y archivo (Departamento Académico de Derecho)"
+    ]
+  }
+}
