@@ -9,6 +9,7 @@
     "prueba": "vitest run",
     "tipos": "tsc --noEmit",
     "render": "remotion render src/index.ts VideoFlujos out/hespo-flujos.mp4 --codec=h264",
+    "render:planificacion": "remotion render src/index.ts VideoPlanificacion out/hespo-planificacion.mp4 --codec=h264",
     "fotogramas": "tsx scripts/fotogramas.ts",
     "duracion": "tsx scripts/duracion.ts",
     "capturas": "tsx scripts/capturas.ts",

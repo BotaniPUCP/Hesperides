@@ -301,7 +301,7 @@
           "id": "c2",
           "texto": "La frecuencia dice cada cuánto.",
           "hespo": {
-            "x": 960,
+            "x": 300,
             "pose": "senala"
           }
         },
@@ -309,7 +309,7 @@
           "id": "c3",
           "texto": "El conjunto, dónde.",
           "hespo": {
-            "x": 960,
+            "x": 740,
             "pose": "senala"
           }
         },
@@ -317,7 +317,7 @@
           "id": "c4",
           "texto": "La planificación, qué toca.",
           "hespo": {
-            "x": 960,
+            "x": 1180,
             "pose": "senala"
           }
         },
@@ -325,7 +325,7 @@
           "id": "c5",
           "texto": "Y la reserva, cuándo no molestar.",
           "hespo": {
-            "x": 960,
+            "x": 1620,
             "pose": "senala"
           }
         },
