@@ -34,7 +34,12 @@ export interface SceneData {
   xerophytic: ScenePoly<ZoneProperties>[];
   reserve: ScenePoly<ZoneProperties>[];
   supervision: ScenePoly<SupervisionZoneProperties>[];
+  /** Solo los edificios principales; los que agrupan a otros del mapa. */
   campusBuildings: ScenePoly<BuildingProperties>[];
+  /** Los edificios del mapa agrupados bajo un principal (tienen `parentId`). */
+  groupedBuildings: ScenePoly<BuildingProperties>[];
+  /** El id de cualquier edificio del campus, principal o agrupado, apunta al índice de su principal en `campusBuildings`. */
+  buildingIndexById: Map<number, number>;
   contextBuildings: ScenePoly<BuildingProperties>[];
   parking: ScenePoly<CampusFeatureProperties>[];
   sidewalks: ScenePoly<CampusFeatureProperties>[];
@@ -91,6 +96,32 @@ export function missingLayers(response: MapLayersResponse): string[] {
   return LAYER_KEYS.filter((k) => !Array.isArray(response.layers?.[k]?.features));
 }
 
+/** Los índices de los principales a pintar cuando se marcan ids de edificios (un hijo marca a su principal). */
+export function markedPrincipalIndexes(buildingIndexById: ReadonlyMap<number, number>, ids: readonly number[]): Set<number> {
+  const out = new Set<number>();
+  ids.forEach((id) => {
+    const index = buildingIndexById.get(id);
+    if (index !== undefined) out.add(index);
+  });
+  return out;
+}
+
+/**
+ * Reparte los edificios del campus en principales y agrupados. Sin `parentId`
+ * (capas guardadas en formato 2) o con un padre que no llegó, es principal.
+ */
+function splitCampusBuildings(features: GeoJsonFeature<BuildingProperties>[], poly: ReturnType<typeof toPoly>) {
+  const campus = features.filter((b) => b.properties.campus);
+  const principalIds = new Set(campus.filter((b) => b.properties.parentId == null).map((b) => b.properties.id));
+  const isGrouped = (b: GeoJsonFeature<BuildingProperties>) => b.properties.parentId != null && principalIds.has(b.properties.parentId);
+  const campusBuildings = campus.filter((b) => !isGrouped(b)).map(poly);
+  const groupedBuildings = campus.filter(isGrouped).map(poly);
+  const buildingIndexById = new Map<number, number>();
+  campusBuildings.forEach((b, i) => buildingIndexById.set(b.props.id, i));
+  groupedBuildings.forEach((b) => buildingIndexById.set(b.props.id, buildingIndexById.get(b.props.parentId as number) as number));
+  return { campusBuildings, groupedBuildings, buildingIndexById };
+}
+
 export function toSceneData(response: MapLayersResponse): SceneData {
   const missing = missingLayers(response);
   if (missing.length) {
@@ -109,6 +140,7 @@ export function toSceneData(response: MapLayersResponse): SceneData {
   }
 
   const sections = layers.sections.features;
+  const { campusBuildings, groupedBuildings, buildingIndexById } = splitCampusBuildings(layers.buildings.features, poly);
   return {
     plane,
     campus: polygons(boundary.geometry, plane),
@@ -116,7 +148,9 @@ export function toSceneData(response: MapLayersResponse): SceneData {
     xerophytic: sections.filter((f) => f.properties.landscapeType === 'XEROPHYTIC').map(poly),
     reserve: [...sections.filter((f) => f.properties.reservable), ...layers.subsections.features].map(poly),
     supervision: layers.supervisionZones.features.map(poly),
-    campusBuildings: layers.buildings.features.filter((b) => b.properties.campus).map(poly),
+    campusBuildings,
+    groupedBuildings,
+    buildingIndexById,
     contextBuildings: layers.buildings.features.filter((b) => !b.properties.campus).map(poly),
     parking: ofType('PARKING').map(poly),
     sidewalks: ofType('RISKY_SIDEWALK').map(poly),

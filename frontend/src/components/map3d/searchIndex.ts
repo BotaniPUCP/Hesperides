@@ -39,13 +39,19 @@ type IndexSource = Pick<
   SceneData,
   'campusBuildings' | 'greenAreas' | 'xerophytic' | 'reserve' | 'supervision' | 'gates' | 'bins' | 'fountains' | 'references' | 'sectorNameByCode'
 > &
-  Partial<Pick<SceneData, 'vegetation'>>;
+  Partial<Pick<SceneData, 'vegetation' | 'groupedBuildings'>>;
 
 export function buildSearchIndex(data: IndexSource): SearchEntry[] {
   const out: SearchEntry[] = [];
   data.campusBuildings.forEach((b, i) => {
     if (!b.props.name) return;
-    out.push(entry(b.props.name, b.props.category ?? 'Edificio', (b.props.aliases ?? []).join(' '), 'campusBuildings', i, 1));
+    const children = (data.groupedBuildings ?? []).filter((c) => c.props.parentId === b.props.id);
+    const terms = [
+      ...(b.props.aliases ?? []),
+      ...(b.props.codes ?? []).flatMap((c) => [c.code, c.label]),
+      ...children.flatMap((c) => [c.props.name ?? '', ...(c.props.aliases ?? [])]),
+    ].filter(Boolean).join(' ');
+    out.push(entry(b.props.name, b.props.category ?? 'Edificio', terms, 'campusBuildings', i, 1));
   });
   data.greenAreas.forEach((s, i) => {
     const sector = s.props.parentCode ? data.sectorNameByCode[s.props.parentCode] : null;

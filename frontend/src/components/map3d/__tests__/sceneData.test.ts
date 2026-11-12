@@ -1,5 +1,5 @@
-import { toSceneData } from '../sceneData';
-import { sampleLayers as response } from '../__fixtures__/mapLayers';
+import { markedPrincipalIndexes, toSceneData } from '../sceneData';
+import { sampleLayers as response, layersWithGroups, layersFormat2, PRINCIPAL_ID, CHILD_IDS } from '../__fixtures__/mapLayers';
 
 describe('toSceneData', () => {
   const data = toSceneData(response);
@@ -47,5 +47,26 @@ describe('toSceneData', () => {
   it('falla si falta el límite del campus, sin el cual no hay maqueta', () => {
     const sinLimite = { ...response, layers: { ...response.layers, features: { type: 'FeatureCollection' as const, features: [] } } };
     expect(() => toSceneData(sinLimite)).toThrow(/límite del campus/);
+  });
+});
+
+describe('edificios agrupados', () => {
+  const grouped = toSceneData(layersWithGroups);
+
+  it('separa principales y agrupados', () => {
+    expect(grouped.campusBuildings.map((b) => b.props.id)).toEqual([PRINCIPAL_ID]);
+    expect(grouped.groupedBuildings.map((b) => b.props.id)).toEqual(CHILD_IDS);
+    expect(grouped.buildingIndexById.get(CHILD_IDS[0])).toBe(0);
+    expect(grouped.buildingIndexById.get(PRINCIPAL_ID)).toBe(0);
+  });
+
+  it('trata como principal un edificio sin parentId', () => {
+    const old = toSceneData(layersFormat2);
+    expect(old.campusBuildings.map((b) => b.props.id)).toEqual([1]);
+    expect(old.groupedBuildings).toEqual([]);
+  });
+
+  it('marcar el id de un hijo marca el índice del principal', () => {
+    expect([...markedPrincipalIndexes(grouped.buildingIndexById, [CHILD_IDS[1], 999])]).toEqual([0]);
   });
 });

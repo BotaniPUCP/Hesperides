@@ -41,6 +41,8 @@ function buildingCard(data: SceneData, target: Target): InfoCard {
   const list = target.layer === 'contextBuildings' ? data.contextBuildings : data.campusBuildings;
   const p = list[target.index].props;
   const estimated = p.heightM == null;
+  const children = target.layer === 'campusBuildings' ? (data.groupedBuildings ?? []).filter((c) => c.props.parentId === p.id) : [];
+  const count = children.length;
   return card(
     p.campus ? 'Edificio del campus' : 'Edificio del entorno',
     p.name ?? 'Edificio sin nombre',
@@ -50,6 +52,8 @@ function buildingCard(data: SceneData, target: Target): InfoCard {
       ['Altura', `${p.heightM ?? DEFAULT_BUILDING_HEIGHT_M} m${estimated ? ' (estimada)' : ''}`],
       ['Pisos', p.levels == null ? null : String(p.levels)],
       ['También se le dice', p.aliases?.join(', ')],
+      ['Códigos oficiales', p.codes?.map((c) => `${c.code} · ${c.label}`).join('; ')],
+      [`Agrupa ${count} ${count === 1 ? 'edificio' : 'edificios'} del mapa`, count ? children.map((c) => c.props.name ?? 'Sin nombre').join(', ') : null],
     ],
     estimated ? `OpenStreetMap no registra la altura de este edificio; la maqueta usa ${DEFAULT_BUILDING_HEIGHT_M} m.` : undefined,
   );

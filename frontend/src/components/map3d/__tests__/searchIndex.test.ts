@@ -1,3 +1,5 @@
+import { toSceneData } from '../sceneData';
+import { layersWithGroups } from '../__fixtures__/mapLayers';
 import { buildSearchIndex, normalize, search, type SearchEntry } from '../searchIndex';
 
 describe('normalize', () => {
@@ -105,10 +107,24 @@ describe('buildSearchIndex', () => {
 
   it('no indexa edificios sin nombre: no se pueden buscar', () => {
     const index = buildSearchIndex({
-      campusBuildings: [{ g: [], props: { id: 1, name: null, inferredName: false, category: null, campus: true, heightM: 8, levels: null, source: 'OSM', aliases: null } }],
+      campusBuildings: [{ g: [], props: { id: 1, name: null, inferredName: false, category: null, campus: true, heightM: 8, levels: null, source: 'OSM', aliases: null, parentId: null, planKey: null, baseM: null, codes: null } }],
       greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], fountains: [], references: [], sectorNameByCode: {},
     });
 
     expect(index).toHaveLength(0);
+  });
+});
+
+describe('edificios del plano en el buscador', () => {
+  const index = buildSearchIndex(toSceneData(layersWithGroups));
+
+  it('encuentra el principal por el nombre o el alias de un hijo', () => {
+    expect(search(index, 'cemduc').map((e) => e.title)).toEqual(['Artes Escénicas']);
+    expect(search(index, 'centro de musica').map((e) => e.title)).toEqual(['Artes Escénicas']);
+  });
+
+  it('encuentra el principal por su código o su etiqueta oficial', () => {
+    expect(search(index, 'C51').map((e) => e.title)).toEqual(['Artes Escénicas']);
+    expect(search(index, 'pabellon y').map((e) => e.title)).toEqual(['Artes Escénicas']);
   });
 });

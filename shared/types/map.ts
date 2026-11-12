@@ -60,6 +60,33 @@ export interface BuildingProperties {
   levels: number | null;
   source: 'OSM' | 'PUCP';
   aliases: string[] | null;
+  /** Id del edificio principal que lo agrupa; nulo (o ausente, formato 2) si es principal. */
+  parentId: number | null;
+  /** Clave del edificio en el plano oficial; solo los principales la traen. */
+  planKey: string | null;
+  /** Cota de la base del edificio en el plano, en metros. */
+  baseM: number | null;
+  /** Códigos oficiales del plano; nulo en los edificios agrupados. */
+  codes: BuildingCode[] | null;
+}
+
+export interface BuildingCode {
+  code: string;
+  label: string;
+}
+
+/** Qué es cada pieza del modelo 3D de los edificios del plano. */
+export type BuildingNodeKind = 'edificio' | 'suelo' | 'jardin' | 'muro' | 'huaca-muro' | 'huaca-tope' | 'decoracion';
+
+/** Manifiesto del modelo 3D de los edificios del plano (SPEC-108 §3). */
+export interface BuildingModelManifest {
+  version: string;
+  anchor: { lat: number; lon: number };
+  nodes: Record<string, BuildingNodeKind>;
+  sunken: { polygon: GeoJsonGeometry; floorM: number }[];
+  huaca: { label: string; at: [number, number, number] };
+  /** Claves de los principales cuyo modelo es todo suelo (dos rampas de estacionamiento). */
+  groundOnly: string[];
 }
 
 export interface CampusFeatureProperties {

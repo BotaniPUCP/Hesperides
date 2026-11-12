@@ -37,7 +37,8 @@ function building(id: number, campus: boolean) {
   return {
     type: 'Feature' as const,
     geometry: square(),
-    properties: { id, name: null, inferredName: false, category: null, campus, heightM: 9, levels: 3, source: 'OSM' as const, aliases: null },
+    properties: { id, name: null, inferredName: false, category: null, campus, heightM: 9, levels: 3, source: 'OSM' as const, aliases: null,
+      parentId: null, planKey: null, baseM: null, codes: null },
   };
 }
 
@@ -101,6 +102,46 @@ export const layersWithTwoBlocks: MapLayersResponse = {
     buildings: {
       ...sampleLayers.layers.buildings,
       features: [...sampleLayers.layers.buildings.features, { ...secondBlock, properties: { ...secondBlock.properties, name: 'Bloque B' } }],
+    },
+  },
+};
+
+/** Un principal del plano (Artes Escénicas, C51) con dos edificios del mapa agrupados bajo él. */
+export const PRINCIPAL_ID = 10;
+export const CHILD_IDS = [11, 12];
+const grouped = (id: number, props: Record<string, unknown>) => {
+  const b = building(id, true);
+  return { ...b, properties: { ...b.properties, ...props } };
+};
+export const layersWithGroups: MapLayersResponse = {
+  ...sampleLayers,
+  layers: {
+    ...sampleLayers.layers,
+    buildings: {
+      ...sampleLayers.layers.buildings,
+      features: [
+        grouped(PRINCIPAL_ID, {
+          name: 'Artes Escénicas', planKey: 'C51', baseM: 1.5,
+          codes: [{ code: 'C51', label: 'PABELLÓN X' }, { code: 'C52', label: 'PABELLÓN Y' }],
+        }),
+        grouped(CHILD_IDS[0], { name: 'CEMDUC', aliases: ['Centro de Música'], parentId: PRINCIPAL_ID }),
+        grouped(CHILD_IDS[1], { name: 'Teatro', parentId: PRINCIPAL_ID }),
+      ],
+    },
+  },
+};
+
+/** Capas guardadas en formato 2: los edificios no traen los campos del plano. */
+export const layersFormat2: MapLayersResponse = {
+  ...sampleLayers,
+  layers: {
+    ...sampleLayers.layers,
+    buildings: {
+      ...sampleLayers.layers.buildings,
+      features: sampleLayers.layers.buildings.features.map((f) => {
+        const { parentId: _p, planKey: _k, baseM: _b, codes: _c, ...old } = f.properties;
+        return { ...f, properties: old as typeof f.properties };
+      }),
     },
   },
 };

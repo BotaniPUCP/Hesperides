@@ -1,5 +1,7 @@
 import type { SceneData } from '../sceneData';
 import { infoFor } from '../infoCard';
+import { toSceneData } from '../sceneData';
+import { layersWithGroups } from '../__fixtures__/mapLayers';
 
 const data = {
   sectorNameByCode: { 'SEC-VERDE-02': 'Sector verde 02' },
@@ -90,5 +92,18 @@ describe('infoFor', () => {
 
   it('un código de bebedero desconocido se muestra tal cual en vez de esconderse', () => {
     expect(infoFor(data, { layer: 'fountains', index: 1 }).rows).toEqual(expect.arrayContaining([['Tipo', 'RARO']]));
+  });
+});
+
+describe('ficha de un edificio del plano', () => {
+  const card = infoFor(toSceneData(layersWithGroups), { layer: 'campusBuildings', index: 0 });
+  const row = (label: string) => card.rows.find(([l]) => l === label)?.[1];
+
+  it('muestra los códigos oficiales', () => {
+    expect(row('Códigos oficiales')).toBe('C51 · PABELLÓN X; C52 · PABELLÓN Y');
+  });
+
+  it('dice cuántos edificios del mapa agrupa y cuáles son', () => {
+    expect(row('Agrupa 2 edificios del mapa')).toBe('CEMDUC, Teatro');
   });
 });

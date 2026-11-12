@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { SceneData } from '../sceneData';
+import { markedPrincipalIndexes, type SceneData } from '../sceneData';
 import type { LayerId, Target } from '../target';
 import { createCameraRig, type CameraPose } from './cameraRig';
 import { scaleFurniture, type PointLayer } from './furniture';
@@ -52,9 +52,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       ? MARKED_COLOR : originalColor(i);
   });
   // Un lugar puede ser varios bloques: se marcan todos, porque la selección resalta uno solo.
-  const markedBuildingIds = new Set<number>();
+  // Los ids de los edificios agrupados se traducen al principal que se dibuja.
+  let markedBuildings = new Set<number>();
   const buildingColor = poly.campusBuildings.options.color;
-  poly.campusBuildings.options.color = (i) => markedBuildingIds.has(data.campusBuildings[i]?.props.id)
+  poly.campusBuildings.options.color = (i) => markedBuildings.has(i)
     ? MARKED_COLOR : buildingColor(i);
   const points = createCampusPoints(scene, data, center);
   const foliage = createFoliageMaterials(textures);
@@ -164,8 +165,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     setMarkedBuildings(ids) {
-      markedBuildingIds.clear();
-      ids.forEach((id) => markedBuildingIds.add(id));
+      markedBuildings = markedPrincipalIndexes(data.buildingIndexById, ids);
       highlight.repaint('campusBuildings');
       needsRender = true;
     },
