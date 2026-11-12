@@ -16,6 +16,7 @@ import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.PlannedR
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.SpeciesCount;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class SpecimenResolver {
     public SpecimenPreview resolve(SpecimenCsvSchema.Parsed parsed, Set<String> zipFiles) {
         Map<String, SpeciesRef> species = lookup.speciesByName();
         Set<String> codes = lookup.existingCodes();
+        Set<String> seenCodes = new HashSet<>();
         List<Nearby> registered = new ArrayList<>(lookup.registeredPlants());
         List<Issue> issues = new ArrayList<>(parsed.issues());
         Map<String, Integer> unknown = new LinkedHashMap<>();
@@ -48,7 +50,7 @@ public class SpecimenResolver {
                 continue;
             }
             int before = issues.size();
-            check(d, codes, zipFiles, issues);
+            check(d, codes, seenCodes, zipFiles, issues);
             if (issues.size() > before) {
                 continue;
             }
@@ -68,9 +70,13 @@ public class SpecimenResolver {
         return new SpecimenPreview(parsed.decimalComma(), rows, unknownSpecies, issues);
     }
 
-    private void check(SpecimenDraft d, Set<String> codes, Set<String> zipFiles, List<Issue> issues) {
-        if (d.code() != null && !codes.contains(d.code())) {
-            issues.add(new Issue(d.line(), "codigo", "Code does not exist. Leave it empty to create a new specimen"));
+    private void check(SpecimenDraft d, Set<String> codes, Set<String> seenCodes, Set<String> zipFiles, List<Issue> issues) {
+        if (d.code() != null) {
+            if (!codes.contains(d.code())) {
+                issues.add(new Issue(d.line(), "codigo", "Code does not exist. Leave it empty to create a new specimen"));
+            } else if (!seenCodes.add(d.code())) {
+                issues.add(new Issue(d.line(), "codigo", "Code «" + d.code() + "» is repeated in the file"));
+            }
         }
         if (!lookup.nearCampus(d.lat(), d.lon(), ImportRules.CAMPUS_MARGIN_M)) {
             issues.add(new Issue(d.line(), "latitud", "The point is outside the campus"));

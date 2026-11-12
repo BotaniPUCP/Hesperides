@@ -81,6 +81,187 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /usuarios/i })).not.toHaveAttribute('aria-current');
   });
 
+  it('en Registrar especie marca solo ese enlace, no también Especies', () => {
+    mockPathname = '/inventario-verde/registrar';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('link', { name: 'Registrar especie' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Especies' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('en la ficha de una especie, sin enlace propio, marca Especies', () => {
+    mockPathname = '/inventario-verde/especies/roystonea-regia';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('link', { name: 'Especies' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('Migrar referencias vive en Lugares: lo abre, marca solo ese enlace y no abre Catastro verde', () => {
+    mockPathname = '/lugares/migracion';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Migrar referencias' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('Importar lugares es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/importar';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: /lugares/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Importar lugares' })).toHaveAttribute('href', '/lugares/importar');
+    expect(screen.getByRole('link', { name: 'Importar lugares' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Importar lugares' })).not.toBeInTheDocument();
+  });
+
+  it('Nuevo lugar es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/nuevo';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Nuevo lugar' })).toHaveAttribute('href', '/lugares/nuevo');
+    expect(screen.getByRole('link', { name: 'Nuevo lugar' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Nuevo lugar' })).not.toBeInTheDocument();
+  });
+
+  it('Exportar lugares es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/exportar';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Exportar lugares' })).toHaveAttribute('href', '/lugares/exportar');
+    expect(screen.getByRole('link', { name: 'Exportar lugares' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Exportar lugares' })).not.toBeInTheDocument();
+  });
+
+  describe('al pasar a otra pantalla por un enlace interno, sin recargar', () => {
+    it('abre el grupo de destino para que se vea la página actual, y cierra el de origen', () => {
+      mockPathname = '/catastro/ejemplares';
+      const { rerender } = render(<Sidebar />);
+      expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'true');
+
+      mockPathname = '/admin/usuarios';
+      rerender(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: /administración/i })).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('link', { name: 'Usuarios' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('moverse dentro del mismo grupo no lo cierra aunque cambie la página', () => {
+      mockPathname = '/catastro/ejemplares';
+      const { rerender } = render(<Sidebar />);
+
+      mockPathname = '/catastro/importar';
+      rerender(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getByRole('link', { name: 'Importar al catastro' })).toHaveAttribute('aria-current', 'page');
+    });
+
+    it('respeta un grupo ajeno que la persona abrió a mano', async () => {
+      mockPathname = '/catastro/ejemplares';
+      const { rerender } = render(<Sidebar />);
+      await userEvent.click(screen.getByRole('button', { name: /administración/i }));
+
+      mockPathname = '/catastro/importar';
+      rerender(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: /administración/i })).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('si la persona cerró el grupo actual, navegar dentro de él no lo reabre', async () => {
+      mockPathname = '/catastro/ejemplares';
+      const { rerender } = render(<Sidebar />);
+      await userEvent.click(screen.getByRole('button', { name: /catastro verde/i }));
+
+      mockPathname = '/catastro/importar';
+      rerender(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
+    });
+  });
+
+  it('en la ficha de un lugar abre Lugares y marca el catálogo', () => {
+    mockPathname = '/lugares/LUG-0001';
+    render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it.each([['SUPERVISOR', 'Supervisor'], ['OPERARIO', 'Operario']])(
+    'a %s, que no migra, el catálogo de lugares le queda como enlace directo y sin clic de más',
+    (code, label) => {
+      comoRol(code, label);
+      mockPathname = '/lugares/LUG-0001';
+      render(<Sidebar />);
+
+      expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.queryByRole('button', { name: 'Lugares' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Migrar referencias' })).not.toBeInTheDocument();
+    },
+  );
+
+  describe('un grupo con un solo enlace visible no es un desplegable', () => {
+    it('Intervenciones es enlace directo para todos', () => {
+      mockPathname = '/intervenciones/10';
+      render(<Sidebar />);
+
+      expect(screen.getByRole('link', { name: 'Intervenciones' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.queryByRole('button', { name: /intervenciones/i })).not.toBeInTheDocument();
+    });
+
+    it('al OPERARIO no le queda ningún desplegable: ve directo las pantallas que consulta', () => {
+      comoRol('OPERARIO', 'Operario de campo');
+      render(<Sidebar />);
+
+      const nav = screen.getByRole('navigation', { name: /principal/i });
+      expect(within(nav).queryAllByRole('button')).toHaveLength(0);
+      for (const nombre of ['Catálogo de lugares', 'Especies', 'Intervenciones', 'Ejemplares', 'Frecuencias de mantenimiento']) {
+        expect(within(nav).getByRole('link', { name: nombre })).toBeInTheDocument();
+      }
+    });
+
+    it('al SUPERVISOR solo le quedan directos los de un enlace; el resto sigue desplegable', () => {
+      comoRol('SUPERVISOR', 'Supervisor');
+      render(<Sidebar />);
+
+      expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Intervenciones' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /administración/i })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Usuarios' })).not.toBeInTheDocument();
+    });
+
+    it('a ADMIN, Lugares sigue siendo desplegable porque tiene dos enlaces', () => {
+      render(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: 'Lugares' })).toBeInTheDocument();
+    });
+
+    it('un enlace directo avisa al navegar, para cerrar el panel móvil', async () => {
+      const onNavigate = jest.fn();
+      render(<Sidebar onNavigate={onNavigate} />);
+      const link = screen.getByRole('link', { name: 'Intervenciones' });
+      link.addEventListener('click', (event) => event.preventDefault());
+
+      await userEvent.click(link);
+
+      expect(onNavigate).toHaveBeenCalled();
+    });
+  });
+
   it('enlaza catálogos, que antes no tenía ningún acceso desde la aplicación', () => {
     mockPathname = '/admin/usuarios';
     render(<Sidebar />);

@@ -10,6 +10,9 @@
 # una sola propiedad la deja sin resolver.
 
 hesperides:
+  incidents:
+    time-zone: America/Lima
+    holidays: "2026-12-25"
   security:
     jwt:
       secret: clave-de-prueba-suficientemente-larga-para-hs256-en-tests
@@ -31,6 +34,10 @@ hesperides:
     local-dir: ${java.io.tmpdir}/hesperides-test-storage
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 250MB
+      max-request-size: 250MB
   jpa:
     hibernate:
       ddl-auto: validate

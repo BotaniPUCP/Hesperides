@@ -2,6 +2,21 @@ import type { InventorySummary, Page, Species, Specimen, SpecimenDetail } from '
 
 /** Datos de muestra con la forma de /api/v1/green-inventory, tomados del catastro real. */
 
+/** Lo que una especie crítica sin promedios trae además de sus datos botánicos. */
+export const medidasDeEspecieCritica = {
+  critical: true,
+  referenceHeightM: null,
+  referenceHeightSourceCode: null,
+  referenceHeightSourceName: null,
+  referenceCrownRadiusM: null,
+  referenceCrownRadiusSourceCode: null,
+  referenceCrownRadiusSourceName: null,
+  usesTrunkHeight: true,
+  usesDbh: true,
+  unmeasuredSpecimenCount: 0,
+  extraMeasures: [],
+};
+
 export const palmeraReal: Species = {
   slug: 'roystonea-regia',
   scientificName: 'Roystonea regia',
@@ -14,6 +29,8 @@ export const palmeraReal: Species = {
   imageUrl: 'https://drive.google.com/thumbnail?id=abc&sz=w1000',
   imageSource: 'SPECIMEN',
   photos: [],
+  ...medidasDeEspecieCritica,
+  unmeasuredSpecimenCount: 130,
 };
 
 export const palmeraReina: Species = {
@@ -53,6 +70,17 @@ export const p01Detail: SpecimenDetail = {
   dataSource: 'MEASURED',
   section: { code: 'AV-0312', name: 'D 3' },
   species: palmeraReal,
+  measuredAt: '2026-01-01',
+  speciesCritical: true,
+  measurementStatus: 'MEASURED',
+  referenceHeightM: null,
+  referenceCrownRadiusM: null,
+  referenceHeightSourceName: null,
+  referenceCrownRadiusSourceName: null,
+  lastPruningDate: null,
+  measuredBeforeLastPruning: false,
+  pruningAssignment: 'THIRD_PARTY',
+  extraMeasures: [],
 };
 
 export const summary: InventorySummary = {

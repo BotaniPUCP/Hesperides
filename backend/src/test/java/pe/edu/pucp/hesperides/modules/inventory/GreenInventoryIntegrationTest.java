@@ -57,6 +57,45 @@ class GreenInventoryIntegrationTest {
                 .andExpect(jsonPath("$.data.vegetationTypes[?(@.code == 'PALM')].count").value(hasItem(250)));
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "true,  true,  87",
+            "true,  false, 762",
+            "false, true,  0",
+            "false, false, 116",
+    })
+    void specimensFilterByCriticalityAndMeasurementIndependently(String critical, String measured, int expected)
+            throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("critical", critical).param("measured", measured))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page.totalElements").value(expected));
+    }
+
+    @Test
+    void eachMeasurementFilterAloneCoversItsSide() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("critical", "false"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(116));
+        mockMvc.perform(get(BASE + "/specimens").param("measured", "true"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(87));
+        mockMvc.perform(get(BASE + "/specimens"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(965));
+    }
+
+    @Test
+    void measurementFiltersCombineWithSearchAndPagination() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("critical", "false").param("measured", "false")
+                        .param("search", "cafeto").param("size", "5"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(55))
+                .andExpect(jsonPath("$.data.content", hasSize(5)))
+                .andExpect(jsonPath("$.data.content[0].speciesCommonName").value("Cafeto"));
+    }
+
+    @Test
+    void anInvalidFilterValueIsRejected() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("critical", "quizas"))
+                .andExpect(status().isBadRequest());
+    }
+
     @Test
     void speciesComeMostRepresentedFirstWithAPhotoOfTheirOwn() throws Exception {
         mockMvc.perform(get(BASE + "/species").param("size", "2"))
@@ -94,6 +133,41 @@ class GreenInventoryIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.scientificName").value("Ficus benjamina 'Variegata'"))
                 .andExpect(jsonPath("$.data.specimenCount").value(2));
+    }
+
+    @Test
+    void allSpecimensAreFilteredByTheVegetationTypeOfTheirSpecies() throws Exception {
+        // Sin filtrar, el café (c1, c2…) encabeza el orden por referencia: si el filtro
+        // solo tocara el conteo, aparecería en esta página.
+        mockMvc.perform(get(BASE + "/specimens").param("vegetationType", "PALM")
+                        .param("sort", "reference").param("size", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page.totalElements").value(250))
+                .andExpect(jsonPath("$.data.content", hasSize(100)))
+                .andExpect(jsonPath("$.data.content[*].speciesSlug").value(org.hamcrest.Matchers.everyItem(
+                        org.hamcrest.Matchers.not("coffea-arabica"))));
+    }
+
+    @Test
+    void theAllTypesValueLeavesTheSpecimensUnfiltered() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("vegetationType", "ALL"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(965));
+    }
+
+    @Test
+    void theVegetationTypeCombinesWithTheSearch() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("search", "coffea"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(org.hamcrest.Matchers.greaterThan(0)));
+        mockMvc.perform(get(BASE + "/specimens").param("search", "coffea").param("vegetationType", "PALM"))
+                .andExpect(jsonPath("$.data.page.totalElements").value(0));
+    }
+
+    @Test
+    void anUnknownVegetationTypeFindsNoSpecimens() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("vegetationType", "NO_EXISTE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page.totalElements").value(0))
+                .andExpect(jsonPath("$.data.content", hasSize(0)));
     }
 
     @Test
@@ -164,5 +238,34 @@ class GreenInventoryIntegrationTest {
     @Test
     void anUnknownSpecimenIsA404() throws Exception {
         mockMvc.perform(get(BASE + "/specimens/EV-999999")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void globalSpecimenSearchFindsByCodeReferenceOrSpecies() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens/search").param("q", "EV-000001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].code").value("EV-000001"))
+                .andExpect(jsonPath("$.data[0].speciesSlug").value("roystonea-regia"));
+
+        mockMvc.perform(get(BASE + "/specimens/search").param("q", "p01"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].sourceReference").value("p01"));
+    }
+
+    @Test
+    void allSpecimensReturnsGlobalInventoryAcrossAllSpecies() throws Exception {
+        mockMvc.perform(get(BASE + "/specimens").param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page.totalElements").value(965))
+                .andExpect(jsonPath("$.data.content", hasSize(10)))
+                .andExpect(jsonPath("$.data.content[0].speciesSlug").isString());
+    }
+
+    @Test
+    void globalLocationsReturnsLocationsAcrossAllSpecies() throws Exception {
+        mockMvc.perform(get(BASE + "/locations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray());
     }
 }

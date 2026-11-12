@@ -1,13 +1,14 @@
 # Build stage
-FROM maven:3.9-eclipse-temurin-26 AS build
+FROM docker.io/library/maven:3.9-eclipse-temurin-26 AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline
 COPY src ./src
-RUN mvn -B package -DskipTests
+# CI runs `mvn verify`; the runtime image does not need test sources compiled.
+RUN mvn -B package -Dmaven.test.skip=true
 
 # Runtime stage
-FROM eclipse-temurin:26-jre-alpine
+FROM docker.io/library/eclipse-temurin:26-jre-alpine
 # addgroup/adduser de BusyBox: la imagen base es Alpine y no trae groupadd/useradd.
 RUN addgroup --system hesperides && adduser --system --ingroup hesperides --no-create-home hesperides
 # Directorio de fotos (STORAGE_LOCAL_DIR). Un volumen nuevo hereda este dueño:

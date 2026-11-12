@@ -53,9 +53,9 @@ class PlaceDetailAssembler {
     }
 
     Outline outline(OutlineRow o) {
-        String source = o.buildingId() != null ? "BUILDING" : o.zoneCode() != null ? "ZONE"
-                : o.featureCode() != null ? "FEATURE" : o.drawn() ? "DRAWN" : "INHERITED";
-        return new Outline(source, o.buildingId(), o.zoneCode(), o.featureCode(), o.lat(), o.lon());
+        String source = !o.buildingIds().isEmpty() ? "BUILDING" : o.zoneCode() != null ? "ZONE"
+                : o.featureCode() != null ? "FEATURE" : o.drawn() ? "DRAWN" : o.fromChildren() ? "CHILDREN" : "INHERITED";
+        return new Outline(source, o.buildingIds(), o.zoneCode(), o.featureCode(), o.lat(), o.lon());
     }
 
     String firstThumbnail(long placeId, long perspectiveId) {

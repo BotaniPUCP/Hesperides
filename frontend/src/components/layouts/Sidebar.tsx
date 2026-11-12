@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { HOME_ITEM, isActivePath, visibleDirectLinks, visibleNavigation } from '@/lib/navigation';
+import { HOME_ITEM, activeHref, visibleDirectLinks, visibleNavigation } from '@/lib/navigation';
 import { SidebarGroup } from './SidebarGroup';
 import { SidebarLink } from './SidebarLink';
 import { SidebarUserPanel } from './SidebarUserPanel';
@@ -18,6 +18,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const rol = user?.role.code ?? '';
   const enlaces = visibleDirectLinks(rol);
   const grupos = visibleNavigation(rol);
+  const activo = activeHref(pathname, [
+    HOME_ITEM.href,
+    ...enlaces.map((enlace) => enlace.href),
+    ...grupos.flatMap((grupo) => grupo.items.map((item) => item.href)),
+  ]);
 
   return (
     <div className="flex h-full flex-col bg-neutral-0">
@@ -30,7 +35,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           href={HOME_ITEM.href}
           label={HOME_ITEM.label}
           icon={HOME_ITEM.icon}
-          active={isActivePath(pathname, HOME_ITEM.href)}
+          active={activo === HOME_ITEM.href}
           onNavigate={onNavigate}
         />
         {enlaces.map((enlace) => (
@@ -39,13 +44,24 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             href={enlace.href}
             label={enlace.label}
             icon={enlace.icon}
-            active={isActivePath(pathname, enlace.href)}
+            active={activo === enlace.href}
             onNavigate={onNavigate}
           />
         ))}
-        {grupos.map((grupo) => (
-          <SidebarGroup key={grupo.id} group={grupo} pathname={pathname} onNavigate={onNavigate} />
-        ))}
+        {grupos.map((grupo) =>
+          grupo.items.length === 1 ? (
+            <SidebarLink
+              key={grupo.id}
+              href={grupo.items[0].href}
+              label={grupo.items[0].label}
+              icon={grupo.items[0].icon}
+              active={activo === grupo.items[0].href}
+              onNavigate={onNavigate}
+            />
+          ) : (
+            <SidebarGroup key={grupo.id} group={grupo} activeHref={activo} onNavigate={onNavigate} />
+          ),
+        )}
       </nav>
 
       <SidebarUserPanel />

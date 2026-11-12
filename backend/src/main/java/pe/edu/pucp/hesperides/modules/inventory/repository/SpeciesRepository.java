@@ -25,8 +25,14 @@ public class SpeciesRepository {
     private static final RowMapper<SpeciesRow> ROW = (rs, i) -> new SpeciesRow(
             rs.getString("slug"), rs.getString("scientific_name"), rs.getString("common_name"),
             splitNames(rs.getString("other_names")), rs.getString("family"), rs.getString("type_code"),
-            rs.getString("type_label"), rs.getLong("specimen_count"), rs.getString("photo_url"),
-            rs.getObject("species_photo_id", Long.class), rs.getObject("specimen_photo_id", Long.class));
+            rs.getString("type_label"), rs.getString("origin_code"), rs.getString("origin_label"),
+            rs.getString("description"), rs.getString("care_notes"), rs.getLong("specimen_count"),
+            rs.getString("photo_url"), rs.getObject("species_photo_id", Long.class),
+            rs.getObject("specimen_photo_id", Long.class), rs.getBoolean("is_critical"),
+            rs.getBigDecimal("reference_height_m"), rs.getString("height_source_code"),
+            rs.getString("height_source_label"), rs.getBigDecimal("reference_crown_radius_m"),
+            rs.getString("crown_source_code"), rs.getString("crown_source_label"),
+            rs.getBoolean("uses_trunk_height"), rs.getBoolean("uses_dbh"), rs.getLong("unmeasured_specimen_count"));
 
     private final NamedParameterJdbcTemplate jdbc;
 

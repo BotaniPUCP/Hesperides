@@ -31,6 +31,7 @@ public class CatalogsServiceImpl implements CatalogsService {
 
     private final CatalogTypesRepository typesRepository;
     private final CatalogItemsRepository itemsRepository;
+    private final ExtraMeasureUnitGuard unitGuard;
 
     @Override
     @Transactional(readOnly = true)
@@ -62,6 +63,7 @@ public class CatalogsServiceImpl implements CatalogsService {
     @Override
     @Transactional
     public CatalogItemResponse createItem(String typeCode, CreateCatalogItemRequest request) {
+        unitGuard.requireUnitOnCreate(typeCode, request.metadata());
         CatalogType type = requireType(typeCode);
 
         itemsRepository.findByTypeCodeAndCode(typeCode, request.code()).ifPresent(existing -> {
@@ -94,6 +96,7 @@ public class CatalogsServiceImpl implements CatalogsService {
         if (request.sortOrder() != null) {
             item.setSortOrder(request.sortOrder());
         }
+        unitGuard.requireUnitUnchanged(item, request.metadata());
         if (request.metadata() != null) {
             item.setMetadata(request.metadata());
         }

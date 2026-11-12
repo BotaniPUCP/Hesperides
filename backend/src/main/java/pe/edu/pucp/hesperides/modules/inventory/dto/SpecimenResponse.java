@@ -6,5 +6,5 @@ package pe.edu.pucp.hesperides.modules.inventory.dto;
  */
 public record SpecimenResponse(String code, String sourceReference, String sourceLocation, Double latitude,
                                Double longitude, String photoUrl, String imageUrl, String thumbnailUrl, int quantity,
-                               String notes) {
+                               String notes, String speciesSlug, String speciesCommonName, String speciesScientificName) {
 }

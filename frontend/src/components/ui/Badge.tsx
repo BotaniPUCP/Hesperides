@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 export type BadgeColor = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info';
@@ -5,6 +6,8 @@ export type BadgeColor = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' 
 export interface BadgeProps {
   label: string;
   color?: BadgeColor;
+  icon?: ReactNode;
+  className?: string;
 }
 
 const COLORS: Record<BadgeColor, string> = {
@@ -17,14 +20,16 @@ const COLORS: Record<BadgeColor, string> = {
 };
 
 /** Etiqueta genérica. Para estados de flujo o urgencia usar StatusBadge/UrgencyBadge. */
-export function Badge({ label, color = 'neutral' }: BadgeProps) {
+export function Badge({ label, color = 'neutral', icon, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
         COLORS[color],
+        className,
       )}
     >
+      {icon}
       {label}
     </span>
   );

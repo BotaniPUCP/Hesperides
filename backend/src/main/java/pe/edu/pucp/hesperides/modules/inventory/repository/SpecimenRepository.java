@@ -10,7 +10,9 @@ import org.springframework.stereotype.Repository;
 import pe.edu.pucp.hesperides.modules.inventory.dto.LocationCountResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SectionRef;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenQuery;
+import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenSearchResultResponse;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +28,11 @@ public class SpecimenRepository {
             rs.getBigDecimal("trunk_height_m"), rs.getBigDecimal("dbh_cm"), rs.getBigDecimal("crown_radius_m"),
             rs.getObject("is_banded", Boolean.class), rs.getString("data_source"),
             rs.getString("element_type_code"), rs.getString("element_type_label"), rs.getString("slug"),
-            rs.getObject("attachment_id", Long.class));
+            rs.getObject("attachment_id", Long.class),
+            rs.getString("species_common_name"), rs.getString("species_scientific_name"),
+            rs.getObject("measured_at", LocalDate.class), rs.getBoolean("species_critical"),
+            rs.getBigDecimal("reference_height_m"), rs.getBigDecimal("reference_crown_radius_m"),
+            rs.getString("height_source_label"), rs.getString("crown_source_label"));
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -61,10 +67,39 @@ public class SpecimenRepository {
                 (rs, i) -> new SectionRef(rs.getString("code"), rs.getString("name"))).stream().findFirst();
     }
 
+    public Optional<LocalDate> lastPruningDate(String code) {
+        return Optional.ofNullable(jdbc.queryForObject(InventoryQueries.LAST_PRUNING,
+                new MapSqlParameterSource("code", code), LocalDate.class));
+    }
+
+    public List<SpecimenSearchResultResponse> search(String query, int limit) {
+        String trimmed = query != null ? query.trim() : "";
+        if (trimmed.isEmpty()) {
+            return List.of();
+        }
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("search", LikePattern.contains(trimmed))
+                .addValue("rawSearch", trimmed)
+                .addValue("prefixSearch", trimmed + "%")
+                .addValue("limit", Math.min(Math.max(limit, 1), 50));
+        return jdbc.query(InventoryQueries.SPECIMEN_SEARCH, params, (rs, i) -> new SpecimenSearchResultResponse(
+                rs.getString("code"),
+                rs.getString("source_reference"),
+                rs.getString("source_location"),
+                rs.getString("legacy_code"),
+                rs.getString("species_slug"),
+                rs.getString("species_common_name"),
+                rs.getString("species_scientific_name")
+        ));
+    }
+
     private static MapSqlParameterSource filter(String speciesSlug, SpecimenQuery query) {
         return new MapSqlParameterSource()
                 .addValue("slug", speciesSlug)
                 .addValue("location", query.location())
+                .addValue("type", query.vegetationType())
+                .addValue("critical", query.critical(), java.sql.Types.BOOLEAN)
+                .addValue("measured", query.measured(), java.sql.Types.BOOLEAN)
                 .addValue("search", LikePattern.contains(query.search()));
     }
 }

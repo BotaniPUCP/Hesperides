@@ -22,7 +22,7 @@ function Flecha({ direccion, onClick }: { direccion: 'anterior' | 'siguiente'; o
       type="button"
       onClick={onClick}
       aria-label={direccion === 'anterior' ? 'Foto anterior' : 'Foto siguiente'}
-      className="rounded-full bg-neutral-0/90 p-2 text-neutral-800 shadow-sm hover:bg-neutral-0 focus:outline-none focus:ring-2 focus:ring-brand-600"
+      className="rounded-full bg-neutral-0/90 p-2 text-neutral-800 shadow-xs hover:bg-neutral-0 focus:outline-hidden focus:ring-2 focus:ring-brand-600"
     >
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
         <path
@@ -78,7 +78,7 @@ export function SpeciesPhotoViewer({ photos, startAt, speciesName, onClose }: Sp
         type="button"
         onClick={onClose}
         aria-label="Cerrar galería"
-        className="absolute right-4 top-4 rounded-lg p-1.5 text-white/90 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-600"
+        className="absolute right-4 top-4 rounded-lg p-1.5 text-white/90 hover:bg-white/10 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-brand-600"
       >
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -90,6 +90,7 @@ export function SpeciesPhotoViewer({ photos, startAt, speciesName, onClose }: Sp
         <img
           src={foto.imageUrl}
           alt={`${speciesName}, foto ${actual + 1} de ${photos.length}`}
+          referrerPolicy="no-referrer"
           className="max-h-[80vh] w-auto max-w-full rounded-lg object-contain"
         />
         {varias && (
@@ -121,3 +122,4 @@ export function SpeciesPhotoViewer({ photos, startAt, speciesName, onClose }: Sp
     </div>
   );
 }
+

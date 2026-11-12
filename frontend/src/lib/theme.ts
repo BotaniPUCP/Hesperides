@@ -29,16 +29,3 @@ export function resolveTheme(preference: ThemePreference, systemPrefersDark: boo
   if (preference === 'system') return systemPrefersDark ? 'dark' : 'light';
   return preference;
 }
-
-/**
- * Corre en <head> antes del primer pintado para que quien eligió oscuro no vea
- * un destello blanco mientras React hidrata. Repite parseThemePreference y
- * resolveTheme en ES5 porque no puede importar nada; los tests ejecutan este
- * mismo texto para que no se desvíe de ellas.
- */
-export const THEME_BOOT_SCRIPT = `(function(){try{
-var p=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
-if(${JSON.stringify(THEME_PREFERENCES)}.indexOf(p)<0)p=${JSON.stringify(DEFAULT_THEME_PREFERENCE)};
-var d=p==="dark"||(p==="system"&&window.matchMedia(${JSON.stringify(DARK_SCHEME_QUERY)}).matches);
-var r=document.documentElement;r.classList.toggle(${JSON.stringify(DARK_CLASS)},d);r.style.colorScheme=d?"dark":"light";
-}catch(e){}})()`;

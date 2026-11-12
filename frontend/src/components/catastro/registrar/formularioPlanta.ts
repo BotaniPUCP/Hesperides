@@ -1,4 +1,5 @@
 import type { AssessmentForm, MeasurementForm, SpecimenForm } from '@shared/types';
+import { todayLocal } from '@/lib/local-date';
 
 /** Un sí/no de evaluación: vacío es «no se evaluó», distinto de «no». */
 export type SiNo = '' | 'si' | 'no';
@@ -43,6 +44,15 @@ export const FORMULARIO_VACIO: FormularioPlanta = {
   manejo: '', observacionEvaluacion: '', observaciones: '',
 };
 
+/**
+ * Lo que ve quien abre el formulario: las fechas ya proponen hoy, el caso común
+ * al registrar en campo. Una sección sigue contando solo si tiene medidas o
+ * respuestas, así que la fecha propuesta no crea mediciones ni evaluaciones.
+ */
+export function formularioNuevo(hoy: string = todayLocal()): FormularioPlanta {
+  return { ...FORMULARIO_VACIO, fechaMedicion: hoy, fechaEvaluacion: hoy };
+}
+
 export type Errores = Partial<Record<'especie' | 'lat' | 'lon' | 'cantidad' | 'fechaMedicion' | 'fechaEvaluacion' | 'medidas', string>>;
 
 /** Acepta la coma decimal que se escribe por costumbre. Vacío es null; algo ilegible, NaN. */
@@ -54,15 +64,28 @@ function medicion(f: FormularioPlanta, errores: Errores): MeasurementForm | null
   const valores = [f.alturaM, f.alturaFusteM, f.dapCm, f.radioCopaM].map(numero);
   if (valores.every((v) => v === null) && f.zunchado === '') return null;
   if (valores.some((v) => v !== null && (Number.isNaN(v) || v < 0))) errores.medidas = 'Las medidas deben ser números positivos';
-  if (!f.fechaMedicion) errores.fechaMedicion = 'Una medición necesita su fecha';
   const [heightM, trunkHeightM, dbhCm, crownRadiusM] = valores;
+  if (heightM !== null && trunkHeightM !== null && trunkHeightM > heightM) {
+    errores.medidas = 'La altura del fuste no puede superar la altura total';
+  }
+  const hoy = todayLocal();
+  if (!f.fechaMedicion) {
+    errores.fechaMedicion = 'Una medición necesita su fecha';
+  } else if (f.fechaMedicion > hoy) {
+    errores.fechaMedicion = 'La fecha de medición no puede ser futura';
+  }
   return { date: f.fechaMedicion, heightM, trunkHeightM, dbhCm, crownRadiusM, banded: siNo(f.zunchado) };
 }
 
 function evaluacion(f: FormularioPlanta, errores: Errores): AssessmentForm | null {
   const respondidas = PREGUNTAS_EVALUACION.some(([k]) => f.respuestas[k] !== '');
   if (!respondidas && !texto(f.manejo) && !texto(f.observacionEvaluacion)) return null;
-  if (!f.fechaEvaluacion) errores.fechaEvaluacion = 'Una evaluación necesita su fecha';
+  const hoy = todayLocal();
+  if (!f.fechaEvaluacion) {
+    errores.fechaEvaluacion = 'Una evaluación necesita su fecha';
+  } else if (f.fechaEvaluacion > hoy) {
+    errores.fechaEvaluacion = 'La fecha de evaluación no puede ser futura';
+  }
   const respuestas = Object.fromEntries(PREGUNTAS_EVALUACION.map(([k]) => [k, siNo(f.respuestas[k])]));
   return { date: f.fechaEvaluacion, ...respuestas, recommendedManagement: texto(f.manejo), observation: texto(f.observacionEvaluacion) };
 }

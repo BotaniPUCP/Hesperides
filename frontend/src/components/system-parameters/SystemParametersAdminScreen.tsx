@@ -6,6 +6,7 @@ import { Button, Card, useToast } from '@/components/ui';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { systemParametersApi } from '@/lib/system-parameters-api';
 import { CampoValor } from './CampoValor';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 /**
  * Pantalla "Parámetros del sistema" (SPEC-003 §5.6). Solo ADMIN (SPEC-001
@@ -100,13 +101,8 @@ export function SystemParametersAdminScreen() {
   const lista = parametros ?? [];
 
   return (
-    <div className="flex flex-col gap-5">
-      <header>
-        <h1 className="text-xl font-semibold text-neutral-900">Parámetros del sistema</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Configuración global que gobierna cómo se valida y se muestra el resto de la aplicación.
-        </p>
-      </header>
+    <div className="space-y-6">
+      <PageHeader title="Parámetros del sistema" description="Configuración global que gobierna cómo se valida y se muestra el resto de la aplicación." />
 
       <Card>
         <ul className="flex flex-col divide-y divide-neutral-100">

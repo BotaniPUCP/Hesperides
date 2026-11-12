@@ -113,10 +113,7 @@ public class UsersServiceImpl implements UsersService {
     @Transactional
     public UserDetailResponse deactivate(Long id, String actorEmail) {
         User target = requireLiveUser(id);
-        User actor = usersRepository.findActiveByEmail(normalize(actorEmail))
-                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND));
-
-        adminRules.refuseSelfDeactivation(target, actor);
+        adminRules.refuseSelfDeactivation(target, requireActiveByEmail(actorEmail));
 
         // Idempotente: desactivar a quien ya lo está no falla ni vuelve a auditar
         // un cambio que no ocurrió (SPEC-100 §5.5).
@@ -153,8 +150,10 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     @Transactional
-    public CredentialDeliveryResponse resendCredentials(Long id) {
-        return credentialOperations.resend(requireLiveUser(id));
+    public CredentialDeliveryResponse resendCredentials(Long id, String actorEmail) {
+        User target = requireLiveUser(id);
+        adminRules.refuseSelfCredentialResend(target, requireActiveByEmail(actorEmail));
+        return credentialOperations.resend(target);
     }
 
     @Override
@@ -168,10 +167,12 @@ public class UsersServiceImpl implements UsersService {
     @Override
     @Transactional
     public void changeOwnPassword(String email, ChangePasswordRequest request) {
-        User user = usersRepository.findActiveByEmail(normalize(email))
-                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND));
+        credentialOperations.changeOwn(requireActiveByEmail(email), request);
+    }
 
-        credentialOperations.changeOwn(user, request);
+    private User requireActiveByEmail(String email) {
+        return usersRepository.findActiveByEmail(normalize(email))
+                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND));
     }
 
     private User requireLiveUser(Long id) {

@@ -143,7 +143,7 @@ decisión hay detrás.
 | `PUT /users/{id}` | ADMIN | Nombre, apellido, correo y rol. **No** contraseña ni `is_active` |
 | `POST /users/{id}/deactivate` | ADMIN | `is_active = FALSE` + revoca refresh tokens |
 | `POST /users/{id}/reactivate` | ADMIN | Revierte. No restaura sesiones ni regenera clave |
-| `POST /users/{id}/resend-credentials` | ADMIN | Regenera clave, reenvía, revoca sesiones |
+| `POST /users/{id}/resend-credentials` | ADMIN, sobre otra cuenta | Regenera clave, reenvía, revoca sesiones |
 | `POST /users/{id}/mark-credentials-delivered` | ADMIN | Cierra un `PENDING_DELIVERY` resuelto fuera del sistema |
 | `POST /users/me/password` | Cualquier autenticado, sobre su cuenta | Único endpoint que acepta una clave escrita a mano tras el alta |
 
@@ -347,6 +347,12 @@ evolución natural si el cliente lo pide.
 - **El ADMIN intenta desactivarse a sí mismo:** 422. Sin esta regla, el único administrador puede
   dejarse fuera del sistema con un clic, y la recuperación exige un `UPDATE` manual en la base de
   datos.
+- **El ADMIN intenta reenviarse sus propias credenciales:** 422, y su fila no ofrece ese botón ni
+  el de desactivar. El reenvío le cambiaría la clave y le cerraría la sesión, y la temporal puede
+  ir a un buzón al que no tiene acceso. Su contraseña se cambia con `POST /users/me/password`.
+- **A quien tiene la pantalla abierta le regeneran la clave:** su siguiente petición recibe el 403
+  de `PasswordChangeRequiredFilter`. El frontend relee `/auth/me` y `RouteGuard` lo lleva a
+  `/cambiar-password`; ese 403 no se presenta como falta de permisos.
 - **Se intenta desactivar o degradar al último ADMIN activo:** 422. El sistema quedaría sin nadie
   capaz de crear usuarios, administrar catálogos ni editar parámetros — un estado del que no se
   sale desde la aplicación. La comprobación cuenta administradores activos **excluyendo al
@@ -430,7 +436,7 @@ son los únicos que ninguna suite puede dar por buenos.
 | CA-09 | **[manual]** El formulario de edición no tiene campo de contraseña, y un `password` inyectado en el body de `PUT` no la cambia |
 | CA-10 | Las cinco acciones dejan rastro en `audit_log` con su `before`/`after`. Desactivar dos veces deja **una** sola fila |
 | CA-11 | **[manual]** Cambiar la propia contraseña expulsa las demás sesiones y mantiene la actual |
-| CA-12 | `docker-compose down -v && up --build` aplica el baseline V001 sin error de checksum; un `INSERT` con `credential_status = 'OTRO'` falla por el CHECK |
+| CA-12 | En una base de prueba vacía, `podman compose -f docker-compose.yml -f docker-compose.dev.yml up --build` aplica el baseline V001 sin error de checksum; un `INSERT` con `credential_status = 'OTRO'` falla por el CHECK |
 
 ## 7. Especificación visual
 
@@ -450,7 +456,8 @@ ningún patrón visual nuevo que describir. Lo que no se deduce mirando la panta
   layout al llegar los datos.
 - **Las confirmaciones destructivas nombran a la persona** ("¿Desactivar la cuenta de María
   García?"). La de reenviar credenciales advierte además de que la contraseña anterior dejará
-  de funcionar: es el efecto que sorprende (§5.4).
+  de funcionar, de que se cierran sus sesiones, de a qué correo va la temporal y de que deberá
+  cambiarla al ingresar: son los efectos que sorprenden (§5.4).
 - **`/cambiar-password` no lleva navegación ni menú.** Mientras `mustChangePassword` sea `true`
   no hay ningún otro destino válido, y ofrecer enlaces que terminan en 403 sería engañoso.
 - El badge de entrega solo aparece con `credentialStatus = PENDING_DELIVERY`; `lastLogin` nulo
@@ -626,4 +633,3 @@ El común está en [`REGLAS.md` §6](../REGLAS.md). Propio de este spec:
 - [ ] Se usó desactivación lógica (`is_active`), no `DELETE` físico ni `deleted_at`.
 - [ ] Ni el dominio `@pucp.edu.pe`, ni el host SMTP, ni la URL pública están hardcodeados.
 - [ ] Los tests cubren los doce criterios de aceptación.
-

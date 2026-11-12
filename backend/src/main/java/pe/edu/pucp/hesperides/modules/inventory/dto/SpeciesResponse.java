@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.inventory.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -11,6 +12,12 @@ import java.util.List;
  */
 public record SpeciesResponse(String slug, String scientificName, String commonName, List<String> otherNames,
                               String family, String vegetationTypeCode, String vegetationTypeName,
+                              String originCode, String originName, String description, String careNotes,
                               long specimenCount, String imageUrl, String imageSource,
-                              List<SpeciesPhotoResponse> photos) {
+                              List<SpeciesPhotoResponse> photos,
+                              boolean critical, BigDecimal referenceHeightM, String referenceHeightSourceCode,
+                              String referenceHeightSourceName, BigDecimal referenceCrownRadiusM,
+                              String referenceCrownRadiusSourceCode, String referenceCrownRadiusSourceName,
+                              boolean usesTrunkHeight, boolean usesDbh, long unmeasuredSpecimenCount,
+                              List<ExtraMeasureResponse> extraMeasures) {
 }

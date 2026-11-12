@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { MapPerspective } from '@shared/types';
 import { photoSrcSet } from '@/lib/photo-srcset';
 import { placeHref } from './catalog/catalogOnMap';
@@ -44,9 +45,9 @@ export function MapInfoCard({ content, onClose }: MapInfoCardProps) {
           </dl>
           {content.card.note && <p className="mt-2 text-xs text-neutral-500">{content.card.note}</p>}
           {content.card.link && (
-            <a href={content.card.link.href} className="mt-2 inline-block text-xs font-medium text-brand-700 hover:underline">
+            <Link href={content.card.link.href} className="mt-2 inline-block text-xs font-medium text-brand-700 hover:underline">
               {content.card.link.label} →
-            </a>
+            </Link>
           )}
         </>
       ) : content.kind === 'perspective' ? (
@@ -70,9 +71,9 @@ function PerspectiveBody({ perspective }: { perspective: MapPerspective }) {
       ) : (
         <p className="text-neutral-500">Esta perspectiva todavía no tiene fotos.</p>
       )}
-      <a href={placeHref(perspective.place.code)} className="inline-block font-medium text-brand-700 hover:underline">
+      <Link href={placeHref(perspective.place.code)} className="inline-block font-medium text-brand-700 hover:underline">
         {`Ver ${perspective.place.name} en el catálogo →`}
-      </a>
+      </Link>
     </div>
   );
 }

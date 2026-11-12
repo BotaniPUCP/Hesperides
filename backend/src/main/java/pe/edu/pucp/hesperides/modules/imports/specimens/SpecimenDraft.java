@@ -1,6 +1,8 @@
 package pe.edu.pucp.hesperides.modules.imports.specimens;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Un ejemplar leído del CSV o del formulario, ya validado en su formato. Lo que
@@ -13,7 +15,15 @@ public record SpecimenDraft(int line, String code, String scientificName, double
 
     /** Una medición: la fecha decide cuál es la vigente. */
     public record Measurement(LocalDate date, Double heightM, Double trunkHeightM, Double dbhCm, Double crownRadiusM,
-                              Boolean banded) {
+                              Boolean banded, List<ExtraValue> extraValues) {
+        /** Una medición sin valores básicos no reemplaza los vigentes: solo añade medidas adicionales. */
+        public boolean onlyExtraValues() {
+            return heightM == null && trunkHeightM == null && dbhCm == null && crownRadiusM == null && banded == null
+                    && !extraValues.isEmpty();
+        }
+    }
+
+    public record ExtraValue(String code, BigDecimal value) {
     }
 
     /** Una evaluación (SPEC-103 D-06). Nulo en cada campo es «no se evaluó». */

@@ -4,14 +4,21 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type {
   CreateMaintenanceFrequencyRequest,
   MaintenanceFrequency,
+  MaintenanceZoneOption,
   UpdateMaintenanceFrequencyRequest,
 } from '@shared/types';
 import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
+import { useListUrlState } from '@/hooks/useListUrlState';
+import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { maintenanceApi } from '@/lib/maintenance-api';
 import { FrequenciesTable } from './FrequenciesTable';
 import { FrequencyFilters, type FilterState } from './FrequencyFilters';
 import { FrequencyFormModal } from './FrequencyFormModal';
+import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS } from './frequencyListState';
+import { LocationCompliancePanel } from './LocationCompliancePanel';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 interface CatalogOption {
   id: number;
@@ -19,8 +26,6 @@ interface CatalogOption {
   label: string;
   parentCode?: string | null;
 }
-
-const NO_FILTERS: FilterState = { search: '', regime: '', ruleType: '' };
 
 export function MaintenanceFrequenciesScreen() {
   const { user } = useAuth();
@@ -30,8 +35,11 @@ export function MaintenanceFrequenciesScreen() {
   const [frequencies, setFrequencies] = useState<MaintenanceFrequency[]>([]);
   const [activities, setActivities] = useState<CatalogOption[]>([]);
   const [ruleTypes, setRuleTypes] = useState<CatalogOption[]>([]);
+  const [zones, setZones] = useState<MaintenanceZoneOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterState>(NO_FILTERS);
+  const { values: filters, setValues: setFilters, query } = useListUrlState(FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS);
+  useListScrollRestoration(FREQUENCIES_PATH, query, !loading);
+  const [searchInput, setSearchInput] = useSearchDraft(filters.search, (search) => setFilters({ search }));
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFrequency, setEditingFrequency] = useState<MaintenanceFrequency | null>(null);
@@ -53,12 +61,14 @@ export function MaintenanceFrequenciesScreen() {
       maintenanceApi.list().catch(() => []),
       maintenanceApi.getActivityTypes().catch(() => []),
       maintenanceApi.getRuleTypes().catch(() => []),
+      maintenanceApi.getZones().catch(() => []),
     ])
-      .then(([freqRes, actRes, ruleRes]) => {
+      .then(([freqRes, actRes, ruleRes, zoneRes]) => {
         if (!vigente) return;
         setFrequencies(Array.isArray(freqRes) ? freqRes : []);
         setActivities(Array.isArray(actRes) ? actRes : []);
         setRuleTypes(Array.isArray(ruleRes) ? ruleRes : []);
+        setZones(Array.isArray(zoneRes) ? zoneRes : []);
       })
       .catch(() => {
         if (vigente) setFeedback({ type: 'error', message: 'Error al cargar las frecuencias de mantenimiento' });
@@ -84,6 +94,11 @@ export function MaintenanceFrequenciesScreen() {
       return matchesSearch && matchesRegime && matchesRuleType;
     });
   }, [frequencies, filters]);
+
+  const handleFiltersChange = ({ search, ...others }: Partial<FilterState>) => {
+    if (search !== undefined) setSearchInput(search);
+    else setFilters(others);
+  };
 
   const handleOpenCreate = () => {
     setEditingFrequency(null);
@@ -129,23 +144,13 @@ export function MaintenanceFrequenciesScreen() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">
-            Frecuencias de Mantenimiento
-          </h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            Periodicidades teóricas, rangos por estación y ciclos operativos del campus.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {canManage && (
-            <Button variant="primary" onClick={handleOpenCreate}>
+      <PageHeader
+        title="Frecuencias de Mantenimiento"
+        description="Periodicidades teóricas, rangos por estación y ciclos operativos del campus."
+        actions={canManage && (<Button variant="primary" onClick={handleOpenCreate}>
               + Nueva frecuencia
-            </Button>
-          )}
-        </div>
-      </div>
+            </Button>)}
+      />
 
       {feedback && (
         <div
@@ -166,8 +171,8 @@ export function MaintenanceFrequenciesScreen() {
       )}
 
       <FrequencyFilters
-        value={filters}
-        onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        value={{ search: searchInput, regime: filters.regime, ruleType: filters.ruleType }}
+        onChange={handleFiltersChange}
         ruleTypes={ruleTypes}
       />
 
@@ -196,6 +201,7 @@ export function MaintenanceFrequenciesScreen() {
         ) : (
           <FrequenciesTable
             frequencies={filteredFrequencies}
+            zones={zones}
             canManage={canManage}
             onEdit={(f) => {
               setEditingFrequency(f);
@@ -206,12 +212,15 @@ export function MaintenanceFrequenciesScreen() {
         )}
       </Card>
 
+      <LocationCompliancePanel key={`${user?.id}:${roleCode}`} />
+
       <FrequencyFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         frequencyToEdit={editingFrequency}
         activities={activities}
         ruleTypes={ruleTypes}
+        zones={zones}
         onSubmit={handleFormSubmit}
       />
     </div>

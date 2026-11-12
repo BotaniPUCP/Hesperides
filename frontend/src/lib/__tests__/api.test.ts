@@ -1,4 +1,4 @@
-import { apiClient, ApiError, setAccessToken } from '../api';
+import { apiClient, ApiError, setAccessToken, setPasswordChangeRequiredHandler } from '../api';
 
 describe('apiClient', () => {
   afterEach(() => {
@@ -20,6 +20,40 @@ describe('apiClient', () => {
     return (mock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
   }
 
+  describe('cambio de contraseña exigido por el backend', () => {
+    function respuesta403(message: string) {
+      return {
+        ok: false,
+        status: 403,
+        json: async () => ({ ok: false, message, data: null }),
+      };
+    }
+
+    afterEach(() => setPasswordChangeRequiredHandler(null));
+
+    it('avisa al manejador y sigue propagando el error', async () => {
+      const handler = jest.fn();
+      setPasswordChangeRequiredHandler(handler);
+      global.fetch = jest
+        .fn()
+        .mockResolvedValue(respuesta403('Password change required before using the system')) as unknown as typeof fetch;
+
+      await expect(apiClient.get('/reports/options')).rejects.toMatchObject({ status: 403 });
+
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it('no avisa ante un 403 por falta de permisos', async () => {
+      const handler = jest.fn();
+      setPasswordChangeRequiredHandler(handler);
+      global.fetch = jest.fn().mockResolvedValue(respuesta403('Forbidden')) as unknown as typeof fetch;
+
+      await expect(apiClient.get('/reports/options')).rejects.toMatchObject({ status: 403 });
+
+      expect(handler).not.toHaveBeenCalled();
+    });
+  });
+
   it('unwraps data from the response envelope', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -30,6 +64,14 @@ describe('apiClient', () => {
     const result = await apiClient.get<{ status: string }>('/health');
 
     expect(result).toEqual({ status: 'UP' });
+  });
+
+  it('accepts an empty 204 on logout without attempting JSON parsing', async () => {
+    const json = jest.fn();
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 204, json }) as unknown as typeof fetch;
+
+    await expect(apiClient.post<void>('/auth/logout')).resolves.toBeNull();
+    expect(json).not.toHaveBeenCalled();
   });
 
   it('throws ApiError carrying status and message on failure', async () => {
@@ -178,6 +220,23 @@ describe('apiClient', () => {
       }) as unknown as typeof fetch;
 
       await expect(apiClient.getBlob('/green-inventory/export.csv')).rejects.toMatchObject({ status: 403 });
+    });
+  });
+
+  describe('postBlob', () => {
+    it('envía filtros autenticados y devuelve el archivo binario', async () => {
+      setAccessToken('t');
+      const blob = new Blob(['workbook']);
+      const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => blob });
+      global.fetch = fetchMock as unknown as typeof fetch;
+      const filters = { categoryCode: 'EDIFICIO' };
+
+      await expect(apiClient.postBlob('/places/export', filters)).resolves.toBe(blob);
+      expect(cabecerasDelUltimoFetch(fetchMock).Authorization).toBe('Bearer t');
+      expect(fetchMock.mock.calls[0][1]).toMatchObject({
+        method: 'POST',
+        body: JSON.stringify(filters),
+      });
     });
   });
 });

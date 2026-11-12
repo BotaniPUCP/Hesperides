@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { DescargasDelEstandar } from './DescargasDelEstandar';
 import { ESTANDARES, type Estandar } from './estandares';
 import { puedeCargarCsv } from './permisos';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 const REGLAS_COMUNES = [
   'UTF-8, con separador punto y coma (;). Un archivo separado por comas se rechaza.',
@@ -18,7 +19,7 @@ const REGLAS_COMUNES = [
 function SeccionEstandar({ e, puedeExportar }: { e: Estandar; puedeExportar: boolean }) {
   const id = `estandar-${e.kind}`;
   return (
-    <section aria-labelledby={id} className="space-y-4">
+    <section aria-labelledby={id} className="surface-card space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id={id} className="text-xl font-semibold text-neutral-900">
           {e.titulo} <code className="text-base font-normal text-neutral-500">{e.archivo}</code>
@@ -56,19 +57,14 @@ export function EstandaresScreen() {
   const puedeExportar = puedeCargarCsv(user?.role.code);
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-bold text-neutral-900">Estándares de carga</h1>
-        <p className="text-neutral-700">
-          El formato de los archivos CSV del catastro. El de ejemplares es el mismo que produce la exportación: se
-          exporta, se corrige y se vuelve a cargar.
-        </p>
+    <div className="space-y-6">
+      <PageHeader title="Estándares de carga" description="El formato de los archivos CSV del catastro. El de ejemplares es el mismo que produce la exportación: se exporta, se corrige y se vuelve a cargar.">
         <nav aria-label="Estándares" className="flex flex-wrap gap-3 text-sm">
           {ESTANDARES.map((e) => (
             <a key={e.kind} href={`#estandar-${e.kind}`} className="text-brand-700 underline">{e.titulo}</a>
           ))}
         </nav>
-      </header>
+      </PageHeader>
 
       <Card title="Reglas comunes">
         <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-700">

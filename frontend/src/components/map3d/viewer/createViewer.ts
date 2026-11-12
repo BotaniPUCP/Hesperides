@@ -24,6 +24,9 @@ import type { Viewer, ViewerCallbacks } from './viewerTypes';
 
 export type { Viewer, ViewerCallbacks } from './viewerTypes';
 
+/** Lo marcado a la vez (secciones de un turno de riego, bloques de un lugar), distinto de la selección. */
+const MARKED_COLOR = '#06B6D4';
+
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose): Viewer {
   const renderer = createRenderer();
   const textures = createTextures(renderer);
@@ -36,6 +39,20 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
   const poly = createSceneLayers(scene, data, textures, state);
+  // El mapa general no marca ninguna sección por defecto. Solo M7 llama a
+  // setMarkedSections; así puede hacer selección múltiple sin alterar /mapa.
+  const markedSectionCodes = new Set<string>();
+  (['greenAreas', 'xerophytic', 'reserve'] as const).forEach((id) => {
+    const layer = poly[id];
+    const originalColor = layer.options.color;
+    layer.options.color = (i) => markedSectionCodes.has(data[id][i]?.props.code)
+      ? MARKED_COLOR : originalColor(i);
+  });
+  // Un lugar puede ser varios bloques: se marcan todos, porque la selección resalta uno solo.
+  const markedBuildingIds = new Set<number>();
+  const buildingColor = poly.campusBuildings.options.color;
+  poly.campusBuildings.options.color = (i) => markedBuildingIds.has(data.campusBuildings[i]?.props.id)
+    ? MARKED_COLOR : buildingColor(i);
   const points = createCampusPoints(scene, data, center);
   const foliage = createFoliageMaterials(textures);
   const vegetation = createVegetationLayer(scene, data.vegetation, foliage);
@@ -135,6 +152,73 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   };
 
   return {
+    setMarkedSections(codes) {
+      markedSectionCodes.clear();
+      codes.forEach((code) => markedSectionCodes.add(code));
+      highlight.repaint('greenAreas');
+      highlight.repaint('xerophytic');
+      highlight.repaint('reserve');
+      needsRender = true;
+    },
+    setMarkedBuildings(ids) {
+      markedBuildingIds.clear();
+      ids.forEach((id) => markedBuildingIds.add(id));
+      highlight.repaint('campusBuildings');
+      needsRender = true;
+    },
+    sectionCodesInScreenRect(x1, y1, x2, y2, eligible) {
+      const allowed = new Set(eligible);
+      const found = new Set<string>();
+      const bounds = {
+        left: Math.min(x1, x2), right: Math.max(x1, x2),
+        top: Math.min(y1, y2), bottom: Math.max(y1, y2),
+      };
+      const canvas = renderer.domElement.getBoundingClientRect();
+      rig.camera.updateMatrixWorld();
+      const project = (x: number, y: number) => {
+        const p = new THREE.Vector3(x, WORLD_LIFT + 0.8, -y).project(rig.camera);
+        return {
+          x: canvas.left + (p.x + 1) * canvas.width / 2,
+          y: canvas.top + (1 - p.y) * canvas.height / 2,
+        };
+      };
+      const inside = (p: { x: number; y: number }) =>
+        p.x >= bounds.left && p.x <= bounds.right && p.y >= bounds.top && p.y <= bounds.bottom;
+      const inRing = (p: { x: number; y: number }, pts: { x: number; y: number }[]) => {
+        let hit = false;
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+          const a = pts[i], b = pts[j];
+          if ((a.y > p.y) !== (b.y > p.y) &&
+              p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) hit = !hit;
+        }
+        return hit;
+      };
+      const corners = [
+        { x: bounds.left, y: bounds.top }, { x: bounds.right, y: bounds.top },
+        { x: bounds.right, y: bounds.bottom }, { x: bounds.left, y: bounds.bottom },
+      ];
+      (['greenAreas', 'xerophytic', 'reserve'] as const).forEach((id) => {
+        for (const section of data[id]) {
+          const code = section.props.code;
+          if (!allowed.has(code) || found.has(code)) continue;
+          const crosses = section.g.some((polygon) => {
+            if (!polygon[0]) return false;
+            const rings = polygon.map((ring) => {
+              const pts: { x: number; y: number }[] = [];
+              for (let i = 0; i < ring.length; i += 2) pts.push(project(ring[i], ring[i + 1]));
+              return pts;
+            });
+            const outer = rings[0];
+            if (outer.some(inside)) return true;
+            // Si el rectangulo esta completamente dentro del poligono.
+            return corners.some((corner) => inRing(corner, outer) &&
+              !rings.slice(1).some((hole) => inRing(corner, hole)));
+          });
+          if (crosses) found.add(code);
+        }
+      });
+      return [...found];
+    },
     setPaint(mode, hidden) {
       state.mode = mode;
       state.hidden = hidden;
@@ -183,6 +267,16 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     focusLatLon(lat, lon) {
       const p = data.plane.toPlane(lat, lon);
       rig.focusPoint(p.x, -p.y);
+      needsRender = true;
+    },
+    setPinLatLon(lat, lon) {
+      const p = data.plane.toPlane(lat, lon);
+      pin.show(p.x, WORLD_LIFT, -p.y);
+      needsRender = true;
+    },
+    clearPin() {
+      pin.hide();
+      needsRender = true;
     },
     dispose() {
       cancelAnimationFrame(frame);

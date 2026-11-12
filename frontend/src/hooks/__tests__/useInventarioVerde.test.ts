@@ -16,7 +16,9 @@ jest.mock('@/lib/inventario-verde-api', () => ({
     species: jest.fn(),
     speciesBySlug: jest.fn(),
     specimens: jest.fn(),
+    allSpecimens: jest.fn(),
     locations: jest.fn(),
+    allLocations: jest.fn(),
     specimen: jest.fn(),
   },
 }));
@@ -81,9 +83,18 @@ describe('useInventarioVerde', () => {
     await waitFor(() => expect(result.current.availableLocations).toEqual([{ location: 'Educación', count: 12 }]));
   });
 
-  it('sin especie no pide ejemplares', () => {
+  it('sin especie pide todos los ejemplares globales', () => {
+    api.allSpecimens.mockResolvedValue(page([p01], 1, 0, 12));
+    api.allLocations.mockResolvedValue([{ location: 'Educación', count: 12 }]);
     renderHook(() => useInventarioVerdeSpecimens(null));
-    expect(api.specimens).not.toHaveBeenCalled();
+    expect(api.allSpecimens).toHaveBeenCalled();
+  });
+
+  it('pasa el tipo de ejemplar al listado global', () => {
+    api.allSpecimens.mockResolvedValue(page([p01], 1, 0, 12));
+    api.allLocations.mockResolvedValue([]);
+    renderHook(() => useInventarioVerdeSpecimens(null, { vegetationType: 'PALM' }));
+    expect(api.allSpecimens).toHaveBeenCalledWith(expect.objectContaining({ vegetationType: 'PALM' }));
   });
 
   it('busca un ejemplar por su código y expone su especie', async () => {
@@ -93,6 +104,25 @@ describe('useInventarioVerde', () => {
 
     await waitFor(() => expect(result.current.specimen).toEqual(p01Detail));
     expect(result.current.species).toEqual(palmeraReal);
+  });
+
+  it('recarga el ejemplar si cambia reloadKey', async () => {
+    api.specimen.mockResolvedValue(p01Detail);
+
+    const { result, rerender } = renderHook(
+      ({ key }) => useInventarioVerdeSpecimenByCode('EV-000001', key),
+      { initialProps: { key: 0 } },
+    );
+
+    await waitFor(() => expect(result.current.specimen).toEqual(p01Detail));
+    expect(api.specimen).toHaveBeenCalledTimes(1);
+
+    const updated = { ...p01Detail, heightM: 9.5 };
+    api.specimen.mockResolvedValue(updated);
+
+    rerender({ key: 1 });
+    await waitFor(() => expect(result.current.specimen?.heightM).toBe(9.5));
+    expect(api.specimen).toHaveBeenCalledTimes(2);
   });
 
   it('el resumen solo ofrece los tipos que tienen ejemplares', async () => {

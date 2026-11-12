@@ -14,8 +14,15 @@ final class InventoryQueries {
 
     private static final String ACTIVE_ELEMENT = "e.deleted_at IS NULL AND e.is_active";
 
+    /** La fuente de cada promedio: en una especie, la altura y la copa pueden venir de sitios distintos. */
+    private static final String REFERENCE_SOURCES = """
+              LEFT JOIN catalog_items hs ON hs.id = s.reference_height_source_item_id
+              LEFT JOIN catalog_items cs ON cs.id = s.reference_crown_radius_source_item_id
+            """;
+
     static final String SPECIES_COLUMNS = """
             SELECT s.slug, s.scientific_name, s.common_name, s.family, t.code AS type_code, t.label AS type_label,
+                   o.code AS origin_code, o.label AS origin_label, s.description, s.care_notes,
                    (SELECT count(*) FROM green_elements e WHERE e.species_id = s.id AND %1$s) AS specimen_count,
                    (SELECT e.photo_url FROM green_elements e WHERE e.species_id = s.id AND %1$s AND e.photo_url IS NOT NULL
                      ORDER BY e.data_source = 'MEASURED' DESC, e.code LIMIT 1) AS photo_url,
@@ -25,9 +32,16 @@ final class InventoryQueries {
                      ORDER BY sp.sort_order LIMIT 1) AS species_photo_id,
                    (SELECT a.id FROM green_element_attachments a JOIN green_elements e ON e.id = a.green_element_id
                      WHERE e.species_id = s.id AND %1$s AND a.deleted_at IS NULL
-                     ORDER BY e.data_source = 'MEASURED' DESC, e.code, a.id DESC LIMIT 1) AS specimen_photo_id
-              FROM species s JOIN catalog_items t ON t.id = s.species_type_item_id
-            """.formatted(ACTIVE_ELEMENT);
+                     ORDER BY e.data_source = 'MEASURED' DESC, e.code, a.id DESC LIMIT 1) AS specimen_photo_id,
+                   s.is_critical, s.reference_height_m, hs.code AS height_source_code, hs.label AS height_source_label,
+                   s.reference_crown_radius_m, cs.code AS crown_source_code, cs.label AS crown_source_label,
+                   s.uses_trunk_height, s.uses_dbh,
+                   (SELECT count(*) FROM green_elements e WHERE e.species_id = s.id AND %1$s
+                       AND e.data_source <> 'MEASURED') AS unmeasured_specimen_count
+              FROM species s
+              JOIN catalog_items t ON t.id = s.species_type_item_id
+              LEFT JOIN catalog_items o ON o.id = s.origin_item_id
+            """.formatted(ACTIVE_ELEMENT) + REFERENCE_SOURCES;
 
     static final String SPECIES_FILTER = """
              WHERE s.deleted_at IS NULL AND s.is_active
@@ -66,17 +80,24 @@ final class InventoryQueries {
                    e.crown_radius_m, e.is_banded, e.data_source, et.code AS element_type_code,
                    et.label AS element_type_label, s.slug,
                    (SELECT a.id FROM green_element_attachments a WHERE a.green_element_id = e.id AND a.deleted_at IS NULL
-                     ORDER BY a.id DESC LIMIT 1) AS attachment_id
+                     ORDER BY a.id DESC LIMIT 1) AS attachment_id,
+                   s.common_name AS species_common_name, s.scientific_name AS species_scientific_name,
+                   e.measured_at, s.is_critical AS species_critical, s.reference_height_m, s.reference_crown_radius_m,
+                   hs.label AS height_source_label, cs.label AS crown_source_label
               FROM green_elements e
               JOIN species s ON s.id = e.species_id
               JOIN catalog_items et ON et.id = e.element_type_item_id
-            """;
+            """ + REFERENCE_SOURCES;
 
     static final String SPECIMEN_FILTER = """
-             WHERE s.slug = :slug AND %s
+             WHERE (CAST(:slug AS TEXT) IS NULL OR s.slug = :slug) AND %s
                AND (CAST(:location AS TEXT) IS NULL OR e.source_location = :location)
+               AND (CAST(:type AS TEXT) IS NULL OR EXISTS (SELECT 1 FROM catalog_items t
+                    WHERE t.id = s.species_type_item_id AND t.code = :type))
+               AND (CAST(:critical AS BOOLEAN) IS NULL OR s.is_critical = CAST(:critical AS BOOLEAN))
+               AND (CAST(:measured AS BOOLEAN) IS NULL OR (e.data_source = 'MEASURED') = CAST(:measured AS BOOLEAN))
                AND (CAST(:search AS TEXT) IS NULL OR unaccent(lower(concat_ws(' ', e.code, e.source_reference,
-                    e.source_location, e.legacy_code, e.notes))) LIKE unaccent(lower(:search)))
+                    e.source_location, e.legacy_code, e.notes, s.common_name, s.scientific_name))) LIKE unaccent(lower(:search)))
             """.formatted(ACTIVE_ELEMENT);
 
     /**
@@ -94,10 +115,22 @@ final class InventoryQueries {
 
     static final String SPECIMEN_BY_CODE = SPECIMEN_COLUMNS + " WHERE e.code = :code AND " + ACTIVE_ELEMENT;
 
+    /** La última poda terminada de un ejemplar: completed_at ya cuenta aunque falte aprobarla. */
+    static final String LAST_PRUNING = """
+            SELECT max(l.completed_at)::date
+              FROM intervention_elements ie
+              JOIN green_elements g ON g.id = ie.green_element_id
+              JOIN intervention_locations l ON l.id = ie.intervention_location_id
+              JOIN interventions i ON i.id = l.intervention_id
+              JOIN catalog_items c ON c.id = i.intervention_class_item_id
+             WHERE g.code = :code AND c.code = 'PODA' AND l.completed_at IS NOT NULL
+               AND ie.deleted_at IS NULL AND l.deleted_at IS NULL AND i.deleted_at IS NULL
+            """;
+
     static final String LOCATIONS = """
             SELECT e.source_location AS location, count(*) AS total
               FROM green_elements e JOIN species s ON s.id = e.species_id
-             WHERE s.slug = :slug AND %s AND e.source_location IS NOT NULL
+             WHERE (CAST(:slug AS TEXT) IS NULL OR s.slug = :slug) AND %s AND e.source_location IS NOT NULL
              GROUP BY e.source_location ORDER BY e.source_location
             """.formatted(ACTIVE_ELEMENT);
 
@@ -109,4 +142,24 @@ final class InventoryQueries {
              WHERE z.deleted_at IS NULL AND ST_Contains(z.boundary, e.location)
              ORDER BY z.area_m2 LIMIT 1
             """;
+
+    /** Búsqueda global de ejemplares (código, referencia, placa, notas, nombres de especie). */
+    static final String SPECIMEN_SEARCH = """
+            SELECT e.code, e.source_reference, e.source_location, e.legacy_code,
+                   s.slug AS species_slug, s.common_name AS species_common_name, s.scientific_name AS species_scientific_name
+              FROM green_elements e
+              JOIN species s ON s.id = e.species_id
+             WHERE %1$s AND s.deleted_at IS NULL
+               AND (CAST(:search AS TEXT) IS NULL OR unaccent(lower(concat_ws(' ', e.code, e.source_reference,
+                    e.source_location, e.legacy_code, e.notes, s.common_name, s.scientific_name))) LIKE unaccent(lower(:search)))
+             ORDER BY
+               CASE WHEN lower(e.code) = lower(:rawSearch) THEN 1
+                    WHEN lower(e.source_reference) = lower(:rawSearch) THEN 2
+                    WHEN lower(e.legacy_code) = lower(:rawSearch) THEN 3
+                    WHEN lower(e.code) LIKE lower(:prefixSearch) THEN 4
+                    WHEN lower(e.source_reference) LIKE lower(:prefixSearch) THEN 5
+                    ELSE 6 END,
+               e.code
+             LIMIT :limit
+            """.formatted(ACTIVE_ELEMENT);
 }

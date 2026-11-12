@@ -19,7 +19,6 @@ describe('SpeciesInfo', () => {
     render(<SpeciesInfo species={conFotos} />);
 
     expect(screen.getByText('1/2')).toBeInTheDocument();
-    expect(screen.queryByText('Foto de un ejemplar')).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: /Ver las 2 fotos/ }));
 
@@ -27,10 +26,11 @@ describe('SpeciesInfo', () => {
     expect(screen.getByText(/Ana · CC BY 4.0/)).toBeInTheDocument();
   });
 
-  it('sin fotos propias dice que la foto es de un ejemplar y no abre galería', () => {
-    render(<SpeciesInfo species={{ ...palmeraReal, imageSource: 'SPECIMEN', photos: [] }} />);
+  it('muestra la etiqueta unificada de tipo de vegetación y familia', () => {
+    render(<SpeciesInfo species={{ ...palmeraReal, photos: [] }} />);
 
-    expect(screen.getByText('Foto de un ejemplar')).toBeInTheDocument();
+    expect(screen.getByText('Palmera')).toBeInTheDocument();
+    expect(screen.getByText('Fam. Arecaceae')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Ver las/ })).not.toBeInTheDocument();
   });
 });

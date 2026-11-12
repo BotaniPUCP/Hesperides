@@ -20,7 +20,8 @@ public class PlaceReadRepository {
     public record CategoryRow(String kindCode, String kindLabel, String categoryCode, String categoryLabel) {
     }
 
-    public record OutlineRow(Long buildingId, String zoneCode, String featureCode, boolean drawn, Double lat, Double lon) {
+    public record OutlineRow(List<Long> buildingIds, String zoneCode, String featureCode, boolean drawn,
+            boolean fromChildren, Double lat, Double lon) {
     }
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -45,8 +46,8 @@ public class PlaceReadRepository {
 
     public OutlineRow outline(long placeId) {
         return jdbc.queryForObject(PlaceQueries.OUTLINE, new MapSqlParameterSource("id", placeId),
-                (rs, i) -> new OutlineRow(rs.getObject(1, Long.class), rs.getString(2), rs.getString(3), rs.getBoolean(4),
-                        rs.getObject(5, Double.class), rs.getObject(6, Double.class)));
+                (rs, i) -> new OutlineRow(SqlArrays.longs(rs.getArray(1)), rs.getString(2), rs.getString(3),
+                        rs.getBoolean(4), rs.getBoolean(5), rs.getObject(6, Double.class), rs.getObject(7, Double.class)));
     }
 
     public List<String> aliases(long placeId) {

@@ -15,9 +15,16 @@ jest.mock('@/components/ui', () => ({
   ...jest.requireActual('@/components/ui'),
   useToast: () => ({ showToast: jest.fn(), dismissAll: jest.fn() }),
 }));
-jest.mock('@/lib/places-api', () => ({ placesApi: { saveMapView: jest.fn(), clearMapView: jest.fn() } }));
+jest.mock('@/lib/places-api', () => ({
+  placesApi: {
+    saveMapView: jest.fn(),
+    clearMapView: jest.fn(),
+    updatePerspective: jest.fn(),
+    clearPerspectiveMapView: jest.fn(),
+  },
+}));
 jest.mock('@/hooks/useMapLayers', () => ({
-  useMapLayers: () => ({ data: jest.requireActual('@/components/map3d/__fixtures__/mapLayers').sampleLayers, isLoading: false }),
+  useMapLayers: () => ({ data: jest.requireActual('@/components/map3d/__fixtures__/mapLayers').layersWithTwoBlocks, isLoading: false }),
 }));
 
 let map: Map3DViewProps;
@@ -30,7 +37,7 @@ jest.mock('@/components/map3d/Map3DView', () => ({
 
 function fakeViewer(): jest.Mocked<Viewer> {
   return {
-    setPaint: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
+    setPaint: jest.fn(), setMarkedSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), setViewCones: jest.fn(), highlightViewCone: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(),
     flyToPose: jest.fn(), dispose: jest.fn(),
@@ -45,7 +52,7 @@ const view = { camera: { lat: -12.0705, lon: -77.08, heightM: 150 }, target: { l
 function place(overrides: Partial<PlaceDetail> = {}): PlaceDetail {
   return {
     code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' }, category: { code: 'EDIFICIO', label: 'Edificio' },
-    outline: { source: 'BUILDING', buildingId: 1, zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
+    outline: { source: 'BUILDING', buildingIds: [1], zoneCode: null, featureCode: null, centerLat: -12.07, centerLon: -77.08 },
     aliases: [], children: [], mainPhotos: [], interior: [], mapView: null,
     perspectives: [{ id: 5, side: { code: 'BACK', label: 'Espalda' }, displayName: 'Espalda de CIA', compass: null, landmark: null,
       lat: -12.0702, lon: -77.08, headingDeg: 0, photos: [], mapView: null }],
@@ -62,8 +69,8 @@ afterEach(() => {
   mockRole.current = 'COORDINADOR';
 });
 
-function renderPanel(p: PlaceDetail, onChanged = jest.fn()) {
-  const utils = render(<PlaceMapPanel place={p} focus={NO_FOCUS} onChanged={onChanged} />);
+function renderPanel(p: PlaceDetail, onChanged = jest.fn(), readOnly = false) {
+  const utils = render(<PlaceMapPanel place={p} focus={NO_FOCUS} onChanged={onChanged} readOnly={readOnly} />);
   act(() => map.onReady(viewer));
   return utils;
 }
@@ -75,6 +82,23 @@ describe('PlaceMapPanel', () => {
     expect(viewer.select).toHaveBeenCalledWith({ layer: 'campusBuildings', index: 0 }, true);
     expect(viewer.flyToPose).not.toHaveBeenCalled();
     expect(viewer.setViewCones).toHaveBeenCalledWith([{ id: 5, lat: -12.0702, lon: -77.08, headingDeg: 0 }]);
+  });
+
+  it('un lugar de varios bloques los marca todos y encuadra su centro', () => {
+    renderPanel(place({ outline: { ...place().outline, buildingIds: [1, 3], centerLat: -12.0701, centerLon: -77.0801 } }));
+
+    expect(viewer.setMarkedBuildings).toHaveBeenLastCalledWith([1, 3]);
+    expect(viewer.select).toHaveBeenLastCalledWith(null, false);
+    expect(viewer.focusLatLon).toHaveBeenCalledWith(-12.0701, -77.0801);
+  });
+
+  it('al pasar de un lugar de varios bloques a uno de un edificio, quita las marcas', () => {
+    const { rerender } = renderPanel(place({ outline: { ...place().outline, buildingIds: [1, 3] } }));
+
+    rerender(<PlaceMapPanel place={place({ code: 'LUG-0002', name: 'Gelarti' })} focus={NO_FOCUS} onChanged={jest.fn()} />);
+
+    expect(viewer.setMarkedBuildings).toHaveBeenLastCalledWith([]);
+    expect(viewer.select).toHaveBeenLastCalledWith({ layer: 'campusBuildings', index: 0 }, true);
   });
 
   it('con vista guardada vuela a ella y solo resalta el edificio', () => {
@@ -116,6 +140,43 @@ describe('PlaceMapPanel', () => {
     expect(saved[1].target.heightM).toBeCloseTo(0, 6);
   });
 
+  it('guarda la vista en la perspectiva seleccionada, no en el lugar', async () => {
+    (placesApi.updatePerspective as jest.Mock).mockResolvedValue(undefined);
+    const onChanged = jest.fn();
+    const p = place();
+    const { rerender } = renderPanel(p, onChanged);
+    rerender(<PlaceMapPanel place={p} focus={{ id: 5, seq: 1 }} onChanged={onChanged} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar esta vista' }));
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    const saved = (placesApi.updatePerspective as jest.Mock).mock.calls[0];
+    expect(saved[0]).toBe('LUG-0001');
+    expect(saved[1]).toBe(5);
+    expect(saved[2]).toMatchObject({
+      sideCode: 'BACK',
+      lat: -12.0702,
+      lon: -77.08,
+      headingDeg: 0,
+    });
+    expect(saved[2].mapView.camera.heightM).toBeCloseTo(200, 6);
+    expect(placesApi.saveMapView).not.toHaveBeenCalled();
+  });
+
+  it('restablece la vista de la perspectiva seleccionada', async () => {
+    (placesApi.clearPerspectiveMapView as jest.Mock).mockResolvedValue(undefined);
+    const onChanged = jest.fn();
+    const p = place({ perspectives: [{ ...place().perspectives[0], mapView: view }] });
+    const { rerender } = renderPanel(p, onChanged);
+    rerender(<PlaceMapPanel place={p} focus={{ id: 5, seq: 1 }} onChanged={onChanged} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Restablecer vista' }));
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    expect(placesApi.clearPerspectiveMapView).toHaveBeenCalledWith('LUG-0001', 5);
+    expect(placesApi.clearMapView).not.toHaveBeenCalled();
+  });
+
   it('restablecer solo aparece si hay vista guardada', () => {
     renderPanel(place());
     expect(screen.queryByRole('button', { name: 'Restablecer vista' })).not.toBeInTheDocument();
@@ -126,6 +187,13 @@ describe('PlaceMapPanel', () => {
     renderPanel(place({ mapView: view }));
 
     expect(screen.queryByRole('button', { name: 'Guardar esta vista' })).not.toBeInTheDocument();
+  });
+
+  it('el modo de solo lectura oculta controles del minimapa incluso para quien puede editar', () => {
+    renderPanel(place({ mapView: view }), jest.fn(), true);
+
+    expect(screen.queryByRole('button', { name: 'Guardar esta vista' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Restablecer vista' })).not.toBeInTheDocument();
   });
 });
 
@@ -172,6 +240,8 @@ describe('isPlacePage', () => {
     ['/lugares', false],
     ['/lugares/nuevo', false],
     ['/lugares/migracion', false],
+    ['/lugares/importar', false],
+    ['/lugares/exportar', false],
     ['/lugares/LUG-0001/editar', false],
   ])('%s → %s', (path, expected) => {
     expect(isPlacePage(path)).toBe(expected);

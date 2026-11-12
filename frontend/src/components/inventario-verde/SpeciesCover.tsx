@@ -15,7 +15,22 @@ const verFotos = (n: number) => (n === 1 ? 'Ver la foto' : `Ver las ${n} fotos`)
 export function SpeciesCover({ species }: { species: Species }) {
   const [imageError, setImageError] = useState(false);
   const [abierta, setAbierta] = useState(false);
-  const fotos = species.photos ?? [];
+
+  // Únicamente fotos reales entregadas por el backend (SPEC-104)
+  const fotos =
+    species.photos && species.photos.length > 0
+      ? species.photos
+      : species.imageUrl && !imageError
+      ? [
+          {
+            imageUrl: species.imageUrl,
+            thumbnailUrl: species.imageUrl,
+            author: species.imageSource === 'SPECIMEN' ? 'Registro fotográfico en campus' : null,
+            license: null,
+            sourceUrl: null,
+          },
+        ]
+      : [];
   const conGaleria = fotos.length > 0;
   const visible = species.imageUrl && !imageError;
 
@@ -25,6 +40,7 @@ export function SpeciesCover({ species }: { species: Species }) {
       src={species.imageUrl ?? undefined}
       alt={species.commonName}
       loading="lazy"
+      referrerPolicy="no-referrer"
       onError={() => setImageError(true)}
       className="h-full w-full object-cover"
     />
@@ -33,26 +49,18 @@ export function SpeciesCover({ species }: { species: Species }) {
   );
 
   return (
-    <div className="relative h-28 w-28 sm:h-32 sm:w-36 rounded-lg overflow-hidden bg-neutral-100 flex-shrink-0 border border-neutral-200/90 shadow-2xs">
+    <div className="relative w-full sm:w-64 md:w-72 h-40 sm:h-44 rounded-xl overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200/90 shadow-2xs">
       {conGaleria ? (
         <button
           type="button"
           onClick={() => setAbierta(true)}
           aria-label={verFotos(fotos.length)}
-          className="block h-full w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-brand-600"
+          className="block h-full w-full cursor-zoom-in focus:outline-hidden focus:ring-2 focus:ring-brand-600"
         >
           {imagen}
         </button>
       ) : (
         imagen
-      )}
-
-      {visible && species.imageSource === 'SPECIMEN' && (
-        <div className="pointer-events-none absolute bottom-1.5 left-1.5 right-1.5">
-          <span className="block text-center truncate px-1.5 py-0.5 rounded bg-ink/80 backdrop-blur-xs text-[10px] font-medium text-white">
-            Foto de un ejemplar
-          </span>
-        </div>
       )}
 
       {fotos.length > 1 && (
@@ -67,3 +75,4 @@ export function SpeciesCover({ species }: { species: Species }) {
     </div>
   );
 }
+

@@ -33,9 +33,9 @@ export function catalogEntries(catalog: MapCatalog): SearchEntry[] {
   return [...places, ...perspectives];
 }
 
-/** El lugar del catálogo hecho sobre ese edificio, si lo hay. */
+/** El lugar del catálogo al que pertenece ese edificio, si lo hay: un edificio es de un solo lugar. */
 export function placeOfBuilding(catalog: MapCatalog | null, buildingId: number): MapPlace | null {
-  return catalog?.places.find((p) => p.buildingId === buildingId) ?? null;
+  return catalog?.places.find((p) => p.buildingIds.includes(buildingId)) ?? null;
 }
 
 export function catalogLink(place: MapPlace): NonNullable<InfoCard['link']> {

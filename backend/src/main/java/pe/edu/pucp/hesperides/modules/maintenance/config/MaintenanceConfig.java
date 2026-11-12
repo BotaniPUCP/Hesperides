@@ -11,21 +11,13 @@ import java.util.List;
 public class MaintenanceConfig {
 
     /**
-     * Sin historial de ejecuciones: es lo que hay mientras la tabla
-     * {@code interventions} no exista.
+     * Integration fallback when no execution provider has been configured.
+     * SPEC-200 supplies the real scoped provider when its module is present.
+     * An empty result does not prove that no work was performed;
+     * it means this fallback supplies no execution history to the evaluator.
      *
-     * <p>Devolver una lista vacia no es un atajo silencioso. El Engine traduce la
-     * ausencia de ejecuciones a {@code NOT_APPLICABLE} con el motivo "nunca se
-     * registro una ejecucion", que es <em>exactamente la verdad</em>: el sistema
-     * no tiene con que juzgar. Lo que no hace, y es lo que importa, es reportar
-     * {@code OVERDUE} y acusar al equipo de campo de un incumplimiento inventado
-     * por un vacio de datos.
-     *
-     * <p>{@code @ConditionalOnMissingBean} va aqui y no sobre un {@code @Component}:
-     * en un componente escaneado la condicion se evalua antes de que el resto de
-     * beans se registre, asi que nunca cede el puesto. Sobre un {@code @Bean} de
-     * configuracion si funciona, y el modulo de intervenciones lo sustituye con
-     * solo publicar su propia implementacion.
+     * <p>Keep the missing-bean condition on the configuration bean rather than
+     * a scanned component, so an agreed real provider can replace this fallback.
      */
     @Bean
     @ConditionalOnMissingBean(ExecutionHistoryProvider.class)

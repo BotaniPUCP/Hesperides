@@ -210,7 +210,7 @@ class UsersControllerTest {
     @Test
     @WithMockUser(username = "admin@pucp.edu.pe", authorities = "ADMIN")
     void resendCredentialsReturnsTheDeliveryStatusAndNeverThePassword() throws Exception {
-        when(usersService.resendCredentials(anyLong()))
+        when(usersService.resendCredentials(anyLong(), anyString()))
                 .thenReturn(new CredentialDeliveryResponse(48L, "mgarcia@pucp.edu.pe",
                         CredentialStatus.DELIVERED));
 

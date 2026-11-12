@@ -38,6 +38,7 @@ function montar(rows: UserDetail[], extra: Partial<React.ComponentProps<typeof U
       page={0}
       onPageChange={jest.fn()}
       canManage
+      currentUserId={99}
       {...acciones}
       {...extra}
     />,
@@ -63,6 +64,16 @@ describe('UsersTable', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /desactivar/i }));
     expect(acciones.onDeactivate).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
+  });
+
+  it('en la fila propia no ofrece desactivar ni reenviar credenciales', () => {
+    montar([usuario({ id: 99, fullName: 'Yo Mismo' }), usuario({ id: 4, fullName: 'Ana Torres' })]);
+
+    expect(screen.queryByRole('button', { name: /desactivar la cuenta de yo mismo/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /reenviar credenciales a yo mismo/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /editar a yo mismo/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /desactivar la cuenta de ana torres/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reenviar credenciales a ana torres/i })).toBeInTheDocument();
   });
 
   it('solo ofrece marcar como entregado cuando la entrega esta pendiente', () => {

@@ -8,6 +8,7 @@ import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenDetailResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenResponse;
+import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenSearchResultResponse;
 
 import java.util.List;
 
@@ -22,7 +23,11 @@ public interface GreenInventoryService {
 
     Page<SpecimenResponse> specimens(String speciesSlug, SpecimenQuery query);
 
+    Page<SpecimenResponse> allSpecimens(SpecimenQuery query);
+
     List<LocationCountResponse> locations(String speciesSlug);
 
     SpecimenDetailResponse specimenByCode(String code);
+
+    List<SpecimenSearchResultResponse> searchSpecimens(String query, int limit);
 }

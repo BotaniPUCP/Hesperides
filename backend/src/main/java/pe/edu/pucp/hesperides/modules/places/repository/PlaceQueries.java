@@ -32,14 +32,22 @@ final class PlaceQueries {
                       WHERE v.place_id = p.id AND v.deleted_at IS NULL)))) LIKE unaccent(lower(:search)))
              ORDER BY lower(p.name), lower(pp.name) NULLS FIRST""";
 
+    /**
+     * Los edificios vigentes del lugar {@code p}, como arreglo ordenado. Sin lista,
+     * el de la columna: así se lee un lugar que guardó una rama anterior.
+     */
+    static final String BUILDING_IDS = "COALESCE(NULLIF(ARRAY(SELECT pb.building_id FROM place_buildings pb "
+            + "WHERE pb.place_id = p.id AND pb.deleted_at IS NULL ORDER BY pb.building_id), '{}'::bigint[]), "
+            + "CASE WHEN p.building_id IS NULL THEN '{}'::bigint[] ELSE ARRAY[p.building_id] END)";
+
     static final String OUTLINE = """
-            SELECT p.building_id, z.code, f.code, p.own_geometry IS NOT NULL,
+            SELECT %s, z.code, f.code, p.own_geometry IS NOT NULL, p.outline_from_children,
                    ST_Y(ST_Centroid(o.geom)), ST_X(ST_Centroid(o.geom))
               FROM places p
               LEFT JOIN zones z ON z.id = p.zone_id
               LEFT JOIN campus_features f ON f.id = p.feature_id
               LEFT JOIN place_outlines o ON o.place_id = p.id
-             WHERE p.id = :id""";
+             WHERE p.id = :id""".formatted(BUILDING_IDS);
 
     private PlaceQueries() {
     }

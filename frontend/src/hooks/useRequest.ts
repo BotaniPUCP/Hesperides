@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '@/lib/api';
 import { mensajeDeApiError } from '@/lib/api-errors';
 
@@ -11,13 +11,21 @@ interface RequestState<T> {
   notFound: boolean;
 }
 
+export interface UseRequestOptions {
+  keepPreviousData?: boolean;
+}
+
 /**
  * Una consulta al backend que se repite cuando cambia `key`. Guardar la clave
  * junto a la respuesta es lo que evita mostrar por un render los datos del
  * filtro anterior, y descartar las respuestas que llegan tarde. Con `key` null
  * no consulta.
  */
-export function useRequest<T>(key: string | null, load: () => Promise<T>) {
+export function useRequest<T>(
+  key: string | null,
+  load: () => Promise<T>,
+  options: UseRequestOptions = {},
+) {
   const [state, setState] = useState<RequestState<T> | null>(null);
 
   useEffect(() => {
@@ -38,10 +46,18 @@ export function useRequest<T>(key: string | null, load: () => Promise<T>) {
   }, [key]);
 
   const fresh = state?.key === key ? state : null;
+  const data = options.keepPreviousData ? (fresh?.data ?? state?.data ?? null) : (fresh?.data ?? null);
+
+  // A successful mutation can return the updated resource without a second GET.
+  // A callback from an older query must not replace the current resource.
+  const updateData = useCallback((data: T) => {
+    setState((current) => current?.key === key ? { ...current, data, errorMessage: null, notFound: false } : current);
+  }, [key]);
   return {
-    data: fresh?.data ?? null,
+    data,
     loading: key !== null && fresh === null,
     errorMessage: fresh?.errorMessage ?? null,
     notFound: fresh?.notFound ?? false,
+    updateData,
   };
 }

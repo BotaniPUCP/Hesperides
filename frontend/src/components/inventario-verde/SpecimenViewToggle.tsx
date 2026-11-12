@@ -25,7 +25,7 @@ export function SpecimenViewToggle({
         className={cn(
           'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150',
           viewMode === 'cards'
-            ? 'bg-neutral-0 text-neutral-900 shadow-sm font-semibold'
+            ? 'bg-neutral-0 text-neutral-900 shadow-xs font-semibold'
             : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/50'
         )}
       >
@@ -53,7 +53,7 @@ export function SpecimenViewToggle({
         className={cn(
           'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150',
           viewMode === 'table'
-            ? 'bg-neutral-0 text-neutral-900 shadow-sm font-semibold'
+            ? 'bg-neutral-0 text-neutral-900 shadow-xs font-semibold'
             : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200/50'
         )}
       >

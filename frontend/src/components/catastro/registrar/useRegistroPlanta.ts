@@ -5,7 +5,7 @@ import type { DuplicateMatch } from '@shared/types';
 import { ApiError } from '@/lib/api';
 import { catastroApi } from '@/lib/catastro-api';
 import { mensajeDeErrorCatastro } from '../mensajes';
-import { aSpecimenForm, type Errores, FORMULARIO_VACIO, type FormularioPlanta } from './formularioPlanta';
+import { aSpecimenForm, type Errores, type FormularioPlanta, formularioNuevo } from './formularioPlanta';
 
 /**
  * El registro de una planta (SPEC-103 §5.1). Si cae cerca de otra de su
@@ -13,9 +13,9 @@ import { aSpecimenForm, type Errores, FORMULARIO_VACIO, type FormularioPlanta } 
  * reenvía confirmando.
  */
 export function useRegistroPlanta() {
-  const [valores, setValores] = useState<FormularioPlanta>(FORMULARIO_VACIO);
-  // Desde dónde se cuenta un cambio: vacío, o lo que deja «Registrar otra».
-  const [base, setBase] = useState<FormularioPlanta>(FORMULARIO_VACIO);
+  // Desde dónde se cuenta un cambio: el formulario nuevo, o lo que deja «Registrar otra».
+  const [base, setBase] = useState<FormularioPlanta>(() => formularioNuevo());
+  const [valores, setValores] = useState<FormularioPlanta>(base);
   const [foto, setFoto] = useState<File | null>(null);
   const [errores, setErrores] = useState<Errores>({});
   const [enviando, setEnviando] = useState(false);
@@ -25,6 +25,13 @@ export function useRegistroPlanta() {
 
   function cambiar<K extends keyof FormularioPlanta>(campo: K, valor: FormularioPlanta[K]) {
     setValores((v) => ({ ...v, [campo]: valor }));
+    setError(null);
+    setErrores((prev) => {
+      if (!prev[campo as keyof Errores]) return prev;
+      const next = { ...prev };
+      delete next[campo as keyof Errores];
+      return next;
+    });
   }
 
   async function enviar(confirmarDuplicado = false) {
@@ -46,7 +53,7 @@ export function useRegistroPlanta() {
 
   /** Otra planta de la misma especie: conserva el punto, que suele ser el mismo sector. */
   function registrarOtra() {
-    const siguiente = { ...FORMULARIO_VACIO, especie: valores.especie, lat: valores.lat, lon: valores.lon };
+    const siguiente = { ...formularioNuevo(), especie: valores.especie, lat: valores.lat, lon: valores.lon };
     setValores(siguiente);
     setBase(siguiente);
     setFoto(null);

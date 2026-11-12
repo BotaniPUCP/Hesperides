@@ -30,31 +30,62 @@ export interface NavGroup {
 export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
 
 /**
- * Pantallas que van sueltas bajo Inicio: un desplegable con un solo ítem obliga
- * a un clic de más para llegar a lo que más se usa.
+ * Pantallas que van sueltas bajo Inicio, para todos los roles que las ven. Un grupo
+ * de NAVIGATION también se muestra suelto cuando el rol solo ve uno de sus enlaces:
+ * un desplegable con un solo ítem obliga a un clic de más.
  */
 export const DIRECT_LINKS: readonly NavItem[] = [
+  { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: ['COORDINADOR', 'SUPERVISOR'] },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // Público incluso sin sesión (docs/inventario-verde/README.md); aquí, para quien ya entró.
-  { label: 'Inventario verde', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // Catálogo de lugares: lo consultan todos; editarlo es de ADMIN y COORDINADOR.
-  { label: 'Lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
+  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+  // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
+  { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
   {
+    // M9. Lo consultan todos; alta, edición y migración son de quien lo administra.
+    id: 'lugares',
+    label: 'Lugares',
+    icon: '🏛️',
+    items: [
+      { label: 'Catálogo de lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+      { label: 'Migrar referencias', href: '/lugares/migracion', icon: '🔀', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Nuevo lugar', href: '/lugares/nuevo', icon: '➕', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Importar lugares', href: '/lugares/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Exportar lugares', href: '/lugares/exportar', icon: '📤', roles: ['ADMIN', 'COORDINADOR'] },
+    ],
+  },
+  {
+    // Catálogo taxonómico botánico de especies del campus PUCP.
+    id: 'inventario-verde',
+    label: 'Catálogo botánico',
+    icon: '🌿',
+    items: [
+      { label: 'Especies', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+      { label: 'Registrar especie', href: '/inventario-verde/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+    ],
+  },
+  {
+    id: 'intervenciones',
+    label: 'Intervenciones',
+    icon: '🧰',
+    items: [{ label: 'Intervenciones', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] }],
+  },
+  {
     // M2 · SPEC-103. Registrar el campus es trabajo diario, no configuración.
     id: 'catastro',
-    label: 'Catastro',
+    label: 'Catastro verde',
     icon: '🌳',
     items: [
+      // Inventario georreferenciado de ejemplares botánicos censados en el campus.
+      { label: 'Ejemplares', href: '/catastro/ejemplares', icon: '🌳', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       // D-03: el supervisor registra por formulario (plantas, tachos, bebederos); la carga masiva es de quien coordina.
-      { label: 'Registrar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
-      { label: 'Importar CSV', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Registrar en el catastro', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Importar al catastro', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
-      // Catálogo de lugares: pasar las referencias antiguas al catálogo es de quien lo edita.
-      { label: 'Migrar referencias', href: '/lugares/migracion', icon: '🔀', roles: ['ADMIN', 'COORDINADOR'] },
     ],
   },
   {
@@ -102,4 +133,14 @@ export function visibleNavigation(roleCode: string): NavGroup[] {
 export function isActivePath(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * El único enlace del menú que representa la ruta: el más específico. Varios
+ * pueden coincidir, porque /inventario-verde/registrar es subruta de /inventario-verde.
+ */
+export function activeHref(pathname: string, hrefs: readonly string[]): string | null {
+  return hrefs
+    .filter((href) => isActivePath(pathname, href))
+    .reduce<string | null>((best, href) => (best === null || href.length > best.length ? href : best), null);
 }

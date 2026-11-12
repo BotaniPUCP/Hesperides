@@ -61,3 +61,21 @@ describe('inventarioVerdeApi: fotos', () => {
     expect(detail.species.imageUrl).toBe(`${API_BASE_URL}/files/species/3?size=thumb`);
   });
 });
+
+describe('inventarioVerdeApi: filtro por tipo de ejemplar', () => {
+  const baseParams = { sortBy: 'code', sortDirection: 'asc', page: 0, size: 16 } as const;
+
+  beforeEach(() => mockedGet.mockResolvedValue(page([p01])));
+
+  it('envía el tipo elegido al listado global', async () => {
+    await inventarioVerdeApi.allSpecimens({ ...baseParams, vegetationType: 'PALM' });
+
+    expect(mockedGet.mock.calls[0][0]).toContain('vegetationType=PALM');
+  });
+
+  it.each(['ALL', undefined])('no envía el tipo cuando vale %s', async (vegetationType) => {
+    await inventarioVerdeApi.allSpecimens({ ...baseParams, vegetationType });
+
+    expect(mockedGet.mock.calls[0][0]).not.toContain('vegetationType');
+  });
+});

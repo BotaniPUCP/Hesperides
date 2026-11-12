@@ -110,7 +110,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'relative z-10 flex max-h-full w-full flex-col rounded-lg bg-neutral-0 shadow-lg',
+          'relative z-10 flex max-h-[90vh] w-full flex-col rounded-2xl bg-neutral-0 shadow-2xl',
           SIZES[effectiveSize],
         )}
       >
@@ -122,7 +122,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="rounded p-1 text-neutral-500 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+            className="rounded p-1 text-neutral-500 hover:bg-neutral-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600"
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
               <path

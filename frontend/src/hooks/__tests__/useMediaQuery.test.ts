@@ -4,6 +4,7 @@ import { useMediaQuery } from '../useMediaQuery';
 describe('useMediaQuery', () => {
   function mockMatchMedia(matches: boolean) {
     Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
       writable: true,
       value: jest.fn().mockImplementation((query: string) => ({
         matches,

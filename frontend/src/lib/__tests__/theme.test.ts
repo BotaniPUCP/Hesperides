@@ -1,10 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   DEFAULT_THEME_PREFERENCE,
-  THEME_BOOT_SCRIPT,
   THEME_STORAGE_KEY,
   parseThemePreference,
   resolveTheme,
 } from '../theme';
+
+const THEME_BOOT_SCRIPT = readFileSync(join(__dirname, '../../../public/theme-boot.js'), 'utf8');
 
 describe('parseThemePreference', () => {
   it.each(['light', 'dark', 'system'] as const)('acepta la preferencia guardada %s', (valor) => {
@@ -32,7 +35,7 @@ describe('resolveTheme', () => {
   });
 });
 
-describe('THEME_BOOT_SCRIPT', () => {
+describe('theme-boot.js', () => {
   function ejecutarCon(guardado: string | null, sistemaOscuro: boolean) {
     const raiz = document.documentElement;
     raiz.className = '';

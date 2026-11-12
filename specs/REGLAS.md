@@ -9,10 +9,13 @@
 > El SPEC-000 se escribió antes de conocer el dominio y algunas de sus directrices quedaron
 > genéricas. Si este archivo contradice a un spec, manda este archivo.
 
-**Stack verificado en el `pom`:** Java **26** (Temurin 26.0.2) · Spring Boot **4.1.1** ·
+**Stack configurado en el `pom`:** Java **26** (Temurin 26) · Spring Boot **4.1.1** ·
 Spring Security **7.1.1** · JJWT **0.12.6** · Testcontainers **2.x** · JaCoCo **0.8.15** ·
 PostgreSQL + PostGIS · Flyway · Next.js 16 (React 19) · TypeScript · Tailwind · React Native ·
 Python 3.11 / Flask.
+
+**JDK 26 obligatorio para todos:** el JDK local, el de CI y las imágenes de construcción
+y ejecución usan Java 26.
 
 ---
 
@@ -141,7 +144,7 @@ Boot 4 probablemente vive en su propio starter. Buscar en el BOM antes de asumir
 | `@MockBean` | Existe | **Eliminado.** Usar `@MockitoBean` de `org.springframework.test.context.bean.override.mockito` |
 | Bean `HttpSecurity` en slices de test | Disponible | Un `@WebMvcTest` que importe `SecurityConfig` necesita **`spring-boot-starter-security-test`** o no existe el bean |
 | Lombok como annotation processor | Lo inyecta el parent | **Hay que declararlo** en `annotationProcessorPaths` del `maven-compiler-plugin`, o `@Slf4j` no genera el campo `log` y la compilación falla |
-| JaCoCo | 0.8.12 sirve | 0.8.12 **no instrumenta bytecode de Java 26** (class file 70) y rompe todo test que cargue el contexto de Spring. Mínimo **0.8.15** |
+| JaCoCo | No asumir compatibilidad con JDK recientes | Se conserva **0.8.15** para instrumentar el bytecode de Java 26 (0.8.12 no lo soporta); no bajar la versión al cambiar de JDK |
 | Testcontainers | Artefactos `postgresql`, `junit-jupiter` | Boot 4 gestiona Testcontainers **2.x**, que los renombró a **`testcontainers-postgresql`** y **`testcontainers-junit-jupiter`** |
 | `OncePerRequestFilter` | `org.springframework.web.filter` | Sin cambio (está en `spring-web`, **no** en `spring-security-web`) |
 
@@ -207,14 +210,20 @@ Reglas obligatorias (implementadas en `shared/security/CorsConfig.java`):
 | Numeración de migraciones | **Cronológica**: cada migración nueva toma el siguiente número libre (`V012`, `V013`…), sin rangos por spec. El número no indica propietaria: la propietaria va en el comentario de cabecera del archivo. Fuente única de qué número tiene cada migración, aplicada o pendiente: el [mapa de migraciones](REGISTRO.md#mapa-de-migraciones). Quien implementa una migración pendiente en otro orden la renumera allí y en su spec |
 | Datos de catálogos | Tablas de catálogo con `code`, `label`, `is_active`, `sort_order` |
 
-### 5.5 Convenciones Docker
+### 5.5 Convenciones de contenedores (Docker o Podman)
+
+Se puede usar Docker con `docker compose` o Podman con `podman compose` (o
+`podman-compose`, si se invoca el proveedor directamente). Los argumentos y los
+archivos `docker-compose.yml` y `docker-compose.dev.yml` son comunes; los ejemplos con uno de los
+motores admiten sustituir el comando por el otro. La CI usa Docker Compose;
+la preferencia local de este usuario en `AGENTS.md` es Podman.
 
 | Aspecto | Convención |
 |---------|-----------|
 | Nombres de servicio | `backend`, `frontend`, `db`, `data-service` |
 | Puertos | Backend: 8080, Frontend: 3000, Flask: 5001, PostgreSQL: 5432 |
 | Env vars | Archivo `.env` (no commiteado), `.env.example` (commiteado con placeholders) |
-| Volúmenes | Solo para BD en dev (`pgdata:/var/lib/postgresql/data`) |
+| Volúmenes | BD en `pgdata` y fotos en `storage`, persistentes en base/dev. `stop` conserva; `down --volumes` descarta los datos locales de todo el proyecto, solo para desarrollo desechable. No usar `tmpfs` por defecto |
 
 
 ---

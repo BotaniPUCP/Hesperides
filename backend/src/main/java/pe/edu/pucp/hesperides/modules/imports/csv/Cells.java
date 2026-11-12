@@ -23,10 +23,44 @@ public final class Cells {
 
     public static double decimal(String text) {
         try {
-            return Double.parseDouble(text.trim().replace(',', '.'));
+            double value = Double.parseDouble(text.trim().replace(',', '.'));
+            if (Double.isNaN(value) || Double.isInfinite(value)) {
+                throw new CellException("«" + text + "» is not a number");
+            }
+            return value;
         } catch (NumberFormatException e) {
             throw new CellException("«" + text + "» is not a number");
         }
+    }
+
+    public static double positiveDecimal(String text, double maxExclusive) {
+        double value = decimal(text);
+        if (value <= 0) {
+            throw new CellException("must be greater than 0");
+        }
+        if (value >= maxExclusive) {
+            throw new CellException("must be less than " + (int) maxExclusive);
+        }
+        return value;
+    }
+
+    public static double nonNegativeDecimal(String text, double maxExclusive) {
+        double value = decimal(text);
+        if (value < 0) {
+            throw new CellException("must be 0 or more");
+        }
+        if (value >= maxExclusive) {
+            throw new CellException("must be less than " + (int) maxExclusive);
+        }
+        return value;
+    }
+
+    public static String maxLength(String text, int max) {
+        String trimmed = text.trim();
+        if (trimmed.length() > max) {
+            throw new CellException("must be at most " + max + " characters");
+        }
+        return trimmed;
     }
 
     public static int positiveInteger(String text) {
@@ -47,6 +81,14 @@ public final class Cells {
         } catch (DateTimeParseException e) {
             throw new CellException("«" + text + "» is not a date YYYY-MM-DD");
         }
+    }
+
+    public static LocalDate pastOrPresentDate(String text) {
+        LocalDate d = date(text);
+        if (d.isAfter(LocalDate.now())) {
+            throw new CellException("«" + text + "» cannot be in the future");
+        }
+        return d;
     }
 
     /** si / no; vacío es «no evaluado» y se lee como nulo. */

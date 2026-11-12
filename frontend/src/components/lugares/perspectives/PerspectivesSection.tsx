@@ -75,7 +75,7 @@ export function PerspectivesSection({ placeCode, perspectives, focused, onFocus,
 
   return (
     <section>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="surface-card mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-bold text-neutral-900">Perspectivas</h2>
         <div className="flex items-center gap-2">
           {ordered.length > 0 && (

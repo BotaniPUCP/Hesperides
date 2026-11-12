@@ -7,8 +7,6 @@ export const metadata: Metadata = {
 
 export default function EstandaresPage() {
   return (
-    <div className="mx-auto max-w-5xl">
-      <EstandaresScreen />
-    </div>
+    <EstandaresScreen />
   );
 }

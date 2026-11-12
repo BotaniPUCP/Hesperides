@@ -7,9 +7,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserMutations } from '@/hooks/useUserMutations';
 import { useUsers } from '@/hooks/useUsers';
 import { ConfirmActionModal } from './ConfirmActionModal';
+import { ResendCredentialsWarning } from './ResendCredentialsWarning';
 import { UserFiltersBar } from './UserFiltersBar';
 import { UserFormModal } from './UserFormModal';
 import { UsersTable } from './UsersTable';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 /** Anexo A de SPEC-001: tres roles leen el listado, uno solo escribe. */
 const ROLES_CON_LECTURA = ['ADMIN', 'COORDINADOR', 'SUPERVISOR'];
@@ -40,10 +42,16 @@ export function UsersAdminScreen() {
     );
   }
 
-  return <PanelDeUsuarios canManage={rol === ROL_QUE_ADMINISTRA} />;
+  return <PanelDeUsuarios canManage={rol === ROL_QUE_ADMINISTRA} currentUserId={user?.id ?? null} />;
 }
 
-function PanelDeUsuarios({ canManage }: { canManage: boolean }) {
+function PanelDeUsuarios({
+  canManage,
+  currentUserId,
+}: {
+  canManage: boolean;
+  currentUserId: number | null;
+}) {
   const [filters, setFilters] = useState<UserFilters>(FILTROS_INICIALES);
   const [page, setPage] = useState(0);
   // `apertura` cuenta las veces que se abrió el formulario y se usa como `key`:
@@ -119,19 +127,8 @@ function PanelDeUsuarios({ canManage }: { canManage: boolean }) {
     (filters.search ?? '') !== '' || (filters.roleCode ?? '') !== '' || filters.teamId !== undefined;
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-neutral-900">Usuarios</h1>
-          <p className="text-sm text-neutral-500">
-            Cuentas del personal con acceso al sistema de áreas verdes.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {canManage && <Button onClick={abrirAlta}>Nuevo usuario</Button>}
-        </div>
-      </header>
+    <div className="space-y-6">
+      <PageHeader title="Usuarios" description="Cuentas del personal con acceso al sistema de áreas verdes." actions={canManage && <Button onClick={abrirAlta}>Nuevo usuario</Button>} />
 
       <UserFiltersBar filters={filters} onChange={cambiarFiltros} />
 
@@ -154,6 +151,7 @@ function PanelDeUsuarios({ canManage }: { canManage: boolean }) {
           page={page}
           onPageChange={setPage}
           canManage={canManage}
+          currentUserId={currentUserId}
           // El esqueleto es para la primera carga (§7.1). En una recarga
           // posterior —cambiar de pagina, refrescar tras desactivar a alguien—
           // se conservan las filas anteriores: vaciar la tabla por medio
@@ -212,17 +210,7 @@ function PanelDeUsuarios({ canManage }: { canManage: boolean }) {
         onConfirm={confirmar}
       >
         {confirmacion?.tipo === 'reenviar' ? (
-          <>
-            <p>
-              ¿Reenviar las credenciales de <strong>{confirmacion.user.fullName}</strong>?
-            </p>
-            {/* La advertencia es obligatoria: al reenviar se genera una
-                contraseña nueva y la anterior deja de servir en el acto. Si el
-                correo no llega, esa persona se queda fuera del sistema (§5.4). */}
-            <p className="mt-2">
-              Se generará una contraseña nueva y la anterior dejará de funcionar de inmediato.
-            </p>
-          </>
+          <ResendCredentialsWarning user={confirmacion.user} />
         ) : (
           <p>
             ¿Desactivar la cuenta de <strong>{confirmacion?.user.fullName}</strong>? Se cerrarán

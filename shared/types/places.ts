@@ -29,10 +29,13 @@ export interface PlaceSummary {
   hasBack: boolean;
 }
 
-/** De dónde sale el contorno. INHERITED: un interior, ubicado por su padre. */
+/**
+ * De dónde sale el contorno. BUILDING: uno o varios edificios; CHILDREN: un
+ * complejo, que suma el de sus lugares hijos; INHERITED: un interior, ubicado por su padre.
+ */
 export interface PlaceOutline {
-  source: 'BUILDING' | 'ZONE' | 'FEATURE' | 'DRAWN' | 'INHERITED';
-  buildingId: number | null;
+  source: 'BUILDING' | 'ZONE' | 'FEATURE' | 'DRAWN' | 'CHILDREN' | 'INHERITED';
+  buildingIds: number[];
   zoneCode: string | null;
   featureCode: string | null;
   centerLat: number | null;
@@ -97,13 +100,16 @@ export interface PlaceDetail {
   mapView: PlaceMapView | null;
 }
 
-/** De dónde sale el contorno al guardar: uno solo, o ninguno para un interior. */
+/** De dónde sale el contorno al guardar: una sola fuente, o ninguna para un interior. */
 export interface OutlineInput {
-  buildingId?: number | null;
+  /** Un lugar que el mapa dibuja en varios bloques los lleva todos; un edificio es de un solo lugar. */
+  buildingIds?: number[];
   zoneCode?: string | null;
   featureCode?: string | null;
   /** GeoJSON de un punto marcado a mano, cuando el lugar no está en el mapa. */
   geometry?: { type: 'Point'; coordinates: [number, number] } | null;
+  /** Un complejo: su contorno es el de los lugares que contiene. */
+  fromChildren?: boolean;
 }
 
 export interface PlaceInput {
@@ -171,7 +177,7 @@ export interface MapPlace {
   code: string;
   name: string;
   parentName: string | null;
-  buildingId: number | null;
+  buildingIds: number[];
   lat: number | null;
   lon: number | null;
 }

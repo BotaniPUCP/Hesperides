@@ -58,7 +58,18 @@ spring:
 server:
   port: ${BACKEND_PORT:8080}
 
+# SPEC-200: provisional workflow details, independent from the mandatory-photo rule.
+interventions:
+  review:
+    require-photo-on-completion: ${INTERVENTIONS_REQUIRE_PHOTO_ON_COMPLETION:true}
+    block-pending-on-approval: ${INTERVENTIONS_BLOCK_PENDING_ON_APPROVAL:true}
+
 hesperides:
+  incidents:
+    time-zone: ${INCIDENT_TIME_ZONE:America/Lima}
+    holidays: ${INCIDENT_HOLIDAYS:}
+  maintenance:
+    time-zone: ${MAINTENANCE_TIME_ZONE:America/Lima}
   security:
     jwt:
       # Sin valor por defecto: si falta la variable, la aplicación no arranca

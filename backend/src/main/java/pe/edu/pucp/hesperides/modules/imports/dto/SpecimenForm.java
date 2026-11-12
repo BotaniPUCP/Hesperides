@@ -11,7 +11,9 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenDraft;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static pe.edu.pucp.hesperides.modules.imports.dto.AssessmentForm.blankToNull;
 
@@ -31,13 +33,24 @@ public record SpecimenForm(@NotBlank @Size(max = 150) String scientificName,
 
     public record MeasurementForm(@NotNull @PastOrPresent LocalDate date, @Positive Double heightM,
                                   @PositiveOrZero Double trunkHeightM, @PositiveOrZero Double dbhCm,
-                                  @Positive Double crownRadiusM, Boolean banded) {
+                                  @Positive Double crownRadiusM, Boolean banded,
+                                  List<@NotNull @Valid ExtraValueForm> extraValues) {
+
+        /** Las medidas adicionales, listas para escribir. Sin lista, ninguna. */
+        public List<SpecimenDraft.ExtraValue> toExtraValues() {
+            return extraValues == null ? List.of()
+                    : extraValues.stream().map(v -> new SpecimenDraft.ExtraValue(v.code(), v.value())).toList();
+        }
+    }
+
+    public record ExtraValueForm(@NotBlank @Size(max = 50) String code,
+                                 @NotNull @PositiveOrZero @DecimalMax("99999999.99") BigDecimal value) {
     }
 
     public SpecimenDraft toDraft(String code) {
         SpecimenDraft.Measurement m = measurement == null ? null : new SpecimenDraft.Measurement(measurement.date(),
                 measurement.heightM(), measurement.trunkHeightM(), measurement.dbhCm(), measurement.crownRadiusM(),
-                measurement.banded());
+                measurement.banded(), measurement.toExtraValues());
         return new SpecimenDraft(0, code, scientificName.trim(), lat, lon, quantity == null ? 1 : quantity,
                 blankToNull(sourceReference), blankToNull(legacyCode), blankToNull(sourceLocation), m,
                 assessment == null ? null : assessment.toDraft(), null, blankToNull(notes));

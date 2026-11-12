@@ -77,6 +77,15 @@ export interface MaintenanceFrequency {
   updatedAt: string;
 }
 
+/** Una sección del campus que puede ser el ámbito de una frecuencia por sección. */
+export interface MaintenanceZoneOption {
+  id: number;
+  code: string;
+  name: string;
+  sectorId: number | null;
+  sectorName: string | null;
+}
+
 export interface CreateMaintenanceFrequencyRequest {
   activityTypeItemId: number;
   regime: MaintenanceRegime;
@@ -144,5 +153,31 @@ export interface ComplianceReport {
   from: string;
   to: string;
   /** Un tramo por version vigente en el periodo. No se promedian. */
+  segments: ComplianceSegment[];
+  locations?: LocationCompliance[];
+}
+
+export interface LocationExecution {
+  interventionId: number;
+  interventionCode: string;
+  locationId: number;
+  attemptNumber: number;
+  targetKind: string;
+  targetId: number;
+  targetLabel: string;
+  zoneId: number | null;
+  placeId: number | null;
+  completedAt: string;
+  validatedAt: string;
+  approvedAt: string;
+  executionDate: string;
+  approvalDate: string;
+}
+
+export interface LocationCompliance {
+  targetKind: string;
+  targetId: number;
+  targetLabel: string;
+  executions: LocationExecution[];
   segments: ComplianceSegment[];
 }

@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source("../");
+@config "../../tailwind.config.ts";
 
 /*
  * Valores de los tokens de tailwind.config.ts, como canales RGB sueltos para
@@ -9,6 +8,26 @@
  * texto) y aclara los tonos que se usan como texto sobre fondo oscuro.
  */
 @layer base {
+  /* Preserve the existing border, placeholder and button defaults from v3. */
+  *,
+  ::before,
+  ::after,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: rgb(var(--color-neutral-200));
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: rgb(var(--color-neutral-400));
+    opacity: 1;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
   :root {
     --color-neutral-0: 255 255 255;
     --color-neutral-50: 248 250 252;
@@ -133,5 +152,33 @@
   .dark ::before,
   .dark ::after {
     --tw-ring-offset-color: rgb(var(--color-neutral-0));
+  }
+}
+
+/*
+ * Una lista corta no tiene barra de scroll y una larga sí: sin reservar su hueco,
+ * el ancho de la pantalla saltaría 15 px entre una y otra. El mapa no lo reserva
+ * porque no tiene marco y ocupa toda la ventana.
+ */
+html:has([data-page-frame]) {
+  scrollbar-gutter: stable;
+}
+
+/*
+ * Lo que va sobre el fondo de un módulo nunca queda suelto: su trama y su color
+ * cambian de una pantalla a otra, así que el texto lleva su propia superficie.
+ */
+@layer components {
+  .surface-card {
+    @apply rounded-2xl border border-neutral-200/90 bg-neutral-0 p-5 shadow-xs;
+  }
+
+  /* SPEC-C01: el título de página es uno solo en toda la aplicación. */
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-neutral-900;
+  }
+
+  .surface-pill {
+    @apply inline-flex w-fit items-center rounded-full border border-neutral-200/70 bg-neutral-0 px-3.5 py-1.5 shadow-xs;
   }
 }

@@ -27,6 +27,20 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
  */
 let accessToken: string | null = null;
 
+/** Texto con que PasswordChangeRequiredFilter distingue su 403 de una falta de permisos. */
+export const PASSWORD_CHANGE_REQUIRED_MESSAGE = 'Password change required before using the system';
+
+let passwordChangeRequiredHandler: (() => void) | null = null;
+
+/**
+ * Lo registra AuthContext. Si otro administrador regenera la clave con la pestaña
+ * abierta, la copia local de la sesión queda desactualizada y RouteGuard no
+ * desviaría a /cambiar-password: toda pantalla mostraría un error sin salida.
+ */
+export function setPasswordChangeRequiredHandler(handler: (() => void) | null): void {
+  passwordChangeRequiredHandler = handler;
+}
+
 /** La llama AuthContext al iniciar sesión y con null al cerrarla. */
 export function setAccessToken(token: string | null): void {
   accessToken = token;
@@ -134,6 +148,9 @@ async function unwrap<T>(response: Response): Promise<T> {
   const envelope = (await response.json()) as ApiResponse<T>;
 
   if (!response.ok || !envelope.ok) {
+    if (response.status === 403 && envelope.message === PASSWORD_CHANGE_REQUIRED_MESSAGE) {
+      passwordChangeRequiredHandler?.();
+    }
     throw new ApiError(response.status, envelope.message ?? 'Unexpected error', envelope.data);
   }
 
@@ -144,8 +161,8 @@ async function unwrap<T>(response: Response): Promise<T> {
  * The only place in the web app that calls fetch. Components must never
  * call it directly.
  */
-async function request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
-  const response = await send(method, path, body);
+async function request<T>(method: HttpMethod, path: string, body?: unknown, headers?: Record<string, string>): Promise<T> {
+  const response = await send(method, path, body, headers);
 
   if (response.status === 204) {
     return null as T;
@@ -181,15 +198,25 @@ async function getBlob(path: string): Promise<Blob> {
   return response.blob();
 }
 
+async function postBlob<T>(path: string, body: T): Promise<Blob> {
+  const response = await send('POST', path, body);
+  if (!response.ok) {
+    return unwrap<Blob>(response);
+  }
+  return response.blob();
+}
+
 export const apiClient = {
+  postWithKey: async <T>(path: string, body: unknown, key: string): Promise<T> =>
+    unwrap<T>(await send('POST', path, body, { 'Idempotency-Key': key })),
   get: <T>(path: string) => request<T>('GET', path),
-  post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
+  post: <T>(path: string, body?: unknown, headers?: Record<string, string>) => request<T>('POST', path, body, headers),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
   postForm: <T>(path: string, form: FormData) => request<T>('POST', path, form),
   putForm: <T>(path: string, form: FormData) => request<T>('PUT', path, form),
   getBlob,
+  postBlob,
   getIfChanged,
 };
-

@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { puedeRegistrar } from '../permisos';
 import { RegistroComponenteForm } from './RegistroComponenteForm';
 import { RegistroPlantaForm } from './RegistroPlantaForm';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 type QueSeRegistra = 'planta' | 'waste-bins' | 'drinking-fountains';
 
@@ -29,9 +30,7 @@ export function RegistrarScreen() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-3">
-        <h1 className="text-2xl font-bold text-neutral-900">Registrar en el catastro</h1>
-        <p className="text-neutral-700">Uno a la vez. Para muchos, usa la importación por CSV.</p>
+      <PageHeader title="Registrar en el catastro" description="Uno a la vez. Para muchos, usa la importación por CSV.">
         <fieldset>
           <legend className="mb-1 text-sm font-medium text-neutral-700">Qué vas a registrar</legend>
           <div className="flex flex-wrap gap-4 text-sm">
@@ -43,7 +42,7 @@ export function RegistrarScreen() {
             ))}
           </div>
         </fieldset>
-      </header>
+      </PageHeader>
       {/* La clave reinicia el formulario al cambiar de tipo: lo escrito para un tacho no vale para un bebedero. */}
       {que === 'planta' ? (
         <RegistroPlantaForm onDirtyChange={setSinGuardar} />

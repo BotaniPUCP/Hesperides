@@ -71,3 +71,6 @@ evaluó».
 `nombre_comun`, `nombres_alternativos`, `familia`, `tipo_vegetacion`, `tipo_elemento` y
 `origen_medidas` salen en la exportación para que el archivo se pueda leer. Al cargar se aceptan y
 se ignoran: la especie se decide solo por `nombre_cientifico`.
+
+`origen_medidas` dice `Medido`, `Sin medir` o `Promedio de la especie`. En este último caso las
+celdas de medidas salen vacías: el promedio vive en la especie y no es una medida del ejemplar.

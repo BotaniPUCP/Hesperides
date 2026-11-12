@@ -7,8 +7,6 @@ export const metadata: Metadata = {
 
 export default function ImportarPage() {
   return (
-    <div className="mx-auto max-w-5xl">
-      <ImportarScreen />
-    </div>
+    <ImportarScreen />
   );
 }

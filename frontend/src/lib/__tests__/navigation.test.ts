@@ -1,4 +1,35 @@
-import { NAVIGATION, isActivePath, visibleDirectLinks, visibleNavigation } from '../navigation';
+import { NAVIGATION, activeHref, isActivePath, visibleDirectLinks, visibleNavigation } from '../navigation';
+
+describe('activeHref', () => {
+  const HREFS = ['/', '/inventario-verde', '/inventario-verde/registrar', '/lugares', '/lugares/migracion', '/lugares/nuevo'];
+
+  it('entre dos enlaces que coinciden gana el más específico', () => {
+    expect(activeHref('/inventario-verde/registrar', HREFS)).toBe('/inventario-verde/registrar');
+    expect(activeHref('/lugares/migracion', HREFS)).toBe('/lugares/migracion');
+  });
+
+  it('el orden de los enlaces no cambia el resultado', () => {
+    expect(activeHref('/inventario-verde/registrar', [...HREFS].reverse())).toBe('/inventario-verde/registrar');
+  });
+
+  it('una subruta sin enlace propio marca su pantalla padre', () => {
+    expect(activeHref('/inventario-verde/especies/roystonea-regia', HREFS)).toBe('/inventario-verde');
+    expect(activeHref('/lugares/LUG-0001', HREFS)).toBe('/lugares');
+  });
+
+  it('el inicio solo se marca en la raíz', () => {
+    expect(activeHref('/', HREFS)).toBe('/');
+    expect(activeHref('/otra', HREFS)).toBeNull();
+  });
+
+  it('si el rol no ve el enlace específico, marca el padre que sí ve', () => {
+    expect(activeHref('/lugares/migracion', ['/', '/lugares'])).toBe('/lugares');
+  });
+
+  it('sin enlaces no hay ninguno activo', () => {
+    expect(activeHref('/lugares', [])).toBeNull();
+  });
+});
 
 describe('isActivePath', () => {
   it('marca activa la ruta exacta', () => {
@@ -25,12 +56,20 @@ function hrefsDe(rol: string): string[] {
 }
 
 describe('visibleNavigation', () => {
-  it('a un ADMIN le muestra el catastro completo y las cuatro pantallas de administración', () => {
+  it('a un ADMIN le muestra inventario verde, catastro completo y las cuatro pantallas de administración', () => {
     expect(hrefsDe('ADMIN')).toEqual([
+      '/lugares',
+      '/lugares/migracion',
+      '/lugares/nuevo',
+      '/lugares/importar',
+      '/lugares/exportar',
+      '/inventario-verde',
+      '/inventario-verde/registrar',
+      '/intervenciones',
+      '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
-      '/lugares/migracion',
       '/admin/usuarios',
       '/admin/catalogos',
       '/admin/frecuencias',
@@ -42,10 +81,18 @@ describe('visibleNavigation', () => {
     // SPEC-003 §4 y §5.6: el backend responde 403 al resto. Mostrar el enlace
     // sería mandarlo a una pantalla que solo puede negarle el paso.
     expect(hrefsDe('COORDINADOR')).toEqual([
+      '/lugares',
+      '/lugares/migracion',
+      '/lugares/nuevo',
+      '/lugares/importar',
+      '/lugares/exportar',
+      '/inventario-verde',
+      '/inventario-verde/registrar',
+      '/intervenciones',
+      '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
-      '/lugares/migracion',
       '/admin/usuarios',
       '/admin/frecuencias',
     ]);
@@ -54,6 +101,11 @@ describe('visibleNavigation', () => {
   it('a un SUPERVISOR le muestra el formulario del catastro pero no la carga por CSV', () => {
     // SPEC-103 D-03: el supervisor registra en campo, una planta a la vez.
     expect(hrefsDe('SUPERVISOR')).toEqual([
+      '/lugares',
+      '/inventario-verde',
+      '/inventario-verde/registrar',
+      '/intervenciones',
+      '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/estandares',
       '/admin/usuarios',
@@ -61,15 +113,46 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('a un OPERARIO le muestra frecuencias, que puede consultar', () => {
-    expect(hrefsDe('OPERARIO')).toEqual(['/admin/frecuencias']);
+  it('a un OPERARIO le muestra lugares, especies, intervenciones, ejemplares y frecuencias, que puede consultar', () => {
+    expect(hrefsDe('OPERARIO')).toEqual([
+      '/lugares',
+      '/inventario-verde',
+      '/intervenciones',
+      '/catastro/ejemplares',
+      '/admin/frecuencias',
+    ]);
   });
 
-  it('el mapa, el inventario verde y los lugares son enlaces directos para los cuatro roles, no grupos', () => {
-    for (const rol of ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO']) {
-      expect(visibleDirectLinks(rol).map((l) => l.href)).toEqual(['/mapa', '/inventario-verde', '/lugares']);
+  it('el mapa es directo para los cuatro roles; incidencias, riego y reportes, para quien los opera', () => {
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
+    expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa']);
+    expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
+      'Lugares',
+      'Catálogo botánico',
+      'Intervenciones',
+      'Catastro verde',
+      'Administración',
+    ]);
+  });
+
+  it('solo coordinación y capataces ven el acceso directo a incidencias', () => {
+    for (const role of ['COORDINADOR', 'SUPERVISOR']) {
+      expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(true);
     }
-    expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual(['Catastro', 'Administración']);
+    for (const role of ['ADMIN', 'OPERARIO', 'DESCONOCIDO']) {
+      expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(false);
+    }
+  });
+
+  it('Reportes es un enlace directo, no un grupo, y el operario no lo ve (SPEC-202 CA-G03, CA-G04)', () => {
+    for (const role of ['ADMIN', 'COORDINADOR', 'SUPERVISOR']) {
+      expect(visibleDirectLinks(role).filter((item) => item.href === '/reportes').map((item) => item.label))
+        .toEqual(['Reportes']);
+    }
+    expect(visibleDirectLinks('OPERARIO').some((item) => item.href === '/reportes')).toBe(false);
+    expect(NAVIGATION.some((group) => group.items.some((item) => item.href === '/reportes'))).toBe(false);
   });
 
   it('un rol desconocido no ve enlaces directos', () => {

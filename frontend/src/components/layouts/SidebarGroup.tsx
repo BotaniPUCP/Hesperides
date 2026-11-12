@@ -2,24 +2,33 @@
 
 import { useId, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { isActivePath, type NavGroup } from '@/lib/navigation';
+import type { NavGroup } from '@/lib/navigation';
 import { SidebarLink } from './SidebarLink';
 
 export interface SidebarGroupProps {
   group: NavGroup;
-  pathname: string;
+  /** El enlace que representa la página actual, entre todos los del menú. */
+  activeHref: string | null;
   onNavigate?: () => void;
 }
 
 /**
  * Módulo desplegable. Arranca abierto solo si contiene la página activa: quien
  * entra a /admin/catalogos ve dónde está sin tener que abrir nada, y el resto
- * de módulos no ocupa espacio mientras no se usan.
+ * de módulos no ocupa espacio mientras no se usan. Lo mismo al llegar o salir por
+ * un enlace de otra pantalla: el menú sigue montado y debe mostrar dónde se está.
+ * Mientras la página siga en el mismo grupo, manda lo que la persona abrió o cerró.
  */
-export function SidebarGroup({ group, pathname, onNavigate }: SidebarGroupProps) {
-  const contieneActiva = group.items.some((item) => isActivePath(pathname, item.href));
+export function SidebarGroup({ group, activeHref, onNavigate }: SidebarGroupProps) {
+  const contieneActiva = group.items.some((item) => item.href === activeHref);
   const [abierto, setAbierto] = useState(contieneActiva);
+  const [conteniaActiva, setConteniaActiva] = useState(contieneActiva);
   const idLista = useId();
+
+  if (contieneActiva !== conteniaActiva) {
+    setConteniaActiva(contieneActiva);
+    setAbierto(contieneActiva);
+  }
 
   return (
     <div>
@@ -30,7 +39,7 @@ export function SidebarGroup({ group, pathname, onNavigate }: SidebarGroupProps)
         onClick={() => setAbierto((valor) => !valor)}
         className={cn(
           'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600',
+          'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600',
           contieneActiva ? 'text-brand-700' : 'text-neutral-900 hover:bg-neutral-100',
         )}
       >
@@ -49,7 +58,7 @@ export function SidebarGroup({ group, pathname, onNavigate }: SidebarGroupProps)
                 href={item.href}
                 label={item.label}
                 icon={item.icon}
-                active={isActivePath(pathname, item.href)}
+                active={item.href === activeHref}
                 nested
                 onNavigate={onNavigate}
               />

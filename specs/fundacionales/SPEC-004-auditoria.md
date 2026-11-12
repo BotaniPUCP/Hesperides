@@ -90,6 +90,9 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `SYSTEM_PARAMETER_CHANGED` | ADMIN | `{ "code": "...", "value": { "before": "...", "after": "..." } }` | **`audit_log`** |
 | `SPECIES_PHOTOS_REPLACED` | ADMIN, COORDINADOR (carga CSV) · ADMIN (bandeja) | `{ "photos": 3 }` — cuántas fotos quedaron en el conjunto de la especie (SPEC-104 D-02) | **`audit_log`** |
 | `SPECIES_PHOTO_ADDED` | ADMIN, COORDINADOR | `{ "photoId": 41 }` — la foto agregada al final por formulario (SPEC-104 D-03) | **`audit_log`** |
+| `SPECIES_UPDATED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "slug": "coffea-arabica", "scientificName": "Coffea arabica" }` — quién corrigió la especie (SPEC-105) |
+| `SPECIES_CRITICALITY_CHANGED` | ADMIN, COORDINADOR | `{ "from": true, "to": false }` — decisión de seguridad: cambia quién atiende sus ejemplares (SPEC-105) |
+| `SPECIES_REFERENCE_CHANGED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "heightFrom": 3.0, "heightTo": 2.5, "crownRadiusFrom": 1.0, "crownRadiusTo": 1.0 }` — el promedio anterior y el nuevo (SPEC-105) |
 | `LOGIN_FAILED_LOCKOUT` | (sistema, sobre cualquier email) | `{ "email": "...", "attempts": 5, "windowMinutes": 15 }` | **`audit_log`** (además de logs SLF4J, sección 3.4) |
 | `REFRESH_TOKEN_REUSE_DETECTED` | (sistema, sobre cualquier usuario) | `{ "userId": ..., "tokenId": ..., "revokedChainCount": 3 }` | **`audit_log`** |
 | Login exitoso individual | — | — | **Solo SLF4J** (sección 3.4) |

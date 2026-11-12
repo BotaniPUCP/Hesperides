@@ -27,6 +27,6 @@ describe('Layout del inventario verde', () => {
 
     expect(screen.getByText('contenido')).toBeInTheDocument();
     expect(screen.getAllByRole('navigation', { name: 'Principal' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: /Inventario verde/i })[0]).toHaveAttribute('aria-current', 'page');
+    expect(screen.getAllByRole('link', { name: /Especies/i })[0]).toHaveAttribute('aria-current', 'page');
   });
 });

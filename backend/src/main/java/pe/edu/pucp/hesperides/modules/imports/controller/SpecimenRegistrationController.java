@@ -19,16 +19,21 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentForm;
 import pe.edu.pucp.hesperides.modules.imports.dto.AssessmentResponse;
+import pe.edu.pucp.hesperides.modules.imports.dto.MeasurementResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.SpecimenForm;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenRegistrationService;
 import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
+import pe.edu.pucp.hesperides.modules.inventory.controller.ManagerAuthority;
+import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesForm;
+import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.service.InventoryPhotoService;
+import pe.edu.pucp.hesperides.modules.inventory.service.SpeciesRegistrationService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
 import java.util.List;
 import java.util.Map;
 
-/** Registro de ejemplares por formulario, su historial de evaluaciones y la foto genérica de especie. */
+/** Registro de ejemplares por formulario, especies, su historial de evaluaciones y la foto genérica de especie. */
 @RestController
 @RequiredArgsConstructor
 public class SpecimenRegistrationController {
@@ -37,6 +42,7 @@ public class SpecimenRegistrationController {
     private static final String MANAGERS = "hasAnyAuthority('ADMIN', 'COORDINADOR')";
 
     private final SpecimenRegistrationService service;
+    private final SpeciesRegistrationService speciesService;
     private final InventoryPhotoService photos;
 
     @PostMapping(value = "/api/v1/green-inventory/specimens", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -63,6 +69,11 @@ public class SpecimenRegistrationController {
         return ResponseEntity.ok(ApiResponse.ok("Assessment history", service.history(code)));
     }
 
+    @GetMapping("/api/v1/green-inventory/specimens/{code}/measurements")
+    public ResponseEntity<ApiResponse<List<MeasurementResponse>>> measurementHistory(@PathVariable String code) {
+        return ResponseEntity.ok(ApiResponse.ok("Measurement history", service.measurementHistory(code)));
+    }
+
     @PostMapping("/api/v1/green-inventory/specimens/{code}/assessments")
     @PreAuthorize(REGISTRARS)
     public ResponseEntity<ApiResponse<List<AssessmentResponse>>> assess(
@@ -79,6 +90,18 @@ public class SpecimenRegistrationController {
             @AuthenticationPrincipal UserDetails principal) {
         photos.addSpeciesPhoto(slug, UploadedFiles.requiredPhoto(photo), principal.getUsername());
         return ResponseEntity.ok(ApiResponse.ok("Species photo saved", null));
+    }
+
+    @PostMapping(value = "/api/v1/green-inventory/species", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize(REGISTRARS)
+    public ResponseEntity<ApiResponse<SpeciesResponse>> registerSpecies(
+            @Valid @RequestPart("data") SpeciesForm form,
+            @RequestPart(value = "photo", required = false) MultipartFile photo,
+            @AuthenticationPrincipal UserDetails principal) {
+        SpeciesResponse created = speciesService.register(
+                form, UploadedFiles.photo(photo), principal.getUsername(), ManagerAuthority.isManager(principal));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Species registered", created));
     }
 
 }

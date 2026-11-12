@@ -1,7 +1,7 @@
 import { ReferenceMigrationScreen } from '@/components/lugares/migracion/ReferenceMigrationScreen';
 
 export const metadata = {
-  title: 'Migración de referencias · Lugares del campus · Hesperides',
+  title: 'Migrar referencias · Catálogo de lugares · Hesperides',
 };
 
 export default function ReferenceMigrationPage() {

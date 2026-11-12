@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { cn } from '@/lib/cn';
 
 export interface BreadcrumbItem {
@@ -13,11 +14,21 @@ export interface BreadcrumbProps {
   className?: string;
 }
 
+/** Volver a un listado por el breadcrumb lo encuentra con los filtros que tenía. */
+function CrumbLink({ href, label }: { href: string; label: string }) {
+  const remembered = useRememberedHref(href);
+  return (
+    <Link href={remembered} className="text-neutral-700 font-medium transition-colors hover:text-brand-700 hover:underline">
+      {label}
+    </Link>
+  );
+}
+
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
   if (!items || items.length === 0) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className={cn('flex items-center text-sm', className)}>
+    <nav aria-label="Breadcrumb" className={cn('surface-pill text-sm', className)}>
       <ol className="flex flex-wrap items-center gap-1.5 text-neutral-700">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
@@ -26,7 +37,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
             <li key={`${item.label}-${index}`} className="flex items-center gap-1.5">
               {index > 0 && (
                 <svg
-                  className="h-3.5 w-3.5 flex-shrink-0 text-neutral-400"
+                  className="h-3.5 w-3.5 shrink-0 text-neutral-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -47,12 +58,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                   {item.label}
                 </span>
               ) : (
-                <Link
-                  href={item.href}
-                  className="text-neutral-700 font-medium transition-colors hover:text-brand-700 hover:underline"
-                >
-                  {item.label}
-                </Link>
+                <CrumbLink href={item.href} label={item.label} />
               )}
             </li>
           );

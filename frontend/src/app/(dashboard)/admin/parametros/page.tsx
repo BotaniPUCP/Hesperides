@@ -12,8 +12,6 @@ export const metadata: Metadata = {
  */
 export default function ParametrosPage() {
   return (
-    <div className="mx-auto max-w-5xl">
-      <SystemParametersAdminScreen />
-    </div>
+    <SystemParametersAdminScreen />
   );
 }

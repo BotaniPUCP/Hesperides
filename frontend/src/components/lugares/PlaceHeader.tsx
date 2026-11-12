@@ -17,7 +17,7 @@ export interface PlaceHeaderProps {
 export function PlaceHeader({ place, onOpenMain, actions }: PlaceHeaderProps) {
   const main = place.mainPhotos[0];
   return (
-    <section className="grid gap-5 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 shadow-xs md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+    <section className="grid gap-5 overflow-hidden rounded-2xl border border-neutral-200/90 bg-neutral-0 shadow-xs md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
       <div className="h-56 bg-neutral-100 md:h-full">
         {main ? (
           <button type="button" onClick={() => onOpenMain(0)} aria-label={`Abrir foto principal de ${place.name}`} className="h-full w-full">
@@ -36,7 +36,7 @@ export function PlaceHeader({ place, onOpenMain, actions }: PlaceHeaderProps) {
           {actions && <div className="ml-auto flex gap-2">{actions}</div>}
         </div>
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-neutral-900">{place.name}</h1>
+          <h1 className="page-title">{place.name}</h1>
           {place.parent && (
             <p className="text-sm text-neutral-600">
               Dentro de{' '}

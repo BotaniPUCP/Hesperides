@@ -9,6 +9,7 @@ import { ResultadoImportacion } from './ResultadoImportacion';
 import { SelectorDeArchivos } from './SelectorDeArchivos';
 import { useImportacion } from './useImportacion';
 import { VistaPrevia } from './VistaPrevia';
+import { PageHeader } from '@/components/layouts/PageHeader';
 
 /** Carga de ejemplares por CSV (SPEC-103 §5.2). Solo ADMIN y COORDINADOR (D-03). */
 export function ImportarScreen() {
@@ -26,14 +27,9 @@ export function ImportarScreen() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-bold text-neutral-900">Importar al catastro</h1>
-        <p className="text-neutral-700">
-          Sube un CSV en su <Link href={`/catastro/estandares#estandar-${imp.kind}`} className="text-brand-700 underline">estándar</Link>.
-          Las filas sin código crean; las que traen código corrigen lo registrado.
-        </p>
+      <PageHeader title="Importar al catastro" description={<>Sube un CSV en su <Link href={`/catastro/estandares#estandar-${imp.kind}`} className="text-brand-700 underline">estándar</Link>. Las filas sin código crean; las que traen código corrigen lo registrado.</>}>
         <DescargasDelEstandar estandar={imp.estandar} puedeExportar />
-      </header>
+      </PageHeader>
 
       {imp.fase === 'hecho' ? (
         <ResultadoImportacion imp={imp} />

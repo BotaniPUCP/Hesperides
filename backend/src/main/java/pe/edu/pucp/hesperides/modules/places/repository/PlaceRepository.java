@@ -15,11 +15,6 @@ public class PlaceRepository {
     public record PlaceRow(long id, String code, String name, String kindCode, Long parentId, String parentName) {
     }
 
-    /** Los ids ya resueltos; {@code geoJson} solo si el contorno se dibujó. */
-    public record PlaceValues(String name, long kindItemId, long categoryItemId, Long parentId, Long buildingId,
-            Long zoneId, Long featureId, String geoJson) {
-    }
-
     private static final String SELECT_ROW = """
             SELECT p.id, p.code, p.name, k.code, p.parent_place_id, pp.name FROM places p
               JOIN catalog_items k ON k.id = p.kind_item_id
@@ -47,25 +42,28 @@ public class PlaceRepository {
     public long insert(PlaceValues v) {
         return jdbc.queryForObject("""
                 INSERT INTO places (name, kind_item_id, category_item_id, parent_place_id, building_id, zone_id,
-                    feature_id, own_geometry) VALUES (?, ?, ?, ?, ?, ?, ?, %s) RETURNING id""".formatted(GEOMETRY),
-                Long.class, v.name(), v.kindItemId(), v.categoryItemId(), v.parentId(), v.buildingId(), v.zoneId(),
-                v.featureId(), v.geoJson(), v.geoJson());
+                    feature_id, own_geometry, outline_from_children) VALUES (?, ?, ?, ?, ?, ?, ?, %s, ?) RETURNING id"""
+                .formatted(GEOMETRY), Long.class, v.name(), v.kindItemId(), v.categoryItemId(), v.parentId(),
+                v.firstBuildingId(), v.zoneId(), v.featureId(), v.geoJson(), v.geoJson(), v.fromChildren());
     }
 
     public void update(long id, PlaceValues v) {
         jdbc.update("""
                 UPDATE places SET name = ?, kind_item_id = ?, category_item_id = ?, parent_place_id = ?, building_id = ?,
-                    zone_id = ?, feature_id = ?, own_geometry = %s, updated_at = CURRENT_TIMESTAMP WHERE id = ?"""
-                .formatted(GEOMETRY), v.name(), v.kindItemId(), v.categoryItemId(), v.parentId(), v.buildingId(),
-                v.zoneId(), v.featureId(), v.geoJson(), v.geoJson(), id);
+                    zone_id = ?, feature_id = ?, own_geometry = %s, outline_from_children = ?,
+                    updated_at = CURRENT_TIMESTAMP WHERE id = ?""".formatted(GEOMETRY), v.name(), v.kindItemId(),
+                v.categoryItemId(), v.parentId(), v.firstBuildingId(), v.zoneId(), v.featureId(), v.geoJson(), v.geoJson(),
+                v.fromChildren(), id);
     }
 
     /**
      * Se va con sus perspectivas, fotos y alias: sin el lugar no ubican nada. Sus
-     * referencias migradas vuelven a la cola en vez de perderse.
+     * referencias migradas vuelven a la cola en vez de perderse, y sus edificios
+     * quedan libres para otro lugar.
      */
     public void softDelete(long id) {
-        for (String table : List.of("place_photos", "place_perspectives", "place_aliases", "place_reference_links")) {
+        for (String table : List.of("place_photos", "place_perspectives", "place_aliases", "place_reference_links",
+                "place_buildings")) {
             jdbc.update("UPDATE " + table + " SET deleted_at = CURRENT_TIMESTAMP WHERE place_id = ? AND deleted_at IS NULL", id);
         }
         jdbc.update("UPDATE places SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?", id);
