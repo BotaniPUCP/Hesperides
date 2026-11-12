@@ -101,6 +101,60 @@ npm run fotogramas -- --escena especies          # inicio, mitad y final de cada
 npm run fotogramas -- --momentos e4:0.8,e6:0.2   # un instante exacto de una frase
 ```
 
+## Video de planificación y reservas
+
+Segundo video del proyecto: Hespo explica Frecuencias, Planificación y Reservas de jardines.
+
+- Diseño: [`docs/superpowers/specs/2026-11-12-video-planificacion-design.md`](../../superpowers/specs/2026-11-12-video-planificacion-design.md)
+- Resultado: `out/hespo-planificacion.mp4`
+
+Comparte a Hespo, los subtítulos y los tiempos con el primer video; tiene su propio guion
+(`guion-planificacion.json`), su audio (`public/voz/planificacion/`) y sus capturas
+(`public/capturas/planificacion/`).
+
+### 1. Voz
+
+```bash
+.venv/Scripts/python scripts/generar_voz.py --guion guion-planificacion.json --salida public/voz/planificacion
+npm run duracion -- --guion guion-planificacion.json --voz public/voz/planificacion
+```
+
+La duración debe quedar entre 3:30 y 4:30.
+
+### 2. Capturas, en dos sesiones
+
+Las pantallas salen de dos ramas que todavía no están en `develop`, y sus migraciones chocan: cada
+una corre en su propia sesión desechable.
+
+| Sesión | Rama | Escenas |
+|--------|------|---------|
+| `a` | `feature/conjuntos-con-ejemplares` | Frecuencias y Planificación |
+| `b` | `feature/spec-107-reservas-jardines` | Reservas |
+
+```bash
+bash scripts/sesion.sh arriba a                  # worktree, base, backend y frontend de la rama
+npm run capturas:planificacion -- --sesion a     # arma los datos de ejemplo y captura
+bash scripts/sesion.sh abajo a                   # borra el worktree y el proyecto hespo-video-a
+```
+
+Igual con `b`. La sesión `b` necesita correr de día en Lima (09:00 a 20:00), porque arma reservas
+en curso y terminadas de hoy.
+
+`sesion.sh` saca la rama en `.worktrees/video-<s>` y la levanta en el proyecto Docker
+`hespo-video-<s>`, con la base en el puerto 55432. Si 3000, 8080 o 55432 están ocupados, se detiene:
+nunca detiene ni reutiliza contenedores ajenos, y al bajar solo borra lo de su proyecto.
+`public/capturas/planificacion/origen.json` guarda la rama y el commit de cada sesión.
+
+Las organizaciones, los contactos y sus teléfonos son de demostración. Los jardines son los del
+campus: hay que revisar cada captura antes de compartir el video.
+
+### 3. Render
+
+```bash
+npm run render:planificacion
+npm run fotogramas -- --video VideoPlanificacion --escena planificacion
+```
+
 ## Cambiar algo
 
 - **Una frase:** editar `guion.json` y repetir los pasos 1 y 3. Si la frase cambió y no se regeneró

@@ -47,3 +47,6 @@ inbox/
 
 pnpm-lock.yaml
 pnpm-workspace.yaml
+
+# Worktrees de trabajo local (sesiones de captura del video, entre otros)
+.worktrees/
