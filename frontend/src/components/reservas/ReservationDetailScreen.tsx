@@ -6,13 +6,16 @@ import { useState } from 'react';
 import type { Reservation } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { Button, EmptyState, LoadingSkeleton } from '@/components/ui';
-import { SectionsFocusMap } from '@/components/map3d/SectionsFocusMap';
+import { SetMap } from '@/components/planning/SetMap';
 import { useCanMaintainReservations, useCanRecordUsage, useReservation, useReservationCheck } from '@/hooks/useReservations';
 import { formatDay, isEditable } from '@/lib/reservation-format';
 import { CancelReservationDialog } from './CancelReservationDialog';
 import { ReservationDetails } from './ReservationDetails';
 import { ResponsibleChangeForm } from './ResponsibleChangeForm';
 import { ReservationWarnings } from './ReservationWarnings';
+
+/** Una reserva es de un jardín: el mapa no marca ejemplares. Constante para no redibujar en cada render. */
+const NO_SPECIMENS: string[] = [];
 
 interface Props {
   code: string;
@@ -114,7 +117,7 @@ export function ReservationDetailScreen({ code, startEditing = false, created = 
         <ReservationDetails reservation={reservation} canMaintain={canMaintain}
           canRecordUsage={canRecordUsage} updateData={reload} />
         <div className="h-[360px] lg:h-auto lg:min-h-[480px]">
-          <SectionsFocusMap codes={reservation.place.sectionCodes} />
+          <SetMap zoneCodes={reservation.place.sectionCodes} specimenCodes={NO_SPECIMENS} className="h-full" />
         </div>
       </div>
 
