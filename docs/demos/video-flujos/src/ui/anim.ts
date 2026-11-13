@@ -2,7 +2,7 @@ import { Easing, interpolate } from 'remotion';
 import type { TramoEscena } from '../tiempos';
 
 const FRAMES_APARICION = 12;
-const FRAMES_PULSO = 18;
+export const FRAMES_PULSO = 18;
 
 /**
  * Progreso de 0 a 1 de algo que aparece con una frase. `retraso` es la fracción

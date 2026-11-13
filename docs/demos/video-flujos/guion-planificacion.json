@@ -61,7 +61,8 @@
           "id": "f2",
           "texto": "Una frecuencia dice cada cuánto se hace una actividad, como el deshierbo de los jardines: cada 30 a 35 días.",
           "hespo": {
-            "x": 960,
+            "x": 1420,
+            "y": 709,
             "pose": "senala"
           }
         },
@@ -69,7 +70,8 @@
           "id": "f3",
           "texto": "Se puede definir de varias formas: cada cierto número de días, distinto según la estación, unas veces al año o dentro de una temporada.",
           "hespo": {
-            "x": 960,
+            "x": 1580,
+            "y": 399,
             "pose": "senala"
           }
         },
@@ -77,15 +79,32 @@
           "id": "f4",
           "texto": "Al abrirla, se elige si rige en todo el campus o solo en algunas áreas, y si la hace personal propio o un servicio tercerizado.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1420,
+            "y": 709,
+            "pose": "senala",
+            "espera": 0.04,
+            "luego": [
+              {
+                "en": 0.26,
+                "x": 1664,
+                "y": 471,
+                "pose": "senala"
+              },
+              {
+                "en": 0.62,
+                "x": 1030,
+                "y": 471,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "f5",
           "texto": "Si se cambia, rige desde hoy, y los reportes de meses anteriores mantienen la frecuencia de su momento.",
           "hespo": {
-            "x": 960,
+            "x": 1700,
+            "y": 678,
             "pose": "senala"
           }
         }

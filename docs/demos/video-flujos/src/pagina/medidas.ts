@@ -11,4 +11,4 @@ export function medida(captura: string, elemento: string): Medida {
   return encontrada;
 }
 
-export const centro = ({ x, y, ancho, alto }: Medida) => ({ x: x + ancho / 2, y: y + alto / 2 });
+export { centro } from './medidasCargadas';

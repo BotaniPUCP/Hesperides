@@ -4,6 +4,9 @@ import type { Medida } from './medidas';
 export type Medidas = Record<string, Record<string, Medida>>;
 export type BuscarMedida = (captura: string, elemento: string) => Medida;
 
+/** El centro de una medida, donde se pulsa. */
+export const centro = ({ x, y, ancho, alto }: Medida) => ({ x: x + ancho / 2, y: y + alto / 2 });
+
 /**
  * Medidas que llegan como datos, no por import: así un video no depende de las capturas
  * generadas del otro. `comando` es lo que hay que ejecutar si falta una.
