@@ -125,7 +125,8 @@
           "id": "p2",
           "texto": "Primero se arman los conjuntos: grupos de jardines que se atienden juntos.",
           "hespo": {
-            "x": 960,
+            "x": 1166,
+            "y": 341,
             "pose": "senala"
           }
         },
@@ -133,23 +134,54 @@
           "id": "p3",
           "texto": "Se eligen en el mapa: con un clic se agrega un jardín, y arrastrando con la tecla Control se eligen varios a la vez.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1093,
+            "y": 530,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.55,
+                "x": 850,
+                "y": 612,
+                "pose": "senala"
+              },
+              {
+                "en": 0.72,
+                "x": 1015,
+                "y": 717,
+                "pose": "pulgar"
+              }
+            ]
           }
         },
         {
           "id": "p4",
           "texto": "Luego, una planificación une el conjunto con su actividad y su frecuencia.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1045,
+            "y": 431,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.7,
+                "x": 1611,
+                "y": 431,
+                "pose": "senala"
+              },
+              {
+                "en": 0.86,
+                "x": 1611,
+                "y": 678,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "p5",
           "texto": "Con eso, el sistema junta lo que antes se calculaba a mano: cuándo fue la última vez, cada cuánto toca y cuánto falta.",
           "hespo": {
-            "x": 960,
+            "x": 1219,
+            "y": 640,
             "pose": "senala"
           }
         },
@@ -157,15 +189,25 @@
           "id": "p6",
           "texto": "Apenas coordinación entra al sistema, el inicio le muestra los conjuntos atrasados y los que vencen en los próximos siete días.",
           "hespo": {
-            "x": 960,
-            "pose": "presenta"
+            "x": 1780,
+            "y": 309,
+            "pose": "presenta",
+            "luego": [
+              {
+                "en": 0.68,
+                "x": 1780,
+                "y": 423,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "p7",
           "texto": "Desde ahí, pasa a la planificación.",
           "hespo": {
-            "x": 960,
+            "x": 695,
+            "y": 537,
             "pose": "senala"
           }
         },
@@ -173,15 +215,25 @@
           "id": "p8",
           "texto": "Las tarjetas se ordenan por urgencia, primero lo atrasado, y se pueden filtrar por conjunto, actividad o estado.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1219,
+            "y": 503,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.5,
+                "x": 1700,
+                "y": 341,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "p9",
           "texto": "Al elegir una, el mapa ilumina sus jardines.",
           "hespo": {
-            "x": 960,
+            "x": 1180,
+            "y": 620,
             "pose": "senala"
           }
         },
@@ -189,23 +241,48 @@
           "id": "p10",
           "texto": "Si una parte del conjunto ya se atendió, por ejemplo desde otro conjunto, la tarjeta lo dice y propone solo lo que falta.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1180,
+            "y": 714,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.6,
+                "x": 1180,
+                "y": 800,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "p11",
           "texto": "Con un botón, el registro de la intervención llega lleno: la actividad, la fecha y los jardines.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1180,
+            "y": 752,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.6,
+                "x": 1700,
+                "y": 452,
+                "pose": "senala"
+              },
+              {
+                "en": 0.8,
+                "x": 1209,
+                "y": 572,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "p12",
           "texto": "Se revisa, se ajusta si hace falta, y quien decide es coordinación.",
           "hespo": {
-            "x": 960,
+            "x": 800,
+            "y": 813,
             "pose": "asiente"
           }
         },
@@ -213,8 +290,24 @@
           "id": "p13",
           "texto": "Al guardar, la tarjeta pasa a programada, y cuando el capataz empieza, muestra cuántos jardines faltan.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 740,
+            "y": 813,
+            "pose": "senala",
+            "espera": 0.04,
+            "luego": [
+              {
+                "en": 0.22,
+                "x": 1183,
+                "y": 528,
+                "pose": "senala"
+              },
+              {
+                "en": 0.62,
+                "x": 1183,
+                "y": 564,
+                "pose": "senala"
+              }
+            ]
           }
         }
       ]
