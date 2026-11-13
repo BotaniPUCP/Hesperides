@@ -1,0 +1,26 @@
+{
+  "planKey": "8ec02178-b752-40cc-a4b5-a2f462b04528",
+  "name": "Aulas móviles (B)",
+  "folder": "aula-moviles-B",
+  "photos": [
+    "lado-edificio1.jpg"
+  ],
+  "notes": "Módulos prefabricados grises con arriostres en X, ventanas y equipos de aire (lado-edificio1.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c7c9cc",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#d7d9dc",
+          "photo": {
+            "tile": "aulas-moviles-b",
+            "widthM": 22,
+            "heightM": 6.5
+          }
+        }
+      }
+    }
+  ]
+}

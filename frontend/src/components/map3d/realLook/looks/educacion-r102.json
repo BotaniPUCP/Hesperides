@@ -1,0 +1,26 @@
+{
+  "planKey": "773eacb8-6e7f-4c6f-9e05-b67fcb17d92d",
+  "name": "Facultad de Educación (Aula R102)",
+  "folder": "FACULTAD DE EDUCACIÓN (AULA R102)",
+  "photos": [
+    "frente-a-facultad-educacion-dos-edificios.jpg"
+  ],
+  "notes": "Muro de ladrillo con remate de concreto (frente-a-facultad-educacion-dos-edificios.jpg, sin los casilleros de la otra foto).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#bdbab2",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#b4705e",
+          "photo": {
+            "tile": "educacion-r102",
+            "widthM": 6,
+            "heightM": 3.0
+          }
+        }
+      }
+    }
+  ]
+}

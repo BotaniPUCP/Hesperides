@@ -1,0 +1,26 @@
+{
+  "planKey": "a340e861-14e1-4091-b10d-b6d696c5d70d",
+  "name": "Estudios Generales Ciencias",
+  "folder": "eeggcc",
+  "photos": [
+    "lado.jpg"
+  ],
+  "notes": "Concreto rosado y bloque claro con vanos de ventanas en tres pisos (lado.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d2cdc4",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#c9ae9c",
+          "photo": {
+            "tile": "eeggcc",
+            "widthM": 18,
+            "heightM": 11
+          }
+        }
+      }
+    }
+  ]
+}

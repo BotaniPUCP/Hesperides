@@ -1,0 +1,26 @@
+{
+  "planKey": "e5641098-e855-4be9-8e70-8672e1561630",
+  "name": "Centro de fotocopiado (adyacente a EE.GG.LL.)",
+  "folder": "fotocopiado-letras-eeggll",
+  "photos": [
+    "IMG_20261111_141133.jpg"
+  ],
+  "notes": "Muro blanco ciego del costado (IMG_20261111_141133.jpg): las vitrinas del frente tienen gente delante.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#cfcbc1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ebe8e0",
+          "photo": {
+            "tile": "fotocopiado-letras",
+            "widthM": 6,
+            "heightM": 2.8
+          }
+        }
+      }
+    }
+  ]
+}

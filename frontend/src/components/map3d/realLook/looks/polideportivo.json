@@ -1,0 +1,42 @@
+{
+  "planKey": "a0c57ec0-18b7-4a69-a4aa-b200fa9420e3",
+  "name": "Polideportivo",
+  "folder": "polideportivo",
+  "photos": [
+    "detras-lado-hacia-aulas-moviles.jpg",
+    "lado-hacia-eeggll.jpg"
+  ],
+  "notes": "Coliseo azul con franja de celosías y base blanca con ventanas pequeñas (lado-hacia-eeggll.jpg, sur); hacia las aulas móviles (oeste), enchape verde bajo el azul (detras-lado-hacia-aulas-moviles.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c9cacb",
+      "faces": {
+        "W": {
+          "kind": "photo",
+          "wall": "#2e4683",
+          "photo": {
+            "tile": "poli-oeste",
+            "widthM": 30,
+            "heightM": 12
+          }
+        },
+        "NW": {
+          "sameAs": "W"
+        },
+        "SW": {
+          "sameAs": "W"
+        },
+        "other": {
+          "kind": "photo",
+          "wall": "#2e4683",
+          "photo": {
+            "tile": "poli-sur",
+            "widthM": 35,
+            "heightM": 12
+          }
+        }
+      }
+    }
+  ]
+}

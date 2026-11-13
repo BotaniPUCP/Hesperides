@@ -1,0 +1,26 @@
+{
+  "planKey": "7f886877-7663-451f-a5cf-55047ed97c79",
+  "name": "Estudios Generales Letras",
+  "folder": "eeggll",
+  "photos": [
+    "lado-hacia-polideportivo-2.jpg"
+  ],
+  "notes": "Bloque crema con bandas de ventanas de marco blanco en tres pisos (lado-hacia-polideportivo-2.jpg, casi frontal); los árboles delante se reemplazan por crema.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#dcdad4",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e4e0d5",
+          "photo": {
+            "tile": "eeggll",
+            "widthM": 30,
+            "heightM": 9.4
+          }
+        }
+      }
+    }
+  ]
+}

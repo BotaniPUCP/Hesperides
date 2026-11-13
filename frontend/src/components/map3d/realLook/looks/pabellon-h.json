@@ -1,0 +1,27 @@
+{
+  "planKey": "80d344a8-1c7d-40eb-aa62-718b483bc480",
+  "name": "Pabellón H (Facultad de Letras y Ciencias Humanas)",
+  "folder": "Pabellon-H",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Fachada curva beige con bandas horizontales de ventanas (frente.jpg), desde 3 m para dejar fuera a la gente y las bicicletas; debajo, beige. Por confirmar el emparejamiento (Anexo A, fila 45).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d6d3cb",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#d3cfc2",
+          "photo": {
+            "tile": "pabellon-h",
+            "widthM": 13,
+            "heightM": 12
+          },
+          "startM": 3.0
+        }
+      }
+    }
+  ]
+}

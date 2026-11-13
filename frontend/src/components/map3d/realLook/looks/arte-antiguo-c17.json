@@ -1,0 +1,80 @@
+{
+  "planKey": "b17ac48c-a511-4307-9455-2c81bd0f21e0",
+  "name": "Arte Antiguo (C17, C19, C20, C22, C25, C27, C28, C29)",
+  "folder": "C17, C19, C20, C22, C25, C27, C28, C29 · Izquierda 117 · SKP C-4848, C-4825, C-19, C-4876, C-4826",
+  "photos": [
+    "lado-doblando-la-esquina-frente-a-edificio-sin-escalera.jpg"
+  ],
+  "notes": "Casetas de paneles blancos con ventanas enrejadas (lado-doblando-la-esquina…jpg, la vista más limpia). La L beige del lado de Dintilhac (norte y oeste) no tiene una vista enderezable: lleva el patrón con sus colores medidos.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#bab6ae",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ecedeb",
+          "photo": {
+            "tile": "arte-antiguo",
+            "widthM": 10,
+            "heightM": 3.0
+          }
+        }
+      }
+    },
+    {
+      "id": "L-norte",
+      "where": {
+        "north": [
+          0.8,
+          1
+        ],
+        "east": [
+          0,
+          0.75
+        ]
+      },
+      "roof": "#b8b3a9",
+      "faces": {
+        "other": {
+          "kind": "ribbon",
+          "wall": "#cdc5b3",
+          "glass": "#3d4246",
+          "frame": "#26292c",
+          "floorM": 3.9,
+          "sillM": 2.45,
+          "windowM": 1.0,
+          "moduleM": 1.1,
+          "frameM": 0.1
+        }
+      }
+    },
+    {
+      "id": "L-oeste",
+      "where": {
+        "east": [
+          0,
+          0.1
+        ],
+        "north": [
+          0.3,
+          1
+        ]
+      },
+      "roof": "#b8b3a9",
+      "faces": {
+        "other": {
+          "kind": "ribbon",
+          "wall": "#cdc5b3",
+          "glass": "#3d4246",
+          "frame": "#26292c",
+          "floorM": 3.9,
+          "sillM": 2.45,
+          "windowM": 1.0,
+          "moduleM": 1.1,
+          "frameM": 0.1
+        }
+      }
+    }
+  ]
+}

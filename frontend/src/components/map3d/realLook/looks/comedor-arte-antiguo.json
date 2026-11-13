@@ -1,0 +1,26 @@
+{
+  "planKey": "b9a4a553-9c25-45f2-b2fc-43592ab2b917",
+  "name": "Caseta Comedor Generales Ciencias (Comedor de arte antiguo)",
+  "folder": "comedor-artes-antiguo-eeggcc",
+  "photos": [
+    "lado2.jpg"
+  ],
+  "notes": "Pabellón de madera oscura con cruces en diagonal, vidrio y base de ladrillo (lado2.jpg). Sin malla en el modelo: se pinta su prisma. Por confirmar el emparejamiento (Anexo A, fila 63).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#a7a39b",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#5c3f2e",
+          "photo": {
+            "tile": "comedor-arte-antiguo",
+            "widthM": 14,
+            "heightM": 4.5
+          }
+        }
+      }
+    }
+  ]
+}

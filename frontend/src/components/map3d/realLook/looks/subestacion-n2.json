@@ -1,0 +1,26 @@
+{
+  "planKey": "704d440c-77d9-4e5e-aff0-b795e6b506b1",
+  "name": "Sub-estación N-2",
+  "folder": "Sub-estacion-n2",
+  "photos": [
+    "Detras.jpg"
+  ],
+  "notes": "Ladrillo con marco de concreto y rejilla metálica (Detras.jpg, sin el tanque de la derecha).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b3b0aa",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a9a6a0",
+          "photo": {
+            "tile": "subestacion-n2",
+            "widthM": 5,
+            "heightM": 3.0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "planKey": "3dfcb7ca-5d19-45ad-9bbb-de84034b1fe5",
+  "name": "Arqueología, C45",
+  "folder": "C45 · Izquierda 59 · SKP C-129",
+  "photos": [
+    "frente-a-ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO.jpg"
+  ],
+  "notes": "Caseta de paneles claros con ventanas enrejadas y puerta doble (frente-a-ARQUEOLOGÍA C…jpg, casi frontal).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#8a7f74",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e4e0d6",
+          "photo": {
+            "tile": "c45",
+            "widthM": 8,
+            "heightM": 3.0
+          }
+        }
+      }
+    }
+  ]
+}

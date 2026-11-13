@@ -1,0 +1,26 @@
+{
+  "planKey": "c657216b-dded-46da-91bd-57fd0fc3b60e",
+  "name": "Facultad de Letras y Ciencias Humanas (código 32)",
+  "folder": "facultad-letras-ciencias-humanas",
+  "photos": [
+    "detras-frente-a-psicologia-3.jpg"
+  ],
+  "notes": "Bandas blancas con ventanas y base de ladrillo (detras-frente-a-psicologia-3.jpg); los árboles delante se reemplazan por blanco. Por confirmar el emparejamiento (Anexo A, fila 73).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d5d5d2",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e7e7e5",
+          "photo": {
+            "tile": "letras-ch",
+            "widthM": 18,
+            "heightM": 9.0
+          }
+        }
+      }
+    }
+  ]
+}

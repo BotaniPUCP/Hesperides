@@ -1,0 +1,2029 @@
+{
+  "biblioteca-detras": {
+    "foto": "bibblioteca-central/espalda-opuesto-de-delante.jpg",
+    "quad": [
+      [
+        622,
+        90
+      ],
+      [
+        2046,
+        270
+      ],
+      [
+        2300,
+        2160
+      ],
+      [
+        650,
+        2390
+      ]
+    ],
+    "anchoTotalM": 12,
+    "altoM": 15.3,
+    "ajuste": [
+      [
+        [
+          300,
+          10
+        ],
+        [
+          283,
+          10
+        ]
+      ],
+      [
+        [
+          265,
+          965
+        ],
+        [
+          283,
+          965
+        ]
+      ],
+      [
+        [
+          740,
+          10
+        ],
+        [
+          748,
+          10
+        ]
+      ],
+      [
+        [
+          755,
+          965
+        ],
+        [
+          748,
+          965
+        ]
+      ]
+    ],
+    "recorte": [
+      40,
+      760
+    ],
+    "anchoM": 11.25,
+    "recorteArriba": 100
+  },
+  "biblioteca-frente": {
+    "foto": "bibblioteca-central/frente-visto-desde-el-jardind12-grande.jpg",
+    "quad": [
+      [
+        140,
+        130
+      ],
+      [
+        470,
+        130
+      ],
+      [
+        470,
+        283
+      ],
+      [
+        140,
+        283
+      ]
+    ],
+    "anchoM": 17.4,
+    "altoM": 8.05,
+    "igualarA": "biblioteca-detras",
+    "quitarFondo": true
+  },
+  "adein": {
+    "foto": "(ADEIN) Y PROGRAMA DE PASANTÍAS EN ENERGÍAS RENOVABLES/detras.jpg",
+    "quadMiniatura": [
+      [
+        166,
+        252
+      ],
+      [
+        558,
+        258
+      ],
+      [
+        560,
+        425
+      ],
+      [
+        166,
+        465
+      ]
+    ],
+    "anchoM": 5.5,
+    "altoM": 2.8
+  },
+  "arqueologia-a": {
+    "foto": "ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA)/frente2.jpg",
+    "quadMiniatura": [
+      [
+        362,
+        197
+      ],
+      [
+        603,
+        207
+      ],
+      [
+        603,
+        430
+      ],
+      [
+        362,
+        523
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 3.2
+  },
+  "arqueologia-c": {
+    "foto": "ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO/frente.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        140
+      ],
+      [
+        760,
+        140
+      ],
+      [
+        760,
+        395
+      ],
+      [
+        0,
+        398
+      ]
+    ],
+    "anchoM": 8,
+    "altoM": 2.7,
+    "quitarFondo": true
+  },
+  "educacion": {
+    "foto": "Ambos edificios-facultad-de-educacion/frente-hacia-eeggll-2.jpg",
+    "quadMiniatura": [
+      [
+        285,
+        55
+      ],
+      [
+        640,
+        150
+      ],
+      [
+        640,
+        448
+      ],
+      [
+        285,
+        485
+      ]
+    ],
+    "anchoM": 6.5,
+    "altoM": 6.0
+  },
+  "arte-nuevo": {
+    "foto": "Arte Nuevo/espalda-hacia-educacion-1.jpg",
+    "quadMiniatura": [
+      [
+        290,
+        55
+      ],
+      [
+        760,
+        5
+      ],
+      [
+        760,
+        450
+      ],
+      [
+        290,
+        468
+      ]
+    ],
+    "anchoM": 14,
+    "altoM": 12.7
+  },
+  "artes-escenicas": {
+    "foto": "Artes Escénicas  Facultad de Artes Escénicas (FARES)/Caseta · pieza C-1658 · C-1658-Caseta · pieza C-2172 · C-2172 y Caseta · pieza C-2162 · C-2162-Caseta · pieza C-2213 · C-2213.jpg",
+    "quadMiniatura": [
+      [
+        370,
+        140
+      ],
+      [
+        760,
+        55
+      ],
+      [
+        760,
+        425
+      ],
+      [
+        370,
+        380
+      ]
+    ],
+    "anchoM": 8,
+    "altoM": 3.4
+  },
+  "arte-antiguo": {
+    "foto": "C17, C19, C20, C22, C25, C27, C28, C29 · Izquierda 117 · SKP C-4848, C-4825, C-19, C-4876, C-4826/lado-doblando-la-esquina-frente-a-edificio-sin-escalera.jpg",
+    "quadMiniatura": [
+      [
+        180,
+        222
+      ],
+      [
+        750,
+        215
+      ],
+      [
+        750,
+        410
+      ],
+      [
+        180,
+        378
+      ]
+    ],
+    "anchoM": 10,
+    "altoM": 3.0
+  },
+  "c18": {
+    "foto": "C18 · Izquierda 124 · SKP C-5037, C-5032/detras.jpg",
+    "quadMiniatura": [
+      [
+        40,
+        140
+      ],
+      [
+        760,
+        140
+      ],
+      [
+        760,
+        410
+      ],
+      [
+        40,
+        380
+      ]
+    ],
+    "anchoM": 7,
+    "altoM": 2.6
+  },
+  "c21": {
+    "foto": "C21 · Izquierda 118 · SKP C-3883, C-3918/frente.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        150
+      ],
+      [
+        470,
+        150
+      ],
+      [
+        470,
+        420
+      ],
+      [
+        0,
+        420
+      ]
+    ],
+    "anchoM": 7.5,
+    "altoM": 4.0,
+    "quitarFondo": true
+  },
+  "c24": {
+    "foto": "C24 · Izquierda 122 · SKP C-3902, C-3882/frente.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        160
+      ],
+      [
+        560,
+        185
+      ],
+      [
+        560,
+        380
+      ],
+      [
+        0,
+        468
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 2.7,
+    "quitarFondo": true
+  },
+  "c30": {
+    "foto": "C30, C35, C26 · Izquierda 120 · SKP C-3886, C-3880, C-4061, C-1/detras.jpg",
+    "quadMiniatura": [
+      [
+        190,
+        213
+      ],
+      [
+        665,
+        58
+      ],
+      [
+        665,
+        558
+      ],
+      [
+        190,
+        388
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 4.0,
+    "quitarFondo": true
+  },
+  "c31": {
+    "foto": "C31 · Izquierda 123 · SKP C-4013, C-3956/frente.jpg",
+    "quadMiniatura": [
+      [
+        50,
+        206
+      ],
+      [
+        570,
+        113
+      ],
+      [
+        570,
+        428
+      ],
+      [
+        50,
+        343
+      ]
+    ],
+    "anchoM": 12,
+    "altoM": 3.4
+  },
+  "c32": {
+    "foto": "C32 · Izquierda 121 · SKP C-3894, C-3907/frente.jpg",
+    "quadMiniatura": [
+      [
+        35,
+        63
+      ],
+      [
+        760,
+        233
+      ],
+      [
+        760,
+        420
+      ],
+      [
+        35,
+        540
+      ]
+    ],
+    "anchoM": 12,
+    "altoM": 4.0
+  },
+  "c45": {
+    "foto": "C45 · Izquierda 59 · SKP C-129/frente-a-ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO.jpg",
+    "quadMiniatura": [
+      [
+        35,
+        183
+      ],
+      [
+        635,
+        195
+      ],
+      [
+        635,
+        500
+      ],
+      [
+        35,
+        450
+      ]
+    ],
+    "anchoM": 8,
+    "altoM": 3.0
+  },
+  "ciga-pulso": {
+    "foto": "CIGA-Pulso-pucp/lado-directament-frente-a-ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA).jpg",
+    "quadMiniatura": [
+      [
+        5,
+        175
+      ],
+      [
+        740,
+        190
+      ],
+      [
+        740,
+        398
+      ],
+      [
+        5,
+        463
+      ]
+    ],
+    "anchoM": 14,
+    "altoM": 3.4
+  },
+  "cise": {
+    "foto": "Centro de Investigaciones y Servicios Educativos (CISE)/lado-mas-cerca-hacia-educacion.jpg",
+    "quadMiniatura": [
+      [
+        140,
+        176
+      ],
+      [
+        700,
+        206
+      ],
+      [
+        700,
+        396
+      ],
+      [
+        140,
+        566
+      ]
+    ],
+    "anchoM": 7,
+    "altoM": 3.3
+  },
+  "comedor-central": {
+    "foto": "Comedor-central/lado1.jpg",
+    "quadMiniatura": [
+      [
+        190,
+        288
+      ],
+      [
+        570,
+        290
+      ],
+      [
+        570,
+        385
+      ],
+      [
+        190,
+        385
+      ]
+    ],
+    "anchoM": 13.5,
+    "altoM": 3.5
+  },
+  "deposito-limpieza": {
+    "foto": "DEPÓSITO DE LIMPIEZA, ARCHIVO DE HISTORIAS  GABINETE DE PROYECTOS PATRIMONIALES/frente-a-artes-2.jpg",
+    "quadMiniatura": [
+      [
+        45,
+        205
+      ],
+      [
+        760,
+        222
+      ],
+      [
+        760,
+        320
+      ],
+      [
+        45,
+        400
+      ]
+    ],
+    "anchoM": 14,
+    "altoM": 2.4
+  },
+  "dpto-sociales": {
+    "foto": "Departamento Académico de Ciencias Sociales/lado-frente-a-derecho.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        0
+      ],
+      [
+        350,
+        0
+      ],
+      [
+        350,
+        228
+      ],
+      [
+        0,
+        228
+      ]
+    ],
+    "anchoM": 13,
+    "altoM": 8.0
+  },
+  "deposito-rural": {
+    "foto": "Depósito de Rural/imagen.jpg",
+    "quadMiniatura": [
+      [
+        95,
+        95
+      ],
+      [
+        630,
+        98
+      ],
+      [
+        630,
+        530
+      ],
+      [
+        95,
+        490
+      ]
+    ],
+    "anchoM": 4.5,
+    "altoM": 2.3
+  },
+  "desconocido-07": {
+    "foto": "Desconocido_07/detras - no hay edificios-eneste-lado-3.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        30
+      ],
+      [
+        440,
+        118
+      ],
+      [
+        440,
+        473
+      ],
+      [
+        0,
+        540
+      ]
+    ],
+    "anchoM": 7,
+    "altoM": 3.8
+  },
+  "desconocido-08": {
+    "foto": "Desconocido_08/interior.jpg",
+    "quadMiniatura": [
+      [
+        165,
+        283
+      ],
+      [
+        740,
+        283
+      ],
+      [
+        740,
+        363
+      ],
+      [
+        165,
+        363
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 1.1
+  },
+  "desconocido-12": {
+    "foto": "Desconocido_12/frente.jpg",
+    "quadMiniatura": [
+      [
+        215,
+        218
+      ],
+      [
+        760,
+        235
+      ],
+      [
+        760,
+        490
+      ],
+      [
+        215,
+        558
+      ]
+    ],
+    "anchoM": 8,
+    "altoM": 3.2
+  },
+  "maestranza-alto": {
+    "foto": "Edificio Administrativo  Maestranza/lado-del-edificio-alto-2.jpg",
+    "quadMiniatura": [
+      [
+        270,
+        15
+      ],
+      [
+        610,
+        75
+      ],
+      [
+        610,
+        425
+      ],
+      [
+        270,
+        418
+      ]
+    ],
+    "anchoM": 12,
+    "altoM": 17
+  },
+  "maestranza-bajo": {
+    "foto": "Edificio Administrativo  Maestranza/espalda-lado-opuesto-a-sala-cuna-3.jpg",
+    "quadMiniatura": [
+      [
+        80,
+        248
+      ],
+      [
+        760,
+        323
+      ],
+      [
+        760,
+        538
+      ],
+      [
+        80,
+        568
+      ]
+    ],
+    "anchoM": 14,
+    "altoM": 6.5
+  },
+  "etnomusicologia": {
+    "foto": "Etnomusicologia-departamento_ciencias_contables/Lado1.jpg",
+    "quadMiniatura": [
+      [
+        5,
+        73
+      ],
+      [
+        745,
+        138
+      ],
+      [
+        745,
+        496
+      ],
+      [
+        5,
+        503
+      ]
+    ],
+    "anchoM": 7.5,
+    "altoM": 4.2
+  },
+  "educacion-r102": {
+    "foto": "FACULTAD DE EDUCACIÓN (AULA R102)/frente-a-facultad-educacion-dos-edificios.jpg",
+    "quadMiniatura": [
+      [
+        55,
+        10
+      ],
+      [
+        570,
+        128
+      ],
+      [
+        570,
+        448
+      ],
+      [
+        55,
+        563
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 3.0
+  },
+  "arquitectura": {
+    "foto": "Facultad-Arquitectura/vista-interior-3.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        30
+      ],
+      [
+        350,
+        80
+      ],
+      [
+        350,
+        262
+      ],
+      [
+        0,
+        275
+      ]
+    ],
+    "anchoM": 18,
+    "altoM": 10
+  },
+  "quimica": {
+    "foto": "Facultad-quimica/IMG_20261111_151559.jpg",
+    "quadMiniatura": [
+      [
+        30,
+        72
+      ],
+      [
+        540,
+        72
+      ],
+      [
+        540,
+        388
+      ],
+      [
+        30,
+        385
+      ]
+    ],
+    "anchoM": 13,
+    "altoM": 6.2,
+    "quitarFondo": true
+  },
+  "civil": {
+    "foto": "Facultad_Civil/frente.jpeg",
+    "quadMiniatura": [
+      [
+        400,
+        80
+      ],
+      [
+        720,
+        80
+      ],
+      [
+        720,
+        180
+      ],
+      [
+        400,
+        182
+      ]
+    ],
+    "anchoM": 21,
+    "altoM": 6.5
+  },
+  "fisica": {
+    "foto": "Facultad_Fisica/frente.jpg",
+    "quadMiniatura": [
+      [
+        422,
+        98
+      ],
+      [
+        542,
+        96
+      ],
+      [
+        542,
+        345
+      ],
+      [
+        422,
+        345
+      ]
+    ],
+    "anchoM": 5,
+    "altoM": 10
+  },
+  "mecanica": {
+    "foto": "Facultad_Mecanica/espalda2.jpg",
+    "quadMiniatura": [
+      [
+        200,
+        243
+      ],
+      [
+        600,
+        208
+      ],
+      [
+        600,
+        353
+      ],
+      [
+        200,
+        308
+      ]
+    ],
+    "anchoM": 20,
+    "altoM": 6.0
+  },
+  "apoyo-rural": {
+    "foto": "GRUPO DE APOYO AL SECTOR RURAL (OFICINAS)/frente.jpg",
+    "quadMiniatura": [
+      [
+        40,
+        105
+      ],
+      [
+        740,
+        108
+      ],
+      [
+        740,
+        335
+      ],
+      [
+        40,
+        333
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 2.9,
+    "quitarFondo": true
+  },
+  "gimnasio": {
+    "foto": "Gimnasio/espalda2.jpg",
+    "quadMiniatura": [
+      [
+        100,
+        178
+      ],
+      [
+        740,
+        268
+      ],
+      [
+        740,
+        378
+      ],
+      [
+        100,
+        453
+      ]
+    ],
+    "anchoM": 14,
+    "altoM": 3.6,
+    "quitarFondo": true
+  },
+  "maquinaria-pesada": {
+    "foto": "LABORATORIO DE MAQUINARIA PESADA + SS.HH/detras-no hay edificios de este lado.jpg",
+    "quadMiniatura": [
+      [
+        225,
+        140
+      ],
+      [
+        660,
+        140
+      ],
+      [
+        660,
+        512
+      ],
+      [
+        225,
+        515
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 5.0
+  },
+  "labcert": {
+    "foto": "Labcert/labcert.jpg",
+    "quadMiniatura": [
+      [
+        230,
+        173
+      ],
+      [
+        545,
+        53
+      ],
+      [
+        545,
+        523
+      ],
+      [
+        230,
+        388
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 5.0
+  },
+  "lab-hidraulica": {
+    "foto": "Laboratorio-Hidraulica-mecanica_suelos/Frente2.jpg",
+    "quadMiniatura": [
+      [
+        40,
+        225
+      ],
+      [
+        740,
+        225
+      ],
+      [
+        740,
+        520
+      ],
+      [
+        40,
+        445
+      ]
+    ],
+    "anchoM": 12,
+    "altoM": 5.0,
+    "quitarFondo": true
+  },
+  "invernadero": {
+    "foto": "PROTOTIPO INVERNADERO (GRUPO DE APOYO AL SECTOR RURAL)/lado-detras.jpg",
+    "quadMiniatura": [
+      [
+        340,
+        130
+      ],
+      [
+        640,
+        135
+      ],
+      [
+        640,
+        315
+      ],
+      [
+        340,
+        330
+      ]
+    ],
+    "anchoM": 5,
+    "altoM": 2.4
+  },
+  "invernadero-inteligente": {
+    "foto": "PROTOTIPO INVERNADERO INTELIGENTE (GRUPO DE APOYO AL SECTOR RURAL)/lado2.jpg",
+    "quadMiniatura": [
+      [
+        200,
+        180
+      ],
+      [
+        625,
+        240
+      ],
+      [
+        625,
+        500
+      ],
+      [
+        200,
+        568
+      ]
+    ],
+    "anchoM": 4.5,
+    "altoM": 3.0
+  },
+  "prototipo-sshh": {
+    "foto": "PROTOTIPO SS.HH. (GRUPO DE APOYO AL SECTOR RURAL)/frente-largo.jpg",
+    "quadMiniatura": [
+      [
+        245,
+        150
+      ],
+      [
+        760,
+        55
+      ],
+      [
+        760,
+        560
+      ],
+      [
+        245,
+        448
+      ]
+    ],
+    "anchoM": 7,
+    "altoM": 2.8
+  },
+  "sumaq-wasi-2": {
+    "foto": "PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 2(GRUPO DE APOYO AL SECTOR RURAL)/frente.jpg",
+    "quadMiniatura": [
+      [
+        90,
+        205
+      ],
+      [
+        725,
+        215
+      ],
+      [
+        725,
+        418
+      ],
+      [
+        90,
+        445
+      ]
+    ],
+    "anchoM": 8,
+    "altoM": 2.6,
+    "quitarFondo": true
+  },
+  "sumaq-wasi-1": {
+    "foto": "PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 1(GRUPO DE APOYO AL SECTOR RURAL)/lado der.jpg",
+    "quadMiniatura": [
+      [
+        112,
+        170
+      ],
+      [
+        470,
+        175
+      ],
+      [
+        470,
+        450
+      ],
+      [
+        112,
+        445
+      ]
+    ],
+    "anchoM": 4.5,
+    "altoM": 2.8
+  },
+  "industrial": {
+    "foto": "Pabellon Industrial/frente.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        45
+      ],
+      [
+        125,
+        45
+      ],
+      [
+        125,
+        235
+      ],
+      [
+        0,
+        235
+      ]
+    ],
+    "anchoM": 4.5,
+    "altoM": 6.8
+  },
+  "pabellon-i": {
+    "foto": "Pabellon_I/lado de edificio sin escalera.jpg",
+    "quadMiniatura": [
+      [
+        40,
+        210
+      ],
+      [
+        560,
+        130
+      ],
+      [
+        560,
+        440
+      ],
+      [
+        40,
+        420
+      ]
+    ],
+    "anchoM": 18,
+    "altoM": 7.6
+  },
+  "minas": {
+    "foto": "Pabellon_Minas/espalda1.jpg",
+    "quadMiniatura": [
+      [
+        290,
+        243
+      ],
+      [
+        760,
+        158
+      ],
+      [
+        760,
+        468
+      ],
+      [
+        290,
+        423
+      ]
+    ],
+    "anchoM": 18,
+    "altoM": 6.5
+  },
+  "pabellon-r": {
+    "foto": "Pabellón R Facultad de Educación (aulas)/lado.jpg",
+    "quadMiniatura": [
+      [
+        95,
+        136
+      ],
+      [
+        745,
+        76
+      ],
+      [
+        745,
+        476
+      ],
+      [
+        95,
+        416
+      ]
+    ],
+    "anchoM": 16,
+    "altoM": 7.0,
+    "quitarFondo": true
+  },
+  "pabellon-h": {
+    "foto": "Pabellon-H/frente.jpg",
+    "quadMiniatura": [
+      [
+        350,
+        115
+      ],
+      [
+        740,
+        125
+      ],
+      [
+        740,
+        408
+      ],
+      [
+        350,
+        408
+      ]
+    ],
+    "anchoM": 13,
+    "altoM": 12,
+    "quitarFondo": true
+  },
+  "quiosco-deportes": {
+    "foto": "QUIOSCO (DEPORTES)/lado.jpg",
+    "quadMiniatura": [
+      [
+        92,
+        215
+      ],
+      [
+        415,
+        215
+      ],
+      [
+        415,
+        520
+      ],
+      [
+        92,
+        505
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 3.0
+  },
+  "snack-sociales": {
+    "foto": "SNACK (FRUTERÍA SOCIALES)/detras.jpg",
+    "quadMiniatura": [
+      [
+        140,
+        233
+      ],
+      [
+        480,
+        175
+      ],
+      [
+        480,
+        478
+      ],
+      [
+        140,
+        448
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 2.6
+  },
+  "subestacion-n11": {
+    "foto": "Sub-estacion-n11/detras.jpg",
+    "quadMiniatura": [
+      [
+        70,
+        138
+      ],
+      [
+        485,
+        138
+      ],
+      [
+        485,
+        423
+      ],
+      [
+        70,
+        425
+      ]
+    ],
+    "anchoM": 7,
+    "altoM": 3.5
+  },
+  "subestacion-n2": {
+    "foto": "Sub-estacion-n2/Detras.jpg",
+    "quadMiniatura": [
+      [
+        180,
+        160
+      ],
+      [
+        420,
+        160
+      ],
+      [
+        420,
+        363
+      ],
+      [
+        180,
+        363
+      ]
+    ],
+    "anchoM": 5,
+    "altoM": 3.0
+  },
+  "subestacion-n8": {
+    "foto": "Sub-estación N-8/frente.jpg",
+    "quadMiniatura": [
+      [
+        372,
+        218
+      ],
+      [
+        690,
+        225
+      ],
+      [
+        690,
+        445
+      ],
+      [
+        372,
+        455
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 3.0
+  },
+  "tiendecita-verde": {
+    "foto": "TIENDECITA VERDE/lado-frente.jpg",
+    "quadMiniatura": [
+      [
+        160,
+        160
+      ],
+      [
+        480,
+        190
+      ],
+      [
+        480,
+        385
+      ],
+      [
+        160,
+        440
+      ]
+    ],
+    "anchoM": 5,
+    "altoM": 3.0
+  },
+  "auditorio-derecho": {
+    "foto": "auditorio-derecho/lado1.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        55
+      ],
+      [
+        365,
+        90
+      ],
+      [
+        365,
+        440
+      ],
+      [
+        0,
+        445
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 8.0,
+    "quitarFondo": true
+  },
+  "auditorio-humanidades": {
+    "foto": "auditorio-humanidades/frente.jpg",
+    "quadMiniatura": [
+      [
+        290,
+        50
+      ],
+      [
+        480,
+        50
+      ],
+      [
+        480,
+        278
+      ],
+      [
+        290,
+        278
+      ]
+    ],
+    "anchoM": 4,
+    "altoM": 5.0
+  },
+  "tinkuy": {
+    "foto": "TInkuy/interior-2.jpg",
+    "quadMiniatura": [
+      [
+        95,
+        10
+      ],
+      [
+        490,
+        45
+      ],
+      [
+        490,
+        518
+      ],
+      [
+        95,
+        568
+      ]
+    ],
+    "anchoM": 10,
+    "altoM": 11
+  },
+  "aula-movil-psicologia": {
+    "foto": "aula-movil-psicologia/frente.jpg",
+    "quadMiniatura": [
+      [
+        20,
+        195
+      ],
+      [
+        415,
+        58
+      ],
+      [
+        415,
+        555
+      ],
+      [
+        20,
+        520
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 7.0,
+    "quitarFondo": true
+  },
+  "aulas-moviles-b": {
+    "foto": "aula-moviles-B/lado-edificio1.jpg",
+    "quadMiniatura": [
+      [
+        95,
+        75
+      ],
+      [
+        680,
+        258
+      ],
+      [
+        680,
+        353
+      ],
+      [
+        95,
+        423
+      ]
+    ],
+    "anchoM": 22,
+    "altoM": 6.5
+  },
+  "comedor-arte-antiguo": {
+    "foto": "comedor-artes-antiguo-eeggcc/lado2.jpg",
+    "quadMiniatura": [
+      [
+        30,
+        70
+      ],
+      [
+        755,
+        85
+      ],
+      [
+        755,
+        415
+      ],
+      [
+        30,
+        420
+      ]
+    ],
+    "anchoM": 14,
+    "altoM": 4.5,
+    "quitarFondo": true
+  },
+  "sociales-alto": {
+    "foto": "complejo-sociales/detras.jpg",
+    "quadMiniatura": [
+      [
+        95,
+        70
+      ],
+      [
+        535,
+        70
+      ],
+      [
+        535,
+        262
+      ],
+      [
+        95,
+        262
+      ]
+    ],
+    "anchoM": 40,
+    "altoM": 18
+  },
+  "teologia": {
+    "foto": "departamento-teologia/lado.jpg",
+    "quadMiniatura": [
+      [
+        115,
+        143
+      ],
+      [
+        410,
+        150
+      ],
+      [
+        410,
+        440
+      ],
+      [
+        115,
+        438
+      ]
+    ],
+    "anchoM": 8,
+    "altoM": 5.0
+  },
+  "dintilhac": {
+    "foto": "dintilhac/detras1.jpg",
+    "quadMiniatura": [
+      [
+        125,
+        150
+      ],
+      [
+        580,
+        140
+      ],
+      [
+        580,
+        388
+      ],
+      [
+        125,
+        370
+      ]
+    ],
+    "anchoM": 18,
+    "altoM": 7.0
+  },
+  "eeggcc": {
+    "foto": "eeggcc/lado.jpg",
+    "quadMiniatura": [
+      [
+        385,
+        11
+      ],
+      [
+        740,
+        201
+      ],
+      [
+        740,
+        441
+      ],
+      [
+        385,
+        526
+      ]
+    ],
+    "anchoM": 18,
+    "altoM": 11
+  },
+  "faci": {
+    "foto": "faci/lado.jpg",
+    "quadMiniatura": [
+      [
+        0,
+        40
+      ],
+      [
+        300,
+        40
+      ],
+      [
+        300,
+        300
+      ],
+      [
+        0,
+        300
+      ]
+    ],
+    "anchoM": 8,
+    "altoM": 6.2
+  },
+  "comunicaciones": {
+    "foto": "facultad-ciencias-artes-comunicaciones/frente2.jpg",
+    "quadMiniatura": [
+      [
+        120,
+        205
+      ],
+      [
+        540,
+        98
+      ],
+      [
+        540,
+        503
+      ],
+      [
+        120,
+        483
+      ]
+    ],
+    "anchoM": 18,
+    "altoM": 9.5,
+    "quitarFondo": true
+  },
+  "ciencias-sociales": {
+    "foto": "facultad-ciencias-sociales/frente2.jpg",
+    "quadMiniatura": [
+      [
+        135,
+        173
+      ],
+      [
+        690,
+        173
+      ],
+      [
+        690,
+        360
+      ],
+      [
+        135,
+        360
+      ]
+    ],
+    "anchoM": 30,
+    "altoM": 10,
+    "quitarFondo": true
+  },
+  "gestion": {
+    "foto": "facultad-gestion/lado.jpg",
+    "quadMiniatura": [
+      [
+        285,
+        120
+      ],
+      [
+        710,
+        130
+      ],
+      [
+        710,
+        440
+      ],
+      [
+        285,
+        445
+      ]
+    ],
+    "anchoM": 13,
+    "altoM": 6.3
+  },
+  "letras-ch": {
+    "foto": "facultad-letras-ciencias-humanas/detras-frente-a-psicologia-3.jpg",
+    "quadMiniatura": [
+      [
+        235,
+        140
+      ],
+      [
+        620,
+        193
+      ],
+      [
+        620,
+        450
+      ],
+      [
+        235,
+        448
+      ]
+    ],
+    "anchoM": 18,
+    "altoM": 9.0,
+    "quitarFondo": true
+  },
+  "psicologia": {
+    "foto": "facultad-psicologia/psicologia-frente-2.jpg",
+    "quadMiniatura": [
+      [
+        100,
+        85
+      ],
+      [
+        470,
+        108
+      ],
+      [
+        470,
+        500
+      ],
+      [
+        100,
+        545
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 7.0
+  },
+  "fotocopiado-letras": {
+    "foto": "fotocopiado-letras-eeggll/IMG_20261111_141133.jpg",
+    "quadMiniatura": [
+      [
+        400,
+        113
+      ],
+      [
+        650,
+        188
+      ],
+      [
+        650,
+        448
+      ],
+      [
+        400,
+        523
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 2.8
+  },
+  "gelarti": {
+    "foto": "heladeria-gelarti/frente-lado.jpg",
+    "quadMiniatura": [
+      [
+        245,
+        212
+      ],
+      [
+        540,
+        195
+      ],
+      [
+        540,
+        390
+      ],
+      [
+        245,
+        395
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 2.6
+  },
+  "sala-cuna": {
+    "foto": "sala cuna/espalda-hacia-educacion.jpg",
+    "quadMiniatura": [
+      [
+        165,
+        128
+      ],
+      [
+        470,
+        213
+      ],
+      [
+        470,
+        363
+      ],
+      [
+        165,
+        423
+      ]
+    ],
+    "anchoM": 10,
+    "altoM": 3.5,
+    "quitarFondo": true
+  },
+  "derecho-ala": {
+    "foto": "facuttad-derecho/frente2.jpg",
+    "quadMiniatura": [
+      [
+        5,
+        226
+      ],
+      [
+        320,
+        224
+      ],
+      [
+        320,
+        440
+      ],
+      [
+        5,
+        445
+      ]
+    ],
+    "anchoM": 14,
+    "altoM": 6.0,
+    "quitarFondo": true
+  },
+  "derecho-entrada": {
+    "foto": "facuttad-derecho/frente1.jpg",
+    "quadMiniatura": [
+      [
+        185,
+        235
+      ],
+      [
+        330,
+        245
+      ],
+      [
+        330,
+        465
+      ],
+      [
+        185,
+        480
+      ]
+    ],
+    "anchoM": 6,
+    "altoM": 7.0
+  },
+  "z-vidrio": {
+    "foto": "Pabellon-Z/lado.jpg",
+    "quadMiniatura": [
+      [
+        120,
+        85
+      ],
+      [
+        760,
+        5
+      ],
+      [
+        760,
+        500
+      ],
+      [
+        120,
+        508
+      ]
+    ],
+    "anchoM": 20,
+    "altoM": 15
+  },
+  "z-patio": {
+    "foto": "Pabellon-Z/interior.jpg",
+    "quadMiniatura": [
+      [
+        225,
+        98
+      ],
+      [
+        570,
+        208
+      ],
+      [
+        570,
+        440
+      ],
+      [
+        225,
+        448
+      ]
+    ],
+    "anchoM": 22,
+    "altoM": 13
+  },
+  "z-blanco": {
+    "foto": "Pabellon-Z/detras.jpg",
+    "quadMiniatura": [
+      [
+        40,
+        40
+      ],
+      [
+        470,
+        40
+      ],
+      [
+        470,
+        560
+      ],
+      [
+        40,
+        560
+      ]
+    ],
+    "anchoM": 12,
+    "altoM": 15
+  },
+  "v-crema": {
+    "foto": "PabellonV/Lado2.jpg",
+    "quadMiniatura": [
+      [
+        320,
+        100
+      ],
+      [
+        565,
+        78
+      ],
+      [
+        565,
+        468
+      ],
+      [
+        320,
+        478
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 14,
+    "quitarFondo": true
+  },
+  "v-ocre": {
+    "foto": "PabellonV/Lado1_2.jpg",
+    "quadMiniatura": [
+      [
+        360,
+        25
+      ],
+      [
+        760,
+        25
+      ],
+      [
+        760,
+        570
+      ],
+      [
+        360,
+        570
+      ]
+    ],
+    "anchoM": 9,
+    "altoM": 14
+  },
+  "poli-sur": {
+    "foto": "polideportivo/lado-hacia-eeggll.jpg",
+    "quadMiniatura": [
+      [
+        90,
+        188
+      ],
+      [
+        750,
+        128
+      ],
+      [
+        750,
+        408
+      ],
+      [
+        90,
+        410
+      ]
+    ],
+    "anchoM": 35,
+    "altoM": 12,
+    "quitarFondo": true
+  },
+  "poli-oeste": {
+    "foto": "polideportivo/detras-lado-hacia-aulas-moviles.jpg",
+    "quadMiniatura": [
+      [
+        200,
+        278
+      ],
+      [
+        610,
+        196
+      ],
+      [
+        610,
+        375
+      ],
+      [
+        200,
+        378
+      ]
+    ],
+    "anchoM": 30,
+    "altoM": 12
+  },
+  "eeggll": {
+    "foto": "eeggll/lado-hacia-polideportivo-2.jpg",
+    "quadMiniatura": [
+      [
+        20,
+        172
+      ],
+      [
+        760,
+        175
+      ],
+      [
+        760,
+        428
+      ],
+      [
+        20,
+        425
+      ]
+    ],
+    "anchoM": 30,
+    "altoM": 9.4,
+    "quitarFondo": true
+  },
+  "fotocopiado-z": {
+    "foto": "fotocopiado-z/ladofrente-1.jpg",
+    "quadMiniatura": [
+      [
+        180,
+        145
+      ],
+      [
+        715,
+        165
+      ],
+      [
+        715,
+        385
+      ],
+      [
+        180,
+        425
+      ]
+    ],
+    "anchoM": 8,
+    "altoM": 2.6
+  }
+}

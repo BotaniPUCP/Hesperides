@@ -1,0 +1,54 @@
+{
+  "planKey": "91277172-4ff8-45d2-a22c-4c508c86f196",
+  "name": "Biblioteca Central",
+  "folder": "bibblioteca-central",
+  "photos": [
+    "espalda-opuesto-de-delante.jpg",
+    "frente-visto-desde-el-jardind12-grande.jpg"
+  ],
+  "notes": "Frente al este, hacia el jardín D12 (AV-0333; lo confirmó Jean Piero): las caras al este llevan una vez el centro de frente-visto-desde-el-jardind12-grande.jpg, centrado en la torre de la entrada y cortado sobre las cabezas de la gente; fuera de él, y en las demás caras, el tramo enderezado de espalda-opuesto-de-delante.jpg (columnas a plomo). frente-visto-desde-el-jardind12-grande.jpg se iguala en color con espalda-opuesto-de-delante.jpg; su cielo y follaje toman el otro tramo.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#a9a69e",
+      "faces": {
+        "E": {
+          "kind": "photo",
+          "wall": "#a8a69f",
+          "photo": {
+            "tile": "biblioteca-frente",
+            "widthM": 17.4,
+            "heightM": 8.05,
+            "repeat": false,
+            "beyond": {
+              "kind": "photo",
+              "wall": "#a8a69f",
+              "photo": {
+                "tile": "biblioteca-detras",
+                "widthM": 11.25,
+                "heightM": 15.3
+              }
+            }
+          },
+          "offsetM": -8.8,
+          "startM": 1.7
+        },
+        "NE": {
+          "sameAs": "E"
+        },
+        "SE": {
+          "sameAs": "E"
+        },
+        "other": {
+          "kind": "photo",
+          "wall": "#a8a69f",
+          "photo": {
+            "tile": "biblioteca-detras",
+            "widthM": 11.25,
+            "heightM": 15.3
+          }
+        }
+      }
+    }
+  ]
+}

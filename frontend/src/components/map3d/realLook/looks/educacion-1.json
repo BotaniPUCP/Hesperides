@@ -1,0 +1,26 @@
+{
+  "planKey": "6d51e9a1-7ff7-4b21-b472-bef79a5060aa",
+  "name": "Facultad de Educación (código 35)",
+  "folder": "Ambos edificios-facultad-de-educacion",
+  "photos": [
+    "frente-hacia-eeggll-2.jpg"
+  ],
+  "notes": "Marco de concreto blanco con paños de ladrillo y bandas de ventanas en dos pisos (frente-hacia-eeggll-2.jpg); la carpeta cubre los dos edificios de Educación, que son iguales.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c9c7c1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e3e2dd",
+          "photo": {
+            "tile": "educacion",
+            "widthM": 6.5,
+            "heightM": 6.0
+          }
+        }
+      }
+    }
+  ]
+}

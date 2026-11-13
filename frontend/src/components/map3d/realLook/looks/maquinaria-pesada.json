@@ -1,0 +1,26 @@
+{
+  "planKey": "2bb94091-bd63-429f-84b8-c203f766549f",
+  "name": "Laboratorio de Maquinaria Pesada + SS.HH.",
+  "folder": "LABORATORIO DE MAQUINARIA PESADA + SS.HH",
+  "photos": [
+    "detras-no hay edificios de este lado.jpg"
+  ],
+  "notes": "Galpón de calamina gris con portones plegables de chapa y paños translúcidos (detras-no hay edificios….jpg); sobre el tramo, calamina gris.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#a9adb0",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#8e9398",
+          "photo": {
+            "tile": "maquinaria-pesada",
+            "widthM": 6,
+            "heightM": 5.0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "planKey": "bf91920d-0d33-43b2-afc2-6c7048f0e3e7",
+  "name": "Tinkuy",
+  "folder": "TInkuy",
+  "photos": [
+    "interior-2.jpg"
+  ],
+  "notes": "Concreto caravista con vanos angostos, listones color óxido arriba y la puerta de enchape azul (interior-2.jpg, vista del patio que se ve desde fuera).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b3b0a8",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#aba8a0",
+          "photo": {
+            "tile": "tinkuy",
+            "widthM": 10,
+            "heightM": 11
+          }
+        }
+      }
+    }
+  ]
+}

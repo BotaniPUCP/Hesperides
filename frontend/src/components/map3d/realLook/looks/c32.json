@@ -1,0 +1,26 @@
+{
+  "planKey": "a1adcd30-c1d2-41a6-8e2d-4b9549babfb5",
+  "name": "Aula/Taller I-111, I-201 al I-203, C32",
+  "folder": "C32 · Izquierda 121 · SKP C-3894, C-3907",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Paneles blancos con franja de celosías, ventanas enrejadas y puertas (frente.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b9b7b1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ecedeb",
+          "photo": {
+            "tile": "c32",
+            "widthM": 12,
+            "heightM": 4.0
+          }
+        }
+      }
+    }
+  ]
+}

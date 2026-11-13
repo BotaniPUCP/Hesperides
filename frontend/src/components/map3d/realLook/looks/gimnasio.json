@@ -1,0 +1,26 @@
+{
+  "planKey": "ad3d6c9f-02a5-4646-a34e-b907f99241ce",
+  "name": "Gimnasio / CEMDUC",
+  "folder": "Gimnasio",
+  "photos": [
+    "espalda2.jpg"
+  ],
+  "notes": "Paneles crema con banda alta de ventanas, puertas y zócalo gris (espalda2.jpg); la cúpula del polideportivo de fondo no es parte del edificio.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c8c6c1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e3dfd5",
+          "photo": {
+            "tile": "gimnasio",
+            "widthM": 14,
+            "heightM": 3.6
+          }
+        }
+      }
+    }
+  ]
+}

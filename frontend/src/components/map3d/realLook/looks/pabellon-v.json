@@ -1,0 +1,58 @@
+{
+  "planKey": "46c7455f-fc26-43e3-b407-7d4637c3a6de",
+  "name": "Pabellón V",
+  "folder": "PabellonV",
+  "photos": [
+    "Lado1_2.jpg",
+    "Lado2.jpg"
+  ],
+  "notes": "Bloque crema con ventanas (Lado2.jpg, el árbol se reemplaza por crema), testeros gris verdoso ciegos y el volumen curvo ocre del oeste (Lado1_2.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d2cfc6",
+      "faces": {
+        "E": {
+          "kind": "blind",
+          "wall": "#a7a99b"
+        },
+        "NE": {
+          "sameAs": "E"
+        },
+        "NW": {
+          "sameAs": "E"
+        },
+        "other": {
+          "kind": "photo",
+          "wall": "#dcd5c2",
+          "photo": {
+            "tile": "v-crema",
+            "widthM": 9,
+            "heightM": 14
+          }
+        }
+      }
+    },
+    {
+      "id": "volumen-curvo-oeste",
+      "where": {
+        "east": [
+          0,
+          0.14
+        ]
+      },
+      "roof": "#d4c08e",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#d6b36b",
+          "photo": {
+            "tile": "v-ocre",
+            "widthM": 9,
+            "heightM": 14
+          }
+        }
+      }
+    }
+  ]
+}

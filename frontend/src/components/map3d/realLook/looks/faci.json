@@ -1,0 +1,27 @@
+{
+  "planKey": "f7ea6a43-0556-419d-92e5-9ad3a7caf21b",
+  "name": "Facultad de Ciencias e Ingeniería",
+  "folder": "faci",
+  "photos": [
+    "lado.jpg"
+  ],
+  "notes": "Muros grises con pilastras gris oscuro y bandas de ventanas (lado.jpg, sin la escalera). La foto faci-frente.png viene rayada a mano y no se usa.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c3c5c8",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#c5c8cc",
+          "photo": {
+            "tile": "faci",
+            "widthM": 8,
+            "heightM": 6.2
+          },
+          "startM": 2.0
+        }
+      }
+    }
+  ]
+}

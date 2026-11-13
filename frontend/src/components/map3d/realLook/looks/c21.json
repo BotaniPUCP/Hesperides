@@ -1,0 +1,26 @@
+{
+  "planKey": "541a9f54-016e-4197-b62f-c2932e43b2b6",
+  "name": "Arte Antiguo, C21",
+  "folder": "C21 · Izquierda 118 · SKP C-3883, C-3918",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Paneles blancos con franja de celosías grises, puertas y ventana (frente.jpg); el follaje delante se reemplaza por el color del muro.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c9c8c3",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#eeeeeb",
+          "photo": {
+            "tile": "c21",
+            "widthM": 7.5,
+            "heightM": 4.0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "planKey": "9baa19ac-bc66-4955-a5a1-8fa6024b3c93",
+  "name": "Grupo de Apoyo al Sector Rural (oficinas)",
+  "folder": "GRUPO DE APOYO AL SECTOR RURAL (OFICINAS)",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Bloques de tierra con zócalo y viga rojo óxido (frente.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#6f5a4a",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#9a8a76",
+          "photo": {
+            "tile": "apoyo-rural",
+            "widthM": 9,
+            "heightM": 2.9
+          }
+        }
+      }
+    }
+  ]
+}

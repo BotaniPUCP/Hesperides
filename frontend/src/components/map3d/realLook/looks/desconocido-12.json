@@ -1,0 +1,26 @@
+{
+  "planKey": "40fbf3b7-a3a7-4919-98fa-284e5476c4b9",
+  "name": "Desconocido_12",
+  "folder": "Desconocido_12",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Galpón abierto cerrado con planchas onduladas rojas bajo estructura metálica (frente.jpg). Sin malla en el modelo: se pinta su prisma (D-09b).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c9c6bf",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#9c5a52",
+          "photo": {
+            "tile": "desconocido-12",
+            "widthM": 8,
+            "heightM": 3.2
+          }
+        }
+      }
+    }
+  ]
+}

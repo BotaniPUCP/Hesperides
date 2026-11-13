@@ -1,0 +1,26 @@
+{
+  "planKey": "e1a3bc92-d6e4-47e6-9619-59f25d6d1639",
+  "name": "Departamento Académico de Ciencias Sociales",
+  "folder": "Departamento Académico de Ciencias Sociales",
+  "photos": [
+    "lado-frente-a-derecho.jpg"
+  ],
+  "notes": "Volumen blanco con bandas de ventanas (lado-frente-a-derecho.jpg, 565 px: se ve algo borroso); sobre el tramo, blanco.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#e0dfdb",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#f2f2f0",
+          "photo": {
+            "tile": "dpto-sociales",
+            "widthM": 13,
+            "heightM": 8.0
+          }
+        }
+      }
+    }
+  ]
+}

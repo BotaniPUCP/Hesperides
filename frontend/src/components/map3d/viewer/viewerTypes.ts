@@ -50,6 +50,8 @@ export interface Viewer {
   setShadows: (on: boolean) => void;
   setLabels: (on: boolean) => void;
   setGrayBuildings: (gray: boolean) => void;
+  /** Los edificios con ficha, con los colores de sus fotos (SPEC-109). */
+  setRealColors: (on: boolean) => void;
   fit: () => void;
   top: () => void;
   north: () => void;

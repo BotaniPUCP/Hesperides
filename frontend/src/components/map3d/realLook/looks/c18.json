@@ -1,0 +1,26 @@
+{
+  "planKey": "80af8752-4fff-44e4-9a6f-a0d128cc9e18",
+  "name": "Servicios higiénicos (Facultad de Arte), C18",
+  "folder": "C18 · Izquierda 124 · SKP C-5037, C-5032",
+  "photos": [
+    "detras.jpg"
+  ],
+  "notes": "Muro blanco con zócalo gris, puerta y ventanas altas (detras.jpg, casi frontal).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b3b0a9",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#efefec",
+          "photo": {
+            "tile": "c18",
+            "widthM": 7,
+            "heightM": 2.6
+          }
+        }
+      }
+    }
+  ]
+}

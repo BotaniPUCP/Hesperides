@@ -1,0 +1,26 @@
+{
+  "planKey": "428087f1-a7b8-41b1-9a04-2f7972723964",
+  "name": "Laboratorio de Certificación (LABCERT)",
+  "folder": "Labcert",
+  "photos": [
+    "labcert.jpg"
+  ],
+  "notes": "Muro blanco con banda de ventanas y zócalo gris (labcert.jpg); quedan las sombras de las palmeras, que son reales.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d3d2ce",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ecebe8",
+          "photo": {
+            "tile": "labcert",
+            "widthM": 9,
+            "heightM": 5.0
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "planKey": "5eca98e4-c503-496a-ae01-09af0dd494fc",
+  "name": "Prototipo SS.HH.",
+  "folder": "PROTOTIPO SS.HH. (GRUPO DE APOYO AL SECTOR RURAL)",
+  "photos": [
+    "frente-largo.jpg"
+  ],
+  "notes": "Muro blanco con puerta y zócalo gris oscuro (frente-largo.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d0d0cd",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e9e9e7",
+          "photo": {
+            "tile": "prototipo-sshh",
+            "widthM": 7,
+            "heightM": 2.8
+          }
+        }
+      }
+    }
+  ]
+}

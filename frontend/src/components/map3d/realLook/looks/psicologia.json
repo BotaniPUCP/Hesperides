@@ -1,0 +1,26 @@
+{
+  "planKey": "d365388a-3f19-4c17-aae2-7364f59c4fbe",
+  "name": "Facultad de Psicología (Pabellón S)",
+  "folder": "facultad-psicologia",
+  "photos": [
+    "psicologia-frente-2.jpg"
+  ],
+  "notes": "Ladrillo con marco de concreto, ventanales y puerta roja (psicologia-frente-2.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b9b6af",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#a76d5c",
+          "photo": {
+            "tile": "psicologia",
+            "widthM": 9,
+            "heightM": 7.0
+          }
+        }
+      }
+    }
+  ]
+}

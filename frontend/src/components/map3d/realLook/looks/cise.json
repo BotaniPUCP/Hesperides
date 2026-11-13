@@ -1,0 +1,26 @@
+{
+  "planKey": "ef79b3e2-ba4d-4015-b580-5ed00d8dba51",
+  "name": "CISE",
+  "folder": "Centro de Investigaciones y Servicios Educativos (CISE)",
+  "photos": [
+    "lado-mas-cerca-hacia-educacion.jpg"
+  ],
+  "notes": "Caseta de paneles beige con ventanas enrejadas y techo de fibrocemento (lado-mas-cerca-hacia-educacion.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#9d968c",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ddd6c8",
+          "photo": {
+            "tile": "cise",
+            "widthM": 7,
+            "heightM": 3.3
+          }
+        }
+      }
+    }
+  ]
+}

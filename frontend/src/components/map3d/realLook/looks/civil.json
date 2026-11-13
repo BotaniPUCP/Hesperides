@@ -1,0 +1,26 @@
+{
+  "planKey": "2643a26d-e46b-4ae9-ad6d-89639dcef770",
+  "name": "Sección Ingeniería Civil",
+  "folder": "Facultad_Civil",
+  "photos": [
+    "frente.jpeg"
+  ],
+  "notes": "Concreto con bandas de ladrillo y ventanas enrejadas en dos pisos (frente.jpeg, 1105 px).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b5b2aa",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#9a8f80",
+          "photo": {
+            "tile": "civil",
+            "widthM": 21,
+            "heightM": 6.5
+          }
+        }
+      }
+    }
+  ]
+}

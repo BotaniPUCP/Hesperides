@@ -1,0 +1,26 @@
+{
+  "planKey": "b0dc2ef8-504d-46a4-ac00-730fc0e1ab48",
+  "name": "Facultad de Arquitectura y Urbanismo",
+  "folder": "Facultad-Arquitectura",
+  "photos": [
+    "vista-interior-3.jpg"
+  ],
+  "notes": "Concreto expuesto con galerías de barandas negras y bandas de ventanas (vista-interior-3.jpg, el patio); las fachadas exteriores de las fotos lado, tapadas por árboles y celosías, son del mismo concreto.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#b8b6b0",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#b3b1aa",
+          "photo": {
+            "tile": "arquitectura",
+            "widthM": 18,
+            "heightM": 10
+          }
+        }
+      }
+    }
+  ]
+}

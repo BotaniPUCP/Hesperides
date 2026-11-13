@@ -1,0 +1,157 @@
+{
+  "planKey": "60bae298-0d82-48c5-bed9-1122a52c9b8d",
+  "name": "Pabellón Z",
+  "folder": "Pabellon-Z",
+  "photos": [
+    "detras.jpg",
+    "interior.jpg",
+    "lado.jpg"
+  ],
+  "notes": "Fachada de vidrio al norte (lado.jpg), galerías al patio (interior.jpg) y muros blancos con ventanas en los testeros y el cuerpo redondo (detras.jpg). La cara curva del oeste, tapada por palmeras en exterior-frente.jpg, lleva el patrón con sus colores medidos. La cara sur de la barra sur no tiene foto: copia el vidrio (SPEC-109 §8, P-02).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#e3e1db",
+      "faces": {
+        "N": {
+          "kind": "photo",
+          "wall": "#ebe9e3",
+          "photo": {
+            "tile": "z-vidrio",
+            "widthM": 20,
+            "heightM": 15
+          }
+        },
+        "S": {
+          "kind": "photo",
+          "wall": "#ebe9e3",
+          "photo": {
+            "tile": "z-patio",
+            "widthM": 22,
+            "heightM": 13
+          }
+        },
+        "other": {
+          "kind": "photo",
+          "wall": "#ebe9e3",
+          "photo": {
+            "tile": "z-blanco",
+            "widthM": 12,
+            "heightM": 15
+          }
+        }
+      }
+    },
+    {
+      "id": "barra-sur",
+      "where": {
+        "north": [
+          0,
+          0.33
+        ],
+        "east": [
+          0,
+          0.75
+        ]
+      },
+      "roof": "#e3e1db",
+      "faces": {
+        "S": {
+          "kind": "photo",
+          "wall": "#ebe9e3",
+          "photo": {
+            "tile": "z-vidrio",
+            "widthM": 20,
+            "heightM": 15
+          }
+        },
+        "N": {
+          "kind": "photo",
+          "wall": "#ebe9e3",
+          "photo": {
+            "tile": "z-patio",
+            "widthM": 22,
+            "heightM": 13
+          }
+        },
+        "other": {
+          "kind": "photo",
+          "wall": "#ebe9e3",
+          "photo": {
+            "tile": "z-blanco",
+            "widthM": 12,
+            "heightM": 15
+          }
+        }
+      }
+    },
+    {
+      "id": "torre-curva-oeste",
+      "where": {
+        "east": [
+          0,
+          0.17
+        ],
+        "north": [
+          0.3,
+          0.85
+        ]
+      },
+      "roof": "#e3e1db",
+      "faces": {
+        "W": {
+          "kind": "windows",
+          "wall": "#f0efea",
+          "glass": "#5e5247",
+          "frame": "#2d2a28",
+          "floorM": 1.7,
+          "sillM": 0.4,
+          "windowM": 1.0,
+          "widthM": 1.9,
+          "moduleM": 2.25,
+          "frameM": 0.07
+        },
+        "NW": {
+          "sameAs": "W"
+        },
+        "SW": {
+          "sameAs": "W"
+        },
+        "other": {
+          "kind": "photo",
+          "wall": "#ebe9e3",
+          "photo": {
+            "tile": "z-blanco",
+            "widthM": 12,
+            "heightM": 15
+          }
+        }
+      }
+    },
+    {
+      "id": "cuerpo-redondo-este",
+      "where": {
+        "east": [
+          0.72,
+          1
+        ],
+        "north": [
+          0.15,
+          0.55
+        ]
+      },
+      "roof": "#e3e1db",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ebe9e3",
+          "photo": {
+            "tile": "z-blanco",
+            "widthM": 12,
+            "heightM": 15
+          }
+        }
+      }
+    }
+  ]
+}

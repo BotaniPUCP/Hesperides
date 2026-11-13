@@ -1,0 +1,26 @@
+{
+  "planKey": "3c57c32e-6c9a-48d6-bdf9-041ded0059a4",
+  "name": "Facultad de Educación (código 38)",
+  "folder": "Ambos edificios-facultad-de-educacion",
+  "photos": [
+    "frente-hacia-eeggll-2.jpg"
+  ],
+  "notes": "Igual que el otro edificio de Educación (misma carpeta, mismo sistema).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#c9c7c1",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e3e2dd",
+          "photo": {
+            "tile": "educacion",
+            "widthM": 6.5,
+            "heightM": 6.0
+          }
+        }
+      }
+    }
+  ]
+}

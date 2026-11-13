@@ -16,7 +16,7 @@ export interface MapScreenSnapshot {
   card: MapCardContent | null;
 }
 
-export const INITIAL_OPTIONS: ViewOptions = { night: false, shadows: true, labels: true, grayBuildings: false };
+export const INITIAL_OPTIONS: ViewOptions = { night: false, shadows: true, labels: true, grayBuildings: false, realColors: false };
 
 const startingSnapshot = (): MapScreenSnapshot => ({
   mode: 'base',

@@ -1,0 +1,26 @@
+{
+  "planKey": "403f4c21-8155-474c-8339-7499bbac5976",
+  "name": "Artes Escénicas / FARES",
+  "folder": "Artes Escénicas  Facultad de Artes Escénicas (FARES)",
+  "photos": [
+    "Caseta · pieza C-1658 · C-1658-Caseta · pieza C-2172 · C-2172 y Caseta · pieza C-2162 · C-2162-Caseta · pieza C-2213 · C-2213.jpg"
+  ],
+  "notes": "Casetas de paneles beige con banda alta de ventanas bajo techo de fibrocemento; es el tipo que más se repite en las fotos de la carpeta. Los contenedores azules y las casetas blancas con hastial azul no se distinguen en el modelo: llevan el mismo tramo.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#a9a69f",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#d9cfb4",
+          "photo": {
+            "tile": "artes-escenicas",
+            "widthM": 8,
+            "heightM": 3.4
+          }
+        }
+      }
+    }
+  ]
+}

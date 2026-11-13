@@ -1,0 +1,26 @@
+{
+  "planKey": "cb1dbda1-6c1a-4853-967b-9f90c8c47df4",
+  "name": "Centro de fotocopiado (adyacente a Pabellón Z)",
+  "folder": "fotocopiado-z",
+  "photos": [
+    "ladofrente-1.jpg"
+  ],
+  "notes": "Caseta de paneles blancos con ventanales de aluminio y techo de fibrocemento (ladofrente-1.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#a9a6a0",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e9e8e3",
+          "photo": {
+            "tile": "fotocopiado-z",
+            "widthM": 8,
+            "heightM": 2.6
+          }
+        }
+      }
+    }
+  ]
+}

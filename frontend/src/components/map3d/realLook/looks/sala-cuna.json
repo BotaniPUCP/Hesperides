@@ -1,0 +1,26 @@
+{
+  "planKey": "44a6cf1a-c7af-486a-b402-ea978a94fbe9",
+  "name": "Sala Cuna",
+  "folder": "sala cuna",
+  "photos": [
+    "espalda-hacia-educacion.jpg"
+  ],
+  "notes": "Muros blancos con ventanas y zócalo gris (espalda-hacia-educacion.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#cfcfcc",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#ebebe9",
+          "photo": {
+            "tile": "sala-cuna",
+            "widthM": 10,
+            "heightM": 3.5
+          }
+        }
+      }
+    }
+  ]
+}

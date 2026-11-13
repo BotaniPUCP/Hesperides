@@ -1,0 +1,26 @@
+{
+  "planKey": "df5f87ed-a1f7-4fa6-ae35-b7f423f61806",
+  "name": "Comedor Central",
+  "folder": "Comedor-central",
+  "photos": [
+    "lado1.jpg"
+  ],
+  "notes": "Muro gris claro con ventanas cuadradas y puerta (lado1.jpg); la carpa blanca de la terraza no está en el modelo.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#d8d6d0",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#c9c7bb",
+          "photo": {
+            "tile": "comedor-central",
+            "widthM": 13.5,
+            "heightM": 3.5
+          }
+        }
+      }
+    }
+  ]
+}

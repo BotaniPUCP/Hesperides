@@ -1,0 +1,26 @@
+{
+  "planKey": "3aa466cc-3cff-46f6-925b-e3f566a83966",
+  "name": "Arqueología C y Sala de Música y Coro",
+  "folder": "ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO",
+  "photos": [
+    "frente.jpg"
+  ],
+  "notes": "Frente casi frontal (frente.jpg): paneles claros, puerta doble y ventanas enrejadas; va en todas las caras.",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#8e857b",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e6e3da",
+          "photo": {
+            "tile": "arqueologia-c",
+            "widthM": 8,
+            "heightM": 2.7
+          }
+        }
+      }
+    }
+  ]
+}

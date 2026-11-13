@@ -12,6 +12,7 @@ export const APPLY_OPTION: Record<keyof ViewOptions, (v: Viewer, on: boolean) =>
   shadows: (v, on) => v.setShadows(on),
   labels: (v, on) => v.setLabels(on),
   grayBuildings: (v, on) => v.setGrayBuildings(on),
+  realColors: (v, on) => v.setRealColors(on),
 };
 
 type ViewerState = Pick<MapScreenSnapshot, 'mode' | 'hidden' | 'visible' | 'options'>;

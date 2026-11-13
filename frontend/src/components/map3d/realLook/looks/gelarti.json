@@ -1,0 +1,26 @@
+{
+  "planKey": "5d0c3da2-1334-4c77-bb3a-54364ffa1417",
+  "name": "Gelarti",
+  "folder": "heladeria-gelarti",
+  "photos": [
+    "frente-lado.jpg"
+  ],
+  "notes": "Caseta crema con vidrio, interior rosado y alero oscuro (frente-lado.jpg).",
+  "zones": [
+    {
+      "id": "edificio",
+      "roof": "#3a3b3c",
+      "faces": {
+        "other": {
+          "kind": "photo",
+          "wall": "#e7e3d8",
+          "photo": {
+            "tile": "gelarti",
+            "widthM": 6,
+            "heightM": 2.6
+          }
+        }
+      }
+    }
+  ]
+}
