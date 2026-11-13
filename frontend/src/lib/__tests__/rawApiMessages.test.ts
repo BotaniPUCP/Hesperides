@@ -19,6 +19,7 @@ const ALLOWED = new Set([
   'components/auth/LoginForm.tsx',
   // Comparan el mensaje con una constante para decidir qué hacer; no lo muestran.
   'components/interventions/InterventionDetail.tsx',
+  'components/interventions/InterventionForm.tsx',
   'components/users/ChangePasswordForm.tsx',
 ]);
 

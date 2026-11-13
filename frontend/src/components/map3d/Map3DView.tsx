@@ -49,6 +49,11 @@ export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemo
           onPointPick: (lat, lon) => latest.current.onPointPick?.(lat, lon),
           onHover: (t, x, y) => latest.current.onHover(t, x, y),
           onCompass: (deg) => latest.current.onCompass(deg),
+          ...(latest.current.specimenSweep?{specimenSweep:{
+            enabled:()=>latest.current.specimenSweep?.enabled()??false,
+            onSelect:(t:Parameters<ViewerCallbacks['onSelect']>[0])=>{if(t)latest.current.specimenSweep?.onSelect(t);},
+            onState:(position:{clientX:number;clientY:number}|null)=>latest.current.specimenSweep?.onState(position),
+          }}:{}),
           // Solo si la pantalla lo pide: en los editores un clic sobre un cono debe marcar un punto.
           ...(latest.current.onViewConePick ? { onViewConePick: (id: number) => latest.current.onViewConePick?.(id) } : {}),
         }, latest.current.poseMemory?.recall(), model);

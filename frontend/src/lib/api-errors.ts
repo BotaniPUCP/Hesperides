@@ -20,6 +20,15 @@ import { SHARED_MESSAGES, SHARED_PATTERNS } from './sharedErrorMessages';
 
 /** Mensajes de regla de negocio (422) y conflicto (409) de SPEC-100 §3. */
 const MENSAJES: Record<string, string> = {
+  'Campus inventory changed; reload the selection': 'El inventario cambió. Actualiza el mapa y revisa la selección antes de guardar.',
+  'Selected campus target is no longer available': 'Un área o ejemplar seleccionado ya no está disponible. Actualiza el mapa y retíralo de la selección.',
+  'Duplicate or invalid campus target': 'Una misma área o ejemplar no puede seleccionarse dos veces.',
+  'Select at least one campus target': 'Selecciona al menos un área verde o un ejemplar.',
+  'Place-zone review is missing or changed; reload the available zones': 'Las asociaciones del lugar cambiaron o necesitan revisión. Actualiza las zonas y confirma la selección.',
+  'Spatial inventory changed; reload before reviewing': 'El mapa cambió. Actualiza las zonas antes de continuar.',
+  'Zone review changed; reload before reviewing': 'Las asociaciones cambiaron. Actualiza las zonas antes de continuar.',
+  'Zone is not directly associated with this place': 'Una zona seleccionada ya no está habilitada para este lugar.',
+  'A zone cannot be planned twice in the same activity': 'Una misma zona no puede seleccionarse en dos lugares de la actividad.',
   'Started work cannot be removed from required interventions': 'El trabajo ya comenzó. Debe completar su ejecución y revisión; no puede retirarse para evitar la validación.',
   'Invalid incident request': 'Revisa los datos: el motivo o resumen no puede quedar vacío y debe respetar los límites.',
   'Resubmit the report before registration': 'El remitente debe corregir y reenviar el reporte antes del registro oficial.',

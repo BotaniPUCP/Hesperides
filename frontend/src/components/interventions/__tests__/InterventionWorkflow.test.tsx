@@ -3,7 +3,7 @@ import { InterventionDetail } from '../InterventionDetail';
 import { InterventionForm } from '../InterventionForm';
 import { interventionsApi } from '@/lib/interventions-api';
 import { ApiError } from '@/lib/api';
-import { todayLocal } from '@/lib/local-date';
+import { todayLocal, todayLima } from '@/lib/local-date';
 import type { InterventionDetail as Detail, InterventionOptions } from '@/lib/interventions-api';
 import { incidentsApi } from '@/lib/incidents-api';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
@@ -20,9 +20,16 @@ jest.mock('@/components/ui', () => {
   const actual = jest.requireActual('@/components/ui');
   return {...actual,useToast:()=>({showToast:toast})};
 });
-jest.mock('@/lib/interventions-api', () => ({...jest.requireActual('@/lib/interventions-api'),interventionsApi:{detail:jest.fn(),options:jest.fn(),command:jest.fn(),create:jest.fn(),photo:jest.fn(),announce:jest.fn(),upload:jest.fn()}}));
+jest.mock('@/lib/interventions-api', () => ({...jest.requireActual('@/lib/interventions-api'),interventionsApi:{detail:jest.fn(),options:jest.fn(),command:jest.fn(),create:jest.fn(),update:jest.fn(),photo:jest.fn(),announce:jest.fn(),upload:jest.fn(),zoneOptions:jest.fn(),previewZones:jest.fn(),campusOptions:jest.fn(),campusPreview:jest.fn()}}));
 jest.mock('@/lib/inventario-verde-api', () => ({inventarioVerdeApi:{specimen:jest.fn()}}));
 jest.mock('@/lib/incidents-api', () => ({incidentsApi:{detail:jest.fn(),linkIntervention:jest.fn()}}));
+jest.mock('../InterventionCampusMap',()=>({InterventionCampusMap:({options,selected,onToggle}:{options:typeof campusOptions;selected:Detail['locations'];onToggle:(t:{kind:'area'|'specimen';id:number})=>void})=><div role="group" aria-label="Mapa del campus">{options.zones.map((z,i)=><button type="button" key={z.id} aria-pressed={selected.some(l=>l.zoneId===z.id)} onClick={()=>onToggle({kind:'area',id:z.id})}>{`Area ${i+1}`}</button>)}{options.specimens.map(s=><button type="button" key={s.id} onClick={()=>onToggle({kind:'specimen',id:s.id})}>Elegir ejemplar</button>)}</div>}));
+const campusOptions={selectionRevision:'revision',zones:Array.from({length:7},(_,i)=>({id:101+i,code:`AV-${101+i}`,name:`Area ${i+1}`,geometryValid:true,geometry:{type:'Polygon',coordinates:[]},areaM2:100,point:{latitude:-12,longitude:-77},polygonCount:1})),specimens:[{id:91,code:'EV-91',name:'Palmera',point:{latitude:-12,longitude:-77},typeCode:'PALM',scientificName:'Palma',heightM:5,crownRadiusM:2,quantity:1}]};
+async function selectZones(count=1) {
+  const map=await screen.findByRole('group',{name:'Mapa del campus'});
+  for(let i=0;i<count;i++)fireEvent.click(within(map).getAllByRole('button',{name:/^Area /})[i]);
+  await waitFor(()=>expect(screen.getByRole('button',{name:/Crear intervenci|Guardar y volver/})).toBeEnabled());
+}
 const options:InterventionOptions={teams:[],places:[{id:15,name:'Jardín de prueba'}],zones:[],catalogs:[
   {id:1,code:'CLASS',label:'Jardinería',typeCode:'INTERVENTION_CLASS',parentItemId:null},
   {id:2,code:'UNIT',label:'Unidad',typeCode:'MEASUREMENT_UNIT',parentItemId:null},
@@ -34,7 +41,7 @@ const detail = ():Detail => ({id:10,code:'INT-000010',version:5,classItemId:1,ty
   {id:21,clientReference:'a',zoneId:null,placeId:15,location:null,description:'Jardín A',locationDescription:'Jardín A',elementIds:[],unitItemId:2,requestedQuantity:2,progressQuantity:2,executedQuantity:2,statusCode:'COMPLETED',executionNotes:'Trabajo terminado',attemptNumber:1,allowedActions:['validate','observe']},
   {id:22,clientReference:'b',zoneId:null,placeId:15,location:null,description:'Jardín B',locationDescription:'Jardín B',elementIds:[],unitItemId:2,requestedQuantity:2,statusCode:'COMPLETED',attemptNumber:1,allowedActions:['validate','observe']},
 ]});
-beforeEach(()=>{jest.clearAllMocks();role='COORDINADOR';jest.mocked(interventionsApi.options).mockResolvedValue(options);jest.mocked(interventionsApi.detail).mockResolvedValue(detail());jest.mocked(incidentsApi.detail).mockResolvedValue(approvedDetail);});
+beforeEach(()=>{jest.clearAllMocks();role='COORDINADOR';jest.mocked(interventionsApi.campusOptions).mockResolvedValue(campusOptions);jest.mocked(interventionsApi.campusPreview).mockImplementation(async(_,zones,specimens)=>({surfaceM2:zones.length?175:0,areaCount:zones.length,specimenCount:specimens.length}));jest.mocked(interventionsApi.options).mockResolvedValue(options);jest.mocked(interventionsApi.detail).mockResolvedValue(detail());jest.mocked(incidentsApi.detail).mockResolvedValue(approvedDetail);});
 
 it('habilita los tipos de la primera clase al abrir el formulario y registra esa selección',async()=>{
   jest.mocked(interventionsApi.options).mockResolvedValue({...options,catalogs:[...options.catalogs,
@@ -47,9 +54,9 @@ it('habilita los tipos de la primera clase al abrir el formulario y registra esa
   expect(screen.getByLabelText(/Clase/)).toHaveValue('1');
   expect(within(type).getByRole('option',{name:'Preparación del terreno'})).toBeInTheDocument();
   fireEvent.change(type,{target:{value:'4'}});
-  fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:'2026-11-05'}});
-  fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
-  fireEvent.change(screen.getByLabelText('Lugar'),{target:{value:'15'}});
+  fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
+
+  await selectZones();
   fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));
   await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledWith(expect.objectContaining({classItemId:1,typeItemId:4}),expect.any(String)));
 });
@@ -76,13 +83,12 @@ it('agrega ubicaciones y registra una intervención sin crypto.randomUUID',async
   try {
     jest.mocked(interventionsApi.create).mockResolvedValue(detail());
     render(<InterventionForm/>);
-    await waitFor(()=>expect(screen.getByRole('button',{name:'Agregar ubicación'})).toBeEnabled());
-    fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
-    fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
-    expect(screen.getAllByLabelText('Lugar')).toHaveLength(2);
+    await screen.findByRole('group',{name:'Mapa del campus'});
+
+
     fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});
-    fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:'2026-10-29'}});
-    for(const select of screen.getAllByLabelText('Lugar'))fireEvent.change(select,{target:{value:'15'}});
+    fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
+    await selectZones(2);
     fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));
     await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledTimes(1));
     const [body,key]=jest.mocked(interventionsApi.create).mock.calls[0];
@@ -101,7 +107,7 @@ it('aprueba únicamente la ubicación elegida y conserva la actividad hasta apro
   const d=detail();d.version=6;d.locations[0].statusCode='VALIDATED';d.locations[0].allowedActions=[];d.validatedLocationCount=1;
   jest.mocked(interventionsApi.command).mockResolvedValue(d);
   render(<InterventionDetail id={10}/>);
-  await screen.findByRole('heading',{name:'INT-000010'});fireEvent.click(screen.getAllByRole('button',{name:'Aprobar'})[0]);
+  await screen.findByRole('heading',{name:'Jardinería'});fireEvent.click(screen.getAllByRole('button',{name:'Aprobar'})[0]);
   const modal=await screen.findByRole('dialog');expect(within(modal).getByText(/únicamente esta ubicación/)).toBeInTheDocument();
   fireEvent.click(within(modal).getByRole('button',{name:'Confirmar'}));
   await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'validate',{version:5}));
@@ -162,7 +168,7 @@ it('muestra cantidades y notas de todos los avances por ubicación e intento, in
     {id:3,actionCode:'PROGRESS_SAVED',interventionLocationId:22,actorUserId:4,attemptNumber:1,occurredAt:'2026-10-22T17:00:00Z',reason:null,progress:{quantity:9,notes:'Avance de otro jardín',unitItemId:2}},
     {id:4,actionCode:'PROGRESS_SAVED',interventionLocationId:21,actorUserId:3,actorName:'Capataz de prueba',attemptNumber:2,occurredAt:'2026-10-23T15:00:00Z',reason:null,progress:{quantity:2,notes:'Subsanación realizada',unitItemId:2}},
   ];
-  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);await screen.findByRole('heading',{name:'INT-000010'});
+  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);await screen.findByRole('heading',{name:'Jardinería'});
   const location=within(screen.getAllByRole('article')[0]);const reports=within(location.getByRole('list',{name:'Avances registrados'}));
   expect(reports.getAllByRole('listitem')).toHaveLength(3);
   for(const text of ['Primera pasada','Cantidad corregida','Subsanación realizada'])expect(reports.getByText(text)).toBeInTheDocument();
@@ -252,27 +258,26 @@ it('recupera una subida fallida sin anunciar otra foto',async()=>{
 it('crea una sola actividad con dos ubicaciones y reintenta con la misma clave tras perder conexión',async()=>{
   Object.defineProperty(global.crypto,'randomUUID',{configurable:true,value:jest.fn().mockImplementation(()=>`ref-${Math.random()}`)});
   jest.mocked(interventionsApi.create).mockRejectedValueOnce(new ApiError(0,'Sin conexión')).mockResolvedValueOnce(detail());
-  render(<InterventionForm/>);await waitFor(()=>expect(screen.getByRole('button',{name:'Agregar ubicación'})).toBeEnabled());
-  fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:'2026-10-23'}});
-  fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
-  for(const select of screen.getAllByLabelText('Lugar'))fireEvent.change(select,{target:{value:'15'}});
-  fireEvent.change(screen.getAllByLabelText('Agregar ejemplares por código (separados por comas)')[0],{target:{value:'EV-000001, EV-000002'}});
+  render(<InterventionForm/>);await screen.findByRole('group',{name:'Mapa del campus'});
+  fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
+
+    await selectZones(2);
   fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));await screen.findByRole('button',{name:'Reintentar registro'});
   fireEvent.click(screen.getByRole('button',{name:'Reintentar registro'}));await waitFor(()=>expect(push).toHaveBeenCalledWith('/intervenciones/10'));
   const calls=jest.mocked(interventionsApi.create).mock.calls;expect(calls[0]).toEqual(calls[1]);expect(calls[0][0].locations).toHaveLength(2);
-  expect(calls[0][0].locations[0].elementCodes).toEqual(['EV-000001','EV-000002']);
+  expect(calls[0][0].locations[0]).toMatchObject({elementCodes:[],location:null,unitItemId:null,requestedQuantity:null,zoneSelectionRevision:'revision'});
 });
 
 it('crea como hallazgo y vuelve a la incidencia con preselección y filtros, sin vincular silenciosamente',async()=>{
   jest.mocked(interventionsApi.create).mockResolvedValue(detail());
   render(<InterventionForm fromIncident={7} returnFilters={{search:'rama',status:'OPEN',page:2}}/>);
-  await waitFor(()=>expect(screen.getByRole('button',{name:'Agregar ubicación'})).toBeEnabled());
+  await screen.findByRole('group',{name:'Mapa del campus'});
   expect(screen.getByRole('link',{name:'Volver a la incidencia'})).toHaveAttribute('href','/incidencias/7?search=rama&status=OPEN&page=2');
   fireEvent.change(screen.getByLabelText(/Clasificación de origen del reporte/),{target:{value:'5'}});
   fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});
-  fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:'2026-11-05'}});
-  fireEvent.click(screen.getByRole('button',{name:'Agregar ubicación'}));
-  fireEvent.change(screen.getByLabelText('Lugar'),{target:{value:'15'}});
+  fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
+
+  await selectZones();
   fireEvent.click(screen.getByRole('button',{name:'Guardar y volver a la incidencia'}));
   await waitFor(()=>expect(push).toHaveBeenCalledWith('/incidencias/7?search=rama&status=OPEN&page=2&selectIntervention=10'));
   expect(jest.mocked(interventionsApi.create).mock.calls[0][0]).toMatchObject({originItemId:4,reportedByItemId:5});
@@ -296,4 +301,113 @@ it('al editar conserva la fecha programada de la intervención',async()=>{
   render(<InterventionForm initial={detail()}/>);
   expect(screen.getByLabelText('Fecha programada')).toHaveValue('2026-10-23');
   await waitFor(()=>expect(interventionsApi.options).toHaveBeenCalled());
+});
+
+it('usa un solo mapa sin lugares y muestra las cinco últimas selecciones',async()=>{
+  render(<InterventionForm/>);
+  const map=await screen.findByRole('group',{name:'Mapa del campus'});
+  expect(screen.queryByLabelText('Lugar')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Agregar lugar'})).not.toBeInTheDocument();
+  for(const area of within(map).getAllByRole('button',{name:/^Area /}))fireEvent.click(area);
+  const list=screen.getByRole('region',{name:'Selección actual'});
+  expect(within(list).getAllByRole('button',{name:'Retirar'})).toHaveLength(5);
+  expect(within(list).queryByText('Area 1')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Mostrar más'}));
+  expect(within(list).getAllByRole('button',{name:'Retirar'})).toHaveLength(7);
+  expect(within(list).getByText('Area 1')).toBeInTheDocument();
+  expect(screen.queryByText('AV-101')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Mostrar menos'}));
+  expect(within(list).getAllByRole('button',{name:'Retirar'})).toHaveLength(5);
+});
+
+it('permite seleccionar solo ejemplares sin añadir áreas ni inventar metros cuadrados',async()=>{
+  jest.mocked(interventionsApi.create).mockResolvedValue(detail());
+  render(<InterventionForm/>);
+  fireEvent.click(await screen.findByRole('button',{name:'Elegir ejemplar'}));
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear intervención'})).toBeEnabled());
+  expect(screen.getByText('0 jardines y 1 ejemplar seleccionado')).toBeInTheDocument();
+  expect(screen.getByText(/Superficie seleccionada: 0 m²/)).toBeInTheDocument();
+  expect(screen.getByText('Palmera')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));
+  await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledWith(expect.objectContaining({campusSelectionRevision:'revision',locations:[expect.objectContaining({zoneId:null,placeId:null,elementIds:[91],location:null,requestedQuantity:null,unitItemId:null})]}),expect.any(String)));
+});
+
+it('no añade automáticamente ejemplares al seleccionar un área y permite retirarla desde la lista',async()=>{
+  render(<InterventionForm/>);await selectZones();
+  expect(screen.getByText('1 jardín y 0 ejemplares seleccionados')).toBeInTheDocument();
+  const surface=screen.getByText(/Superficie seleccionada:/);
+  const list=screen.getByRole('region',{name:'Selección actual'});
+  expect(surface.compareDocumentPosition(list)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  fireEvent.click(screen.getByRole('button',{name:'Retirar'}));
+  expect(screen.getByRole('button',{name:'Crear intervención'})).toBeDisabled();
+  expect(screen.queryByRole('region',{name:'Selección actual'})).not.toBeInTheDocument();
+});
+
+it('agrupa el cálculo de superficie cuando se seleccionan varios objetivos rápidamente',async()=>{
+  render(<InterventionForm/>);
+  const map=await screen.findByRole('group',{name:'Mapa del campus'});
+  for(const area of within(map).getAllByRole('button',{name:/^Area /}).slice(0,3))fireEvent.click(area);
+  await waitFor(()=>expect(interventionsApi.campusPreview).toHaveBeenCalledTimes(1));
+  expect(interventionsApi.campusPreview).toHaveBeenLastCalledWith('revision',[101,102,103],[]);
+});
+
+it('descarta una superficie tardía después de desmarcar lo seleccionado',async()=>{
+  let resolve!:(value:{surfaceM2:number;areaCount:number;specimenCount:number})=>void;
+  jest.mocked(interventionsApi.campusPreview).mockReturnValueOnce(new Promise(r=>{resolve=r;}));
+  render(<InterventionForm/>);
+  const map=await screen.findByRole('group',{name:'Mapa del campus'});
+  fireEvent.click(within(map).getAllByRole('button',{name:/^Area /})[0]);
+  await waitFor(()=>expect(interventionsApi.campusPreview).toHaveBeenCalled());
+  fireEvent.click(within(map).getAllByRole('button',{name:/^Area /})[0]);
+  resolve({surfaceM2:999,areaCount:1,specimenCount:0});
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear intervención'})).toBeDisabled());
+  expect(screen.queryByText(/999 m²/)).not.toBeInTheDocument();
+});
+
+it('conserva ID y UUID al editar una selección global y pide confirmar el inventario cambiado',async()=>{
+  const initial={...detail(),campusSelectionRevision:'old',locations:[{...detail().locations[0],placeId:null,zoneId:101,zoneSelectionRevision:'old',elementIds:[]}]};
+  jest.mocked(interventionsApi.update).mockResolvedValue(initial);
+  render(<InterventionForm initial={initial}/>);
+  fireEvent.click(await screen.findByRole('button',{name:'Confirmar selección actual'}));
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Guardar cambios'})).toBeEnabled());
+  fireEvent.click(screen.getByRole('button',{name:'Guardar cambios'}));
+  await waitFor(()=>expect(interventionsApi.update).toHaveBeenCalledWith(10,expect.objectContaining({campusSelectionRevision:'revision',locations:[expect.objectContaining({id:21,clientReference:'a',zoneId:101,placeId:null,zoneSelectionRevision:'revision',unitItemId:null,requestedQuantity:null,location:null})]})));
+});
+
+it('permite confirmar el inventario actualizado también durante una creación nueva',async()=>{
+  render(<InterventionForm/>);await selectZones();
+  jest.mocked(interventionsApi.campusOptions).mockResolvedValue({...campusOptions,selectionRevision:'new'});
+  fireEvent.click(screen.getByRole('button',{name:'Actualizar mapa'}));
+  fireEvent.click(await screen.findByRole('button',{name:'Confirmar selección actual'}));
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear intervención'})).toBeEnabled());
+  expect(interventionsApi.campusPreview).toHaveBeenLastCalledWith('new',[101],[]);
+});
+
+it('mantiene las últimas cinco áreas en el resumen y muestra también los ejemplares al expandir',async()=>{
+  render(<InterventionForm/>);
+  const map=await screen.findByRole('group',{name:'Mapa del campus'});
+  for(const area of within(map).getAllByRole('button',{name:/^Area /}))fireEvent.click(area);
+  fireEvent.click(screen.getByRole('button',{name:'Elegir ejemplar'}));
+  const list=screen.getByRole('region',{name:'Selección actual'});
+  expect(within(list).getAllByRole('button',{name:'Retirar'})).toHaveLength(5);
+  expect(within(list).queryByText('Palmera')).not.toBeInTheDocument();
+  expect(within(list).getByText('Area 3')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Mostrar más'}));
+  expect(within(list).getByText('Palmera')).toBeInTheDocument();
+  expect(within(list).getAllByRole('button',{name:'Retirar'})).toHaveLength(8);
+});
+
+it('impide registrar fechas pasadas y permite hoy o una fecha futura',async()=>{
+  jest.mocked(interventionsApi.create).mockResolvedValue(detail());
+  render(<InterventionForm/>);
+  await selectZones();
+  const input=screen.getByLabelText('Fecha programada');
+  expect(input).toHaveAttribute('min',todayLima());
+  fireEvent.change(input,{target:{value:'2000-01-01'}});
+  fireEvent.submit(input.closest('form')!);
+  expect(await screen.findByRole('alert')).toHaveTextContent('La fecha programada debe ser hoy o una fecha futura.');
+  expect(interventionsApi.create).not.toHaveBeenCalled();
+  fireEvent.change(input,{target:{value:'2099-01-01'}});
+  fireEvent.submit(input.closest('form')!);
+  await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledWith(expect.objectContaining({scheduledDate:'2099-01-01'}),expect.any(String)));
 });

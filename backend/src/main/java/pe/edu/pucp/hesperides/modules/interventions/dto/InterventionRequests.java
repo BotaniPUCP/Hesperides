@@ -14,14 +14,29 @@ public final class InterventionRequests {
     public record Location(Long id, @NotNull UUID clientReference, Long zoneId, Long placeId,
             @Valid Point location, List<@NotNull Long> elementIds, @Size(max=4000) String description,
             Long unitItemId, @DecimalMin("0") @Digits(integer=9, fraction=3) BigDecimal requestedQuantity,
-            List<@NotBlank @Size(max=100) String> elementCodes) {
+            List<@NotBlank @Size(max=100) String> elementCodes,
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+            @Pattern(regexp="[0-9a-f]{64}") String zoneSelectionRevision) {
         public Location { elementIds = elementIds == null ? List.of() : java.util.Collections.unmodifiableList(new java.util.ArrayList<>(elementIds)); }
+        public Location(Long id,UUID clientReference,Long zoneId,Long placeId,Point location,List<Long> elementIds,
+                String description,Long unitItemId,BigDecimal requestedQuantity,List<String> elementCodes) {
+            this(id,clientReference,zoneId,placeId,location,elementIds,description,unitItemId,requestedQuantity,elementCodes,null);
+        }
     }
     public record Planning(@NotNull Long classItemId, Long typeItemId, @NotNull LocalDate scheduledDate,
             @Size(max=4000) String description, Long originItemId, Long reportedByItemId,
             @Size(max=40) String externalCode, LocalDate requestedAt,
             @NotEmpty List<@NotNull @Valid Location> locations,
-            @PositiveOrZero Long version, @Size(max=2000) String rescheduleReason) {}
+            @PositiveOrZero Long version, @Size(max=2000) String rescheduleReason,
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+            @Pattern(regexp="[0-9a-f]{64}") String campusSelectionRevision) {
+        public Planning(Long classItemId,Long typeItemId,LocalDate scheduledDate,String description,
+                Long originItemId,Long reportedByItemId,String externalCode,LocalDate requestedAt,
+                List<Location> locations,Long version,String rescheduleReason) {
+            this(classItemId,typeItemId,scheduledDate,description,originItemId,reportedByItemId,
+                externalCode,requestedAt,locations,version,rescheduleReason,null);
+        }
+    }
     public record Assignment(@NotNull @PositiveOrZero Long version, @NotNull Long teamId,
                              @NotNull Long assignedToUserId) {}
     public record Cancellation(@NotNull @PositiveOrZero Long version,
@@ -48,6 +63,6 @@ public final class InterventionRequests {
             Long zoneId, Long placeId, Long greenElementId, Long teamId, Long assignedToUserId,
             @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate dateTo, Long incidentId,
-            @Size(min=1,max=100) String greenElementCode) {}
+            @Size(min=1,max=100) String greenElementCode, Boolean active) {}
 }
 

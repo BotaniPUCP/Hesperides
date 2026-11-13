@@ -21,6 +21,8 @@ import java.util.Map;
 @Setter
 @NoArgsConstructor
 public class Intervention extends BaseEntity {
+    @Column(name="campus_selection_revision")
+    private String campusSelectionRevision;
     @Column(name = "code")
     private String code;
     @Column(name = "version")

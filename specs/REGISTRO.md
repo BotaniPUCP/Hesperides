@@ -24,7 +24,7 @@
 | SPEC-106 | Directorio de organizaciones y contactos | 🔄 En progreso | —          | —      |              |
 | SPEC-107 | Reservas de jardines | 🔄 En progreso | —          | —      |              |
 | SPEC-108 | Edificios del plano oficial en el mapa | 🔄 En progreso: implementada y verificada en web (12 nov 2026, 12 de 13; CA-11 corregido después); falta el WebView de Android (CA-14) | Luis       | —      |              |
-| SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: núcleo/web probados; T08/T09 local implementados, visual pendiente; T10 requiere conciliar contrato | — | S2 (propuesto) | |
+| SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: §2.12 reemplaza el flujo por lugares con mapa único, áreas de todo el campus y ejemplares seleccionables. V050 (antes V036) conserva datos y contratos anteriores. Pendientes revisión visual, R5 y R6; la selección fina de ejemplares se refinará posteriormente. | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
 | SPEC-203 | Planificación preventiva por conjuntos de áreas verdes | 🔄 En progreso: implementada, falta verificar en navegador | —          | —      |              |
@@ -50,6 +50,10 @@ sorpresa que un principio fundacional cambió.
 | SPEC-102 D-03, §4.1, §7.1 y P-02 | SPEC-108 (implementada, 12 nov 2026) | Los edificios del mapa pasan a los modelos del plano oficial (SKP), agrupados según las relaciones de Nicolás y con los nombres y excepciones de Jean Piero. Hay un edificio principal por relación (133), y los 71 edificios del mapa que comparten relación se agrupan bajo él sin borrarse (`parent_building_id`). Los códigos oficiales quedan en `campus_building_codes`. El modelo lo sirve el backend con sesión. Se conservan el acabado y las luces de hoy. Patios vacíos, desniveles visibles, huaca con textura de tapial y etiquetas recortadas por ancho. **La atribución a OpenStreetMap se queda.** El Pabellón C no entra. Ya aplicado a SPEC-102 (D-03, §4.1, §7.1 y P-02). |
 | SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: guardan quién las pide (organización y solicitante, fijos), para quién son (opcional) y un responsable que puede cambiar, con su historial; el operario ve todo eso (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El vínculo contacto–organización gana un rol opcional y `contactos.csv` la columna `roles` (SPEC-106 §4.3). Enmienda del seguimiento de uso (SPEC-107 D-12): `use_confirmed` y `space_used` con sus historiales y el parámetro `RESERVATION_CONFIRMATION_MINUTES` — el corte de 20 minutos antes del fin cierra la confirmación y también la marca de uso (V044) —, y dos acciones auditables más. El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y siete acciones auditables. |
 | SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
+| SPEC-200 §2.11 · Rediseño R1/R2 | Aclaración y capturas del usuario (11 nov 2026) | Solo zonas directamente asociadas al lugar, sin expansión al nivel 2. Biblioteca Central: AV-0174, AV-0377, AV-0378, AV-0380 y AV-0381; confirmación visual del usuario y prueba del motor contra las otras 526 zonas del inventario. R3/R4 aún pendientes; no modifica Lugares ni Mapa general. |
+| SPEC-200 §2.11.6 · R3 | Backend del rediseño (11 nov 2026) | V049 (nació como V035): revisiones y enlaces directos con historial; consulta, revisión y cálculo previo de superficie; guardado derivado por zona y geometría histórica. Contrato antiguo compatible y transición explícita sin convertir cantidades sobre el mismo ID. Suite completa de 923 pruebas aprobada y 24 comprobaciones finales tras añadir preview. V035 aplicada localmente durante R4 después de respaldo. |
+| SPEC-200 §2.11.7 · R4 | Selector web del rediseño (11 nov 2026) | Registro por lugar y zonas completas, contador sin lista de códigos, cambio desde edificios registrados, superficie del servidor y edición compatible. Biblioteca Central: cinco asociaciones persistidas, 1712,49 m² y guardado/reintento/edición comprobados por API (INT-000017 cancelada). Usuario confirma que el mapa funciona; pendiente revisión visual de las correcciones. Ver informe R4. |
+| SPEC-200 §2.12 | Cambio posterior confirmado por el usuario y su líder (11 nov 2026) | Mapa único, áreas de todo el campus y ejemplares independientes; elimina lugares y vecindad del flujo nuevo. Últimas cinco áreas y «Mostrar más» para áreas/ejemplares, árboles visibles, m² solo de áreas. V036 aplicada tras respaldo, pruebas y guardado real comprobados; INT-000018 cancelada al terminar. Falta revisión visual del nuevo flujo. |
 | SPEC-004 §3.2 · C-08 · C-09 · E-03 · REQ 2.7 · Catálogo 2.2/2.11 | SPEC-105 (6 nov 2026) | Tres acciones auditables de especie. La criticidad pasa a ser de la especie y no de su tipo; `GENERIC` deja de escribirse; se retira la proyección automática de medidas tras una poda. |
 | SPEC-C01 §4.3 | Estandarización de pantallas (7 nov 2026) | Toda pantalla usa `PageFrame` (un solo ancho, fila fija de flecha y breadcrumb derivado del menú) y `PageHeader`. Las tarjetas pasan a `rounded-2xl`. |
 | SPEC-100 §3, §5.5 y §7 | Autobloqueo al reenviarse credenciales (6 nov 2026) | Un ADMIN ya no puede reenviarse sus credenciales: responde 422 y su fila no ofrece ese botón ni el de desactivar. El 403 de cambio obligatorio relee la sesión y lleva a `/cambiar-password`. La confirmación de reenvío detalla sus efectos. |
@@ -211,9 +215,12 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V047 | `V047__add_green_area_set_elements.sql` | SPEC-203 D-14 | Un conjunto puede incluir ejemplares (`green_area_set_elements`) además de jardines, o solo ejemplares. Nació como V040 |
 | V048 | `V048__planning_assignments.sql` | SPEC-203 §4.1 · D-16, D-17 | El conjunto dice dónde; qué se planifica es una asignación de una frecuencia al conjunto (`rule_key`, asignaciones). Nació como V041 |
 
+| V049 | `V049__intervention_place_zone_selections.sql` | SPEC-200 §2.11.6 · R3 | Revisiones y asociaciones directas lugar–zona; geometría histórica y revisión opcionales por ubicación, sin conversión ni siembra de IDs locales. Nació como V035 en `modulo-intervenciones` |
+| V050 | `V050__intervention_campus_selection.sql` | SPEC-200 §2.12 | Revisión opcional de selección global y áreas con geometría histórica sin lugar; conserva el flujo anterior y sus datos. Nació como V036 |
+
 ### Pendientes (sin número reservado)
 
-Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V049**, sujeto a
+Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V051**, sujeto a
 comprobarlo nuevamente al implementar. El modelo de solicitante, responsable y rol del contacto entró por V040 y V041;
 el seguimiento del uso del jardín por V043 y su corrección del corte por V044 (la V042 fue aplicada y retirada el
 mismo día). Los edificios del plano (SPEC-108) entraron por V045: nacieron como V040 y se renumeraron al integrarse
@@ -221,6 +228,8 @@ con reservas, porque reservas ya tenía cinco migraciones aplicadas en bases de 
 Una base que ya aplicó la V040 del plano se recrea (o se restaura desde un respaldo previo a esa migración).
 Las tres de conjuntos (`feature/conjuntos-con-ejemplares`) nacieron como V039–V041 y pasaron a V046–V048 al
 integrarse detrás de reservas y del plano; quien las aplicó con su número antiguo recrea su base.
+Las dos de intervenciones (`modulo-intervenciones`) nacieron como V035–V036 y pasaron a V049–V050; quien
+las aplicó con su número antiguo recrea su base.
 `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

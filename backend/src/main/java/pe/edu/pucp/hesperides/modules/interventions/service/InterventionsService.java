@@ -14,6 +14,9 @@ public interface InterventionsService {
     Page<InterventionSummaryResponse> findAll(Filter filter, Pageable page);
     InterventionDetailResponse findById(Long id);
     Map<String,Object> options();
+    InterventionZoneSelections.Options zoneOptions(long placeId);
+    InterventionZoneSelections.Options reviewZones(long placeId, InterventionZoneSelections.Review request);
+    InterventionZoneSelections.PreviewResponse previewZones(InterventionZoneSelections.Preview request);
     Creation create(Planning request, UUID key);
     InterventionDetailResponse update(Long id, Planning request);
     InterventionDetailResponse assign(Long id, Assignment request);

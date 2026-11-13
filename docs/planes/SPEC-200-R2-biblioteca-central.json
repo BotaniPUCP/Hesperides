@@ -1,0 +1,74 @@
+{
+  "selectionRule": "DIRECT_ASSOCIATIONS",
+  "source": "User confirmation with screenshots, 2026-11-11; read-only local database export",
+  "datasetRevision": "b4c08f2fc7c5d0d90772d9a7997005ff75e49400ae5320064b274f7cd0f8457b",
+  "place": {
+    "id": 1,
+    "code": "LUG-0001",
+    "name": "Biblioteca Central PUCP",
+    "geometryValid": true
+  },
+  "confirmedZones": [
+    {
+      "id": 179,
+      "code": "AV-0174",
+      "name": "C 43",
+      "areaM2": 534.83,
+      "geometryValid": true
+    },
+    {
+      "id": 382,
+      "code": "AV-0377",
+      "name": "C 44",
+      "areaM2": 39.18,
+      "geometryValid": true
+    },
+    {
+      "id": 383,
+      "code": "AV-0378",
+      "name": "C 42",
+      "areaM2": 398.94,
+      "geometryValid": true
+    },
+    {
+      "id": 385,
+      "code": "AV-0380",
+      "name": "C 41",
+      "areaM2": 108.33,
+      "geometryValid": true
+    },
+    {
+      "id": 386,
+      "code": "AV-0381",
+      "name": "C 42",
+      "areaM2": 631.21,
+      "geometryValid": true
+    }
+  ],
+  "availableZones": 531,
+  "expectedRejectedZones": 526,
+  "validation": {
+    "selectionRule": "DIRECT_ASSOCIATIONS",
+    "datasetRevision": "b4c08f2fc7c5d0d90772d9a7997005ff75e49400ae5320064b274f7cd0f8457b",
+    "readyPlaces": 1,
+    "pendingPlaces": 0,
+    "places": [
+      {
+        "placeId": 1,
+        "code": "LUG-0001",
+        "name": "Biblioteca Central PUCP",
+        "eligibleZoneIds": [
+          179,
+          382,
+          383,
+          385,
+          386
+        ],
+        "ready": true,
+        "reasons": []
+      }
+    ]
+  },
+  "productionEnabled": false,
+  "databaseChanged": false
+}

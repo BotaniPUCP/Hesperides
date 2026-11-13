@@ -2,6 +2,22 @@ import type { MessagePattern } from './placeErrorMessages';
 
 /** Los errores de intervenciones (M3) en español: qué pasó y qué hacer. */
 export const INTERVENTION_MESSAGES: Record<string, string> = {
+  'Campus selection derives its location and quantities': 'La selección en el mapa calcula sola la ubicación y las cantidades; no se ingresan a mano.',
+  'Invalid campus area selection': 'Una de las áreas elegidas no es válida. Actualiza el mapa y vuelve a elegirla.',
+  'Square-meter measurement unit is unavailable': 'Falta configurar la unidad «metro cuadrado» en el sistema. Avisa al administrador.',
+  'Zone area exceeds the supported quantity': 'La superficie de un área supera el máximo que se puede registrar. Avisa al administrador.',
+  'Select one specimen per execution target': 'Elige un solo ejemplar en cada fila de la selección.',
+  'A campus plan must keep its selection mode': 'Una intervención registrada con el mapa se sigue editando con el mapa.',
+  'Keep the original legacy location; retire it explicitly before adding a new mapped location': 'Conserva la ubicación original o retírala antes de agregar una nueva desde el mapa.',
+  'A mapped location must be edited using its reviewed zone selection': 'Esta ubicación se eligió en el mapa: edítala desde la selección de zonas.',
+  'Place requires a valid polygon before reviewing its zones': 'El lugar necesita un contorno válido antes de revisar sus zonas. Corrígelo en el catálogo de lugares.',
+  'Duplicate associated zone': 'Esa zona ya está asociada. Quita la repetida.',
+  'Multipart acknowledgment must refer to a selected zone': 'Solo puedes confirmar las partes de una zona que elegiste.',
+  'Associated zone requires an active valid green-area polygon': 'La zona asociada necesita un área verde activa con contorno válido.',
+  'Review the complete multipart zone before associating it': 'Esa zona tiene varias partes: revísala completa antes de asociarla.',
+  'Zone selection requires a place and a zone': 'Elige el lugar y la zona.',
+  'Zone selection derives geometry and square meters; manual values and specimen links are not accepted': 'La selección de zonas calcula sola el contorno y los metros cuadrados; no se ingresan a mano ni se vinculan ejemplares.',
+  'Scheduled date cannot be in the past': 'La fecha programada debe ser hoy o una fecha futura.',
   'A reviewer cannot approve their own execution or reporting': 'Otra persona autorizada debe aprobar el trabajo que ejecutaste o reportaste.',
   'Execution cannot begin before the scheduled date': 'El trabajo podrá ejecutarse desde la fecha programada. Si debe adelantarse, solicita al coordinador que revise la planificación.',
   'At least one received photo is required for this location and attempt': 'Adjunta al menos una foto recibida de esta ubicación e intento antes de continuar.',

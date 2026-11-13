@@ -22,6 +22,12 @@ public class InterventionExecutionSchedule {
         this.clock = clock;
     }
 
+    public void requirePlanningDate(LocalDate scheduledDate) {
+        if (scheduledDate.isBefore(LocalDate.now(clock))) {
+            throw new BusinessRuleException("Scheduled date cannot be in the past");
+        }
+    }
+
     public boolean canExecute(LocalDate scheduledDate) {
         return !scheduledDate.isAfter(LocalDate.now(clock));
     }

@@ -54,7 +54,8 @@ it('limpia el historial al cambiar de lector y al cerrar sesión',async()=>{
 });
 it('el listado conserva el ejemplar al filtrar por estado',async()=>{
   window.history.replaceState(null,'','/intervenciones?greenElementCode=EV-000001');
-  render(<InterventionsList greenElementCode="EV-000001"/>);await screen.findByRole('link',{name:'INT-000001'});
+  render(<InterventionsList greenElementCode="EV-000001"/>);await screen.findByRole('link',{name:'Actividad sin clasificación'});
   fireEvent.change(screen.getByLabelText('Estado'),{target:{value:'COMPLETED'}});
-  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(0,'COMPLETED','','','EV-000001'));
+  // Elegir un estado muestra activas e inactivas: el filtro de actividad no viaja.
+  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(0,'COMPLETED','','','EV-000001',undefined));
 });
