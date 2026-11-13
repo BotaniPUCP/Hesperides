@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import type { Locator, Page } from 'playwright-core';
 import { cabenReservasDeHoy, horaLimaHoy, HORAS_RESERVAS_DE_HOY, mediodiaLimaHace } from './escenario/fechas';
-import { abrirNavegador, BASE, crearApi, crearSesionDeCapturas, nuevaPagina, punto, union, type Api, type Capturar } from './navegador';
+import { abrirNavegador, BASE, crearApi, crearSesionDeCapturas, mapaDe, nuevaPagina, punto, union, type Api, type Capturar } from './navegador';
 
 const COORDINADOR = 'coordinador@demo.invalid';
 const CAPATAZ = 'capataz@demo.invalid';
@@ -290,14 +290,14 @@ async function capturasA(page: Page, capturar: Capturar) {
   await page.getByText('Se aplica a', { exact: true }).waitFor();
   await page.evaluate(() => window.scrollTo(0, 0));
   await capturar(page, 'frecuencia-ficha', {
-    seAplicaA: await union(page.getByText('Se aplica a', { exact: true }), page.getByText('Solo algunas áreas', { exact: true })),
-    modalidad: await union(page.getByText('Modalidad de ejecución', { exact: true }), page.getByText('Servicio tercerizado', { exact: true })),
+    seAplicaA: union(page.getByText('Se aplica a', { exact: true }), page.getByText('Solo algunas áreas', { exact: true })),
+    modalidad: union(page.getByText('Modalidad de ejecución', { exact: true }), page.getByText('Servicio tercerizado', { exact: true })),
   });
   const guardarVersion = page.getByRole('button', { name: 'Guardar versión' });
   await guardarVersion.scrollIntoViewIfNeeded();
   await capturar(page, 'frecuencia-ficha-pie', {
     aviso: page.getByText(/El cambio rige desde hoy/),
-    botones: await union(page.getByRole('button', { name: 'Desactivar frecuencia' }), guardarVersion),
+    botones: union(page.getByRole('button', { name: 'Desactivar frecuencia' }), guardarVersion),
   });
 
   // Conjuntos: la lista y el selector sobre el mapa (este conjunto no se guarda).
@@ -309,7 +309,7 @@ async function capturasA(page: Page, capturar: Capturar) {
   const lista = page.getByText(/^(Nada elegido todavía|Elegido: .+)$/);
   await page.getByText('Nada elegido todavía').waitFor();
   // El mapa ignora los botones hasta terminar de cargar: sin esta espera queda en perspectiva.
-  await page.locator('main canvas').first().waitFor();
+  await page.locator('main canvas').last().waitFor();
   await page.waitForTimeout(5000);
   await page.getByRole('button', { name: 'Vista superior' }).click();
   await page.waitForTimeout(2500);
@@ -377,7 +377,7 @@ async function capturasA(page: Page, capturar: Capturar) {
   await page.waitForTimeout(3500);
   await capturar(page, 'planificacion-elegida', {
     primeraTarjeta: tarjeta,
-    mapa: page.locator('main canvas').first(),
+    mapa: mapaDe(page),
     alDia: tarjeta.getByText('Al día: 1 de 6 jardines', { exact: true }).locator('..'),
     botonPlanificar,
   });
@@ -453,8 +453,8 @@ async function capturasB(page: Page, capturar: Capturar) {
   const selectores = page.locator('main select');
   const nuevaReserva = page.getByRole('link', { name: 'Nueva reserva' }).or(page.getByRole('button', { name: 'Nueva reserva' })).first();
   await capturar(page, 'reservas-agenda', {
-    filtroJardin: await union(page.getByText('Jardín', { exact: true }), selectores.nth(0)),
-    filtroOrganizacion: await union(page.getByText('Organización', { exact: true }), selectores.nth(1)),
+    filtroJardin: union(page.getByText('Jardín', { exact: true }), selectores.nth(0)),
+    filtroOrganizacion: union(page.getByText('Organización', { exact: true }), selectores.nth(1)),
     nuevaReserva,
   });
   const fila = page.locator('main li', { has: page.getByRole('link', { name: JARDINES_AGENDA.enCurso, exact: true }) });
@@ -477,10 +477,10 @@ async function capturasB(page: Page, capturar: Capturar) {
   const jardin = page.locator('#reservation-garden');
   await jardin.waitFor();
   const campoJardin = () => union(page.locator('label[for="reservation-garden"]'), jardin);
-  await capturar(page, 'reserva-nueva-0', { jardin: await campoJardin() });
+  await capturar(page, 'reserva-nueva-0', { jardin: campoJardin() });
   await jardin.selectOption(String(reservado));
   await soltarFoco(page);
-  await capturar(page, 'reserva-nueva-1', { jardin: await campoJardin() });
+  await capturar(page, 'reserva-nueva-1', { jardin: campoJardin() });
 
   const horario = () => union(page.locator('label', { hasText: /^Fecha/ }), page.locator('label', { hasText: /^Hora de fin/ }));
   const avisos = page.getByText('Avisos de este horario', { exact: true }).locator('..');
@@ -490,19 +490,19 @@ async function capturasB(page: Page, capturar: Capturar) {
   await soltarFoco(page);
   await page.getByText(/tiene trabajo por hacer/).waitFor();
   await bajarAlFinal(page);
-  await capturar(page, 'reserva-nueva-2', { horario: await horario(), avisos });
+  await capturar(page, 'reserva-nueva-2', { horario: horario(), avisos });
 
   await subir(page);
   await elegirDelDirectorio(page, '#reservation-requested-by', 'Organización de dem', ORGANIZACION);
   await soltarFoco(page);
   const pedidoDe = () => union(page.getByText('Pedido de', { exact: true }), page.getByText(ORGANIZACION, { exact: true }).first());
-  await capturar(page, 'reserva-nueva-3', { pedidoDe: await pedidoDe() });
+  await capturar(page, 'reserva-nueva-3', { pedidoDe: pedidoDe() });
   await elegirDelDirectorio(page, '#reservation-requester', 'Ana', 'Ana Ejemplo');
   await soltarFoco(page);
   await capturar(page, 'reserva-nueva-4', {
-    pedidoDe: await pedidoDe(),
-    solicitante: await union(page.getByText('Solicitante', { exact: true }), page.getByText('Ana Ejemplo', { exact: true }).nth(0)),
-    responsable: await union(page.getByText('Responsable', { exact: true }), page.getByText('Ana Ejemplo', { exact: true }).nth(1)),
+    pedidoDe: pedidoDe(),
+    solicitante: union(page.getByText('Solicitante', { exact: true }), page.getByText('Ana Ejemplo', { exact: true }).nth(0)),
+    responsable: union(page.getByText('Responsable', { exact: true }), page.getByText('Ana Ejemplo', { exact: true }).nth(1)),
   });
 
   await page.locator('#reservation-purpose').fill(MOTIVO);
@@ -519,7 +519,7 @@ async function capturasB(page: Page, capturar: Capturar) {
   await page.waitForTimeout(5000);
   await page.evaluate(() => window.scrollTo(0, 180));
   await page.waitForTimeout(800);
-  await capturar(page, 'reserva-ficha', { banner, mapa: page.locator('main canvas').first() });
+  await capturar(page, 'reserva-ficha', { banner, mapa: mapaDe(page) });
 
   // Al revés: el registro de un trabajo de mañana junto al jardín avisa de la reserva.
   await page.goto(`${BASE}/intervenciones/nueva`);
