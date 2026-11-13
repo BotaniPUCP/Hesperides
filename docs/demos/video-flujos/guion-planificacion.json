@@ -328,23 +328,42 @@
           "texto": "La universidad presta algunos jardines para actividades, y Hesperides registra quién usa cada uno, qué día y de qué hora a qué hora.",
           "textoVoz": "La universidad presta algunos jardines para actividades, y Hespérides registra quién usa cada uno, qué día y de qué hora a qué hora.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1420,
+            "y": 692,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.1,
+                "x": 1380,
+                "y": 692,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "r3",
           "texto": "La agenda los muestra por día, con el estado de cada reserva: próxima, en curso o terminada.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1380,
+            "y": 692,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.6,
+                "x": 1420,
+                "y": 692,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "r4",
           "texto": "Se puede filtrar por jardín o por organización, y cada tarjeta lleva a su ficha.",
           "hespo": {
-            "x": 960,
+            "x": 1320,
+            "y": 664,
             "pose": "senala"
           }
         },
@@ -352,15 +371,43 @@
           "id": "r5",
           "texto": "Para registrar una, coordinación elige el jardín, el horario y la organización que lo pide, con la persona que hizo el pedido.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1360,
+            "y": 190,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.25,
+                "x": 1700,
+                "y": 345,
+                "pose": "senala"
+              },
+              {
+                "en": 0.41,
+                "x": 1500,
+                "y": 600,
+                "pose": "senala"
+              },
+              {
+                "en": 0.55,
+                "x": 1140,
+                "y": 533,
+                "pose": "senala"
+              },
+              {
+                "en": 0.78,
+                "x": 1180,
+                "y": 533,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "r6",
           "texto": "El responsable es a quien se llama si pasa algo en el jardín: al principio es quien lo pidió, y se puede cambiar.",
           "hespo": {
-            "x": 960,
+            "x": 1500,
+            "y": 674,
             "pose": "senala"
           }
         },
@@ -368,7 +415,8 @@
           "id": "r7",
           "texto": "Si ese día hay trabajo programado en el jardín o cerca de él, el sistema avisa antes de guardar.",
           "hespo": {
-            "x": 960,
+            "x": 1500,
+            "y": 706,
             "pose": "sorpresa"
           }
         },
@@ -376,23 +424,42 @@
           "id": "r8",
           "texto": "Al guardar, se abre la ficha de la reserva, con el jardín iluminado en el mapa.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 535,
+            "y": 845,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.3,
+                "x": 1300,
+                "y": 288,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "r9",
           "texto": "Y funciona también al revés: al programar un trabajo, el sistema avisa si ese día hay una reserva en el jardín o a diez metros o menos.",
           "hespo": {
-            "x": 960,
-            "pose": "senala"
+            "x": 1750,
+            "y": 690,
+            "pose": "senala",
+            "luego": [
+              {
+                "en": 0.3,
+                "x": 1560,
+                "y": 690,
+                "pose": "senala"
+              }
+            ]
           }
         },
         {
           "id": "r10",
           "texto": "Ningún aviso impide guardar: solo ayudan a decidir.",
           "hespo": {
-            "x": 960,
+            "x": 800,
+            "y": 813,
             "pose": "pulgar"
           }
         }
