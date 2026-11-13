@@ -122,3 +122,80 @@ export function monthlyHref(filters: MonthlyFilters): string {
 export function activeMonthlyFilters(filters: MonthlyFilters): number {
   return ID_KEYS.filter((key) => filters[key] !== null).length + (filters.dateFrom ? 1 : 0);
 }
+
+/* ---------- Weekly tab: weekStart and sectorId (§3.6) ---------- */
+
+export interface WeeklyParams {
+  weekStart: string | null;
+  sectorId: number | null;
+}
+
+export interface ParsedWeekly {
+  params: WeeklyParams;
+  invalid: boolean;
+}
+
+/** A week always starts on Monday (D-14); any other day in the URL is invalid, not silently moved. */
+export function parseWeekly(params: Pick<URLSearchParams, 'get'>): ParsedWeekly {
+  const result: WeeklyParams = { weekStart: null, sectorId: null };
+  let invalid = false;
+  const sector = parseId(params.get('sectorId'));
+  if (sector === undefined) invalid = true;
+  else result.sectorId = sector;
+  const raw = params.get('weekStart');
+  const time = parseIsoDate(raw);
+  if (time === undefined || (typeof time === 'number' && new Date(time).getUTCDay() !== 1)) invalid = true;
+  else if (time !== null) result.weekStart = raw;
+  return { params: result, invalid };
+}
+
+export function weeklyHref(params: WeeklyParams): string {
+  const query = new URLSearchParams({ tab: 'semanal' });
+  if (params.weekStart) query.set('weekStart', params.weekStart);
+  if (params.sectorId !== null) query.set('sectorId', String(params.sectorId));
+  return `/reportes?${query}`;
+}
+
+function isoOf(time: number): string {
+  return new Date(time).toISOString().slice(0, 10);
+}
+
+/** The Monday of the week that contains {@code iso}. */
+export function mondayOf(iso: string): string {
+  const time = parseIsoDate(iso);
+  if (typeof time !== 'number') return iso;
+  const day = new Date(time).getUTCDay();
+  return isoOf(time - ((day + 6) % 7) * DAY_MS);
+}
+
+export function shiftWeeks(weekStart: string, weeks: number): string {
+  const time = parseIsoDate(weekStart);
+  return typeof time === 'number' ? isoOf(time + weeks * 7 * DAY_MS) : weekStart;
+}
+
+/* ---------- Direction tab: month (§3.6) ---------- */
+
+export interface ParsedDirection {
+  month: string | null;
+  invalid: boolean;
+}
+
+const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+export function parseDirection(params: Pick<URLSearchParams, 'get'>): ParsedDirection {
+  const raw = params.get('month');
+  if (raw === null || raw === '') return { month: null, invalid: false };
+  return MONTH_PATTERN.test(raw) ? { month: raw, invalid: false } : { month: null, invalid: true };
+}
+
+export function directionHref(month: string | null): string {
+  const query = new URLSearchParams({ tab: 'direccion' });
+  if (month) query.set('month', month);
+  return `/reportes?${query}`;
+}
+
+export function shiftMonth(month: string, months: number): string {
+  const [year, value] = month.split('-').map(Number);
+  const date = new Date(Date.UTC(year, value - 1 + months, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+}

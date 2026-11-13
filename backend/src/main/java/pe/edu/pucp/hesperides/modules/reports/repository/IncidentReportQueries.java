@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import pe.edu.pucp.hesperides.engine.reporting.DateRange;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -55,6 +57,17 @@ public class IncidentReportQueries {
         return jdbc.queryForObject(sql, params, (rs, n) -> new MonthlyCounters(
                 rs.getLong("pending_approval"), rs.getLong("open_count"), rs.getLong("in_progress"),
                 rs.getLong("reported"), rs.getLong("resolved")));
+    }
+
+    /** Incidents of the whole campus resolved in the period, by civil date (§2.6 row 23). */
+    public long resolvedIn(DateRange period, ZoneId zone) {
+        Long count = jdbc.queryForObject("""
+            select count(*) from incidents i
+            where i.deleted_at is null and i.resolved_at is not null
+              and (i.resolved_at at time zone :tz)::date between :from and :to
+            """, new MapSqlParameterSource().addValue("tz", zone.getId())
+                .addValue("from", period.from()).addValue("to", period.to()), Long.class);
+        return count == null ? 0 : count;
     }
 
     /** What SPEC-201 lets a SUPERVISOR see: sent by them or assigned to the teams they lead. */

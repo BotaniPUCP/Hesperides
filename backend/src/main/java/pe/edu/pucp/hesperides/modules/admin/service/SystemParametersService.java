@@ -43,6 +43,7 @@ public class SystemParametersService {
     /** Un día: una reserva dura máximo siete, y el corte no puede superar la mitad del plazo útil. */
     private static final int MAX_CONFIRMATION_MINUTES = 1440;
     private static final BigDecimal MAX_CAMPUS_HECTARES = new BigDecimal("100000");
+    private static final BigDecimal MAX_REPORT_TARGET = BigDecimal.valueOf(100);
 
     /**
      * Fallback de la longitud mínima cuando la fila falta o está mal escrita.
@@ -189,6 +190,14 @@ public class SystemParametersService {
                 && (value.signum() < 0 || value.compareTo(MAX_CAMPUS_HECTARES) > 0)) {
             throw new ValidationException(
                     "Las hectáreas del campus deben estar entre 0 y " + MAX_CAMPUS_HECTARES);
+        }
+        if (code.equals(SystemParameterCodes.REPORT_COVERAGE_TARGET_PERCENT)
+                && (value.compareTo(BigDecimal.ONE) < 0 || value.compareTo(MAX_REPORT_TARGET) > 0)) {
+            throw new ValidationException("La meta de cobertura mensual debe estar entre 1 y 100");
+        }
+        if (code.equals(SystemParameterCodes.REPORT_IRRIGATION_TARGET_PERCENT)
+                && (value.compareTo(BigDecimal.ONE) < 0 || value.compareTo(MAX_REPORT_TARGET) > 0)) {
+            throw new ValidationException("La meta de riego mensual debe estar entre 1 y 100");
         }
         return value.stripTrailingZeros().toPlainString();
     }

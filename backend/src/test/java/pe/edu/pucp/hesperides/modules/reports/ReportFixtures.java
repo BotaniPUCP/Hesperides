@@ -155,6 +155,25 @@ final class ReportFixtures {
             """, incidentId, item("INCIDENT_STATUS", status), by.id(), at, at);
     }
 
+    /** An irrigation turn of {@code sectorId} on a civil date, covering {@code sections}. */
+    long turn(long sectorId, Account foreman, String date, long... sections) {
+        long id = jdbc.queryForObject("""
+            insert into irrigation_turns(sector_zone_id,supervisor_user_id,irrigation_date) values (?,?,?::date)
+            returning id
+            """, Long.class, sectorId, foreman.id(), date);
+        for (long section : sections) {
+            jdbc.update("insert into irrigation_turn_sections(turn_id,section_zone_id) values (?,?)", id, section);
+        }
+        return id;
+    }
+
+    /** Draws {@code zoneId} as a small square centered on a point, so an incident there falls inside it. */
+    void square(long zoneId, double lon, double lat) {
+        jdbc.update("""
+            update zones set boundary=ST_Multi(ST_Expand(ST_SetSRID(ST_MakePoint(?,?),4326), 0.0005)) where id=?
+            """, lon, lat, zoneId);
+    }
+
     /** One approved work with a single location in {@code zoneId}, executed at {@code completedUtc}. */
     long approvedWork(long typeId, long teamId, Account operator, Account coordinator, Long zoneId, String completedUtc) {
         long work = work(typeId, teamId, operator, coordinator, "ASSIGNED");

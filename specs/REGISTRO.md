@@ -26,7 +26,7 @@
 | SPEC-108 | Edificios del plano oficial en el mapa | 🔄 En progreso: implementada y verificada en web (12 nov 2026, 12 de 13; CA-11 corregido después); falta el WebView de Android (CA-14) | Luis       | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: §2.12 reemplaza el flujo por lugares con mapa único, áreas de todo el campus y ejemplares seleccionables. V050 (antes V036) conserva datos y contratos anteriores. Pendientes revisión visual, R5 y R6; la selección fina de ejemplares se refinará posteriormente. | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
-| SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 1 (pantalla, opciones y Mensual) | —          | S4     |              |
+| SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 2 (Semanal, Mensual y Resumen para OSG con gráficos y datos de demostración); falta verificar en navegador real por rol | —          | S4     |              |
 | SPEC-203 | Planificación preventiva por conjuntos de áreas verdes | 🔄 En progreso: implementada, falta verificar en navegador | —          | —      |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
@@ -214,13 +214,13 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V046 | `V046__shorten_frequency_rule_type_labels.sql` | SPEC-101 | Nombres cortos de los tipos de regla de frecuencia; solo cambian etiquetas, no códigos. Nació como V039 en `feature/conjuntos-con-ejemplares` |
 | V047 | `V047__add_green_area_set_elements.sql` | SPEC-203 D-14 | Un conjunto puede incluir ejemplares (`green_area_set_elements`) además de jardines, o solo ejemplares. Nació como V040 |
 | V048 | `V048__planning_assignments.sql` | SPEC-203 §4.1 · D-16, D-17 | El conjunto dice dónde; qué se planifica es una asignación de una frecuencia al conjunto (`rule_key`, asignaciones). Nació como V041 |
-
 | V049 | `V049__intervention_place_zone_selections.sql` | SPEC-200 §2.11.6 · R3 | Revisiones y asociaciones directas lugar–zona; geometría histórica y revisión opcionales por ubicación, sin conversión ni siembra de IDs locales. Nació como V035 en `modulo-intervenciones` |
 | V050 | `V050__intervention_campus_selection.sql` | SPEC-200 §2.12 | Revisión opcional de selección global y áreas con geometría histórica sin lugar; conserva el flujo anterior y sus datos. Nació como V036 |
+| V051 | `V051__seed_report_targets.sql` | SPEC-202 §4 | Metas del resumen de reportes: `REPORT_COVERAGE_TARGET_PERCENT` y `REPORT_IRRIGATION_TARGET_PERCENT` (100), editables de 1 a 100. Nació como V035 en `feature/SPEC-202-reportes` |
 
 ### Pendientes (sin número reservado)
 
-Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V051**, sujeto a
+Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V052**, sujeto a
 comprobarlo nuevamente al implementar. El modelo de solicitante, responsable y rol del contacto entró por V040 y V041;
 el seguimiento del uso del jardín por V043 y su corrección del corte por V044 (la V042 fue aplicada y retirada el
 mismo día). Los edificios del plano (SPEC-108) entraron por V045: nacieron como V040 y se renumeraron al integrarse
@@ -229,7 +229,8 @@ Una base que ya aplicó la V040 del plano se recrea (o se restaura desde un resp
 Las tres de conjuntos (`feature/conjuntos-con-ejemplares`) nacieron como V039–V041 y pasaron a V046–V048 al
 integrarse detrás de reservas y del plano; quien las aplicó con su número antiguo recrea su base.
 Las dos de intervenciones (`modulo-intervenciones`) nacieron como V035–V036 y pasaron a V049–V050; quien
-las aplicó con su número antiguo recrea su base.
+las aplicó con su número antiguo recrea su base. La siembra de metas de reportes nació como V035 y pasó a V051;
+es idempotente (no inserta si el código ya existe), pero una base que la aplicó como V035 igual se recrea.
 `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 
@@ -240,7 +241,6 @@ Los números en citas históricas de otros specs no autorizan reutilizar version
 | Contratos y proveedores | SPEC-002 §4.7 | Intervenciones; definir la FK cuando ambas tablas existan |
 | Incidencias | SPEC-002 §4.8 · SPEC-102 §4.4 · SPEC-005 §4.3 · SPEC-200 §3.6 | FK `incidents.intervention_id` al trabajo completo, creación multiubicación/vínculo transaccional, estados separados y cierre explícito. Contrato definido, integración no implementada |
 | Catálogos restantes y confirmados | SPEC-002 §4.9 · SPEC-005 §4.5 | Sembrar solo lo que no exista; los necesarios para intervenciones pertenecen a su entrega |
-| Metas del resumen de reportes (dos filas en `system_parameters`, sin tablas) | SPEC-202 §4 | Solo datos; se numera al implementar el módulo de reportes |
 | Edificios del plano: grupos, códigos oficiales y base (generada) | SPEC-108 §4 | La genera `scripts/mapa/plano_pucp/generar_migracion.py` y no se regenera una vez publicada. Verificada en web el 12 nov 2026; falta el WebView de Android (SPEC-108 P-14). Ver la fila V045 del mapa de migraciones |
 | Auditoría global persistente | SPEC-004 §4 | Revisar tablas realmente existentes al implementarla; hoy `AuditService` escribe en logs. El historial de dominio de SPEC-200 no la sustituye |
 

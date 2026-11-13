@@ -15,6 +15,12 @@ export const SPANISH_BACKEND_MESSAGES: readonly RegExp[] = [
   /^El corte de las marcas de uso debe estar entre 0 y \d+ minutos$/,
   /^El rol no puede superar los \d+ caracteres$/,
   /^Las hectáreas del campus deben estar entre 0 y \S+$/,
+  /^La meta de (cobertura|riego) mensual debe estar entre 1 y 100$/,
+  // Reportes (SPEC-202): nacieron en español; se muestran tal cual.
+  /^El mes debe tener el formato AAAA-MM$/,
+  /^La semana debe empezar un lunes$/,
+  /^(La semana no puede ser posterior a la semana en curso|El mes no puede ser posterior al mes en curso)$/,
+  /^Elige un sector$/,
   // Catálogos y medidas adicionales (SPEC-105)
   /^Ya existe un ítem con el código .+ en .+$/,
   // SPEC-203 §3.4: nombra el conjunto y la actividad; se muestra tal cual.

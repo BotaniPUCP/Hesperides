@@ -27,6 +27,13 @@ export const CHART_TEXTS = {
   sectorColumn: 'Sector',
   percentColumn: 'Porcentaje',
   detailColumn: 'Superficie',
+  noRecords: 'Sin registros',
+  categoryColumn: 'Categoría',
+  valueColumn: 'Cantidad',
+  monthColumn: 'Mes',
+  others: 'Otros',
+  target: (value: string) => `meta ${value}`,
+  targetShort: 'Meta',
 };
 
 export const FILTER_TEXTS = {
@@ -67,6 +74,17 @@ export const MONTHLY_TEXTS = {
       + 'Sin sector no se puede medir la cobertura.',
   },
   sectorsTitle: 'Cobertura por sector',
+  visualHeading: 'Resumen visual del periodo',
+  coverageRing: 'Cobertura del periodo',
+  coverageRingCaption: (covered: string, total: string) => `${covered} de ${total}`,
+  incidentsDonut: 'Incidencias por estado',
+  incidentsDonutTotal: 'incidencias',
+  incidentStates: { PENDING_APPROVAL: 'Pendientes de aprobación', OPEN: 'Pendientes de atención', IN_PROGRESS: 'En atención', RESOLVED: 'Resueltas en el periodo' },
+  complianceDonut: 'Cumplimiento de frecuencias',
+  complianceDonutCaption: 'Lugares evaluados en todas las actividades',
+  complianceDonutTotal: 'lugares',
+  worksDonut: 'Labores aprobadas por sector',
+  worksDonutTotal: 'labores',
   noSections: 'Tu filtro no encontró secciones',
   noSectionsHelp: 'Prueba con otro sector, sección o periodo.',
   noWork: 'No hay trabajo aprobado en este periodo',
@@ -111,6 +129,11 @@ export const SCREEN_TEXTS = {
   showing: (tab: ReportTab) => `Mostrando ${TAB_TEXTS[tab].label}`,
   noAccessTitle: 'No tienes acceso a los reportes',
   noAccessDescription: 'Los reportes están disponibles para administración, coordinación y capataces.',
-  comingSoonTitle: 'Próximamente',
-  comingSoonDescription: 'Esta pestaña llega en la siguiente entrega.',
+};
+
+/** The demonstration switch: the figures come from the JSON files of components/reports/demo. */
+export const DEMO_TEXTS = {
+  turnOn: 'Ver con datos de demostración',
+  turnOff: 'Volver a los datos reales',
+  banner: 'Datos de demostración: las cifras son de ejemplo y no salen del sistema.',
 };
