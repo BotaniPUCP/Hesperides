@@ -23,8 +23,8 @@ interface IncidentStatProps { label: string; value: number; caption: string; ton
 export function IncidentStat({ label, value, caption, tone, icon }: IncidentStatProps) {
   const ink = { primary: 'text-white', amber: 'text-urgency-medium-fg', blue: 'text-status-in-progress-fg', green: 'text-status-resolved-fg' };
   return <div className={`rounded-[10px] border px-5 py-5 ${tone === 'primary' ? 'border-forest-900 bg-forest-900 text-white' : 'border-neutral-200 bg-neutral-0 text-neutral-900'}`}>
-    <p className={`flex items-center justify-between gap-2 text-xs ${tone === 'primary' ? 'text-forest-100' : 'text-neutral-600'}`}>{label}<IncidentIcon name={icon} /></p>
+    <p className={`flex items-center justify-between gap-2 text-[13px] ${tone === 'primary' ? 'text-forest-100' : 'text-neutral-600'}`}>{label}<IncidentIcon name={icon} /></p>
     <p className={`mb-1 mt-3 text-[34px] font-semibold leading-tight tracking-tight tabular-nums ${tone ? ink[tone] : ''}`}>{value}</p>
-    <p className={`text-[11px] ${tone === 'primary' ? 'text-forest-100' : 'text-neutral-600'}`}>{caption}</p>
+    <p className={`text-xs ${tone === 'primary' ? 'text-forest-100' : 'text-neutral-600'}`}>{caption}</p>
   </div>;
 }

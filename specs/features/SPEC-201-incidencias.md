@@ -147,10 +147,14 @@ La corrección aplica al módulo completo, no solo al tablero de coordinación:
 
 - Fondo neutro solo en `/incidencias` y sus subrutas; sin modificar los fondos ni
   la navegación de los demás módulos. Se conservan PageFrame y breadcrumbs.
-- Títulos de 29 px en escritorio y 25 px en móvil, etiquetas de 12 px y controles
+- Títulos de 29 px en escritorio y 25 px en móvil, etiquetas de 13 px y controles
   de 38–42 px en escritorio;
   objetivos táctiles de al menos 44 px en móvil. Son ajustes locales al módulo,
   no cambios a los tamaños predeterminados de los componentes compartidos.
+- Ajuste de legibilidad solicitado tras revisar esa corrección: texto principal,
+  tablas y campos de 14 px; etiquetas, botones y estados de 13 px; fechas y texto
+  secundario de al menos 12 px. Se conservan títulos, cifras y distribución; solo
+  se permite el crecimiento natural necesario para no recortar el texto.
 - Paneles sin sombras grandes, cabeceras divididas de su contenido, radios de
   10–12 px, filas compactas y alineadas. La atención prioritaria presenta tres filas;
   el resto es accesible desde su cabecera.
@@ -363,3 +367,14 @@ como visualmente terminada. Esta verificación corresponde a su corrección:
 - Se conservaron el proceso habitual de frontend en :3000 y sus contenedores.
   Solo se retiraron los recursos temporales de prueba. El build final se repitió
   sin la URL de API de prueba. Sin commits ni pushes.
+
+### Comprobación del ajuste de legibilidad
+
+- Ajuste exclusivamente tipográfico: no modifica permisos, contratos ni reglas
+  del flujo. Se eliminan las clases locales de texto de 9–11 px.
+- Firefox sobre build real: seis pantallas de coordinación y capataz, escritorio
+  y móvil, con capturas claro/oscuro en móvil. Tamaños computados comprobados:
+  cuerpo y campos 14 px; etiquetas, botones y estados 13 px; mínimo visible 12 px.
+  Títulos de 29/25 px y campos de 42/44 px conservados; sin desbordamiento horizontal.
+- Lint, build y 1203 tests correctos. Evidencias del ajuste en
+  `/tmp/opencode/incident-typography/verification.json` y capturas de esa carpeta.

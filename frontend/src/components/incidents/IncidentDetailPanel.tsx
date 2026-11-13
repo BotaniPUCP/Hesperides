@@ -60,7 +60,7 @@ function ReviewForm({ detail, options, busy, onSave, onCancel }: {
     {guard.dialog}
     <form onChange={() => setDirty(true)} onSubmit={(e) => { e.preventDefault(); void save(); }}>
       <section className="space-y-4 px-5 py-6 sm:px-7">
-      <h2 className="flex items-center gap-3 text-[13px] font-semibold"><span className="grid h-6 w-6 place-content-center rounded-md bg-brand-50 text-[10px] text-brand-800">01</span>Descripción y ubicación</h2>
+      <h2 className="flex items-center gap-3 text-[13px] font-semibold"><span className="grid h-6 w-6 place-content-center rounded-md bg-brand-50 text-xs text-brand-800">01</span>Descripción y ubicación</h2>
       <Textarea id="review-description" label="Descripción" value={description} rows={3} maxLength={10000} disabled={busy} required
         errorMessage={descriptionError} onChange={(value) => { setDescription(value); setDescriptionError(''); }} />
       <div className="grid gap-4 sm:grid-cols-2">
@@ -81,7 +81,7 @@ function ReviewForm({ detail, options, busy, onSave, onCancel }: {
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       </div>
       <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 bg-neutral-0 px-5 py-4 sm:px-7">
-        <span className="text-[11px] text-neutral-600">{dirty ? 'Cambios sin guardar' : 'Edición del registro'}</span>
+        <span className="text-xs text-neutral-600">{dirty ? 'Cambios sin guardar' : 'Edición del registro'}</span>
         <div className="flex gap-2"><Button variant="ghost" disabled={busy} onClick={() => guard.confirm(onCancel)}>Cancelar</Button>
         <Button type="submit" disabled={busy} loading={busy}>Guardar cambios</Button></div>
       </div>
@@ -116,7 +116,7 @@ export function IncidentDetailPanel({ detail, options, optionsLoading, coordinat
     <header className="flex flex-wrap items-start justify-between gap-3">
       <div className="space-y-2"><h1 className="page-title">{editing ? 'Editar incidencia' : incident.officialCode ?? `Incidencia #${incident.id}`}</h1>
         <div className="flex flex-wrap gap-2"><StatusBadge code={incident.status.code} label={incident.status.label} />
-          {editing && <span className="text-[11px] font-semibold text-neutral-600">{incident.officialCode ?? `INCIDENCIA #${incident.id}`}</span>}
+          {editing && <span className="text-xs font-semibold text-neutral-600">{incident.officialCode ?? `INCIDENCIA #${incident.id}`}</span>}
           {incident.urgency && <UrgencyBadge code={incident.urgency.code as UrgencyCode} label={incident.urgency.label} />}
         </div>
       </div>

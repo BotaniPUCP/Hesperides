@@ -9,7 +9,7 @@ import { IncidentPanel } from './IncidentPresentation';
 
 function Distribution({ title, rows }: { title: string; rows: IncidentDistribution[] }) {
   const max=Math.max(1,...rows.map(r => r.count));
-  return <IncidentPanel title={title} aside={<span className="text-[10px] text-neutral-600">{rows.reduce((sum, row) => sum + row.count, 0)} reportes</span>}><div className="px-5 py-6">{rows.length ? <ul className="space-y-5 text-xs">{rows.slice(0,8).map((row) =>
+  return <IncidentPanel title={title} aside={<span className="text-xs text-neutral-600">{rows.reduce((sum, row) => sum + row.count, 0)} reportes</span>}><div className="px-5 py-6">{rows.length ? <ul className="space-y-5 text-sm">{rows.slice(0,8).map((row) =>
     <li key={row.label} className="space-y-2"><div className="flex items-start justify-between gap-3"><span className="min-w-0 break-words text-neutral-600">{row.label}</span>
       <span className="font-semibold tabular-nums">{row.count}</span></div>
       <meter min={0} max={max} value={row.count} aria-label={`${title}: ${row.label}`} className="sr-only">{row.count}</meter>
@@ -20,7 +20,7 @@ function Distribution({ title, rows }: { title: string; rows: IncidentDistributi
 function ReportProgress({ rows }: { rows: IncidentDistribution[] }) {
   const total = rows.reduce((sum, row) => sum + row.count, 0);
   const colors = ['text-warning-600/70', 'text-info-600/70', 'text-brand-700/75', 'text-neutral-500', 'text-status-in-review-fg', 'text-brand-400', 'text-action-danger', 'text-neutral-700'];
-  return <IncidentPanel title="Avance de los reportes" aside={<span className="text-[10px] text-neutral-600">{total} reportes</span>}>
+  return <IncidentPanel title="Avance de los reportes" aside={<span className="text-xs text-neutral-600">{total} reportes</span>}>
     {!total ? <p className="p-5 text-xs text-neutral-700">Sin datos.</p> : <div className="flex items-center gap-6 px-5 py-6">
       <div className="relative h-32 w-32 shrink-0">
         <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90" role="img" aria-label={rows.map(row => `${row.label}: ${row.count}`).join(', ')}>
@@ -32,9 +32,9 @@ function ReportProgress({ rows }: { rows: IncidentDistribution[] }) {
               strokeDasharray={`${Math.max(0,length - 1)} ${100 - Math.max(0,length - 1)}`} strokeDashoffset={-start} className={colors[index % colors.length]} />;
           })}
         </svg>
-        <div className="absolute inset-0 grid place-content-center text-center"><strong className="text-[28px] font-semibold leading-tight tabular-nums">{total}</strong><span className="mt-1 text-[9px] uppercase text-neutral-600">reportes</span></div>
+        <div className="absolute inset-0 grid place-content-center text-center"><strong className="text-[28px] font-semibold leading-tight tabular-nums">{total}</strong><span className="mt-1 text-xs uppercase text-neutral-600">reportes</span></div>
       </div>
-      <ul className="min-w-0 flex-1 space-y-3">{rows.map((row, index) => <li key={row.label} className="flex items-center gap-2 text-[11px] text-neutral-600">
+      <ul className="min-w-0 flex-1 space-y-3">{rows.map((row, index) => <li key={row.label} className="flex items-center gap-2 text-[13px] text-neutral-600">
         <span aria-hidden="true" className={colors[index % colors.length]}>●</span><span className="min-w-0 flex-1 break-words">{row.label}</span><strong className="tabular-nums">{row.count}</strong>
       </li>)}</ul>
     </div>}

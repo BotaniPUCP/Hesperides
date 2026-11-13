@@ -58,11 +58,11 @@ export function IncidentsScreen() {
             <IncidentStat label="Registradas abiertas" value={Math.max(0,dashboard.active-dashboard.pendingRegistration)} caption="Con atención en seguimiento" tone="blue" icon="work" />
             <IncidentStat label="Cerradas" value={summary.data?.resolved ?? 0} caption="Resolución validada" tone="green" icon="check" />
           </div>
-          <IncidentPanel title="Requieren tu atención" aside={dashboard.attention.length > 3 ? <button type="button" aria-expanded={allAttention} onClick={() => setAllAttention(v => !v)} className="flex items-center gap-2 text-[11px] font-medium text-brand-800">{allAttention ? 'Mostrar menos' : `Ver los ${dashboard.attention.length} pendientes`}<IncidentIcon name="arrow" /></button> : <span className="text-[11px] text-neutral-600">{dashboard.attention.length} casos</span>}>
+          <IncidentPanel title="Requieren tu atención" aside={dashboard.attention.length > 3 ? <button type="button" aria-expanded={allAttention} onClick={() => setAllAttention(v => !v)} className="flex items-center gap-2 text-[13px] font-medium text-brand-800">{allAttention ? 'Mostrar menos' : `Ver los ${dashboard.attention.length} pendientes`}<IncidentIcon name="arrow" /></button> : <span className="text-xs text-neutral-600">{dashboard.attention.length} casos</span>}>
             {!dashboard.attention.length ? <p className="p-5 text-xs">Sin reportes que requieran atención prioritaria.</p> : <ul>{dashboard.attention.slice(0, allAttention ? undefined : 3).map(i => <li key={i.id}>
               <Link href={href(`/incidencias/${i.id}`)} className="grid grid-cols-[66px_minmax(0,1fr)_14px] items-center gap-x-3 gap-y-1 border-b border-neutral-100 px-5 py-3 hover:bg-neutral-50 sm:grid-cols-[75px_minmax(0,1fr)_150px_14px]">
-                <span className="col-start-1 row-start-1 text-[10px] font-semibold text-neutral-600">{i.officialCode ?? `#${i.id}`}</span><span className="col-start-2 row-start-1 min-w-0 truncate text-xs font-medium" title={i.description}>{i.description}</span>
-                <span className="col-start-2 row-start-2 whitespace-nowrap text-[10px] text-urgency-medium-fg sm:col-start-3 sm:row-start-1">{!i.approvedAt ? 'Por registrar' : i.status.label}</span><span className="col-start-3 row-start-1 text-neutral-500 sm:col-start-4"><IncidentIcon name="arrow" /></span>
+                <span className="col-start-1 row-start-1 text-xs font-semibold text-neutral-600">{i.officialCode ?? `#${i.id}`}</span><span className="col-start-2 row-start-1 min-w-0 truncate text-sm font-medium" title={i.description}>{i.description}</span>
+                <span className="col-start-2 row-start-2 text-[13px] text-urgency-medium-fg sm:col-start-3 sm:row-start-1">{!i.approvedAt ? 'Por registrar' : i.status.label}</span><span className="col-start-3 row-start-1 text-neutral-500 sm:col-start-4"><IncidentIcon name="arrow" /></span>
               </Link>
             </li>)}</ul>}
           </IncidentPanel>
@@ -76,14 +76,14 @@ export function IncidentsScreen() {
         {summary.data?.matrix && <IncidentDashboard matrix={summary.data.matrix} progress={dashboard ? [
           {label:'Por registrar',count:dashboard.pendingRegistration}, {label:'Registradas abiertas',count:Math.max(0,dashboard.active-dashboard.pendingRegistration)}, {label:'Cerradas',count:summary.data.resolved},
         ] : undefined}><div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{metrics.map(([label, count]) => <Card key={label}><p className="text-xs text-neutral-600">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{count}</p></Card>)}</div></IncidentDashboard>}
-        {dashboard && <p className="text-[10px] text-neutral-600">Totales generales, independientes de los filtros. Gráficos de todos los reportes, incluidos pendientes y cerrados. Actualizado: {new Date(dashboard.generatedAt).toLocaleString('es-PE')}.</p>}
+        {dashboard && <p className="text-xs text-neutral-600">Totales generales, independientes de los filtros. Gráficos de todos los reportes, incluidos pendientes y cerrados. Actualizado: {new Date(dashboard.generatedAt).toLocaleString('es-PE')}.</p>}
       </section>}
 
       <section className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0" aria-label="Listado de reportes">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-3"><h2 className="text-[13px] font-semibold">{preview ? coordinator ? 'Reportes recientes' : 'Reportes recientes de mi cuadrilla' : coordinator ? 'Reportes' : 'Reportes propios y de mi cuadrilla'}</h2>
-        <div className="flex items-center gap-3">{preview && <button type="button" className="text-[11px] font-medium text-brand-800" onClick={() => changeFilters(current => ({...current,view:'reports',page:0}))}>Ver todos</button>}{coordinator && <IncidentExportButton />}</div></div>
+        <div className="flex items-center gap-3">{preview && <button type="button" className="text-[13px] font-medium text-brand-800" onClick={() => changeFilters(current => ({...current,view:'reports',page:0}))}>Ver todos</button>}{coordinator && <IncidentExportButton />}</div></div>
       <details open={!preview} className="border-b border-neutral-100 px-5 py-3">
-        <summary className="cursor-pointer text-[11px] font-medium text-brand-800">Buscar y filtrar reportes</summary>
+        <summary className="cursor-pointer text-[13px] font-medium text-brand-800">Buscar y filtrar reportes</summary>
       <div className="pt-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-end">
           <div className="min-w-0 flex-1">
@@ -97,7 +97,7 @@ export function IncidentsScreen() {
           </div>
           <Button variant="secondary" size="lg" disabled={list.loading} onClick={refresh}>Actualizar</Button>
         </div>
-        {coordinator && <details className="mt-2" open={Boolean(filters.registration || filters.severity || filters.urgency || filters.service)}><summary className="cursor-pointer py-2 text-[11px] font-medium text-brand-800">Más filtros</summary><div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {coordinator && <details className="mt-2" open={Boolean(filters.registration || filters.severity || filters.urgency || filters.service)}><summary className="cursor-pointer py-2 text-[13px] font-medium text-brand-800">Más filtros</summary><div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Select id="incident-registration" label="Registro oficial" size="lg" clearable value={filters.registration ?? null}
             options={[{id:1,code:'PENDING',label:'Pendientes de registro'},{id:2,code:'REGISTERED',label:'Registradas en curso'},{id:3,code:'CLOSED',label:'Cerradas'}]}
             onChange={v => changeFilters(current => ({...current,registration:v?.code,page:0}))} />
