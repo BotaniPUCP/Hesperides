@@ -18,7 +18,7 @@ import { managesIncidents } from '@/lib/incidentRoles';
 import { LegacyInterventionForm } from './LegacyInterventionForm';
 import { RecentAttentionNotice } from './RecentAttentionNotice';
 import { ReservationNearbyNotice } from './ReservationNearbyNotice';
-import { addCampusSpecimen, campusLocation, campusReady, campusRowsFromPrefill, targetAvailable, targetName, toggleCampus, type CampusTarget } from './campusSelection';
+import { addCampusTargets, campusLocation, campusReady, campusRowsFromPrefill, targetAvailable, targetName, removeCampusTargets, toggleCampus, type CampusTarget } from './campusSelection';
 const CampusMap=dynamic(()=>import('./InterventionCampusMap').then(m=>m.InterventionCampusMap),{ssr:false});
 /** Valores iniciales de una intervención nueva, por ejemplo desde la planificación (SPEC-203 §5.6). */
 export interface InterventionPrefill { typeId?: number; date?: string; description?: string; locations?: InterventionLocation[] }
@@ -91,6 +91,10 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
     try {setLocations(rows=>toggleCampus(rows,target,inventory.data!));setDirty(true);setError('');}
     catch {setError('No se pudo seleccionar. Actualiza el navegador y vuelve a intentarlo.');}
   };
+  const changeMany=(change:(rows:InterventionLocation[])=>InterventionLocation[])=>{
+    if(pending||uncertain||!sourceAvailable)return;
+    setLocations(change);setDirty(true);
+  };
   const catalog = (type: string) => options?.catalogs.filter(c => c.typeCode === type) ?? [];
   const types = catalog('INTERVENTION_TYPE').filter(t => t.parentItemId === classId);
   const submit = async (event: React.FormEvent) => {
@@ -153,10 +157,9 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
       {inventory.loading&&<p role="status">Consultando áreas y ejemplares...</p>}
       {inventory.errorMessage&&<p role="alert">{inventory.errorMessage}</p>}
       {inventory.data&&<>
-        <CampusMap options={inventory.data} selected={locations} disabled={pending||uncertain||!sourceAvailable} onToggle={toggle} onAddSpecimen={id=>{
-          if(pending||uncertain||!sourceAvailable)return;
-          setLocations(rows=>addCampusSpecimen(rows,id,inventory.data!));setDirty(true);
-        }} focus={focus}/>
+        <CampusMap options={inventory.data} selected={locations} disabled={pending||uncertain||!sourceAvailable} onToggle={toggle}
+          onAdd={targets=>changeMany(rows=>addCampusTargets(rows,targets,inventory.data!))}
+          onRemove={targets=>changeMany(rows=>removeCampusTargets(rows,targets))} focus={focus}/>
         <p role="status" aria-live="polite" className="text-sm text-neutral-600">{zoneIds.length} {zoneIds.length===1?'jardín':'jardines'} y {specimenIds.length} {specimenIds.length===1?'ejemplar seleccionado':'ejemplares seleccionados'}</p>
         <div role="status" className="rounded-md border border-neutral-200 p-3">
           Superficie seleccionada: {selectionReady&&preview.data?`${preview.data.surfaceM2.toLocaleString('es-PE',{maximumFractionDigits:2})} m²`:previewWaiting||preview.loading?'Verificando...':'Selecciona jardines o ejemplares.'}

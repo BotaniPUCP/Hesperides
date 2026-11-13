@@ -1,4 +1,4 @@
-import { campusRowsFromPrefill } from '../campusSelection';
+import { addCampusTargets, campusRowsFromPrefill, removeCampusTargets } from '../campusSelection';
 import type { CampusOptions, InterventionLocation } from '@/lib/interventions-api';
 
 const options = {
@@ -36,5 +36,31 @@ describe('campusRowsFromPrefill: lo prellenado pasa a la selección del mapa', (
 
   it('sin nada prellenado no hay selección', () => {
     expect(campusRowsFromPrefill([], options)).toEqual({ rows: [], missing: 0 });
+  });
+});
+
+describe('agregar y quitar varios a la vez (Ctrl + rectángulo, barrido)', () => {
+  const area = (id: number) => ({ kind: 'area' as const, id });
+  const tree = (id: number) => ({ kind: 'specimen' as const, id });
+
+  it('agrega solo lo que falta y lo desconocido no entra', () => {
+    const first = addCampusTargets([], [area(112)], options);
+    const rows = addCampusTargets(first, [area(112), area(113), tree(501), tree(404), area(999)], options);
+
+    expect(rows.map((r) => r.zoneId ?? r.elementIds[0])).toEqual([112, 113, 501]);
+    expect(rows[0]).toBe(first[0]);
+  });
+
+  it('quita lo indicado y deja lo demás', () => {
+    const rows = addCampusTargets([], [area(112), area(113), tree(501), tree(502)], options);
+
+    expect(removeCampusTargets(rows, [area(113), tree(501), tree(404)]).map((r) => r.zoneId ?? r.elementIds[0])).toEqual([112, 502]);
+  });
+
+  it('sin nada que cambiar devuelve la misma lista', () => {
+    const rows = addCampusTargets([], [area(112)], options);
+
+    expect(addCampusTargets(rows, [area(112)], options)).toBe(rows);
+    expect(removeCampusTargets(rows, [area(113)])).toBe(rows);
   });
 });

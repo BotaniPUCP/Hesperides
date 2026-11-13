@@ -9,7 +9,8 @@ import { Map3DView } from '@/components/map3d/Map3DView';
 import { MapAttribution } from '@/components/map3d/MapAttribution';
 import { toSceneData, type SceneData } from '@/components/map3d/sceneData';
 import type { Target } from '@/components/map3d/target';
-import { useRectangleSelection } from '@/components/map3d/useRectangleSelection';
+import { useCtrlRectangle, type RectangleAction, type ScreenRect } from '@/components/map3d/useCtrlRectangle';
+import { useSweepHint } from '@/components/map3d/useSweepHint';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
 import { useMapLayers } from '@/hooks/useMapLayers';
 import { contentsLabel, gardensLabel, specimensLabel } from './planningTexts';
@@ -89,8 +90,6 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   const [mode, setMode] = useState<PickMode>(() => initialMode(selectedZoneIds, selectedSpecimenIds));
   const [term, setTerm] = useState('');
   const [onlySelected, setOnlySelected] = useState(false);
-  /** Ctrl (o ⌘) apretado: el mapa deja de girar y el arrastre dibuja un rectángulo. */
-  const [ctrlHeld, setCtrlHeld] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
@@ -200,70 +199,47 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     } : null);
   };
 
-  const zoneOfCode = useMemo(() => new Map(allSections.map((s) => [s.code, s])), [allSections]);
-  // Ctrl + arrastrar dibuja un rectángulo. Si todo lo que encierra ya estaba elegido, lo quita;
-  // si no, agrega lo que falta. El hook es compartido con Riego y solo sabe «agregar»: aquí se
-  // juntan los jardines y ejemplares que devuelve y se decide con los dos a la vez.
-  const inRect = useRef<{ gardens: number[]; plants: number[] }>({ gardens: [], plants: [] });
-  const onRectResult = (text: string) => {
-    const { gardens, plants: trees } = inRect.current;
-    inRect.current = { gardens: [], plants: [] };
-    if (text.startsWith('Arrastra')) { setNotice({ text: 'Mantén Ctrl y arrastra un rectángulo sobre el mapa.' }); return; }
+  /** Ctrl + clic izquierdo agrega lo que encierra el rectángulo; Ctrl + clic derecho lo quita (se puede deshacer). */
+  const onRectangle = ({ x1, y1, x2, y2 }: ScreenRect, action: RectangleAction) => {
+    const v = viewer.current;
+    if (!v) return;
+    const gardenCodes = pickGardens ? v.sectionCodesInScreenRect(x1, y1, x2, y2, allSections.map((s) => s.code)) : [];
+    const plantCodes = pickPlants ? v.specimenCodesInScreenRect(x1, y1, x2, y2, specimens.map((e) => e.code)) : [];
+    const gardens = gardenCodes.map((code) => sectionByCode.get(code)?.id).filter((id): id is number => id !== undefined);
+    const trees = plantCodes.map((code) => specimenByCode.get(code)?.id).filter((id): id is number => id !== undefined);
     if (gardens.length + trees.length === 0) { setNotice({ text: 'El rectángulo no encerró nada que se pueda elegir.' }); return; }
-    const before = { zones, plants };
-    const allChosen = gardens.every((id) => zones.has(id)) && trees.every((id) => plants.has(id));
-    if (allChosen) {
-      const dropZones = new Set(gardens);
-      const dropPlants = new Set(trees);
-      setZones(new Set([...zones].filter((id) => !dropZones.has(id))));
-      setPlants(new Set([...plants].filter((id) => !dropPlants.has(id))));
-      setNotice({ text: `Se quitó del conjunto: ${contentsLabel(gardens.length, trees.length)}.`,
-        undo: () => { setZones(before.zones); setPlants(before.plants); setNotice(null); } });
+    if (action === 'add') {
+      const newGardens = gardens.filter((id) => !zones.has(id));
+      const newPlants = trees.filter((id) => !plants.has(id));
+      if (newGardens.length + newPlants.length === 0) { setNotice({ text: 'Ya estaba todo elegido.' }); return; }
+      setZones(new Set([...zones, ...newGardens]));
+      setPlants(new Set([...plants, ...newPlants]));
+      setNotice({ text: `Se agregó al conjunto: ${contentsLabel(newGardens.length, newPlants.length)}.` });
       return;
     }
-    const newGardens = gardens.filter((id) => !zones.has(id));
-    const newPlants = trees.filter((id) => !plants.has(id));
-    setZones(new Set([...zones, ...newGardens]));
-    setPlants(new Set([...plants, ...newPlants]));
-    setNotice({ text: `Se agregó al conjunto: ${contentsLabel(newGardens.length, newPlants.length)}. Arrastra otra vez sobre lo mismo para quitarlo.` });
+    const dropGardens = gardens.filter((id) => zones.has(id));
+    const dropPlants = trees.filter((id) => plants.has(id));
+    if (dropGardens.length + dropPlants.length === 0) { setNotice({ text: 'No había nada elegido ahí.' }); return; }
+    const before = { zones, plants };
+    setZones(new Set([...zones].filter((id) => !dropGardens.includes(id))));
+    setPlants(new Set([...plants].filter((id) => !dropPlants.includes(id))));
+    setNotice({ text: `Se quitó del conjunto: ${contentsLabel(dropGardens.length, dropPlants.length)}.`,
+      undo: () => { setZones(before.zones); setPlants(before.plants); setNotice(null); } });
   };
-  const { drag, beginDrag, moveDrag, endDrag, cancelDrag } = useRectangleSelection({
-    mapRegion, viewer, permittedCodes: pickGardens ? allSections.map((s) => s.code) : [], sectionsByCode: zoneOfCode,
-    onAdd: (ids) => { inRect.current.gardens = ids; }, onNotice: onRectResult,
-    specimens: pickPlants ? { eligible: specimens.map((e) => e.code), byCode: new Map(specimens.map((e) => [e.code, e.id])),
-      onAdd: (ids) => { inRect.current.plants = ids; } } : undefined,
-  });
-  /** La capa del rectángulo sigue mientras se arrastra, aunque se suelte Ctrl antes de soltar el clic. */
-  const selecting = (ctrlHeld || drag !== null) && Boolean(scene) && !unsupported;
-  const startArea = (e: ReactPointerEvent<HTMLDivElement>) => { inRect.current = { gardens: [], plants: [] }; beginDrag(e); };
-  useEffect(() => {
-    const track = (e: KeyboardEvent) => setCtrlHeld(e.ctrlKey || e.metaKey);
-    const release = () => setCtrlHeld(false);
-    window.addEventListener('keydown', track);
-    window.addEventListener('keyup', track);
-    window.addEventListener('blur', release);
-    return () => {
-      window.removeEventListener('keydown', track);
-      window.removeEventListener('keyup', track);
-      window.removeEventListener('blur', release);
-    };
-  }, []);
-  /**
-   * La capa del rectángulo (Ctrl + arrastrar) tapa el mapa para dibujarlo, y así también se
-   * comía la rueda: se la pasa al lienzo del mapa para que acercar y alejar siga funcionando.
-   * Va como escucha nativa no pasiva, para que la rueda no desplace además la página.
-   */
-  const areaLayer = useCallback((layer: HTMLDivElement | null) => {
-    if (!layer) return;
-    const forward = (e: WheelEvent) => {
-      const canvas = mapRegion.current?.querySelector('canvas');
-      if (!canvas) return;
-      e.preventDefault();
-      canvas.dispatchEvent(new WheelEvent('wheel', e));
-    };
-    layer.addEventListener('wheel', forward, { passive: false });
-    return () => layer.removeEventListener('wheel', forward);
-  }, []);
+  const hint = useSweepHint(mapRegion);
+  const { selecting, layer: ctrlLayer } = useCtrlRectangle({ mapRegion, enabled: Boolean(scene) && !unsupported, onRectangle });
+
+  /** Mantener pulsado y arrastrar: agrega lo que toca, del tipo con que empezó y si el modo lo deja elegir. */
+  const sweepAdd = (target: Target, data: SceneData) => {
+    if (target.layer === 'vegetation') {
+      const hit = specimenByCode.get(data.vegetation[target.index]?.props.code);
+      if (hit) setPlants((prev) => (prev.has(hit.id) ? prev : new Set([...prev, hit.id])));
+      return;
+    }
+    if (target.layer !== 'greenAreas' && target.layer !== 'xerophytic' && target.layer !== 'reserve') return;
+    const hit = sectionByCode.get(data[target.layer][target.index]?.props.code);
+    if (hit) setZones((prev) => (prev.has(hit.id) ? prev : new Set([...prev, hit.id])));
+  };
 
   // Mover o acercar el mapa a mano deja de «ver» el sector enfocado; un clic no.
   const onMapPointerDown = (e: ReactPointerEvent) => { pointerStart.current = selecting ? null : { x: e.clientX, y: e.clientY }; };
@@ -318,6 +294,8 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
               onReady={(v) => { viewer.current = v; v.setMarkedSections(markedCodes); v.setMarkedSpecimens(markedPlantCodes); v.setLayerVisible('supervision', false); }}
               onUnsupported={() => setUnsupported(true)}
               onSelect={(target) => { if (!selecting) onMapPick(target, scene); }}
+              selectionSweep={{ enabled: (kind) => (kind === 'section' ? pickGardens : pickPlants),
+                onSelect: (target) => sweepAdd(target, scene), onState: hint.onState }}
               onGroundPick={() => undefined} onHover={() => undefined} onCompass={() => undefined} />
               : <div className="flex h-full flex-col items-center justify-center p-8 text-center">
                 <p className="font-semibold">Mapa 3D no disponible</p>
@@ -332,7 +310,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                   <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.fit(); }}>Ver campus</button>
                   {/* Cómo elegir varios, siempre a la vista: no hay botón que active un modo. */}
                   <span className={`${MAP_CHIP} px-2.5 py-1.5 font-medium text-neutral-600`}>
-                    <kbd className="rounded border border-neutral-300 bg-neutral-50 px-1 font-sans">Ctrl</kbd> + arrastrar: elegir o quitar varios
+                    <kbd className="rounded border border-neutral-300 bg-neutral-50 px-1 font-sans">Ctrl</kbd>: clic izquierdo elige varios, clic derecho los quita
                   </span>
                 </>}
               </div>
@@ -355,13 +333,8 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                 className="rounded px-2 py-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">✕</button>
             </div>}
           </div>
-          {selecting && <div ref={areaLayer} className="absolute inset-0 z-20 cursor-crosshair touch-none"
-            aria-label="Dibuja un rectángulo para elegir o quitar lo que encierre"
-            onPointerDown={startArea} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={cancelDrag}>
-            {drag && <div className="pointer-events-none absolute border-2 border-brand-700 bg-brand-200/30"
-              style={{ left: Math.min(drag.startX, drag.endX) - drag.originX, top: Math.min(drag.startY, drag.endY) - drag.originY,
-                width: Math.abs(drag.endX - drag.startX), height: Math.abs(drag.endY - drag.startY) }} />}
-          </div>}
+          {ctrlLayer}
+          {hint.badge}
           {stale && <div className="absolute bottom-10 left-3 z-30 max-w-xs rounded-md bg-alert-warning-bg p-2 text-xs text-alert-warning-fg">Mapa almacenado sin conexión; verifica la selección.</div>}
           {layers && <div className="pointer-events-none absolute bottom-2 left-3 z-30"><MapAttribution required={layers.attributionRequired} /></div>}
         </div>

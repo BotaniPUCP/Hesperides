@@ -5,6 +5,8 @@ import type { SceneData } from './sceneData';
 import type { CameraPose } from './viewer/cameraRig';
 import type { Viewer, ViewerCallbacks } from './viewer/createViewer';
 import type { PlanModel } from './viewer/planModel';
+import type { SweepKind } from './viewer/selectionSweep';
+import type { Target } from './target';
 
 /** Guarda la vista entre montajes, para que la cámara no vuelva al encuadre inicial. */
 export interface PoseMemory {
@@ -49,11 +51,11 @@ export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemo
           onPointPick: (lat, lon) => latest.current.onPointPick?.(lat, lon),
           onHover: (t, x, y) => latest.current.onHover(t, x, y),
           onCompass: (deg) => latest.current.onCompass(deg),
-          ...(latest.current.specimenSweep?{specimenSweep:{
-            enabled:()=>latest.current.specimenSweep?.enabled()??false,
-            onSelect:(t:Parameters<ViewerCallbacks['onSelect']>[0])=>{if(t)latest.current.specimenSweep?.onSelect(t);},
-            onState:(position:{clientX:number;clientY:number}|null)=>latest.current.specimenSweep?.onState(position),
-          }}:{}),
+          ...(latest.current.selectionSweep ? { selectionSweep: {
+            enabled: (kind: SweepKind) => latest.current.selectionSweep?.enabled(kind) ?? false,
+            onSelect: (t: Target) => latest.current.selectionSweep?.onSelect(t),
+            onState: (position: { clientX: number; clientY: number } | null) => latest.current.selectionSweep?.onState(position),
+          } } : {}),
           // Solo si la pantalla lo pide: en los editores un clic sobre un cono debe marcar un punto.
           ...(latest.current.onViewConePick ? { onViewConePick: (id: number) => latest.current.onViewConePick?.(id) } : {}),
         }, latest.current.poseMemory?.recall(), model);

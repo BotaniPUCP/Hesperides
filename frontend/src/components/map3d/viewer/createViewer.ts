@@ -22,6 +22,7 @@ import { createViewCones } from './viewCones';
 import { sectionPoints, specimenPoints } from './frameFit';
 import { sectionCodesInScreenRect, specimenCodesInScreenRect } from './screenRectSections';
 import type { Viewer, ViewerCallbacks } from './viewerTypes';
+import { createSelectionSweep, SECTION_LAYERS } from './selectionSweep';
 import { ringLines, centroid } from './geometry';
 import { BUILDING_LOOKS, PHOTO_ATLAS, PHOTO_ATLAS_URL } from '../realLook/looks';
 import { createRealColors, NEUTRAL, setEdgesForRealColors } from '../realLook/realColors';
@@ -32,7 +33,6 @@ export type { Viewer, ViewerCallbacks } from './viewerTypes';
 
 /** Lo marcado a la vez (secciones de un turno de riego, bloques de un lugar), distinto de la selección. */
 const MARKED_COLOR = '#06B6D4';
-const SECTION_LAYERS = ['greenAreas', 'xerophytic', 'reserve'] as const;
 
 /** Con `model`, los edificios se dibujan con las mallas del plano oficial; sin él (no llegó o falló), como prismas. */
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose,
@@ -126,36 +126,21 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   }
 
   const dom = renderer.domElement;
-  let sweepPrevious:{x:number;y:number}|null=null;
-  let controlsBeforeSweep=true;
-  const swept=new Set<number>();
-  const sweepAt=(x:number,y:number)=>{
-    const previous=sweepPrevious??{x,y};
-    const steps=Math.max(1,Math.min(64,Math.ceil(Math.hypot(x-previous.x,y-previous.y)/8)));
-    for(let n=1;n<=steps;n++) {
-      const hit=pick(previous.x+(x-previous.x)*n/steps,previous.y+(y-previous.y)*n/steps,dom,rig.camera,pickables,isHidden);
-      if(hit?.target.layer==='vegetation'&&!swept.has(hit.target.index)) {
-        swept.add(hit.target.index);cb.specimenSweep?.onSelect(hit.target);
-      }
-    }
-    sweepPrevious={x,y};needsRender=true;
-  };
+  // Mientras se barre, la cámara queda quieta: el arrastre es del barrido, no del giro.
+  let sweeping = false;
+  let controlsBeforeSweep = true;
+  const sweep = cb.selectionSweep && createSelectionSweep({
+    pickAt: (x, y) => pick(x, y, dom, rig.camera, pickables, isHidden)?.target ?? null,
+    callbacks: cb.selectionSweep,
+    begin: () => {
+      sweeping = true; controlsBeforeSweep = rig.controls.enabled; rig.controls.enabled = false;
+      dom.style.cursor = 'grabbing'; pin.hide(); highlight.setSelected(null); highlight.setHover(null);
+    },
+    end: () => { sweeping = false; rig.controls.enabled = controlsBeforeSweep; dom.style.cursor = ''; },
+    requestRender: () => { needsRender = true; },
+  });
   const unbind = bindPointer(dom, {
-    ...(cb.specimenSweep?{sweep:{
-      enabled:()=>cb.specimenSweep!.enabled(),
-      canStart:(x:number,y:number)=>pick(x,y,dom,rig.camera,pickables,isHidden)?.target.layer==='vegetation',
-      onStart:(x:number,y:number)=>{
-        controlsBeforeSweep=rig.controls.enabled;rig.controls.enabled=false;
-        sweepPrevious=null;swept.clear();dom.style.cursor='grabbing';
-        pin.hide();highlight.setSelected(null);highlight.setHover(null);
-        cb.specimenSweep!.onState({clientX:x,clientY:y});sweepAt(x,y);
-      },
-      onMove:(x:number,y:number)=>{cb.specimenSweep!.onState({clientX:x,clientY:y});sweepAt(x,y);},
-      onEnd:()=>{
-        rig.controls.enabled=controlsBeforeSweep;dom.style.cursor='';sweepPrevious=null;swept.clear();
-        cb.specimenSweep!.onState(null);needsRender=true;
-      },
-    }}:{}),
+    ...(sweep ? { sweep } : {}),
     onPress: () => { rig.cancelFlight(); rig.controls.autoRotate = false; },
     onClick(x, y) {
       const cone = cb.onViewConePick ? cones.hitTest(x, y, dom, rig.camera) : null;
@@ -189,7 +174,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   let frame = 0, lastDistance = 0;
   const loop = (now: number) => {
     frame = requestAnimationFrame(loop);
-    const flew = rig.step(now), moved = sweepPrevious?false:rig.controls.update();
+    const flew = rig.step(now), moved = sweeping ? false : rig.controls.update();
     const distance = rig.camera.position.distanceTo(rig.controls.target);
     if (Math.abs(distance - lastDistance) / Math.max(lastDistance, 1) > 0.04) { scaleFurniture(Object.values(points), distance); lastDistance = distance; }
     if (flew || moved || needsRender || rig.controls.autoRotate) {

@@ -62,7 +62,18 @@ export function campusRowsFromPrefill(locations:InterventionLocation[],options:C
     if(l.zoneId!==null) add(options.zones.some(z=>z.id===l.zoneId)?{kind:'area',id:l.zoneId}:null);
     for(const code of l.elementCodes??[]) { const id=specimenIdByCode.get(code); add(id===undefined?null:{kind:'specimen',id}); }
   }
-  const rows=targets.reduce<InterventionLocation[]>((acc,t)=>t.kind==='specimen'?addCampusSpecimen(acc,t.id,options)
-    :acc.some(l=>l.zoneId===t.id)?acc:toggleCampus(acc,t,options),[]);
-  return {rows,missing};
+  return {rows:addCampusTargets([],targets,options),missing};
+}
+
+const sameTarget=(a:CampusTarget,b:CampusTarget)=>a.kind===b.kind&&a.id===b.id;
+
+/** Agrega varios de una vez (rectángulo con Ctrl, barrido): solo lo que falta y lo que el inventario conoce. */
+export function addCampusTargets(rows:InterventionLocation[],targets:CampusTarget[],options:CampusOptions):InterventionLocation[] {
+  return targets.reduce((acc,t)=>acc.some(l=>sameTarget(targetOf(l),t))?acc:toggleCampus(acc,t,options),rows);
+}
+
+/** Quita varios de una vez (Ctrl + clic derecho); sin nada que quitar, la misma lista. */
+export function removeCampusTargets(rows:InterventionLocation[],targets:CampusTarget[]):InterventionLocation[] {
+  const kept=rows.filter(l=>!targets.some(t=>sameTarget(targetOf(l),t)));
+  return kept.length===rows.length?rows:kept;
 }

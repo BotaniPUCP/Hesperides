@@ -2,16 +2,13 @@ import type { ModeId } from '../modes';
 import type { LayerId, Target } from '../target';
 import type { CameraPose } from './cameraRig';
 import type { ViewCone } from './viewCones';
+import type { SelectionSweepCallbacks } from './selectionSweep';
 import type { Polygon } from '../sceneData';
 
 /** Lo que el visor avisa a la interfaz React. */
 export interface ViewerCallbacks {
-  /** Opt-in specimen brush; other maps keep their normal camera gestures. */
-  specimenSweep?: {
-    enabled:()=>boolean;
-    onSelect:(target:Target)=>void;
-    onState:(position:{clientX:number;clientY:number}|null)=>void;
-  };
+  /** Mantener pulsado y arrastrar elige jardines o ejemplares, según dónde empezó; solo si la pantalla lo pide. */
+  selectionSweep?: SelectionSweepCallbacks;
   onSelect: (target: Target | null) => void;
   onGroundPick: (lat: number, lon: number) => void;
   /** Cualquier clic con punto (suelo, área verde, edificio): para marcar una ubicación. */
