@@ -139,6 +139,34 @@ Coordinación dispone de vistas Tablero y Reportes en `/incidencias`:
   sin modificar navegación global ni tamaños por defecto de componentes compartidos.
   Esta presentación no requiere migraciones ni dependencias nuevas.
 
+### Fidelidad con la maqueta aprobada
+
+La primera integración fue objetada por no reproducir la densidad ni la jerarquía
+visual de la maqueta. Sus verificaciones funcionales no acreditan aceptación visual.
+La corrección aplica al módulo completo, no solo al tablero de coordinación:
+
+- Fondo neutro solo en `/incidencias` y sus subrutas; sin modificar los fondos ni
+  la navegación de los demás módulos. Se conservan PageFrame y breadcrumbs.
+- Títulos de 29 px en escritorio y 25 px en móvil, etiquetas de 12 px y controles
+  de 38–42 px en escritorio;
+  objetivos táctiles de al menos 44 px en móvil. Son ajustes locales al módulo,
+  no cambios a los tamaños predeterminados de los componentes compartidos.
+- Paneles sin sombras grandes, cabeceras divididas de su contenido, radios de
+  10–12 px, filas compactas y alineadas. La atención prioritaria presenta tres filas;
+  el resto es accesible desde su cabecera.
+- Coordinación: cuatro indicadores con iconos, cifras diferenciadas por color,
+  avance agrupado en por registrar/registradas abiertas/cerradas y segundo gráfico
+  de severidad. Población global declarada, sin fingir un filtro temporal.
+- Capataz: sus cuatro totales y tres reportes recientes con acceso al resto, usando
+  la misma escala visual. No recibe tablero global ni capacidades de planificación.
+  En captura, Mis reportes es una lista lateral sin repetir las cuatro métricas.
+- Vista inicial sin filtros: hasta tres reportes recientes y acceso a Ver todos.
+  La vista Reportes y las consultas con filtros conservan lista completa, filtros
+  en servidor, paginación y restauración de navegación. Tabla con cuatro columnas
+  principales; el detalle conserva todos los metadatos y clasificación del registro.
+- Captura, editor y selector comparten la escala compacta; las verificaciones
+  visuales comparan el mismo rol, pantalla y viewport, no capataz contra coordinación.
+
 ## Contratos
 
 Prefijo `/api/v1/incidents`; sobre `{ok,message,data}`. Contratos completos en DTOs
@@ -302,3 +330,36 @@ su verificación con Java 25, Podman y Bun.
   `/tmp/opencode/incident-redesign/`; no son archivos necesarios para producción.
 - Se retiraron solo los procesos y contenedores de esta verificación. No se
   migró/reinició el entorno habitual ni se realizaron commits o pushes.
+
+## Verificación de fidelidad visual — 12 nov 2026
+
+La objeción posterior del usuario invalida la presentación de la primera integración
+como visualmente terminada. Esta verificación corresponde a su corrección:
+
+- Escala aplicada también a capataz, captura simple/ampliada, editor, relaciones y
+  tabla; fondo neutro limitado a incidencias. Sin cambios de permisos ni backend.
+- Comparación manual de capturas reales de coordinación con las referencias de
+  coordinación aprobadas, al mismo viewport; galería comparativa en
+  `/tmp/opencode/incident-fidelity/galeria.html`. Las diferencias de datos reales y
+  de menú funcional se declaran, no se simulan cifras ni navegación ficticias.
+- Firefox sobre build de producción con Bun: 24 capturas de seis pantallas en
+  escritorio a 1440×1100 y móvil a 390×844, con claro/oscuro comprobados en móvil,
+  sin desbordamiento horizontal. Comprobaciones
+  DOM de títulos de 29 px, campos de 42 px y tres reportes propios inicialmente
+  visibles. Las filas de atención ocupan un panel de aproximadamente 189 px.
+- Lint y build correctos; 1203 tests en 150 suites, todos aprobados. Incluye
+  regresiones de fondo neutro por ruta, listado personal progresivo y captura
+  lateral sin repetir indicadores. Persisten avisos `act(...)` de tests.
+- Recorrido completo repetido con la presentación corregida: #13 / OSG-0009,
+  INT-000008 e INT-000005 antes del registro y nueva INT-000021 contextual,
+  confirmación explícita del vínculo, cuatro ubicaciones ejecutadas por capataz
+  con cuatro fotos de prueba, validación por coordinación y cierre con resumen.
+  Cuatro intentos anticipados devuelven 422; el resumen vacío no permite cerrar;
+  no hay autocierre. Recarga final por ambos roles comprobada.
+- 76 preflights correctos, sin errores de API, respuestas 5xx ni errores de consola.
+  El registro contiene además seis eventos `fetchError` de recursos de frontend
+  y precargas RSC durante cambios de contexto; no se presentan como cero eventos
+  de red ni se confunden con llamadas de negocio fallidas.
+- Se conservaron el proceso habitual de frontend en :3000 y sus contenedores.
+  Solo se retiraron los recursos temporales de prueba. El build final se repitió
+  sin la URL de API de prueba. Sin commits ni pushes.

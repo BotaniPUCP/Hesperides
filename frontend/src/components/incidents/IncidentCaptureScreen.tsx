@@ -25,7 +25,7 @@ export function IncidentCaptureScreen() {
             onCreateIntervention={(id) => router.replace(interventionCreationHref(id, filters))}
             onDone={(id) => router.replace(href(`/incidencias/${id}`))} />
         </div>
-        <aside className="min-w-0"><IncidentMyReports /></aside>
+        <aside className="min-w-0"><IncidentMyReports compact /></aside>
       </div>
     </IncidentWorkspace>
   );

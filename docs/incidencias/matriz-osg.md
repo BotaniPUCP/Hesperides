@@ -50,3 +50,8 @@ caso, Intervenciones y Actividad. El original se consulta bajo demanda. El table
 prioriza cuatro indicadores y dos gráficos; las métricas adicionales se despliegan
 sin perder sus datos. La búsqueda de trabajo muestra resultados directamente y la
 creación contextual conserva los permisos del módulo de Intervenciones.
+
+La fidelidad visual se aplica también a Mis reportes del capataz: indicadores y
+filas compactos, tres recientes y acceso al resto; no un bloque grande con ocho
+fichas. La vista inicial muestra un adelanto de tres reportes; Ver todos permite
+consultar y filtrar la página completa. No se elimina información del registro.

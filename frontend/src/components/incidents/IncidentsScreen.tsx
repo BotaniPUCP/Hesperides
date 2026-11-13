@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button, Card, EmptyState, Input, LoadingSkeleton, Select } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -12,6 +13,7 @@ import { PageHeader } from '@/components/layouts/PageHeader';
 import { IncidentReportTable } from './IncidentReportTable';
 import { IncidentMyReports } from './IncidentMyReports';
 import { IncidentWorkspace } from './IncidentWorkspace';
+import { IncidentIcon, IncidentPanel, IncidentStat } from './IncidentPresentation';
 
 export function IncidentsScreen() {
   const { user } = useAuth();
@@ -25,6 +27,9 @@ export function IncidentsScreen() {
   const refresh = () => { list.reload(); options.reload(); summary.reload(); };
   const showDashboard=coordinator && filters.view!=='reports';
   const dashboard=summary.data?.dashboard;
+  const [allAttention, setAllAttention] = useState(false);
+  const preview = filters.view !== 'reports' && filters.page === 0 && !filters.search && !filters.status
+    && !filters.registration && !filters.severity && !filters.urgency && !filters.service && !filters.zoneId;
   const metrics: [string, number][] = summary.data ? [
     ['Pendientes de registro', summary.data.pendingApproval], ['Pendientes de atención', summary.data.pendingAttention],
     ['En atención', summary.data.inProgress], ['Resueltas', summary.data.resolved], ['Intervenciones finalizadas', summary.data.completedInterventions],
@@ -35,47 +40,51 @@ export function IncidentsScreen() {
 
   return (
     <IncidentWorkspace>
-      <PageHeader title="Incidencias" description={coordinator ? 'Revisión y seguimiento de la atención.' : 'Tus envíos y las incidencias de tu cuadrilla.'} actions={<Link href={href('/incidencias/nueva')} className="inline-flex min-h-12 items-center rounded-md bg-brand-600 px-4 py-2 font-semibold text-white hover:bg-forest-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+      <PageHeader title={showDashboard ? 'Resumen de incidencias' : 'Incidencias'} description={coordinator ? 'Lo que requiere atención y cómo avanza el trabajo.' : 'Tus reportes y el trabajo de tu cuadrilla, en un solo lugar.'} actions={<Link href={href('/incidencias/nueva')} className="inline-flex min-h-12 items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+          <IncidentIcon name="plus" />
           Informar una incidencia
         </Link>} />
-      {coordinator && <nav aria-label="Vistas de incidencias" className="flex flex-wrap gap-3">
-        <Button size="lg" variant={showDashboard ? 'primary' : 'secondary'} onClick={() => changeFilters(current => ({...current,view:undefined,page:0}))}>Tablero</Button>
-        <Button size="lg" variant={!showDashboard ? 'primary' : 'secondary'} onClick={() => changeFilters(current => ({...current,view:'reports',page:0}))}>Reportes</Button>
+      {coordinator && <nav aria-label="Vistas de incidencias" className="flex gap-6 border-b border-neutral-200">
+        <button type="button" aria-current={showDashboard ? 'page' : undefined} className={`border-b-2 px-1 pb-2 text-xs font-semibold ${showDashboard ? 'border-brand-700 text-brand-800' : 'border-transparent text-neutral-600'}`} onClick={() => changeFilters(current => ({...current,view:undefined,page:0}))}>Tablero</button>
+        <button type="button" aria-current={!showDashboard ? 'page' : undefined} className={`border-b-2 px-1 pb-2 text-xs font-semibold ${!showDashboard ? 'border-brand-700 text-brand-800' : 'border-transparent text-neutral-600'}`} onClick={() => changeFilters(current => ({...current,view:'reports',page:0}))}>Reportes</button>
       </nav>}
       {!coordinator && <IncidentMyReports />}
 
       {showDashboard && <section aria-label="Tablero de incidencias" className="space-y-5">
-        <p className="text-sm text-neutral-700">Totales generales, independientes de los filtros de la lista.</p>
         {dashboard && <>
-          <p className="text-xs text-neutral-700">Actualizado: {new Date(dashboard.generatedAt).toLocaleString('es-PE')}</p>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[
-            ['Reportes recibidos',dashboard.total],['Por registrar',dashboard.pendingRegistration],
-            ['Registradas abiertas',Math.max(0,dashboard.active-dashboard.pendingRegistration)],['Cerradas',summary.data?.resolved ?? 0],
-          ].map(([label,count], index) => <div key={label} className={`rounded-xl border p-5 ${index === 0 ? 'border-forest-800 bg-forest-800 text-white' : 'border-neutral-200 bg-neutral-0 text-neutral-900'}`}><p className={`text-sm ${index === 0 ? 'text-white' : 'text-neutral-700'}`}>{label}</p><p className="mt-3 text-4xl font-semibold tabular-nums">{count}</p></div>)}</div>
-          <Card title="Requieren atención">
-            <p className="mb-3 text-sm text-neutral-700">Reportes por registrar, urgencia alta, observaciones o asignaciones pendientes. No son alertas de SLA.</p>
-            {!dashboard.attention.length ? <p className="text-sm">Sin reportes que requieran atención prioritaria.</p> : <ul className="divide-y divide-neutral-200">{dashboard.attention.slice(0, 3).map(i => <li key={i.id} className="py-3">
-              <Link href={href(`/incidencias/${i.id}`)} className="block truncate text-sm font-medium text-brand-800 hover:underline">{i.officialCode ?? `Reporte #${i.id}`} · {i.description}</Link>
-              <p className="mt-1 text-sm text-neutral-700">{i.status.label} · {i.matrix.responsible?.fullName ?? 'Responsable sin asignar'}{!i.approvedAt ? ' · Pendiente de registro oficial' : ''}{i.urgency?.code==='HIGH' ? ' · Urgencia alta' : ''}</p>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <IncidentStat label="Reportes recibidos" value={dashboard.total} caption="Todos los reportes recibidos" tone="primary" icon="report" />
+            <IncidentStat label="Por registrar" value={dashboard.pendingRegistration} caption="Pendientes de revisión" tone="amber" icon="clock" />
+            <IncidentStat label="Registradas abiertas" value={Math.max(0,dashboard.active-dashboard.pendingRegistration)} caption="Con atención en seguimiento" tone="blue" icon="work" />
+            <IncidentStat label="Cerradas" value={summary.data?.resolved ?? 0} caption="Resolución validada" tone="green" icon="check" />
+          </div>
+          <IncidentPanel title="Requieren tu atención" aside={dashboard.attention.length > 3 ? <button type="button" aria-expanded={allAttention} onClick={() => setAllAttention(v => !v)} className="flex items-center gap-2 text-[11px] font-medium text-brand-800">{allAttention ? 'Mostrar menos' : `Ver los ${dashboard.attention.length} pendientes`}<IncidentIcon name="arrow" /></button> : <span className="text-[11px] text-neutral-600">{dashboard.attention.length} casos</span>}>
+            {!dashboard.attention.length ? <p className="p-5 text-xs">Sin reportes que requieran atención prioritaria.</p> : <ul>{dashboard.attention.slice(0, allAttention ? undefined : 3).map(i => <li key={i.id}>
+              <Link href={href(`/incidencias/${i.id}`)} className="grid grid-cols-[66px_minmax(0,1fr)_14px] items-center gap-x-3 gap-y-1 border-b border-neutral-100 px-5 py-3 hover:bg-neutral-50 sm:grid-cols-[75px_minmax(0,1fr)_150px_14px]">
+                <span className="col-start-1 row-start-1 text-[10px] font-semibold text-neutral-600">{i.officialCode ?? `#${i.id}`}</span><span className="col-start-2 row-start-1 min-w-0 truncate text-xs font-medium" title={i.description}>{i.description}</span>
+                <span className="col-start-2 row-start-2 whitespace-nowrap text-[10px] text-urgency-medium-fg sm:col-start-3 sm:row-start-1">{!i.approvedAt ? 'Por registrar' : i.status.label}</span><span className="col-start-3 row-start-1 text-neutral-500 sm:col-start-4"><IncidentIcon name="arrow" /></span>
+              </Link>
             </li>)}</ul>}
-            {dashboard.attention.length > 3 && <details className="mt-3 border-t border-neutral-200 pt-2"><summary className="min-h-12 cursor-pointer py-3 text-sm font-medium text-brand-800">Ver {dashboard.attention.length - 3} casos más</summary>
-              <ul className="divide-y divide-neutral-200">{dashboard.attention.slice(3).map(i => <li key={i.id} className="py-3"><Link href={href(`/incidencias/${i.id}`)} className="text-sm font-medium text-brand-800 hover:underline">{i.officialCode ?? `Reporte #${i.id}`} · {i.description}</Link><p className="text-sm text-neutral-700">{i.status.label}</p></li>)}</ul></details>}
-          </Card>
+          </IncidentPanel>
         </>}
         {summary.loading ? <LoadingSkeleton variant="card" /> : summary.errorMessage ? (
           <div role="alert" className="space-y-3 rounded-lg bg-alert-warning-bg p-4 text-alert-warning-fg">
             <p>No se pudo cargar el resumen. {summary.errorMessage}</p>
             <Button variant="secondary" size="lg" onClick={summary.reload}>Reintentar resumen</Button>
           </div>
-        ) : <details><summary className="min-h-12 cursor-pointer py-3 text-sm font-semibold text-brand-800">Seguimiento del flujo y trabajo relacionado</summary><div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{metrics.map(([label, count]) => (
-          <Card key={label}><p className="text-sm text-neutral-700">{label}</p><p className="mt-2 text-3xl font-semibold text-neutral-900">{count}</p></Card>
-        ))}</div></details>}
-        {summary.data?.matrix && <IncidentDashboard matrix={summary.data.matrix} />}
+        ) : null}
+        {summary.data?.matrix && <IncidentDashboard matrix={summary.data.matrix} progress={dashboard ? [
+          {label:'Por registrar',count:dashboard.pendingRegistration}, {label:'Registradas abiertas',count:Math.max(0,dashboard.active-dashboard.pendingRegistration)}, {label:'Cerradas',count:summary.data.resolved},
+        ] : undefined}><div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{metrics.map(([label, count]) => <Card key={label}><p className="text-xs text-neutral-600">{label}</p><p className="mt-2 text-2xl font-semibold tabular-nums">{count}</p></Card>)}</div></IncidentDashboard>}
+        {dashboard && <p className="text-[10px] text-neutral-600">Totales generales, independientes de los filtros. Gráficos de todos los reportes, incluidos pendientes y cerrados. Actualizado: {new Date(dashboard.generatedAt).toLocaleString('es-PE')}.</p>}
       </section>}
 
-      <div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-lg font-semibold">{coordinator ? 'Resumen de reportes' : 'Reportes propios y de mi cuadrilla'}</h2>
-        {coordinator && <IncidentExportButton />}</div>
-      <Card>
+      <section className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0" aria-label="Listado de reportes">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-5 py-3"><h2 className="text-[13px] font-semibold">{preview ? coordinator ? 'Reportes recientes' : 'Reportes recientes de mi cuadrilla' : coordinator ? 'Reportes' : 'Reportes propios y de mi cuadrilla'}</h2>
+        <div className="flex items-center gap-3">{preview && <button type="button" className="text-[11px] font-medium text-brand-800" onClick={() => changeFilters(current => ({...current,view:'reports',page:0}))}>Ver todos</button>}{coordinator && <IncidentExportButton />}</div></div>
+      <details open={!preview} className="border-b border-neutral-100 px-5 py-3">
+        <summary className="cursor-pointer text-[11px] font-medium text-brand-800">Buscar y filtrar reportes</summary>
+      <div className="pt-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-end">
           <div className="min-w-0 flex-1">
             <Input id="incident-search" label="Buscar" type="search" size="lg" value={filters.search} maxLength={200}
@@ -88,7 +97,7 @@ export function IncidentsScreen() {
           </div>
           <Button variant="secondary" size="lg" disabled={list.loading} onClick={refresh}>Actualizar</Button>
         </div>
-        {coordinator && <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {coordinator && <details className="mt-2" open={Boolean(filters.registration || filters.severity || filters.urgency || filters.service)}><summary className="cursor-pointer py-2 text-[11px] font-medium text-brand-800">Más filtros</summary><div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Select id="incident-registration" label="Registro oficial" size="lg" clearable value={filters.registration ?? null}
             options={[{id:1,code:'PENDING',label:'Pendientes de registro'},{id:2,code:'REGISTERED',label:'Registradas en curso'},{id:3,code:'CLOSED',label:'Cerradas'}]}
             onChange={v => changeFilters(current => ({...current,registration:v?.code,page:0}))} />
@@ -98,12 +107,13 @@ export function IncidentsScreen() {
             onChange={v => changeFilters(current => ({...current,urgency:v?.code,page:0}))} />
           <Select id="incident-service" label="Servicio" size="lg" clearable value={filters.service ?? null} options={options.data?.matrix.services ?? []}
             onChange={v => changeFilters(current => ({...current,service:v?.code,page:0}))} />
-        </div>}
+        </div></details>}
         {options.errorMessage && <div role="alert" className="mt-3 space-y-3 rounded-md bg-alert-warning-bg p-3 text-sm text-alert-warning-fg">
           <p>No se pudieron cargar los filtros de estado. {options.errorMessage}</p>
           <Button variant="secondary" size="lg" onClick={options.reload}>Reintentar opciones</Button>
         </div>}
-      </Card>
+      </div>
+      </details>
 
       {list.loading ? <LoadingSkeleton variant="card" count={3} /> : list.errorMessage ? (
         <div role="alert" className="space-y-3 rounded-lg bg-alert-danger-bg p-4 text-alert-danger-fg">
@@ -113,13 +123,14 @@ export function IncidentsScreen() {
         {list.data.content.length === 0 ? (
           <EmptyState title={filters.search || filters.status ? 'No hay incidencias con esos criterios' : 'Todavía no hay incidencias'}
             description={filters.search || filters.status ? 'Prueba con otra descripción o cambia los filtros.' : 'Informa lo que ocurrió con un texto breve; las fotos y la ubicación son opcionales.'} />
-        ) : <IncidentReportTable incidents={list.data.content} href={href} />}
-        <nav aria-label="Páginas de incidencias" className="surface-card flex flex-wrap items-center justify-between gap-3">
+        ) : <IncidentReportTable incidents={preview ? list.data.content.slice(0,3) : list.data.content} href={href} />}
+        {!preview && <nav aria-label="Páginas de incidencias" className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-100 px-5 py-3">
           <Button variant="secondary" size="lg" disabled={filters.page === 0} onClick={() => changeFilters(current => ({ ...current, page: Math.max(0,current.page - 1) }))}>Anterior</Button>
           <p className="text-sm text-neutral-700">{list.data.page.totalElements} registros · Página {filters.page + 1} de {Math.max(1, list.data.page.totalPages)}</p>
           <Button variant="secondary" size="lg" disabled={filters.page + 1 >= list.data.page.totalPages} onClick={() => changeFilters(current => ({ ...current, page: current.page + 1 }))}>Siguiente</Button>
-        </nav>
+        </nav>}
       </>}
+      </section>
     </IncidentWorkspace>
   );
 }

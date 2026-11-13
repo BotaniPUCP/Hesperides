@@ -37,7 +37,7 @@ beforeEach(() => {
 it('links to capture and detail with the current filters rather than switching local views', () => {
   render(<IncidentsScreen />);
   expect(screen.getByRole('link', { name: 'Informar una incidencia' })).toHaveAttribute('href', '/incidencias/nueva?search=rama&status=OPEN&page=2');
-  expect(screen.getByRole('link', { name: /Rama caída/ })).toHaveAttribute('href', '/incidencias/7?search=rama&status=OPEN&page=2');
+  for (const link of screen.getAllByRole('link', { name: /Rama caída/ })) expect(link).toHaveAttribute('href', '/incidencias/7?search=rama&status=OPEN&page=2');
 });
 
 it('recupera la posición del scroll de la lista con los mismos filtros', () => {

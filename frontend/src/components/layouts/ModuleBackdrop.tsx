@@ -54,6 +54,8 @@ function BackdropCanvas({ module }: { module: ModuleId }) {
 
 /** Fondo del módulo de la ruta actual. Su contenedor debe aislar el apilamiento (`relative isolate`). */
 export function ModuleBackdrop() {
-  const moduleId = moduleForPath(usePathname());
+  const pathname = usePathname();
+  const moduleId = moduleForPath(pathname);
+  if (pathname === '/incidencias' || pathname?.startsWith('/incidencias/')) return <div data-testid="module-backdrop" data-module={moduleId} aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-neutral-100/80" />;
   return moduleId ? <BackdropCanvas module={moduleId} /> : null;
 }

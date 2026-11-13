@@ -2,32 +2,31 @@
 
 import Link from 'next/link';
 import type { Incident } from '@shared/types';
-import { Card,StatusBadge,UrgencyBadge,type UrgencyCode } from '@/components/ui';
+import { StatusBadge } from '@/components/ui';
 import { incidentDate } from '@/lib/incidentNavigation';
 
-export function IncidentReportTable({ incidents,href }: {incidents: Incident[];href: (path: string) => string}) {
+export function IncidentReportTable({ incidents, href }: { incidents: Incident[]; href: (path: string) => string }) {
   return <>
-    <div className="space-y-3 md:hidden">{incidents.map(i => <Link key={i.id} href={href(`/incidencias/${i.id}`)} className="block rounded-md focus-visible:ring-2 focus-visible:ring-brand-600">
-      <Card><div className="flex flex-wrap justify-between gap-2"><b>{i.officialCode ?? `Reporte #${i.id}`}</b><StatusBadge code={i.status.code} label={i.status.label}/></div>
-        <p className="my-3 break-words font-medium">{i.description}</p>
-        <p className="text-sm text-neutral-700">{i.matrix.zone?.label ?? i.locationReference ?? 'Ubicación no indicada'}</p>
-        <p className="mt-2 text-sm text-neutral-700">{i.reportedBy.fullName} · {incidentDate(i.createdAt)}</p>
-        <p className="mt-2 text-sm">Severidad: {i.matrix.severity?.label ?? 'Sin evaluar'} · {i.matrix.service?.label ?? 'Servicio sin determinar'}</p>
-        <p className="mt-2 text-sm">{i.approvedAt ? 'Registro oficial' : 'Pendiente de registro'} · {i.matrix.responsible?.fullName ?? 'Responsable sin asignar'}</p>
-      </Card>
-    </Link>)}</div>
-    <div className="hidden overflow-x-auto rounded-lg border border-neutral-200 md:block">
-      <table className="w-full text-left text-sm"><caption className="sr-only">Resumen de reportes de incidencias</caption>
-        <thead className="bg-neutral-50 text-neutral-700"><tr>{['Reporte','Ubicación','Reportado por / recibida','Clasificación','Atención','Estado / registro'].map(h => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
-        <tbody className="divide-y divide-neutral-200 bg-neutral-0">{incidents.map(i => <tr key={i.id} className="hover:bg-neutral-50">
-          <td className="max-w-sm px-4 py-4 align-top"><Link href={href(`/incidencias/${i.id}`)} className="font-semibold text-brand-700 underline">{i.officialCode ?? `Reporte #${i.id}`}</Link><p className="mt-2 break-words">{i.description}</p></td>
-          <td className="max-w-xs px-4 py-4 align-top">{i.matrix.zone?.label ?? i.locationReference ?? 'Sin identificar'}<p className="mt-1 text-xs text-neutral-700">{i.matrix.zone?.sectorLabel}</p></td>
-          <td className="px-4 py-4 align-top">{i.matrix.reporterName ?? i.reportedBy.fullName}<p className="mt-1 text-xs text-neutral-700">{incidentDate(i.createdAt)}</p><p className="mt-1 text-xs">{i.matrix.intakeChannel?.label ?? 'Formulario'}</p></td>
-          <td className="px-4 py-4 align-top"><p>{i.matrix.event?.label ?? 'Incidencia'}</p><p className="mt-1 text-xs">{i.matrix.service?.label ?? 'Servicio sin determinar'}</p><p className="mt-1">Severidad: {i.matrix.severity?.label ?? 'Sin evaluar'}</p>
-            {i.urgency && <div className="mt-2"><UrgencyBadge code={i.urgency.code as UrgencyCode} label={i.urgency.label}/></div>}</td>
-          <td className="px-4 py-4 align-top">{i.matrix.responsible?.fullName ?? 'Responsable sin asignar'}<p className="mt-1 text-xs text-neutral-700">{i.team?.name ?? 'Sin cuadrilla asignada'}</p><p className="mt-1 text-xs">{i.matrix.company?.label ?? 'Empresa sin determinar'}</p></td>
-          <td className="px-4 py-4 align-top"><StatusBadge code={i.status.code} label={i.status.label}/><p className="mt-2 text-xs">{i.approvedAt ? 'Registrada oficialmente' : 'Pendiente de registro'}</p>
-            {i.resolvedAt && <p className="mt-2 text-xs">Cierre: {incidentDate(i.resolvedAt)} · {i.closureBusinessDays} días hábiles</p>}</td>
+    <ul className="divide-y divide-neutral-100 md:hidden">{incidents.map(i => <li key={i.id}>
+      <Link href={href(`/incidencias/${i.id}`)} className="block space-y-2 px-5 py-4 hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-brand-600">
+        <div className="flex items-center justify-between gap-3"><span className="text-[11px] font-semibold text-brand-800">{i.officialCode ?? `Reporte #${i.id}`}</span><StatusBadge code={i.status.code} label={i.status.label}/></div>
+        <p className="line-clamp-2 text-xs font-medium">{i.description}</p>
+        <p className="truncate text-[10px] text-neutral-600">{i.matrix.zone?.label ?? i.locationReference ?? 'Ubicación no indicada'} · {incidentDate(i.createdAt)}</p>
+      </Link>
+    </li>)}</ul>
+    <div className="hidden overflow-x-auto md:block">
+      <table className="w-full table-fixed text-left text-xs"><caption className="sr-only">Resumen de reportes de incidencias</caption>
+        <thead className="bg-neutral-50 text-[10px] uppercase tracking-wide text-neutral-600"><tr>
+          <th className="w-[36%] px-5 py-3 font-medium">Reporte</th><th className="w-[24%] px-5 py-3 font-medium">Ubicación</th>
+          <th className="w-[22%] px-5 py-3 font-medium">Responsable</th><th className="w-[18%] px-5 py-3 font-medium">Estado</th>
+        </tr></thead>
+        <tbody className="divide-y divide-neutral-100">{incidents.map(i => <tr key={i.id} className="hover:bg-neutral-50">
+          <td className="px-5 py-3 align-middle"><Link href={href(`/incidencias/${i.id}`)} className="block min-w-0 hover:underline">
+            <span className="text-[10px] font-semibold text-brand-800">{i.officialCode ?? `Reporte #${i.id}`}</span><span className="mt-1 block truncate font-medium text-neutral-800" title={i.description}>{i.description}</span>
+          </Link></td>
+          <td className="px-5 py-3 align-middle"><span className="line-clamp-2 text-neutral-600">{i.matrix.zone?.label ?? i.locationReference ?? 'Sin identificar'}</span><span className="mt-1 block text-[10px] text-neutral-600">{i.matrix.zone?.sectorLabel}</span></td>
+          <td className="px-5 py-3 align-middle"><span className="block truncate text-neutral-600">{i.matrix.responsible?.fullName ?? 'Por asignar'}</span><span className="mt-1 block truncate text-[10px] text-neutral-600">{i.team?.name}</span></td>
+          <td className="px-5 py-3 align-middle"><StatusBadge code={i.status.code} label={i.status.label}/></td>
         </tr>)}</tbody>
       </table>
     </div>

@@ -50,7 +50,7 @@ export function IncidentMatrixFields({ value, original, options, disabled, onCha
   const cause = options.rootCauses.find((i) => i.code === value.rootCauseCode);
   return <div className="space-y-5 border-t border-neutral-200 pt-5">
     <section className="space-y-4" aria-labelledby="matrix-classification">
-      <h2 id="matrix-classification" className="text-base font-semibold">Clasificación y prioridad</h2>
+      <h2 id="matrix-classification" className="flex items-center gap-3 text-[13px] font-semibold"><span className="grid h-6 w-6 place-content-center rounded-md bg-brand-50 text-[10px] text-brand-800">02</span>Clasificación y prioridad</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 [&>div]:min-w-0 [&_select]:min-w-0 [&_select]:max-w-full">
         {includeZone && <IncidentZoneField value={value.zoneId ?? null} options={options} disabled={disabled} onChange={zoneId => change('zoneId', zoneId)} />}
         {select('serviceCode', 'Servicio', options.services, original.service)}

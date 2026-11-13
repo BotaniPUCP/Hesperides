@@ -56,16 +56,19 @@ function ReviewForm({ detail, options, busy, onSave, onCancel }: {
       setError(''); if (await onSave(review)) { setDirty(false); onCancel(); }
     } catch (ex) { setError((ex as Error).message); }
   };
-  return <Card title="Editar incidencia">
+  return <div className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0">
     {guard.dialog}
-    <form className="space-y-4" onChange={() => setDirty(true)} onSubmit={(e) => { e.preventDefault(); void save(); }}>
-      <h2 className="text-base font-semibold">Descripción y ubicación</h2>
+    <form onChange={() => setDirty(true)} onSubmit={(e) => { e.preventDefault(); void save(); }}>
+      <section className="space-y-4 px-5 py-6 sm:px-7">
+      <h2 className="flex items-center gap-3 text-[13px] font-semibold"><span className="grid h-6 w-6 place-content-center rounded-md bg-brand-50 text-[10px] text-brand-800">01</span>Descripción y ubicación</h2>
       <Textarea id="review-description" label="Descripción" value={description} rows={3} maxLength={10000} disabled={busy} required
         errorMessage={descriptionError} onChange={(value) => { setDescription(value); setDescriptionError(''); }} />
       <div className="grid gap-4 sm:grid-cols-2">
         <LocationFields value={location} onChange={(next) => { setLocation(next); setDirty(true); }} disabled={busy} compact />
         <IncidentZoneField value={matrix.zoneId ?? null} options={options.matrix} disabled={busy} onChange={zoneId => { setMatrix({ ...matrix, zoneId }); setDirty(true); }} />
       </div>
+      </section>
+      <div className="px-5 sm:px-7">
       <IncidentMatrixFields value={matrix} original={incident.matrix} options={options.matrix} disabled={busy} includeZone={false} onChange={(next) => { setMatrix(next); setDirty(true); }}
         priority={<Select id="review-urgency" label="Urgencia" size="lg" options={options.urgencies} value={urgency} onChange={(v) => setUrgency(v?.code ?? null)} clearable disabled={busy} placeholder="Sin evaluar" />}
         management={<><Select id="review-type" label="Tipo de incidencia" size="lg" options={options.types} value={type} onChange={(v) => setType(v?.code ?? null)} clearable disabled={busy} placeholder="Sin clasificar" />
@@ -76,13 +79,14 @@ function ReviewForm({ detail, options, busy, onSave, onCancel }: {
           ...options.teams.map((team) => ({ id: team.id, code: String(team.id), label: team.name })),
         ]} /></>} />
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
-      <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 bg-neutral-0 py-4">
-        <span className="text-sm text-neutral-600">{dirty ? 'Cambios sin guardar' : 'Edición del registro'}</span>
+      </div>
+      <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 bg-neutral-0 px-5 py-4 sm:px-7">
+        <span className="text-[11px] text-neutral-600">{dirty ? 'Cambios sin guardar' : 'Edición del registro'}</span>
         <div className="flex gap-2"><Button variant="ghost" disabled={busy} onClick={() => guard.confirm(onCancel)}>Cancelar</Button>
         <Button type="submit" disabled={busy} loading={busy}>Guardar cambios</Button></div>
       </div>
     </form>
-  </Card>;
+  </div>;
 }
 
 export function IncidentDetailPanel({ detail, options, optionsLoading, coordinator, onChange, onReload, selectedInterventionId = null, createInterventionHref = '/intervenciones/nueva' }: {
@@ -110,8 +114,9 @@ export function IncidentDetailPanel({ detail, options, optionsLoading, coordinat
 
   return <IncidentWorkspace>
     <header className="flex flex-wrap items-start justify-between gap-3">
-      <div className="space-y-2"><h1 className="page-title">{incident.officialCode ?? `Incidencia #${incident.id}`}</h1>
+      <div className="space-y-2"><h1 className="page-title">{editing ? 'Editar incidencia' : incident.officialCode ?? `Incidencia #${incident.id}`}</h1>
         <div className="flex flex-wrap gap-2"><StatusBadge code={incident.status.code} label={incident.status.label} />
+          {editing && <span className="text-[11px] font-semibold text-neutral-600">{incident.officialCode ?? `INCIDENCIA #${incident.id}`}</span>}
           {incident.urgency && <UrgencyBadge code={incident.urgency.code as UrgencyCode} label={incident.urgency.label} />}
         </div>
       </div>

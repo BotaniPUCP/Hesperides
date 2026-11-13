@@ -53,4 +53,11 @@ describe('ModuleBackdrop', () => {
 
     expect(screen.queryByTestId('module-backdrop')).not.toBeInTheDocument();
   });
+
+  it.each(['/incidencias', '/incidencias/7', '/incidencias/nueva'])('uses the approved neutral workspace only on %s', path => {
+    mockPathname = path;
+    const { container } = render(<ModuleBackdrop />);
+    expect(screen.getByTestId('module-backdrop')).toHaveClass('bg-neutral-100/80');
+    expect(container.querySelector('canvas')).not.toBeInTheDocument();
+  });
 });
