@@ -207,15 +207,20 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V043 | `V043__reservation_use_confirmation_and_usage.sql` | SPEC-107 §4 · D-12 | Retira `attendance` y trae el seguimiento de uso: `use_confirmed`, `space_used`, los historiales `garden_reservation_confirmations` y `garden_reservation_usages`, y el parámetro `RESERVATION_CONFIRMATION_MINUTES` |
 | V044 | `V044__usage_mark_shares_confirmation_cutoff.sql` | SPEC-107 §4 · D-12 | Corrección del usuario: la tolerancia del corte aplica también a la marca de uso; se generaliza label y descripción del parámetro (el código no se renombra) |
 | V045 | `V045__group_buildings_by_plan.sql` | SPEC-108 §4 | Edificios del plano: `parent_building_id`, `plan_key` y `base_m` en `campus_buildings`, tabla `campus_building_codes`, 133 principales, 71 agrupados y 127 códigos. Generada por `scripts/mapa/plano_pucp/generar_migracion.py`; no se regenera una vez publicada. Nació como V040 en `feature/spec-108-edificios-del-plano` y pasó a V045 al integrarse con reservas (12 nov 2026) |
+| V046 | `V046__shorten_frequency_rule_type_labels.sql` | SPEC-101 | Nombres cortos de los tipos de regla de frecuencia; solo cambian etiquetas, no códigos. Nació como V039 en `feature/conjuntos-con-ejemplares` |
+| V047 | `V047__add_green_area_set_elements.sql` | SPEC-203 D-14 | Un conjunto puede incluir ejemplares (`green_area_set_elements`) además de jardines, o solo ejemplares. Nació como V040 |
+| V048 | `V048__planning_assignments.sql` | SPEC-203 §4.1 · D-16, D-17 | El conjunto dice dónde; qué se planifica es una asignación de una frecuencia al conjunto (`rule_key`, asignaciones). Nació como V041 |
 
 ### Pendientes (sin número reservado)
 
-Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V046**, sujeto a
+Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V049**, sujeto a
 comprobarlo nuevamente al implementar. El modelo de solicitante, responsable y rol del contacto entró por V040 y V041;
 el seguimiento del uso del jardín por V043 y su corrección del corte por V044 (la V042 fue aplicada y retirada el
 mismo día). Los edificios del plano (SPEC-108) entraron por V045: nacieron como V040 y se renumeraron al integrarse
 con reservas, porque reservas ya tenía cinco migraciones aplicadas en bases de trabajo y el plano una sola.
 Una base que ya aplicó la V040 del plano se recrea (o se restaura desde un respaldo previo a esa migración).
+Las tres de conjuntos (`feature/conjuntos-con-ejemplares`) nacieron como V039–V041 y pasaron a V046–V048 al
+integrarse detrás de reservas y del plano; quien las aplicó con su número antiguo recrea su base.
 `Vnext` en un spec es un marcador documental, no un nombre de archivo ejecutable.
 Los números en citas históricas de otros specs no autorizan reutilizar versiones ocupadas.
 

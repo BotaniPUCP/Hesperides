@@ -20,12 +20,19 @@ export interface Viewer {
   setPaint: (mode: ModeId, hidden: Set<string>) => void;
   /** M7: áreas registradas temporalmente, sin cambiar el modo normal del mapa. */
   setMarkedSections: (codes: readonly string[]) => void;
-  /** Vuela hasta ver juntas esas áreas; sin áreas reconocidas, la cámara no se mueve. */
-  focusSections: (codes: readonly string[]) => void;
+  /** Ejemplares marcados a la vez (los de un conjunto), con el mismo color que las áreas. */
+  setMarkedSpecimens: (codes: readonly string[]) => void;
+  /**
+   * Vuela hasta ver juntas esas áreas y, si se pasan, esos ejemplares; sin nada
+   * reconocido, la cámara no se mueve.
+   */
+  focusSections: (codes: readonly string[], specimenCodes?: readonly string[]) => void;
   /** Los edificios de un lugar hecho de varios bloques; una lista vacía quita las marcas. */
   setMarkedBuildings: (ids: readonly number[]) => void;
   /** Areas del sector cuyo poligono cruza el rectangulo de pantalla (pixeles cliente). */
   sectionCodesInScreenRect: (x1: number, y1: number, x2: number, y2: number, eligible: readonly string[]) => string[];
+  /** Ejemplares elegibles cuyo punto cae dentro del rectángulo de pantalla (píxeles cliente). */
+  specimenCodesInScreenRect: (x1: number, y1: number, x2: number, y2: number, eligible: readonly string[]) => string[];
   setLayerVisible: (id: LayerId, visible: boolean) => void;
   select: (target: Target | null, focus: boolean) => void;
   setNight: (night: boolean) => void;

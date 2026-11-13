@@ -4,7 +4,7 @@ import React from 'react';
 import { Card } from '@/components/ui';
 
 const FIELD = 'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
-const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
+const LABEL = 'mb-1 block text-sm font-medium text-neutral-700';
 
 export interface FilterState {
   search: string;
@@ -53,13 +53,13 @@ export function FrequencyFilters({ value, onChange, ruleTypes }: Props) {
         </label>
 
         <label className="block">
-          <span className={LABEL}>Modelo de periodicidad</span>
+          <span className={LABEL}>Tipo de frecuencia</span>
           <select
             value={value.ruleType}
             onChange={(e) => onChange({ ruleType: e.target.value })}
             className={`${FIELD} bg-neutral-0`}
           >
-            <option value="">Todos los modelos</option>
+            <option value="">Todos los tipos</option>
             {ruleTypes.map((r) => (
               <option key={r.id} value={r.code}>{r.label}</option>
             ))}

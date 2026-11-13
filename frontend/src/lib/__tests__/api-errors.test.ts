@@ -150,7 +150,9 @@ describe('errores de conjuntos y planificación (SPEC-203)', () => {
     expect(mensajeDeApiError(new ApiError(422, 'Ya existe un conjunto con ese nombre'))).toBe('Ya existe un conjunto con ese nombre.');
     expect(mensajeDeApiError(new ApiError(409, 'Otra persona cambió este conjunto. Recarga para ver su versión.')))
       .toBe('Otra persona cambió este conjunto mientras lo editabas. Recarga para ver su versión.');
-    expect(mensajeDeApiError(new ApiError(422, 'Quita primero la frecuencia propia de este conjunto'))).toMatch(/frecuencia propia/);
+    expect(mensajeDeApiError(new ApiError(422, 'Las frecuencias tercerizadas no se planifican'))).toMatch(/personal propio/);
+    expect(mensajeDeApiError(new ApiError(409, '«Ingreso» ya tiene una planificación de Riego manual. Edítala en vez de crear otra.')))
+      .toBe('«Ingreso» ya tiene una planificación de Riego manual. Edítala en vez de crear otra.');
   });
 
   it('un mensaje con ids al final se reconoce por su comienzo', () => {

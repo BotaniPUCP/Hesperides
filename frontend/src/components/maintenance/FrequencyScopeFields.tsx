@@ -1,41 +1,32 @@
 'use client';
 
-import type { GreenAreaSetSummary, MaintenanceScope } from '@shared/types';
+import type { MaintenanceScope } from '@shared/types';
+import { FrequencyChoice } from './FrequencyChoice';
 
-const SELECT = 'w-full rounded-md border border-neutral-300 bg-neutral-0 px-3 py-2 text-sm focus:border-primary-500 focus:outline-hidden';
-const LABEL = 'block text-xs font-medium text-neutral-600 mb-1';
+const PLANNING_PATH = '/intervenciones/planificacion';
+
+/** Planificación con la actividad de una frecuencia ya filtrada; allí «Ver todas» quita el filtro. */
+export const planningOfActivity = (activityId: number) => `${PLANNING_PATH}?actividad=${activityId}`;
+
+/** «1 planificación», «3 planificaciones». */
+export const planningsLabel = (n: number) => (n === 1 ? '1 planificación' : `${n} planificaciones`);
 
 interface Props {
   scope: MaintenanceScope;
-  setId: number | null;
-  sets: GreenAreaSetSummary[];
   onScope: (scope: MaintenanceScope) => void;
-  onSet: (id: number | null) => void;
 }
 
-/** A qué se aplica una frecuencia: todo el campus o un conjunto guardado (SPEC-203 D-07). */
-export function FrequencyScopeFields({ scope, setId, sets, onScope, onSet }: Props) {
+/**
+ * Dónde rige una frecuencia (SPEC-203 D-16): en todo el campus o solo en algunas áreas. La
+ * frecuencia es de su actividad; en qué áreas se usa una de «solo algunas áreas» se decide al
+ * crear cada planificación, no aquí.
+ */
+export function FrequencyScopeFields({ scope, onScope }: Props) {
   return (
-    <>
-      <div>
-        <label htmlFor="frequency-scope" className={LABEL}>Se aplica a</label>
-        <select id="frequency-scope" value={scope} onChange={(e) => onScope(e.target.value as MaintenanceScope)} className={SELECT}>
-          <option value="CAMPUS_WIDE">Todo el campus</option>
-          <option value="BY_SET">Un conjunto</option>
-        </select>
-      </div>
-      {scope === 'BY_SET' && (
-        <div className="sm:col-span-2">
-          <label htmlFor="frequency-set" className={LABEL}>Conjunto</label>
-          <select id="frequency-set" value={setId ?? 0} onChange={(e) => onSet(Number(e.target.value) || null)} className={SELECT}>
-            <option value={0}>Elige un conjunto…</option>
-            {sets.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <span className="mt-1 block text-xs text-neutral-500">
-            Reemplaza a la frecuencia de todo el campus solo para los jardines de este conjunto.
-          </span>
-        </div>
-      )}
-    </>
+    <FrequencyChoice legend="Se aplica a" name="frequency-scope" value={scope} onChange={onScope}
+      options={[{ value: 'CAMPUS_WIDE', label: 'Todo el campus' }, { value: 'BY_SET', label: 'Solo algunas áreas' }]}
+      hint={scope === 'BY_SET'
+        ? 'Las áreas se eligen al crear cada planificación.'
+        : 'Rige en todo el campus y es la que se propone al planificar.'} />
   );
 }

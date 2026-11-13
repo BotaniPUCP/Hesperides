@@ -6,6 +6,7 @@ export function planningRow(over: Partial<PlanningRow> = {}): PlanningRow {
     setId: 3,
     setName: 'Ingreso Riva-Agüero',
     zoneCount: 18,
+    elementCount: 0,
     activityTypeItemId: 30,
     activityLabel: 'Corte de césped',
     ruleKind: 'INTERVAL_DAYS',
@@ -21,6 +22,12 @@ export function planningRow(over: Partial<PlanningRow> = {}): PlanningRow {
     estimatedDate: null,
     yearCount: null,
     suggestedDate: '2026-11-08',
+    assignmentId: 71,
+    ruleKey: 'regla-corte',
+    upToDateCount: 0,
+    lastDates: [{ date: '2026-09-30', count: 18 }],
+    pendingZoneIds: [],
+    pendingElementIds: [],
     ...over,
   };
 }

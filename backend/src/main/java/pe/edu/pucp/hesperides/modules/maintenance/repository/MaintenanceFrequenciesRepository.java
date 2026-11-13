@@ -93,20 +93,17 @@ public interface MaintenanceFrequenciesRepository extends JpaRepository<Maintena
     /**
      * Detecta el choque contra el indice unico parcial antes de que lo lance la
      * base: asi el usuario recibe un 409 con un mensaje que explica el conflicto
-     * en vez de un error de constraint.
+     * en vez de un error de constraint. Solo aplica a las de todo el campus.
      */
     @Query("SELECT mf FROM MaintenanceFrequency mf "
             + "WHERE mf.validTo IS NULL "
             + "AND mf.activityTypeItem.id = :activityTypeItemId "
             + "AND mf.regime = :regime "
-            + "AND mf.scope = :scope "
-            + "AND ((:setId IS NULL AND mf.greenAreaSetId IS NULL) OR (mf.greenAreaSetId = :setId)) "
+            + "AND mf.scope = 'CAMPUS_WIDE' "
             + "AND (:excludeId IS NULL OR mf.id <> :excludeId)")
-    Optional<MaintenanceFrequency> findDuplicateCurrent(
+    Optional<MaintenanceFrequency> findDuplicateCampusWide(
             @Param("activityTypeItemId") Long activityTypeItemId,
             @Param("regime") String regime,
-            @Param("scope") String scope,
-            @Param("setId") Long setId,
             @Param("excludeId") Long excludeId
     );
 }

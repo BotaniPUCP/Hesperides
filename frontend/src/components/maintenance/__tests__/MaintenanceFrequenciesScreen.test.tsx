@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { MaintenanceFrequency } from '@shared/types';
 import { MaintenanceFrequenciesScreen } from '../MaintenanceFrequenciesScreen';
+import { saveFrequencyFlash } from '../frequencyListState';
 import { PageFrame } from '@/components/layouts/PageFrame';
 import { rememberedHref, rememberListQuery } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
@@ -19,7 +20,6 @@ jest.mock('@/lib/maintenance-api', () => ({
     list: jest.fn(), getActivityTypes: jest.fn(), getRuleTypes: jest.fn(),
   },
 }));
-jest.mock('@/lib/green-area-sets-api', () => ({ greenAreaSetsApi: { list: jest.fn().mockResolvedValue([]) } }));
 
 const LIST = '/intervenciones/frecuencias';
 const frequency = (id: number, label: string, regime: string) => ({
@@ -76,4 +76,18 @@ it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de c
   expect(screen.getByLabelText('Modalidad de ejecución')).toHaveValue('');
   expect(screen.getByText('Riego')).toBeInTheDocument();
   await waitFor(() => expect(rememberedHref(LIST)).toBe(LIST));
+});
+
+it('crear lleva a su propia página, y al volver la lista muestra el aviso una sola vez', async () => {
+  saveFrequencyFlash({ type: 'success', message: 'Frecuencia registrada', warnings: ['Un aviso'] });
+  const { unmount } = render(<MaintenanceFrequenciesScreen />);
+
+  expect(await screen.findByText('Frecuencia registrada')).toBeInTheDocument();
+  expect(screen.getByText('Un aviso')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '+ Nueva frecuencia' })).toHaveAttribute('href', `${LIST}/nueva`);
+
+  unmount();
+  render(<MaintenanceFrequenciesScreen />);
+  await screen.findByText('Poda');
+  expect(screen.queryByText('Frecuencia registrada')).not.toBeInTheDocument();
 });

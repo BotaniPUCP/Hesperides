@@ -66,13 +66,18 @@ class PlanningIntegrationTest {
         set = jdbc.queryForObject("INSERT INTO green_area_sets(name) VALUES (?) RETURNING id", Long.class,
                 "Planificación " + UUID.randomUUID());
         jdbc.update("INSERT INTO green_area_set_zones(set_id, zone_id) VALUES (?,?),(?,?)", set, kept, set, removed);
-        for (long type : types) {
-            jdbc.update("INSERT INTO green_area_set_activities(set_id, activity_type_item_id) VALUES (?,?)", set, type);
-        }
         jdbc.update("UPDATE zones SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?", removed);
         rule(types.get(0), "IN_HOUSE", "INTERVAL_DAYS", 30, 35);
         rule(types.get(1), "OUTSOURCED", "INTERVAL_DAYS", 30, 35);
         rule(types.get(2), "IN_HOUSE", "ON_DEMAND", null, null);
+        // SPEC-203 §3.4: qué se planifica en el conjunto es una asignación a cada regla.
+        for (long type : types) {
+            jdbc.update("""
+                    INSERT INTO planning_assignments(set_id, activity_type_item_id, frequency_rule_key)
+                    SELECT ?, ?, rule_key FROM maintenance_frequencies WHERE activity_type_item_id = ? AND valid_to IS NULL
+                    ORDER BY id DESC LIMIT 1
+                    """, set, type, type);
+        }
     }
 
     private long zone(long sectionType) {

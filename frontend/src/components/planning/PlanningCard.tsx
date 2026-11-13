@@ -1,59 +1,125 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { PlanningRow } from '@shared/types';
+import { Badge, Button, type BadgeColor } from '@/components/ui';
 import { cn } from '@/lib/cn';
-import { lastLine, rhythmText, rowTitle, stateDetail, stateLabel } from './planningTexts';
+import { contentsLabel, historyLine, partialProgress, pendingLabel, rhythmText, stateDetail, stateLabel, unitsLabel } from './planningTexts';
 
-/** Color del estado según SPEC-C01: rojo atrasada, ámbar toca, azul abierta, verde al día. */
-const TONE: Record<PlanningRow['state'], string> = {
-  OVERDUE: 'text-action-danger',
-  DUE: 'text-alert-warning-fg',
-  IN_PROGRESS: 'text-info-600',
-  SCHEDULED: 'text-info-600',
-  NOT_DUE: 'text-success-600',
-  DONE_FOR_PERIOD: 'text-success-600',
-  NOT_CONFIGURED: 'text-neutral-500',
+/** Color del estado según SPEC-C01: rojo atrasada, ámbar pendiente, azul abierta, verde al día. */
+const TONE: Record<PlanningRow['state'], BadgeColor> = {
+  OVERDUE: 'danger',
+  DUE: 'warning',
+  IN_PROGRESS: 'info',
+  SCHEDULED: 'info',
+  NOT_DUE: 'success',
+  DONE_FOR_PERIOD: 'success',
+  NOT_CONFIGURED: 'neutral',
 };
 
 const PLANNABLE: PlanningRow['state'][] = ['OVERDUE', 'DUE', 'NOT_DUE'];
+export const NEW_PLANNING_PATH = '/intervenciones/planificacion/nueva';
+const planningPath = (assignmentId: number) => `/intervenciones/planificacion/${assignmentId}`;
 
+/** Con avance parcial, el registro llega solo con lo que falta (se puede sumar el resto allí). */
 export function planHref(row: PlanningRow): string {
-  return `/intervenciones/nueva?conjunto=${row.setId}&actividad=${row.activityTypeItemId}`;
+  const base = `/intervenciones/nueva?conjunto=${row.setId}&actividad=${row.activityTypeItemId}`;
+  return partialProgress(row) ? `${base}&pendientes=1` : base;
 }
+
+/** Con intervalo, el atraso es de las unidades que faltan: «6 días tarde en 2 jardines». */
+const DELAY_IN_UNITS: (string | null)[] = ['INTERVAL_DAYS', 'COVERAGE_CYCLE'];
 
 interface Props {
   row: PlanningRow;
   selected: boolean;
   onSelect: () => void;
+  /** Eliminar la planificación; la pantalla confirma y recarga. */
+  onRemove?: () => void;
 }
 
-/** Una fila de planificación en tres líneas (SPEC-203 §7). */
-export function PlanningCard({ row, selected, onSelect }: Props) {
+/**
+ * Una actividad de un conjunto y cuándo hay que hacerla (SPEC-203 §7). Todas las tarjetas
+ * tienen la misma forma: actividad y conjunto a la izquierda, estado a la derecha, tres datos y una acción.
+ */
+export function PlanningCard({ row, selected, onSelect, onRemove }: Props) {
+  const history = historyLine(row);
+  const rhythm = rhythmText(row);
+  const partial = partialProgress(row);
+  const baseDetail = stateDetail(row).replace(/^\((.*)\)$/, '$1');
+  const detail = partial && (row.state === 'OVERDUE' || row.state === 'DUE') && DELAY_IN_UNITS.includes(row.ruleKind)
+    ? `${baseDetail} en ${pendingLabel(row)}` : baseDetail;
   return (
-    <li className={cn('rounded-lg border bg-neutral-0 p-3 text-sm', selected ? 'border-brand-600 ring-1 ring-brand-600' : 'border-neutral-200')}>
-      <button type="button" onClick={onSelect} aria-pressed={selected} className="block w-full text-left">
-        <span className="flex flex-wrap items-baseline justify-between gap-2">
-          <strong className="text-neutral-900">{rowTitle(row)}</strong>
-          <span className={TONE[row.state]}>
-            <strong>{stateLabel(row)}</strong> {stateDetail(row)}
+    <li className={cn('rounded-lg border bg-neutral-0 text-sm', selected ? 'border-brand-600 ring-1 ring-brand-600' : 'border-neutral-200')}>
+      <button type="button" onClick={onSelect} aria-pressed={selected} className="block w-full p-4 text-left">
+        <span className="flex items-start justify-between gap-4">
+          <span className="min-w-0">
+            <span className="block font-semibold text-neutral-900">{row.activityLabel ?? 'Actividad'}</span>
+            <span className="block text-neutral-600">en <span className="font-medium text-neutral-800">{row.setName}</span></span>
+          </span>
+          <span className="flex max-w-[45%] shrink-0 flex-col items-end gap-1 text-right">
+            <Badge label={stateLabel(row)} color={TONE[row.state]} />
+            {detail && <span className="text-xs text-neutral-600">{detail}</span>}
           </span>
         </span>
-        <span className="mt-1 block text-neutral-700">{lastLine(row)}</span>
-        {rhythmText(row) && <span className="mt-0.5 block text-xs text-neutral-500">{rhythmText(row)}</span>}
+        {/* Tres columnas fijas en todas las tarjetas, aunque falte la frecuencia, para que se lean igual. */}
+        <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 rounded-md bg-neutral-50 px-3 py-2 text-xs sm:grid-cols-3">
+          <Datum label={history.label} value={history.value} />
+          <Datum label="Contiene" value={contentsLabel(row.zoneCount, row.elementCount)} />
+          {rhythm && <Datum label="Suele realizarse" value={rhythm} />}
+        </dl>
+        {/* Avance parcial: cuánto del conjunto ya está al día, como la barra de una intervención en curso. */}
+        {partial && (
+          <span className="mt-2 flex items-center gap-3 text-xs">
+            <span className="whitespace-nowrap font-medium text-neutral-800">Al día: {partial.upToDate} de {unitsLabel(row, partial.total)}</span>
+            <span role="progressbar" aria-label="Al día" aria-valuemin={0} aria-valuemax={partial.total} aria-valuenow={partial.upToDate}
+              className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200">
+              <span className="block h-full rounded-full bg-brand-600" style={{ width: `${(100 * partial.upToDate) / partial.total}%` }} />
+            </span>
+          </span>
+        )}
       </button>
-      <div className="mt-2">
-        {PLANNABLE.includes(row.state) && (
-          <Link href={planHref(row)} className="inline-block rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700">
-            Planificar intervención
-          </Link>
-        )}
-        {row.openIntervention && (
-          <Link href={`/intervenciones/${row.openIntervention.id}`} className="text-xs font-semibold text-brand-700 underline">
-            Ver intervención
-          </Link>
-        )}
-      </div>
+      <Actions row={row} onRemove={onRemove} />
     </li>
+  );
+}
+
+function Datum({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-neutral-500">{label}</dt>
+      <dd className="font-medium text-neutral-800">{value}</dd>
+    </div>
+  );
+}
+
+/**
+ * Abajo, siempre igual: a la izquierda cambiar o quitar la asignación; a la derecha
+ * la acción principal (planificar, ver lo abierto o elegir la frecuencia).
+ */
+function Actions({ row, onRemove }: { row: PlanningRow; onRemove?: () => void }) {
+  const router = useRouter();
+  const change = planningPath(row.assignmentId);
+  const where = `${row.activityLabel ?? 'la actividad'} en ${row.setName}`;
+  let action = null;
+  if (row.openIntervention) {
+    const { id, code } = row.openIntervention;
+    action = <Button variant="secondary" size="sm" onClick={() => router.push(`/intervenciones/${id}`)}>Ver intervención {code}</Button>;
+  } else if (PLANNABLE.includes(row.state)) {
+    const partial = partialProgress(row);
+    action = <Button size="sm" onClick={() => router.push(planHref(row))}>
+      {partial ? `Planificar ${partial.pending === 1 ? 'el pendiente' : `los ${partial.pending} pendientes`}` : 'Planificar intervención'}</Button>;
+  } else if (row.state === 'NOT_CONFIGURED') {
+    action = <Button size="sm" onClick={() => router.push(change)}>Completar planificación</Button>;
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-t border-neutral-200 px-4 py-2">
+      {row.state !== 'NOT_CONFIGURED' && (
+        <Button variant="secondary" size="sm" aria-label={`Editar la planificación de ${where}`} onClick={() => router.push(change)}>
+          Editar</Button>
+      )}
+      {onRemove && <Button variant="ghost" size="sm" aria-label={`Eliminar la planificación de ${where}`} onClick={onRemove}>Eliminar</Button>}
+      <span className="ml-auto">{action}</span>
+    </div>
   );
 }

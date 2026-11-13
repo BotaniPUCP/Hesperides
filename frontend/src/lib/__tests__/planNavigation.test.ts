@@ -2,7 +2,8 @@ import { plannedFrom } from '../planNavigation';
 
 describe('plannedFrom (SPEC-203 §5.6)', () => {
   it('lee el conjunto y la actividad de la dirección', () => {
-    expect(plannedFrom({ conjunto: '3', actividad: '30' })).toEqual({ setId: 3, activityId: 30 });
+    expect(plannedFrom({ conjunto: '3', actividad: '30' })).toEqual({ setId: 3, activityId: 30, onlyPending: false });
+    expect(plannedFrom({ conjunto: '3', actividad: '30', pendientes: '1' })).toEqual({ setId: 3, activityId: 30, onlyPending: true });
   });
 
   it.each([

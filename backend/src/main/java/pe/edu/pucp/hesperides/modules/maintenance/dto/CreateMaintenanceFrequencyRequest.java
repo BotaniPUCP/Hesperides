@@ -22,10 +22,8 @@ public record CreateMaintenanceFrequencyRequest(
         String frequencyRuleTypeCode,
 
         @NotBlank(message = "El ámbito de aplicación es obligatorio")
-        @Pattern(regexp = "CAMPUS_WIDE|BY_SET", message = "La frecuencia se aplica a todo el campus o a un conjunto")
+        @Pattern(regexp = "CAMPUS_WIDE|BY_SET", message = "La frecuencia se aplica a todo el campus o a conjuntos")
         String scope,
-
-        Long greenAreaSetId,
 
 
         @Positive(message = "El intervalo mínimo debe ser mayor a cero")

@@ -119,6 +119,19 @@ class MigrationSmokeTest {
     }
 
     @Test
+    void frequencyRuleTypesHaveShortLabels() {
+        // V046: los nombres largos partian la insignia en varias lineas.
+        List<String> labels = jdbcTemplate.queryForList("""
+                SELECT ci.label FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'FREQUENCY_RULE_TYPE' ORDER BY ci.sort_order
+                """, String.class);
+
+        assertThat(labels).containsExactly(
+                "Rango de días", "Cuota anual", "Ventana anual", "Ciclo de cobertura", "A demanda");
+    }
+
+    @Test
     void theRoleCatalogCarriesOnlyTheFourRealRoles() {
         // El historial anterior sembraba un USER generico que una migracion
         // posterior desactivaba. El baseline declara el estado final, asi que ese

@@ -15,11 +15,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Cumplimiento por lugar de una actividad de personal propio (SPEC-203 §5.8).
- * Cada jardín se juzga con una sola regla, su regla efectiva: la propia de menor
- * mínimo entre sus conjuntos o, si no tiene, la de todo el campus. Un jardín sin
+ * Cada jardín se juzga con una sola regla, su regla efectiva: la de menor mínimo
+ * entre las asignadas a sus conjuntos o, si no tiene, la de todo el campus. Un jardín sin
  * regla efectiva no aparece.
  */
 final class LocationComplianceGrouper {
@@ -29,7 +30,7 @@ final class LocationComplianceGrouper {
 
     /** Lo que ya se leyó de la base para una actividad. */
     record Inputs(List<MaintenanceFrequency> current, List<MaintenanceFrequency> overlapping,
-                  List<LocationExecution> facts, Map<Long, Set<Long>> setsByZone, Map<Long, Long> placeSection) {
+                  List<LocationExecution> facts, Map<Long, Set<UUID>> assignedRulesByZone, Map<Long, Long> placeSection) {
     }
 
     private LocationComplianceGrouper() {
@@ -67,9 +68,9 @@ final class LocationComplianceGrouper {
     }
 
     private static MaintenanceFrequency effective(Inputs in, MaintenanceFrequency general, Long section, LocalDate at) {
-        Set<Long> setsOfZone = section == null ? Set.of() : in.setsByZone().getOrDefault(section, Set.of());
+        Set<UUID> assigned = section == null ? Set.of() : in.assignedRulesByZone().getOrDefault(section, Set.of());
         List<FrequencyRule> own = in.current().stream()
-                .filter(f -> BY_SET.equals(f.getScope()) && setsOfZone.contains(f.getGreenAreaSetId()))
+                .filter(f -> BY_SET.equals(f.getScope()) && assigned.contains(f.getRuleKey()))
                 .map(MaintenanceFrequency::toRule).toList();
         FrequencyRule chosen = EffectiveRule.forGarden(own, general == null ? null : general.toRule(), at);
         if (chosen == null) return null;
@@ -79,8 +80,7 @@ final class LocationComplianceGrouper {
     /** Cada tramo se juzga con la versión que regía entonces, de esa misma regla. */
     private static List<FrequencyRule> versionsOf(MaintenanceFrequency rule, List<MaintenanceFrequency> overlapping) {
         return overlapping.stream().filter(f -> Objects.equals(rule.getRegime(), f.getRegime())
-                        && Objects.equals(rule.getScope(), f.getScope())
-                        && Objects.equals(rule.getGreenAreaSetId(), f.getGreenAreaSetId()))
+                        && Objects.equals(rule.getRuleKey(), f.getRuleKey()))
                 .map(MaintenanceFrequency::toRule).toList();
     }
 

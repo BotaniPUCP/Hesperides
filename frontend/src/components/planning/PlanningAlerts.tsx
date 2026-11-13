@@ -40,8 +40,8 @@ export function PlanningAlerts() {
           rows={overdue} tone="border-action-danger bg-alert-danger-bg text-alert-danger-fg" />
       )}
       {soon.length > 0 && (
-        <Block title={soon.length === 1 ? `1 conjunto toca en los próximos ${NEAR_DUE_DAYS} días`
-          : `${soon.length} conjuntos tocan en los próximos ${NEAR_DUE_DAYS} días`}
+        <Block title={soon.length === 1 ? `1 conjunto vence en los próximos ${NEAR_DUE_DAYS} días`
+          : `${soon.length} conjuntos vencen en los próximos ${NEAR_DUE_DAYS} días`}
           rows={soon} tone="border-alert-warning-border bg-alert-warning-bg text-alert-warning-fg" />
       )}
       <Link href="/intervenciones/planificacion" className="inline-block rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">

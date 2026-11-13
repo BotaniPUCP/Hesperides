@@ -15,13 +15,15 @@ interface Options {
   sectionsByCode: Map<string, IrrigationZone>;
   onAdd: (ids: number[]) => void;
   onNotice: (notice: string) => void;
+  /** Si se pasa, el rectángulo también agrega los ejemplares elegibles que encierra. */
+  specimens?: { eligible: string[]; byCode: Map<string, number>; onAdd: (ids: number[]) => void };
 }
 
 /**
  * Selección por rectángulo sobre el mapa. Solo activa secciones realmente
  * dibujadas: el visor proyecta la geometría de cada sección, no estima por filas.
  */
-export function useRectangleSelection({ mapRegion, viewer, permittedCodes, sectionsByCode, onAdd, onNotice }: Options) {
+export function useRectangleSelection({ mapRegion, viewer, permittedCodes, sectionsByCode, onAdd, onNotice, specimens }: Options) {
   const [drag, setDrag] = useState<DragBox | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -47,11 +49,20 @@ export function useRectangleSelection({ mapRegion, viewer, permittedCodes, secti
       onNotice('Arrastra un rectángulo sobre las áreas verdes para agregarlas.');
       return;
     }
-    const codes = viewer.current?.sectionCodesInScreenRect(a.x, a.y, e.clientX, e.clientY, permittedCodes) ?? [];
+    const codes = permittedCodes.length ? viewer.current?.sectionCodesInScreenRect(a.x, a.y, e.clientX, e.clientY, permittedCodes) ?? [] : [];
     const ids = codes.map((code) => sectionsByCode.get(code)?.id).filter((id): id is number => id !== undefined);
-    if (!ids.length) { onNotice('El rectángulo no incluyó secciones disponibles. Amplía el área o usa el buscador.'); return; }
-    onAdd(ids);
-    onNotice(`Se añadieron ${ids.length} secciones dentro del área dibujada (puedes desmarcarlas en la lista).`);
+    const plantCodes = specimens ? viewer.current?.specimenCodesInScreenRect(a.x, a.y, e.clientX, e.clientY, specimens.eligible) ?? [] : [];
+    const plantIds = plantCodes.map((code) => specimens?.byCode.get(code)).filter((id): id is number => id !== undefined);
+    if (!specimens) {
+      if (!ids.length) { onNotice('El rectángulo no incluyó secciones disponibles. Amplía el área o usa el buscador.'); return; }
+      onAdd(ids);
+      onNotice(`Se añadieron ${ids.length} secciones dentro del área dibujada (puedes desmarcarlas en la lista).`);
+      return;
+    }
+    if (!ids.length && !plantIds.length) { onNotice('El rectángulo no incluyó nada disponible. Amplía el área o usa el buscador.'); return; }
+    if (ids.length) onAdd(ids);
+    if (plantIds.length) specimens.onAdd(plantIds);
+    onNotice(`Se añadieron ${ids.length} jardines y ${plantIds.length} ejemplares del área dibujada (puedes desmarcarlos en la lista).`);
   }
 
   function cancelDrag() {

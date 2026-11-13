@@ -65,7 +65,7 @@ class MaintenanceFrequencyControllerTest {
                 "OUTSOURCED",
                 new MaintenanceFrequencyResponse.FrequencyRuleTypeSummary(101L, "INTERVAL_DAYS", "Intervalo por rango de dias"),
                 "CAMPUS_WIDE",
-                null,
+                java.util.UUID.randomUUID(),
                 30, 45,
                 null, null, 3,
                 null, null,
@@ -73,7 +73,7 @@ class MaintenanceFrequencyControllerTest {
                 "Notas",
                 LocalDate.now(), null,
                 true, true,
-                Instant.now(), Instant.now(), List.of());
+                Instant.now(), Instant.now(), 0, List.of());
     }
 
     @Test

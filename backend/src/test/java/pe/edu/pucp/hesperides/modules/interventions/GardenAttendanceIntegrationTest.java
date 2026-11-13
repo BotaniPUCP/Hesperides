@@ -11,6 +11,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import pe.edu.pucp.hesperides.modules.planning.attendance.GardenAttendanceProvider;
+import pe.edu.pucp.hesperides.modules.planning.attendance.SpecimenAttendanceProvider;
+import pe.edu.pucp.hesperides.modules.planning.attendance.SpecimenCompletion;
 import pe.edu.pucp.hesperides.modules.planning.attendance.GardenCompletion;
 import pe.edu.pucp.hesperides.support.TestDatabase;
 
@@ -38,6 +40,7 @@ class GardenAttendanceIntegrationTest {
 
     @Autowired JdbcTemplate jdbc;
     @Autowired GardenAttendanceProvider attendance;
+    @Autowired SpecimenAttendanceProvider specimens;
 
     private long user;
     private long type;
@@ -101,6 +104,58 @@ class GardenAttendanceIntegrationTest {
                            (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
                             WHERE ct.code='REFERENCE_CATEGORY' ORDER BY ci.id LIMIT 1), ?) RETURNING id""",
                 Long.class, "Lugar " + UUID.randomUUID(), zoneId);
+    }
+
+    /** Una ubicación sin sección que nombra esos ejemplares, como la registra una poda de árboles. */
+    private void specimenLocation(long work, String status, String startedUtc, String completedUtc, List<Long> elements) {
+        long id = jdbc.queryForObject("""
+                INSERT INTO intervention_locations(intervention_id,client_reference,status_item_id,
+                    started_at,completed_at,executed_by_user_id)
+                VALUES (?,gen_random_uuid(),?,?::timestamp,?::timestamp, CASE WHEN ?::timestamp IS NOT NULL THEN ? END)
+                RETURNING id""", Long.class, work, item("INTERVENTION_STATUS", status), startedUtc, completedUtc, startedUtc, user);
+        elements.forEach(e -> jdbc.update(
+                "INSERT INTO intervention_elements(intervention_id,intervention_location_id,green_element_id) VALUES (?,?,?)",
+                work, id, e));
+    }
+
+    private List<Long> twoSpecimens() {
+        return jdbc.queryForList("SELECT id FROM green_elements WHERE deleted_at IS NULL AND is_active ORDER BY id DESC LIMIT 2",
+                Long.class);
+    }
+
+    @Test
+    void aSpecimenCountsOnlyWhenACompletedLocationNamesIt() {
+        List<Long> e = twoSpecimens();
+        long done = work(type, "ASSIGNED");
+        specimenLocation(done, "COMPLETED", "2026-11-03 13:00:00", "2026-11-03 17:00:00", List.of(e.get(0)));
+        long other = work(otherType, "ASSIGNED");
+        specimenLocation(other, "COMPLETED", "2026-11-04 13:00:00", "2026-11-04 17:00:00", e);
+
+        var completions = specimens.specimenCompletions(type, e);
+
+        assertThat(completions).extracting(SpecimenCompletion::elementId).containsExactly(e.get(0));
+        assertThat(completions.get(0).date()).isEqualTo(LocalDate.of(2026, 11, 3));
+        assertThat(completions.get(0).interventionId()).isEqualTo(done);
+    }
+
+    @Test
+    void anOpenWorkListsItsSpecimensAndTheOnesStillPending() {
+        List<Long> e = twoSpecimens();
+        long open = work(type, "ASSIGNED");
+        specimenLocation(open, "COMPLETED", "2026-11-03 13:00:00", "2026-11-03 17:00:00", List.of(e.get(0)));
+        specimenLocation(open, "ASSIGNED", null, null, List.of(e.get(1)));
+        long cancelled = work(type, "CANCELLED");
+        specimenLocation(cancelled, "ASSIGNED", null, null, e);
+
+        var works = specimens.openSpecimenWorks(type, e);
+
+        assertThat(works).singleElement().satisfies(w -> {
+            assertThat(w.interventionId()).isEqualTo(open);
+            assertThat(w.elementIds()).containsExactlyInAnyOrderElementsOf(e);
+            assertThat(w.pendingElementIds()).containsExactly(e.get(1));
+            assertThat(w.firstStartedDate()).isEqualTo(LocalDate.of(2026, 11, 3));
+        });
+        assertThat(specimens.openSpecimenWorks(type, List.of())).isEmpty();
     }
 
     private List<LocalDate> datesOf(long zone) {

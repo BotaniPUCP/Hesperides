@@ -15,6 +15,6 @@ public class PlanningRuleSource {
 
     public List<PlanningRule> current() {
         return frequencies.findCurrentInHouse().stream().map(f -> new PlanningRule(f.getActivityTypeItem().getId(),
-                f.getActivityTypeItem().getLabel(), f.getGreenAreaSetId(), f.toRule())).toList();
+                f.getActivityTypeItem().getLabel(), f.getRuleKey(), "CAMPUS_WIDE".equals(f.getScope()), f.toRule())).toList();
     }
 }

@@ -7,6 +7,7 @@ import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequencySea
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 public record MaintenanceFrequencyResponse(
         Long id,
@@ -14,7 +15,8 @@ public record MaintenanceFrequencyResponse(
         String regime,
         FrequencyRuleTypeSummary frequencyRuleType,
         String scope,
-        Long greenAreaSetId,
+        /** La regla, compartida por todas sus versiones; a ella apuntan las asignaciones. */
+        UUID ruleKey,
         Integer minDaysInterval,
         Integer maxDaysInterval,
         Integer annualTargetCount,
@@ -31,14 +33,23 @@ public record MaintenanceFrequencyResponse(
         boolean active,
         Instant createdAt,
         Instant updatedAt,
+        /** A cuántos conjuntos está asignada en Planificación. */
+        int assignedSetCount,
         /** Avisos al guardar, como el cruce de frecuencias propias (SPEC-203 D-08). Nunca bloquean. */
         List<String> warnings
 ) {
     public MaintenanceFrequencyResponse withWarnings(List<String> w) {
-        return new MaintenanceFrequencyResponse(id, activityType, regime, frequencyRuleType, scope, greenAreaSetId,
+        return new MaintenanceFrequencyResponse(id, activityType, regime, frequencyRuleType, scope, ruleKey,
                 minDaysInterval, maxDaysInterval, annualTargetCount, coverageTargetDays, estimatedDurationDays,
                 seasonStartMonth, seasonEndMonth, seasons, notes, validFrom, validTo, current, active,
-                createdAt, updatedAt, List.copyOf(w));
+                createdAt, updatedAt, assignedSetCount, List.copyOf(w));
+    }
+
+    public MaintenanceFrequencyResponse withAssignedSetCount(int count) {
+        return new MaintenanceFrequencyResponse(id, activityType, regime, frequencyRuleType, scope, ruleKey,
+                minDaysInterval, maxDaysInterval, annualTargetCount, coverageTargetDays, estimatedDurationDays,
+                seasonStartMonth, seasonEndMonth, seasons, notes, validFrom, validTo, current, active,
+                createdAt, updatedAt, count, warnings);
     }
 
     public record ActivityTypeSummary(
@@ -81,7 +92,7 @@ public record MaintenanceFrequencyResponse(
                 entity.getRegime(),
                 FrequencyRuleTypeSummary.from(entity.getFrequencyRuleTypeItem()),
                 entity.getScope(),
-                entity.getGreenAreaSetId(),
+                entity.getRuleKey(),
                 entity.getMinDaysInterval(),
                 entity.getMaxDaysInterval(),
                 entity.getAnnualTargetCount(),
@@ -97,6 +108,7 @@ public record MaintenanceFrequencyResponse(
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
+                0,
                 List.of()
         );
     }

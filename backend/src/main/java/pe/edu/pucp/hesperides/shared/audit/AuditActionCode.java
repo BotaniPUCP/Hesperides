@@ -40,6 +40,10 @@ public enum AuditActionCode {
     /** Migración de referencias: quién decidió a qué lugar va cada referencia antigua, o que no es un lugar. */
     PLACE_REFERENCES_LINKED,
     PLACE_REFERENCES_DISCARDED,
+    /** SPEC-203: quién asignó, cambió o quitó la frecuencia que se planifica en un conjunto. */
+    PLANNING_ASSIGNMENT_CREATED,
+    PLANNING_ASSIGNMENT_UPDATED,
+    PLANNING_ASSIGNMENT_DELETED,
     /** SPEC-106: quién creó, cambió o dio de baja una organización del Directorio. */
     ORGANIZATION_CREATED,
     ORGANIZATION_UPDATED,

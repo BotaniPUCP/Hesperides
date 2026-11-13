@@ -2,13 +2,13 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { MaintenanceFrequency } from '@shared/types';
 import { FrequenciesTable } from '../FrequenciesTable';
-import { FrequencyFormModal } from '../FrequencyFormModal';
+import { FrequencyForm } from '../FrequencyForm';
+import { todayLocal } from '@/lib/local-date';
 
+const mockNavigate = jest.fn();
 jest.mock('@/components/forms/unsaved/useUnsavedChangesGuard', () => ({
-  useUnsavedChangesGuard: () => ({ confirm: (fn: () => void) => fn(), dialog: null, navigate: jest.fn() }),
+  useUnsavedChangesGuard: () => ({ confirm: (fn: () => void) => fn(), dialog: null, navigate: mockNavigate }),
 }));
-
-const sets = [{ id: 5, name: 'Campo deportivo', description: null, zoneCount: 4, activities: [], version: 0 }];
 
 const frequency: MaintenanceFrequency = {
   id: 1,
@@ -16,7 +16,7 @@ const frequency: MaintenanceFrequency = {
   regime: 'IN_HOUSE',
   frequencyRuleType: { id: 101, code: 'INTERVAL_DAYS', label: 'Intervalo por rango de días' },
   scope: 'BY_SET',
-  greenAreaSetId: 5,
+  ruleKey: 'regla-riego',
   minDaysInterval: 2,
   maxDaysInterval: 3,
   annualTargetCount: null,
@@ -32,32 +32,135 @@ const frequency: MaintenanceFrequency = {
   active: true,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
+  assignedSetCount: 2,
 };
 
-describe('Frecuencias por conjunto (SPEC-203 §5.3)', () => {
-  it('la fila de una frecuencia propia dice a qué conjunto aplica', () => {
-    render(<FrequenciesTable frequencies={[frequency]} sets={sets} canManage onEdit={jest.fn()} onDeactivate={jest.fn()} />);
+const activities = [{ id: 30, code: 'RIEGO', label: 'Riego' }];
+const ruleTypes = [{ id: 101, code: 'INTERVAL_DAYS', label: 'Intervalo por rango de días' }];
 
-    const row = screen.getByRole('row', { name: /Riego/ });
-    expect(within(row).getByText('Campo deportivo')).toBeInTheDocument();
-    expect(within(row).getByText('propio de este conjunto')).toBeInTheDocument();
+beforeEach(() => jest.clearAllMocks());
+
+describe('Frecuencias: dónde rigen (SPEC-203 D-16)', () => {
+  describe('la tabla', () => {
+    it('dice dónde rige, sin nombrar conjuntos: dónde se usa se ve en Planificación', () => {
+      render(<FrequenciesTable frequencies={[frequency]} canManage onEdit={jest.fn()} />);
+
+      const row = screen.getByRole('row', { name: /Riego/ });
+      expect(within(row).getByText('Solo algunas áreas')).toBeInTheDocument();
+      expect(within(row).queryByRole('link')).not.toBeInTheDocument();
+      expect(within(row).queryByText(/conjunto/i)).not.toBeInTheDocument();
+    });
+
+    it('la fila se abre con un clic o con el nombre, que también llega por teclado', async () => {
+      const onEdit = jest.fn();
+      render(<FrequenciesTable frequencies={[frequency]} canManage onEdit={onEdit} />);
+
+      await userEvent.click(screen.getByText('Solo algunas áreas'));
+      await userEvent.click(screen.getByRole('button', { name: 'Riego' }));
+
+      expect(onEdit).toHaveBeenCalledTimes(2);
+      expect(onEdit).toHaveBeenCalledWith(frequency);
+      expect(screen.getByText('01/01/2026')).toBeInTheDocument();
+    });
   });
 
-  it('el formulario no pide «Teórico» y una frecuencia propia exige elegir el conjunto', async () => {
-    const onSubmit = jest.fn().mockResolvedValue(undefined);
-    render(<FrequencyFormModal isOpen onClose={jest.fn()} activities={[{ id: 30, code: 'RIEGO', label: 'Riego' }]}
-      ruleTypes={[{ id: 101, code: 'INTERVAL_DAYS', label: 'Intervalo por rango de días' }]} sets={sets} onSubmit={onSubmit} />);
+  describe('el formulario, en su propia página', () => {
+    it('no es un pop-up y «solo algunas áreas» no pide elegirlas aquí', async () => {
+      const onSubmit = jest.fn().mockResolvedValue(undefined);
+      render(<FrequencyForm activities={activities} ruleTypes={ruleTypes} onSubmit={onSubmit} />);
 
-    expect(screen.queryByText(/teórico/i)).not.toBeInTheDocument();
-    await userEvent.selectOptions(screen.getByLabelText('Se aplica a'), 'BY_SET');
-    await userEvent.type(screen.getByLabelText(/Mín. días/), '2');
-    await userEvent.type(screen.getByLabelText(/Máx. días/), '3');
-    await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));
-    expect(await screen.findByText(/Elige el conjunto/)).toBeInTheDocument();
-    expect(onSubmit).not.toHaveBeenCalled();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByText(/teórico/i)).not.toBeInTheDocument();
+      await userEvent.selectOptions(screen.getByLabelText('Grupo de actividades'), 'Otras actividades');
+      await userEvent.selectOptions(screen.getByLabelText('Actividad'), '30');
+      // Por defecto: personal propio y solo algunas áreas, con radios a la vista.
+      expect(screen.getByRole('radio', { name: 'Personal propio PUCP' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'Solo algunas áreas' })).toBeChecked();
+      expect(screen.getByText('Las áreas se eligen al crear cada planificación.')).toBeInTheDocument();
+      expect(screen.queryByLabelText(/Conjunto de áreas verdes/)).not.toBeInTheDocument();
+      await userEvent.type(screen.getByLabelText(/Mín. días/), '2');
+      await userEvent.type(screen.getByLabelText(/Máx. días/), '3');
+      await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));
 
-    await userEvent.selectOptions(screen.getByLabelText('Conjunto'), '5');
-    await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'BY_SET', greenAreaSetId: 5 }));
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'BY_SET' }));
+      expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('greenAreaSetId');
+      expect(mockNavigate).toHaveBeenCalledWith('/intervenciones/frecuencias');
+    });
+
+    it('todo el campus y tercerizado se eligen con un clic', async () => {
+      const onSubmit = jest.fn().mockResolvedValue(undefined);
+      render(<FrequencyForm activities={activities} ruleTypes={ruleTypes} onSubmit={onSubmit} />);
+      await userEvent.selectOptions(screen.getByLabelText('Grupo de actividades'), 'Otras actividades');
+      await userEvent.selectOptions(screen.getByLabelText('Actividad'), '30');
+
+      await userEvent.click(screen.getByRole('radio', { name: 'Todo el campus' }));
+      await userEvent.click(screen.getByRole('radio', { name: 'Servicio tercerizado' }));
+      expect(screen.getByText('Las tercerizadas no se planifican.')).toBeInTheDocument();
+      await userEvent.type(screen.getByLabelText(/Mín. días/), '2');
+      await userEvent.type(screen.getByLabelText(/Máx. días/), '3');
+      await userEvent.click(screen.getByRole('button', { name: 'Registrar frecuencia' }));
+
+      expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ scope: 'CAMPUS_WIDE', regime: 'OUTSOURCED' }));
+    });
+
+    it('al editar, un solo aviso junto a los botones dice desde cuándo rige y que el pasado no cambia', () => {
+      render(<FrequencyForm frequencyToEdit={frequency} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
+
+      const notes = screen.getAllByRole('note');
+      expect(notes).toHaveLength(1);
+      expect(notes[0]).toHaveTextContent('El cambio rige desde hoy y se aplica a las 2 planificaciones que usan esta frecuencia (ver en Planificación). '
+        + 'Los reportes de meses anteriores mantienen la frecuencia vigente en su momento.');
+      expect(screen.getByRole('link', { name: 'ver en Planificación' })).toHaveAttribute('href', '/intervenciones/planificacion?actividad=30');
+      // Va después de los campos, justo antes de guardar.
+      const save = screen.getByRole('button', { name: 'Guardar versión' });
+      expect(notes[0].compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(screen.getByLabelText('Notas').compareDocumentPosition(notes[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('sin planificaciones que la usen, dice solo desde cuándo rige', () => {
+      render(<FrequencyForm frequencyToEdit={{ ...frequency, assignedSetCount: 0 }} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
+
+      expect(screen.getByRole('note')).toHaveTextContent(/^El cambio rige desde hoy\. Los reportes de meses anteriores/);
+      expect(screen.queryByRole('link', { name: 'ver en Planificación' })).not.toBeInTheDocument();
+    });
+
+    it('una frecuencia creada hoy no tiene meses anteriores: no los menciona', () => {
+      const today = todayLocal();
+      render(<FrequencyForm frequencyToEdit={{ ...frequency, validFrom: today, assignedSetCount: 1 }} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
+
+      expect(screen.getByRole('note')).toHaveTextContent('El cambio rige desde hoy y se aplica a la planificación que usa esta frecuencia (ver en Planificación).');
+      expect(screen.getByRole('note')).not.toHaveTextContent('meses anteriores');
+    });
+
+    it('creada hoy y sin planificaciones, no hay nada que avisar', () => {
+      const today = todayLocal();
+      render(<FrequencyForm frequencyToEdit={{ ...frequency, validFrom: today, assignedSetCount: 0 }} activities={activities} ruleTypes={ruleTypes} onSubmit={jest.fn()} />);
+
+      expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    });
+
+    it('desactivar está dentro y vuelve a la lista solo si se confirmó', async () => {
+      const onDeactivate = jest.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+      render(<FrequencyForm frequencyToEdit={frequency} activities={activities} ruleTypes={ruleTypes}
+        onSubmit={jest.fn()} onDeactivate={onDeactivate} />);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Desactivar frecuencia' }));
+      expect(onDeactivate).toHaveBeenCalledWith(frequency);
+      expect(mockNavigate).not.toHaveBeenCalled();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Desactivar frecuencia' }));
+      expect(mockNavigate).toHaveBeenCalledWith('/intervenciones/frecuencias');
+    });
+
+    it('si el servidor rechaza, se queda en la página y lo dice', async () => {
+      const onSubmit = jest.fn().mockRejectedValue(new Error('Ya existe una frecuencia vigente de todo el campus para esta actividad y modalidad'));
+      render(<FrequencyForm frequencyToEdit={{ ...frequency, scope: 'CAMPUS_WIDE' }} activities={activities}
+        ruleTypes={ruleTypes} onSubmit={onSubmit} />);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Guardar versión' }));
+
+      expect(await screen.findByRole('alert')).toBeInTheDocument();
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
   });
 });

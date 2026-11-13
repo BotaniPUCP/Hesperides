@@ -338,13 +338,16 @@ no violaría la unicidad.
 2. El sistema carga `GET /api/v1/maintenance/frequencies`, `/activity-types` y `/rule-types`
    en paralelo y muestra la tabla con los filtros superiores.
 3. El usuario presiona **+ Nueva frecuencia**.
-4. Selecciona la actividad del catálogo de intervenciones (ej. «Corte de césped»).
+4. Selecciona el grupo de actividades y luego la actividad (ej. «Mantenimiento de jardines» →
+   «Corte de césped»). Solo se eligen actividades: el grupo ordena la lista y no se puede elegir
+   (enmienda de 10 nov 2026).
 5. Selecciona la modalidad de ejecución (Personal propio o Servicio tercerizado).
-6. Selecciona el tipo de regla (ej. «Intervalo por días»).
+6. Selecciona el tipo de frecuencia. V046 dejó nombres cortos: «Rango de días», «Cuota anual»,
+   «Ventana anual», «Ciclo de cobertura» y «A demanda».
 7. El formulario adapta dinámicamente sus campos de entrada según el tipo de regla (D-05):
    - **Intervalo por días:** ofrece dos modos: «Por estaciones» (con filas dinámicas para
      Verano, Otoño, Invierno, Primavera) o «Todo el año uniforme» (tres campos numéricos).
-   - **Periodicidad estacional:** selector de distribución temporal («1 por estación» fija automáticamente cuota mínima de 4 al año; «Semestral» fija 2 al año; «Cuota personalizada» habilita el campo numérico libre para la cantidad mínima anual). Permite indicar refuerzos adicionales por plagas.
+   - **Cuota anual** (antes «Periodicidad estacional / cuota anual»): selector de distribución temporal («1 por estación» fija automáticamente cuota mínima de 4 al año; «Semestral» fija 2 al año; «Cuota personalizada» habilita el campo numérico libre para la cantidad mínima anual). Permite indicar refuerzos adicionales por plagas.
    - **Ventana anual:** selección de periodo (ej. Diciembre-Enero).
    - **Ciclo de cobertura:** días para completar el 100% y turno horario.
    - **A demanda:** sin campos adicionales.

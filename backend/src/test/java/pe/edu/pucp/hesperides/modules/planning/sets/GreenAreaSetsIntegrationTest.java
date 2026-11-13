@@ -74,8 +74,8 @@ class GreenAreaSetsIntegrationTest {
     }
 
     private String body(String name, List<Long> zones, Long version) {
-        return json.writeValueAsString(new java.util.HashMap<>(Map.of("name", name, "zoneIds", zones,
-                "activityTypeItemIds", List.of(activity))) {{ if (version != null) put("version", version); }});
+        return json.writeValueAsString(new java.util.HashMap<>(Map.of("name", name, "zoneIds", zones))
+                {{ if (version != null) put("version", version); }});
     }
 
     private JsonNode create(String name, List<Long> zones, int expected) throws Exception {
@@ -96,12 +96,73 @@ class GreenAreaSetsIntegrationTest {
         for (JsonNode row : list) if (row.get("id").asLong() == id) mine = row;
         assertThat(mine).isNotNull();
         assertThat(mine.get("zoneCount").asInt()).isEqualTo(2);
-        assertThat(mine.get("activities").get(0).get("id").asLong()).isEqualTo(activity);
+        assertThat(mine.get("specimenTypes")).isEmpty();
+        assertThat(mine.get("updatedAt").asString()).isNotBlank();
+        // Qué se planifica en él se asigna en Planificación (SPEC-203 §3.4), no en el conjunto.
+        assertThat(mine.has("activities")).isFalse();
+        assertThat(mine.has("sectorNames")).isFalse();
 
         var detail = json.readTree(mvc.perform(get("/api/v1/green-area-sets/" + id).with(as(coordinator, "COORDINADOR")))
                 .andReturn().getResponse().getContentAsString()).get("data");
         assertThat(detail.get("zones")).hasSize(2);
         assertThat(detail.get("zones").get(0).get("displayName").asString()).isNotBlank();
+    }
+
+    @Test
+    void aSetCanMixGardensWithSpecimensAndReportsEachSpecimenSector() throws Exception {
+        List<Long> specimens = jdbc.queryForList("""
+                SELECT id FROM green_elements WHERE deleted_at IS NULL AND is_active AND location IS NOT NULL
+                ORDER BY id LIMIT 3""", Long.class);
+        String payload = json.writeValueAsString(Map.of("name", "Mixto " + UUID.randomUUID(), "zoneIds", sections,
+                "elementIds", specimens));
+        long id = json.readTree(mvc.perform(post("/api/v1/green-area-sets").with(as(coordinator, "COORDINADOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("data").get("id").asLong();
+
+        var detail = json.readTree(mvc.perform(get("/api/v1/green-area-sets/" + id).with(as(coordinator, "COORDINADOR")))
+                .andReturn().getResponse().getContentAsString()).get("data");
+        assertThat(detail.get("zones")).hasSize(2);
+        assertThat(detail.get("elements")).hasSize(3);
+        assertThat(detail.get("elements").get(0).get("code").asString()).startsWith("EV-");
+        assertThat(detail.get("elements").get(0).get("displayName").asString()).isNotBlank();
+
+        var list = json.readTree(mvc.perform(get("/api/v1/green-area-sets").with(as(coordinator, "COORDINADOR")))
+                .andReturn().getResponse().getContentAsString()).get("data");
+        for (JsonNode row : list) {
+            if (row.get("id").asLong() != id) continue;
+            assertThat(row.get("elementCount").asInt()).isEqualTo(3);
+            int byType = 0;
+            for (JsonNode type : row.get("specimenTypes")) byType += type.get("count").asInt();
+            assertThat(byType).isEqualTo(3);
+        }
+    }
+
+    @Test
+    void aSetOfOnlySpecimensIsAcceptedAndAnEmptyOneIsNot() throws Exception {
+        long specimen = jdbc.queryForObject("""
+                SELECT id FROM green_elements WHERE deleted_at IS NULL AND is_active ORDER BY id LIMIT 1""", Long.class);
+        mvc.perform(post("/api/v1/green-area-sets").with(as(coordinator, "COORDINADOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                                "name", "Solo ejemplares " + UUID.randomUUID(), "elementIds", List.of(specimen)))))
+                .andExpect(status().isCreated());
+
+        var error = json.readTree(mvc.perform(post("/api/v1/green-area-sets").with(as(coordinator, "COORDINADOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of(
+                                "name", "Vacío " + UUID.randomUUID()))))
+                .andExpect(status().is(422)).andReturn().getResponse().getContentAsString());
+        assertThat(error.get("message").asString()).isEqualTo("Elige al menos un jardín o un ejemplar");
+    }
+
+    @Test
+    void theSpecimenOptionsCarryTheSectorFoundByPosition() throws Exception {
+        var options = json.readTree(mvc.perform(get("/api/v1/green-area-sets/element-options").with(as(coordinator, "COORDINADOR")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
+        assertThat(options.size()).isEqualTo(jdbc.queryForObject("""
+                SELECT count(*) FROM green_elements WHERE deleted_at IS NULL AND is_active AND location IS NOT NULL""",
+                Integer.class));
+        boolean someInASector = false;
+        for (JsonNode o : options) someInASector |= !o.get("sectorName").isNull();
+        assertThat(someInASector).isTrue();
     }
 
     @Test
@@ -140,6 +201,17 @@ class GreenAreaSetsIntegrationTest {
     }
 
     @Test
+    void deletingASetRetiresItsAssignments() throws Exception {
+        long id = create("Con asignación " + UUID.randomUUID(), sections, 201).get("data").get("id").asLong();
+        jdbc.update("INSERT INTO planning_assignments(set_id, activity_type_item_id) VALUES (?, ?)", id, activity);
+
+        mvc.perform(delete("/api/v1/green-area-sets/" + id).with(as(coordinator, "COORDINADOR"))).andExpect(status().isOk());
+
+        assertThat(jdbc.queryForObject(
+                "SELECT count(*) FROM planning_assignments WHERE set_id = ? AND deleted_at IS NULL", Integer.class, id)).isZero();
+    }
+
+    @Test
     void aDeletedSetFreesItsName() throws Exception {
         String name = "Baja " + UUID.randomUUID();
         long id = create(name, sections, 201).get("data").get("id").asLong();
@@ -151,6 +223,7 @@ class GreenAreaSetsIntegrationTest {
     @ValueSource(strings = {"SUPERVISOR", "OPERARIO"})
     void fieldRolesCannotUseSets(String role) throws Exception {
         mvc.perform(get("/api/v1/green-area-sets").with(as("x@test.local", role))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/green-area-sets/element-options").with(as("x@test.local", role))).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/green-area-sets").with(as("x@test.local", role))
                 .contentType(MediaType.APPLICATION_JSON).content(body("X", sections, null)))
                 .andExpect(status().isForbidden());
