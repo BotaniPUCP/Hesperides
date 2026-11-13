@@ -76,7 +76,11 @@ it('lets the reporter optionally fill workbook data and preserves it when return
   render(<IncidentCaptureForm sender="Capataz" options={options} onDone={jest.fn()} onCancel={jest.fn()} />);
   expect(screen.queryByRole('button',{name:'Guardar reporte y crear intervención'})).not.toBeInTheDocument();
   await userEvent.type(screen.getByLabelText(/¿Qué pasó?/),'Aspersor girado junto a la vereda');
-  await userEvent.click(screen.getByRole('button',{name:'Añadir más detalles · modo ampliado'}));
+  await userEvent.click(screen.getByRole('button',{name:'Más precisión · modo ampliado (opcional)'}));
+  expect(screen.queryByLabelText('Tipo de evento')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Canal de ingreso')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Reportado por (opcional)')).not.toBeInTheDocument();
+  await userEvent.click(screen.getByText(/Causa raíz y acciones/));
   expect(screen.getAllByRole('option').filter(o=>o.textContent?.includes('AV-')&&o.textContent?.includes(' — '))).toHaveLength(15);
   await userEvent.selectOptions(screen.getByLabelText('Servicio'),'AV-01');
   await userEvent.selectOptions(screen.getByLabelText('Severidad'),'HIGH');
@@ -99,10 +103,9 @@ it('saves once and relates multiple existing interventions before registration',
   const done=jest.fn();
   render(<IncidentCaptureForm sender="Capataz" onDone={done} onCancel={jest.fn()} />);
   await userEvent.type(screen.getByLabelText(/¿Qué pasó?/),'Dos trabajos atienden este reporte');
-  await userEvent.click(screen.getByText('Relacionar intervenciones existentes (opcional)'));
-  await waitFor(()=>expect(screen.getByRole('option',{name:'INT-11 · Trabajo 11'})).toBeInTheDocument());
-  await userEvent.selectOptions(screen.getByLabelText('Añadir intervención relacionada'),'11');
-  await userEvent.selectOptions(screen.getByLabelText('Añadir intervención relacionada'),'12');
+  await userEvent.click(screen.getByText('Intervenciones relacionadas · Opcional'));
+  await userEvent.click(await screen.findByRole('button',{name:'Añadir INT-11'}));
+  await userEvent.click(screen.getByRole('button',{name:'Añadir INT-12'}));
   await userEvent.click(screen.getByRole('button',{name:'Enviar'}));
   await waitFor(()=>expect(done).toHaveBeenCalledWith(7));
   expect(create).toHaveBeenCalledTimes(1);

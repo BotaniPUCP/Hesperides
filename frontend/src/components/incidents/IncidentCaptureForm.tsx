@@ -99,20 +99,11 @@ export function IncidentCaptureForm({ sender, onDone, onCancel, options = null, 
   return (
     <Card>
       <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-        <p className="text-sm text-neutral-700">Envía: {sender} · Canal: web<br />La fecha y hora de recepción se registrarán al enviar.</p>
+        <p className="text-sm text-neutral-700">{sender} · Plataforma web</p>
         <Textarea id="incident-description" label="¿Qué pasó?" rows={4} maxLength={10000} required
           helperText="Una frase basta. Si puedes, indica dónde ocurrió." errorMessage={descriptionError}
           placeholder="Rama caída en puerta principal" value={description} disabled={busy || savedId !== null}
           onChange={(value) => { setDescription(value); setDescriptionError(''); }} />
-        <Button type="button" size="lg" variant="secondary" disabled={busy || savedId!==null} onClick={() => setExtended(v => !v)}>
-          {extended ? 'Volver al modo simple' : 'Añadir más detalles · modo ampliado'}
-        </Button>
-        <div className={extended ? 'space-y-4' : 'hidden'}>
-          <p className="text-sm text-neutral-700">Datos opcionales de la plantilla OSG. No necesitas completarlos para enviar.</p>
-          {options ? <IncidentMatrixFields value={matrix} original={emptyIncidentMatrix} options={options.matrix} disabled={busy || savedId!==null}
-            onChange={(next) => {setMatrix(next);setHasMatrix(true);}} /> : <p className="text-sm text-neutral-700">{optionsError ?? 'Cargando los campos opcionales…'} Puedes enviar el reporte simple.</p>}
-          {optionsError && onRetryOptions && <Button type="button" size="lg" onClick={onRetryOptions}>Reintentar campos OSG</Button>}
-        </div>
         <fieldset disabled={busy || savedId !== null} className="space-y-4">
           <div className="flex flex-wrap gap-3">
             <label className="flex min-h-12 cursor-pointer items-center rounded-md border border-neutral-200 bg-neutral-0 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 focus-within:ring-2 focus-within:ring-brand-600">
@@ -132,7 +123,18 @@ export function IncidentCaptureForm({ sender, onDone, onCancel, options = null, 
             <LocationFields value={location} onChange={setLocation} disabled={busy || savedId !== null} />
           </details>
         </fieldset>
-        <IncidentCaptureLinks value={links} onChange={setLinks} disabled={busy || savedId!==null} scopeKey={scopeKey} />
+        <div className="border-t border-neutral-200 pt-3">
+          <Button type="button" size="lg" variant="ghost" disabled={busy || savedId!==null} onClick={() => setExtended(v => !v)}>
+            {extended ? 'Volver al modo simple' : 'Más precisión · modo ampliado (opcional)'}
+          </Button>
+          <div className={extended ? 'space-y-4' : 'hidden'}>
+            {options ? <IncidentMatrixFields value={matrix} original={emptyIncidentMatrix} options={options.matrix} disabled={busy || savedId!==null}
+              onChange={(next) => {setMatrix(next);setHasMatrix(true);}} /> : <p className="text-sm text-neutral-700">{optionsError ?? 'Cargando los campos opcionales…'} Puedes enviar el reporte simple.</p>}
+            {optionsError && onRetryOptions && <Button type="button" size="lg" onClick={onRetryOptions}>Reintentar campos OSG</Button>}
+          </div>
+        </div>
+        <IncidentCaptureLinks value={links} onChange={setLinks} disabled={busy || savedId!==null} scopeKey={scopeKey} statuses={options?.workStatuses}
+          creationAction={options?.canCreateIntervention && onCreateIntervention ? <Button variant="secondary" size="lg" disabled={busy} onClick={() => void submit(true)}>Guardar reporte y crear intervención</Button> : undefined} />
         {attachments.length > 0 && <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {attachments.map((a) => <li key={a.reference} className="space-y-2 rounded-lg border border-neutral-200 p-3">
             <Preview file={a.file} />
@@ -149,11 +151,10 @@ export function IncidentCaptureForm({ sender, onDone, onCancel, options = null, 
         {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
         <div className="flex flex-wrap gap-3">
           <Button type="submit" size="lg" loading={busy}>{savedId === null ? 'Enviar' : 'Reintentar pendientes'}</Button>
-          {options?.canCreateIntervention && onCreateIntervention && <Button type="button" size="lg" variant="secondary" disabled={busy}
-            onClick={() => void submit(true)}>Guardar reporte y crear intervención</Button>}
           {savedId === null ? <Button type="button" size="lg" variant="ghost" disabled={busy} onClick={onCancel}>Volver</Button>
             : <Button type="button" size="lg" variant="secondary" disabled={busy} onClick={() => onDone(savedId)}>Continuar al detalle</Button>}
         </div>
+        <p className="text-xs text-neutral-600">El usuario, la fecha de recepción y el canal se registran automáticamente.</p>
       </form>
     </Card>
   );

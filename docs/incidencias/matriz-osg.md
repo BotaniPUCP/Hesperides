@@ -11,15 +11,15 @@ caso autorizado. Coordinación revisa esos mismos datos. No hay dos matrices par
 |---|---|
 | N° | OSG-#### automático al registrar oficialmente |
 | Fecha de recepción/registro | Recepción del servidor, conservada en correcciones |
-| Tipo de evento | Catálogo: incidencia, reclamo, no conformidad y hallazgos |
+| Tipo de evento | Incidencia automática en esta captura web; otros valores existentes del catálogo se conservan |
 | Tipo de servicio | Servicios de Áreas verdes, alcance de este módulo |
 | Servicio | Tres opciones de BaseServicios para áreas verdes |
 | Empresa | Catálogo de empresas de Listas; Ninguna es distinto de Sin determinar |
 | Código Proceso (N2) | GSG-01…GSG-04, hoja Procesos_N2 |
 | Subproceso | Selección dependiente del proceso; dato conocido del ejemplo de Matriz |
 | Descripción del evento | Texto editable; original del remitente conservado aparte |
-| Canal de ingreso | Siete opciones de Listas; no sustituye al canal técnico WEB |
-| Reportado por | Nombre opcional del comunicante; por defecto, quien captura |
+| Canal de ingreso | Formulario automático en esta captura web; otros canales OSG existentes se conservan, sin integración externa |
+| Reportado por | Usuario de captura automático; se conserva el reportante nominal si un registro anterior lo tenía |
 | Severidad | Alta, Media o Baja; independiente de urgencia |
 | Impacto | Opciones de Listas, selección múltiple |
 | Responsable de atención | Persona responsable del seguimiento, distinta de la cuadrilla ejecutora |
@@ -44,3 +44,9 @@ aplicación utiliza sus componentes y tema existentes: atención prioritaria,
 indicadores, gráficos y tabla navegable (tarjetas en móvil). No simula porcentajes
 de precisión IA ni vencimientos sin un SLA acordado. Los informes oficiales
 incluyen registrados; el tablero declara cuándo incluye todos los reportes.
+
+El rediseño aprobado separa consulta de edición y organiza el detalle en Datos del
+caso, Intervenciones y Actividad. El original se consulta bajo demanda. El tablero
+prioriza cuatro indicadores y dos gráficos; las métricas adicionales se despliegan
+sin perder sus datos. La búsqueda de trabajo muestra resultados directamente y la
+creación contextual conserva los permisos del módulo de Intervenciones.

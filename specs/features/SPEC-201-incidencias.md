@@ -22,21 +22,25 @@ La aclaración del usuario del 5 nov 2026 sustituye el prototipo anterior:
    opcionales. No se exige cargar mapas, clasificarse ni crear intervenciones.
 2. «Añadir más detalles · modo ampliado» permite **también al capataz** aportar
    campos OSG opcionales. Volver al modo simple conserva esos valores.
-3. Se eligen tipo de evento, servicio de áreas verdes, empresa, proceso/subproceso,
-   severidad, impactos múltiples, responsable, canal de ingreso y causa catalogada.
+3. Se eligen servicio de áreas verdes, empresa, proceso/subproceso,
+   severidad, impactos múltiples, responsable y causa catalogada.
    Acciones, análisis de causa, proceso impactado y observaciones son textos distintos.
 4. Las causas AV-01…AV-15 se muestran con la descripción completa del Excel. No se
    confunden con los códigos AV-01…AV-03 del catálogo de servicios.
-5. «Reportado por» puede identificar a quien comunicó el problema. No sustituye al
-   usuario autenticado que captura el reporte. El canal de ingreso OSG tampoco
-   sustituye al canal técnico WEB. Elegir WhatsApp no integra una API externa.
+5. En este flujo web no se solicitan evento, canal ni reportante nominal: una nueva
+   captura corresponde a Incidencia y Formulario; usuario y recepción son automáticos.
+   Los metadatos OSG existentes se conservan al revisar registros previos y en el
+   CSV, sin inventar una integración con otros canales.
 6. La sección es opcional y explícita; el sector se consulta por su jerarquía real.
    No se deduce del texto, del capataz, ni de una coordenada de referencia ficticia.
 7. Coordinación edita los casos abiertos. El capataz edita sus pendientes y los
    casos de cuadrillas activas que supervisa. No puede asignar otras cuadrillas.
    Un caso cerrado explica por qué no se edita; coordinación puede reabrirlo.
-8. La ficha muestra «Registro OSG · datos guardados», acceso a su editor y el
-   formulario «Registro OSG · editar datos». No se oculta todo detrás de un resumen.
+8. Consulta y edición son excluyentes. «Editar» abre un único formulario con
+   descripción/ubicación y clasificación/prioridad; gestión y análisis son grupos
+   opcionales desplegables. Guardar vuelve a consulta; cancelar con cambios exige
+   confirmación. Un conflicto conserva lo escrito. No hay descripción duplicada ni
+   botón grande de refresco. El original se abre bajo demanda.
 9. Original, recepción, autor de captura y fotografías se conservan. Las revisiones
    tienen versión y cambios antes/después con autor y fecha; un 409 no borra el formulario.
 10. Mis reportes consulta únicamente los envíos del usuario y muestra total,
@@ -67,11 +71,15 @@ No hay trabajos internos, sustitución de trabajos antiguos ni endpoints paralel
 - El selector filtra y pagina antes de responder: coordinación ve los trabajos
   autorizados; el capataz solo los de cuadrillas activas que supervisa. Un ID fuera
   de alcance devuelve 404 y no genera vínculos ni eventos.
+- Captura y detalle comparten resultados visibles, búsqueda reactiva con espera,
+  error recuperable y estado sin coincidencias. Las selecciones se quitan mediante
+  controles compactos con etiqueta accesible; el propósito sigue siendo explícito.
+  «Nueva intervención» se sitúa junto al buscador cuando la capacidad lo autoriza.
 - Crear se deriva de la autorización de Intervenciones, no se amplía por llegar
   desde incidencias: ADMIN/COORDINADOR planifican; el capataz no. Se exige además
   acceso a la incidencia, por lo que ADMIN no recibe acceso nuevo a este módulo.
 - «Guardar reporte y crear intervención» conserva primero el reporte pendiente,
-  sin aprobarlo, y abre el formulario existente. «Registrar nueva intervención»
+  sin aprobarlo, y abre el formulario existente. «Nueva intervención»
   desde detalle hace lo mismo con su contexto ya guardado. Se retorna con el
   trabajo preseleccionado; **vincular requiere confirmación**. Cancelar no vincula.
 - Se conservan filtros de regreso. El origen contextual admite solo un ID local
@@ -108,6 +116,10 @@ Coordinación dispone de vistas Tablero y Reportes en `/incidencias`:
 
 - Reportes recibidos, activos, urgencia alta activa, pendientes de registro,
   registrados sin trabajo y pendientes de revisión final de cierre.
+- Jerarquía visual aprobada el 12 nov 2026: cuatro cifras principales (recibidos,
+  por registrar, registradas abiertas y cerradas), atención pendiente y dos gráficos
+  principales (estados y severidad de todos los reportes). Seguimiento y análisis
+  adicionales se despliegan bajo demanda; no se elimina su información.
 - Atención enlazable: hasta 12 reportes recientes con registro, urgencia alta,
   observaciones o asignación pendiente. No se muestran falsos vencimientos ni confianza de IA.
 - Seguimiento de estados, trabajo finalizado y trabajo validado, con conteo DISTINCT
@@ -122,6 +134,10 @@ Coordinación dispone de vistas Tablero y Reportes en `/incidencias`:
   Un fallo de resumen u opciones no oculta la lista ni impide el reporte simple.
 - Se conservan `PageFrame`/`PageHeader`, breadcrumbs derivados del menú y restauración
   del scroll por consulta completa, incluidos los filtros OSG, según SPEC-C01.
+- Detalle organizado en Datos del caso, Intervenciones y Actividad; la ejecución y
+  el cierre permanecen en Intervenciones. Área de trabajo local con tokens del tema,
+  sin modificar navegación global ni tamaños por defecto de componentes compartidos.
+  Esta presentación no requiere migraciones ni dependencias nuevas.
 
 ## Contratos
 
@@ -251,3 +267,38 @@ su verificación con Java 25, Podman y Bun.
   recorridos históricos no sustituyen esa verificación.
 - No se migró ni reinició la base habitual. Los conflictos quedaron resueltos y
   preparados en el índice; no se ejecutó commit, push ni continuación del rebase.
+
+## Verificación del rediseño aprobado — 12 nov 2026
+
+- Implementación web sin dependencias, migraciones ni cambios de autorización.
+  El backend conserva su derivación de Incidencia/Formulario para capturas nuevas;
+  los metadatos de registros anteriores se mantienen al editar.
+- Bun: lint y build correctos; **1198 pruebas en 150 suites**, todas aprobadas.
+  Cobertura añadida para consulta/editor exclusivos, cancelación con borrador,
+  búsqueda reactiva, respuestas tardías, paginación, reintento y selección con versión.
+  Persisten avisos `act(...)` de tests; no son fallos funcionales.
+- Java 25 y Maven: empaquetado correcto con tests omitidos explícitamente. No se
+  repitió la suite Java: esta entrega no modifica código backend.
+- Firefox real contra backend y PostGIS en contenedores Podman aislados, frontend
+  con Bun: incidencia **#13 / OSG-0009**, reportada por capataz y relacionada con
+  INT-000008 e INT-000005 antes del registro. Coordinación precisó la descripción,
+  registró y creó INT-000021 desde el buscador, con tres ubicaciones. El retorno
+  solo preseleccionó; se verificó que no hubiera vínculo hasta confirmarlo.
+- Capataz ejecutó las cuatro ubicaciones pendientes (una de INT-000008 y tres de
+  INT-000021), con cuatro fotos recibidas y rotuladas como prueba aislada.
+  Coordinación validó esas ubicaciones y cerró el caso con resumen; recarga final
+  comprobada por ambos roles. INT-000005 ya estaba validada en el seed.
+- Cuatro solicitudes diagnósticas de cierre anticipado rechazadas con HTTP 422:
+  trabajo asignado, trabajo contextual planificado, finalización sin validación y
+  validación parcial. Se comprobó el bloqueo del resumen vacío y que validar
+  intervenciones no cierre automáticamente la incidencia.
+- En el recorrido completo: **82 preflights correctos**, ningún error de red,
+  ninguna respuesta 5xx ni error de consola. Comprobación visual adicional sobre
+  un caso pendiente: original bajo demanda, cancelar/seguir/descartar sin alterar
+  datos, búsqueda sin coincidencias, selección compacta y retiro sin vinculación.
+- Escritorio 1440 px y móvil 390×844, claro/oscuro, sin desbordamiento horizontal.
+  Contraste medido en los colores computados: texto y acciones ≥4.5:1 y borde
+  de campos ≥3:1 en ambos temas. La galería real y evidencias temporales están en
+  `/tmp/opencode/incident-redesign/`; no son archivos necesarios para producción.
+- Se retiraron solo los procesos y contenedores de esta verificación. No se
+  migró/reinició el entorno habitual ni se realizaron commits o pushes.

@@ -94,6 +94,6 @@ it('uses a route-level heading and filtered breadcrumb for capture', () => {
   mockPathname = '/incidencias/nueva';
   rememberListQuery('/incidencias', 'search=rama&status=OPEN&page=2');
   render(<PageFrame><IncidentCaptureScreen /></PageFrame>);
-  expect(screen.getByRole('heading', { level: 1, name: 'Informar una incidencia' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1, name: '¿Qué encontraste?' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Incidencias' })).toHaveAttribute('href', '/incidencias?search=rama&status=OPEN&page=2');
 });

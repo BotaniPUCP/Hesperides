@@ -17,8 +17,8 @@ export function locationPayload(value: LocationValue) {
   return { locationReference: value.reference.trim() || null, latitude, longitude };
 }
 
-export function LocationFields({ value, onChange, disabled = false }: {
-  value: LocationValue; onChange: (value: LocationValue) => void; disabled?: boolean;
+export function LocationFields({ value, onChange, disabled = false, compact = false }: {
+  value: LocationValue; onChange: (value: LocationValue) => void; disabled?: boolean; compact?: boolean;
 }) {
   const [message, setMessage] = useState('');
   const id = useId();
@@ -54,6 +54,8 @@ export function LocationFields({ value, onChange, disabled = false }: {
       <Input id={`${id}-reference`} label="Referencia del lugar (opcional)" size="lg" value={value.reference}
         disabled={disabled} maxLength={500} placeholder="Frente a la entrada de Ingeniería Civil"
         onChange={(reference) => onChange({ ...value, reference })} />
+      <details open={compact ? undefined : true}>
+        <summary className={compact ? 'min-h-12 cursor-pointer py-3 text-sm font-medium text-brand-800' : 'hidden'}>Precisar ubicación y coordenadas · Opcional</summary>
       <IncidentPlaceLookup disabled={disabled} onChoose={(reference) => onChange({ ...value, reference })} />
       <Button type="button" variant="secondary" size="lg" disabled={disabled || locating} onClick={locate}>
         {locating ? 'Obteniendo ubicación…' : 'Usar ubicación del teléfono'}
@@ -73,6 +75,7 @@ export function LocationFields({ value, onChange, disabled = false }: {
         generation.current.value++; setLocating(false); setMessage(''); onChange({ ...value, latitude: '', longitude: '' });
       }}>Quitar coordenadas</Button>
       {message && <p role="status" className="text-sm text-neutral-700">{message}</p>}
+      </details>
     </div>
   );
 }

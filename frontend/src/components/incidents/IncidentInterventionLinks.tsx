@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { IncidentDetail, IncidentInterventionLink, IncidentOptions, LinkedIncidentIntervention } from '@shared/types';
-import { Button, Card, Input, Select, StatusBadge } from '@/components/ui';
+import { Button, Card, Modal, Select, StatusBadge, Textarea } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
-import { incidentsApi } from '@/lib/incidents-api';
 import { interventionsApi } from '@/lib/interventions-api';
+import { IncidentWorkSearch } from './IncidentWorkSearch';
 
 export function IncidentInterventionLinks({ detail, options, coordinator, busy, selectedInterventionId, createHref, onLink, onRemove }: {
   detail: IncidentDetail; options: IncidentOptions | null; coordinator: boolean; busy: boolean;
@@ -15,64 +15,51 @@ export function IncidentInterventionLinks({ detail, options, coordinator, busy, 
   onRemove: (linkId: number, reason: string) => Promise<boolean>;
 }) {
   const editable = detail.canLinkInterventions;
-  const [search, setSearch] = useState('');
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(0);
-  const [revision, setRevision] = useState(0);
-  const [selected, setSelected] = useState<number | null>(selectedInterventionId);
+  const [selected, setSelected] = useState<LinkedIncidentIntervention | null>(null);
+  const [returnedId, setReturnedId] = useState(selectedInterventionId);
   const [purpose, setPurpose] = useState('MITIGATION');
-  const [removeReasons,setRemoveReasons] = useState<Record<number,string>>({});
-  const candidates = useRequest(editable ? `links:${detail.incident.id}:${query}:${page}:${revision}` : null,
-    () => incidentsApi.interventionOptions(detail.incident.id, query, page));
-  const chosen = useRequest(editable && selected ? `link-candidate:${detail.incident.id}:${selected}:${revision}` : null,
-    () => interventionsApi.detail(selected!));
-  const selectedWork: LinkedIncidentIntervention | null = chosen.data ? { ...chosen.data, linkId: null, purpose: null } : null;
-  const label = (code: string) => options?.workStatuses.find((s) => s.code === code)?.label ?? code;
-  const selections = [...(candidates.data?.content ?? [])];
-  if (selectedWork && !selections.some((w) => w.id === selectedWork.id)) selections.unshift(selectedWork);
+  const [removeId, setRemoveId] = useState<number | null>(null);
+  const [reason, setReason] = useState('');
+  const chosen = useRequest(editable && returnedId ? `link-return:${detail.incident.id}:${returnedId}` : null, () => interventionsApi.detail(returnedId!));
+  const work = selected ?? (chosen.data ? { ...chosen.data, linkId: null, purpose: null } : null);
+  const label = (code: string) => options?.workStatuses.find(s => s.code === code)?.label ?? code;
   return <Card title="Intervenciones relacionadas">
-    <div className="space-y-4">
-      <p className="text-sm text-neutral-700">Se ejecutan y revisan en el módulo de intervenciones. Finalizada no significa validada. Una intervención puede atender varias incidencias.</p>
-      {detail.linkedInterventions.length === 0 ? <p className="text-sm text-neutral-700">No hay intervenciones visibles vinculadas. El registro oficial no las exige; el cierre sí.</p> :
-        <ul className="space-y-3">{detail.linkedInterventions.map((work) => <li key={work.linkId} className="space-y-2 rounded-md border border-neutral-200 p-3">
-          <StatusBadge code={work.statusCode} label={label(work.statusCode)} />
-          {work.code ? <Link href={`/intervenciones/${work.id}`} className="block break-words font-semibold text-brand-700 underline">{work.code} · {work.description || 'Ver intervención'}</Link>
-            : <p>Intervención no disponible. El cierre permanecerá bloqueado.</p>}
-          <p className="text-sm text-neutral-700">{work.purpose?.label} · {work.validatedLocationCount}/{work.locationCount} ubicaciones validadas</p>
-          {editable && work.linkId !== null && ['PLANNED','ASSIGNED','CANCELLED'].includes(work.statusCode) && <div className="space-y-2">
-            <Input id={`remove-link-${work.linkId}`} label={`Motivo para retirar vínculo ${work.code}`} size="lg" maxLength={2000}
-              value={removeReasons[work.linkId] ?? ''} disabled={busy} onChange={(reason) => setRemoveReasons((r) => ({...r,[work.linkId!]:reason}))} />
-            <Button type="button" size="lg" variant="secondary" disabled={busy || !removeReasons[work.linkId]?.trim()}
-              onClick={() => void onRemove(work.linkId!,removeReasons[work.linkId!].trim())}>Retirar vínculo antes de ejecutar</Button>
-          </div>}
+    <div className="space-y-5">
+      {!detail.linkedInterventions.length ? <p className="text-sm text-neutral-700">Aún no hay intervenciones relacionadas. Puedes registrar el caso sin ellas.</p> :
+        <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200">{detail.linkedInterventions.map(item => <li key={item.linkId} className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="min-w-0 flex-1">{item.code ? <Link href={`/intervenciones/${item.id}`} className="break-words font-semibold text-brand-800 hover:underline">{item.code} · {item.description || 'Ver intervención'}</Link> : <p>Intervención no disponible. El cierre permanecerá bloqueado.</p>}
+            <p className="mt-1 text-sm text-neutral-700">{item.purpose?.label} · {item.validatedLocationCount}/{item.locationCount} ubicaciones validadas</p></div>
+          <StatusBadge code={item.statusCode} label={label(item.statusCode)} />
+          {editable && item.linkId !== null && ['PLANNED','ASSIGNED','CANCELLED'].includes(item.statusCode) && <Button variant="ghost" disabled={busy} aria-label={`Retirar relación ${item.code}`}
+            onClick={() => { setReason(''); setRemoveId(item.linkId); }}>×</Button>}
         </li>)}</ul>}
       {detail.requiredInterventionCount > detail.linkedInterventions.length && <p className="text-sm text-neutral-700">Hay intervenciones vinculadas que no están disponibles para tu cuenta.</p>}
-      {editable && <div className="space-y-4 border-t border-neutral-200 pt-4">
-        {detail.canCreateIntervention && <><Link href={createHref} className="inline-flex min-h-12 items-center rounded-md border border-neutral-200 px-4 font-medium text-brand-700">Registrar nueva intervención</Link>
-          <p className="text-sm text-neutral-700">Al guardar volverás aquí con la nueva intervención preseleccionada; confirma su vínculo a continuación.</p></>}
-        {!coordinator && <p className="text-sm text-neutral-700">Puedes relacionar trabajos de las cuadrillas que supervisas. La creación y planificación conserva los permisos de Intervenciones.</p>}
-        <div className="space-y-3">
-          <Input id="link-work-search" label="Buscar intervención por código o descripción" size="lg" value={search} onChange={setSearch} disabled={busy} maxLength={200} />
-          <Button type="button" variant="secondary" size="lg" disabled={busy || candidates.loading} onClick={() => { setQuery(search.trim()); setPage(0); setRevision((v) => v + 1); }}>Buscar intervenciones</Button>
-          {candidates.errorMessage && <p role="alert" className="text-sm text-action-danger">{candidates.errorMessage}</p>}
-          <Select id="link-work" label="Intervención existente" size="lg" clearable disabled={busy || candidates.loading}
-            value={selected?.toString() ?? null} options={selections.map((w) => ({ id: w.id, code: String(w.id), label: `${w.code} · ${label(w.statusCode)} · ${w.description ?? ''}` }))}
-            onChange={(w) => setSelected(w?.id ?? null)} placeholder="Selecciona una intervención" />
-          {chosen.errorMessage && <p role="alert" className="text-sm text-action-danger">{chosen.errorMessage}</p>}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" size="lg" variant="secondary" disabled={busy || page === 0} onClick={() => setPage((v) => v - 1)}>Anteriores intervenciones</Button>
-            <span className="text-sm">Página {page + 1} · {candidates.data?.page.totalElements ?? 0} resultados</span>
-            <Button type="button" size="lg" variant="secondary" disabled={busy || !candidates.data || page + 1 >= candidates.data.page.totalPages} onClick={() => setPage((v) => v + 1)}>Siguientes intervenciones</Button>
-          </div>
+      {editable && <>
+        <IncidentWorkSearch incidentId={detail.incident.id} scopeKey={`detail-${detail.incident.id}-${detail.incident.version}`} disabled={busy}
+          statuses={options?.workStatuses}
+          excludedIds={[...detail.linkedInterventions.map(w => w.id), ...(work ? [work.id] : [])]} onSelect={(next) => { setReturnedId(null); setSelected(next); }}
+          creationAction={detail.canCreateIntervention ? <Link href={createHref} className="inline-flex min-h-12 items-center rounded-md bg-brand-600 px-4 font-semibold text-white hover:bg-forest-700">Nueva intervención ↗</Link> : undefined} />
+        {chosen.loading && <p role="status">Cargando la intervención creada…</p>}
+        {(chosen.errorMessage || chosen.notFound) && <p role="alert" className="text-alert-danger-fg">{chosen.errorMessage ?? 'La intervención no está disponible para tu cuenta.'}</p>}
+        {work && <div className="space-y-3 rounded-lg border border-brand-200 bg-brand-50 p-4">
+          <div className="flex items-center justify-between gap-3"><p className="min-w-0 break-words font-medium">Por relacionar: {work.code} · {work.description}</p>
+            <Button variant="ghost" disabled={busy} aria-label={`Quitar selección ${work.code}`} onClick={() => { setSelected(null); setReturnedId(null); }}>×</Button></div>
           <Select id="link-purpose" label="Propósito para esta incidencia" size="lg" value={purpose} options={options?.matrix.actionPurposes ?? []}
             disabled={busy || !options} onChange={(p) => setPurpose(p?.code ?? 'MITIGATION')} />
-          <Button type="button" size="lg" loading={busy} disabled={!selectedWork || !options || selectedWork.statusCode === 'CANCELLED'} onClick={async () => {
-            if (!selectedWork) return;
-            if (await onLink({ version: detail.incident.version, interventionId: selectedWork.id, interventionVersion: selectedWork.version,
-              purposeCode: purpose })) { setSelected(null); setRevision((v) => v + 1); }
+          <Button loading={busy} disabled={!options || work.statusCode === 'CANCELLED'} onClick={async () => {
+            if (await onLink({ version: detail.incident.version, interventionId: work.id, interventionVersion: work.version, purposeCode: purpose })) { setSelected(null); setReturnedId(null); }
           }}>Vincular intervención</Button>
-        </div>
-      </div>}
+        </div>}
+        {!coordinator && <p className="text-sm text-neutral-700">Puedes relacionar trabajos de las cuadrillas que supervisas. Si aún no existen, coordinación debe planificarlos.</p>}
+      </>}
+      <p className="text-sm text-neutral-700">Finalizada no significa validada. El cierre requiere que todas las intervenciones requeridas estén validadas.</p>
     </div>
+    <Modal isOpen={removeId !== null} onClose={() => { if (!busy) setRemoveId(null); }} title="Retirar relación">
+      <form className="space-y-4" onSubmit={async e => { e.preventDefault(); if (removeId !== null && reason.trim() && await onRemove(removeId, reason.trim())) setRemoveId(null); }}>
+        <p className="text-sm text-neutral-700">Se retira el vínculo antes de ejecutar. La intervención se conserva.</p>
+        <Textarea id="remove-link-reason" label="Motivo" value={reason} onChange={setReason} required disabled={busy} maxLength={2000} />
+        <Button type="submit" loading={busy} disabled={!reason.trim()}>Retirar relación</Button>
+      </form>
+    </Modal>
   </Card>;
 }

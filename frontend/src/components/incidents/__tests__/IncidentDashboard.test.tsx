@@ -9,10 +9,13 @@ jest.mock('@/lib/incidents-api', () => ({ incidentsApi: { export: jest.fn() } })
 it('labels closure statistics as closed-only business days, not SLA compliance', () => {
   render(<IncidentDashboard matrix={{ pendingActions: 2, closedWithDuration: 3, averageClosureBusinessDays: 2,
     severities: [{ label: 'Alta', count: 1 }], impacts: [], services: [], responsiblePeople: [],
-    states:[],urgencies:[],rootCauses:[],companies:[],sectors:[],locations:[],events:[],channels:[] }} />);
+    states:[{label:'Pendientes',count:3},{label:'Cerradas',count:2}],urgencies:[],rootCauses:[],companies:[],sectors:[],locations:[],events:[],channels:[] }} />);
   expect(screen.getByText('Solo casos cerrados (3). No es un indicador de SLA.')).toBeInTheDocument();
   expect(screen.getByText('Alta')).toBeInTheDocument();
-  expect(screen.getByRole('meter',{name:'Por severidad: Alta'})).toHaveAttribute('value','1');
+  expect(screen.getByRole('meter',{name:'Severidad de los reportes: Alta'})).toHaveAttribute('value','1');
+  expect(screen.getByRole('img', { name: 'Pendientes: 3, Cerradas: 2' })).toBeInTheDocument();
+  expect(screen.getByText('5')).toBeInTheDocument();
+  expect(screen.getByText('Más análisis: servicios, causas y responsables').closest('details')).not.toHaveAttribute('open');
 });
 
 it('reports export errors without hiding the dashboard', async () => {

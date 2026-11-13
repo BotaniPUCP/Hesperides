@@ -22,7 +22,9 @@ export function IncidentResolutionReview({ detail, busy, onResolve, onObserve }:
         {!detail.canResolve && <p className="text-sm text-alert-warning-fg">Falta relacionar al menos una intervención o validar todas las requeridas.</p>}
         <Button type="submit" size="lg" loading={busy} disabled={!detail.canResolve}>Validar resolución y cerrar incidencia</Button>
       </form>}
-      <form className="space-y-3 border-t border-neutral-200 pt-4" onSubmit={async (e) => {
+      <details className="border-t border-neutral-200 pt-2">
+        <summary className="min-h-12 cursor-pointer py-3 text-sm font-medium text-brand-800">{closed ? 'Reabrir el caso' : 'Observar la resolución'} · Con motivo</summary>
+      <form className="space-y-3 pt-3" onSubmit={async (e) => {
         e.preventDefault(); if (!reason.trim()) { setError('Explica qué queda pendiente de resolver.'); return; }
         setError(''); if (await onObserve(reason.trim())) setReason('');
       }}>
@@ -30,6 +32,7 @@ export function IncidentResolutionReview({ detail, busy, onResolve, onObserve }:
         <p className="text-sm text-neutral-700">La incidencia sigue o vuelve a estar abierta. No invalida automáticamente intervenciones compartidas ya aprobadas.</p>
         <Button type="submit" variant="secondary" size="lg" loading={busy}>{closed ? 'Reabrir incidencia con observación' : 'Observar resolución'}</Button>
       </form>
+      </details>
       {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}
     </div>
   </Card>;
