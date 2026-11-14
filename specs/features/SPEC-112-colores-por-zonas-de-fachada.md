@@ -380,4 +380,3 @@ Con los tramos de foto dejan de aplicar estos pendientes de SPEC-109:
 - P-11: fotos chicas, borrosas de cerca.
 
 P-12 sigue igual: esas fotos no se usan.
-
