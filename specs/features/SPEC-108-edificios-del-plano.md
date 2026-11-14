@@ -263,6 +263,9 @@ rompecabezas, sin pisarlo (V054):
 - El GLB no se toca y la altura no cambia.
 - *Origen:* decisión del usuario del 14 nov 2026 («hazlo en el campus»).
 
+> **Segunda tanda, 14 nov 2026 (V055):** Desconocido_05 (malla) se corre 1,35 m al centro del hueco de su pasto,
+> sin cambiar su tamaño, con su ajuste en `adjustments`. La casa autosostenible baja de 8 a 4 m: «no es tan alto».
+
 ## 3. Contratos de API
 
 | Endpoint | Autorización | Qué resuelve |

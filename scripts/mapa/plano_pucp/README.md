@@ -79,9 +79,10 @@ Las huellas de la base ya están corridas (V053): no se corren otra vez. Si se o
 manifiesto, falla `BuildingModelServiceTest.theAnchorIsTheOneShiftedTowardsTheGardens`.
 
 El manifiesto publicado trae además `adjustments` (SPEC-108 D-16): ajustes por edificio que
-el generador no escribe. Se copian tal cual al manifiesto nuevo; sus huellas ya están en V054.
-Si se pierden, falla la prueba de `frontend/src/components/map3d/__tests__/adjustments.test.ts`
-que compara cada matriz con su huella de V054.
+el generador no escribe. Se copian tal cual al manifiesto nuevo; sus huellas ya están en V054 y
+las migraciones que le siguen. Si se pierden, falla la prueba de
+`frontend/src/components/map3d/__tests__/adjustments.test.ts`, que compara cada matriz con su
+huella en esas migraciones.
 
 ## Tests
 
