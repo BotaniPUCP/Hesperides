@@ -28,9 +28,20 @@ import complejoSociales from './complejo-sociales.json';
 import comunicaciones from './comunicaciones.json';
 import depositoLimpieza from './deposito-limpieza.json';
 import depositoRural from './deposito-rural.json';
+import desconocido01 from './desconocido-01.json';
+import desconocido02 from './desconocido-02.json';
+import desconocido03 from './desconocido-03.json';
+import desconocido04 from './desconocido-04.json';
+import desconocido05 from './desconocido-05.json';
+import desconocido06 from './desconocido-06.json';
 import desconocido07 from './desconocido-07.json';
 import desconocido08 from './desconocido-08.json';
+import desconocido09 from './desconocido-09.json';
+import desconocido10 from './desconocido-10.json';
+import desconocido11 from './desconocido-11.json';
 import desconocido12 from './desconocido-12.json';
+import desconocido13B from './desconocido-13-b.json';
+import desconocido13 from './desconocido-13.json';
 import dintilhac from './dintilhac.json';
 import dptoSociales from './dpto-sociales.json';
 import educacion1 from './educacion-1.json';
@@ -114,9 +125,20 @@ const files: unknown[] = [
   comunicaciones,
   depositoLimpieza,
   depositoRural,
+  desconocido01,
+  desconocido02,
+  desconocido03,
+  desconocido04,
+  desconocido05,
+  desconocido06,
   desconocido07,
   desconocido08,
+  desconocido09,
+  desconocido10,
+  desconocido11,
   desconocido12,
+  desconocido13B,
+  desconocido13,
   dintilhac,
   dptoSociales,
   educacion1,

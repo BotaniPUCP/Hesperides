@@ -1,0 +1,21 @@
+{
+  "planKey": "45ec0877-d3b4-4761-b45c-0ebf9b0d9b39",
+  "name": "Desconocido_06",
+  "source": "Decisión de Jean Piero (14 nov 2026): los «Desconocido» sin ficha de fotos van de ladrillo liso, sin ventanas, como Ingeniería Mecánica (SPEC-112 P-04)",
+  "materials": {
+    "ladrillo": {
+      "color": "#b9765f"
+    },
+    "techo": {
+      "color": "#b2afa8"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "ladrillo",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Ladrillo liso con el color y el techo de Ingeniería Mecánica, sin ventanas ni franjas."
+}

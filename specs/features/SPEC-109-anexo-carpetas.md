@@ -32,7 +32,7 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 21 | Desconocido_07 | `e82375f3` | Desconocido_07 | nombre | seguro |
 | 22 | Desconocido_08 | `9d9846b2` | Desconocido_08 | nombre; color interior = exterior (D-08) | seguro |
 | 23 | Desconocido_12 | `40fbf3b7` | Desconocido_12 | nombre; sin malla, se pinta su prisma (D-09b) | seguro |
-| 24 | Desconocido_13 | `3441937e` | Desconocido_13 (el de 3,2 m, a 120 m de Química) | foto: losa a ras del césped con rejillas, junto a un muro de piedra; el otro Desconocido_13 está a 616 m de Química | **por confirmar** |
+| 24 | Desconocido_13 | `3441937e` | Desconocido_13 (el de 3,2 m, a 120 m de Química) | foto: losa a ras del césped con rejillas, junto a un muro de piedra; el otro Desconocido_13 está a 616 m de Química | sin usar: el 14 nov 2026 Jean Piero decidió que los «Desconocido» sin ficha van de ladrillo liso (SPEC-112 P-04); los dos Desconocido_13 lo llevan |
 | 25 | Edificio Administrativo / Maestranza | `38278886` | Edificio Administrativo / Maestranza | nombre | seguro |
 | 26 | Etnomusicologia-departamento_ciencias_contables | `af3c0f81` | Instituto de Etnomusicología… / Departamento de Ciencias Contables | nombre, C15 C14 | seguro |
 | 27 | FACULTAD DE EDUCACIÓN (AULA R102) | `773eacb8` | Facultad de Educación (Aula R102) | nombre, código 37 | seguro |
@@ -89,7 +89,7 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 78 | heladeria-gelarti | `5d0c3da2` | Gelarti | nombre, C12 | seguro |
 | 79 | polideportivo | `a0c57ec0` | Polideportivo | nombre, código 45 | seguro |
 | 80 | sala cuna | `44a6cf1a` | Sala Cuna | nombre, código 51 | seguro |
-| 81 | Desconocido_13 (segundo) | `e5800604` | Desconocido_13 (el de 3,0 m) | queda sin ficha hasta confirmar la fila 24 | — |
+| 81 | Desconocido_13 (segundo) | `e5800604` | Desconocido_13 (el de 3,0 m) | ladrillo liso por la misma decisión (SPEC-112 P-04) | — |
 
 La fila 81 no es una carpeta: aparece para dejar a la vista que el segundo `Desconocido_13` queda sin
 pintar mientras no se confirme cuál de los dos es el de las fotos.
