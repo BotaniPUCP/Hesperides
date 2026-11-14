@@ -1,0 +1,38 @@
+{
+  "planKey": "704d440c-77d9-4e5e-aff0-b795e6b506b1",
+  "name": "Sub-estación N-2",
+  "folder": "Sub-estacion-n2",
+  "photos": [
+    "Detras.jpg",
+    "Frente.jpg",
+    "Lado.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#b97a62"
+    },
+    "techo": {
+      "color": "#b9b6af"
+    },
+    "concreto": {
+      "color": "#c4c2bc"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            2.45,
+            3.1
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Ladrillo con marco y remate de concreto gris y rejillas metálicas (Detras.jpg, Frente.jpg, Lado.jpg). El tanque y la escalera de al lado no son parte del edificio."
+}

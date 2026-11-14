@@ -1,0 +1,37 @@
+{
+  "planKey": "cb1dbda1-6c1a-4853-967b-9f90c8c47df4",
+  "name": "Centro de fotocopiado (adyacente a Pabellón Z)",
+  "folder": "fotocopiado-z",
+  "photos": [
+    "ladofrente-1.jpg",
+    "ladofrente-2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e9e6dc"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "ventanas": {
+      "color": "#b9bcba"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Caseta de paneles claros con una cinta de ventanales de aluminio, como franja, y techo de fibrocemento (ladofrente-1.jpg, ladofrente-2.jpg)."
+}

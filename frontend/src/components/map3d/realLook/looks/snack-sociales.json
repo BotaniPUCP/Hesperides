@@ -1,0 +1,26 @@
+{
+  "planKey": "0172ad66-8eff-420d-8659-8007941c351c",
+  "name": "Snack (Frutería Sociales)",
+  "folder": "SNACK (FRUTERÍA SOCIALES)",
+  "photos": [
+    "delante.jpg",
+    "detras.jpg",
+    "lado.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e6dfcb"
+    },
+    "techo": {
+      "color": "#cfccc5"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Muro crema de atrás (detras.jpg). El mostrador del frente, con su toldo, tiene gente delante en las fotos y no se dibuja."
+}

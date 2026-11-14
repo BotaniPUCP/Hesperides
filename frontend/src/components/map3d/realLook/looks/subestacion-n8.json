@@ -1,0 +1,36 @@
+{
+  "planKey": "7ae47916-549e-40c2-b918-9c43d305e19d",
+  "name": "Sub-estación N-8",
+  "folder": "Sub-estación N-8",
+  "photos": [
+    "frente.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#b97a62"
+    },
+    "techo": {
+      "color": "#c9c7c1"
+    },
+    "concreto": {
+      "color": "#e2e2de"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            2.4,
+            3.1
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Ladrillo con marco y remate de concreto blanco, rejillas negras y puerta metálica (frente.jpg)."
+}

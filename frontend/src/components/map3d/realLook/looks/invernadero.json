@@ -1,0 +1,25 @@
+{
+  "planKey": "e9461126-748f-4e02-88fa-9f72c58bfd17",
+  "name": "Prototipo invernadero (Grupo de Apoyo al Sector Rural)",
+  "folder": "PROTOTIPO INVERNADERO (GRUPO DE APOYO AL SECTOR RURAL)",
+  "photos": [
+    "lado-detras.jpg",
+    "lado-frente.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#d3d6d2"
+    },
+    "techo": {
+      "color": "#c9b6a6"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Estructura de madera rojiza con paños de policarbonato claro, que llevan el color (lado-detras.jpg, lado-frente.jpg)."
+}

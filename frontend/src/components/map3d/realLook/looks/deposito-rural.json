@@ -1,0 +1,24 @@
+{
+  "planKey": "a8412f57-3ef4-4ffd-8bbd-45f3982a34fa",
+  "name": "Depósito de Rural",
+  "folder": "Depósito de Rural",
+  "photos": [
+    "imagen.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#8f9496"
+    },
+    "techo": {
+      "color": "#a9aaa6"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Jaula de malla con marco metálico gris bajo calamina (imagen.jpg); lo que se ve a través de la malla no se dibuja."
+}
