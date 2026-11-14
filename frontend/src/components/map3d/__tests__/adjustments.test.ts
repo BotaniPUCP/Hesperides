@@ -1,6 +1,5 @@
-import fs from 'fs';
-import path from 'path';
 import type { BuildingModelManifest, GeoJsonGeometry } from '@shared/types';
+import { fittedFootprints, planFootprintsBeforeFits, repoManifest } from '../__fixtures__/repoFootprints';
 import { LocalPlane } from '../projection';
 import { polygons } from '../sceneData';
 import { adjustedRing, adjustmentsOf } from '../viewer/adjustments';
@@ -41,50 +40,27 @@ describe('adjustedRing', () => {
 });
 
 describe('el manifiesto del repositorio', () => {
-  /** La primera migración que ajusta huellas a mano (SPEC-108 D-16). */
-  const FIRST_FIT_VERSION = 54;
-  const backend = path.resolve(__dirname, '../../../../../backend/src/main/resources');
-  const repoManifest = JSON.parse(fs.readFileSync(path.join(backend, 'mapa/edificios-plano.json'), 'utf8')) as BuildingModelManifest;
-  const migration = (prefix: string) => {
-    const dir = path.join(backend, 'db/migration');
-    return fs.readFileSync(path.join(dir, fs.readdirSync(dir).find((f) => f.startsWith(prefix))!), 'utf8');
-  };
-  /**
-   * La huella GeoJSON que la migración le pone a cada plan_key, por trozo: V045 trae la clave y la huella en la misma
-   * línea (un INSERT tiene muchas filas), V054 en la misma sentencia (el WHERE va en la línea siguiente).
-   */
-  const footprints = (chunks: string[]) => new Map(chunks.flatMap((chunk) => {
-    const key = chunk.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)?.[0];
-    const geojson = chunk.match(/ST_GeomFromGeoJSON\('(\{[^']*\})'\)/)?.[1];
-    return key && geojson ? [[key, JSON.parse(geojson) as GeoJsonGeometry] as const] : [];
-  }));
+  const manifestOfRepo = repoManifest();
 
   it('trae ajustes válidos: solo de mallas de edificio y con matrices que no voltean ni aplastan', () => {
-    expect(() => adjustmentsOf(repoManifest)).not.toThrow();
-    expect(Object.values(repoManifest.adjustments ?? {}).every((a) => a.why.length > 0)).toBe(true);
+    expect(() => adjustmentsOf(manifestOfRepo)).not.toThrow();
+    expect(Object.values(manifestOfRepo.adjustments ?? {}).every((a) => a.why.length > 0)).toBe(true);
   });
 
   it('la huella de cada malla ajustada en V054 es su huella anterior con la misma matriz (a 2 cm)', () => {
-    const plane = new LocalPlane(repoManifest.anchor.lat, repoManifest.anchor.lon);
-    const shift = migration('V053__').match(/ST_Translate\(footprint, (-?[\d.]+), (-?[\d.]+)\)/)!;
-    const [dLon, dLat] = [Number(shift[1]), Number(shift[2])];
-    // Las huellas ajustadas viven en V054 y en las migraciones que le siguen: gana la última, como en la base.
-    const dir = path.join(backend, 'db/migration');
-    const fitted = fs.readdirSync(dir).filter((f) => Number(f.match(/^V(\d+)__/)?.[1]) >= FIRST_FIT_VERSION).sort();
-    const before = footprints(migration('V045__').split('\n'));
-    const after = footprints(fitted.flatMap((f) => fs.readFileSync(path.join(dir, f), 'utf8').split(';')));
-    const moved = (c: unknown): unknown => (typeof (c as number[])[0] === 'number' ? [(c as number[])[0] + dLon, (c as number[])[1] + dLat] : (c as unknown[]).map(moved));
+    const plane = new LocalPlane(manifestOfRepo.anchor.lat, manifestOfRepo.anchor.lon);
+    const before = planFootprintsBeforeFits();
+    const after = fittedFootprints();
     const pairs = (g: GeoJsonGeometry) => {
       const flat = polygons(g, plane).flat(2);
       return Array.from({ length: flat.length / 2 }, (_, i) => [flat[2 * i], flat[2 * i + 1]]);
     };
     // Distancia de Hausdorff entre vértices: V054 sale de la huella ya guardada, que puede empezar el anillo en otro vértice.
     const farthest = (a: number[][], b: number[][]) => Math.max(...a.map(([x, y]) => Math.min(...b.map(([u, v]) => Math.hypot(x - u, y - v)))));
-    const adjustments = [...adjustmentsOf(repoManifest)];
+    const adjustments = [...adjustmentsOf(manifestOfRepo)];
 
     const off = adjustments.map(([key, m]) => {
-      const shifted = { ...before.get(key)!, coordinates: moved(before.get(key)!.coordinates) } as GeoJsonGeometry;
-      const expected = pairs(shifted).map(([x, y]) => adjustedRing([x, y], m));
+      const expected = pairs(before.get(key)!).map(([x, y]) => adjustedRing([x, y], m));
       const actual = pairs(after.get(key)!);
       return [key, Math.max(farthest(actual, expected), farthest(expected, actual))] as const;
     }).filter(([, metres]) => !(metres < 0.02));

@@ -66,7 +66,8 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const buildingColor = poly.campusBuildings.options.color;
   poly.campusBuildings.options.color = (i) => markedBuildings.has(i)
     ? MARKED_COLOR : buildingColor(i);
-  const realColors = createRealColors(poly.campusBuildings, data.campusBuildings.map((b) => ({ planKey: b.props.planKey ?? null, g: b.g })), BUILDING_LOOKS);
+  const realColors = createRealColors(poly.campusBuildings, data.campusBuildings.map((b) => ({ planKey: b.props.planKey ?? null, g: b.g,
+    stairFrom: b.props.planKey ? model?.stairFrom.get(b.props.planKey) : undefined })), BUILDING_LOOKS);
   // Antes de la primera pintura: así el visor nace en el modo que la pantalla da por hecho (SPEC-112 D-13).
   if (start.realColors) {
     realColors.setEnabled(true);

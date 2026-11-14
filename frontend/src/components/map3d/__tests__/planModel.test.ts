@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import type { BuildingModelManifest, BuildingProperties, VegetationProperties } from '@shared/types';
+import type { BuildingModelManifest, BuildingProperties, BuildingStair, VegetationProperties } from '@shared/types';
 import { sampleLayers } from '../__fixtures__/mapLayers';
 import { LocalPlane } from '../projection';
 import { toSceneData, type Polygon, type ScenePoly } from '../sceneData';
@@ -43,7 +43,7 @@ function building(id: number, planKey: string | null, g: Polygon[] = square()): 
 
 function modelWith(buildings: Record<string, Float32Array>, extra: Partial<PlanModel> = {}): PlanModel {
   return {
-    buildings: new Map(Object.entries(buildings)), nodes: {}, sunken: [], offset: { x: 0, z: 0 },
+    buildings: new Map(Object.entries(buildings)), stairFrom: new Map(), nodes: {}, sunken: [], offset: { x: 0, z: 0 },
     huaca: { label: 'Camino Prehispánico', x: 0, y: 4.9, z: 0 }, ...extra,
   };
 }
@@ -226,6 +226,30 @@ describe('parsePlanModel', () => {
 
     expect(Array.from(model.buildings.get('k1')!.slice(0, 3))).toEqual([7, 4, 1]);
     expect(Array.from(model.buildings.get('k2')!.slice(0, 3))).toEqual([1, 4, -2]);
+  });
+
+  it('aplica la escalera del manifiesto: quita la parte que reemplaza, cierra el edificio y dice dónde empieza la escalera', async () => {
+    // Un techo a 3 m dentro de la parte reemplazada (sale) y otro lejos (queda), en metros alrededor del anclaje (SPEC-108 D-17).
+    const stair: BuildingStair = {
+      replaces: { polygon: [[0, 0], [4, 0], [4, 4], [0, 4]], fromM: 0, toM: 3 },
+      walls: [[[0, 0], [0, 4]]],
+      flights: [{ from: [[0, 0], [2, 0]], to: [[0, 3], [2, 3]], fromM: 0, toM: 1.5, risers: 10 }],
+      landings: [{ polygon: [[0, 3], [2, 3], [2, 4], [0, 4]], atM: 1.5 }],
+      why: 'prueba',
+    };
+    const inside = [1, 3, -1, 2, 3, -1, 1, 3, -2];
+    const outside = [10, 0, 0, 11, 0, 0, 10, 0, -1];
+    const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' }, stairs: { k1: stair } });
+    const file = glb([{ name: 'k1', positions: [...inside, ...outside] }, { name: 'k2', positions: outside }]);
+
+    const model = await parsePlanModel(manifest, file, plane);
+
+    const mesh = model.buildings.get('k1')!;
+    expectClose(mesh.slice(0, 9), outside);
+    // Tras lo que queda, el muro que cierra el edificio (dos triángulos); de ahí en adelante, la escalera.
+    expect(model.stairFrom.get('k1')).toBe(3 + 6);
+    expect(mesh.length / 3).toBeGreaterThan(9);
+    expect(model.stairFrom.has('k2')).toBe(false);
   });
 
   it('un ajuste de algo que no es la malla de un edificio hace fallar la lectura: no se aplica a ciegas', async () => {

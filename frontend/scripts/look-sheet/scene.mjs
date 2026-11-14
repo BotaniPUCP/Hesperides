@@ -140,7 +140,7 @@ export function wallSegments(building, look) {
 
 /** Clasifica el edificio de la ficha como el visor: fila de la tabla y (u, v) por vértice. */
 export function classifiedBuilding(campus, look, realLook) {
-  const { LocalPlane, polygons, buildLookTable, classifyBuilding, adjustmentsOf, adjusted, adjustedRing } = realLook;
+  const { LocalPlane, polygons, buildLookTable, classifyBuilding, adjustmentsOf, adjusted, adjustedRing, stairsOf, withStair } = realLook;
   const raw = campus.nodes.get(look.planKey);
   if (!raw?.length) throw new Error(`El modelo no tiene malla para ${look.planKey} (${look.name})`);
   const geojson = campus.footprints.get(look.planKey);
@@ -150,11 +150,14 @@ export function classifiedBuilding(campus, look, realLook) {
   const plane = new LocalPlane(campus.manifest.anchor.lat, campus.manifest.anchor.lon);
   // Con un ajuste del manifiesto (SPEC-108 D-16), malla y huella se mueven y estiran juntas, como en el visor y en V054.
   const m = adjustmentsOf(campus.manifest).get(look.planKey);
-  const positions = m ? adjusted(raw, m) : raw;
+  const fitted = m ? adjusted(raw, m) : raw;
+  // Con una escalera (D-17), la malla pierde el bloque que la escalera reemplaza y la suma al final, sin fachada.
+  const stair = stairsOf(campus.manifest).get(look.planKey);
+  const { positions, stairFrom } = stair ? withStair(fitted, stair, look.planKey) : { positions: fitted, stairFrom: fitted.length / 3 };
   const footprint = polygons(geojson, plane).map((poly) => (m ? poly.map((ring) => adjustedRing(ring, m)) : poly));
   const table = buildLookTable([look]);
   const n = positions.length / 3;
   const out = { row: new Float32Array(n).fill(-1), face: new Float32Array(n * 2) };
-  classifyBuilding(positions, 0, n, footprint, table.zones.get(look.planKey), out);
+  classifyBuilding(positions, 0, n, footprint, table.zones.get(look.planKey), out, stairFrom);
   return { positions, row: out.row, face: out.face, table };
 }

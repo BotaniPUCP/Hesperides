@@ -103,12 +103,12 @@ function printSegments(building, segments) {
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
-  const [{ LocalPlane }, { polygons }, { buildLookTable }, { classifyBuilding }, { facadeColor }, { validateLooks }, { adjustmentsOf, adjusted, adjustedRing }] = await Promise.all(
-    ['projection.ts', 'sceneData.ts', 'realLook/lookTable.ts', 'realLook/classifyFaces.ts', 'realLook/facadeColor.ts', 'realLook/validateLook.ts', 'viewer/adjustments.ts'].map(map3d));
+  const [{ LocalPlane }, { polygons }, { buildLookTable }, { classifyBuilding }, { facadeColor }, { validateLooks }, { adjustmentsOf, adjusted, adjustedRing }, { stairsOf, withStair }] = await Promise.all(
+    ['projection.ts', 'sceneData.ts', 'realLook/lookTable.ts', 'realLook/classifyFaces.ts', 'realLook/facadeColor.ts', 'realLook/validateLook.ts', 'viewer/adjustments.ts', 'viewer/stairs.ts'].map(map3d));
   const look = JSON.parse(fs.readFileSync(opts.look, 'utf8'));
   const campus = loadCampus(path.resolve(frontend, '..'));
   validateLooks([look], new Set(Object.entries(campus.manifest.nodes).filter(([, kind]) => kind === 'edificio').map(([key]) => key)));
-  const building = classifiedBuilding(campus, look, { LocalPlane, polygons, buildLookTable, classifyBuilding, adjustmentsOf, adjusted, adjustedRing });
+  const building = classifiedBuilding(campus, look, { LocalPlane, polygons, buildLookTable, classifyBuilding, adjustmentsOf, adjusted, adjustedRing, stairsOf, withStair });
   if (opts.measures) printSegments(building, wallSegments(building, look));
   const title = { input: caption(`${look.name} · ${look.planKey}`, SHEET_W, 20), left: 0, top: 0 };
   const photos = await photoTiles(photoFiles(look, opts), 32);

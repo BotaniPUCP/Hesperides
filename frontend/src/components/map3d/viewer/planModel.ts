@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import type { BuildingModelManifest, BuildingNodeKind, BuildingProperties } from '@shared/types';
+import type { BuildingModelManifest, BuildingNodeKind, BuildingProperties, BuildingStair } from '@shared/types';
 import type { LocalPlane } from '../projection';
 import { polygons, type Polygon, type ScenePoly } from '../sceneData';
-import { adjusted, adjustmentsOf } from './adjustments';
+import { adjusted, adjustmentsOf, type AdjustmentMatrix } from './adjustments';
 import { assemble, prismParts, type MergedGeometry } from './geometry';
 import { insideRing } from './picking';
+import { stairsOf, withStair } from './stairs';
 
 /**
  * El modelo de los edificios del plano oficial (SPEC-108 D-06): el GLB que arma
@@ -35,6 +36,8 @@ export interface SunkenArea {
 export interface PlanModel {
   /** De `planKey` a posiciones sin índice en el marco de la escena. Un principal que es todo suelo tiene una malla vacía. */
   buildings: Map<string, Float32Array>;
+  /** De `planKey` al primer vértice de su escalera (SPEC-108 D-17): de ahí al final de su malla, nada es fachada. */
+  stairFrom: Map<string, number>;
   /** Un nodo por tipo: los del mismo tipo (los muros y el fondo de los desniveles) van juntos. */
   nodes: Partial<Record<PlanNodeKind, PlanNode>>;
   sunken: SunkenArea[];
@@ -46,11 +49,12 @@ export interface PlanModel {
 
 /** Lee el GLB con su manifiesto. Lanza si el archivo no es un GLB válido: quien llama cae a los prismas. */
 export async function parsePlanModel(manifest: BuildingModelManifest, glb: ArrayBuffer, plane: LocalPlane): Promise<PlanModel> {
-  const adjustments = adjustmentsOf(manifest);
+  const fixes = { adjustments: adjustmentsOf(manifest), stairs: stairsOf(manifest) };
   const { scene } = await new GLTFLoader().parseAsync(glb, '');
   const anchor = plane.toPlane(manifest.anchor.lat, manifest.anchor.lon);
   const offset = { x: anchor.x, z: -anchor.y };
   const buildings = new Map<string, Float32Array>();
+  const stairFrom = new Map<string, number>();
   const parts: Partial<Record<PlanNodeKind, PlanNode[]>> = {};
   scene.traverse((object) => {
     const mesh = object as THREE.Mesh;
@@ -61,10 +65,13 @@ export async function parsePlanModel(manifest: BuildingModelManifest, glb: Array
     if (!kind) return;
     const geo = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry;
     const positions = geo.attributes.position.array as Float32Array;
-    // Un ajuste (D-16) mueve y estira en planta la malla de ese edificio; el GLB no se toca.
-    const adjustment = kind === 'edificio' ? adjustments.get(key) : undefined;
-    if (kind === 'edificio') buildings.set(key, shifted(adjustment ? adjusted(positions, adjustment) : positions, offset));
-    else (parts[kind] ??= []).push({ positions, uv: (geo.attributes.uv?.array as Float32Array | undefined) ?? null });
+    if (kind !== 'edificio') {
+      (parts[kind] ??= []).push({ positions, uv: (geo.attributes.uv?.array as Float32Array | undefined) ?? null });
+      return;
+    }
+    const fixed = fixedMesh(key, positions, fixes);
+    buildings.set(key, shifted(fixed.positions, offset));
+    if (fixed.stairFrom !== undefined) stairFrom.set(key, fixed.stairFrom);
   });
   // Sus piezas pasaron todas a ser suelo: ni malla ni prisma, pero su tramo sigue en la capa (D-08).
   manifest.groundOnly.forEach((key) => buildings.set(key, new Float32Array(0)));
@@ -72,11 +79,28 @@ export async function parsePlanModel(manifest: BuildingModelManifest, glb: Array
   const huaca = plane.toPlane(lat, lon);
   return {
     buildings,
+    stairFrom,
     nodes: Object.fromEntries(Object.entries(parts).map(([kind, list]) => [kind, joined(list)])),
     sunken: manifest.sunken.map((s) => ({ g: polygons(s.polygon, plane), floorM: s.floorM })),
     offset,
     huaca: { label: manifest.huaca.label, x: huaca.x, y: zM, z: -huaca.y },
   };
+}
+
+interface Fixes {
+  adjustments: Map<string, AdjustmentMatrix>;
+  stairs: Map<string, BuildingStair>;
+}
+
+/**
+ * La malla de un edificio con lo que el manifiesto le corrige, sin tocar el GLB: primero su ajuste en planta (D-16)
+ * y, sobre la malla ya ajustada, su escalera (D-17).
+ */
+function fixedMesh(key: string, raw: Float32Array, fixes: Fixes): { positions: Float32Array; stairFrom?: number } {
+  const adjustment = fixes.adjustments.get(key);
+  const positions = adjustment ? adjusted(raw, adjustment) : raw;
+  const stair = fixes.stairs.get(key);
+  return stair ? withStair(positions, stair, key) : { positions };
 }
 
 function shifted(p: Float32Array, offset: PlanModel['offset']): Float32Array {

@@ -89,4 +89,14 @@ describe('classifyBuilding', () => {
   it('un tramo vacío no hace nada', () => {
     expect(() => run([])).not.toThrow();
   });
+
+  it('desde plainFrom todo lleva el techo de su zona: la escalera no es fachada, aunque sus caras sean verticales', () => {
+    const wall = tri(0, 0, -10, 10, 0, -10, 0, 5, -10);
+    const n = 6;
+    const out: FaceAttributes = { row: new Float32Array(n).fill(-1), face: new Float32Array(n * 2) };
+
+    classifyBuilding(new Float32Array([...wall, ...wall]), 0, n, square, [zone], out, 3);
+
+    expect([...out.row]).toEqual([0, 0, 0, 100, 100, 100]);
+  });
 });

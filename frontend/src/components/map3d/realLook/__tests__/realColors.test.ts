@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildLookTable } from '../lookTable';
 import { createRealColors } from '../realColors';
 import type { BuildingLook } from '../types';
 import type { PolyLayer } from '../../viewer/polyLayer';
@@ -46,6 +47,16 @@ describe('createRealColors', () => {
     real.setEnabled(false);
     expect(layer.mesh.material).toBe(today);
     expect(geometry.groups).toEqual([]);
+  });
+
+  it('la escalera de un edificio con ficha (desde stairFrom) lleva el techo de su zona, aunque sus caras sean verticales', () => {
+    const layer = fakeLayer();
+    const roof = buildLookTable([look]).zones.get('con-ficha')![0].roof;
+
+    createRealColors(layer, [{ ...buildings[0], stairFrom: 0 }, buildings[1], buildings[2]], [look]);
+
+    const row = (layer.mesh.geometry as THREE.BufferGeometry).attributes.aLookRow.array as Float32Array;
+    expect([...row.slice(0, 3)]).toEqual([roof, roof, roof]);
   });
 
   it('una ficha de un edificio que no está en la escena detiene todo', () => {

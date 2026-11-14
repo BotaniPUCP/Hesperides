@@ -87,6 +87,8 @@ test('con un ajuste en el manifiesto (D-16), la malla y su huella llegan ajustad
     adjustmentsOf: () => new Map([['k', [1, 0, 0, 1, 10, 0]]]),
     adjusted: (p, m) => Float32Array.from(p, (v, i) => (i % 3 === 0 ? v + shiftEast(m) : v)),
     adjustedRing: (ring, m) => ring.map((v, i) => (i % 2 === 0 ? v + shiftEast(m) : v)),
+    stairsOf: () => new Map(),
+    withStair: () => assert.fail('sin escalera no se toca la malla'),
   };
   const campus = { manifest: { anchor: { lat: 0, lon: 0 } }, nodes: new Map([['k', new Float32Array([1, 2, 3])]]), footprints: new Map([['k', {}]]) };
 
@@ -95,4 +97,25 @@ test('con un ajuste en el manifiesto (D-16), la malla y su huella llegan ajustad
   assert.deepEqual(calls[0].positions, [11, 2, 3]);
   assert.deepEqual(calls[0].footprint, [[[10, 0, 11, 0, 11, 1]]]);
   assert.deepEqual(Array.from(building.positions), [11, 2, 3]);
+});
+
+test('con una escalera en el manifiesto (D-17), la malla llega con su escalera y la clasificación sabe dónde empieza', () => {
+  const calls = [];
+  const realLook = {
+    LocalPlane: class {},
+    polygons: () => [[[0, 0, 1, 0, 1, 1]]],
+    buildLookTable: () => ({ zones: new Map([['k', []]]) }),
+    classifyBuilding: (positions, start, n, footprint, zones, out, plainFrom) => calls.push({ positions: Array.from(positions), n, plainFrom }),
+    adjustmentsOf: () => new Map(),
+    adjusted: () => assert.fail('sin ajuste no se corre la malla'),
+    adjustedRing: () => assert.fail('sin ajuste no se corre la huella'),
+    stairsOf: () => new Map([['k', { why: 'prueba' }]]),
+    withStair: (p, stair, key) => ({ positions: Float32Array.from([...p, 7, 8, 9]), stairFrom: key === 'k' && stair.why ? 1 : -1 }),
+  };
+  const campus = { manifest: { anchor: { lat: 0, lon: 0 } }, nodes: new Map([['k', new Float32Array([1, 2, 3])]]), footprints: new Map([['k', {}]]) };
+
+  const building = classifiedBuilding(campus, { planKey: 'k', name: 'K' }, realLook);
+
+  assert.deepEqual(calls[0], { positions: [1, 2, 3, 7, 8, 9], n: 2, plainFrom: 1 });
+  assert.deepEqual(Array.from(building.positions), [1, 2, 3, 7, 8, 9]);
 });

@@ -23,6 +23,8 @@ export interface RealColors {
 export interface LookedBuilding {
   planKey: string | null;
   g: Polygon[];
+  /** Desde qué vértice de su tramo va su escalera (SPEC-108 D-17), que no es fachada. */
+  stairFrom?: number;
 }
 
 /** En modo real las aristas rosadas desentonan: pasan a un gris tenue, como juntas. */
@@ -66,7 +68,8 @@ export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], 
   const out: FaceAttributes = { row: new Float32Array(n).fill(-1), face: new Float32Array(n * 2) };
   const looked = buildings.map((b, i) => {
     const zones = b.planKey ? table.zones.get(b.planKey) : undefined;
-    if (zones) classifyBuilding(positions, layer.starts[i], layer.starts[i + 1], b.g, zones, out);
+    const [start, end] = [layer.starts[i], layer.starts[i + 1]];
+    if (zones) classifyBuilding(positions, start, end, b.g, zones, out, b.stairFrom === undefined ? end : start + b.stairFrom);
     return !!zones;
   });
   geometry.setAttribute('aLookRow', new THREE.BufferAttribute(out.row, 1));
