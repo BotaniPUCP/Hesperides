@@ -5,7 +5,7 @@
 | HU relacionada | SPEC-102 (mapa 3D). Reemplaza D-04, D-06 y D-15 de SPEC-109 y cambia su D-10 (el modo arranca encendido) |
 | Autor | Jean Piero, con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android |
-| Estado | 13 nov 2026: entrega 1 hecha (motor, arranque encendido, hoja de revisión y cinco edificios del piloto), verificada en Chrome sin ventana con el material real. Jean Piero revisó el piloto en el navegador: corregidos el extremo del McGregor y la cara sur del Pabellón Z (P-02). Pendiente: franjas o muro en Química (P-03) antes de los grupos (§5) |
+| Estado | 13 nov 2026: entrega 1 hecha (motor, arranque encendido, hoja de revisión y cinco edificios del piloto), verificada en Chrome sin ventana con el material real. Jean Piero aprobó el piloto en el navegador, con el extremo del McGregor y la cara sur del Pabellón Z corregidos (P-02) y las franjas de Química (P-03). En curso: grupo 2 (§5) |
 | Dependencias | SPEC-109 (motor de colores reales y Anexo A de carpetas), SPEC-108 (modelo del plano) |
 | Rama | `feature/spec-112-colores-por-zonas`, desde `develop` |
 
@@ -123,8 +123,8 @@ puerta de atrás, la validación (D-10) pone dos límites *(decisión de Claude)
 - una franja por piso mide al menos 4 m de ancho;
 - una cara lleva a lo sumo 12 regiones, contando las comunes.
 
-**D-04 · Ventanas sueltas en las fotos** *(decisión de Claude; se revisa con el piloto)*. Una fila de
-ventanas sueltas no se dibuja ventana por ventana:
+**D-04 · Ventanas sueltas en las fotos** *(decisión de Claude; Jean Piero la confirmó con Química el
+13 nov)*. Una fila de ventanas sueltas no se dibuja ventana por ventana:
 - si a la distancia marca el color del piso, va como una franja corrida de poco contraste, del color
   que resulta de mezclar el muro y el vidrio;
 - si no, el color del muro la absorbe.
@@ -176,6 +176,9 @@ lados.
 > fachada larga sin foto tiene enfrente, en el mismo edificio, una fachada de vidrio, repite su
 > composición (vidrio, ventanal, paños). Un muro liso frente a una fachada de vidrio se ve raro. Si la
 > opuesta es muro, la cara sin foto sigue siendo muro. La ficha anota de dónde copia.
+>
+> Excepción confirmada por Jean Piero el mismo día: la torre de la Facultad de Derecho. Su cara este
+> queda de concreto, aunque la oeste lleva muro cortina.
 
 **D-07 · Techos.** Toda cara horizontal lleva el material liso del techo de su zona, como en SPEC-109
 D-05.
@@ -361,7 +364,7 @@ Visor
 |---|---|---|
 | P-01 | Filas «por confirmar» del Anexo A de SPEC-109 (su P-01) | Abierto: no se pintan hasta confirmarlas |
 | P-02 | **Pabellón Z, cara sur de la barra sur:** ninguna foto la muestra. Con D-06, copia el vidrio norte solo si el plano muestra dos barras gemelas; si no, lleva muro | Resuelto el 13 nov: lleva vidrio por coherencia del edificio (ajuste de D-06). Repite la composición norte en su propio largo: vidrio, ventanal y el paño blanco del extremo este. Va en una zona propia, solo el frente sur, porque las paredes del patio también miran al sur |
-| P-03 | **D-04 (ventanas sueltas como franja tenue)** es decisión de Claude | Se valida con el edificio de ventanas del piloto. 13 nov: Jean Piero compara Química con franjas y sin ellas |
+| P-03 | **D-04 (ventanas sueltas como franja tenue)** es decisión de Claude | Resuelto el 13 nov: Jean Piero comparó Química con franjas y sin ellas, y se quedan las franjas |
 | P-04 | **Edificios sin fotos:** unos 46 con malla y sin ficha, más los prismas | Rosados hasta que lleguen sus fotos (D-15) |
 | P-05 | **CA-10 en el `WebView` de Android** (SPEC-109 P-06) | Abierto. Si baja más de un 10 %, se decide si en Android el modo arranca apagado |
 | P-06 | **Huaca:** sigue con su textura de tapial (SPEC-109 P-05) | Fuera de este spec |
