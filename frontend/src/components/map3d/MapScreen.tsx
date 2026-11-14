@@ -16,11 +16,15 @@ import { MapFullscreenButton } from './MapFullscreenButton';
 import { MapInfoCard } from './MapInfoCard';
 import { MapSearch } from './MapSearch';
 import { MapToolbar } from './MapToolbar';
-import { mapScreenPose } from './mapScreenMemory';
+import { INITIAL_OPTIONS, mapScreenPose } from './mapScreenMemory';
 import { ModeLegend } from './ModeLegend';
 import { toSceneData } from './sceneData';
 import { buildSearchIndex, isCatalogTarget } from './searchIndex';
 import { useMapScreenState } from './useMapScreenState';
+import type { ViewerStart } from './viewer/createViewer';
+
+/** El visor nace como dicen las opciones de inicio: `applyToViewer` solo le ordena lo que difiere de ellas. */
+const VIEWER_START: ViewerStart = { realColors: INITIAL_OPTIONS.realColors };
 
 /** El mapa del campus a pantalla completa: la maqueta 3D con buscador, capas, leyenda y ficha. */
 export function MapScreen() {
@@ -98,6 +102,7 @@ export function MapScreen() {
           onHover={() => undefined}
           onCompass={s.onCompass}
           onViewConePick={onMap.onConePick}
+          start={VIEWER_START}
           poseMemory={mapScreenPose}
         />
       )}

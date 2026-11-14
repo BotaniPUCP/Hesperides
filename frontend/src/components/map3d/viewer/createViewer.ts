@@ -21,7 +21,7 @@ import { WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { createViewCones } from './viewCones';
 import { sectionPoints, specimenPoints } from './frameFit';
 import { sectionCodesInScreenRect, specimenCodesInScreenRect } from './screenRectSections';
-import type { Viewer, ViewerCallbacks } from './viewerTypes';
+import type { Viewer, ViewerCallbacks, ViewerStart } from './viewerTypes';
 import { createSelectionSweep, SECTION_LAYERS } from './selectionSweep';
 import { ringLines, centroid } from './geometry';
 import { BUILDING_LOOKS } from '../realLook/looks';
@@ -29,14 +29,14 @@ import { createRealColors, NEUTRAL, setEdgesForRealColors } from '../realLook/re
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
 
-export type { Viewer, ViewerCallbacks } from './viewerTypes';
+export type { Viewer, ViewerCallbacks, ViewerStart } from './viewerTypes';
 
 /** Lo marcado a la vez (secciones de un turno de riego, bloques de un lugar), distinto de la selección. */
 const MARKED_COLOR = '#06B6D4';
 
 /** Con `model`, los edificios se dibujan con las mallas del plano oficial; sin él (no llegó o falló), como prismas. */
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose,
-  model: PlanModel | null = null): Viewer {
+  model: PlanModel | null = null, start: ViewerStart = {}): Viewer {
   const renderer = createRenderer();
   const textures = createTextures(renderer);
   const stage = createStage(container, renderer, data.campus, textures, model?.sunken);
@@ -67,6 +67,11 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   poly.campusBuildings.options.color = (i) => markedBuildings.has(i)
     ? MARKED_COLOR : buildingColor(i);
   const realColors = createRealColors(poly.campusBuildings, data.campusBuildings.map((b) => ({ planKey: b.props.planKey ?? null, g: b.g })), BUILDING_LOOKS);
+  // Antes de la primera pintura: así el visor nace en el modo que la pantalla da por hecho (SPEC-112 D-13).
+  if (start.realColors) {
+    realColors.setEnabled(true);
+    setEdgesForRealColors(poly.campusBuildings.extra, true);
+  }
   const paletteColor = poly.campusBuildings.options.color;
   // En modo real el edificio con ficha se pinta neutro: el shader pone su color, y el resaltado lo tiñe.
   poly.campusBuildings.options.color = (i) => realColors.enabled() && realColors.hasLook(i) && !markedBuildings.has(i)

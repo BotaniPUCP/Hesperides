@@ -181,6 +181,13 @@ describe('MapScreen', () => {
     expect(viewer.setLayerVisible).toHaveBeenLastCalledWith('supervision', true);
   });
 
+  it('arranca en colores reales: el visor nace con ellos y el botón aparece activo', async () => {
+    await renderLoaded();
+    expect(mockedCreate.mock.calls[0][6]).toEqual({ realColors: true });
+    expect(screen.getByRole('button', { name: 'Colores reales' })).toHaveAttribute('aria-pressed', 'true');
+    expect(viewer.setRealColors).not.toHaveBeenCalled();
+  });
+
   it('las opciones de vista llegan al visor', async () => {
     await renderLoaded();
     fireEvent.click(screen.getByRole('button', { name: 'Noche' }));
@@ -328,6 +335,18 @@ describe('MapScreen', () => {
 
       await waitFor(() => expect(viewer.setNight).toHaveBeenCalledWith(true));
       expect(viewer.setShadows).not.toHaveBeenCalled();
+    });
+
+    it('si se apagaron los colores reales, el visor nuevo nace con ellos y los apaga', async () => {
+      const { unmount } = await renderLoaded();
+      fireEvent.click(screen.getByRole('button', { name: 'Colores reales' }));
+      viewer.setRealColors.mockClear();
+
+      await leaveAndReturn(unmount);
+
+      await waitFor(() => expect(viewer.setRealColors).toHaveBeenCalledWith(false));
+      expect(mockedCreate.mock.calls[mockedCreate.mock.calls.length - 1][6]).toEqual({ realColors: true });
+      expect(screen.getByRole('button', { name: 'Colores reales' })).toHaveAttribute('aria-pressed', 'false');
     });
 
     it('conserva el elemento elegido y su ficha sin mover la cámara', async () => {

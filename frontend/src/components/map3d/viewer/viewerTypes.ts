@@ -19,6 +19,12 @@ export interface ViewerCallbacks {
   onViewConePick?: (id: number) => void;
 }
 
+/** Cómo nace el visor; lo que no se dice nace como siempre. */
+export interface ViewerStart {
+  /** Los edificios con ficha nacen en sus colores reales (SPEC-112 D-13). */
+  realColors?: boolean;
+}
+
 /** Las operaciones que la interfaz React ordena al visor. */
 export interface Viewer {
   /** Optional restrictions and reference outline; unused by the general map. */
