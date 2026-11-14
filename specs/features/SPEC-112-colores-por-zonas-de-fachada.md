@@ -5,7 +5,7 @@
 | HU relacionada | SPEC-102 (mapa 3D). Reemplaza D-04, D-06 y D-15 de SPEC-109 y cambia su D-10 (el modo arranca encendido) |
 | Autor | Jean Piero, con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android |
-| Estado | 13 nov 2026: aprobada por Jean Piero; entrega 1 en curso |
+| Estado | 13 nov 2026: entrega 1 hecha (motor, arranque encendido, hoja de revisión y cinco edificios del piloto), verificada en Chrome sin ventana con el material real. Pendiente: que Jean Piero revise el piloto en el navegador (§5) |
 | Dependencias | SPEC-109 (motor de colores reales y Anexo A de carpetas), SPEC-108 (modelo del plano) |
 | Rama | `feature/spec-112-colores-por-zonas`, desde `develop` |
 
@@ -194,8 +194,8 @@ de Modelos 3D. Si la geometría del campus difiere de la del SKP, manda la del c
 - Colores en `#rrggbb`.
 - El techo de cada zona es un material liso.
 - Cada región cita un material de su ficha, y sus tramos de u y v van de menor a mayor.
-- Vidrio en rangos de edificio: ancho de módulo de 0,6 a 6 m, alto de módulo de 2,4 a 6 m, y el
-  antepecho cabe en el módulo.
+- Vidrio en rangos de edificio: ancho de módulo de 0,6 a 6 m, alto de módulo de 1 a 6 m (el vidrio de la
+  Biblioteca tiene travesaños cada 1,3 m), y el antepecho cabe en el módulo.
 - Franja por piso: el alto del piso va de 2,4 a 6 m, su tramo cabe en el piso y mide al menos 4 m de
   ancho (D-03).
 - A lo sumo 12 regiones por cara.
@@ -219,6 +219,18 @@ repositorio, porque llevan fotos con personas (SPEC-109 D-11).
 
 La rectificación de SPEC-109 (`enderezar.py` y `tramos.json`) se queda como ayuda local para medir en
 metros dónde va cada material de una fachada. Sus imágenes no se versionan.
+
+Cómo se usa, desde `frontend/`:
+
+```
+node --import ./scripts/ts-register.mjs scripts/look-sheet.mjs <ficha.json> --salida <carpeta local>
+     --fotos <carpeta edificios-pucp> [--cuadricula] [--medidas]
+node --import ./scripts/ts-register.mjs scripts/real-look-shader-check.mjs
+```
+
+`--cuadricula` marca la u y la v cada 5 m (la u = 0 en rojo, la cota 0 en azul). `--medidas` lista los paños
+de cada cara con su tramo de u, su cota y su área. El segundo comando compila el shader en Chrome sin ventana
+y lo compara píxel a píxel con `facadeColor`: falla si se separan. Se corre después de tocar el GLSL.
 
 **D-12 · Salen el atlas y los patrones de SPEC-109.** Se van:
 - el tipo `photo` y los patrones `windows`, `ribbon`, `curtain` y `blind`;
@@ -323,8 +335,9 @@ Resolución de regiones (la función pura que usan las pruebas y la hoja)
 
 Tabla y shader
 - materiales y regiones iguales se comparten, y el orden de pintado se conserva
-- la disposición de la tabla que lee el GLSL sale de las mismas constantes de TypeScript
-- el material del modo real no carga texturas
+- la disposición de la tabla que lee el GLSL sale de las mismas constantes de TypeScript (`LAYOUT_GLSL`);
+  como jsdom no tiene GPU, lo comprueba real-look-shader-check.mjs (D-11) píxel a píxel
+- el material del modo real no carga texturas: solo recibe la tabla
 
 Visor
 - INITIAL_OPTIONS.realColors es true, y el visor nace con el modo real puesto
@@ -336,11 +349,13 @@ Visor
 | # | Caso | Estado |
 |---|---|---|
 | P-01 | Filas «por confirmar» del Anexo A de SPEC-109 (su P-01) | Abierto: no se pintan hasta confirmarlas |
-| P-02 | **Pabellón Z, cara sur de la barra sur:** ninguna foto la muestra. Con D-06, copia el vidrio norte solo si el plano muestra dos barras gemelas; si no, lleva muro | Se decide en el piloto y se le muestra a Jean Piero |
+| P-02 | **Pabellón Z, cara sur de la barra sur:** ninguna foto la muestra. Con D-06, copia el vidrio norte solo si el plano muestra dos barras gemelas; si no, lleva muro | En el piloto lleva muro: las barras no son evidentemente gemelas (la norte tiene su paño blanco al este). Jean Piero lo confirma al revisarlo |
 | P-03 | **D-04 (ventanas sueltas como franja tenue)** es decisión de Claude | Se valida con el edificio de ventanas del piloto |
 | P-04 | **Edificios sin fotos:** unos 46 con malla y sin ficha, más los prismas | Rosados hasta que lleguen sus fotos (D-15) |
 | P-05 | **CA-10 en el `WebView` de Android** (SPEC-109 P-06) | Abierto. Si baja más de un 10 %, se decide si en Android el modo arranca apagado |
 | P-06 | **Huaca:** sigue con su textura de tapial (SPEC-109 P-05) | Fuera de este spec |
+| P-07 | **Química, testeros verde oliva con el letrero** (frente.jpg, frente2.jpg): ninguna foto dice hacia dónde miran | Quedan del color del muro hasta saberlo |
+| P-08 | **La hoja no simula la luz del mapa:** con el sol de media tarde de frente, el ladrillo de la Biblioteca se ve más claro que en la foto (visto en three.js con las luces del visor). La calibración es para una cara al sol promedio | Se confirma en el navegador con el piloto |
 
 Con los tramos de foto dejan de aplicar estos pendientes de SPEC-109:
 - P-08: dónde servir el atlas;
