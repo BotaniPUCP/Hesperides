@@ -15,20 +15,20 @@ function fakeLayer(): PolyLayer {
 const square = [[[0, 0, 10, 0, 10, 10, 0, 10]]];
 const look: BuildingLook = {
   planKey: 'con-ficha', name: 'Con ficha', folder: 'x', photos: ['frente.jpg'],
-  zones: [{ id: 'base', roof: '#cccccc', faces: { other: { kind: 'blind', wall: '#ffffff' } } }],
+  materials: { blanco: { color: '#ffffff' }, gris: { color: '#cccccc' } },
+  zones: [{ id: 'base', wall: 'blanco', roof: 'gris' }],
 };
-const photos = { atlas: {}, url: 'data:,', onLoad: () => undefined };
 const buildings = [{ planKey: 'con-ficha', g: square }, { planKey: null, g: square }, { planKey: 'sin-ficha', g: square }];
 
 describe('createRealColors', () => {
   it('marca solo los edificios con ficha', () => {
-    const real = createRealColors(fakeLayer(), buildings, [look], photos);
+    const real = createRealColors(fakeLayer(), buildings, [look]);
     expect([0, 1, 2].map(real.hasLook)).toEqual([true, false, false]);
   });
 
   it('los vértices sin ficha llevan la fila −1', () => {
     const layer = fakeLayer();
-    createRealColors(layer, buildings, [look], photos);
+    createRealColors(layer, buildings, [look]);
     const row = (layer.mesh.geometry as THREE.BufferGeometry).attributes.aLookRow.array as Float32Array;
     expect([...row.slice(0, 3)].every((r) => r >= 0)).toBe(true);
     expect([...row.slice(3)]).toEqual([-1, -1, -1]);
@@ -38,7 +38,7 @@ describe('createRealColors', () => {
     const layer = fakeLayer();
     const geometry = layer.mesh.geometry;
     const today = layer.mesh.material;
-    const real = createRealColors(layer, buildings, [look], photos);
+    const real = createRealColors(layer, buildings, [look]);
     real.setEnabled(true);
     expect(Array.isArray(layer.mesh.material)).toBe(true);
     expect(layer.mesh.geometry).toBe(geometry);
@@ -49,6 +49,6 @@ describe('createRealColors', () => {
   });
 
   it('una ficha de un edificio que no está en la escena detiene todo', () => {
-    expect(() => createRealColors(fakeLayer(), [{ planKey: 'otro', g: square }], [look], photos)).toThrow(/no está en el modelo/);
+    expect(() => createRealColors(fakeLayer(), [{ planKey: 'otro', g: square }], [look])).toThrow(/no está en el modelo/);
   });
 });

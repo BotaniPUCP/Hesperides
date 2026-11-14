@@ -1,10 +1,12 @@
-import { ROW_TEXELS } from './lookTable';
+import { LAYOUT_GLSL } from './lookLayout';
 
 /**
- * GLSL del patrón de fachadas. Cada vértice trae su fila de la tabla (`aLookRow`),
- * sus coordenadas sobre la cara (`aLookFace`: metros a lo largo del muro y cota)
- * y el tono con que lo pinta `paintPoly` (`aTone`), para quitarlo: el modo real no
- * usa el degradado del modo rosado, pero sí el tinte del resaltado.
+ * GLSL de las fachadas (SPEC-112). Hace la misma cuenta que `facadeColor.ts`,
+ * que es la copia que se prueba. Cada vértice trae el texel de su cara
+ * (`aLookRow`), sus coordenadas sobre la cara (`aLookFace`: metros a lo largo
+ * del muro y cota) y el tono con que lo pinta `paintPoly` (`aTone`), para
+ * quitarlo: el modo real no usa el degradado del modo rosado, pero sí el tinte
+ * del resaltado.
  */
 
 export const LOOK_VERTEX_HEAD = /* glsl */ `
@@ -24,55 +26,138 @@ vTone = aTone;
 
 export const LOOK_FRAGMENT_HEAD = /* glsl */ `
 uniform sampler2D lookTable;
-uniform sampler2D lookAtlas;
 uniform float lookRows;
 varying float vLookRow;
 varying vec2 vLookFace;
 varying float vTone;
+${LAYOUT_GLSL}
 
-vec4 lookTexel(float row, float i) {
-  return texture2D(lookTable, vec2((i + 0.5) / ${ROW_TEXELS.toFixed(1)}, (row + 0.5) / lookRows));
+vec4 lookAt(float i) {
+  float y = floor((i + 0.5) / LOOK_TABLE_WIDTH);
+  float x = i - y * LOOK_TABLE_WIDTH;
+  return texture2D(lookTable, vec2((x + 0.5) / LOOK_TABLE_WIDTH, (y + 0.5) / lookRows));
 }
 
 float lookBox(float x, float a, float b, float aa) {
   return clamp(smoothstep(a - aa, a + aa, x) - smoothstep(b - aa, b + aa, x), 0.0, 1.0);
 }
 
-// Un piso del patrón: muro, vidrio, marcos y canto de losa. Lejos, el promedio, para que no titile.
-vec3 lookFloor(float row, vec2 f, vec2 aa, out float glass) {
-  vec4 t0 = lookTexel(row, 0.0), t1 = lookTexel(row, 1.0), t2 = lookTexel(row, 2.0);
-  vec4 t3 = lookTexel(row, 3.0), t4 = lookTexel(row, 4.0), t5 = lookTexel(row, 5.0);
-  float kind = t0.a, floorM = t1.a, sill = t2.a, win = t3.a;
-  float width = t4.x, module = t4.y, frameM = t4.w, bandM = t5.x;
-  float y = mod(f.y - t5.y, floorM);
-  float x = mod(f.x - t4.z, module);
-  float glassMask = 0.0, frameMask = 0.0, coverage = 0.0;
-  if (kind > 0.5 && kind < 1.5) {
-    float outer = lookBox(y, sill, sill + win, aa.y) * lookBox(x, 0.0, width, aa.x);
-    float inner = lookBox(y, sill + frameM, sill + win - frameM, aa.y) * lookBox(x, frameM, width - frameM, aa.x);
-    glassMask = inner;
-    frameMask = max(outer - inner, 0.0);
-    coverage = (win / floorM) * (width / module);
-  } else if (kind > 1.5 && kind < 2.5) {
-    float strip = lookBox(y, sill, sill + win, aa.y);
-    float mullion = 1.0 - lookBox(x, frameM * 0.5, module - frameM * 0.5, aa.x);
-    float rails = 1.0 - lookBox(y, sill + frameM, sill + win - frameM, aa.y);
-    frameMask = strip * max(mullion, rails);
-    glassMask = max(strip - frameMask, 0.0);
-    coverage = win / floorM;
-  } else if (kind > 2.5) {
-    float mullion = 1.0 - lookBox(x, frameM * 0.5, module - frameM * 0.5, aa.x);
-    float transom = 1.0 - lookBox(y, frameM, floorM - frameM, aa.y);
-    frameMask = max(mullion, transom);
-    glassMask = 1.0 - frameMask;
-    coverage = 0.9;
+float lookDetail(float pixel, float period) {
+  return 1.0 - smoothstep(LOOK_FADE_FROM, LOOK_FADE_TO, pixel / period);
+}
+
+// pcg2d del módulo con la semilla de la cara: x elige el acento, y da el tono. Es de enteros para que dé lo
+// mismo que cellHash en TypeScript; en WebGL1 no hay enteros sin signo y queda uno de floats, solo parecido.
+#if __VERSION__ >= 300
+vec2 lookCellHash(vec2 cell, float seed) {
+  uint s = uint(seed);
+  uvec2 v = uvec2(ivec2(cell)) ^ uvec2(s * LOOK_SEED_MIX_X, s * LOOK_SEED_MIX_Y);
+  v = v * LOOK_PCG_MUL + LOOK_PCG_ADD;
+  for (int pass = 0; pass < 2; pass++) {
+    v.x += v.y * LOOK_PCG_MUL;
+    v.y += v.x * LOOK_PCG_MUL;
+    v = v ^ (v >> 16u);
   }
-  float bandMask = bandM > 0.0 ? 1.0 - smoothstep(bandM - aa.y, bandM + aa.y, y) : 0.0;
-  vec3 near = mix(mix(mix(t0.rgb, t2.rgb, frameMask), t1.rgb, glassMask), t3.rgb, bandMask);
-  vec3 far = mix(mix(t0.rgb, t1.rgb, coverage), t3.rgb, bandM / floorM);
-  float detail = 1.0 - smoothstep(0.2, 0.5, max(aa.x / module, aa.y / floorM));
-  glass = glassMask * (1.0 - bandMask) * detail;
-  return mix(far, near, detail);
+  return vec2(v) * (1.0 / 4294967296.0);
+}
+#else
+float lookHash1(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+vec2 lookCellHash(vec2 cell, float seed) {
+  vec2 p = cell + mod(seed, 61.0) * vec2(1.7, 3.1);
+  return vec2(lookHash1(p), lookHash1(p + vec2(17.0, 31.0)));
+}
+#endif
+
+// El módulo de vidrio de cerca: paño con su tono, antepecho o acento, y perfiles.
+vec3 lookGlassNear(float m, vec2 p, vec2 aa, float seed, out float glass) {
+  vec4 t0 = lookAt(m), t1 = lookAt(m + 1.0), t2 = lookAt(m + 2.0), t3 = lookAt(m + 3.0), t4 = lookAt(m + 4.0);
+  vec2 size = t4.xy;
+  vec2 cell = floor(p / size);
+  vec2 f = p - cell * size;
+  vec2 h = lookCellHash(cell, seed);
+  bool accentOn = t3.a > 0.0 && h.x < t3.a;
+  float tone = 1.0 + t4.z * (2.0 * h.y - 1.0);
+  vec3 pane = accentOn && t2.a <= 0.0 ? t3.rgb : t0.rgb * tone;
+  vec3 panel = accentOn ? t3.rgb : t2.rgb;
+  float halfFrame = t1.a * 0.5;
+  float inPanel = t2.a > 0.0 ? 1.0 - smoothstep(t2.a - aa.y, t2.a + aa.y, f.y) : 0.0;
+  float rail = t2.a > 0.0 ? lookBox(f.y, t2.a - halfFrame, t2.a + halfFrame, aa.y) : 0.0;
+  float frame = max(max(1.0 - lookBox(f.x, halfFrame, size.x - halfFrame, aa.x), 1.0 - lookBox(f.y, halfFrame, size.y - halfFrame, aa.y)), rail);
+  glass = (1.0 - frame) * (1.0 - inPanel);
+  return mix(mix(pane, panel, inPanel), t1.rgb, frame);
+}
+
+// El módulo de lejos: el promedio de paños, antepechos, acentos y perfiles, para que no titile.
+vec3 lookGlassFar(float m, out float glass) {
+  vec4 t0 = lookAt(m), t1 = lookAt(m + 1.0), t2 = lookAt(m + 2.0), t3 = lookAt(m + 3.0), t4 = lookAt(m + 4.0);
+  float panelFrac = t2.a / t4.y;
+  vec3 pane = t2.a > 0.0 ? t0.rgb : mix(t0.rgb, t3.rgb, t3.a);
+  vec3 panel = mix(t2.rgb, t3.rgb, t3.a);
+  float frameFrac = clamp(t1.a / t4.x + (t1.a / t4.y) * (t2.a > 0.0 ? 2.0 : 1.0), 0.0, 1.0);
+  glass = (1.0 - frameFrac) * (1.0 - panelFrac);
+  return mix(mix(pane, panel, panelFrac), t1.rgb, frameFrac);
+}
+
+vec3 lookMaterial(float m, vec2 p, vec2 aa, float seed, out float glass) {
+  vec4 t0 = lookAt(m);
+  glass = 0.0;
+  if (t0.a < 0.5) return t0.rgb;
+  vec2 size = lookAt(m + 4.0).xy;
+  float d = min(lookDetail(aa.x, size.x), lookDetail(aa.y, size.y));
+  float farGlass;
+  vec3 far = lookGlassFar(m, farGlass);
+  glass = farGlass;
+  if (d <= 0.0) return far;
+  float nearGlass;
+  vec3 near = lookGlassNear(m, p, aa, seed, nearGlass);
+  glass = mix(farGlass, nearGlass, d);
+  return mix(far, near, d);
+}
+
+// Cuánto del píxel cae en la franja del piso; lejos, la proporción del piso que ocupa.
+float lookFloorBand(float v, vec4 band, float aa) {
+  float y = mod(v - band.z + band.y * 0.5, band.y) - band.y * 0.5;
+  return mix(2.0 * band.w / band.y, lookBox(y, -band.w, band.w, aa), lookDetail(aa, band.y));
+}
+
+// De la última región a la primera, cada una tapa lo que está debajo; lo que queda a la vista es el muro.
+vec3 lookDisplay(float face, vec2 f, out float glass) {
+  vec2 aa = max(fwidth(f), vec2(1e-4));
+  vec4 rec = lookAt(face);
+  vec3 color = vec3(0.0);
+  float alpha = 0.0;
+  float g;
+  glass = 0.0;
+  for (int k = 0; k < LOOK_MAX_REGIONS; k++) {
+    float i = rec.z - 1.0 - float(k);
+    if (i < 0.0 || alpha > LOOK_OPAQUE) break;
+    float r = rec.y + i * LOOK_REGION_TEXELS;
+    vec4 span = lookAt(r);
+    vec4 band = lookAt(r + 1.0);
+    float c = lookBox(f.x, span.x, span.y, aa.x) * lookBox(f.y, span.z, span.w, aa.y);
+    if (band.y > 0.0 && c > 0.0) c *= lookFloorBand(f.y, band, aa.y);
+    if (c <= LOOK_MIN_COVERAGE) continue;
+    float ox = abs(span.x) < LOOK_NO_BOUND * 0.5 ? span.x : 0.0;
+    float oy = band.y > 0.0 ? band.z - band.w : (abs(span.z) < LOOK_NO_BOUND * 0.5 ? span.z : 0.0);
+    vec3 m = lookMaterial(band.x, f - vec2(ox, oy), aa, rec.w, g);
+    float w = (1.0 - alpha) * c;
+    color += m * w;
+    glass += g * w;
+    alpha += w;
+  }
+  if (alpha <= LOOK_OPAQUE) {
+    vec3 m = lookMaterial(rec.x, f, aa, rec.w, g);
+    float w = 1.0 - alpha;
+    color += m * w;
+    glass += g * w;
+    alpha += w;
+  }
+  glass /= alpha;
+  return color / alpha;
 }
 
 // La escena aclara los oscuros y entibia todo (luz cálida, exposición y ACES). Se invierte esa curva para que
@@ -85,44 +170,8 @@ vec3 lookToAlbedo(vec3 t) {
   return x / LOOK_GAIN;
 }
 
-// Un tramo de foto repetido a lo largo del muro; sobre su alto, el color del muro. El gradiente se toma
-// de las coordenadas sin envolver para que el corte de cada repetición no deje una costura.
-// outside: el punto cae fuera de un tramo que no se repite (casilla del módulo en 0).
-vec3 lookPhoto(float row, vec2 f, out bool outside) {
-  vec4 t0 = lookTexel(row, 0.0), t1 = lookTexel(row, 1.0), t4 = lookTexel(row, 4.0);
-  vec4 t5 = lookTexel(row, 5.0), t7 = lookTexel(row, 7.0);
-  vec2 q = vec2((f.x - t4.z) / t4.x, (f.y - t5.y) / t1.a);
-  outside = t4.y < 0.5 && (q.x < 0.0 || q.x > 1.0 || q.y < 0.0);
-  if (outside || q.y > 1.0 || q.y < 0.0) return t0.rgb;
-  vec2 uv = t7.xy + t7.zw * vec2(t4.y < 0.5 ? q.x : fract(q.x), clamp(q.y, 0.0, 1.0));
-  vec3 c = textureGrad(lookAtlas, uv, dFdx(q) * t7.zw, dFdy(q) * t7.zw).rgb;
-  // el color clave (magenta) marca cielo y follaje: ahí la cara toma lo que sigue fuera del tramo
-  outside = c.r - c.g > 0.22 && c.b - c.g > 0.22;
-  return outside ? t0.rgb : c;
-}
-
-vec3 lookFace(float row, vec2 f, vec2 aa, out float glass) {
-  if (lookTexel(row, 0.0).a < 3.5) return lookFloor(row, f, aa, glass);
-  glass = 0.0;
-  bool outside;
-  vec3 c = lookPhoto(row, f, outside);
-  float beyond = lookTexel(row, 2.0).a;
-  if (!outside || beyond < -0.5) return c;
-  if (lookTexel(beyond, 0.0).a > 3.5) return lookPhoto(beyond, f, outside);
-  return lookFloor(beyond, f, aa, glass);
-}
-
-vec3 lookDisplay(float row, vec2 f, out float glass) {
-  vec2 aa = max(fwidth(f), vec2(1e-4));
-  vec4 t0 = lookTexel(row, 0.0), t5 = lookTexel(row, 5.0), t6 = lookTexel(row, 6.0);
-  glass = 0.0;
-  if (t0.a < 3.5 && f.y < t6.a) return t6.rgb;
-  if (t5.z > -0.5 && f.y < t5.y) return lookFace(t5.z, f, aa, glass);
-  return lookFace(row, f, aa, glass);
-}
-
-vec3 lookAlbedo(float row, vec2 f, out float glass) {
-  return lookToAlbedo(lookDisplay(row, f, glass));
+vec3 lookAlbedo(float face, vec2 f, out float glass) {
+  return lookToAlbedo(lookDisplay(face, f, glass));
 }
 `;
 
@@ -135,7 +184,7 @@ if (vLookRow > -0.5) {
 }
 `;
 
-/** El vidrio refleja un poco; muros, losas y techos quedan mates (D-13). */
+/** El vidrio refleja un poco; muros, losas y techos quedan mates (SPEC-109 D-13). */
 export const LOOK_ROUGHNESS_FRAGMENT = /* glsl */ `
 #include <roughnessmap_fragment>
 roughnessFactor = mix(roughnessFactor, 0.5, lookGlass);
