@@ -266,6 +266,25 @@ rompecabezas, sin pisarlo (V054):
 > **Segunda tanda, 14 nov 2026 (V055):** Desconocido_05 (malla) se corre 1,35 m al centro del hueco de su pasto,
 > sin cambiar su tamaño, con su ajuste en `adjustments`. La casa autosostenible baja de 8 a 4 m: «no es tan alto».
 
+**D-17 · Una escalera que el SKP dibuja como bloque se reemplaza en el visor.** En la esquina noreste del Comedor
+Central, el SKP trae un bloque macizo en «U» de 4,35 m de alto y 25,5 m² que llega al suelo y tapa 23 m² de pasto.
+Jean Piero aclaró que es una escalera en diagonal que no se apoya en el suelo, y que el pasto de abajo debe verse.
+Con el boceto confirmado, se reemplaza así (V056):
+- El manifiesto lleva `stairs` (§3): la parte que se quita (polígono y cotas), los muros que cierran el edificio
+  donde estaba pegada, los tramos y los descansos.
+- El visor quita los triángulos que caen enteros en esa parte, agrega los muros y, al final de la malla, la escalera:
+  - **Tramo 1:** va por el brazo de afuera, del suelo a un descanso a 1,83 m (11 contrahuellas de 14,8 cm).
+  - **Tramo 2:** va por el brazo pegado al comedor, hasta 4,35 m (17 contrahuellas).
+  - **Forma:** peldaños rectos sobre una losa de 20 cm, sin barandas ni columnas.
+  - **Apoyo:** solo toca el suelo en la arista donde arranca. Bajo los tramos queda pasto, que se ve de lado y en el
+    hueco entre los brazos. Desde arriba se ven los peldaños.
+- **Colores reales (SPEC-112):** la escalera es parte del comedor (el clic la toma como él), pero no es fachada.
+  Todas sus caras llevan el techo de su zona, sin la franja de ventanas.
+- **Huella en la base:** pierde la «U» (V056). Una prueba la compara con la parte reemplazada del manifiesto, a 2 cm.
+- El GLB no se toca.
+- *Origen:* decisión del usuario del 14 nov 2026: «representan una escalera en diagonal vista desde un lado […] por
+  eso toda el área verde debe ser visible».
+
 ## 3. Contratos de API
 
 | Endpoint | Autorización | Qué resuelve |
@@ -312,6 +331,19 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
   anclaje (x este, y norte): x' = a·x + b·y + e, y' = c·x + d·y + f. Lleva también el porqué (`why`). El visor la
   aplica a la malla de ese edificio. Si la clave no es de una malla de edificio, o la matriz voltea o aplasta la
   malla, la lectura del modelo falla.
+- `stairs` (opcional, D-17) trae por `plan_key` una escalera que reemplaza parte de la malla. Todo va en metros
+  alrededor del anclaje, en el marco de la malla ya ajustada:
+  - `replaces`: el polígono y las cotas `fromM`–`toM` entre las que se quitan los triángulos.
+  - `walls`: los segmentos donde se cierra el edificio, entre las mismas cotas.
+  - `flights`: cada tramo, con su arista `from`, su arista `to`, sus cotas y sus `risers`.
+  - `landings`: cada descanso, con su polígono y su cota.
+  - `why`: el porqué.
+
+  La lectura del modelo falla en cualquiera de estos casos:
+  - la clave no es de una malla de edificio;
+  - una cota no sube;
+  - una contrahuella mide lo que la losa (20 cm) o más;
+  - la parte reemplazada no quita ningún triángulo.
 
 ### 3.1 Decisiones que el código no explica
 
@@ -337,8 +369,8 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 > **Desde el 14 nov 2026 (D-13):** la etiqueta del GLB y la del manifiesto es la `version` del manifiesto, que
 > empieza con el hash del GLB y lleva un sufijo cuando el manifiesto se corrige sin regenerar el GLB
 > (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
-> arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16 sube el sufijo
-> (`.jardines.piezas-1`).
+> arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16 o de las
+> escaleras de D-17 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor).
 
 ## 4. Migración de base de datos
 
@@ -499,6 +531,13 @@ Visor
 - recortar(): «Estudios Generales Ciencias» → «EE.GG. Ciencias»; «AULAS MOVILES PSICOLOGÍA» queda entero;
   «PABELLÓN I: FACULTAD …» → «PABELLÓN I»; nunca termina en «de …»
 - un edificio agrupado no se dibuja; uno principal sin nodo se dibuja como prisma
+
+Escaleras (D-17)
+- la malla pierde solo los triángulos que caen enteros en la parte reemplazada; los muros la cierran entre sus cotas
+- cada tramo sube en contrahuellas iguales y solo toca el suelo en la arista donde arranca
+- un descanso no lleva canto donde llega o arranca un tramo, ni contra un muro
+- la huella del comedor en V056 es la anterior sin la «U», a 2 cm; nada más cambia en la base
+- en colores reales, todas las caras de la escalera llevan el techo de su zona
 ```
 
 ## 9. Propio de este spec

@@ -78,11 +78,16 @@ nuevo se le suma lo mismo, en grados, que V053 sumó a las huellas del SKP:
 Las huellas de la base ya están corridas (V053): no se corren otra vez. Si se olvida el
 manifiesto, falla `BuildingModelServiceTest.theAnchorIsTheOneShiftedTowardsTheGardens`.
 
-El manifiesto publicado trae además `adjustments` (SPEC-108 D-16): ajustes por edificio que
-el generador no escribe. Se copian tal cual al manifiesto nuevo; sus huellas ya están en V054 y
-las migraciones que le siguen. Si se pierden, falla la prueba de
-`frontend/src/components/map3d/__tests__/adjustments.test.ts`, que compara cada matriz con su
-huella en esas migraciones.
+El manifiesto publicado trae además dos campos que el generador no escribe. Se copian tal cual al
+manifiesto nuevo; sus huellas ya están en V054 y las migraciones que le siguen.
+
+- `adjustments` (SPEC-108 D-16): ajustes por edificio. Si se pierden, falla la prueba de
+  `frontend/src/components/map3d/__tests__/adjustments.test.ts`, que compara cada matriz con su
+  huella en esas migraciones.
+- `stairs` (D-17): escaleras que reemplazan una parte de una malla, como la del Comedor Central.
+  Si se pierden, falla `stairs.test.ts` en la misma carpeta. Si el GLB nuevo cambia esa malla y
+  la escalera ya no quita ningún triángulo, el visor no lee el modelo («no reemplaza nada de su
+  malla»): se vuelve a medir la escalera.
 
 ## Tests
 

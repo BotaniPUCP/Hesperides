@@ -183,6 +183,10 @@ lados.
 **D-07 · Techos.** Toda cara horizontal lleva el material liso del techo de su zona, como en SPEC-109
 D-05.
 
+> **Desde el 14 nov 2026 (SPEC-108 D-17):** una escalera que reemplaza parte de la malla, como la del Comedor
+> Central, tampoco es fachada. Todas sus caras llevan el techo de su zona, aunque sus contrahuellas y costados sean
+> verticales: así no se le pintan franjas de ventanas.
+
 **D-08 · Lejos y cerca.** Perfiles, franjas finas y antepechos se funden en su color promedio cuando en
 pantalla quedan más finos que un par de píxeles, como ya hace el patrón de SPEC-109. Así no titilan ni
 hacen muaré al girar la cámara. Los bordes de las regiones no se ven escalonados.
