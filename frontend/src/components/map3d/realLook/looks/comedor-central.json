@@ -1,0 +1,42 @@
+{
+  "planKey": "df5f87ed-a1f7-4fa6-ae35-b7f423f61806",
+  "name": "Comedor Central",
+  "folder": "Comedor-central",
+  "photos": [
+    "hesperides-espalda.jpg",
+    "hesperides-frente.jpg",
+    "hesperides-general.jpg",
+    "hesperides-lado-sureste-hacia-jardin.jpg",
+    "lado1.jpg",
+    "lado2.jpg",
+    "lado3.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e3e0d2"
+    },
+    "techo": {
+      "color": "#d8d6d0"
+    },
+    "ventanas": {
+      "color": "#9a9d9f"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.4
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Muros crema con ventanas sueltas, como franja tenue (lado1.jpg a lado3.jpg, hesperides-espalda.jpg). La carpa blanca de la terraza y el ingreso vidriado bajo ella (hesperides-frente.jpg, hesperides-general.jpg) no están en el modelo."
+}

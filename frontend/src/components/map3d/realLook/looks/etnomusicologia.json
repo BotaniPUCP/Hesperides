@@ -1,0 +1,40 @@
+{
+  "planKey": "af3c0f81-cfe7-470e-8a18-48060a89933f",
+  "name": "Instituto de Etnomusicología / Departamento de Ciencias Contables",
+  "folder": "Etnomusicologia-departamento_ciencias_contables",
+  "photos": [
+    "Espalda.jpg",
+    "Frente.jpg",
+    "Lado1.jpg",
+    "Lado2.jpg",
+    "Lado3.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e8e6df"
+    },
+    "techo": {
+      "color": "#c9c8c3"
+    },
+    "ventanas": {
+      "color": "#6e6458"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.4
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Paneles claros con juntas oscuras y ventanas sueltas de vidrio bronce, como franja tenue (Lado1.jpg a Lado3.jpg, Frente.jpg, Espalda.jpg)."
+}

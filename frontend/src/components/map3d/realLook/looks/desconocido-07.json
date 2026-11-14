@@ -1,0 +1,40 @@
+{
+  "planKey": "e82375f3-02dc-461a-98ea-67b4a9244f12",
+  "name": "Desconocido_07",
+  "folder": "Desconocido_07",
+  "photos": [
+    "detras - no hay edificios-eneste-lado-1.jpg",
+    "detras - no hay edificios-eneste-lado-2.jpg",
+    "detras - no hay edificios-eneste-lado-3.jpg",
+    "frente1.jpg",
+    "frente2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#b39a83"
+    },
+    "techo": {
+      "color": "#a9aaa6"
+    },
+    "ventanas": {
+      "color": "#d6d8d2"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            2.5,
+            3.2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Talleres de tableros OSB con marcos grises y una banda alta translúcida (detras - no hay edificios-eneste-lado-2.jpg y -3.jpg); el galpón de chapa gris de detras…-1.jpg y frente1.jpg no se separa en el modelo."
+}

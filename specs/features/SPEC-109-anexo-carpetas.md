@@ -81,7 +81,7 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 70 | facultad-ciencias-artes-comunicaciones | `d9793065` | Facultad de Ciencias y Artes de la Comunicación | nombre, código 29 | seguro |
 | 71 | facultad-ciencias-sociales | `d7b50529` | Facultad de Ciencias Sociales (código 18) | la otra con ese nombre; Jean Piero lo confirmó el 14 nov 2026 | seguro |
 | 72 | facultad-gestion | `83345054` | Facultad de Gestión y Alta Dirección | nombre, código 27 | seguro |
-| 73 | facultad-letras-ciencias-humanas | `c657216b` | Departamento Académico de Humanidades (oficinas) (código 32; V045 lo llamaba Facultad de Letras y Ciencias Humanas, corregido en V052) | cercanía: las fotos miran a Psicología (40 m) y a EE.GG.LL. (65 m) | **por confirmar** |
+| 73 | facultad-letras-ciencias-humanas | `c657216b` | Departamento Académico de Humanidades (oficinas) (código 32; V045 lo llamaba Facultad de Letras y Ciencias Humanas, corregido en V052) | cercanía: las fotos miran a Psicología (40 m) y a EE.GG.LL. (65 m); foto: rótulo «Departamento de Humanidades» (frente-hacia-eeggll.jpg), que coincide con el nombre que dio Jean Piero el 14 nov 2026 | seguro |
 | 74 | facultad-psicologia | `d365388a` | Facultad de Psicología | nombre, código 30 | seguro |
 | 75 | facuttad-derecho | `c315d792` | Facultad de Derecho | nombre, código 21 | seguro |
 | 76 | fotocopiado-letras-eeggll | `e5641098` | Centro de fotocopiado (adyacente a EE.GG.LL.) | nombre, C58 | seguro |

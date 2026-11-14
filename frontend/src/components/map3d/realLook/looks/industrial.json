@@ -1,0 +1,49 @@
+{
+  "planKey": "be3bdfcc-7e3a-4f45-a995-4d82caa7025f",
+  "name": "Sección Ingeniería Industrial",
+  "folder": "Pabellon Industrial",
+  "photos": [
+    "frente.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#ebebe8"
+    },
+    "techo": {
+      "color": "#d0d0cc"
+    },
+    "ventanas": {
+      "glass": "#56636a",
+      "frame": "#d8dad8",
+      "moduleM": 1.5,
+      "heightM": 1.4,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            6.8
+          ],
+          "floors": {
+            "everyM": 3.4,
+            "startM": 0,
+            "bandM": [
+              1,
+              2.4
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Volumen blanco con una cinta de ventanas oscuras en cada piso (frente.jpg, la única foto, chica). El ingreso vidriado y el letrero no se dibujan."
+}

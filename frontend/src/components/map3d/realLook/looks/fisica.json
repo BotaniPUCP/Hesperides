@@ -16,10 +16,10 @@
       "color": "#b9b6ae"
     },
     "ventanas": {
-      "glass": "#4f5a60",
+      "glass": "#5d686e",
       "frame": "#c9cbc6",
       "moduleM": 1.5,
-      "heightM": 1.8,
+      "heightM": 1.4,
       "frameM": 0.08,
       "vary": 0.05
     }
@@ -55,8 +55,8 @@
             "everyM": 3.6,
             "startM": 0,
             "bandM": [
-              1,
-              2.8
+              1.2,
+              2.6
             ]
           }
         }

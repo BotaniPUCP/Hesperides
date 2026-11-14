@@ -1,0 +1,69 @@
+{
+  "planKey": "e1692786-56ac-4841-ba1b-a020a7e90117",
+  "name": "Departamento Académico de Teología",
+  "folder": "departamento-teologia",
+  "photos": [
+    "detras.jpg",
+    "frnte.jpg",
+    "lado.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#a8735f"
+    },
+    "techo": {
+      "color": "#b9b6af"
+    },
+    "losas": {
+      "color": "#cfcbc4"
+    },
+    "ventanas": {
+      "glass": "#56616a",
+      "frame": "#c9cbc6",
+      "moduleM": 1.5,
+      "heightM": 1.2,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "losas",
+          "v": [
+            -0.5,
+            6.8
+          ],
+          "floors": {
+            "everyM": 3.2,
+            "startM": 0,
+            "bandM": [
+              -0.35,
+              0.45
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            6.3
+          ],
+          "floors": {
+            "everyM": 3.2,
+            "startM": 0,
+            "bandM": [
+              1.2,
+              2.4
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Volúmenes de ladrillo con marco de concreto y una cinta de ventanas por piso (frnte.jpg, lado.jpg, detras.jpg). El letrero no se dibuja."
+}
