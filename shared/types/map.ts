@@ -87,6 +87,19 @@ export interface BuildingModelManifest {
   huaca: { label: string; at: [number, number, number] };
   /** Claves de los principales cuyo modelo es todo suelo (dos rampas de estacionamiento). */
   groundOnly: string[];
+  /** Ajustes por edificio (SPEC-108 D-16), por `plan_key` de una malla de edificio. Su huella en la base ya viene ajustada. */
+  adjustments?: Record<string, BuildingAdjustment>;
+}
+
+/**
+ * Una transformación afín en metros alrededor del anclaje (x este, y norte) que el visor aplica a la malla:
+ * x' = a·x + b·y + e, y' = c·x + d·y + f. La altura no cambia.
+ */
+export interface BuildingAdjustment {
+  /** [a, b, c, d, e, f] */
+  matrix: [number, number, number, number, number, number];
+  /** Qué se corrigió y a pedido de quién. */
+  why: string;
 }
 
 export interface CampusFeatureProperties {

@@ -140,17 +140,21 @@ export function wallSegments(building, look) {
 
 /** Clasifica el edificio de la ficha como el visor: fila de la tabla y (u, v) por vértice. */
 export function classifiedBuilding(campus, look, realLook) {
-  const { LocalPlane, polygons, buildLookTable, classifyBuilding } = realLook;
-  const positions = campus.nodes.get(look.planKey);
-  if (!positions?.length) throw new Error(`El modelo no tiene malla para ${look.planKey} (${look.name})`);
+  const { LocalPlane, polygons, buildLookTable, classifyBuilding, adjustmentsOf, adjusted, adjustedRing } = realLook;
+  const raw = campus.nodes.get(look.planKey);
+  if (!raw?.length) throw new Error(`El modelo no tiene malla para ${look.planKey} (${look.name})`);
   const geojson = campus.footprints.get(look.planKey);
   if (!geojson) throw new Error(`V045 no trae la huella de ${look.planKey} (${look.name})`);
   // El anclaje del manifiesto ya está corrido (14 nov 2026): con las huellas de V045 sin V053, la malla y su
   // huella quedarían 3,7 m una de otra y las caras se clasificarían contra un contorno ajeno.
   const plane = new LocalPlane(campus.manifest.anchor.lat, campus.manifest.anchor.lon);
+  // Con un ajuste del manifiesto (SPEC-108 D-16), malla y huella se mueven y estiran juntas, como en el visor y en V054.
+  const m = adjustmentsOf(campus.manifest).get(look.planKey);
+  const positions = m ? adjusted(raw, m) : raw;
+  const footprint = polygons(geojson, plane).map((poly) => (m ? poly.map((ring) => adjustedRing(ring, m)) : poly));
   const table = buildLookTable([look]);
   const n = positions.length / 3;
   const out = { row: new Float32Array(n).fill(-1), face: new Float32Array(n * 2) };
-  classifyBuilding(positions, 0, n, polygons(geojson, plane), table.zones.get(look.planKey), out);
+  classifyBuilding(positions, 0, n, footprint, table.zones.get(look.planKey), out);
   return { positions, row: out.row, face: out.face, table };
 }

@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { BuildingModelManifest, BuildingNodeKind, BuildingProperties } from '@shared/types';
 import type { LocalPlane } from '../projection';
 import { polygons, type Polygon, type ScenePoly } from '../sceneData';
+import { adjusted, adjustmentsOf } from './adjustments';
 import { assemble, prismParts, type MergedGeometry } from './geometry';
 import { insideRing } from './picking';
 
@@ -45,6 +46,7 @@ export interface PlanModel {
 
 /** Lee el GLB con su manifiesto. Lanza si el archivo no es un GLB válido: quien llama cae a los prismas. */
 export async function parsePlanModel(manifest: BuildingModelManifest, glb: ArrayBuffer, plane: LocalPlane): Promise<PlanModel> {
+  const adjustments = adjustmentsOf(manifest);
   const { scene } = await new GLTFLoader().parseAsync(glb, '');
   const anchor = plane.toPlane(manifest.anchor.lat, manifest.anchor.lon);
   const offset = { x: anchor.x, z: -anchor.y };
@@ -59,7 +61,9 @@ export async function parsePlanModel(manifest: BuildingModelManifest, glb: Array
     if (!kind) return;
     const geo = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry;
     const positions = geo.attributes.position.array as Float32Array;
-    if (kind === 'edificio') buildings.set(key, shifted(positions, offset));
+    // Un ajuste (D-16) mueve y estira en planta la malla de ese edificio; el GLB no se toca.
+    const adjustment = kind === 'edificio' ? adjustments.get(key) : undefined;
+    if (kind === 'edificio') buildings.set(key, shifted(adjustment ? adjusted(positions, adjustment) : positions, offset));
     else (parts[kind] ??= []).push({ positions, uv: (geo.attributes.uv?.array as Float32Array | undefined) ?? null });
   });
   // Sus piezas pasaron todas a ser suelo: ni malla ni prisma, pero su tramo sigue en la capa (D-08).

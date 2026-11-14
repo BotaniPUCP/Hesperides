@@ -216,6 +216,24 @@ describe('parsePlanModel', () => {
     expectClose([model.huaca.x, model.huaca.y, model.huaca.z], [30, 4.9, 40]);
   });
 
+  it('aplica el ajuste del manifiesto a la malla de ese edificio: la corre y la estira en planta sin cambiarle la altura', async () => {
+    // x' = 2x + 5 y y' = y − 3, en metros este/norte alrededor del anclaje (SPEC-108 D-16).
+    const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' },
+      adjustments: { k1: { matrix: [2, 0, 0, 1, 5, -3], why: 'prueba' } } });
+    const file = glb([{ name: 'k1', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }, { name: 'k2', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }]);
+
+    const model = await parsePlanModel(manifest, file, plane);
+
+    expect(Array.from(model.buildings.get('k1')!.slice(0, 3))).toEqual([7, 4, 1]);
+    expect(Array.from(model.buildings.get('k2')!.slice(0, 3))).toEqual([1, 4, -2]);
+  });
+
+  it('un ajuste de algo que no es la malla de un edificio hace fallar la lectura: no se aplica a ciegas', async () => {
+    const manifest = manifestWith({ nodes: { suelo: 'suelo' }, adjustments: { suelo: { matrix: [1, 0, 0, 1, 1, 0], why: 'prueba' } } });
+
+    await expect(parsePlanModel(manifest, glb([{ name: 'suelo', positions: Array.from(corner) }]), plane)).rejects.toThrow(/suelo/);
+  });
+
   it('un principal que es todo suelo no lleva malla ni prisma: su tramo queda vacío y los demás no se corren', async () => {
     const manifest = manifestWith({ groundOnly: ['rampa'] });
     const model = await parsePlanModel(manifest, glb([{ name: 'k1', positions: Array.from(corner) }]), plane);

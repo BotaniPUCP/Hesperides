@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { test } from 'node:test';
-import { footprintsAfterV053, footprintsOfV045, shiftOfV053 } from './scene.mjs';
+import { classifiedBuilding, footprintsAfterV053, footprintsOfV045, shiftOfV053 } from './scene.mjs';
 
 const geo = (x) => `ST_Multi(ST_CollectionExtract(ST_MakeValid(ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON('{"type":"Polygon","coordinates":[[[${x},0],[${x},1],[${x + 1},1],[${x},0]]]}'), 4326)))))`;
 const KEY_UPDATE = '11111111-1111-4111-8111-111111111111';
@@ -74,4 +74,25 @@ test('también se corre la de OpenStreetMap que V053 nombra (la caseta con malla
 test('también corre los multipolígonos', () => {
   const multi = new Map([[KEY_UPDATE, { geojson: { type: 'MultiPolygon', coordinates: [[[[1, 2], [3, 4]]]] }, fromThePlan: true }]]);
   assert.deepEqual(footprintsAfterV053(multi, { dLon: 1, dLat: 1, planKeys: [] }).get(KEY_UPDATE).coordinates, [[[[2, 3], [4, 5]]]]);
+});
+
+test('con un ajuste en el manifiesto (D-16), la malla y su huella llegan ajustadas a la clasificación, como en el visor', () => {
+  const calls = [];
+  const shiftEast = (m) => m[4];
+  const realLook = {
+    LocalPlane: class {},
+    polygons: () => [[[0, 0, 1, 0, 1, 1]]],
+    buildLookTable: () => ({ zones: new Map([['k', []]]) }),
+    classifyBuilding: (positions, start, n, footprint) => calls.push({ positions: Array.from(positions), footprint }),
+    adjustmentsOf: () => new Map([['k', [1, 0, 0, 1, 10, 0]]]),
+    adjusted: (p, m) => Float32Array.from(p, (v, i) => (i % 3 === 0 ? v + shiftEast(m) : v)),
+    adjustedRing: (ring, m) => ring.map((v, i) => (i % 2 === 0 ? v + shiftEast(m) : v)),
+  };
+  const campus = { manifest: { anchor: { lat: 0, lon: 0 } }, nodes: new Map([['k', new Float32Array([1, 2, 3])]]), footprints: new Map([['k', {}]]) };
+
+  const building = classifiedBuilding(campus, { planKey: 'k', name: 'K' }, realLook);
+
+  assert.deepEqual(calls[0].positions, [11, 2, 3]);
+  assert.deepEqual(calls[0].footprint, [[[10, 0, 11, 0, 11, 1]]]);
+  assert.deepEqual(Array.from(building.positions), [11, 2, 3]);
 });
