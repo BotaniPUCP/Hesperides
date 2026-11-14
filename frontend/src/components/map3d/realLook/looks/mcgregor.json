@@ -55,7 +55,7 @@
   },
   "zones": [
     {
-      "id": "edificio",
+      "id": "bajos",
       "wall": "concreto",
       "roof": "techo",
       "faces": {
@@ -81,28 +81,6 @@
               18,
               19.2
             ]
-          },
-          {
-            "material": "torre",
-            "u": [
-              -39.8,
-              -5.2
-            ],
-            "v": [
-              0,
-              43.2
-            ]
-          },
-          {
-            "material": "remate",
-            "u": [
-              -39.8,
-              -5.2
-            ],
-            "v": [
-              43.2,
-              46.2
-            ]
           }
         ],
         "S": [
@@ -127,7 +105,50 @@
               18,
               19.2
             ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "torre",
+      "where": {
+        "east": [
+          0.555,
+          1
+        ],
+        "north": [
+          0.447,
+          1
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo",
+      "faces": {
+        "N": [
+          {
+            "material": "torre",
+            "u": [
+              -39.8,
+              -5.2
+            ],
+            "v": [
+              0,
+              43.2
+            ]
           },
+          {
+            "material": "remate",
+            "u": [
+              -39.8,
+              -5.2
+            ],
+            "v": [
+              43.2,
+              46.2
+            ]
+          }
+        ],
+        "S": [
           {
             "material": "torre",
             "u": [
@@ -163,7 +184,37 @@
           }
         ]
       }
+    },
+    {
+      "id": "testero-este",
+      "where": {
+        "east": [
+          0.617,
+          0.764
+        ],
+        "north": [
+          0,
+          0.298
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo"
+    },
+    {
+      "id": "testero-oeste",
+      "where": {
+        "east": [
+          0.078,
+          0.148
+        ],
+        "north": [
+          0,
+          0.298
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo"
     }
   ],
-  "notes": "Como el McGregor de Modelos 3D: fachadas largas de vidrio en módulos de 1,2 × 3,6 m con antepecho claro, uno de cada nueve de color (azul en la torre, rojo en los cuerpos bajos); testeros de concreto beige; remates metálicos claros; techos gris cálido; el atrio de vidrio gris verdoso al pie del lado sur de la torre."
+  "notes": "Como el McGregor de Modelos 3D: fachadas largas de vidrio en módulos de 1,2 × 3,6 m con antepecho claro, uno de cada nueve de color (azul en la torre, rojo en los cuerpos bajos); testeros de concreto beige; remates metálicos claros; techos gris cálido; el atrio de vidrio gris verdoso al pie del lado sur de la torre. Por zonas en planta, como los planos de Modelos 3D: el vidrio del bloque bajo del frente va de este −28,5 a 9,9 m desde el centro de la caja y sus dos extremos son volúmenes de concreto; el atrio y el vidrio de la torre solo visten la torre (13 nov: el atrio pintaba el extremo este del bloque)."
 }

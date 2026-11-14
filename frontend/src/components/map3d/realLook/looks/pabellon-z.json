@@ -173,6 +173,52 @@
       }
     },
     {
+      "id": "fachada-sur",
+      "where": {
+        "north": [
+          0,
+          0.2
+        ]
+      },
+      "wall": "blanco",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            -1,
+            0.45
+          ]
+        }
+      ],
+      "faces": {
+        "S": [
+          {
+            "material": "vidrio",
+            "u": [
+              -33.1,
+              12.3
+            ],
+            "v": [
+              3.55,
+              14.2
+            ]
+          },
+          {
+            "material": "ventanal",
+            "u": [
+              -33.1,
+              7.2
+            ],
+            "v": [
+              0.9,
+              2.9
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "torre-oeste",
       "where": {
         "east": [
@@ -225,5 +271,5 @@
       ]
     }
   ],
-  "notes": "Vidrio al norte (lado.jpg): de la losa del primer piso alto al parapeto, con antepecho oscuro al pie de cada piso; en el primer piso, el ventanal corrido y, al este, el paño blanco con ventanas en pares (D-04: no se dibujan). Galerías del patio con su franja melón en cada antepecho (interior.jpg). Torre curva del oeste con sus filas de ventanas como franjas (exterior-frente.jpg). La cara sur de la barra sur no tiene foto: lleva muro (SPEC-112 D-06, P-02)."
+  "notes": "Vidrio al norte (lado.jpg): de la losa del primer piso alto al parapeto, con antepecho oscuro al pie de cada piso; en el primer piso, el ventanal corrido y, al este, el paño blanco con ventanas en pares (D-04: no se dibujan). Galerías del patio con su franja melón en cada antepecho (interior.jpg). Torre curva del oeste con sus filas de ventanas como franjas (exterior-frente.jpg). La cara sur de la barra sur no tiene foto: repite la composición de la norte (vidrio, ventanal y el paño blanco del extremo este), por coherencia del edificio (13 nov, SPEC-112 P-02). Va en una zona propia, solo el frente sur, para no vestir de vidrio las paredes del patio que también miran al sur."
 }
