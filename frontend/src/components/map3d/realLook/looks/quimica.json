@@ -1,0 +1,49 @@
+{
+  "planKey": "8c67359a-fb2d-4f1d-aa54-53860a6ad71b",
+  "name": "Química",
+  "folder": "Facultad-quimica",
+  "photos": [
+    "IMG_20261111_151559.jpg",
+    "IMG_20261111_151613.jpg",
+    "IMG_20261111_151636.jpg",
+    "IMG_20261111_151714.jpg",
+    "espalda.jpg",
+    "frente.jpg",
+    "frente2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#d8d4bf"
+    },
+    "techo": {
+      "color": "#c9c6b8"
+    },
+    "ventanas": {
+      "color": "#aeafa6"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            6.2
+          ],
+          "floors": {
+            "everyM": 3.1,
+            "bandM": [
+              1.0,
+              2.3
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Dos pisos de paneles beige verdoso. Cada piso lleva su fila de ventanas sueltas en todas las caras con foto: va como una franja corrida del color que resulta de mezclar muro y ventana, sin dibujar ventanas (SPEC-112 D-04). Los testeros verde oliva con el letrero (frente.jpg, frente2.jpg) no tienen orientación segura y quedan del color del muro."
+}
