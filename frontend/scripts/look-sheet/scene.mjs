@@ -1,5 +1,5 @@
 // Un edificio del modelo del campus clasificado con su ficha, igual que en el visor (SPEC-112 D-11): las mismas
-// mallas, las mismas huellas (las de V045) y las mismas funciones de realLook. El marco es el del modelo: metros
+// mallas, las mismas huellas (las de V045, corridas por V053) y las mismas funciones de realLook. El marco es el del modelo: metros
 // alrededor del anclaje, x este, y arriba, z = −norte; el visor solo lo corre en planta, y eso no cambia ni la u
 // (medida desde el centro de la caja) ni la v (la cota).
 import fs from 'node:fs';
@@ -45,26 +45,49 @@ function concat(arrays) {
   return out;
 }
 
-/** La huella GeoJSON (lat/lon) de cada plan_key, tal como la deja V045. */
+/** En V045, el UPDATE o la fila del INSERT de un edificio cuya geometría es del SKP. */
+const FROM_THE_PLAN = /source = 'PUCP'|^\s*\('PUCP'/;
+
+/** La huella GeoJSON (lat/lon) de cada plan_key, tal como la deja V045, y si es del SKP o de OpenStreetMap. */
 export function footprintsOfV045(sql) {
   const out = new Map();
   // Por línea y no por sentencia: el INSERT de los principales nuevos trae una fila por línea, cada una con
-  // su plan_key y su huella; los UPDATE también los traen en la misma línea.
+  // su plan_key, su huella y su fuente; los UPDATE también las traen en la misma línea.
   for (const line of sql.split('\n')) {
     const key = line.match(UUID)?.[0];
     const geojson = line.match(/ST_GeomFromGeoJSON\('(\{[^']*\})'\)/)?.[1];
-    if (key && geojson && !out.has(key)) out.set(key, JSON.parse(geojson));
+    if (key && geojson && !out.has(key)) out.set(key, { geojson: JSON.parse(geojson), fromThePlan: FROM_THE_PLAN.test(line) });
   }
   return out;
+}
+
+/**
+ * Los grados que V053 corre hacia los jardines (14 nov 2026) las huellas del SKP, y los plan_key que nombra
+ * aparte: los de OpenStreetMap que el visor dibuja con una malla del GLB, como la caseta del edificio 95.
+ */
+export function shiftOfV053(sql) {
+  const degrees = sql.match(/ST_Translate\(footprint, (-?\d+(?:\.\d+)?), (-?\d+(?:\.\d+)?)\)/);
+  if (!degrees) throw new Error('V053 ya no trae el ST_Translate de las huellas del plano: la hoja las ubicaría mal');
+  const planKeys = [...sql.matchAll(/plan_key = '([^']+)'/g)].map((m) => m[1]);
+  return { dLon: Number(degrees[1]), dLat: Number(degrees[2]), planKeys };
+}
+
+/** Las huellas como quedan en la base tras V053: las del SKP y las que nombra, corridas; las demás, igual. */
+export function footprintsAfterV053(footprints, { dLon, dLat, planKeys }) {
+  const move = (c) => (typeof c[0] === 'number' ? [c[0] + dLon, c[1] + dLat] : c.map(move));
+  return new Map([...footprints].map(([key, { geojson, fromThePlan }]) =>
+    [key, fromThePlan || planKeys.includes(key) ? { ...geojson, coordinates: move(geojson.coordinates) } : geojson]));
 }
 
 /** Lee el modelo, el manifiesto y las huellas del repositorio; `realLook` son los módulos del visor ya importados. */
 export function loadCampus(repoRoot) {
   const mapa = path.join(repoRoot, 'backend/src/main/resources/mapa');
+  const migrations = path.join(repoRoot, 'backend/src/main/resources/db/migration');
   const manifest = JSON.parse(fs.readFileSync(path.join(mapa, 'edificios-plano.json'), 'utf8'));
   const nodes = readGlbNodes(fs.readFileSync(path.join(mapa, 'edificios-plano.glb')));
-  const sql = fs.readFileSync(path.join(repoRoot, 'backend/src/main/resources/db/migration/V045__group_buildings_by_plan.sql'), 'utf8');
-  return { manifest, nodes, footprints: footprintsOfV045(sql) };
+  const v045 = fs.readFileSync(path.join(migrations, 'V045__group_buildings_by_plan.sql'), 'utf8');
+  const v053 = fs.readFileSync(path.join(migrations, 'V053__shift_plan_footprints_to_gardens.sql'), 'utf8');
+  return { manifest, nodes, footprints: footprintsAfterV053(footprintsOfV045(v045), shiftOfV053(v053)) };
 }
 
 /** De cada texel de cara, su zona y orientación: la tabla da uno distinto a cada una. */
@@ -122,6 +145,8 @@ export function classifiedBuilding(campus, look, realLook) {
   if (!positions?.length) throw new Error(`El modelo no tiene malla para ${look.planKey} (${look.name})`);
   const geojson = campus.footprints.get(look.planKey);
   if (!geojson) throw new Error(`V045 no trae la huella de ${look.planKey} (${look.name})`);
+  // El anclaje del manifiesto ya está corrido (14 nov 2026): con las huellas de V045 sin V053, la malla y su
+  // huella quedarían 3,7 m una de otra y las caras se clasificarían contra un contorno ajeno.
   const plane = new LocalPlane(campus.manifest.anchor.lat, campus.manifest.anchor.lon);
   const table = buildLookTable([look]);
   const n = positions.length / 3;
