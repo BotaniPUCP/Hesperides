@@ -137,9 +137,11 @@
     ]
   },
   "61": {
-    "name": "Biblioteca de Ciencias Sociales"
+    "name": "Biblioteca de Ciencias Sociales",
+    "aliases": []
   },
   "32": {
-    "name": "Departamento Académico de Humanidades (oficinas)"
+    "name": "Departamento Académico de Humanidades (oficinas)",
+    "aliases": []
   }
 }
