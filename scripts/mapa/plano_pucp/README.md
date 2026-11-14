@@ -65,6 +65,19 @@ La migración se genera **una sola vez y no se regenera una vez publicada**: si 
 cambia, se regenera el modelo y se escribe una migración nueva solo con la diferencia. Nunca
 se ejecuta `scripts/mapa/generar_semilla_mapa.py` (reescribiría `V011`).
 
+**Corrimiento hacia los jardines (14 nov 2026, SPEC-108 D-13).** El manifiesto publicado no es
+el que escribe `generar_modelo.py`: se corrió a mano 2,6 m al oeste y 2,6 m al sur para que los
+edificios calcen con los jardines de la base. Si se vuelve a generar el modelo, al manifiesto
+nuevo se le suma lo mismo, en grados, que V053 sumó a las huellas del SKP:
+
+- `anchor`, cada vértice de `sunken` y `huaca.at`: lat −0,000023503283647569735 y
+  lon −0,000023880677126684355;
+- `version`: el hash del GLB y un sufijo (`.jardines`) si el GLB no cambió, para que el
+  navegador no reciba 304 con el anclaje viejo.
+
+Las huellas de la base ya están corridas (V053): no se corren otra vez. Si se olvida el
+manifiesto, falla `BuildingModelServiceTest.theAnchorIsTheOneShiftedTowardsTheGardens`.
+
 ## Tests
 
 Con el Python del entorno de la sección «Preparación», desde la raíz del repositorio (tarda cerca de 1,5 minutos):
@@ -77,7 +90,9 @@ Con el Python del entorno de la sección «Preparación», desde la raíz del re
 
 - **Escala:** el plano está en metros reales (una semejanza libre da 1,00044).
 - **Ubicación:** no viene georreferenciado (SketchUp lo dejó en Boulder, Colorado). Se
-  ubica con giro −0,41° y un desplazamiento, con error mediano de 0,89 m contra OSM.
+  ubica con giro −0,41° y un desplazamiento, con error mediano de 0,89 m contra OSM. En el
+  mapa va además 2,6 m al oeste y 2,6 m al sur, hacia los jardines de la base, que no
+  coinciden con OSM (SPEC-108 D-13); `transformacion.npz` no lleva ese corrimiento.
 - **Suelo:** el suelo del modelo está en z = 91,44 m. Alturas y bases se miden desde ahí;
   una base negativa es un sótano o una plaza hundida.
 - **Límite:** el muro del plano (L5) tiene cortes de más de 10 m y no cierra. El interior

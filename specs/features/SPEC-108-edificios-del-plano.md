@@ -36,7 +36,7 @@ Jean Piero. El resto del mapa se ve como hoy, y nada de lo que ya apunta a un ed
 | Relaciones | 133 relaciones hechas a mano por Nicolás: edificios del mapa ↔ piezas del SKP ↔ códigos oficiales | `frontend/src/components/map3d/equivalence/final-relations.json` |
 | Códigos oficiales | 128 códigos de la leyenda del plano, con su etiqueta | `…/equivalence/codes.json` |
 | Nombres, alias y excepciones | Regla de la vista unificada de Jean Piero | `…/equivalence/unification.ts`, `building-references.json` |
-| Ubicación del plano | Giro −0,41° y desplazamiento; error mediano 0,89 m contra OSM | `scripts/mapa/plano_pucp/` (`transformacion.npz`) |
+| Ubicación del plano | Giro −0,41° y desplazamiento; error mediano 0,89 m contra OSM. Corrido 2,6 m al oeste y 2,6 m al sur hacia los jardines (D-13, 14 nov 2026) | `scripts/mapa/plano_pucp/` (`transformacion.npz`), manifiesto y V053 |
 | Suelo del plano y huaca | Capas L1 (pavimento), L2 (jardinería) y L6 (huacas) del modelo | Export del SKP, fuera del repositorio |
 
 **Referencia visual aprobada.** La página de comparación «Edificios del plano en el mapa» (12 nov 2026)
@@ -223,6 +223,19 @@ el tooltip y en la ficha.
 **D-13 · La alineación del modelo es la del plano.** Giro −0,41°, error mediano 0,89 m. Difiere menos de
 0,52 m de la alineación que calcula la vista unificada.
 
+> **Corrección de Jean Piero, 14 nov 2026 (V053):** vistos desde arriba, los edificios pisaban los jardines;
+> deben encajar con ellos «como dos piezas de un rompecabezas». Medido sobre todo el campus, el plano estaba
+> 2,6 m al este y 2,6 m al norte de los jardines de la base, sin giro (el mismo desfase de D-15). Se corrió el
+> plano entero 2,6 m al oeste y 2,6 m al sur: el anclaje, los 27 desniveles y la huaca del manifiesto, a mano (el
+> GLB no cambia: sus posiciones son relativas al anclaje), y en V053 las huellas de lo que se dibuja con ese
+> modelo: las 125 `source = 'PUCP'` y la de la caseta del edificio 95, que es de OpenStreetMap pero lleva la malla
+> de la caseta C-3446 (D-04). Las demás de OpenStreetMap no se mueven. Lo que los edificios ocupan de jardín a su
+> mismo nivel bajó de 6498 a 1172 m².
+> - El manifiesto lleva `version` = hash del GLB + `.jardines` (§3.1).
+> - `generar_modelo.py` todavía escribe el anclaje de `transformacion.npz`: si se vuelve a correr, se reaplica
+>   el corrimiento (`scripts/mapa/plano_pucp/README.md`). `BuildingModelServiceTest` falla si el anclaje del jar
+>   no es el corregido.
+
 **D-14 · La atribución a OpenStreetMap se queda.** Siguen en OSM los 255 edificios del entorno y los
 edificios principales que no tienen pieza del SKP. Esto enmienda SPEC-102:
 - D-03 decía que la atribución desaparece al llegar los planos.
@@ -233,6 +246,11 @@ estacionamientos, puertas y el límite están corridos 2,5 m al oeste y 2,5 m al
 edificios. Corregidas, las áreas verdes calzarían con la jardinería del plano en un 76 % y no en un 57 %.
 Corregirlo mueve secciones, sectores y zonas de supervisión, así que va en un cambio aparte.
 - *Origen:* decisión del usuario del 12 nov 2026.
+
+> **Resuelto el 14 nov 2026 desde el otro lado (D-13, V053):** en lugar de correr las capas del cliente, se
+> corrió el plano hacia ellas. Áreas verdes, veredas, estacionamientos, puertas, límite, secciones, sectores y
+> zonas de supervisión no cambian. Quedan en el marco de OpenStreetMap los 255 edificios del entorno y los
+> 7 principales que se dibujan como prisma (D-04, D-14).
 
 ## 3. Contratos de API
 
@@ -297,6 +315,11 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 - **`LAYERS_FORMAT` pasa a 3:** una copia guardada antes, sin `parentId`, no debe recibir 304.
 - **El modelo está en metros locales** (x este, z = −norte) alrededor de `anchor`. El visor lo ubica con
   `projection.ts`, igual que las capas.
+
+> **Desde el 14 nov 2026 (D-13):** la etiqueta del GLB y la del manifiesto es la `version` del manifiesto, que
+> empieza con el hash del GLB y lleva un sufijo cuando el manifiesto se corrige sin regenerar el GLB
+> (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
+> arranca si la versión no empieza con el hash del GLB del jar.
 
 ## 4. Migración de base de datos
 
