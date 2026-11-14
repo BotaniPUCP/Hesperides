@@ -252,6 +252,17 @@ Corregirlo mueve secciones, sectores y zonas de supervisión, así que va en un 
 > zonas de supervisión no cambian. Quedan en el marco de OpenStreetMap los 255 edificios del entorno y los
 > 7 principales que se dibujan como prisma (D-04, D-14).
 
+**D-16 · Algunos edificios se ajustan uno por uno para encajar con el pasto.** Con el plano corrido (D-13),
+Jean Piero revisó el mapa desde arriba y pidió que cinco edificios encajen con el pasto como piezas de un
+rompecabezas, sin pisarlo (V054):
+- **Prismas de OpenStreetMap** (Sub-estación N-7, Prototipo Casa Autosostenible): cambia su huella. Se corren y se
+  hacen la pieza que sigue el borde del pasto. Los dos bloques de la casa se corren juntos.
+- **Mallas del plano** (Desconocido_07, Desconocido_08, Prototipo Invernadero Inteligente): el manifiesto lleva un
+  ajuste afín por edificio (`adjustments`, §3) que el visor aplica a la malla: mover y estirar en planta. Su huella
+  en la base lleva el mismo ajuste. Una prueba compara la matriz con la huella de V054, a 2 cm.
+- El GLB no se toca y la altura no cambia.
+- *Origen:* decisión del usuario del 14 nov 2026 («hazlo en el campus»).
+
 ## 3. Contratos de API
 
 | Endpoint | Autorización | Qué resuelve |
@@ -294,6 +305,10 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
   Parking subterráneo». Cuentan como edificio principal, pero el visor no les dibuja prisma ni malla.
 - `sunken` trae, por desnivel, su polígono y la cota de su piso (`floorM`).
 - `huaca` trae la etiqueta y el punto donde se coloca (latitud, longitud y altura en metros).
+- `adjustments` (opcional, D-16) trae por `plan_key` una matriz afín `[a, b, c, d, e, f]` en metros alrededor del
+  anclaje (x este, y norte): x' = a·x + b·y + e, y' = c·x + d·y + f. Lleva también el porqué (`why`). El visor la
+  aplica a la malla de ese edificio. Si la clave no es de una malla de edificio, o la matriz voltea o aplasta la
+  malla, la lectura del modelo falla.
 
 ### 3.1 Decisiones que el código no explica
 
@@ -319,7 +334,8 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 > **Desde el 14 nov 2026 (D-13):** la etiqueta del GLB y la del manifiesto es la `version` del manifiesto, que
 > empieza con el hash del GLB y lleva un sufijo cuando el manifiesto se corrige sin regenerar el GLB
 > (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
-> arranca si la versión no empieza con el hash del GLB del jar.
+> arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16 sube el sufijo
+> (`.jardines.piezas-1`).
 
 ## 4. Migración de base de datos
 
