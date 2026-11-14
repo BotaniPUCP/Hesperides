@@ -1,0 +1,54 @@
+{
+  "planKey": "b0dc2ef8-504d-46a4-ac00-730fc0e1ab48",
+  "name": "Facultad de Arquitectura y Urbanismo",
+  "folder": "Facultad-Arquitectura",
+  "photos": [
+    "Interno-desde_adentro.jpg",
+    "lado 1.jpg",
+    "lado2.jpg",
+    "vista-interior-2.jpg",
+    "vista-interior-3.jpg",
+    "vista-interior.jpg"
+  ],
+  "materials": {
+    "concreto": {
+      "color": "#c8c3b9"
+    },
+    "techo": {
+      "color": "#b8b6b0"
+    },
+    "ventanales": {
+      "glass": "#6f777a",
+      "frame": "#404444",
+      "moduleM": 1.5,
+      "heightM": 1.8,
+      "frameM": 0.06,
+      "vary": 0.05
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "concreto",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanales",
+          "v": [
+            0,
+            12.6
+          ],
+          "floors": {
+            "everyM": 4.2,
+            "startM": 0,
+            "bandM": [
+              1.2,
+              3
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Concreto expuesto gris cálido. Por fuera, ventanales oscuros en cada piso, con celosías y la planta baja vidriada (lado 1.jpg, lado2.jpg); hacia el patio, las galerías de barandas negras con sus ventanales detrás (Interno-desde_adentro.jpg, vista-interior*.jpg). Una cinta por piso en todas las caras; las celosías y las barandas no se dibujan."
+}

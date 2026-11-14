@@ -5,7 +5,7 @@
 | HU relacionada | SPEC-102 (mapa 3D). Reemplaza D-04, D-06 y D-15 de SPEC-109 y cambia su D-10 (el modo arranca encendido) |
 | Autor | Jean Piero, con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android |
-| Estado | 13 nov 2026: entrega 1 hecha (motor, arranque encendido, hoja de revisión y cinco edificios del piloto), verificada en Chrome sin ventana con el material real. Jean Piero aprobó el piloto en el navegador, con el extremo del McGregor y la cara sur del Pabellón Z corregidos (P-02) y las franjas de Química (P-03). En curso: grupo 2 (§5) |
+| Estado | 13 nov 2026: entrega 1 hecha (motor, arranque encendido, hoja de revisión y cinco edificios del piloto), verificada en Chrome sin ventana con el material real. Jean Piero aprobó el piloto en el navegador, con el extremo del McGregor y la cara sur del Pabellón Z corregidos (P-02) y las franjas de Química (P-03). 14 nov: grupo 2 hecho (los 18 fotografiados más grandes con emparejamiento confirmado), en revisión de Jean Piero. Pendientes del Anexo A antes de pintarlos: Pabellón H, complejo de Sociales y Ciencias Sociales (código 18) (§5, P-01) |
 | Dependencias | SPEC-109 (motor de colores reales y Anexo A de carpetas), SPEC-108 (modelo del plano) |
 | Rama | `feature/spec-112-colores-por-zonas`, desde `develop` |
 
@@ -240,11 +240,13 @@ Cómo se usa, desde `frontend/`:
 node --import ./scripts/ts-register.mjs scripts/look-sheet.mjs <ficha.json> --salida <carpeta local>
      --fotos <carpeta edificios-pucp> [--cuadricula] [--medidas]
 node --import ./scripts/ts-register.mjs scripts/real-look-shader-check.mjs
+node --test scripts/look-sheet/
 ```
 
 `--cuadricula` marca la u y la v cada 5 m (la u = 0 en rojo, la cota 0 en azul). `--medidas` lista los paños
 de cada cara con su tramo de u, su cota y su área. El segundo comando compila el shader en Chrome sin ventana
-y lo compara píxel a píxel con `facadeColor`: falla si se separan. Se corre después de tocar el GLSL.
+y lo compara píxel a píxel con `facadeColor`: falla si se separan. Se corre después de tocar el GLSL. El tercero
+prueba la lectura de V045 de la hoja.
 
 **D-12 · Salen el atlas y los patrones de SPEC-109.** Se van:
 - el tipo `photo` y los patrones `windows`, `ribbon`, `curtain` y `blind`;

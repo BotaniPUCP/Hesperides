@@ -1,0 +1,50 @@
+{
+  "planKey": "b17ac48c-a511-4307-9455-2c81bd0f21e0",
+  "name": "Arte Antiguo (C17, C19, C20, C22, C25, C27, C28, C29)",
+  "folder": "C17, C19, C20, C22, C25, C27, C28, C29 · Izquierda 117 · SKP C-4848, C-4825, C-19, C-4876, C-4826",
+  "photos": [
+    "casetas-frente-a-dintilhac-lado L-01.jpg",
+    "casetas-frente-a-dintilhac-lado L-02.jpg",
+    "casetas-frente-a-dintilhac-lado L-03.jpg",
+    "cuadrado-interno-derecha.jpg",
+    "cuadrado-interno-izquierda.jpg",
+    "frente-a-C18 · Izquierda 124 · SKP C-5037, C-5032.jpg",
+    "frente-a-dintilhac.jpg",
+    "frente-a-pabellon-I-edificio-con-escalera.jpg",
+    "frente-a-pabellon-I-edificio-sin-escalera.jpg",
+    "lado-cercano-a-comedor-artes-antiguo-01.jpg",
+    "lado-cercano-a-comedor-artes-antiguo-02.jpg",
+    "lado-doblando-la-esquina-frente-a-edificio-sin-escalera.jpg",
+    "lado-frente-a-dintilhac-cercano-a-pabellon-I.jpg",
+    "lado-frente-a-dintilhac-lejano-a-pabellon-I.jpg",
+    "lado-L-frente-a-dintilhac.jpg"
+  ],
+  "materials": {
+    "paneles": {
+      "color": "#e3e4e2"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "ventanas": {
+      "color": "#8e9294"
+    }
+  },
+  "zones": [
+    {
+      "id": "casetas",
+      "wall": "paneles",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1.1,
+            2.3
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Casetas de paneles blancos con ventanas enrejadas sueltas, que van como franja tenue (D-04; lado-doblando-la-esquina…jpg y las demás de la carpeta). Las celosías altas y los murales no se dibujan."
+}

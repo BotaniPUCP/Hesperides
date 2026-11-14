@@ -1,0 +1,50 @@
+{
+  "planKey": "f7ea6a43-0556-419d-92e5-9ad3a7caf21b",
+  "name": "Facultad de Ciencias e Ingeniería",
+  "folder": "faci",
+  "photos": [
+    "faci-frente.png",
+    "lado.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#d2d5d6"
+    },
+    "techo": {
+      "color": "#c3c5c8"
+    },
+    "ventanas": {
+      "glass": "#788891",
+      "frame": "#e0e2e2",
+      "moduleM": 1.5,
+      "heightM": 2.2,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7.6
+          ],
+          "floors": {
+            "everyM": 3.8,
+            "startM": 0,
+            "bandM": [
+              0.8,
+              3
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Muros gris claro con ventanales de marco claro en sus dos pisos (lado.jpg); las pilastras gris oscuro y la escalera exterior no se dibujan. faci-frente.png viene rayada a mano: solo confirma el color."
+}

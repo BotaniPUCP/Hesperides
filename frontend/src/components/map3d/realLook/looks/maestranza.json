@@ -1,0 +1,150 @@
+{
+  "planKey": "38278886-283c-434d-ab74-506bb6813522",
+  "name": "Edificio Administrativo / Maestranza",
+  "folder": "Edificio Administrativo  Maestranza",
+  "photos": [
+    "espalda-lado-opuesto-a-sala-cuna-1.jpg",
+    "espalda-lado-opuesto-a-sala-cuna-2.jpg",
+    "espalda-lado-opuesto-a-sala-cuna-3.jpg",
+    "esquina-cerca-a-invernadero.jpg",
+    "esquina-hueca-cercana-a-arboles-palo-borracho-EV-000750.jpg",
+    "lado-del-edificio-alto-1.jpg",
+    "lado-del-edificio-alto-2.jpg"
+  ],
+  "materials": {
+    "crema": {
+      "color": "#e4ddd0"
+    },
+    "ladrillo": {
+      "color": "#bd7f6c"
+    },
+    "concreto": {
+      "color": "#cfd0cc"
+    },
+    "techo": {
+      "color": "#b9b6ae"
+    },
+    "ventanas-bajas": {
+      "color": "#a9adaa"
+    },
+    "ventanas-ladrillo": {
+      "color": "#7d817f"
+    },
+    "fachada-alta": {
+      "glass": "#73848f",
+      "frame": "#d6d9d6",
+      "moduleM": 1.5,
+      "heightM": 3.1,
+      "frameM": 0.08,
+      "spandrel": {
+        "color": "#c9cdca",
+        "heightM": 1.0
+      },
+      "vary": 0.08,
+      "accent": {
+        "color": "#3f86ad",
+        "share": 0.12
+      }
+    }
+  },
+  "zones": [
+    {
+      "id": "bloques-bajos",
+      "wall": "crema",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas-bajas",
+          "v": [
+            0,
+            7
+          ],
+          "floors": {
+            "everyM": 3.5,
+            "startM": 0,
+            "bandM": [
+              0.9,
+              2.3
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ladrillo-este",
+      "where": {
+        "east": [
+          0.72,
+          1
+        ],
+        "north": [
+          0.225,
+          0.75
+        ]
+      },
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas-ladrillo",
+          "v": [
+            0,
+            7
+          ],
+          "floors": {
+            "everyM": 3.5,
+            "startM": 0,
+            "bandM": [
+              1.0,
+              2.4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "edificio-alto",
+      "where": {
+        "east": [
+          0.15,
+          1
+        ],
+        "north": [
+          0,
+          0.225
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo",
+      "faces": {
+        "S": [
+          {
+            "material": "fachada-alta",
+            "u": [
+              -21.1,
+              29.2
+            ],
+            "v": [
+              0,
+              21.7
+            ]
+          }
+        ],
+        "N": [
+          {
+            "material": "fachada-alta",
+            "u": [
+              -23.9,
+              20.8
+            ],
+            "v": [
+              0,
+              21.7
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "notes": "Edificio alto de siete pisos al sur de la planta: retícula de ventanas con paneles grises y paneles azul turquesa sueltos (lado-del-edificio-alto-1.jpg, lado-del-edificio-alto-2.jpg), en sus dos fachadas largas; los testeros, de concreto. Al este, del lado opuesto a Sala Cuna, el ala baja de ladrillo con marco de concreto y su fila de ventanas (espalda-lado-opuesto-a-sala-cuna-2.jpg y -3.jpg). El resto, pabellones bajos crema con ventanas sueltas (espalda-lado-opuesto-a-sala-cuna-1.jpg, esquina-cerca-a-invernadero.jpg)."
+}

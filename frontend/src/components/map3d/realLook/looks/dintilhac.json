@@ -1,0 +1,70 @@
+{
+  "planKey": "1d3cfcb0-06c4-43b2-923f-610c5dcfb260",
+  "name": "Tesorería General (Dintilhac)",
+  "folder": "dintilhac",
+  "photos": [
+    "detras1.jpg",
+    "detras2.jpg",
+    "frente.jpg",
+    "lado1.jpg"
+  ],
+  "materials": {
+    "ladrillo": {
+      "color": "#c99383"
+    },
+    "concreto": {
+      "color": "#dcdcd6"
+    },
+    "techo": {
+      "color": "#b8b5ae"
+    },
+    "ventanas": {
+      "glass": "#3f4852",
+      "frame": "#d9dbd8",
+      "moduleM": 1.5,
+      "heightM": 1.9,
+      "frameM": 0.07,
+      "vary": 0.05
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            -0.5,
+            9.8
+          ],
+          "floors": {
+            "everyM": 3.8,
+            "startM": 0,
+            "bandM": [
+              -0.3,
+              0.45
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7.6
+          ],
+          "floors": {
+            "everyM": 3.8,
+            "startM": 0,
+            "bandM": [
+              1.0,
+              2.9
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Dos pisos de paños de ladrillo rosado en un marco de concreto claro, con una cinta de ventanas oscuras en cada piso (detras1.jpg, detras2.jpg). La fachada blanca del Centro Dintilhac y la Oficina Central de Registro (frente.jpg, lado1.jpg) son volúmenes chicos que no se separan en el modelo."
+}

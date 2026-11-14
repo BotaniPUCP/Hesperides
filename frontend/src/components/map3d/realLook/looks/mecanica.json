@@ -1,0 +1,51 @@
+{
+  "planKey": "2a8d1db4-2115-4823-b339-437aaa09a6e1",
+  "name": "Sección Ingeniería Mecánica",
+  "folder": "Facultad_Mecanica",
+  "photos": [
+    "FRENTE.jpg",
+    "espalda1.jpg",
+    "espalda2.jpg"
+  ],
+  "materials": {
+    "ladrillo": {
+      "color": "#b9765f"
+    },
+    "techo": {
+      "color": "#b2afa8"
+    },
+    "ventanas": {
+      "glass": "#4b555c",
+      "frame": "#8fa39b",
+      "moduleM": 1.5,
+      "heightM": 1.6,
+      "frameM": 0.08,
+      "vary": 0.05
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            10.5
+          ],
+          "floors": {
+            "everyM": 3.5,
+            "startM": 0,
+            "bandM": [
+              1.0,
+              2.6
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Ladrillo rojo con una cinta de ventanas de marco gris verdoso en cada piso (FRENTE.jpg, espalda1.jpg, espalda2.jpg). El remate de concreto de algunos volúmenes (espalda2.jpg) no se separa: queda bajo el ladrillo."
+}

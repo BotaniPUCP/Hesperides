@@ -1,0 +1,63 @@
+{
+  "planKey": "a0c57ec0-18b7-4a69-a4aa-b200fa9420e3",
+  "name": "Polideportivo",
+  "folder": "polideportivo",
+  "photos": [
+    "detras-lado-hacia-aulas-moviles.jpg",
+    "frente.jpg",
+    "lado-hacia-eeggll.jpg",
+    "otro-lado.jpg"
+  ],
+  "materials": {
+    "azul": {
+      "color": "#2f5694"
+    },
+    "base": {
+      "color": "#e6e4df"
+    },
+    "verde": {
+      "color": "#6f8a7c"
+    },
+    "celosias": {
+      "color": "#d9dcdf"
+    },
+    "techo": {
+      "color": "#c9cacb"
+    }
+  },
+  "zones": [
+    {
+      "id": "coliseo",
+      "wall": "azul",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "base",
+          "v": [
+            -1,
+            4.2
+          ]
+        },
+        {
+          "material": "celosias",
+          "v": [
+            9.0,
+            10.2
+          ]
+        }
+      ],
+      "faces": {
+        "W": [
+          {
+            "material": "verde",
+            "v": [
+              -1,
+              5.5
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "notes": "Coliseo de revestimiento azul con su franja de celosías claras y la base blanca (lado-hacia-eeggll.jpg, el sur; frente.jpg); hacia las aulas móviles (oeste), la base es un enchape verde (detras-lado-hacia-aulas-moviles.jpg). Las ventanas chicas de la base no se dibujan. Los anexos bajos de las esquinas, grises en otro-lado.jpg, no se separan."
+}
