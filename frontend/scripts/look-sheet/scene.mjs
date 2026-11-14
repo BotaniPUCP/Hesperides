@@ -48,9 +48,11 @@ function concat(arrays) {
 /** La huella GeoJSON (lat/lon) de cada plan_key, tal como la deja V045. */
 export function footprintsOfV045(sql) {
   const out = new Map();
-  for (const statement of sql.split(/;\s*\n/)) {
-    const key = statement.match(UUID)?.[0];
-    const geojson = statement.match(/ST_GeomFromGeoJSON\('(\{[^']*\})'\)/)?.[1];
+  // Por línea y no por sentencia: el INSERT de los principales nuevos trae una fila por línea, cada una con
+  // su plan_key y su huella; los UPDATE también los traen en la misma línea.
+  for (const line of sql.split('\n')) {
+    const key = line.match(UUID)?.[0];
+    const geojson = line.match(/ST_GeomFromGeoJSON\('(\{[^']*\})'\)/)?.[1];
     if (key && geojson && !out.has(key)) out.set(key, JSON.parse(geojson));
   }
   return out;
