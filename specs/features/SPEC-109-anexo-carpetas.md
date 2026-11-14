@@ -53,7 +53,7 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 42 | PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 1 | `9b3e73d7` | Sumaq Wasi 1 | nombre, C62 | seguro |
 | 43 | PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 2 | `3e2eae3d` | Sumaq Wasi 2 | nombre, C63 | seguro |
 | 44 | Pabellon Industrial | `be3bdfcc` | Sección Ingeniería Industrial | alias «Industrial», código 6 | seguro |
-| 45 | Pabellon-H | `80d344a8` | Facultad de Letras y Ciencias Humanas (código 41) | foto: rótulo «Pabellón H · Facultad de Letras y Ciencias Humanas»; es la grande de las dos con ese nombre | **por confirmar** |
+| 45 | Pabellon-H | `80d344a8` | Facultad de Letras y Ciencias Humanas (código 41) | foto: rótulo «Pabellón H · Facultad de Letras y Ciencias Humanas»; Jean Piero lo confirmó el 14 nov 2026 | seguro |
 | 46 | Pabellon-Z | `60bae298` | Pabellón Z | nombre | seguro |
 | 47 | PabellonV | `46c7455f` | Pabellón V | nombre, código 5 | seguro |
 | 48 | Pabellon_I | `23a5dd73` | Pabellón I: Facultad de Arte y Diseño… | nombre, código 17 | seguro |
@@ -72,16 +72,16 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 61 | aula-moviles-B | `8ec02178` | Aulas móviles (alias «Aulas móviles B») | alias, C52 | seguro |
 | 62 | bibblioteca-central | `91277172` | Biblioteca Central | nombre, código 25 | seguro |
 | 63 | comedor-artes-antiguo-eeggcc | `b9a4a553` | Caseta Comedor Generales Ciencias (alias «Comedor de arte antiguo») | alias, y la carpeta nombra EE.GG.CC., a 61 m (SPEC-108 P-06) | **por confirmar** |
-| 64 | complejo-sociales | `8f79b2cc` | Facultad de Ciencias Sociales (código 61) | cercanía: el complejo grande, a 34 m del Snack de Sociales | **por confirmar** |
+| 64 | complejo-sociales | `8f79b2cc` | Biblioteca de Ciencias Sociales (código 61; V045 la llamaba Facultad de Ciencias Sociales, corregido en V052) | cercanía: el complejo grande, a 34 m del Snack de Sociales; Jean Piero lo confirmó el 14 nov 2026 | seguro |
 | 65 | departamento-teologia | `e1692786` | Departamento Académico de Teología | nombre, código 26 | seguro |
 | 66 | dintilhac | `1d3cfcb0` | Tesorería General (alias «Dintilhac») | alias, código 24 | seguro |
 | 67 | eeggcc | `a340e861` | Estudios Generales Ciencias | alias EE.GG.CC, código 16 | seguro |
 | 68 | eeggll | `7f886877` | Estudios Generales Letras | alias EEGGLL, código 34 | seguro |
 | 69 | faci | `f7ea6a43` | Facultad de Ciencias e Ingeniería | código 1 | seguro |
 | 70 | facultad-ciencias-artes-comunicaciones | `d9793065` | Facultad de Ciencias y Artes de la Comunicación | nombre, código 29 | seguro |
-| 71 | facultad-ciencias-sociales | `d7b50529` | Facultad de Ciencias Sociales (código 18) | la otra con ese nombre | **por confirmar** |
+| 71 | facultad-ciencias-sociales | `d7b50529` | Facultad de Ciencias Sociales (código 18) | la otra con ese nombre; Jean Piero lo confirmó el 14 nov 2026 | seguro |
 | 72 | facultad-gestion | `83345054` | Facultad de Gestión y Alta Dirección | nombre, código 27 | seguro |
-| 73 | facultad-letras-ciencias-humanas | `c657216b` | Facultad de Letras y Ciencias Humanas (código 32) | cercanía: las fotos miran a Psicología (40 m) y a EE.GG.LL. (65 m) | **por confirmar** |
+| 73 | facultad-letras-ciencias-humanas | `c657216b` | Departamento Académico de Humanidades (oficinas) (código 32; V045 lo llamaba Facultad de Letras y Ciencias Humanas, corregido en V052) | cercanía: las fotos miran a Psicología (40 m) y a EE.GG.LL. (65 m) | **por confirmar** |
 | 74 | facultad-psicologia | `d365388a` | Facultad de Psicología | nombre, código 30 | seguro |
 | 75 | facuttad-derecho | `c315d792` | Facultad de Derecho | nombre, código 21 | seguro |
 | 76 | fotocopiado-letras-eeggll | `e5641098` | Centro de fotocopiado (adyacente a EE.GG.LL.) | nombre, C58 | seguro |

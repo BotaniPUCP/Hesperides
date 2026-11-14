@@ -121,6 +121,11 @@ Los edificios agrupados conservan su nombre y la etiqueta oficial queda en `camp
 - *Consecuencia:* se heredan los nombres que hoy chocan, como CIGA ×2 o Desconocido_13 ×2. Quedan listados
   en §9 y no se corrigen por cuenta propia.
 
+> **Corrección de Jean Piero, 14 nov 2026 (V052):** el código 61 es la Biblioteca de Ciencias Sociales, no la
+> facultad, y el código 32 es el Departamento Académico de Humanidades (oficinas); la Facultad de Letras y
+> Ciencias Humanas es el Pabellón H (código 41). Van como `name` en `building-references.json` (regla 1) y en una
+> migración nueva; las etiquetas oficiales de `campus_building_codes` no cambian.
+
 **D-04 · Se respetan las excepciones de Jean Piero:**
 - **Sub-estación N-7:** usa la geometría del mapa, aunque el SKP tiene la pieza.
 - **Caseta del edificio 95:** toma la forma de la caseta C-3446, ajustada a las medidas del edificio del

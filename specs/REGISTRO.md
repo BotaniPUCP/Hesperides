@@ -219,6 +219,7 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V049 | `V049__intervention_place_zone_selections.sql` | SPEC-200 §2.11.6 · R3 | Revisiones y asociaciones directas lugar–zona; geometría histórica y revisión opcionales por ubicación, sin conversión ni siembra de IDs locales. Nació como V035 en `modulo-intervenciones` |
 | V050 | `V050__intervention_campus_selection.sql` | SPEC-200 §2.12 | Revisión opcional de selección global y áreas con geometría histórica sin lugar; conserva el flujo anterior y sus datos. Nació como V036 |
 | V051 | `V051__seed_report_targets.sql` | SPEC-202 §4 | Metas del resumen de reportes: `REPORT_COVERAGE_TARGET_PERCENT` y `REPORT_IRRIGATION_TARGET_PERCENT` (100), editables de 1 a 100. Nació como V035 en `feature/SPEC-202-reportes` |
+| V052 | `V052__rename_two_plan_buildings.sql` | SPEC-108 D-03 | Nombres corregidos por Jean Piero (14 nov 2026): el código 61 es la Biblioteca de Ciencias Sociales y el 32, el Departamento Académico de Humanidades (oficinas). Solo cambia `name`; las etiquetas oficiales no. Nació en `feature/spec-112-colores-por-zonas`. `feature/modelos-3d` también trae una V052 y una V053 sin integrar: la rama que se integre segunda renumera las suyas |
 
 ### Pendientes (sin número reservado)
 
