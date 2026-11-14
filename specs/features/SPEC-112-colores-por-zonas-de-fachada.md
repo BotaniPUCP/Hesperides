@@ -5,7 +5,7 @@
 | HU relacionada | SPEC-102 (mapa 3D). Reemplaza D-04, D-06 y D-15 de SPEC-109 y cambia su D-10 (el modo arranca encendido) |
 | Autor | Jean Piero, con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android |
-| Estado | 13 nov 2026: entrega 1 hecha (motor, arranque encendido, hoja de revisión y cinco edificios del piloto), verificada en Chrome sin ventana con el material real. Pendiente: que Jean Piero revise el piloto en el navegador (§5) |
+| Estado | 13 nov 2026: entrega 1 hecha (motor, arranque encendido, hoja de revisión y cinco edificios del piloto), verificada en Chrome sin ventana con el material real. Jean Piero revisó el piloto en el navegador: corregidos el extremo del McGregor y la cara sur del Pabellón Z (P-02). Pendiente: franjas o muro en Química (P-03) antes de los grupos (§5) |
 | Dependencias | SPEC-109 (motor de colores reales y Anexo A de carpetas), SPEC-108 (modelo del plano) |
 | Rama | `feature/spec-112-colores-por-zonas`, desde `develop` |
 
@@ -172,6 +172,11 @@ la fachada opuesta de una barra idéntica o el lado gemelo de un edificio simét
 por qué. Lo que tapan los árboles o las personas se completa continuando las regiones que se ven a los
 lados.
 
+> **Ajuste del 13 nov 2026 (revisión del piloto, P-02):** manda la coherencia del edificio. Si una
+> fachada larga sin foto tiene enfrente, en el mismo edificio, una fachada de vidrio, repite su
+> composición (vidrio, ventanal, paños). Un muro liso frente a una fachada de vidrio se ve raro. Si la
+> opuesta es muro, la cara sin foto sigue siendo muro. La ficha anota de dónde copia.
+
 **D-07 · Techos.** Toda cara horizontal lleva el material liso del techo de su zona, como en SPEC-109
 D-05.
 
@@ -186,6 +191,12 @@ del campus:
 - vidrio con antepechos rojos en las de los cuerpos bajos;
 - concreto beige en los testeros;
 - techos gris cálido.
+
+> **Ajuste del 13 nov 2026 (revisión del piloto):** cada material va donde está su plano en
+> `pabellon-n-appearance.mjs`. El atrio solo viste la torre: con un tramo de u en una sola zona pintaba
+> también el extremo este del bloque bajo del frente, que cae en el mismo tramo 18 m más adelante. Los
+> dos extremos de ese bloque son volúmenes de concreto: zonas en planta (este −33,6 a −28,5 m y 9,9 a
+> 17 m desde el centro de la caja), y su vidrio queda en el tramo central de 38,4 m, como en Modelos 3D.
 
 La ficha cita como fuente el generador, no fotos. Su hoja de revisión compara contra vistas del modelo
 de Modelos 3D. Si la geometría del campus difiere de la del SKP, manda la del campus: el GLB no se toca.
@@ -349,8 +360,8 @@ Visor
 | # | Caso | Estado |
 |---|---|---|
 | P-01 | Filas «por confirmar» del Anexo A de SPEC-109 (su P-01) | Abierto: no se pintan hasta confirmarlas |
-| P-02 | **Pabellón Z, cara sur de la barra sur:** ninguna foto la muestra. Con D-06, copia el vidrio norte solo si el plano muestra dos barras gemelas; si no, lleva muro | En el piloto lleva muro: las barras no son evidentemente gemelas (la norte tiene su paño blanco al este). Jean Piero lo confirma al revisarlo |
-| P-03 | **D-04 (ventanas sueltas como franja tenue)** es decisión de Claude | Se valida con el edificio de ventanas del piloto |
+| P-02 | **Pabellón Z, cara sur de la barra sur:** ninguna foto la muestra. Con D-06, copia el vidrio norte solo si el plano muestra dos barras gemelas; si no, lleva muro | Resuelto el 13 nov: lleva vidrio por coherencia del edificio (ajuste de D-06). Repite la composición norte en su propio largo: vidrio, ventanal y el paño blanco del extremo este. Va en una zona propia, solo el frente sur, porque las paredes del patio también miran al sur |
+| P-03 | **D-04 (ventanas sueltas como franja tenue)** es decisión de Claude | Se valida con el edificio de ventanas del piloto. 13 nov: Jean Piero compara Química con franjas y sin ellas |
 | P-04 | **Edificios sin fotos:** unos 46 con malla y sin ficha, más los prismas | Rosados hasta que lleguen sus fotos (D-15) |
 | P-05 | **CA-10 en el `WebView` de Android** (SPEC-109 P-06) | Abierto. Si baja más de un 10 %, se decide si en Android el modo arranca apagado |
 | P-06 | **Huaca:** sigue con su textura de tapial (SPEC-109 P-05) | Fuera de este spec |
