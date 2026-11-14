@@ -41,6 +41,8 @@ describe('adjustedRing', () => {
 });
 
 describe('el manifiesto del repositorio', () => {
+  /** La primera migración que ajusta huellas a mano (SPEC-108 D-16). */
+  const FIRST_FIT_VERSION = 54;
   const backend = path.resolve(__dirname, '../../../../../backend/src/main/resources');
   const repoManifest = JSON.parse(fs.readFileSync(path.join(backend, 'mapa/edificios-plano.json'), 'utf8')) as BuildingModelManifest;
   const migration = (prefix: string) => {
@@ -66,7 +68,11 @@ describe('el manifiesto del repositorio', () => {
     const plane = new LocalPlane(repoManifest.anchor.lat, repoManifest.anchor.lon);
     const shift = migration('V053__').match(/ST_Translate\(footprint, (-?[\d.]+), (-?[\d.]+)\)/)!;
     const [dLon, dLat] = [Number(shift[1]), Number(shift[2])];
-    const before = footprints(migration('V045__').split('\n')), after = footprints(migration('V054__').split(';'));
+    // Las huellas ajustadas viven en V054 y en las migraciones que le siguen: gana la última, como en la base.
+    const dir = path.join(backend, 'db/migration');
+    const fitted = fs.readdirSync(dir).filter((f) => Number(f.match(/^V(\d+)__/)?.[1]) >= FIRST_FIT_VERSION).sort();
+    const before = footprints(migration('V045__').split('\n'));
+    const after = footprints(fitted.flatMap((f) => fs.readFileSync(path.join(dir, f), 'utf8').split(';')));
     const moved = (c: unknown): unknown => (typeof (c as number[])[0] === 'number' ? [(c as number[])[0] + dLon, (c as number[])[1] + dLat] : (c as unknown[]).map(moved));
     const pairs = (g: GeoJsonGeometry) => {
       const flat = polygons(g, plane).flat(2);
