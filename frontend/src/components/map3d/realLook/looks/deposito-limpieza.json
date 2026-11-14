@@ -1,0 +1,37 @@
+{
+  "planKey": "e34a7c5b-8a10-4a94-b5e3-e636d56d42bd",
+  "name": "Depósito de limpieza, archivo de historias / Gabinete de proyectos patrimoniales",
+  "folder": "DEPÓSITO DE LIMPIEZA, ARCHIVO DE HISTORIAS  GABINETE DE PROYECTOS PATRIMONIALES",
+  "photos": [
+    "frente-a-artes-1.jpg",
+    "frente-a-artes-2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#ddd6c3"
+    },
+    "techo": {
+      "color": "#5e6163"
+    },
+    "ventanas": {
+      "color": "#4f5458"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0.6,
+            2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Paneles beige con ventanales de vidrio oscuro, como franja, bajo techo de calamina oscura (frente-a-artes-1.jpg, frente-a-artes-2.jpg)."
+}

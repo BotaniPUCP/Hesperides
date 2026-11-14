@@ -1,0 +1,49 @@
+{
+  "planKey": "44a6cf1a-c7af-486a-b402-ea978a94fbe9",
+  "name": "Sala Cuna",
+  "folder": "sala cuna",
+  "photos": [
+    "espalda-hacia-educacion.jpg",
+    "frente.jpg",
+    "lado.jpg",
+    "lado2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#ededea"
+    },
+    "techo": {
+      "color": "#d2d1cc"
+    },
+    "ventanas": {
+      "color": "#c2c5c6"
+    },
+    "zocalo": {
+      "color": "#a9acab"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            -1,
+            0.4
+          ]
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0.9,
+            2.3
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Muros blancos con ventanas sueltas, como franja tenue, y zócalo gris (espalda-hacia-educacion.jpg, lado.jpg, lado2.jpg). La galería con cerco blanco del frente (frente.jpg) no se dibuja."
+}

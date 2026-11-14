@@ -1,0 +1,37 @@
+{
+  "planKey": "5d0c3da2-1334-4c77-bb3a-54364ffa1417",
+  "name": "Gelarti",
+  "folder": "heladeria-gelarti",
+  "photos": [
+    "detras.jpg",
+    "frente-lado.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e8e2d3"
+    },
+    "techo": {
+      "color": "#4f5254"
+    },
+    "ventanas": {
+      "color": "#969894"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0.6,
+            2.2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Caseta crema con frentes vidriados, como franja, bajo un alero oscuro (detras.jpg, frente-lado.jpg). El interior rosado y el letrero no se dibujan."
+}

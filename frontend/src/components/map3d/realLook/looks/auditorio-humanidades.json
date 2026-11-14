@@ -1,0 +1,36 @@
+{
+  "planKey": "3ff11b67-d756-46a5-a2c2-54a294e50313",
+  "name": "Auditorio de Humanidades",
+  "folder": "auditorio-humanidades",
+  "photos": [
+    "frente.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#b8664a"
+    },
+    "techo": {
+      "color": "#b9b6af"
+    },
+    "granate": {
+      "color": "#7e2f33"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "granate",
+          "v": [
+            4.2,
+            5
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Ladrillo con una banda granate en lo alto (frente.jpg, chica). La otra foto de la carpeta (frente-lado-frente-a-educacion.png) muestra Estudios Generales Letras, no el auditorio: no se usa."
+}

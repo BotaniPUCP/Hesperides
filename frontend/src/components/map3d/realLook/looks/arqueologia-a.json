@@ -1,0 +1,38 @@
+{
+  "planKey": "f5e7a188-3cd8-48d3-8a3c-5b2aaba1bd97",
+  "name": "Arqueología A / CIGA",
+  "folder": "ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA)",
+  "photos": [
+    "detras.jpg",
+    "frente-1.jpg",
+    "frente2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e4e2db"
+    },
+    "techo": {
+      "color": "#c4c2bc"
+    },
+    "ventanas": {
+      "color": "#b1b3b1"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            2.2,
+            3
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Paneles prefabricados claros con una cinta alta de ventanas bajo el alero (detras.jpg, frente-1.jpg, frente2.jpg)."
+}
