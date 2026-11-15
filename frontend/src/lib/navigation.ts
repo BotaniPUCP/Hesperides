@@ -40,8 +40,6 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: INCIDENT_MEMBER_ROLES },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
-  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
   // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
   { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];

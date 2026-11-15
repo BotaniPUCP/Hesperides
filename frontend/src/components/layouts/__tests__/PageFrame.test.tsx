@@ -3,7 +3,7 @@ import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { PageFrame } from '../PageFrame';
 import { usePageTrail } from '../PageTrailContext';
 
-let mockPathname = '/riego';
+let mockPathname = '/reportes';
 let mockUser: object | null = { id: 1 };
 jest.mock('next/navigation', () => ({ usePathname: () => mockPathname }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: mockUser }) }));
@@ -15,16 +15,16 @@ function FichaConNombre() {
 
 describe('PageFrame', () => {
   beforeEach(() => {
-    mockPathname = '/riego';
+    mockPathname = '/reportes';
     mockUser = { id: 1 };
-    restartTrail('/riego');
+    restartTrail('/reportes');
   });
 
   it('pone el breadcrumb y debajo el contenido', () => {
     render(<PageFrame><p>contenido</p></PageFrame>);
 
     const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
-    expect(nav).toHaveTextContent('InicioRiego');
+    expect(nav).toHaveTextContent('InicioReportes');
     expect(nav.compareDocumentPosition(screen.getByText('contenido'))).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 

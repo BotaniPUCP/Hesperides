@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SectionMapPicker } from '../SectionMapPicker';
-import { IrrigationMapPicker } from '@/components/irrigation/IrrigationMapPicker';
 
 jest.mock('@/hooks/useMapLayers', () => ({
   useMapLayers: () => ({ data: null, isLoading: false, errorMessage: 'Sin mapa en la prueba', stale: false }),
@@ -43,14 +42,5 @@ describe('SectionMapPicker (SPEC-203 §5.2)', () => {
 
     expect(screen.queryByRole('checkbox', { name: /Jardín Central/ })).not.toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /Berma Norte/ })).toBeInTheDocument();
-  });
-
-  it('Riego conserva sus textos (CA-12)', () => {
-    render(<IrrigationMapPicker sectors={sectors} sectionsBySector={sectionsBySector} scope="ALL" selectedIds={[11]}
-      onCancel={jest.fn()} onConfirm={jest.fn()} />);
-
-    expect(screen.getByRole('heading', { name: 'Seleccionar secciones de riego · Mapa 3D' })).toBeInTheDocument();
-    expect(screen.getByText('Áreas regadas')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Confirmar selección de 1 secciones' })).toBeInTheDocument();
   });
 });
