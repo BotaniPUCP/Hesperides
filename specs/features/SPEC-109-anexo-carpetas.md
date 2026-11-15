@@ -95,6 +95,12 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 84 | ceprepuc | `c46e56b9` | CEPREPUC | nombre, código 13; foto: rótulo «CEPRE PUCP» en la reja | seguro |
 | 85 | cia | `d093db0d` | CIA (Complejo de Innovación Académica) | nombre, código 60; cercanía: cia-1 se tomó desde Gelarti, 100 m al nor-noreste | seguro |
 | 86 | Pabellon-G | `efc7e845` | Pabellón G (edificio 2 de la Facultad de Ciencias Contables, código 15) | nombre; foto: rótulos «Pabellón G» y «Facultad de Ciencias Contables», y la forma del edificio 2 (bloque de dos pisos con el ala baja y la escalera a su azotea). El edificio 1 (código 14) sigue sin fotos | seguro |
+| 87 | instituto-corrosion | `9428bc9e` | Instituto Corrosión y Protección | nombre, código 8; foto: rótulo «Instituto de Corrosión y Protección» en el remate | seguro |
+| 88 | cetam-pabellon-K | `9c41011e` | CETAM | nombre, códigos 7 y C65; el punto «Pabellón K (Sec. Mecatrónica PUCP)» del mapa cae en el edificio | seguro |
+| 89 | aulas-moviles-A | `5c5f0f57` | Aulas Móviles A | nombre, C53; foto: el letrero «Banco de Libros», cuyo punto del mapa está en el extremo sur del bloque oeste | seguro |
+| 90 | aulas-moviles-C | `77291032` | Aulas Móviles C | nombre, C54; foto: el bloque de techo a dos aguas y el pasillo con dos escaleras de la cara sur, como en el modelo | seguro |
+| 91 | gastronomia | `c805ae90` | Facultad de Gastronomía, Hotelería y Turismo | nombre, código 63; foto: la retícula blanca de la facultad | seguro |
+| 92 | matematicas | `5cff01e0` | Matemáticas | nombre, código 10; fotos: rótulos «Matemáticas» y «Departamento Académico de Ciencias — Edificio José Tola Pasquel». El Tola Pasquel es el bloque curvo del este de la misma malla | seguro; el bloque del este, por confirmar |
 
 La fila 81 no es una carpeta: aparece para dejar a la vista que el segundo `Desconocido_13` queda sin
 pintar mientras no se confirme cuál de los dos es el de las fotos.
