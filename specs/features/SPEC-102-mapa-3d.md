@@ -279,6 +279,20 @@ se promueve a su propia tabla.
 
 - **Áreas xerofíticas:** las 10 entran como **secciones sin sector** (`parent_zone_id` nulo),
   con su clase («Ornato») en `description`. No pertenecen a ninguno de los 5 sectores.
+  > **Enmienda del 15 nov 2026 (pedido de Jean Piero, V063):** ocho de las diez repetían el polígono de un jardín
+  > de `areas_verdes.geojson`, porque `zonas.py` creó una sección por cada área de `xerofitica.geojson`. Esas
+  > áreas son xerofíticas, no jardines:
+  > - XE-0001 a XE-0005, XE-0008 y XE-0009 **heredan de su jardín** el uso, el riego actual, el proyecto de riego,
+  >   el sector, el código del mapa del cliente («D 14», «E 31») y la reserva. Conservan su código, su nombre, su
+  >   clase y su polígono. Con el sector pasan a tener capataz y pueden entrar en turnos de riego.
+  > - Los ocho jardines (AV-0248, -0253, -0264, -0287, -0383, -0455, -0466, -0483) se borran lógicamente.
+  >   También XE-0007, que caía entero dentro de XE-0005 (E 31): AV-0455 estaba dentro de AV-0383 y se contaba dos
+  >   veces en SEC-VERDE-02, cuya área baja en 118 m². El contorno de los sectores no cambia.
+  > - En todo conjunto, cada jardín borrado pasa a ser su xerofítica, una sola vez, y el conjunto sube su versión.
+  > - «Mismo polígono» es con menos de 0,01 m² de diferencia (no coinciden vértice a vértice). Si un par ya no
+  >   coincide, V063 falla sin tocar nada.
+  > - XE-0006 y XE-0010 quedan como estaban: son una parte de jardines más grandes (AV-0401 y D 1), no copias.
+  > - El buscador encuentra una xerofítica por su código del mapa y muestra su sector, como a un jardín.
 - **Reserva:** `zones` gana `is_reservable` y `reservation_owner_item_id` (`RESERVATION_OWNER`:
   `DAF`, `UNIDADES`). Los 20 jardines de reserva con geometría caen al 100 % dentro de una sección:
   se marcan esas secciones, no se crean zonas. `JR-0021` se descarta: repite a `JR-0010` y no tiene

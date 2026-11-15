@@ -66,7 +66,8 @@ class MapIntegrationTest {
         mockMvc.perform(get("/api/v1/map/layers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.layers.sectors.features", hasSize(5)))
-                .andExpect(jsonPath("$.data.layers.sections.features", hasSize(531)))
+                // 531 menos los 8 jardines que repetían una xerofítica y XE-0007 (V063, SPEC-102 §4.3).
+                .andExpect(jsonPath("$.data.layers.sections.features", hasSize(522)))
                 .andExpect(jsonPath("$.data.layers.subsections.features", hasSize(2)))
                 .andExpect(jsonPath("$.data.layers.supervisionZones.features", hasSize(4)))
                 .andExpect(jsonPath("$.data.layers.references.features", hasSize(411)))
