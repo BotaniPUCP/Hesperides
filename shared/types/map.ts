@@ -93,12 +93,28 @@ export interface BuildingModelManifest {
   stairs?: Record<string, BuildingStair>;
   /** Edificios que el SKP dibuja dentro de la malla de otro (SPEC-108 D-18), por su propio `plan_key`. */
   pieces?: Record<string, BuildingPiece>;
+  /** Rampas del piso del modelo que en realidad son escalones (SPEC-108 D-20), por un nombre propio. */
+  floorSteps?: Record<string, FloorSteps>;
 }
 
 /**
  * Un edificio que el SKP dibuja dentro de la malla de otro (SPEC-108 D-18): el visor le pasa los triángulos que
  * caen enteros en su polígono, en el marco de la malla ya ajustada (D-16). En la base, cada uno tiene su huella.
  */
+/**
+ * Una rampa del piso del modelo (nodo `suelo`) que en realidad es una escalera (SPEC-108 D-20): el visor escalona
+ * sus caras inclinadas que caen enteras en el polígono y entre las dos cotas, en `risers` contrahuellas iguales.
+ * Todo va en metros alrededor del anclaje (este, norte).
+ */
+export interface FloorSteps {
+  polygon: PlanPoint[];
+  fromM: number;
+  toM: number;
+  risers: number;
+  /** Qué se corrigió y a pedido de quién. */
+  why: string;
+}
+
 export interface BuildingPiece {
   /** La `plan_key` de la malla de la que sale. */
   from: string;

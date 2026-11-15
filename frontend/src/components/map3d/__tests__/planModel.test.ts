@@ -189,6 +189,21 @@ describe('parsePlanModel', () => {
     expectClose(model.nodes.suelo?.uv ?? undefined, [0, 0, 1, 0, 0, 1]);
   });
 
+  it('escalona las rampas del piso que el manifiesto dice que son escaleras (SPEC-108 D-20)', async () => {
+    // Una rampa que baja 1 m hacia el norte (z negativo), en dos contrahuellas: ninguna cara queda inclinada.
+    const manifest = manifestWith({ nodes: { suelo: 'suelo' },
+      floorSteps: { rampa: { polygon: [[0, 0], [4, 0], [4, 10], [0, 10]], fromM: -1, toM: 0, risers: 2, why: 'prueba' } } });
+    const file = glb([{ name: 'suelo', positions: [0, 0, 0, 4, 0, 0, 4, -1, -10], uv: [0, 0, 4, 0, 4, 10] }]);
+
+    const model = await parsePlanModel(manifest, file, plane);
+    const p = model.nodes.suelo!.positions;
+    const inclined = Array.from({ length: p.length / 9 }, (_, t) => [p[t * 9 + 1], p[t * 9 + 4], p[t * 9 + 7]])
+      .filter((ys) => !ys.every((y) => y === ys[0]) && new Set(ys).size === 3);
+
+    expect(p.length).toBeGreaterThan(9);
+    expect(inclined).toEqual([]);
+  });
+
   it('junta los nodos de un mismo tipo, como los muros y el fondo de los desniveles', async () => {
     const manifest = manifestWith({ nodes: { 'muros-desnivel': 'muro', 'fondo-desnivel': 'muro' } });
     const file = glb([
