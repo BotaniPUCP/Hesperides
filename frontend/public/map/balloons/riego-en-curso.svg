@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 68 70" width="68" height="70" role="img" aria-label="Riego en curso o de hoy">
+  <title>Riego en curso o de hoy</title>
+  <ellipse cx="32" cy="65" rx="8" ry="2.2" fill="#000" opacity=".18"/>
+  <path d="M16.1 53.1A28 28 0 1 1 47.9 53.1L32 64Z" fill="#1E88E5" stroke="#1F2A33" stroke-width="2.4" stroke-linejoin="round"/>
+  <circle cx="32" cy="30" r="21.5" fill="#fff" stroke="#1F2A33" stroke-width="1.5"/>
+  <g transform="translate(16 14)" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M4 12q4-7 12-8M28 12q-4-7-12-8" fill="none" stroke="#29B6F6" stroke-width="2" stroke-dasharray="2.5 2.5"/>
+    <path d="M6 6.5c1 2 0 3-1 3s-2-1-1-3l1-2Z M27 6.5c1 2 0 3-1 3s-2-1-1-3l1-2Z" fill="#29B6F6"/>
+    <path d="M16 6c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8Z" fill="#29B6F6" stroke="#1F2A33" stroke-width="1.4"/>
+    <rect x="13.5" y="18" width="5" height="7" rx="1" fill="#90A4AE" stroke="#1F2A33" stroke-width="1.5"/>
+    <path d="M2 30q3-4 6 0q3-4 6 0q2-3 4 0q3-4 6 0q3-4 6 0" fill="#66BB6A" stroke="#1F2A33" stroke-width="1.4"/>
+    <rect x="10" y="25" width="12" height="4" rx="1" fill="#607D8B" stroke="#1F2A33" stroke-width="1.5"/>
+  </g>
+</svg>
