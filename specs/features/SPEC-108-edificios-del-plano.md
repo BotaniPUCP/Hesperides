@@ -297,6 +297,18 @@ Con el boceto confirmado, se reemplaza así (V056):
 - *Origen:* decisión del usuario del 14 nov 2026: «representan una escalera en diagonal vista desde un lado […] por
   eso toda el área verde debe ser visible».
 
+> **Escalera del Auditorio Juan Pablo II, 15 nov 2026 (V061):** al bajar el auditorio 5 m (D-16, V060), su patio de
+> ingreso del SKP quedó a −1,455 m bajo el suelo del mapa, cerrado por muros bajos y sin escalera. Con el boceto
+> confirmado:
+> - **Escalera:** baja de la plaza a la puerta por el lado noreste del patio, en todo su ancho (11,9 m). Arriba lleva
+>   un descanso de 30 cm a cota 0 y luego 8 contrahuellas de 18,2 cm con huellas de 30 cm. Se propusieron 5 de 29 cm,
+>   pero una contrahuella debe medir menos que la losa de 20 cm. Reemplaza el muro bajo de ese lado.
+> - **Patio:** es un desnivel del manifiesto (`sunken`, a −1,455): el suelo del mapa se abre sobre él y su escalera.
+> - **Huella:** pierde la franja de la escalera y su descanso (28,5 m², V061).
+> - **Pruebas:** la de las huellas acepta, además de las esquinas del recorte, los vértices que caen sobre sus bordes,
+>   donde el borde de la huella cruza la línea del muro. La de los ajustes de V054 deja las huellas de los edificios
+>   con escalera a la prueba de las escaleras, y exige que su ajuste no los mueva en planta.
+
 **D-18 · Un edificio que el SKP dibuja dentro de la malla de otro se separa en el visor.** El mapa mostraba la
 Librería PUCP y el café Juan Valdez como un solo edificio, llamado «Juan Valdez»: V045 le puso al principal del código
 42 el nombre de su único hijo de OpenStreetMap con nombre, y el SKP dibuja el café en la misma malla. La leyenda del
@@ -426,7 +438,7 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 > (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
 > arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16, de las
 > escaleras de D-17 o de las piezas de D-18 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor y
-> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5` y `-6`, el auditorio que baja).
+> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5` y `-6`, el auditorio que baja; `-7`, su escalera de ingreso).
 
 ## 4. Migración de base de datos
 
