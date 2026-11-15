@@ -120,10 +120,27 @@ describe('las escaleras del manifiesto del repositorio', () => {
   const stairs = stairsOf(manifestOfRepo);
   const near = (a: PlanPoint, b: PlanPoint) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.02;
   const COMEDOR_CENTRAL = 'df5f87ed-a1f7-4fa6-ae35-b7f423f61806';
+  const AUDITORIO = '0587a436-a6b7-4214-8d74-9b4883986521';
 
   it('trae escaleras válidas, cada una con su porqué; la del Comedor Central entre ellas', () => {
     expect(stairs.has(COMEDOR_CENTRAL)).toBe(true);
     expect([...stairs.values()].every((s) => s.why.length > 0)).toBe(true);
+  });
+
+  it('el Auditorio Juan Pablo II, bajado 5 m, tiene una escalera de 8 contrahuellas de la plaza (0) a su patio de ingreso (−1,455)', () => {
+    const flights = stairs.get(AUDITORIO)?.flights ?? [];
+
+    expect(flights.map((f) => [f.fromM, f.toM, f.risers])).toEqual([[-1.455, 0, 8]]);
+  });
+
+  it('el suelo del mapa se abre sobre el patio de ingreso del auditorio y sobre su escalera: un desnivel a −1,455', () => {
+    const plane = new LocalPlane(manifestOfRepo.anchor.lat, manifestOfRepo.anchor.lon);
+    const patio = manifestOfRepo.sunken.filter((s) => s.floorM === -1.455).flatMap((s) => polygons(s.polygon, plane));
+    const inPatio = ([x, y]: PlanPoint) => patio.some(([outer]) => insideRing(x, y, outer));
+    // Ante la puerta, en medio del patio y sobre la escalera, en metros alrededor del anclaje.
+    const points: PlanPoint[] = [[-3, -19], [-1, -17.5], [0.5, -15.7]];
+
+    expect(points.filter((p) => !inPatio(p))).toEqual([]);
   });
 
   it('cada tramo arranca del suelo o de un descanso y llega a un descanso, arista con arista', () => {
@@ -154,7 +171,9 @@ describe('las escaleras del manifiesto del repositorio', () => {
       const strictlyInside = (p: PlanPoint) => insideRing(p[0], p[1], ring) && cut.every((a, i) => toSegment(p, a, cut[(i + 1) % cut.length]) > 0.02);
 
       expect(area(was) - area(is)).toBeCloseTo(ringArea(ring), 1);
-      expect(points(is).filter((p) => ![...points(was), ...cut].some((q) => near(p, q)))).toEqual([]);
+      // Un vértice nuevo es uno de antes o sale del recorte: una esquina suya o el cruce de un borde suyo con la huella.
+      const onCut = (p: PlanPoint) => cut.some((a, i) => toSegment(p, a, cut[(i + 1) % cut.length]) < 0.02);
+      expect(points(is).filter((p) => !points(was).some((q) => near(p, q)) && !onCut(p))).toEqual([]);
       expect(points(is).filter(strictlyInside)).toEqual([]);
     }
   });

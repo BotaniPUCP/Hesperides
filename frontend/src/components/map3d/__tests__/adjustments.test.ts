@@ -3,6 +3,7 @@ import { fittedFootprints, planFootprintsBeforeFits, repoManifest } from '../__f
 import { LocalPlane } from '../projection';
 import { polygons } from '../sceneData';
 import { adjustedRing, adjustmentsOf, lifted, liftsOf } from '../viewer/adjustments';
+import { stairsOf } from '../viewer/stairs';
 
 /** Ajustes por edificio del manifiesto (SPEC-108 D-16): una matriz afín en metros este/norte alrededor del anclaje. */
 function manifest(adjustments: BuildingModelManifest['adjustments'], nodes: BuildingModelManifest['nodes'] = { k1: 'edificio' }): BuildingModelManifest {
@@ -91,8 +92,13 @@ describe('el manifiesto del repositorio', () => {
     // Distancia de Hausdorff entre vértices: V054 sale de la huella ya guardada, que puede empezar el anillo en otro vértice.
     const farthest = (a: number[][], b: number[][]) => Math.max(...a.map(([x, y]) => Math.min(...b.map(([u, v]) => Math.hypot(x - u, y - v)))));
     const adjustments = [...adjustmentsOf(manifestOfRepo)];
+    // La huella de un edificio con escalera la revisa la prueba de las escaleras contra la de antes: su ajuste no
+    // puede moverlo en planta (el Auditorio Juan Pablo II solo baja).
+    const stairs = stairsOf(manifestOfRepo);
+    const identity = [1, 0, 0, 1, 0, 0];
+    expect(adjustments.filter(([key, m]) => stairs.has(key) && m.some((v, i) => v !== identity[i]))).toEqual([]);
 
-    const off = adjustments.map(([key, m]) => {
+    const off = adjustments.filter(([key]) => !stairs.has(key)).map(([key, m]) => {
       const expected = pairs(before.get(key)!).map(([x, y]) => adjustedRing([x, y], m));
       // Sin migración que la cambie, la huella es la anterior: un ajuste solo en altura (el auditorio) no la mueve.
       const actual = pairs(after.get(key) ?? before.get(key)!);
