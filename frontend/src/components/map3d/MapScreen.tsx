@@ -24,6 +24,7 @@ import { ModeLegend } from './ModeLegend';
 import { toSceneData } from './sceneData';
 import { buildSearchIndex, isCatalogTarget } from './searchIndex';
 import { useMapScreenState } from './useMapScreenState';
+import { useAdminModeToggle } from './pilot/useAdminModeToggle';
 import type { ViewerStart } from './viewer/createViewer';
 
 /** El visor nace como dicen las opciones de inicio: `applyToViewer` solo le ordena lo que difiere de ellas. */
@@ -54,6 +55,8 @@ export function MapScreen() {
   const balloons = useBalloonsOnMap({ viewer: s.viewer, viewerEpoch: s.viewerEpoch, unsupported: s.unsupported,
     cardOpen: s.card !== null, closeCard: s.closeCard });
   const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
+  // Ctrl+Shift+U: movimiento libre de administrador, con un aviso temporal al entrar y al salir.
+  useAdminModeToggle(s.viewer, s.viewerEpoch > 0);
   const root = useRef<HTMLDivElement>(null);
   const focusedParamRef = useRef<string | null>(null);
   const viewerSettled = s.viewerEpoch > 0 || s.unsupported;
