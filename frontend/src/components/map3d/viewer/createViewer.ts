@@ -7,6 +7,7 @@ import { createCampusPoints } from './campusPoints';
 import { createFoliageMaterials } from './foliageMaterials';
 import { createHighlight } from './highlight';
 import { createLabels, type LabelKind } from './labels';
+import { createBalloonLayer } from './balloons';
 import { createLights } from './lighting';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
@@ -94,6 +95,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   };
   const pin = createPin(scene);
   const cones = createViewCones(scene);
+  const balloons = start.balloonRoot ? createBalloonLayer(start.balloonRoot, data.plane, {
+    onPick: (b) => cb.onBalloonPick?.(b),
+    onGroup: (points) => rig.focusPoints(points),
+  }) : null;
   const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta, model?.huaca);
   /** Cada clase de etiqueta se apaga con su capa; la de la huaca, solo con el botón de etiquetas. */
   const labelVisible = (kind: LabelKind) => {
@@ -188,6 +193,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       renderer.render(scene, rig.camera);
       const { w, h } = size();
       labels.update(rig.camera, w, h, labelVisible);
+      balloons?.update(rig.camera, w, h, distance);
       const off = rig.camera.position.clone().sub(rig.controls.target);
       cb.onCompass((Math.atan2(off.x, off.z) * 180) / Math.PI);
       needsRender = false;
@@ -307,6 +313,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       pin.show(p.x, WORLD_LIFT, -p.y);
       needsRender = true;
     },
+    setBalloons(list) {
+      balloons?.set(list);
+      needsRender = true;
+    },
     clearPin() {
       pin.hide();
       needsRender = true;
@@ -318,6 +328,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       unbind();
       rig.controls.dispose();
       labels.dispose();
+      balloons?.dispose();
       cones.dispose();
       stage.dispose();
     },

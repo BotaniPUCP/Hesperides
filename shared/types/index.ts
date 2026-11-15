@@ -13,3 +13,4 @@ export * from './reports';
 export * from './directory';
 export * from './planning';
 export * from './reservations';
+export * from './balloons';

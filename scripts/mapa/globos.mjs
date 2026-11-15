@@ -84,7 +84,6 @@ const mower = `
 const group = (color) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 68 70" width="68" height="70" role="img" aria-label="Grupo de globos">
   <title>Grupo de globos</title>${shell(color, '#fff')}
   <circle cx="32" cy="30" r="17" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="4 3"/>
-  <text x="32" y="37" font-family="Arial, sans-serif" font-size="20" font-weight="800" text-anchor="middle" fill="${INK}">5</text>
 </svg>
 `;
 
