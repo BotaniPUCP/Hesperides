@@ -191,7 +191,7 @@ describe('facadeColor: acabados y luz (SPEC-112 D-17 a D-19)', () => {
   it('el paño del vidrio lleva su reflejo y queda hundido; el perfil no (D-23)', () => {
     const s = sampler({ faces: { N: [{ material: 'vidrio', u: [0, 10], v: [0, 8] }] } });
     const shades = [0.3, 1, 1.7, 2.5, 3.3].map((v) => s.at('N', 1, v).shade);
-    expect(Math.max(...shades)).toBeGreaterThan(Math.min(...shades) * 1.1);
+    expect(Math.max(...shades)).toBeGreaterThan(Math.min(...shades) * 1.05);
     expect(s.at('N', 1, 2).height).toBeLessThan(0);
     expect(s.at('N', 2, 2).height).toBeCloseTo(0, 3);
     expect(s.at('N', 1, 2, FAR).shade).toBeCloseTo(1, 5);

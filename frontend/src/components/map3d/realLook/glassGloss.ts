@@ -16,10 +16,18 @@ export interface Gloss { shade: number; height: number }
 /** La coordenada diagonal del paño: constante a lo largo de una línea «/», de 0 (abajo a la izquierda) a 1. */
 const diagonal = (px: number, py: number) => (px - 0.5 * py + 0.5) / 1.5;
 
+/** Cuánto de una franja de reflejo cae en t, con su borde suave. */
+export function streakAt(t: number, aaT: number): number {
+  return Math.max(...GLASS_GLOSS.streaks.map(([a, b]) => box(t, a, b, aaT + GLASS_GLOSS.soft)));
+}
+
+/** La parte de t que cubren las franjas: el promedio del reflejo cuando t recorre todo su tramo. */
+export const STREAK_SHARE = GLASS_GLOSS.streaks.reduce((s, [a, b]) => s + b - a, 0);
+/** La franja más angosta: con píxeles de ese orden el reflejo se funde. */
+export const STREAK_MIN = Math.min(...GLASS_GLOSS.streaks.map(([a, b]) => b - a));
+
 function rawShade(px: number, py: number, aaT: number): number {
-  const t = diagonal(px, py);
-  const streak = Math.max(...GLASS_GLOSS.streaks.map(([a, b]) => box(t, a, b, aaT)));
-  return mix(GLASS_GLOSS.bottom, GLASS_GLOSS.top, py) * (1 + GLASS_GLOSS.streak * streak);
+  return mix(GLASS_GLOSS.bottom, GLASS_GLOSS.top, py) * (1 + GLASS_GLOSS.streak * streakAt(diagonal(px, py), aaT));
 }
 
 /** El promedio del brillo sobre un paño, de cerca: se divide por él para que el paño conserve su color. */
@@ -55,10 +63,17 @@ const [[a0, b0], [a1, b1]] = GLASS_GLOSS.streaks;
 
 /** La misma cuenta en GLSL; un rectángulo es un vec4 (x0, x1, y0, y1). Usa `lookBox` y `lookDetail`. */
 export const GLOSS_GLSL = /* glsl */ `
+#define LOOK_STREAK ${f(GLASS_GLOSS.streak)}
+#define LOOK_STREAK_SHARE ${f(STREAK_SHARE)}
+#define LOOK_STREAK_MIN ${f(STREAK_MIN)}
+#define LOOK_GLAZED_PERIOD ${f(GLASS_GLOSS.glazedPeriodM)}
+float lookStreak(float t, float aaT) {
+  float s = aaT + ${f(GLASS_GLOSS.soft)};
+  return max(lookBox(t, ${f(a0)}, ${f(b0)}, s), lookBox(t, ${f(a1)}, ${f(b1)}, s));
+}
 float lookGlossRaw(float px, float py, float aaT) {
   float t = (px - 0.5 * py + 0.5) / 1.5;
-  float streak = max(lookBox(t, ${f(a0)}, ${f(b0)}, aaT), lookBox(t, ${f(a1)}, ${f(b1)}, aaT));
-  return mix(${f(GLASS_GLOSS.bottom)}, ${f(GLASS_GLOSS.top)}, py) * (1.0 + ${f(GLASS_GLOSS.streak)} * streak);
+  return mix(${f(GLASS_GLOSS.bottom)}, ${f(GLASS_GLOSS.top)}, py) * (1.0 + LOOK_STREAK * lookStreak(t, aaT));
 }
 float lookInside(vec2 p, vec4 r) { return max(min(min(p.x - r.x, r.y - p.x), min(p.y - r.z, r.w - p.y)), 0.0); }
 float lookRectNear(vec4 r, vec2 aa) { return min(lookDetail(aa.x, r.y - r.x), lookDetail(aa.y, r.w - r.z)); }

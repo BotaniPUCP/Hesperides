@@ -1,4 +1,5 @@
-import { BRICK, CONCRETE, finishId, GRAIN_SEED, METAL, PLASTER } from './finishes';
+import { BRICK, CONCRETE, finishId, GLASS_GLOSS, GRAIN_SEED, METAL, PLASTER } from './finishes';
+import { STREAK_MIN, STREAK_SHARE, streakAt } from './glassGloss';
 import { box, cellHash, detail, glslMod, mix, smoothstep } from './lookMath';
 import type { PixelSize } from './facadeColor';
 
@@ -14,6 +15,16 @@ export interface Grain { shade: number; height: number }
 
 const NONE: Grain = { shade: 1, height: 0 };
 const BRICK_ID = finishId('brick'), CONCRETE_ID = finishId('concrete'), METAL_ID = finishId('metal'), PLASTER_ID = finishId('plaster');
+const GLAZED_ID = finishId('glazed');
+
+/** Una cinta acristalada lisa no tiene paños: su reflejo se repite en diagonal a lo largo del muro (D-23). */
+function glazedGloss(u: number, v: number, aa: PixelSize): Grain {
+  const period = GLASS_GLOSS.glazedPeriodM;
+  const t = glslMod((u - 0.5 * v) / period, 1);
+  const aaT = Math.max(aa[0], 0.5 * aa[1]) / period;
+  const raw = (1 + GLASS_GLOSS.streak * streakAt(t, aaT)) / (1 + GLASS_GLOSS.streak * STREAK_SHARE);
+  return { shade: mix(1, raw, detail(aaT, STREAK_MIN)), height: 0 };
+}
 
 interface Tiling { w: number; h: number; joint: number; vary: number; jointShade: number; relief: number }
 
@@ -69,5 +80,6 @@ export function finishGrain(finish: number, u: number, v: number, aa: PixelSize,
   if (finish === CONCRETE_ID) return tiled(CONCRETE_TILING, u, v, aa, seed, 0);
   if (finish === METAL_ID) return seams(u, aa);
   if (finish === PLASTER_ID) return mottle(u, v, aa, seed);
+  if (finish === GLAZED_ID) return glazedGloss(u, v, aa);
   return NONE;
 }

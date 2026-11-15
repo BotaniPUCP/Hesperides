@@ -8,14 +8,15 @@ const PANE: Rect = [0.04, 1.16, 1.1, 3.5];
 describe('paneGloss: reflejo del paño (SPEC-112 D-23)', () => {
   it('arriba más claro que abajo, fuera de las franjas', () => {
     const top = paneGloss(0.1, 3.45, PANE, SHARP).shade, bottom = paneGloss(1.1, 1.15, PANE, SHARP).shade;
-    expect(top).toBeGreaterThan(bottom * 1.15);
+    expect(top).toBeGreaterThan(bottom * 1.08);
   });
 
-  it('una franja de brillo en diagonal «/»: más clara que lo que la rodea a la misma altura', () => {
+  it('una franja de brillo sutil en diagonal «/»: algo más clara que lo que la rodea a la misma altura', () => {
     const shades: number[] = [];
     for (let x = 0.05; x < 1.15; x += 0.01) shades.push(paneGloss(x, 2.3, PANE, SHARP).shade);
     const max = Math.max(...shades), min = Math.min(...shades);
-    expect(max / min).toBeGreaterThan(1.3);
+    expect(max / min).toBeGreaterThan(1.2);
+    expect(max / min).toBeLessThan(1.5);
     const peakAt = (y: number) => {
       let best = 0, bx = 0;
       for (let x = 0.05; x < 1.15; x += 0.005) { const s = paneGloss(x, y, PANE, SHARP).shade; if (s > best) { best = s; bx = x; } }

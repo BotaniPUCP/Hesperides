@@ -369,13 +369,18 @@ Vale también para el modo rosado: CA-01 queda «idéntico salvo por sombras má
 
 **D-23 · Paños con brillo y relieve** *(pedido de Jean Piero el 15 nov, con una imagen de referencia)*.
 De cerca, cada módulo de vidrio se ve como en la referencia, con el color de su ficha:
-- **Reflejo:** cada paño claro lleva un degradado de más claro arriba (×1,15) a más oscuro abajo (×0,85)
-  y dos franjas de brillo en diagonal («/»), de 12 % y 6 % del paño, que lo aclaran a poco más del doble.
-  El brillo se compensa: el promedio de cada paño es su color de ficha. Un paño de acento no lleva reflejo.
+- **Reflejo sutil:** cada paño claro lleva un degradado de más claro arriba (×1,06) a más oscuro abajo
+  (×0,94) y dos franjas de brillo en diagonal («/»), de 12 % y 6 % del paño. Las franjas aclaran un 35 % y
+  tienen el borde suave. El brillo se compensa: el promedio de cada paño es su color de ficha. Un paño de
+  acento no lleva reflejo.
+- **Todas las ventanas, no solo el vidrio con módulos:** una cinta o un paño acristalado pintado liso
+  (acabado `glazed`) no tiene paños, así que lleva las mismas franjas repetidas en diagonal cada 1,6 m
+  a lo largo del muro, sin relieve. También se compensan y se funden de lejos.
 - **Relieve:** el paño queda 6 cm hundido respecto del perfil, con un bisel de 12 cm. El antepecho y el
   paño de acento quedan abombados 5 cm, como los paneles inflados del prototipo v39.
-- Los números salen del banco de pruebas del 15 nov: con la mitad del brillo y del relieve, el efecto no
-  se notaba frente a la referencia *(decisión de Claude)*.
+- Ajustado con el banco de pruebas del 15 nov sobre los 124 edificios con malla. La primera versión
+  (franjas que doblaban el brillo) se veía fuerte, y Jean Piero pidió un reflejo más sutil, como el de la
+  referencia.
 - Todo se funde de lejos, como los perfiles (D-08): de lejos el vidrio se ve igual que antes.
 
 **D-22 · Una sola copia probada** (sigue D-11). Cada cosa nueva tiene su copia en TypeScript, que es la

@@ -25,6 +25,7 @@ const look = {
     vidrio: { glass: '#5d646c', frame: '#e4e4df', moduleM: 1.2, heightM: 3.6, frameM: 0.08, spandrel: { color: '#cbd0cc', heightM: 1.4 }, accent: { color: '#24608b', share: 0.12 }, vary: 0.1 },
     cinta: { glass: '#2e3437', frame: '#3c4248', moduleM: 1.5, heightM: 3.5, frameM: 0.06 },
     chapa: { color: '#9aa0a6', finish: 'metal' },
+    ventanas: { color: '#2f3a42' },
   },
   zones: [{
     id: 'z', wall: 'ladrillo', roof: 'concreto',
@@ -35,6 +36,7 @@ const look = {
       W: [{ material: 'concreto', u: [-10, 10] }],
       NE: [{ material: 'chapa' }],
       NW: [{ material: 'melon' }],
+      SE: [{ material: 'ventanas', floors: { everyM: 3.5, bandM: [0.9, 2.5] } }],
     },
   }],
 };
@@ -52,6 +54,7 @@ const base = [
   { name: 'concreto de cerca', face: rows.sides.W, range: [-4, -1, 4, 7] },
   { name: 'metal de cerca', face: rows.sides.NE, range: [-2, 1, 2, 5] },
   { name: 'tarrajeo', face: rows.sides.NW, range: [-12, -1, 12, 23] },
+  { name: 'cinta acristalada lisa', face: rows.sides.SE, range: [-4, 0, 4, 8] },
 ];
 /** Qué se compara en cada pasada: el color, y luego cada canal de luz llevado a [0, 1]. */
 const CHANNELS = [

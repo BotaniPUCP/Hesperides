@@ -47,6 +47,14 @@ vec2 lookMottle(vec2 p, vec2 aa, float seed) {
   return vec2(1.0 + LOOK_PLASTER.y * (2.0 * n - 1.0) * d, 0.0);
 }
 
+// Una cinta acristalada lisa: su reflejo se repite en diagonal a lo largo del muro (D-23).
+vec2 lookGlazed(vec2 p, vec2 aa) {
+  float t = mod((p.x - 0.5 * p.y) / LOOK_GLAZED_PERIOD, 1.0);
+  float aaT = max(aa.x, 0.5 * aa.y) / LOOK_GLAZED_PERIOD;
+  float raw = (1.0 + LOOK_STREAK * lookStreak(t, aaT)) / (1.0 + LOOK_STREAK * LOOK_STREAK_SHARE);
+  return vec2(mix(1.0, raw, lookDetail(aaT, LOOK_STREAK_MIN)), 0.0);
+}
+
 // Un techo (semilla negativa) no lleva grano: sus coordenadas no son las de una fachada.
 vec2 lookGrain(float finish, vec2 p, vec2 aa, float seed) {
   if (seed < 0.0) return vec2(1.0, 0.0);
@@ -58,6 +66,7 @@ vec2 lookGrain(float finish, vec2 p, vec2 aa, float seed) {
   }
   if (finish == LOOK_FINISH_METAL) return lookSeams(p.x, aa);
   if (finish == LOOK_FINISH_PLASTER) return lookMottle(p, aa, seed);
+  if (finish == LOOK_FINISH_GLAZED) return lookGlazed(p, aa);
   return vec2(1.0, 0.0);
 }
 `;

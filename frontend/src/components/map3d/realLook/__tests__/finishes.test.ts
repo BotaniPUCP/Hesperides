@@ -103,8 +103,21 @@ describe('finishGrain: concreto, metal y tarrajeo', () => {
     expect(Math.abs(meanShade(plaster, 64, 64, 0.29) - 1)).toBeLessThan(0.01);
   });
 
-  it('liso y acristalado no llevan grano', () => {
-    [id('techo'), id('ventanas')].forEach((f) => expect(finishGrain(f, 1.234, 2.5, SHARP, SEED)).toEqual({ shade: 1, height: 0 }));
+  it('liso no lleva grano', () => {
+    expect(finishGrain(id('techo'), 1.234, 2.5, SHARP, SEED)).toEqual({ shade: 1, height: 0 });
+  });
+
+  it('acristalado: reflejo sutil en diagonal «/», sin relieve, promedio 1 y nada de lejos (D-23)', () => {
+    const glazed = id('ventanas');
+    const along = (v: number) => Array.from({ length: 160 }, (_, i) => finishGrain(glazed, i * 0.01, v, SHARP, SEED).shade);
+    const row = along(1);
+    expect(Math.max(...row) / Math.min(...row)).toBeGreaterThan(1.2);
+    expect(Math.max(...row) / Math.min(...row)).toBeLessThan(1.5);
+    const peak = (v: number) => { const r = along(v); return r.indexOf(Math.max(...r)); };
+    expect(peak(1.4)).toBeGreaterThan(peak(1));
+    expect(finishGrain(glazed, 0.4, 1, SHARP, SEED).height).toBe(0);
+    expect(Math.abs(meanShade(glazed, 6.4, 3.2, 0.0113) - 1)).toBeLessThan(0.01);
+    expect(finishGrain(glazed, 0.4, 1, FAR, SEED).shade).toBeCloseTo(1, 5);
   });
 
   it('un techo (semilla negativa) no lleva grano aunque su material sea ladrillo', () => {
