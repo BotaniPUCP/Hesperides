@@ -12,7 +12,9 @@ import auditorioHumanidades from './auditorio-humanidades.json';
 import auditorioJuanPabloIi from './auditorio-juan-pablo-ii.json';
 import aulaMovilPsicologia from './aula-movil-psicologia.json';
 import aulario from './aulario.json';
+import aulasMovilesA from './aulas-moviles-a.json';
 import aulasMovilesB from './aulas-moviles-b.json';
+import aulasMovilesC from './aulas-moviles-c.json';
 import bibliotecaCentral from './biblioteca-central.json';
 import c18 from './c18.json';
 import c21 from './c21.json';
@@ -22,6 +24,7 @@ import c31 from './c31.json';
 import c32 from './c32.json';
 import c45 from './c45.json';
 import ceprepuc from './ceprepuc.json';
+import cetam from './cetam.json';
 import cia from './cia.json';
 import cienciasSociales from './ciencias-sociales.json';
 import cigaPulso from './ciga-pulso.json';
@@ -60,10 +63,12 @@ import facultadDerecho from './facultad-derecho.json';
 import fisica from './fisica.json';
 import fotocopiadoLetras from './fotocopiado-letras.json';
 import fotocopiadoZ from './fotocopiado-z.json';
+import gastronomia from './gastronomia.json';
 import gelarti from './gelarti.json';
 import gestion from './gestion.json';
 import gimnasio from './gimnasio.json';
 import industrial from './industrial.json';
+import institutoCorrosion from './instituto-corrosion.json';
 import invernaderoInteligente from './invernadero-inteligente.json';
 import invernadero from './invernadero.json';
 import labHidraulica from './lab-hidraulica.json';
@@ -71,6 +76,7 @@ import labcert from './labcert.json';
 import letrasCh from './letras-ch.json';
 import maestranza from './maestranza.json';
 import maquinariaPesada from './maquinaria-pesada.json';
+import matematicas from './matematicas.json';
 import mcgregor from './mcgregor.json';
 import mecanica from './mecanica.json';
 import minas from './minas.json';
@@ -115,7 +121,9 @@ const files: unknown[] = [
   auditorioJuanPabloIi,
   aulaMovilPsicologia,
   aulario,
+  aulasMovilesA,
   aulasMovilesB,
+  aulasMovilesC,
   bibliotecaCentral,
   c18,
   c21,
@@ -125,6 +133,7 @@ const files: unknown[] = [
   c32,
   c45,
   ceprepuc,
+  cetam,
   cia,
   cienciasSociales,
   cigaPulso,
@@ -163,10 +172,12 @@ const files: unknown[] = [
   fisica,
   fotocopiadoLetras,
   fotocopiadoZ,
+  gastronomia,
   gelarti,
   gestion,
   gimnasio,
   industrial,
+  institutoCorrosion,
   invernaderoInteligente,
   invernadero,
   labHidraulica,
@@ -174,6 +185,7 @@ const files: unknown[] = [
   letrasCh,
   maestranza,
   maquinariaPesada,
+  matematicas,
   mcgregor,
   mecanica,
   minas,
