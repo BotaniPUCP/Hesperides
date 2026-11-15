@@ -41,8 +41,8 @@
               -2.6
             ],
             "v": [
-              4.6,
-              5.9
+              0.665,
+              1.965
             ]
           }
         ],
@@ -54,8 +54,8 @@
               15.5
             ],
             "v": [
-              4.6,
-              5.9
+              0.665,
+              1.965
             ]
           }
         ],
@@ -67,13 +67,13 @@
               3.4
             ],
             "v": [
-              3.8,
-              6.4
+              -0.135,
+              2.465
             ]
           }
         ]
       }
     }
   ],
-  "notes": "Muros beige con una cinta de ventanas de vidrio oscuro y marco claro a un metro del piso del patio de entrada (auditorio-juan-pablo-2.jpg, tomada desde la plaza del noreste): en el muro que mira al norte y en el que mira al este, con las puertas de vidrio en la esquina del ingreso. Las demás caras no tienen foto: muro beige, sin vidrio (SPEC-112 D-06)."
+  "notes": "Muros beige con una cinta de ventanas de vidrio oscuro y marco claro a un metro del piso del patio de entrada (auditorio-juan-pablo-2.jpg, tomada desde la plaza del noreste): en el muro que mira al norte y en el que mira al este, con las puertas de vidrio en la esquina del ingreso. Las demás caras no tienen foto: muro beige, sin vidrio (SPEC-112 D-06). Sus cotas están 3,935 m por debajo de las del modelo original, porque el auditorio baja esa altura (SPEC-108 D-16, 15 nov 2026)."
 }
