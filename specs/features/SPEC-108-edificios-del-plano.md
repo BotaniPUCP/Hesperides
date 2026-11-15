@@ -346,6 +346,16 @@ a los jardines (uno solo mide 4 163 m²), así que no se separan piezas como en 
 - El GLB, el manifiesto y la base no cambian.
 - *Origen:* pedido del usuario del 15 nov 2026: «no debe haber partes del piso cubriendo los céspedes».
 
+> **Rampas frente al CIA, 15 nov 2026 (V062):** el recorte le quitaba 110 m² a dos de las tres rampas que bajan al
+> desnivel de AV-0409 (−5 m), porque los polígonos de la base se montaban sobre ellas. La vista superior del modelo
+> muestra el césped como es en realidad: Jean Piero confirmó que las rampas no pisan el jardín. V062 corrige los
+> polígonos, no el recorte:
+> - **AV-0409:** pasa a ser la planta del jardín hundido del modelo, sin las rampas. Mide 519,1 m² (antes 584,87).
+> - **AV-0408:** pierde la esquina de ese jardín y la franja sobre la rampa del lado del CIA. Mide 461,9 m² (antes
+>   516).
+> - **Sector SEC-VERDE-02:** se recalcula como en V011.
+> - **Resultado:** las rampas quedan enteras y el resaltado de AV-0409 al hacer clic coincide con su jardín.
+
 ## 3. Contratos de API
 
 | Endpoint | Autorización | Qué resuelve |
