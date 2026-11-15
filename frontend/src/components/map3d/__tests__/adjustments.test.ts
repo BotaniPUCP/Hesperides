@@ -73,10 +73,10 @@ describe('el manifiesto del repositorio', () => {
     expect(Object.values(manifestOfRepo.adjustments ?? {}).every((a) => a.why.length > 0)).toBe(true);
   });
 
-  it('baja el Auditorio Juan Pablo II 3,935 m, sin moverlo en planta: su escalera llega al fondo de la zanja del jardín hundido', () => {
+  it('baja el Auditorio Juan Pablo II 5 m, sin moverlo en planta: su techo queda bajo el césped del jardín hundido (AV-0166 y AV-0170)', () => {
     const key = '0587a436-a6b7-4214-8d74-9b4883986521';
 
-    expect(liftsOf(manifestOfRepo).get(key)).toBe(-3.935);
+    expect(liftsOf(manifestOfRepo).get(key)).toBe(-5);
     expect(adjustmentsOf(manifestOfRepo).get(key)).toEqual([1, 0, 0, 1, 0, 0]);
   });
 

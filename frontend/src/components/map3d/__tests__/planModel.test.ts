@@ -228,7 +228,7 @@ describe('parsePlanModel', () => {
     expect(Array.from(model.buildings.get('k2')!.slice(0, 3))).toEqual([1, 4, -2]);
   });
 
-  it('un ajuste con altura sube o baja la malla entera de ese edificio (el Auditorio Juan Pablo II baja 3,935 m)', async () => {
+  it('un ajuste con altura sube o baja la malla entera de ese edificio (el Auditorio Juan Pablo II baja 5 m)', async () => {
     const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' },
       adjustments: { k1: { matrix: [1, 0, 0, 1, 0, 0], liftM: -3, why: 'prueba' } } });
     const file = glb([{ name: 'k1', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }, { name: 'k2', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }]);
