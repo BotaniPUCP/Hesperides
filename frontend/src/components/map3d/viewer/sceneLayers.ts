@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { categoryOf, colorOf, MODES, type ModeId } from '../modes';
-import type { SceneData } from '../sceneData';
+import type { Polygon, SceneData } from '../sceneData';
 import type { PolyLayerId } from '../target';
 import { ringLines } from './geometry';
 import type { ScenePalette } from './palette';
 import { facetedGeometry, mergedBuildings, type PlanModel, type PlanNode, type PlanNodeKind } from './planModel';
+import { lawnOverFloor, lawnsOverSunken } from './lawnOverFloor';
 import { createPolyLayer, surfaceMaterial, WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { openOverSunken, type Stage } from './stage';
 import type { SceneTextures } from './textures';
@@ -120,6 +121,16 @@ export interface PlanNodes {
   applyTheme: (palette: ScenePalette) => void;
 }
 
+function addLawnOverFloor(scene: THREE.Scene, model: PlanModel, lawns: Polygon[][], material: THREE.Material) {
+  const floor = model.nodes.suelo;
+  const near = lawnsOverSunken(lawns, model.sunken.map((s) => s.g));
+  if (!floor || !near.length) return;
+  const mesh = new THREE.Mesh(facetedGeometry(lawnOverFloor(floor.positions, near, model.offset)), material);
+  mesh.position.set(model.offset.x, WORLD_LIFT, model.offset.z);
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+}
+
 /** Un material de superficie con un solo color en vez de colores por vértice, por las dos caras como las mallas del SKP. */
 function solid(surface: 'building' | 'green', textures: SceneTextures, color: string): THREE.MeshPhysicalMaterial {
   const material = surfaceMaterial(surface, textures) as THREE.MeshPhysicalMaterial;
@@ -141,10 +152,11 @@ function earth(map: THREE.Texture, normalMap: THREE.Texture): THREE.MeshStandard
 /**
  * El suelo, los desniveles, la huaca y la decoración del modelo (D-08 a D-10).
  * Se ubican en el anclaje del modelo y nadie los cliquea. El jardín hundido no
- * proyecta sombra, como en la página aprobada.
+ * proyecta sombra, como en la página aprobada. Los céspedes de la base que caen en un desnivel se dibujan sobre su
+ * piso, con el material del jardín: ninguna parte del piso los cubre.
  */
 export function createPlanNodes(scene: THREE.Scene, model: PlanModel, textures: SceneTextures, ground: Stage['modelGround'],
-  palette: ScenePalette): PlanNodes {
+  palette: ScenePalette, lawns: Polygon[][] = []): PlanNodes {
   const decoration = solid('building', textures, palette.building);
   const materials: Record<PlanNodeKind, THREE.Material> = {
     suelo: ground.top,
@@ -163,5 +175,6 @@ export function createPlanNodes(scene: THREE.Scene, model: PlanModel, textures: 
     scene.add(mesh);
     if (kind === 'decoracion') decorationMesh = mesh;
   }
+  addLawnOverFloor(scene, model, lawns, materials.jardin);
   return { decoration: decorationMesh, applyTheme: (p) => decoration.color.set(p.building) };
 }

@@ -48,7 +48,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
   const poly = createSceneLayers(scene, data, textures, state, model);
-  const planNodes = model ? createPlanNodes(scene, model, textures, stage.modelGround, state.palette) : null;
+  const planNodes = model ? createPlanNodes(scene, model, textures, stage.modelGround, state.palette, data.greenAreas.map((z) => z.g)) : null;
   if (planNodes?.decoration) poly.campusBuildings.extra.push(planNodes.decoration);
   // El mapa general no marca ninguna sección por defecto. Solo M7 llama a
   // setMarkedSections; así puede hacer selección múltiple sin alterar /mapa.
