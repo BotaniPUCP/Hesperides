@@ -1,6 +1,6 @@
 import { FaceCopyError, faceRegions } from './faceRegions';
 import { MAX_REGIONS } from './lookLayout';
-import { SIDES, type BuildingLook, type GlassMaterial, type Material, type Region, type Side, type Zone } from './types';
+import { FINISHES, SIDES, type BuildingLook, type GlassMaterial, type Material, type Region, type Side, type Zone } from './types';
 
 /** Una ficha mal escrita: se detiene la carga con un mensaje que dice cuál y por qué. */
 export class LookError extends Error {
@@ -45,7 +45,12 @@ function checkGlass(key: string, where: string, m: GlassMaterial) {
 function checkMaterial(key: string, name: string, m: Material) {
   const where = `material ${name}`;
   if (isGlass(m)) checkGlass(key, where, m);
-  else checkColor(key, where, m.color);
+  else {
+    checkColor(key, where, m.color);
+    if (m.finish !== undefined && !(FINISHES as readonly string[]).includes(m.finish)) {
+      throw new LookError(key, `${where}: el acabado «${m.finish}» no es ninguno de ${FINISHES.join(', ')}`);
+    }
+  }
 }
 
 function checkSpan(key: string, where: string, axis: 'u' | 'v', range: [number, number] | undefined) {

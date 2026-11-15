@@ -75,6 +75,14 @@ describe('validateLooks: materiales', () => {
   });
 });
 
+describe('validateLooks: acabados (SPEC-112 D-17)', () => {
+  it('acepta un acabado de la lista y falla con uno que no está, diciendo cuál', () => {
+    const with_ = (finish: string) => look({ materials: { ...look().materials, ladrillo: { color: '#c47a65', finish: finish as never } } });
+    expect(check([with_('concrete')])).not.toThrow();
+    expect(check([with_('marmol')])).toThrow(/material ladrillo.*acabado «marmol»/);
+  });
+});
+
 describe('validateLooks: regiones', () => {
   it('falla si una región cita un material inexistente, y dice la zona y la cara', () => {
     expect(check([withZone({ faces: { W: [{ material: 'piedra' }] } })])).toThrow(/zona base, cara W.*piedra/);

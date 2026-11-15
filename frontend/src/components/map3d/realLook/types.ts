@@ -12,9 +12,15 @@
 export const SIDES = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] as const;
 export type Side = (typeof SIDES)[number];
 
+/** Acabados de un material liso: el grano y el relieve que toma la luz (SPEC-112 D-17). */
+export const FINISHES = ['smooth', 'plaster', 'brick', 'concrete', 'metal', 'glazed'] as const;
+export type Finish = (typeof FINISHES)[number];
+
 /** Un color plano: ladrillo, concreto, pintura, enchape, una franja. */
 export interface SolidMaterial {
   color: string;
+  /** Sin él, el acabado sale del nombre del material. */
+  finish?: Finish;
 }
 
 /** Un antepecho opaco al pie de cada módulo de vidrio. */

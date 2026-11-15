@@ -153,3 +153,92 @@ describe('facadeColor: acentos', () => {
     expect(n.filter((blue, i) => blue === s[i]).length).toBeLessThan(9000);
   });
 });
+
+describe('facadeColor: acabados y luz (SPEC-112 D-17 a D-19)', () => {
+  const extra: Record<string, Material> = { ladrillo: { color: '#c47a65' }, chapa: { color: '#9aa0a6', finish: 'metal' } };
+
+  it('el color de la ficha no cambia con el acabado', () => {
+    const s = sampler({ wall: 'ladrillo' }, extra);
+    expectRgb(s.at('N', 0.1, 0.075).rgb, [0xc4 / 255, 0x7a / 255, 0x65 / 255]);
+  });
+
+  it('un muro de ladrillo lleva su grano, su relieve y su rugosidad', () => {
+    const s = sampler({ wall: 'ladrillo' }, extra);
+    const joint = s.at('N', 0.1, 0.075), face = s.at('N', 0.1, 0.0375);
+    expect(joint.shade).toBeLessThan(face.shade);
+    expect(joint.height).toBeLessThan(0);
+    expect(face.rough).toBeCloseTo(0.92, 5);
+    expect(face.metal).toBe(0);
+  });
+
+  it('el finish de la ficha manda: una chapa lleva metal', () => {
+    const s = sampler({ faces: { N: [{ material: 'chapa', u: [0, 10] }] } }, extra);
+    expect(s.at('N', 3, 2).rough).toBeCloseTo(0.45, 5);
+    expect(s.at('N', 3, 2).metal).toBeCloseTo(0.3, 5);
+  });
+
+  it('el techo no lleva grano aunque sea de ladrillo', () => {
+    const roof = sampler({ roof: 'ladrillo' }, extra).roof(0.1, 0.075);
+    expect(roof.shade).toBe(1);
+    expect(roof.height).toBe(0);
+  });
+
+  it('el borde entre dos materiales mezcla su rugosidad', () => {
+    const s = sampler({ wall: 'ladrillo', faces: { N: [{ material: 'chapa', u: [0, 10] }] } }, extra);
+    expect(s.at('N', 0, 2, [0.1, 0.1]).rough).toBeCloseTo((0.92 + 0.45) / 2, 2);
+  });
+
+  it('el paño del vidrio es liso y algo metálico; el perfil, menos', () => {
+    const s = sampler({ faces: { N: [{ material: 'vidrio', u: [0, 10], v: [0, 8] }] } });
+    expect(s.at('N', 1, 2).rough).toBeCloseTo(0.18, 2);
+    expect(s.at('N', 1, 2).metal).toBeCloseTo(0.1, 2);
+    expect(s.at('N', 2, 2).rough).toBeCloseTo(0.6, 2);
+  });
+});
+
+describe('facadeColor: ventanas encendidas de noche (SPEC-112 D-19)', () => {
+  const glass = { glass: '#000000', frame: '#ffffff', moduleM: 1, heightM: 2, frameM: 0.05 };
+  const litCells = (t: ReturnType<typeof sampler>) => {
+    const on: boolean[] = [];
+    for (let i = 0; i < 100; i++) for (let j = 0; j < 100; j++) on.push(t.at('N', i + 0.5, j * 2 + 1).lit > 0.5);
+    return on;
+  };
+  const t = sampler({ wall: 'muro', faces: { N: [{ material: 'muro' }] } }, { muro: glass });
+
+  it('se encienden tres de cada diez paños (±5 % en 10 000)', () => {
+    const share = litCells(t).filter(Boolean).length / 10000;
+    expect(share).toBeGreaterThan(0.3 * 0.95);
+    expect(share).toBeLessThan(0.3 * 1.05);
+  });
+
+  it('siempre los mismos', () => {
+    expect(litCells(sampler({ wall: 'muro', faces: { N: [{ material: 'muro' }] } }, { muro: glass }))).toEqual(litCells(t));
+  });
+
+  it('un perfil no se enciende, ni un paño que pinta un acento', () => {
+    expect(t.at('N', 1, 1).lit).toBeCloseTo(0, 3);
+    const accented = sampler({ wall: 'muro' }, { muro: { ...glass, accent: { color: '#0000ff', share: 0.5 } } });
+    for (let i = 0; i < 200; i++) {
+      const p = accented.at('N', i + 0.5, 1);
+      if (p.rgb[2] > 0.5) expect(p.lit).toBe(0);
+    }
+  });
+
+  it('cada paño encendido tiene su nivel, de 0,6 a 1, para que no se lean como calcomanías', () => {
+    const levels = new Set<number>();
+    for (let i = 0; i < 100; i++) {
+      const p = t.at('N', i + 0.5, 1);
+      if (p.lit > 0) { expect(p.lit).toBeGreaterThanOrEqual(0.6 * p.glass - 1e-9); levels.add(Math.round(p.lit * 100)); }
+    }
+    expect(levels.size).toBeGreaterThan(5);
+  });
+
+  it('de lejos, el promedio: tres décimos de lo que es paño, a nivel medio', () => {
+    const far = t.at('N', 3, 3, FAR);
+    expect(far.lit).toBeCloseTo(0.3 * 0.8 * far.glass, 3);
+  });
+
+  it('un muro liso no se enciende', () => {
+    expect(sampler({}).at('N', 1, 1).lit).toBe(0);
+  });
+});

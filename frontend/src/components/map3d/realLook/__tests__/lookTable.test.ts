@@ -44,4 +44,18 @@ describe('buildLookTable', () => {
     const table = buildLookTable([look([zone({ N: [{ material: 'vidrio' }] }, { common: [{ material: 'gris', floors: { everyM: 3.9, bandM: [0, 0.4] } }] })])]);
     expect(table.data.every(Number.isFinite)).toBe(true);
   });
+
+  it('un material del mismo color pero de otro acabado se guarda aparte (D-17)', () => {
+    const twins = look([zone({ N: [{ material: 'otroBlanco', v: [0, 1] }] })]);
+    const shared = buildLookTable([twins]);
+    const apart = buildLookTable([{ ...twins, materials: { ...twins.materials, blanco: { color: '#ffffff', finish: 'brick' } } }]);
+    expect(apart.texels).toBe(shared.texels + 5);
+  });
+
+  it('la cara de techo lleva semilla negativa: el shader no le pone grano', () => {
+    const table = buildLookTable([look([zone({ N: [vidrio] })])]);
+    const rows = table.zones.get('k1')![0];
+    expect(table.data[rows.roof * 4 + 3]).toBeLessThan(0);
+    expect(table.data[rows.sides.N * 4 + 3]).toBeGreaterThanOrEqual(0);
+  });
 });

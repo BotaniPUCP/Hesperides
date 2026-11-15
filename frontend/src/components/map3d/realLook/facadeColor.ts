@@ -1,49 +1,37 @@
-import { DETAIL_FADE, MIN_COVERAGE, NO_BOUND_M, OPAQUE, PCG_ADD, PCG_MUL, REGION_TEXELS, SEED_MIX } from './lookLayout';
+import { GLASS_LIGHT, GLASS_NIGHT, LIT_MEAN } from './finishes';
+import { finishGrain } from './finishGrain';
+import { MIN_COVERAGE, NO_BOUND_M, OPAQUE, REGION_TEXELS } from './lookLayout';
+import { box, cellHash, clamp01, detail, glslMod, mix, smoothstep } from './lookMath';
 import type { LookTable } from './lookTable';
 
+export { cellHash } from './lookMath';
+
 /**
- * El color de un punto de una fachada, leído de la tabla igual que lo lee el
- * shader (`lookShader.ts` hace la misma cuenta en GLSL). Lo usan las pruebas y
- * la hoja de revisión. Es el color que se ve en pantalla en una cara al sol:
- * la vuelta a albedo (`lookToAlbedo`) queda en el shader.
+ * Un punto de una fachada, leído de la tabla igual que lo lee el shader
+ * (`lookShader.ts` hace la misma cuenta en GLSL). Lo usan las pruebas y la hoja
+ * de revisión. `rgb` es el color que se ve en pantalla en una cara al sol: la
+ * vuelta a albedo (`lookToAlbedo`) queda en el shader. Lo demás es cómo toma
+ * la luz (SPEC-112 D-17 a D-19).
  */
 
 export type Rgb = [number, number, number];
 export interface FacadeSample {
   rgb: Rgb;
-  /** Cuánto del punto es vidrio (el shader le da un poco de reflejo). */
+  /** Cuánto del punto es paño de vidrio. */
   glass: number;
+  /** El grano del acabado sobre el color: promedio 1 (D-17). */
+  shade: number;
+  /** Altura del relieve en metros, para el bump. */
+  height: number;
+  rough: number;
+  metal: number;
+  /** Cuánto del punto es un paño que se enciende de noche (D-19). */
+  lit: number;
 }
 /** Tamaño de un píxel sobre la fachada, en metros a lo largo del muro y en altura. */
 export type PixelSize = readonly [number, number];
 
-const clamp01 = (x: number) => Math.min(Math.max(x, 0), 1);
-const smoothstep = (a: number, b: number, x: number) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
-const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)];
-const glslMod = (x: number, y: number) => x - y * Math.floor(x / y);
-/** 1 dentro de [a, b], con bordes suavizados en `aa`: aproxima cuánto del píxel cae dentro. */
-const box = (x: number, a: number, b: number, aa: number) => clamp01(smoothstep(a - aa, a + aa, x) - smoothstep(b - aa, b + aa, x));
-/** 1 cerca; 0 cuando el píxel ya es una buena parte del período y conviene el promedio. */
-const detail = (pixel: number, period: number) => 1 - smoothstep(DETAIL_FADE[0], DETAIL_FADE[1], pixel / period);
-
-const TWO_32 = 4294967296;
-
-/** pcg2d del módulo (cx, cy) con la semilla de la cara: [elige acento, tono], cada uno en [0, 1). */
-export function cellHash(cx: number, cy: number, seed: number): [number, number] {
-  let x = ((cx | 0) ^ Math.imul(seed, SEED_MIX[0])) >>> 0;
-  let y = ((cy | 0) ^ Math.imul(seed, SEED_MIX[1])) >>> 0;
-  x = (Math.imul(x, PCG_MUL) + PCG_ADD) >>> 0;
-  y = (Math.imul(y, PCG_MUL) + PCG_ADD) >>> 0;
-  for (let pass = 0; pass < 2; pass++) {
-    x = (x + Math.imul(y, PCG_MUL)) >>> 0;
-    y = (y + Math.imul(x, PCG_MUL)) >>> 0;
-    x = (x ^ (x >>> 16)) >>> 0;
-    y = (y ^ (y >>> 16)) >>> 0;
-  }
-  return [x / TWO_32, y / TWO_32];
-}
-
 const texel = (t: LookTable, i: number) => Array.from(t.data.subarray(i * 4, i * 4 + 4));
 const rgbOf = (t: number[]): Rgb => [t[0], t[1], t[2]];
 
@@ -54,40 +42,64 @@ function readGlass(table: LookTable, m: number): Glass {
   return { glass: rgbOf(t0), frame: rgbOf(t1), frameM: t1[3], panel: rgbOf(t2), panelM: t2[3], accent: rgbOf(t3), share: t3[3], module: t4[0], height: t4[1], vary: t4[2] };
 }
 
-/** El módulo de cerca: paño (con su tono), antepecho o acento, y perfiles. */
+/** Paño y perfil: rugosidad y metal según cuánto del punto es paño. */
+function glassSample(rgb: Rgb, glass: number, lit: number): FacadeSample {
+  const { pane, frame } = GLASS_LIGHT;
+  return { rgb, glass, shade: 1, height: 0, rough: mix(frame.rough, pane.rough, glass), metal: mix(frame.metal, pane.metal, glass), lit };
+}
+
+/** El módulo de cerca: paño (con su tono), antepecho o acento, y perfiles. Un paño de acento no se enciende. */
 function glassNear(g: Glass, x: number, y: number, aa: PixelSize, seed: number): FacadeSample {
   const cx = Math.floor(x / g.module), cy = Math.floor(y / g.height);
   const fx = x - cx * g.module, fy = y - cy * g.height;
   const [accentHash, toneHash] = cellHash(cx, cy, seed);
   const accentOn = g.share > 0 && accentHash < g.share;
   const tone = 1 + g.vary * (2 * toneHash - 1);
-  const pane: Rgb = accentOn && !g.panelM ? g.accent : [g.glass[0] * tone, g.glass[1] * tone, g.glass[2] * tone];
+  const accentPane = accentOn && !g.panelM;
+  const pane: Rgb = accentPane ? g.accent : [g.glass[0] * tone, g.glass[1] * tone, g.glass[2] * tone];
   const panel = accentOn ? g.accent : g.panel;
   const half = g.frameM / 2;
   const inPanel = g.panelM > 0 ? 1 - smoothstep(g.panelM - aa[1], g.panelM + aa[1], fy) : 0;
   const line = g.panelM > 0 ? box(fy, g.panelM - half, g.panelM + half, aa[1]) : 0;
   const frame = Math.max(1 - box(fx, half, g.module - half, aa[0]), 1 - box(fy, half, g.height - half, aa[1]), line);
-  return { rgb: mixRgb(mixRgb(pane, panel, inPanel), g.frame, frame), glass: (1 - frame) * (1 - inPanel) };
+  const glass = (1 - frame) * (1 - inPanel);
+  const [litHash, litLevel] = cellHash(cx, cy, seed + GLASS_NIGHT.seed);
+  const litOn = !accentPane && litHash < GLASS_NIGHT.share;
+  const lit = litOn ? glass * mix(GLASS_NIGHT.dim, 1, litLevel) : 0;
+  return glassSample(mixRgb(mixRgb(pane, panel, inPanel), g.frame, frame), glass, lit);
 }
 
-/** El módulo de lejos: el promedio de paños, antepechos, acentos y perfiles. */
+/** El módulo de lejos: el promedio de paños, antepechos, acentos, perfiles y paños encendidos. */
 function glassFar(g: Glass): FacadeSample {
   const panelFrac = g.panelM / g.height;
   const pane = g.panelM > 0 ? g.glass : mixRgb(g.glass, g.accent, g.share);
   const panel = mixRgb(g.panel, g.accent, g.share);
   const frameFrac = clamp01(g.frameM / g.module + (g.frameM / g.height) * (g.panelM > 0 ? 2 : 1));
-  return { rgb: mixRgb(mixRgb(pane, panel, panelFrac), g.frame, frameFrac), glass: (1 - frameFrac) * (1 - panelFrac) };
+  const glass = (1 - frameFrac) * (1 - panelFrac);
+  const lit = glass * GLASS_NIGHT.share * LIT_MEAN * (g.panelM > 0 ? 1 : 1 - g.share);
+  return glassSample(mixRgb(mixRgb(pane, panel, panelFrac), g.frame, frameFrac), glass, lit);
 }
 
-function materialColor(table: LookTable, m: number, x: number, y: number, aa: PixelSize, seed: number): FacadeSample {
+function blend(a: FacadeSample, b: FacadeSample, t: number): FacadeSample {
+  return {
+    rgb: mixRgb(a.rgb, b.rgb, t), glass: mix(a.glass, b.glass, t), shade: mix(a.shade, b.shade, t), height: mix(a.height, b.height, t),
+    rough: mix(a.rough, b.rough, t), metal: mix(a.metal, b.metal, t), lit: mix(a.lit, b.lit, t),
+  };
+}
+
+/** Un liso: su color, su grano y la luz de su acabado (segundo texel). */
+function solidSample(t0: number[], t1: number[], x: number, y: number, aa: PixelSize, seed: number): FacadeSample {
+  const grain = finishGrain(t1[0], x, y, aa, seed);
+  return { rgb: rgbOf(t0), glass: 0, shade: grain.shade, height: grain.height, rough: t1[1], metal: t1[2], lit: 0 };
+}
+
+function materialSample(table: LookTable, m: number, x: number, y: number, aa: PixelSize, seed: number): FacadeSample {
   const t0 = texel(table, m);
-  if (t0[3] < 0.5) return { rgb: rgbOf(t0), glass: 0 };
+  if (t0[3] < 0.5) return solidSample(t0, texel(table, m + 1), x, y, aa, seed);
   const g = readGlass(table, m);
   const d = Math.min(detail(aa[0], g.module), detail(aa[1], g.height));
   const far = glassFar(g);
-  if (d <= 0) return far;
-  const near = glassNear(g, x, y, aa, seed);
-  return { rgb: mixRgb(far.rgb, near.rgb, d), glass: mix(far.glass, near.glass, d) };
+  return d <= 0 ? far : blend(far, glassNear(g, x, y, aa, seed), d);
 }
 
 /** Cuánto del píxel cae en la franja del piso; lejos, la proporción del piso que ocupa. */
@@ -112,25 +124,35 @@ function origin(table: LookTable, r: number): [number, number] {
   return [finite(u0) ? u0 : 0, every > 0 ? center - half : finite(v0) ? v0 : 0];
 }
 
-interface Accumulator { rgb: Rgb; glass: number; alpha: number }
+const KEYS = ['glass', 'shade', 'height', 'rough', 'metal', 'lit'] as const;
 
-function addLayer(acc: Accumulator, s: FacadeSample, weight: number) {
+/** Lo que se acumula de una capa a otra: cada campo pesado por su cobertura. */
+function addLayer(acc: FacadeSample & { alpha: number }, s: FacadeSample, weight: number) {
   acc.rgb = [acc.rgb[0] + s.rgb[0] * weight, acc.rgb[1] + s.rgb[1] * weight, acc.rgb[2] + s.rgb[2] * weight];
-  acc.glass += s.glass * weight;
+  KEYS.forEach((k) => { acc[k] += s[k] * weight; });
   acc.alpha += weight;
 }
 
-/** De la última región a la primera, cada una tapa lo que está debajo; lo que queda a la vista es el muro. */
+/**
+ * De la última región a la primera, cada una tapa lo que está debajo; lo que queda a la vista es el muro. El
+ * grano se mide desde el origen de la cara, como el del muro, para que no salte en el borde de una región.
+ */
 export function facadeColor(table: LookTable, face: number, u: number, v: number, aa: PixelSize): FacadeSample {
   const [wall, start, count, seed] = texel(table, face);
-  const acc: Accumulator = { rgb: [0, 0, 0], glass: 0, alpha: 0 };
+  const acc = { rgb: [0, 0, 0] as Rgb, glass: 0, shade: 0, height: 0, rough: 0, metal: 0, lit: 0, alpha: 0 };
   for (let k = count - 1; k >= 0 && acc.alpha <= OPAQUE; k--) {
     const r = start + k * REGION_TEXELS;
     const c = coverage(table, r, u, v, aa);
     if (c <= MIN_COVERAGE) continue;
     const [ox, oy] = origin(table, r);
-    addLayer(acc, materialColor(table, texel(table, r + 1)[0], u - ox, v - oy, aa, seed), (1 - acc.alpha) * c);
+    const m = texel(table, r + 1)[0];
+    const s = texel(table, m)[3] < 0.5 ? materialSample(table, m, u, v, aa, seed) : materialSample(table, m, u - ox, v - oy, aa, seed);
+    addLayer(acc, s, (1 - acc.alpha) * c);
   }
-  if (acc.alpha <= OPAQUE) addLayer(acc, materialColor(table, wall, u, v, aa, seed), 1 - acc.alpha);
-  return { rgb: [acc.rgb[0] / acc.alpha, acc.rgb[1] / acc.alpha, acc.rgb[2] / acc.alpha], glass: acc.glass / acc.alpha };
+  if (acc.alpha <= OPAQUE) addLayer(acc, materialSample(table, wall, u, v, aa, seed), 1 - acc.alpha);
+  const a = acc.alpha;
+  return {
+    rgb: [acc.rgb[0] / a, acc.rgb[1] / a, acc.rgb[2] / a], glass: acc.glass / a, shade: acc.shade / a, height: acc.height / a,
+    rough: acc.rough / a, metal: acc.metal / a, lit: acc.lit / a,
+  };
 }

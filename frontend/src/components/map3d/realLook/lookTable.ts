@@ -1,4 +1,5 @@
 import { faceRegions } from './faceRegions';
+import { FINISH_LIGHT, finishId, finishOf } from './finishes';
 import { DEFAULT_FRAME_M, KIND_GLASS, KIND_SOLID, NO_BOUND_M, TABLE_WIDTH } from './lookLayout';
 import { SIDES, type BuildingLook, type Material, type Region, type Side, type ZoneSelector } from './types';
 import { isGlass } from './validateLook';
@@ -34,8 +35,16 @@ export function hexToRgb(hex: string): [number, number, number] {
 
 const NONE = [0, 0, 0];
 
-function materialRecord(m: Material): number[] {
-  if (!isGlass(m)) return [...hexToRgb(m.color), KIND_SOLID, ...new Array(16).fill(0)];
+/** Semilla de la cara de techo: negativa, para que el shader no le ponga grano (SPEC-112 D-17). */
+export const ROOF_SEED = -1;
+
+/** Un liso guarda en su segundo texel su acabado, su rugosidad y su metal (D-17 y D-18). */
+function materialRecord(name: string, m: Material): number[] {
+  if (!isGlass(m)) {
+    const finish = finishOf(name, m);
+    const { rough, metal } = FINISH_LIGHT[finish];
+    return [...hexToRgb(m.color), KIND_SOLID, finishId(finish), rough, metal, 0, ...new Array(12).fill(0)];
+  }
   return [
     ...hexToRgb(m.glass), KIND_GLASS,
     ...hexToRgb(m.frame), m.frameM ?? DEFAULT_FRAME_M,
@@ -76,14 +85,14 @@ function texelStore() {
 }
 
 function lookZones(look: BuildingLook, add: ReturnType<typeof texelStore>['add']): ZoneRows[] {
-  const material = (name: string) => add('m', materialRecord(look.materials[name]));
+  const material = (name: string) => add('m', materialRecord(name, look.materials[name]));
   const face = (regions: Region[], wall: string, seed: number) => {
     const list = regions.flatMap((r) => regionRecord(r, material(r.material)));
     return add('f', [material(wall), list.length ? add('r', list) : 0, regions.length, seed]);
   };
   return look.zones.map((zone) => ({
     where: zone.where,
-    roof: face([], zone.roof, 0),
+    roof: face([], zone.roof, ROOF_SEED),
     sides: Object.fromEntries(SIDES.map((side) => [side, face(faceRegions(zone, side), zone.wall, faceSeed(look.planKey, zone.id, side))])) as Record<Side, number>,
   }));
 }
