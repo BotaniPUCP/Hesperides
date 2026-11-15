@@ -269,6 +269,12 @@ rompecabezas, sin pisarlo (V054):
 > **Tercera tanda, 15 nov 2026 (V058):** la Sub-estación N-7 y el Desconocido_03, prismas de OpenStreetMap, bajan
 > a la mitad de su alto, de 8 a 4 m. La huella no cambia.
 
+> **Cuarta tanda, 15 nov 2026 (V059):** el Auditorio Juan Pablo II flotaba: su cuerpo arrancaba a 3,55 m y su
+> escalera en L, a 2,35 m, sobre la zanja del jardín hundido. Jean Piero pidió bajarlo para que el césped quede por
+> encima. Baja 3,935 m sin moverse en planta, con `liftM` en su ajuste (§3). Así la escalera llega al fondo de la
+> zanja (−1,589 m) y su losa de 3,545 m queda en la terraza de césped a −0,39 m. V059 baja su base y su alto lo
+> mismo, y su ficha de colores reales baja sus cotas.
+
 **D-17 · Una escalera que el SKP dibuja como bloque se reemplaza en el visor.** En la esquina noreste del Comedor
 Central, el SKP trae un bloque macizo en «U» de 4,35 m de alto y 25,5 m² que llega al suelo y tapa 23 m² de pasto.
 Jean Piero aclaró que es una escalera en diagonal que no se apoya en el suelo, y que el pasto de abajo debe verse.
@@ -370,7 +376,8 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 - `adjustments` (opcional, D-16) trae por `plan_key` una matriz afín `[a, b, c, d, e, f]` en metros alrededor del
   anclaje (x este, y norte): x' = a·x + b·y + e, y' = c·x + d·y + f. Lleva también el porqué (`why`). El visor la
   aplica a la malla de ese edificio. Si la clave no es de una malla de edificio, o la matriz voltea o aplasta la
-  malla, la lectura del modelo falla.
+  malla, la lectura del modelo falla. Un `liftM` opcional sube la malla entera esos metros (negativo, la baja); si
+  no es un número finito, la lectura falla. Un ajuste solo en altura lleva la matriz identidad.
 - `stairs` (opcional, D-17) trae por `plan_key` una escalera que reemplaza parte de la malla. Todo va en metros
   alrededor del anclaje, en el marco de la malla ya ajustada:
   - `replaces`: el polígono y las cotas `fromM`–`toM` entre las que se quitan los triángulos.
@@ -416,7 +423,7 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 > (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
 > arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16, de las
 > escaleras de D-17 o de las piezas de D-18 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor y
-> `.jardines.piezas-4`, el Juan Valdez).
+> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5`, el auditorio que baja).
 
 ## 4. Migración de base de datos
 
