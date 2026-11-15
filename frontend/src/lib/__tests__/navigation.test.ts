@@ -132,10 +132,10 @@ describe('visibleNavigation', () => {
     ]);
   });
 
-  it('el mapa es directo para los cuatro roles; incidencias, riego y reportes, para quien los opera o supervisa', () => {
-    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
-    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
-    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
+  it('el mapa es directo para los cuatro roles; incidencias y reportes, para quien los opera o supervisa', () => {
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/reportes']);
+    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/reportes']);
+    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/reportes']);
     expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa']);
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Lugares',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { IrrigationZone } from '@shared/types/irrigation';
+import type { ZoneOption } from '@shared/types';
 import { Button, LoadingSkeleton } from '@/components/ui';
 import { Map3DView } from './Map3DView';
 import { MapAttribution } from './MapAttribution';
@@ -23,8 +23,8 @@ export interface SectionPickerTexts {
 }
 
 export interface SectionMapPickerProps {
-  sectors: IrrigationZone[];
-  sectionsBySector: Record<number, IrrigationZone[]>;
+  sectors: ZoneOption[];
+  sectionsBySector: Record<number, ZoneOption[]>;
   scope: string;
   selectedIds: number[];
   onCancel: () => void;

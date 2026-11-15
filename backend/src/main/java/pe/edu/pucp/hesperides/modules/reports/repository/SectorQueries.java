@@ -1,23 +1,22 @@
-package pe.edu.pucp.hesperides.modules.irrigation.repository;
+package pe.edu.pucp.hesperides.modules.reports.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationZoneResponse;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-/** zones todavía no tiene entidad JPA. SQL parametrizado sobre el catálogo existente. */
+/**
+ * Sectors, their sections and a SUPERVISOR's sectors, as the reports read them
+ * (SPEC-202 §2.1, D-08). {@code zones} has no JPA entity yet: parameterized SQL.
+ * It lived in the irrigation turns module until that module was removed.
+ */
 @Repository
 @RequiredArgsConstructor
-public class IrrigationZoneQueries {
+public class SectorQueries {
     private final JdbcTemplate jdbc;
 
-    /**
-     * Qué es «una sección de un sector»: la regla la comparten riego y reportes
-     * (SPEC-202 §2.1), así que vive una sola vez.
-     */
     private static final String SECTIONS_OF_SECTOR = """
         FROM zones z
         JOIN catalog_items ci ON ci.id = z.zone_type_item_id
@@ -27,11 +26,14 @@ public class IrrigationZoneQueries {
         ORDER BY z.name
         """;
 
-    /** Una sección con su superficie; la superficie es nula si el mapa no la trae. */
+    public record ZoneOption(Long id, String code, String name) {
+    }
+
+    /** A section with its area; the area is null when the map does not carry it. */
     public record SectionWithArea(Long id, String code, String name, BigDecimal areaM2) {
     }
 
-    public List<IrrigationZoneResponse> sectors() {
+    public List<ZoneOption> sectors() {
         return jdbc.query("""
             SELECT z.id, z.code, z.name FROM zones z
             JOIN catalog_items ci ON ci.id = z.zone_type_item_id
@@ -39,17 +41,9 @@ public class IrrigationZoneQueries {
             WHERE ct.code = 'ZONE_TYPE' AND ci.code = 'SECTOR'
               AND z.is_active = TRUE AND z.deleted_at IS NULL
             ORDER BY z.name
-            """, (rs, n) -> new IrrigationZoneResponse(
-                rs.getLong("id"), rs.getString("code"), rs.getString("name")));
+            """, (rs, n) -> new ZoneOption(rs.getLong("id"), rs.getString("code"), rs.getString("name")));
     }
 
-    public List<IrrigationZoneResponse> sectionsOf(Long sectorId) {
-        return jdbc.query("SELECT z.id, z.code, z.name " + SECTIONS_OF_SECTOR,
-            (rs, n) -> new IrrigationZoneResponse(
-                rs.getLong("id"), rs.getString("code"), rs.getString("name")), sectorId);
-    }
-
-    /** Misma regla que {@link #sectionsOf(Long)}, con la superficie que necesitan los reportes. */
     public List<SectionWithArea> sectionsWithAreaOf(Long sectorId) {
         return jdbc.query("SELECT z.id, z.code, z.name, z.area_m2 " + SECTIONS_OF_SECTOR,
             (rs, n) -> new SectionWithArea(rs.getLong("id"), rs.getString("code"),

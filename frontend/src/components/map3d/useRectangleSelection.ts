@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
-import type { IrrigationZone } from '@shared/types/irrigation';
+import type { ZoneOption } from '@shared/types';
 import type { Viewer } from './viewer/createViewer';
 
 /** Coordenadas de cliente más el origen del mapa, leído al empezar: el render no toca refs. */
@@ -12,7 +12,7 @@ interface Options {
   mapRegion: RefObject<HTMLDivElement | null>;
   viewer: RefObject<Viewer | null>;
   permittedCodes: string[];
-  sectionsByCode: Map<string, IrrigationZone>;
+  sectionsByCode: Map<string, ZoneOption>;
   onAdd: (ids: number[]) => void;
   onNotice: (notice: string) => void;
   /** Si se pasa, el rectángulo también agrega los ejemplares elegibles que encierra. */

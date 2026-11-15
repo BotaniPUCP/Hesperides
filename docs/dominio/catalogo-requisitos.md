@@ -566,7 +566,7 @@ eso lo incluimos en nuestro modelado aunque su mapa ya lo tenga.
 
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
-| 7.1 | Registro del turno de riego por sector | **Alta** | 3 | D5 | ✅ | 0% | Ciclo bien explicado en la 2.ª entrevista |
+| 7.1 | Registro del turno de riego por sector | **Alta** | 3 | D5 | ✅ | 0% | Ciclo bien explicado en la 2.ª entrevista. **15 nov 2026:** el riego se registra como intervención de clase Riego desde Planificación (SPEC-203); el módulo de turnos se eliminó (SPEC-113 D-08) |
 | 7.2 | Cobertura del campus en la ventana de 15 días | **Alta** | 3 | D5 | 🔶 | 0% | Falta qué cuenta como «zona regada» |
 | 7.3 | Zonas que requieren más de una pasada | Media | 2 | D5 | 🔒 | 0% | Falta la lista de esas zonas |
 | 7.4 | Control de la ventana horaria | Baja | 1 | — | ✅ | 0% | 6:30-7:00 a 11:30 |

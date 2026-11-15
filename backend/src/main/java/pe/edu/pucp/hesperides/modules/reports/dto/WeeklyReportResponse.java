@@ -17,7 +17,7 @@ public record WeeklyReportResponse(
         Incidents incidents,
         Instant generatedAt
 ) {
-    public static final String IRRIGATION_RULE = "PROVISIONAL_ONE_TURN_PER_SECTION";
+    public static final String IRRIGATION_RULE = "PROVISIONAL_ONE_IRRIGATION_PER_SECTION";
 
     /** {@code cutoffDate} is the Sunday, or today while the week is still running. */
     public record Week(LocalDate weekStart, LocalDate weekEnd, String timeZone, boolean inProgress,
@@ -48,8 +48,8 @@ public record WeeklyReportResponse(
     public record AttendedSections(String rule, int covered, int total, BigDecimal percent) {
     }
 
-    /** {@code percent} is null when the sector had no turn in the week (D-15). */
-    public record Irrigation(String rule, long turns, int irrigatedSections, int totalSections, BigDecimal percent,
+    /** {@code irrigations} counts irrigation works; {@code percent} is null when there was none in the week (D-15). */
+    public record Irrigation(String rule, long irrigations, int irrigatedSections, int totalSections, BigDecimal percent,
                              TopList<NotIrrigated> notIrrigated) {
     }
 

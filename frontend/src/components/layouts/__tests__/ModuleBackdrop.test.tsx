@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { ModuleBackdrop } from '../ModuleBackdrop';
 
-let mockPathname = '/riego';
+let mockPathname = '/reportes';
 jest.mock('next/navigation', () => ({ usePathname: () => mockPathname }));
 
 function canvasContextDouble() {
@@ -31,7 +31,7 @@ describe('ModuleBackdrop', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it.each([
-    ['/riego', 'riego', '#0B5F8A'],
+    ['/reportes', 'reportes', '#2F3A8F'],
     ['/lugares/LUG-0001', 'lugares', '#8A3F1F'],
   ])('%s pinta el fondo completo de su módulo', (path, module, firstTone) => {
     const ctx = useCanvasDouble();
