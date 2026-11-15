@@ -9,6 +9,7 @@ import { createHighlight } from './highlight';
 import { createLabels, type LabelKind } from './labels';
 import { createBalloonLayer } from './balloons';
 import { attachAdminMovement } from '../pilot/adminMovement';
+import { attachAdminAnchor } from './adminAnchor';
 import { createLights } from './lighting';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
@@ -103,6 +104,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const cones = createViewCones(scene);
   const admin = attachAdminMovement(renderer.domElement, rig.camera, rig.controls, () => { needsRender = true; });
   admin.fitTo(WORLD_LIFT, ADMIN_SPEED_RADIUS_M);
+  const adminAnchor = attachAdminAnchor(renderer.domElement, rig.camera, rig.controls.target, scene, () => { needsRender = true; });
   const balloons = start.balloonRoot ? createBalloonLayer(start.balloonRoot, data.plane, {
     onPick: (b) => cb.onBalloonPick?.(b),
     onGroup: (points) => rig.focusPoints(points),
@@ -322,7 +324,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     setAdminMode(on) {
+      rig.setFree(on);
       admin.setEnabled(on);
+      adminAnchor.setEnabled(on);
+      // Al salir, la vista vuelve a la inicial, fija, con los límites de siempre.
       if (!on) rig.fit();
       needsRender = true;
     },
@@ -343,6 +348,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       labels.dispose();
       balloons?.dispose();
       admin.dispose();
+      adminAnchor.dispose();
       cones.dispose();
       stage.dispose();
     },

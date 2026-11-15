@@ -27,6 +27,9 @@ type Vec3 = [number, number, number];
 /** Dónde está la cámara y hacia dónde mira: basta para devolverla a la misma vista. */
 export interface CameraPose { position: Vec3; target: Vec3 }
 
+/** En el modo libre, el anclaje puede quedar muy cerca: un árbol a pocos metros. */
+const FREE_MIN_DISTANCE_M = 0.5;
+
 interface Flight { p0: THREE.Vector3; t0: THREE.Vector3; p1: THREE.Vector3; t1: THREE.Vector3; start: number; ms: number }
 
 export interface CameraRig {
@@ -47,6 +50,11 @@ export interface CameraRig {
   pose: () => CameraPose;
   /** Vuela hasta una pose guardada. */
   flyToPose: (pose: CameraPose) => void;
+  /**
+   * Modo de administrador: el anclaje va a donde se mira, así que no se encierra en el
+   * campus ni se limita la distancia; al salir vuelven los límites de la órbita.
+   */
+  setFree: (free: boolean) => void;
 }
 
 export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE.Vector3, reducedMotion: boolean, initialPose?: CameraPose): CameraRig {
@@ -55,8 +63,11 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
   Object.assign(controls, { enableDamping: true, dampingFactor: 0.09, maxPolarAngle: 1.32, minDistance: 35, maxDistance: 2600, zoomSpeed: 1.1, rotateSpeed: 0.7 });
   controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
   let flight: Flight | null = null;
+  let free = false;
+  const orbitDistances = { minDistance: controls.minDistance, maxDistance: controls.maxDistance };
 
   controls.addEventListener('change', () => {
+    if (free) return;
     const t = controls.target;
     const cx = THREE.MathUtils.clamp(t.x, box.min.x - PAN_MARGIN_M, box.max.x + PAN_MARGIN_M);
     const cz = THREE.MathUtils.clamp(t.z, box.min.z - PAN_MARGIN_M, box.max.z + PAN_MARGIN_M);
@@ -148,6 +159,10 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
       flight = null;
     },
     flyToPose: (pose) => flyTo(new THREE.Vector3(...pose.position), new THREE.Vector3(...pose.target)),
+    setFree: (on) => {
+      free = on;
+      Object.assign(controls, on ? { minDistance: FREE_MIN_DISTANCE_M, maxDistance: Infinity } : orbitDistances);
+    },
     pose: () => flight
       ? { position: flight.p1.toArray() as Vec3, target: flight.t1.toArray() as Vec3 }
       : { position: camera.position.toArray() as Vec3, target: controls.target.toArray() as Vec3 },
