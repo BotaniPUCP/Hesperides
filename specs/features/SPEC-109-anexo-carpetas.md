@@ -90,6 +90,11 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 79 | polideportivo | `a0c57ec0` | Polideportivo | nombre, código 45 | seguro |
 | 80 | sala cuna | `44a6cf1a` | Sala Cuna | nombre, código 51 | seguro |
 | 81 | Desconocido_13 (segundo) | `e5800604` | Desconocido_13 (el de 3,0 m) | ladrillo liso por la misma decisión (SPEC-112 P-04) | — |
+| 82 | auditorio-juan-pablo-2 | `0587a436` | Auditorio Juan Pablo II | nombre, código 22; foto: rótulo «Auditorio Juan Pablo II» en el ingreso | seguro |
+| 83 | aulario | `8be4b50b` | Aulario (Pabellón A) | nombre, código 59; foto: las dos torres y las rampas de la cara sur, como en el modelo | seguro |
+| 84 | ceprepuc | `c46e56b9` | CEPREPUC | nombre, código 13; foto: rótulo «CEPRE PUCP» en la reja | seguro |
+| 85 | cia | `d093db0d` | CIA (Complejo de Innovación Académica) | nombre, código 60; cercanía: cia-1 se tomó desde Gelarti, 100 m al nor-noreste | seguro |
+| 86 | Pabellon-G | `efc7e845` | Pabellón G (edificio 2 de la Facultad de Ciencias Contables, código 15) | nombre; foto: rótulos «Pabellón G» y «Facultad de Ciencias Contables», y la forma del edificio 2 (bloque de dos pisos con el ala baja y la escalera a su azotea). El edificio 1 (código 14) sigue sin fotos | seguro |
 
 La fila 81 no es una carpeta: aparece para dejar a la vista que el segundo `Desconocido_13` queda sin
 pintar mientras no se confirme cuál de los dos es el de las fotos.
