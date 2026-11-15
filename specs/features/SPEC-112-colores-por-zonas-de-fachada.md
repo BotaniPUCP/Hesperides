@@ -306,7 +306,7 @@ eso, a la distancia de encuadre, cada edificio se ve del color de su ficha.
 
 **D-16 · Volumen de los muros** *(decisión de Claude)*. El muro vuelve a llevar una parte del degradado
 del modo rosado: el factor es `mix(1, tono / 0,72, 0,4)`, más oscuro al pie y más claro arriba, entre
-0,92 y 1,07. Los techos no cambian. El tinte del resaltado se sigue aplicando igual.
+0,92 y 1,08. Los techos no cambian. El tinte del resaltado se sigue aplicando igual.
 
 **D-17 · Acabados por material.** Cada material liso lleva un acabado, que da el grano del material en
 la cara y el relieve que toma la luz:
@@ -351,6 +351,9 @@ la cara y el relieve que toma la luz:
   del módulo con la semilla de la cara, así que siempre son los mismos y no se nota un patrón. Un paño
   que pinta un acento no se enciende, y de lejos el brillo se promedia como el resto del vidrio. Solo
   pasa en el vidrio de las fichas: una cinta `glazed` lisa no se enciende.
+- La luz va a intensidad 0,5, y cada paño encendido tiene su propio nivel, de 0,6 a 1, que también sale
+  del hash *(decisión de Claude tras el banco de pruebas del 15 nov)*. A intensidad 1 los paños se veían
+  casi blancos y se leían como calcomanías, el sello que esta spec quiere evitar.
 
 **D-20 · Contacto con el suelo** *(decisión de Claude)*. El primer 0,9 m de cada muro, medido desde el
 vértice más bajo de su edificio, se oscurece hasta un 14 % en el pie. La sombra bajo los aleros queda
@@ -385,7 +388,7 @@ Acabados
 - un techo no lleva grano ni relieve
 - rugosidad y metal de cada acabado; el vidrio mezcla paño y perfil según su cobertura
 - de noche: tres de cada diez paños (±5 % en 10 000), siempre los mismos; un acento no se enciende;
-  un perfil no se enciende; de lejos, el promedio
+  un perfil no se enciende; cada paño con su nivel, de 0,6 a 1; de lejos, el promedio
 - el color de la ficha (rgb) es el mismo que antes de la enmienda
 
 Luz y sombras
