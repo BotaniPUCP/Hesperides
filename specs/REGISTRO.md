@@ -25,7 +25,7 @@
 | SPEC-107 | Reservas de jardines | 🔄 En progreso | —          | —      |              |
 | SPEC-108 | Edificios del plano oficial en el mapa | 🔄 En progreso: implementada y verificada en web (12 nov 2026, 12 de 13; CA-11 corregido después); falta el WebView de Android (CA-14) | Luis       | —      |              |
 | SPEC-112 | Colores por zonas de la fachada | 🔄 En progreso: spec aprobada el 13 nov 2026; entrega 1 (motor y piloto) en `feature/spec-112-colores-por-zonas` | Jean Piero | —      |              |
-| SPEC-113 | Globos del mapa | 👀 En revisión: preguntas resueltas el 15 nov 2026; D-08 (eliminar los turnos de riego) implementado en `refactor/elimina-turnos-riego` | Jean Piero | —      |              |
+| SPEC-113 | Globos del mapa | 🔄 En progreso: D-08 (eliminar los turnos de riego) integrado; globos implementados en backend y web el 15 nov 2026 en `feature/spec-113-globos-del-mapa`; falta verificar en navegador real (INV-10) y en Android | Jean Piero | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: §2.12 reemplaza el flujo por lugares con mapa único, áreas de todo el campus y ejemplares seleccionables. V050 (antes V036) conserva datos y contratos anteriores. Pendientes revisión visual, R5 y R6; la selección fina de ejemplares se refinará posteriormente. | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 2 (Semanal, Mensual y Resumen para OSG con gráficos y datos de demostración); falta verificar en navegador real por rol | —          | S4     |              |
