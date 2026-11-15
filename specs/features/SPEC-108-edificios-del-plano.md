@@ -313,8 +313,13 @@ así (V057):
 SKP (`suelo`), que en algunos lugares cubre áreas verdes de la base: unos 106 m² de AV-0480 (F 22) y 195 m² de
 AV-0409, en este caso con la rampa que baja 5 m por su borde oeste. El SKP corta su piso en triángulos que no siguen
 a los jardines (uno solo mide 4 163 m²), así que no se separan piezas como en D-18:
-- **Visor:** cada césped de la capa de áreas verdes que toca un desnivel se recorta contra los triángulos del piso y
-  se dibuja 3 cm encima de ellos, con su pendiente y el material del jardín hundido (`viewer/lawnOverFloor.ts`).
+- **Visor:** a cada triángulo del piso se le quita la parte que cae en un césped de la capa de áreas verdes que toca
+  un desnivel (`viewer/floorWithoutLawns.ts`). Lo que queda conserva su cota, su textura y su giro. Debajo se ve el
+  jardín hundido del SKP: en AV-0480 y AV-0409 el piso era una tapa a −0,3 m sobre su pendiente, que baja a −3 m.
+- Una primera versión pintaba el césped sobre el piso; Jean Piero la rechazó el mismo día: «debes eliminar la parte
+  del piso gris encima del césped».
+- **Pendiente:** donde el piso quitado era la rampa del borde oeste de AV-0409 (unos 93 m²) y 9 m² de AV-0480, debajo
+  no hay jardín sino el fondo del desnivel, a −10,5 m.
 - **Alcance:** vale para todos los céspedes, no solo para esos dos. El 15 nov 2026 también cubre parte de AV-0408,
   AV-0359, AV-0232, AV-0068, AV-0233, AV-0265, AV-0242 (F 21), AV-0226 y AV-0048.
 - El GLB, el manifiesto y la base no cambian.
@@ -587,10 +592,10 @@ Piezas (D-18)
 - en la base solo cambian esos dos edificios; los otros hijos de OpenStreetMap siguen en la librería
 - la hoja de revisión clasifica la pieza con sus triángulos y con su polígono como huella
 
-Céspedes sobre el piso (D-19)
-- el césped cubre justo la parte del piso que cae en él, con sus huecos y su forma cóncava, apenas encima
-- sobre una rampa sigue su pendiente; un muro no lleva césped
-- solo se recortan los céspedes que tocan un desnivel
+Piso abierto sobre los céspedes (D-19)
+- el piso pierde justo la parte que cae en un césped, con sus huecos y su forma cóncava; sin césped queda igual
+- lo que queda sigue su cota, su pendiente, su textura y su giro; los muros del piso se quedan
+- solo cuentan los céspedes que tocan un desnivel
 ```
 
 ## 9. Propio de este spec
