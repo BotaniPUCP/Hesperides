@@ -346,6 +346,44 @@ a los jardines (uno solo mide 4 163 m²), así que no se separan piezas como en 
 - El GLB, el manifiesto y la base no cambian.
 - *Origen:* pedido del usuario del 15 nov 2026: «no debe haber partes del piso cubriendo los céspedes».
 
+> **Rampas frente al CIA, 15 nov 2026 (V062):** el recorte le quitaba 110 m² a dos de las tres rampas que bajan al
+> desnivel de AV-0409 (−5 m), porque los polígonos de la base se montaban sobre ellas. La vista superior del modelo
+> muestra el césped como es en realidad: Jean Piero confirmó que las rampas no pisan el jardín. V062 corrige los
+> polígonos, no el recorte:
+> - **AV-0409:** pasa a ser la planta del jardín hundido del modelo, sin las rampas. Mide 519,1 m² (antes 584,87).
+> - **AV-0408:** pierde la esquina de ese jardín y la franja sobre la rampa del lado del CIA. Mide 461,9 m² (antes
+>   516).
+> - **Sector SEC-VERDE-02:** se recalcula como en V011.
+> - **Resultado:** las rampas quedan enteras y el resaltado de AV-0409 al hacer clic coincide con su jardín.
+
+**D-20 · Una rampa del piso del modelo que es una escalera se escalona en el visor.** Frente al CIA, el SKP dibuja como
+planos inclinados tres escaleras que bajan al desnivel de AV-0409 (de 0,2 a −4,8 m). Jean Piero las identificó en la
+vista superior:
+- **A:** va pegada al césped y baja al sur, en 41 m. Tiene peldaños muy separados: 14 contrahuellas de 36 cm, una
+  cada 3,2 m.
+- **B:** va junto a la A y baja al sur, en 25 m. Es una escalera normal: 28 contrahuellas de 18 cm.
+- **C:** está del lado del CIA y baja al norte, en 22 m. Es normal como la B: 28 contrahuellas de 18 cm.
+
+Se escalonan así:
+- **Manifiesto:** lleva `floorSteps` (§3). Por nombre trae el polígono de cada rampa, sus dos cotas y sus
+  contrahuellas.
+- **Visor:** a cada cara del piso (`suelo`) con entre 2° y 40° de pendiente, centro en el polígono y vértices entre
+  las cotas, le aplica lo siguiente (`viewer/floorSteps.ts`, `rampSteps.ts`):
+  - **Huellas:** corta la cara por las cotas de los escalones. Cada franja es una huella horizontal a la cota de
+    arriba de la franja, así que nunca baja de la rampa.
+  - **Contrahuellas:** se levanta una vertical en cada corte. La pone la cara que sigue subiendo desde él, para que
+    no salga dos veces.
+  - **Forma:** los escalones siguen el contorno exacto de la rampa, también donde es una cuña.
+  - **Textura:** las coordenadas van como en el modelo: desde arriba en las huellas y de frente en las contrahuellas.
+- **Cuenta el centro de la cara y no sus vértices,** porque el SKP tiende triángulos de un borde a otro de la rampa.
+- **La cubierta inclinada del murete entre A y B** sube por encima de la plaza (hasta 1,22 m). Queda como está:
+  no es camino.
+- **Validación:** la lectura falla si una rampa del manifiesto no toma nada del piso, si no sube, o si sus
+  contrahuellas no son un entero de dos o más.
+- El GLB y la base no cambian.
+- *Origen:* pedido del usuario del 15 nov 2026: «lo rojo son las escaleras que van hacia abajo y lo verde también,
+  pero son escaleras con peldaños mucho más separados».
+
 ## 3. Contratos de API
 
 | Endpoint | Autorización | Qué resuelve |
@@ -400,6 +438,8 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
   - `flights`: cada tramo, con su arista `from`, su arista `to`, sus cotas y sus `risers`.
   - `landings`: cada descanso, con su polígono y su cota.
   - `why`: el porqué.
+- `floorSteps` (opcional, D-20) trae, por nombre, una rampa del piso del modelo que es una escalera: su polígono en
+  metros alrededor del anclaje, sus cotas `fromM` y `toM`, sus contrahuellas (`risers`) y el porqué (`why`).
 - `pieces` (opcional, D-18) trae, por la `plan_key` propia de un edificio que el SKP dibuja dentro de otra malla, de
   qué malla sale (`from`), su polígono en metros alrededor del anclaje (en el marco de esa malla ya ajustada) y el
   porqué (`why`). El visor le pasa los triángulos que caen enteros en el polígono, a 2 cm. La pieza se separa antes
@@ -438,7 +478,7 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 > (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
 > arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16, de las
 > escaleras de D-17 o de las piezas de D-18 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor y
-> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5` y `-6`, el auditorio que baja; `-7`, su escalera de ingreso).
+> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5` y `-6`, el auditorio que baja; `-7`, su escalera de ingreso; `-8`, los escalones frente al CIA).
 
 ## 4. Migración de base de datos
 

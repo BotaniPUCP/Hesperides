@@ -4,6 +4,7 @@ import type { BuildingModelManifest, BuildingNodeKind, BuildingPiece, BuildingPr
 import type { LocalPlane } from '../projection';
 import { polygons, type Polygon, type ScenePoly } from '../sceneData';
 import { adjusted, adjustmentsOf, lifted, liftsOf, type AdjustmentMatrix } from './adjustments';
+import { floorStepsOf, withFloorSteps } from './floorSteps';
 import { assemble, prismParts, type MergedGeometry } from './geometry';
 import { insideRing } from './picking';
 import { piecesOf, splitPiece } from './pieces';
@@ -51,6 +52,7 @@ export interface PlanModel {
 /** Lee el GLB con su manifiesto. Lanza si el archivo no es un GLB válido: quien llama cae a los prismas. */
 export async function parsePlanModel(manifest: BuildingModelManifest, glb: ArrayBuffer, plane: LocalPlane): Promise<PlanModel> {
   const fixes = { adjustments: adjustmentsOf(manifest), lifts: liftsOf(manifest), stairs: stairsOf(manifest), pieces: piecesOf(manifest) };
+  const floorSteps = floorStepsOf(manifest);
   const { scene } = await new GLTFLoader().parseAsync(glb, '');
   const anchor = plane.toPlane(manifest.anchor.lat, manifest.anchor.lon);
   const offset = { x: anchor.x, z: -anchor.y };
@@ -83,7 +85,7 @@ export async function parsePlanModel(manifest: BuildingModelManifest, glb: Array
   return {
     buildings,
     stairFrom,
-    nodes: Object.fromEntries(Object.entries(parts).map(([kind, list]) => [kind, joined(list)])),
+    nodes: Object.fromEntries(Object.entries(parts).map(([kind, list]) => [kind, kind === 'suelo' ? withFloorSteps(joined(list), floorSteps) : joined(list)])),
     sunken: manifest.sunken.map((s) => ({ g: polygons(s.polygon, plane), floorM: s.floorM })),
     offset,
     huaca: { label: manifest.huaca.label, x: huaca.x, y: zM, z: -huaca.y },
