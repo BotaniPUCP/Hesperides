@@ -101,6 +101,8 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 90 | aulas-moviles-C | `77291032` | Aulas Móviles C | nombre, C54; foto: el bloque de techo a dos aguas y el pasillo con dos escaleras de la cara sur, como en el modelo | seguro |
 | 91 | gastronomia | `c805ae90` | Facultad de Gastronomía, Hotelería y Turismo | nombre, código 63; foto: la retícula blanca de la facultad | seguro |
 | 92 | matematicas | `5cff01e0` | Matemáticas | nombre, código 10; fotos: rótulos «Matemáticas» y «Departamento Académico de Ciencias — Edificio José Tola Pasquel». El Tola Pasquel es el bloque curvo del este de la misma malla | seguro; el bloque del este, por confirmar |
+| 93 | libreria-pucp | `4ee6b413` | Librería PUCP (se llamaba «Juan Valdez» hasta V057) | código 42 («LIBRERIA PUCP, …»); fotos: rótulo «Librería PUCP»; Jean Piero marcó en el mapa lo que es del café, y el resto es la librería (SPEC-108 D-18) | seguro |
+| 94 | juan-valdez | `5c6e8c9f` | Juan Valdez (pieza de la malla de la librería, V057) | nombre; foto: el letrero «Juan Valdez Café»; es la caja que Jean Piero marcó en el mapa (SPEC-108 D-18) | seguro |
 
 La fila 81 no es una carpeta: aparece para dejar a la vista que el segundo `Desconocido_13` queda sin
 pintar mientras no se confirme cuál de los dos es el de las fotos.
