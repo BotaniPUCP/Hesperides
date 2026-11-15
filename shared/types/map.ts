@@ -149,6 +149,8 @@ export interface BuildingStair {
 export interface BuildingAdjustment {
   /** [a, b, c, d, e, f] */
   matrix: [number, number, number, number, number, number];
+  /** Metros que sube la malla entera; negativo, baja (SPEC-108 D-16). Sin él, la altura queda igual. */
+  liftM?: number;
   /** Qué se corrigió y a pedido de quién. */
   why: string;
 }

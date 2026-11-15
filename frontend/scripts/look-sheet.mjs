@@ -103,14 +103,14 @@ function printSegments(building, segments) {
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
-  const [{ LocalPlane }, { polygons }, { buildLookTable }, { classifyBuilding }, { facadeColor }, { validateLooks }, { adjustmentsOf, adjusted, adjustedRing }, { stairsOf, withStair }, { piecesOf, splitPiece }] = await Promise.all(
+  const [{ LocalPlane }, { polygons }, { buildLookTable }, { classifyBuilding }, { facadeColor }, { validateLooks }, { adjustmentsOf, adjusted, adjustedRing, liftsOf, lifted }, { stairsOf, withStair }, { piecesOf, splitPiece }] = await Promise.all(
     ['projection.ts', 'sceneData.ts', 'realLook/lookTable.ts', 'realLook/classifyFaces.ts', 'realLook/facadeColor.ts', 'realLook/validateLook.ts', 'viewer/adjustments.ts', 'viewer/stairs.ts', 'viewer/pieces.ts'].map(map3d));
   const look = JSON.parse(fs.readFileSync(opts.look, 'utf8'));
   const campus = loadCampus(path.resolve(frontend, '..'));
   // Las mallas de edificio son los nodos del GLB y las piezas que el manifiesto separa de ellos (SPEC-108 D-18).
   const meshes = [...Object.entries(campus.manifest.nodes).filter(([, kind]) => kind === 'edificio').map(([key]) => key), ...piecesOf(campus.manifest).keys()];
   validateLooks([look], new Set(meshes));
-  const building = classifiedBuilding(campus, look, { LocalPlane, polygons, buildLookTable, classifyBuilding, adjustmentsOf, adjusted, adjustedRing, stairsOf, withStair, piecesOf, splitPiece });
+  const building = classifiedBuilding(campus, look, { LocalPlane, polygons, buildLookTable, classifyBuilding, adjustmentsOf, adjusted, adjustedRing, liftsOf, lifted, stairsOf, withStair, piecesOf, splitPiece });
   if (opts.measures) printSegments(building, wallSegments(building, look));
   const title = { input: caption(`${look.name} · ${look.planKey}`, SHEET_W, 20), left: 0, top: 0 };
   const photos = await photoTiles(photoFiles(look, opts), 32);

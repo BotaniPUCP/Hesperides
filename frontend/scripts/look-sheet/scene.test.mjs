@@ -87,6 +87,8 @@ test('con un ajuste en el manifiesto (D-16), la malla y su huella llegan ajustad
     adjustmentsOf: () => new Map([['k', [1, 0, 0, 1, 10, 0]]]),
     adjusted: (p, m) => Float32Array.from(p, (v, i) => (i % 3 === 0 ? v + shiftEast(m) : v)),
     adjustedRing: (ring, m) => ring.map((v, i) => (i % 2 === 0 ? v + shiftEast(m) : v)),
+    liftsOf: () => new Map(),
+    lifted: () => assert.fail('sin altura no se sube la malla'),
     stairsOf: () => new Map(),
     withStair: () => assert.fail('sin escalera no se toca la malla'),
     piecesOf: () => new Map(),
@@ -101,6 +103,31 @@ test('con un ajuste en el manifiesto (D-16), la malla y su huella llegan ajustad
   assert.deepEqual(Array.from(building.positions), [11, 2, 3]);
 });
 
+test('con un ajuste en altura (D-16), la malla se clasifica a su cota nueva: la huella no cambia', () => {
+  const calls = [];
+  const realLook = {
+    LocalPlane: class {},
+    polygons: () => [[[0, 0, 1, 0, 1, 1]]],
+    buildLookTable: () => ({ zones: new Map([['k', []]]) }),
+    classifyBuilding: (positions, start, n, footprint) => calls.push({ positions: Array.from(positions), footprint }),
+    adjustmentsOf: () => new Map(),
+    adjusted: () => assert.fail('sin ajuste en planta no se corre la malla'),
+    adjustedRing: () => assert.fail('sin ajuste en planta no se corre la huella'),
+    liftsOf: () => new Map([['k', -2]]),
+    lifted: (p, liftM) => Float32Array.from(p, (v, i) => (i % 3 === 1 ? v + liftM : v)),
+    stairsOf: () => new Map(),
+    withStair: () => assert.fail('sin escalera no se toca la malla'),
+    piecesOf: () => new Map(),
+    splitPiece: () => assert.fail('sin piezas no se parte la malla'),
+  };
+  const campus = { manifest: { anchor: { lat: 0, lon: 0 } }, nodes: new Map([['k', new Float32Array([1, 2, 3])]]), footprints: new Map([['k', {}]]) };
+
+  classifiedBuilding(campus, { planKey: 'k', name: 'K' }, realLook);
+
+  assert.deepEqual(calls[0].positions, [1, 0, 3]);
+  assert.deepEqual(calls[0].footprint, [[[0, 0, 1, 0, 1, 1]]]);
+});
+
 test('con una escalera en el manifiesto (D-17), la malla llega con su escalera y la clasificación sabe dónde empieza', () => {
   const calls = [];
   const realLook = {
@@ -111,6 +138,8 @@ test('con una escalera en el manifiesto (D-17), la malla llega con su escalera y
     adjustmentsOf: () => new Map(),
     adjusted: () => assert.fail('sin ajuste no se corre la malla'),
     adjustedRing: () => assert.fail('sin ajuste no se corre la huella'),
+    liftsOf: () => new Map(),
+    lifted: () => assert.fail('sin altura no se sube la malla'),
     stairsOf: () => new Map([['k', { why: 'prueba' }]]),
     withStair: (p, stair, key) => ({ positions: Float32Array.from([...p, 7, 8, 9]), stairFrom: key === 'k' && stair.why ? 1 : -1 }),
     piecesOf: () => new Map(),
@@ -134,6 +163,8 @@ function withPiece(calls) {
     adjustmentsOf: () => new Map(),
     adjusted: () => assert.fail('sin ajuste no se corre la malla'),
     adjustedRing: () => assert.fail('sin ajuste no se corre la huella'),
+    liftsOf: () => new Map(),
+    lifted: () => assert.fail('sin altura no se sube la malla'),
     stairsOf: () => new Map(),
     withStair: () => assert.fail('sin escalera no se toca la malla'),
     piecesOf: () => new Map([['p', { from: 'k', polygon: [[0, 0], [1, 0], [1, 1]], why: 'prueba' }]]),

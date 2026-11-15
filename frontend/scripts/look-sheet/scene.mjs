@@ -139,17 +139,19 @@ export function wallSegments(building, look) {
 }
 
 /**
- * La malla de un edificio como la arma el visor (planModel): con su ajuste (SPEC-108 D-16) y sin las piezas que son
+ * La malla de un edificio como la arma el visor (planModel): con su ajuste en planta y en altura (SPEC-108 D-16) y sin las piezas que son
  * otros edificios (D-18). Una pieza sale de la malla de la que se separa, ya ajustada; su huella es su polígono.
  */
-function fittedMesh(campus, look, { adjustmentsOf, adjusted, piecesOf, splitPiece }) {
+function fittedMesh(campus, look, { adjustmentsOf, adjusted, liftsOf, lifted, piecesOf, splitPiece }) {
   const pieces = piecesOf(campus.manifest);
   const piece = pieces.get(look.planKey);
   const from = piece ? piece.from : look.planKey;
   const raw = campus.nodes.get(from);
   if (!raw?.length) throw new Error(`El modelo no tiene malla para ${look.planKey} (${look.name})`);
   const m = adjustmentsOf(campus.manifest).get(from);
+  const lift = liftsOf(campus.manifest).get(from);
   let positions = m ? adjusted(raw, m) : raw;
+  if (lift !== undefined) positions = lifted(positions, lift);
   for (const [key, other] of pieces) {
     if (other.from !== from) continue;
     const split = splitPiece(positions, other.polygon, key);

@@ -3,7 +3,7 @@ import type { BuildingModelManifest } from '@shared/types';
 /**
  * Ajustes por edificio del modelo del plano (SPEC-108 D-16): mover y estirar en planta la malla de un edificio
  * para que encaje con el pasto, sin tocar el GLB. La matriz va en metros alrededor del anclaje (x este, y norte):
- * x' = a·x + b·y + e, y' = c·x + d·y + f.
+ * x' = a·x + b·y + e, y' = c·x + d·y + f. Un ajuste también puede subir o bajar la malla entera (`liftM`).
  */
 export type AdjustmentMatrix = readonly [number, number, number, number, number, number];
 
@@ -39,5 +39,24 @@ export function adjusted(p: Float32Array, m: AdjustmentMatrix): Float32Array {
 export function adjustedRing(ring: readonly number[], m: AdjustmentMatrix): number[] {
   const out: number[] = [];
   for (let i = 0; i < ring.length; i += 2) out.push(m[0] * ring[i] + m[1] * ring[i + 1] + m[4], m[2] * ring[i] + m[3] * ring[i + 1] + m[5]);
+  return out;
+}
+
+/** Lo que sube (o baja, si es negativo) cada malla ajustada que lo pide, validado como sus matrices. */
+export function liftsOf(manifest: BuildingModelManifest): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const [key, adjustment] of Object.entries(manifest.adjustments ?? {})) {
+    if (adjustment.liftM === undefined) continue;
+    if (manifest.nodes[key] !== 'edificio') throw new Error(`El ajuste de ${key} no es de la malla de un edificio del modelo`);
+    if (!Number.isFinite(adjustment.liftM)) throw new Error(`El ajuste de ${key} no trae una altura en metros`);
+    out.set(key, adjustment.liftM);
+  }
+  return out;
+}
+
+/** Posiciones del modelo (x este, y arriba, z = −norte) subidas `liftM` metros; la planta queda igual. */
+export function lifted(p: Float32Array, liftM: number): Float32Array {
+  const out = Float32Array.from(p);
+  for (let i = 1; i < out.length; i += 3) out[i] += liftM;
   return out;
 }

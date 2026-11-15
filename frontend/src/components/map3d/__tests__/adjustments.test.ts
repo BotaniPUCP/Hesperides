@@ -2,7 +2,7 @@ import type { BuildingModelManifest, GeoJsonGeometry } from '@shared/types';
 import { fittedFootprints, planFootprintsBeforeFits, repoManifest } from '../__fixtures__/repoFootprints';
 import { LocalPlane } from '../projection';
 import { polygons } from '../sceneData';
-import { adjustedRing, adjustmentsOf } from '../viewer/adjustments';
+import { adjustedRing, adjustmentsOf, lifted, liftsOf } from '../viewer/adjustments';
 
 /** Ajustes por edificio del manifiesto (SPEC-108 D-16): una matriz afín en metros este/norte alrededor del anclaje. */
 function manifest(adjustments: BuildingModelManifest['adjustments'], nodes: BuildingModelManifest['nodes'] = { k1: 'edificio' }): BuildingModelManifest {
@@ -33,6 +33,32 @@ describe('adjustmentsOf', () => {
   });
 });
 
+describe('liftsOf', () => {
+  it('devuelve cuánto sube (o baja, si es negativo) cada malla que lo pide', () => {
+    const lifts = liftsOf(manifest({ k1: { matrix: [1, 0, 0, 1, 0, 0], liftM: -3.9, why: 'p' } }));
+
+    expect(lifts.get('k1')).toBe(-3.9);
+  });
+
+  it('un ajuste solo en planta no mueve la altura', () => {
+    expect(liftsOf(manifest({ k1: { matrix: [1, 0, 0, 1, 2, 3], why: 'p' } })).size).toBe(0);
+  });
+
+  it('falla con una altura que no es un número finito', () => {
+    expect(() => liftsOf(manifest({ k1: { matrix: [1, 0, 0, 1, 0, 0], liftM: Number.NaN, why: 'p' } }))).toThrow(/k1.*altura/);
+  });
+
+  it('falla con una clave que no es la malla de un edificio del modelo', () => {
+    expect(() => liftsOf(manifest({ otro: { matrix: [1, 0, 0, 1, 0, 0], liftM: 1, why: 'p' } }))).toThrow(/otro/);
+  });
+});
+
+describe('lifted', () => {
+  it('mueve solo la cota de cada vértice (y arriba); la planta queda igual', () => {
+    expect(Array.from(lifted(new Float32Array([1, 2, 3, 4, 5, 6]), -2))).toEqual([1, 0, 3, 4, 3, 6]);
+  });
+});
+
 describe('adjustedRing', () => {
   it('lleva cada vértice de un anillo plano [x0, y0, x1, y1…] con la misma matriz que la malla', () => {
     expect(adjustedRing([1, 2, 3, 4], [2, 0, 0, 1, 5, -3])).toEqual([7, -1, 11, 1]);
@@ -45,6 +71,13 @@ describe('el manifiesto del repositorio', () => {
   it('trae ajustes válidos: solo de mallas de edificio y con matrices que no voltean ni aplastan', () => {
     expect(() => adjustmentsOf(manifestOfRepo)).not.toThrow();
     expect(Object.values(manifestOfRepo.adjustments ?? {}).every((a) => a.why.length > 0)).toBe(true);
+  });
+
+  it('baja el Auditorio Juan Pablo II 3,935 m, sin moverlo en planta: su escalera llega al fondo de la zanja del jardín hundido', () => {
+    const key = '0587a436-a6b7-4214-8d74-9b4883986521';
+
+    expect(liftsOf(manifestOfRepo).get(key)).toBe(-3.935);
+    expect(adjustmentsOf(manifestOfRepo).get(key)).toEqual([1, 0, 0, 1, 0, 0]);
   });
 
   it('la huella de cada malla ajustada en V054 es su huella anterior con la misma matriz (a 2 cm)', () => {
@@ -61,7 +94,8 @@ describe('el manifiesto del repositorio', () => {
 
     const off = adjustments.map(([key, m]) => {
       const expected = pairs(before.get(key)!).map(([x, y]) => adjustedRing([x, y], m));
-      const actual = pairs(after.get(key)!);
+      // Sin migración que la cambie, la huella es la anterior: un ajuste solo en altura (el auditorio) no la mueve.
+      const actual = pairs(after.get(key) ?? before.get(key)!);
       return [key, Math.max(farthest(actual, expected), farthest(expected, actual))] as const;
     }).filter(([, metres]) => !(metres < 0.02));
 

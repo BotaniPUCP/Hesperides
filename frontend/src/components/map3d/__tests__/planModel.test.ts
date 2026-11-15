@@ -228,6 +228,17 @@ describe('parsePlanModel', () => {
     expect(Array.from(model.buildings.get('k2')!.slice(0, 3))).toEqual([1, 4, -2]);
   });
 
+  it('un ajuste con altura sube o baja la malla entera de ese edificio (el Auditorio Juan Pablo II baja 3,935 m)', async () => {
+    const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' },
+      adjustments: { k1: { matrix: [1, 0, 0, 1, 0, 0], liftM: -3, why: 'prueba' } } });
+    const file = glb([{ name: 'k1', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }, { name: 'k2', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }]);
+
+    const model = await parsePlanModel(manifest, file, plane);
+
+    expect(Array.from(model.buildings.get('k1')!.slice(0, 3))).toEqual([1, 1, -2]);
+    expect(Array.from(model.buildings.get('k2')!.slice(0, 3))).toEqual([1, 4, -2]);
+  });
+
   it('aplica la escalera del manifiesto: quita la parte que reemplaza, cierra el edificio y dice dónde empieza la escalera', async () => {
     // Un techo a 3 m dentro de la parte reemplazada (sale) y otro lejos (queda), en metros alrededor del anclaje (SPEC-108 D-17).
     const stair: BuildingStair = {
