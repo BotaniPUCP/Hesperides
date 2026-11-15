@@ -274,6 +274,9 @@ rompecabezas, sin pisarlo (V054):
 > encima. Baja 3,935 m sin moverse en planta, con `liftM` en su ajuste (§3). Así la escalera llega al fondo de la
 > zanja (−1,589 m) y su losa de 3,545 m queda en la terraza de césped a −0,39 m. V059 baja su base y su alto lo
 > mismo, y su ficha de colores reales baja sus cotas.
+> Al verlo, pidió bajarlo más: desde arriba su techo bajo (4,45 y 4,90 m en el modelo) seguía tapando el césped del
+> jardín hundido a −0,05 m (AV-0170 y AV-0166). V060 lo baja 1,065 m más, 5 m en total: esos techos quedan en −0,55
+> y −0,10 m, bajo el césped. La escalera ya no apoya en el fondo de la zanja; queda bajo él.
 
 **D-17 · Una escalera que el SKP dibuja como bloque se reemplaza en el visor.** En la esquina noreste del Comedor
 Central, el SKP trae un bloque macizo en «U» de 4,35 m de alto y 25,5 m² que llega al suelo y tapa 23 m² de pasto.
@@ -423,7 +426,7 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 > (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
 > arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16, de las
 > escaleras de D-17 o de las piezas de D-18 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor y
-> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5`, el auditorio que baja).
+> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5` y `-6`, el auditorio que baja).
 
 ## 4. Migración de base de datos
 

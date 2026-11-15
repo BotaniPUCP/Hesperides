@@ -228,6 +228,7 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V058 | `V058__halve_n7_and_desconocido_03.sql` | SPEC-108 D-16 | Pedido de Jean Piero (15 nov 2026): la Sub-estación N-7 y el Desconocido_03 (prismas de OpenStreetMap) bajan a la mitad de su alto, de 8 a 4 m. Nació en `feature/spec-112-colores-por-zonas` |
 
 | V059 | `V059__lower_auditorio_juan_pablo_ii.sql` | SPEC-108 D-16 | Pedido de Jean Piero (15 nov 2026): el Auditorio Juan Pablo II baja 3,935 m para que el césped del jardín hundido quede por encima; su base y su alto bajan lo mismo, como su malla (`liftM` en el manifiesto). Nació en `feature/spec-112-colores-por-zonas` |
+| V060 | `V060__lower_auditorio_below_its_grass.sql` | SPEC-108 D-16 | Pedido de Jean Piero (15 nov 2026), al ver V059: el Auditorio Juan Pablo II baja 1,065 m más, 5 m en total, para que su techo bajo quede bajo el césped del jardín hundido (AV-0166 y AV-0170). Nació en `feature/spec-112-colores-por-zonas` |
 ### Pendientes (sin número reservado)
 
 Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V052**, sujeto a
