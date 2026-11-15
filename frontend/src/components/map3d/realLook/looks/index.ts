@@ -71,9 +71,11 @@ import industrial from './industrial.json';
 import institutoCorrosion from './instituto-corrosion.json';
 import invernaderoInteligente from './invernadero-inteligente.json';
 import invernadero from './invernadero.json';
+import juanValdez from './juan-valdez.json';
 import labHidraulica from './lab-hidraulica.json';
 import labcert from './labcert.json';
 import letrasCh from './letras-ch.json';
+import libreriaPucp from './libreria-pucp.json';
 import maestranza from './maestranza.json';
 import maquinariaPesada from './maquinaria-pesada.json';
 import matematicas from './matematicas.json';
@@ -180,9 +182,11 @@ const files: unknown[] = [
   institutoCorrosion,
   invernaderoInteligente,
   invernadero,
+  juanValdez,
   labHidraulica,
   labcert,
   letrasCh,
+  libreriaPucp,
   maestranza,
   maquinariaPesada,
   matematicas,
