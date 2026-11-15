@@ -148,6 +148,10 @@ modo real usa un material propio:
 Los dos materiales se arman al cargar y el botón solo cambia cuál se usa: la geometría no se rearma
 (D-10) y el modo rosado queda idéntico al de hoy (CA-03).
 
+> **Enmienda de SPEC-112 (15 nov 2026):** el material sigue sin texturas descargadas, pero cada material lleva su
+> acabado, con grano, relieve, rugosidad y metal. El vidrio refleja más y de noche se enciende en parte. Los muros
+> recuperan parte del volumen, y las sombras siguen a la cámara (SPEC-112 D-16 a D-22).
+
 **D-14 · Rendimiento** *(decisión de Claude)*. Al cargar se precalcula por vértice la parte, la zona, la
 orientación y las coordenadas de la cara. En cada cuadro el shader solo evalúa el patrón de ventanas,
 que son unas pocas operaciones por píxel. CA-08 se mide en la laptop de desarrollo y en un Android de

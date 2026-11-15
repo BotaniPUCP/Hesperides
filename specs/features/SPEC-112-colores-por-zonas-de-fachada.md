@@ -30,6 +30,9 @@ etiqueta, y nada le parece repetido ni copiado.
 **No es objetivo:** ventanas sueltas, carpintería, letreros, murales, fotos sobre el modelo, ventanas
 encendidas de noche, cambiar la geometría (`edificios-plano.glb` o el SKP) ni tocar Modelos 3D.
 
+> **Enmienda del 15 nov 2026 (D-19):** las ventanas encendidas de noche pasan a ser objetivo: tres de cada diez
+> paños del vidrio de las fichas se encienden en luz cálida.
+
 **Sería un fracaso aunque funcione:**
 - ventanas por todos lados, o cualquier parte que se lea como un sello repetido a lo largo del muro;
 - vidrio inventado en una cara que ninguna foto muestra;
@@ -286,6 +289,110 @@ sus fotos:
 5. Se verifica en el navegador y se hace el commit de la ficha.
 
 Ninguno de estos pasos cambia código.
+
+### 4.1 Enmienda del 15 nov 2026: acabados, luz y sombras
+
+**Por qué:** con las fichas, los edificios ganaron sus colores pero perdieron cuerpo. El material del
+modo real (SPEC-109 D-13) es mate, de una sola rugosidad y sin relieve. Además, el shader quita el
+degradado de tono por vértice que en el modo rosado aclara el techo y oscurece el pie de los muros. El
+prototipo v39 (develop, 5 nov) se veía con más volumen y más material aunque fuera de un solo color:
+barniz, paneles en relieve con su normal map, degradado y sol a la hora. El 15 nov Jean Piero aprobó
+traer eso al modo real sin perder el color de las fichas. Rama: `feature/spec-112-acabados-de-materiales`.
+
+**La condición de todas:** el color de la ficha no cambia. `facadeColor` y `lookDisplay` siguen dando el
+mismo color que hoy, y `LOOK_GAIN` no se vuelve a medir. Lo nuevo modula alrededor de 1: su promedio
+sobre la cara es 1, y se funde en 1 cuando su detalle queda más fino que un par de píxeles (D-08). Por
+eso, a la distancia de encuadre, cada edificio se ve del color de su ficha.
+
+**D-16 · Volumen de los muros** *(decisión de Claude)*. El muro vuelve a llevar una parte del degradado
+del modo rosado: el factor es `mix(1, tono / 0,72, 0,4)`, más oscuro al pie y más claro arriba, entre
+0,92 y 1,07. Los techos no cambian. El tinte del resaltado se sigue aplicando igual.
+
+**D-17 · Acabados por material.** Cada material liso lleva un acabado, que da el grano del material en
+la cara y el relieve que toma la luz:
+
+| Acabado | Cerca | Relieve |
+|---|---|---|
+| `brick` (ladrillo) | Hiladas de 7,5 cm con ladrillos de 25 cm a soga, cada uno con un tono algo distinto (±7 %), y juntas de mortero hundidas | Junta 8 mm abajo |
+| `concrete` (concreto) | Paños de encofrado de 2,4 × 1,2 m, cada uno con un tono algo distinto (±4 %), y juntas finas | Junta 5 mm abajo |
+| `plaster` (tarrajeo pintado) | Manchas muy suaves cada 1,6 m (±3,5 %) | Sin relieve |
+| `metal` | Engrapes verticales cada 60 cm | Engrape 15 mm arriba |
+| `glazed` (cinta o paño acristalado pintado liso) | Nada | Sin relieve |
+| `smooth` (liso) | Nada | Sin relieve |
+
+- **Sin tocar las fichas:** el acabado se deduce del nombre del material. Un `finish` en el material lo
+  reemplaza, y la validación (D-10) rechaza un acabado que no está en la lista. Los nombres empiezan así:
+  - `ladrillo…`: `brick`;
+  - `concreto…`, `losa…`, `zocalo…`, `testero…`, `base…`, `bloque…`: `concrete`;
+  - `metal…`, `oxido…`, `remate…`: `metal`;
+  - `ventana…`, `vidrio…`, `vano…`, `translucido…`, `vitr…`, `cinta…`: `glazed`;
+  - `techo…`, `sombra…`: `smooth`;
+  - cualquier otro, como `muro` o un color: `plaster`.
+- **Techos:** no llevan grano ni relieve, porque sus coordenadas no son de una fachada (la u es la x de
+  la escena y la v, su cota).
+- **No contradice D-03 ni CA-02.** Hiladas, paños y engrapes son el grano del material, no ventanas ni
+  sellos a lo largo del muro. Se funden antes de la distancia de encuadre, como los perfiles del vidrio.
+- **Relieve:** se calcula en el shader con las derivadas de la altura en pantalla, igual que el
+  `bumpMap` de three. No se descarga ni se dibuja ninguna imagen.
+
+**D-18 · Rugosidad y metal por material** (cambia SPEC-109 D-13). La rugosidad deja de ser una sola
+(0,88) y pasa a ir con cada acabado:
+
+| Acabado | `smooth` | `plaster` | `brick` | `concrete` | `metal` | `glazed` |
+|---|---|---|---|---|---|---|
+| Rugosidad | 0,88 | 0,9 | 0,92 | 0,86 | 0,45 | 0,3 |
+| Metal | 0 | 0 | 0 | 0 | 0,3 | 0,05 |
+
+**D-19 · Vidrio** (cambia SPEC-109 D-13; levanta «ventanas encendidas de noche» de lo que no es objetivo).
+- Los paños llevan rugosidad 0,18 y metal 0,1, y reflejan el cielo con el doble de intensidad que los
+  muros. El Fresnel ya lo hace el BRDF de three: de costado, el vidrio refleja más.
+- Los perfiles, rugosidad 0,6 y metal 0,2.
+- **De noche** se encienden en luz cálida (#ffd9a0) tres de cada diez paños. Cuáles, lo elige el hash
+  del módulo con la semilla de la cara, así que siempre son los mismos y no se nota un patrón. Un paño
+  que pinta un acento no se enciende, y de lejos el brillo se promedia como el resto del vidrio. Solo
+  pasa en el vidrio de las fichas: una cinta `glazed` lisa no se enciende.
+
+**D-20 · Contacto con el suelo** *(decisión de Claude)*. El primer 0,9 m de cada muro, medido desde el
+vértice más bajo de su edificio, se oscurece hasta un 14 % en el pie. La sombra bajo los aleros queda
+fuera, porque la malla no tiene aleros modelados.
+
+**D-21 · Sombras que siguen a la cámara.** Hoy el mapa de sombras cubre ±720 m alrededor del centro del
+campus, unos 35 cm por texel. Pasa a cubrir alrededor del punto que mira la cámara un radio de 0,9 veces
+su distancia, entre 60 m y 720 m. Para que las sombras no tiemblen al moverse:
+- el centro se ajusta a la retícula de texeles de la luz;
+- el radio cambia en saltos de 25 %.
+
+Vale también para el modo rosado: CA-01 queda «idéntico salvo por sombras más nítidas».
+
+**D-22 · Una sola copia probada** (sigue D-11). Cada cosa nueva tiene su copia en TypeScript, que es la
+que prueban los tests:
+- el grano, el relieve, la rugosidad y el encendido de cada punto (`facadeColor` devuelve también
+  `shade`, `height`, `rough`, `metal` y `lit`);
+- el volumen y el contacto (`wallLight`);
+- el ajuste de las sombras (`shadowFit`).
+
+`real-look-shader-check.mjs` compara además el sombreado, la rugosidad y el encendido píxel a píxel.
+El rendimiento sigue con el criterio de D-14.
+
+**Tests de la enmienda:**
+
+```
+Acabados
+- un nombre de material da su acabado; un finish lo reemplaza; un finish que no está en la lista falla
+- ladrillo: hay junta entre hiladas y entre ladrillos, a soga; el promedio del grano sobre la cara es 1
+  (±1 %); de lejos, shade = 1 y height = 0
+- concreto y metal: la junta o el engrape caen donde dice D-17; de lejos se funden
+- un techo no lleva grano ni relieve
+- rugosidad y metal de cada acabado; el vidrio mezcla paño y perfil según su cobertura
+- de noche: tres de cada diez paños (±5 % en 10 000), siempre los mismos; un acento no se enciende;
+  un perfil no se enciende; de lejos, el promedio
+- el color de la ficha (rgb) es el mismo que antes de la enmienda
+
+Luz y sombras
+- wallLight: el pie del muro es más oscuro que la parte alta; el techo da 1; sobre 0,9 m no hay contacto
+- shadowFit: el radio sigue a la distancia entre 60 y 720 m, en saltos; el centro cae en la retícula
+  de texeles y no se mueve con un desplazamiento menor que un texel
+```
 
 ## 5. Entregas
 
