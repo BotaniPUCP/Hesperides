@@ -35,6 +35,7 @@ import cienciasSociales from './ciencias-sociales.json';
 import cigaPulso from './ciga-pulso.json';
 import cise from './cise.json';
 import civil from './civil.json';
+import cocinasMejoradas from './cocinas-mejoradas.json';
 import comedorCentral from './comedor-central.json';
 import comedorDeArte from './comedor-de-arte.json';
 import comedorLetras from './comedor-letras.json';
@@ -81,6 +82,7 @@ import gastronomia from './gastronomia.json';
 import gelarti from './gelarti.json';
 import gestion from './gestion.json';
 import gimnasio from './gimnasio.json';
+import humanidadesJefatura from './humanidades-jefatura.json';
 import industrial from './industrial.json';
 import inras from './inras.json';
 import institutoCorrosion from './instituto-corrosion.json';
@@ -92,6 +94,7 @@ import labHidraulica from './lab-hidraulica.json';
 import labcert from './labcert.json';
 import letrasCh from './letras-ch.json';
 import libreriaPucp from './libreria-pucp.json';
+import lugarPrestado from './lugar-prestado.json';
 import maestranza from './maestranza.json';
 import maquinariaPesada from './maquinaria-pesada.json';
 import matematicas from './matematicas.json';
@@ -102,20 +105,25 @@ import omicas from './omicas.json';
 import pabellonG from './pabellon-g.json';
 import pabellonH from './pabellon-h.json';
 import pabellonI from './pabellon-i.json';
+import pabellonO from './pabellon-o.json';
 import pabellonR from './pabellon-r.json';
 import pabellonV from './pabellon-v.json';
 import pabellonZ from './pabellon-z.json';
 import polideportivo from './polideportivo.json';
 import prototipoSshh from './prototipo-sshh.json';
 import psicologia from './psicologia.json';
+import puenteHuaca from './puente-huaca.json';
 import quimica from './quimica.json';
 import quioscoDeportes from './quiosco-deportes.json';
+import quioscoLetras from './quiosco-letras.json';
+import quioscoSociales from './quiosco-sociales.json';
 import salaCuna from './sala-cuna.json';
 import snackElectronica from './snack-electronica.json';
 import snackFruteriaLetras from './snack-fruteria-letras.json';
 import snackSociales from './snack-sociales.json';
 import subestacionN11 from './subestacion-n11.json';
 import subestacionN2 from './subestacion-n2.json';
+import subestacionN7 from './subestacion-n7.json';
 import subestacionN8 from './subestacion-n8.json';
 import sumaqWasi1 from './sumaq-wasi-1.json';
 import sumaqWasi2 from './sumaq-wasi-2.json';
@@ -166,6 +174,7 @@ const files: unknown[] = [
   cigaPulso,
   cise,
   civil,
+  cocinasMejoradas,
   comedorCentral,
   comedorDeArte,
   comedorLetras,
@@ -212,6 +221,7 @@ const files: unknown[] = [
   gelarti,
   gestion,
   gimnasio,
+  humanidadesJefatura,
   industrial,
   inras,
   institutoCorrosion,
@@ -223,6 +233,7 @@ const files: unknown[] = [
   labcert,
   letrasCh,
   libreriaPucp,
+  lugarPrestado,
   maestranza,
   maquinariaPesada,
   matematicas,
@@ -233,20 +244,25 @@ const files: unknown[] = [
   pabellonG,
   pabellonH,
   pabellonI,
+  pabellonO,
   pabellonR,
   pabellonV,
   pabellonZ,
   polideportivo,
   prototipoSshh,
   psicologia,
+  puenteHuaca,
   quimica,
   quioscoDeportes,
+  quioscoLetras,
+  quioscoSociales,
   salaCuna,
   snackElectronica,
   snackFruteriaLetras,
   snackSociales,
   subestacionN11,
   subestacionN2,
+  subestacionN7,
   subestacionN8,
   sumaqWasi1,
   sumaqWasi2,
