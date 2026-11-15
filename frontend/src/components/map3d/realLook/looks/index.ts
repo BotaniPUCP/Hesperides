@@ -1,5 +1,6 @@
 import type { BuildingLook } from '../types';
 import adein from './adein.json';
+import admision from './admision.json';
 import apoyoRural from './apoyo-rural.json';
 import arqueologiaA from './arqueologia-a.json';
 import arqueologiaC from './arqueologia-c.json';
@@ -24,6 +25,7 @@ import c31 from './c31.json';
 import c32 from './c32.json';
 import c45 from './c45.json';
 import capu from './capu.json';
+import casaAutosostenible from './casa-autosostenible.json';
 import casetaComedorEeggcc from './caseta-comedor-eeggcc.json';
 import ceprepuc from './ceprepuc.json';
 import cetam from './cetam.json';
@@ -96,6 +98,7 @@ import matematicas from './matematicas.json';
 import mcgregor from './mcgregor.json';
 import mecanica from './mecanica.json';
 import minas from './minas.json';
+import omicas from './omicas.json';
 import pabellonG from './pabellon-g.json';
 import pabellonH from './pabellon-h.json';
 import pabellonI from './pabellon-i.json';
@@ -116,6 +119,7 @@ import subestacionN2 from './subestacion-n2.json';
 import subestacionN8 from './subestacion-n8.json';
 import sumaqWasi1 from './sumaq-wasi-1.json';
 import sumaqWasi2 from './sumaq-wasi-2.json';
+import tallerI114 from './taller-i114.json';
 import teologia from './teologia.json';
 import tiendecitaVerde from './tiendecita-verde.json';
 import tinkuy from './tinkuy.json';
@@ -127,6 +131,7 @@ import tinkuy from './tinkuy.json';
  */
 const files: unknown[] = [
   adein,
+  admision,
   apoyoRural,
   arqueologiaA,
   arqueologiaC,
@@ -151,6 +156,7 @@ const files: unknown[] = [
   c32,
   c45,
   capu,
+  casaAutosostenible,
   casetaComedorEeggcc,
   ceprepuc,
   cetam,
@@ -223,6 +229,7 @@ const files: unknown[] = [
   mcgregor,
   mecanica,
   minas,
+  omicas,
   pabellonG,
   pabellonH,
   pabellonI,
@@ -243,6 +250,7 @@ const files: unknown[] = [
   subestacionN8,
   sumaqWasi1,
   sumaqWasi2,
+  tallerI114,
   teologia,
   tiendecitaVerde,
   tinkuy,
