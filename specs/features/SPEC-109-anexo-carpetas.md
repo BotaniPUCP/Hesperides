@@ -115,6 +115,8 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 104 | inras | `c4d51563` | INRAS (Instituto de Radioastronomía) | nombre, código 54; foto: rótulo «Instituto de Radioastronomía INRAS» | seguro |
 | 105 | invernadero-patrimonial | `209334da` | Invernadero (adyacente a Gabinete de Proyectos Patrimoniales) | código C49, nombre de la foto | seguro |
 | 106 | tambo-actoral | `73c6c0f7` | CFCOM | cercanía: el pabellón bajo junto al Estudio de TV 2 (la foto muestra detrás un edificio crema con celosías oscuras) | por confirmar |
+| 107 | pabellon-o | `d0e95525` | Pabellón O | nombre; foto de referencia que mandó Jean Piero el 15 nov («el Pabellón O debe ser como esta imagen») | seguro |
+| 108 | puente-huaca | `f3b65a42` | Puente Huaca | nombre; foto de un puente de arco rojo que no es del campus, solo para el color | seguro |
 
 La fila 81 no es una carpeta: aparece para dejar a la vista que el segundo `Desconocido_13` queda sin
 pintar mientras no se confirme cuál de los dos es el de las fotos.
