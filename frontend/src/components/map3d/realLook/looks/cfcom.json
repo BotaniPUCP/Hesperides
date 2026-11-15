@@ -1,0 +1,36 @@
+{
+  "planKey": "73c6c0f7-3612-48b7-80ce-fb9f07ee978d",
+  "name": "CFCOM",
+  "folder": "tambo-actoral",
+  "photos": [
+    "tambo-actoral.jpg"
+  ],
+  "materials": {
+    "blanco": {
+      "color": "#ebebe8"
+    },
+    "zocalo": {
+      "color": "#3d4144"
+    },
+    "techo": {
+      "color": "#b9bbb9"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "blanco",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            0,
+            0.6
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Pabellón blanco de un piso con techo de calamina y zócalo gris oscuro (tambo-actoral.jpg, «Talleres de teatro»). Ubicación por confirmar: es el pabellón bajo junto al Estudio de TV 2 (Anexo A de SPEC-109)."
+}

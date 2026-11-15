@@ -1,0 +1,50 @@
+{
+  "planKey": "7d738604-381d-44ac-a08a-bf992337e23f",
+  "name": "Facultad de Ciencias Contables (edificio 1)",
+  "source": "Decisión de Jean Piero (15 nov 2026): el edificio 1 de Contables va como el edificio 2, el Pabellón G (SPEC-112)",
+  "materials": {
+    "blanco": {
+      "color": "#ebebe7"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "zocalo": {
+      "color": "#5d6266"
+    },
+    "ventanas": {
+      "color": "#b3b6b6"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "blanco",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            0,
+            0.4
+          ]
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            1.1,
+            2.8
+          ]
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            3.9,
+            5.1
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Copia los colores del Pabellón G (edificio 2, pabellon-g.json): blanco con zócalo gris oscuro y las filas de ventanas de sus dos pisos como franjas tenues (D-04), aquí en todas las caras. Sin fotos propias: la cinta de vidrio de la cara sur del edificio 2 no se copia."
+}

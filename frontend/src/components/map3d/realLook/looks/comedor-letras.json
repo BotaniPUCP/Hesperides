@@ -1,0 +1,24 @@
+{
+  "planKey": "bc020b20-90b6-48ec-99bd-7debc97cb545",
+  "name": "Comedor de Letras",
+  "folder": "comedor-letras",
+  "photos": [
+    "comedor-letras.jpg"
+  ],
+  "materials": {
+    "blanco": {
+      "color": "#ecece8"
+    },
+    "techo": {
+      "color": "#efefeb"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "blanco",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Toldos tensados blancos sobre estructura metálica gris y, detrás, el comedor blanco (comedor-letras.jpg). Va blanco."
+}

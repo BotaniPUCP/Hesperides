@@ -23,16 +23,22 @@ import c30 from './c30.json';
 import c31 from './c31.json';
 import c32 from './c32.json';
 import c45 from './c45.json';
+import capu from './capu.json';
+import casetaComedorEeggcc from './caseta-comedor-eeggcc.json';
 import ceprepuc from './ceprepuc.json';
 import cetam from './cetam.json';
+import cfcom from './cfcom.json';
 import cia from './cia.json';
 import cienciasSociales from './ciencias-sociales.json';
 import cigaPulso from './ciga-pulso.json';
 import cise from './cise.json';
 import civil from './civil.json';
 import comedorCentral from './comedor-central.json';
+import comedorDeArte from './comedor-de-arte.json';
+import comedorLetras from './comedor-letras.json';
 import complejoSociales from './complejo-sociales.json';
 import comunicaciones from './comunicaciones.json';
+import contablesEdificio1 from './contables-edificio-1.json';
 import depositoLimpieza from './deposito-limpieza.json';
 import depositoRural from './deposito-rural.json';
 import desconocido01 from './desconocido-01.json';
@@ -57,10 +63,16 @@ import educacion2 from './educacion-2.json';
 import educacionR102 from './educacion-r102.json';
 import eeggcc from './eeggcc.json';
 import eeggll from './eeggll.json';
+import escuelaGobierno from './escuela-gobierno.json';
+import espaciosCulturales from './espacios-culturales.json';
+import estacionMeteorologica from './estacion-meteorologica.json';
+import estudioTv from './estudio-tv.json';
 import etnomusicologia from './etnomusicologia.json';
 import faci from './faci.json';
 import facultadDerecho from './facultad-derecho.json';
 import fisica from './fisica.json';
+import fotocopiadoDerecho from './fotocopiado-derecho.json';
+import fotocopiadoEeggcc from './fotocopiado-eeggcc.json';
 import fotocopiadoLetras from './fotocopiado-letras.json';
 import fotocopiadoZ from './fotocopiado-z.json';
 import gastronomia from './gastronomia.json';
@@ -68,8 +80,10 @@ import gelarti from './gelarti.json';
 import gestion from './gestion.json';
 import gimnasio from './gimnasio.json';
 import industrial from './industrial.json';
+import inras from './inras.json';
 import institutoCorrosion from './instituto-corrosion.json';
 import invernaderoInteligente from './invernadero-inteligente.json';
+import invernaderoPatrimonial from './invernadero-patrimonial.json';
 import invernadero from './invernadero.json';
 import juanValdez from './juan-valdez.json';
 import labHidraulica from './lab-hidraulica.json';
@@ -94,6 +108,8 @@ import psicologia from './psicologia.json';
 import quimica from './quimica.json';
 import quioscoDeportes from './quiosco-deportes.json';
 import salaCuna from './sala-cuna.json';
+import snackElectronica from './snack-electronica.json';
+import snackFruteriaLetras from './snack-fruteria-letras.json';
 import snackSociales from './snack-sociales.json';
 import subestacionN11 from './subestacion-n11.json';
 import subestacionN2 from './subestacion-n2.json';
@@ -134,16 +150,22 @@ const files: unknown[] = [
   c31,
   c32,
   c45,
+  capu,
+  casetaComedorEeggcc,
   ceprepuc,
   cetam,
+  cfcom,
   cia,
   cienciasSociales,
   cigaPulso,
   cise,
   civil,
   comedorCentral,
+  comedorDeArte,
+  comedorLetras,
   complejoSociales,
   comunicaciones,
+  contablesEdificio1,
   depositoLimpieza,
   depositoRural,
   desconocido01,
@@ -168,10 +190,16 @@ const files: unknown[] = [
   educacionR102,
   eeggcc,
   eeggll,
+  escuelaGobierno,
+  espaciosCulturales,
+  estacionMeteorologica,
+  estudioTv,
   etnomusicologia,
   faci,
   facultadDerecho,
   fisica,
+  fotocopiadoDerecho,
+  fotocopiadoEeggcc,
   fotocopiadoLetras,
   fotocopiadoZ,
   gastronomia,
@@ -179,8 +207,10 @@ const files: unknown[] = [
   gestion,
   gimnasio,
   industrial,
+  inras,
   institutoCorrosion,
   invernaderoInteligente,
+  invernaderoPatrimonial,
   invernadero,
   juanValdez,
   labHidraulica,
@@ -205,6 +235,8 @@ const files: unknown[] = [
   quimica,
   quioscoDeportes,
   salaCuna,
+  snackElectronica,
+  snackFruteriaLetras,
   snackSociales,
   subestacionN11,
   subestacionN2,
