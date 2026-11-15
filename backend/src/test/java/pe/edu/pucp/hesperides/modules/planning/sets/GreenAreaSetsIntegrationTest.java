@@ -166,6 +166,24 @@ class GreenAreaSetsIntegrationTest {
     }
 
     @Test
+    void theSectionOptionsGroupEveryActiveSectionUnderItsSector() throws Exception {
+        var sectors = json.readTree(mvc.perform(get("/api/v1/green-area-sets/section-options").with(as(coordinator, "COORDINADOR")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
+        assertThat(sectors.size()).isEqualTo(jdbc.queryForObject("""
+                SELECT count(*) FROM zones z JOIN catalog_items t ON t.id = z.zone_type_item_id
+                WHERE t.code = 'SECTOR' AND z.is_active AND z.deleted_at IS NULL""", Integer.class));
+        int listed = 0;
+        for (JsonNode s : sectors) listed += s.get("sections").size();
+        assertThat(listed).isEqualTo(jdbc.queryForObject("""
+                SELECT count(*) FROM zones z JOIN catalog_items t ON t.id = z.zone_type_item_id
+                JOIN zones p ON p.id = z.parent_zone_id
+                JOIN catalog_items pt ON pt.id = p.zone_type_item_id AND pt.code = 'SECTOR'
+                WHERE t.code = 'SECTION' AND z.is_active AND z.deleted_at IS NULL
+                  AND p.is_active AND p.deleted_at IS NULL""", Integer.class));
+        assertThat(sectors.get(0).get("sections").get(0).has("code")).isTrue();
+    }
+
+    @Test
     void anInactiveSectionLeavesTheSetDetail() throws Exception {
         long id = create("Inactiva " + UUID.randomUUID(), sections, 201).get("data").get("id").asLong();
         jdbc.update("UPDATE zones SET is_active = FALSE WHERE id = ?", sections.get(1));
@@ -224,6 +242,7 @@ class GreenAreaSetsIntegrationTest {
     void fieldRolesCannotUseSets(String role) throws Exception {
         mvc.perform(get("/api/v1/green-area-sets").with(as("x@test.local", role))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/green-area-sets/element-options").with(as("x@test.local", role))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/green-area-sets/section-options").with(as("x@test.local", role))).andExpect(status().isForbidden());
         mvc.perform(post("/api/v1/green-area-sets").with(as("x@test.local", role))
                 .contentType(MediaType.APPLICATION_JSON).content(body("X", sections, null)))
                 .andExpect(status().isForbidden());

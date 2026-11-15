@@ -9,11 +9,13 @@ import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetRequest;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Detail;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.ElementRef;
+import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.SectorSections;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Summary;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.TypeCount;
 import pe.edu.pucp.hesperides.modules.planning.sets.entity.GreenAreaSet;
 import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetQueries;
 import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetsRepository;
+import pe.edu.pucp.hesperides.modules.planning.sets.repository.SectionOptionQueries;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
@@ -33,6 +35,7 @@ public class GreenAreaSetsServiceImpl implements GreenAreaSetsService {
 
     private final GreenAreaSetsRepository sets;
     private final GreenAreaSetQueries queries;
+    private final SectionOptionQueries sectionOptions;
     private final UsersRepository users;
     private final AuditService audit;
 
@@ -133,6 +136,12 @@ public class GreenAreaSetsServiceImpl implements GreenAreaSetsService {
     @Transactional(readOnly = true)
     public List<ElementRef> elementOptions() {
         return queries.elementOptions();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SectorSections> sectionOptions() {
+        return sectionOptions.sectorsWithSections();
     }
 
     private GreenAreaSet load(long id) {
