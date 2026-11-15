@@ -89,6 +89,8 @@ test('con un ajuste en el manifiesto (D-16), la malla y su huella llegan ajustad
     adjustedRing: (ring, m) => ring.map((v, i) => (i % 2 === 0 ? v + shiftEast(m) : v)),
     stairsOf: () => new Map(),
     withStair: () => assert.fail('sin escalera no se toca la malla'),
+    piecesOf: () => new Map(),
+    splitPiece: () => assert.fail('sin piezas no se parte la malla'),
   };
   const campus = { manifest: { anchor: { lat: 0, lon: 0 } }, nodes: new Map([['k', new Float32Array([1, 2, 3])]]), footprints: new Map([['k', {}]]) };
 
@@ -111,6 +113,8 @@ test('con una escalera en el manifiesto (D-17), la malla llega con su escalera y
     adjustedRing: () => assert.fail('sin ajuste no se corre la huella'),
     stairsOf: () => new Map([['k', { why: 'prueba' }]]),
     withStair: (p, stair, key) => ({ positions: Float32Array.from([...p, 7, 8, 9]), stairFrom: key === 'k' && stair.why ? 1 : -1 }),
+    piecesOf: () => new Map(),
+    splitPiece: () => assert.fail('sin piezas no se parte la malla'),
   };
   const campus = { manifest: { anchor: { lat: 0, lon: 0 } }, nodes: new Map([['k', new Float32Array([1, 2, 3])]]), footprints: new Map([['k', {}]]) };
 
@@ -118,4 +122,40 @@ test('con una escalera en el manifiesto (D-17), la malla llega con su escalera y
 
   assert.deepEqual(calls[0], { positions: [1, 2, 3, 7, 8, 9], n: 2, plainFrom: 1 });
   assert.deepEqual(Array.from(building.positions), [1, 2, 3, 7, 8, 9]);
+});
+
+/** Los módulos del visor para una malla `k` con dos triángulos de mentira, de los que la pieza `p` se lleva el segundo. */
+function withPiece(calls) {
+  return {
+    LocalPlane: class {},
+    polygons: () => [[[9, 9, 9, 9, 9, 9]]],
+    buildLookTable: (looks) => ({ zones: new Map([[looks[0].planKey, []]]) }),
+    classifyBuilding: (positions, start, n, footprint) => calls.push({ positions: Array.from(positions), footprint }),
+    adjustmentsOf: () => new Map(),
+    adjusted: () => assert.fail('sin ajuste no se corre la malla'),
+    adjustedRing: () => assert.fail('sin ajuste no se corre la huella'),
+    stairsOf: () => new Map(),
+    withStair: () => assert.fail('sin escalera no se toca la malla'),
+    piecesOf: () => new Map([['p', { from: 'k', polygon: [[0, 0], [1, 0], [1, 1]], why: 'prueba' }]]),
+    splitPiece: (p, polygon, key) => (key === 'p' && polygon.length === 3 ? { kept: p.slice(0, 3), piece: p.slice(3) } : assert.fail('otra pieza')),
+  };
+}
+const campusWithPiece = () => ({ manifest: { anchor: { lat: 0, lon: 0 } }, nodes: new Map([['k', new Float32Array([1, 2, 3, 4, 5, 6])]]), footprints: new Map([['k', {}]]) });
+
+test('con una pieza en el manifiesto (D-18), la malla de la que sale llega sin ella a la clasificación, como en el visor', () => {
+  const calls = [];
+
+  const building = classifiedBuilding(campusWithPiece(), { planKey: 'k', name: 'K' }, withPiece(calls));
+
+  assert.deepEqual(calls[0].positions, [1, 2, 3]);
+  assert.deepEqual(Array.from(building.positions), [1, 2, 3]);
+});
+
+test('una pieza (D-18) se clasifica con sus triángulos y con su polígono como huella: V045 no la trae', () => {
+  const calls = [];
+
+  const building = classifiedBuilding(campusWithPiece(), { planKey: 'p', name: 'P' }, withPiece(calls));
+
+  assert.deepEqual(calls[0], { positions: [4, 5, 6], footprint: [[[0, 0, 1, 0, 1, 1]]] });
+  assert.deepEqual(Array.from(building.positions), [4, 5, 6]);
 });

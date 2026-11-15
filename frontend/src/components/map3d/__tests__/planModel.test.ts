@@ -252,6 +252,26 @@ describe('parsePlanModel', () => {
     expect(model.stairFrom.has('k2')).toBe(false);
   });
 
+  it('separa las piezas del manifiesto: sus triángulos pasan a su propio edificio, ubicado con el anclaje como los demás', async () => {
+    // Un quiosco que el SKP dibujó dentro de la malla de k1, en metros alrededor del anclaje (SPEC-108 D-18).
+    const [lat, lon] = plane.toLatLon({ x: 10, y: 0 });
+    const kiosk = [1, 3, -1, 2, 3, -1, 1, 3, -2];
+    const rest = [10, 0, 0, 11, 0, 0, 10, 0, -1];
+    const manifest = manifestWith({ anchor: { lat, lon }, pieces: { quiosco: { from: 'k1', polygon: [[0, 0], [4, 0], [4, 4], [0, 4]], why: 'prueba' } } });
+
+    const model = await parsePlanModel(manifest, glb([{ name: 'k1', positions: [...kiosk, ...rest] }]), plane);
+
+    expectClose(model.buildings.get('k1'), [20, 0, 0, 21, 0, 0, 20, 0, -1]);
+    expectClose(model.buildings.get('quiosco'), [11, 3, -1, 12, 3, -1, 11, 3, -2]);
+  });
+
+  it('una pieza cuya malla no está en el modelo hace fallar la lectura: su edificio quedaría sin malla', async () => {
+    const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' },
+      pieces: { quiosco: { from: 'k2', polygon: [[0, 0], [4, 0], [4, 4]], why: 'prueba' } } });
+
+    await expect(parsePlanModel(manifest, glb([{ name: 'k1', positions: Array.from(corner) }]), plane)).rejects.toThrow(/quiosco/);
+  });
+
   it('un ajuste de algo que no es la malla de un edificio hace fallar la lectura: no se aplica a ciegas', async () => {
     const manifest = manifestWith({ nodes: { suelo: 'suelo' }, adjustments: { suelo: { matrix: [1, 0, 0, 1, 1, 0], why: 'prueba' } } });
 

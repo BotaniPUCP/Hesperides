@@ -1,6 +1,6 @@
-import type { BuildingModelManifest, BuildingStair, PlanPoint } from '@shared/types';
-import { insideRing } from './picking';
-import { distanceToSegment, flightTriangles, landingTriangles, STAIR_SLAB_M, wallTriangles, type Segment } from './stairMesh';
+import type { BuildingModelManifest, BuildingStair } from '@shared/types';
+import { inPlanPolygon, isPlanPoint } from './planPolygon';
+import { flightTriangles, landingTriangles, STAIR_SLAB_M, wallTriangles, type Segment } from './stairMesh';
 
 /**
  * Escaleras que reemplazan una parte de la malla de un edificio (SPEC-108 D-17): el SKP dibuja como un bloque
@@ -8,18 +8,14 @@ import { distanceToSegment, flightTriangles, landingTriangles, STAIR_SLAB_M, wal
  * donde estaba pegado y dibuja la escalera; el GLB no se toca.
  */
 
-/** Un vértice a menos de esto del borde de la parte reemplazada cae en ella: el manifiesto redondea al milímetro. */
-const PLAN_TOLERANCE_M = 0.02;
 const HEIGHT_TOLERANCE_M = 0.01;
-
-const isPoint = (p: unknown): p is PlanPoint => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
 
 function pointsOf(s: BuildingStair): unknown[] {
   return [...s.replaces.polygon, ...s.walls.flat(), ...s.flights.flatMap((f) => [...f.from, ...f.to]), ...s.landings.flatMap((l) => l.polygon)];
 }
 
 function validate(key: string, s: BuildingStair): void {
-  if (!pointsOf(s).every(isPoint)) throw new Error(`La escalera de ${key} tiene un punto que no son dos números finitos`);
+  if (!pointsOf(s).every(isPlanPoint)) throw new Error(`La escalera de ${key} tiene un punto que no son dos números finitos`);
   if (!(s.replaces.toM > s.replaces.fromM)) throw new Error(`La parte que reemplaza la escalera de ${key} no sube`);
   if (!s.landings.every((l) => Number.isFinite(l.atM))) throw new Error(`Un descanso de la escalera de ${key} no tiene cota`);
   for (const f of s.flights) {
@@ -42,12 +38,11 @@ export function stairsOf(manifest: BuildingModelManifest): Map<string, BuildingS
 
 /** Los triángulos que no caen enteros en el prisma de la parte reemplazada (planta y cotas), en su orden. */
 function keptTriangles(p: Float32Array, { polygon, fromM, toM }: BuildingStair['replaces']): Float32Array {
-  const ring = polygon.flat();
-  const edges = polygon.map((a, i): Segment => [a, polygon[(i + 1) % polygon.length]]);
+  const inPlan = inPlanPolygon(polygon);
   const inPart = (v: number) => {
-    const x = p[v], y = p[v + 1], north = -p[v + 2];
+    const y = p[v + 1];
     if (y < fromM - HEIGHT_TOLERANCE_M || y > toM + HEIGHT_TOLERANCE_M) return false;
-    return insideRing(x, north, ring) || edges.some((e) => distanceToSegment([x, north], e) < PLAN_TOLERANCE_M);
+    return inPlan(p[v], -p[v + 2]);
   };
   const out: number[] = [];
   for (let t = 0; t < p.length; t += 9) {

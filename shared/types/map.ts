@@ -91,6 +91,20 @@ export interface BuildingModelManifest {
   adjustments?: Record<string, BuildingAdjustment>;
   /** Escaleras que reemplazan una parte de la malla (SPEC-108 D-17), por `plan_key`. Su huella en la base ya no la incluye. */
   stairs?: Record<string, BuildingStair>;
+  /** Edificios que el SKP dibuja dentro de la malla de otro (SPEC-108 D-18), por su propio `plan_key`. */
+  pieces?: Record<string, BuildingPiece>;
+}
+
+/**
+ * Un edificio que el SKP dibuja dentro de la malla de otro (SPEC-108 D-18): el visor le pasa los triángulos que
+ * caen enteros en su polígono, en el marco de la malla ya ajustada (D-16). En la base, cada uno tiene su huella.
+ */
+export interface BuildingPiece {
+  /** La `plan_key` de la malla de la que sale. */
+  from: string;
+  polygon: PlanPoint[];
+  /** Qué se separó y a pedido de quién. */
+  why: string;
 }
 
 /** Un punto del plano en metros alrededor del anclaje: [este, norte]. */
