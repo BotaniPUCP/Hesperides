@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { MapLayersResponse } from '@shared/types';
+import type { Balloon, MapLayersResponse } from '@shared/types';
 import { MapScreen } from '../MapScreen';
 import { layersWithTwoBlocks, sampleLayers, SECOND_BLOCK_ID } from '../__fixtures__/mapLayers';
 import type { CameraPose } from '../viewer/cameraRig';
@@ -11,6 +11,7 @@ import { mapApi } from '@/lib/map-api';
 import { ApiError } from '@/lib/api';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { placesApi } from '@/lib/places-api';
+import { balloonsApi } from '@/lib/balloons-api';
 import type { MapCatalog } from '@shared/types';
 
 jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
@@ -20,6 +21,7 @@ jest.mock('@/hooks/useMapLayers', () => ({ useMapLayers: jest.fn() }));
 jest.mock('@/hooks/usePlanModel', () => ({ usePlanModel: jest.fn() }));
 jest.mock('@/lib/map-api', () => ({ mapApi: { describe: jest.fn() } }));
 jest.mock('@/lib/places-api', () => ({ placesApi: { map: jest.fn() } }));
+jest.mock('@/lib/balloons-api', () => ({ balloonsApi: { list: jest.fn(() => new Promise(() => {})) } }));
 
 const mockedCreate = createViewer as jest.MockedFunction<typeof createViewer>;
 const mockedLayers = useMapLayers as jest.MockedFunction<typeof useMapLayers>;
@@ -32,7 +34,7 @@ let testNumber = 0;
 
 function fakeViewer(): jest.Mocked<Viewer> {
   return {
-    setPaint: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
+    setPaint: jest.fn(), setBalloons: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), setRealColors: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), pose: jest.fn(() => SAVED_POSE),
     setViewCones: jest.fn(), flyToPose: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(), setPinLatLon: jest.fn(), dispose: jest.fn(),
@@ -183,7 +185,7 @@ describe('MapScreen', () => {
 
   it('arranca en colores reales: el visor nace con ellos y el botón aparece activo', async () => {
     await renderLoaded();
-    expect(mockedCreate.mock.calls[0][6]).toEqual({ realColors: true });
+    expect(mockedCreate.mock.calls[0][6]).toMatchObject({ realColors: true });
     expect(screen.getByRole('button', { name: 'Colores reales' })).toHaveAttribute('aria-pressed', 'true');
     expect(viewer.setRealColors).not.toHaveBeenCalled();
   });
@@ -345,7 +347,7 @@ describe('MapScreen', () => {
       await leaveAndReturn(unmount);
 
       await waitFor(() => expect(viewer.setRealColors).toHaveBeenCalledWith(false));
-      expect(mockedCreate.mock.calls[mockedCreate.mock.calls.length - 1][6]).toEqual({ realColors: true });
+      expect(mockedCreate.mock.calls[mockedCreate.mock.calls.length - 1][6]).toMatchObject({ realColors: true });
       expect(screen.getByRole('button', { name: 'Colores reales' })).toHaveAttribute('aria-pressed', 'false');
     });
 
@@ -668,5 +670,33 @@ describe('MapScreen', () => {
       await renderLoaded();
       expect(screen.getByTestId('map-3d')).toBeInTheDocument();
     });
+  });
+});
+
+describe('MapScreen: globos (SPEC-113)', () => {
+  const incident: Balloon = {
+    id: 'INCIDENT:4', kind: 'INCIDENT', variant: 'HIGH', attention: true, latitude: -12.07, longitude: -77.08,
+    sectorId: 1, memberCount: 1,
+    card: { title: 'Rama caída', status: 'En atención', lines: [], progress: null, photoUrl: null, href: '/incidencias/4' },
+  };
+
+  beforeEach(() => {
+    (balloonsApi.list as jest.Mock).mockResolvedValue({ generatedAt: '', balloons: [incident], unavailableKinds: [], truncated: false });
+  });
+
+  it('el visor nace con dónde dibujar los globos y los recibe', async () => {
+    await renderLoaded();
+
+    expect(mockedCreate.mock.calls[0][6]?.balloonRoot).toBeInstanceOf(HTMLElement);
+    await waitFor(() => expect(viewer.setBalloons).toHaveBeenLastCalledWith([incident]));
+  });
+
+  it('tocar un globo abre su ficha corta con el enlace al detalle (CA-10)', async () => {
+    await renderLoaded();
+
+    act(() => callbacks.onBalloonPick?.(incident));
+
+    expect(await screen.findByRole('heading', { name: 'Rama caída' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Ver detalle/ })).toHaveAttribute('href', '/incidencias/4');
   });
 });

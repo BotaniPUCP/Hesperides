@@ -34,6 +34,7 @@ export interface Map3DViewProps extends ViewerCallbacks {
 export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemory, start, ...callbacks }: Map3DViewProps) {
   const container = useRef<HTMLDivElement>(null);
   const labels = useRef<HTMLDivElement>(null);
+  const balloons = useRef<HTMLDivElement>(null);
   // Los callbacks cambian en cada render del padre; el visor se crea una sola
   // vez, así que lee siempre los más recientes a través de esta referencia.
   const latest = useRef({ ...callbacks, onReady, onUnsupported, poseMemory, start });
@@ -60,7 +61,10 @@ export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemo
           } } : {}),
           // Solo si la pantalla lo pide: en los editores un clic sobre un cono debe marcar un punto.
           ...(latest.current.onViewConePick ? { onViewConePick: (id: number) => latest.current.onViewConePick?.(id) } : {}),
-        }, latest.current.poseMemory?.recall(), model, latest.current.start);
+          onBalloonPick: (b) => latest.current.onBalloonPick?.(b),
+        }, latest.current.poseMemory?.recall(), model,
+          // Solo la pantalla del mapa pide globos; los selectores de los editores no los muestran.
+          latest.current.onBalloonPick && balloons.current ? { ...latest.current.start, balloonRoot: balloons.current } : latest.current.start);
         latest.current.onReady(viewer);
       })
       .catch(() => {
@@ -77,6 +81,7 @@ export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemo
     <div className="absolute inset-0 overflow-hidden" data-testid="map-3d">
       <div ref={container} className="absolute inset-0" />
       <div ref={labels} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
+      <div ref={balloons} className="pointer-events-none absolute inset-0 overflow-hidden" role="group" aria-label="Globos del mapa" />
     </div>
   );
 }

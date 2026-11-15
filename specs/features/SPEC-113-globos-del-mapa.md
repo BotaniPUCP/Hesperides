@@ -95,6 +95,8 @@ Se verifica que se puedan tocar con el dedo (§7.1).
 | D-07 | Globos y mapa de calor (REQ 6.9, aún no construido) no se muestran a la vez | El mapa de calor resume la historia; los globos, el presente. Juntos se tapan | Superponerlos |
 | D-08 | El riego sale de la **planificación** (SPEC-203) y de las intervenciones de clase `RIEGO` (SPEC-200). El módulo de turnos de riego (`modules/irrigation`, `/riego`) **se elimina** | Decisión del usuario (15 nov 2026): planificación ya maneja el riego; dos registros del mismo trabajo se contradicen | Turnos de riego como fuente |
 | D-09 | «Sección por regar» usa el estado por jardín de SPEC-203 §5.5.1 con la regla de frecuencia de riego vigente; **solo para jardines con al menos un riego registrado** | Decisión del usuario (15 nov 2026): sin eso, el mapa se llena de globos de jardines que nunca tuvieron registro | Avisar también de los jardines sin registro previo |
+| D-11 | El atraso de «Sección por regar» se mide sobre los jardines que el globo cubre: el regado hace más tiempo contra el máximo de la regla (`rhythm.maxDays`). Sin máximo, manda el estado de la fila | Planificación juzga el conjunto por su jardín más desatendido, que puede ser uno nunca regado; el globo, que no lo muestra, quedaría «por vencer» con un jardín 5 días tarde | Usar siempre el estado de la fila |
+| D-12 | El tipo de globo es un `enum` de Java (`engine/balloons/BalloonKind`), como `ReservationState` | Es código, no dato administrable (D-04); el enum lleva su rango de urgencia y si pide atención | Constantes sueltas |
 | D-10 | Solo salen las incidencias **aprobadas** (registro oficial). Una aprobada sin urgencia lleva el globo de **aro blanco** | Decisión del usuario (15 nov 2026). La aprobación no exige urgencia (SPEC-201) | Mostrar las pendientes de aprobación |
 
 ## 3. Contratos de API
@@ -136,7 +138,8 @@ Respuesta (`data`):
 
 - `kind`: `INCIDENT` · `INTERVENTION` · `IRRIGATION` · `IRRIGATION_DUE` · `RESERVATION` ·
   (reservados, sin fuente en esta entrega: `BLOCKING_EVENT` · `MACHINERY_CUT`).
-- `variant`: solo en `INCIDENT` (`HIGH`, `MEDIUM`, `LOW`, `NONE` sin urgencia); `null` en los demás.
+- `variant`: en `INCIDENT`, la urgencia (`HIGH`, `MEDIUM`, `LOW`, `NONE` sin urgencia); en `IRRIGATION_DUE`,
+  `OVERDUE` o `DUE`; `null` en los demás.
 - `id`: `<KIND>:<id de origen>`, y `#<n>` cuando un conjunto se parte en minigrupos
   (`IRRIGATION_DUE:7#2`). Es estable entre consultas mientras el origen no cambie: el navegador
   lo usa para no redibujar lo que no cambió y para mantener abierta la ficha.
@@ -212,8 +215,9 @@ están dispersos, se parte en minigrupos:
   temporal con su número, como hace `labels.ts` con las etiquetas.
 - El globo de grupo es oscuro con el número; si **alguno de sus miembros pide atención**, lleva un
   punto del color de la atención más urgente que contiene.
-- `FAR_DISTANCE_M` se fija al verificar en el navegador (propuesta inicial: la distancia a la que
-  dejan de leerse los nombres de jardín).
+- `FAR_DISTANCE_M = 700` m (`viewer/balloons.ts`): la distancia a la que dejan de verse los nombres de
+  jardín. Se ajusta al verificar en el navegador.
+- Tocar un grupo acerca la cámara hasta encuadrar a sus miembros (`focusPoints`).
 
 ### 5.5 Orden y prioridad
 
@@ -277,8 +281,7 @@ incidencia sin urgencia → sección por regar que vence → riego → intervenc
   `corte-maquinaria-pendiente`, `grupo`.
 - Tamaño en pantalla: 40 × 41 px en escritorio, 48 × 49 px en táctil (≥ 44 px para el dedo). La
   punta de la cola toca el ancla.
-- El globo de grupo muestra el número real en lugar del «5» de muestra (texto HTML encima del
-  SVG, no un SVG por número); «99+» desde 100.
+- `grupo.svg` no lleva número: el visor escribe encima el número real como texto HTML; «99+» desde 100.
 - `aria-label` con el tipo y el título («Incidencia alta: Rama caída sobre la vereda»); navegable
   con Tab; Enter abre la ficha.
 - Hover en escritorio: el globo sube 2 px y muestra el título como tooltip.
