@@ -9,7 +9,9 @@ import arteNuevo from './arte-nuevo.json';
 import artesEscenicas from './artes-escenicas.json';
 import auditorioDerecho from './auditorio-derecho.json';
 import auditorioHumanidades from './auditorio-humanidades.json';
+import auditorioJuanPabloIi from './auditorio-juan-pablo-ii.json';
 import aulaMovilPsicologia from './aula-movil-psicologia.json';
+import aulario from './aulario.json';
 import aulasMovilesB from './aulas-moviles-b.json';
 import bibliotecaCentral from './biblioteca-central.json';
 import c18 from './c18.json';
@@ -19,6 +21,8 @@ import c30 from './c30.json';
 import c31 from './c31.json';
 import c32 from './c32.json';
 import c45 from './c45.json';
+import ceprepuc from './ceprepuc.json';
+import cia from './cia.json';
 import cienciasSociales from './ciencias-sociales.json';
 import cigaPulso from './ciga-pulso.json';
 import cise from './cise.json';
@@ -70,6 +74,7 @@ import maquinariaPesada from './maquinaria-pesada.json';
 import mcgregor from './mcgregor.json';
 import mecanica from './mecanica.json';
 import minas from './minas.json';
+import pabellonG from './pabellon-g.json';
 import pabellonH from './pabellon-h.json';
 import pabellonI from './pabellon-i.json';
 import pabellonR from './pabellon-r.json';
@@ -107,7 +112,9 @@ const files: unknown[] = [
   artesEscenicas,
   auditorioDerecho,
   auditorioHumanidades,
+  auditorioJuanPabloIi,
   aulaMovilPsicologia,
+  aulario,
   aulasMovilesB,
   bibliotecaCentral,
   c18,
@@ -117,6 +124,8 @@ const files: unknown[] = [
   c31,
   c32,
   c45,
+  ceprepuc,
+  cia,
   cienciasSociales,
   cigaPulso,
   cise,
@@ -168,6 +177,7 @@ const files: unknown[] = [
   mcgregor,
   mecanica,
   minas,
+  pabellonG,
   pabellonH,
   pabellonI,
   pabellonR,

@@ -1,0 +1,45 @@
+{
+  "planKey": "c46e56b9-a324-4df3-840c-b3baf9dea0fc",
+  "name": "CEPREPUC",
+  "folder": "ceprepuc",
+  "photos": [
+    "ceprepucp-1.jpg",
+    "ceprepucp-2-desde-adentro.jpg"
+  ],
+  "materials": {
+    "ladrillo": {
+      "color": "#c47a65"
+    },
+    "crema": {
+      "color": "#ddd6c3"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "crema",
+          "v": [
+            4,
+            13.6
+          ],
+          "floors": {
+            "everyM": 4.4,
+            "startM": 4.4,
+            "bandM": [
+              -0.4,
+              0.4
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Ladrillo en un marco de concreto crema: las losas y los antepechos de cada piso y el remate de arriba (ceprepucp-1.jpg, la esquina del ingreso; ceprepucp-2-desde-adentro.jpg, el patio). Las ventanas de marco claro de algunas caras no se dibujan: el ladrillo y el crema mandan en el color (D-04). Va igual en todas las caras."
+}

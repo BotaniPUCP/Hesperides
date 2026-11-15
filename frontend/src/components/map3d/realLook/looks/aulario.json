@@ -1,0 +1,85 @@
+{
+  "planKey": "8be4b50b-2d15-482d-a8c3-2f97da9963ed",
+  "name": "Aulario (Pabellón A)",
+  "folder": "aulario",
+  "photos": [
+    "aulario-1.jpg",
+    "aulario-2.jpg"
+  ],
+  "materials": {
+    "torre": {
+      "color": "#9c918f"
+    },
+    "concreto": {
+      "color": "#b9b1a3"
+    },
+    "sombra": {
+      "color": "#6b6560"
+    },
+    "madera": {
+      "color": "#8c5a45"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "vitrina": {
+      "glass": "#4b4f52",
+      "frame": "#8f8f8a",
+      "moduleM": 1.8,
+      "heightM": 2.6,
+      "frameM": 0.08
+    }
+  },
+  "zones": [
+    {
+      "id": "torres",
+      "wall": "torre",
+      "roof": "techo"
+    },
+    {
+      "id": "centro",
+      "where": {
+        "east": [
+          0.2,
+          0.8
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo",
+      "faces": {
+        "S": [
+          {
+            "material": "vitrina",
+            "v": [
+              0,
+              2.6
+            ]
+          },
+          {
+            "material": "madera",
+            "v": [
+              2.6,
+              4.1
+            ]
+          },
+          {
+            "material": "sombra",
+            "v": [
+              4.1,
+              26.1
+            ],
+            "floors": {
+              "everyM": 3.7,
+              "startM": 4.1,
+              "bandM": [
+                1.2,
+                3.6
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "notes": "Concreto caravista. Las torres de los extremos, de tono malva, con rendijas de ventana que no se dibujan (D-04); el cuerpo central, más claro, con los pisos retirados en sombra entre losas y antepechos (aulario-1.jpg, cara sur). En la planta baja del centro, la vitrina de la cafetería y la banda de madera sobre ella (aulario-2.jpg). Las cajas de acero y vidrio de los puentes no se dibujan. La cara norte no tiene foto: el concreto de cada cuerpo, sin vidrio (D-06)."
+}
