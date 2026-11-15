@@ -40,7 +40,7 @@ const MARKED_COLOR = '#06B6D4';
  * Escala de la velocidad del modo administrador: el vuelo va a la mitad de esto en m/s.
  * En los pilotos es el radio del edificio; el campus entero sería demasiado rápido.
  */
-const ADMIN_SPEED_RADIUS_M = 60;
+const ADMIN_SPEED_RADIUS_M = 80;
 
 /** Con `model`, los edificios se dibujan con las mallas del plano oficial; sin él (no llegó o falló), como prismas. */
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose,
