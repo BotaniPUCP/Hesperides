@@ -5,7 +5,7 @@ import type { PolyLayerId } from '../target';
 import { ringLines } from './geometry';
 import type { ScenePalette } from './palette';
 import { facetedGeometry, mergedBuildings, type PlanModel, type PlanNode, type PlanNodeKind } from './planModel';
-import { lawnOverFloor, lawnsOverSunken } from './lawnOverFloor';
+import { floorWithoutLawns, lawnsOverSunken } from './floorWithoutLawns';
 import { createPolyLayer, surfaceMaterial, WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { openOverSunken, type Stage } from './stage';
 import type { SceneTextures } from './textures';
@@ -121,14 +121,11 @@ export interface PlanNodes {
   applyTheme: (palette: ScenePalette) => void;
 }
 
-function addLawnOverFloor(scene: THREE.Scene, model: PlanModel, lawns: Polygon[][], material: THREE.Material) {
-  const floor = model.nodes.suelo;
+/** El piso del modelo sin la parte que tapa un césped de la base en un desnivel (D-19): debajo se ve el jardín. */
+function openOverLawns(model: PlanModel, kind: PlanNodeKind, node: PlanNode, lawns: Polygon[][]): PlanNode {
+  if (kind !== 'suelo') return node;
   const near = lawnsOverSunken(lawns, model.sunken.map((s) => s.g));
-  if (!floor || !near.length) return;
-  const mesh = new THREE.Mesh(facetedGeometry(lawnOverFloor(floor.positions, near, model.offset)), material);
-  mesh.position.set(model.offset.x, WORLD_LIFT, model.offset.z);
-  mesh.receiveShadow = true;
-  scene.add(mesh);
+  return near.length ? floorWithoutLawns(node, near, model.offset) : node;
 }
 
 /** Un material de superficie con un solo color en vez de colores por vértice, por las dos caras como las mallas del SKP. */
@@ -152,8 +149,8 @@ function earth(map: THREE.Texture, normalMap: THREE.Texture): THREE.MeshStandard
 /**
  * El suelo, los desniveles, la huaca y la decoración del modelo (D-08 a D-10).
  * Se ubican en el anclaje del modelo y nadie los cliquea. El jardín hundido no
- * proyecta sombra, como en la página aprobada. Los céspedes de la base que caen en un desnivel se dibujan sobre su
- * piso, con el material del jardín: ninguna parte del piso los cubre.
+ * proyecta sombra, como en la página aprobada. El piso se abre sobre los céspedes de la
+ * base (D-19).
  */
 export function createPlanNodes(scene: THREE.Scene, model: PlanModel, textures: SceneTextures, ground: Stage['modelGround'],
   palette: ScenePalette, lawns: Polygon[][] = []): PlanNodes {
@@ -167,7 +164,8 @@ export function createPlanNodes(scene: THREE.Scene, model: PlanModel, textures: 
     decoracion: decoration,
   };
   let decorationMesh: THREE.Mesh | null = null;
-  for (const [kind, node] of Object.entries(model.nodes) as [PlanNodeKind, PlanNode][]) {
+  for (const [kind, raw] of Object.entries(model.nodes) as [PlanNodeKind, PlanNode][]) {
+    const node = openOverLawns(model, kind, raw, lawns);
     const mesh = new THREE.Mesh(facetedGeometry(node.positions, node.uv), materials[kind]);
     mesh.position.set(model.offset.x, WORLD_LIFT, model.offset.z);
     mesh.castShadow = kind !== 'jardin';
@@ -175,6 +173,5 @@ export function createPlanNodes(scene: THREE.Scene, model: PlanModel, textures: 
     scene.add(mesh);
     if (kind === 'decoracion') decorationMesh = mesh;
   }
-  addLawnOverFloor(scene, model, lawns, materials.jardin);
   return { decoration: decorationMesh, applyTheme: (p) => decoration.color.set(p.building) };
 }
