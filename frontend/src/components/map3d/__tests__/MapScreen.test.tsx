@@ -9,6 +9,7 @@ import { usePlanModel } from '@/hooks/usePlanModel';
 import type { PlanModel } from '../viewer/planModel';
 import { mapApi } from '@/lib/map-api';
 import { ApiError } from '@/lib/api';
+import { ToastProvider } from '@/components/ui';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { placesApi } from '@/lib/places-api';
 import { balloonsApi } from '@/lib/balloons-api';
@@ -34,7 +35,7 @@ let testNumber = 0;
 
 function fakeViewer(): jest.Mocked<Viewer> {
   return {
-    setPaint: jest.fn(), setBalloons: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
+    setPaint: jest.fn(), setBalloons: jest.fn(), setAdminMode: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), setRealColors: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), pose: jest.fn(() => SAVED_POSE),
     setViewCones: jest.fn(), flyToPose: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(), setPinLatLon: jest.fn(), dispose: jest.fn(),
@@ -50,7 +51,7 @@ let callbacks: ViewerCallbacks;
 
 async function renderLoaded(data?: MapLayersResponse) {
   mockedLayers.mockReturnValue(loaded(data));
-  const result = render(<MapScreen />);
+  const result = render(<MapScreen />, { wrapper: ToastProvider });
   await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
   return result;
 }
@@ -79,20 +80,20 @@ afterEach(() => jest.clearAllMocks());
 describe('MapScreen', () => {
   it('muestra un esqueleto mientras llegan las capas', () => {
     mockedLayers.mockReturnValue({ data: null, isLoading: true, errorMessage: null, stale: false });
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     expect(screen.queryByTestId('map-3d')).not.toBeInTheDocument();
   });
 
   it('informa si no hay capas que mostrar', () => {
     mockedLayers.mockReturnValue({ data: null, isLoading: false, errorMessage: 'Sin conexión. Verifique su red.', stale: false });
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     expect(screen.getByRole('alert')).toHaveTextContent('Sin conexión');
   });
 
   it('si las capas llegan incompletas avisa en vez de romper la página', () => {
     const { vegetation: _omitted, ...incomplete } = sampleLayers.layers;
     mockedLayers.mockReturnValue(loaded({ ...sampleLayers, layers: incomplete as typeof sampleLayers.layers }));
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     expect(screen.getByRole('alert')).toHaveTextContent('Los datos del mapa están incompletos');
   });
 
@@ -241,7 +242,7 @@ describe('MapScreen', () => {
 
   it('sin red avisa que el mapa puede estar desactualizado', async () => {
     mockedLayers.mockReturnValue({ ...loaded(), stale: true });
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     expect(await screen.findByText(/última versión descargada/)).toBeInTheDocument();
   });
 
@@ -252,7 +253,7 @@ describe('MapScreen', () => {
 
   it('al salir de la pantalla libera el visor', async () => {
     mockedLayers.mockReturnValue(loaded());
-    const { unmount } = render(<MapScreen />);
+    const { unmount } = render(<MapScreen />, { wrapper: ToastProvider });
     await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
     unmount();
     expect(viewer.dispose).toHaveBeenCalled();
@@ -260,10 +261,10 @@ describe('MapScreen', () => {
 
   it('al volver a la pantalla la cámara sigue donde se dejó', async () => {
     mockedLayers.mockReturnValue(loaded());
-    const { unmount } = render(<MapScreen />);
+    const { unmount } = render(<MapScreen />, { wrapper: ToastProvider });
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(1));
     unmount();
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(2));
     expect(mockedCreate.mock.calls[1][4]).toEqual(SAVED_POSE);
   });
@@ -298,7 +299,7 @@ describe('MapScreen', () => {
       unmount();
       viewer = fakeViewer();
       mockedCreate.mockClear();
-      const result = render(<MapScreen />);
+      const result = render(<MapScreen />, { wrapper: ToastProvider });
       await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
       return result;
     }
@@ -698,5 +699,21 @@ describe('MapScreen: globos (SPEC-113)', () => {
 
     expect(await screen.findByRole('heading', { name: 'Rama caída' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver detalle/ })).toHaveAttribute('href', '/incidencias/4');
+  });
+});
+
+describe('MapScreen: movimiento de administrador', () => {
+  const ctrlShiftU = () => act(() => { fireEvent.keyDown(window, { code: 'KeyU', key: 'U', ctrlKey: true, shiftKey: true }); });
+
+  it('Ctrl+Shift+U entra al modo, avisa un momento y la segunda vez vuelve a la vista inicial', async () => {
+    await renderLoaded();
+
+    ctrlShiftU();
+    expect(viewer.setAdminMode).toHaveBeenLastCalledWith(true);
+    expect(screen.getByText('Modo de movimiento de administrador')).toBeInTheDocument();
+
+    ctrlShiftU();
+    expect(viewer.setAdminMode).toHaveBeenLastCalledWith(false);
+    expect(screen.getByText('Modo de movimiento normal')).toBeInTheDocument();
   });
 });
