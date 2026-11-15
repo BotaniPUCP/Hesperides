@@ -78,7 +78,7 @@ nuevo se le suma lo mismo, en grados, que V053 sumó a las huellas del SKP:
 Las huellas de la base ya están corridas (V053): no se corren otra vez. Si se olvida el
 manifiesto, falla `BuildingModelServiceTest.theAnchorIsTheOneShiftedTowardsTheGardens`.
 
-El manifiesto publicado trae además dos campos que el generador no escribe. Se copian tal cual al
+El manifiesto publicado trae además tres campos que el generador no escribe. Se copian tal cual al
 manifiesto nuevo; sus huellas ya están en V054 y las migraciones que le siguen.
 
 - `adjustments` (SPEC-108 D-16): ajustes por edificio. Si se pierden, falla la prueba de
@@ -88,6 +88,10 @@ manifiesto nuevo; sus huellas ya están en V054 y las migraciones que le siguen.
   Si se pierden, falla `stairs.test.ts` en la misma carpeta. Si el GLB nuevo cambia esa malla y
   la escalera ya no quita ningún triángulo, el visor no lee el modelo («no reemplaza nada de su
   malla»): se vuelve a medir la escalera.
+- `pieces` (D-18): edificios que el SKP dibuja dentro de la malla de otro, como el Juan Valdez en la
+  de la Librería PUCP. Si se pierden, falla `pieces.test.ts` en la misma carpeta. Si el GLB nuevo
+  cambia esa malla y el polígono ya no toma nada, el visor no lee el modelo («no toma nada de su
+  malla»): se vuelve a medir la pieza.
 
 ## Tests
 

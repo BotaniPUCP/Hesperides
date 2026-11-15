@@ -285,6 +285,27 @@ Con el boceto confirmado, se reemplaza así (V056):
 - *Origen:* decisión del usuario del 14 nov 2026: «representan una escalera en diagonal vista desde un lado […] por
   eso toda el área verde debe ser visible».
 
+**D-18 · Un edificio que el SKP dibuja dentro de la malla de otro se separa en el visor.** El mapa mostraba la
+Librería PUCP y el café Juan Valdez como un solo edificio, llamado «Juan Valdez»: V045 le puso al principal del código
+42 el nombre de su único hijo de OpenStreetMap con nombre, y el SKP dibuja el café en la misma malla. La leyenda del
+plano dice que el código 42 es la librería («LIBRERIA PUCP, ASOCIACIÓN DE EGRESADOS Y GRADUADOS, …»). Jean Piero marcó
+el café en el mapa: la caja de la esquina suroeste y el muro de su jardinera. Todo lo demás es la librería. Se separa
+así (V057):
+- **Manifiesto:** lleva `pieces` (§3). El visor le pasa al Juan Valdez los triángulos de la malla de la librería que
+  caen enteros en su polígono: 60 de 770.
+- **Base:**
+  - El principal del código 42 pasa a llamarse Librería PUCP y su huella pierde el polígono del café (39,1 m²), que
+    estaba aparte.
+  - El Juan Valdez de OpenStreetMap deja de ser su hijo y pasa a ser un principal con la `plan_key` de la pieza. Su
+    huella es la del café en el SKP, no la de OpenStreetMap, que está corrida unos 3 m. Su alto es el de la pieza
+    (3,85 m).
+  - Los otros dos hijos de OpenStreetMap siguen en la librería.
+- **Pruebas:** comparan el polígono de la pieza con la huella del Juan Valdez en V057, y la de la librería con la de
+  antes sin la pieza, a 2 cm.
+- El GLB no se toca. Con la pieza aparte, cada edificio se elige y se pinta por separado (SPEC-112).
+- *Origen:* pedido del usuario del 14 nov 2026: «en realidad son dos edificios distintos […] todo lo demás de esa
+  unidad es la librería PUCP».
+
 ## 3. Contratos de API
 
 | Endpoint | Autorización | Qué resuelve |
@@ -338,6 +359,11 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
   - `flights`: cada tramo, con su arista `from`, su arista `to`, sus cotas y sus `risers`.
   - `landings`: cada descanso, con su polígono y su cota.
   - `why`: el porqué.
+- `pieces` (opcional, D-18) trae, por la `plan_key` propia de un edificio que el SKP dibuja dentro de otra malla, de
+  qué malla sale (`from`), su polígono en metros alrededor del anclaje (en el marco de esa malla ya ajustada) y el
+  porqué (`why`). El visor le pasa los triángulos que caen enteros en el polígono, a 2 cm. La pieza se separa antes
+  de la escalera de su malla, si la tiene. La lectura del modelo falla si la clave ya es un nodo del GLB, si `from`
+  no es una malla de edificio, si el polígono no toma nada o si se lleva toda la malla.
 
   La lectura del modelo falla en cualquiera de estos casos:
   - la clave no es de una malla de edificio;
@@ -369,8 +395,9 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 > **Desde el 14 nov 2026 (D-13):** la etiqueta del GLB y la del manifiesto es la `version` del manifiesto, que
 > empieza con el hash del GLB y lleva un sufijo cuando el manifiesto se corrige sin regenerar el GLB
 > (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
-> arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16 o de las
-> escaleras de D-17 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor).
+> arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16, de las
+> escaleras de D-17 o de las piezas de D-18 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor y
+> `.jardines.piezas-4`, el Juan Valdez).
 
 ## 4. Migración de base de datos
 
@@ -538,6 +565,13 @@ Escaleras (D-17)
 - un descanso no lleva canto donde llega o arranca un tramo, ni contra un muro
 - la huella del comedor en V056 es la anterior sin la «U», a 2 cm; nada más cambia en la base
 - en colores reales, todas las caras de la escalera llevan el techo de su zona
+
+Piezas (D-18)
+- la pieza se lleva los triángulos que caen enteros en su polígono (a 2 cm); los demás quedan en su orden
+- la lectura falla si la pieza no toma nada, si se lleva toda la malla o si su malla no está en el modelo
+- la huella del Juan Valdez en V057 es el polígono de la pieza y la de la librería es la anterior sin él, a 2 cm
+- en la base solo cambian esos dos edificios; los otros hijos de OpenStreetMap siguen en la librería
+- la hoja de revisión clasifica la pieza con sus triángulos y con su polígono como huella
 ```
 
 ## 9. Propio de este spec
