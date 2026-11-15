@@ -1,4 +1,5 @@
 import { FINISH_GLSL } from './finishes';
+import { GLOSS_GLSL } from './glassGloss';
 import { LOOK_FINISH_GLSL } from './lookFinishShader';
 import { LOOK_GLASS_GLSL } from './lookGlassShader';
 import { LAYOUT_GLSL } from './lookLayout';
@@ -190,4 +191,4 @@ vec3 lookToAlbedo(vec3 t) {
 }
 `;
 
-export const LOOK_FRAGMENT_HEAD = [LOOK_CORE_GLSL, LOOK_FINISH_GLSL, LOOK_GLASS_GLSL, LOOK_DISPLAY_GLSL, LOOK_ALBEDO_GLSL, WALL_LIGHT_GLSL].join('\n');
+export const LOOK_FRAGMENT_HEAD = [LOOK_CORE_GLSL, LOOK_FINISH_GLSL, GLOSS_GLSL, LOOK_GLASS_GLSL, LOOK_DISPLAY_GLSL, LOOK_ALBEDO_GLSL, WALL_LIGHT_GLSL].join('\n');

@@ -47,6 +47,14 @@ export const GLASS_LIGHT = { pane: { rough: 0.18, metal: 0.1 }, frame: { rough: 
 export const GLASS_NIGHT = { share: 0.3, seed: 211, color: '#ffd9a0', glow: 0.5, dim: 0.6 } as const;
 /** El nivel promedio de un paño encendido. */
 export const LIT_MEAN = (1 + GLASS_NIGHT.dim) / 2;
+/**
+ * Brillo y relieve de los paños (D-23): degradado de abajo a arriba, dos franjas en diagonal (tramos de la
+ * coordenada diagonal t, de 0 a 1) y cuánto aclaran, y el hundido, el bisel y el abombado en metros.
+ */
+export const GLASS_GLOSS = {
+  bottom: 0.85, top: 1.15, streaks: [[0.36, 0.48], [0.56, 0.62]], streak: 1.1,
+  insetM: 0.06, bevelM: 0.12, pillowM: 0.05,
+} as const;
 
 /** Medidas en metros del grano de cada acabado (D-17). `vary` es el cambio de tono de una pieza a otra. */
 export const BRICK = { courseM: 0.075, lengthM: 0.25, jointM: 0.012, vary: 0.07, mortar: 0.82, reliefM: 0.008 } as const;

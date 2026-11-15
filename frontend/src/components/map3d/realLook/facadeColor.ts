@@ -1,5 +1,6 @@
 import { GLASS_LIGHT, GLASS_NIGHT, LIT_MEAN } from './finishes';
 import { finishGrain } from './finishGrain';
+import { panelPillow, paneGloss, type Gloss, type Rect } from './glassGloss';
 import { MIN_COVERAGE, NO_BOUND_M, OPAQUE, REGION_TEXELS } from './lookLayout';
 import { box, cellHash, clamp01, detail, glslMod, mix, smoothstep } from './lookMath';
 import type { LookTable } from './lookTable';
@@ -43,9 +44,18 @@ function readGlass(table: LookTable, m: number): Glass {
 }
 
 /** Paño y perfil: rugosidad y metal según cuánto del punto es paño. */
-function glassSample(rgb: Rgb, glass: number, lit: number): FacadeSample {
+function glassSample(rgb: Rgb, glass: number, lit: number, gloss: Gloss = { shade: 1, height: 0 }): FacadeSample {
   const { pane, frame } = GLASS_LIGHT;
-  return { rgb, glass, shade: 1, height: 0, rough: mix(frame.rough, pane.rough, glass), metal: mix(frame.metal, pane.metal, glass), lit };
+  return { rgb, glass, ...gloss, rough: mix(frame.rough, pane.rough, glass), metal: mix(frame.metal, pane.metal, glass), lit };
+}
+
+/** El brillo y el relieve del módulo (D-23): paño hundido con reflejo, antepecho y acento abombados, perfil al ras. */
+function moduleGloss(g: Glass, fx: number, fy: number, aa: PixelSize, accentPane: boolean, inPanel: number, frame: number): Gloss {
+  const half = g.frameM / 2;
+  const pane: Rect = [half, g.module - half, g.panelM > 0 ? g.panelM + half : half, g.height - half];
+  const paneG = accentPane ? { shade: 1, height: panelPillow(fx, fy, pane, aa) } : paneGloss(fx, fy, pane, aa);
+  const panelH = g.panelM > 0 ? panelPillow(fx, fy, [half, g.module - half, half, g.panelM - half], aa) : 0;
+  return { shade: mix(mix(paneG.shade, 1, inPanel), 1, frame), height: (1 - frame) * mix(paneG.height, panelH, inPanel) };
 }
 
 /** El módulo de cerca: paño (con su tono), antepecho o acento, y perfiles. Un paño de acento no se enciende. */
@@ -66,7 +76,8 @@ function glassNear(g: Glass, x: number, y: number, aa: PixelSize, seed: number):
   const [litHash, litLevel] = cellHash(cx, cy, seed + GLASS_NIGHT.seed);
   const litOn = !accentPane && litHash < GLASS_NIGHT.share;
   const lit = litOn ? glass * mix(GLASS_NIGHT.dim, 1, litLevel) : 0;
-  return glassSample(mixRgb(mixRgb(pane, panel, inPanel), g.frame, frame), glass, lit);
+  const gloss = moduleGloss(g, fx, fy, aa, accentPane, inPanel, frame);
+  return glassSample(mixRgb(mixRgb(pane, panel, inPanel), g.frame, frame), glass, lit, gloss);
 }
 
 /** El módulo de lejos: el promedio de paños, antepechos, acentos, perfiles y paños encendidos. */

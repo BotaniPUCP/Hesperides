@@ -36,7 +36,14 @@ LookSurface lookGlassNear(float m, vec2 p, vec2 aa, float seed) {
   vec2 litHash = lookCellHash(cell, seed + LOOK_LIT_SEED);
   bool litOn = !accentPane && litHash.x < LOOK_LIT_SHARE;
   float lit = litOn ? glass * mix(LOOK_LIT_DIM, 1.0, litHash.y) : 0.0;
-  return lookGlassSurface(mix(mix(pane, panel, inPanel), t1.rgb, frame), glass, lit);
+  LookSurface s = lookGlassSurface(mix(mix(pane, panel, inPanel), t1.rgb, frame), glass, lit);
+  // Brillo y relieve (D-23): paño hundido con reflejo, antepecho y acento abombados, perfil al ras.
+  vec4 paneRect = vec4(halfFrame, size.x - halfFrame, t2.a > 0.0 ? t2.a + halfFrame : halfFrame, size.y - halfFrame);
+  vec2 paneG = accentPane ? vec2(1.0, lookPanelPillow(f, paneRect, aa)) : lookPaneGloss(f, paneRect, aa);
+  float panelH = t2.a > 0.0 ? lookPanelPillow(f, vec4(halfFrame, size.x - halfFrame, halfFrame, t2.a - halfFrame), aa) : 0.0;
+  s.shade = mix(mix(paneG.x, 1.0, inPanel), 1.0, frame);
+  s.height = (1.0 - frame) * mix(paneG.y, panelH, inPanel);
+  return s;
 }
 
 // El módulo de lejos: el promedio de paños, antepechos, acentos, perfiles y paños encendidos, para que no titile.
