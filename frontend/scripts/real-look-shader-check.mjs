@@ -1,5 +1,6 @@
-// Compara el GLSL de las fachadas con facadeColor, la copia que prueban los tests (SPEC-112 D-11): compila el
-// shader en Chrome sin ventana, dibuja seis casos y los compara píxel a píxel. Falla si se separan.
+// Compara el GLSL de las fachadas con facadeColor, la copia que prueban los tests (SPEC-112 D-11 y D-22): compila el
+// shader en Chrome sin ventana, dibuja cada caso y lo compara píxel a píxel: el color, y también el grano, el
+// encendido, la rugosidad, el metal y el relieve. Falla si se separan.
 // Uso, desde frontend/: node --import ./scripts/ts-register.mjs scripts/real-look-shader-check.mjs
 // Chrome: la variable CHROME o las rutas de siempre.
 import fs from 'node:fs';
@@ -23,6 +24,7 @@ const look = {
     ladrillo: { color: '#c47a65' }, concreto: { color: '#b8b3ab' }, zocalo: { color: '#56616b' }, melon: { color: '#d9a888' },
     vidrio: { glass: '#5d646c', frame: '#e4e4df', moduleM: 1.2, heightM: 3.6, frameM: 0.08, spandrel: { color: '#cbd0cc', heightM: 1.4 }, accent: { color: '#24608b', share: 0.12 }, vary: 0.1 },
     cinta: { glass: '#2e3437', frame: '#3c4248', moduleM: 1.5, heightM: 3.5, frameM: 0.06 },
+    chapa: { color: '#9aa0a6', finish: 'metal' },
   },
   zones: [{
     id: 'z', wall: 'ladrillo', roof: 'concreto',
@@ -30,27 +32,41 @@ const look = {
     faces: {
       N: [{ material: 'vidrio', u: [-6, 6], v: [1, 12] }, { material: 'melon', u: [-8, 8], v: [13, 13.5] }],
       S: [{ material: 'cinta', u: [-10, 10], floors: { everyM: 3.5, startM: 0, bandM: [1, 2.6] } }],
+      W: [{ material: 'concreto', u: [-10, 10] }],
+      NE: [{ material: 'chapa' }],
+      NW: [{ material: 'melon' }],
     },
   }],
 };
 const table = buildLookTable([look]);
 const rows = table.zones.get('k')[0];
 const W = 128, H = 128;
-const cases = [
+const base = [
   { name: 'vidrio de cerca', face: rows.sides.N, range: [-8, -1, 8, 15] },
   { name: 'perfiles muy de cerca', face: rows.sides.N, range: [-2, 2, 0, 4] },
   { name: 'vidrio de lejos', face: rows.sides.N, range: [-200, -40, 200, 360] },
   { name: 'cintas por piso', face: rows.sides.S, range: [-12, -1, 12, 15] },
   { name: 'cara sin entrada', face: rows.sides.E, range: [-8, -1, 8, 15] },
   { name: 'techo', face: rows.roof, range: [-8, -1, 8, 15] },
+  { name: 'ladrillo de cerca', face: rows.sides.E, range: [-1, 1, 1, 3] },
+  { name: 'concreto de cerca', face: rows.sides.W, range: [-4, -1, 4, 7] },
+  { name: 'metal de cerca', face: rows.sides.NE, range: [-2, 1, 2, 5] },
+  { name: 'tarrajeo', face: rows.sides.NW, range: [-12, -1, 12, 23] },
 ];
+/** Qué se compara en cada pasada: el color, y luego cada canal de luz llevado a [0, 1]. */
+const CHANNELS = [
+  ['color', (s) => s.rgb],
+  ['grano · encendido · rugosidad', (s) => [s.shade * 0.5, s.lit, s.rough]],
+  ['metal · relieve · vidrio', (s) => [s.metal, s.height * 40 + 0.5, s.glass]],
+];
+const cases = CHANNELS.flatMap(([label, pick], channel) => base.map((c) => ({ ...c, name: `${c.name} · ${label}`, channel, pick })));
 for (const c of cases) {
   const [u0, v0, u1, v1] = c.range;
   const du = (u1 - u0) / W, dv = (v1 - v0) / H;
   c.want = [];
   for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
     const s = facadeColor(table, c.face, u0 + (px + 0.5) * du, v0 + (py + 0.5) * dv, [Math.max(du, 1e-4), Math.max(dv, 1e-4)]);
-    c.want.push(...s.rgb.map((x) => Math.round(Math.min(Math.max(x, 0), 1) * 255)));
+    c.want.push(...c.pick(s).map((x) => Math.round(Math.min(Math.max(x, 0), 1) * 255)));
   }
 }
 
@@ -60,8 +76,13 @@ precision highp float;
 #define texture2D texture
 ${LOOK_FRAGMENT_HEAD}
 uniform float uFace;
+uniform int uChannel;
 out vec4 outColor;
-void main() { float g; vec3 c = lookDisplay(uFace, vLookFace, g); outColor = vec4(c, 1.0); }`;
+void main() {
+  LookSurface s = lookDisplay(uFace, vLookFace);
+  vec3 c = uChannel == 0 ? s.rgb : uChannel == 1 ? vec3(s.shade * 0.5, s.lit, s.rough) : vec3(s.metal, s.height * 40.0 + 0.5, s.glass);
+  outColor = vec4(c, 1.0);
+}`;
 const vertex = `#version 300 es
 in vec2 pos;
 uniform vec4 uRange;
@@ -88,10 +109,11 @@ try {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.uniform1i(gl.getUniformLocation(prog, 'lookTable'), 0);
   gl.uniform1f(gl.getUniformLocation(prog, 'lookRows'), ${table.height});
-  const cases = ${JSON.stringify(cases.map(({ name, face, range }) => ({ name, face, range })))};
+  const cases = ${JSON.stringify(cases.map(({ name, face, range, channel }) => ({ name, face, range, channel })))};
   const res = [];
   for (const c of cases) {
     gl.uniform1f(gl.getUniformLocation(prog, 'uFace'), c.face);
+    gl.uniform1i(gl.getUniformLocation(prog, 'uChannel'), c.channel);
     gl.uniform4f(gl.getUniformLocation(prog, 'uRange'), c.range[0], c.range[1], c.range[2], c.range[3]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     const px = new Uint8Array(${W * H * 4}); gl.readPixels(0, 0, ${W}, ${H}, gl.RGBA, gl.UNSIGNED_BYTE, px);
@@ -122,6 +144,6 @@ cases.forEach((c, k) => {
   }
   const p = Math.floor(worst / 3), x = p % W, y = Math.floor(p / W);
   failed ||= max > TOLERANCE;
-  console.log(`${max > TOLERANCE ? 'DIFIERE' : 'igual  '} ${c.name.padEnd(24)} máx ${String(max).padStart(3)} · más de 6: ${(100 * over / c.want.length).toFixed(2)} % · peor en (${x},${y}) quiere ${c.want.slice(p * 3, p * 3 + 3)} y da ${[...got.slice(p * 3, p * 3 + 3)]}`);
+  console.log(`${max > TOLERANCE ? 'DIFIERE' : 'igual  '} ${c.name.padEnd(52)} máx ${String(max).padStart(3)} · más de 6: ${(100 * over / c.want.length).toFixed(2)} % · peor en (${x},${y}) quiere ${c.want.slice(p * 3, p * 3 + 3)} y da ${[...got.slice(p * 3, p * 3 + 3)]}`);
 });
 process.exit(failed ? 1 : 0);

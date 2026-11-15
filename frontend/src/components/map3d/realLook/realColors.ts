@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Polygon } from '../sceneData';
 import type { PolyLayer } from '../viewer/polyLayer';
 import { classifyBuilding, type FaceAttributes } from './classifyFaces';
-import { createLookMaterial } from './lookMaterial';
+import { createLookMaterial, setLookNight } from './lookMaterial';
 import { buildLookTable } from './lookTable';
 import type { BuildingLook } from './types';
 import { validateLooks } from './validateLook';
@@ -18,6 +18,8 @@ export interface RealColors {
   enabled: () => boolean;
   /** Cambia el material; no toca la geometría ni vuelve a clasificar. */
   setEnabled: (on: boolean) => void;
+  /** De noche se encienden en parte los paños de vidrio (SPEC-112 D-19). */
+  setNight: (night: boolean) => void;
 }
 
 export interface LookedBuilding {
@@ -75,6 +77,7 @@ export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], 
   geometry.setAttribute('aLookRow', new THREE.BufferAttribute(out.row, 1));
   geometry.setAttribute('aLookFace', new THREE.BufferAttribute(out.face, 2));
   geometry.setAttribute('aTone', new THREE.BufferAttribute(layer.tone, 1));
+  geometry.setAttribute('aLookLift', new THREE.BufferAttribute(liftAboveBase(positions, layer.starts), 1));
   const today = layer.mesh.material as THREE.Material;
   const real = createLookMaterial(table);
   const groups = materialGroups(layer.starts, looked);
@@ -88,5 +91,17 @@ export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], 
       if (on) groups.forEach((g) => geometry.addGroup(g.start, g.count, g.materialIndex));
       layer.mesh.material = on ? [today, real] : today;
     },
+    setNight: (night) => setLookNight(real, night),
   };
+}
+
+/** La altura de cada vértice sobre el más bajo de su edificio: el contacto con el suelo (SPEC-112 D-20). */
+function liftAboveBase(positions: Float32Array, starts: number[]): Float32Array {
+  const lift = new Float32Array(positions.length / 3);
+  for (let i = 0; i + 1 < starts.length; i++) {
+    let base = Infinity;
+    for (let v = starts[i]; v < starts[i + 1]; v++) base = Math.min(base, positions[v * 3 + 1]);
+    for (let v = starts[i]; v < starts[i + 1]; v++) lift[v] = positions[v * 3 + 1] - base;
+  }
+  return lift;
 }

@@ -59,6 +59,30 @@ describe('createRealColors', () => {
     expect([...row.slice(0, 3)]).toEqual([roof, roof, roof]);
   });
 
+  it('cada vértice lleva su altura sobre el vértice más bajo de su edificio (SPEC-112 D-20)', () => {
+    const layer = fakeLayer();
+    const position = (layer.mesh.geometry as THREE.BufferGeometry).attributes.position.array as Float32Array;
+    position.set([0, 3, -10, 10, 3, -10, 0, 9, -10], 9);
+    createRealColors(layer, buildings, [look]);
+    const lift = (layer.mesh.geometry as THREE.BufferGeometry).attributes.aLookLift.array as Float32Array;
+    expect([...lift]).toEqual([0, 0, 5, 0, 0, 6]);
+  });
+
+  it('de noche, el vidrio recibe la luz de las ventanas encendidas; de día, nada (D-19)', () => {
+    const layer = fakeLayer();
+    const real = createRealColors(layer, buildings, [look]);
+    real.setEnabled(true);
+    const material = (layer.mesh.material as THREE.Material[])[1];
+    const glow = (material.userData.lookUniforms.lookNightGlow.value as THREE.Color);
+    expect(glow.getHex()).toBe(0);
+    real.setNight(true);
+    expect(glow.r).toBeGreaterThan(glow.b);
+    expect(glow.r).toBeGreaterThan(0.3);
+    expect(glow.r).toBeLessThan(0.8);
+    real.setNight(false);
+    expect(glow.getHex()).toBe(0);
+  });
+
   it('una ficha de un edificio que no está en la escena detiene todo', () => {
     expect(() => createRealColors(fakeLayer(), [{ planKey: 'otro', g: square }], [look])).toThrow(/no está en el modelo/);
   });
