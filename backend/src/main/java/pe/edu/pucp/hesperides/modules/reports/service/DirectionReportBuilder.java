@@ -95,7 +95,7 @@ public class DirectionReportBuilder {
 
     /** Same weighting as coverage: by area, over the same sections (D-15, §2.6 row 22). */
     private BigDecimal irrigationPercent(List<SectionRef> sections, YearMonth m) {
-        Set<Long> irrigated = irrigation.irrigatedSections(null, ReportPeriods.month(m));
+        Set<Long> irrigated = irrigation.irrigatedSections(null, ReportPeriods.month(m), calendar.zone());
         BigDecimal covered = BigDecimal.ZERO;
         BigDecimal total = BigDecimal.ZERO;
         for (SectionRef s : sections) {

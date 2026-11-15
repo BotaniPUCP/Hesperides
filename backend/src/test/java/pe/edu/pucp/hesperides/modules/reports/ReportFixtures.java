@@ -91,6 +91,14 @@ final class ReportFixtures {
             """, Long.class);
     }
 
+    /** The intervention type with {@code code}, such as {@code RIEGO_MANUAL}. */
+    long type(String code) {
+        return jdbc.queryForObject("""
+            select t.id from catalog_items t join catalog_types tt on tt.id=t.catalog_type_id
+            where tt.code='INTERVENTION_TYPE' and t.code=? and t.deleted_at is null
+            """, Long.class, code);
+    }
+
     long classOf(long typeId) {
         return jdbc.queryForObject("select parent_item_id from catalog_items where id=?", Long.class, typeId);
     }
@@ -153,18 +161,6 @@ final class ReportFixtures {
             insert into incident_status_history(incident_id,status_item_id,changed_by_user_id,created_at,updated_at)
             values (?,?,?,?::timestamptz,?::timestamptz)
             """, incidentId, item("INCIDENT_STATUS", status), by.id(), at, at);
-    }
-
-    /** An irrigation turn of {@code sectorId} on a civil date, covering {@code sections}. */
-    long turn(long sectorId, Account foreman, String date, long... sections) {
-        long id = jdbc.queryForObject("""
-            insert into irrigation_turns(sector_zone_id,supervisor_user_id,irrigation_date) values (?,?,?::date)
-            returning id
-            """, Long.class, sectorId, foreman.id(), date);
-        for (long section : sections) {
-            jdbc.update("insert into irrigation_turn_sections(turn_id,section_zone_id) values (?,?)", id, section);
-        }
-        return id;
     }
 
     /** Draws {@code zoneId} as a small square centered on a point, so an incident there falls inside it. */
