@@ -309,6 +309,17 @@ así (V057):
 - *Origen:* pedido del usuario del 14 nov 2026: «en realidad son dos edificios distintos […] todo lo demás de esa
   unidad es la librería PUCP».
 
+**D-19 · Ningún piso del modelo cubre un césped.** En los desniveles el suelo del mapa se abre (D-09) y se ve el piso del
+SKP (`suelo`), que en algunos lugares cubre áreas verdes de la base: unos 106 m² de AV-0480 (F 22) y 195 m² de
+AV-0409, en este caso con la rampa que baja 5 m por su borde oeste. El SKP corta su piso en triángulos que no siguen
+a los jardines (uno solo mide 4 163 m²), así que no se separan piezas como en D-18:
+- **Visor:** cada césped de la capa de áreas verdes que toca un desnivel se recorta contra los triángulos del piso y
+  se dibuja 3 cm encima de ellos, con su pendiente y el material del jardín hundido (`viewer/lawnOverFloor.ts`).
+- **Alcance:** vale para todos los céspedes, no solo para esos dos. El 15 nov 2026 también cubre parte de AV-0408,
+  AV-0359, AV-0232, AV-0068, AV-0233, AV-0265, AV-0242 (F 21), AV-0226 y AV-0048.
+- El GLB, el manifiesto y la base no cambian.
+- *Origen:* pedido del usuario del 15 nov 2026: «no debe haber partes del piso cubriendo los céspedes».
+
 ## 3. Contratos de API
 
 | Endpoint | Autorización | Qué resuelve |
@@ -575,6 +586,11 @@ Piezas (D-18)
 - la huella del Juan Valdez en V057 es el polígono de la pieza y la de la librería es la anterior sin él, a 2 cm
 - en la base solo cambian esos dos edificios; los otros hijos de OpenStreetMap siguen en la librería
 - la hoja de revisión clasifica la pieza con sus triángulos y con su polígono como huella
+
+Céspedes sobre el piso (D-19)
+- el césped cubre justo la parte del piso que cae en él, con sus huecos y su forma cóncava, apenas encima
+- sobre una rampa sigue su pendiente; un muro no lleva césped
+- solo se recortan los céspedes que tocan un desnivel
 ```
 
 ## 9. Propio de este spec
