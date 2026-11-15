@@ -15,7 +15,8 @@ function planKeysOfMigrations(): Set<string> {
   const v045 = fs.readFileSync(path.join(MIGRATIONS, 'V045__group_buildings_by_plan.sql'), 'utf8');
   const assigned = fs.readdirSync(MIGRATIONS).flatMap((file) =>
     [...fs.readFileSync(path.join(MIGRATIONS, file), 'utf8').matchAll(new RegExp(`SET [^;]*plan_key = '(${UUID})'`, 'g'))].map((m) => m[1]));
-  return new Set([...(v045.match(new RegExp(UUID, 'g')) ?? []), ...assigned]);
+  const unified = v045.match(/unified:[a-z0-9-]+/g) ?? [];
+  return new Set([...(v045.match(new RegExp(UUID, 'g')) ?? []), ...unified, ...assigned]);
 }
 
 const lookFiles = () => fs.readdirSync(path.resolve(__dirname, '../looks')).filter((name) => name.endsWith('.json'));
@@ -27,6 +28,10 @@ describe('fichas de apariencia del repositorio', () => {
 
   it('la clave que una migración le da a otro edificio cuenta: el Juan Valdez la recibe en V057', () => {
     expect(planKeysOfMigrations().has('5c6e8c9f-26bb-4285-b29c-26b5edd25c35')).toBe(true);
+  });
+
+  it('cuenta la clave unificada que V045 le da al Lugar prestado, que no es un uuid', () => {
+    expect(planKeysOfMigrations().has('unified:lugar-prestado')).toBe(true);
   });
 
   it('caben en la tabla del shader', () => {
