@@ -103,6 +103,18 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 92 | matematicas | `5cff01e0` | Matemáticas | nombre, código 10; fotos: rótulos «Matemáticas» y «Departamento Académico de Ciencias — Edificio José Tola Pasquel». El Tola Pasquel es el bloque curvo del este de la misma malla | seguro; el bloque del este, por confirmar |
 | 93 | libreria-pucp | `4ee6b413` | Librería PUCP (se llamaba «Juan Valdez» hasta V057) | código 42 («LIBRERIA PUCP, …»); fotos: rótulo «Librería PUCP»; Jean Piero marcó en el mapa lo que es del café, y el resto es la librería (SPEC-108 D-18) | seguro |
 | 94 | juan-valdez | `5c6e8c9f` | Juan Valdez (pieza de la malla de la librería, V057) | nombre; foto: el letrero «Juan Valdez Café»; es la caja que Jean Piero marcó en el mapa (SPEC-108 D-18) | seguro |
+| 95 | capu | `f6bd818a` | Centro de Asesoría Pastoral Universitaria (CAPU) | nombre, código 23; foto: rótulo «Centro de Asesoría Pastoral Universitaria CAPU» | seguro |
+| 96 | comedor-artes-antiguo-eeggcc (comedor-arte-antiguo.jpg, frente y lados) | `6eb8356a` | Comedor de Arte | código C16; el pabellón de madera con vidrios de colores, de un piso y 30 m, cerca del punto «Comedor de Arte» del mapa. Resuelve la fila «por confirmar» de esta carpeta | seguro |
+| 97 | comedor-artes-antiguo-eeggcc (detras.jpg, lado-02.jpg) | `b9a4a553` | Caseta Comedor Generales Ciencias | cercanía: el bloque blanco de servicio detrás del comedor | por confirmar |
+| 98 | comedor-letras | `bc020b20` | Comedor de Letras | nombre, código C38 | seguro |
+| 99 | snack-electronica | `8b6b383e` | Snack de Electrónica, lactarios | código 52; foto: el snack «Diodo». Va con los colores de los snacks (pedido del 15 nov) | seguro |
+| 100 | escuela-gobierno | `a836d9c8` | Escuela de Gobierno y Políticas Públicas | nombre; foto: rótulo «Escuela de Gobierno y Políticas Públicas» | seguro |
+| 101 | espacios-culturales | `e0d34049` | Pabellón W: Espacios Culturales | nombre, código 53; foto: rótulo «Espacios Culturales» | seguro |
+| 102 | estacion-meteorologica | `e667899d` | Estación Meteorológica «Hipólito Unanue» | nombre, código C04 | seguro |
+| 103 | estudio-tv | `533742e5` | Estudio de TV 2 | nombre, código 48 | seguro |
+| 104 | inras | `c4d51563` | INRAS (Instituto de Radioastronomía) | nombre, código 54; foto: rótulo «Instituto de Radioastronomía INRAS» | seguro |
+| 105 | invernadero-patrimonial | `209334da` | Invernadero (adyacente a Gabinete de Proyectos Patrimoniales) | código C49, nombre de la foto | seguro |
+| 106 | tambo-actoral | `73c6c0f7` | CFCOM | cercanía: el pabellón bajo junto al Estudio de TV 2 (la foto muestra detrás un edificio crema con celosías oscuras) | por confirmar |
 
 La fila 81 no es una carpeta: aparece para dejar a la vista que el segundo `Desconocido_13` queda sin
 pintar mientras no se confirme cuál de los dos es el de las fotos.
