@@ -53,12 +53,11 @@ export function buildSearchIndex(data: IndexSource): SearchEntry[] {
     ].filter(Boolean).join(' ');
     out.push(entry(b.props.name, b.props.category ?? 'Edificio', terms, 'campusBuildings', i, 1));
   });
-  data.greenAreas.forEach((s, i) => {
-    const sector = s.props.parentCode ? data.sectorNameByCode[s.props.parentCode] : null;
-    const subtitle = ['Área verde', s.props.mapCode, sector].filter(Boolean).join(', ');
-    out.push(entry(s.props.name, subtitle, s.props.code, 'greenAreas', i));
-  });
-  data.xerophytic.forEach((s, i) => out.push(entry(s.props.name, 'Jardín xerofítico', s.props.code, 'xerophytic', i)));
+  // Una xerofítica también lleva el código del mapa del cliente y el sector de su jardín (SPEC-102 §4.3).
+  const sectionSubtitle = (kind: string, p: { mapCode: string | null; parentCode: string | null }) =>
+    [kind, p.mapCode, p.parentCode ? data.sectorNameByCode[p.parentCode] : null].filter(Boolean).join(', ');
+  data.greenAreas.forEach((s, i) => out.push(entry(s.props.name, sectionSubtitle('Área verde', s.props), s.props.code, 'greenAreas', i)));
+  data.xerophytic.forEach((s, i) => out.push(entry(s.props.name, sectionSubtitle('Jardín xerofítico', s.props), s.props.code, 'xerophytic', i)));
   data.reserve.forEach((s, i) => out.push(entry(s.props.name, 'Jardín de reserva', s.props.code, 'reserve', i)));
   data.supervision.forEach((z, i) => out.push(entry(z.props.name, 'Zona de supervisión', z.props.code, 'supervision', i)));
   data.gates.forEach((g, i) => out.push(entry(g.props.name ?? 'Puerta', 'Puerta de acceso', g.props.code ?? '', 'gates', i)));
