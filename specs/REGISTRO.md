@@ -225,6 +225,7 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V055 | `V055__second_fit_and_lower_casa.sql` | SPEC-108 D-16 | Segunda tanda de Jean Piero (14 nov 2026): Desconocido_05 se corre al centro del hueco de su pasto (con su ajuste en el manifiesto) y la casa autosostenible baja de 8 a 4 m de alto. Nació en `feature/spec-112-colores-por-zonas` |
 | V056 | `V056__comedor_stair_frees_the_grass.sql` | SPEC-108 D-17 | Pedido de Jean Piero (14 nov 2026): la «U» de la esquina noreste del Comedor Central es una escalera de dos tramos que solo toca el suelo al arrancar. Sale de la huella del comedor (25,5 m²) y el pasto que tapaba (23 m²) queda libre. La escalera la dibuja el visor desde el manifiesto (`stairs`). Nació en `feature/spec-112-colores-por-zonas` |
 | V057 | `V057__juan_valdez_leaves_the_libreria.sql` | SPEC-108 D-18 | Pedido de Jean Piero (14 nov 2026): la Librería PUCP y el café Juan Valdez son dos edificios. El principal del código 42 pasa a llamarse Librería PUCP y su huella pierde el café (39,1 m²). El Juan Valdez de OpenStreetMap pasa a ser un principal con la `plan_key` de la pieza que el manifiesto separa de la malla (`pieces`), con la huella del café en el SKP. Nació en `feature/spec-112-colores-por-zonas` |
+| V058 | `V058__halve_n7_and_desconocido_03.sql` | SPEC-108 D-16 | Pedido de Jean Piero (15 nov 2026): la Sub-estación N-7 y el Desconocido_03 (prismas de OpenStreetMap) bajan a la mitad de su alto, de 8 a 4 m. Nació en `feature/spec-112-colores-por-zonas` |
 
 ### Pendientes (sin número reservado)
 

@@ -266,6 +266,9 @@ rompecabezas, sin pisarlo (V054):
 > **Segunda tanda, 14 nov 2026 (V055):** Desconocido_05 (malla) se corre 1,35 m al centro del hueco de su pasto,
 > sin cambiar su tamaño, con su ajuste en `adjustments`. La casa autosostenible baja de 8 a 4 m: «no es tan alto».
 
+> **Tercera tanda, 15 nov 2026 (V058):** la Sub-estación N-7 y el Desconocido_03, prismas de OpenStreetMap, bajan
+> a la mitad de su alto, de 8 a 4 m. La huella no cambia.
+
 **D-17 · Una escalera que el SKP dibuja como bloque se reemplaza en el visor.** En la esquina noreste del Comedor
 Central, el SKP trae un bloque macizo en «U» de 4,35 m de alto y 25,5 m² que llega al suelo y tapa 23 m² de pasto.
 Jean Piero aclaró que es una escalera en diagonal que no se apoya en el suelo, y que el pasto de abajo debe verse.
