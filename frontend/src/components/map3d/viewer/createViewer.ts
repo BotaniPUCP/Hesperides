@@ -108,7 +108,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   /** El sol mueve también el borde iluminado de las copas. */
   function relight() {
     lights.setHour(hour, night);
-    foliage.setLighting(night, lights.sun.position.clone().sub(center).normalize());
+    foliage.setLighting(night, lights.sunDir());
   }
 
   function applyTheme() {
@@ -116,6 +116,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     const { w, h } = size();
     stage.applyTheme(state.palette, night, w, h);
     lights.applyTheme(state.palette, night);
+    realColors.setNight(night);
     planNodes?.applyTheme(state.palette);
     relight();
     highlight.repaintAll();
@@ -183,6 +184,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     const distance = rig.camera.position.distanceTo(rig.controls.target);
     if (Math.abs(distance - lastDistance) / Math.max(lastDistance, 1) > 0.04) { scaleFurniture(Object.values(points), distance); lastDistance = distance; }
     if (flew || moved || needsRender || rig.controls.autoRotate) {
+      lights.follow(rig.controls.target, distance);
       renderer.render(scene, rig.camera);
       const { w, h } = size();
       labels.update(rig.camera, w, h, labelVisible);

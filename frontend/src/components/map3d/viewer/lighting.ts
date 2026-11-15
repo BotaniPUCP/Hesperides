@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { ScenePalette } from './palette';
+import { SHADOW_FIT, shadowRadius, snapToTexels } from './shadowFit';
 
 /**
  * Luces de la maqueta, las del prototipo v39: un sol que se mueve con la hora
@@ -11,12 +12,17 @@ import type { ScenePalette } from './palette';
 const CAMPUS_LATITUDE_DEG = -12.07;
 /** Distancia del sol al centro: lejos para que las sombras sean casi paralelas. */
 const SUN_DISTANCE_M = 1800;
-const SHADOW_EXTENT_M = 720;
+/** El separador de la sombra en texeles: 0,6 m con el mapa de ±720 m de antes, y proporcional al achicarlo (D-21). */
+const NORMAL_BIAS_TEXELS = 1.7;
 
 export interface Lights {
   sun: THREE.DirectionalLight;
+  /** Hacia dónde está el sol, unitario. */
+  sunDir: () => THREE.Vector3;
   setHour: (hour: number, night: boolean) => void;
   applyTheme: (palette: ScenePalette, night: boolean) => void;
+  /** Centra el mapa de sombras en lo que mira la cámara (SPEC-112 D-21). */
+  follow: (target: THREE.Vector3, cameraDistance: number) => void;
 }
 
 export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePointer: boolean): Lights {
@@ -31,19 +37,43 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
   sun.castShadow = true;
   const mapSize = coarsePointer ? 2048 : 4096; // en móvil, la mitad: la memoria de video manda
   sun.shadow.mapSize.set(mapSize, mapSize);
-  Object.assign(sun.shadow.camera, {
-    left: -SHADOW_EXTENT_M, right: SHADOW_EXTENT_M, top: SHADOW_EXTENT_M, bottom: -SHADOW_EXTENT_M, near: 10, far: 4000,
-  });
+  sun.shadow.camera.near = 10;
+  sun.shadow.camera.far = 4000;
   sun.shadow.bias = -0.0004;
-  sun.shadow.normalBias = 0.6;
-  sun.target.position.copy(center);
   scene.add(hemi, sun, sun.target, fill, rim, ambient);
+
+  const dir = new THREE.Vector3(0, 1, 0);
+  const focus = center.clone();
+  let radius = 0;
+
+  function setRadius(r: number) {
+    radius = r;
+    Object.assign(sun.shadow.camera, { left: -r, right: r, top: r, bottom: -r });
+    sun.shadow.camera.updateProjectionMatrix();
+    sun.shadow.normalBias = NORMAL_BIAS_TEXELS * ((2 * r) / mapSize);
+  }
+
+  /** El sol a su distancia del centro de la sombra, que cae en la retícula de texeles. */
+  function place() {
+    const [x, y, z] = snapToTexels([focus.x, focus.y, focus.z], [dir.x, dir.y, dir.z], radius, mapSize);
+    sun.target.position.set(x, y, z);
+    sun.target.updateMatrixWorld();
+    sun.position.copy(sun.target.position).addScaledVector(dir, SUN_DISTANCE_M);
+  }
+
+  function follow(target: THREE.Vector3, cameraDistance: number) {
+    const r = shadowRadius(cameraDistance);
+    if (r !== radius) setRadius(r);
+    focus.copy(target);
+    place();
+  }
+  setRadius(SHADOW_FIT.maxM);
 
   function setHour(hour: number, night: boolean) {
     const h = ((hour - 12) * 15 * Math.PI) / 180, phi = (CAMPUS_LATITUDE_DEG * Math.PI) / 180;
     const east = -Math.sin(h), north = -Math.sin(phi) * Math.cos(h), up = Math.cos(phi) * Math.cos(h);
-    const dir = new THREE.Vector3(east, Math.max(up, 0.05), -north).normalize();
-    sun.position.copy(center).addScaledVector(dir, SUN_DISTANCE_M);
+    dir.set(east, Math.max(up, 0.05), -north).normalize();
+    place();
     if (night) {
       sun.color.set(0xc4d5ff);
     } else {
@@ -65,5 +95,5 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
     ambient.intensity = night ? 0.24 : 0.2;
   }
 
-  return { sun, setHour, applyTheme };
+  return { sun, sunDir: () => dir.clone(), setHour, applyTheme, follow };
 }
