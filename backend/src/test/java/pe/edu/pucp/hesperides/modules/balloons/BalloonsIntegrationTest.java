@@ -222,6 +222,15 @@ class BalloonsIntegrationTest {
         double midLat = (a.get("latitude").asDouble() + b.get("latitude").asDouble()) / 2;
         assertThat(Math.abs(midLon - lon) * 111_320).isLessThan(1.5);
         assertThat(Math.abs(midLat + 12.0) * 111_320).isLessThan(1.5);
+        // Lejos del borde: un punto apenas dentro del polígono se ve sobre la vereda.
+        assertThat(balloons).allMatch(x -> edgeMeters(section, x) >= 3);
+    }
+
+    private double edgeMeters(long garden, JsonNode b) {
+        return jdbc.queryForObject("""
+                SELECT ST_Distance(ST_Boundary(boundary)::geography,
+                                   ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) FROM zones WHERE id = ?""",
+                Double.class, b.get("longitude").asDouble(), b.get("latitude").asDouble(), garden);
     }
 
     @Test

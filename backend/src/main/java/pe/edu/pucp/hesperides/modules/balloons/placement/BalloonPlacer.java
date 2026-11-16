@@ -21,6 +21,11 @@ public class BalloonPlacer {
 
     /** Separaciones a probar, en metros: la mayor que quepa en el jardín, para que no se pisen. */
     private static final double[] SPACINGS = {12, 8, 5, 3, 1.5};
+    /**
+     * Distancia mínima al borde, en separaciones: a media separación, los globos quedan tan lejos del
+     * borde como entre sí; un punto apenas dentro del polígono se ve en el filo, sobre la vereda.
+     */
+    private static final double EDGE_MARGIN = 0.5;
 
     private final GardenLocator gardens;
 
@@ -52,13 +57,13 @@ public class BalloonPlacer {
         return byGarden;
     }
 
-    /** La mayor separación con la que todos caben dentro; si ni la menor alcanza, los que sobran van al centro. */
+    /** La mayor separación con la que todos caben dentro, lejos del borde; si ni la menor alcanza, los que sobran van al centro. */
     private List<GeoPoint> spread(long gardenId, GeoPoint center, int count) {
         List<GeoPoint> inside = List.of();
         for (double spacing : SPACINGS) {
             List<GeoPoint> candidates = GardenGrid.offsets(count, spacing).stream()
                     .map(o -> center.moved(o[0], o[1])).toList();
-            List<Boolean> covered = gardens.covered(gardenId, candidates);
+            List<Boolean> covered = gardens.covered(gardenId, candidates, spacing * EDGE_MARGIN);
             inside = new ArrayList<>();
             for (int i = 0; i < candidates.size() && inside.size() < count; i++) {
                 if (covered.get(i)) {

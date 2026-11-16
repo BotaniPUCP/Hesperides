@@ -217,10 +217,11 @@ un grupo de ellos. El servidor decide el punto final (`BalloonPlacer`), ya orden
 3. Si no, va al jardín más cercano a `NEAREST_GARDEN_METERS = 100` m o menos; más lejos, se queda
    donde está.
 4. Un globo solo dentro de su jardín conserva su punto. Uno que llegó de fuera, o **varios que
-   comparten jardín**, se reparten en una **cuadrícula centrada** en el punto interior del jardín
-   (`ST_PointOnSurface`), en metros (`GardenGrid`): el más urgente al centro; con un número par la
+   comparten jardín**, se reparten en una **cuadrícula centrada** en el punto del jardín más lejano
+   de sus bordes (centro de `ST_MaximumInscribedCircle`), en metros (`GardenGrid`): el más urgente al centro; con un número par la
    cuadrícula se corre media celda (dos quedan a cada lado del centro; tres, en fila). Se prueba la
-   mayor separación que quepa entera dentro del polígono: 12, 8, 5, 3 y 1,5 m. Si ni 1,5 m alcanza,
+   mayor separación que quepa entera dentro del polígono, con cada globo a media separación o más
+   del borde (un punto apenas dentro se ve sobre la vereda): 12, 8, 5, 3 y 1,5 m. Si ni 1,5 m alcanza,
    los que sobran van al centro.
 
 El punto es fijo en el mapa: el navegador no corre los globos al mover la cámara ni al acercarse.
@@ -371,8 +372,8 @@ Engine · reparto en el jardín (§5.3b)
 - los candidatos van del centro hacia afuera; misma entrada → mismo orden
 
 Posado (integración)
-- dos incidencias en el mismo punto → dos puntos distintos dentro del jardín, centrados en él, el
-  más urgente primero
+- dos incidencias en el mismo punto → dos puntos distintos dentro del jardín, centrados en él y a
+  3 m o más del borde, el más urgente primero
 - una incidencia a 25 m de un jardín, fuera de todo jardín → su globo cae dentro de ese jardín
 - una incidencia sobre un ejemplar suelto → su globo se queda en el punto
 

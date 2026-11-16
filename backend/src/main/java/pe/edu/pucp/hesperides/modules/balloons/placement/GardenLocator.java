@@ -47,7 +47,7 @@ public class GardenLocator {
                                               AND (ST_DWithin(e.location::geography, p.g::geography, :specimen)
                                                    OR ST_Covers(e.area, p.g)))
                                        THEN near.id END AS near_id,
-                                  ST_PointOnSurface(COALESCE(inside.boundary, near.boundary)) AS center
+                                  (ST_MaximumInscribedCircle(COALESCE(inside.boundary, near.boundary))).center AS center
                              FROM p
                              LEFT JOIN LATERAL (%1$s AND ST_Covers(z.boundary, p.g)
                                    ORDER BY ST_Area(z.boundary), z.id LIMIT 1) inside ON TRUE
@@ -64,16 +64,18 @@ public class GardenLocator {
         return Arrays.asList(spots);
     }
 
-    /** Cuáles de los puntos caen dentro del jardín, en el mismo orden. */
-    public List<Boolean> covered(long gardenId, List<GeoPoint> points) {
+    /** Cuáles de los puntos caen dentro del jardín y a {@code marginMeters} o más de su borde, en el mismo orden. */
+    public List<Boolean> covered(long gardenId, List<GeoPoint> points, double marginMeters) {
         Boolean[] covered = new Boolean[points.size()];
         Arrays.fill(covered, Boolean.FALSE);
         jdbc.query("""
-                SELECT u.idx, ST_Covers(z.boundary, ST_SetSRID(ST_MakePoint(u.lon, u.lat), 4326)) AS covered
-                  FROM zones z, unnest(CAST(:lats AS float8[]), CAST(:lons AS float8[]))
-                       WITH ORDINALITY AS u(lat, lon, idx)
+                SELECT u.idx, ST_Covers(z.boundary, u.g)
+                              AND ST_Distance(ST_Boundary(z.boundary)::geography, u.g::geography) >= :margin AS covered
+                  FROM zones z, (SELECT idx, ST_SetSRID(ST_MakePoint(lon, lat), 4326) AS g
+                                   FROM unnest(CAST(:lats AS float8[]), CAST(:lons AS float8[]))
+                                        WITH ORDINALITY AS v(lat, lon, idx)) u
                  WHERE z.id = :garden
-                """, params(points).addValue("garden", gardenId), rs -> {
+                """, params(points).addValue("garden", gardenId).addValue("margin", marginMeters), rs -> {
             covered[rs.getInt("idx") - 1] = rs.getBoolean("covered");
         });
         return Arrays.asList(covered);
