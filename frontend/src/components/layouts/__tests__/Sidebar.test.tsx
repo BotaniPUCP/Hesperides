@@ -185,12 +185,12 @@ describe('Sidebar', () => {
       expect(screen.queryByRole('button', { name: /intervenciones/i })).not.toBeInTheDocument();
     });
 
-    it('al OPERARIO no le queda ningún desplegable: ve directo las pantallas que consulta', () => {
+    it('al OPERARIO solo le queda desplegable Reservas (agenda y calendario, SPEC-114); el resto lo ve directo', () => {
       comoRol('OPERARIO', 'Operario de campo');
       render(<Sidebar />);
 
       const nav = screen.getByRole('navigation', { name: /principal/i });
-      expect(within(nav).queryAllByRole('button')).toHaveLength(0);
+      expect(within(nav).queryAllByRole('button').map((b) => b.textContent)).toEqual([expect.stringContaining('Reservas')]);
       for (const nombre of ['Catálogo de lugares', 'Especies', 'Intervenciones', 'Ejemplares']) {
         expect(within(nav).getByRole('link', { name: nombre })).toBeInTheDocument();
       }

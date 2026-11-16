@@ -13,6 +13,7 @@ import { todayLocal } from '@/lib/local-date';
 import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { PageHeader } from '@/components/layouts/PageHeader';
+import { CampusEventNotice } from './CampusEventNotice';
 import { ReservationNearbyNotice } from './ReservationNearbyNotice';
 
 const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
@@ -116,6 +117,7 @@ export function LegacyInterventionForm({ initial, fromIncident = null, returnFil
       </div>
       <Input id="work-description" label="Descripción del trabajo" value={description} onChange={setDescription} maxLength={4000} />
       <ReservationNearbyNotice date={date} locations={locations} />
+      <CampusEventNotice date={date} locations={locations} />
       <h2 className="text-lg font-semibold">Ubicaciones de esta actividad</h2>
       {locations.map((l,index) => <div key={l.clientReference} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
         <div className="flex items-center justify-between"><h3 className="font-semibold">Ubicación {index + 1}</h3><Button variant="ghost" onClick={() => { setDirty(true); setLocations(rows => rows.filter((_,i) => i !== index)); }}>Retirar ubicación {index + 1}</Button></div>

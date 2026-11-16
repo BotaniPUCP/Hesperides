@@ -35,8 +35,16 @@ public final class BalloonDtos {
                                   BalloonCard card) {
     }
 
+    /**
+     * Un aviso de todo el campus para la franja de arriba del mapa (SPEC-114 D-06), como «Hoy es
+     * feriado: Fiestas Patrias». {@code typeCode} es el del evento: BLOCKING u HOLIDAY.
+     */
+    public record CampusNotice(String typeCode, String text) {
+    }
+
     /** {@code truncated}: había más de los que caben y se recortó por urgencia. */
     public record BalloonsResponse(Instant generatedAt, List<BalloonResponse> balloons,
-                                   List<BalloonKind> unavailableKinds, boolean truncated) {
+                                   List<BalloonKind> unavailableKinds, boolean truncated,
+                                   List<CampusNotice> campusNotices) {
     }
 }

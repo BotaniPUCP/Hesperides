@@ -75,6 +75,7 @@ describe('visibleNavigation', () => {
       '/directorio/importar',
       '/reservas',
       '/reservas/importar',
+      '/calendario',
       '/admin/usuarios',
       '/admin/catalogos',
       '/admin/parametros',
@@ -102,6 +103,7 @@ describe('visibleNavigation', () => {
       '/directorio/importar',
       '/reservas',
       '/reservas/importar',
+      '/calendario',
       '/admin/usuarios',
     ]);
   });
@@ -118,6 +120,7 @@ describe('visibleNavigation', () => {
       '/catastro/estandares',
       '/directorio',
       '/reservas',
+      '/calendario',
       '/admin/usuarios',
     ]);
   });
@@ -129,6 +132,7 @@ describe('visibleNavigation', () => {
       '/intervenciones',
       '/catastro/ejemplares',
       '/reservas',
+      '/calendario',
     ]);
   });
 

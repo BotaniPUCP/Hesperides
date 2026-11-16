@@ -69,5 +69,9 @@ public enum AuditActionCode {
     /** SPEC-107 (enmienda 11 nov 2026): la confirmación de uso del solicitante, de qué a qué. */
     GARDEN_RESERVATION_CONFIRMATION_CHANGED,
     /** SPEC-107 (enmienda 11 nov 2026): la marca de uso del espacio, de qué a qué. */
-    GARDEN_RESERVATION_USAGE_CHANGED
+    GARDEN_RESERVATION_USAGE_CHANGED,
+    /** SPEC-114: el calendario del campus (eventos bloqueantes y feriados). */
+    CAMPUS_EVENT_CREATED,
+    CAMPUS_EVENT_UPDATED,
+    CAMPUS_EVENT_DELETED
 }

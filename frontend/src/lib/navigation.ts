@@ -104,13 +104,15 @@ export const NAVIGATION: readonly NavGroup[] = [
   },
   {
     // SPEC-107: grupo propio. Los cuatro roles leen la agenda; registrar, uno a uno o
-    // por archivo, es de coordinación. Después recibirá los eventos bloqueantes de 1.12.
+    // por archivo, es de coordinación. SPEC-114 suma el calendario del campus (REQ 1.12).
     id: 'reservas',
     label: 'Reservas',
     icon: '📅',
     items: [
       { label: 'Agenda de reservas', href: '/reservas', icon: '📅', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       { label: 'Registro masivo', href: '/reservas/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      // SPEC-114: los eventos bloqueantes y los feriados; los cuatro roles los leen.
+      { label: 'Calendario del campus', href: '/calendario', icon: '🗓️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
     ],
   },
   {

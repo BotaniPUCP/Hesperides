@@ -683,7 +683,8 @@ describe('MapScreen: globos (SPEC-113)', () => {
   };
 
   beforeEach(() => {
-    (balloonsApi.list as jest.Mock).mockResolvedValue({ generatedAt: '', balloons: [incident], unavailableKinds: [], truncated: false });
+    (balloonsApi.list as jest.Mock).mockResolvedValue({ generatedAt: '', balloons: [incident], unavailableKinds: [], truncated: false,
+      campusNotices: [{ typeCode: 'HOLIDAY', text: 'Hoy es feriado: Fiestas Patrias' }] });
   });
 
   it('el visor nace con dónde dibujar los globos y los recibe', async () => {
@@ -746,5 +747,27 @@ describe('MapScreen: día o noche según el tema', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Noche' }));
     expect(viewer.setNight).toHaveBeenLastCalledWith(true);
+  });
+});
+
+describe('MapScreen: franja del calendario del campus (SPEC-114 §5.5)', () => {
+  beforeEach(() => {
+    (balloonsApi.list as jest.Mock).mockResolvedValue({ generatedAt: '', balloons: [], unavailableKinds: [], truncated: false,
+      campusNotices: [{ typeCode: 'HOLIDAY', text: 'Hoy es feriado: Fiestas Patrias' }] });
+    try { localStorage.clear(); } catch { /* sin almacenamiento: la franja igual se muestra */ }
+  });
+
+  it('muestra los eventos de todo el campus de hoy y se cierra hasta mañana (CA-06)', async () => {
+    const { unmount } = await renderLoaded();
+
+    const notice = await screen.findByText('Hoy es feriado: Fiestas Patrias');
+    expect(notice.closest('[role="status"]')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar avisos del campus' }));
+    expect(screen.queryByText('Hoy es feriado: Fiestas Patrias')).not.toBeInTheDocument();
+
+    unmount();
+    await renderLoaded();
+    await waitFor(() => expect(balloonsApi.list).toHaveBeenCalled());
+    expect(screen.queryByText('Hoy es feriado: Fiestas Patrias')).not.toBeInTheDocument();
   });
 });
