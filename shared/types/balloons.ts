@@ -39,10 +39,17 @@ export interface Balloon {
   card: BalloonCard;
 }
 
+/** Un aviso de todo el campus para la franja del mapa (SPEC-114 D-06): «Hoy es feriado: …». */
+export interface CampusNotice {
+  typeCode: 'BLOCKING' | 'HOLIDAY';
+  text: string;
+}
+
 export interface BalloonsResponse {
   generatedAt: string;
   /** Ya ordenados del más urgente al menos. */
   balloons: Balloon[];
   unavailableKinds: BalloonKind[];
   truncated: boolean;
+  campusNotices: CampusNotice[];
 }

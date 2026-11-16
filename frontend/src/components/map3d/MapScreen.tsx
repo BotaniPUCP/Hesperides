@@ -9,6 +9,7 @@ import { useMapLayers } from '@/hooks/useMapLayers';
 import { usePlanModel } from '@/hooks/usePlanModel';
 import { BalloonCard } from './balloons/BalloonCard';
 import { BalloonLegend } from './balloons/BalloonLegend';
+import { CampusNoticesBanner } from './balloons/CampusNoticesBanner';
 import { useBalloonsOnMap } from './balloons/useBalloonsOnMap';
 import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
 import { LayerToggles } from './LayerToggles';
@@ -124,6 +125,7 @@ export function MapScreen() {
               <MapSearch index={index} onPick={(e) => (isCatalogTarget(e.target) ? onMap.pick(e.target) : s.select(e.target))} />
             </div>
           </div>
+          <CampusNoticesBanner notices={balloons.campusNotices} />
           {stale && (
             <p role="status" className="rounded-md bg-alert-warning-bg/95 px-3 py-1.5 text-xs text-alert-warning-fg shadow">
               Sin conexión: se muestra la última versión descargada del mapa.

@@ -16,7 +16,7 @@ const balloon = (over: Partial<Balloon> = {}): Balloon => ({
   ...over,
 });
 const response = (balloons: Balloon[], unavailableKinds: BalloonsResponse['unavailableKinds'] = []): BalloonsResponse =>
-  ({ generatedAt: '2026-11-15T10:00:00-05:00', balloons, unavailableKinds, truncated: false });
+  ({ generatedAt: '2026-11-15T10:00:00-05:00', balloons, unavailableKinds, truncated: false, campusNotices: [] });
 
 describe('useBalloons (SPEC-113 §5.6)', () => {
   beforeEach(() => { jest.useFakeTimers(); list.mockReset(); });
@@ -88,7 +88,7 @@ describe('BalloonLegend (SPEC-113 §7.3)', () => {
 
     expect(screen.getByText('Incidencia abierta').closest('li')).toHaveTextContent('2');
     expect(screen.getByText('Riego en curso o de hoy').closest('li')).toHaveTextContent('0');
-    expect(screen.queryByText('Evento bloqueante')).not.toBeInTheDocument();
+    expect(screen.getByText('Evento bloqueante').closest('li')).toHaveTextContent('0');
     expect(screen.getByRole('status')).toHaveTextContent('Reserva en curso');
     fireEvent.click(screen.getByRole('checkbox', { name: 'Globos' }));
     expect(onToggle).toHaveBeenCalledWith(false);

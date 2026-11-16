@@ -17,6 +17,7 @@ import { PageHeader } from '@/components/layouts/PageHeader';
 import { managesIncidents } from '@/lib/incidentRoles';
 import { LegacyInterventionForm } from './LegacyInterventionForm';
 import { RecentAttentionNotice } from './RecentAttentionNotice';
+import { CampusEventNotice } from './CampusEventNotice';
 import { ReservationNearbyNotice } from './ReservationNearbyNotice';
 import { addCampusTargets, campusLocation, campusReady, campusRowsFromPrefill, targetAvailable, targetName, removeCampusTargets, toggleCampus, type CampusTarget } from './campusSelection';
 const CampusMap=dynamic(()=>import('./InterventionCampusMap').then(m=>m.InterventionCampusMap),{ssr:false});
@@ -151,6 +152,7 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
       {!initial && <RecentAttentionNotice typeId={typeId} typeLabel={types.find(t => t.id === typeId)?.label ?? 'esta actividad'} date={date}
         zoneIds={zoneIds} onRemove={zoneId => { setDirty(true); setLocations(rows => rows.filter(l => l.zoneId !== zoneId)); }} />}
       <ReservationNearbyNotice date={date} locations={locations} />
+      <CampusEventNotice date={date} locations={locations} />
       {!!prefillMissing && <p role="alert" className="text-sm text-alert-warning-fg">{prefillMissing} del conjunto ya no {prefillMissing === 1 ? 'está' : 'están'} en el mapa y no se {prefillMissing === 1 ? 'incluyó' : 'incluyeron'}.</p>}
       <h2 className="text-lg font-semibold">Áreas verdes y ejemplares</h2>
       <Button variant="secondary" onClick={()=>setReload(n=>n+1)}>Actualizar mapa</Button>

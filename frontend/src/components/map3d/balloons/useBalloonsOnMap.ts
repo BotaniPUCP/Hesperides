@@ -23,7 +23,7 @@ interface MapScreenLink {
 export function useBalloonsOnMap(link: MapScreenLink) {
   const [on, setOn] = useState(true);
   const [picked, setPicked] = useState<Balloon | null>(null);
-  const { balloons, unavailableKinds, errorMessage } = useBalloons(on && !link.unsupported);
+  const { balloons, unavailableKinds, campusNotices, errorMessage } = useBalloons(on && !link.unsupported);
   const { viewer, viewerEpoch, cardOpen, closeCard } = link;
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function useBalloonsOnMap(link: MapScreenLink) {
   // La ficha muestra la versión más reciente del globo; si ya no está, lo avisa y espera.
   const latest = picked ? balloons.find((b) => b.id === picked.id) ?? null : null;
   return {
-    on, toggle, balloons, unavailableKinds, errorMessage, pick,
+    on, toggle, balloons, unavailableKinds, campusNotices, errorMessage, pick,
     // Solo una ficha a la vez: con la del mapa abierta, la del globo no se muestra.
     card: picked && !cardOpen ? { balloon: latest ?? picked, gone: latest === null } : null,
     closeBalloon: () => setPicked(null),

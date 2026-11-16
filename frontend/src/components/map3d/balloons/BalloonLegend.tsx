@@ -10,6 +10,7 @@ const KINDS_WITH_SOURCE: { kind: BalloonKind; icon: string }[] = [
   { kind: 'IRRIGATION', icon: 'riego-en-curso' },
   { kind: 'INTERVENTION', icon: 'intervencion-en-curso' },
   { kind: 'RESERVATION', icon: 'reserva-en-curso' },
+  { kind: 'BLOCKING_EVENT', icon: 'evento-bloqueante' },
 ];
 
 export interface BalloonLegendProps {

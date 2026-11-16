@@ -14,3 +14,4 @@ export * from './directory';
 export * from './planning';
 export * from './reservations';
 export * from './balloons';
+export * from './campusEvents';

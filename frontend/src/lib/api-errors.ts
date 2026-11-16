@@ -1,6 +1,7 @@
 import type { FieldError, ValidationErrors } from '@shared/types';
 import { ApiError, PASSWORD_CHANGE_REQUIRED_MESSAGE } from './api';
 import { isSpanishBackendMessage } from './backendSpanishMessages';
+import { CAMPUS_EVENT_MESSAGES, CAMPUS_EVENT_PATTERNS } from './campusEventErrorMessages';
 import { DIRECTORY_MESSAGES, DIRECTORY_PATTERNS } from './directoryErrorMessages';
 import { IMPORT_PATTERNS } from './importErrorMessages';
 import { PLACE_MESSAGES, PLACE_PATTERNS, type MessagePattern } from './placeErrorMessages';
@@ -85,11 +86,12 @@ const MENSAJES: Record<string, string> = {
   ...DIRECTORY_MESSAGES,
   ...PLANNING_MESSAGES,
   ...RESERVATION_MESSAGES,
+  ...CAMPUS_EVENT_MESSAGES,
 };
 
 /** Los mensajes que traen un dato no caben en un diccionario de textos exactos. */
 const PATRONES: readonly MessagePattern[] = [...PLACE_PATTERNS, ...SHARED_PATTERNS, ...DIRECTORY_PATTERNS, ...IMPORT_PATTERNS,
-  ...PLANNING_PATTERNS, ...RESERVATION_PATTERNS];
+  ...PLANNING_PATTERNS, ...RESERVATION_PATTERNS, ...CAMPUS_EVENT_PATTERNS];
 
 /** La traducción de un mensaje conocido del backend; null si no se conoce. */
 export function traducirConocido(message: string, patrones: readonly MessagePattern[] = PATRONES): string | null {

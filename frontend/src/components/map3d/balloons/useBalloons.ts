@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Balloon, BalloonKind } from '@shared/types';
+import type { Balloon, BalloonKind, CampusNotice } from '@shared/types';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { balloonsApi } from '@/lib/balloons-api';
 
@@ -11,10 +11,12 @@ export const REFRESH_MS = 60_000;
 export interface UseBalloonsResult {
   balloons: Balloon[];
   unavailableKinds: BalloonKind[];
+  /** Los eventos de todo el campus de hoy, para la franja (SPEC-114). */
+  campusNotices: CampusNotice[];
   errorMessage: string | null;
 }
 
-const EMPTY: UseBalloonsResult = { balloons: [], unavailableKinds: [], errorMessage: null };
+const EMPTY: UseBalloonsResult = { balloons: [], unavailableKinds: [], campusNotices: [], errorMessage: null };
 
 /**
  * Los globos del mapa mientras el interruptor está encendido: al encender, cada minuto
@@ -28,7 +30,8 @@ export function useBalloons(enabled: boolean): UseBalloonsResult {
     let current = true;
     const load = () => {
       balloonsApi.list()
-        .then((r) => { if (current) setState({ balloons: r.balloons, unavailableKinds: r.unavailableKinds, errorMessage: null }); })
+        .then((r) => { if (current) setState({ balloons: r.balloons, unavailableKinds: r.unavailableKinds,
+          campusNotices: r.campusNotices ?? [], errorMessage: null }); })
         .catch((e: unknown) => { if (current) setState((s) => ({ ...s, errorMessage: mensajeDeApiError(e) })); });
     };
     const visible = () => document.visibilityState !== 'hidden';
