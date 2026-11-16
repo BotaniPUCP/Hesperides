@@ -5,15 +5,15 @@
 Usar un entorno local de desarrollo con datos desechables: PostgreSQL/PostGIS y
 backend en contenedores, frontend con Bun local. La imagen del backend incluye
 JDK 26; no hace falta ejecutar Java ni exportar sus variables manualmente. El módulo
-aplica V026–V029 después de las migraciones de develop. El servicio Flask no interviene.
+usa V026–V029 y el rediseño V052 (SPEC-201, 15 nov 2026). El servicio Flask no interviene.
 No conectar esta demostración a una base real.
 No usar `.env` ni credenciales reales en una prueba automatizada compartida.
 
 Con el perfil `dev`, Flyway ejecuta automáticamente
 `backend/src/main/resources/db/dev-migration/R__seed_demo_incidents.sql` después de
-las migraciones del esquema. Crea dos capataces, un coordinador, dos cuadrillas,
-ocho incidencias y doce trabajos del prototipo, conservados de solo lectura. No los
-convierte automáticamente en intervenciones reales validadas. Contraseña pública de prueba:
+las migraciones del esquema. Crea dos capataces, un coordinador, un operario, dos cuadrillas,
+una empresa externa ficticia y seis incidencias del flujo nuevo, sin trabajo fabricado.
+Contraseña pública de prueba:
 `Hesperides2026`. Los nombres de cuenta terminan en `@demo.invalid`.
 
 Preparar `.env` con los valores de `.env.example`: completar `POSTGRES_PASSWORD`,
@@ -21,7 +21,9 @@ Preparar `.env` con los valores de `.env.example`: completar `POSTGRES_PASSWORD`
 en 3000; configurar `APP_PUBLIC_URL=http://localhost:3000`,
 `CORS_ALLOWED_ORIGINS=http://localhost:3000` y `COOKIE_SECURE=false`.
 Para que la limpieza de volúmenes incluya las fotos de prueba, usar
-`STORAGE_TYPE=local` y `STORAGE_LOCAL_DIR=/data/storage`.
+`STORAGE_TYPE=local` y `STORAGE_LOCAL_DIR=/data/storage`. Para ver el prellenado por IA,
+completar `OLLAMA_API_KEY` (y si hace falta `OLLAMA_MODEL`); sin clave la demo funciona
+igual y el prellenado queda fallido, con el botón para pedir otra sugerencia.
 
 Desde la raíz, reconstruir e iniciar solo PostgreSQL/PostGIS y backend:
 
@@ -63,67 +65,48 @@ no se crean cuentas ni incidencias de demostración. **No activar `dev` en una b
 real.** Compose base también usa dev por defecto; para producción, usar un perfil
 no dev explícito y no cargar `docker-compose.dev.yml`.
 
-La carga es repetible: no duplica los casos ni restablece cambios realizados durante
-la demostración. Cada capataz ve cuatro casos iniciales, uno por estado, y el
-coordinador ve los ocho. En una base sin otras incidencias, el tablero comienza con:
+La carga es repetible: solo inserta los casos que faltan y no deshace lo que alguien
+cambió durante la demostración. Los seis casos:
 
-| Indicador | Total inicial |
-|---|---:|
-| Pendientes de aprobación | 2 |
-| Pendientes de atención | 2 |
-| En atención | 2 |
-| Resueltas | 2 |
-| Intervenciones reales finalizadas | 0 |
-| Intervenciones reales validadas | 0 |
+| Caso | Quién lo reportó | Estado de partida |
+|---|---|---|
+| Rama rajada sobre el sendero | Capataz | Por activar, sin prellenado |
+| Aspersor roto | Otro capataz | Por activar, con prellenado de ejemplo |
+| Cochinilla en arbustos | Operario | Por activar |
+| Árbol caído | Capataz | Activa, urgencia alta, **vencida** (rojo en el mapa) |
+| Plantas marchitas | Otro capataz | Activa, **por vencer** (ámbar), con GPS |
+| Ficus de 10 m | Capataz | Activa, la atiende un tercero con 10 días pactados |
 
-El caso del Tontódromo conserva un trabajo realizado y otro pendiente. Desde V029
-sirve para demostrar la asociación explícita del legado, no para marcarlo finalizado
-sin ejecución/revisión del módulo real. El caso de la puerta principal contiene solo el
-texto mínimo. Las coordenadas de ejemplo son ilustrativas; no se crean fotografías
-ficticias. Flyway aplica esta migración repetible en una base nueva y cuando cambia
-su contenido, no en cada `compose up` si la base ya está al día. Después de una
-limpieza explícita de la demo, el siguiente arranque crea el esquema y vuelve a
-cargar sus datos. Si el SQL cambia, reconstruir la imagen del backend para incluirlo.
-
-La prueba `DemoIncidentsSeedTest` verifica la carga automática con el perfil dev,
-los contadores, los permisos por cuadrilla y la conservación de ediciones y
-resoluciones al repetir el SQL. `MigrationSmokeTest` comprueba que la configuración
-sin dev no ejecuta la carga de demostración.
-
-La cuenta inicial ADMIN puede seguir administrando usuarios, pero no participa en
-este flujo operativo. Para la prueba se necesitan los perfiles de coordinación y
-capataz; cambiar el rol de ADMIN no es necesario.
+No hay incidencias cerradas: cerrar exige intervenciones validadas de verdad, así que
+se demuestra creándolas en la aplicación. La prueba `DemoIncidentsSeedTest` verifica la
+carga y que repetirla no duplica nada.
 
 ## Recorrido para presentar al cliente
 
-1. Entrar como `capataz@demo.invalid` y abrir **Incidencias**.
-2. Informar «Rama caída en puerta principal», sin completar nada más. Abrir el
-   detalle: pendiente de aprobación, remitente y fecha de recepción visibles.
-3. Repetir con una fotografía y, si el contexto es HTTPS/localhost, ubicación.
-   Denegar ubicación y comprobar que sigue siendo posible enviar.
-4. Entrar como `coordinador@demo.invalid`. Opcionalmente **Devolver para corrección**
-   con un motivo; volver al capataz, corregir y **Reenviar para revisión**. Comprobar
-   que siguen siendo el mismo ID, recepción y texto original conservado.
-5. Coordinación revisa matriz, cuadrilla y datos recibidos y pulsa **Registrar incidencia
-   oficialmente**. Se asigna OSG, incluso sin intervenciones; el cierre sigue bloqueado.
-6. **Registrar nueva intervención** abre el módulo real. Seleccionar clasificación de
-   origen, clase/tipo, fecha y ubicaciones verdaderas. Guardar y volver: queda preseleccionada,
-   pero solo se asocia al confirmar **Vincular intervención**. También se puede elegir
-   una existente y compartirla entre incidencias. Para legado, marcar qué registros sustituye.
-7. En la intervención, coordinación asigna cuadrilla y ejecutor. El capataz inicia,
-   registra evidencia de la ubicación/intento y reporta terminada. Esto no habilita
-   todavía el cierre de la incidencia.
-8. Coordinación revisa las ubicaciones: **Observar** con motivo devuelve a corrección;
-   el capataz abre otro intento y lo finaliza con sus evidencias. **Aprobar** valida
-   cada ubicación; la intervención completa solo queda validada al aprobarlas todas.
-9. Volver a cada incidencia. Solo coordinación, con todas sus requeridas validadas,
-   completa **Cómo se resolvió la incidencia** y **Validar resolución y cerrar incidencia**.
-   Un trabajo compartido no cierra automáticamente ningún caso. Cada cierre tiene su resumen.
-10. Entrar como `otro-capataz@demo.invalid`: ve sus propios casos, no el caso creado
-   para la otra cuadrilla.
-11. En una ventana de unos 390 px, repetir captura/listado/detalle sin scroll lateral.
-12. Cambiar entre claro y oscuro; revisar controles, avisos y badges. Abrir un detalle,
-    recargar su URL y volver con el navegador y el breadcrumb: se conservan los filtros.
+1. Entrar como `capataz@demo.invalid`, abrir **Incidencias** e **Informar una incidencia**:
+   escribir qué pasó y marcar la gravedad. Nada más es obligatorio. Queda **por activar**.
+2. Entrar como `operario@demo.invalid`: también reporta, y solo ve lo suyo.
+3. Entrar como `coordinador@demo.invalid` y abrir el reporte. Revisar la tarjeta
+   **Prellenado por IA** (si hay clave) y los campos marcados «Sugerido por IA». Modificar
+   lo necesario: quedan marcados «Editado» y la IA ya no los cambia. El texto original
+   queda aparte.
+4. **Activar incidencia**: si falta tipo, urgencia o sección/GPS, la tarjeta lo dice. Un
+   árbol de 5 m o más exige marcar que lo atiende un tercero, con la empresa del Directorio
+   y sus días pactados.
+5. Ya activa, **Crear intervención para esta incidencia** abre Intervenciones con la
+   incidencia preseleccionada; al guardar, el vínculo ya existe y la incidencia pasa a
+   **En proceso**. También se puede vincular una existente buscándola por código, o desde el
+   detalle de la intervención. El mismo vínculo se ve en ambos lados.
+6. En la intervención: asignar, ejecutar con evidencia y finalizar. La incidencia muestra
+   que hay trabajo **sin validar** y no deja cerrar.
+7. Validar la intervención. Volver a la incidencia, escribir la **Solución aplicada** y
+   **Cerrar incidencia**. El plazo queda congelado como «en plazo» o «fuera de plazo».
+8. Probar una cancelada: cancelar una intervención vinculada y ver que bloquea el cierre;
+   **Reemplazar** la quita y vincula otra en un paso, con su motivo.
+9. Abrir **Mapa**: las incidencias activas aparecen en verde, ámbar o rojo según su plazo;
+   pulsar una abre su detalle. El panel de capas cuenta las que no tienen ubicación.
+10. Entrar como `otro-capataz@demo.invalid`: no ve los casos de la otra cuadrilla.
+11. Repetir captura, lista y detalle a unos 390 px, en claro y en oscuro.
 
 ## Fotografías
 
@@ -136,24 +119,13 @@ privada, con `Cache-Control: no-store`; no se usan los endpoints públicos del c
 La prueba unitaria `IncidentFilesTest` cubre la lectura desde ese único almacenamiento,
 los límites de claves, conservación de bytes y limpieza en rollback.
 
-## Límites explícitos de la prueba de concepto
+## Límites de esta versión
 
-Verificación del realineamiento, 24 de octubre de 2026: **606 pruebas backend**
-con JDK 25 y Testcontainers/Podman, **606 frontend**, lint y build correctos.
-Firefox real mediante WebDriver BiDi a 390×844 y 1440×1000: claro/oscuro, controles
-de 48 px, navegación/recarga con filtros, ubicación denegada, foto con reintento sin
-recrear la incidencia, aprobación, dos trabajos con ejecución parcial, resolución,
-permisos entre cuadrillas y contadores. Tras reiniciar Java, el estado resuelto y
-los bytes de la foto siguen disponibles. Los 47 preflights observados respondieron
-sin error. Configuración Compose base/dev validada, incluidos los montajes de
-almacenamiento y recarga. Falta comprobar captura de cámara en un Android físico y recoger las
-observaciones del cliente; no se probó contra un bucket S3 real.
-
-- La matriz OSG entregada aporta servicios, causas, severidad e impactos; la categoría
-  operativa del prototipo permanece provisional y no se infiere riesgo.
-- Sin IA, notificaciones, integración con WhatsApp ni app React Native.
-- Sin mapa interactivo: referencia textual y coordenadas editables; ningún registro
-  depende de cargar mapas o de habilitar GPS.
-- Sin sincronización offline: los errores conservan el formulario mientras siga
-  abierto. Tras recibir el texto se reintentan fotos, no la creación completa.
-- El tablero usa totales generales; los filtros afectan solo al listado.
+- Plazos provisionales (24/48/72 h), editables en los parámetros del sistema hasta que el
+  cliente los confirme.
+- La IA solo sugiere; coordinación valida todo al activar. Si Ollama no responde, el
+  reporte se guarda igual.
+- Sin regla de maquinaria de corte (irá en Intervenciones), sin riesgo por ubicación de la
+  sección y sin reapertura de incidencias cerradas.
+- Sin notificaciones, integración con WhatsApp o Centuria, ni app nativa.
+- Sin sincronización offline: los errores conservan el formulario mientras siga abierto.
