@@ -13,7 +13,7 @@ export interface IncidentAccessProps {
 export function IncidentAccess({ children }: IncidentAccessProps) {
   const { user } = useAuth();
   if (!canUseIncidents(user?.role.code)) {
-    return <EmptyState title="Sin acceso a incidencias" description="Este módulo está disponible para administración, coordinación y capataces." />;
+    return <EmptyState title="Sin acceso a incidencias" description="Tu cuenta no tiene un rol que use este módulo." />;
   }
   return children;
 }

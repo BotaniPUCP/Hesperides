@@ -40,7 +40,7 @@ export interface InterventionHistoryEvent {
 export interface InterventionDetail extends InterventionSummary {
   campusSelectionRevision?:string|null;
   incidentIntegrationAvailable?: boolean;
-  sourceIncidents?: { id: number; code: string | null; statusCode: string }[];
+  sourceIncidents?: InterventionSourceIncident[];
   description: string | null; locations: InterventionLocation[]; evidences: InterventionEvidence[];
   originItemId: number; reportedByItemId: number; externalCode: string | null; requestedAt: string | null;
   responsibleSupervisorUserId: number | null;
@@ -66,11 +66,17 @@ export interface InterventionZoneOptions {
 }
 export interface ZoneSelection {placeId:number;zoneId:number;zoneSelectionRevision:string;}
 export interface ZonePreview {surfaceM2:number;zones:InterventionZone[];}
+/** Incidencia vinculada, vista desde la intervención (SPEC-201 §3.8). */
+export interface InterventionSourceIncident {
+  id: number; code: string; title: string | null; statusCode: string; active: boolean; linkId: number | null;
+}
 export interface InterventionPlanning {
   campusSelectionRevision?:string|null;
   classItemId: number; typeItemId: number | null; scheduledDate: string; description: string | null;
   locations: InterventionLocation[]; version?: number; rescheduleReason?: string;
   originItemId?: number; reportedByItemId?: number; externalCode?: string | null; requestedAt?: string | null;
+  /** SPEC-201 §3.8: incidencias que atiende, solo al crear. */
+  incidentIds?: number[];
 }
 export interface InterventionOptions {
   places: {id:number; code?:string; name:string}[];

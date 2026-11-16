@@ -15,6 +15,8 @@ import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { managesIncidents } from '@/lib/incidentRoles';
+import type { IncidentRef } from '@shared/types';
+import { InterventionIncidentPicker } from './InterventionIncidentPicker';
 import { LegacyInterventionForm } from './LegacyInterventionForm';
 import { RecentAttentionNotice } from './RecentAttentionNotice';
 import { ReservationNearbyNotice } from './ReservationNearbyNotice';
@@ -32,7 +34,13 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
   const source = useRequest(origin ? `intervention-origin:${user?.id}:${origin}` : null, () => incidentsApi.detail(origin!));
   const [dirty,setDirty] = useState(false);
   const guard = useUnsavedChangesGuard(dirty);
-  const sourceAvailable = !origin || (managesIncidents(user?.role.code) && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
+  const sourceAvailable = !origin || (managesIncidents(user?.role.code) && !!source.data?.incident.active && source.data.incident.closedAt === null);
+  const [incidents,setIncidents]=useState<IncidentRef[]>([]);
+  // La incidencia de origen entra preseleccionada una sola vez, cuando llega su detalle.
+  const [originSeeded,setOriginSeeded]=useState(false);
+  if(origin&&sourceAvailable&&source.data&&!originSeeded){
+    const i=source.data.incident;setIncidents([{id:i.id,code:i.code,title:i.title,statusCode:i.status.code,active:i.active}]);setOriginSeeded(true);
+  }
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? prefill?.typeId ?? null);
@@ -110,6 +118,7 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
       ...(initial ? {originItemId:initial.originItemId, reportedByItemId:initial.reportedByItemId, externalCode:initial.externalCode, requestedAt:initial.requestedAt, version:initial.version, rescheduleReason:reason} : {}),
       ...(origin ? {originItemId:findingOrigin!.id,reportedByItemId:findingSource!} : {}),
       classItemId:classId, typeItemId:typeId, scheduledDate:date, description, locations:locations.map(campusLocation),campusSelectionRevision:inventory.data!.selectionRevision,
+      ...(!initial && incidents.length ? {incidentIds:incidents.map(i=>i.id)} : {}),
     };
     setPending(true); setError('');
     let requestSent = false;
@@ -122,7 +131,7 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
         requestSent = true;
         result = await interventionsApi.create(saved.body, saved.key);
       }
-      guard.navigate(origin ? incidentAfterCreationHref(origin,result.id,returnFilters) : `/intervenciones/${result.id}`);
+      guard.navigate(origin ? incidentAfterCreationHref(origin,null,returnFilters) : `/intervenciones/${result.id}`);
     } catch (e) {
       if (!initial && requestSent && (!(e instanceof ApiError) || e.status === 0 || e.status >= 500 || (e.status === 409 && !/zone|spatial|campus/i.test(e.message)))) setUncertain(true);
       setError(interventionError(e));
@@ -133,14 +142,15 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
   <form className="surface-card space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
     {guard.dialog}
     {origin && <Link href={incidentAfterCreationHref(origin,null,returnFilters)} className="text-brand-600 underline">Volver a la incidencia</Link>}
-    {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.officialCode ?? `incidencia #${origin}`}. Al guardar volverás para confirmar el vínculo; todavía no se crea una asociación.</p>}
-    {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar registrada, abierta y disponible para tu cuenta.'}</p>}
+    {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.code ?? `incidencia #${origin}`}. Al guardar, la intervención queda vinculada y vuelves a la incidencia.</p>}
+    {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar activa, abierta y disponible para tu cuenta.'}</p>}
     {error && <p role="alert" className="text-action-danger">{error}</p>}
     {uncertain && <p role="status">No se pudo confirmar el registro. Reintentar enviará exactamente los mismos datos para evitar duplicados. También puedes consultar el listado.</p>}
     <fieldset disabled={pending || uncertain || !options || !sourceAvailable} className="space-y-5 disabled:opacity-70">
       {origin && <Select id="finding-source" label="Clasificación de origen del reporte" required value={findingSource?.toString() ?? null}
         options={catalog('INCIDENT_SOURCE').map(c => ({...c,code:String(c.id)}))} onChange={o => setFindingSource(o?.id ?? null)}
         helperText="La actividad se registra como hallazgo. Esta clasificación es distinta del nombre de quien envió la incidencia." />}
+      {!initial && managesIncidents(user?.role.code) && <InterventionIncidentPicker value={incidents} onChange={setIncidents} disabled={pending} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <Select id="work-class" label="Clase" value={String(classId)} options={catalog('INTERVENTION_CLASS').map(c => ({...c,code:String(c.id)}))} onChange={o => {setClassId(o?.id ?? 0);setTypeId(null);}} required />
         <Select id="work-type" label="Tipo" value={typeId === null ? null : String(typeId)} options={types.map(c => ({...c,code:String(c.id)}))} onChange={o => setTypeId(o?.id ?? null)} disabled={!types.length} required={types.length > 0} />

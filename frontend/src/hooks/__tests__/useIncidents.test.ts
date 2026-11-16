@@ -1,16 +1,16 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useAuth } from '../useAuth';
-import { useIncidentDetail, useIncidentNavigation, useIncidentOptions, useIncidents, useIncidentSummary } from '../useIncidents';
+import { useIncidentDetail, useIncidentMine, useIncidentNavigation, useIncidentOptions, useIncidents } from '../useIncidents';
 import { useSearchParams } from 'next/navigation';
 import { rememberedHref } from '@/lib/listMemory';
 import { incidentsApi } from '@/lib/incidents-api';
 import { ApiError } from '@/lib/api';
-import { incidentOptions, incidentPage, pendingDetail, approvedDetail } from '@/components/incidents/__fixtures__/incidents';
+import { incidentOptions, incidentPage, pendingDetail, approvedDetail, incidentMine } from '@/components/incidents/__fixtures__/incidents';
 
 jest.mock('../useAuth', () => ({ useAuth: jest.fn() }));
 jest.mock('next/navigation', () => ({ useSearchParams: jest.fn() }));
 jest.mock('@/lib/incidents-api', () => ({ incidentsApi: {
-  list: jest.fn(), options: jest.fn(), summary: jest.fn(), detail: jest.fn(),
+  list: jest.fn(), options: jest.fn(), mine: jest.fn(), detail: jest.fn(),
 } }));
 const api = incidentsApi as jest.Mocked<typeof incidentsApi>;
 const auth = jest.mocked(useAuth);
@@ -33,19 +33,19 @@ it('recuerda los filtros de la URL para que el breadcrumb regrese a la lista fil
   window.sessionStorage.clear();
 });
 
-it('loads the list even when options and summary fail, without refetching them for each filter', async () => {
+it('loads the list even when options and own reports fail, without refetching them for each filter', async () => {
   api.options.mockRejectedValue(new ApiError(500, 'Unavailable'));
-  api.summary.mockRejectedValue(new ApiError(500, 'Unavailable'));
+  api.mine.mockRejectedValue(new ApiError(500, 'Unavailable'));
   const { result, rerender } = renderHook(({ search }) => ({
-    list: useIncidents({ ...filters, search }), options: useIncidentOptions(), summary: useIncidentSummary(),
+    list: useIncidents({ ...filters, search }), options: useIncidentOptions(), mine: useIncidentMine(),
   }), { initialProps: { search: '' } });
   await waitFor(() => expect(result.current.list.data).toEqual(incidentPage));
   await waitFor(() => expect(result.current.options.errorMessage).toBeTruthy());
-  expect(result.current.summary.errorMessage).toBeTruthy();
+  expect(result.current.mine.errorMessage).toBeTruthy();
   rerender({ search: 'rama' });
-  await waitFor(() => expect(api.list).toHaveBeenLastCalledWith(0, '', 'rama'));
+  await waitFor(() => expect(api.list).toHaveBeenLastCalledWith(0, '', 'rama', null));
   expect(api.options).toHaveBeenCalledTimes(1);
-  expect(api.summary).toHaveBeenCalledTimes(1);
+  expect(api.mine).toHaveBeenCalledTimes(1);
 });
 
 it('does not display results from an old query while the next query loads', async () => {
@@ -89,21 +89,20 @@ it('distinguishes not found from network failure and does not call restricted en
   await waitFor(() => expect(result.current.notFound).toBe(true));
   expect(result.current.errorMessage).toBeNull();
 
-  auth.mockReturnValue({ user: { id: 2, role: { code: 'SUPERVISOR' } } } as ReturnType<typeof useAuth>);
-  renderHook(() => useIncidentSummary());
-  expect(api.summary).not.toHaveBeenCalled();
-  auth.mockReturnValue({ user: { id: 3, role: { code: 'OPERARIO' } } } as ReturnType<typeof useAuth>);
+  auth.mockReturnValue({ user: { id: 3, role: { code: 'DESCONOCIDO' } } } as ReturnType<typeof useAuth>);
   renderHook(() => useIncidents(filters));
+  renderHook(() => useIncidentMine());
   expect(api.list).not.toHaveBeenCalled();
+  expect(api.mine).not.toHaveBeenCalled();
 });
 
-it('el ADMIN consulta la lista y el resumen', async () => {
-  auth.mockReturnValue({ user: { id: 4, role: { code: 'ADMIN' } } } as ReturnType<typeof useAuth>);
-  api.summary.mockResolvedValue({} as Awaited<ReturnType<typeof incidentsApi.summary>>);
+it('el operario consulta la lista y sus propios reportes (SPEC-201 §3.1)', async () => {
+  auth.mockReturnValue({ user: { id: 4, role: { code: 'OPERARIO' } } } as ReturnType<typeof useAuth>);
+  api.mine.mockResolvedValue(incidentMine);
   renderHook(() => useIncidents(filters));
-  renderHook(() => useIncidentSummary());
+  renderHook(() => useIncidentMine());
   await waitFor(() => expect(api.list).toHaveBeenCalled());
-  expect(api.summary).toHaveBeenCalled();
+  expect(api.mine).toHaveBeenCalled();
 });
 
 it('discards data when the signed-in actor changes', async () => {

@@ -23,6 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
   IN_REVIEW: 'bg-status-in-review-bg text-status-in-review-fg',
   IN_PROGRESS: 'bg-status-in-progress-bg text-status-in-progress-fg',
   RESOLVED: 'bg-status-resolved-bg text-status-resolved-fg',
+  CLOSED: 'bg-status-resolved-bg text-status-resolved-fg',
 };
 
 const UNKNOWN_STATUS = 'bg-neutral-100 text-neutral-700';
