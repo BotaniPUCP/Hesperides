@@ -19,6 +19,14 @@ public class IncidentReferenceQueries {
                 (r, n) -> new ZoneResponse(r.getLong("id"), r.getString("code"), r.getString("name")), id).stream().findFirst();
     }
 
+    /** Secciones activas del campus, para ubicar una incidencia al revisarla (§3.6). */
+    public java.util.List<ZoneResponse> sections() {
+        return jdbc.query("""
+            SELECT z.id,z.code,z.name FROM zones z JOIN catalog_items t ON t.id=z.zone_type_item_id
+             WHERE z.deleted_at IS NULL AND z.is_active AND t.code='SECTION' ORDER BY z.name, z.id
+            """, (r, n) -> new ZoneResponse(r.getLong("id"), r.getString("code"), r.getString("name")));
+    }
+
     public Optional<OrganizationResponse> organization(Long id) {
         if (id == null) return Optional.empty();
         return jdbc.query("SELECT id,name FROM organizations WHERE id=? AND deleted_at IS NULL",

@@ -27,6 +27,7 @@ public class IncidentQueryService {
     private final IncidentResponses responses;
     private final IncidentDetails details;
     private final IncidentCatalogs catalogs;
+    private final pe.edu.pucp.hesperides.modules.incidents.repository.IncidentReferenceQueries references;
 
     public Page<IncidentResponse> list(String email, String search, String status, Boolean active, int page, int size) {
         User actor = access.actor(email);
@@ -57,7 +58,7 @@ public class IncidentQueryService {
         var teams = access.assignableTeams(actor).stream().map(IncidentResponses::team).toList();
         return new OptionsResponse(catalogOptions(IncidentCatalogs.URGENCY), catalogOptions(IncidentCatalogs.CLASS), types(),
                 catalogOptions(IncidentCatalogs.STATUS), catalogOptions(IncidentCatalogs.SOURCE),
-                Arrays.stream(HeightClass.values()).map(Enum::name).toList(), teams,
+                Arrays.stream(HeightClass.values()).map(Enum::name).toList(), teams, references.sections(),
                 IncidentCaptureService.DEFAULT_REQUESTER);
     }
 

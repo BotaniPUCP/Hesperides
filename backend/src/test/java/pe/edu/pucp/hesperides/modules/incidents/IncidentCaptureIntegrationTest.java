@@ -107,3 +107,4 @@ class IncidentCaptureIntegrationTest extends IncidentTestSupport {
         assertThat(mine.recent()).hasSize(1);
     }
 }
+

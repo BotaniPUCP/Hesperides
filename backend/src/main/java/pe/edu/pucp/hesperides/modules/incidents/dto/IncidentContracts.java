@@ -108,7 +108,7 @@ public final class IncidentContracts {
     public record OptionsResponse(List<OptionResponse> urgencies, List<OptionResponse> classes,
                                   List<TypeOptionResponse> types, List<OptionResponse> statuses,
                                   List<OptionResponse> sources, List<String> heightClasses,
-                                  List<TeamResponse> teams, String defaultRequesterName) {}
+                                  List<TeamResponse> teams, List<ZoneResponse> sections, String defaultRequesterName) {}
     /** Lo mínimo para buscar una incidencia desde Intervenciones y mostrarla en su detalle. */
     public record IncidentRefResponse(Long id, String code, String title, String statusCode, boolean active) {}
     public record MapMarkerResponse(Long id, String code, String title, double latitude, double longitude,
