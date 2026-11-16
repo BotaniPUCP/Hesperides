@@ -40,6 +40,7 @@ class BalloonsIntegrationTest {
 
     static final Instant NOW = Instant.parse("2026-11-04T15:00:00Z");
     static final PostgreSQLContainer<?> POSTGRES = TestDatabase.newContainer();
+    private static final java.util.concurrent.atomic.AtomicInteger NEXT_PLACE = new java.util.concurrent.atomic.AtomicInteger();
 
     static {
         POSTGRES.start();
@@ -77,8 +78,9 @@ class BalloonsIntegrationTest {
     @BeforeEach
     void sectorWithTwoGardens() {
         String tag = UUID.randomUUID().toString().substring(0, 8);
-        // Cada prueba dibuja sus jardines lejos de los de las demás y del campus real.
-        lon = -70.0 - (Math.abs(tag.hashCode()) % 1000) * 0.01;
+        // Cada prueba dibuja sus jardines lejos de los de las demás y del campus real; con un sorteo,
+        // dos pruebas podían caer en el mismo sitio y llevarse una el globo de la otra.
+        lon = -70.0 - NEXT_PLACE.incrementAndGet() * 0.05;
         sector = zone("SECTOR", null, "S-" + tag, null);
         section = zone("SECTION", sector, "A-" + tag, lon);
         other = zone("SECTION", sector, "B-" + tag, lon + 0.01);
@@ -178,6 +180,73 @@ class BalloonsIntegrationTest {
         assertThat(balloons.get(1).get("variant").asString()).isEqualTo("LOW");
         assertThat(balloons.get(2).get("variant").asString()).isEqualTo("NONE");
         assertThat(balloons.get(2).get("card").toString()).contains("Sin urgencia");
+    }
+
+    private JsonNode balloonWithId(String id) throws Exception {
+        var body = mvc.perform(get("/api/v1/map/balloons")
+                        .with(user("s@test.local").authorities(new SimpleGrantedAuthority("SUPERVISOR"))))
+                .andReturn().getResponse().getContentAsString();
+        for (JsonNode b : json.readTree(body).get("data").get("balloons")) {
+            if (b.get("id").asString().equals(id)) {
+                return b;
+            }
+        }
+        throw new AssertionError("Sin globo " + id);
+    }
+
+    private boolean inGarden(long garden, JsonNode b) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(
+                "SELECT ST_Covers(boundary, ST_SetSRID(ST_MakePoint(?, ?), 4326)) FROM zones WHERE id = ?",
+                Boolean.class, b.get("longitude").asDouble(), b.get("latitude").asDouble(), garden));
+    }
+
+    /** Metros al este de la longitud dada, a la latitud -12 de las pruebas. */
+    private static double east(double fromLon, double meters) {
+        return fromLon + meters / (111_320 * Math.cos(Math.toRadians(12)));
+    }
+
+    @Test
+    void balloonsSharingAGardenSpreadCenteredInsideIt() throws Exception {
+        long first = incident("REPORTED", "HIGH", -12.0, lon, true, null);
+        long second = incident("REPORTED", "LOW", -12.0, lon, true, null);
+
+        var balloons = balloonsOf("INCIDENT");
+
+        assertThat(balloons).hasSize(2).allMatch(b -> inGarden(section, b));
+        JsonNode a = balloons.get(0);
+        JsonNode b = balloons.get(1);
+        assertThat(a.get("id").asString()).isEqualTo("INCIDENT:" + first);
+        assertThat(b.get("id").asString()).isEqualTo("INCIDENT:" + second);
+        assertThat(a.get("longitude").asDouble()).isNotEqualTo(b.get("longitude").asDouble());
+        double midLon = (a.get("longitude").asDouble() + b.get("longitude").asDouble()) / 2;
+        double midLat = (a.get("latitude").asDouble() + b.get("latitude").asDouble()) / 2;
+        assertThat(Math.abs(midLon - lon) * 111_320).isLessThan(1.5);
+        assertThat(Math.abs(midLat + 12.0) * 111_320).isLessThan(1.5);
+    }
+
+    @Test
+    void aBalloonOutsideEveryGardenLandsOnTheNearestOne() throws Exception {
+        long onABuilding = incident("REPORTED", "HIGH", -12.0, east(lon, 40), true, null);
+
+        var balloon = balloonWithId("INCIDENT:" + onABuilding);
+
+        assertThat(inGarden(section, balloon)).isTrue();
+        assertThat(balloon.get("sectorId").asLong()).isEqualTo(sector);
+    }
+
+    @Test
+    void aBalloonOnALoneSpecimenStaysOnIt() throws Exception {
+        double specimenLon = east(lon, 40);
+        jdbc.update("""
+                INSERT INTO green_elements (element_type_item_id, location, registered_by_user_id)
+                VALUES (?, ST_SetSRID(ST_MakePoint(?, -12.0), 4326), ?)""",
+                item("GREEN_ELEMENT_TYPE", "INDIVIDUAL"), specimenLon, userId);
+        long onATree = incident("REPORTED", "HIGH", -12.0, specimenLon, true, null);
+
+        var balloon = balloonWithId("INCIDENT:" + onATree);
+
+        assertThat(balloon.get("longitude").asDouble()).isEqualTo(specimenLon);
+        assertThat(balloon.get("latitude").asDouble()).isEqualTo(-12.0);
     }
 
     @Test

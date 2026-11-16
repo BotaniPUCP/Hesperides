@@ -123,22 +123,16 @@ export function balloonScale(cameraDistance: number): number {
   return Math.min(BALLOON_MAX_SCALE, Math.max(1, BALLOON_GROW_FROM_M / Math.max(cameraDistance, 1)));
 }
 
-/** A menos de esto (m) entre sí, los globos de un grupo están en el mismo sitio: acercarse no los separa. */
-export const SAME_SPOT_M = 3;
-
-export function sameSpot(points: readonly { x: number; z: number }[]): boolean {
-  return points.every((p) => Math.hypot(p.x - points[0].x, p.z - points[0].z) <= SAME_SPOT_M);
-}
-
 /**
- * Reparte en círculo, alrededor de su centro en pantalla, los globos que no se pueden separar
- * acercándose (como hace Waze): cada uno se ve y se toca por separado.
+ * El miembro más cercano al centro de un grupo: ahí se clava el globo del grupo. El promedio de
+ * dos jardines puede caer sobre un edificio; un miembro siempre está sobre su jardín (SPEC-113 §5.3b).
  */
-export function fanOut(center: { x: number; y: number }, count: number, radius: number): { x: number; y: number }[] {
-  if (count <= 1) return [{ ...center }];
-  // Empieza arriba y gira en sentido horario, para que el orden de urgencia se lea igual siempre.
-  return Array.from({ length: count }, (_, i) => {
-    const angle = -Math.PI / 2 + (2 * Math.PI * i) / count;
-    return { x: center.x + radius * Math.cos(angle), y: center.y + radius * Math.sin(angle) };
+export function memberNearestCenter(points: readonly { x: number; z: number }[]): number {
+  const cx = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+  const cz = points.reduce((sum, p) => sum + p.z, 0) / points.length;
+  let best = 0;
+  points.forEach((p, i) => {
+    if (Math.hypot(p.x - cx, p.z - cz) < Math.hypot(points[best].x - cx, points[best].z - cz)) best = i;
   });
+  return best;
 }

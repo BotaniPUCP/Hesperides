@@ -206,22 +206,42 @@ están dispersos, se parte en minigrupos:
   de 4» con el total del conjunto, no del minigrupo.
 - El valor de 60 m es una constante con nombre; se ajusta al verificar en el navegador.
 
+### 5.3b Dónde se posa el globo (pedido del usuario, 16 nov 2026)
+
+Un globo **nunca se posa sobre un edificio**: va sobre un jardín (sección activa), un ejemplar o
+un grupo de ellos. El servidor decide el punto final (`BalloonPlacer`), ya ordenados por urgencia:
+
+1. Si el punto cae dentro de un jardín, ese es su jardín (el más chico, si hay dos encimados).
+2. Si no, y está a `SPECIMEN_METERS = 1,5` m o menos de un ejemplar (o dentro de una agrupación),
+   se queda sobre el ejemplar: los árboles de veredas y plazas no tienen jardín.
+3. Si no, va al jardín más cercano a `NEAREST_GARDEN_METERS = 100` m o menos; más lejos, se queda
+   donde está.
+4. Un globo solo dentro de su jardín conserva su punto. Uno que llegó de fuera, o **varios que
+   comparten jardín**, se reparten en una **cuadrícula centrada** en el punto interior del jardín
+   (`ST_PointOnSurface`), en metros (`GardenGrid`): el más urgente al centro; con un número par la
+   cuadrícula se corre media celda (dos quedan a cada lado del centro; tres, en fila). Se prueba la
+   mayor separación que quepa entera dentro del polígono: 12, 8, 5, 3 y 1,5 m. Si ni 1,5 m alcanza,
+   los que sobran van al centro.
+
+El punto es fijo en el mapa: el navegador no corre los globos al mover la cámara ni al acercarse.
+
 ### 5.4 Agrupación por zoom (estilo Waze)
 
 - **Lejos** (distancia de cámara ≥ `FAR_DISTANCE_M`): un globo de grupo **por sector** con el
-  número de globos que contiene, clavado en el punto interior del sector. Los globos sin sector se
+  número de globos que contiene, clavado sobre el miembro más cercano al centro de sus miembros
+  (`memberNearestCenter`): el promedio puede caer sobre un edificio. Los globos sin sector se
   juntan en un grupo «Otros» en el centro del campus.
-- **Cerca**: globos individuales. Si dos se pisan en pantalla, se juntan en un globo de grupo
-  temporal con su número, como hace `labels.ts` con las etiquetas.
+- **Media distancia** (entre `BALLOON_GROW_FROM_M` y `FAR_DISTANCE_M`): globos individuales; si dos se
+  pisan en pantalla, se juntan en un globo de grupo temporal con su número, clavado donde el más
+  urgente, como hace `labels.ts` con las etiquetas.
+- **Cerca** (a menos de `BALLOON_GROW_FROM_M = 350` m): cada globo suelto en su punto (§5.3b), sin juntarse.
 - El globo de grupo es oscuro con el número; si **alguno de sus miembros pide atención**, lleva un
   punto del color de la atención más urgente que contiene.
 - `FAR_DISTANCE_M = 700` m (`viewer/balloons.ts`): la distancia a la que dejan de verse los nombres de
   jardín. Se ajusta al verificar en el navegador.
 - Tocar un grupo acerca la cámara hasta encuadrar a sus miembros (`focusPoints`).
-- **Abanico** (pedido del usuario, 16 nov 2026): un grupo cuyos globos están en el mismo sitio
-  (`SAME_SPOT_M = 3` m entre sí) nunca se separaría al acercarse; se abre en círculo alrededor de su
-  punto y cada globo se ve y se toca suelto. Desde `BALLOON_GROW_FROM_M = 350` m se abren todos los
-  que se pisan.
+- **Sin abanico** (16 nov 2026): el abanico en pantalla sacaba los globos del jardín al mover la
+  cámara; lo reemplaza el reparto en el jardín de §5.3b, fijo en el mapa.
 - **Tamaño al acercarse** (mismo pedido): hasta 350 m el globo mide 40 × 41 px; más cerca crece con el
   mapa, hasta el doble (`BALLOON_MAX_SCALE = 2`), para no verse cada vez más chico frente a los jardines.
 
@@ -251,8 +271,10 @@ incidencia sin urgencia → sección por regar que vence → riego → intervenc
   `IRRIGATION_DUE` excluye los riegos abiertos).
 - **Jardín por regar que nunca tuvo riego registrado:** sin globo (D-09). La fila de
   Planificación sigue diciendo «N jardines sin registro previo»; el mapa no.
-- **Jardín en dos conjuntos con riego:** un globo por conjunto en el mismo sitio; la agrupación
-  de pantalla (§5.4) los junta en un grupo de 2.
+- **Jardín en dos conjuntos con riego:** un globo por conjunto; comparten jardín y se reparten en
+  él (§5.3b). A media distancia, si se pisan, la agrupación de pantalla (§5.4) los junta en un grupo de 2.
+- **Incidencia con el punto sobre un edificio:** su globo pasa al jardín más cercano (§5.3b); la
+  incidencia guarda su punto original.
 - **Conjunto sin asignación de riego:** sus jardines nunca generan «Sección por regar».
 - **Riego programado para hoy en un domingo con reserva en curso en el mismo jardín:** se ven los
   dos; no es tarea de este spec avisar del choque.
@@ -277,6 +299,8 @@ incidencia sin urgencia → sección por regar que vence → riego → intervenc
 | CA-10 | Pulsar un globo abre la ficha corta; «Ver detalle» lleva al módulo | Navegador real, en escritorio y en el WebView de Android |
 | CA-11 | Si una fuente falla, el resto de globos se ve y la leyenda avisa cuál falta | Apagar la fuente de reservas en un test o forzar un error |
 | CA-12 | Apagar «Globos» los quita y deja de pedirlos; encenderlo los trae | Interruptor en el panel de capas; pestaña Red del navegador |
+| CA-13 | Dos incidencias en el mismo punto de un jardín se ven como dos globos dentro del jardín, a cada lado de su centro, y no se mueven al girar, desplazar o acercar la cámara | Jardín Tesorería en los datos de demostración |
+| CA-14 | Una incidencia con el punto sobre un edificio muestra su globo en el jardín más cercano | Registrar una sobre un pabellón |
 
 ## 7. Especificación visual
 
@@ -342,10 +366,21 @@ Servicio
 - una fuente que lanza excepción → respuesta ok con el resto y `unavailableKinds`
 - más de MAX_BALLOONS → se recorta respetando el orden
 
+Engine · reparto en el jardín (§5.3b)
+- un globo → el centro; dos → simétricos al centro, a la separación pedida; tres → en fila centrada
+- los candidatos van del centro hacia afuera; misma entrada → mismo orden
+
+Posado (integración)
+- dos incidencias en el mismo punto → dos puntos distintos dentro del jardín, centrados en él, el
+  más urgente primero
+- una incidencia a 25 m de un jardín, fuera de todo jardín → su globo cae dentro de ese jardín
+- una incidencia sobre un ejemplar suelto → su globo se queda en el punto
+
 Frontend · agrupación por zoom
 - lejos → un grupo por sector con el conteo correcto; sin sector → «Otros»
 - grupo con una incidencia alta → punto rojo
-- dos globos que se pisan en pantalla → un grupo de 2
+- dos globos que se pisan en pantalla, a media distancia → un grupo de 2
+- un grupo se clava sobre el miembro más cercano al centro, no en el promedio
 ```
 
 ## 9. Propio de este spec

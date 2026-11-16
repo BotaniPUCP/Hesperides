@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Balloon } from '@shared/types';
 import type { LocalPlane } from '../projection';
 import {
-  BALLOON_GROW_FROM_M, balloonScale, fanOut, groupBySector, mergeOverlapping, sameSpot, type ScreenBalloon,
+  BALLOON_GROW_FROM_M, balloonScale, groupBySector, memberNearestCenter, mergeOverlapping, type ScreenBalloon,
 } from '../balloons/balloonClusters';
 import { fillGroup, group, resize, single, type BalloonButton, type Size } from './balloonButtons';
 import type { GroundPoint } from './frameFit';
@@ -11,9 +11,10 @@ import { WORLD_LIFT } from './polyLayer';
 /**
  * Los globos del mapa sobre la escena (SPEC-113 §5.4 y §7.1), como botones HTML: así se
  * pueden tocar, enfocar con Tab y leer con un lector de pantalla, y se ven nítidos a
- * cualquier zoom. De lejos, un grupo por sector; de cerca, cada globo, y los que se pisan
- * se juntan en un grupo con su número, como hace Waze. Muy cerca, o si están en el mismo sitio y
- * acercarse no los separaría, se abren en abanico. Desde cierta distancia crecen con el mapa.
+ * cualquier zoom. De lejos, un grupo por sector; a media distancia, los que se pisan se juntan en
+ * un grupo con su número, como hace Waze; de cerca, cada globo suelto. Todo globo y todo grupo se
+ * clava en un punto fijo del mapa sobre un jardín o un ejemplar (el servidor ya reparte los que
+ * comparten jardín, §5.3b): mover la cámara no los corre. Desde cierta distancia crecen con el mapa.
  */
 
 /** Desde esta distancia de la cámara al centro de la vista, solo grupos por sector; se ajusta al verlo. */
@@ -69,10 +70,7 @@ export function createBalloonLayer(root: HTMLElement, plane: LocalPlane, cb: Bal
 
   const far = (camera: THREE.Camera, width: number, height: number): Placed[] =>
     groupBySector(balloons).flatMap((g) => {
-      const center = new THREE.Vector3();
-      g.members.forEach((m) => center.add(world(m)));
-      center.divideScalar(g.members.length);
-      const at = toScreen(center, camera, width, height);
+      const at = toScreen(world(g.members[memberNearestCenter(points(g.members))]), camera, width, height);
       return at ? [{ key: `g:${g.key}`, ...at, members: g.members }] : [];
     });
 
@@ -84,16 +82,14 @@ export function createBalloonLayer(root: HTMLElement, plane: LocalPlane, cb: Bal
         onScreen.push({ balloon: b, ...at });
       }
     }
-    return mergeOverlapping(onScreen, size).flatMap((c): Placed[] => {
-      if (c.members.length === 1) return [{ key: `b:${c.members[0].id}`, x: c.x, y: c.y, members: c.members }];
-      // Cerca, o en el mismo sitio, acercarse ya no los separa: se abren en abanico, cada uno suelto.
-      if (distance < BALLOON_GROW_FROM_M || sameSpot(points(c.members))) {
-        const n = c.members.length;
-        const radius = Math.max(0.6 * size.w, (1.1 * size.w) / (2 * Math.sin(Math.PI / n)));
-        return fanOut(c, n, radius).map((spot, i) => ({ key: `b:${c.members[i].id}`, ...spot, members: [c.members[i]] }));
-      }
-      return [{ key: `g:${c.members.map((m) => m.id).join('|')}`, x: c.x, y: c.y, members: c.members }];
-    });
+    // De cerca nadie se junta: cada globo en su sitio. Más lejos, el grupo queda donde su más urgente.
+    const clusters = distance < BALLOON_GROW_FROM_M
+      ? onScreen.map((o) => ({ x: o.x, y: o.y, members: [o.balloon] }))
+      : mergeOverlapping(onScreen, size);
+    return clusters.map((c): Placed => ({
+      key: c.members.length === 1 ? `b:${c.members[0].id}` : `g:${c.members.map((m) => m.id).join('|')}`,
+      x: c.x, y: c.y, members: c.members,
+    }));
   };
 
   const button = (p: Placed) => {

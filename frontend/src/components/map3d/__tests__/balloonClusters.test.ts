@@ -1,7 +1,7 @@
 import type { Balloon } from '@shared/types';
 import {
-  attentionDot, BALLOON_GROW_FROM_M, BALLOON_MAX_SCALE, balloonIcon, balloonLabel, balloonScale, fanOut, groupBySector,
-  mergeOverlapping, sameSpot,
+  attentionDot, BALLOON_GROW_FROM_M, BALLOON_MAX_SCALE, balloonIcon, balloonLabel, balloonScale, groupBySector,
+  memberNearestCenter, mergeOverlapping,
 } from '../balloons/balloonClusters';
 
 const balloon = (id: string, over: Partial<Balloon> = {}): Balloon => ({
@@ -63,7 +63,7 @@ describe('el punto del grupo es la atención más urgente que contiene (CA-08)',
   });
 });
 
-describe('acercarse: el globo deja de achicarse y los del mismo sitio se abren', () => {
+describe('acercarse: el globo deja de achicarse y los grupos se clavan sobre un jardín', () => {
   it('lejos conserva su tamaño; cerca crece con el mapa hasta el tope', () => {
     expect(balloonScale(BALLOON_GROW_FROM_M * 3)).toBe(1);
     expect(balloonScale(BALLOON_GROW_FROM_M)).toBe(1);
@@ -71,19 +71,12 @@ describe('acercarse: el globo deja de achicarse y los del mismo sitio se abren',
     expect(balloonScale(1)).toBe(BALLOON_MAX_SCALE);
   });
 
-  it('los que comparten sitio se reparten en círculo alrededor del centro, sin pisarse', () => {
-    const spots = fanOut({ x: 100, y: 100 }, 3, 40);
-    expect(spots).toHaveLength(3);
-    for (const s of spots) expect(Math.hypot(s.x - 100, s.y - 100)).toBeCloseTo(40);
-    expect(Math.hypot(spots[0].x - spots[1].x, spots[0].y - spots[1].y)).toBeGreaterThan(40);
+  it('un grupo se clava sobre el miembro más cercano al centro, nunca en el promedio entre jardines', () => {
+    const points = [{ x: 0, z: 0 }, { x: 9, z: 1 }, { x: 10, z: 0 }, { x: 30, z: 0 }];
+    expect(memberNearestCenter(points)).toBe(2);
   });
 
-  it('uno solo queda en su sitio', () => {
-    expect(fanOut({ x: 10, y: 20 }, 1, 40)).toEqual([{ x: 10, y: 20 }]);
-  });
-
-  it('sabe si los miembros de un grupo están en el mismo sitio, a metros', () => {
-    expect(sameSpot([{ x: 0, z: 0 }, { x: 0.5, z: 0.5 }])).toBe(true);
-    expect(sameSpot([{ x: 0, z: 0 }, { x: 30, z: 0 }])).toBe(false);
+  it('con un solo miembro, ese es el sitio', () => {
+    expect(memberNearestCenter([{ x: 4, z: 5 }])).toBe(0);
   });
 });

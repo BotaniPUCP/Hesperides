@@ -6,6 +6,7 @@ import pe.edu.pucp.hesperides.engine.balloons.BalloonKind;
 import pe.edu.pucp.hesperides.engine.balloons.GeoPoint;
 import pe.edu.pucp.hesperides.modules.balloons.dto.BalloonDtos.BalloonCard;
 import pe.edu.pucp.hesperides.modules.balloons.dto.BalloonDtos.BalloonResponse;
+import pe.edu.pucp.hesperides.modules.balloons.placement.BalloonPlacer;
 import pe.edu.pucp.hesperides.modules.balloons.repository.SectorLocator;
 import pe.edu.pucp.hesperides.modules.balloons.service.BalloonsService;
 import pe.edu.pucp.hesperides.modules.balloons.source.BalloonDraft;
@@ -31,16 +32,19 @@ class BalloonsServiceTest {
     private static final BalloonCard CARD = new BalloonCard("t", "s", List.of(), null, null, "/x");
 
     private SectorLocator sectors;
+    private BalloonPlacer placer;
 
     @BeforeEach
     void sectorsAnswerSeven() {
         sectors = mock(SectorLocator.class);
         when(sectors.sectorsOf(anyList())).thenAnswer(call ->
                 new ArrayList<>(Collections.nCopies(((List<?>) call.getArgument(0)).size(), 7L)));
+        placer = mock(BalloonPlacer.class);
+        when(placer.place(anyList())).thenAnswer(call -> call.getArgument(0));
     }
 
     private BalloonsService service(List<BalloonSource> sources, int max) {
-        return new BalloonsService(sources, List.of(), sectors, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), max);
+        return new BalloonsService(sources, List.of(), sectors, placer, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), max);
     }
 
     private static BalloonSource source(BalloonKind kind, BalloonDraft... drafts) {

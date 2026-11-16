@@ -10,6 +10,7 @@ import pe.edu.pucp.hesperides.engine.balloons.MiniGroups;
 import pe.edu.pucp.hesperides.modules.balloons.dto.BalloonDtos.BalloonResponse;
 import pe.edu.pucp.hesperides.modules.balloons.dto.BalloonDtos.BalloonsResponse;
 import pe.edu.pucp.hesperides.modules.balloons.dto.BalloonDtos.CampusNotice;
+import pe.edu.pucp.hesperides.modules.balloons.placement.BalloonPlacer;
 import pe.edu.pucp.hesperides.modules.balloons.repository.SectorLocator;
 import pe.edu.pucp.hesperides.modules.balloons.source.BalloonDraft;
 import pe.edu.pucp.hesperides.modules.balloons.source.BalloonSource;
@@ -21,8 +22,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Junta los globos de todas las fuentes, los parte en minigrupos, les pone su sector y
- * los ordena por urgencia (SPEC-113 §3, §5.3 y §5.5). Una fuente que falla no tumba la
+ * Junta los globos de todas las fuentes, los parte en minigrupos, los ordena por urgencia,
+ * los posa sobre su jardín y les pone su sector (SPEC-113 §3, §5.3, §5.3b y §5.5). Una fuente que falla no tumba la
  * respuesta: se avisa en {@code unavailableKinds}.
  */
 @Slf4j
@@ -38,20 +39,22 @@ public class BalloonsService {
     private final List<BalloonSource> sources;
     private final List<CampusNoticeSource> notices;
     private final SectorLocator sectors;
+    private final BalloonPlacer placer;
     private final Clock clock;
     private final int maxBalloons;
 
     @Autowired
     public BalloonsService(List<BalloonSource> sources, List<CampusNoticeSource> notices, SectorLocator sectors,
-                           Clock clock) {
-        this(sources, notices, sectors, clock, MAX_BALLOONS);
+                           BalloonPlacer placer, Clock clock) {
+        this(sources, notices, sectors, placer, clock, MAX_BALLOONS);
     }
 
     public BalloonsService(List<BalloonSource> sources, List<CampusNoticeSource> notices, SectorLocator sectors,
-                           Clock clock, int maxBalloons) {
+                           BalloonPlacer placer, Clock clock, int maxBalloons) {
         this.sources = List.copyOf(sources);
         this.notices = List.copyOf(notices);
         this.sectors = sectors;
+        this.placer = placer;
         this.clock = clock;
         this.maxBalloons = maxBalloons;
     }
@@ -71,10 +74,11 @@ public class BalloonsService {
                 .thenComparing(Pinned::id));
         boolean truncated = pinned.size() > maxBalloons;
         List<Pinned> kept = truncated ? pinned.subList(0, maxBalloons) : pinned;
-        List<Long> sectorIds = sectors.sectorsOf(kept.stream().map(Pinned::pin).toList());
+        List<GeoPoint> placed = placer.place(kept.stream().map(Pinned::pin).toList());
+        List<Long> sectorIds = sectors.sectorsOf(placed);
         List<BalloonResponse> balloons = new ArrayList<>();
         for (int i = 0; i < kept.size(); i++) {
-            balloons.add(response(kept.get(i), sectorIds.get(i)));
+            balloons.add(response(kept.get(i), placed.get(i), sectorIds.get(i)));
         }
         return new BalloonsResponse(clock.instant(), balloons, unavailable, truncated, campusNotices());
     }
@@ -103,9 +107,9 @@ public class BalloonsService {
         return pinned;
     }
 
-    private static BalloonResponse response(Pinned p, Long sectorId) {
+    private static BalloonResponse response(Pinned p, GeoPoint at, Long sectorId) {
         BalloonDraft d = p.draft();
         return new BalloonResponse(p.id(), d.kind(), d.variant(), d.kind().attention(),
-                p.pin().lat(), p.pin().lon(), sectorId, p.members(), d.card());
+                at.lat(), at.lon(), sectorId, p.members(), d.card());
     }
 }
