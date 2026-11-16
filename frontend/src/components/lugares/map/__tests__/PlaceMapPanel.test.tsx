@@ -34,6 +34,7 @@ function fakeViewer(): jest.Mocked<Viewer> {
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), setRealColors: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), setViewCones: jest.fn(), setIncidentMarkers: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(),
     flyToPose: jest.fn(), dispose: jest.fn(),
+    livePerspective: jest.fn(),
     pose: jest.fn(() => ({ position: [10, 222, 30] as [number, number, number], target: [0, 22, 0] as [number, number, number] })),
   };
 }

@@ -46,6 +46,8 @@ export interface CameraRig {
   /** Avanza el vuelo en curso; true si la cámara se movió. */
   step: (now: number) => boolean;
   cancelFlight: () => void;
+  /** Si un vuelo programado está moviendo la cámara ahora. */
+  flying: () => boolean;
   /** La vista actual o, durante un vuelo, la de su destino: un visor que se rearma a mitad de vuelo debe terminar donde iba. */
   pose: () => CameraPose;
   /** Vuela hasta una pose guardada. */
@@ -158,6 +160,7 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
     cancelFlight: () => {
       flight = null;
     },
+    flying: () => flight !== null,
     flyToPose: (pose) => flyTo(new THREE.Vector3(...pose.position), new THREE.Vector3(...pose.target)),
     setFree: (on) => {
       free = on;

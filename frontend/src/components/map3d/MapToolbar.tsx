@@ -1,5 +1,9 @@
 'use client';
 
+import type { RefObject } from 'react';
+import { RecordViewButton } from './recording/RecordViewButton';
+import type { Viewer } from './viewer/viewerTypes';
+
 export interface ViewOptions {
   night: boolean;
   shadows: boolean;
@@ -12,10 +16,7 @@ export interface MapToolbarProps {
   options: ViewOptions;
   compass: number;
   onOption: (key: keyof ViewOptions, value: boolean) => void;
-  onFit: () => void;
-  onTop: () => void;
-  onNorth: () => void;
-  onSpin: () => void;
+  viewer: RefObject<Pick<Viewer, 'fit' | 'top' | 'north' | 'toggleSpin' | 'livePerspective'> | null>;
 }
 
 const OPTION_LABELS: Record<keyof ViewOptions, string> = {
@@ -29,7 +30,8 @@ const OPTION_LABELS: Record<keyof ViewOptions, string> = {
 const button = 'rounded-md bg-neutral-0/95 px-2 py-1 text-xs text-neutral-700 shadow hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600';
 
 /** Controles de cámara y de apariencia. La brújula apunta al norte y, al pulsarla, orienta la vista. */
-export function MapToolbar({ options, compass, onOption, onFit, onTop, onNorth, onSpin }: MapToolbarProps) {
+export function MapToolbar({ options, compass, onOption, viewer }: MapToolbarProps) {
+  const onNorth = () => viewer.current?.north();
   return (
     <div className="flex flex-wrap items-center gap-1">
       <button type="button" className={button} onClick={onNorth} aria-label="Orientar al norte" title="Orientar al norte">
@@ -37,13 +39,13 @@ export function MapToolbar({ options, compass, onOption, onFit, onTop, onNorth, 
           ⬆
         </span>
       </button>
-      <button type="button" className={button} onClick={onFit}>
+      <button type="button" className={button} onClick={() => viewer.current?.fit()}>
         Encuadrar
       </button>
-      <button type="button" className={button} onClick={onTop}>
+      <button type="button" className={button} onClick={() => viewer.current?.top()}>
         Vista superior
       </button>
-      <button type="button" className={button} onClick={onSpin}>
+      <button type="button" className={button} onClick={() => viewer.current?.toggleSpin()}>
         Girar
       </button>
       {(Object.keys(OPTION_LABELS) as (keyof ViewOptions)[]).map((key) => (
@@ -51,6 +53,7 @@ export function MapToolbar({ options, compass, onOption, onFit, onTop, onNorth, 
           {OPTION_LABELS[key]}
         </button>
       ))}
+      <RecordViewButton viewer={viewer} className={button} />
     </div>
   );
 }

@@ -146,10 +146,7 @@ export function MapScreen() {
               options={s.options}
               compass={s.compass}
               onOption={s.setOption}
-              onFit={() => s.viewer.current?.fit()}
-              onTop={() => s.viewer.current?.top()}
-              onNorth={() => s.viewer.current?.north()}
-              onSpin={() => s.viewer.current?.toggleSpin()}
+              viewer={s.viewer}
             />
           </div>
         )}

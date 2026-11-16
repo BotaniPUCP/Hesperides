@@ -196,7 +196,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const observer = new ResizeObserver(resize);
   observer.observe(container);
 
-  let frame = 0, lastDistance = 0;
+  let frame = 0, lastDistance = 0, adminMode = false;
   const loop = (now: number) => {
     frame = requestAnimationFrame(loop);
     const flew = rig.step(now), moved = sweeping ? false : rig.controls.update();
@@ -307,6 +307,14 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     fit: rig.fit, top: rig.top, north: rig.north, toggleSpin: rig.toggleSpin, pose: rig.pose, flyToPose: rig.flyToPose,
+    livePerspective() {
+      const { camera, controls } = rig;
+      const latLon = (v: THREE.Vector3) => data.plane.toLatLon({ x: v.x, y: -v.z });
+      return {
+        position: camera.position.toArray(), target: controls.target.toArray(), fovDeg: camera.fov,
+        flying: rig.flying(), adminMode, cameraLatLon: latLon(camera.position), targetLatLon: latLon(controls.target),
+      };
+    },
     setViewCones(list) {
       cones.set(list.map((c) => { const p = data.plane.toPlane(c.lat, c.lon); return { id: c.id, x: p.x, z: -p.y, headingDeg: c.headingDeg }; }));
       needsRender = true;
@@ -332,6 +340,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     setAdminMode(on) {
+      adminMode = on;
       rig.setFree(on);
       admin.setEnabled(on);
       adminAnchor.setEnabled(on);

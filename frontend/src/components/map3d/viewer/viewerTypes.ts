@@ -1,6 +1,7 @@
 import type { ModeId } from '../modes';
 import type { LayerId, Target } from '../target';
 import type { CameraPose } from './cameraRig';
+import type { LivePerspective } from '../recording/perspectiveRecording';
 import type { ViewCone } from './viewCones';
 import type { DeadlineStatus } from '@shared/types';
 
@@ -71,6 +72,8 @@ export interface Viewer {
   north: () => void;
   toggleSpin: () => boolean;
   pose: () => CameraPose;
+  /** TEMPORAL: la cámara en este instante, para «Grabar vista». */
+  livePerspective: () => LivePerspective;
   /** Vuela hasta una pose guardada, con la misma animación que al buscar. */
   flyToPose: (pose: CameraPose) => void;
   /** Los conos de las perspectivas de un lugar; una lista vacía los quita. */
