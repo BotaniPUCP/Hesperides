@@ -25,7 +25,7 @@
 | SPEC-107 | Reservas de jardines | 🔄 En progreso | —          | —      |              |
 | SPEC-108 | Edificios del plano oficial en el mapa | 🔄 En progreso: implementada y verificada en web (12 nov 2026, 12 de 13; CA-11 corregido después); falta el WebView de Android (CA-14) | Luis       | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: §2.12 reemplaza el flujo por lugares con mapa único, áreas de todo el campus y ejemplares seleccionables. V050 (antes V036) conserva datos y contratos anteriores. Pendientes revisión visual, R5 y R6; la selección fina de ejemplares se refinará posteriormente. | — | S2 (propuesto) | |
-| SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
+| SPEC-201 | Incidencias de áreas verdes (rediseño del 15 nov 2026) | 🔄 En progreso: spec aprobado, implementación en `feature/spec-201-incidencias-rediseno` | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 2 (Semanal, Mensual y Resumen para OSG con gráficos y datos de demostración); falta verificar en navegador real por rol | —          | S4     |              |
 | SPEC-203 | Planificación preventiva por conjuntos de áreas verdes | 🔄 En progreso: implementada, falta verificar en navegador | —          | —      |              |
 
@@ -35,11 +35,9 @@
 
 ## Enmiendas a specs cerrados
 
-SPEC-201 ajusta SPEC-001 Anexo A (aprobación exclusiva de coordinación y resolución
-por capataz), SPEC-002 §4.8 (captura mínima, ubicación opcional, 1:N intervenciones)
-y SPEC-C01 (estados). La ampliación de noviembre usa la matriz OSG entregada:
-severidad/impactos separados, catálogo de causas y servicios, acciones requeridas,
-numeración propia, comunicación interna y cierre en días hábiles inclusivos. Sin IA.
+SPEC-201 (rediseño del 15 nov 2026) sustituye la versión del 5 nov: vuelve a la definición de
+septiembre (tres estados, modelo propio sin la matriz OSG ni códigos OSG propios) y conserva de
+noviembre solo los vínculos N:M con intervenciones y la robustez técnica. Ver sus §2.6, §2.7 y §6.
 
 Cuando un spec de feature obliga a corregir uno fundacional ya cerrado, la enmienda se aplica al
 archivo original (marcada como cita con su procedencia) y se anota aquí. Nadie debe descubrir por
@@ -47,6 +45,7 @@ sorpresa que un principio fundacional cambió.
 
 | Spec enmendado | Enmendado por | Qué cambió |
 |---|---|---|
+| SPEC-000 §1 · SPEC-001 Anexo A (fila 5) · SPEC-002 §4.8 · SPEC-102 · SPEC-200 · SPEC-202 D-06 | SPEC-201, rediseño (15 nov 2026) | Ollama Cloud entra como cuarta excepción a «sin servicios externos» (su caída no impide reportar). El operario vuelve a reportar y ve solo las suyas; los reportes de no coordinadores nacen no activos y coordinación los activa. `intervention_id` único pasa a vínculos N:M que se crean desde ambos módulos; el cierre exige todas las vinculadas `VALIDATED`. El mapa gana la capa de incidencias con color por plazo. Estados `REPORTED`, `IN_PROGRESS`, `CLOSED`; Reportes se ajusta a ellos. Se retiran la matriz OSG, el correlativo `OSG-####` propio y los días hábiles. |
 | SPEC-102 D-03, §4.1, §7.1 y P-02 | SPEC-108 (implementada, 12 nov 2026) | Los edificios del mapa pasan a los modelos del plano oficial (SKP), agrupados según las relaciones de Nicolás y con los nombres y excepciones de Jean Piero. Hay un edificio principal por relación (133), y los 71 edificios del mapa que comparten relación se agrupan bajo él sin borrarse (`parent_building_id`). Los códigos oficiales quedan en `campus_building_codes`. El modelo lo sirve el backend con sesión. Se conservan el acabado y las luces de hoy. Patios vacíos, desniveles visibles, huaca con textura de tapial y etiquetas recortadas por ancho. **La atribución a OpenStreetMap se queda.** El Pabellón C no entra. Ya aplicado a SPEC-102 (D-03, §4.1, §7.1 y P-02). |
 | SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: guardan quién las pide (organización y solicitante, fijos), para quién son (opcional) y un responsable que puede cambiar, con su historial; el operario ve todo eso (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El vínculo contacto–organización gana un rol opcional y `contactos.csv` la columna `roles` (SPEC-106 §4.3). Enmienda del seguimiento de uso (SPEC-107 D-12): `use_confirmed` y `space_used` con sus historiales y el parámetro `RESERVATION_CONFIRMATION_MINUTES` — el corte de 20 minutos antes del fin cierra la confirmación y también la marca de uso (V044) —, y dos acciones auditables más. El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y siete acciones auditables. |
 | SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
