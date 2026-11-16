@@ -10,6 +10,7 @@ import type { PlanModel } from '../viewer/planModel';
 import { mapApi } from '@/lib/map-api';
 import { ApiError } from '@/lib/api';
 import { ToastProvider } from '@/components/ui';
+import { saveThemePreference } from '@/lib/theme-store';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { placesApi } from '@/lib/places-api';
 import { balloonsApi } from '@/lib/balloons-api';
@@ -715,5 +716,35 @@ describe('MapScreen: movimiento de administrador', () => {
     ctrlShiftU();
     expect(viewer.setAdminMode).toHaveBeenLastCalledWith(false);
     expect(screen.getByText('Modo de movimiento normal')).toBeInTheDocument();
+  });
+});
+
+describe('MapScreen: día o noche según el tema', () => {
+  afterEach(() => act(() => saveThemePreference('light')));
+
+  it('con el tema oscuro el mapa nace de noche', async () => {
+    saveThemePreference('dark');
+    await renderLoaded();
+
+    expect(viewer.setNight).toHaveBeenLastCalledWith(true);
+    expect(screen.getByRole('button', { name: 'Noche' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('con el tema claro nace de día, y si el tema cambia con el mapa abierto, el mapa lo sigue', async () => {
+    await renderLoaded();
+    expect(viewer.setNight).not.toHaveBeenCalledWith(true);
+
+    act(() => saveThemePreference('dark'));
+    expect(viewer.setNight).toHaveBeenLastCalledWith(true);
+
+    act(() => saveThemePreference('light'));
+    expect(viewer.setNight).toHaveBeenLastCalledWith(false);
+  });
+
+  it('el botón Noche lo cambia a mano hasta el siguiente cambio de tema', async () => {
+    await renderLoaded();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Noche' }));
+    expect(viewer.setNight).toHaveBeenLastCalledWith(true);
   });
 });
