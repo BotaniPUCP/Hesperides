@@ -49,6 +49,12 @@ public class IncidentLinksController {
         return ok(links.replace(id, linkId, request, user.getUsername()));
     }
 
+    @GetMapping("/api/v1/incidents/intervention-candidates")
+    public ResponseEntity<ApiResponse<List<LinkedInterventionResponse>>> candidates(@RequestParam(defaultValue = "") String q,
+            @AuthenticationPrincipal UserDetails user) {
+        return ok(links.candidates(q, user.getUsername()));
+    }
+
     @GetMapping("/api/v1/incidents/search")
     public ResponseEntity<ApiResponse<List<IncidentRefResponse>>> search(@RequestParam(defaultValue = "") String q,
             @AuthenticationPrincipal UserDetails user) {

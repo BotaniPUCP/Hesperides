@@ -27,6 +27,7 @@ public class IncidentLinksService {
     private final IncidentTimeline timeline;
     private final IncidentWorkEvents workEvents;
     private final IncidentDetails details;
+    private final IncidentWorkLinks workLinks;
 
     @Transactional
     public DetailResponse link(Long incidentId, LinkRequest request, String email) {
@@ -34,6 +35,13 @@ public class IncidentLinksService {
         Incident incident = linkable(incidentId, actor, request.version());
         attach(incident, lockWork(request.interventionId()), actor);
         return details.of(incident, actor);
+    }
+
+    /** Para el buscador del detalle: intervenciones que se pueden vincular (§3.8). */
+    @Transactional(readOnly = true)
+    public List<LinkedInterventionResponse> candidates(String search, String email) {
+        access.requireManager(access.actor(email));
+        return workLinks.candidates(search);
     }
 
     @Transactional

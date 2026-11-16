@@ -139,6 +139,19 @@ class IncidentLinksAndClosureIntegrationTest extends IncidentTestSupport {
         assertThat(current(second).closureBlockers()).isEmpty();
     }
 
+    @Test
+    void coordinationFindsInterventionsToLinkByCodeExcludingCancelledOnes() {
+        long work = planWork();
+        long cancelled = planWork();
+        cancelWork(cancelled);
+        String code = asActor(coordinator, () -> workService.findById(work)).getCode();
+
+        assertThat(links.candidates(code, coordinator)).extracting(LinkedInterventionResponse::id).containsExactly(work);
+        String cancelledCode = asActor(coordinator, () -> workService.findById(cancelled)).getCode();
+        assertThat(links.candidates(cancelledCode, coordinator)).isEmpty();
+        assertThatThrownBy(() -> links.candidates(code, foreman)).isInstanceOf(AccessDeniedException.class);
+    }
+
     long planWorkFor(List<Long> incidentIds) {
         long type = jdbc.queryForObject("""
             SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
