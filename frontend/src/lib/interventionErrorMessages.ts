@@ -18,6 +18,8 @@ export const INTERVENTION_MESSAGES: Record<string, string> = {
   'Zone selection requires a place and a zone': 'Elige el lugar y la zona.',
   'Zone selection derives geometry and square meters; manual values and specimen links are not accepted': 'La selección de zonas calcula sola el contorno y los metros cuadrados; no se ingresan a mano ni se vinculan ejemplares.',
   'Scheduled date cannot be in the past': 'La fecha programada debe ser hoy o una fecha futura.',
+  'Cutting machinery can only be scheduled on Saturdays, Sundays or holidays':
+    'La maquinaria de corte solo se programa sábados, domingos o feriados. Elige otra fecha o desmarca la casilla.',
   'A reviewer cannot approve their own execution or reporting': 'Otra persona autorizada debe aprobar el trabajo que ejecutaste o reportaste.',
   'Execution cannot begin before the scheduled date': 'El trabajo podrá ejecutarse desde la fecha programada. Si debe adelantarse, solicita al coordinador que revise la planificación.',
   'At least one received photo is required for this location and attempt': 'Adjunta al menos una foto recibida de esta ubicación e intento antes de continuar.',

@@ -7,6 +7,8 @@ import type { GeoJsonGeometry } from '@shared/types';
 export interface InterventionSummary {
   id: number; code: string; activityTitle?: string; version: number; classItemId: number; typeItemId: number | null;
   scheduledDate: string; planningStatusCode: string; statusCode: string;
+  /** SPEC-115: el trabajo usa maquinaria de corte. */
+  usesCuttingMachinery?: boolean;
   teamId: number | null; assignedToUserId: number | null; startedAt: string | null;
   completedAt: string | null; validatedAt: string | null;
   elapsedSeconds?: number | null;
@@ -71,12 +73,15 @@ export interface InterventionPlanning {
   classItemId: number; typeItemId: number | null; scheduledDate: string; description: string | null;
   locations: InterventionLocation[]; version?: number; rescheduleReason?: string;
   originItemId?: number; reportedByItemId?: number; externalCode?: string | null; requestedAt?: string | null;
+  usesCuttingMachinery?: boolean;
 }
 export interface InterventionOptions {
   places: {id:number; code?:string; name:string}[];
   zones: {id:number; name:string}[];
   teams: { id: number; name: string; responsibleSupervisorUserId: number | null; assignees: { id: number; fullName: string }[] }[];
-  catalogs: { id: number; code: string; label: string; typeCode: string; parentItemId: number | null }[];
+  catalogs: { id: number; code: string; label: string; typeCode: string; parentItemId: number | null;
+    /** SPEC-115: el tipo marca sola la casilla de maquinaria de corte. */
+    suggestsCuttingMachinery?: boolean }[];
 }
 export type InterventionPage = Page<InterventionSummary>;
 const base = '/interventions';

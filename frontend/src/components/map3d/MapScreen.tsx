@@ -7,6 +7,10 @@ import { LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useMapLayers } from '@/hooks/useMapLayers';
 import { usePlanModel } from '@/hooks/usePlanModel';
+import { BalloonCard } from './balloons/BalloonCard';
+import { BalloonLegend } from './balloons/BalloonLegend';
+import { CampusNoticesBanner } from './balloons/CampusNoticesBanner';
+import { useBalloonsOnMap } from './balloons/useBalloonsOnMap';
 import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
 import { LayerToggles } from './LayerToggles';
 import { Map3DView } from './Map3DView';
@@ -21,6 +25,7 @@ import { ModeLegend } from './ModeLegend';
 import { toSceneData } from './sceneData';
 import { buildSearchIndex, isCatalogTarget } from './searchIndex';
 import { useMapScreenState } from './useMapScreenState';
+import { useAdminModeToggle } from './pilot/useAdminModeToggle';
 import type { ViewerStart } from './viewer/createViewer';
 
 /** El visor nace como dicen las opciones de inicio: `applyToViewer` solo le ordena lo que difiere de ellas. */
@@ -48,7 +53,11 @@ export function MapScreen() {
   // solo cuando un visor quedó listo (hay WebGL): sin WebGL se ven las listas y el modelo no sirve.
   const plan = usePlanModel(data?.plane ?? null, s.viewerEpoch > 0);
   const onMap = useCatalogOnMap(data, catalog, s);
+  const balloons = useBalloonsOnMap({ viewer: s.viewer, viewerEpoch: s.viewerEpoch, unsupported: s.unsupported,
+    cardOpen: s.card !== null, closeCard: s.closeCard });
   const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
+  // Ctrl+Shift+U: movimiento libre de administrador, con un aviso temporal al entrar y al salir.
+  useAdminModeToggle(s.viewer, s.viewerEpoch > 0);
   const root = useRef<HTMLDivElement>(null);
   const focusedParamRef = useRef<string | null>(null);
   const viewerSettled = s.viewerEpoch > 0 || s.unsupported;
@@ -102,6 +111,7 @@ export function MapScreen() {
           onHover={() => undefined}
           onCompass={s.onCompass}
           onViewConePick={onMap.onConePick}
+          onBalloonPick={balloons.pick}
           start={VIEWER_START}
           poseMemory={mapScreenPose}
         />
@@ -115,6 +125,7 @@ export function MapScreen() {
               <MapSearch index={index} onPick={(e) => (isCatalogTarget(e.target) ? onMap.pick(e.target) : s.select(e.target))} />
             </div>
           </div>
+          <CampusNoticesBanner notices={balloons.campusNotices} />
           {stale && (
             <p role="status" className="rounded-md bg-alert-warning-bg/95 px-3 py-1.5 text-xs text-alert-warning-fg shadow">
               Sin conexión: se muestra la última versión descargada del mapa.
@@ -154,6 +165,8 @@ export function MapScreen() {
           {s.panelOpen && (
             <div className="mt-2 max-h-[60vh] space-y-4 overflow-y-auto rounded-lg border border-neutral-200 bg-neutral-0/95 p-3 shadow-lg">
               <ModeLegend mode={s.mode} hidden={s.hidden} onModeChange={s.setMode} onToggleCategory={s.toggleCategory} />
+              <BalloonLegend on={balloons.on} balloons={balloons.balloons} unavailableKinds={balloons.unavailableKinds}
+                onToggle={balloons.toggle} />
               <LayerToggles visible={s.visible} onToggle={s.toggleLayer} />
             </div>
           )}
@@ -161,6 +174,11 @@ export function MapScreen() {
       )}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-start gap-2 p-3">
+        {balloons.card && (
+          <div className="pointer-events-auto w-full max-w-sm">
+            <BalloonCard balloon={balloons.card.balloon} gone={balloons.card.gone} onClose={balloons.closeBalloon} />
+          </div>
+        )}
         {s.card && (
           <div className="pointer-events-auto w-full max-w-sm">
             <MapInfoCard content={s.card} onClose={s.closeCard} />

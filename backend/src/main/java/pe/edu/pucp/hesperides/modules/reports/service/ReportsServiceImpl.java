@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.engine.reporting.DateRange;
 import pe.edu.pucp.hesperides.engine.reporting.ReportPeriods;
-import pe.edu.pucp.hesperides.modules.irrigation.repository.IrrigationZoneQueries;
+import pe.edu.pucp.hesperides.modules.reports.repository.SectorQueries;
 import pe.edu.pucp.hesperides.modules.reports.dto.DirectionReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportFilter;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse;
@@ -33,7 +33,7 @@ public class ReportsServiceImpl implements ReportsService {
 
     private final ReportScopeResolver scopes;
     private final ReportCalendar calendar;
-    private final IrrigationZoneQueries zones;
+    private final SectorQueries zones;
     private final TeamsRepository teams;
     private final InterventionReportQueries interventions;
     private final MonthlyFilterValidator monthlyFilters;

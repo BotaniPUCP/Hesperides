@@ -8,6 +8,7 @@ import type { ContactPick } from '@/components/directorio/ContactForm';
 import { OrganizationPicker } from '@/components/directorio/OrganizationPicker';
 import { Button, Select, Textarea } from '@/components/ui';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
+import { useCampusEventCheck } from '@/hooks/useCampusEvents';
 import { useCanMaintainReservations, useReservationCheck, useReservationGardens } from '@/hooks/useReservations';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { isoFromInput, todayInLima } from '@/lib/reservation-format';
@@ -48,6 +49,8 @@ export function ReservationForm() {
   const rangeInvalid = startsAt !== null && endsAt !== null && endsAt <= startsAt;
   const checkable = placeId !== null && startsAt !== null && endsAt !== null && !rangeInvalid;
   const check = useReservationCheck(checkable ? { placeId, startsAt, endsAt } : null);
+  // SPEC-114 §5.4: el calendario del campus avisa en la misma lista; con horario, solo si se cruzan.
+  const campus = useCampusEventCheck(checkable ? { dates: [day], placeIds: [placeId], startTime, endTime } : null);
 
   if (!canMaintain) {
     return <p role="alert" className="text-sm text-alert-danger-fg">No tienes permiso para registrar reservas.</p>;
@@ -136,7 +139,7 @@ export function ReservationForm() {
         </div>
         <Textarea id="reservation-purpose" label="Motivo" value={purpose} onChange={setPurpose}
           maxLength={300} rows={3} helperText="Opcional, hasta 300 caracteres." />
-        <ReservationWarnings warnings={check.warnings} title="Avisos de este horario" />
+        <ReservationWarnings warnings={[...check.warnings, ...campus.warnings]} title="Avisos de este horario" />
         {check.errorMessage && (
           <p role="status" className="rounded-md border border-alert-warning-border bg-alert-warning-bg p-3 text-sm text-alert-warning-fg">
             No se pudieron consultar los avisos de este horario. Puedes guardar igual.

@@ -4,6 +4,7 @@ import type { CameraPose } from './cameraRig';
 import type { ViewCone } from './viewCones';
 import type { SelectionSweepCallbacks } from './selectionSweep';
 import type { Polygon } from '../sceneData';
+import type { Balloon } from '@shared/types';
 
 /** Lo que el visor avisa a la interfaz React. */
 export interface ViewerCallbacks {
@@ -17,12 +18,16 @@ export interface ViewerCallbacks {
   onCompass: (degrees: number) => void;
   /** Un clic sobre el cono de una perspectiva. */
   onViewConePick?: (id: number) => void;
+  /** Un clic sobre un globo (SPEC-113): la pantalla abre su ficha corta. */
+  onBalloonPick?: (balloon: Balloon) => void;
 }
 
 /** Cómo nace el visor; lo que no se dice nace como siempre. */
 export interface ViewerStart {
   /** Los edificios con ficha nacen en sus colores reales (SPEC-112 D-13). */
   realColors?: boolean;
+  /** Donde se dibujan los globos (SPEC-113); sin ella, el visor no muestra globos. */
+  balloonRoot?: HTMLElement;
 }
 
 /** Las operaciones que la interfaz React ordena al visor. */
@@ -72,5 +77,12 @@ export interface Viewer {
   setPinLatLon?: (lat: number, lon: number) => void;
   /** Oculta el marcador/pin de la escena. */
   clearPin?: () => void;
+  /**
+   * Ctrl+Shift+U: W/S, A/D, Espacio y Shift mueven la cámara y el clic derecho mira
+   * alrededor sin moverla. Al salir se vuelve a la vista 3D inicial.
+   */
+  setAdminMode: (on: boolean) => void;
+  /** Los globos vigentes (SPEC-113); una lista vacía los quita. */
+  setBalloons: (balloons: readonly Balloon[]) => void;
   dispose: () => void;
 }

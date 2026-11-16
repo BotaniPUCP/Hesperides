@@ -11,8 +11,6 @@ describe('moduleForPath', () => {
     ['/inventario-verde/especies/roystonea-regia', 'catalogo'],
     ['/inventario-verde/ejemplares', 'catastro'],
     ['/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001', 'catastro'],
-    ['/riego', 'riego'],
-    ['/riego/', 'riego'],
     ['/intervenciones', 'intervenciones'],
     ['/intervenciones/12/editar', 'intervenciones'],
     ['/lugares', 'lugares'],

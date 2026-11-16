@@ -1,4 +1,4 @@
-import type { GreenAreaSetDetail, GreenAreaSetElement, GreenAreaSetRequest, GreenAreaSetSummary } from '@shared/types';
+import type { GreenAreaSetDetail, GreenAreaSetElement, GreenAreaSetRequest, GreenAreaSetSummary, SectorSections } from '@shared/types';
 import { apiClient } from './api';
 
 const path = '/green-area-sets';
@@ -12,4 +12,6 @@ export const greenAreaSetsApi = {
   remove: (id: number) => apiClient.del<null>(`${path}/${id}`),
   /** Los ejemplares que el mapa deja agregar, con su sector. */
   elementOptions: () => apiClient.get<GreenAreaSetElement[]>(`${path}/element-options`),
+  /** Los sectores con sus secciones, en una sola llamada. */
+  sectionOptions: () => apiClient.get<SectorSections[]>(`${path}/section-options`),
 };

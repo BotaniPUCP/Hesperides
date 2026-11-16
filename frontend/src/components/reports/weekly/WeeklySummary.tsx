@@ -51,16 +51,16 @@ export function WeeklySummary({ report }: { report: WeeklyReport }) {
             valueText={WEEKLY_TEXTS.attendedText(attended.covered, attended.total)}
             footnote={<p className="flex flex-wrap items-center gap-2 text-xs text-neutral-700">
               <ReportBadge kind="PROVISIONAL" />{WEEKLY_TEXTS.attendedRule}</p>} />
-          {irrigation.turns === 0 ? (
+          {irrigation.irrigations === 0 ? (
             <div className="space-y-1">
               <p className="text-sm font-medium text-neutral-700">{WEEKLY_TEXTS.irrigation}</p>
-              <p className="font-semibold text-neutral-900">{WEEKLY_TEXTS.noTurn}</p>
-              <p className="text-xs text-neutral-700">{WEEKLY_TEXTS.noTurnHelp}</p>
+              <p className="font-semibold text-neutral-900">{WEEKLY_TEXTS.noIrrigation}</p>
+              <p className="text-xs text-neutral-700">{WEEKLY_TEXTS.noIrrigationHelp}</p>
             </div>
           ) : (
             <ProgressMeter label={WEEKLY_TEXTS.irrigation} percent={irrigation.percent} tone="info"
               headline={formatPercent(irrigation.percent) ?? CHART_TEXTS.noData}
-              valueText={WEEKLY_TEXTS.irrigationText(irrigation.irrigatedSections, irrigation.totalSections, irrigation.turns)}
+              valueText={WEEKLY_TEXTS.irrigationText(irrigation.irrigatedSections, irrigation.totalSections, irrigation.irrigations)}
               footnote={<p className="flex flex-wrap items-center gap-2 text-xs text-neutral-700">
                 <ReportBadge kind="PROVISIONAL" />{WEEKLY_TEXTS.irrigationRule}</p>} />
           )}

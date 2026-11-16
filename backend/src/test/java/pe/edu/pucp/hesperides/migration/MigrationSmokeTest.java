@@ -535,4 +535,13 @@ class MigrationSmokeTest {
         // Tres sembradas por V003, la de cercanía por V039, la de confirmación por V043 y las dos metas de reportes por V051.
         assertThat(live).isEqualTo(7);
     }
+
+    @Test
+    void irrigationTurnTablesAreGoneBecausePlanningOwnsIrrigation() {
+        Integer tables = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_name IN ('irrigation_turns', 'irrigation_turn_sections')
+                """, Integer.class);
+        assertThat(tables).isZero();
+    }
 }

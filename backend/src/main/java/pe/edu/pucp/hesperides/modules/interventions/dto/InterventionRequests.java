@@ -29,13 +29,22 @@ public final class InterventionRequests {
             @NotEmpty List<@NotNull @Valid Location> locations,
             @PositiveOrZero Long version, @Size(max=2000) String rescheduleReason,
             @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-            @Pattern(regexp="[0-9a-f]{64}") String campusSelectionRevision) {
+            @Pattern(regexp="[0-9a-f]{64}") String campusSelectionRevision,
+            /** SPEC-115: ausente = sin maquinaria de corte. */
+            Boolean usesCuttingMachinery) {
         public Planning(Long classItemId,Long typeItemId,LocalDate scheduledDate,String description,
                 Long originItemId,Long reportedByItemId,String externalCode,LocalDate requestedAt,
                 List<Location> locations,Long version,String rescheduleReason) {
             this(classItemId,typeItemId,scheduledDate,description,originItemId,reportedByItemId,
-                externalCode,requestedAt,locations,version,rescheduleReason,null);
+                externalCode,requestedAt,locations,version,rescheduleReason,null,null);
         }
+        public Planning(Long classItemId,Long typeItemId,LocalDate scheduledDate,String description,
+                Long originItemId,Long reportedByItemId,String externalCode,LocalDate requestedAt,
+                List<Location> locations,Long version,String rescheduleReason,String campusSelectionRevision) {
+            this(classItemId,typeItemId,scheduledDate,description,originItemId,reportedByItemId,
+                externalCode,requestedAt,locations,version,rescheduleReason,campusSelectionRevision,null);
+        }
+        public boolean machinery() { return Boolean.TRUE.equals(usesCuttingMachinery); }
     }
     public record Assignment(@NotNull @PositiveOrZero Long version, @NotNull Long teamId,
                              @NotNull Long assignedToUserId) {}

@@ -162,6 +162,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     <div className="surface-card space-y-2">
       <p className="text-xs text-neutral-500">Código: {data.code}</p>
       <p>{data.description || 'Sin descripción'}</p><p>Programada: {data.scheduledDate}</p>
+      {data.usesCuttingMachinery && <p><span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-700">Con maquinaria de corte</span></p>}
       <ExecutionTime work={data}/>
       {data.executionBlockedUntil && <p role="status" className="rounded-md border border-neutral-200 p-3">El trabajo podrá ejecutarse desde el {data.executionBlockedUntil}. Si debe adelantarse, solicita al coordinador que revise la planificación.</p>}
       <p>{data.completedLocationCount}/{data.locationCount} ubicaciones terminadas · {data.validatedLocationCount}/{data.locationCount} aprobadas</p>

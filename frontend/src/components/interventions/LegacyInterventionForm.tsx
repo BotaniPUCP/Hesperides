@@ -13,6 +13,8 @@ import { todayLocal } from '@/lib/local-date';
 import { useRequest } from '@/hooks/useRequest';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { PageHeader } from '@/components/layouts/PageHeader';
+import { CampusEventNotice } from './CampusEventNotice';
+import { MachineryField } from './MachineryField';
 import { ReservationNearbyNotice } from './ReservationNearbyNotice';
 
 const blankLocation = (): InterventionLocation => ({ clientReference: createClientUuid(), zoneId:null, placeId:null, location:null, elementIds:[], description:'', unitItemId:null, requestedQuantity:null });
@@ -31,6 +33,8 @@ export function LegacyInterventionForm({ initial, fromIncident = null, returnFil
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? null);
   const [date, setDate] = useState(() => initial?.scheduledDate ?? todayLocal());
+  // SPEC-115: al editar, la marca viaja siempre; ausente se leería como «sin maquinaria».
+  const [machinery, setMachinery] = useState(initial?.usesCuttingMachinery ?? false);
   const [description, setDescription] = useState(initial?.description ?? '');
   const [reason, setReason] = useState('');
   const [findingSource,setFindingSource] = useState<number | null>(null);
@@ -75,7 +79,7 @@ export function LegacyInterventionForm({ initial, fromIncident = null, returnFil
     const body: InterventionPlanning = {
       ...(initial ? {originItemId:initial.originItemId, reportedByItemId:initial.reportedByItemId, externalCode:initial.externalCode, requestedAt:initial.requestedAt, version:initial.version, rescheduleReason:reason} : {}),
       ...(origin ? {originItemId:findingOrigin!.id,reportedByItemId:findingSource!} : {}),
-      classItemId:classId, typeItemId:typeId, scheduledDate:date, description,
+      classItemId:classId, typeItemId:typeId, scheduledDate:date, usesCuttingMachinery:machinery, description,
       locations:locations.map(l => l.zoneSelectionRevision ? {...l,location:null,unitItemId:null,requestedQuantity:null,elementIds:[],elementCodes:[]} : l),
     };
     setPending(true); setError('');
@@ -112,10 +116,12 @@ export function LegacyInterventionForm({ initial, fromIncident = null, returnFil
         <Select id="work-class" label="Clase" value={String(classId)} options={catalog('INTERVENTION_CLASS').map(c => ({...c,code:String(c.id)}))} onChange={o => {setClassId(o?.id ?? 0);setTypeId(null);}} required />
         <Select id="work-type" label="Tipo" value={typeId === null ? null : String(typeId)} options={types.map(c => ({...c,code:String(c.id)}))} onChange={o => setTypeId(o?.id ?? null)} disabled={!types.length} required={types.length > 0} />
         <label className="grid gap-1 text-sm">Fecha programada<input className="h-11 rounded-md border border-neutral-200 p-2" type="date" required value={date} onChange={e => setDate(e.target.value)} /></label>
+        <MachineryField date={date} checked={machinery} onChange={setMachinery} />
         {initial && initial.scheduledDate !== date && <Input id="reschedule-reason" label="Motivo de reprogramación" value={reason} onChange={setReason} maxLength={2000} required />}
       </div>
       <Input id="work-description" label="Descripción del trabajo" value={description} onChange={setDescription} maxLength={4000} />
       <ReservationNearbyNotice date={date} locations={locations} />
+      <CampusEventNotice date={date} locations={locations} />
       <h2 className="text-lg font-semibold">Ubicaciones de esta actividad</h2>
       {locations.map((l,index) => <div key={l.clientReference} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-0 p-4">
         <div className="flex items-center justify-between"><h3 className="font-semibold">Ubicación {index + 1}</h3><Button variant="ghost" onClick={() => { setDirty(true); setLocations(rows => rows.filter((_,i) => i !== index)); }}>Retirar ubicación {index + 1}</Button></div>

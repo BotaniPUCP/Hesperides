@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetRequest;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Detail;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.ElementRef;
+import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.SectorSections;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Summary;
 import pe.edu.pucp.hesperides.modules.planning.sets.service.GreenAreaSetsService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
@@ -42,6 +43,11 @@ public class GreenAreaSetsController {
     @GetMapping("/element-options")
     public ResponseEntity<ApiResponse<List<ElementRef>>> elementOptions() {
         return ResponseEntity.ok(ApiResponse.ok("Ejemplares disponibles", service.elementOptions()));
+    }
+
+    @GetMapping("/section-options")
+    public ResponseEntity<ApiResponse<List<SectorSections>>> sectionOptions() {
+        return ResponseEntity.ok(ApiResponse.ok("Secciones por sector", service.sectionOptions()));
     }
 
     @GetMapping("/{id}")
