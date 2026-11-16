@@ -29,8 +29,26 @@ public class IncidentReferenceQueries {
 
     public Optional<OrganizationResponse> organization(Long id) {
         if (id == null) return Optional.empty();
-        return jdbc.query("SELECT id,name FROM organizations WHERE id=? AND deleted_at IS NULL",
-                (r, n) -> new OrganizationResponse(r.getLong("id"), r.getString("name")), id).stream().findFirst();
+        return jdbc.query("SELECT code,name FROM organizations WHERE id=? AND deleted_at IS NULL",
+                (r, n) -> new OrganizationResponse(r.getString("code"), r.getString("name")), id).stream().findFirst();
+    }
+
+    public Optional<Long> organizationId(String code) {
+        if (code == null || code.isBlank()) return Optional.empty();
+        return jdbc.query("SELECT id FROM organizations WHERE code=? AND deleted_at IS NULL",
+                (r, n) -> r.getLong(1), code.trim()).stream().findFirst();
+    }
+
+    public Optional<Long> contactId(String code) {
+        if (code == null || code.isBlank()) return Optional.empty();
+        return jdbc.query("SELECT id FROM contacts WHERE code=? AND deleted_at IS NULL",
+                (r, n) -> r.getLong(1), code.trim()).stream().findFirst();
+    }
+
+    public Optional<String> contactCode(Long id) {
+        if (id == null) return Optional.empty();
+        return jdbc.query("SELECT code FROM contacts WHERE id=? AND deleted_at IS NULL",
+                (r, n) -> r.getString(1), id).stream().findFirst();
     }
 
     /** Un tercero es una empresa externa del Directorio (SPEC-106, `EXTERNAL_COMPANY`). */

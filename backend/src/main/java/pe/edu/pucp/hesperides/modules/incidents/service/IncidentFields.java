@@ -22,10 +22,11 @@ public class IncidentFields {
         incident.setLongitude(longitude);
     }
 
-    public void applyRequester(Incident incident, Long byOrganization, String byName, Long contact, Long forOrganization) {
-        requireOrganization(byOrganization);
-        requireOrganization(forOrganization);
-        if (contact != null && references.contactName(contact).isEmpty()) throw new ValidationException("Invalid contact");
+    public void applyRequester(Incident incident, String byCode, String byName, String contactCode, String forCode) {
+        Long byOrganization = organization(byCode);
+        Long forOrganization = organization(forCode);
+        Long contact = contactCode == null || contactCode.isBlank() ? null
+                : references.contactId(contactCode).orElseThrow(() -> new ValidationException("Invalid contact"));
         if (byOrganization == null && clean(byName) == null) throw new ValidationException("Requester required");
         if (forOrganization != null && Objects.equals(forOrganization, byOrganization)) {
             throw new ValidationException("Requested for must differ from requested by");
@@ -36,8 +37,10 @@ public class IncidentFields {
         incident.setRequestedForOrganizationId(forOrganization);
     }
 
-    private void requireOrganization(Long id) {
-        if (id != null && references.organization(id).isEmpty()) throw new ValidationException("Invalid organization");
+    /** Una organización del Directorio por su código; uno desconocido es un 400. */
+    public Long organization(String code) {
+        if (code == null || code.isBlank()) return null;
+        return references.organizationId(code).orElseThrow(() -> new ValidationException("Invalid organization"));
     }
 
     private static void requireCoordinates(Double latitude, Double longitude) {

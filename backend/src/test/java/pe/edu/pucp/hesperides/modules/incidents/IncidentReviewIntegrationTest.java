@@ -83,7 +83,7 @@ class IncidentReviewIntegrationTest extends IncidentTestSupport {
     @Test
     void thirdPartyMustBeAnExternalCompanyOfTheDirectory() {
         var sent = reportAs(foreman);
-        long unit = organization("Facultad de Letras", "PUCP_UNIT");
+        String unit = organization("Facultad de Letras", "PUCP_UNIT");
         var r = completeReview(sent);
         var request = new ReviewIncidentRequest(r.version(), r.title(), r.description(), r.urgencyCode(), r.typeCode(),
                 r.zoneId(), null, null, null, r.teamId(), true, unit, 10, "OVER_5M", null, r.requestedByName(),
@@ -95,7 +95,7 @@ class IncidentReviewIntegrationTest extends IncidentTestSupport {
     @Test
     void activatingAThirdPartyIncidentUsesTheAgreedDays() {
         var sent = reportAs(foreman);
-        long company = organization("Arbolistas del Sur", "EXTERNAL_COMPANY");
+        String company = organization("Arbolistas del Sur", "EXTERNAL_COMPANY");
         var r = completeReview(sent);
         var request = new ReviewIncidentRequest(r.version(), r.title(), r.description(), r.urgencyCode(), r.typeCode(),
                 r.zoneId(), null, null, null, r.teamId(), true, company, 10, "OVER_5M", null, r.requestedByName(),
@@ -125,10 +125,10 @@ class IncidentReviewIntegrationTest extends IncidentTestSupport {
         assertThat(again.incident().activatedAt()).isEqualTo(active.incident().activatedAt());
     }
 
-    long organization(String name, String type) {
+    String organization(String name, String type) {
         return jdbc.queryForObject("""
             INSERT INTO organizations(name,type_item_id) SELECT ?, ci.id FROM catalog_items ci
-            JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='ORGANIZATION_TYPE' AND ci.code=? RETURNING id
-            """, Long.class, name, type);
+            JOIN catalog_types ct ON ct.id=ci.catalog_type_id WHERE ct.code='ORGANIZATION_TYPE' AND ci.code=? RETURNING code
+            """, String.class, name, type);
     }
 }

@@ -61,8 +61,8 @@ public class IncidentCaptureService {
         incident.setUrgency(severity);
         incident.setStatus(catalogs.required(IncidentCatalogs.STATUS, "REPORTED"));
         fields.applyLocation(incident, request.zoneId(), request.locationReference(), request.latitude(), request.longitude());
-        fields.applyRequester(incident, request.requestedByOrganizationId(), defaultRequester(request),
-                request.requesterContactId(), request.requestedForOrganizationId());
+        fields.applyRequester(incident, request.requestedByOrganizationCode(), defaultRequester(request),
+                request.requesterContactCode(), request.requestedForOrganizationCode());
         incident.setSource(catalogs.optional(IncidentCatalogs.SOURCE, request.sourceCode()));
         incident.setExternalCode(IncidentFields.clean(request.externalCode()));
         incident.setReportedBy(actor);
@@ -75,7 +75,7 @@ public class IncidentCaptureService {
     }
 
     private static String defaultRequester(CreateIncidentRequest request) {
-        if (request.requestedByOrganizationId() != null) return IncidentFields.clean(request.requestedByName());
+        if (IncidentFields.clean(request.requestedByOrganizationCode()) != null) return IncidentFields.clean(request.requestedByName());
         String name = IncidentFields.clean(request.requestedByName());
         return name == null ? DEFAULT_REQUESTER : name;
     }

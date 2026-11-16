@@ -27,15 +27,15 @@ public class IncidentReviewFields {
                 .filter(t -> t.isActive() && !t.isDeleted()).orElseThrow(() -> new ValidationException("Invalid team")));
         applyAttention(incident, r);
         incident.setHeightClass(heightClass(r.heightClass()));
-        fields.applyRequester(incident, r.requestedByOrganizationId(), r.requestedByName(),
-                r.requesterContactId(), r.requestedForOrganizationId());
+        fields.applyRequester(incident, r.requestedByOrganizationCode(), r.requestedByName(),
+                r.requesterContactCode(), r.requestedForOrganizationCode());
         incident.setSource(catalogs.optional(IncidentCatalogs.SOURCE, r.sourceCode()));
         incident.setExternalCode(IncidentFields.clean(r.externalCode()));
     }
 
     /** El tercero es una empresa externa del Directorio, solo como dato informativo (§3.6). */
     private void applyAttention(Incident incident, ReviewIncidentRequest r) {
-        Long provider = r.providerOrganizationId();
+        Long provider = fields.organization(r.providerOrganizationCode());
         if (provider != null && !references.isExternalCompany(provider)) {
             throw new ValidationException("Provider must be an external company");
         }

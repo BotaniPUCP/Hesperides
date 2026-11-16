@@ -103,7 +103,7 @@ abstract class IncidentTestSupport {
         var i = current.incident();
         return new ReviewIncidentRequest(i.version(), "Rama en riesgo", i.description(), "MEDIUM", "BRANCH_AT_RISK",
                 anyZoneId(), i.locationReference(), i.latitude(), i.longitude(), teamId, false, null, null, "UNDER_5M",
-                i.requestedBy().organizationId(), i.requestedBy().name(), null, null, null, null);
+                i.requestedBy().organizationCode(), i.requestedBy().name(), null, null, null, null);
     }
 
     DetailResponse activeIncident() {

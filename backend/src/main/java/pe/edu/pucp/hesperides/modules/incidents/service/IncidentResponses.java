@@ -36,10 +36,11 @@ public class IncidentResponses {
     }
 
     private RequesterResponse requester(Incident i) {
-        String organization = references.organization(i.getRequestedByOrganizationId())
-                .map(OrganizationResponse::name).orElse(null);
-        return new RequesterResponse(i.getRequestedByOrganizationId(), organization, i.getRequestedByName(),
-                i.getRequesterContactId(), references.contactName(i.getRequesterContactId()).orElse(null));
+        var organization = references.organization(i.getRequestedByOrganizationId());
+        return new RequesterResponse(organization.map(OrganizationResponse::code).orElse(null),
+                organization.map(OrganizationResponse::name).orElse(null), i.getRequestedByName(),
+                references.contactCode(i.getRequesterContactId()).orElse(null),
+                references.contactName(i.getRequesterContactId()).orElse(null));
     }
 
     static PersonResponse person(User user) {

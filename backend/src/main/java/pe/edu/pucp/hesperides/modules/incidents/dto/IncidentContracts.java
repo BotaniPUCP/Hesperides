@@ -23,10 +23,10 @@ public final class IncidentContracts {
             @DecimalMin("-90") @DecimalMax("90") Double latitude,
             @DecimalMin("-180") @DecimalMax("180") Double longitude,
             @Positive Long zoneId,
-            @Positive Long requestedByOrganizationId,
+            @Size(max = 20) String requestedByOrganizationCode,
             @Size(max = 200) String requestedByName,
-            @Positive Long requesterContactId,
-            @Positive Long requestedForOrganizationId,
+            @Size(max = 20) String requesterContactCode,
+            @Size(max = 20) String requestedForOrganizationCode,
             @Size(max = 50) String sourceCode,
             @Size(max = 40) String externalCode) {}
 
@@ -43,13 +43,13 @@ public final class IncidentContracts {
             @DecimalMin("-180") @DecimalMax("180") Double longitude,
             @Positive Long teamId,
             boolean thirdParty,
-            @Positive Long providerOrganizationId,
+            @Size(max = 20) String providerOrganizationCode,
             @Min(1) @Max(90) Integer agreedDays,
             @Size(max = 20) String heightClass,
-            @Positive Long requestedByOrganizationId,
+            @Size(max = 20) String requestedByOrganizationCode,
             @Size(max = 200) String requestedByName,
-            @Positive Long requesterContactId,
-            @Positive Long requestedForOrganizationId,
+            @Size(max = 20) String requesterContactCode,
+            @Size(max = 20) String requestedForOrganizationCode,
             @Size(max = 50) String sourceCode,
             @Size(max = 40) String externalCode) {}
 
@@ -68,9 +68,10 @@ public final class IncidentContracts {
     public record PersonResponse(Long id, String fullName) {}
     public record TeamResponse(Long id, String name) {}
     public record ZoneResponse(Long id, String code, String name) {}
-    public record OrganizationResponse(Long id, String name) {}
-    public record RequesterResponse(Long organizationId, String organizationName, String name,
-                                    Long contactId, String contactName) {}
+    /** Directorio por código, nunca por id (SPEC-002 INV-04). */
+    public record OrganizationResponse(String code, String name) {}
+    public record RequesterResponse(String organizationCode, String organizationName, String name,
+                                    String contactCode, String contactName) {}
     public record DeadlineResponse(Instant dueAt, String status, Boolean met) {}
 
     public record IncidentResponse(
