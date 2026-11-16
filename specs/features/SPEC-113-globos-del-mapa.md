@@ -137,7 +137,7 @@ Respuesta (`data`):
 ```
 
 - `kind`: `INCIDENT` · `INTERVENTION` · `IRRIGATION` · `IRRIGATION_DUE` · `RESERVATION` ·
-  (reservados, sin fuente en esta entrega: `BLOCKING_EVENT` · `MACHINERY_CUT`).
+  `BLOCKING_EVENT` (fuente: SPEC-114) · `MACHINERY_CUT` (reservado, sin fuente aún).
 - `variant`: en `INCIDENT`, la urgencia (`HIGH`, `MEDIUM`, `LOW`, `NONE` sin urgencia); en `IRRIGATION_DUE`,
   `OVERDUE` o `DUE`; `null` en los demás.
 - `id`: `<KIND>:<id de origen>`, y `#<n>` cuando un conjunto se parte en minigrupos
@@ -177,7 +177,7 @@ un cambio aparte, con su propia migración.
 | Riego en curso o de hoy (`IRRIGATION`) | Aspersor | Azul | No | Intervención de clase **Riego** con una ubicación en ejecución, **o** con fecha programada hoy y sin empezar (D-08) | Sus ubicaciones, en minigrupos | Tipo de riego, conjunto si lo hay, capataz, hora de inicio (o «Programado para hoy»), «dentro / fuera de la ventana 6:30–11:30» |
 | Sección por regar (`IRRIGATION_DUE`) | Gota con reloj | Naranja | Sí | En un conjunto con una asignación de riego, el jardín **falta** (SPEC-203 §5.5.1: `DUE` u `OVERDUE`), **tiene al menos un riego registrado** (D-09) y no está en un riego abierto | Los jardines que faltan del conjunto, en minigrupos | Conjunto, «6 días tarde» o «vence en 2 días», «Faltan 2 de 4», «Último riego: 2 nov» |
 | Reserva en curso (`RESERVATION`) | Toldo | Celeste | No | Estado **En curso** (SPEC-107) | Punto interior del contorno del jardín reservado | Jardín, «Pedido de», horario, uso derivado |
-| Evento bloqueante (`BLOCKING_EVENT`) | Calendario prohibido | Morado | No | *Sin fuente:* lo aportará el módulo de calendario de eventos PUCP | — | — |
+| Evento bloqueante (`BLOCKING_EVENT`) | Calendario prohibido | Morado | No | Un bloqueante de **sector o sección** del calendario del campus ocurre hoy y, con horario, mientras dura (SPEC-114 §5.5). Los de todo el campus van a la franja (`campusNotices`) | Punto interior de su zona | Nombre, horario o «Todo el día», tipo, ámbito |
 | Corte con maquinaria (`MACHINERY_CUT`) | Cortacésped | Gris | No | *Sin fuente:* lo aportará REQ 5.11 | — | — |
 
 Los dos últimos tienen dibujo y lugar en la leyenda, pero **ninguna fuente en esta entrega**:
@@ -358,5 +358,4 @@ Frontend · agrupación por zoom
   `/riego`, su menú y sus tipos; V063 borra las tablas. El reporte semanal (SPEC-202 D-15) lee
   ahora las intervenciones de clase Riego, y los conjuntos piden sus secciones a
   `GET /green-area-sets/section-options`.
-- **Fuentes de `BLOCKING_EVENT` y `MACHINERY_CUT`:** llegan con el módulo de calendario de eventos
-  PUCP y con REQ 5.11.
+- **Fuente de `MACHINERY_CUT`:** llega con REQ 5.11. La de `BLOCKING_EVENT` llegó con SPEC-114.
