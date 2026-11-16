@@ -14,6 +14,8 @@ export interface MapScreenSnapshot {
   panelOpen: boolean;
   selected: Target | null;
   card: MapCardContent | null;
+  /** Si el tema era oscuro cuando se dejó el mapa; nulo si nunca se abrió. Con otro tema, manda el tema. */
+  nightTheme: boolean | null;
 }
 
 /** El mapa arranca en colores reales y el rosado queda a un clic (SPEC-112 D-13): su visor nace así. */
@@ -27,6 +29,7 @@ const startingSnapshot = (): MapScreenSnapshot => ({
   panelOpen: false,
   selected: null,
   card: null,
+  nightTheme: null,
 });
 
 /**
