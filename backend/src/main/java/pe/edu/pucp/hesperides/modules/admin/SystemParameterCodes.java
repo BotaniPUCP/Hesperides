@@ -16,6 +16,10 @@ public final class SystemParameterCodes {
     /** Metas del resumen de dirección de los reportes (SPEC-202 §4), de 1 a 100. */
     public static final String REPORT_COVERAGE_TARGET_PERCENT = "REPORT_COVERAGE_TARGET_PERCENT";
     public static final String REPORT_IRRIGATION_TARGET_PERCENT = "REPORT_IRRIGATION_TARGET_PERCENT";
+    /** Plazos de incidencias por urgencia, en horas; provisionales (SPEC-201 §3.9). */
+    public static final String INCIDENT_DEADLINE_HIGH_HOURS = "INCIDENT_DEADLINE_HIGH_HOURS";
+    public static final String INCIDENT_DEADLINE_MEDIUM_HOURS = "INCIDENT_DEADLINE_MEDIUM_HOURS";
+    public static final String INCIDENT_DEADLINE_LOW_HOURS = "INCIDENT_DEADLINE_LOW_HOURS";
 
     // No hay MAIL_FROM, y no debe volver: el remitente de correo solo es valido
     // si el proveedor lo tiene verificado, y esta aplicacion no puede

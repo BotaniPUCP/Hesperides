@@ -90,9 +90,9 @@ public class WeeklyReportBuilder {
     private Incidents incidents(ReportFilter filter, Long sectorId, LocalDate cutoff, ReportScope scope) {
         var rows = incidents.openAtCutoff(filter, sectorId, cutoff);
         var located = rows.stream().filter(r -> sectorId.equals(r.sectorId())).toList();
-        long open = located.stream().filter(r -> !"PENDING_APPROVAL".equals(r.statusCode())).count();
+        long open = located.stream().filter(r -> !WeeklyIncidentQueries.NOT_ACTIVE.equals(r.statusCode())).count();
         long unlocated = rows.stream()
-                .filter(r -> r.sectorId() == null && !"PENDING_APPROVAL".equals(r.statusCode())).count();
+                .filter(r -> r.sectorId() == null && !WeeklyIncidentQueries.NOT_ACTIVE.equals(r.statusCode())).count();
         var items = located.stream().map(r -> WeeklyAssembler.incident(r, cutoff)).toList();
         return new Incidents(cutoff, open, located.size() - open, scope.campus() ? unlocated : null,
                 TopList.of(items, WeeklyAssembler.INCIDENTS_CAP));

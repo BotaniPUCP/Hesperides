@@ -1,153 +1,114 @@
--- SPEC-201: development-only repeatable migration, applied after schema migrations.
--- Public test password: Hesperides2026. Never run against real user data.
+-- SPEC-201 (rediseño del 15 nov 2026): datos de demostración, solo con el perfil dev.
+-- Contraseña pública de prueba: Hesperides2026. Nunca correr sobre datos reales.
+--
+-- Muestra el flujo nuevo sin fabricar trabajo: reportes no activos (con y sin prellenado),
+-- activos a tiempo, por vencer y vencidos, y uno de un tercero. No hay cerradas porque
+-- cerrar exige intervenciones validadas de verdad (§3.8); se demuestran creándolas en la app.
+-- Repetirlo solo inserta lo que falta y nunca deshace lo que alguien cambió en la demo.
+
 INSERT INTO users (email, password_hash, first_name, last_name, role_item_id, is_active, must_change_password)
 SELECT fixture.email, '$2a$10$4r8g9MXWvnVXpz.Z5AIjRO/OsgquCUkP3xribRDZTpWkIJB06V22y',
        fixture.first_name, 'Demostración', ci.id, TRUE, FALSE
 FROM (VALUES
  ('capataz@demo.invalid', 'Capataz', 'SUPERVISOR'),
  ('otro-capataz@demo.invalid', 'Otro capataz', 'SUPERVISOR'),
- ('coordinador@demo.invalid', 'Coordinador', 'COORDINADOR')
-) AS fixture(email,first_name,role_code)
-JOIN catalog_types ct ON ct.code='ROLE'
-JOIN catalog_items ci ON ci.catalog_type_id=ct.id AND ci.code=fixture.role_code
-WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.email=fixture.email AND u.deleted_at IS NULL);
+ ('coordinador@demo.invalid', 'Coordinador', 'COORDINADOR'),
+ ('operario@demo.invalid', 'Operario', 'OPERARIO')
+) AS fixture(email, first_name, role_code)
+JOIN catalog_types ct ON ct.code = 'ROLE'
+JOIN catalog_items ci ON ci.catalog_type_id = ct.id AND ci.code = fixture.role_code
+WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.email = fixture.email AND u.deleted_at IS NULL);
 
-INSERT INTO teams (code,name,supervisor_user_id)
+INSERT INTO teams (code, name, supervisor_user_id)
 SELECT fixture.code, fixture.name, u.id
 FROM (VALUES
- ('DEMO-INC-1','Cuadrilla de demostración','capataz@demo.invalid'),
- ('DEMO-INC-2','Otra cuadrilla de demostración','otro-capataz@demo.invalid')
-) AS fixture(code,name,email)
-JOIN users u ON u.email=fixture.email AND u.deleted_at IS NULL
-WHERE NOT EXISTS (SELECT 1 FROM teams t WHERE t.code=fixture.code AND t.deleted_at IS NULL);
+ ('DEMO-INC-1', 'Cuadrilla de demostración', 'capataz@demo.invalid'),
+ ('DEMO-INC-2', 'Otra cuadrilla de demostración', 'otro-capataz@demo.invalid')
+) AS fixture(code, name, email)
+JOIN users u ON u.email = fixture.email AND u.deleted_at IS NULL
+WHERE NOT EXISTS (SELECT 1 FROM teams t WHERE t.code = fixture.code AND t.deleted_at IS NULL);
 
--- Eight incidents: two per state, four per team. Coordinates are illustrative.
--- Only newly inserted incidents receive work/history. Rerunning never resets
--- an incident that someone has edited, approved or resolved during the demo.
-WITH fixtures (
-    seed_number, team_code, status_code, age, original_description, description,
-    location_reference, latitude, longitude, type_code, urgency_code,
-    first_work, first_activity, second_work, second_activity, completed_work_count
-) AS (VALUES
-    (1, 'DEMO-INC-1', 'PENDING_APPROVAL', INTERVAL '1 hour',
-     'Rama caída en puerta principal.', 'Rama caída en puerta principal.',
-     NULL, NULL, NULL, NULL, NULL,
-     NULL, NULL, NULL, NULL, 0),
-    (2, 'DEMO-INC-2', 'PENDING_APPROVAL', INTERVAL '3 hours',
-     'Hay una fuga de agua junto al jardín de Gastronomía.', 'Hay una fuga de agua junto al jardín de Gastronomía.',
-     'Jardín frente a Gastronomía, cerca del aspersor.', NULL, NULL, NULL, NULL,
-     NULL, NULL, NULL, NULL, 0),
-    (3, 'DEMO-INC-1', 'OPEN', INTERVAL '1 day',
-     'Mucha hojarasca al costado del Comedor Central.', 'Hojarasca acumulada en el sendero junto al Comedor Central.',
-     'Sendero lateral del Comedor Central.', NULL, NULL, 'LEAF_LITTER', 'LOW',
-     'Barrer la hojarasca del sendero.', 'LIMPIEZA_HOJARASCA',
-     'Recoger los residuos y trasladarlos al punto de acopio.', 'RECOLECCION_HOJARASCA', 0),
-    (4, 'DEMO-INC-2', 'OPEN', INTERVAL '2 days',
-     'Rama caída frente a Ingeniería de Minas.', 'Rama caída junto al acceso a Ingeniería de Minas.',
-     'Jardín frente al acceso de Ingeniería de Minas.', NULL, NULL, 'FALLEN_BRANCH', 'MEDIUM',
-     'Retirar la rama del acceso peatonal.', 'RECOLECCION_RAMAS',
-     'Trasladar los restos vegetales al punto de acopio.', 'DISPOSICION_RESIDUOS', 0),
-    (5, 'DEMO-INC-1', 'IN_PROGRESS', INTERVAL '3 days',
-     'Rama caída en el tontódromo, cerca de Letras.', 'Rama caída obstruye parcialmente el sendero del Tontódromo frente a Letras.',
-     'Tontódromo, frente a Estudios Generales Letras.', -12.0694, -77.0796, 'FALLEN_BRANCH', 'HIGH',
-     'Retirar la rama para liberar el paso peatonal.', 'RECOLECCION_RAMAS',
-     'Recoger las ramas pequeñas y limpiar el sendero.', 'DISPOSICION_RESIDUOS', 1),
-    (6, 'DEMO-INC-2', 'IN_PROGRESS', INTERVAL '4 days',
-     'Fuga de agua en un aspersor del jardín de Arte.', 'Pérdida de agua en la conexión de un aspersor del jardín de Arte.',
-     'Jardín de Arte, al lado del camino peatonal.', NULL, NULL, 'WATER_LEAK', 'MEDIUM',
-     'Revisar el aspersor y localizar la conexión con pérdida.', 'VERIFICACION_RIEGO',
-     'Corregir la conexión y comprobar que no pierda agua.', NULL, 0),
-    (7, 'DEMO-INC-1', 'RESOLVED', INTERVAL '6 days',
-     'Hojarasca acumulada junto a la Biblioteca Central.', 'Hojarasca acumulada junto a la Biblioteca Central.',
-     'Sendero junto al jardín de la Biblioteca Central.', NULL, NULL, 'LEAF_LITTER', 'LOW',
-     'Barrer la hojarasca del sendero.', 'LIMPIEZA_HOJARASCA',
-     'Recoger los residuos vegetales y trasladarlos al acopio.', 'RECOLECCION_HOJARASCA', 2),
-    (8, 'DEMO-INC-2', 'RESOLVED', INTERVAL '8 days',
-     'Rama caída cerca de la puerta Urubamba.', 'Rama caída cerca de la puerta Urubamba.',
-     'Lado interior de la puerta Urubamba.', -12.0710, -77.0810, 'FALLEN_BRANCH', 'MEDIUM',
-     'Retirar la rama del área de tránsito.', 'RECOLECCION_RAMAS',
-     'Trasladar los restos vegetales y dejar libre el acceso.', 'DISPOSICION_RESIDUOS', 2)
-), prepared AS (
-    SELECT f.*, t.id AS team_id, t.supervisor_user_id AS sender_id,
-           reviewer.id AS reviewer_id, state.id AS status_id,
-           (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
-            WHERE ct.code='INCIDENT_TYPE' AND ci.code=f.type_code AND ci.deleted_at IS NULL) AS type_id,
-           (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
-            WHERE ct.code='URGENCY_LEVEL' AND ci.code=f.urgency_code AND ci.deleted_at IS NULL) AS urgency_id,
-           ('20000000-0000-4000-8000-' || lpad(f.seed_number::text, 12, '0'))::uuid AS reference,
-           CURRENT_TIMESTAMP - f.age AS received_at
-    FROM fixtures f
-    JOIN teams t ON t.code=f.team_code AND t.deleted_at IS NULL
-    JOIN users reviewer ON reviewer.email='coordinador@demo.invalid' AND reviewer.deleted_at IS NULL
-    JOIN catalog_types state_type ON state_type.code='INCIDENT_STATUS'
-    JOIN catalog_items state ON state.catalog_type_id=state_type.id AND state.code=f.status_code
-), inserted AS (
-    INSERT INTO incidents (
-        original_description, description, location_reference, latitude, longitude,
-        incident_type_item_id, urgency_item_id, status_item_id, reported_by_user_id, team_id,
-        approved_by_user_id, approved_at, resolved_at, channel, client_reference, request_hash,
-        version, created_at, updated_at, official_number, event_item_id, service_group_item_id
-    )
-    SELECT original_description, description, location_reference, latitude, longitude,
-           type_id, urgency_id, status_id, sender_id, team_id,
-           CASE WHEN status_code <> 'PENDING_APPROVAL' THEN reviewer_id END,
-           CASE WHEN status_code <> 'PENDING_APPROVAL' THEN received_at + INTERVAL '30 minutes' END,
-           CASE WHEN status_code = 'RESOLVED' THEN received_at + INTERVAL '4 hours' END,
-           'WEB', reference, encode(sha256(convert_to('SPEC-200 demo incident ' || seed_number, 'UTF8')), 'hex'),
-           CASE status_code WHEN 'PENDING_APPROVAL' THEN 0 WHEN 'OPEN' THEN 1 WHEN 'IN_PROGRESS' THEN 2 ELSE 3 END,
-           received_at,
-           received_at + CASE status_code WHEN 'PENDING_APPROVAL' THEN INTERVAL '0 minutes'
-               WHEN 'OPEN' THEN INTERVAL '30 minutes' WHEN 'IN_PROGRESS' THEN INTERVAL '75 minutes'
-                ELSE INTERVAL '4 hours' END,
-            CASE WHEN status_code <> 'PENDING_APPROVAL' THEN nextval('incident_official_number_seq') END,
-            (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
-             WHERE ct.code='INCIDENT_EVENT' AND ci.code='INCIDENT'),
-            (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
-             WHERE ct.code='INCIDENT_SERVICE_GROUP' AND ci.code='GREEN_AREAS')
-    FROM prepared
-    WHERE NOT EXISTS (SELECT 1 FROM incidents existing WHERE existing.reported_by_user_id=sender_id
-        AND existing.client_reference=reference AND existing.deleted_at IS NULL)
-    ON CONFLICT (reported_by_user_id, client_reference) WHERE deleted_at IS NULL DO NOTHING
-    RETURNING *
-), inserted_work AS (
-    INSERT INTO incident_interventions (
-        incident_id, description, type_item_id, status_item_id, recorded_by_user_id,
-        completed_by_user_id, completed_at, client_reference, request_hash, created_at, updated_at, purpose_item_id
-    )
-    SELECT i.id, work.description,
-           (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
-            WHERE ct.code='INTERVENTION_TYPE' AND ci.code=work.activity AND ci.deleted_at IS NULL),
-           state.id, i.approved_by_user_id,
-           CASE WHEN work.position <= f.completed_work_count THEN i.reported_by_user_id END,
-           CASE WHEN work.position <= f.completed_work_count THEN i.approved_at + work.position * INTERVAL '1 hour' END,
-           ('21000000-0000-4000-8000-' || lpad((f.seed_number * 10 + work.position)::text, 12, '0'))::uuid,
-           encode(sha256(convert_to(work.description, 'UTF8')), 'hex'),
-           i.approved_at + INTERVAL '15 minutes',
-           i.approved_at + CASE WHEN work.position <= f.completed_work_count THEN work.position * INTERVAL '1 hour'
-                ELSE INTERVAL '15 minutes' END,
-            (SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
-             WHERE ct.code='INCIDENT_ACTION_PURPOSE' AND ci.code='MITIGATION')
-    FROM inserted i
-    JOIN prepared f ON f.reference=i.client_reference
-    CROSS JOIN LATERAL (VALUES (1, f.first_work, f.first_activity), (2, f.second_work, f.second_activity))
-        AS work(position, description, activity)
-    JOIN catalog_types state_type ON state_type.code='INTERVENTION_STATUS'
-    JOIN catalog_items state ON state.catalog_type_id=state_type.id
-        AND state.code=CASE WHEN work.position <= f.completed_work_count THEN 'COMPLETED' ELSE 'ASSIGNED' END
-    WHERE i.approved_at IS NOT NULL
-    RETURNING id
-)
-INSERT INTO incident_status_history (incident_id, status_item_id, changed_by_user_id, created_at, updated_at)
-SELECT i.id, state.id, event.actor_id, event.occurred_at, event.occurred_at
-FROM inserted i
-JOIN prepared f ON f.reference=i.client_reference
-CROSS JOIN LATERAL (VALUES
-    ('PENDING_APPROVAL', i.reported_by_user_id, i.created_at),
-    ('OPEN', i.approved_by_user_id, i.approved_at),
-    ('IN_PROGRESS', i.reported_by_user_id,
-        CASE WHEN f.status_code IN ('IN_PROGRESS', 'RESOLVED') THEN i.approved_at + INTERVAL '45 minutes' END),
-    ('RESOLVED', i.reported_by_user_id, i.resolved_at)
-) AS event(status_code, actor_id, occurred_at)
-JOIN catalog_types state_type ON state_type.code='INCIDENT_STATUS'
-JOIN catalog_items state ON state.catalog_type_id=state_type.id AND state.code=event.status_code
-WHERE event.occurred_at IS NOT NULL;
+INSERT INTO organizations (name, type_item_id)
+SELECT 'Arbolistas de demostración (ficticia)', ci.id
+FROM catalog_items ci JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+WHERE ct.code = 'ORGANIZATION_TYPE' AND ci.code = 'EXTERNAL_COMPANY'
+  AND NOT EXISTS (SELECT 1 FROM organizations o
+                  WHERE o.name = 'Arbolistas de demostración (ficticia)' AND o.deleted_at IS NULL);
+
+DO $$
+DECLARE
+    f RECORD;
+    new_id BIGINT;
+    received TIMESTAMPTZ;
+    seq BIGINT;
+    zone BIGINT := (SELECT z.id FROM zones z JOIN catalog_items t ON t.id = z.zone_type_item_id
+                     WHERE t.code = 'SECTION' AND z.boundary IS NOT NULL AND z.deleted_at IS NULL
+                     ORDER BY z.id LIMIT 1);
+    coordinator BIGINT := (SELECT id FROM users WHERE email = 'coordinador@demo.invalid' AND deleted_at IS NULL);
+    provider BIGINT := (SELECT id FROM organizations
+                         WHERE name = 'Arbolistas de demostración (ficticia)' AND deleted_at IS NULL);
+BEGIN
+    FOR f IN SELECT * FROM (VALUES
+        (1, 'capataz@demo.invalid', 'DEMO-INC-1', INTERVAL '30 minutes', 'MEDIUM',
+         'Hay una rama rajada sobre el sendero, pasa mucha gente.', NULL, NULL, FALSE, 'NOT_REQUESTED',
+         NULL::TEXT, NULL::TEXT, NULL::NUMERIC, NULL::NUMERIC, FALSE, NULL::INTEGER, NULL::TEXT),
+        (2, 'otro-capataz@demo.invalid', 'DEMO-INC-2', INTERVAL '2 hours', 'LOW',
+         'Se rompió un aspersor y sale agua a chorro desde temprano.', NULL, NULL, FALSE, 'READY',
+         'Fuga o aspersor roto', 'LEAK_OR_BROKEN_SPRINKLER', NULL, NULL, FALSE, NULL, 'NOT_APPLICABLE'),
+        (3, 'operario@demo.invalid', NULL, INTERVAL '5 hours', 'MEDIUM',
+         'Encontré cochinilla en los arbustos, varias plantas con hojas pegajosas.', NULL, NULL, FALSE,
+         'NOT_REQUESTED', NULL, NULL, NULL, NULL, FALSE, NULL, NULL),
+        (4, 'capataz@demo.invalid', 'DEMO-INC-1', INTERVAL '50 hours', 'HIGH',
+         'Árbol caído bloquea el paso de estudiantes.', 'Frente a la escalera de Letras', 'zone', TRUE,
+         'NOT_REQUESTED', 'Árbol caído', 'FALLEN_TREE', NULL, NULL, FALSE, NULL, 'UNDER_5M'),
+        (5, 'otro-capataz@demo.invalid', 'DEMO-INC-2', INTERVAL '40 hours', 'MEDIUM',
+         'Plantas marchitas junto a la jardinera.', NULL, NULL, TRUE, 'NOT_REQUESTED',
+         'Plantas marchitas', 'DISEASE', -12.0694, -77.0796, FALSE, NULL, 'NOT_APPLICABLE'),
+        (6, 'capataz@demo.invalid', 'DEMO-INC-1', INTERVAL '1 day', 'MEDIUM',
+         'Ficus de unos 10 metros con una rama grande rajada.', 'Junto a la losa deportiva', 'zone', TRUE,
+         'NOT_REQUESTED', 'Rama rajada en ficus alto', 'BRANCH_AT_RISK', NULL, NULL, TRUE, 10, 'OVER_5M')
+    ) AS v(n, reporter, team_code, age, urgency, description, reference, zone_flag, active, prefill,
+           title, type_code, lat, lng, third_party, agreed_days, height)
+    LOOP
+        CONTINUE WHEN EXISTS (SELECT 1 FROM incidents
+                               WHERE client_reference = ('30000000-0000-4000-8000-' || lpad(f.n::TEXT, 12, '0'))::UUID);
+        received := CURRENT_TIMESTAMP - f.age;
+        INSERT INTO incident_code_counters (year, last_number)
+        VALUES (extract(YEAR FROM received AT TIME ZONE 'America/Lima')::INTEGER, 1)
+        ON CONFLICT (year) DO UPDATE SET last_number = incident_code_counters.last_number + 1
+        RETURNING last_number INTO seq;
+
+        INSERT INTO incidents (code, title, original_description, description, reported_urgency_item_id,
+            urgency_item_id, incident_type_item_id, status_item_id, zone_id, location_reference, latitude, longitude,
+            team_id, third_party, provider_organization_id, agreed_days, height_class, requested_by_name,
+            reported_by_user_id, activated_by_user_id, activated_at, prefill_status, prefill_suggestion,
+            prefill_updated_at, client_reference, request_hash, created_at, updated_at)
+        SELECT 'INC-' || extract(YEAR FROM received AT TIME ZONE 'America/Lima')::INTEGER || '-' || lpad(seq::TEXT, 4, '0'),
+               f.title, f.description, f.description, u.id, u.id, ty.id, st.id,
+               CASE WHEN f.zone_flag = 'zone' THEN zone END, f.reference, f.lat, f.lng,
+               tm.id, f.third_party, CASE WHEN f.third_party THEN provider END, f.agreed_days, f.height,
+               'Áreas verdes (hallazgo en campo)', rep.id,
+               CASE WHEN f.active THEN coordinator END, CASE WHEN f.active THEN received + INTERVAL '20 minutes' END,
+               f.prefill,
+               CASE WHEN f.prefill = 'READY' THEN jsonb_build_object(
+                   'title', f.title, 'typeCode', f.type_code, 'thirdParty', FALSE, 'heightClass', f.height,
+                   'imminentRisk', FALSE, 'plan', '1. Cerrar la válvula del sector. 2. Cambiar el cabezal.',
+                   'justification', 'Ejemplo de demostración: palabras «aspersor» y «agua».', 'confidence', 0.82) END,
+               CASE WHEN f.prefill = 'READY' THEN received + INTERVAL '1 minute' END,
+               ('30000000-0000-4000-8000-' || lpad(f.n::TEXT, 12, '0'))::UUID, repeat('0', 64), received, received
+        FROM users rep
+        JOIN catalog_items u ON u.code = f.urgency
+             AND u.catalog_type_id = (SELECT id FROM catalog_types WHERE code = 'URGENCY_LEVEL')
+        JOIN catalog_items st ON st.code = 'REPORTED'
+             AND st.catalog_type_id = (SELECT id FROM catalog_types WHERE code = 'INCIDENT_STATUS')
+        LEFT JOIN catalog_items ty ON ty.code = f.type_code
+             AND ty.catalog_type_id = (SELECT id FROM catalog_types WHERE code = 'INCIDENT_TYPE')
+             AND (f.active OR f.prefill = 'READY')
+        LEFT JOIN teams tm ON tm.code = f.team_code AND tm.deleted_at IS NULL
+        WHERE rep.email = f.reporter AND rep.deleted_at IS NULL
+        RETURNING id INTO new_id;
+
+        INSERT INTO incident_status_history (incident_id, status_item_id, changed_by_user_id, created_at, updated_at)
+        SELECT new_id, status_item_id, reported_by_user_id, received, received FROM incidents WHERE id = new_id;
+    END LOOP;
+END $$;

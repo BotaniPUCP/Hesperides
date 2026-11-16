@@ -127,23 +127,33 @@ final class ReportFixtures {
     }
 
     /**
-     * An incident registered at {@code createdAt} (ISO-8601 with offset) whose
-     * history starts with {@code initialStatus}. The current status is set by
-     * {@link #changeStatus}.
+     * An active incident registered at {@code createdAt} (ISO-8601 with offset) whose history
+     * starts with {@code initialStatus}. The current status is set by {@link #changeStatus}.
      */
     long incident(Account reporter, Long teamId, String initialStatus, String createdAt, Double lat, Double lon) {
+        return incident(reporter, teamId, initialStatus, createdAt, lat, lon, true);
+    }
+
+    /** Reported but not activated yet (SPEC-201 redesign): reports count it as pending. */
+    long notActiveIncident(Account reporter, Long teamId, String createdAt) {
+        return incident(reporter, teamId, "REPORTED", createdAt, null, null, false);
+    }
+
+    private long incident(Account reporter, Long teamId, String initialStatus, String createdAt,
+                          Double lat, Double lon, boolean active) {
         long id = jdbc.queryForObject("""
-            insert into incidents(original_description,description,latitude,longitude,status_item_id,
-                reported_by_user_id,team_id,client_reference,request_hash,created_at,updated_at)
-            values (?,?,?,?,?,?,?,gen_random_uuid(),'test',?::timestamptz,?::timestamptz) returning id
+            insert into incidents(code,original_description,description,latitude,longitude,status_item_id,
+                reported_by_user_id,team_id,activated_at,requested_by_name,client_reference,request_hash,created_at,updated_at)
+            values ('T-' || substr(md5(random()::text),1,16),?,?,?,?,?,?,?,case when ? then ?::timestamptz end,
+                'Áreas verdes (hallazgo en campo)',gen_random_uuid(),'test',?::timestamptz,?::timestamptz) returning id
             """, Long.class, "Incidencia de prueba", "Incidencia de prueba", lat, lon,
-                item("INCIDENT_STATUS", initialStatus), reporter.id(), teamId, createdAt, createdAt);
+                item("INCIDENT_STATUS", initialStatus), reporter.id(), teamId, active, createdAt, createdAt, createdAt);
         history(id, initialStatus, createdAt, reporter);
         return id;
     }
 
     void changeStatus(long incidentId, String status, String at, Account by) {
-        jdbc.update("update incidents set status_item_id=?, resolved_at=case when ?='RESOLVED' then ?::timestamptz end where id=?",
+        jdbc.update("update incidents set status_item_id=?, closed_at=case when ?='CLOSED' then ?::timestamptz end where id=?",
                 item("INCIDENT_STATUS", status), status, at, incidentId);
         history(incidentId, status, at, by);
     }

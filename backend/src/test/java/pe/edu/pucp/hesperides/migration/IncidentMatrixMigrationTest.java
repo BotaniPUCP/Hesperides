@@ -32,7 +32,7 @@ class IncidentMatrixMigrationTest {
             FROM catalog_items ci JOIN catalog_types ct ON ct.id=ci.catalog_type_id
             WHERE ct.code='INCIDENT_STATUS' AND ci.code='OPEN' RETURNING id
             """, Long.class, person, person, UUID.randomUUID());
-        Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()).load().migrate();
+        Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()).target("051").load().migrate();
         assertThat(jdbc.queryForList("SELECT version,checksum FROM flyway_schema_history WHERE version IS NOT NULL AND version::integer <= 26 ORDER BY installed_rank"))
                 .isEqualTo(before);
         assertThat(jdbc.queryForObject("SELECT original_description FROM incidents WHERE id=?", String.class, incident)).isEqualTo("Texto original");
