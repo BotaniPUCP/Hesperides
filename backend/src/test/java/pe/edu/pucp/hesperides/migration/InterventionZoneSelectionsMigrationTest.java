@@ -39,14 +39,16 @@ class InterventionZoneSelectionsMigrationTest {
         String places=jdbc.queryForObject("SELECT coalesce(jsonb_agg(to_jsonb(p) ORDER BY id),'[]')::text FROM places p",String.class);
         String zones=jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(z) ORDER BY id)::text FROM zones z",String.class);
         Flyway.configure().dataSource(source).locations("classpath:db/migration").target("49").load().migrate();
+        // La V049 no toca lugares ni jardines. Se mira justo después de ella: migraciones
+        // posteriores corrigen jardines a propósito (V053-V057 desfase del plano, V066 xerofíticas).
+        assertThat(jdbc.queryForObject("SELECT coalesce(jsonb_agg(to_jsonb(p) ORDER BY id),'[]')::text FROM places p",String.class)).isEqualTo(places);
+        assertThat(jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(z) ORDER BY id)::text FROM zones z",String.class)).isEqualTo(zones);
         String locations35=jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(l) ORDER BY id)::text FROM intervention_locations l",String.class);
         String interventions35=jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(i) ORDER BY id)::text FROM interventions i",String.class);
         Flyway.configure().dataSource(source).locations("classpath:db/migration").load().migrate();
         assertThat(jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(l) ORDER BY id)::text FROM intervention_locations l",String.class)).isEqualTo(locations35);
-        assertThat(jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(i)-'campus_selection_revision' ORDER BY id)::text FROM interventions i",String.class)).isEqualTo(interventions35);
+        assertThat(jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(i)-'campus_selection_revision'-'uses_cutting_machinery' ORDER BY id)::text FROM interventions i",String.class)).isEqualTo(interventions35);
         assertThat(jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(l)-'zone_selection_revision'-'zone_boundary_snapshot' ORDER BY id)::text FROM intervention_locations l",String.class)).isEqualTo(before);
-        assertThat(jdbc.queryForObject("SELECT coalesce(jsonb_agg(to_jsonb(p) ORDER BY id),'[]')::text FROM places p",String.class)).isEqualTo(places);
-        assertThat(jdbc.queryForObject("SELECT jsonb_agg(to_jsonb(z) ORDER BY id)::text FROM zones z",String.class)).isEqualTo(zones);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM intervention_place_zone_reviews",Integer.class)).isZero();
         assertThat(jdbc.queryForObject("SELECT count(*) FROM intervention_place_zone_links",Integer.class)).isZero();
         assertThatThrownBy(()->jdbc.update("UPDATE intervention_locations SET zone_selection_revision=repeat('a',64)"))
