@@ -1,26 +1,43 @@
-import type { Incident, IncidentCapture, IncidentDetail, IncidentInterventionLink, LinkedIncidentIntervention, IncidentMatrixExport, IncidentOptions, IncidentPhoto, IncidentReview, IncidentSummary, Page } from '@shared/types';
+import type {
+  Incident, IncidentCapture, IncidentDetail, IncidentMap, IncidentMine, IncidentOptions, IncidentPhoto,
+  IncidentRef, IncidentReview, LinkedIncidentIntervention, Page,
+} from '@shared/types';
 import { apiClient } from './api';
 
 const path = '/incidents';
+
+/** Cliente de SPEC-201 (rediseño). El vínculo con intervenciones se gestiona desde ambos módulos. */
 export const incidentsApi = {
-  list: (page: number, status: string, search: string) => apiClient.get<Page<Incident>>(
-    `${path}?${new URLSearchParams({ page: String(page), size: '20', status, search })}`),
+  list: (page: number, status: string, search: string, active: boolean | null) => {
+    const params = new URLSearchParams({ page: String(page), size: '20', status, search });
+    if (active !== null) params.set('active', String(active));
+    return apiClient.get<Page<Incident>>(`${path}?${params}`);
+  },
+  mine: () => apiClient.get<IncidentMine>(`${path}/mine`),
   options: () => apiClient.get<IncidentOptions>(`${path}/options`),
-  summary: () => apiClient.get<IncidentSummary>(`${path}/summary`),
-  export: () => apiClient.get<IncidentMatrixExport>(`${path}/export`),
-  comment: (id: number, body: string, clientReference: string) => apiClient.post<IncidentDetail>(`${path}/${id}/comments`, { body, clientReference }),
   detail: (id: number) => apiClient.get<IncidentDetail>(`${path}/${id}`),
   create: (body: IncidentCapture, reference: string) => apiClient.post<IncidentDetail>(path, body, { 'Idempotency-Key': reference }),
   review: (id: number, body: IncidentReview) => apiClient.put<IncidentDetail>(`${path}/${id}`, body),
-  approve: (id: number, version: number) => apiClient.post<IncidentDetail>(`${path}/${id}/approve`, { version }),
-  start: (id: number) => apiClient.post<IncidentDetail>(`${path}/${id}/start`),
-  requestCorrection: (id: number, version: number, reason: string) => apiClient.post<IncidentDetail>(`${path}/${id}/request-correction`, { version, reason }),
-  resubmit: (id: number, version: number, report: IncidentCapture) => apiClient.post<IncidentDetail>(`${path}/${id}/resubmit`, { version, report }),
-  resolve: (id: number, version: number, resolutionSummary: string) => apiClient.post<IncidentDetail>(`${path}/${id}/resolve`, { version, resolutionSummary }),
-  observeResolution: (id: number, version: number, reason: string) => apiClient.post<IncidentDetail>(`${path}/${id}/observe-resolution`, { version, reason }),
-  interventionOptions: (id: number, search: string, page: number) => apiClient.get<Page<LinkedIncidentIntervention>>(`${path}/${id}/intervention-options?${new URLSearchParams({ search, page: String(page) })}`),
-  linkIntervention: (id: number, body: IncidentInterventionLink) => apiClient.post<IncidentDetail>(`${path}/${id}/intervention-links`, body),
-  unlinkIntervention: (id: number, linkId: number, version: number, reason: string) => apiClient.post<IncidentDetail>(`${path}/${id}/intervention-links/${linkId}/remove`, { version, reason }),
+  activate: (id: number, version: number) => apiClient.post<IncidentDetail>(`${path}/${id}/activate`, { version }),
+  retryPrefill: (id: number) => apiClient.post<IncidentDetail>(`${path}/${id}/prefill/retry`),
+  close: (id: number, version: number, resolutionSummary: string) =>
+    apiClient.post<IncidentDetail>(`${path}/${id}/close`, { version, resolutionSummary }),
+  link: (id: number, version: number, interventionId: number) =>
+    apiClient.post<IncidentDetail>(`${path}/${id}/links`, { version, interventionId }),
+  unlink: (id: number, linkId: number, version: number, reason: string) =>
+    apiClient.post<IncidentDetail>(`${path}/${id}/links/${linkId}/remove`, { version, reason }),
+  replace: (id: number, linkId: number, version: number, interventionId: number, reason: string) =>
+    apiClient.post<IncidentDetail>(`${path}/${id}/links/${linkId}/replace`, { version, interventionId, reason }),
+  candidates: (query: string) =>
+    apiClient.get<LinkedIncidentIntervention[]>(`${path}/intervention-candidates?${new URLSearchParams({ q: query })}`),
+  search: (query: string) => apiClient.get<IncidentRef[]>(`${path}/search?${new URLSearchParams({ q: query })}`),
+  linkFromWork: (interventionId: number, incidentId: number) =>
+    apiClient.post<null>(`/interventions/${interventionId}/incident-links`, { incidentId }),
+  unlinkFromWork: (interventionId: number, linkId: number, reason: string) =>
+    apiClient.post<null>(`/interventions/${interventionId}/incident-links/${linkId}/remove`, { reason }),
+  comment: (id: number, body: string, clientReference: string) =>
+    apiClient.post<IncidentDetail>(`${path}/${id}/comments`, { body, clientReference }),
+  map: () => apiClient.get<IncidentMap>(`${path}/map`),
   upload: (id: number, file: File, reference: string) => {
     const form = new FormData();
     form.append('file', file);
@@ -30,7 +47,7 @@ export const incidentsApi = {
   photo: (id: number, photoId: number) => apiClient.get<{ contentType: string; base64: string }>(`${path}/${id}/photos/${photoId}`),
 };
 
-/** getRandomValues also works on LAN HTTP, where randomUUID is not available. */
+/** getRandomValues también funciona por HTTP en la LAN, donde randomUUID no está disponible. */
 export function newClientReference(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = (bytes[6] & 15) | 64;

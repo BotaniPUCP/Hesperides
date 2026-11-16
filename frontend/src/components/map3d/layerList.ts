@@ -2,9 +2,13 @@ import type { LayerId } from './target';
 
 /** Capas que la persona puede encender o apagar, en el orden del panel. */
 /** Las capas del visor, más las perspectivas del catálogo de lugares, que el visor dibuja como conos. */
-export type ToggleId = LayerId | 'perspectives';
+export type ToggleId = LayerId | 'perspectives' | 'incidents';
 
 export const PERSPECTIVES_TOGGLE = 'perspectives';
+/** Incidencias activas, con el color de su plazo (SPEC-201 §3.10). */
+export const INCIDENTS_TOGGLE = 'incidents';
+/** Las que el visor no dibuja como capa propia: las agrega la pantalla encima. */
+export const OVERLAY_TOGGLES: ReadonlySet<string> = new Set([PERSPECTIVES_TOGGLE, INCIDENTS_TOGGLE]);
 
 export interface LayerToggle {
   id: ToggleId;
@@ -28,6 +32,8 @@ export const LAYER_TOGGLES: LayerToggle[] = [
   { id: 'fountains', label: 'Bebederos', initiallyVisible: false },
   { id: 'fauna', label: 'Fauna', initiallyVisible: false },
   { id: 'perspectives', label: 'Perspectivas', initiallyVisible: false },
+  // Los globos ya muestran las incidencias abiertas (SPEC-113); los marcadores por plazo, a pedido.
+  { id: 'incidents', label: 'Incidencias', initiallyVisible: false },
 ];
 
 export function initialVisibility(): Record<string, boolean> {

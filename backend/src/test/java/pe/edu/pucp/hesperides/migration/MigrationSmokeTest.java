@@ -500,8 +500,10 @@ class MigrationSmokeTest {
         // RESERVATION_CONFIRMATION_MINUTES es la enmienda del seguimiento de uso:
         // 20 minutos antes del fin en que ya no se acepta confirmar.
         // Las dos metas del resumen de reportes salen de V051 (SPEC-202 §4).
+        // Los tres plazos de incidencias por urgencia salen de V067 (SPEC-201 §3.9).
         assertThat(codes).containsExactly(
-                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH",
+                "CAMPUS_TOTAL_HECTARES", "INCIDENT_DEADLINE_HIGH_HOURS", "INCIDENT_DEADLINE_LOW_HOURS",
+                "INCIDENT_DEADLINE_MEDIUM_HOURS", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH",
                 "REPORT_COVERAGE_TARGET_PERCENT", "REPORT_IRRIGATION_TARGET_PERCENT",
                 "RESERVATION_CONFIRMATION_MINUTES", "RESERVATION_NEARBY_METERS");
     }
@@ -532,8 +534,9 @@ class MigrationSmokeTest {
         Integer live = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
                 Integer.class);
-        // Tres sembradas por V003, la de cercanía por V039, la de confirmación por V043 y las dos metas de reportes por V051.
-        assertThat(live).isEqualTo(7);
+        // Tres sembradas por V003, la de cercanía por V039, la de confirmación por V043, las dos metas de
+        // reportes por V051 y los tres plazos de incidencias por V067.
+        assertThat(live).isEqualTo(10);
     }
 
     @Test

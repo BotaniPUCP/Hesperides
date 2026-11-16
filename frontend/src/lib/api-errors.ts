@@ -4,6 +4,7 @@ import { isSpanishBackendMessage } from './backendSpanishMessages';
 import { CAMPUS_EVENT_MESSAGES, CAMPUS_EVENT_PATTERNS } from './campusEventErrorMessages';
 import { DIRECTORY_MESSAGES, DIRECTORY_PATTERNS } from './directoryErrorMessages';
 import { IMPORT_PATTERNS } from './importErrorMessages';
+import { INCIDENT_MESSAGES, INCIDENT_PATTERNS } from './incidentErrorMessages';
 import { PLACE_MESSAGES, PLACE_PATTERNS, type MessagePattern } from './placeErrorMessages';
 import { PLANNING_MESSAGES, PLANNING_PATTERNS } from './planningErrorMessages';
 import { RESERVATION_MESSAGES, RESERVATION_PATTERNS } from './reservationErrorMessages';
@@ -87,11 +88,12 @@ const MENSAJES: Record<string, string> = {
   ...PLANNING_MESSAGES,
   ...RESERVATION_MESSAGES,
   ...CAMPUS_EVENT_MESSAGES,
+  ...INCIDENT_MESSAGES,
 };
 
 /** Los mensajes que traen un dato no caben en un diccionario de textos exactos. */
 const PATRONES: readonly MessagePattern[] = [...PLACE_PATTERNS, ...SHARED_PATTERNS, ...DIRECTORY_PATTERNS, ...IMPORT_PATTERNS,
-  ...PLANNING_PATTERNS, ...RESERVATION_PATTERNS, ...CAMPUS_EVENT_PATTERNS];
+  ...PLANNING_PATTERNS, ...RESERVATION_PATTERNS, ...CAMPUS_EVENT_PATTERNS, ...INCIDENT_PATTERNS];
 
 /** La traducción de un mensaje conocido del backend; null si no se conoce. */
 export function traducirConocido(message: string, patrones: readonly MessagePattern[] = PATRONES): string | null {

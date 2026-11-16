@@ -102,10 +102,10 @@ class ReportsWeeklyIntegrationTest extends ReportsIntegrationSupport {
 
     @Test
     void incidentsAreLocatedByCoordinatesOrByTeamAndTakenAtTheCutoff() throws Exception {
-        long byPoint = fx.incident(coordinator, null, "OPEN", "2026-10-29T10:00:00-05:00", -12.0, lon);
-        long byTeam = fx.incident(coordinator, team, "OPEN", "2026-10-30T10:00:00-05:00", null, null);
-        long resolved = fx.incident(coordinator, team, "OPEN", "2026-10-20T10:00:00-05:00", null, null);
-        fx.changeStatus(resolved, "RESOLVED", "2026-10-27T10:00:00-05:00", coordinator);
+        long byPoint = fx.incident(coordinator, null, "REPORTED", "2026-10-29T10:00:00-05:00", -12.0, lon);
+        long byTeam = fx.incident(coordinator, team, "REPORTED", "2026-10-30T10:00:00-05:00", null, null);
+        long resolved = fx.incident(coordinator, team, "REPORTED", "2026-10-20T10:00:00-05:00", null, null);
+        fx.changeStatus(resolved, "CLOSED", "2026-10-27T10:00:00-05:00", coordinator);
 
         week("2026-10-26", coordinator).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.incidents.asOf").value("2026-11-01"))

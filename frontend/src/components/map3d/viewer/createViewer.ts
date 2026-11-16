@@ -22,6 +22,7 @@ import { createTextures } from './textures';
 import { createVegetationLayer } from './vegetation';
 import { WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { createViewCones } from './viewCones';
+import { createIncidentMarkers } from './incidentMarkers';
 import { sectionPoints, specimenPoints } from './frameFit';
 import { sectionCodesInScreenRect, specimenCodesInScreenRect } from './screenRectSections';
 import type { Viewer, ViewerCallbacks, ViewerStart } from './viewerTypes';
@@ -109,6 +110,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     onPick: (b) => cb.onBalloonPick?.(b),
     onGroup: (points) => rig.focusPoints(points),
   }) : null;
+  const incidents = createIncidentMarkers(scene);
   const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta, model?.huaca);
   /** Cada clase de etiqueta se apaga con su capa; la de la huaca, solo con el botón de etiquetas. */
   const labelVisible = (kind: LabelKind) => {
@@ -164,6 +166,8 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     ...(sweep ? { sweep } : {}),
     onPress: () => { rig.cancelFlight(); rig.controls.autoRotate = false; },
     onClick(x, y) {
+      const incident = cb.onIncidentPick ? incidents.hitTest(x, y, dom, rig.camera) : null;
+      if (incident !== null) { cb.onIncidentPick?.(incident); return; }
       const cone = cb.onViewConePick ? cones.hitTest(x, y, dom, rig.camera) : null;
       if (cone !== null) { cones.highlight(cone); cb.onViewConePick?.(cone); needsRender = true; return; }
       const hit = pick(x, y, dom, rig.camera, pickables, isHidden);
@@ -307,6 +311,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       cones.set(list.map((c) => { const p = data.plane.toPlane(c.lat, c.lon); return { id: c.id, x: p.x, z: -p.y, headingDeg: c.headingDeg }; }));
       needsRender = true;
     },
+    setIncidentMarkers(list) {
+      incidents.set(list.map((i) => { const p = data.plane.toPlane(i.lat, i.lon); return { id: i.id, x: p.x, z: -p.y, deadlineStatus: i.deadlineStatus }; }));
+      needsRender = true;
+    },
     focusViewCone(id) {
       cones.highlight(id);
       const at = id === null ? null : cones.position(id);
@@ -350,6 +358,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       admin.dispose();
       adminAnchor.dispose();
       cones.dispose();
+      incidents.dispose();
       stage.dispose();
     },
   };

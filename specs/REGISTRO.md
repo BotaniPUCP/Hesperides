@@ -29,7 +29,7 @@
 | SPEC-114 | Calendario del campus: eventos bloqueantes y feriados | 🔄 En progreso: spec aprobada e implementada en backend y web el 15 nov 2026 (`feature/spec-114-calendario-campus`, V064); falta verificar en navegador real | Jean Piero | —      |              |
 | SPEC-115 | Maquinaria de corte solo en sábados, domingos y feriados | 🔄 En progreso: spec aprobada e implementada el 16 nov 2026 (`feature/spec-115-maquinaria-de-corte`, V065); falta verificar en navegador real | Jean Piero | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: §2.12 reemplaza el flujo por lugares con mapa único, áreas de todo el campus y ejemplares seleccionables. V050 (antes V036) conserva datos y contratos anteriores. Pendientes revisión visual, R5 y R6; la selección fina de ejemplares se refinará posteriormente. | — | S2 (propuesto) | |
-| SPEC-201 | Incidencias y atención web | 👀 En revisión | —          | —      |              |
+| SPEC-201 | Incidencias de áreas verdes (rediseño del 15 nov 2026) | 🔄 En progreso: spec aprobado, implementación en `feature/spec-201-incidencias-rediseno` | —          | —      |              |
 | SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 2 (Semanal, Mensual y Resumen para OSG con gráficos y datos de demostración); falta verificar en navegador real por rol | —          | S4     |              |
 | SPEC-203 | Planificación preventiva por conjuntos de áreas verdes | 🔄 En progreso: implementada, falta verificar en navegador | —          | —      |              |
 
@@ -39,11 +39,9 @@
 
 ## Enmiendas a specs cerrados
 
-SPEC-201 ajusta SPEC-001 Anexo A (aprobación exclusiva de coordinación y resolución
-por capataz), SPEC-002 §4.8 (captura mínima, ubicación opcional, 1:N intervenciones)
-y SPEC-C01 (estados). La ampliación de noviembre usa la matriz OSG entregada:
-severidad/impactos separados, catálogo de causas y servicios, acciones requeridas,
-numeración propia, comunicación interna y cierre en días hábiles inclusivos. Sin IA.
+SPEC-201 (rediseño del 15 nov 2026) sustituye la versión del 5 nov: vuelve a la definición de
+septiembre (tres estados, modelo propio sin la matriz OSG ni códigos OSG propios) y conserva de
+noviembre solo los vínculos N:M con intervenciones y la robustez técnica. Ver sus §2.6, §2.7 y §6.
 
 Cuando un spec de feature obliga a corregir uno fundacional ya cerrado, la enmienda se aplica al
 archivo original (marcada como cita con su procedencia) y se anota aquí. Nadie debe descubrir por
@@ -53,6 +51,7 @@ sorpresa que un principio fundacional cambió.
 |---|---|---|
 | SPEC-202 D-15, D-08, §2.6 filas 6, 18 y 22, CA-S03 · Catálogo 7.1 | SPEC-113 D-08 (15 nov 2026) | Se elimina el módulo de turnos de riego (`modules/irrigation`, `/riego`, V024): planificación ya maneja el riego. Una sección cuenta como regada si una intervención de clase `RIEGO` completó allí una ubicación. La Semanal cuenta «riegos» en vez de «turnos» (`irrigation.irrigations`). Las secciones por sector para armar conjuntos salen de `GET /green-area-sets/section-options`. V063 borra las tablas |
 | SPEC-109 D-04, D-06, D-10 y D-15 | SPEC-112 (13 nov 2026) | Las caras dejan los patrones de ventanas y los tramos de foto: llevan regiones de material ubicadas en metros, como el McGregor de Modelos 3D. Una cara sin foto no lleva vidrio inventado. «Colores reales» arranca encendido. Salen el atlas y la forma compacta de las fichas |
+| SPEC-000 §1 · SPEC-001 Anexo A (fila 5) · SPEC-002 §4.8 · SPEC-102 · SPEC-200 · SPEC-202 D-06 | SPEC-201, rediseño (15 nov 2026) | Ollama Cloud entra como cuarta excepción a «sin servicios externos» (su caída no impide reportar). El operario vuelve a reportar y ve solo las suyas; los reportes de no coordinadores nacen no activos y coordinación los activa. `intervention_id` único pasa a vínculos N:M que se crean desde ambos módulos; el cierre exige todas las vinculadas `VALIDATED`. El mapa gana la capa de incidencias con color por plazo. Estados `REPORTED`, `IN_PROGRESS`, `CLOSED`; Reportes se ajusta a ellos. Se retiran la matriz OSG, el correlativo `OSG-####` propio y los días hábiles. |
 | SPEC-102 D-03, §4.1, §7.1 y P-02 | SPEC-108 (implementada, 12 nov 2026) | Los edificios del mapa pasan a los modelos del plano oficial (SKP), agrupados según las relaciones de Nicolás y con los nombres y excepciones de Jean Piero. Hay un edificio principal por relación (133), y los 71 edificios del mapa que comparten relación se agrupan bajo él sin borrarse (`parent_building_id`). Los códigos oficiales quedan en `campus_building_codes`. El modelo lo sirve el backend con sesión. Se conservan el acabado y las luces de hoy. Patios vacíos, desniveles visibles, huaca con textura de tapial y etiquetas recortadas por ancho. **La atribución a OpenStreetMap se queda.** El Pabellón C no entra. Ya aplicado a SPEC-102 (D-03, §4.1, §7.1 y P-02). |
 | SPEC-106 §9.4 · SPEC-102 §4.3 · Catálogo 1.12 · SPEC-001 Anexo A · SPEC-004 §3.2 | SPEC-107 (11 nov 2026) | Las reservas de jardines usan el Directorio: guardan quién las pide (organización y solicitante, fijos), para quién son (opcional) y un responsable que puede cambiar, con su historial; el operario ve todo eso (antes el calendario de la OSG se importaba sin nombres ni teléfonos). El vínculo contacto–organización gana un rol opcional y `contactos.csv` la columna `roles` (SPEC-106 §4.3). Enmienda del seguimiento de uso (SPEC-107 D-12): `use_confirmed` y `space_used` con sus historiales y el parámetro `RESERVATION_CONFIRMATION_MINUTES` — el corte de 20 minutos antes del fin cierra la confirmación y también la marca de uso (V044) —, y dos acciones auditables más. El préstamo queda cubierto por un módulo propio; los eventos bloqueantes y la recuperación posterior siguen pendientes. Se añaden la fila de permisos de reservas y siete acciones auditables. |
 | SPEC-101 · SPEC-001 Anexo A (1.7) · SPEC-202 · SPEC-C01 §3.1 | SPEC-203 (8 nov 2026) | Las frecuencias pasan de juzgar hacia atrás a planificar por conjuntos guardados de jardines. El alcance `BY_ZONE`/`BY_SECTOR` se convierte en `BY_SET`; desaparece «Teórico»; el rango se lee como lo normal (`EARLY` reemplaza a `WITHIN_TOLERANCE`); la pantalla se mueve a Intervenciones y solo la usan ADMIN y COORDINADOR. |
@@ -239,6 +238,7 @@ no demuestra que se aplicó en una base concreta: eso se comprueba en `flyway_sc
 | V064 | `V064__create_campus_events.sql` | SPEC-114 | Catálogo `CAMPUS_EVENT_TYPE` (bloqueante, feriado) y la tabla `campus_events`, que guarda la regla de cada evento |
 | V065 | `V065__intervention_cutting_machinery.sql` | SPEC-115 | `interventions.uses_cutting_machinery` y la sugerencia `suggestsCuttingMachinery` en el metadata de las cuatro podas |
 | V066 | `V066__xerophytic_areas_replace_their_gardens.sql` | SPEC-102 §4.3 | Pedido de Jean Piero (15 nov 2026): las áreas xerofíticas reemplazan a los ocho jardines que repetían su polígono y heredan sus datos. Nació como V063 y se renumeró al integrarse después de la V065 |
+| V067 | `V067__redesign_incidents.sql` | SPEC-201 (rediseño) | Tres estados (Reportada/En proceso/Cerrada) con historial convertido; activación y cierre; retira la matriz OSG (tablas, columnas y catálogos con sus textos) y los trabajos internos; código `INC-AAAA-NNNN` con contador anual; «Pedido de»/«Para», tercero del Directorio, clase de altura, plazo congelado y prellenado; `INCIDENT_CLASS` y tipos provisionales; plazos 24/48/72 h. Nació en `feature/spec-201-incidencias-rediseno`: renumerar al integrar si otra rama tomó V052 Nació como V052 y se renumeró al integrarse después de la V066 |
 ### Pendientes (sin número reservado)
 
 Al 12 nov 2026, en la rama de integración `integra/12-noviembre`, el siguiente número libre es **V052**, sujeto a

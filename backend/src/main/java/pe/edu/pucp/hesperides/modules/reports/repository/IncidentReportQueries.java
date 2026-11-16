@@ -12,8 +12,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 /**
- * Incidents in the reports (SPEC-202 D-06). V026 does not tie an incident to a
- * section, so the monthly report only filters them by team (§3.6).
+ * Incidents in the reports (SPEC-202 D-06), with the three states of the SPEC-201 redesign.
+ * The monthly report only filters them by team (§3.6).
  */
 @Repository
 @RequiredArgsConstructor
@@ -39,20 +39,24 @@ public class IncidentReportQueries {
                  then cs.code end)
         """;
 
+    /** SPEC-201 (rediseño): «por activar» es Reportada sin activar antes del corte. */
+    static final String ACTIVE_AT_CUTOFF = "(i.activated_at is not null and i.activated_at < :cutoffEnd)";
+
     /**
      * Counts by status at the cutoff, plus the incidents registered and resolved
      * in the period. Incidents registered after the cutoff do not exist yet.
      */
     public MonthlyCounters monthlyCounters(ReportFilter f, LocalDate cutoff) {
         var params = ReportSql.periodParams(f).addValue("cutoffEnd", endOf(cutoff, f));
-        String sql = "with scoped as (select i.created_at, i.resolved_at, " + STATUS_AT_CUTOFF + " status_code"
+        String sql = "with scoped as (select i.created_at, i.closed_at, " + ACTIVE_AT_CUTOFF + " active_at_cutoff, "
+                + STATUS_AT_CUTOFF + " status_code"
                 + " from incidents i join catalog_items cs on cs.id=i.status_item_id"
                 + " where i.deleted_at is null and i.created_at < :cutoffEnd" + scopeFilters(f, params) + ")"
-                + " select count(*) filter (where status_code='PENDING_APPROVAL') pending_approval,"
-                + " count(*) filter (where status_code='OPEN') open_count,"
+                + " select count(*) filter (where status_code='REPORTED' and not active_at_cutoff) pending_approval,"
+                + " count(*) filter (where status_code='REPORTED' and active_at_cutoff) open_count,"
                 + " count(*) filter (where status_code='IN_PROGRESS') in_progress,"
                 + " count(*) filter (where (created_at at time zone :tz)::date between :from and :to) reported,"
-                + " count(*) filter (where (resolved_at at time zone :tz)::date between :from and :to) resolved"
+                + " count(*) filter (where (closed_at at time zone :tz)::date between :from and :to) resolved"
                 + " from scoped";
         return jdbc.queryForObject(sql, params, (rs, n) -> new MonthlyCounters(
                 rs.getLong("pending_approval"), rs.getLong("open_count"), rs.getLong("in_progress"),
@@ -63,8 +67,8 @@ public class IncidentReportQueries {
     public long resolvedIn(DateRange period, ZoneId zone) {
         Long count = jdbc.queryForObject("""
             select count(*) from incidents i
-            where i.deleted_at is null and i.resolved_at is not null
-              and (i.resolved_at at time zone :tz)::date between :from and :to
+            where i.deleted_at is null and i.closed_at is not null
+              and (i.closed_at at time zone :tz)::date between :from and :to
             """, new MapSqlParameterSource().addValue("tz", zone.getId())
                 .addValue("from", period.from()).addValue("to", period.to()), Long.class);
         return count == null ? 0 : count;

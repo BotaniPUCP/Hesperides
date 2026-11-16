@@ -28,7 +28,7 @@ export function LegacyInterventionForm({ initial, fromIncident = null, returnFil
   const source = useRequest(origin ? `intervention-origin:${user?.id}:${origin}` : null, () => incidentsApi.detail(origin!));
   const [dirty,setDirty] = useState(false);
   const guard = useUnsavedChangesGuard(dirty);
-  const sourceAvailable = !origin || (user?.role.code === 'COORDINADOR' && source.data?.incident.approvedAt != null && source.data.incident.resolvedAt === null);
+  const sourceAvailable = !origin || (user?.role.code === 'COORDINADOR' && !!source.data?.incident.active && source.data.incident.closedAt === null);
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? null);
@@ -104,7 +104,7 @@ export function LegacyInterventionForm({ initial, fromIncident = null, returnFil
   <form className="surface-card space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
     {guard.dialog}
     {origin && <Link href={incidentAfterCreationHref(origin,null,returnFilters)} className="text-brand-600 underline">Volver a la incidencia</Link>}
-    {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.officialCode ?? `incidencia #${origin}`}. Al guardar volverás para confirmar el vínculo; todavía no se crea una asociación.</p>}
+    {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.code ?? `incidencia #${origin}`}. Al guardar volverás para confirmar el vínculo; todavía no se crea una asociación.</p>}
     {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar registrada, abierta y disponible para tu cuenta.'}</p>}
     {error && <p role="alert" className="text-action-danger">{error}</p>}
     {uncertain && <p role="status">No se pudo confirmar el registro. Reintentar enviará exactamente los mismos datos para evitar duplicados. También puedes consultar el listado.</p>}

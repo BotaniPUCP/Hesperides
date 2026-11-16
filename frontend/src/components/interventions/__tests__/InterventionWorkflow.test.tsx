@@ -22,7 +22,7 @@ jest.mock('@/components/ui', () => {
 });
 jest.mock('@/lib/interventions-api', () => ({...jest.requireActual('@/lib/interventions-api'),interventionsApi:{detail:jest.fn(),options:jest.fn(),command:jest.fn(),create:jest.fn(),update:jest.fn(),photo:jest.fn(),announce:jest.fn(),upload:jest.fn(),zoneOptions:jest.fn(),previewZones:jest.fn(),campusOptions:jest.fn(),campusPreview:jest.fn()}}));
 jest.mock('@/lib/inventario-verde-api', () => ({inventarioVerdeApi:{specimen:jest.fn()}}));
-jest.mock('@/lib/incidents-api', () => ({incidentsApi:{detail:jest.fn(),linkIntervention:jest.fn()}}));
+jest.mock('@/lib/incidents-api', () => ({incidentsApi:{detail:jest.fn(),search:jest.fn(async()=>[])}}));
 jest.mock('../InterventionCampusMap',()=>({InterventionCampusMap:({options,selected,onToggle}:{options:typeof campusOptions;selected:Detail['locations'];onToggle:(t:{kind:'area'|'specimen';id:number})=>void})=><div role="group" aria-label="Mapa del campus">{options.zones.map((z,i)=><button type="button" key={z.id} aria-pressed={selected.some(l=>l.zoneId===z.id)} onClick={()=>onToggle({kind:'area',id:z.id})}>{`Area ${i+1}`}</button>)}{options.specimens.map(s=><button type="button" key={s.id} onClick={()=>onToggle({kind:'specimen',id:s.id})}>Elegir ejemplar</button>)}</div>}));
 const campusOptions={selectionRevision:'revision',zones:Array.from({length:7},(_,i)=>({id:101+i,code:`AV-${101+i}`,name:`Area ${i+1}`,geometryValid:true,geometry:{type:'Polygon',coordinates:[]},areaM2:100,point:{latitude:-12,longitude:-77},polygonCount:1})),specimens:[{id:91,code:'EV-91',name:'Palmera',point:{latitude:-12,longitude:-77},typeCode:'PALM',scientificName:'Palma',heightM:5,crownRadiusM:2,quantity:1}]};
 async function selectZones(count=1) {
@@ -268,24 +268,24 @@ it('crea una sola actividad con dos ubicaciones y reintenta con la misma clave t
   expect(calls[0][0].locations[0]).toMatchObject({elementCodes:[],location:null,unitItemId:null,requestedQuantity:null,zoneSelectionRevision:'revision'});
 });
 
-it('crea como hallazgo y vuelve a la incidencia con preselección y filtros, sin vincular silenciosamente',async()=>{
+it('crea como hallazgo vinculada a la incidencia de origen y vuelve a ella con sus filtros (SPEC-201 §3.8)',async()=>{
   jest.mocked(interventionsApi.create).mockResolvedValue(detail());
-  render(<InterventionForm fromIncident={7} returnFilters={{search:'rama',status:'OPEN',page:2}}/>);
+  render(<InterventionForm fromIncident={7} returnFilters={{search:'rama',status:'REPORTED',page:2}}/>);
   await screen.findByRole('group',{name:'Mapa del campus'});
-  expect(screen.getByRole('link',{name:'Volver a la incidencia'})).toHaveAttribute('href','/incidencias/7?search=rama&status=OPEN&page=2');
+  expect(screen.getByRole('link',{name:'Volver a la incidencia'})).toHaveAttribute('href','/incidencias/7?search=rama&status=REPORTED&page=2');
+  expect(await screen.findByText('INC-2026-0007 · Rama en riesgo')).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText(/Clasificación de origen del reporte/),{target:{value:'5'}});
   fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});
   fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
 
   await selectZones();
   fireEvent.click(screen.getByRole('button',{name:'Guardar y volver a la incidencia'}));
-  await waitFor(()=>expect(push).toHaveBeenCalledWith('/incidencias/7?search=rama&status=OPEN&page=2&selectIntervention=10'));
-  expect(jest.mocked(interventionsApi.create).mock.calls[0][0]).toMatchObject({originItemId:4,reportedByItemId:5});
-  expect(incidentsApi.linkIntervention).not.toHaveBeenCalled();
+  await waitFor(()=>expect(push).toHaveBeenCalledWith('/incidencias/7?search=rama&status=REPORTED&page=2'));
+  expect(jest.mocked(interventionsApi.create).mock.calls[0][0]).toMatchObject({originItemId:4,reportedByItemId:5,incidentIds:[7]});
 });
 
-it('no habilita creación contextual si la incidencia no está registrada',async()=>{
-  jest.mocked(incidentsApi.detail).mockResolvedValue({...approvedDetail,incident:{...approvedDetail.incident,approvedAt:null}});
+it('no habilita creación contextual si la incidencia no está activa',async()=>{
+  jest.mocked(incidentsApi.detail).mockResolvedValue({...approvedDetail,incident:{...approvedDetail.incident,active:false,activatedAt:null}});
   render(<InterventionForm fromIncident={7}/>);
   expect(await screen.findByRole('button',{name:'Guardar y volver a la incidencia'})).toBeDisabled();
   expect(interventionsApi.create).not.toHaveBeenCalled();

@@ -248,6 +248,10 @@ CREATE INDEX idx_campus_events_dates ON campus_events (start_date, end_date) WHE
 
 ### 5.6 Días hábiles de incidencias
 
+> **Sin efecto desde el rediseño de incidencias (SPEC-201, integrado el 16 nov 2026):** los plazos de
+> una incidencia corren en horas desde la recepción, sin días hábiles, y `IncidentBusinessCalendar`
+> se retiró. D-07 y CA-08 quedan sin objeto; `CampusHolidays` sigue sirviendo a la regla 5.11 (SPEC-115).
+
 `IncidentBusinessCalendar` deja de leer solo `INCIDENT_HOLIDAYS`: cuenta como no hábiles la unión de
 esa variable y los feriados registrados (D-07).
 

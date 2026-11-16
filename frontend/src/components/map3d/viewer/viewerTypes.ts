@@ -2,6 +2,10 @@ import type { ModeId } from '../modes';
 import type { LayerId, Target } from '../target';
 import type { CameraPose } from './cameraRig';
 import type { ViewCone } from './viewCones';
+import type { DeadlineStatus } from '@shared/types';
+
+/** Una incidencia activa en lat/lon, como llega de la API (SPEC-201 §3.10). */
+export interface IncidentMarker { id: number; lat: number; lon: number; deadlineStatus: DeadlineStatus | null }
 import type { SelectionSweepCallbacks } from './selectionSweep';
 import type { Polygon } from '../sceneData';
 import type { Balloon } from '@shared/types';
@@ -20,6 +24,8 @@ export interface ViewerCallbacks {
   onViewConePick?: (id: number) => void;
   /** Un clic sobre un globo (SPEC-113): la pantalla abre su ficha corta. */
   onBalloonPick?: (balloon: Balloon) => void;
+  /** Un clic sobre el marcador de una incidencia. */
+  onIncidentPick?: (id: number) => void;
 }
 
 /** Cómo nace el visor; lo que no se dice nace como siempre. */
@@ -69,6 +75,7 @@ export interface Viewer {
   flyToPose: (pose: CameraPose) => void;
   /** Los conos de las perspectivas de un lugar; una lista vacía los quita. */
   setViewCones: (cones: ViewCone[]) => void;
+  setIncidentMarkers: (incidents: IncidentMarker[]) => void;
   /** Resalta un cono (o ninguno) y lleva la cámara a él. */
   focusViewCone: (id: number | null) => void;
   /** Lleva la cámara a un punto del campus. */

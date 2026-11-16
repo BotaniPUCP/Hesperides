@@ -18,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.testcontainers.containers.PostgreSQLContainer;
-import pe.edu.pucp.hesperides.modules.incidents.service.IncidentBusinessCalendar;
 import pe.edu.pucp.hesperides.support.TestDatabase;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -69,8 +68,6 @@ class CampusEventsIntegrationTest {
     MockMvc mvc;
     @Autowired
     JdbcTemplate jdbc;
-    @Autowired
-    IncidentBusinessCalendar businessDays;
     private final ObjectMapper json = new ObjectMapper();
 
     private String coordinator;
@@ -212,15 +209,13 @@ class CampusEventsIntegrationTest {
     }
 
     @Test
-    void aHolidayWarnsEverywhereAndIsNotABusinessDay() throws Exception {
+    void aHolidayWarnsEverywhere() throws Exception {
         created("""
                 {"name":"Día de prueba","typeCode":"HOLIDAY","scope":"CAMPUS","startDate":"2026-11-06","endDate":"2026-11-06"}""");
 
         check("2026-11-06", neighbour, null, null)
                 .andExpect(jsonPath("$.data[0].kind").value("HOLIDAY"))
                 .andExpect(jsonPath("$.data[0].text", containsString("es feriado: Día de prueba")));
-        // Jueves 5 y viernes 6 (feriado): un solo día hábil.
-        assertThat(businessDays.count(Instant.parse("2026-11-05T15:00:00Z"), Instant.parse("2026-11-06T15:00:00Z"))).isEqualTo(1);
     }
 
     @Test

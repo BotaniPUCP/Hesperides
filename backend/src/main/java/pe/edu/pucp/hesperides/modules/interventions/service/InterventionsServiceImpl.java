@@ -50,6 +50,7 @@ public class InterventionsServiceImpl implements InterventionsService {
     private final InterventionZoneSelectionsService zoneSelections;
     private final InterventionCampusSelections campusSelections;
     private final pe.edu.pucp.hesperides.modules.incidents.repository.IncidentLinkQueries incidentLinks;
+    private final pe.edu.pucp.hesperides.modules.incidents.service.IncidentLinksService incidentLinking;
 
     private void validate(Object request) {
         if(request==null)throw new ValidationException("Request is required");
@@ -253,6 +254,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         applyHeader(i,r);interventions.saveAndFlush(i);
         applyLocations(i,r.locations(),false);locations.flush();elements.flush();
         event(i,u,"CREATED",null,null,Map.of("planning",snapshot(i)));
+        incidentLinking.linkFromIntervention(i.getId(),r.incidentIds(),u);
         var s=new InterventionSubmission();s.setActorUserId(u.getId());s.setOperation("CREATE");s.setIdempotencyKey(key);
         s.setRequestSha256(hash);s.setInterventionId(i.getId());s.setExpiresAt(Instant.now().plus(24,ChronoUnit.HOURS));
         submissions.saveAndFlush(s);return new Creation(detail(i.getId(),u),false);

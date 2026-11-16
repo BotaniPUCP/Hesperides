@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useAuth } from './useAuth';
 import { useRequest } from './useRequest';
 import { incidentsApi } from '@/lib/incidents-api';
-import { canUseIncidents, managesIncidents } from '@/lib/incidentRoles';
+import { canUseIncidents } from '@/lib/incidentRoles';
 import { incidentFilters, incidentHref, incidentQuery, type IncidentFilters } from '@/lib/incidentNavigation';
 import { rememberListQuery } from '@/lib/listMemory';
 
@@ -34,7 +34,7 @@ export function useIncidents(filters: IncidentFilters) {
   const scope = useIncidentScope();
   const [revision, setRevision] = useState(0);
   const request = useRequest(scope ? JSON.stringify([scope, filters, revision]) : null,
-    () => incidentsApi.list(filters.page, filters.status, filters.search));
+    () => incidentsApi.list(filters.page, filters.status, filters.search, null));
   const reload = useCallback(() => setRevision((v) => v + 1), []);
   return { ...request, reload };
 }
@@ -47,11 +47,11 @@ export function useIncidentOptions() {
   return { ...request, reload };
 }
 
-export function useIncidentSummary() {
-  const { user } = useAuth();
+/** Solo los envíos de la persona, aunque vea más por su cuadrilla (SPEC-201 §3.11). */
+export function useIncidentMine() {
+  const scope = useIncidentScope();
   const [revision, setRevision] = useState(0);
-  const request = useRequest(user && managesIncidents(user.role.code) ? `${user.id}:summary:${revision}` : null,
-    () => incidentsApi.summary());
+  const request = useRequest(scope ? `${scope}:mine:${revision}` : null, () => incidentsApi.mine());
   const reload = useCallback(() => setRevision((v) => v + 1), []);
   return { ...request, reload };
 }

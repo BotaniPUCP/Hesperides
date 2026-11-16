@@ -106,14 +106,17 @@ class BalloonsIntegrationTest {
                  WHERE t.code = ? AND i.code = ?""", Long.class, type, code);
     }
 
-    private long incident(String status, String urgency, Double lat, Double lng) {
+    /** SPEC-201 rediseño: activada = registro oficial; sin activar no va al mapa. */
+    private long incident(String status, String urgency, Double lat, Double lng, boolean activated, Long zoneId) {
         return jdbc.queryForObject("""
-                INSERT INTO incidents (original_description, description, latitude, longitude, status_item_id,
-                    urgency_item_id, reported_by_user_id, client_reference, request_hash, created_at, updated_at)
-                VALUES ('Rama caída', 'Rama caída sobre la vereda', ?, ?, ?, ?, ?, gen_random_uuid(), 'test',
-                    TIMESTAMPTZ '2026-11-01 10:00-05', TIMESTAMPTZ '2026-11-01 10:00-05') RETURNING id""",
-                Long.class, lat, lng, item("INCIDENT_STATUS", status),
-                urgency == null ? null : item("URGENCY_LEVEL", urgency), userId);
+                INSERT INTO incidents (code, title, original_description, description, latitude, longitude, zone_id,
+                    status_item_id, urgency_item_id, reported_by_user_id, requested_by_name, activated_at,
+                    client_reference, request_hash, created_at, updated_at)
+                VALUES ('INC-T-' || substr(md5(random()::text), 1, 10), 'Rama caída', 'Rama caída', 'Rama caída sobre la vereda',
+                    ?, ?, ?, ?, ?, ?, 'Áreas verdes', CASE WHEN ? THEN TIMESTAMPTZ '2026-11-01 11:00-05' END,
+                    gen_random_uuid(), 'test', TIMESTAMPTZ '2026-11-01 10:00-05', TIMESTAMPTZ '2026-11-01 10:00-05') RETURNING id""",
+                Long.class, lat, lng, zoneId, item("INCIDENT_STATUS", status),
+                urgency == null ? null : item("URGENCY_LEVEL", urgency), userId, activated);
     }
 
     private long work(String typeCode, String scheduled) {
@@ -157,23 +160,24 @@ class BalloonsIntegrationTest {
     }
 
     @Test
-    void onlyApprovedOpenIncidentsWithCoordinatesHaveABalloon() throws Exception {
-        long high = incident("OPEN", "HIGH", -12.0, lon);
-        long none = incident("IN_PROGRESS", null, -12.0, lon + 0.01);
-        incident("PENDING_APPROVAL", "HIGH", -12.0, lon);
-        incident("CHANGES_REQUESTED", "HIGH", -12.0, lon);
-        incident("RESOLVED", "HIGH", -12.0, lon);
+    void onlyActiveOpenIncidentsHaveABalloon() throws Exception {
+        long high = incident("REPORTED", "HIGH", -12.0, lon, true, null);
+        long none = incident("IN_PROGRESS", null, -12.0, lon + 0.01, true, null);
+        long onItsZone = incident("REPORTED", "LOW", null, null, true, section);
+        incident("REPORTED", "HIGH", -12.0, lon, false, null);
+        incident("CLOSED", "HIGH", -12.0, lon, true, null);
 
         var balloons = balloonsOf("INCIDENT");
 
         assertThat(balloons).extracting(b -> b.get("id").asString())
-                .containsExactly("INCIDENT:" + high, "INCIDENT:" + none);
+                .containsExactlyInAnyOrder("INCIDENT:" + high, "INCIDENT:" + none, "INCIDENT:" + onItsZone);
         assertThat(balloons.get(0).get("variant").asString()).isEqualTo("HIGH");
         assertThat(balloons.get(0).get("attention").asBoolean()).isTrue();
         assertThat(balloons.get(0).get("card").get("href").asString()).isEqualTo("/incidencias/" + high);
         assertThat(balloons.get(0).get("card").toString()).contains("Abierta", "Hace 3 días");
-        assertThat(balloons.get(1).get("variant").asString()).isEqualTo("NONE");
-        assertThat(balloons.get(1).get("card").toString()).contains("Sin urgencia");
+        assertThat(balloons.get(1).get("variant").asString()).isEqualTo("LOW");
+        assertThat(balloons.get(2).get("variant").asString()).isEqualTo("NONE");
+        assertThat(balloons.get(2).get("card").toString()).contains("Sin urgencia");
     }
 
     @Test

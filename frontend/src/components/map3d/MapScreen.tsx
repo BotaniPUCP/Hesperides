@@ -13,6 +13,7 @@ import { CampusNoticesBanner } from './balloons/CampusNoticesBanner';
 import { useBalloonsOnMap } from './balloons/useBalloonsOnMap';
 import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
 import { LayerToggles } from './LayerToggles';
+import { useIncidentsOnMap } from './incidents/useIncidentsOnMap';
 import { Map3DView } from './Map3DView';
 import { MapAttribution } from './MapAttribution';
 import { MapFallback } from './MapFallback';
@@ -55,6 +56,7 @@ export function MapScreen() {
   const onMap = useCatalogOnMap(data, catalog, s);
   const balloons = useBalloonsOnMap({ viewer: s.viewer, viewerEpoch: s.viewerEpoch, unsupported: s.unsupported,
     cardOpen: s.card !== null, closeCard: s.closeCard });
+  const incidents = useIncidentsOnMap(s.viewer, s.viewerEpoch, s.visible);
   const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
   // Ctrl+Shift+U: movimiento libre de administrador, con un aviso temporal al entrar y al salir.
   useAdminModeToggle(s.viewer, s.viewerEpoch > 0);
@@ -113,6 +115,7 @@ export function MapScreen() {
           onViewConePick={onMap.onConePick}
           onBalloonPick={balloons.pick}
           start={VIEWER_START}
+          onIncidentPick={incidents.onIncidentPick}
           poseMemory={mapScreenPose}
         />
       )}
@@ -168,6 +171,7 @@ export function MapScreen() {
               <BalloonLegend on={balloons.on} balloons={balloons.balloons} unavailableKinds={balloons.unavailableKinds}
                 onToggle={balloons.toggle} />
               <LayerToggles visible={s.visible} onToggle={s.toggleLayer} />
+              {incidents.withoutLocation > 0 && <p className="text-xs text-neutral-700">{incidents.withoutLocation} incidencias activas sin ubicación: revísalas en Incidencias.</p>}
             </div>
           )}
         </aside>

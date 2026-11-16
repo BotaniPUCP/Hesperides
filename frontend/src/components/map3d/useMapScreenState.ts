@@ -5,7 +5,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { mapApi } from '@/lib/map-api';
 import { infoFor, type InfoCard } from './infoCard';
-import { PERSPECTIVES_TOGGLE, type ToggleId } from './layerList';
+import { OVERLAY_TOGGLES, type ToggleId } from './layerList';
 import type { MapCardContent } from './MapInfoCard';
 import { recallMapScreen, rememberMapScreen } from './mapScreenMemory';
 import type { ViewOptions } from './MapToolbar';
@@ -129,7 +129,7 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
   /** Los conos de «Perspectivas» los pone quien tiene el catálogo, al ver este estado. */
   const toggleLayer = (id: ToggleId, on: boolean) => {
     setVisible((v) => ({ ...v, [id]: on }));
-    if (id !== PERSPECTIVES_TOGGLE) viewer.current?.setLayerVisible(id as LayerId, on);
+    if (!OVERLAY_TOGGLES.has(id)) viewer.current?.setLayerVisible(id as LayerId, on);
   };
 
   const showCard = (content: MapCardContent) => {
