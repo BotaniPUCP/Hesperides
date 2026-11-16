@@ -8,6 +8,11 @@ import { WORLD_LIFT } from './polyLayer';
  * árbol o el suelo. Se recalcula al soltar las teclas de vuelo, al terminar de mirar o de
  * desplazar, y justo antes de cada zoom; así el zoom acerca a lo que se mira y no a un
  * punto que quedó fijo atrás.
+ *
+ * El anclaje queda siempre sobre el rayo del centro, a la distancia de lo que se cruza: re-anclar
+ * nunca gira la vista. Antes se tomaba el punto que devolvía three.js, y en una línea (un borde)
+ * ese punto puede estar hasta un metro al costado del rayo: con la cámara pegada a un borde, la
+ * vista saltaba a mirar arriba o abajo (grabación del 16 nov 2026, giros de 100 a 180° en un cuadro).
  */
 
 /** Más lejos que esto no se ancla: mirando al horizonte el anclaje queda donde estaba. */
@@ -16,15 +21,16 @@ export const ADMIN_ANCHOR_MAX_M = 3000;
 const CENTER = new THREE.Vector2(0, 0);
 const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), -WORLD_LIFT);
 
-export interface AnchorHit {
-  distance: number;
-  point: THREE.Vector3;
-}
-
-/** Lo primero visible al frente; sin eso, el suelo; sin nada cerca, ninguno. */
-export function chooseAnchor(hits: readonly AnchorHit[], groundHit: THREE.Vector3 | null): THREE.Vector3 | null {
-  const first = hits.find((h) => h.distance <= ADMIN_ANCHOR_MAX_M);
-  return first ? first.point : groundHit;
+/**
+ * A qué distancia sobre el rayo del centro se ancla: lo primero que se ve al frente; sin eso, el
+ * suelo; sin nada, ninguno. Lo que está a menos de `nearest` (el plano cercano de la cámara) no se
+ * dibuja, así que no cuenta: se ancla en lo que se ve detrás.
+ */
+export function chooseAnchorDistance(hits: readonly { distance: number }[], groundDistance: number | null, nearest: number): number | null {
+  const counts = (d: number) => d >= nearest && d <= ADMIN_ANCHOR_MAX_M;
+  const first = hits.find((h) => counts(h.distance));
+  if (first) return first.distance;
+  return groundDistance !== null && counts(groundDistance) ? groundDistance : null;
 }
 
 const shown = (o: THREE.Object3D | null): boolean => !o || (o.visible && shown(o.parent));
@@ -50,10 +56,10 @@ export function attachAdminAnchor(
     raycaster.setFromCamera(CENTER, camera);
     const hits = raycaster.intersectObjects(scene.children, true).filter((h) => shown(h.object));
     const onGround = raycaster.ray.intersectPlane(ground, groundHit);
-    const near = onGround && onGround.distanceTo(camera.position) <= ADMIN_ANCHOR_MAX_M ? onGround : null;
-    const anchor = chooseAnchor(hits, near);
-    if (anchor) {
-      target.copy(anchor);
+    const nearest = camera instanceof THREE.PerspectiveCamera ? camera.near : 0;
+    const distance = chooseAnchorDistance(hits, onGround ? onGround.distanceTo(raycaster.ray.origin) : null, nearest);
+    if (distance !== null) {
+      raycaster.ray.at(distance, target);
       onChange();
     }
   }
