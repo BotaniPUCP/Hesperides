@@ -9,9 +9,11 @@ import pe.edu.pucp.hesperides.engine.balloons.GeoPoint;
 import pe.edu.pucp.hesperides.engine.balloons.MiniGroups;
 import pe.edu.pucp.hesperides.modules.balloons.dto.BalloonDtos.BalloonResponse;
 import pe.edu.pucp.hesperides.modules.balloons.dto.BalloonDtos.BalloonsResponse;
+import pe.edu.pucp.hesperides.modules.balloons.dto.BalloonDtos.CampusNotice;
 import pe.edu.pucp.hesperides.modules.balloons.repository.SectorLocator;
 import pe.edu.pucp.hesperides.modules.balloons.source.BalloonDraft;
 import pe.edu.pucp.hesperides.modules.balloons.source.BalloonSource;
+import pe.edu.pucp.hesperides.modules.balloons.source.CampusNoticeSource;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -34,17 +36,21 @@ public class BalloonsService {
     }
 
     private final List<BalloonSource> sources;
+    private final List<CampusNoticeSource> notices;
     private final SectorLocator sectors;
     private final Clock clock;
     private final int maxBalloons;
 
     @Autowired
-    public BalloonsService(List<BalloonSource> sources, SectorLocator sectors, Clock clock) {
-        this(sources, sectors, clock, MAX_BALLOONS);
+    public BalloonsService(List<BalloonSource> sources, List<CampusNoticeSource> notices, SectorLocator sectors,
+                           Clock clock) {
+        this(sources, notices, sectors, clock, MAX_BALLOONS);
     }
 
-    public BalloonsService(List<BalloonSource> sources, SectorLocator sectors, Clock clock, int maxBalloons) {
+    public BalloonsService(List<BalloonSource> sources, List<CampusNoticeSource> notices, SectorLocator sectors,
+                           Clock clock, int maxBalloons) {
         this.sources = List.copyOf(sources);
+        this.notices = List.copyOf(notices);
         this.sectors = sectors;
         this.clock = clock;
         this.maxBalloons = maxBalloons;
@@ -70,7 +76,20 @@ public class BalloonsService {
         for (int i = 0; i < kept.size(); i++) {
             balloons.add(response(kept.get(i), sectorIds.get(i)));
         }
-        return new BalloonsResponse(clock.instant(), balloons, unavailable, truncated);
+        return new BalloonsResponse(clock.instant(), balloons, unavailable, truncated, campusNotices());
+    }
+
+    /** Una fuente de avisos que falla no tumba los globos: la franja sale sin sus avisos. */
+    private List<CampusNotice> campusNotices() {
+        List<CampusNotice> all = new ArrayList<>();
+        for (CampusNoticeSource source : notices) {
+            try {
+                all.addAll(source.notices());
+            } catch (RuntimeException e) {
+                log.warn("Fuente de avisos del campus no disponible", e);
+            }
+        }
+        return all;
     }
 
     private static List<Pinned> pin(BalloonDraft draft) {

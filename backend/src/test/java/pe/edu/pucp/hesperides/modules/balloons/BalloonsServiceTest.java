@@ -40,7 +40,7 @@ class BalloonsServiceTest {
     }
 
     private BalloonsService service(List<BalloonSource> sources, int max) {
-        return new BalloonsService(sources, sectors, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), max);
+        return new BalloonsService(sources, List.of(), sectors, Clock.fixed(Instant.EPOCH, ZoneOffset.UTC), max);
     }
 
     private static BalloonSource source(BalloonKind kind, BalloonDraft... drafts) {
