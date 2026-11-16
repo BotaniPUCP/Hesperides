@@ -218,6 +218,12 @@ están dispersos, se parte en minigrupos:
 - `FAR_DISTANCE_M = 700` m (`viewer/balloons.ts`): la distancia a la que dejan de verse los nombres de
   jardín. Se ajusta al verificar en el navegador.
 - Tocar un grupo acerca la cámara hasta encuadrar a sus miembros (`focusPoints`).
+- **Abanico** (pedido del usuario, 16 nov 2026): un grupo cuyos globos están en el mismo sitio
+  (`SAME_SPOT_M = 3` m entre sí) nunca se separaría al acercarse; se abre en círculo alrededor de su
+  punto y cada globo se ve y se toca suelto. Desde `BALLOON_GROW_FROM_M = 350` m se abren todos los
+  que se pisan.
+- **Tamaño al acercarse** (mismo pedido): hasta 350 m el globo mide 40 × 41 px; más cerca crece con el
+  mapa, hasta el doble (`BALLOON_MAX_SCALE = 2`), para no verse cada vez más chico frente a los jardines.
 
 ### 5.5 Orden y prioridad
 
