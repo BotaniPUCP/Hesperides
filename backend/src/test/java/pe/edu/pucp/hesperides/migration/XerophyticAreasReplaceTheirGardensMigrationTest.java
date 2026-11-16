@@ -24,8 +24,8 @@ import static org.assertj.core.api.Assertions.within;
 @Testcontainers
 class XerophyticAreasReplaceTheirGardensMigrationTest {
 
-    private static final String PREVIOUS_VERSION = "62";
-    private static final String REPLACE_VERSION = "63";
+    private static final String PREVIOUS_VERSION = "65";
+    private static final String REPLACE_VERSION = "66";
     /** Cada xerofítica que se queda, con el jardín del que hereda. */
     private static final Map<String, String> HEIRS = Map.of(
             "XE-0001", "AV-0248", "XE-0002", "AV-0253", "XE-0003", "AV-0264", "XE-0004", "AV-0287",

@@ -31,7 +31,7 @@ BEGIN
         OR (r.inherits AND ST_Area(ST_SymDifference(o.boundary, n.boundary)::geography) >= 0.01)
         OR (NOT r.inherits AND ST_Area(ST_Difference(o.boundary, n.boundary)::geography) >= 0.01);
     IF broken IS NOT NULL THEN
-        RAISE EXCEPTION 'V063: estos pares ya no son el mismo polígono (o el de adentro ya no cae dentro): %. Revisar antes de reemplazar.', broken;
+        RAISE EXCEPTION 'V066: estos pares ya no son el mismo polígono (o el de adentro ya no cae dentro): %. Revisar antes de reemplazar.', broken;
     END IF;
 END $$;
 
