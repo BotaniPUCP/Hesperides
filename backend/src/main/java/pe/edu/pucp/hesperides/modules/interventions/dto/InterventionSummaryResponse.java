@@ -21,6 +21,8 @@ public class InterventionSummaryResponse {
     private Long teamId;
     private Long assignedToUserId;
     private LocalDate scheduledDate;
+    /** SPEC-115. */
+    private boolean usesCuttingMachinery;
     private Instant startedAt;
     private Instant completedAt;
     private Instant validatedAt;

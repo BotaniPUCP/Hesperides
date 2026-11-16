@@ -168,6 +168,42 @@ class InterventionsIntegrationTest {
         mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isOk());
         assertThat(jdbc.queryForObject("select details->>'previousDate' from intervention_events where action_code='REPROGRAMMED' and intervention_id=?",String.class,id)).isEqualTo(java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
     }
+    /** SPEC-115: el próximo día de la semana pedido, desde mañana. */
+    static java.time.LocalDate next(java.time.DayOfWeek day) {
+        var d=java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).plusDays(1);
+        while(d.getDayOfWeek()!=day)d=d.plusDays(1);
+        return d;
+    }
+    @Test void cuttingMachineryOnlyOnSaturdaysSundaysOrHolidays() throws Exception {
+        var tuesday=next(java.time.DayOfWeek.TUESDAY);
+        var body=plan();body.put("scheduledDate",tuesday.toString());body.put("usesCuttingMachinery",true);
+        var error=json.readTree(mvc.perform(post("/api/v1/interventions").header("Idempotency-Key",UUID.randomUUID().toString()).contentType("application/json").content(json.writeValueAsString(body)))
+            .andExpect(status().isUnprocessableEntity()).andReturn().getResponse().getContentAsString());
+        assertThat(error.get("message").asString()).isEqualTo("Cutting machinery can only be scheduled on Saturdays, Sundays or holidays");
+        body.put("usesCuttingMachinery",false);
+        assertThat(create(body,UUID.randomUUID().toString(),201).get("usesCuttingMachinery").asBoolean()).isFalse();
+        body=plan();body.put("scheduledDate",next(java.time.DayOfWeek.SATURDAY).toString());body.put("usesCuttingMachinery",true);
+        assertThat(create(body,UUID.randomUUID().toString(),201).get("usesCuttingMachinery").asBoolean()).isTrue();
+        jdbc.update("""
+            insert into campus_events(name,type_item_id,scope,start_date,end_date,created_by_user_id)
+            values ('Feriado de prueba',(select i.id from catalog_items i join catalog_types t on t.id=i.catalog_type_id
+              where t.code='CAMPUS_EVENT_TYPE' and i.code='HOLIDAY'),'CAMPUS',?,?,?)""",tuesday,tuesday,planner);
+        body=plan();body.put("scheduledDate",tuesday.toString());body.put("usesCuttingMachinery",true);
+        create(body,UUID.randomUUID().toString(),201);
+        jdbc.update("update campus_events set deleted_at=current_timestamp where name='Feriado de prueba'");
+    }
+    @Test void anOldInvalidDateOnlyMattersWhenTheDateOrTheMarkChanges() throws Exception {
+        var body=plan();body.put("scheduledDate",next(java.time.DayOfWeek.WEDNESDAY).toString());
+        long id=create(body,UUID.randomUUID().toString(),201).get("id").asLong();
+        jdbc.update("update interventions set uses_cutting_machinery=true where id=?",id);
+        var refs=jdbc.queryForList("select id from intervention_locations where intervention_id=? order by id",id);
+        @SuppressWarnings("unchecked") var locations=(List<Map<String,Object>>)body.get("locations");
+        for(int i=0;i<3;i++)locations.get(i).put("id",refs.get(i).get("id"));
+        body.put("version",0);body.put("usesCuttingMachinery",true);body.put("description","Solo cambia la descripción");
+        mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isOk());
+        body.put("version",1);body.put("scheduledDate",next(java.time.DayOfWeek.THURSDAY).toString());body.put("rescheduleReason","Otra fecha");
+        mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isUnprocessableEntity());
+    }
     @Test void corsAllowsIdempotencyHeader() throws Exception {
         mvc.perform(options("/api/v1/interventions").header("Origin","http://localhost:3000").header("Access-Control-Request-Method","POST").header("Access-Control-Request-Headers","Content-Type,Idempotency-Key"))
             .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Headers",org.hamcrest.Matchers.containsString("Idempotency-Key")));

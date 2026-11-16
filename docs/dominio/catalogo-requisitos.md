@@ -457,7 +457,7 @@ llenan los capataces con ayuda de las ingenieras de la sección o del propio pre
 | 5.8 | Marca de origen Centuria | Baja ⬇️ | 1 | D1 | ✅ | 0% | **Reformulado:** una marca de que la solicitud llegó por Centuria. Ver nota |
 | 5.9 | Distinguir hallazgo de mantenimiento rutinario | Media | 2 | D7 | ✅ | 0% | El Excel ya lo distingue |
 | 5.10 | Avisar a la unidad solicitante al cerrar | Media | 2 | D7 | ⏭️ | 0% | Las unidades no son usuarias y su canal es Centuria |
-| **5.11** | **Maquinaria de corte solo en sábados, domingos y feriados** | Media | 2 | D7 | ✅ | 0% | 🆕 Ver nota |
+| **5.11** | **Maquinaria de corte solo en sábados, domingos y feriados** | Media | 2 | D7 | ✅ | 90% | 🆕 SPEC-115 (16 nov 2026): casilla en la intervención, sugerida por el tipo; impide guardar fuera de sábado, domingo o feriado del calendario. Falta validar con el cliente la lista de tipos que la sugieren. Ver nota |
 
 ### Sobre 5.1 — la urgencia depende de dónde está el problema
 
