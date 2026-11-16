@@ -2,6 +2,10 @@ import type { ModeId } from '../modes';
 import type { LayerId, Target } from '../target';
 import type { CameraPose } from './cameraRig';
 import type { ViewCone } from './viewCones';
+import type { DeadlineStatus } from '@shared/types';
+
+/** Una incidencia activa en lat/lon, como llega de la API (SPEC-201 §3.10). */
+export interface IncidentMarker { id: number; lat: number; lon: number; deadlineStatus: DeadlineStatus | null }
 import type { SelectionSweepCallbacks } from './selectionSweep';
 import type { Polygon } from '../sceneData';
 
@@ -17,6 +21,8 @@ export interface ViewerCallbacks {
   onCompass: (degrees: number) => void;
   /** Un clic sobre el cono de una perspectiva. */
   onViewConePick?: (id: number) => void;
+  /** Un clic sobre el marcador de una incidencia. */
+  onIncidentPick?: (id: number) => void;
 }
 
 /** Las operaciones que la interfaz React ordena al visor. */
@@ -58,6 +64,7 @@ export interface Viewer {
   flyToPose: (pose: CameraPose) => void;
   /** Los conos de las perspectivas de un lugar; una lista vacía los quita. */
   setViewCones: (cones: ViewCone[]) => void;
+  setIncidentMarkers: (incidents: IncidentMarker[]) => void;
   /** Resalta un cono (o ninguno) y lleva la cámara a él. */
   focusViewCone: (id: number | null) => void;
   /** Lleva la cámara a un punto del campus. */

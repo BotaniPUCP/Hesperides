@@ -9,6 +9,7 @@ import { useMapLayers } from '@/hooks/useMapLayers';
 import { usePlanModel } from '@/hooks/usePlanModel';
 import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
 import { LayerToggles } from './LayerToggles';
+import { useIncidentsOnMap } from './incidents/useIncidentsOnMap';
 import { Map3DView } from './Map3DView';
 import { MapAttribution } from './MapAttribution';
 import { MapFallback } from './MapFallback';
@@ -44,6 +45,7 @@ export function MapScreen() {
   // solo cuando un visor quedó listo (hay WebGL): sin WebGL se ven las listas y el modelo no sirve.
   const plan = usePlanModel(data?.plane ?? null, s.viewerEpoch > 0);
   const onMap = useCatalogOnMap(data, catalog, s);
+  const incidents = useIncidentsOnMap(s.viewer, s.viewerEpoch, s.visible);
   const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
   const root = useRef<HTMLDivElement>(null);
   const focusedParamRef = useRef<string | null>(null);
@@ -98,6 +100,7 @@ export function MapScreen() {
           onHover={() => undefined}
           onCompass={s.onCompass}
           onViewConePick={onMap.onConePick}
+          onIncidentPick={incidents.onIncidentPick}
           poseMemory={mapScreenPose}
         />
       )}
@@ -150,6 +153,7 @@ export function MapScreen() {
             <div className="mt-2 max-h-[60vh] space-y-4 overflow-y-auto rounded-lg border border-neutral-200 bg-neutral-0/95 p-3 shadow-lg">
               <ModeLegend mode={s.mode} hidden={s.hidden} onModeChange={s.setMode} onToggleCategory={s.toggleCategory} />
               <LayerToggles visible={s.visible} onToggle={s.toggleLayer} />
+              {incidents.withoutLocation > 0 && <p className="text-xs text-neutral-700">{incidents.withoutLocation} incidencias activas sin ubicación: revísalas en Incidencias.</p>}
             </div>
           )}
         </aside>

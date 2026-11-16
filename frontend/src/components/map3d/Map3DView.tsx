@@ -58,6 +58,7 @@ export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemo
           } } : {}),
           // Solo si la pantalla lo pide: en los editores un clic sobre un cono debe marcar un punto.
           ...(latest.current.onViewConePick ? { onViewConePick: (id: number) => latest.current.onViewConePick?.(id) } : {}),
+          ...(latest.current.onIncidentPick ? { onIncidentPick: (id: number) => latest.current.onIncidentPick?.(id) } : {}),
         }, latest.current.poseMemory?.recall(), model);
         latest.current.onReady(viewer);
       })
