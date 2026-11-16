@@ -1,5 +1,8 @@
 import type { Balloon } from '@shared/types';
-import { attentionDot, balloonIcon, balloonLabel, groupBySector, mergeOverlapping } from '../balloons/balloonClusters';
+import {
+  attentionDot, BALLOON_GROW_FROM_M, BALLOON_MAX_SCALE, balloonIcon, balloonLabel, balloonScale, fanOut, groupBySector,
+  mergeOverlapping, sameSpot,
+} from '../balloons/balloonClusters';
 
 const balloon = (id: string, over: Partial<Balloon> = {}): Balloon => ({
   id, kind: 'INTERVENTION', variant: null, attention: false, latitude: -12, longitude: -77, sectorId: 1, memberCount: 1,
@@ -57,5 +60,30 @@ describe('el punto del grupo es la atención más urgente que contiene (CA-08)',
     expect(attentionDot([balloon('r'), balloon('i', { kind: 'INCIDENT', variant: 'HIGH', attention: true })])).toBe('#E53935');
     expect(attentionDot([balloon('s', { kind: 'INCIDENT', variant: 'NONE', attention: true })])).toBe('#FFFFFF');
     expect(attentionDot([balloon('r')])).toBeNull();
+  });
+});
+
+describe('acercarse: el globo deja de achicarse y los del mismo sitio se abren', () => {
+  it('lejos conserva su tamaño; cerca crece con el mapa hasta el tope', () => {
+    expect(balloonScale(BALLOON_GROW_FROM_M * 3)).toBe(1);
+    expect(balloonScale(BALLOON_GROW_FROM_M)).toBe(1);
+    expect(balloonScale(BALLOON_GROW_FROM_M / 1.5)).toBeCloseTo(1.5);
+    expect(balloonScale(1)).toBe(BALLOON_MAX_SCALE);
+  });
+
+  it('los que comparten sitio se reparten en círculo alrededor del centro, sin pisarse', () => {
+    const spots = fanOut({ x: 100, y: 100 }, 3, 40);
+    expect(spots).toHaveLength(3);
+    for (const s of spots) expect(Math.hypot(s.x - 100, s.y - 100)).toBeCloseTo(40);
+    expect(Math.hypot(spots[0].x - spots[1].x, spots[0].y - spots[1].y)).toBeGreaterThan(40);
+  });
+
+  it('uno solo queda en su sitio', () => {
+    expect(fanOut({ x: 10, y: 20 }, 1, 40)).toEqual([{ x: 10, y: 20 }]);
+  });
+
+  it('sabe si los miembros de un grupo están en el mismo sitio, a metros', () => {
+    expect(sameSpot([{ x: 0, z: 0 }, { x: 0.5, z: 0.5 }])).toBe(true);
+    expect(sameSpot([{ x: 0, z: 0 }, { x: 30, z: 0 }])).toBe(false);
   });
 });

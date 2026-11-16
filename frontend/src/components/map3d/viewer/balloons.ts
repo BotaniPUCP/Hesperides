@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import type { Balloon } from '@shared/types';
 import type { LocalPlane } from '../projection';
 import {
-  attentionDot, balloonIcon, balloonLabel, GROUP_ICON, groupBySector, mergeOverlapping, type ScreenBalloon,
+  BALLOON_GROW_FROM_M, balloonScale, fanOut, groupBySector, mergeOverlapping, sameSpot, type ScreenBalloon,
 } from '../balloons/balloonClusters';
+import { fillGroup, group, resize, single, type BalloonButton, type Size } from './balloonButtons';
 import type { GroundPoint } from './frameFit';
 import { WORLD_LIFT } from './polyLayer';
 
@@ -11,7 +12,8 @@ import { WORLD_LIFT } from './polyLayer';
  * Los globos del mapa sobre la escena (SPEC-113 §5.4 y §7.1), como botones HTML: así se
  * pueden tocar, enfocar con Tab y leer con un lector de pantalla, y se ven nítidos a
  * cualquier zoom. De lejos, un grupo por sector; de cerca, cada globo, y los que se pisan
- * se juntan en un grupo con su número, como hace Waze.
+ * se juntan en un grupo con su número, como hace Waze. Muy cerca, o si están en el mismo sitio y
+ * acercarse no los separaría, se abren en abanico. Desde cierta distancia crecen con el mapa.
  */
 
 /** Desde esta distancia de la cámara al centro de la vista, solo grupos por sector; se ajusta al verlo. */
@@ -20,7 +22,6 @@ export const FAR_DISTANCE_M = 700;
 const MOUSE_SIZE = { w: 40, h: 41 };
 const TOUCH_SIZE = { w: 48, h: 49 };
 const TIP = 64 / 70;
-const GROUP_MAX = 99;
 
 export interface BalloonLayerCallbacks {
   onPick: (balloon: Balloon) => void;
@@ -75,26 +76,30 @@ export function createBalloonLayer(root: HTMLElement, plane: LocalPlane, cb: Bal
       return at ? [{ key: `g:${g.key}`, ...at, members: g.members }] : [];
     });
 
-  const near = (camera: THREE.Camera, width: number, height: number): Placed[] => {
+  const near = (camera: THREE.Camera, width: number, height: number, distance: number, size: Size): Placed[] => {
     const onScreen: ScreenBalloon[] = [];
     for (const b of balloons) {
       const at = toScreen(world(b), camera, width, height);
-      if (at && at.x > -SIZE.w && at.x < width + SIZE.w && at.y > -SIZE.h && at.y < height + SIZE.h) {
+      if (at && at.x > -size.w && at.x < width + size.w && at.y > -size.h && at.y < height + size.h) {
         onScreen.push({ balloon: b, ...at });
       }
     }
-    return mergeOverlapping(onScreen, SIZE).map((c) => ({
-      key: c.members.length === 1 ? `b:${c.members[0].id}` : `g:${c.members.map((m) => m.id).join('|')}`,
-      x: c.x, y: c.y, members: c.members,
-    }));
+    return mergeOverlapping(onScreen, size).flatMap((c): Placed[] => {
+      if (c.members.length === 1) return [{ key: `b:${c.members[0].id}`, x: c.x, y: c.y, members: c.members }];
+      // Cerca, o en el mismo sitio, acercarse ya no los separa: se abren en abanico, cada uno suelto.
+      if (distance < BALLOON_GROW_FROM_M || sameSpot(points(c.members))) {
+        const n = c.members.length;
+        const radius = Math.max(0.6 * size.w, (1.1 * size.w) / (2 * Math.sin(Math.PI / n)));
+        return fanOut(c, n, radius).map((spot, i) => ({ key: `b:${c.members[i].id}`, ...spot, members: [c.members[i]] }));
+      }
+      return [{ key: `g:${c.members.map((m) => m.id).join('|')}`, x: c.x, y: c.y, members: c.members }];
+    });
   };
 
   const button = (p: Placed) => {
     let el = buttons.get(p.key);
     if (!el) {
       const created = p.key.startsWith('b:') ? single(p.members[0], cb) : group(p.members, () => cb.onGroup(points(created.members)));
-      created.style.width = `${SIZE.w}px`;
-      created.style.height = `${SIZE.h}px`;
       el = created;
       root.appendChild(el);
       buttons.set(p.key, el);
@@ -110,11 +115,14 @@ export function createBalloonLayer(root: HTMLElement, plane: LocalPlane, cb: Bal
       worlds.clear();
     },
     update(camera, width, height, distance) {
-      const placed = distance >= FAR_DISTANCE_M ? far(camera, width, height) : near(camera, width, height);
+      const scale = balloonScale(distance);
+      const size = { w: SIZE.w * scale, h: SIZE.h * scale };
+      const placed = distance >= FAR_DISTANCE_M ? far(camera, width, height) : near(camera, width, height, distance, size);
       const used = new Set<string>();
       for (const p of placed) {
         const el = button(p);
-        el.style.transform = `translate(${(p.x - SIZE.w / 2).toFixed(1)}px,${(p.y - SIZE.h * TIP).toFixed(1)}px)`;
+        resize(el, size, scale);
+        el.style.transform = `translate(${(p.x - size.w / 2).toFixed(1)}px,${(p.y - size.h * TIP).toFixed(1)}px)`;
         used.add(p.key);
       }
       for (const [key, el] of buttons) {
@@ -129,59 +137,4 @@ export function createBalloonLayer(root: HTMLElement, plane: LocalPlane, cb: Bal
       buttons.clear();
     },
   };
-}
-
-type BalloonButton = HTMLButtonElement & { members: Balloon[] };
-
-const BUTTON_CLASS = 'group pointer-events-auto absolute left-0 top-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600';
-const IMAGE_CLASS = 'block h-full w-full drop-shadow transition-transform group-hover:-translate-y-0.5';
-
-function base(label: string): BalloonButton {
-  const el = document.createElement('button') as BalloonButton;
-  el.type = 'button';
-  el.className = BUTTON_CLASS;
-  el.setAttribute('aria-label', label);
-  el.title = label;
-  const img = document.createElement('img');
-  img.alt = '';
-  img.className = IMAGE_CLASS;
-  img.draggable = false;
-  el.appendChild(img);
-  return el;
-}
-
-function single(b: Balloon, cb: BalloonLayerCallbacks): BalloonButton {
-  const el = base(balloonLabel(b));
-  el.dataset.balloon = b.id;
-  (el.firstChild as HTMLImageElement).src = balloonIcon(b);
-  el.addEventListener('click', (e) => { e.stopPropagation(); cb.onPick(el.members[0]); });
-  return el;
-}
-
-function group(members: Balloon[], onClick: () => void): BalloonButton {
-  const el = base('');
-  (el.firstChild as HTMLImageElement).src = GROUP_ICON;
-  const count = document.createElement('span');
-  count.className = 'pointer-events-none absolute inset-x-0 top-[31%] text-center text-[13px] font-extrabold leading-none text-[#1F2A33]';
-  const dot = document.createElement('span');
-  dot.className = 'pointer-events-none absolute right-0 top-0 h-3 w-3 rounded-full border-2 border-[#1F2A33]';
-  el.append(count, dot);
-  el.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
-  el.members = members;
-  return el;
-}
-
-function fillGroup(el: BalloonButton, members: readonly Balloon[]) {
-  const n = members.length;
-  const text = n > GROUP_MAX ? `${GROUP_MAX}+` : String(n);
-  const [, count, dot] = el.children as unknown as [HTMLImageElement, HTMLSpanElement, HTMLSpanElement];
-  if (count.textContent !== text) count.textContent = text;
-  const color = attentionDot(members);
-  dot.style.display = color ? '' : 'none';
-  if (color) dot.style.background = color;
-  const label = `Grupo de ${n} globos${color ? ', alguno pide atención' : ''}. Acercar`;
-  if (el.getAttribute('aria-label') !== label) {
-    el.setAttribute('aria-label', label);
-    el.title = label;
-  }
 }

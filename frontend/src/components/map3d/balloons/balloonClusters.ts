@@ -110,3 +110,35 @@ export function attentionDot(members: readonly Balloon[]): string | null {
   const first = members.find((m) => m.attention);
   return first ? ATTENTION_COLOR[`${first.kind}:${first.variant ?? 'NONE'}`] ?? null : null;
 }
+
+/**
+ * Desde esta distancia de la cámara (m) el globo deja de quedarse fijo en píxeles y crece con el
+ * mapa: así, al acercarse, no se ve cada vez más chico frente a los jardines.
+ */
+export const BALLOON_GROW_FROM_M = 350;
+/** Tope del crecimiento: el doble de su tamaño normal. */
+export const BALLOON_MAX_SCALE = 2;
+
+export function balloonScale(cameraDistance: number): number {
+  return Math.min(BALLOON_MAX_SCALE, Math.max(1, BALLOON_GROW_FROM_M / Math.max(cameraDistance, 1)));
+}
+
+/** A menos de esto (m) entre sí, los globos de un grupo están en el mismo sitio: acercarse no los separa. */
+export const SAME_SPOT_M = 3;
+
+export function sameSpot(points: readonly { x: number; z: number }[]): boolean {
+  return points.every((p) => Math.hypot(p.x - points[0].x, p.z - points[0].z) <= SAME_SPOT_M);
+}
+
+/**
+ * Reparte en círculo, alrededor de su centro en pantalla, los globos que no se pueden separar
+ * acercándose (como hace Waze): cada uno se ve y se toca por separado.
+ */
+export function fanOut(center: { x: number; y: number }, count: number, radius: number): { x: number; y: number }[] {
+  if (count <= 1) return [{ ...center }];
+  // Empieza arriba y gira en sentido horario, para que el orden de urgencia se lea igual siempre.
+  return Array.from({ length: count }, (_, i) => {
+    const angle = -Math.PI / 2 + (2 * Math.PI * i) / count;
+    return { x: center.x + radius * Math.cos(angle), y: center.y + radius * Math.sin(angle) };
+  });
+}
