@@ -45,6 +45,7 @@ public class InterventionsServiceImpl implements InterventionsService {
     private final InterventionEvidenceFiles evidenceFiles;
     private final InterventionReviewPolicy reviewPolicy;
     private final InterventionExecutionSchedule schedule;
+    private final CuttingMachineryRule machinery;
     private final InterventionAccess access;
     private final InterventionZoneSelectionsService zoneSelections;
     private final InterventionCampusSelections campusSelections;
@@ -246,6 +247,7 @@ public class InterventionsServiceImpl implements InterventionsService {
             s.softDelete();submissions.saveAndFlush(s);
         }
         schedule.requirePlanningDate(r.scheduledDate());
+        if(r.machinery())machinery.requireAllowed(r.scheduledDate());
         var i=new Intervention();i.setCode(references.nextCode());i.setVersion(0L);i.setCreatedByUserId(u.getId());
         i.setPlanningStatusItemId(status("PLANNED"));
         applyHeader(i,r);interventions.saveAndFlush(i);
@@ -261,6 +263,8 @@ public class InterventionsServiceImpl implements InterventionsService {
         var before=snapshot(i);var oldDate=i.getScheduledDate();
         boolean rescheduled=!Objects.equals(oldDate,r.scheduledDate());
         if(rescheduled&&(r.rescheduleReason()==null||r.rescheduleReason().isBlank()))throw new BusinessRuleException("Reschedule reason is required");
+        // SPEC-115 §5.3: una fecha vieja ya inválida solo cuenta si cambian la fecha o la marca.
+        if(r.machinery()&&(rescheduled||!i.isUsesCuttingMachinery()))machinery.requireAllowed(r.scheduledDate());
         applyHeader(i,r);applyLocations(i,r.locations(),true);i.setVersion(i.getVersion()+1);interventions.saveAndFlush(i);
         locations.flush();elements.flush();
         event(i,u,"UPDATED",i.getPlanningStatusItemId(),null,Map.of("previous",before,"current",snapshot(i)));
@@ -740,6 +744,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         if(references.code(origin).equals("FINDING")&&references.code(reported).equals("NONE"))throw new BusinessRuleException("Finding requires a report source");
         if(r.requestedAt()!=null&&r.requestedAt().isAfter(r.scheduledDate()))throw new BusinessRuleException("Request date cannot follow scheduled date");
         i.setOriginItemId(origin);i.setReportedByItemId(reported);i.setScheduledDate(r.scheduledDate());i.setDescription(r.description());
+        i.setUsesCuttingMachinery(r.machinery());
         i.setExternalCode(r.externalCode());i.setRequestedAt(r.requestedAt());
     }
     private void applyLocations(Intervention i,List<Location> requests,boolean editing){
@@ -814,7 +819,7 @@ public class InterventionsServiceImpl implements InterventionsService {
     private Map<String,Object> snapshot(Intervention i){
         var m=new LinkedHashMap<String,Object>();m.put("classItemId",i.getInterventionClassItemId());m.put("typeItemId",i.getInterventionTypeItemId());
         m.put("campusSelectionRevision",i.getCampusSelectionRevision());
-        m.put("scheduledDate",i.getScheduledDate());m.put("description",i.getDescription());m.put("teamId",i.getTeamId());
+        m.put("scheduledDate",i.getScheduledDate());m.put("usesCuttingMachinery",i.isUsesCuttingMachinery());m.put("description",i.getDescription());m.put("teamId",i.getTeamId());
         m.put("assignedToUserId",i.getAssignedToUserId());m.put("originItemId",i.getOriginItemId());m.put("reportedByItemId",i.getReportedByItemId());
         m.put("externalCode",i.getExternalCode());m.put("requestedAt",i.getRequestedAt());
         m.put("locations",locations.findByInterventionIdAndDeletedAtIsNullOrderById(i.getId()).stream().map(this::locationSnapshot).toList());return m;

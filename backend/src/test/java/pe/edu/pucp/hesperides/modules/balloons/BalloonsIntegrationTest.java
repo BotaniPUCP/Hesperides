@@ -208,6 +208,20 @@ class BalloonsIntegrationTest {
     }
 
     @Test
+    void cuttingMachinerySoonAndUnfinishedIsAGrayBalloon() throws Exception {
+        long saturday = work("PODA_SANITARIA", "2026-11-07");
+        location(saturday, section, "ASSIGNED", null, null);
+        long later = work("PODA_SANITARIA", "2026-11-14");
+        location(later, other, "ASSIGNED", null, null);
+        jdbc.update("UPDATE interventions SET uses_cutting_machinery = TRUE WHERE id IN (?, ?)", saturday, later);
+
+        var gray = balloonsOf("MACHINERY_CUT");
+
+        assertThat(gray).extracting(b -> b.get("id").asString()).containsExactly("MACHINERY_CUT:" + saturday);
+        assertThat(gray.getFirst().get("card").toString()).contains("Programada el", "7 nov");
+    }
+
+    @Test
     void aDueGardenShowsOnlyIfItWasIrrigatedBefore() throws Exception {
         long riego = item("INTERVENTION_TYPE", "RIEGO_MANUAL");
         jdbc.update("UPDATE maintenance_frequencies SET deleted_at = CURRENT_TIMESTAMP WHERE activity_type_item_id = ?", riego);

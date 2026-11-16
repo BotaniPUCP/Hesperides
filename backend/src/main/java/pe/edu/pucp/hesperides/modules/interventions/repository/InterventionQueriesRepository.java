@@ -71,6 +71,7 @@ public class InterventionQueriesRepository {
         d.setPlanningStatusCode((String)r.get("planning_status_code"));d.setStatusCode((String)r.get("status_code"));
         d.setTeamId(number(r,"team_id"));d.setAssignedToUserId(number(r,"assigned_to_user_id"));
         Object date=r.get("scheduled_date");d.setScheduledDate(date instanceof java.sql.Date sqlDate?sqlDate.toLocalDate():(java.time.LocalDate)date);
+        d.setUsesCuttingMachinery(Boolean.TRUE.equals(r.get("uses_cutting_machinery")));
         d.setStartedAt(instant(r.get("started_at")));d.setCompletedAt(instant(r.get("completed_at")));d.setValidatedAt(instant(r.get("validated_at")));
         d.setLocationCount(number(r,"location_count").intValue());d.setCompletedLocationCount(number(r,"completed_location_count").intValue());
         d.setValidatedLocationCount(number(r,"validated_location_count").intValue());d.setPendingEvidenceCount(number(r,"pending_evidence_count").intValue());return d;
@@ -98,6 +99,7 @@ public class InterventionQueriesRepository {
         d.setPlanningStatusCode(r.getString("planning_status_code"));d.setStatusCode(r.getString("status_code"));
         d.setTeamId(r.getObject("team_id",Long.class));d.setAssignedToUserId(r.getObject("assigned_to_user_id",Long.class));
         d.setScheduledDate(r.getDate("scheduled_date").toLocalDate());
+        d.setUsesCuttingMachinery(r.getBoolean("uses_cutting_machinery"));
         // V025 timestamps persist UTC without a zone, as Hibernate does for Instant.
         // Read the stored wall time explicitly, independently of the JVM time zone.
         d.setStartedAt(instant(r.getObject("started_at",java.time.LocalDateTime.class)));
