@@ -48,5 +48,21 @@ export function limitDescent(y: number, dy: number, floorY: number): number {
   return Math.max(dy, Math.min(0, floorY - y));
 }
 
+/**
+ * Metros por segundo por cada metro de holgura: a la altura de una persona, unos 2,5 m/s. La
+ * holgura es lo que hay hasta el piso o hasta lo que se mira, lo que esté más cerca.
+ */
+export const SPEED_PER_CLEARANCE = 1.5;
+/** Pegado a una pared o al piso, la cámara igual se mueve, despacio. */
+export const MIN_FLY_SPEED_M_S = 1;
+
+/**
+ * La velocidad de vuelo según la holgura, hasta `maxSpeed`: con una fija, la que cruza el campus
+ * en segundos daba saltos de metros al recorrer un pasillo de cerca.
+ */
+export function flySpeed(clearance: number, maxSpeed: number): number {
+  return Math.min(maxSpeed, Math.max(MIN_FLY_SPEED_M_S, clearance * SPEED_PER_CLEARANCE));
+}
+
 /** Ctrl+Shift+U entra y sale del modo de movimiento de administrador. */
 export const isAdminModeToggle = (event: KeyCombo) => isCtrlShift(event, 'KeyU');

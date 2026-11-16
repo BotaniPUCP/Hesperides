@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { flyActionFor, flyStep, limitDescent, type FlyAction } from './flyMotion';
+import { flyActionFor, flySpeed, flyStep, limitDescent, type FlyAction } from './flyMotion';
 
-/** Metros por segundo frente al radio del modelo: cruzarlo toma unos cuatro segundos. */
+/** Tope de metros por segundo frente al radio del modelo: de lejos, cruzarlo toma unos cuatro segundos. */
 const SPEED_PER_RADIUS = 0.5;
 const MIN_SPEED_M_S = 4;
 /** Un cuadro lento (pestaña en segundo plano) no debe teletransportar la cámara. */
@@ -19,6 +19,7 @@ export interface FlyControls {
 
 /**
  * Modo de administrador: W/S adelante y atrás, A/D a los costados, Espacio sube y Shift baja.
+ * Más despacio cuanto más cerca del piso o de lo que se mira, para recorrer pasillos con precisión.
  * Mueve la cámara y el centro de la órbita juntos, así que después de volar
  * se sigue girando alrededor de lo que se tiene delante. Escucha solo con el
  * visor enfocado, para no robarle Espacio a la página ni a los botones.
@@ -39,10 +40,12 @@ export function attachFlyControls(
   let last = 0;
 
   function tick(now: number) {
-    const seconds = Math.min((now - last) / 1000, MAX_FRAME_S);
+    // El sello del primer cuadro puede ser anterior a la pulsación: nunca un paso hacia atrás.
+    const seconds = THREE.MathUtils.clamp((now - last) / 1000, 0, MAX_FRAME_S);
     last = now;
     camera.getWorldDirection(look);
-    const step = flyStep(active, { x: look.x, z: look.z }, speed * seconds);
+    const clearance = Math.min(camera.position.y - floorY, camera.position.distanceTo(orbitTarget));
+    const step = flyStep(active, { x: look.x, z: look.z }, flySpeed(clearance, speed) * seconds);
     delta.set(step.x, limitDescent(camera.position.y, step.y, floorY), step.z);
     camera.position.add(delta);
     orbitTarget.add(delta);

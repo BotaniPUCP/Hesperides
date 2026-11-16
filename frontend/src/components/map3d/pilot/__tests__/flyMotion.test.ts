@@ -1,4 +1,6 @@
-import { flyActionFor, flyStep, isAdminModeToggle, limitDescent, type FlyAction } from '../flyMotion';
+import {
+  flyActionFor, flySpeed, flyStep, isAdminModeToggle, limitDescent, MIN_FLY_SPEED_M_S, type FlyAction,
+} from '../flyMotion';
 
 const north = { x: 0, z: -1 };
 const step = (actions: FlyAction[], heading = north, distance = 1) => flyStep(new Set(actions), heading, distance);
@@ -88,5 +90,21 @@ describe('isAdminModeToggle', () => {
     ['con otra letra', { ...keys, code: 'KeyI' }],
   ])('%s no cambia', (_, event) => {
     expect(isAdminModeToggle(event)).toBe(false);
+  });
+});
+
+describe('velocidad de vuelo según la holgura', () => {
+  it('a la altura de una persona, un cuarto de segundo avanza menos de un metro', () => {
+    expect(flySpeed(1.7, 40) * 0.25).toBeLessThan(1);
+  });
+
+  it('crece con la holgura hasta el tope', () => {
+    expect(flySpeed(10, 40)).toBeGreaterThan(flySpeed(2, 40));
+    expect(flySpeed(500, 40)).toBe(40);
+  });
+
+  it('pegado a algo nunca se queda quieto', () => {
+    expect(flySpeed(0, 40)).toBe(MIN_FLY_SPEED_M_S);
+    expect(flySpeed(-3, 40)).toBe(MIN_FLY_SPEED_M_S);
   });
 });
