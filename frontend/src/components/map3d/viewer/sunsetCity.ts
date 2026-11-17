@@ -29,9 +29,13 @@ export interface CityData {
 }
 
 const CITY = {
-  /** Celda de la grilla de ocupación y lado de un lote del relleno. */
-  cellM: 6,
+  /** Celda de la grilla de ocupación y lado de un lote del relleno del interior de las manzanas. */
+  cellM: 3,
   lotM: 12,
+  /** Lotes con frente a la calle: frente y fondo (de-a, en metros) y cuántas filas hacia el interior. */
+  frontageM: [8, 14],
+  depthM: [13, 19],
+  rows: 3,
   /** Margen de vereda a cada lado de una vía. */
   sidewalkM: 2.5,
   asphalt: '#34312e',
@@ -78,6 +82,10 @@ class Occupancy {
   index(x: number, y: number): number {
     const i = Math.floor((x + this.radius) / this.cell), j = Math.floor((y + this.radius) / this.cell);
     return i < 0 || j < 0 || i >= this.n || j >= this.n ? -1 : j * this.n + i;
+  }
+  mark(x: number, y: number, value: number) {
+    const k = this.index(x, y);
+    if (k >= 0) this.cells[k] = value;
   }
   get(x: number, y: number): number {
     const k = this.index(x, y);
@@ -206,26 +214,70 @@ export function buildCity(data: CityData, toScene: ToScene, campus: number[][], 
     pushBuilding(pos, col, ring, b[0], pick(CITY.buildings), pick(CITY.roofs), toScene, groundY);
   }
 
-  // Relleno: un lote donde la grilla está libre; alturas por manzana, que cambian de a poco.
-  const lots: [number, number, number][] = [];
+  // Relleno. Primero, lotes con frente a cada calle, girados como ella y en filas hacia el interior; un lote
+  // va solo si su rectángulo está libre, y lo ocupa. Lo que queda en el interior de las manzanas grandes, con
+  // la grilla. Las alturas van por manzana y cambian de a poco.
+  const lots: [x: number, y: number, h: number, w: number, d: number, yaw: number][] = [];
+  const heightAt = (x: number, y: number) => {
+    const block = Math.sin(Math.floor(x / 60) * 12.9898 + Math.floor(y / 60) * 78.233) * 43758.5453;
+    return (1 + Math.floor((block - Math.floor(block)) * 3 + rnd() * 1.6)) * 3 + rnd() * 1.2;
+  };
+  /** Puntos de muestra de un rectángulo girado (centro, frente `w` a lo largo de (ux, uy), fondo `d`). */
+  const samples = (cx: number, cy: number, w: number, d: number, ux: number, uy: number) => {
+    const pts: [number, number][] = [];
+    const step = CITY.cellM / 2;
+    for (let a = -w / 2 + 0.4; a <= w / 2 - 0.4; a += step) {
+      for (let b = -d / 2 + 0.4; b <= d / 2 - 0.4; b += step) pts.push([cx + ux * a - uy * b, cy + uy * a + ux * b]);
+    }
+    return pts;
+  };
+  const between = ([lo, hi]: readonly [number, number]) => lo + rnd() * (hi - lo);
+  for (const v of vias) {
+    if (v[0] < 5) continue;
+    for (let i = 1; i + 3 < v.length; i += 2) {
+      const [ax, ay, bx, by] = [v[i], v[i + 1], v[i + 2], v[i + 3]];
+      const len = Math.hypot(bx - ax, by - ay);
+      if (len < 6) continue;
+      const ux = (bx - ax) / len, uy = (by - ay) / len;
+      const yaw = Math.atan2(uy, ux);
+      for (const side of [1, -1]) {
+        for (let t = 0; t < len; ) {
+          const w = between(CITY.frontageM);
+          let off = v[0] / 2 + CITY.sidewalkM + 0.3;
+          for (let row = 0; row < CITY.rows; row++) {
+            const d = between(CITY.depthM);
+            const mid = off + d / 2;
+            const cx = ax + ux * (t + w / 2) - uy * mid * side, cy = ay + uy * (t + w / 2) + ux * mid * side;
+            off += d + 0.6;
+            if (Math.hypot(cx, cy) > data.radioM - 10) break;
+            const pts = samples(cx, cy, w, d, ux, uy);
+            if (!pts.every(([x, y]) => grid.get(x, y) === FREE)) continue;
+            pts.forEach(([x, y]) => grid.mark(x, y, BUILT));
+            lots.push([cx, cy, heightAt(cx, cy), w * 0.96, d * 0.97, yaw]);
+          }
+          t += w;
+        }
+      }
+    }
+  }
   const half = CITY.lotM / 2;
   for (let y = -data.radioM + half; y < data.radioM; y += CITY.lotM) {
     for (let x = -data.radioM + half; x < data.radioM; x += CITY.lotM) {
       if (Math.hypot(x, y) > data.radioM - half) continue;
-      const q = CITY.lotM / 4;
-      if ([[-q, -q], [q, -q], [-q, q], [q, q]].some(([dx, dy]) => grid.get(x + dx, y + dy) !== FREE)) continue;
-      const block = Math.sin(Math.floor(x / 60) * 12.9898 + Math.floor(y / 60) * 78.233) * 43758.5453;
-      const floors = 1 + Math.floor((block - Math.floor(block)) * 3 + rnd() * 1.6);
-      lots.push([x, y, floors * 3 + rnd() * 1.2]);
+      const pts = samples(x, y, CITY.lotM, CITY.lotM, 1, 0);
+      if (!pts.every(([px, py]) => grid.get(px, py) === FREE)) continue;
+      pts.forEach(([px, py]) => grid.mark(px, py, BUILT));
+      const w = CITY.lotM * (0.86 + rnd() * 0.12);
+      lots.push([x, y, heightAt(x, y), w, w, 0]);
     }
   }
   const box = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
   const lotMesh = new THREE.InstancedMesh(box, withCityWindows(new THREE.MeshStandardMaterial({ roughness: 0.9 }), groundY), lots.length);
   const m = new THREE.Matrix4(), s = new THREE.Vector3(), p = new THREE.Vector3(), qn = new THREE.Quaternion();
-  lots.forEach(([x, y, h], k) => {
+  const axisY = new THREE.Vector3(0, 1, 0);
+  lots.forEach(([x, y, h, w, d, yaw], k) => {
     const [sx, sz] = toScene(x, y);
-    const w = CITY.lotM * (0.86 + rnd() * 0.12);
-    m.compose(p.set(sx, groundY, sz), qn, s.set(w, h, w));
+    m.compose(p.set(sx, groundY, sz), qn.setFromAxisAngle(axisY, yaw), s.set(w, h, d));
     lotMesh.setMatrixAt(k, m);
     lotMesh.setColorAt(k, pick(CITY.buildings).multiplyScalar(0.92));
   });
