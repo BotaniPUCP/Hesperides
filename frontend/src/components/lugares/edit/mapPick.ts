@@ -2,6 +2,7 @@ import type { OutlineInput } from '@shared/types';
 import type { LocalPlane } from '@/components/map3d/projection';
 import type { SceneData } from '@/components/map3d/sceneData';
 import type { Target } from '@/components/map3d/target';
+import type { Viewer } from '@/components/map3d/viewer/createViewer';
 
 export interface LatLon {
   lat: number;
@@ -83,6 +84,66 @@ export function toggleBuilding(data: SceneData, ids: readonly number[], id: numb
 export function pickOnMap(current: PickedOutline | null, data: SceneData, target: Target): PickedOutline | null {
   if (target.layer !== 'campusBuildings') return outlineFromTarget(data, target) ?? current;
   return toggleBuilding(data, current?.outline.buildingIds ?? [], data.campusBuildings[target.index].props.id);
+}
+
+/** Enfoca el contorno seleccionado al abrir el editor. */
+export function focusPickedOutline(viewer: Viewer, data: SceneData, picked: PickedOutline | null, initialCenter?: LatLon): void {
+  if (!picked) return;
+  const outline = picked.outline;
+  const buildingIds = outline.buildingIds ?? [];
+
+  if (buildingIds.length === 1) {
+    const index = data.campusBuildings.findIndex((building) => building.props.id === buildingIds[0]);
+    if (index >= 0) {
+      viewer.select({ layer: 'campusBuildings', index }, true);
+      return;
+    }
+  }
+
+  if (buildingIds.length > 1) {
+    if (initialCenter) {
+      viewer.focusLatLon(initialCenter.lat, initialCenter.lon);
+      return;
+    }
+    const buildings = data.campusBuildings.filter((building) => buildingIds.includes(building.props.id));
+    const points = buildings.flatMap((building) => building.g.flatMap((polygon) => polygon.flatMap((ring) => {
+      const coordinates: { x: number; y: number }[] = [];
+      for (let i = 0; i + 1 < ring.length; i += 2) coordinates.push({ x: ring[i], y: ring[i + 1] });
+      return coordinates;
+    })));
+    if (points.length > 0) {
+      const xs = points.map((point) => point.x);
+      const ys = points.map((point) => point.y);
+      const [lat, lon] = data.plane.toLatLon({
+        x: (Math.min(...xs) + Math.max(...xs)) / 2,
+        y: (Math.min(...ys) + Math.max(...ys)) / 2,
+      });
+      viewer.focusLatLon(lat, lon);
+      return;
+    }
+  }
+
+  for (const layer of ['greenAreas', 'xerophytic', 'reserve'] as const) {
+    const index = data[layer].findIndex((zone) => zone.props.code === outline.zoneCode);
+    if (index >= 0) {
+      viewer.select({ layer, index }, true);
+      return;
+    }
+  }
+  if (outline.featureCode) {
+    const index = data.parking.findIndex((feature) => feature.props.code === outline.featureCode);
+    if (index >= 0) {
+      viewer.select({ layer: 'parking', index }, true);
+      return;
+    }
+  }
+
+  const coordinates = outline.geometry?.coordinates;
+  if (outline.geometry?.type === 'Point' && coordinates) {
+    viewer.focusLatLon(coordinates[1], coordinates[0]);
+    return;
+  }
+  if (initialCenter) viewer.focusLatLon(initialCenter.lat, initialCenter.lon);
 }
 
 /** Un punto marcado a mano como contorno, para lo que no está dibujado en el mapa. */

@@ -28,7 +28,7 @@ describe('MapInfoCard', () => {
     render(
       <MapInfoCard
         onClose={jest.fn()}
-        content={{ kind: 'perspective', perspective: { id: 7, place: { code: 'LUG-0001', name: 'Tinkuy' }, displayName: 'Frente de Tinkuy', lat: 0, lon: 0, headingDeg: 0, thumbnailUrl: null } }}
+        content={{ kind: 'perspective', perspective: { id: 7, place: { code: 'LUG-0001', name: 'Tinkuy' }, displayName: 'Frente de Tinkuy', lat: 0, lon: 0, headingDeg: 0, thumbnailUrl: null, mapView: null } }}
       />,
     );
 

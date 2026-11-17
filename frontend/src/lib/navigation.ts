@@ -46,13 +46,16 @@ export const DIRECT_LINKS: readonly NavItem[] = [
 
 export const NAVIGATION: readonly NavGroup[] = [
   {
-    // M9. Lo consultan todos; editarlo y migrar las referencias antiguas es de quien lo administra.
+    // M9. Lo consultan todos; alta, edición y migración son de quien lo administra.
     id: 'lugares',
     label: 'Lugares',
     icon: '🏛️',
     items: [
       { label: 'Catálogo de lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       { label: 'Migrar referencias', href: '/lugares/migracion', icon: '🔀', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Nuevo lugar', href: '/lugares/nuevo', icon: '➕', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Importar lugares', href: '/lugares/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Exportar lugares', href: '/lugares/exportar', icon: '📤', roles: ['ADMIN', 'COORDINADOR'] },
     ],
   },
   {

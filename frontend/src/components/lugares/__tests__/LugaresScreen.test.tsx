@@ -41,6 +41,16 @@ beforeEach(() => {
 });
 
 describe('LugaresScreen', () => {
+  it('no muestra acciones de alta ni migración en el catálogo principal', async () => {
+    list.mockResolvedValue([]);
+    mockRole.current = 'ADMIN';
+    render(<LugaresScreen />);
+
+    await waitFor(() => expect(list).toHaveBeenCalled());
+    expect(screen.queryByRole('link', { name: 'Nuevo lugar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Migrar referencias' })).not.toBeInTheDocument();
+  });
+
   describe('conservar la pantalla para regresar', () => {
     it('recupera la posición del scroll cuando terminan de cargar los datos', async () => {
       const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);

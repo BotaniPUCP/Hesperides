@@ -106,6 +106,45 @@ describe('Sidebar', () => {
     expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('Importar lugares es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/importar';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: /lugares/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Importar lugares' })).toHaveAttribute('href', '/lugares/importar');
+    expect(screen.getByRole('link', { name: 'Importar lugares' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Importar lugares' })).not.toBeInTheDocument();
+  });
+
+  it('Nuevo lugar es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/nuevo';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Nuevo lugar' })).toHaveAttribute('href', '/lugares/nuevo');
+    expect(screen.getByRole('link', { name: 'Nuevo lugar' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Nuevo lugar' })).not.toBeInTheDocument();
+  });
+
+  it('Exportar lugares es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/exportar';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Exportar lugares' })).toHaveAttribute('href', '/lugares/exportar');
+    expect(screen.getByRole('link', { name: 'Exportar lugares' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Exportar lugares' })).not.toBeInTheDocument();
+  });
+
   describe('al pasar a otra pantalla por un enlace interno, sin recargar', () => {
     it('abre el grupo de destino para que se vea la página actual, y cierra el de origen', () => {
       mockPathname = '/catastro/ejemplares';

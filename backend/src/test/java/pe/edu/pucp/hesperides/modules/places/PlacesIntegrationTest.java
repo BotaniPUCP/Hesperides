@@ -2,6 +2,7 @@ package pe.edu.pucp.hesperides.modules.places;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -9,6 +10,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -16,7 +19,13 @@ import com.jayway.jsonpath.JsonPath;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import javax.imageio.ImageIO;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import pe.edu.pucp.hesperides.modules.places.service.PlaceWorkbookImportService;
 import pe.edu.pucp.hesperides.support.TestDatabase;
 
 /** El catálogo de lugares de punta a punta: lugares, perspectivas con nombre automático y fotos. */
@@ -105,6 +115,74 @@ class PlacesIntegrationTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ImageIO.write(new BufferedImage(600, 400, BufferedImage.TYPE_INT_RGB), "png", out);
         return out.toByteArray();
+    }
+
+    private static byte[] placeWorkbook(String name, boolean withPerspective, boolean withPhoto) throws IOException {
+        return placeWorkbook(name, withPerspective, withPhoto, true, false);
+    }
+
+    private static byte[] placeWorkbook(String name, boolean withPerspective, boolean withPhoto, boolean withPoint)
+            throws IOException {
+        return placeWorkbook(name, withPerspective, withPhoto, withPoint, false);
+    }
+
+    private static byte[] placeWorkbook(String name, boolean withPerspective, boolean withPhoto, boolean withPoint,
+            boolean withBuilding) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            XSSFSheet sheet = workbook.createSheet("Lugares");
+            var header = sheet.createRow(0);
+            for (int i = 0; i < PlaceWorkbookImportService.HEADERS.size(); i++) {
+                header.createCell(i).setCellValue(PlaceWorkbookImportService.HEADERS.get(i));
+            }
+            var row = sheet.createRow(1);
+            row.createCell(0).setCellValue(name);
+            row.createCell(1).setCellValue("OUTDOOR");
+            row.createCell(2).setCellValue("EDIFICIO");
+            row.createCell(4).setCellValue("Alias " + name);
+            if (withPoint) {
+                row.createCell(8).setCellValue(LAT);
+                row.createCell(9).setCellValue(LON);
+            }
+            if (withBuilding) row.createCell(5).setCellValue("1");
+            if (withPerspective) {
+                row.createCell(11).setCellValue("BACK");
+                row.createCell(12).setCellValue(LAT - OFFSET);
+                row.createCell(13).setCellValue(LON);
+                row.createCell(14).setCellValue(0);
+                if (withPhoto) {
+                    int picture = workbook.addPicture(png(), Workbook.PICTURE_TYPE_PNG);
+                    XSSFClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
+                    anchor.setRow1(1);
+                    anchor.setRow2(2);
+                    anchor.setCol1(15);
+                    anchor.setCol2(16);
+                    sheet.createDrawingPatriarch().createPicture(anchor, picture);
+                }
+            }
+            workbook.write(output);
+            return output.toByteArray();
+        }
+    }
+
+    private static byte[] placeWorkbookRows(String... names) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            XSSFSheet sheet = workbook.createSheet("Lugares");
+            var header = sheet.createRow(0);
+            for (int i = 0; i < PlaceWorkbookImportService.HEADERS.size(); i++) {
+                header.createCell(i).setCellValue(PlaceWorkbookImportService.HEADERS.get(i));
+            }
+            for (int i = 0; i < names.length; i++) {
+                var row = sheet.createRow(i + 1);
+                row.createCell(0).setCellValue(names[i]);
+                row.createCell(1).setCellValue("OUTDOOR");
+                row.createCell(2).setCellValue("EDIFICIO");
+                row.createCell(4).setCellValue(names[i]);
+                row.createCell(8).setCellValue(LAT - 5 * OFFSET);
+                row.createCell(9).setCellValue(LON - 5 * OFFSET);
+            }
+            workbook.write(output);
+            return output.toByteArray();
+        }
     }
 
     @Test
@@ -194,6 +272,308 @@ class PlacesIntegrationTest {
         mockMvc.perform(get(PLACES + "/" + code))
                 .andExpect(jsonPath("$.data.perspectives[0].mapView.camera.heightM").value(40.0))
                 .andExpect(jsonPath("$.data.perspectives[0].headingDeg").value(10.0));
+        mockMvc.perform(get(PLACES + "/map"))
+                .andExpect(jsonPath("$.data.perspectives[0].mapView.camera.heightM").value(40.0))
+                .andExpect(jsonPath("$.data.perspectives[0].mapView.target.lat").value(LAT));
+    }
+
+    @Test
+    void savesAndClearsTheMapViewOfTheSelectedPerspective() throws Exception {
+        String code = createInras();
+        long id = perspectiveId(perspective(code, "BACK", LAT - OFFSET, LON));
+        String placeView = """
+                {"camera": {"lat": %s, "lon": %s, "heightM": 120}, "target": {"lat": %s, "lon": %s, "heightM": 0}}"""
+                .formatted(LAT - OFFSET, LON, LAT, LON);
+        String perspectiveView = """
+                "mapView": {"camera": {"lat": %s, "lon": %s, "heightM": 40}, "target": {"lat": %s, "lon": %s, "heightM": 0}}"""
+                .formatted(LAT - 2 * OFFSET, LON, LAT, LON);
+        mockMvc.perform(put(PLACES + "/" + code + "/map-view").contentType(MediaType.APPLICATION_JSON).content(placeView))
+                .andExpect(status().isOk());
+        mockMvc.perform(put(PLACES + "/" + code + "/perspectives/" + id).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sideCode\": \"BACK\", \"lat\": %s, \"lon\": %s, \"headingDeg\": 0, %s}"
+                                .formatted(LAT - OFFSET, LON, perspectiveView)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get(PLACES + "/" + code))
+                .andExpect(jsonPath("$.data.mapView.camera.heightM").value(120.0))
+                .andExpect(jsonPath("$.data.perspectives[0].mapView.camera.heightM").value(40.0));
+
+        mockMvc.perform(delete(PLACES + "/" + code + "/perspectives/" + id + "/map-view")).andExpect(status().isOk());
+        mockMvc.perform(get(PLACES + "/" + code))
+                .andExpect(jsonPath("$.data.mapView.camera.heightM").value(120.0))
+                .andExpect(jsonPath("$.data.perspectives[0].mapView").doesNotExist());
+    }
+
+    @Test
+    void downloadsThePlacesImportTemplate() throws Exception {
+        byte[] content = mockMvc.perform(get(PLACES + "/import/template"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(header().string("Content-Disposition", containsString("plantilla-importar-lugares.xlsx")))
+                .andReturn().getResponse().getContentAsByteArray();
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new java.io.ByteArrayInputStream(content))) {
+            assertThat(workbook.getSheet("Lugares")).isNotNull();
+            assertThat(workbook.getSheet("Lugares").getRow(0).getCell(0).getStringCellValue()).isEqualTo("Nombre");
+        }
+    }
+
+    @Test
+    void exportsFilteredPlacesInTheImportTemplateFormatWithOnlySelectedPerspectivePhotos() throws Exception {
+        byte[] source = placeWorkbook("Lugar para exportar", true, true);
+        MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", source);
+        mockMvc.perform(multipart(PLACES + "/import").file(file)).andExpect(status().isOk());
+
+        String filters = """
+                {
+                  "categoryCode": "EDIFICIO",
+                  "alias": "alias lugar para exportar",
+                  "parentCode": null,
+                  "createdFrom": null,
+                  "createdTo": null,
+                  "point1Lat": -12.07,
+                  "point1Lon": -77.09,
+                  "point2Lat": -12.07,
+                  "point2Lon": -77.07,
+                  "point3Lat": -12.06,
+                  "point3Lon": -77.08,
+                  "includePerspectives": true,
+                  "perspectiveSides": ["BACK"]
+                }
+                """;
+        byte[] exported = mockMvc.perform(post(PLACES + "/export")
+                        .contentType(MediaType.APPLICATION_JSON).content(filters))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andReturn().getResponse().getContentAsByteArray();
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new java.io.ByteArrayInputStream(exported))) {
+            XSSFSheet sheet = workbook.getSheet("Lugares");
+            assertThat(sheet.getLastRowNum()).isEqualTo(1);
+            assertThat(sheet.getRow(0).getCell(0).getStringCellValue())
+                    .isEqualTo(PlaceWorkbookImportService.HEADERS.get(0));
+            assertThat(sheet.getRow(0).getPhysicalNumberOfCells()).isEqualTo(PlaceWorkbookImportService.HEADERS.size());
+            assertThat(sheet.getRow(1).getCell(0).getStringCellValue()).isEqualTo("Lugar para exportar");
+            assertThat(sheet.getRow(1).getCell(8).getNumericCellValue()).isEqualTo(LAT);
+            assertThat(sheet.getRow(1).getCell(9).getNumericCellValue()).isEqualTo(LON);
+            assertThat(sheet.getRow(1).getCell(5).getStringCellValue()).isEmpty();
+            assertThat(sheet.getRow(1).getCell(11).getStringCellValue()).isEqualTo("BACK");
+            assertThat(sheet.getRow(1).getCell(16).getStringCellValue()).isEmpty();
+            assertThat(sheet.getDrawingPatriarch().getShapes()).hasSize(1);
+            XSSFClientAnchor anchor = (XSSFClientAnchor) sheet.getDrawingPatriarch().getShapes().get(0).getAnchor();
+            assertThat(anchor.getRow1()).isEqualTo(1);
+            assertThat(anchor.getCol1()).isEqualTo((short) 15);
+        }
+    }
+
+    @Test
+    void refusesAnIncompleteThreePointExportArea() throws Exception {
+        mockMvc.perform(post(PLACES + "/export").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"point1Lat\":-12.0,\"includePerspectives\":false}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void previewsAndImportsAPlaceWithItsPerspectivePhoto() throws Exception {
+        byte[] workbook = placeWorkbook("Lugar por Excel", true, true);
+        MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", workbook);
+
+        mockMvc.perform(multipart(PLACES + "/import/preview").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.rows").value(1))
+                .andExpect(jsonPath("$.data.canImport").value(true))
+                .andExpect(jsonPath("$.data.errors", hasSize(0)));
+
+        String response = mockMvc.perform(multipart(PLACES + "/import").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.imported").value(1))
+                .andExpect(jsonPath("$.data.places[0].name").value("Lugar por Excel"))
+                .andReturn().getResponse().getContentAsString();
+        String code = JsonPath.read(response, "$.data.places[0].code");
+        mockMvc.perform(get(PLACES + "/" + code))
+                .andExpect(jsonPath("$.data.perspectives", hasSize(1)))
+                .andExpect(jsonPath("$.data.perspectives[0].side.code").value("BACK"))
+                .andExpect(jsonPath("$.data.perspectives[0].photos", hasSize(1)))
+                .andExpect(jsonPath("$.data.outline.centerLat").value(LAT))
+                .andExpect(jsonPath("$.data.outline.centerLon").value(LON));
+        String mapJson = mockMvc.perform(get(PLACES + "/map")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        List<Map<String, Object>> mapPlaces = JsonPath.read(mapJson, "$.data.places");
+        Map<String, Object> mapPlace = mapPlaces.stream().filter(place -> code.equals(place.get("code")))
+                .findFirst().orElseThrow();
+        assertThat(((Number) mapPlace.get("lat")).doubleValue()).isCloseTo(LAT,
+                org.assertj.core.data.Offset.offset(1e-9));
+        assertThat(((Number) mapPlace.get("lon")).doubleValue()).isCloseTo(LON,
+                org.assertj.core.data.Offset.offset(1e-9));
+    }
+
+    @Test
+    void previewsLocationConflictsAndExplicitlyReplacesTheSelectedPlace() throws Exception {
+        drawnPlace("Lugar existente A", LAT, LON, null);
+        String selectedCode = drawnPlace("Lugar existente B", LAT, LON, null);
+        perspective(selectedCode, "BACK", LAT - OFFSET, LON).andExpect(status().isCreated());
+        String childJson = postJson(PLACES, """
+                {"name": "Interior conservado", "kindCode": "INDOOR", "categoryCode": "EDIFICIO",
+                 "parentCode": "%s", "outline": {}}""".formatted(selectedCode))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String childCode = JsonPath.read(childJson, "$.data.code");
+        String mainPhotoJson = mockMvc.perform(multipart(PLACES + "/" + selectedCode + "/photos")
+                        .file(new MockMultipartFile("file", "principal.png", "image/png", png()))
+                        .param("author", "Equipo de catastro"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        Number mainPhotoId = JsonPath.read(mainPhotoJson, "$.data.id");
+
+        MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                placeWorkbook("Lugar actualizado", true, false));
+
+        mockMvc.perform(multipart(PLACES + "/import/preview").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.canImport").value(true))
+                .andExpect(jsonPath("$.data.locationConflicts[0].row").value(2))
+                .andExpect(jsonPath("$.data.locationConflicts[0].places", hasSize(3)));
+
+        MockMultipartFile replacements = new MockMultipartFile("replacements", "replacements.json",
+                MediaType.APPLICATION_JSON_VALUE,
+                "[{\"row\":2,\"placeCode\":\"%s\"}]".formatted(selectedCode).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        String response = mockMvc.perform(multipart(PLACES + "/import").file(file).file(replacements))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.imported").value(1))
+                .andExpect(jsonPath("$.data.places[0].code").value(selectedCode))
+                .andExpect(jsonPath("$.data.places[0].replaced").value(true))
+                .andReturn().getResponse().getContentAsString();
+        String returnedCode = JsonPath.read(response, "$.data.places[0].code");
+
+        mockMvc.perform(get(PLACES + "/" + returnedCode))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Lugar actualizado"))
+                .andExpect(jsonPath("$.data.perspectives", hasSize(1)))
+                .andExpect(jsonPath("$.data.perspectives[0].side.code").value("BACK"))
+                .andExpect(jsonPath("$.data.perspectives[0].photos", hasSize(0)))
+                .andExpect(jsonPath("$.data.children[0].code").value(childCode))
+                .andExpect(jsonPath("$.data.mainPhotos[0].id").value(mainPhotoId));
+        assertThat(returnedCode).isEqualTo(selectedCode);
+    }
+
+    @Test
+    void refusesToImportWhenAConflictingLocationHasNoReplacementSelection() throws Exception {
+        String code = drawnPlace("Lugar que debe conservarse", LAT, LON, null);
+        MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                placeWorkbook("Otro lugar", false, false));
+
+        mockMvc.perform(multipart(PLACES + "/import").file(file)).andExpect(status().isBadRequest());
+        mockMvc.perform(get(PLACES + "/" + code))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Lugar que debe conservarse"));
+    }
+
+    @Test
+    void refusesToImportAnOutdoorPlaceWithoutMapPointCoordinates() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                placeWorkbook("Lugar sin punto", false, false, false));
+
+        mockMvc.perform(multipart(PLACES + "/import/preview").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.canImport").value(false))
+                .andExpect(jsonPath("$.data.errors[0].column").value("Latitud de punto"))
+                .andExpect(jsonPath("$.data.errors[1].column").value("Longitud de punto"));
+        mockMvc.perform(multipart(PLACES + "/import").file(file)).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void refusesToCombineAnOutdoorMapPointWithAnotherOutlineSource() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                placeWorkbook("Lugar con fuentes mezcladas", false, false, true, true));
+
+        mockMvc.perform(multipart(PLACES + "/import/preview").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.canImport").value(false))
+                .andExpect(jsonPath("$.data.errors[0].column").value("Ubicación"));
+    }
+
+    @Test
+    void exportsTheMapCenterOfAnOutdoorPlaceAsAnImportablePoint() throws Exception {
+        String code = createInras();
+        double[] expectedCenter = center(code);
+        byte[] exported = mockMvc.perform(post(PLACES + "/export")
+                        .contentType(MediaType.APPLICATION_JSON).content("""
+                                {
+                                  "categoryCode": null,
+                                  "alias": null,
+                                  "parentCode": null,
+                                  "createdFrom": null,
+                                  "createdTo": null,
+                                  "point1Lat": null,
+                                  "point1Lon": null,
+                                  "point2Lat": null,
+                                  "point2Lon": null,
+                                  "point3Lat": null,
+                                  "point3Lon": null,
+                                  "includePerspectives": false,
+                                  "perspectiveSides": []
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new java.io.ByteArrayInputStream(exported))) {
+            XSSFSheet sheet = workbook.getSheet("Lugares");
+            var row = java.util.stream.IntStream.rangeClosed(1, sheet.getLastRowNum())
+                    .mapToObj(sheet::getRow)
+                    .filter(candidate -> "INRAS".equals(candidate.getCell(0).getStringCellValue()))
+                    .findFirst().orElseThrow();
+            assertThat(row.getCell(5).getStringCellValue()).isEmpty();
+            assertThat(row.getCell(6).getStringCellValue()).isEmpty();
+            assertThat(row.getCell(7).getStringCellValue()).isEmpty();
+            assertThat(row.getCell(8).getNumericCellValue()).isCloseTo(expectedCenter[0],
+                    org.assertj.core.data.Offset.offset(1e-9));
+            assertThat(row.getCell(9).getNumericCellValue()).isCloseTo(expectedCenter[1],
+                    org.assertj.core.data.Offset.offset(1e-9));
+            assertThat(row.getCell(10).getStringCellValue()).isEqualTo("NO");
+        }
+    }
+
+    @Test
+    void refusesToImportNamesAlreadyPresentInTheCatalog() throws Exception {
+        String code = createInras();
+        String name = jdbc.queryForObject("SELECT name FROM places WHERE code = ?", String.class, code);
+        MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", placeWorkbook(name, false, false));
+
+        mockMvc.perform(multipart(PLACES + "/import/preview").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.canImport").value(false))
+                .andExpect(jsonPath("$.data.errors[0].column").value("Nombre / Alias"));
+
+        mockMvc.perform(multipart(PLACES + "/import").file(file))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void allowsImportedNamesContainingAnExistingNameOrAlias() throws Exception {
+        drawnPlace("Prueba", LAT, LON, null);
+        postJson(PLACES, """
+                {"name": "Lugar con alias", "kindCode": "OUTDOOR", "categoryCode": "EDIFICIO",
+                 "outline": {"geometry": {"type": "Point", "coordinates": [%s, %s]}}, "aliases": ["Prueba"]}"""
+                .formatted(LON, LAT)).andExpect(status().isCreated());
+
+        MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                placeWorkbookRows("Prueba 2", "Prueba 3", "Lugar de Prueba"));
+
+        mockMvc.perform(multipart(PLACES + "/import/preview").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.canImport").value(true))
+                .andExpect(jsonPath("$.data.errors", hasSize(0)));
+        mockMvc.perform(multipart(PLACES + "/import").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.imported").value(3));
     }
 
     @Test

@@ -22,11 +22,11 @@ const LIST_PATH = '/lugares';
 const NEW = 'new';
 
 /** La ficha de un lugar: foto principal, perspectivas en el mapa y fotos por vista. Quien edita, edita aquí. */
-export function PlaceDetailScreen({ code }: { code: string }) {
+export function PlaceDetailScreen({ code, readOnly = false }: { code: string; readOnly?: boolean }) {
   const router = useRouter();
   const listHref = useRememberedHref(LIST_PATH);
   const { place, loading, errorMessage, reload } = usePlace(code);
-  const canEdit = useCanEditPlaces();
+  const canEdit = useCanEditPlaces() && !readOnly;
   const actions = usePlaceActions(place, reload);
   const [focused, setFocused] = useState<number | null>(null);
   const [gallery, setGallery] = useState<GalleryState | null>(null);
@@ -34,13 +34,15 @@ export function PlaceDetailScreen({ code }: { code: string }) {
   const map = usePlaceMap();
   usePageTrail(place ? {
     labels: { [place.code]: place.name },
-    parents: place.parent ? [{ label: place.parent.name, href: `/lugares/${place.parent.code}` }] : [],
+    parents: place.parent
+      ? [{ label: place.parent.name, href: `/lugares/${place.parent.code}${readOnly ? '?soloLectura=1' : ''}` }]
+      : [],
   } : {});
 
   // El mapa vive en el layout de /lugares: se le dice qué lugar mostrar y qué perspectiva resaltar.
   useEffect(() => {
-    if (place) map.show(place, reload);
-  }, [map, place, reload]);
+    if (place) map.show(place, reload, readOnly);
+  }, [map, place, reload, readOnly]);
   // Al abrir otro lugar no queda ninguna perspectiva resaltada.
   useEffect(() => map.focusPerspective(null), [map, code]);
   const focusOnMap = (id: number) => {

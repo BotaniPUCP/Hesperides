@@ -406,6 +406,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       incidents.set(list.map((i) => { const p = data.plane.toPlane(i.lat, i.lon); return { id: i.id, x: p.x, z: -p.y, deadlineStatus: i.deadlineStatus }; }));
       needsRender = true;
     },
+    highlightViewCone(id) {
+      cones.highlight(id);
+      needsRender = true;
+    },
     focusViewCone(id) {
       cones.highlight(id);
       const at = id === null ? null : cones.position(id);

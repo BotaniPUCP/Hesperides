@@ -222,4 +222,21 @@ describe('apiClient', () => {
       await expect(apiClient.getBlob('/green-inventory/export.csv')).rejects.toMatchObject({ status: 403 });
     });
   });
+
+  describe('postBlob', () => {
+    it('envía filtros autenticados y devuelve el archivo binario', async () => {
+      setAccessToken('t');
+      const blob = new Blob(['workbook']);
+      const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => blob });
+      global.fetch = fetchMock as unknown as typeof fetch;
+      const filters = { categoryCode: 'EDIFICIO' };
+
+      await expect(apiClient.postBlob('/places/export', filters)).resolves.toBe(blob);
+      expect(cabecerasDelUltimoFetch(fetchMock).Authorization).toBe('Bearer t');
+      expect(fetchMock.mock.calls[0][1]).toMatchObject({
+        method: 'POST',
+        body: JSON.stringify(filters),
+      });
+    });
+  });
 });

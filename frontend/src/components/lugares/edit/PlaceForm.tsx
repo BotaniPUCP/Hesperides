@@ -29,14 +29,12 @@ function initialValues(place?: PlaceDetail, defaultName = ''): PlaceFormValues {
     kind: (place?.kind.code as PlaceKindCode) ?? 'OUTDOOR',
     category: place?.category.code ?? null,
     parentCode: place?.parent?.code ?? null,
-    aliases: place?.aliases.join(', ') ?? '',
+    aliases: place?.aliases ?? [],
   };
 }
 
 /** Lo que el formulario guardaría: si cambia respecto del inicio, hay algo que perder. */
 const snapshot = (values: PlaceFormValues, picked: PickedOutline | null) => JSON.stringify([values, picked?.outline ?? null]);
-
-const splitAliases = (text: string) => text.split(/[,\n]/).map((a) => a.trim()).filter(Boolean);
 
 /** Alta (sin `place`) o edición de un lugar. Al guardar abre su ficha. */
 export interface PlaceFormProps {
@@ -64,7 +62,7 @@ export function PlaceForm({ place, defaultName, returnTo }: PlaceFormProps) {
       categoryCode: values.category,
       parentCode: values.parentCode,
       outline: outdoor && picked ? picked.outline : {},
-      aliases: splitAliases(values.aliases),
+      aliases: values.aliases.map((alias) => alias.trim()).filter(Boolean),
     };
     setSaving(true);
     setError(null);
@@ -86,7 +84,15 @@ export function PlaceForm({ place, defaultName, returnTo }: PlaceFormProps) {
       }}
     >
       <PlaceFormFields values={values} onChange={setValues} excludeCode={place?.code} />
-      {outdoor && <OutlinePicker picked={picked} onPick={setPicked} />}
+      {outdoor && (
+        <OutlinePicker
+          picked={picked}
+          onPick={setPicked}
+          initialCenter={place && place.outline.centerLat !== null && place.outline.centerLon !== null
+            ? { lat: place.outline.centerLat, lon: place.outline.centerLon }
+            : undefined}
+        />
+      )}
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={() => guard.confirm(() => guard.navigate(place ? `/lugares/${place.code}` : rememberedHref(returnTo ?? '/lugares')))}>

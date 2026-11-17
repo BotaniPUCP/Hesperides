@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import type { PlaceKindCode } from '@shared/types';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
@@ -8,7 +7,6 @@ import { useListUrlState } from '@/hooks/useListUrlState';
 import { usePlaces } from '@/hooks/usePlaces';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { oneOf } from '@/lib/listUrl';
-import { useCanEditPlaces } from './edit/useCanEditPlaces';
 import { PlaceCard } from './PlaceCard';
 import { PlaceFilters } from './PlaceFilters';
 import { PageHeader } from '@/components/layouts/PageHeader';
@@ -26,7 +24,6 @@ export function LugaresScreen() {
   const [search, setSearch] = useSearchDraft(values.search, (next) => setValues({ search: next }));
   const category = values.category || null;
   const kind = oneOf(values.kind, KIND_CODES, '') || null;
-  const canEdit = useCanEditPlaces();
   const { places, loading, errorMessage } = usePlaces({
     search: values.search || undefined,
     category: category ?? undefined,
@@ -39,14 +36,6 @@ export function LugaresScreen() {
       <PageHeader
         title="Catálogo de lugares"
         description="Edificios, jardines, estacionamientos y complejos, con fotos desde sus alrededores para ubicar un trabajo sin volver al sitio."
-        actions={canEdit && (<>
-            <Link href="/lugares/migracion" className="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50">
-              Migrar referencias
-            </Link>
-            <Link href="/lugares/nuevo" className="rounded-md bg-forest-700 px-4 py-2 text-sm font-semibold text-white hover:bg-forest-800">
-              Nuevo lugar
-            </Link>
-          </>)}
       />
 
       <PlaceFilters

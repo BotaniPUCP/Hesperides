@@ -20,6 +20,51 @@ export interface PlaceFilters {
   kind?: string;
 }
 
+export interface PlaceImportIssue {
+  row: number;
+  column: string;
+  value: string;
+  message: string;
+}
+
+export interface PlaceImportPreview {
+  rows: number;
+  canImport: boolean;
+  errors: PlaceImportIssue[];
+  locationConflicts: {
+    row: number;
+    lat: number;
+    lon: number;
+    places: { code: string; name: string }[];
+  }[];
+}
+
+export interface PlaceImportReplacement {
+  row: number;
+  placeCode: string;
+}
+
+export interface PlaceImportResult {
+  imported: number;
+  places: { code: string; name: string; replaced: boolean }[];
+}
+
+export interface PlaceWorkbookExportFilters {
+  categoryCode: string | null;
+  alias: string | null;
+  parentCode: string | null;
+  createdFrom: string | null;
+  createdTo: string | null;
+  point1Lat: number | null;
+  point1Lon: number | null;
+  point2Lat: number | null;
+  point2Lon: number | null;
+  point3Lat: number | null;
+  point3Lon: number | null;
+  includePerspectives: boolean;
+  perspectiveSides: string[];
+}
+
 /** Las fotos llegan como ruta de la API («/files/places/…»); el navegador necesita la dirección entera. */
 const media = (url: string) => (url.startsWith('/') ? `${API_BASE_URL}${url}` : url);
 
@@ -69,9 +114,25 @@ export const placesApi = {
     apiClient.post<PlacePerspective>(`/places/${segment(code)}/perspectives`, input),
   updatePerspective: (code: string, id: number, input: PerspectiveInput) =>
     apiClient.put<PlacePerspective>(`/places/${segment(code)}/perspectives/${id}`, input),
+  clearPerspectiveMapView: (code: string, id: number) =>
+    apiClient.del<void>(`/places/${segment(code)}/perspectives/${id}/map-view`),
   reorderPerspectives: (code: string, ids: number[]) =>
     apiClient.put<void>(`/places/${segment(code)}/perspectives/order`, { ids }),
   removePerspective: (code: string, id: number) => apiClient.del<void>(`/places/${segment(code)}/perspectives/${id}`),
+
+  placeImportTemplate: () => apiClient.getBlob('/places/import/template'),
+  previewPlaceImport: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiClient.postForm<PlaceImportPreview>('/places/import/preview', form);
+  },
+  importPlaces: (file: File, replacements: PlaceImportReplacement[] = []) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('replacements', new Blob([JSON.stringify(replacements)], { type: 'application/json' }));
+    return apiClient.postForm<PlaceImportResult>('/places/import', form);
+  },
+  exportPlaces: (filters: PlaceWorkbookExportFilters) => apiClient.postBlob('/places/export', filters),
 
   uploadPhoto: (code: string, file: File, target: PhotoInput) => {
     const form = new FormData();

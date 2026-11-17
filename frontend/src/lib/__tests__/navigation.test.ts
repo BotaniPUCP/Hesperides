@@ -1,7 +1,7 @@
 import { NAVIGATION, activeHref, isActivePath, visibleDirectLinks, visibleNavigation } from '../navigation';
 
 describe('activeHref', () => {
-  const HREFS = ['/', '/inventario-verde', '/inventario-verde/registrar', '/lugares', '/lugares/migracion'];
+  const HREFS = ['/', '/inventario-verde', '/inventario-verde/registrar', '/lugares', '/lugares/migracion', '/lugares/nuevo'];
 
   it('entre dos enlaces que coinciden gana el más específico', () => {
     expect(activeHref('/inventario-verde/registrar', HREFS)).toBe('/inventario-verde/registrar');
@@ -60,6 +60,9 @@ describe('visibleNavigation', () => {
     expect(hrefsDe('ADMIN')).toEqual([
       '/lugares',
       '/lugares/migracion',
+      '/lugares/nuevo',
+      '/lugares/importar',
+      '/lugares/exportar',
       '/inventario-verde',
       '/inventario-verde/registrar',
       '/inventario-verde/importar',
@@ -90,6 +93,9 @@ describe('visibleNavigation', () => {
     expect(hrefsDe('COORDINADOR')).toEqual([
       '/lugares',
       '/lugares/migracion',
+      '/lugares/nuevo',
+      '/lugares/importar',
+      '/lugares/exportar',
       '/inventario-verde',
       '/inventario-verde/registrar',
       '/inventario-verde/importar',

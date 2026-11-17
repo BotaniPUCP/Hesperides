@@ -63,6 +63,14 @@ public class PerspectiveService {
         return assembler.perspective(perspectives.byId(place.id(), id), List.of(), views.find(Owner.PERSPECTIVE, id));
     }
 
+    @Transactional
+    public void clearMapView(String placeCode, long id) {
+        PlaceRow place = outdoorPlace(placeCode);
+        perspectives.byId(place.id(), id);
+        views.save(Owner.PERSPECTIVE, id, null);
+        audit.record(AuditActionCode.PLACE_PERSPECTIVE_UPDATED, ENTITY, id, Map.of("place", placeCode, "mapView", "automatic"));
+    }
+
     /** El nombre que el sistema le pondría, sin guardar nada: para verlo mientras se marca en el mapa. */
     @Transactional(readOnly = true)
     public String preview(String placeCode, PerspectiveRequest request) {

@@ -15,7 +15,14 @@ jest.mock('@/components/ui', () => ({
   ...jest.requireActual('@/components/ui'),
   useToast: () => ({ showToast: jest.fn(), dismissAll: jest.fn() }),
 }));
-jest.mock('@/lib/places-api', () => ({ placesApi: { saveMapView: jest.fn(), clearMapView: jest.fn() } }));
+jest.mock('@/lib/places-api', () => ({
+  placesApi: {
+    saveMapView: jest.fn(),
+    clearMapView: jest.fn(),
+    updatePerspective: jest.fn(),
+    clearPerspectiveMapView: jest.fn(),
+  },
+}));
 jest.mock('@/hooks/useMapLayers', () => ({
   useMapLayers: () => ({ data: jest.requireActual('@/components/map3d/__fixtures__/mapLayers').layersWithTwoBlocks, isLoading: false }),
 }));
@@ -32,7 +39,7 @@ function fakeViewer(): jest.Mocked<Viewer> {
   return {
     setPaint: jest.fn(), setBalloons: jest.fn(), setAdminMode: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setSunset: jest.fn(), setSunsetHour: jest.fn(), snapshot: jest.fn(), setCaptureMode: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), setRealColors: jest.fn(), fit: jest.fn(), top: jest.fn(),
-    north: jest.fn(), toggleSpin: jest.fn(), setViewCones: jest.fn(), setIncidentMarkers: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(),
+    north: jest.fn(), toggleSpin: jest.fn(), setViewCones: jest.fn(), highlightViewCone: jest.fn(), setIncidentMarkers: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(),
     flyToPose: jest.fn(), dispose: jest.fn(),
     livePerspective: jest.fn(),
     pose: jest.fn(() => ({ position: [10, 222, 30] as [number, number, number], target: [0, 22, 0] as [number, number, number] })),
@@ -63,8 +70,8 @@ afterEach(() => {
   mockRole.current = 'COORDINADOR';
 });
 
-function renderPanel(p: PlaceDetail, onChanged = jest.fn()) {
-  const utils = render(<PlaceMapPanel place={p} focus={NO_FOCUS} onChanged={onChanged} />);
+function renderPanel(p: PlaceDetail, onChanged = jest.fn(), readOnly = false) {
+  const utils = render(<PlaceMapPanel place={p} focus={NO_FOCUS} onChanged={onChanged} readOnly={readOnly} />);
   act(() => map.onReady(viewer));
   return utils;
 }
@@ -134,6 +141,43 @@ describe('PlaceMapPanel', () => {
     expect(saved[1].target.heightM).toBeCloseTo(0, 6);
   });
 
+  it('guarda la vista en la perspectiva seleccionada, no en el lugar', async () => {
+    (placesApi.updatePerspective as jest.Mock).mockResolvedValue(undefined);
+    const onChanged = jest.fn();
+    const p = place();
+    const { rerender } = renderPanel(p, onChanged);
+    rerender(<PlaceMapPanel place={p} focus={{ id: 5, seq: 1 }} onChanged={onChanged} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar esta vista' }));
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    const saved = (placesApi.updatePerspective as jest.Mock).mock.calls[0];
+    expect(saved[0]).toBe('LUG-0001');
+    expect(saved[1]).toBe(5);
+    expect(saved[2]).toMatchObject({
+      sideCode: 'BACK',
+      lat: -12.0702,
+      lon: -77.08,
+      headingDeg: 0,
+    });
+    expect(saved[2].mapView.camera.heightM).toBeCloseTo(200, 6);
+    expect(placesApi.saveMapView).not.toHaveBeenCalled();
+  });
+
+  it('restablece la vista de la perspectiva seleccionada', async () => {
+    (placesApi.clearPerspectiveMapView as jest.Mock).mockResolvedValue(undefined);
+    const onChanged = jest.fn();
+    const p = place({ perspectives: [{ ...place().perspectives[0], mapView: view }] });
+    const { rerender } = renderPanel(p, onChanged);
+    rerender(<PlaceMapPanel place={p} focus={{ id: 5, seq: 1 }} onChanged={onChanged} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Restablecer vista' }));
+
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    expect(placesApi.clearPerspectiveMapView).toHaveBeenCalledWith('LUG-0001', 5);
+    expect(placesApi.clearMapView).not.toHaveBeenCalled();
+  });
+
   it('restablecer solo aparece si hay vista guardada', () => {
     renderPanel(place());
     expect(screen.queryByRole('button', { name: 'Restablecer vista' })).not.toBeInTheDocument();
@@ -144,6 +188,13 @@ describe('PlaceMapPanel', () => {
     renderPanel(place({ mapView: view }));
 
     expect(screen.queryByRole('button', { name: 'Guardar esta vista' })).not.toBeInTheDocument();
+  });
+
+  it('el modo de solo lectura oculta controles del minimapa incluso para quien puede editar', () => {
+    renderPanel(place({ mapView: view }), jest.fn(), true);
+
+    expect(screen.queryByRole('button', { name: 'Guardar esta vista' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Restablecer vista' })).not.toBeInTheDocument();
   });
 });
 
@@ -190,6 +241,8 @@ describe('isPlacePage', () => {
     ['/lugares', false],
     ['/lugares/nuevo', false],
     ['/lugares/migracion', false],
+    ['/lugares/importar', false],
+    ['/lugares/exportar', false],
     ['/lugares/LUG-0001/editar', false],
   ])('%s → %s', (path, expected) => {
     expect(isPlacePage(path)).toBe(expected);

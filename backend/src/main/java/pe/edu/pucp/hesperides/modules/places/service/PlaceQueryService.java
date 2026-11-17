@@ -74,7 +74,7 @@ public class PlaceQueryService {
                         .toList(),
                 mapRows.perspectives().stream().map(v -> new MapPerspective(v.id(), new PlaceRef(v.placeCode(), v.placeName()),
                         v.displayName(), v.lat(), v.lon(), v.headingDeg(),
-                        v.firstPhotoId() == null ? null : PlaceDetailAssembler.url(v.firstPhotoId(), true))).toList());
+                        v.firstPhotoId() == null ? null : PlaceDetailAssembler.url(v.firstPhotoId(), true), v.mapView())).toList());
     }
 
     private static String blankToNull(String value) {

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { Map3DViewProps } from '@/components/map3d/Map3DView';
 import { layersWithTwoBlocks, SECOND_BLOCK_ID } from '@/components/map3d/__fixtures__/mapLayers';
 import { toSceneData } from '@/components/map3d/sceneData';
@@ -34,7 +34,7 @@ const create = placesApi.create as jest.MockedFunction<typeof placesApi.create>;
 const list = placesApi.list as jest.MockedFunction<typeof placesApi.list>;
 const update = placesApi.update as jest.MockedFunction<typeof placesApi.update>;
 const data = toSceneData(layersWithTwoBlocks);
-const marks = { setMarkedBuildings: jest.fn(), select: jest.fn() };
+const marks = { setMarkedBuildings: jest.fn(), select: jest.fn(), focusLatLon: jest.fn() };
 
 beforeEach(() => list.mockResolvedValue([]));
 afterEach(() => jest.clearAllMocks());
@@ -42,7 +42,10 @@ afterEach(() => jest.clearAllMocks());
 function fillBasics() {
   fireEvent.change(screen.getByLabelText(/Nombre/), { target: { value: 'CIA' } });
   fireEvent.change(screen.getByLabelText(/Categoría/), { target: { value: 'EDIFICIO' } });
-  fireEvent.change(screen.getByLabelText(/Alias/), { target: { value: 'Complejo de Innovación, CIA nuevo' } });
+  for (const alias of ['CIA', 'CIA2']) {
+    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: alias } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar alias' }));
+  }
 }
 
 describe('PlaceForm', () => {
@@ -57,7 +60,7 @@ describe('PlaceForm', () => {
 
     await waitFor(() => expect(create).toHaveBeenCalledWith({
       name: 'CIA', kindCode: 'OUTDOOR', categoryCode: 'EDIFICIO', parentCode: null,
-      outline: { buildingIds: [data.campusBuildings[0].props.id] }, aliases: ['Complejo de Innovación', 'CIA nuevo'],
+      outline: { buildingIds: [data.campusBuildings[0].props.id] }, aliases: ['CIA', 'CIA2'],
     }));
     // Con cambios hay una entrada propia en el historial: se reemplaza al salir.
     expect(replace).toHaveBeenCalledWith('/lugares/LUG-0005');
@@ -109,11 +112,46 @@ describe('PlaceForm', () => {
       aliases: [], children: [], mainPhotos: [], perspectives: [], interior: [], mapView: null,
     }} />);
 
+    act(() => map.onReady(marks as never));
+
+    expect(marks.focusLatLon).toHaveBeenCalledWith(-12.07, -77.08);
     expect(screen.getByText(/2 edificios: .*Bloque B/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/Nombre/), { target: { value: 'CIA nuevo' } });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar lugar' }));
 
     await waitFor(() => expect(update.mock.calls[0][1].outline).toEqual({ buildingIds: ids }));
+  });
+
+  it('al editar permite reemplazar y quitar alias desde el modal de gestión', async () => {
+    update.mockResolvedValue(undefined as never);
+    render(<PlaceForm place={{
+      code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' }, category: { code: 'EDIFICIO', label: 'Edificio' },
+      outline: { source: 'BUILDING', buildingIds: [data.campusBuildings[0].props.id], zoneCode: null, featureCode: null, centerLat: null, centerLon: null },
+      aliases: ['Nombre antiguo', 'CIA2'], children: [], mainPhotos: [], perspectives: [], interior: [], mapView: null,
+    }} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Gestionar alias' }));
+    const dialog = screen.getByRole('dialog', { name: 'Gestionar alias' });
+    fireEvent.change(within(dialog).getByLabelText('Alias 1'), { target: { value: 'CIA' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Quitar alias CIA2' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Listo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar lugar' }));
+
+    await waitFor(() => expect(update.mock.calls[0][1].aliases).toEqual(['CIA']));
+  });
+
+  it('no permite agregar alias con espacios ni alias duplicados ignorando mayúsculas y tildes', () => {
+    render(<PlaceForm />);
+
+    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: 'dos palabras' } });
+    expect(screen.getByLabelText('Alias')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Agregar alias' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: 'Fisica' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar alias' }));
+    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: 'física' } });
+
+    expect(screen.getByRole('button', { name: 'Agregar alias' })).toBeDisabled();
   });
 
   it('al editar un complejo conserva que su contorno sale de sus hijos', () => {
