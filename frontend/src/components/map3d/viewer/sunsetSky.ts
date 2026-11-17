@@ -64,6 +64,13 @@ void main() {
   col += vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55;
   col += vec3(2.4, 1.3, 0.55) * pow(toward, 90.0) * sunPower;
   col += vec3(70.0, 44.0, 18.0) * smoothstep(0.99975, 0.99988, toward) * sunPower;
+  // Estrella del sol: ocho rayos finos, alternando largos y cortos, que se apagan lejos del disco.
+  vec3 sx = normalize(cross(sunDir, vec3(0.0, 1.0, 0.0)));
+  vec3 sy = cross(sx, sunDir);
+  float ang = atan(dot(dir, sy), dot(dir, sx));
+  float spikes = pow(abs(cos(ang * 4.0)), 80.0) + 0.6 * pow(abs(sin(ang * 4.0)), 160.0);
+  float reach = exp(-(1.0 - toward) * 180.0) * (1.0 - smoothstep(0.9998, 1.0, toward));
+  col += vec3(3.0, 1.6, 0.6) * spikes * reach * sunPower * (1.0 - dusk);
   // Nubes en un plano alto: estratocúmulos en jirones, con el borde del lado del sol encendido.
   if (h > 0.0 && cloudsReady > 0.5) {
     float el = asin(clamp(h, 0.0, 1.0)) / 0.7853982;

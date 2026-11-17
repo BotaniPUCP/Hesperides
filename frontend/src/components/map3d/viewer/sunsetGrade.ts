@@ -153,8 +153,10 @@ void main() {
   vec2 d = vUv - 0.5;
   c *= 1.0 - uVignette * smoothstep(0.25, 0.85, dot(d, d) * 2.2);
   // Dither triangular de medio nivel: sin él, el cielo y el halo del sol salen en bandas al pasar a 8 bits.
-  float n1 = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
-  float n2 = fract(sin(dot(gl_FragCoord.xy + 17.0, vec2(39.3468, 11.135))) * 24634.6345);
+  // Ruido de gradiente entrelazado (sin sin(): con coordenadas grandes, como en la Foto al doble, sin() pierde
+  // precisión en la GPU y el dither desaparecía).
+  float n1 = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  float n2 = fract(52.9829189 * fract(dot(gl_FragCoord.xy + vec2(47.0, 17.0), vec2(0.06711056, 0.00583715))));
   c += (n1 + n2 - 1.0) / 255.0;
   gl_FragColor = vec4(c, 1.0);
 }`;
