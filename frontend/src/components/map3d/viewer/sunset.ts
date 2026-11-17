@@ -3,6 +3,11 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { SANITIZE_GLSL, SunsetGradePass } from './sunsetGrade';
+import { buildCity, CITY_ORIGIN, CITY_RADIUS_M, CITY_URL, type CityData } from './sunsetCity';
+import { withCityWindows } from './cityWindows';
+import { broadleafCrown } from './sunsetTrees';
+import type { LocalPlane } from '../projection';
+import type { Polygon } from '../sceneData';
 import { createSunsetSky, HORIZON } from './sunsetSky';
 
 /**
@@ -92,9 +97,14 @@ export interface Sunset {
   dispose: () => void;
 }
 
-/** Suelo lejano y ciudad de relleno alrededor del campus: la bruma los funde con el horizonte. */
-function createSurroundings(campus: THREE.Box3, groundY: number): THREE.Group {
+/**
+ * Suelo lejano y ciudad de relleno alrededor del campus: la bruma los funde con el horizonte. Lo que cae
+ * dentro del radio de la ciudad real (`sunsetCity.ts`, centrada en `city`) va aparte, en `inner`: se oculta
+ * cuando esa ciudad llega.
+ */
+function createSurroundings(campus: THREE.Box3, groundY: number, city: { x: number; z: number }): { group: THREE.Group; inner: THREE.Object3D[] } {
   const group = new THREE.Group();
+  const isInner = (x: number, z: number) => Math.hypot(x - city.x, z - city.z) < CITY_RADIUS_M - 40;
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(SUNSET.groundRadiusM, 64).rotateX(-Math.PI / 2),
     new THREE.MeshStandardMaterial({ color: SUNSET.ground, roughness: 1 }),
@@ -143,51 +153,64 @@ function createSurroundings(campus: THREE.Box3, groundY: number): THREE.Group {
       }
     }
   }
-  const blocks = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0),
-    new THREE.MeshStandardMaterial({ roughness: 0.9 }),
-    lots.length,
-  );
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
-  lots.forEach(([x, z, w, h, d], i) => {
-    m.compose(p.set(x, groundY, z), q, s.set(w, h, d));
-    blocks.setMatrixAt(i, m);
-    // Lo bajo y cercano, más oscuro: no compite con el campus.
-    const tint = palette[Math.floor(rnd() * palette.length)].clone();
-    blocks.setColorAt(i, h < 10 ? tint.multiplyScalar(0.72) : tint);
+  const inner: THREE.Object3D[] = [];
+  const boxGeo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+  const boxMat = withCityWindows(new THREE.MeshStandardMaterial({ roughness: 0.9 }), groundY);
+  [lots.filter(([x, z]) => isInner(x, z)), lots.filter(([x, z]) => !isInner(x, z))].forEach((part, k) => {
+    const blocks = new THREE.InstancedMesh(boxGeo, boxMat, part.length);
+    part.forEach(([x, z, w, h, d], i) => {
+      m.compose(p.set(x, groundY, z), q, s.set(w, h, d));
+      blocks.setMatrixAt(i, m);
+      // Lo bajo y cercano, más oscuro: no compite con el campus.
+      const tint = palette[Math.floor(rnd() * palette.length)].clone();
+      blocks.setColorAt(i, h < 10 ? tint.multiplyScalar(0.72) : tint);
+    });
+    blocks.castShadow = true;
+    blocks.receiveShadow = true;
+    blocks.raycast = noRaycast;
+    group.add(blocks);
+    if (k === 0) inner.push(blocks);
   });
-  blocks.castShadow = true;
-  blocks.receiveShadow = true;
-  blocks.raycast = noRaycast;
-  group.add(blocks);
 
-  const trees = new THREE.InstancedMesh(
-    new THREE.IcosahedronGeometry(1, 0).translate(0, 1, 0),
-    new THREE.MeshStandardMaterial({ color: '#3f5a2c', roughness: 1, flatShading: true }),
-    SUNSET.city.trees,
-  );
+  const placed: THREE.Matrix4[] = [];
+  const at: [number, number][] = [];
   for (let i = 0; i < SUNSET.city.trees; i++) {
     // En las calles: sobre una línea de la trama, en un punto al azar de ella.
     let [x, z] = around(1.4);
     if (rnd() < 0.5) x = cx + (Math.round((x - cx) / pitch - 0.5) + 0.5) * pitch;
     else z = cz + (Math.round((z - cz) / pitch - 0.5) + 0.5) * pitch;
     const r = 3.5 + rnd() * 4.5;
-    m.compose(p.set(x, groundY, z), q.identity(), s.set(r, r * (1.1 + rnd() * 0.6), r));
-    trees.setMatrixAt(i, m);
+    placed.push(new THREE.Matrix4().compose(p.set(x, groundY, z), q.identity(), s.set(r, r * (1.1 + rnd() * 0.6), r)));
+    at.push([x, z]);
   }
-  trees.castShadow = true;
-  trees.raycast = noRaycast;
-  group.add(trees);
+  // Las copas en racimo de los árboles del campus, más livianas: son miles y se ven de lejos.
+  const crownGeo = broadleafCrown(0x51ce7, 0, 4).translate(0, 1, 0);
+  const crownMat = new THREE.MeshStandardMaterial({ color: '#3f5a2c', roughness: 1, vertexColors: true });
+  [true, false].forEach((innerPart) => {
+    const idx = at.map(([x, z], i) => (isInner(x, z) === innerPart ? i : -1)).filter((i) => i >= 0);
+    const trees = new THREE.InstancedMesh(crownGeo, crownMat, idx.length);
+    idx.forEach((i, k) => trees.setMatrixAt(k, placed[i]));
+    trees.raycast = noRaycast;
+    group.add(trees);
+    if (innerPart) inner.push(trees);
+  });
   group.visible = false;
-  return group;
+  return { group, inner };
 }
 
-/**
- * `onChange`: algo llegó tarde (la foto de las nubes) y hay que redibujar. `lite`: en pantallas táctiles,
- * sin oclusión ambiental y con menos muestras de antialiasing (la memoria y la GPU de un celular).
- */
+export interface SunsetOptions {
+  /** El plano de la escena y el límite del campus: ubican la ciudad real y dejan libre el campus. */
+  plane: LocalPlane;
+  campus: Polygon[];
+  /** Algo llegó tarde (la foto de las nubes, la ciudad) y hay que redibujar. */
+  onChange?: () => void;
+  /** En pantallas táctiles: sin oclusión ambiental y con menos muestras de antialiasing. */
+  lite?: boolean;
+}
+
 export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, campus: THREE.Box3,
-  groundY: number, onChange: () => void = () => undefined, lite = false): Sunset {
+  groundY: number, { plane, campus: campusPolygons, onChange = () => undefined, lite = false }: SunsetOptions): Sunset {
   const { mesh: sky, setSun, setSunPower } = createSunsetSky(SUNSET.groundRadiusM, () => {
     // Las nubes también se reflejan: con el modo prendido, se vuelve a hornear el entorno.
     env?.dispose();
@@ -199,8 +222,27 @@ export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, 
     onChange();
   });
   sky.visible = false;
-  const surroundings = createSurroundings(campus, groundY);
+  const cityOrigin = plane.toPlane(CITY_ORIGIN[0], CITY_ORIGIN[1]);
+  const { group: surroundings, inner } = createSurroundings(campus, groundY, { x: cityOrigin.x, z: -cityOrigin.y });
   scene.add(sky, surroundings);
+  let cityRequested = false;
+
+  /** La ciudad real, una sola vez y recién cuando se prende el modo; si no llega, queda la de relleno. */
+  function loadCity() {
+    if (cityRequested) return;
+    cityRequested = true;
+    fetch(CITY_URL)
+      .then((r) => (r.ok ? (r.json() as Promise<CityData>) : Promise.reject(new Error(String(r.status)))))
+      .then((data) => {
+        const o = plane.toPlane(data.origen[0], data.origen[1]);
+        const toFile = (ring: number[]) => ring.map((v, i) => v - (i % 2 === 0 ? o.x : o.y));
+        const city = buildCity(data, (x, y) => [x + o.x, -(y + o.y)], campusPolygons.map((poly) => toFile(poly[0])), groundY);
+        surroundings.add(city);
+        inner.forEach((obj) => { obj.visible = false; });
+        onChange();
+      })
+      .catch(() => undefined);
+  }
   const fog = new THREE.Fog(HORIZON.clone(), 1000, 6000);
 
   const size = renderer.getSize(new THREE.Vector2());
@@ -248,6 +290,7 @@ export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, 
     enabled: () => on,
     setEnabled(next, sunDir) {
       if (next) {
+        loadCity();
         setSun(sunDir);
         bakeEnvironment(sunDir);
         scene.environment = env?.texture ?? null;

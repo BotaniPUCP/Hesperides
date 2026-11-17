@@ -57,7 +57,8 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
   const lights = createLights(scene, center, coarse);
   let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true, golden = false;
-  const sunset = createSunset(renderer, scene, rig.camera, stage.box, WORLD_LIFT, () => { needsRender = true; }, coarse);
+  const sunset = createSunset(renderer, scene, rig.camera, stage.box, WORLD_LIFT,
+    { plane: data.plane, campus: data.campus, onChange: () => { needsRender = true; }, lite: coarse });
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
   const poly = createSceneLayers(scene, data, textures, state, model);
@@ -142,6 +143,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     const dusk = golden && !night;
     sunset.setEnabled(dusk, lights.sunDir());
     stage.backdrop.style.visibility = dusk ? 'hidden' : '';
+    vegetation.setGolden(dusk);
     setGroundMatte([poly.greenAreas, poly.xerophytic, poly.parking, poly.sidewalks]
       .flatMap((l) => (Array.isArray(l.mesh.material) ? l.mesh.material : [l.mesh.material])), dusk);
     realColors.setGlow(night ? 1 : dusk ? SUNSET.windowGlow : 0);
@@ -294,6 +296,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       if (!layer) return;
       const objects = layer.kind === 'poly' ? [layer.mesh, ...layer.extra] : layer.meshes;
       objects.forEach((o) => { o.visible = visible; });
+      if (id === 'vegetation') vegetation.setGolden(golden && !night);
       needsRender = true;
     },
     select(target, focus) {
