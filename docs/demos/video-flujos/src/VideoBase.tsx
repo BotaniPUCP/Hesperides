@@ -10,7 +10,7 @@ import { useFormaBoca } from './hespo2d/useFormaBoca';
 import { DISENOS } from './hespo2d/v2/disenos';
 import { HespoV2 } from './hespo2d/v2/HespoV2';
 import { useApertura } from './hespo/useApertura';
-import { fraseActiva, FRAMES_TRANSICION, opacidadDeEscena, type Linea, type TramoEscena } from './tiempos';
+import { fraseActiva, FRAMES_TRANSICION, opacidadDeEscena, volumenMusica, type Linea, type TramoEscena } from './tiempos';
 import { indiceFrase } from './ui/anim';
 import { Escenario } from './ui/Escenario';
 import { fontFamily } from './ui/fuente';
@@ -68,6 +68,7 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
             <Html5Audio src={staticFile(audio(t.archivo))} />
           </Sequence>
         ))}
+      {config.musica ? <Html5Audio src={staticFile(config.musica)} volume={(f) => volumenMusica(linea, f)} /> : null}
     </AbsoluteFill>
   );
 };

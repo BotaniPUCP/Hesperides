@@ -9,6 +9,8 @@ import {
   FRAMES_TRANSICION,
   opacidadDeEscena,
   problemasDeVoz,
+  volumenMusica,
+  VOLUMEN_MUSICA,
   type Manifiesto,
 } from './tiempos';
 
@@ -66,6 +68,17 @@ test('el respiro de una frase alarga el silencio que la sigue, también al final
   expect(primera.frases[1].desde).toBe(30 + 30 + FRAMES_PAUSA);
   expect(primera.frames).toBe(30 + 30 + FRAMES_PAUSA + 60 + 15);
   expect(segunda.desde).toBe(primera.frames + FRAMES_TRANSICION);
+});
+
+test('la música baja mientras habla la voz y sube suave en los silencios largos', () => {
+  const linea = construirLinea(guion, manifiesto);
+  const primera = linea.escenas[0].frases[0];
+  expect(volumenMusica(linea, primera.desde + 5)).toBeCloseTo(VOLUMEN_MUSICA.bajo);
+  const lejos = linea.framesTotales + 60;
+  expect(volumenMusica(linea, lejos)).toBeCloseTo(VOLUMEN_MUSICA.alto);
+  const cerca = primera.desde + primera.frames + 6;
+  expect(volumenMusica(linea, cerca)).toBeGreaterThan(VOLUMEN_MUSICA.bajo);
+  expect(volumenMusica(linea, cerca)).toBeLessThan(VOLUMEN_MUSICA.alto);
 });
 
 test('redondea los fotogramas hacia arriba', () => {

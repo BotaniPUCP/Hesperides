@@ -354,9 +354,11 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
     );
   }
   // h10: la cuadrilla corta la rama, sube la foto y la incidencia se cierra.
+  // La grieta cede despacio mientras podan y recién entonces la rama cae: se alcanza a leer.
   const corte = tw(frame, [
-    [momentoDe(escena, 'h10', 0.08), 0],
-    [momentoDe(escena, 'h10', 0.38), 1],
+    [momentoDe(escena, 'h10', 0.05), 0],
+    [momentoDe(escena, 'h10', 0.3), 0.12],
+    [momentoDe(escena, 'h10', 0.46), 1],
   ]);
   const flash = interpolate(frame, [momentoDe(escena, 'h10', 0.48), momentoDe(escena, 'h10', 0.5), momentoDe(escena, 'h10', 0.58)], [0, 0.9, 0], {
     extrapolateLeft: 'clamp',

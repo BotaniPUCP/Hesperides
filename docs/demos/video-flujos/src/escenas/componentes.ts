@@ -11,6 +11,8 @@ export type ConfigVideo = {
   carpetaVoz: string;
   /** Cómo se dibuja Hespo; si falta, en 2D. */
   hespo?: '2d' | '3d' | 'semilla';
+  /** Música de fondo en `public/`; baja de volumen mientras habla la voz. */
+  musica?: string;
 };
 
 export function componenteDeEscena(config: ConfigVideo, id: EscenaId): React.FC<PropsEscena> {

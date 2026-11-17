@@ -16,6 +16,8 @@ const CONFIG: ConfigVideo = {
   escalas: { aparece: 1.05, solucion: 0.75, resultado: 0.95 },
   carpetaVoz: CARPETA_VOZ_HISTORIA,
   hespo: 'semilla',
+  // Original, sintetizada con scripts/generar_musica.py.
+  musica: 'musica/historia.wav',
 };
 
 const Contenido: React.FC<{ linea: Linea; medidas: Medidas }> = ({ linea, medidas }) => {

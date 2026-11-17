@@ -1,6 +1,23 @@
 import { interpolate } from 'remotion';
 import type { EscenaId, Frase, Guion } from './guion';
 
+export const VOLUMEN_MUSICA = { bajo: 0.1, alto: 0.28 } as const;
+const CUADROS_DE_RAMPA = 12;
+
+/** Volumen de la música: baja mientras habla la voz y sube en rampa a medida que se aleja de ella. */
+export function volumenMusica(linea: Linea, frame: number): number {
+  let distancia = Infinity;
+  for (const escena of linea.escenas) {
+    for (const t of escena.frases) {
+      const fin = t.desde + t.frames;
+      const d = frame < t.desde ? t.desde - frame : frame > fin ? frame - fin : 0;
+      distancia = Math.min(distancia, d);
+    }
+  }
+  const k = Math.min(1, distancia / CUADROS_DE_RAMPA);
+  return VOLUMEN_MUSICA.bajo + (VOLUMEN_MUSICA.alto - VOLUMEN_MUSICA.bajo) * k;
+}
+
 /** Una escena se desvanece al terminar; la última no: queda en pantalla si el video sigue (cierre). */
 export function opacidadDeEscena(linea: Linea, escena: TramoEscena, frame: number): number {
   if (escena === linea.escenas[linea.escenas.length - 1]) return 1;
