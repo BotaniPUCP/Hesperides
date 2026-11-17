@@ -5,7 +5,7 @@ import { random } from 'remotion';
 import { ESPERA_BROTE } from '../hespo2d/semillaEnGuion';
 import type { Linea, TramoEscena } from '../tiempos';
 import { momentoDe } from '../ui/anim';
-import { corrimientoManana, fraccionesH10, pinEnVideo, SELLO, SUELO, X_ARBOL, X_ARBOL_MANANA, X_BROTE } from './posiciones';
+import { CORRIMIENTO_MANANA, fraccionesH10, pinEnVideo, SELLO, SUELO, X_ARBOL, X_ARBOL_MANANA, X_BROTE } from './posiciones';
 
 export type Sacudida = { x: number; y: number; giro: number };
 
@@ -103,7 +103,7 @@ export function golpesDeHistoria(linea: Linea): Golpe[] {
   const sello = momentoDe(solucion, 'h10', fraccionesH10.sello) + SELLO.caida;
   const pin = pinEnVideo();
   return [
-    { id: 'grieta', frame: grieta, x: X_ARBOL_MANANA - corrimientoManana(manana, grieta) - 70, y: SUELO - 360, amp: 9, pausa: 1, blanco: 0, cromatica: 5, colores: ['borde', 'arena'] },
+    { id: 'grieta', frame: grieta, x: X_ARBOL_MANANA - CORRIMIENTO_MANANA - 70, y: SUELO - 360, amp: 9, pausa: 1, blanco: 0, cromatica: 5, colores: ['borde', 'arena'] },
     { id: 'brote', frame: aparece.desde + ESPERA_BROTE + 3, x: X_BROTE, y: SUELO, amp: 12, pausa: 2, blanco: 0.35, cromatica: 6, colores: ['hoja', 'cuerpo', 'arena'] },
     { id: 'mapa', frame: momentoDe(solucion, 'h9', 0.2), x: pin.x, y: pin.y, amp: 0, pausa: 1, blanco: 0.25, cromatica: 7, colores: ['hoja', 'blanco'] },
     { id: 'caida', frame: momentoDe(solucion, 'h10', fraccionesH10.cae), x: X_ARBOL - 340, y: SUELO - 10, amp: 22, pausa: 2, blanco: 0, cromatica: 6, colores: ['borde', 'hoja', 'cuerpo'] },

@@ -11,7 +11,7 @@ import { FPS } from '../tiempos';
 import { apareceEn, momentoDe } from '../ui/anim';
 import { Arbol, ArbolRajado, Burbuja, Celular, Cielo, Escritorio, Farol, HORIZONTE, Laptop, Lienzo, Sello, Sol, SUELO, Tierra } from './decorado';
 import { EnPantalla, HojaPapel, useParalaje } from './HojasDePapel';
-import { pinEnVideo } from './posiciones';
+import { CORRIMIENTO_MANANA, pinEnVideo } from './posiciones';
 import { progresoDeTrazo } from './tinta';
 import { FlechaTinta, SubrayadoTinta } from './TrazosDeTinta';
 import { enDos } from './enDos';
@@ -78,7 +78,7 @@ const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: number; 
       <Lienzo>
         <g transform={`translate(${-corrimiento * 0.8} 0)`}>
           {[180, 520, 1040, 2150].map((x, i) => (
-            <Arbol key={x} x={x} y={HORIZONTE + 70} alto={260 + (i % 2) * 60} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} vaiven={Math.sin((frame + i * 13) / 30) * 1.2} />
+            <Arbol key={x} x={x} y={HORIZONTE + 70} alto={260 + (i % 2) * 60} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} />
           ))}
           <Farol x={880} y={SUELO - 30} />
         </g>
@@ -93,11 +93,8 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
   const fp = enDos(frame);
   const h1 = momentoDe(escena, 'h1', 0);
   const h2 = momentoDe(escena, 'h2', 0);
-  const fin = escena.desde + escena.frames;
-  const corrimiento = tw(frame, [
-    [h1, 0],
-    [fin, 300],
-  ]);
+  // Sin paneo: el campus queda quieto en el mismo encuadre que las escenas siguientes.
+  const corrimiento = CORRIMIENTO_MANANA;
   const amanecer = tw(frame, [
     [h1, 0],
     [h2, 1],
@@ -263,7 +260,7 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
     <AbsoluteFill>
       <Campus corrimiento={0} frame={frame}>
         {arboles.map((x, i) => (
-          <Arbol key={x} x={x} y={SUELO - 30} alto={300} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} vaiven={Math.sin((frame + i * 9) / 7) * (avance > i / 5 && avance < (i + 1) / 5 ? 3 : 0.5)} />
+          <Arbol key={x} x={x} y={SUELO - 30} alto={300} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} vaiven={avance > i / 5 && avance < (i + 1) / 5 ? Math.sin((frame + i * 9) / 7) * 3 : 0} />
         ))}
         {arboles.map((x, i) => {
           const t = interpolate(avance, [(i + 0.6) / 5, (i + 0.9) / 5], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });

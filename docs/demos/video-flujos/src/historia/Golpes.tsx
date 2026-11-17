@@ -16,8 +16,17 @@ const FiltroCromatico: React.FC<{ dx: number }> = ({ dx }) => (
       <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g" />
       <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b" />
       <feOffset in="b" dx={-dx} dy={0} result="b2" />
-      <feBlend mode="screen" in="r2" in2="g" result="rg" />
-      <feBlend mode="screen" in="rg" in2="b2" />
+      {/* En el borde que queda al descubierto se usa el canal sin correr: sin línea de color. */}
+      <feMerge result="r3">
+        <feMergeNode in="r" />
+        <feMergeNode in="r2" />
+      </feMerge>
+      <feMerge result="b3">
+        <feMergeNode in="b" />
+        <feMergeNode in="b2" />
+      </feMerge>
+      <feBlend mode="screen" in="r3" in2="g" result="rg" />
+      <feBlend mode="screen" in="rg" in2="b3" />
     </filter>
   </svg>
 );

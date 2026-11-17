@@ -105,7 +105,9 @@ export const Farol: React.FC<{ x: number; y: number }> = ({ x, y }) => (
  */
 export const ArbolRajado: React.FC<{ x: number; y: number; frame: number; alerta: number; corte?: number }> = ({ x, y, frame, alerta, corte = 0 }) => {
   const base = { x: x - 40, y: y - 330 };
-  const vaiven = Math.sin(frame / 9) * 2.5 * (1 - corte);
+  // La rama se mece solo cuando importa: con el aviso o mientras la cortan (sin vaivén ocioso).
+  const meneo = Math.max(alerta, corte > 0 && corte < 1 ? 1 : 0);
+  const vaiven = Math.sin(frame / 9) * 2.5 * (1 - corte) * meneo;
   // Cae: la punta se hunde mientras se suelta y la rama aterriza casi plana sobre el sendero.
   const caida = corte * corte * 300;
   const giro = vaiven - Math.sin(Math.PI * Math.min(1, corte)) * 35;

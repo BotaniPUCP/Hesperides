@@ -1,7 +1,5 @@
 // Tiempos y lugares de la historia que comparten las escenas, los golpes y la cámara.
 import { Easing, interpolate } from 'remotion';
-import type { TramoEscena } from '../tiempos';
-import { momentoDe } from '../ui/anim';
 
 export const HORIZONTE = 640;
 export const SUELO = 880;
@@ -17,13 +15,11 @@ export function tw(frame: number, puntos: [number, number][]): number {
   );
 }
 
-/** Paneo del campus en la mañana: de 0 a 300 px a lo largo de la escena. */
-export function corrimientoManana(escena: TramoEscena, frame: number): number {
-  return tw(frame, [
-    [momentoDe(escena, 'h1', 0), 0],
-    [escena.desde + escena.frames, 300],
-  ]);
-}
+/**
+ * Corrimiento fijo del campus en la mañana (ya no hay paneo: el movimiento lateral constante
+ * molestaba). Con 300 el árbol queda donde está en las escenas siguientes.
+ */
+export const CORRIMIENTO_MANANA = 300;
 
 /** Pie del árbol de la rama rajada en la mañana (antes del paneo). */
 export const X_ARBOL_MANANA = 1650;
