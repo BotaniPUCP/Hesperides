@@ -153,6 +153,28 @@ class SpeciesPhotoGalleryIntegrationTest {
     }
 
     @Test
+    void anInactiveSpeciesCannotBeEditedThroughThePhotoEndpoint() throws Exception {
+        jdbc.update("UPDATE species SET is_active=FALSE WHERE slug='schinus-molle'");
+
+        mockMvc.perform(multipart(SPECIES + "/photo")
+                        .file(new MockMultipartFile("photo", "n.png", "image/png", png())))
+                .andExpect(status().isNotFound());
+
+        assertThat(activePhotos()).isZero();
+    }
+
+    @Test
+    void csvPhotoImportDoesNotOfferAnInactiveSpeciesForGalleryEdits() throws Exception {
+        jdbc.update("UPDATE species SET is_active=FALSE WHERE slug='schinus-molle'");
+
+        preview(HEADER + "Schinus molle;a.png;;;;\n", zip("a.png"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.canConfirm").value(false))
+                .andExpect(jsonPath("$.data.unknownSpecies[0].name").value("Schinus molle"));
+        assertThat(activePhotos()).isZero();
+    }
+
+    @Test
     void withoutOwnPhotosTheSpeciesFallsBackToASpecimenPhoto() throws Exception {
         mockMvc.perform(get(SPECIES))
                 .andExpect(jsonPath("$.data.imageSource").value("SPECIMEN"))

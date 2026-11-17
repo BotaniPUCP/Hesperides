@@ -41,9 +41,10 @@ public class GreenInventoryController {
     public ResponseEntity<ApiResponse<Page<SpeciesResponse>>> species(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String vegetationType,
+            @RequestParam(required = false) Boolean retiring,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "24") int size) {
-        SpeciesQuery query = SpeciesQuery.of(search, vegetationType, page, size);
+        SpeciesQuery query = SpeciesQuery.of(search, vegetationType, retiring, page, size);
         return ResponseEntity.ok(ApiResponse.ok("Species retrieved", service.species(query)));
     }
 

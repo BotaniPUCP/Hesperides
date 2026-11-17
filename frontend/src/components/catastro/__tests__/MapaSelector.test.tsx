@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MapaSelector } from '../registrar/MapaSelector';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
@@ -153,5 +153,33 @@ describe('MapaSelector - Sincronización Bidireccional', () => {
 
     // No debe llamarse de nuevo porque proviene del mismo clic
     expect(mockFocusLatLon).not.toHaveBeenCalled();
+  });
+
+  it('obtiene coordenadas desde el GPS del dispositivo al pulsar "Usar mi ubicación"', async () => {
+    const onElegir = jest.fn();
+    const mockGeolocation = {
+      getCurrentPosition: jest.fn().mockImplementation((success) => {
+        success({
+          coords: {
+            latitude: -12.069500,
+            longitude: -77.080500,
+          },
+        });
+      }),
+    };
+    Object.defineProperty(global.navigator, 'geolocation', {
+      value: mockGeolocation,
+      configurable: true,
+    });
+
+    render(<MapaSelector onElegir={onElegir} />);
+
+    const botonGps = screen.getByRole('button', { name: /Usar mi ubicación/i });
+    expect(botonGps).toBeInTheDocument();
+
+    fireEvent.click(botonGps);
+
+    expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
+    expect(onElegir).toHaveBeenCalledWith(-12.069500, -77.080500);
   });
 });

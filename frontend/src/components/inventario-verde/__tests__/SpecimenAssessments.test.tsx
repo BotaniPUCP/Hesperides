@@ -75,6 +75,16 @@ describe('SpecimenAssessments', () => {
     expect(screen.getByText(/Ana Supervisora/)).toBeInTheDocument();
   });
 
+  it('vuelve a consultar el historial cuando la ficha recupera el foco', async () => {
+    const view = render(<SpecimenAssessments code="EV-000001" refreshKey={0} />);
+    await screen.findByText('Evaluaciones Fitosanitarias e Inspecciones');
+    expect(mockCatastroApi.assessments).toHaveBeenCalledTimes(1);
+
+    view.rerender(<SpecimenAssessments code="EV-000001" refreshKey={1} />);
+    await waitFor(() => expect(mockCatastroApi.assessments).toHaveBeenCalledTimes(2));
+    expect(mockCatastroApi.assessments).toHaveBeenLastCalledWith('EV-000001');
+  });
+
   it('no muestra botón "+ Nueva evaluación" para usuario anónimo o sin rol', async () => {
     render(<SpecimenAssessments code="EV-000001" />);
 

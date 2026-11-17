@@ -94,13 +94,15 @@ const base = '/interventions';
 export const interventionsApi = {
   campusOptions:()=>apiClient.get<CampusOptions>(`${base}/campus-selection`),
   campusPreview:(selectionRevision:string,zoneIds:number[],specimenIds:number[])=>apiClient.post<{surfaceM2:number;areaCount:number;specimenCount:number}>(`${base}/campus-selection/preview`,{selectionRevision,zoneIds,specimenIds}),
-  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string, active?: boolean) => {
+  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string, active?: boolean,
+    greenElementId?: number | string) => {
     const query = new URLSearchParams({ page: String(page), size: '20' });
     if (active !== undefined) query.set('active', String(active));
     if (status) query.set('statusCode', status);
     if (dateFrom) query.set('dateFrom', dateFrom);
     if (dateTo) query.set('dateTo', dateTo);
     if (greenElementCode !== undefined) query.set('greenElementCode', greenElementCode);
+    if (greenElementId !== undefined) query.set('greenElementId', String(greenElementId));
     return apiClient.get<InterventionPage>(`${base}?${query}`);
   },
   detail: (id: number) => apiClient.get<InterventionDetail>(`${base}/${id}`),

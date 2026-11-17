@@ -97,6 +97,8 @@ class FeatureImportIntegrationTest {
         mockMvc.perform(post("/api/v1/imports/" + batch + "/confirm"))
                 .andExpect(jsonPath("$.data.created").value(1))
                 .andExpect(jsonPath("$.data.createdCodes[0]", matchesPattern("TA-\\d{6}")));
+        mockMvc.perform(post("/api/v1/imports/" + batch + "/confirm"))
+                .andExpect(status().isUnprocessableEntity());
 
         String code = jdbc.queryForObject("SELECT code FROM campus_features WHERE name = 'Frente a Ciencias'", String.class);
         assertThat(attribute(code, "residuos")).isEqualTo("[\"Plástico\", \"Papel y Cartón\"]");

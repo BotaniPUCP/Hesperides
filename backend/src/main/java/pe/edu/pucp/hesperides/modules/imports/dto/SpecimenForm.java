@@ -51,7 +51,7 @@ public record SpecimenForm(@NotBlank @Size(max = 150) String scientificName,
         SpecimenDraft.Measurement m = measurement == null ? null : new SpecimenDraft.Measurement(measurement.date(),
                 measurement.heightM(), measurement.trunkHeightM(), measurement.dbhCm(), measurement.crownRadiusM(),
                 measurement.banded(), measurement.toExtraValues());
-        return new SpecimenDraft(0, code, scientificName.trim(), lat, lon, quantity == null ? 1 : quantity,
+        return new SpecimenDraft(0, code, scientificName.trim(), lat, lon, quantity,
                 blankToNull(sourceReference), blankToNull(legacyCode), blankToNull(sourceLocation), m,
                 assessment == null ? null : assessment.toDraft(), null, blankToNull(notes));
     }

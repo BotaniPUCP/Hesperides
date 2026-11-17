@@ -63,8 +63,11 @@ const texto = (v: string) => (v.trim() === '' ? null : v.trim());
 function medicion(f: FormularioPlanta, errores: Errores): MeasurementForm | null {
   const valores = [f.alturaM, f.alturaFusteM, f.dapCm, f.radioCopaM].map(numero);
   if (valores.every((v) => v === null) && f.zunchado === '') return null;
-  if (valores.some((v) => v !== null && (Number.isNaN(v) || v < 0))) errores.medidas = 'Las medidas deben ser números positivos';
   const [heightM, trunkHeightM, dbhCm, crownRadiusM] = valores;
+  if ([heightM, crownRadiusM].some((v) => v !== null && (Number.isNaN(v) || v <= 0))
+      || [trunkHeightM, dbhCm].some((v) => v !== null && (Number.isNaN(v) || v < 0))) {
+    errores.medidas = 'Altura y radio deben ser mayores que 0; fuste y DAP deben ser 0 o más';
+  }
   if (heightM !== null && trunkHeightM !== null && trunkHeightM > heightM) {
     errores.medidas = 'La altura del fuste no puede superar la altura total';
   }

@@ -22,7 +22,7 @@ import java.util.Optional;
 public class SpecimenRepository {
 
     private static final RowMapper<SpecimenRow> ROW = (rs, i) -> new SpecimenRow(
-            rs.getString("code"), rs.getString("source_reference"), rs.getString("source_location"),
+            rs.getLong("id"), rs.getString("code"), rs.getString("source_reference"), rs.getString("source_location"),
             rs.getString("legacy_code"), rs.getObject("lat", Double.class), rs.getObject("lon", Double.class),
             rs.getString("photo_url"), rs.getInt("quantity"), rs.getString("notes"), rs.getBigDecimal("height_m"),
             rs.getBigDecimal("trunk_height_m"), rs.getBigDecimal("dbh_cm"), rs.getBigDecimal("crown_radius_m"),
@@ -67,9 +67,9 @@ public class SpecimenRepository {
                 (rs, i) -> new SectionRef(rs.getString("code"), rs.getString("name"))).stream().findFirst();
     }
 
-    public Optional<LocalDate> lastPruningDate(String code) {
+    public Optional<LocalDate> lastPruningDate(long specimenId) {
         return Optional.ofNullable(jdbc.queryForObject(InventoryQueries.LAST_PRUNING,
-                new MapSqlParameterSource("code", code), LocalDate.class));
+                new MapSqlParameterSource("id", specimenId), LocalDate.class));
     }
 
     public List<SpecimenSearchResultResponse> search(String query, int limit) {

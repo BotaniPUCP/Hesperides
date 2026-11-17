@@ -28,6 +28,11 @@ public class BatchPhotoZips {
         return needed ? PhotoFiles.read(storage.read(key(batchId))) : Map.of();
     }
 
+    /** Lectura estricta para las altas masivas de ejemplares o especies: un ZIP dudoso se rechaza entero. */
+    public Map<String, byte[]> readStrict(long batchId, boolean needed) {
+        return needed ? PhotoFiles.readStrict(storage.read(key(batchId))) : Map.of();
+    }
+
     static String key(long batchId) {
         return "imports/" + batchId + "/photos.zip";
     }

@@ -50,8 +50,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SpeciesCriticalityIntegrationTest {
 
     private static final String BASE = "/api/v1/green-inventory";
-    private static final RequestPostProcessor COORDINATOR = user("coordinator@test.local").authorities(() -> "COORDINADOR");
-    private static final RequestPostProcessor SUPERVISOR = user("supervisor@test.local").authorities(() -> "SUPERVISOR");
+    // Use a seeded user ID for persisted audit_log rows while overriding only the authority under test.
+    private static final RequestPostProcessor COORDINATOR = user("admin@pucp.edu.pe").authorities(() -> "COORDINADOR");
+    private static final RequestPostProcessor SUPERVISOR = user("admin@pucp.edu.pe").authorities(() -> "SUPERVISOR");
 
     @Container
     static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();

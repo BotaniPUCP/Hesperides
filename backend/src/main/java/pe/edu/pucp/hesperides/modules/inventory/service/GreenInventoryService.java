@@ -19,6 +19,8 @@ public interface GreenInventoryService {
 
     Page<SpeciesResponse> species(SpeciesQuery query);
 
+    Page<SpeciesResponse> assignableSpecies(SpeciesQuery query);
+
     SpeciesResponse speciesBySlug(String slug);
 
     Page<SpecimenResponse> specimens(String speciesSlug, SpecimenQuery query);

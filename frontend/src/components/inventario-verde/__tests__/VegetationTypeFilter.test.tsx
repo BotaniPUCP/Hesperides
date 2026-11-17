@@ -61,4 +61,20 @@ describe('VegetationTypeFilter - Búsqueda de especies y filtros de tipo', () =>
     await userEvent.click(arbolChip);
     expect(handleSelectType).toHaveBeenCalledWith('ARBOL');
   });
+
+  it('permite alternar el filtro de especies en proceso de retiro', async () => {
+    const handleEnRetiroChange = jest.fn();
+    render(
+      <VegetationTypeFilter
+        {...defaultProps}
+        enRetiro={false}
+        onEnRetiroChange={handleEnRetiroChange}
+      />,
+    );
+
+    const checkbox = screen.getByLabelText(/En proceso de retiro/i);
+    expect(checkbox).not.toBeChecked();
+    await userEvent.click(checkbox);
+    expect(handleEnRetiroChange).toHaveBeenCalledWith(true);
+  });
 });

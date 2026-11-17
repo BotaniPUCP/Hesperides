@@ -1,6 +1,11 @@
 import type { ImportKind } from '@shared/types';
 import { COLUMNAS_INFORMATIVAS, ESTANDAR_EJEMPLARES, type GrupoDeColumnas } from './estandarEjemplares';
-import { ESTANDAR_BEBEDEROS, ESTANDAR_FOTOS_ESPECIES, ESTANDAR_TACHOS } from './estandaresComponentes';
+import {
+  ESTANDAR_BEBEDEROS,
+  ESTANDAR_ESPECIES_GRUPOS,
+  ESTANDAR_FOTOS_ESPECIES,
+  ESTANDAR_TACHOS,
+} from './estandaresComponentes';
 
 /** Un estándar de carga: lo que muestran Importar y Estándares. */
 export interface Estandar {
@@ -40,7 +45,19 @@ export const ESTANDARES: Estandar[] = [
   },
 ];
 
+export const ESTANDAR_ESPECIES: Estandar = {
+  kind: 'species',
+  titulo: 'Especies',
+  archivo: 'especies.csv',
+  plural: 'especies',
+  porEspecie: false,
+  textos: { nuevos: 'especies nuevas', aCorregir: 'especies a actualizar', corregidos: 'especies actualizadas' },
+  grupos: ESTANDAR_ESPECIES_GRUPOS,
+  informativas: ['slug', 'ejemplares'],
+};
+
 export function estandar(kind: ImportKind): Estandar {
+  if (kind === 'species') return ESTANDAR_ESPECIES;
   const e = ESTANDARES.find((x) => x.kind === kind);
   if (!e) throw new Error(`Estándar desconocido: ${kind}`);
   return e;

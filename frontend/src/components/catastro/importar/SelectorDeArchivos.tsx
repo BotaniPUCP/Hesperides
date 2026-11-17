@@ -7,20 +7,29 @@ import { ESTANDARES } from '../estandares';
 import type { Importacion } from './useImportacion';
 
 /** El CSV y, si las fotos no son enlaces de Drive, el ZIP que las trae. */
-export function SelectorDeArchivos({ imp }: { imp: Importacion }) {
+export function SelectorDeArchivos({
+  imp,
+  ocultarSelectorDeTipo = false,
+}: {
+  imp: Importacion;
+  ocultarSelectorDeTipo?: boolean;
+}) {
   return (
     <Card title="1. Sube el archivo">
-      <fieldset className="mb-4">
-        <legend className="mb-2 text-sm font-medium text-neutral-700">Qué vas a cargar</legend>
-        <div className="flex flex-wrap gap-4 text-sm">
-          {ESTANDARES.map((e) => (
-            <label key={e.kind} className="flex items-center gap-1 text-neutral-900">
-              <input type="radio" name="estandar" checked={imp.kind === e.kind} onChange={() => imp.setKind(e.kind)} />
-              {e.titulo}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {!ocultarSelectorDeTipo && (
+        <fieldset className="mb-4">
+          <legend className="mb-2 text-sm font-medium text-neutral-700">Qué vas a cargar</legend>
+          <div className="flex flex-wrap gap-4 text-sm">
+            {ESTANDARES.map((e) => (
+              <label key={e.kind} className="flex items-center gap-1 text-neutral-900">
+                <input type="radio" name="estandar" checked={imp.kind === e.kind} disabled={imp.fase === 'revisando'}
+                  onChange={() => imp.setKind(e.kind)} />
+                {e.titulo}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <CampoArchivo
           id="archivo-csv"
@@ -28,6 +37,7 @@ export function SelectorDeArchivos({ imp }: { imp: Importacion }) {
           ayuda="Separado por punto y coma, en UTF-8."
           acepta=".csv,text/csv"
           limite={LIMITES.subida}
+          disabled={imp.fase === 'revisando'}
           archivo={imp.csv}
           onElegir={imp.setCsv}
         />
@@ -37,6 +47,7 @@ export function SelectorDeArchivos({ imp }: { imp: Importacion }) {
           ayuda={`Solo si la columna foto nombra archivos en vez de enlaces de Drive. Cada foto hasta ${LIMITES.foto.etiqueta}; descomprimido, hasta ${LIMITES.zipDescomprimido.etiqueta}.`}
           acepta=".zip,application/zip"
           limite={LIMITES.subida}
+          disabled={imp.fase === 'revisando'}
           archivo={imp.zip}
           onElegir={imp.setZip}
         />

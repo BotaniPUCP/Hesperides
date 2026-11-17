@@ -23,8 +23,17 @@ export function DescargasDelEstandar({ estandar, puedeExportar }: DescargasDelEs
   async function descargar(tipo: Descarga) {
     setEnCurso(tipo);
     try {
-      const blob = tipo === 'plantilla' ? await catastroApi.template(estandar.kind) : await catastroApi.exportSpecimens();
-      guardarArchivo(blob, tipo === 'plantilla' ? `plantilla-${estandar.archivo}` : 'ejemplares.csv');
+      const esEspecies = estandar.kind === 'species';
+      const blob =
+        tipo === 'plantilla'
+          ? await catastroApi.template(estandar.kind)
+          : esEspecies
+            ? await catastroApi.exportSpecies()
+            : await catastroApi.exportSpecimens();
+      guardarArchivo(
+        blob,
+        tipo === 'plantilla' ? `plantilla-${estandar.archivo}` : esEspecies ? 'especies.csv' : 'ejemplares.csv',
+      );
     } catch (error) {
       showToast({ variant: 'error', title: 'No se pudo descargar', description: mensajeDeErrorCatastro(error) });
     } finally {
@@ -37,9 +46,9 @@ export function DescargasDelEstandar({ estandar, puedeExportar }: DescargasDelEs
       <Button variant="secondary" loading={enCurso === 'plantilla'} onClick={() => descargar('plantilla')}>
         Plantilla de {estandar.titulo.toLowerCase()}
       </Button>
-      {puedeExportar && estandar.kind === 'specimens' && (
+      {puedeExportar && (estandar.kind === 'specimens' || estandar.kind === 'species') && (
         <Button variant="secondary" loading={enCurso === 'exportacion'} onClick={() => descargar('exportacion')}>
-          Exportar ejemplares
+          Exportar {estandar.plural}
         </Button>
       )}
     </div>

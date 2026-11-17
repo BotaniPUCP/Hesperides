@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { Species } from '@shared/types';
 import { Badge } from '@/components/ui';
 import { SpeciesCover } from './SpeciesCover';
+import { SpeciesStatusBadge } from './SpeciesStatusBadge';
 import type { ReactNode } from 'react';
 
 export interface SpeciesInfoProps {
@@ -37,6 +38,7 @@ export function SpeciesInfo({ species, availableLocations = [], actions }: Speci
             <div className="flex flex-wrap items-center justify-between gap-2.5 mb-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge label={species.vegetationTypeName} color="brand" />
+                <SpeciesStatusBadge isActive={species.isActive} />
                 <Badge label={species.critical ? 'Crítica' : 'No crítica'} color={species.critical ? 'warning' : 'neutral'} />
                 {species.family && (
                   <Badge label={`Fam. ${species.family}`} color="neutral" />

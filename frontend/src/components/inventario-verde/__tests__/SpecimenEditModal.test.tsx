@@ -13,9 +13,11 @@ jest.mock('@/lib/catastro-api', () => ({
 const mockCatastroApi = catastroApi as jest.Mocked<typeof catastroApi>;
 
 const EJEMPLO_SPECIMEN: SpecimenDetail = {
+  id: 1,
   code: 'EV-000001',
   species: {
     slug: 'palmera-real',
+    isActive: true,
     scientificName: 'Roystonea regia',
     commonName: 'Palmera real',
     otherNames: [],
@@ -311,7 +313,7 @@ describe('SpecimenEditModal', () => {
       />
     );
 
-    expect(screen.getByText(/Actualizar Medidas · EV-000001/i)).toBeInTheDocument();
+    expect(screen.getByText(/Editar ejemplar · EV-000001/i)).toBeInTheDocument();
 
     await user.clear(screen.getByLabelText(/Altura total/i));
     await user.type(screen.getByLabelText(/Altura total/i), '12');
@@ -373,7 +375,7 @@ describe('SpecimenEditModal', () => {
 
     // Se cerró el diálogo de confirmación pero el modal de edición sigue abierto
     expect(screen.queryByText(/¿Confirmas registrar esta nueva medición/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/Actualizar Medidas · EV-000001/i)).toBeInTheDocument();
+    expect(screen.getByText(/Editar ejemplar · EV-000001/i)).toBeInTheDocument();
     expect(mockCatastroApi.update).not.toHaveBeenCalled();
   });
 });
