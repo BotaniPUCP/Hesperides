@@ -7,10 +7,12 @@ import type { OrganizationDetail } from '@shared/types';
 import { Button, Card } from '@/components/ui';
 import { useCanMaintainDirectory, useOrganization } from '@/hooks/useDirectory';
 import { directoryApi } from '@/lib/directory-api';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 import { ContactFormModal } from './ContactFormModal';
 import { DeactivateAction } from './DeactivateAction';
 import { DetailFrame, DetailHeader, Field, InactiveBadge } from './DetailParts';
 import { OrganizationFormModal } from './OrganizationFormModal';
+import { useDirectoryCatalog } from './DirectoryCatalog';
 
 /** Ficha de una organización con sus contactos (SPEC-106 §7). Una dada de baja se lee, no se cambia. */
 export function OrganizationDetailScreen({ code }: { code: string }) {
@@ -27,6 +29,8 @@ function OrganizationView({ organization, reload }: { organization: Organization
   const router = useRouter();
   const [editing, setEditing] = useState(0);
   const [addingContact, setAddingContact] = useState(0);
+  const catalog = useDirectoryCatalog();
+  usePageTrail({ labels: { [organization.code]: organization.name } });
   const ref = { code: organization.code, name: organization.name, active: organization.active };
 
   return (
@@ -37,7 +41,7 @@ function OrganizationView({ organization, reload }: { organization: Organization
           <Button variant="secondary" onClick={() => setEditing((n) => n + 1)}>Editar</Button>
           <DeactivateAction title={`Dar de baja «${organization.name}»`}
             deactivate={() => directoryApi.deactivateOrganization(organization.code)}
-            onDone={() => router.push('/directorio')}>
+            onDone={() => { catalog.refresh(); router.push('/directorio'); }}>
             Dejará de aparecer en búsquedas y formularios. Lo que ya la usaba la sigue mostrando, y sus contactos
             no se dan de baja: pueden pertenecer a otras organizaciones.
           </DeactivateAction>

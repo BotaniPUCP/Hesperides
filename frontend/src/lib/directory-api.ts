@@ -1,4 +1,5 @@
 import type {
+  ContactCatalogEntry,
   ContactDetail,
   ContactInput,
   ContactSummary,
@@ -6,8 +7,8 @@ import type {
   DirectoryImportOutcome,
   DirectoryImportPlan,
   DirectoryPage,
-  OrganizationDetail,
-  OrganizationInput,
+  OrganizationCatalogEntry,
+  OrganizationDetail,  OrganizationInput,
   OrganizationSuggestion,
   OrganizationSummary,
 } from '@shared/types';
@@ -51,7 +52,8 @@ export const directoryApi = {
   similarOrganizations: (name: string) =>
     apiClient.get<OrganizationSuggestion[]>(`${ORGS}/similar?${query({ name })}`),
 
-  organization: (code: string) => apiClient.get<OrganizationDetail>(`${ORGS}/${segment(code)}`),
+  /** Todo el catálogo: lo carga el provider una vez por sesión, no por cada búsqueda. */
+  catalog: () => apiClient.get<OrganizationCatalogEntry[]>(`${ORGS}/catalog`),  organization: (code: string) => apiClient.get<OrganizationDetail>(`${ORGS}/${segment(code)}`),
 
   createOrganization: (input: OrganizationInput) => apiClient.post<{ code: string }>(ORGS, input),
 
@@ -67,6 +69,9 @@ export const directoryApi = {
 
   similarContacts: (fullName: string) =>
     apiClient.get<ContactSummary[]>(`${CONTACTS}/similar?${query({ fullName })}`),
+
+  /** Todo el catálogo de contactos: lo carga el provider una vez por sesión. */
+  contactsCatalog: () => apiClient.get<ContactCatalogEntry[]>(`${CONTACTS}/catalog`),
 
   contact: (code: string) => apiClient.get<ContactDetail>(`${CONTACTS}/${segment(code)}`),
 

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.directory.dto.ContactRequest;
+import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactCatalogEntry;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactDetail;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactSummary;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.Page;
@@ -50,6 +51,12 @@ public class ContactController {
     @PreAuthorize(DirectoryAccess.MAINTAINERS)
     public ResponseEntity<ApiResponse<List<ContactSummary>>> similar(@RequestParam String fullName) {
         return ResponseEntity.ok(ApiResponse.ok("Similar contacts", queries.similar(fullName)));
+    }
+
+    /** Catálogo completo para el front: así busca parecidos y filtrados sin llamar por letra. */
+    @GetMapping("/catalog")
+    public ResponseEntity<ApiResponse<List<ContactCatalogEntry>>> catalog() {
+        return ResponseEntity.ok(ApiResponse.ok("Contact catalog", queries.catalog()));
     }
 
     @GetMapping("/{code}")

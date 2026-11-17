@@ -34,6 +34,16 @@ public final class DirectoryResponses {
     public record OrganizationSuggestion(String code, String name) {
     }
 
+    /** Todo el catálogo de una vez, para que el front busque parecidos sin consultar por letra. */
+    public record OrganizationCatalogEntry(String code, String name, CodeLabel type, boolean active,
+            List<String> aliases) {
+    }
+
+    /** Contactos de una vez: el front busca parecidos y filtra sin llamar por letra. */
+    public record ContactCatalogEntry(String code, String fullName, String extension, String mobile, String email,
+            boolean active, List<OrganizationRef> organizations) {
+    }
+
     public record ContactSummary(String code, String fullName, String extension, String mobile, String email,
             List<OrganizationRef> organizations) {
     }

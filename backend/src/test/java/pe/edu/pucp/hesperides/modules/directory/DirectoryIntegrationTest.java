@@ -160,6 +160,45 @@ class DirectoryIntegrationTest {
         }
 
         @Test
+        void theCatalogListsEveryOrganizationWithItsAliases() throws Exception {
+            String code = createOrg("Estudios Generales Ciencias", "EEGGCC");
+            createOrg("CF Psicología");
+
+            mockMvc.perform(get(ORGS + "/catalog")).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data[*].code", hasItem(code)))
+                    .andExpect(jsonPath("$.data[?(@.code == '" + code + "')].aliases", contains(contains("EEGGCC"))))
+                    .andExpect(jsonPath("$.data[?(@.code == '" + code + "')].active", contains(true)))
+                    .andExpect(jsonPath("$.data[?(@.code == '" + code + "')].type.code", contains("PUCP_UNIT")));
+        }
+
+        @Test
+        void theCatalogOmitsAnOrganizacionDeactivated() throws Exception {
+            String code = createOrg("Facultad de Derecho");
+            mockMvc.perform(delete(ORGS + "/" + code)).andExpect(status().isOk());
+
+            mockMvc.perform(get(ORGS + "/catalog"))
+                    .andExpect(jsonPath("$.data[*].code", not(hasItem(code))));
+        }
+
+        @Test
+        void theContactCatalogListsEveryoneWithTheirOrganizations() throws Exception {
+            String org = createOrg("CF Psicología");
+            String contact = createContact("Juan Diego Villasante", org);
+
+            mockMvc.perform(get(CONTACTS + "/catalog")).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data[*].code", hasItem(contact)))
+                    .andExpect(jsonPath("$.data[?(@.code == '" + contact + "')].active", contains(true)))
+                    .andExpect(jsonPath("$.data[?(@.code == '" + contact + "')].organizations[0].code",
+                            contains(org)))
+                    .andExpect(jsonPath("$.data[?(@.code == '" + contact + "')].organizations[0].name",
+                            contains("CF Psicología")));
+
+            mockMvc.perform(delete(CONTACTS + "/" + contact)).andExpect(status().isOk());
+            mockMvc.perform(get(CONTACTS + "/catalog"))
+                    .andExpect(jsonPath("$.data[?(@.code == '" + contact + "')].active", contains(false)));
+        }
+
+        @Test
         void theDetailShowsAliasesAndContacts() throws Exception {
             String org = createOrg("CF Psicología", "Centro Federado de Psicología");
             String contact = createContact("Juan Diego Villasante", org);

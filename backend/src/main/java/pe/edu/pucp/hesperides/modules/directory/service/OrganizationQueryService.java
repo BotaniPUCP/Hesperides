@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.CodeLabel;
+import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationCatalogEntry;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationDetail;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSuggestion;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSummary;
@@ -35,6 +36,10 @@ public class OrganizationQueryService {
             return List.of();
         }
         return reads.similar(text, DirectoryText.SIMILARITY_THRESHOLD, DirectoryText.MAX_SUGGESTIONS);
+    }
+
+    public List<OrganizationCatalogEntry> catalog() {
+        return reads.catalog();
     }
 
     public OrganizationDetail detail(String code) {

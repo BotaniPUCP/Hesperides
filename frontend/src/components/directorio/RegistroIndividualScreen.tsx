@@ -12,8 +12,8 @@ import { OrganizationForm } from './OrganizationForm';
 type Kind = 'organizacion' | 'contacto';
 
 const KINDS: { kind: Kind; title: string; description: string }[] = [
-  { kind: 'organizacion', title: 'Organización', description: 'Una unidad PUCP o una empresa externa.' },
-  { kind: 'contacto', title: 'Contacto', description: 'Una persona de una o más organizaciones.' },
+  { kind: 'organizacion', title: 'Registrar organización', description: 'Una unidad PUCP o una empresa externa.' },
+  { kind: 'contacto', title: 'Registrar contacto', description: 'Una persona de una o más organizaciones.' },
 ];
 
 const openLink = (href: string) => (

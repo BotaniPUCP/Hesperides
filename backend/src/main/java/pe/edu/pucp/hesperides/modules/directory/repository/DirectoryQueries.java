@@ -31,6 +31,15 @@ final class DirectoryQueries {
                   FROM organizations o WHERE o.deleted_at IS NULL) s
              WHERE sim >= :threshold ORDER BY sim DESC, lower(name) LIMIT :limit""";
 
+    /** Catálogo completo: una fila por organización con sus alias unidas por chr(1), control char improbable. */
+    static final String ORGANIZATION_CATALOG = """
+            SELECT o.code, o.name, t.code AS type_code, t.label AS type_label, o.deleted_at IS NULL AS active,
+                   COALESCE((SELECT string_agg(a.alias, chr(1)) FROM organization_aliases a
+                              WHERE a.organization_id = o.id AND a.deleted_at IS NULL), '') AS aliases
+              FROM organizations o JOIN catalog_items t ON t.id = o.type_item_id
+             WHERE o.deleted_at IS NULL
+             ORDER BY lower(o.name)""";
+
     static final String CONTACT_FILTER = """
               FROM contacts c
              WHERE c.deleted_at IS NULL
@@ -52,6 +61,12 @@ final class DirectoryQueries {
                        word_similarity(directory_key(:text), directory_key(c.full_name))) AS sim
                   FROM contacts c WHERE c.deleted_at IS NULL) s
              WHERE sim >= :threshold ORDER BY sim DESC, lower(full_name) LIMIT :limit""";
+
+    /** Catálogo completo de contactos: una fila por contacto, sin filtro ni paginación. */
+    static final String CONTACT_CATALOG = """
+            SELECT c.id, c.code, c.full_name, c.extension, c.mobile, c.email, c.deleted_at IS NULL AS active
+              FROM contacts c
+             ORDER BY lower(c.full_name), c.code""";
 
     /** Organizaciones de varios contactos a la vez, para no consultar una por fila. */
     static final String ORGANIZATIONS_OF_CONTACTS = """

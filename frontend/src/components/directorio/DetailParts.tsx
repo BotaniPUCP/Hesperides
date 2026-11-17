@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { BackButton, EmptyState, LoadingSkeleton } from '@/components/ui';
+import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { PageHeader } from '@/components/layouts/PageHeader';
 
 /** Un dato de una ficha; vacío se muestra como raya para no dejar un hueco que parezca un error. */
@@ -35,7 +35,6 @@ export function DetailHeader({ title, badge, description, actions }:
   { title: string; badge?: ReactNode; description?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="flex items-start gap-3">
-      <BackButton fallbackHref="/directorio" />
       <div className="flex-1">
         <PageHeader title={<span className="flex flex-wrap items-center gap-2">{title}{badge}</span>}
           description={description} actions={actions} />

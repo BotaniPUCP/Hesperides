@@ -6,6 +6,7 @@ import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedCha
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { directoryApi } from '@/lib/directory-api';
 import { guardarArchivo } from '@/lib/download';
+import { useDirectoryCatalog } from './DirectoryCatalog';
 
 /** Los nombres de las plantillas: los mismos de `backend/src/main/resources/imports/templates/`. */
 const PLANTILLAS: Record<DirectoryImportKind, string> = {
@@ -18,6 +19,7 @@ const PLANTILLAS: Record<DirectoryImportKind, string> = {
  * servidor y la confirmación escribe lo revisado, sin volver a subir el archivo.
  */
 export function useRegistroMasivo() {
+  const catalog = useDirectoryCatalog();
   const [kind, setKindState] = useState<DirectoryImportKind | null>(null);
   const [file, setFileState] = useState<File | null>(null);
   const [plan, setPlan] = useState<DirectoryImportPlan | null>(null);
@@ -61,6 +63,7 @@ export function useRegistroMasivo() {
   const review = () => run(async () => setPlan(await directoryApi.previewImport(kind!, file!)));
   const confirm = () => run(async () => {
     setOutcome(await directoryApi.confirmImport(plan!.batchId));
+    catalog.refresh(); // El catálogo precargado debe incluir lo importado.
     setPlan(null);
     setFileState(null);
     setFileInputKey((k) => k + 1);

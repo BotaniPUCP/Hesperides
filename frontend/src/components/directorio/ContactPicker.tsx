@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ContactSummary, OrganizationRef } from '@shared/types';
 import { Button, Input, Modal } from '@/components/ui';
-import { useCanMaintainDirectory, useContacts } from '@/hooks/useDirectory';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useCanMaintainDirectory } from '@/hooks/useDirectory';
 import { mensajeDeApiError } from '@/lib/api-errors';
-import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
 import { directoryApi } from '@/lib/directory-api';
+import { useDirectoryCatalog } from './DirectoryCatalog';
 import { ContactFormModal, type ContactPick } from './ContactFormModal';
 import { PickedValue, PickerOption, PickerResults } from './PickerParts';
 
@@ -36,6 +35,7 @@ function RoleAsk({ contact, organization, onClose, onDone }:
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [editing, setEditing] = useState(false);
+  const catalog = useDirectoryCatalog();
 
   async function confirm() {
     setPending(true);
@@ -47,6 +47,7 @@ function RoleAsk({ contact, organization, onClose, onDone }:
       } else {
         await directoryApi.linkContact(contact.code, organization.code, value);
       }
+      catalog.refresh(); // El catálogo ya refleja el vínculo (con o sin rol).
       onDone({ code: contact.code, fullName: contact.fullName });
     } catch (e) {
       if (!editing && (e as { status?: number }).status === 409) {
@@ -87,18 +88,22 @@ function RoleAsk({ contact, organization, onClose, onDone }:
  */
 export function ContactPicker({ id, label, organization, searchEverywhere = false, value, onChange }: ContactPickerProps) {
   const canMaintain = useCanMaintainDirectory();
+  const catalog = useDirectoryCatalog();
   const [text, setText] = useState('');
   const [registering, setRegistering] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [linking, setLinking] = useState<ContactSummary | null>(null);
-  const search = useDebouncedValue(text.trim(), SEARCH_DEBOUNCE_MS);
   const free = searchEverywhere && organization === null;
+  const search = text.trim();
   const active = (organization !== null || free) && value === null && search !== '';
-  const inside = useContacts(free ? { search } : { search, organizationCode: organization?.code }, 0, 0, active);
-  const settled = active && !inside.loading && search === text.trim();
-  const lookElsewhere = !free && settled && inside.result.items.length === 0;
-  const elsewhere = useContacts({ search }, 0, 0, lookElsewhere);
-  const others = elsewhere.result.items.filter((c) => !c.organizations.some((o) => o.code === organization?.code));
+  // El catálogo ya trae cada contacto con sus organizaciones: nada de esto va al backend.
+  const matches = useMemo(() => (active ? catalog.filterContacts(search) : []), [catalog, active, search]);
+  const inside = useMemo(() => (free ? matches
+    : matches.filter((c) => c.organizations.some((o) => o.code === organization?.code))), [matches, free, organization]);
+  const others = useMemo(() => (free ? [] : matches
+    .filter((c) => !c.organizations.some((o) => o.code === organization?.code))), [matches, free, organization]);
+  const settled = active;
+  const lookElsewhere = !free && settled && inside.length === 0;
 
   function pick(next: ContactPick) {
     onChange(next);
@@ -121,14 +126,14 @@ export function ContactPicker({ id, label, organization, searchEverywhere = fals
     <div className="space-y-2">
       <Input id={id} label={label} value={text} onChange={setText} type="search" autoComplete="off"
         helperText={free ? 'Cualquier contacto del Directorio.' : undefined} />
-      {settled && (!lookElsewhere || !elsewhere.loading) && (
-        <PickerResults empty={inside.result.items.length === 0 && others.length === 0}
+      {settled && (
+        <PickerResults empty={inside.length === 0 && others.length === 0}
           emptyText={canMaintain ? `«${text.trim()}» no está en el directorio.`
             : `«${text.trim()}» no está en ${organization?.name}. Pide a coordinación que lo registre.`}
           footer={canMaintain && (
             <Button size="sm" variant="secondary" onClick={() => setRegistering(true)}>Registrar «{text.trim()}»</Button>
           )}>
-          {inside.result.items.slice(0, RESULTS).map((c) => (
+          {inside.slice(0, RESULTS).map((c) => (
             <PickerOption key={c.code} label={c.fullName}
               detail={free || organization === null ? organizationsOf(c)
                 : c.organizations.find((o) => o.code === organization.code)?.role ?? undefined}

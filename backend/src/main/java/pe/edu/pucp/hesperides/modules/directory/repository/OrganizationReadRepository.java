@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.CodeLabel;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactCard;
+import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationCatalogEntry;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSuggestion;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSummary;
 
@@ -36,6 +37,19 @@ public class OrganizationReadRepository {
                 .addValue("limit", limit);
         return jdbc.query(DirectoryQueries.ORGANIZATION_SIMILAR, params,
                 (rs, i) -> new OrganizationSuggestion(rs.getString("code"), rs.getString("name")));
+    }
+
+    /** Todo el directorio de organizaciones en una fila por cada una; sin paginación ni filtro. */
+    public List<OrganizationCatalogEntry> catalog() {
+        return jdbc.query(DirectoryQueries.ORGANIZATION_CATALOG, (rs, i) -> new OrganizationCatalogEntry(
+                rs.getString("code"), rs.getString("name"),
+                new CodeLabel(rs.getString("type_code"), rs.getString("type_label")),
+                rs.getBoolean("active"),
+                aliases(rs.getString("aliases"))));
+    }
+
+    private static List<String> aliases(String aggregated) {
+        return aggregated.isEmpty() ? List.of() : List.of(aggregated.split("\u0001"));
     }
 
     public List<ContactCard> contacts(long organizationId) {

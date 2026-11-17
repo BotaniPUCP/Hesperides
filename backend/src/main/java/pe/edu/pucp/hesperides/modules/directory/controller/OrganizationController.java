@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationCatalogEntry;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationDetail;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSuggestion;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSummary;
@@ -48,6 +49,12 @@ public class OrganizationController {
     @PreAuthorize(DirectoryAccess.MAINTAINERS)
     public ResponseEntity<ApiResponse<List<OrganizationSuggestion>>> similar(@RequestParam String name) {
         return ResponseEntity.ok(ApiResponse.ok("Similar organizations", queries.similar(name)));
+    }
+
+    /** Catálogo completo para el front: así busca parecidos y filtrados sin llamar por letra. */
+    @GetMapping("/catalog")
+    public ResponseEntity<ApiResponse<List<OrganizationCatalogEntry>>> catalog() {
+        return ResponseEntity.ok(ApiResponse.ok("Organization catalog", queries.catalog()));
     }
 
     @GetMapping("/{code}")

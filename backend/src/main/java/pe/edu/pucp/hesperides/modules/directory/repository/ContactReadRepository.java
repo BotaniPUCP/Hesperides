@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactCatalogEntry;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactSummary;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationRef;
 import pe.edu.pucp.hesperides.modules.directory.repository.ContactRepository.ContactRow;
@@ -38,6 +39,17 @@ public class ContactReadRepository {
         MapSqlParameterSource params = new MapSqlParameterSource("text", text).addValue("threshold", threshold)
                 .addValue("limit", limit);
         return withOrganizations(jdbc.query(DirectoryQueries.CONTACT_SIMILAR, params, ROW));
+    }
+
+    /** Todo el directorio de contactos de una fila por cada uno; sin filtro ni paginación. */
+    public List<ContactCatalogEntry> catalog() {
+        List<ContactRow> rows = jdbc.query(DirectoryQueries.CONTACT_CATALOG,
+                (rs, i) -> new ContactRow(rs.getLong("id"), rs.getString("code"), rs.getString("full_name"),
+                        rs.getString("extension"), rs.getString("mobile"), rs.getString("email"),
+                        rs.getBoolean("active")));
+        Map<Long, List<OrganizationRef>> links = linksOf(rows.stream().map(ContactRow::id).toList());
+        return rows.stream().map(c -> new ContactCatalogEntry(c.code(), c.fullName(), c.extension(), c.mobile(),
+                c.email(), c.active(), links.getOrDefault(c.id(), List.of()))).toList();
     }
 
     /** Vigentes primero; las dadas de baja siguen, marcadas, para que coordinación sepa qué reasignar. */

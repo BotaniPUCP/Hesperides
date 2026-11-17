@@ -7,9 +7,11 @@ import type { ContactDetail } from '@shared/types';
 import { Button, Card } from '@/components/ui';
 import { useCanMaintainDirectory, useContact } from '@/hooks/useDirectory';
 import { directoryApi } from '@/lib/directory-api';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 import { ContactFormModal } from './ContactFormModal';
 import { DeactivateAction } from './DeactivateAction';
 import { DetailFrame, DetailHeader, Field, InactiveBadge } from './DetailParts';
+import { useDirectoryCatalog } from './DirectoryCatalog';
 
 /** Ficha de un contacto: sus datos y sus organizaciones; ahí se edita y se da de baja (SPEC-106 §7). */
 export function ContactDetailScreen({ code }: { code: string }) {
@@ -25,6 +27,8 @@ function ContactView({ contact, reload }: { contact: ContactDetail; reload: () =
   const canChange = useCanMaintainDirectory() && contact.active;
   const router = useRouter();
   const [editing, setEditing] = useState(0);
+  const catalog = useDirectoryCatalog();
+  usePageTrail({ labels: { [contact.code]: contact.fullName } });
 
   return (
     <div className="space-y-6">
@@ -34,7 +38,7 @@ function ContactView({ contact, reload }: { contact: ContactDetail; reload: () =
           <Button variant="secondary" onClick={() => setEditing((n) => n + 1)}>Editar</Button>
           <DeactivateAction title={`Dar de baja a ${contact.fullName}`}
             deactivate={() => directoryApi.deactivateContact(contact.code)}
-            onDone={() => router.push('/directorio?tab=contactos')}>
+            onDone={() => { catalog.refresh(); router.push('/directorio?tab=contactos'); }}>
             Dejará de aparecer para elegirlo en los formularios. Lo que ya lo usaba lo sigue mostrando.
           </DeactivateAction>
         </>)} />

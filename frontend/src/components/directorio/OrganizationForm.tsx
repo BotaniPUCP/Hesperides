@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import type { OrganizationDetail, OrganizationRef, OrganizationTypeCode } from '@shared/types';
 import { Button, Input, Textarea } from '@/components/ui';
+import { useDirectoryCatalog } from './DirectoryCatalog';
 import { useSimilarOrganizations } from '@/hooks/useDirectory';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { directoryApi } from '@/lib/directory-api';
@@ -38,8 +39,12 @@ export function OrganizationForm({ organization, initialName = '', onClose, onSa
   const [aliases, setAliases] = useState((organization?.aliases ?? []).join('\n'));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const similar = useSimilarOrganizations(name, organization === null)
-    .filter((s) => s.code !== organization?.code);
+  // Con el catálogo precargado, los parecidos salen del cliente sin llamar al backend.
+  const catalog = useDirectoryCatalog();
+  const clientSimilar = catalog.findSimilar(name, organization?.code);
+  // Mientras el catálogo no esté, respaldo: el endpoint `/similar` de siempre (por eso el debounce).
+  const fallback = useSimilarOrganizations(name, organization === null && !catalog.ready);
+  const similar = catalog.ready ? clientSimilar : fallback;
   const isCompany = typeCode === 'EXTERNAL_COMPANY';
 
   async function save() {
@@ -55,6 +60,7 @@ export function OrganizationForm({ organization, initialName = '', onClose, onSa
       const code = organization
         ? (await directoryApi.updateOrganization(organization.code, input), organization.code)
         : (await directoryApi.createOrganization(input)).code;
+      catalog.refresh(); // El catálogo ya incluye a la nueva (o sus datos nuevos).
       onSaved({ code, name: input.name, active: true });
     } catch (e) {
       setError(mensajeDeApiError(e));
@@ -64,7 +70,7 @@ export function OrganizationForm({ organization, initialName = '', onClose, onSa
 
   return (
       <div className="space-y-4">
-        <Input id="org-name" label="Nombre" value={name} onChange={setName} required maxLength={200} autoFocus />
+        <Input id="org-name" label="Nombre de organización" value={name} onChange={setName} required maxLength={200} autoFocus />
         <SimilarList items={similar.map((s) => ({ code: s.code, title: s.name }))}
           renderAction={(item) => renderSimilarAction?.(item.code, item.title)} />
         <fieldset>

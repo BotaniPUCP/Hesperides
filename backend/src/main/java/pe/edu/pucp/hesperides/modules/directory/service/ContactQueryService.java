@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactCatalogEntry;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactDetail;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactSummary;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationRef;
@@ -36,6 +37,10 @@ public class ContactQueryService {
             return List.of();
         }
         return reads.similar(text, DirectoryText.SIMILARITY_THRESHOLD, DirectoryText.MAX_SUGGESTIONS);
+    }
+
+    public List<ContactCatalogEntry> catalog() {
+        return reads.catalog();
     }
 
     public ContactDetail detail(String code) {

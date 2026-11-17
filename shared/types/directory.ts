@@ -57,6 +57,25 @@ export interface OrganizationSuggestion {
   name: string;
 }
 
+/** Todo el catálogo de una vez: el front busca parecidos y filtra sin llamar por letra. */
+export interface OrganizationCatalogEntry {
+  code: string;
+  name: string;
+  type: DirectoryCodeLabel;
+  active: boolean;
+  aliases: string[];
+}
+
+export interface ContactCatalogEntry {
+  code: string;
+  fullName: string;
+  extension: string | null;
+  mobile: string | null;
+  email: string | null;
+  active: boolean;
+  organizations: OrganizationRef[];
+}
+
 export interface ContactSummary extends ContactCard {
   organizations: OrganizationRef[];
 }

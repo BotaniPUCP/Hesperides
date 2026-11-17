@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { RouteGuard } from '@/components/auth/RouteGuard';
 import { AppShell } from '@/components/layouts/AppShell';
+import { DirectoryCatalogProvider } from '@/components/directorio/DirectoryCatalog';
 
 /**
  * Toda pantalla con sesión vive en este grupo de rutas: el guard y el sidebar
@@ -14,7 +15,9 @@ import { AppShell } from '@/components/layouts/AppShell';
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <RouteGuard>
-      <AppShell>{children}</AppShell>
+      <DirectoryCatalogProvider>
+        <AppShell>{children}</AppShell>
+      </DirectoryCatalogProvider>
     </RouteGuard>
   );
 }
