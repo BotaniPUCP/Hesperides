@@ -259,3 +259,17 @@ es la de §6.1. La cámara no cambia de lugar: solo hacia dónde mira. El logo s
 
 - **CA-12** De 2,9 a 3,8 s el encuadre gira junto con el logo; a los 12 s la toma termina en la pose
   final de §6.1.
+
+### 9.4 Aparición en 1 s y deslizamiento lento (17 nov 2026)
+
+Ajusta §9.2 y §9.3:
+
+| Tiempo de la secuencia | Qué pasa |
+|---|---|
+| 0,0 → 1,0 s | El logo pasa de transparente a opaco en el centro |
+| 1,0 → 3,8 s | El logo se desliza despacio hasta (35 %, 35 %) y la cámara gira la mirada con la misma curva (~10° en el pico, a los 3,8 s); el logo sigue creciendo de 92 % a 100 % |
+| 3,8 s en adelante | Igual que antes: anclado, cambio de imagen a los 5,25 s, salida con el desenfoque a los 6 s; la mirada vuelve a la ruta hasta los 12 s |
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-13 | Deslizamiento y giro a lo largo de 2,8 s (Jean Piero) | Lento, pasa desapercibido | El tramo de 0,9 s de D-12, que se notaba |

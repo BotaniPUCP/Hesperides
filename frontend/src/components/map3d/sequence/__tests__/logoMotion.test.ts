@@ -1,5 +1,5 @@
 import {
-  LOGO_ANCHOR_M, LOGO_APPEARED_S, LOGO_END_S, LOGO_IMAGE_WIDTH, LOGO_LANDED_S, LOGO_SETTLE_S, logoAt, logoSourceAt, type LogoState,
+  LOGO_ANCHOR_M, LOGO_ANCHORED_S, LOGO_DRIFT_FROM_S, LOGO_END_S, LOGO_IMAGE_WIDTH, LOGO_LANDED_S, LOGO_SETTLE_S, logoAt, logoSourceAt, type LogoState,
 } from '../logoMotion';
 import { SEQUENCE_DURATION_S } from '../sequencePath';
 import { SWAP_AT_S } from '../sequenceTimeline';
@@ -59,20 +59,30 @@ describe('el logo en la secuencia', () => {
     expect(logoAt(11, ASPECT).visible).toBe(false);
   });
 
-  it('aparece quieto en el centro, de transparente a opaco, sin girar', () => {
+  it('aparece en el centro, de transparente a opaco en el primer segundo, sin girar', () => {
     expect(logoAt(0, ASPECT)).toMatchObject({ x: 0.5, y: 0.5, rotationDeg: 0, opacity: 0, image: 'pixel' });
-    expect(logoAt(1.25, ASPECT).opacity).toBeCloseTo(0.5, 5);
-    expect(logoAt(2.5, ASPECT).opacity).toBe(1);
-    // Arranca lento: el primer cuarto de segundo apenas se nota.
-    expect(logoAt(0.25, ASPECT).opacity).toBeLessThan(0.05);
+    expect(logoAt(0.5, ASPECT).opacity).toBeCloseTo(0.5, 5);
+    expect(logoAt(1, ASPECT).opacity).toBe(1);
+    expect(logoAt(0.1, ASPECT).opacity).toBeLessThan(0.05);
   });
 
-  it('mientras aparece "respira": crece de 92 % a 100 % y llega quieto al deslizamiento', () => {
+  it('desde el segundo 1 se desliza despacio hasta donde se ancla, y ahí sigue sin salto', () => {
+    expect(LOGO_DRIFT_FROM_S).toBe(1);
+    expect(LOGO_ANCHORED_S).toBeCloseTo(2 + 4 / 2.2, 9);
+    expect(logoAt(LOGO_DRIFT_FROM_S, ASPECT)).toMatchObject({ x: 0.5, y: 0.5 });
+    const mid = logoAt((LOGO_DRIFT_FROM_S + LOGO_ANCHORED_S) / 2, ASPECT);
+    expect(mid.x).toBeCloseTo(0.425, 6);
+    expect(mid.y).toBeCloseTo(0.425, 6);
+    same(logoAt(LOGO_ANCHORED_S + 1e-6, ASPECT), logoAt(LOGO_ANCHORED_S - 1e-6, ASPECT), 5);
+    const anchoredAt = logoAt(LOGO_ANCHORED_S - 1e-9, ASPECT);
+    expect(anchoredAt.x).toBeCloseTo(0.35, 6);
+    expect(anchoredAt.y).toBeCloseTo(0.35, 6);
+  });
+
+  it('mientras se desliza "respira": crece de 92 % a 100 % sin achicarse nunca', () => {
     expect(logoAt(0, ASPECT).width).toBeCloseTo(LOGO_IMAGE_WIDTH * 0.92, 9);
-    expect(logoAt(LOGO_APPEARED_S - 1e-6, ASPECT).width).toBeCloseTo(LOGO_IMAGE_WIDTH, 6);
-    for (let t = 0; t < LOGO_APPEARED_S; t += 0.1) expect(logoAt(t + 0.1, ASPECT).width).toBeGreaterThanOrEqual(logoAt(t, ASPECT).width);
-    same(logoAt(LOGO_APPEARED_S + 1e-6, ASPECT), logoAt(LOGO_APPEARED_S - 1e-6, ASPECT), 5);
-    expect(LOGO_APPEARED_S).toBeCloseTo(2 + 2 / 2.2, 9);
+    expect(logoAt(LOGO_ANCHORED_S - 1e-6, ASPECT).width).toBeCloseTo(LOGO_IMAGE_WIDTH, 6);
+    for (let t = 0; t < LOGO_ANCHORED_S; t += 0.1) expect(logoAt(t + 0.1, ASPECT).width).toBeGreaterThanOrEqual(logoAt(t, ASPECT).width);
   });
 
   it('de 5 a 6 s muestra exactamente lo que la coreografía muestra de 8 a 9 s', () => {

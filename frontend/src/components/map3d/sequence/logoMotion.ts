@@ -3,8 +3,9 @@ import { SWAP_AT_S } from './sequenceTimeline';
 
 /**
  * El logo de la secuencia (SPEC-118 §9), sin three. Desde el primer cuadro aparece
- * en el centro, de transparente a opaco y creciendo apenas (D-11). Luego sigue la
- * coreografía: se desliza hacia arriba a la izquierda y queda anclado en el espacio,
+ * en el centro, de transparente a opaco y creciendo apenas (D-11); desde el segundo 1
+ * se desliza despacio hacia arriba a la izquierda, junto con el giro de la cámara
+ * (D-13), y queda anclado en el espacio,
  * fuera del eje de la cámara para que lo pase por un costado sin llenar la pantalla.
  * La coreografía va comprimida (D-10): de 5 a 6 s muestra lo que mostraría de 8 a
  * 9 s, así se va justo con el desenfoque. Posición en fracciones del cuadro (0-1,
@@ -106,12 +107,12 @@ const FAST_SPEED = (() => {
   const real = REAL_SPEED_FROM_S - WARP_FROM_S, source = SOURCE_AT_REAL_SPEED_S - WARP_FROM_S;
   return (source - SLOWDOWN_S / 2) / (real - SLOWDOWN_S / 2);
 })();
-/** Cuando la coreografía empieza a deslizarse: hasta ahí, el logo aparece en el centro. */
-export const LOGO_APPEARED_S = WARP_FROM_S + (LOGO_LANDED_S - WARP_FROM_S) / FAST_SPEED;
-/** Cuando, en la secuencia, termina de deslizarse y queda anclado. */
+/** Cuando, en la secuencia, termina de deslizarse y queda anclado: donde la coreografía comprimida llega a 6 s. */
 export const LOGO_ANCHORED_S = WARP_FROM_S + (LOGO_SETTLE_S - WARP_FROM_S) / FAST_SPEED;
-/** La aparición: opacidad de 0 a 1 en este tiempo, y de 92 % a 100 % de tamaño hasta LOGO_APPEARED_S. */
-const FADE_IN_S = 2.5;
+/** De transparente a opaco en el primer segundo; desde ahí se desliza despacio hasta anclarse. */
+const FADE_IN_S = 1;
+export const LOGO_DRIFT_FROM_S = FADE_IN_S;
+/** Mientras aparece y se desliza crece de 92 % a 100 %. */
 const APPEAR_SCALE = 0.92;
 /** Se desvanece al final, ya pasado el desenfoque: a los 9 s de la coreografía todavía tapa una esquina. */
 const FADE_OUT_S = 0.3;
@@ -127,14 +128,19 @@ function sourceTime(t: number): number {
 }
 
 function appearing(t: number): LogoState {
-  const grow = easeInOut(t / LOGO_APPEARED_S);
-  return centered(t, LOGO_IMAGE_WIDTH * (APPEAR_SCALE + (1 - APPEAR_SCALE) * grow), easeInOut(t / FADE_IN_S));
+  const grow = easeInOut(t / LOGO_ANCHORED_S);
+  const drift = easeInOut((t - LOGO_DRIFT_FROM_S) / (LOGO_ANCHORED_S - LOGO_DRIFT_FROM_S));
+  return {
+    ...centered(t, LOGO_IMAGE_WIDTH * (APPEAR_SCALE + (1 - APPEAR_SCALE) * grow), easeInOut(t / FADE_IN_S)),
+    x: 0.5 + (LOGO_ANCHOR_SCREEN.x - 0.5) * drift,
+    y: 0.5 + (LOGO_ANCHOR_SCREEN.y - 0.5) * drift,
+  };
 }
 
 /** El logo en el segundo `t` de la secuencia. `aspect`: ancho entre alto del cuadro. */
 export function logoAt(t: number, aspect: number): LogoState {
   if (t < 0 || t >= LOGO_END_S) return { ...centered(t, 0, 0), visible: false };
-  if (t < LOGO_APPEARED_S) return appearing(t);
+  if (t < LOGO_ANCHORED_S) return appearing(t);
   const state = logoSourceAt(sourceTime(t), aspect);
   const fade = 1 - easeInOut((t - (LOGO_END_S - FADE_OUT_S)) / FADE_OUT_S);
   return { ...state, image: imageAt(t), opacity: state.opacity * fade };

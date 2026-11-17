@@ -1,5 +1,5 @@
 import type { CameraPose } from '../../viewer/cameraRig';
-import { LOGO_ANCHOR_SCREEN, LOGO_ANCHORED_S, LOGO_APPEARED_S } from '../logoMotion';
+import { LOGO_ANCHOR_SCREEN, LOGO_ANCHORED_S, LOGO_DRIFT_FROM_S } from '../logoMotion';
 import { cameraPoseAt, SEQUENCE_DURATION_S } from '../sequencePath';
 import { GAZE_PEAK_S, GAZE_START_S, shotPoseAt } from '../sequenceCamera';
 
@@ -23,7 +23,7 @@ const gazeOf = (p: CameraPose) => sub(p.target, p.position);
 
 describe('la mirada de la cámara en la toma', () => {
   it('gira en el mismo tramo en que el logo se desliza', () => {
-    expect(GAZE_START_S).toBe(LOGO_APPEARED_S);
+    expect(GAZE_START_S).toBe(LOGO_DRIFT_FROM_S);
     expect(GAZE_PEAK_S).toBe(LOGO_ANCHORED_S);
   });
 

@@ -1,5 +1,5 @@
 import type { CameraPose } from '../viewer/cameraRig';
-import { LOGO_ANCHOR_SCREEN, LOGO_ANCHORED_S, LOGO_APPEARED_S } from './logoMotion';
+import { LOGO_ANCHOR_SCREEN, LOGO_ANCHORED_S, LOGO_DRIFT_FROM_S } from './logoMotion';
 import { cameraPoseAt, SEQUENCE_DURATION_S } from './sequencePath';
 
 /**
@@ -12,7 +12,7 @@ import { cameraPoseAt, SEQUENCE_DURATION_S } from './sequencePath';
 
 type Vec3 = [number, number, number];
 
-export const GAZE_START_S = LOGO_APPEARED_S;
+export const GAZE_START_S = LOGO_DRIFT_FROM_S;
 export const GAZE_PEAK_S = LOGO_ANCHORED_S;
 /** El mismo campo de visión que la cámara del visor (cameraRig). */
 const HALF_FOV_TAN = Math.tan((38 * Math.PI) / 360);
