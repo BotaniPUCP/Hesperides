@@ -31,7 +31,7 @@ export interface Lights {
   sunDir: () => THREE.Vector3;
   setHour: (hour: number, night: boolean) => void;
   /** Con `dusk`, la luz de la hora dorada (modo Atardecer): manda sobre la de la paleta. */
-  applyTheme: (palette: ScenePalette, night: boolean, dusk?: boolean) => void;
+  applyTheme: (palette: ScenePalette, night: boolean, dusk?: boolean, twilight?: number) => void;
   /** Centra el mapa de sombras en lo que mira la cámara (SPEC-112 D-21). */
   follow: (target: THREE.Vector3, cameraDistance: number) => void;
 }
@@ -96,7 +96,8 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
     }
   }
 
-  function applyTheme(palette: ScenePalette, night: boolean, golden = false) {
+  /** `twilight`: cuánto es ya crepúsculo; el sol directo y el cielo bajan. */
+  function applyTheme(palette: ScenePalette, night: boolean, golden = false, twilight = 0) {
     dusk = golden && !night;
     hemi.color.set(palette.hemiSky);
     hemi.groundColor.set(palette.hemiGround);
@@ -111,8 +112,8 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
     if (!dusk) return;
     hemi.color.set(DUSK.hemiSky);
     hemi.groundColor.set(DUSK.hemiGround);
-    hemi.intensity = DUSK.hemiIntensity;
-    sun.intensity = DUSK.sunIntensity;
+    hemi.intensity = DUSK.hemiIntensity * (1 - 0.35 * twilight);
+    sun.intensity = DUSK.sunIntensity * (1 - 0.85 * twilight);
     fill.intensity = 0;
     rim.color.set(DUSK.rim);
     rim.intensity = DUSK.rimIntensity;

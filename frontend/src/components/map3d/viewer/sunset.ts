@@ -8,7 +8,7 @@ import { withCityWindows } from './cityWindows';
 import { broadleafCrown } from './sunsetTrees';
 import type { LocalPlane } from '../projection';
 import type { Polygon } from '../sceneData';
-import { createSunsetSky, HORIZON } from './sunsetSky';
+import { createSunsetSky, DUSK_HORIZON, HORIZON } from './sunsetSky';
 
 /**
  * Modo «Atardecer»: el campus a la hora dorada, como un render de arquitectura.
@@ -23,8 +23,12 @@ import { createSunsetSky, HORIZON } from './sunsetSky';
  * de las fichas de fachada no cambia (SPEC-109 D-07).
  */
 
-/** Hora del sol en el atardecer: unos 4° sobre el horizonte, por el oeste. */
-export const SUNSET_HOUR = 17.72;
+export { SUNSET_HOUR, SUNSET_HOURS } from './sunsetHours';
+
+/** Cuánto es ya crepúsculo (0 a 1): el cielo se apaga hacia el violeta, el sol directo se va y las luces suben. */
+export function duskOf(hour: number): number {
+  return THREE.MathUtils.smoothstep(hour, 17.75, 18.55);
+}
 
 export const SUNSET = {
   exposure: 1.3,
@@ -91,8 +95,8 @@ export function setGroundMatte(materials: THREE.Material[], on: boolean): void {
 
 export interface Sunset {
   enabled: () => boolean;
-  /** Prende o apaga el modo; `sunDir` es hacia dónde está el sol. */
-  setEnabled: (on: boolean, sunDir: THREE.Vector3) => void;
+  /** Prende o apaga el modo; `sunDir` es hacia dónde está el sol y `dusk`, cuánto es ya crepúsculo. */
+  setEnabled: (on: boolean, sunDir: THREE.Vector3, dusk?: number) => void;
   /** `distance`: de la cámara a lo que mira; la bruma se mide desde ahí. */
   render: (distance: number) => void;
   resize: (width: number, height: number) => void;
@@ -213,7 +217,7 @@ export interface SunsetOptions {
 
 export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, campus: THREE.Box3,
   groundY: number, { plane, campus: campusPolygons, onChange = () => undefined, lite = false }: SunsetOptions): Sunset {
-  const { mesh: sky, setSun, setSunPower } = createSunsetSky(SUNSET.groundRadiusM, () => {
+  const { mesh: sky, setSun, setSunPower, setDusk } = createSunsetSky(SUNSET.groundRadiusM, () => {
     // Las nubes también se reflejan: con el modo prendido, se vuelve a hornear el entorno.
     env?.dispose();
     env = null;
@@ -274,9 +278,11 @@ export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, 
   const bakedSun = new THREE.Vector3(0, -1, 0);
 
   /** Los reflejos salen del mismo cielo: el vidrio y los techos toman el naranja del atardecer. Solo si el sol se movió. */
-  function bakeEnvironment(sunDir: THREE.Vector3) {
-    if (env && bakedSun.distanceToSquared(sunDir) < 1e-8) return;
+  let bakedDusk = 0;
+  function bakeEnvironment(sunDir: THREE.Vector3, dusk = bakedDusk) {
+    if (env && bakedSun.distanceToSquared(sunDir) < 1e-8 && Math.abs(bakedDusk - dusk) < 1e-3) return;
     bakedSun.copy(sunDir);
+    bakedDusk = dusk;
     const only = new THREE.Scene();
     const copy = new THREE.Mesh(sky.geometry, sky.material);
     copy.scale.setScalar(1000);
@@ -291,17 +297,21 @@ export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, 
 
   return {
     enabled: () => on,
-    setEnabled(next, sunDir) {
+    setEnabled(next, sunDir, dusk = 0) {
       if (next) {
         loadCity();
         setSun(sunDir);
+        setDusk(dusk);
+        // La bruma (lejana y baja) se apaga con el cielo.
+        fog.color.copy(HORIZON).lerp(DUSK_HORIZON, dusk);
+        grade.setGround(groundY, fog.color);
         grade.setSun(sunDir);
-        bakeEnvironment(sunDir);
+        bakeEnvironment(sunDir, dusk);
         scene.environment = env?.texture ?? null;
         scene.fog = fog;
         renderer.toneMapping = THREE.NoToneMapping;
-        renderer.toneMappingExposure = SUNSET.exposure;
-        grade.setExposure(SUNSET.exposure);
+        renderer.toneMappingExposure = SUNSET.exposure * (1 + 0.45 * dusk);
+        grade.setExposure(SUNSET.exposure * (1 + 0.45 * dusk));
       } else {
         // El entorno y la exposición del tema los repone stage.applyTheme, que el visor llama después.
         scene.fog = null;

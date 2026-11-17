@@ -136,6 +136,12 @@ void main() {
     float amount = (1.0 - exp(-length(p) * ${GRADE.lowFog.density})) * exp(-height / ${GRADE.lowFog.heightM.toFixed(1)});
     hdr = mix(hdr, uFogColor, min(amount, ${GRADE.lowFog.max}));
   }
+  // Lo lejano ya está en la bruma: lleva el mismo halo del sol que el cielo junto al horizonte, sin costura.
+  if (depth < 1.0) {
+    float toward = max(dot(normalize(p), uSunView), 0.0);
+    float hazy = smoothstep(1200.0, 4200.0, length(p));
+    hdr += (vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.6 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55) * hazy;
+  }
   hdr += sunRays();
   vec3 c = gradeAces(hdr);
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
@@ -146,6 +152,10 @@ void main() {
   c = clamp((c - 0.5) * 1.12 + 0.5, 0.0, 1.0);
   vec2 d = vUv - 0.5;
   c *= 1.0 - uVignette * smoothstep(0.25, 0.85, dot(d, d) * 2.2);
+  // Dither triangular de medio nivel: sin él, el cielo y el halo del sol salen en bandas al pasar a 8 bits.
+  float n1 = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+  float n2 = fract(sin(dot(gl_FragCoord.xy + 17.0, vec2(39.3468, 11.135))) * 24634.6345);
+  c += (n1 + n2 - 1.0) / 255.0;
   gl_FragColor = vec4(c, 1.0);
 }`;
 

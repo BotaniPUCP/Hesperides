@@ -63,6 +63,10 @@ export interface Viewer {
   setNight: (night: boolean) => void;
   /** Modo Atardecer: hora dorada con cielo, bruma y posprocesado. De noche no se aplica. */
   setSunset: (on: boolean) => void;
+  /** La hora del Atardecer, de la hora dorada al crepúsculo (SUNSET_HOURS). */
+  setSunsetHour: (hour: number) => void;
+  /** Una captura de lo que se ve, a `scale` veces la resolución de la pantalla, en PNG. */
+  snapshot: (scale?: number) => Promise<Blob | null>;
   setHour: (hour: number) => void;
   setShadows: (on: boolean) => void;
   setLabels: (on: boolean) => void;

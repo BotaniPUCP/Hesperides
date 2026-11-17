@@ -10,6 +10,8 @@ import * as THREE from 'three';
 
 /** El color del horizonte: también el de la bruma, para que el suelo lejano se funda con el cielo. */
 export const HORIZON = new THREE.Color().setRGB(1.0, 0.5, 0.24);
+/** El horizonte ya en el crepúsculo: violeta apagado. */
+export const DUSK_HORIZON = new THREE.Color().setRGB(0.42, 0.24, 0.3);
 
 const SKY_GLSL = {
   vertex: /* glsl */ `
@@ -24,6 +26,8 @@ uniform vec3 sunDir;
 uniform vec3 horizon;
 /** 1 en pantalla; menos al hornear los reflejos, para que el disco no deje manchas en el suelo. */
 uniform float sunPower;
+/** Crepúsculo (0 a 1): el cielo se apaga hacia el azul violáceo y el sol se va. */
+uniform float dusk;
 /** Máscara de nubes de una foto (brillo en r, máscara en a), de 0° a 45° de elevación; mientras carga, las procedurales. */
 uniform sampler2D cloudTex;
 uniform float cloudsReady;
@@ -82,9 +86,12 @@ void main() {
     lit += vec3(1.3, 0.52, 0.18) * edge * (0.35 + 0.9 * pow(toward, 3.0));
     col = mix(col, lit, cover * 0.9);
   } else {
-    // Bajo el horizonte (detrás del suelo lejano): la bruma.
-    col = horizon;
+    // Bajo el horizonte (detrás del suelo lejano): la bruma, con el mismo halo que le pone el pase final a lo lejano.
+    col = horizon * (1.0 + 0.2 * toward) + vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.6 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55;
   }
+  // Crepúsculo: arriba azul profundo, abajo un resto de naranja; el disco y su halo cercano ya no están.
+  vec3 twilight = mix(vec3(0.42, 0.24, 0.3) * (1.0 + 0.8 * toward), vec3(0.04, 0.06, 0.16), smoothstep(0.0, 0.5, max(h, 0.0)));
+  col = mix(col, twilight + col * 0.12, dusk);
   gl_FragColor = vec4(col, 1.0);
 }`,
 };
@@ -99,13 +106,14 @@ export interface SunsetSky {
   setSun: (dir: THREE.Vector3) => void;
   /** Para hornear los reflejos: sin disco ni halo cercano. */
   setSunPower: (power: number) => void;
+  setDusk: (dusk: number) => void;
 }
 
 /** `onClouds`: llegó la foto de las nubes; hay que redibujar (y volver a hornear los reflejos). */
 export function createSunsetSky(radius: number, onClouds: () => void = () => undefined): SunsetSky {
   const uniforms = {
     sunDir: { value: new THREE.Vector3(0, 1, 0) }, horizon: { value: HORIZON.clone() }, sunPower: { value: 1 },
-    cloudTex: { value: null as THREE.Texture | null }, cloudsReady: { value: 0 }, cloudOffset: { value: 0 },
+    cloudTex: { value: null as THREE.Texture | null }, cloudsReady: { value: 0 }, cloudOffset: { value: 0 }, dusk: { value: 0 },
   };
   // Sin mipmaps: el cielo siempre se ve ampliado, y así no aparece una costura donde el azimut da la vuelta.
   new THREE.TextureLoader().load(CLOUDS.url, (texture) => {
@@ -137,5 +145,6 @@ export function createSunsetSky(radius: number, onClouds: () => void = () => und
       uniforms.cloudOffset.value = CLOUDS.sunU - azimuthU(uniforms.sunDir.value);
     },
     setSunPower: (power) => { uniforms.sunPower.value = power; },
+    setDusk: (dusk) => { uniforms.dusk.value = dusk; },
   };
 }

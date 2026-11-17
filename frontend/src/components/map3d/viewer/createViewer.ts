@@ -12,7 +12,7 @@ import { attachAdminMovement } from '../pilot/adminMovement';
 import { attachAdminAnchor } from './adminAnchor';
 import { createLights } from './lighting';
 import { createRoofDetails } from './roofDetails';
-import { createSunset, setGroundMatte, SUNSET, SUNSET_HOUR, SUNSET_MAX_POLAR, sunsetPose } from './sunset';
+import { createSunset, duskOf, setGroundMatte, SUNSET, SUNSET_HOUR, SUNSET_MAX_POLAR, sunsetPose } from './sunset';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
 import { createPin } from './pin';
@@ -58,7 +58,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const coarse = window.matchMedia('(pointer: coarse)').matches;
   const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
   const lights = createLights(scene, center, coarse);
-  let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true, golden = false;
+  let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true, golden = false, sunsetHour: number = SUNSET_HOUR;
   const sunset = createSunset(renderer, scene, rig.camera, stage.box, WORLD_LIFT,
     { plane: data.plane, campus: data.campus, onChange: () => { needsRender = true; }, lite: coarse });
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
@@ -135,7 +135,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
 
   /** El sol mueve también el borde iluminado de las copas. */
   function relight() {
-    lights.setHour(golden && !night ? SUNSET_HOUR : hour, night);
+    lights.setHour(golden && !night ? sunsetHour : hour, night);
     foliage.setLighting(night, lights.sunDir(), golden);
   }
 
@@ -143,18 +143,19 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     state.palette = paletteFor(night, gray, golden && !night);
     const { w, h } = size();
     stage.applyTheme(state.palette, night, w, h);
-    lights.applyTheme(state.palette, night, golden);
+    const twilight = golden && !night ? duskOf(sunsetHour) : 0;
+    lights.applyTheme(state.palette, night, golden, twilight);
     relight();
     // Atardecer (no de noche): cielo, bruma, ciudad alrededor y posprocesado; pisa el entorno y la exposición del tema.
     const dusk = golden && !night;
-    sunset.setEnabled(dusk, lights.sunDir());
+    sunset.setEnabled(dusk, lights.sunDir(), twilight);
     stage.backdrop.style.visibility = dusk ? 'hidden' : '';
     vegetation.setGolden(dusk);
     roofs.visible = dusk && poly.campusBuildings.mesh.visible;
     realColors.setGlassEnv(dusk ? SUNSET.glassEnv : GLASS_ENV_BOOST);
     setGroundMatte([poly.greenAreas, poly.xerophytic, poly.parking, poly.sidewalks]
       .flatMap((l) => (Array.isArray(l.mesh.material) ? l.mesh.material : [l.mesh.material])), dusk);
-    realColors.setGlow(night ? 1 : dusk ? SUNSET.windowGlow : 0);
+    realColors.setGlow(night ? 1 : dusk ? SUNSET.windowGlow * (1 + 1.2 * twilight) : 0);
     planNodes?.applyTheme(state.palette);
     relight();
     highlight.repaintAll();
@@ -324,6 +325,24 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       if (turnedOn && !night) rig.flyToPose(sunsetPose(center, lights.sunDir()));
     },
     setHour: (h) => { hour = h; relight(); needsRender = true; },
+    setSunsetHour: (h) => { sunsetHour = h; if (golden) applyTheme(); },
+    async snapshot(scale = 2) {
+      // Un cuadro a más resolución, leído en el mismo turno en que se dibuja (el lienzo no se conserva).
+      const ratio = renderer.getPixelRatio();
+      const { w, h } = size();
+      renderer.setPixelRatio(Math.min(ratio * scale, 4));
+      stage.resize(w, h);
+      sunset.resize(w, h);
+      const distance = rig.camera.position.distanceTo(rig.controls.target);
+      lights.follow(rig.controls.target, distance);
+      if (sunset.enabled()) sunset.render(distance); else renderer.render(scene, rig.camera);
+      const blob = await new Promise<Blob | null>((resolve) => renderer.domElement.toBlob(resolve, 'image/png'));
+      renderer.setPixelRatio(ratio);
+      stage.resize(w, h);
+      sunset.resize(w, h);
+      needsRender = true;
+      return blob;
+    },
     setShadows(on) {
       renderer.shadowMap.enabled = on;
       lights.sun.castShadow = on;
