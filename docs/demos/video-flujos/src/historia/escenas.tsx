@@ -10,6 +10,7 @@ import { ALTO, BANDA, COLOR } from '../tema';
 import { FPS } from '../tiempos';
 import { apareceEn, momentoDe } from '../ui/anim';
 import { Arbol, ArbolRajado, Burbuja, Celular, Cielo, Colinas, Edificios, Farol, HORIZONTE, Laptop, Lienzo, Sello, Sol, SUELO, Suelo, Tierra } from './decorado';
+import { enDos } from './enDos';
 import { Persona } from './Persona';
 
 const suave = Easing.inOut(Easing.cubic);
@@ -63,6 +64,7 @@ const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: number }
 
 // ---------------- 1. Mañana ----------------
 export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
+  const fp = enDos(frame);
   const h1 = momentoDe(escena, 'h1', 0);
   const h2 = momentoDe(escena, 'h2', 0);
   const fin = escena.desde + escena.frames;
@@ -74,12 +76,12 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
     [h1, 0],
     [h2, 1],
   ]);
-  const xJulio = tw(frame, [
+  const xJulio = tw(fp, [
     [h1, -160],
     [momentoDe(escena, 'h1', 0.85), 680],
   ]);
-  const caminando = frame < momentoDe(escena, 'h1', 0.85) ? 1 : 0;
-  const mira = tw(frame, [
+  const caminando = fp < momentoDe(escena, 'h1', 0.85) ? 1 : 0;
+  const mira = tw(fp, [
     [momentoDe(escena, 'h2', 0.2), 0],
     [momentoDe(escena, 'h2', 0.35), 1],
   ]);
@@ -93,9 +95,9 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
       {/* Peatones que pasan bajo la rama */}
       {[0, 1].map((i) => {
         const desde = momentoDe(escena, 'h2', 0.35 + i * 0.15);
-        const x = 2000 - (frame - desde) * 7;
-        return frame > desde ? (
-          <Persona key={i} quien="peaton" x={x} sueloY={SUELO + 6} escala={0.62} frame={frame} pose={{ brazoI: 8, brazoD: 8 }} mira={-1} andar={{ distancia: (frame - desde) * 7, w: 1 }} ropa={i ? COLOR.arena : COLOR.blanco} />
+        const x = 2000 - (fp - desde) * 7;
+        return fp > desde ? (
+          <Persona key={i} quien="peaton" x={x} sueloY={SUELO + 6} escala={0.62} frame={fp} pose={{ brazoI: 8, brazoD: 8 }} mira={-1} andar={{ distancia: (fp - desde) * 7, w: 1 }} ropa={i ? COLOR.arena : COLOR.blanco} />
         ) : null;
       })}
       <Persona
@@ -103,9 +105,9 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
         x={xJulio}
         sueloY={SUELO + 4}
         escala={0.95}
-        frame={frame}
+        frame={fp}
         pose={{ brazoI: 10, brazoD: 10 + mira * 30, miraY: -0.8 * mira, miraX: 0.6 * mira }}
-        gesto={frame < momentoDe(escena, 'h2', 0.3) ? 'feliz' : mira > 0.5 ? 'preocupado' : 'neutral'}
+        gesto={fp < momentoDe(escena, 'h2', 0.3) ? 'feliz' : mira > 0.5 ? 'preocupado' : 'neutral'}
         andar={{ distancia: xJulio, w: caminando }}
       />
       <Tarjeta texto="6:00 a. m." visible={apareceEn(escena, 'h1', frame, 0.05)} />
@@ -140,6 +142,7 @@ const Chat: React.FC<{ frame: number; mio: number; inicioLluvia: number }> = ({ 
 };
 
 export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
+  const fp = enDos(frame);
   const h4 = momentoDe(escena, 'h4', 0);
   const h5 = momentoDe(escena, 'h5', 0);
   if (frame < h4) {
@@ -151,9 +154,9 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
           x={460}
           sueloY={SUELO + 30}
           escala={1.35}
-          frame={frame}
+          frame={fp}
           pose={{ brazoI: 10, brazoD: 120, miraX: 0.6, miraY: -0.2 }}
-          gesto={frame < momentoDe(escena, 'h3', 0.6) ? 'neutral' : 'preocupado'}
+          gesto={fp < momentoDe(escena, 'h3', 0.6) ? 'neutral' : 'preocupado'}
           objeto="celular"
         />
         <Celular x={1180} y={60} alto={800}>
@@ -218,12 +221,16 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
             <circle cx={270} cy={430} r={11} fill={COLOR.blanco} stroke={COLOR.borde} strokeWidth={4} />
           </g>
         </Lienzo>
-        <Persona quien="jefe" x={420} sueloY={850} escala={1.15} frame={frame} pose={{ brazoI: 40, brazoD: 165 + Math.sin(frame / 4) * 6, miraX: 0.4, miraY: -0.3 }} gesto="pensativo" sentado />
+        <Persona quien="jefe" x={420} sueloY={850} escala={1.15} frame={fp} pose={{ brazoI: 40, brazoD: 165 + Math.sin(fp / 4) * 6, miraX: 0.4, miraY: -0.3 }} gesto="pensativo" sentado />
       </AbsoluteFill>
     );
   }
   // h5: la cuadrilla poda quince árboles y nadie sabe si quedaron bien.
   const avance = tw(frame, [
+    [h5, 0],
+    [momentoDe(escena, 'h5', 0.75), 1],
+  ]);
+  const avanceP = tw(fp, [
     [h5, 0],
     [momentoDe(escena, 'h5', 0.75), 1],
   ]);
@@ -252,14 +259,14 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
         <Persona
           key={i}
           quien="podador"
-          x={500 + i * 130 + avance * 980}
+          x={500 + i * 130 + avanceP * 980}
           sueloY={SUELO + 8}
           escala={0.8}
-          frame={frame}
-          pose={{ brazoI: 20, brazoD: 95 + Math.sin(frame / 3 + i) * 10 }}
+          frame={fp}
+          pose={{ brazoI: 20, brazoD: 95 + Math.sin(fp / 3 + i) * 10 }}
           gesto="neutral"
           objeto="podadora"
-          andar={{ distancia: avance * 980, w: avance > 0 && avance < 1 ? 1 : 0 }}
+          andar={{ distancia: avanceP * 980, w: avanceP > 0 && avanceP < 1 ? 1 : 0 }}
         />
       ))}
       <Tarjeta texto={`${Math.round(avance * 15)} árboles podados · ¿bien hechos?`} visible={apareceEn(escena, 'h5', frame, 0.05)} />
@@ -272,10 +279,12 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
 const X_BROTE = 1080;
 
 export const Aparece: React.FC<PropsEscena> = ({ escena, frame }) => {
+  const fp = enDos(frame);
   const t = frame - escena.desde;
+  const tp = fp - escena.desde;
   const brota = ESPERA_BROTE;
   const temblor = t < brota ? Math.sin(t * 2.5) * 4 : 0;
-  const sorpresa = t >= brota && t < brota + 30;
+  const sorpresa = tp >= brota && tp < brota + 30;
   return (
     <AbsoluteFill>
       <Lienzo>
@@ -286,15 +295,15 @@ export const Aparece: React.FC<PropsEscena> = ({ escena, frame }) => {
       </Lienzo>
       <Persona
         quien="julio"
-        x={tw(frame, [
+        x={tw(fp, [
           [escena.desde + brota, 680],
           [escena.desde + brota + 10, 600],
         ])}
         sueloY={SUELO + 4}
         escala={0.95}
-        frame={frame}
-        pose={{ brazoI: sorpresa ? 70 : 12, brazoD: sorpresa ? 70 : 14, miraX: 0.8, miraY: t < brota ? -0.6 : 0.1 }}
-        gesto={t < brota ? 'preocupado' : sorpresa ? 'sorpresa' : 'feliz'}
+        frame={fp}
+        pose={{ brazoI: sorpresa ? 70 : 12, brazoD: sorpresa ? 70 : 14, miraX: 0.8, miraY: tp < brota ? -0.6 : 0.1 }}
+        gesto={tp < brota ? 'preocupado' : sorpresa ? 'sorpresa' : 'feliz'}
       />
     </AbsoluteFill>
   );
@@ -325,6 +334,7 @@ const Oficina: React.FC = () => (
 );
 
 export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
+  const fp = enDos(frame);
   const medida = useMedida();
   const h8 = momentoDe(escena, 'h8', 0);
   const h10 = momentoDe(escena, 'h10', 0);
@@ -339,7 +349,7 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
         <Lienzo>
           <Campus corrimiento={300} frame={frame} />
         </Lienzo>
-        <Persona quien="julio" x={420} sueloY={SUELO + 4} escala={1.15} frame={frame} pose={{ brazoI: 10, brazoD: 120, miraX: 0.7 }} gesto="feliz" objeto="celular" />
+        <Persona quien="julio" x={420} sueloY={SUELO + 4} escala={1.15} frame={fp} pose={{ brazoI: 10, brazoD: 120, miraX: 0.7 }} gesto="feliz" objeto="celular" />
         <Celular x={1060} y={50} alto={alto} captura="venta/reporte-celular">
           <Resalte medida={{ x: m.x * k, y: m.y * k, ancho: m.ancho * k, alto: m.alto * k }} visible={apareceEn(escena, 'h7', frame, 0.35)} />
         </Celular>
@@ -356,7 +366,7 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
     return (
       <AbsoluteFill>
         <Oficina />
-        <Persona quien="jefe" x={330} sueloY={870} escala={1.05} frame={frame} pose={{ brazoI: 30, brazoD: enMapa ? 85 : 40, miraX: 0.8 }} gesto={frame < momentoDe(escena, 'h8', 0.4) ? 'sorpresa' : 'feliz'} sentado />
+        <Persona quien="jefe" x={330} sueloY={870} escala={1.05} frame={fp} pose={{ brazoI: 30, brazoD: enMapa ? 85 : 40, miraX: 0.8 }} gesto={fp < momentoDe(escena, 'h8', 0.4) ? 'sorpresa' : 'feliz'} sentado />
         <Laptop x={1080} y={150} ancho={ancho} captura={enMapa ? 'venta/mapa-atardecer' : 'venta/incidencia-prellenada'}>
           {!enMapa ? <Resalte medida={{ x: pre.x * k, y: pre.y * k, ancho: pre.ancho * k, alto: pre.alto * k }} visible={apareceEn(escena, 'h8', frame, 0.15)} /> : null}
           {enMapa && pulso >= 0 ? <Pulso x={ancho * PIN_INCIDENCIA[0]} y={((ancho * 941) / 1920) * PIN_INCIDENCIA[1]} progreso={pulso} /> : null}
@@ -384,9 +394,9 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
         <Campus corrimiento={300} frame={frame} />
         <ArbolRajado x={1350} y={SUELO - 30} frame={frame} alerta={0} corte={corte} />
       </Lienzo>
-      <Persona quien="podador" x={1000} sueloY={SUELO + 6} escala={0.9} frame={frame} pose={{ brazoI: 20, brazoD: corte < 1 ? 100 + Math.sin(frame / 2.5) * 12 : 20 }} gesto="neutral" objeto="podadora" />
-      <Persona quien="podador" x={1180} sueloY={SUELO + 6} escala={0.9} frame={frame} pose={{ brazoI: 15, brazoD: frame > momentoDe(escena, 'h10', 0.4) ? 125 : 15, miraX: -0.4 }} gesto="feliz" objeto="celular" mira={-1} />
-      <Persona quien="julio" x={560} sueloY={SUELO + 4} escala={0.95} frame={frame} pose={{ brazoI: 10, brazoD: sello > 0 ? 70 : 12, miraX: 0.6 }} gesto={sello > 0 ? 'feliz' : 'neutral'} />
+      <Persona quien="podador" x={1000} sueloY={SUELO + 6} escala={0.9} frame={fp} pose={{ brazoI: 20, brazoD: corte < 1 ? 100 + Math.sin(fp / 2.5) * 12 : 20 }} gesto="neutral" objeto="podadora" />
+      <Persona quien="podador" x={1180} sueloY={SUELO + 6} escala={0.9} frame={fp} pose={{ brazoI: 15, brazoD: fp > momentoDe(escena, 'h10', 0.4) ? 125 : 15, miraX: -0.4 }} gesto="feliz" objeto="celular" mira={-1} />
+      <Persona quien="julio" x={560} sueloY={SUELO + 4} escala={0.95} frame={fp} pose={{ brazoI: 10, brazoD: sello > 0 ? 70 : 12, miraX: 0.6 }} gesto={sello > 0 ? 'feliz' : 'neutral'} />
       <AbsoluteFill style={{ background: COLOR.blanco, opacity: flash }} />
       <Sello x={960} y={330} texto="Cerrada" t={sello} />
     </AbsoluteFill>
@@ -395,6 +405,7 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
 
 // ---------------- 5. Resultado ----------------
 export const Resultado: React.FC<PropsEscena> = ({ escena, frame }) => {
+  const fp = enDos(frame);
   const h12 = momentoDe(escena, 'h12', 0);
   if (frame < h12) {
     const ancho = 980;
@@ -416,22 +427,22 @@ export const Resultado: React.FC<PropsEscena> = ({ escena, frame }) => {
             );
           })}
         </Laptop>
-        <Persona quien="peaton" x={250} sueloY={850} escala={0.95} frame={frame} pose={{ brazoI: 20, brazoD: 25, miraX: 0.8 }} gesto="feliz" sentado ropa={COLOR.verde} />
-        <Persona quien="peaton" x={520} sueloY={850} escala={0.95} frame={frame} pose={{ brazoI: 20, brazoD: 25, miraX: 0.8 }} gesto="neutral" sentado ropa={COLOR.arena} />
-        <Persona quien="jefe" x={1720} sueloY={880} escala={1.05} frame={frame} pose={{ brazoI: 10, brazoD: 95, miraX: 0.5 }} gesto="feliz" mira={-1} />
+        <Persona quien="peaton" x={250} sueloY={850} escala={0.95} frame={fp} pose={{ brazoI: 20, brazoD: 25, miraX: 0.8 }} gesto="feliz" sentado ropa={COLOR.verde} />
+        <Persona quien="peaton" x={520} sueloY={850} escala={0.95} frame={fp} pose={{ brazoI: 20, brazoD: 25, miraX: 0.8 }} gesto="neutral" sentado ropa={COLOR.arena} />
+        <Persona quien="jefe" x={1720} sueloY={880} escala={1.05} frame={fp} pose={{ brazoI: 10, brazoD: 95, miraX: 0.5 }} gesto="feliz" mira={-1} />
       </AbsoluteFill>
     );
   }
   const titulo = spring({ frame: frame - momentoDe(escena, 'h12', 0.05), fps: FPS, config: { damping: 10, stiffness: 120 } });
   const lema = apareceEn(escena, 'h12', frame, 0.3);
-  const saludo = 120 + Math.sin(frame / 4) * 25;
+  const saludo = 120 + Math.sin(fp / 4) * 25;
   return (
     <AbsoluteFill style={{ background: COLOR.verde, height: ALTO - BANDA }}>
       <div style={{ position: 'absolute', left: 0, right: 0, top: 780, bottom: 0, background: COLOR.arena }} />
       <h1 style={{ position: 'absolute', left: 0, right: 0, top: 70, margin: 0, textAlign: 'center', color: COLOR.blanco, fontSize: 150, fontWeight: 800, opacity: Math.min(1, titulo), transform: `scale(${0.7 + 0.3 * titulo})` }}>Hesperides</h1>
       <p style={{ position: 'absolute', left: 0, right: 0, top: 280, margin: 0, textAlign: 'center', color: COLOR.arena, fontSize: 52, fontWeight: 700, opacity: lema }}>El cuidado de sus áreas verdes, en un solo lugar.</p>
-      <Persona quien="julio" x={520} sueloY={880} escala={1} frame={frame} pose={{ brazoI: 10, brazoD: saludo }} gesto="feliz" />
-      <Persona quien="jefe" x={860} sueloY={880} escala={1} frame={frame} pose={{ brazoI: 10, brazoD: 240 - saludo }} gesto="feliz" mira={-1} />
+      <Persona quien="julio" x={520} sueloY={880} escala={1} frame={fp} pose={{ brazoI: 10, brazoD: saludo }} gesto="feliz" />
+      <Persona quien="jefe" x={860} sueloY={880} escala={1} frame={fp} pose={{ brazoI: 10, brazoD: 240 - saludo }} gesto="feliz" mira={-1} />
     </AbsoluteFill>
   );
 };

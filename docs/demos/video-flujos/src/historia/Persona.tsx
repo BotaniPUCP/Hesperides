@@ -1,6 +1,7 @@
 // Personas de la historia en el mismo estilo plano de Hespo: contorno verde oscuro, formas redondas.
 import React from 'react';
 import { COLOR } from '../tema';
+import { enDos } from './enDos';
 
 /** Solo para personas: piel, pelo y ropa que la paleta de marca no tiene. */
 export const PIEL = { julio: '#C98E62', jefe: '#E8B791', podador: '#B57F55', peaton: '#DDA77E' } as const;
@@ -166,7 +167,9 @@ const Cabeza: React.FC<{ quien: Quien; piel: string; children: React.ReactNode }
   );
 };
 
-export const Persona: React.FC<PropsPersona> = ({ quien, x, sueloY, escala, frame, pose, gesto = 'neutral', mira = 1, andar, sentado = false, objeto = 'nada', ropa }) => {
+export const Persona: React.FC<PropsPersona> = ({ quien, x, sueloY, escala, frame: cuadro, pose, gesto = 'neutral', mira = 1, andar, sentado = false, objeto = 'nada', ropa }) => {
+  // Las personas se animan «en dos»: el dibujo cambia cada 2 cuadros.
+  const frame = enDos(cuadro);
   const piel = PIEL[quien];
   const camisa = quien === 'jefe' ? COLOR.blanco : quien === 'peaton' ? ropa ?? COLOR.hoja : COLOR.blanco;
   const chaleco = quien === 'julio' ? COLOR.verde : quien === 'podador' ? COLOR.arena : null;

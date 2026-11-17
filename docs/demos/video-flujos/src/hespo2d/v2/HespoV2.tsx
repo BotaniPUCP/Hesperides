@@ -378,8 +378,20 @@ const Migas: React.FC<{ frame: number }> = ({ frame }) => (
 );
 
 // ---------- Hespo ----------
-export const HespoV2: React.FC<{ d: Diseno; s: EstadoSim; frame: number; boca: FormaBoca; x: number; sueloY: number; escala: number; vh: number }> = ({
+export const HespoV2: React.FC<{
+  d: Diseno;
+  s: EstadoSim;
+  frame: number;
+  boca: FormaBoca;
+  x: number;
+  sueloY: number;
+  escala: number;
+  vh: number;
+  /** Cada cuántos cuadros cambia el temblor del trazo; 2 si Hespo se anima «en dos». */
+  cuadrosPorTrazo?: number;
+}> = ({
   d,
+  cuadrosPorTrazo = 3,
   s,
   frame,
   boca,
@@ -430,7 +442,7 @@ export const HespoV2: React.FC<{ d: Diseno; s: EstadoSim; frame: number; boca: F
         </radialGradient>
         {d.trazoAMano ? (
           <filter id={filtro} x="-20%" y="-20%" width="140%" height="140%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves={2} seed={Math.floor(frame / 3)} result="ruido" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves={2} seed={Math.floor(frame / cuadrosPorTrazo)} result="ruido" />
             <feDisplacementMap in="SourceGraphic" in2="ruido" scale={2.5} xChannelSelector="R" yChannelSelector="G" />
           </filter>
         ) : null}

@@ -19,12 +19,14 @@ import { Subtitulos } from './ui/Subtitulos';
 /** El trazo tiembla apenas, como dibujado a mano (line boil), igual que el grano de la escena. */
 const SEMILLA_CON_TRAZO_VIVO = { ...DISENOS[1], trazoAMano: true };
 
-/** Hespo Semilla (diseño elegido el 2026-11-17): brota, camina y gesticula con resortes. */
-const SemillaEnVideo: React.FC<{ escena: TramoEscena; frame: number; boca: FormaBoca; escala: number }> = ({ escena, frame, boca, escala }) => {
+/** Hespo Semilla (diseño elegido el 2026-11-17): brota, camina y gesticula con resortes, «en dos». */
+const SemillaEnVideo: React.FC<{ escena: TramoEscena; frame: number; boca: FormaBoca; escala: number }> = ({ escena, frame: cuadro, boca, escala }) => {
+  // «En dos», como las personas: resortes, pose y temblor del trazo cambian cada 2 cuadros.
+  const frame = Math.floor(cuadro / 2) * 2;
   const estado = semillaEnEscena(escena, frame);
   if (!estado || estado.tamano <= 0.01) return null;
   return (
-    <HespoV2 d={SEMILLA_CON_TRAZO_VIVO} s={estado.s} frame={frame} boca={boca} x={estado.s.x} sueloY={sueloDe(escena.id)} escala={escala * estado.tamano} vh={estado.vh} />
+    <HespoV2 d={SEMILLA_CON_TRAZO_VIVO} s={estado.s} frame={frame} boca={boca} x={estado.s.x} sueloY={sueloDe(escena.id)} escala={escala * estado.tamano} vh={estado.vh} cuadrosPorTrazo={2} />
   );
 };
 
