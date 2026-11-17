@@ -3,13 +3,27 @@ import { AbsoluteFill, Html5Audio, Sequence, staticFile, useCurrentFrame } from 
 import { componenteDeEscena, type ConfigVideo } from './escenas/componentes';
 import { Hespo } from './hespo/Hespo';
 import { HespoEnEscena3D } from './hespo3d/HespoEnEscena3D';
-import { estadoHespo } from './hespo/recorrido';
+import { estadoHespo, sueloDe } from './hespo/recorrido';
+import type { FormaBoca } from './hespo2d/boca';
+import { semillaEnEscena } from './hespo2d/semillaEnGuion';
+import { useFormaBoca } from './hespo2d/useFormaBoca';
+import { DISENOS } from './hespo2d/v2/disenos';
+import { HespoV2 } from './hespo2d/v2/HespoV2';
 import { useApertura } from './hespo/useApertura';
 import { fraseActiva, FRAMES_TRANSICION, opacidadDeEscena, type Linea, type TramoEscena } from './tiempos';
 import { indiceFrase } from './ui/anim';
 import { Escenario } from './ui/Escenario';
 import { fontFamily } from './ui/fuente';
 import { Subtitulos } from './ui/Subtitulos';
+
+/** Hespo Semilla (diseño elegido el 2026-11-17): brota, camina y gesticula con resortes. */
+const SemillaEnVideo: React.FC<{ escena: TramoEscena; frame: number; boca: FormaBoca; escala: number }> = ({ escena, frame, boca, escala }) => {
+  const estado = semillaEnEscena(escena, frame);
+  if (!estado || estado.tamano <= 0.01) return null;
+  return (
+    <HespoV2 d={DISENOS[1]} s={estado.s} frame={frame} boca={boca} x={estado.s.x} sueloY={sueloDe(escena.id)} escala={escala * estado.tamano} vh={estado.vh} />
+  );
+};
 
 function escenaEn(linea: Linea, frame: number): TramoEscena {
   const actual = linea.escenas.find((e) => frame < e.desde + e.frames + FRAMES_TRANSICION);
@@ -25,6 +39,7 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
   const audio = (archivo: string) => `${config.carpetaVoz}/${archivo}`;
   const reserva = linea.escenas[0].frases[0].archivo;
   const apertura = useApertura(config.carpetaVoz, tramo?.archivo ?? null, tramo ? frame - tramo.desde : 0, reserva);
+  const boca = useFormaBoca(config.carpetaVoz, tramo?.archivo ?? null, tramo ? frame - tramo.desde : 0, reserva);
   const Escena = componenteDeEscena(config, escena.id);
 
   // Escena y Hespo se desvanecen juntos: así el salto de Hespo a la siguiente entrada no se ve.
@@ -37,7 +52,9 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
       <Escenario />
       <AbsoluteFill style={{ opacity: opacidad }}>
         <Escena escena={escena} frame={frame} />
-        {config.hespo === '3d' ? (
+        {config.hespo === 'semilla' ? (
+          <SemillaEnVideo escena={escena} frame={frame} boca={boca} escala={config.escalas[escena.id] ?? 1} />
+        ) : config.hespo === '3d' ? (
           <HespoEnEscena3D estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
         ) : (
           <Hespo estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />

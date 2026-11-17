@@ -10,7 +10,7 @@ export type ConfigVideo = {
   /** Carpeta de `public/` con los audios y el manifiesto. */
   carpetaVoz: string;
   /** Cómo se dibuja Hespo; si falta, en 2D. */
-  hespo?: '2d' | '3d';
+  hespo?: '2d' | '3d' | 'semilla';
 };
 
 export function componenteDeEscena(config: ConfigVideo, id: EscenaId): React.FC<PropsEscena> {

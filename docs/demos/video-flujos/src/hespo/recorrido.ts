@@ -117,6 +117,11 @@ export function llegadaDe(escena: TramoEscena, fraseId: string, paso = 0): numbe
 }
 
 /** Todo sale del fotograma: renderizar dos veces da el mismo resultado. */
+/** La línea por la que camina Hespo en una escena. */
+export function sueloDe(id: EscenaId): number {
+  return SUELO[id];
+}
+
 export function estadoHespo(escena: TramoEscena, frame: number): EstadoHespo {
   let x = ENTRADA_X;
   let y = SUELO[escena.id];
