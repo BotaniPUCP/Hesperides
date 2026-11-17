@@ -1,5 +1,6 @@
 import type React from 'react';
 import type { EscenaId } from '../guion';
+import type { Corte } from '../queEs/serie';
 import type { PropsEscena } from './tipos';
 
 /** Lo que distingue a un video de otro: sus escenas, el tamaño de Hespo en cada una y dónde está su voz. */
@@ -15,6 +16,8 @@ export type ConfigVideo = {
   musica?: string;
   /** Hespo Semilla se dibuja «a dos» (un dibujo cada dos cuadros), como los personajes. */
   aDos?: boolean;
+  /** Escenas encadenadas con @remotion/transitions en vez del fundido propio de cada escena. */
+  transiciones?: { cuadros: number; corte: (de: EscenaId, a: EscenaId) => Corte };
 };
 
 export function componenteDeEscena(config: ConfigVideo, id: EscenaId): React.FC<PropsEscena> {

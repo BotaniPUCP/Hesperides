@@ -1,5 +1,10 @@
 import React from 'react';
-import { AbsoluteFill, Html5Audio, Sequence, staticFile, useCurrentFrame } from 'remotion';
+import { linearTiming, TransitionSeries, type TransitionPresentation } from '@remotion/transitions';
+import { fade } from '@remotion/transitions/fade';
+import { iris } from '@remotion/transitions/iris';
+import { wipe } from '@remotion/transitions/wipe';
+import { AbsoluteFill, Easing, Html5Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { tramosDeSerie, type Corte } from './queEs/serie';
 import { componenteDeEscena, type ConfigVideo } from './escenas/componentes';
 import { Hespo } from './hespo/Hespo';
 import { HespoEnEscena3D } from './hespo3d/HespoEnEscena3D';
@@ -33,9 +38,62 @@ function escenaEn(linea: Linea, frame: number): TramoEscena {
   return actual ?? linea.escenas[linea.escenas.length - 1];
 }
 
+// Las presentaciones tienen props distintas; la serie solo necesita que sean presentaciones.
+const presentacion = (corte: Corte): TransitionPresentation<Record<string, unknown>> =>
+  (corte.tipo === 'cortina' ? wipe({ direction: 'from-left' }) : corte.tipo === 'iris' ? iris({ width: 1920, height: 1080 }) : fade()) as unknown as TransitionPresentation<Record<string, unknown>>;
+
+/** Una escena dentro de la serie: su cuadro es el del video (la serie cuenta desde su inicio). */
+const EscenaEnSerie: React.FC<{ escena: TramoEscena; desde: number; config: ConfigVideo; boca: FormaBoca }> = ({ escena, desde, config, boca }) => {
+  // useCurrentFrame aquí, en el componente más chico: dentro de la serie el cuadro es relativo.
+  const frame = useCurrentFrame() + desde;
+  const Escena = componenteDeEscena(config, escena.id);
+  return (
+    <AbsoluteFill>
+      <Escena escena={escena} frame={frame} />
+      {config.hespo === 'semilla' ? (
+        <SemillaEnVideo escena={escena} frame={config.aDos ? Math.floor(frame / 2) * 2 : frame} boca={boca} escala={config.escalas[escena.id] ?? 1} />
+      ) : null}
+    </AbsoluteFill>
+  );
+};
+
+/** Las escenas encadenadas con @remotion/transitions: cada corte con su presentación. */
+const EscenasEnSerie: React.FC<{ linea: Linea; config: ConfigVideo & { transiciones: NonNullable<ConfigVideo['transiciones']> }; boca: FormaBoca; total: number }> = ({
+  linea,
+  config,
+  boca,
+  total,
+}) => {
+  const t = config.transiciones;
+  const tramos = tramosDeSerie(linea, total, t.cuadros);
+  return (
+    <TransitionSeries>
+      {linea.escenas.flatMap((escena, i) => {
+        const piezas = [
+          <TransitionSeries.Sequence key={escena.id} durationInFrames={tramos[i].duracion}>
+            <EscenaEnSerie escena={escena} desde={tramos[i].desde} config={config} boca={boca} />
+          </TransitionSeries.Sequence>,
+        ];
+        const siguiente = linea.escenas[i + 1];
+        if (siguiente) {
+          piezas.push(
+            <TransitionSeries.Transition
+              key={`${escena.id}>${siguiente.id}`}
+              presentation={presentacion(t.corte(escena.id, siguiente.id))}
+              timing={linearTiming({ durationInFrames: t.cuadros, easing: Easing.bezier(0.45, 0, 0.55, 1) })}
+            />,
+          );
+        }
+        return piezas;
+      })}
+    </TransitionSeries>
+  );
+};
+
 /** Escenas, Hespo, subtítulos y voz de cualquier video, según su configuración. */
 export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ linea, config }) => {
   const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
   const escena = escenaEn(linea, frame);
   const fin = escena.desde + escena.frames;
   const tramo = fraseActiva(linea, frame);
@@ -53,6 +111,9 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
   return (
     <AbsoluteFill style={{ fontFamily }}>
       <Escenario />
+      {config.transiciones ? (
+        <EscenasEnSerie linea={linea} config={{ ...config, transiciones: config.transiciones }} boca={boca} total={durationInFrames} />
+      ) : (
       <AbsoluteFill style={{ opacity: opacidad }}>
         <Escena escena={escena} frame={frame} />
         {config.hespo === 'semilla' ? (
@@ -63,6 +124,7 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
           <Hespo estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
         )}
       </AbsoluteFill>
+      )}
       <Subtitulos texto={subtitulo} />
       {linea.escenas
         .flatMap((e) => e.frases)
