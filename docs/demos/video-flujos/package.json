@@ -16,14 +16,18 @@
     "capturas:planificacion": "tsx scripts/capturas-planificacion.ts"
   },
   "dependencies": {
+    "@react-three/fiber": "^9.1.2",
     "@remotion/bundler": "4.0.540",
     "@remotion/cli": "4.0.540",
     "@remotion/google-fonts": "4.0.540",
     "@remotion/media-utils": "4.0.540",
     "@remotion/renderer": "4.0.540",
+    "@remotion/three": "^4.0.540",
+    "@types/three": "^0.171.0",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "remotion": "4.0.540"
+    "remotion": "4.0.540",
+    "three": "^0.171.0"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

@@ -5,6 +5,7 @@ import type { Medidas } from './pagina/medidasCargadas';
 import { comprobarAudios, construirLinea, FPS, type Manifiesto } from './tiempos';
 import { ALTO, ANCHO } from './tema';
 import { Video } from './Video';
+import { PruebaHespo3D } from './hespo3d/PruebaHespo3D';
 import { CARPETA_CAPTURAS, CARPETA_VOZ, COMANDO_CAPTURAS, VideoPlanificacion } from './VideoPlanificacion';
 
 const calcularDuracion = async () => {
@@ -61,5 +62,6 @@ export const Root: React.FC = () => (
       defaultProps={{ linea: null, medidas: null }}
       calculateMetadata={calcularPlanificacion}
     />
+    <Composition id="PruebaHespo3D" component={PruebaHespo3D} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={300} />
   </>
 );
