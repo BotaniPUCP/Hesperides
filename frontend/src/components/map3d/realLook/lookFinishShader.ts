@@ -34,18 +34,20 @@ vec2 lookSeams(float u, vec2 aa) {
   return vec2(mix(1.0, LOOK_METAL.z, seam) / mean, seam * LOOK_METAL.w * d);
 }
 
-// Manchas suaves: ruido de valor sobre celdas, interpolado sin bordes.
-vec2 lookMottle(vec2 p, vec2 aa, float seed) {
-  vec2 g = p / LOOK_PLASTER.x;
+// Manchas suaves: ruido de valor sobre celdas de cv.x, interpolado sin bordes, ±cv.y.
+vec2 lookPatches(vec2 p, vec2 aa, float seed, vec2 cv) {
+  vec2 g = p / cv.x;
   vec2 i = floor(g);
   vec2 s = smoothstep(0.0, 1.0, g - i);
   float k = seed + LOOK_GRAIN_SEED;
   float h00 = lookCellHash(i, k).y, h10 = lookCellHash(i + vec2(1.0, 0.0), k).y;
   float h01 = lookCellHash(i + vec2(0.0, 1.0), k).y, h11 = lookCellHash(i + vec2(1.0, 1.0), k).y;
   float n = mix(mix(h00, h10, s.x), mix(h01, h11, s.x), s.y);
-  float d = min(lookDetail(aa.x, LOOK_PLASTER.x), lookDetail(aa.y, LOOK_PLASTER.x));
-  return vec2(1.0 + LOOK_PLASTER.y * (2.0 * n - 1.0) * d, 0.0);
+  float d = min(lookDetail(aa.x, cv.x), lookDetail(aa.y, cv.x));
+  return vec2(1.0 + cv.y * (2.0 * n - 1.0) * d, 0.0);
 }
+
+vec2 lookMottle(vec2 p, vec2 aa, float seed) { return lookPatches(p, aa, seed, LOOK_PLASTER); }
 
 // Una cinta acristalada lisa: su reflejo se repite en diagonal a lo largo del muro (D-23).
 vec2 lookGlazed(vec2 p, vec2 aa) {
@@ -59,10 +61,14 @@ vec2 lookGlazed(vec2 p, vec2 aa) {
 vec2 lookGrain(float finish, vec2 p, vec2 aa, float seed) {
   if (seed < 0.0) return vec2(1.0, 0.0);
   if (finish == LOOK_FINISH_BRICK) {
-    return lookTiled(vec2(LOOK_BRICK.y, LOOK_BRICK.x), LOOK_BRICK.z, LOOK_BRICK.w, LOOK_BRICK_MORTAR, LOOK_BRICK_RELIEF, p, aa, seed, LOOK_BRICK.y * 0.5);
+    vec2 g = lookTiled(vec2(LOOK_BRICK.y, LOOK_BRICK.x), LOOK_BRICK.z, LOOK_BRICK.w, LOOK_BRICK_MORTAR, LOOK_BRICK_RELIEF, p, aa, seed, LOOK_BRICK.y * 0.5);
+    g.x *= lookPatches(p, aa, seed + LOOK_PATCH_SEED, LOOK_BRICK_PATCH).x;
+    return g;
   }
   if (finish == LOOK_FINISH_CONCRETE) {
-    return lookTiled(LOOK_CONCRETE.xy, LOOK_CONCRETE.z, LOOK_CONCRETE.w, LOOK_CONCRETE_JOINT, LOOK_CONCRETE_RELIEF, p, aa, seed, 0.0);
+    vec2 g = lookTiled(LOOK_CONCRETE.xy, LOOK_CONCRETE.z, LOOK_CONCRETE.w, LOOK_CONCRETE_JOINT, LOOK_CONCRETE_RELIEF, p, aa, seed, 0.0);
+    g.x *= lookPatches(p, aa, seed + LOOK_PATCH_SEED, LOOK_CONCRETE_PATCH).x;
+    return g;
   }
   if (finish == LOOK_FINISH_METAL) return lookSeams(p.x, aa);
   if (finish == LOOK_FINISH_PLASTER) return lookMottle(p, aa, seed);

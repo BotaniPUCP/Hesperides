@@ -3,8 +3,8 @@
  * no debe cargar la maqueta para mostrar el deslizador.
  */
 
-/** La hora con que se prende el modo: el sol a unos 4° sobre el horizonte, por el oeste. */
-export const SUNSET_HOUR = 17.72;
+/** La hora con que se prende el modo: el sol a unos 2° sobre el horizonte, por el oeste. */
+export const SUNSET_HOUR = 17.85;
 
 /** El deslizador «Hora» del modo: de la hora dorada al crepúsculo. */
 export const SUNSET_HOURS = [16.5, 18.6] as const;

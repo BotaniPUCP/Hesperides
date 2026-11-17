@@ -153,7 +153,8 @@ export function MapScreen() {
       )}
 
       {!capture && (
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start gap-2 p-3">
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start gap-2 p-3 md:pr-64">
+        {/* A la derecha queda libre la columna de «Capas y leyenda»: la barra pasa a otra línea antes de taparla. */}
         <div className="pointer-events-auto w-full max-w-sm space-y-2">
           <div className="flex items-center gap-2">
             <BackButton />

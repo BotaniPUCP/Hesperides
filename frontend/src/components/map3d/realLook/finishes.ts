@@ -58,12 +58,19 @@ export const GLASS_GLOSS = {
 } as const;
 
 /** Medidas en metros del grano de cada acabado (D-17). `vary` es el cambio de tono de una pieza a otra. */
-export const BRICK = { courseM: 0.075, lengthM: 0.25, jointM: 0.012, vary: 0.07, mortar: 0.82, reliefM: 0.02 } as const;
-export const CONCRETE = { widthM: 2.4, heightM: 1.2, jointM: 0.015, vary: 0.04, joint: 0.78, reliefM: 0.012 } as const;
+export const BRICK = { courseM: 0.075, lengthM: 0.25, jointM: 0.012, vary: 0.08, mortar: 0.82, reliefM: 0.02, patchM: 1.4, patchVary: 0.08 } as const;
+export const CONCRETE = { widthM: 2.4, heightM: 1.2, jointM: 0.015, vary: 0.04, joint: 0.78, reliefM: 0.012, patchM: 2.4, patchVary: 0.06 } as const;
 export const METAL = { seamEveryM: 0.6, seamM: 0.04, seam: 1.08, reliefM: 0.015 } as const;
 export const PLASTER = { cellM: 1.6, vary: 0.035 } as const;
 /** Desfasa el hash del grano del de los acentos y del de las ventanas encendidas. */
 export const GRAIN_SEED = 101;
+/** Desfasa el hash de los parches (variación de lejos) del de las piezas. */
+export const PATCH_SEED = 31;
+/**
+ * Suciedad bajo las ventanas: una banda más oscura que baja desde el borde inferior del paño sobre el
+ * antepecho, `heightM` de alto, oscureciendo hasta `share` arriba y nada abajo.
+ */
+export const GRIME = { heightM: 0.6, share: 0.22 } as const;
 
 const f = (x: number) => (Number.isInteger(x) ? x.toFixed(1) : String(x));
 const ids = FINISHES.map((name) => `#define LOOK_FINISH_${name.toUpperCase()} ${f(finishId(name))}`).join('\n');
@@ -81,6 +88,10 @@ ${light('FRAME', GLASS_LIGHT.frame)}
 #define LOOK_CONCRETE_RELIEF ${f(CONCRETE.reliefM)}
 #define LOOK_METAL vec4(${f(METAL.seamEveryM)}, ${f(METAL.seamM)}, ${f(METAL.seam)}, ${f(METAL.reliefM)})
 #define LOOK_PLASTER vec2(${f(PLASTER.cellM)}, ${f(PLASTER.vary)})
+#define LOOK_BRICK_PATCH vec2(${f(BRICK.patchM)}, ${f(BRICK.patchVary)})
+#define LOOK_CONCRETE_PATCH vec2(${f(CONCRETE.patchM)}, ${f(CONCRETE.patchVary)})
+#define LOOK_PATCH_SEED ${f(PATCH_SEED)}
+#define LOOK_GRIME vec2(${f(GRIME.heightM)}, ${f(GRIME.share)})
 #define LOOK_GRAIN_SEED ${f(GRAIN_SEED)}
 #define LOOK_LIT_SHARE ${f(GLASS_NIGHT.share)}
 #define LOOK_LIT_SEED ${f(GLASS_NIGHT.seed)}

@@ -11,6 +11,7 @@ import { createBalloonLayer } from './balloons';
 import { attachAdminMovement } from '../pilot/adminMovement';
 import { attachAdminAnchor } from './adminAnchor';
 import { createLights } from './lighting';
+import { setGrassVariation } from './grassVariation';
 import { createSunset, duskOf, setGroundMatte, SUNSET, SUNSET_HOUR, SUNSET_MAX_POLAR, sunsetPose } from './sunset';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
@@ -47,6 +48,8 @@ const ADMIN_SPEED_RADIUS_M = 80;
 /** El límite de inclinación de siempre (cameraRig). */
 const ORBIT_MAX_POLAR = 1.32;
 const NO_INTERIOR = new THREE.Color(0, 0, 0);
+/** El ocre del degradado del césped en el mapa de siempre (polyLayer). */
+const GRASS_WARM = '#C8A020';
 
 /** Con `model`, los edificios se dibujan con las mallas del plano oficial; sin él (no llegó o falló), como prismas. */
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose,
@@ -152,6 +155,12 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     vegetation.setGolden(dusk);
     realColors.setGlassEnv(dusk ? SUNSET.glassEnv : GLASS_ENV_BOOST);
     realColors.setInterior(dusk ? SUNSET.interior.clone().multiplyScalar(1 + 1.5 * twilight) : NO_INTERIOR);
+    realColors.setEmissiveDesat(dusk ? SUNSET.emissiveDesat : 0);
+    // El cielo del atardecer es casi todo naranja: reflejado de lleno, tiñe las caras en sombra.
+    realColors.setEnvIntensity(dusk ? 0.18 : 0.35);
+    // El césped lleva un ocre por vértice (el degradado del mapa); al atardecer se apaga y se manchan los tonos.
+    poly.greenAreas.warmColor = dusk ? null : GRASS_WARM;
+    setGrassVariation(poly.greenAreas.mesh.material as THREE.Material, dusk);
     setGroundMatte([poly.greenAreas, poly.xerophytic, poly.parking, poly.sidewalks]
       .flatMap((l) => (Array.isArray(l.mesh.material) ? l.mesh.material : [l.mesh.material])), dusk);
     realColors.setGlow(night ? 1 : dusk ? SUNSET.windowGlow * (1 + 1.2 * twilight) : 0);

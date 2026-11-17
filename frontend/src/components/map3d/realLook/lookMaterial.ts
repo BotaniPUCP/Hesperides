@@ -43,6 +43,7 @@ export function createLookMaterial(table: LookTable): THREE.MeshStandardMaterial
     lookTable: { value: lookTexture(table) }, lookRows: { value: table.height }, lookNightGlow: { value: NO_GLOW.clone() },
     lookGlassEnv: { value: GLASS_ENV_BOOST },
     lookInterior: { value: new THREE.Color(0, 0, 0) },
+    lookEmissiveDesat: { value: 0 },
   };
   material.userData.lookUniforms = uniforms;
   // fwidth y dFdx en WebGL1; en WebGL2 ya vienen. Los tipos de three 0.147 solo lo declaran en ShaderMaterial.
@@ -64,6 +65,16 @@ export function createLookMaterial(table: LookTable): THREE.MeshStandardMaterial
 /** De noche se encienden los paños elegidos del vidrio (SPEC-112 D-19); de día, nada. */
 export function setLookNight(material: THREE.Material, night: boolean): void {
   setLookGlow(material, night ? 1 : 0);
+}
+
+/** Desatura la luz de las ventanas hacia su luminancia (0 a 1). */
+export function setLookEmissiveDesat(material: THREE.Material, amount: number): void {
+  material.userData.lookUniforms.lookEmissiveDesat.value = amount;
+}
+
+/** Cuánto llega a las fachadas el reflejo del cielo (difuso y especular). */
+export function setLookEnvIntensity(material: THREE.Material, intensity: number): void {
+  (material as THREE.MeshStandardMaterial).envMapIntensity = intensity;
 }
 
 /** El brillo de los interiores tras todo el vidrio, en lineal (el Atardecer lo prende). */

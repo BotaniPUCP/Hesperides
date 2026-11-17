@@ -188,7 +188,7 @@ export function frondTexture(): THREE.Texture {
  * afuera y algo giradas, más algunas adentro para que no se vea hueca. Las normales son las de la copa
  * (hacia afuera), así la luz es suave como en un follaje real; la textura recorta las hojas.
  */
-export function leafyCrown(seed: number, cards = 70): THREE.BufferGeometry {
+export function leafyCrown(seed: number, cards = 110): THREE.BufferGeometry {
   const rnd = seeded(seed);
   const pos: number[] = [], nor: number[] = [], uv: number[] = [], col: number[] = [];
   const out = new THREE.Vector3(), t1 = new THREE.Vector3(), t2 = new THREE.Vector3(), c = new THREE.Vector3();
@@ -206,7 +206,7 @@ export function leafyCrown(seed: number, cards = 70): THREE.BufferGeometry {
     if (t1.lengthSq() < 1e-4) t1.set(1, 0, 0);
     t1.normalize().applyAxisAngle(out, rnd() * Math.PI);
     t2.crossVectors(out, t1).normalize();
-    const half = (0.45 + rnd() * 0.25) / 2;
+    const half = (0.5 + rnd() * 0.28) / 2;
     const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => c.clone().addScaledVector(t1, u * half).addScaledVector(t2, v * half));
     // Más oscuro abajo y adentro: la sombra propia de la copa.
     const shade = (0.62 + 0.38 * THREE.MathUtils.smoothstep(out.y, -0.8, 0.7)) * (inner ? 0.75 : 1) * (0.9 + rnd() * 0.2);
@@ -235,7 +235,7 @@ export function leafTexture(): THREE.Texture {
   texture.anisotropy = 4;
   if (!c) return texture;
   const rnd = seeded(0x1eaf);
-  for (let i = 0; i < 150; i++) {
+  for (let i = 0; i < 260; i++) {
     // Más hojas al centro: el borde del racimo queda recortado.
     const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * S * 0.42;
     const x = S / 2 + Math.cos(a) * d, y = S / 2 + Math.sin(a) * d;

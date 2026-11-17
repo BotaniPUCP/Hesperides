@@ -26,7 +26,7 @@ export const GRADE = {
   /** Aristas que miran al sol: su brillo ámbar y hasta qué distancia se ven. */
   edge: { color: [1.0, 0.52, 0.2], strength: 0.55, farM: 1100 },
   /** Rayos de sol: cuánto avanza cada muestra hacia el sol, cuánto se apagan y su color. */
-  rays: { samples: 36, density: 0.85, decay: 0.955, strength: 0.035, color: [1.0, 0.6, 0.28] },
+  rays: { samples: 36, density: 0.85, decay: 0.955, strength: 0.05, color: [1.0, 0.6, 0.28] },
   /** Bruma baja: escala de altura (m), densidad por metro y cuánto tapa como máximo. */
   lowFog: { heightM: 16, density: 0.00016, max: 0.3 },
 } as const;
@@ -108,7 +108,10 @@ vec3 sunRays() {
     }
     weight *= ${GRADE.rays.decay.toFixed(3)};
   }
-  return uRayColor * sum * uSunScreen.z / float(RAY_SAMPLES);
+  // Los haces se ven cerca del sol: lejos de su dirección no suman (si no, velan de naranja todo lo oscuro).
+  vec3 dir = normalize(viewPos(vUv, 0.99999));
+  float align = pow(max(dot(dir, uSunView), 0.0), 8.0);
+  return uRayColor * sum * uSunScreen.z * align / float(RAY_SAMPLES);
 }
 
 void main() {
@@ -133,14 +136,16 @@ void main() {
   if (depth < 1.0) {
     vec3 w = (uViewToWorld * vec4(p, 1.0)).xyz;
     float height = max(w.y - uGround, 0.0);
-    float amount = (1.0 - exp(-length(p) * ${GRADE.lowFog.density})) * exp(-height / ${GRADE.lowFog.heightM.toFixed(1)});
+    // Desde los 1200 m: el primer plano conserva su color (el de la bruma es mucho más brillante que una sombra).
+    float amount = (1.0 - exp(-length(p) * ${GRADE.lowFog.density})) * exp(-height / ${GRADE.lowFog.heightM.toFixed(1)})
+      * smoothstep(1200.0, 3000.0, length(p));
     hdr = mix(hdr, uFogColor, min(amount, ${GRADE.lowFog.max}));
   }
   // Lo lejano ya está en la bruma: lleva el mismo halo del sol que el cielo junto al horizonte, sin costura.
   if (depth < 1.0) {
     float toward = max(dot(normalize(p), uSunView), 0.0);
     float hazy = smoothstep(1800.0, 4800.0, length(p));
-    hdr += (vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.6 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55) * hazy;
+    hdr += (vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.3 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55) * hazy;
   }
   hdr += sunRays();
   // Lo lejano pierde color: la ciudad del fondo se ve gris y brumosa, no naranja.
@@ -151,9 +156,10 @@ void main() {
   vec3 c = gradeAces(hdr);
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   // Hora dorada: sombras hacia el azul petróleo, luces hacia el ámbar.
-  vec3 shadows = vec3(0.93, 0.95, 1.04), lights = vec3(1.1, 0.97, 0.82);
-  c *= mix(shadows, lights, smoothstep(0.08, 0.75, l));
-  c = mix(vec3(l), c, 1.18);
+  // Lo cálido, solo en las luces altas; las sombras, hacia el azul; los medios, sin tocar.
+  c *= mix(vec3(1.0), vec3(1.08, 0.98, 0.88), smoothstep(0.45, 0.9, l));
+  c *= mix(vec3(0.9, 0.96, 1.08), vec3(1.0), smoothstep(0.04, 0.32, l));
+  c = mix(vec3(l), c, 1.06);
   c = clamp((c - 0.5) * 1.12 + 0.5, 0.0, 1.0);
   vec2 d = vUv - 0.5;
   c *= 1.0 - uVignette * smoothstep(0.25, 0.85, dot(d, d) * 2.2);

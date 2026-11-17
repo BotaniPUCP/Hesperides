@@ -13,7 +13,8 @@ export const CITY_WINDOWS = {
   bayM: 3.2,
   floorM: 3,
   litShare: 0.26,
-  glow: new THREE.Color('#ffb267').multiplyScalar(0.9),
+  // Desaturado un 20 % hacia su luminancia: si no, las ventanas suman al naranja de todo lo demás.
+  glow: (() => { const c = new THREE.Color('#ffb267'); const l = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; return c.lerp(new THREE.Color(l, l, l), 0.2).multiplyScalar(0.9); })(),
   /** Cuánto oscurece el vidrio apagado y cuánto el techo. */
   glass: 0.45,
   roof: 0.72,

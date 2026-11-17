@@ -27,22 +27,24 @@ export { SUNSET_HOUR, SUNSET_HOURS } from './sunsetHours';
 
 /** Cuánto es ya crepúsculo (0 a 1): el cielo se apaga hacia el violeta, el sol directo se va y las luces suben. */
 export function duskOf(hour: number): number {
-  return THREE.MathUtils.smoothstep(hour, 17.75, 18.55);
+  return THREE.MathUtils.smoothstep(hour, 17.95, 18.6);
 }
 
 export const SUNSET = {
-  exposure: 1.3,
+  exposure: 1.4,
   /** La bruma empieza pasado lo que se mira y se cierra hacia el horizonte: múltiplos de la distancia de la cámara. */
   fogNear: 1.5,
   fogFar: 6.5,
   ground: '#4c5338',
   groundRadiusM: 8000,
   /** Umbral en HDR (antes del tono): solo el sol, sus reflejos fuertes y las ventanas encendidas. */
-  bloom: { strength: 0.55, radius: 0.5, threshold: 2.2 },
+  bloom: { strength: 0.6, radius: 0.28, threshold: 2.2 },
   /** Ciudad de relleno: manzanas de `blockM` separadas por calles de `streetM`, hasta `outerM` del centro. */
   city: { blockM: 70, streetM: 18, innerMarginM: 60, outerM: 4200, fill: 0.8, trees: 14000, lowWithinM: 700 },
   /** Cuánto se encienden las ventanas al atardecer respecto de la noche. */
-  windowGlow: 1.6,
+  windowGlow: 2.3,
+  /** Cuánto se desaturan los emisivos de las fachadas hacia su luminancia, antes del tono. */
+  emissiveDesat: 0.2,
   /** Cuánto refleja el cielo el vidrio de las fachadas (el modo de siempre usa 2). */
   glassEnv: 3.5,
   /** Los interiores tras el vidrio de las fachadas: cálidos, y más a medida que baja el sol. */
@@ -194,7 +196,7 @@ function createSurroundings(campus: THREE.Box3, groundY: number, city: { x: numb
     at.push([x, z]);
   }
   // Las copas en racimo de los árboles del campus, más livianas: son miles y se ven de lejos.
-  const crownGeo = leafyCrown(0x51ce7, 20).translate(0, 1, 0);
+  const crownGeo = leafyCrown(0x51ce7, 28).translate(0, 1, 0);
   const crownMat = leafMaterials(leafTexture(), new THREE.MeshStandardMaterial({ color: '#3f5a2c', roughness: 0.85 })).material;
   [true, false].forEach((innerPart) => {
     const idx = at.map(([x, z], i) => (isInner(x, z) === innerPart ? i : -1)).filter((i) => i >= 0);

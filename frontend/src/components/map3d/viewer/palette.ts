@@ -62,7 +62,7 @@ export const GOLDEN: Partial<ScenePalette> = {
   plinth: '#4a4743',
   plinthSide: '#3b3936',
   parking: '#7d7870',
-  natural: { grass: '#4c6b2c', xerophytic: '#a08a5c', sidewalk: '#b8ab98' },
+  natural: { grass: '#587d38', xerophytic: '#a08a5c', sidewalk: '#b8ab98' },
 };
 
 export function paletteFor(night: boolean, grayBuildings: boolean, golden = false): ScenePalette {

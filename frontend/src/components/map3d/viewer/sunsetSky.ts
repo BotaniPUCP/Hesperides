@@ -52,15 +52,16 @@ void main() {
   float h = dir.y;
   float toward = max(dot(dir, sunDir), 0.0);
   // Degradado: horizonte ámbar, una franja durazno, cenit azul grisáceo. Del lado del sol todo es más cálido.
-  vec3 zenith = vec3(0.12, 0.17, 0.32);
-  vec3 band = mix(vec3(0.6, 0.36, 0.34), vec3(1.0, 0.46, 0.2), toward);
+  vec3 zenith = vec3(0.14, 0.18, 0.36);
+  // Lo cálido de la franja, cerca del sol; lejos, un rosado lavanda.
+  vec3 band = mix(vec3(0.58, 0.44, 0.5), vec3(1.0, 0.5, 0.24), toward * toward);
   // Justo en el horizonte el cielo es la bruma: sin costura con el suelo lejano.
   vec3 low = horizon * (1.0 + 0.2 * toward);
   vec3 col = mix(horizon, low, smoothstep(0.0, 0.02, h));
   col = mix(col, band, smoothstep(0.02, 0.16, h));
-  col = mix(col, zenith, smoothstep(0.1, 0.65, h));
+  col = mix(col, zenith, smoothstep(0.06, 0.42, h));
   // Halo ancho, halo cercano y disco.
-  col += vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.6;
+  col += vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.3;
   col += vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55;
   col += vec3(2.4, 1.3, 0.55) * pow(toward, 90.0) * sunPower;
   col += vec3(70.0, 44.0, 18.0) * smoothstep(0.99975, 0.99988, toward) * sunPower;
@@ -75,12 +76,16 @@ void main() {
   if (h > 0.0 && cloudsReady > 0.5) {
     float el = asin(clamp(h, 0.0, 1.0)) / 0.7853982;
     vec2 ct = vec2(fract(atan(dir.z, dir.x) / 6.2831853 + 0.5 + cloudOffset), clamp(el, 0.0, 1.0));
-    vec4 t = texture2D(cloudTex, ct);
-    float cover = smoothstep(0.03, 0.55, t.a) * smoothstep(0.004, 0.03, h) * (1.0 - smoothstep(0.62, 0.71, h));
+    // Cinco lecturas: la máscara es un WebP de 8 bits con pérdida y, ampliada y con contraste, sus escalones se
+    // verían como terrazas.
+    vec2 texel = vec2(1.5 / 4096.0, 1.5 / 512.0);
+    vec4 t = (texture2D(cloudTex, ct) * 2.0 + texture2D(cloudTex, ct + vec2(texel.x, 0.0)) + texture2D(cloudTex, ct - vec2(texel.x, 0.0))
+      + texture2D(cloudTex, ct + vec2(0.0, texel.y)) + texture2D(cloudTex, ct - vec2(0.0, texel.y))) / 6.0;
+    float cover = smoothstep(0.0, 0.7, t.a) * smoothstep(0.004, 0.03, h) * (1.0 - smoothstep(0.62, 0.71, h));
     // La foto da la forma y cuánto más clara u oscura es la nube que su cielo; el color lo pone el atardecer:
     // panza violácea, lo claro en durazno y, cerca del sol, encendido.
     vec3 belly = vec3(0.24, 0.15, 0.2);
-    vec3 sunny = mix(vec3(1.0, 0.52, 0.34), vec3(2.2, 0.9, 0.3), pow(toward, 6.0));
+    vec3 sunny = mix(vec3(0.78, 0.6, 0.66), vec3(2.2, 0.9, 0.3), pow(toward, 6.0));
     col = mix(col, mix(belly, sunny, smoothstep(0.32, 0.85, t.r)), cover * 0.95);
   } else if (h > 0.0) {
     vec2 uv = dir.xz / (h + 0.06) * 0.9;
@@ -94,7 +99,7 @@ void main() {
     col = mix(col, lit, cover * 0.9);
   } else {
     // Bajo el horizonte (detrás del suelo lejano): la bruma, con el mismo halo que le pone el pase final a lo lejano.
-    col = horizon * (1.0 + 0.2 * toward) + vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.6 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55;
+    col = horizon * (1.0 + 0.2 * toward) + vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.3 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55;
   }
   // Crepúsculo: arriba azul profundo, abajo un resto de naranja; el disco y su halo cercano ya no están.
   vec3 twilight = mix(vec3(0.42, 0.24, 0.3) * (1.0 + 0.8 * toward), vec3(0.04, 0.06, 0.16), smoothstep(0.0, 0.5, max(h, 0.0)));

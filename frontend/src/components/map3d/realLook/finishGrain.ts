@@ -1,4 +1,4 @@
-import { BRICK, CONCRETE, finishId, GLASS_GLOSS, GRAIN_SEED, METAL, PLASTER } from './finishes';
+import { BRICK, CONCRETE, finishId, GLASS_GLOSS, GRAIN_SEED, METAL, PATCH_SEED, PLASTER } from './finishes';
 import { STREAK_MIN, STREAK_SHARE, streakAt } from './glassGloss';
 import { box, cellHash, detail, glslMod, mix, smoothstep } from './lookMath';
 import type { PixelSize } from './facadeColor';
@@ -62,22 +62,29 @@ function seams(u: number, aa: PixelSize): Grain {
   return { shade: mix(1, METAL.seam, seam) / mean, height: seam * METAL.reliefM * d };
 }
 
-/** Manchas suaves: ruido de valor sobre una retícula de celdas, interpolado sin bordes. */
-function mottle(u: number, v: number, aa: PixelSize, seed: number): Grain {
-  const gx = u / PLASTER.cellM, gy = v / PLASTER.cellM;
+/** Manchas suaves: ruido de valor sobre una retícula de celdas de `cellM`, interpolado sin bordes, ±`vary`. */
+function patches(u: number, v: number, aa: PixelSize, seed: number, cellM: number, vary: number): Grain {
+  const gx = u / cellM, gy = v / cellM;
   const ix = Math.floor(gx), iy = Math.floor(gy);
   const sx = smoothstep(0, 1, gx - ix), sy = smoothstep(0, 1, gy - iy);
   const h = (i: number, j: number) => cellHash(ix + i, iy + j, seed + GRAIN_SEED)[1];
   const n = mix(mix(h(0, 0), h(1, 0), sx), mix(h(0, 1), h(1, 1), sx), sy);
-  const d = Math.min(detail(aa[0], PLASTER.cellM), detail(aa[1], PLASTER.cellM));
-  return { shade: 1 + PLASTER.vary * (2 * n - 1) * d, height: 0 };
+  const d = Math.min(detail(aa[0], cellM), detail(aa[1], cellM));
+  return { shade: 1 + vary * (2 * n - 1) * d, height: 0 };
+}
+
+const mottle = (u: number, v: number, aa: PixelSize, seed: number) => patches(u, v, aa, seed, PLASTER.cellM, PLASTER.vary);
+
+/** Piezas y, encima, parches de tono que se siguen viendo de lejos (ladrillo de distinta tanda, manchas del concreto). */
+function withPatches(g: Grain, u: number, v: number, aa: PixelSize, seed: number, cellM: number, vary: number): Grain {
+  return { shade: g.shade * patches(u, v, aa, seed + PATCH_SEED, cellM, vary).shade, height: g.height };
 }
 
 /** Un techo (semilla negativa) no lleva grano: sus coordenadas no son las de una fachada. */
 export function finishGrain(finish: number, u: number, v: number, aa: PixelSize, seed: number): Grain {
   if (seed < 0) return NONE;
-  if (finish === BRICK_ID) return tiled(BRICK_TILING, u, v, aa, seed, BRICK.lengthM / 2);
-  if (finish === CONCRETE_ID) return tiled(CONCRETE_TILING, u, v, aa, seed, 0);
+  if (finish === BRICK_ID) return withPatches(tiled(BRICK_TILING, u, v, aa, seed, BRICK.lengthM / 2), u, v, aa, seed, BRICK.patchM, BRICK.patchVary);
+  if (finish === CONCRETE_ID) return withPatches(tiled(CONCRETE_TILING, u, v, aa, seed, 0), u, v, aa, seed, CONCRETE.patchM, CONCRETE.patchVary);
   if (finish === METAL_ID) return seams(u, aa);
   if (finish === PLASTER_ID) return mottle(u, v, aa, seed);
   if (finish === GLAZED_ID) return glazedGloss(u, v, aa);

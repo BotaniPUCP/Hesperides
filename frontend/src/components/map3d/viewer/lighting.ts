@@ -20,7 +20,7 @@ const NORMAL_BIAS_TEXELS = 1.7;
  */
 const DUSK = {
   sun: 0xff9a4e, sunIntensity: 3.2,
-  hemiSky: 0x7c7fc0, hemiGround: 0x4a3328, hemiIntensity: 0.3,
+  hemiSky: 0x8689b8, hemiGround: 0x4a3328, hemiIntensity: 0.4,
   rim: 0xff9a5a, rimIntensity: 0.1,
   ambient: 0xc0a090, ambientIntensity: 0.06,
 } as const;
@@ -84,7 +84,7 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
   function setHour(hour: number, night: boolean) {
     const h = ((hour - 12) * 15 * Math.PI) / 180, phi = (CAMPUS_LATITUDE_DEG * Math.PI) / 180;
     const east = -Math.sin(h), north = -Math.sin(phi) * Math.cos(h), up = Math.cos(phi) * Math.cos(h);
-    dir.set(east, Math.max(up, 0.05), -north).normalize();
+    dir.set(east, Math.max(up, 0.035), -north).normalize();
     place();
     if (night) {
       sun.color.set(0xc4d5ff);

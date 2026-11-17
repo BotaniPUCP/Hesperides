@@ -13,6 +13,8 @@ export const LOOK_LIGHT_HEAD = /* glsl */ `
 uniform vec3 lookNightGlow;
 /** El interior que se ve tras todo el vidrio al atardecer (cero de día y en el modo de siempre). */
 uniform vec3 lookInterior;
+/** Cuánto se lleva la luz de las ventanas hacia su luminancia (el Atardecer, 0,2). */
+uniform float lookEmissiveDesat;
 /** Cuánto más refleja el cielo el vidrio que un muro; el Atardecer lo sube. */
 uniform float lookGlassEnv;
 
@@ -68,7 +70,8 @@ export const LOOK_EMISSIVE_FRAGMENT = /* glsl */ `
 #include <emissivemap_fragment>
 // El interior varía por vano (unos 2,4 m de ancho y un piso de alto): unos más claros, otros casi apagados.
 float lookBay = fract(sin(dot(floor(vLookFace / vec2(2.4, 3.3)), vec2(12.9898, 78.233))) * 43758.5453);
-totalEmissiveRadiance += lookNightGlow * lookLit + lookInterior * lookGlass * (0.15 + 1.1 * lookBay * lookBay);
+vec3 lookEmit = lookNightGlow * lookLit + lookInterior * lookGlass * (0.15 + 1.1 * lookBay * lookBay);
+totalEmissiveRadiance += mix(lookEmit, vec3(dot(lookEmit, vec3(0.2126, 0.7152, 0.0722))), lookEmissiveDesat);
 `;
 
 export const LOOK_LIGHTS_FRAGMENT = /* glsl */ `
