@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildStreets } from './cityStreets';
 import { withCityWindows } from './cityWindows';
 import { broadleafCrown, seeded } from './sunsetTrees';
 
@@ -154,11 +155,20 @@ export function buildCity(data: CityData, toScene: ToScene, campus: number[][], 
   const rnd = seeded(0xc17e);
   const grid = new Occupancy(data.radioM, CITY.cellM);
   campus.forEach((ring) => grid.fill(ring, CAMPUS));
+  /** Dentro del campus no va nada de la ciudad, tampoco sus caminos internos de OSM. */
+  const inCampus = (x: number, y: number) => campus.some((ring) => pointInRing(x, y, ring));
+  const vias = data.vias
+    .map((v) => {
+      const keep: number[] = [v[0]];
+      for (let i = 1; i < v.length; i += 2) if (!inCampus(v[i], v[i + 1])) keep.push(v[i], v[i + 1]);
+      return keep;
+    })
+    .filter((v) => v.length >= 5);
 
   // Vías: cinta de asfalto, y en la grilla, la calle con sus veredas.
   const road: number[] = [];
   const up = groundY + 0.06;
-  for (const v of data.vias) {
+  for (const v of vias) {
     const w = v[0];
     for (let i = 1; i + 3 < v.length; i += 2) {
       const [ax, ay, bx, by] = [v[i], v[i + 1], v[i + 2], v[i + 3]];
@@ -231,7 +241,7 @@ export function buildCity(data: CityData, toScene: ToScene, campus: number[][], 
 
   // Árboles: en las veredas de las vías anchas y dentro de los parques.
   const trees: [number, number, number][] = [];
-  for (const v of data.vias) {
+  for (const v of vias) {
     if (v[0] < CITY.streetTreeMinWidthM) continue;
     for (let i = 1; i + 3 < v.length; i += 2) {
       const [ax, ay, bx, by] = [v[i], v[i + 1], v[i + 2], v[i + 3]];
@@ -270,6 +280,8 @@ export function buildCity(data: CityData, toScene: ToScene, campus: number[][], 
   });
   // Son decenas de miles y se ven de lejos: sin sombra propia (el mapa de sombras no recorta instancias).
   [crown, trunk].forEach((mesh) => { mesh.raycast = () => undefined; group.add(mesh); });
-  group.userData.counts = { osm: data.edificios.length, lots: lots.length, trees: trees.length, roads: data.vias.length };
+  const streets = buildStreets(vias, toScene, (x, y) => inCampus(x, y) || Math.hypot(x, y) > data.radioM, groundY);
+  group.add(streets);
+  group.userData.counts = { osm: data.edificios.length, lots: lots.length, trees: trees.length, roads: vias.length, ...streets.userData.counts };
   return group;
 }
