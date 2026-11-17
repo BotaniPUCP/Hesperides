@@ -37,7 +37,7 @@ export interface ReservationResponsibleEntry {
   assignedBy: string;
 }
 
-/** Una fila del historial de confirmaciones o de usos; solo viene en la ficha. */
+/** Una fila del historial de marcas de uso; solo viene en la ficha. */
 export interface ReservationFollowupEntry {
   value: boolean;
   at: string;
@@ -69,22 +69,18 @@ export interface Reservation {
   responsible: ReservationContactRef;
   /** Solo viene lleno en la ficha (GET /{code}). */
   responsibleHistory: ReservationResponsibleEntry[];
-  /** Solo vienen llenos en la ficha (GET /{code}); en la agenda van vacíos. */
-  confirmationHistory: ReservationFollowupEntry[];
+  /** Solo viene lleno en la ficha (GET /{code}); en la agenda va vacío. */
   usageHistory: ReservationFollowupEntry[];
   startsAt: string;
   endsAt: string;
   purpose: string | null;
   state: ReservationState;
   cancelReason: string | null;
-  /** El solicitante confirmó que usará el jardín (enmienda 11 nov 2026). */
-  useConfirmed: boolean;
   /** El encargado marcó que el espacio está siendo usado. */
   spaceUsed: boolean;
   /** El uso derivado: las marcas más el reloj. */
   usageState: ReservationUsage;
-  /** Si las ventanas de cada marca están abiertas ahora mismo. */
-  canConfirm: boolean;
+  /** Si la ventana de la marca está abierta ahora mismo. */
   canRecordUsage: boolean;
   version: number;
   /** Solo viene lleno al crear y editar. */

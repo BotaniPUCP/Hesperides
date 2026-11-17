@@ -19,7 +19,6 @@ import pe.edu.pucp.hesperides.engine.reservations.ReservationState;
 import pe.edu.pucp.hesperides.modules.admin.SystemParameterCodes;
 import pe.edu.pucp.hesperides.modules.admin.service.SystemParameterReader;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.CancelRequest;
-import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ConfirmationRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ContactRef;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.FollowupEntry;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.GardenOption;
@@ -110,7 +109,7 @@ public class ReservationsServiceImpl implements ReservationsService {
     public ReservationResponse get(String code) {
         ReservationRow row = reads.byCode(code);
         return response(row, sections.sectionCodes(row.placeId()), history(reads.responsibleHistory(code)),
-                followups(reads.confirmationHistory(code)), followups(reads.usageHistory(code)), List.of());
+                followups(reads.usageHistory(code)), List.of());
     }
 
     @Override
@@ -212,38 +211,6 @@ public class ReservationsServiceImpl implements ReservationsService {
         PlaceRow place = reads.place(reservation.getPlaceId());
         audit.record(AuditActionCode.GARDEN_RESERVATION_CANCELLED, "GardenReservation", reservation.getId(),
                 java.util.Map.of("code", code, "place", place == null ? "" : place.code()));
-        return response(reads.byCode(code), List.of(), List.of(), List.of(), List.of());
-    }
-
-    @Override
-    @Transactional
-    public ReservationResponse confirm(String code, ConfirmationRequest request, String userEmail) {
-        GardenReservation reservation = require(code);
-        if (request == null || request.version() == null) {
-            throw new ValidationException("Version is required");
-        }
-        ReservationState state = ReservationPeriod.state(reservation.getStartsAt(), reservation.getEndsAt(),
-                reservation.getCancelledAt(), Instant.now());
-        int minutes = confirmationMinutes();
-        if (!ReservationFollowup.canConfirm(state, reservation.getEndsAt(), Instant.now(), minutes)) {
-            if (state == ReservationState.FINISHED || state == ReservationState.CANCELLED) {
-                throw new BusinessRuleException("This reservation already finished or was cancelled");
-            }
-            throw new BusinessRuleException("The confirmation window is closed: it closes "
-                    + minutes + " minutes before the reservation ends");
-        }
-        requireVersion(reservation, request.version());
-        if (reservation.isUseConfirmed() == request.confirmed()) {
-            return response(reads.byCode(code), List.of(), List.of(), List.of(), List.of());
-        }
-        reservation.setUseConfirmed(request.confirmed());
-        reservation.setVersion(reservation.getVersion() + 1);
-        reservations.saveAndFlush(reservation);
-        reservations.addConfirmation(reservation.getId(), request.confirmed(), users.of(userEmail));
-
-        audit.record(AuditActionCode.GARDEN_RESERVATION_CONFIRMATION_CHANGED, "GardenReservation",
-                reservation.getId(), java.util.Map.of("code", code,
-                        "from", !request.confirmed(), "to", request.confirmed()));
         return response(reads.byCode(code), List.of(), List.of(), List.of(), List.of());
     }
 
@@ -455,13 +422,12 @@ public class ReservationsServiceImpl implements ReservationsService {
     }
 
     private ReservationResponse response(ReservationRow row, List<ResponsibleEntry> history,
-            List<FollowupEntry> confirmations, List<FollowupEntry> usages, List<Warning> warnings) {
-        return response(row, List.of(), history, confirmations, usages, warnings);
+            List<FollowupEntry> usages, List<Warning> warnings) {
+        return response(row, List.of(), history, usages, warnings);
     }
 
     private ReservationResponse response(ReservationRow row, List<String> sectionCodes,
-            List<ResponsibleEntry> history, List<FollowupEntry> confirmations, List<FollowupEntry> usages,
-            List<Warning> warnings) {
+            List<ResponsibleEntry> history, List<FollowupEntry> usages, List<Warning> warnings) {
         Instant now = Instant.now();
         ReservationState state = ReservationPeriod.state(row.startsAt(), row.endsAt(), row.cancelledAt(), now);
         int minutes = confirmationMinutes();
@@ -476,17 +442,14 @@ public class ReservationsServiceImpl implements ReservationsService {
                 new ContactRef(row.responsibleCode(), row.responsibleName(), row.responsibleRole(),
                         row.responsibleMobile(), row.responsibleExtension()),
                 history,
-                confirmations,
                 usages,
                 toOffset(row.startsAt()),
                 toOffset(row.endsAt()),
                 row.purpose(),
                 state.name(),
                 row.cancelReason(),
-                row.useConfirmed(),
                 row.spaceUsed(),
                 ReservationFollowup.usageDisplay(state, row.spaceUsed()).name(),
-                ReservationFollowup.canConfirm(state, row.endsAt(), now, minutes),
                 ReservationFollowup.canRecordUsage(row.startsAt(), row.endsAt(), row.cancelledAt(), now, minutes),
                 row.version(),
                 warnings);
@@ -511,7 +474,7 @@ public class ReservationsServiceImpl implements ReservationsService {
                 SystemParameterCodes.RESERVATION_NEARBY_METERS, 10)));
     }
 
-    /** El corte de confirmación, acotado como su pantalla de parámetros (0 a un día). */
+    /** El corte de la marca de uso, acotado como su pantalla de parámetros (0 a un día). */
     private int confirmationMinutes() {
         return Math.max(0, Math.min(1440, parameters.readInt(
                 SystemParameterCodes.RESERVATION_CONFIRMATION_MINUTES, 20)));

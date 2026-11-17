@@ -432,73 +432,9 @@ class ReservationsIntegrationTest {
                     String.class, rosalesId, start, end, userId, requestedBy, requester, requester);
         }
 
-        private ResultActions confirm(String code, String body) throws Exception {
-            return mockMvc.perform(put(RESERVATIONS + "/" + code + "/confirmation")
-                    .contentType(MediaType.APPLICATION_JSON).content(body));
-        }
-
         private ResultActions usage(String code, String body) throws Exception {
             return mockMvc.perform(put(RESERVATIONS + "/" + code + "/usage")
                     .contentType(MediaType.APPLICATION_JSON).content(body));
-        }
-
-        @Test
-        void aCoordinatorConfirmsTheUseAndTheHistoryKeepsIt() throws Exception {
-            LocalDate day = LocalDate.now(LIMA).plusDays(2);
-            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
-
-            confirm(code, "{\"confirmed\":true,\"version\":0}")
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.useConfirmed").value(true))
-                    .andExpect(jsonPath("$.data.canConfirm").value(true))
-                    .andExpect(jsonPath("$.data.version").value(1));
-
-            assertThat(jdbc.queryForObject(
-                    "SELECT count(*) FROM garden_reservation_confirmations h"
-                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
-                    Integer.class, code)).isEqualTo(1);
-
-            mockMvc.perform(get(RESERVATIONS + "/" + code))
-                    .andExpect(jsonPath("$.data.useConfirmed").value(true))
-                    .andExpect(jsonPath("$.data.confirmationHistory", org.hamcrest.Matchers.hasSize(1)))
-                    .andExpect(jsonPath("$.data.confirmationHistory[0].value").value(true))
-                    .andExpect(jsonPath("$.data.confirmationHistory[0].by").value("reservas@pucp.edu.pe"));
-        }
-
-        @Test
-        void unconfirmingAddsAnotherHistoryRow() throws Exception {
-            LocalDate day = LocalDate.now(LIMA).plusDays(2);
-            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
-
-            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isOk());
-            confirm(code, "{\"confirmed\":false,\"version\":1}")
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.useConfirmed").value(false));
-
-            assertThat(jdbc.queryForObject(
-                    "SELECT count(*) FROM garden_reservation_confirmations h"
-                            + " JOIN garden_reservations r ON r.id = h.reservation_id WHERE r.code = ?",
-                    Integer.class, code)).isEqualTo(2);
-        }
-
-        @Test
-        void confirmingWithAStaleVersionConflicts() throws Exception {
-            LocalDate day = LocalDate.now(LIMA).plusDays(2);
-            String code = codeOf(create(rosalesId, at(day, 10), at(day, 14)).andExpect(status().isCreated()));
-
-            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isOk());
-            confirm(code, "{\"confirmed\":false,\"version\":0}").andExpect(status().isConflict());
-        }
-
-        @Test
-        void theConfirmationClosesMinutesBeforeTheEnd() throws Exception {
-            // Fin en 10 min con corte de 20: el plazo cerró hace 10 minutos.
-            String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(10));
-
-            confirm(code, "{\"confirmed\":true,\"version\":0}")
-                    .andExpect(status().isUnprocessableEntity())
-                    .andExpect(jsonPath("$.message").value(
-                            "The confirmation window is closed: it closes 20 minutes before the reservation ends"));
         }
 
         @Test
@@ -518,10 +454,8 @@ class ReservationsIntegrationTest {
 
         @Test
         @WithMockUser(username = "reservas@pucp.edu.pe", authorities = "SUPERVISOR")
-        void aSupervisorCannotConfirmButCanRecordUsage() throws Exception {
+        void aSupervisorCanRecordUsage() throws Exception {
             String code = inProgress(java.time.Duration.ofMinutes(30), java.time.Duration.ofMinutes(90));
-
-            confirm(code, "{\"confirmed\":true,\"version\":0}").andExpect(status().isForbidden());
 
             usage(code, "{\"used\":true,\"version\":0}")
                     .andExpect(status().isOk())

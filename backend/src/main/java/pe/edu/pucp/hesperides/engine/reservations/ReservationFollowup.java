@@ -4,9 +4,8 @@ import java.time.Instant;
 
 /**
  * Reglas puras del seguimiento del uso de una reserva (SPEC-107, enmienda del
- * 11 nov 2026): la confirmación del solicitante y la marca de uso del
- * encargado. Sin Spring ni reloj propio: el instante de referencia se recibe
- * para que las pruebas sean deterministas.
+ * 11 nov 2026): la marca de uso del encargado. Sin Spring ni reloj propio: el
+ * instante de referencia se recibe para que las pruebas sean deterministas.
  */
 public final class ReservationFollowup {
 
@@ -14,23 +13,14 @@ public final class ReservationFollowup {
     }
 
     /**
-     * El corte compartido por las dos marcas: minutos antes del fin de la
-     * reserva (parámetro RESERVATION_CONFIRMATION_MINUTES, 20 por defecto).
-     * Pasado el corte ya no se confirma el uso ni se marca el espacio, porque
-     * dentro de esos minutos ya no sirve para decidir nada (D-12).
+     * El corte de la marca de uso: minutos antes del fin de la reserva
+     * (parámetro RESERVATION_CONFIRMATION_MINUTES, 20 por defecto). Pasado el
+     * corte ya no se marca el espacio, porque dentro de esos minutos ya no
+     * sirve para decidir nada (D-12). El nombre del parámetro no se renombra
+     * (V044) aunque la confirmación de uso ya no existe (17 nov 2026).
      */
     public static Instant lateCutoff(Instant end, int minutes) {
         return end.minusSeconds(minutes * 60L);
-    }
-
-    /**
-     * Confirmar o desconfirmar vale desde que existe la reserva hasta el corte.
-     * Una anulada o terminada tampoco, y eso lo cubre el chequeo de estado.
-     */
-    public static boolean canConfirm(ReservationState state, Instant end, Instant now, int minutes) {
-        return state == ReservationState.UPCOMING || state == ReservationState.IN_PROGRESS
-                ? now.isBefore(lateCutoff(end, minutes))
-                : false;
     }
 
     /**

@@ -9,7 +9,6 @@ import { FollowupBlock } from './FollowupBlock';
 
 interface Props {
   reservation: Reservation;
-  canMaintain: boolean;
   canRecordUsage: boolean;
   updateData: (reservation: Reservation) => void;
 }
@@ -31,12 +30,12 @@ function usageBlockedText(reservation: Reservation): string {
   if (reservation.state === 'UPCOMING') {
     return 'El espacio se marca en uso a partir de la hora de inicio de la reserva.';
   }
-  // En curso tras el corte: la misma tolerancia que la confirmación.
+  // En curso tras el corte: la tolerancia del parámetro de la marca de uso.
   return 'Ya no se puede marcar el uso: el corte es minutos antes del fin de la reserva.';
 }
 
 /** Los datos de una reserva en su ficha (SPEC-107 §5.2), con su seguimiento de uso. */
-export function ReservationDetails({ reservation, canMaintain, canRecordUsage, updateData }: Props) {
+export function ReservationDetails({ reservation, canRecordUsage, updateData }: Props) {
   return (
         <section className="surface-card">
           <div className="flex flex-wrap items-center gap-2">
@@ -87,22 +86,6 @@ export function ReservationDetails({ reservation, canMaintain, canRecordUsage, u
             <Field label="Inicio">{formatDateTime(reservation.startsAt)}</Field>
             <Field label="Fin">{formatDateTime(reservation.endsAt)}</Field>
             <Field label="Motivo">{reservation.purpose ?? '—'}</Field>
-            <Field label="Confirmación del solicitante">
-              <FollowupBlock
-                entries={reservation.confirmationHistory}
-                value={reservation.useConfirmed}
-                labelOn="El solicitante confirmó el uso"
-                labelOff="Sin confirmación del solicitante"
-                buttonLabel="Registrar confirmación"
-                buttonOff="Quitar confirmación"
-                open={reservation.canConfirm}
-                blockedText="El plazo de confirmación ya cerró: solo se confirma antes del corte."
-                canChange={canMaintain}
-                version={reservation.version}
-                onChanged={updateData}
-                code={reservation.code}
-                kind="confirmation" />
-            </Field>
             <Field label="Uso del espacio">
               <FollowupBlock
                 entries={reservation.usageHistory}
@@ -116,8 +99,7 @@ export function ReservationDetails({ reservation, canMaintain, canRecordUsage, u
                 canChange={canRecordUsage}
                 version={reservation.version}
                 onChanged={updateData}
-                code={reservation.code}
-                kind="usage" />
+                code={reservation.code} />
             </Field>
           </dl>
         </section>

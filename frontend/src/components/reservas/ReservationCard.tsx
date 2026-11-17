@@ -85,7 +85,6 @@ export function ReservationCard({ reservation, canMaintain, canRecordUsage, onCa
         className={reservation.state === 'CANCELLED' ? 'line-through' : undefined} />
       {reservation.state !== 'CANCELLED' && (
         <div className="flex flex-wrap items-center gap-1">
-          {reservation.useConfirmed && <Badge label="Confirmada" color="info" />}
           <Badge label={usageLabel(reservation.usageState)} color={usageColor(reservation.usageState)} />
         </div>
       )}

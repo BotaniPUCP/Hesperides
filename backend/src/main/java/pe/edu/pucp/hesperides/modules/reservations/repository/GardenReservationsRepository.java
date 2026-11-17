@@ -23,14 +23,6 @@ public interface GardenReservationsRepository extends JpaRepository<GardenReserv
     void addResponsible(@Param("reservationId") long reservationId, @Param("contactId") long contactId,
             @Param("assignedBy") long assignedBy);
 
-    /** Enmienda del 11 nov 2026: una fila por cada cambio de confirmación de uso. */
-    @Modifying
-    @Query(value = "INSERT INTO garden_reservation_confirmations "
-            + "(reservation_id, confirmed, changed_by_user_id) VALUES (:reservationId, :confirmed, :changedBy)",
-            nativeQuery = true)
-    void addConfirmation(@Param("reservationId") long reservationId, @Param("confirmed") boolean confirmed,
-            @Param("changedBy") long changedBy);
-
     /** Enmienda del 11 nov 2026: una fila por cada marca o desmarca de uso. */
     @Modifying
     @Query(value = "INSERT INTO garden_reservation_usages "

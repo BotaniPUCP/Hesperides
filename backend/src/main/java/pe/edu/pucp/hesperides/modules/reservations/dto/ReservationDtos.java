@@ -24,7 +24,7 @@ public final class ReservationDtos {
     public record ResponsibleEntry(ContactRef contact, OffsetDateTime assignedAt, String assignedBy) {
     }
 
-    /** Una fila del historial de confirmaciones o de usos (enmienda del 11 nov 2026). */
+    /** Una fila del historial de marcas de uso (enmienda del 11 nov 2026). */
     public record FollowupEntry(boolean value, OffsetDateTime at, String by) {
     }
 
@@ -32,9 +32,9 @@ public final class ReservationDtos {
      * {@code warnings} solo viene lleno al crear y editar; en las lecturas es una
      * lista vacía para que el frontend no tenga que distinguir la forma.
      * {@code responsibleHistory} solo viene lleno en la ficha; en la agenda va vacío.
-     * Lo mismo los historiales de confirmación y de uso (enmienda del 11 nov 2026).
-     * {@code usageState} se calcula con el reloj; {@code canConfirm} y
-     * {@code canRecordUsage} dicen si la ventana de cada marca está abierta ahora.
+     * Lo mismo el historial de usos (enmienda del 11 nov 2026). {@code usageState}
+     * se calcula con el reloj; {@code canRecordUsage} dice si la ventana de la
+     * marca está abierta ahora.
      */
     public record ReservationResponse(
             String code,
@@ -44,24 +44,17 @@ public final class ReservationDtos {
             OrganizationRef requestedFor,
             ContactRef responsible,
             List<ResponsibleEntry> responsibleHistory,
-            List<FollowupEntry> confirmationHistory,
             List<FollowupEntry> usageHistory,
             OffsetDateTime startsAt,
             OffsetDateTime endsAt,
             String purpose,
             String state,
             String cancelReason,
-            boolean useConfirmed,
             boolean spaceUsed,
             String usageState,
-            boolean canConfirm,
             boolean canRecordUsage,
             long version,
             List<Warning> warnings) {
-    }
-
-    /** El cuerpo de confirmar o desconfirmar el uso del solicitante (enmienda del 11 nov 2026). */
-    public record ConfirmationRequest(boolean confirmed, Long version) {
     }
 
     /** El cuerpo de marcar o desmarcar el uso del espacio (enmienda del 11 nov 2026). */

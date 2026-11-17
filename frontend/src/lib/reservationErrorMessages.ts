@@ -38,8 +38,6 @@ export const RESERVATION_MESSAGES: Record<string, string> = {
 
 /** Los mensajes que traen un dato no caben en un diccionario de textos exactos. */
 export const RESERVATION_PATTERNS: readonly MessagePattern[] = [
-  [/^The confirmation window is closed: it closes (\d+) minutes before the reservation ends$/,
-    (match) => `El plazo de confirmación ya cerró: solo se confirma hasta ${match[1]} minutos antes del fin de la reserva.`],
   [/^The usage window is closed: it closes (\d+) minutes before the reservation ends$/,
     (match) => `Ya no se puede marcar el uso: el corte es ${match[1]} minutos antes del fin de la reserva.`],
   [/^The file is missing the columns: (.+)$/,
