@@ -57,7 +57,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
   const lights = createLights(scene, center, coarse);
   let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true, golden = false;
-  const sunset = createSunset(renderer, scene, rig.camera, stage.box, WORLD_LIFT);
+  const sunset = createSunset(renderer, scene, rig.camera, stage.box, WORLD_LIFT, () => { needsRender = true; }, coarse);
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
   const poly = createSceneLayers(scene, data, textures, state, model);

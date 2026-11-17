@@ -15,7 +15,7 @@ const GLOW = { day: new THREE.Color('#FFE79C'), night: new THREE.Color('#AFC2FF'
 const CONTACT = { day: 0x5b5448, night: 0x5f77bf, dayOpacity: 0.15, nightOpacity: 0.18 };
 /** Atardecer: copas más oscuras y oliva, menos barniz, y el borde del lado del sol en ámbar (modo Atardecer). */
 const WHITE = new THREE.Color(0xffffff);
-const GOLDEN = { tint: new THREE.Color('#7f8f62'), rim: new THREE.Color('#FFA24E'), rimStrength: 0.62, sunInfluence: 0.75, sheen: 0.08, clearcoat: 0.08, glowOpacity: 0.04 };
+const GOLDEN = { tint: new THREE.Color('#7f8f62'), rim: new THREE.Color('#FFA24E'), rimStrength: 0.38, sunInfluence: 0.7, sheen: 0.08, clearcoat: 0.08, glowOpacity: 0.04 };
 
 export interface FoliageMaterials {
   /** Un material de copa por forma: cada InstancedMesh necesita el suyo. */

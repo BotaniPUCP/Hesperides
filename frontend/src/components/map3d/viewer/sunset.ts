@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { SANITIZE_GLSL, SunsetGradePass } from './sunsetGrade';
 import { createSunsetSky, HORIZON } from './sunsetSky';
 
 /**
@@ -28,7 +28,8 @@ export const SUNSET = {
   fogFar: 5.5,
   ground: '#4c5338',
   groundRadiusM: 8000,
-  bloom: { strength: 0.7, radius: 0.6, threshold: 0.9 },
+  /** Umbral en HDR (antes del tono): solo el sol, sus reflejos fuertes y las ventanas encendidas. */
+  bloom: { strength: 0.55, radius: 0.5, threshold: 2.2 },
   /** Ciudad de relleno: manzanas de `blockM` separadas por calles de `streetM`, hasta `outerM` del centro. */
   city: { blockM: 70, streetM: 18, innerMarginM: 60, outerM: 4200, fill: 0.8, trees: 14000, lowWithinM: 700 },
   /** Cuánto se encienden las ventanas al atardecer respecto de la noche. */
@@ -64,53 +65,6 @@ export function sunsetPose(center: THREE.Vector3, sunDir: THREE.Vector3): { posi
     .add(new THREE.Vector3(0, SUNSET_VIEW.distanceM * Math.sin(pitch), 0));
   return { position: position.toArray() as [number, number, number], target: target.toArray() as [number, number, number] };
 }
-
-const GRADE_SHADER = {
-  uniforms: {
-    tDiffuse: { value: null as THREE.Texture | null },
-    uExposure: { value: SUNSET.exposure },
-    uVignette: { value: 0.2 },
-  },
-  vertexShader: /* glsl */ `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}`,
-  fragmentShader: /* glsl */ `
-uniform sampler2D tDiffuse;
-uniform float uExposure;
-uniform float uVignette;
-varying vec2 vUv;
-
-// El ACES de three (tonemapping_pars_fragment de r147), con su misma exposición.
-vec3 gradeFit(vec3 v) {
-  vec3 a = v * (v + 0.0245786) - 0.000090537;
-  vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
-  return a / b;
-}
-vec3 gradeAces(vec3 color) {
-  const mat3 inMat = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
-  const mat3 outMat = mat3(vec3(1.60475, -0.10208, -0.00327), vec3(-0.53108, 1.10813, -0.07276), vec3(-0.07367, -0.00605, 1.07602));
-  color *= uExposure / 0.6;
-  color = outMat * gradeFit(inMat * color);
-  return clamp(color, 0.0, 1.0);
-}
-
-void main() {
-  vec3 c = gradeAces(texture2D(tDiffuse, vUv).rgb);
-  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-  // Hora dorada: sombras hacia el azul petróleo, luces hacia el ámbar.
-  vec3 shadows = vec3(0.86, 0.95, 1.12), lights = vec3(1.1, 0.98, 0.84);
-  c *= mix(shadows, lights, smoothstep(0.08, 0.75, l));
-  // Un poco más de contraste y de saturación, como el render de referencia.
-  c = mix(vec3(l), c, 1.18);
-  c = clamp((c - 0.5) * 1.12 + 0.5, 0.0, 1.0);
-  vec2 d = vUv - 0.5;
-  c *= 1.0 - uVignette * smoothstep(0.25, 0.85, dot(d, d) * 2.2);
-  gl_FragColor = vec4(c, 1.0);
-}`,
-};
 
 interface Finish { roughness: number; clearcoat: number; sheen: number }
 
@@ -228,21 +182,45 @@ function createSurroundings(campus: THREE.Box3, groundY: number): THREE.Group {
   return group;
 }
 
+/**
+ * `onChange`: algo llegó tarde (la foto de las nubes) y hay que redibujar. `lite`: en pantallas táctiles,
+ * sin oclusión ambiental y con menos muestras de antialiasing (la memoria y la GPU de un celular).
+ */
 export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, campus: THREE.Box3,
-  groundY: number): Sunset {
-  const { mesh: sky, setSun, setSunPower } = createSunsetSky(SUNSET.groundRadiusM);
+  groundY: number, onChange: () => void = () => undefined, lite = false): Sunset {
+  const { mesh: sky, setSun, setSunPower } = createSunsetSky(SUNSET.groundRadiusM, () => {
+    // Las nubes también se reflejan: con el modo prendido, se vuelve a hornear el entorno.
+    env?.dispose();
+    env = null;
+    if (on) {
+      bakeEnvironment(bakedSun.clone());
+      scene.environment = (env as THREE.WebGLRenderTarget | null)?.texture ?? null;
+    }
+    onChange();
+  });
   sky.visible = false;
   const surroundings = createSurroundings(campus, groundY);
   scene.add(sky, surroundings);
   const fog = new THREE.Fog(HORIZON.clone(), 1000, 6000);
 
   const size = renderer.getSize(new THREE.Vector2());
-  const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType });
+  // Media precisión (el sol y las ventanas pasan del blanco), 4 muestras (el antialiasing que el compositor
+  // le quita al renderer) y la profundidad, que el pase final usa para la oclusión ambiental.
+  const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: lite ? 2 : 4 });
+  target.depthTexture = new THREE.DepthTexture(size.x, size.y, THREE.UnsignedIntType);
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
   const { strength, radius, threshold } = SUNSET.bloom;
-  composer.addPass(new UnrealBloomPass(size.clone(), strength, radius, threshold));
-  const grade = new ShaderPass(GRADE_SHADER);
+  const bloom = new UnrealBloomPass(size.clone(), strength, radius, threshold);
+  // Sus buffers, también de media precisión: si no, el brillo se corta en 1 y el sol queda como un disco pálido.
+  [bloom.renderTargetBright, ...bloom.renderTargetsHorizontal, ...bloom.renderTargetsVertical]
+    .forEach((rt) => { rt.texture.type = THREE.HalfFloatType; });
+  // El filtro de brillo del bloom lee la escena: también lo sanea (ver SANITIZE_GLSL).
+  const highPass = bloom.materialHighPassFilter;
+  highPass.fragmentShader = SANITIZE_GLSL + highPass.fragmentShader
+    .replace('vec4 texel = texture2D( tDiffuse, vUv );', 'vec4 texel = texture2D( tDiffuse, vUv ); texel.rgb = sunsetFinite( texel.rgb );');
+  composer.addPass(bloom);
+  const grade = new SunsetGradePass(camera, SUNSET.exposure, !lite);
   composer.addPass(grade);
 
   let on = false;
@@ -276,7 +254,7 @@ export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, 
         scene.fog = fog;
         renderer.toneMapping = THREE.NoToneMapping;
         renderer.toneMappingExposure = SUNSET.exposure;
-        grade.uniforms.uExposure.value = SUNSET.exposure;
+        grade.setExposure(SUNSET.exposure);
       } else {
         // El entorno y la exposición del tema los repone stage.applyTheme, que el visor llama después.
         scene.fog = null;
