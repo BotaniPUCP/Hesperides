@@ -9,6 +9,8 @@ export type ConfigVideo = {
   escalas: Partial<Record<EscenaId, number>>;
   /** Carpeta de `public/` con los audios y el manifiesto. */
   carpetaVoz: string;
+  /** Cómo se dibuja Hespo; si falta, en 2D. */
+  hespo?: '2d' | '3d';
 };
 
 export function componenteDeEscena(config: ConfigVideo, id: EscenaId): React.FC<PropsEscena> {

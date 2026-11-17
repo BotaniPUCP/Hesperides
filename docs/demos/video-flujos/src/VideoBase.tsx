@@ -2,6 +2,7 @@ import React from 'react';
 import { AbsoluteFill, Html5Audio, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion';
 import { componenteDeEscena, type ConfigVideo } from './escenas/componentes';
 import { Hespo } from './hespo/Hespo';
+import { HespoEnEscena3D } from './hespo3d/HespoEnEscena3D';
 import { estadoHespo } from './hespo/recorrido';
 import { useApertura } from './hespo/useApertura';
 import { fraseActiva, FRAMES_TRANSICION, type Linea, type TramoEscena } from './tiempos';
@@ -35,7 +36,11 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
       <Escenario />
       <AbsoluteFill style={{ opacity: opacidad }}>
         <Escena escena={escena} frame={frame} />
-        <Hespo estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
+        {config.hespo === '3d' ? (
+          <HespoEnEscena3D estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
+        ) : (
+          <Hespo estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
+        )}
       </AbsoluteFill>
       <Subtitulos texto={subtitulo} />
       {linea.escenas
