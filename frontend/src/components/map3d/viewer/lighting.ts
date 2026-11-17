@@ -19,7 +19,8 @@ const NORMAL_BIAS_TEXELS = 1.7;
  * rellenos del modo de siempre, que aplanan el volumen. Las sombras quedan frías y las caras al sol, ámbar.
  */
 const DUSK = {
-  sun: 0xff9a4e, sunIntensity: 3.2,
+  /** El color del sol alto (unos 4800 K) y el de cuando roza el horizonte. */
+  sunHigh: 0xffd6aa, sun: 0xff9a4e, sunIntensity: 3.2,
   hemiSky: 0x8689b8, hemiGround: 0x4a3328, hemiIntensity: 0.4,
   rim: 0xff9a5a, rimIntensity: 0.1,
   ambient: 0xc0a090, ambientIntensity: 0.06,
@@ -34,7 +35,11 @@ export interface Lights {
   applyTheme: (palette: ScenePalette, night: boolean, dusk?: boolean, twilight?: number) => void;
   /** Centra el mapa de sombras en lo que mira la cámara (SPEC-112 D-21). */
   follow: (target: THREE.Vector3, cameraDistance: number) => void;
+  /** Apaga el sol de la escena (las sombras en cascada lo reemplazan). */
+  setSunActive: (on: boolean) => void;
 }
+
+const SUN_HIGH = new THREE.Color(DUSK.sunHigh);
 
 export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePointer: boolean): Lights {
   const hemi = new THREE.HemisphereLight(0xffe0a0, 0xc8b898, 0.85);
@@ -89,7 +94,8 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
     if (night) {
       sun.color.set(0xc4d5ff);
     } else if (dusk) {
-      sun.color.set(DUSK.sun);
+      // Alto, blanco cálido; bajo (menos de unos 4°), naranja.
+      sun.color.set(DUSK.sun).lerp(SUN_HIGH, THREE.MathUtils.smoothstep(dir.y, 0.07, 0.34));
     } else {
       const low = Math.max(0, 1 - up * 2.2); // sol bajo: más cálido
       sun.color.setRGB(1, 1 - low * 0.18, 1 - low * 0.38);
@@ -121,5 +127,5 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
     ambient.intensity = DUSK.ambientIntensity;
   }
 
-  return { sun, sunDir: () => dir.clone(), setHour, applyTheme, follow };
+  return { sun, sunDir: () => dir.clone(), setHour, applyTheme, follow, setSunActive: (on) => { sun.visible = on; } };
 }

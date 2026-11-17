@@ -8,7 +8,7 @@ import { withCityWindows } from './cityWindows';
 import { leafMaterials, leafTexture, leafyCrown } from './sunsetTrees';
 import type { LocalPlane } from '../projection';
 import type { Polygon } from '../sceneData';
-import { createSunsetSky, DUSK_HORIZON, HORIZON } from './sunsetSky';
+import { createSunsetSky, DAY_HORIZON, DUSK_HORIZON, goldenOf, HORIZON } from './sunsetSky';
 
 /**
  * Modo «Atardecer»: el campus a la hora dorada, como un render de arquitectura.
@@ -32,6 +32,10 @@ export function duskOf(hour: number): number {
 
 export const SUNSET = {
   exposure: 1.4,
+  /** La exposición con el sol alto (unos 20° o más). */
+  dayExposure: 0.9,
+  /** El umbral del bloom con el sol alto. */
+  dayBloomThreshold: 4,
   /** La bruma empieza pasado lo que se mira y se cierra hacia el horizonte: múltiplos de la distancia de la cámara. */
   fogNear: 1.5,
   fogFar: 6.5,
@@ -46,7 +50,9 @@ export const SUNSET = {
   /** Cuánto se desaturan los emisivos de las fachadas hacia su luminancia, antes del tono. */
   emissiveDesat: 0.2,
   /** Cuánto refleja el cielo el vidrio de las fachadas (el modo de siempre usa 2). */
-  glassEnv: 3.5,
+  glassEnv: 1.5,
+  /** Cuánto se hunden los paños de vidrio respecto de la fachada. */
+  paneInsetM: 0.22,
   /** Los interiores tras el vidrio de las fachadas: cálidos, y más a medida que baja el sol. */
   interior: new THREE.Color().setRGB(1.0, 0.62, 0.32).multiplyScalar(0.16),
 } as const;
@@ -67,7 +73,7 @@ const DEG = Math.PI / 180;
 /** Cuánto puede bajar la cámara en el modo, en radianes desde la vertical (unos 6° sobre el horizonte). */
 export const SUNSET_MAX_POLAR = 1.47;
 
-export const SUNSET_VIEW = { yawDeg: -15, pitchDeg: 12, distanceM: 1000, aheadM: 300 } as const;
+export const SUNSET_VIEW = { yawDeg: -100, pitchDeg: 14, distanceM: 950, aheadM: 250 } as const;
 
 /** Dónde poner la cámara para la toma del atardecer, mirando al centro del campus. */
 export function sunsetPose(center: THREE.Vector3, sunDir: THREE.Vector3): { position: [number, number, number]; target: [number, number, number] } {
@@ -197,11 +203,13 @@ function createSurroundings(campus: THREE.Box3, groundY: number, city: { x: numb
   }
   // Las copas en racimo de los árboles del campus, más livianas: son miles y se ven de lejos.
   const crownGeo = leafyCrown(0x51ce7, 28).translate(0, 1, 0);
-  const crownMat = leafMaterials(leafTexture(), new THREE.MeshStandardMaterial({ color: '#3f5a2c', roughness: 0.85 })).material;
+  const leaves = leafMaterials(leafTexture(), new THREE.MeshStandardMaterial({ color: '#3f5a2c', roughness: 0.85 }));
+  const crownMat = leaves.material;
   [true, false].forEach((innerPart) => {
     const idx = at.map(([x, z], i) => (isInner(x, z) === innerPart ? i : -1)).filter((i) => i >= 0);
     const trees = new THREE.InstancedMesh(crownGeo, crownMat, idx.length);
     idx.forEach((i, k) => trees.setMatrixAt(k, placed[i]));
+    trees.customDepthMaterial = leaves.depth;
     trees.raycast = noRaycast;
     group.add(trees);
     if (innerPart) inner.push(trees);
@@ -308,15 +316,22 @@ export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, 
         setSun(sunDir);
         setDusk(dusk);
         // La bruma (lejana y baja) se apaga con el cielo.
-        fog.color.copy(HORIZON).lerp(DUSK_HORIZON, dusk);
+        // La bruma es el horizonte del cielo: de día clara, al atardecer dorada, al crepúsculo violeta.
+        fog.color.copy(DAY_HORIZON).lerp(HORIZON, goldenOf(sunDir.y)).lerp(DUSK_HORIZON, dusk);
         grade.setGround(groundY, fog.color);
         grade.setSun(sunDir);
         bakeEnvironment(sunDir, dusk);
         scene.environment = env?.texture ?? null;
         scene.fog = fog;
         renderer.toneMapping = THREE.NoToneMapping;
-        renderer.toneMappingExposure = SUNSET.exposure * (1 + 0.45 * dusk);
-        grade.setExposure(SUNSET.exposure * (1 + 0.45 * dusk));
+        // Con el sol alto la luz pega de frente: menos exposición que con el sol rasante.
+        const exposure = THREE.MathUtils.lerp(SUNSET.dayExposure, SUNSET.exposure, goldenOf(sunDir.y)) * (1 + 0.45 * dusk);
+        renderer.toneMappingExposure = exposure;
+        grade.setExposure(exposure);
+        // Los rayos de sol son de la hora dorada: con el sol alto, apenas.
+        grade.setRays(THREE.MathUtils.lerp(0.25, 1, goldenOf(sunDir.y)));
+        // Con el sol alto, techos y vidrio reflejan de frente: solo lo muy brillante florece.
+        bloom.threshold = THREE.MathUtils.lerp(SUNSET.dayBloomThreshold, SUNSET.bloom.threshold, goldenOf(sunDir.y));
       } else {
         // El entorno y la exposición del tema los repone stage.applyTheme, que el visor llama después.
         scene.fog = null;

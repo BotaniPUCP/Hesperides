@@ -4,6 +4,11 @@
  * y `LookSurface`, que declara `lookShader.ts` antes de incluirlo.
  */
 export const LOOK_GLASS_GLSL = /* glsl */ `
+// El paño de cerca del último vidrio leído (en metros del módulo) y cuánto vale de cerca: lo usa el vano hundido.
+vec4 lookPaneRect = vec4(0.0);
+vec2 lookPaneF = vec2(0.0);
+float lookPaneW = 0.0;
+
 LookSurface lookGlassSurface(vec3 rgb, float glass, float lit) {
   LookSurface s;
   s.rgb = rgb;
@@ -41,6 +46,8 @@ LookSurface lookGlassNear(float m, vec2 p, vec2 aa, float seed) {
   LookSurface s = lookGlassSurface(mix(mix(pane, panel, inPanel), t1.rgb, frame), glass, lit);
   // Brillo y relieve (D-23): paño hundido con reflejo, antepecho y acento abombados, perfil al ras.
   vec4 paneRect = vec4(halfFrame, size.x - halfFrame, t2.a > 0.0 ? t2.a + halfFrame : halfFrame, size.y - halfFrame);
+  lookPaneRect = paneRect;
+  lookPaneF = f;
   vec2 paneG = accentPane ? vec2(1.0, lookPanelPillow(f, paneRect, aa)) : lookPaneGloss(f, paneRect, aa);
   float panelH = t2.a > 0.0 ? lookPanelPillow(f, vec4(halfFrame, size.x - halfFrame, halfFrame, t2.a - halfFrame), aa) : 0.0;
   s.shade = mix(mix(paneG.x, 1.0, inPanel), 1.0, frame);

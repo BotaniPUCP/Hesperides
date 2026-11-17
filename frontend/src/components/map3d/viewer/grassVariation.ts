@@ -35,7 +35,7 @@ const FRAGMENT_COLOR = /* glsl */ `
 if (grassVariation > 0.0) {
   float n = grassNoise(vGrassXZ / 9.0) * 0.6 + grassNoise(vGrassXZ / 37.0 + 11.0) * 0.4;
   // De más verde y oscuro a más seco y claro.
-  vec3 tint = mix(vec3(0.82, 0.95, 0.8), vec3(1.14, 1.06, 0.82), smoothstep(0.25, 0.8, n));
+  vec3 tint = mix(vec3(0.88, 0.96, 0.86), vec3(1.15, 1.06, 0.82), smoothstep(0.2, 0.75, n));
   diffuseColor.rgb *= mix(vec3(1.0), tint, grassVariation);
 }
 `;

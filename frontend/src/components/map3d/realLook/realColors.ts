@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Polygon } from '../sceneData';
 import type { PolyLayer } from '../viewer/polyLayer';
 import { classifyBuilding, type FaceAttributes } from './classifyFaces';
-import { createLookMaterial, setLookEmissiveDesat, setLookEnvIntensity, setLookGlassEnv, setLookGlow, setLookInterior } from './lookMaterial';
+import { createLookMaterial, setLookContact, setLookEmissiveDesat, setLookPaneInset, setLookRoofRough, setLookEnvIntensity, setLookGlassEnv, setLookGlow, setLookInterior } from './lookMaterial';
 import { buildLookTable } from './lookTable';
 import type { BuildingLook } from './types';
 import { validateLooks } from './validateLook';
@@ -26,6 +26,9 @@ export interface RealColors {
   setInterior: (color: THREE.Color) => void;
   setEmissiveDesat: (amount: number) => void;
   setEnvIntensity: (intensity: number) => void;
+  setRoofRough: (rough: number) => void;
+  setPaneInset: (insetM: number) => void;
+  setContact: (amount: number) => void;
 }
 
 export interface LookedBuilding {
@@ -102,6 +105,9 @@ export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], 
     setInterior: (color) => setLookInterior(real, color),
     setEmissiveDesat: (amount) => setLookEmissiveDesat(real, amount),
     setEnvIntensity: (intensity) => setLookEnvIntensity(real, intensity),
+    setRoofRough: (rough) => setLookRoofRough(real, rough),
+    setPaneInset: (insetM) => setLookPaneInset(real, insetM),
+    setContact: (amount) => setLookContact(real, amount),
   };
 }
 

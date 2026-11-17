@@ -317,8 +317,9 @@ export function buildCity(data: CityData, toScene: ToScene, campus: number[][], 
       if (pointInRing(x, y, ring)) trees.push([x, y, 3 + rnd() * 3]);
     }
   }
-  const crown = new THREE.InstancedMesh(leafyCrown(0x7ee5, 40),
-    leafMaterials(leafTexture(), new THREE.MeshStandardMaterial({ color: '#4a6532', roughness: 0.85 })).material, trees.length);
+  const leaves = leafMaterials(leafTexture(), new THREE.MeshStandardMaterial({ color: '#4a6532', roughness: 0.85 }));
+  const crown = new THREE.InstancedMesh(leafyCrown(0x7ee5, 40), leaves.material, trees.length);
+  crown.customDepthMaterial = leaves.depth;
   const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.2, 1, 5).translate(0, 0.5, 0),
     new THREE.MeshStandardMaterial({ color: '#4d3d30', roughness: 1 }), trees.length);
   trees.forEach(([x, y, r], k) => {

@@ -39,7 +39,7 @@ export const FINISH_LIGHT: Record<Finish, FinishLight> = {
 };
 
 /** Paños del vidrio y sus perfiles (D-19). */
-export const GLASS_LIGHT = { pane: { rough: 0.18, metal: 0.1 }, frame: { rough: 0.6, metal: 0.2 } } as const;
+export const GLASS_LIGHT = { pane: { rough: 0.07, metal: 0.1 }, frame: { rough: 0.5, metal: 0.2 } } as const;
 /**
  * De noche (D-19): qué parte de los paños se enciende, el desfase de su hash respecto del de los acentos, su luz
  * y su intensidad. Cada paño encendido tiene su nivel, de `dim` a 1, para que no se lean como calcomanías.

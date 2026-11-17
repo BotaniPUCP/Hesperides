@@ -12,6 +12,8 @@ import { attachAdminMovement } from '../pilot/adminMovement';
 import { attachAdminAnchor } from './adminAnchor';
 import { createLights } from './lighting';
 import { setGrassVariation } from './grassVariation';
+import { createCascadeShadows, type CascadeShadows } from './cascadeShadows';
+import { createParapets } from './parapets';
 import { createSunset, duskOf, setGroundMatte, SUNSET, SUNSET_HOUR, SUNSET_MAX_POLAR, sunsetPose } from './sunset';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
@@ -62,8 +64,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
   const lights = createLights(scene, center, coarse);
   let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true, golden = false, sunsetHour: number = SUNSET_HOUR;
+  // Las sombras en cascada se crean la primera vez que se prende el modo; registran todo material que aparezca.
+  let cascades: CascadeShadows | null = null;
   const sunset = createSunset(renderer, scene, rig.camera, stage.box, WORLD_LIFT,
-    { plane: data.plane, campus: data.campus, onChange: () => { needsRender = true; }, lite: coarse });
+    { plane: data.plane, campus: data.campus, onChange: () => { cascades?.adopt(scene); needsRender = true; }, lite: coarse });
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
   const poly = createSceneLayers(scene, data, textures, state, model);
@@ -92,6 +96,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     realColors.setEnabled(true);
     setEdgesForRealColors(poly.campusBuildings.extra, true);
   }
+  // Parapetos sobre los techos planos del campus, para el modo.
+  const parapets = createParapets(scene, data.campusBuildings.map((b) => b.g),
+    (poly.campusBuildings.mesh.geometry as THREE.BufferGeometry).attributes.position.array, poly.campusBuildings.starts,
+    poly.campusBuildings.mesh.position.y);
   const paletteColor = poly.campusBuildings.options.color;
   // En modo real el edificio con ficha se pinta neutro: el shader pone su color, y el resaltado lo tiñe.
   poly.campusBuildings.options.color = (i) => realColors.enabled() && realColors.hasLook(i) && !markedBuildings.has(i)
@@ -153,11 +161,20 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     sunset.setEnabled(dusk, lights.sunDir(), twilight);
     stage.backdrop.style.visibility = dusk ? 'hidden' : '';
     vegetation.setGolden(dusk);
+    if (dusk && !cascades) cascades = createCascadeShadows(scene, rig.camera);
+    cascades?.adopt(scene);
+    cascades?.setEnabled(dusk, lights.sunDir(), lights.sun.color, lights.sun.intensity);
+    lights.setSunActive(!dusk);
     realColors.setGlassEnv(dusk ? SUNSET.glassEnv : GLASS_ENV_BOOST);
     realColors.setInterior(dusk ? SUNSET.interior.clone().multiplyScalar(1 + 1.5 * twilight) : NO_INTERIOR);
     realColors.setEmissiveDesat(dusk ? SUNSET.emissiveDesat : 0);
     // El cielo del atardecer es casi todo naranja: reflejado de lleno, tiñe las caras en sombra.
-    realColors.setEnvIntensity(dusk ? 0.18 : 0.35);
+    // El cielo de día ya no es naranja: el reflejo puede ir completo (techos satinados, vidrio pulido).
+    realColors.setEnvIntensity(dusk ? 1 : 0.35);
+    realColors.setRoofRough(dusk ? 0.5 : -1);
+    realColors.setPaneInset(dusk ? SUNSET.paneInsetM : 0);
+    realColors.setContact(dusk ? 0.45 : 0);
+    parapets.visible = dusk && poly.campusBuildings.mesh.visible;
     // El césped lleva un ocre por vértice (el degradado del mapa); al atardecer se apaga y se manchan los tonos.
     poly.greenAreas.warmColor = dusk ? null : GRASS_WARM;
     setGrassVariation(poly.greenAreas.mesh.material as THREE.Material, dusk);
@@ -174,6 +191,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     const { w, h } = size();
     stage.resize(w, h);
     sunset.resize(w, h);
+    cascades?.resize();
     rig.camera.aspect = w / h;
     rig.camera.updateProjectionMatrix();
     applyTheme();
@@ -235,7 +253,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     if (Math.abs(distance - lastDistance) / Math.max(lastDistance, 1) > 0.04) { scaleFurniture(Object.values(points), distance); lastDistance = distance; }
     if (flew || moved || needsRender || rig.controls.autoRotate) {
       lights.follow(rig.controls.target, distance);
-      if (sunset.enabled()) sunset.render(distance); else renderer.render(scene, rig.camera);
+      if (sunset.enabled()) { cascades?.update(); sunset.render(distance); } else renderer.render(scene, rig.camera);
       const { w, h } = size();
       labels.update(rig.camera, w, h, labelVisible);
       balloons?.update(rig.camera, w, h, distance);
@@ -346,7 +364,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       lights.follow(rig.controls.target, distance);
       const shown = markers.visible;
       markers.visible = false;
-      if (sunset.enabled()) sunset.render(distance); else renderer.render(scene, rig.camera);
+      if (sunset.enabled()) { cascades?.update(); sunset.render(distance); } else renderer.render(scene, rig.camera);
       markers.visible = shown;
       const blob = await new Promise<Blob | null>((resolve) => renderer.domElement.toBlob(resolve, 'image/png'));
       renderer.setPixelRatio(ratio);
@@ -431,6 +449,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       adminAnchor.dispose();
       cones.dispose();
       incidents.dispose();
+      cascades?.dispose();
       sunset.dispose();
       stage.dispose();
     },

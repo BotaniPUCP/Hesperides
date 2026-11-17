@@ -22,7 +22,7 @@ vec3 sunsetFinite(vec3 c) { return vec3(sunsetFinite(c.r), sunsetFinite(c.g), su
 export const GRADE = {
   vignette: 0.2,
   /** Oclusión: radio en metros, cuánto oscurece y hasta qué distancia de la cámara se ve (después la bruma manda). */
-  ao: { radiusM: 5, strength: 1.35, farM: 1800 },
+  ao: { radiusM: 3, strength: 1.6, farM: 1800 },
   /** Aristas que miran al sol: su brillo ámbar y hasta qué distancia se ven. */
   edge: { color: [1.0, 0.52, 0.2], strength: 0.55, farM: 1100 },
   /** Rayos de sol: cuánto avanza cada muestra hacia el sol, cuánto se apagan y su color. */
@@ -214,6 +214,11 @@ export class SunsetGradePass extends ShaderPass {
   /** Hacia dónde está el sol (en la escena); el pase lo lleva a la vista en cada cuadro. */
   setSun(dir: THREE.Vector3) {
     this.sunWorld.copy(dir).normalize();
+  }
+
+  /** Cuánto se ven los rayos de sol (1, los de la hora dorada; con el sol alto, menos). */
+  setRays(amount: number) {
+    this.uniforms.uRayColor.value.set(...GRADE.rays.color.map((v) => v * GRADE.rays.strength * amount) as [number, number, number]);
   }
 
   /** La cota de la calle y el color de la bruma baja (el del horizonte). */

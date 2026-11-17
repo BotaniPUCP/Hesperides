@@ -1,3 +1,4 @@
+import { GLASS_LIGHT } from '../finishes';
 import { facadeColor } from '../facadeColor';
 import { buildLookTable } from '../lookTable';
 import type { BuildingLook, Material, Side, Zone } from '../types';
@@ -212,9 +213,10 @@ describe('facadeColor: acabados y luz (SPEC-112 D-17 a D-19)', () => {
 
   it('el paño del vidrio es liso y algo metálico; el perfil, menos', () => {
     const s = sampler({ faces: { N: [{ material: 'vidrio', u: [0, 10], v: [0, 8] }] } });
-    expect(s.at('N', 1, 2).rough).toBeCloseTo(0.18, 2);
-    expect(s.at('N', 1, 2).metal).toBeCloseTo(0.1, 2);
-    expect(s.at('N', 2, 2).rough).toBeCloseTo(0.6, 2);
+    expect(s.at('N', 1, 2).rough).toBeCloseTo(GLASS_LIGHT.pane.rough, 2);
+    expect(s.at('N', 1, 2).metal).toBeCloseTo(GLASS_LIGHT.pane.metal, 2);
+    expect(s.at('N', 2, 2).rough).toBeCloseTo(GLASS_LIGHT.frame.rough, 2);
+    expect(GLASS_LIGHT.pane.rough).toBeLessThan(GLASS_LIGHT.frame.rough);
   });
 });
 

@@ -44,6 +44,9 @@ export function createLookMaterial(table: LookTable): THREE.MeshStandardMaterial
     lookGlassEnv: { value: GLASS_ENV_BOOST },
     lookInterior: { value: new THREE.Color(0, 0, 0) },
     lookEmissiveDesat: { value: 0 },
+    lookRoofRough: { value: -1 },
+    lookPaneInset: { value: 0 },
+    lookContact: { value: 0 },
   };
   material.userData.lookUniforms = uniforms;
   // fwidth y dFdx en WebGL1; en WebGL2 ya vienen. Los tipos de three 0.147 solo lo declaran en ShaderMaterial.
@@ -65,6 +68,21 @@ export function createLookMaterial(table: LookTable): THREE.MeshStandardMaterial
 /** De noche se encienden los paños elegidos del vidrio (SPEC-112 D-19); de día, nada. */
 export function setLookNight(material: THREE.Material, night: boolean): void {
   setLookGlow(material, night ? 1 : 0);
+}
+
+/** Cuánto se oscurece la base de cada pared (0 a 1). */
+export function setLookContact(material: THREE.Material, amount: number): void {
+  material.userData.lookUniforms.lookContact.value = amount;
+}
+
+/** Cuánto se hunden los paños de vidrio respecto de la fachada (0, al ras). */
+export function setLookPaneInset(material: THREE.Material, insetM: number): void {
+  material.userData.lookUniforms.lookPaneInset.value = insetM;
+}
+
+/** La rugosidad de los techos; negativa, la de cada ficha. */
+export function setLookRoofRough(material: THREE.Material, rough: number): void {
+  material.userData.lookUniforms.lookRoofRough.value = rough;
 }
 
 /** Desatura la luz de las ventanas hacia su luminancia (0 a 1). */
