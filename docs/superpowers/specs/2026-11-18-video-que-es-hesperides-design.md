@@ -107,11 +107,38 @@ No se promete app móvil, modo sin conexión, avisos por vencimiento ni plazos 2
   `aDos: true`, música y `Acabado`.
 - Nuevos `EscenaId` y sus suelos en `recorrido.ts`; `Guion.velocidad` opcional.
 
-## 6. Para regenerar
+## 6. Segunda versión (`que-es-hesperides-2.mp4`)
+
+Mismo contenido y estilo (al usuario le gustó la primera); mejoras tomadas de las reglas de
+remotion-dev/skills (todo con `useCurrentFrame`, `interpolate`, `Easing.bezier`; sin animaciones CSS):
+
+- **Sin vaivén**: los árboles del campus ya no se mecen (`Campus quieto`); no hay deriva ni balanceo de cámara.
+  Quedan la órbita del globo, los vuelos del mapa, el paneo de don Julio y el temblor de los tres golpes.
+- **Efectos de sonido propios** (`scripts/generar_sfx.py`, numpy, `npm run sfx` → `public/sfx`): barrido suave en
+  cada corte, clic al enviar, al aprobar y al cerrar, pop y campanita cuando brota el globo y cuando brota Hespo,
+  golpe en el sello «Cerrada», papel en las hojas de cálculo. Más bajos mientras habla la voz (×0,6). Los momentos
+  están en `src/queEs/momentos.ts`, compartidos por escenas y sonidos. Sin los WAV el render falla con el comando.
+- **Transiciones** con `@remotion/transitions` 4.0.540 en una `TransitionSeries` que no mueve la voz
+  (`src/queEs/serie.ts`): fundido, cortina (wipe desde la izquierda, que descubre sin desplazar) o iris por corte;
+  nada desliza de lado a lado. Los otros videos siguen con su fundido propio.
+- **Destellos cálidos** en tres cortes (vuelo → Lucía, cuadrilla → globo, juntos → logo). Son propios en CSS
+  (`destello.tsx`): el `lightLeak` de `@remotion/effects` 4.0.540 se dibuja con WebGPU, que el Chrome sin pantalla
+  del render no garantiza.
+- **Trazos a mano** con `@remotion/rough-notation` 4.0.540 sobre las pantallas reales: caja en el texto del reporte,
+  círculo en «Aprobar registro», subrayado de la cuadrilla y del aviso de cruce, círculos en «Validada»/«Ejecutada»,
+  caja en la intervención dentro de la historia del jardín, círculo blanco en el globo, círculo en «Actualizar
+  detalle», subrayado de cada paso firmado y círculo en «Incidencias abiertas».
+- **«Zonas de más atención»**: campo generativo de partículas que suben despacio (`campo.ts`) alrededor de los
+  globos reales de incidencias abiertas, con el rótulo «Ilustración: capa de ejemplo».
+- **Desenfoque de movimiento: no se usó.** `HtmlInCanvasMotionBlur` necesita la bandera experimental HTML-in-canvas
+  de Chrome y las tomas del mapa son capturas discretas (no hay cuadros fraccionarios que promediar).
+
+## 7. Para regenerar
 
 ```
 npx tsx scripts/capturas-que-es-hesperides.ts  # SOLO=vuelo,pantallas y luego SOLO=globo,alejar (ver cabecera)
 .venv/Scripts/python scripts/generar_voz.py --guion guion-que-es-hesperides.json --salida public/voz/que-es-hesperides
 python scripts/generar_musica.py --salida public/musica/que-es-hesperides.wav --duracion 206.5 --secciones "0:manana,52:problema,78:solucion"
+npm run sfx
 npm run render:que-es
 ```
