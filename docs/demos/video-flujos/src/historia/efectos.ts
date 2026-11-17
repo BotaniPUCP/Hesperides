@@ -30,8 +30,8 @@ export function efectosDeHistoria(linea: Linea): Disparo[] {
   const solucion = escena(linea, 'solucion');
   const resultado = escena(linea, 'resultado');
   const disparos: Disparo[] = [
-    // El whoosh llega a su punto más alto justo en el corte.
-    ...linea.escenas.slice(1).map((e) => ({ efecto: 'whoosh' as const, frame: e.desde - 10, volumen: 0.45 })),
+    // El whoosh llega a su punto más alto a mitad de la transición (que ocupa los 18 cuadros previos).
+    ...linea.escenas.slice(1).map((e) => ({ efecto: 'whoosh' as const, frame: e.desde - 19, volumen: 0.45 })),
     { efecto: 'crujido', frame: golpe('grieta') - 2, volumen: 0.6 },
     { efecto: 'pop', frame: golpe('brote') - 3, volumen: 0.6 },
     // Don Julio envía el reporte; el jefe lo activa.

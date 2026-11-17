@@ -47,9 +47,25 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
   const reserva = linea.escenas[0].frases[0].archivo;
   const apertura = useApertura(config.carpetaVoz, tramo?.archivo ?? null, tramo ? frame - tramo.desde : 0, reserva);
   const boca = useFormaBoca(config.carpetaVoz, tramo?.archivo ?? null, tramo ? frame - tramo.desde : 0, reserva);
-  const Escena = componenteDeEscena(config, escena.id);
   const Capa = config.capaEscena ?? SinCapa;
-  const local = config.retiempo ? config.retiempo(frame) : frame;
+  /** Una escena con su Hespo en el cuadro absoluto `f` (con la serie de transiciones hay dos a la vez). */
+  const dibujarEscena = (e: TramoEscena, f: number) => {
+    const Escena = componenteDeEscena(config, e.id);
+    const local = config.retiempo ? config.retiempo(f) : f;
+    const escala = config.escalas[e.id] ?? 1;
+    return (
+      <Capa frame={f} escena={e}>
+        <Escena escena={e} frame={local} />
+        {config.hespo === 'semilla' ? (
+          <SemillaEnVideo escena={e} frame={local} boca={boca} escala={escala} />
+        ) : config.hespo === '3d' ? (
+          <HespoEnEscena3D estado={estadoHespo(e, local)} frame={local} apertura={apertura} escala={escala} />
+        ) : (
+          <Hespo estado={estadoHespo(e, local)} frame={local} apertura={apertura} escala={escala} />
+        )}
+      </Capa>
+    );
+  };
 
   // Escena y Hespo se desvanecen juntos: así el salto de Hespo a la siguiente entrada no se ve.
   const opacidad = opacidadDeEscena(linea, escena, frame);
@@ -59,18 +75,7 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
   return (
     <AbsoluteFill style={{ fontFamily }}>
       <Escenario />
-      <AbsoluteFill style={{ opacity: opacidad }}>
-        <Capa frame={frame} escena={escena}>
-          <Escena escena={escena} frame={local} />
-          {config.hespo === 'semilla' ? (
-            <SemillaEnVideo escena={escena} frame={local} boca={boca} escala={config.escalas[escena.id] ?? 1} />
-          ) : config.hespo === '3d' ? (
-            <HespoEnEscena3D estado={estadoHespo(escena, local)} frame={local} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
-          ) : (
-            <Hespo estado={estadoHespo(escena, local)} frame={local} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
-          )}
-        </Capa>
-      </AbsoluteFill>
+      {config.serie ? config.serie(dibujarEscena) : <AbsoluteFill style={{ opacity: opacidad }}>{dibujarEscena(escena, frame)}</AbsoluteFill>}
       <Subtitulos texto={subtitulo} />
       {linea.escenas
         .flatMap((e) => e.frases)

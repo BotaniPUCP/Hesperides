@@ -4,12 +4,13 @@ import { Acabado } from './historia/Acabado';
 import { camaraEn, planosDeHistoria, transformarToma } from './historia/camara';
 import { efectosDeHistoria, rutaEfecto } from './historia/efectos';
 import { CapaDeGolpes } from './historia/Golpes';
+import { SerieDeEscenas } from './historia/SerieDeEscenas';
 import { TomaContexto } from './historia/HojasDePapel';
 import { cuadroConPausa, golpesDeHistoria, pausasDe } from './historia/impacto';
 import type { ConfigVideo } from './escenas/componentes';
 import { Aparece, Hoy, Manana, Resultado, Solucion } from './historia/escenas';
 import { crearMedida, MedidasContexto, type Medidas } from './pagina/medidasCargadas';
-import type { Linea } from './tiempos';
+import { FRAMES_TRANSICION, type Linea } from './tiempos';
 import { VideoBase } from './VideoBase';
 
 export type PropsVideoHistoria = {
@@ -52,7 +53,9 @@ const Contenido: React.FC<{ linea: Linea; medidas: Medidas; camaraQuieta: boolea
         </TomaContexto.Provider>
       );
     };
-    return { ...BASE, capaEscena: Capa, retiempo: (f) => cuadroConPausa(f, pausas) };
+    const total = linea.framesTotales + FRAMES_COLA_HISTORIA;
+    const serie: ConfigVideo['serie'] = (dibujar) => <SerieDeEscenas linea={linea} total={total} transicion={FRAMES_TRANSICION} dibujar={dibujar} />;
+    return { ...BASE, capaEscena: Capa, retiempo: (f) => cuadroConPausa(f, pausas), serie };
   }, [linea, camaraQuieta]);
   return (
     <MedidasContexto.Provider value={medida}>

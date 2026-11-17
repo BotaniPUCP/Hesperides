@@ -18,6 +18,11 @@ export type ConfigVideo = {
   capaEscena?: React.FC<{ frame: number; escena: TramoEscena; children: React.ReactNode }>;
   /** Reloj de la animación de la escena y de Hespo (p. ej. pausas de impacto); la voz no cambia. */
   retiempo?: (frame: number) => number;
+  /**
+   * Si está, dibuja las escenas en vez del fundido simple (p. ej. una TransitionSeries): recibe
+   * cómo dibujar una escena en un cuadro absoluto.
+   */
+  serie?: (dibujar: (escena: TramoEscena, frame: number) => React.ReactNode) => React.ReactNode;
 };
 
 export function componenteDeEscena(config: ConfigVideo, id: EscenaId): React.FC<PropsEscena> {
