@@ -4,6 +4,7 @@ Tres secciones que siguen la historia: mañana tranquila, problema más melancó
 aparece Hespo, completa y luminosa. Determinista (semilla fija): cada ejecución da el mismo WAV.
 
 Uso: python scripts/generar_musica.py [--salida public/musica/historia.wav] [--duracion 80]
+        [--secciones "0:manana,14:problema,33:solucion"]
 """
 
 import argparse
@@ -86,18 +87,40 @@ def sumar(destino: np.ndarray, sonido: np.ndarray, inicio: float, ganancia: floa
     destino[i:fin, 1] += trozo * (1 + paneo) / 1.0
 
 
-def generar(duracion: float) -> np.ndarray:
+PROGRESIONES = {
+    "manana": ["G", "D", "Em", "C"],
+    "problema": ["Em", "C", "G", "D"],
+    "solucion": ["G", "D", "Em", "C"],
+}
+SECCIONES_HISTORIA = "0:manana,14:problema,33:solucion"
+
+
+def leer_secciones(texto: str | None) -> list[tuple[float, str]]:
+    """«0:manana,14:problema,33:solucion» → cortes en segundos, en orden y desde 0."""
+    cortes = []
+    for parte in (texto or SECCIONES_HISTORIA).split(","):
+        inicio, nombre = parte.split(":")
+        if nombre not in PROGRESIONES:
+            raise ValueError(f"Sección desconocida: {nombre}")
+        cortes.append((float(inicio), nombre))
+    if cortes[0][0] != 0 or any(b[0] <= a[0] for a, b in zip(cortes, cortes[1:])):
+        raise ValueError("Las secciones empiezan en 0 y van en orden")
+    return cortes
+
+
+def seccion_en(t: float, cortes: list[tuple[float, str]]) -> str:
+    return [nombre for inicio, nombre in cortes if inicio <= t][-1]
+
+
+def generar(duracion: float, cortes: list[tuple[float, str]] | None = None) -> np.ndarray:
+    cortes = cortes or leer_secciones(None)
     rng = np.random.default_rng(2026)
     mezcla = np.zeros((int(duracion * TASA), 2))
     compases = int(np.ceil(duracion / COMPAS))
     for c in range(compases):
         t0 = c * COMPAS
-        if t0 < 14:
-            seccion, progresion = "manana", ["G", "D", "Em", "C"]
-        elif t0 < 33:
-            seccion, progresion = "problema", ["Em", "C", "G", "D"]
-        else:
-            seccion, progresion = "solucion", ["G", "D", "Em", "C"]
+        seccion = seccion_en(t0, cortes)
+        progresion = PROGRESIONES[seccion]
         acorde = progresion[c % 4]
         frecs = frecuencias(acorde)
         sumar(mezcla, pad(frecs, COMPAS), t0, 0.16 if seccion != "problema" else 0.19)
@@ -123,8 +146,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--salida", default="public/musica/historia.wav")
     parser.add_argument("--duracion", type=float, default=80.0)
+    parser.add_argument("--secciones", help="Cortes «segundo:sección» separados por coma (manana, problema, solucion)")
     args = parser.parse_args()
-    datos = (generar(args.duracion) * 32767).astype(np.int16)
+    datos = (generar(args.duracion, leer_secciones(args.secciones)) * 32767).astype(np.int16)
     salida = Path(args.salida)
     salida.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(salida), "wb") as w:
