@@ -17,16 +17,22 @@
     "capturas": "tsx scripts/capturas.ts",
     "capturas:planificacion": "tsx scripts/capturas-planificacion.ts",
     "capturas:venta": "tsx scripts/capturas-venta.ts",
-    "capturas:que-es": "tsx scripts/capturas-que-es-hesperides.ts"
+    "capturas:que-es": "tsx scripts/capturas-que-es-hesperides.ts",
+    "sfx": "python scripts/generar_sfx.py --salida public/sfx"
   },
   "dependencies": {
     "@react-three/fiber": "9.1.2",
     "@remotion/bundler": "4.0.540",
     "@remotion/cli": "4.0.540",
+    "@remotion/effects": "4.0.540",
     "@remotion/google-fonts": "4.0.540",
+    "@remotion/light-leaks": "4.0.540",
     "@remotion/media-utils": "4.0.540",
+    "@remotion/motion-blur": "4.0.540",
     "@remotion/renderer": "4.0.540",
+    "@remotion/rough-notation": "4.0.540",
     "@remotion/three": "4.0.540",
+    "@remotion/transitions": "4.0.540",
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "remotion": "4.0.540",
