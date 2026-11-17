@@ -25,16 +25,16 @@ it('muestra cada actividad y conserva el ejemplar al paginar',async()=>{
   expect(screen.getByRole('link',{name:'Ver listado completo'})).toHaveAttribute('href','/intervenciones?greenElementId=1&greenElementCode=EV-000001');
   expect(screen.getAllByRole('listitem')).toHaveLength(1);
   fireEvent.click(screen.getByRole('button',{name:'Siguiente'}));
-  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,1));
+  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,undefined,1));
 });
 it('revalida el historial al recuperar el foco y conserva la página actual',async()=>{
   const view=render(<SpecimenInterventions id={1} code="EV-000001" refreshKey={0}/>);
   await screen.findByRole('link',{name:'INT-000001'});
   fireEvent.click(screen.getByRole('button',{name:'Siguiente'}));
-  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,1));
+  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,undefined,1));
 
   view.rerender(<SpecimenInterventions id={1} code="EV-000001" refreshKey={1}/>);
-  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,1));
+  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(1,'','','',undefined,undefined,1));
   expect(interventionsApi.list).toHaveBeenCalledTimes(3);
 });
 it('distingue ausencia de trabajos autorizados de un fallo recuperable',async()=>{

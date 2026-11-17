@@ -99,8 +99,9 @@ it('filtrar conserva la identidad inmutable cuando el código puede reutilizarse
 
   fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'COMPLETED' } });
 
-  await waitFor(() => expect(window.location.search).toBe('?greenElementCode=EV-000001&greenElementId=42&status=COMPLETED'));
-  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, 'COMPLETED', '', '', undefined, '42'));
+  // Con un estado elegido, el filtro de actividad pasa a «Todas» y queda en la URL.
+  await waitFor(() => expect(window.location.search).toBe('?greenElementCode=EV-000001&greenElementId=42&status=COMPLETED&activity=all'));
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, 'COMPLETED', '', '', undefined, undefined, '42'));
 });
 
 it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de cero', async () => {

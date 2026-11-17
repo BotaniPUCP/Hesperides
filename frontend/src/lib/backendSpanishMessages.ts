@@ -75,6 +75,12 @@ export const SPANISH_BACKEND_MESSAGES: readonly RegExp[] = [
   /^Envía ambas fechas del periodo o ninguna$/,
   /^La fecha final no puede ser anterior a la inicial$/,
   /^El periodo no puede superar \d+ días$/,
+  // Ciclo de vida de especies y ejemplares (inventario verde): nacieron en español.
+  /^Los ejemplares nuevos solo pueden vincularse a especies activas$/,
+  /^El nombre científico contiene caracteres o puntuación no permitidos$/,
+  /^La especie está inactiva y no puede editarse ni reactivarse$/,
+  /^La especie ya está inactiva y no puede reactivarse$/,
+  /^El ejemplar ya está inactivo y no puede reactivarse$/,
   // Política de contraseñas (SPEC-001)
   /^La contraseña (es obligatoria|debe tener al menos \d+ caracteres|no puede superar los \d+ caracteres|no puede contener tus datos personales)$/,
   /^La contraseña debe incluir al menos (una letra minúscula|una letra mayúscula|un dígito)$/,

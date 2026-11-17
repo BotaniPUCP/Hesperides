@@ -27,7 +27,9 @@ describe('EstandaresScreen', () => {
 
   it.each(ESTANDARES.map((e) => [e.titulo, e] as const))('las columnas de %s son las de su plantilla, en su orden', (_, e) => {
     // La plantilla es la misma que sirve el backend (se lee del mismo archivo).
-    const plantilla = readFileSync(join(__dirname, '../../../../../backend/src/main/resources/imports/templates', e.archivo), 'utf8');
+    // Las plantillas llevan BOM para que Excel las abra en UTF-8.
+    const plantilla = readFileSync(join(__dirname, '../../../../../backend/src/main/resources/imports/templates', e.archivo), 'utf8')
+      .replace(/^\uFEFF/, '');
     const cabecera = plantilla.split(/\r?\n/)[0].split(';');
 
     expect(e.grupos.flatMap((g) => g.columnas.map((c) => c.nombre))).toEqual(cabecera);
