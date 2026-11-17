@@ -39,6 +39,8 @@ export const SUNSET = {
   city: { blockM: 70, streetM: 18, innerMarginM: 60, outerM: 4200, fill: 0.8, trees: 14000, lowWithinM: 700 },
   /** Cuánto se encienden las ventanas al atardecer respecto de la noche. */
   windowGlow: 5,
+  /** Cuánto refleja el cielo el vidrio de las fachadas (el modo de siempre usa 2). */
+  glassEnv: 3.5,
 } as const;
 
 /** Pseudoaleatorio con semilla: la ciudad de relleno no cambia entre cargas. */
@@ -292,6 +294,7 @@ export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, 
       if (next) {
         loadCity();
         setSun(sunDir);
+        grade.setSun(sunDir);
         bakeEnvironment(sunDir);
         scene.environment = env?.texture ?? null;
         scene.fog = fog;

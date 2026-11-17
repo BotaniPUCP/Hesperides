@@ -3,6 +3,7 @@ import { GLASS_NIGHT } from './finishes';
 import {
   LOOK_COLOR_FRAGMENT, LOOK_EMISSIVE_FRAGMENT, LOOK_LIGHT_HEAD, LOOK_LIGHTS_FRAGMENT, LOOK_METALNESS_FRAGMENT, LOOK_NORMAL_FRAGMENT,
   LOOK_ROUGHNESS_FRAGMENT,
+  GLASS_ENV_BOOST,
 } from './lookLightShader';
 import type { LookTable } from './lookTable';
 import { LOOK_FRAGMENT_HEAD, LOOK_VERTEX_BODY, LOOK_VERTEX_HEAD } from './lookShader';
@@ -40,6 +41,7 @@ export function createLookMaterial(table: LookTable): THREE.MeshStandardMaterial
   });
   const uniforms = {
     lookTable: { value: lookTexture(table) }, lookRows: { value: table.height }, lookNightGlow: { value: NO_GLOW.clone() },
+    lookGlassEnv: { value: GLASS_ENV_BOOST },
   };
   material.userData.lookUniforms = uniforms;
   // fwidth y dFdx en WebGL1; en WebGL2 ya vienen. Los tipos de three 0.147 solo lo declaran en ShaderMaterial.
@@ -61,6 +63,11 @@ export function createLookMaterial(table: LookTable): THREE.MeshStandardMaterial
 /** De noche se encienden los paños elegidos del vidrio (SPEC-112 D-19); de día, nada. */
 export function setLookNight(material: THREE.Material, night: boolean): void {
   setLookGlow(material, night ? 1 : 0);
+}
+
+/** Cuánto refleja el cielo el vidrio respecto de un muro (SPEC-112 D-19); el Atardecer lo sube. */
+export function setLookGlassEnv(material: THREE.Material, boost: number): void {
+  material.userData.lookUniforms.lookGlassEnv.value = boost;
 }
 
 /** Cuánto se encienden los paños elegidos, respecto de la noche: al atardecer también, y más (modo Atardecer). */

@@ -11,6 +11,8 @@ export const GLASS_ENV_BOOST = 2;
 
 export const LOOK_LIGHT_HEAD = /* glsl */ `
 uniform vec3 lookNightGlow;
+/** Cuánto más refleja el cielo el vidrio que un muro; el Atardecer lo sube. */
+uniform float lookGlassEnv;
 
 // perturbNormalArb de three (bumpmap_pars_fragment), que solo se declara con un bumpMap: aquí la altura es el relieve.
 vec3 lookBump(vec3 surfPos, vec3 surfNorm, vec2 dHdxy, float faceDir) {
@@ -67,5 +69,5 @@ totalEmissiveRadiance += lookNightGlow * lookLit;
 
 export const LOOK_LIGHTS_FRAGMENT = /* glsl */ `
 #include <lights_fragment_end>
-reflectedLight.indirectSpecular *= mix(1.0, ${GLASS_ENV_BOOST.toFixed(1)}, lookGlass);
+reflectedLight.indirectSpecular *= mix(1.0, lookGlassEnv, lookGlass);
 `;

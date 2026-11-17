@@ -11,6 +11,7 @@ import { createBalloonLayer } from './balloons';
 import { attachAdminMovement } from '../pilot/adminMovement';
 import { attachAdminAnchor } from './adminAnchor';
 import { createLights } from './lighting';
+import { createRoofDetails } from './roofDetails';
 import { createSunset, setGroundMatte, SUNSET, SUNSET_HOUR, SUNSET_MAX_POLAR, sunsetPose } from './sunset';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
@@ -31,6 +32,7 @@ import { createSelectionSweep, SECTION_LAYERS } from './selectionSweep';
 import { ringLines, centroid } from './geometry';
 import { BUILDING_LOOKS } from '../realLook/looks';
 import { createRealColors, NEUTRAL, setEdgesForRealColors } from '../realLook/realColors';
+import { GLASS_ENV_BOOST } from '../realLook/lookLightShader';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
 
@@ -87,6 +89,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     realColors.setEnabled(true);
     setEdgesForRealColors(poly.campusBuildings.extra, true);
   }
+  // Equipos sobre los techos planos del campus, para el Atardecer.
+  const roofs = createRoofDetails(scene, data.campusBuildings.map((b) => b.g),
+    (poly.campusBuildings.mesh.geometry as THREE.BufferGeometry).attributes.position.array, poly.campusBuildings.starts,
+    poly.campusBuildings.mesh.position.y);
   const paletteColor = poly.campusBuildings.options.color;
   // En modo real el edificio con ficha se pinta neutro: el shader pone su color, y el resaltado lo tiñe.
   poly.campusBuildings.options.color = (i) => realColors.enabled() && realColors.hasLook(i) && !markedBuildings.has(i)
@@ -144,6 +150,8 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     sunset.setEnabled(dusk, lights.sunDir());
     stage.backdrop.style.visibility = dusk ? 'hidden' : '';
     vegetation.setGolden(dusk);
+    roofs.visible = dusk && poly.campusBuildings.mesh.visible;
+    realColors.setGlassEnv(dusk ? SUNSET.glassEnv : GLASS_ENV_BOOST);
     setGroundMatte([poly.greenAreas, poly.xerophytic, poly.parking, poly.sidewalks]
       .flatMap((l) => (Array.isArray(l.mesh.material) ? l.mesh.material : [l.mesh.material])), dusk);
     realColors.setGlow(night ? 1 : dusk ? SUNSET.windowGlow : 0);

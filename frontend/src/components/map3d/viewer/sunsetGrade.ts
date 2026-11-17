@@ -23,6 +23,8 @@ export const GRADE = {
   vignette: 0.2,
   /** Oclusión: radio en metros, cuánto oscurece y hasta qué distancia de la cámara se ve (después la bruma manda). */
   ao: { radiusM: 5, strength: 1.35, farM: 1800 },
+  /** Aristas que miran al sol: su brillo ámbar y hasta qué distancia se ven. */
+  edge: { color: [1.0, 0.52, 0.2], strength: 0.55, farM: 1100 },
 } as const;
 
 const fragmentShader = /* glsl */ `
@@ -35,6 +37,8 @@ uniform mat4 uProj;
 uniform mat4 uInvProj;
 uniform vec2 uResolution;
 uniform vec3 uAo;
+uniform vec3 uSunView;
+uniform vec4 uEdge;
 varying vec2 vUv;
 
 // El ACES de three (tonemapping_pars_fragment de r147).
@@ -80,7 +84,8 @@ float ambientOcclusion(vec3 p, vec3 n) {
 void main() {
   vec3 hdr = sunsetFinite(texture2D(tDiffuse, vUv).rgb);
   float depth = texture2D(tDepth, vUv).x;
-  vec3 p = viewPos(vUv, depth);
+  // En el cielo la posición sería infinita: se la acerca al plano lejano para que las derivadas no den NaN.
+  vec3 p = viewPos(vUv, min(depth, 0.99999));
   // Las derivadas, fuera de cualquier rama.
   vec3 n = normalize(cross(dFdx(p), dFdy(p)));
   if (dot(n, -p) < 0.0) n = -n;
@@ -88,6 +93,12 @@ void main() {
     float fade = 1.0 - smoothstep(uAo.z * 0.5, uAo.z, -p.z);
     if (fade > 0.0) hdr *= mix(1.0, ambientOcclusion(p, n), fade);
   }
+  // Aristas encendidas: donde la normal cambia de golpe (una esquina) y esa cara mira al sol.
+  vec3 dn = fwidth(n);
+  float crease = smoothstep(0.35, 1.0, dn.x + dn.y + dn.z);
+  float sunny = smoothstep(0.05, 0.5, dot(n, uSunView));
+  float near = 1.0 - smoothstep(uEdge.w * 0.6, uEdge.w, -p.z);
+  if (depth < 1.0) hdr += uEdge.rgb * crease * sunny * near;
   vec3 c = gradeAces(hdr);
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   // Hora dorada: sombras hacia el azul petróleo, luces hacia el ámbar.
@@ -121,11 +132,20 @@ export class SunsetGradePass extends ShaderPass {
         uInvProj: { value: new THREE.Matrix4() },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uAo: { value: new THREE.Vector3(GRADE.ao.radiusM, GRADE.ao.strength, ao ? GRADE.ao.farM : 0) },
+        uSunView: { value: new THREE.Vector3(0, 1, 0) },
+        uEdge: { value: new THREE.Vector4(...GRADE.edge.color.map((v) => v * GRADE.edge.strength), GRADE.edge.farM) },
       },
       vertexShader,
       fragmentShader,
     });
     Object.assign(this.material, { extensions: { derivatives: true } });
+  }
+
+  private readonly sunWorld = new THREE.Vector3(0, 1, 0);
+
+  /** Hacia dónde está el sol (en la escena); el pase lo lleva a la vista en cada cuadro. */
+  setSun(dir: THREE.Vector3) {
+    this.sunWorld.copy(dir).normalize();
   }
 
   setExposure(exposure: number) {
@@ -137,6 +157,7 @@ export class SunsetGradePass extends ShaderPass {
     this.uniforms.uProj.value.copy(this.camera.projectionMatrix);
     this.uniforms.uInvProj.value.copy(this.camera.projectionMatrixInverse);
     this.uniforms.uResolution.value.set(readBuffer.width, readBuffer.height);
+    this.uniforms.uSunView.value.copy(this.sunWorld).transformDirection(this.camera.matrixWorldInverse);
     super.render(renderer, writeBuffer, readBuffer, deltaTime, maskActive);
   }
 }
