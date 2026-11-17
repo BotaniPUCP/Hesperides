@@ -13,13 +13,14 @@ import type { Viewer, ViewerStart } from '../viewer/createViewer';
 import { cameraPoseAt } from './sequencePath';
 import { playSequence } from './sequencePlayer';
 import { SWAP_AT_S } from './sequenceTimeline';
+import { useSequenceExport } from './useSequenceExport';
 
 /**
  * La secuencia de SPEC-118 a pantalla completa: el mapa sin interfaz, una toma de
  * 12 s que pasa de poca a buena calidad. Espacio la arranca; Esc vuelve al mapa.
  */
 
-type Phase = 'loading' | 'preparing' | 'ready' | 'playing' | 'done' | 'failed' | 'broken';
+type Phase = 'loading' | 'preparing' | 'ready' | 'playing' | 'done' | 'exporting' | 'failed' | 'broken';
 
 /** Cuánto se deja dibujando la buena calidad bajo el velo: compila shaders y carga la ciudad y las nubes (§6.4). */
 const PREWARM_GOOD_MS = 3000;
@@ -45,7 +46,7 @@ async function prepare(viewer: Viewer, alive: () => boolean): Promise<void> {
 const VEIL_TEXT: Partial<Record<Phase, string>> = {
   loading: 'Cargando el mapa…',
   preparing: 'Preparando…',
-  ready: 'Pulsa espacio para empezar · Esc para salir',
+  ready: 'Espacio para verla · E para exportar MP4 · Esc para salir',
   failed: 'Este navegador no puede mostrar el mapa 3D. Esc para salir.',
   broken: 'No se pudo preparar la secuencia; el detalle está en la consola. Recarga la página.',
 };
@@ -62,6 +63,8 @@ export function MapSequenceScreen() {
   const effects = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const stop = useRef<(() => void) | null>(null);
+  const exporter = useSequenceExport();
+  const [notice, setNotice] = useState<string | null>(null);
   // En desarrollo React monta, desmonta y vuelve a montar: la bandera se repone en cada montaje.
   const mounted = useRef(false);
   /** Cada visor nuevo arranca su propia preparación; solo cuenta la última. */
@@ -84,21 +87,28 @@ export function MapSequenceScreen() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { router.push('/mapa'); return; }
-      if (e.key !== ' ' || (phase !== 'ready' && phase !== 'done')) return;
-      e.preventDefault();
+      if (e.key === 'Escape') { if (phase === 'exporting') exporter.cancel(); else router.push('/mapa'); return; }
       const v = viewer.current;
-      if (!v || !effects.current || !overlay.current) return;
-      stop.current?.();
-      setPhase('playing');
-      stop.current = playSequence(v, { effects: effects.current, overlay: overlay.current }, () => setPhase('done'));
+      if ((phase !== 'ready' && phase !== 'done') || !v || !effects.current || !overlay.current) return;
+      if (e.key === ' ') {
+        e.preventDefault();
+        stop.current?.();
+        setPhase('playing');
+        stop.current = playSequence(v, { effects: effects.current, overlay: overlay.current }, () => setPhase('done'));
+      } else if (e.key.toLowerCase() === 'e') {
+        stop.current?.();
+        setNotice(null);
+        setPhase('exporting');
+        void exporter.start(v).then((failure) => { setNotice(failure); setPhase('ready'); });
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [phase, router]);
+  }, [phase, router, exporter]);
 
   const modelSettled = plan.model !== null || plan.failed;
-  const veil = !data && errorMessage ? `No se pudo cargar el mapa. ${errorMessage}` : VEIL_TEXT[phase];
+  const exporting = phase === 'exporting' ? `Exportando… ${exporter.percent ?? 0} % · Esc para cancelar` : null;
+  const veil = !data && errorMessage ? `No se pudo cargar el mapa. ${errorMessage}` : exporting ?? VEIL_TEXT[phase];
   return (
     <div className={`fixed inset-0 overflow-hidden bg-black ${phase === 'playing' || phase === 'done' ? 'cursor-none' : ''}`}>
       <div ref={effects} className="absolute inset-0 will-change-[filter,transform]">
@@ -111,7 +121,10 @@ export function MapSequenceScreen() {
       </div>
       {veil && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/85 text-lg text-white" role="status">
-          {veil}
+          <p className="max-w-xl text-center">
+            {veil}
+            {notice && phase === 'ready' && <span className="mt-3 block text-base text-red-300">{notice}</span>}
+          </p>
         </div>
       )}
     </div>

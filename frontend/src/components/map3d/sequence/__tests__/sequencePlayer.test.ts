@@ -21,6 +21,7 @@ function fakeViewer() {
     setPoseNow: jest.fn(),
     setSequenceLook: jest.fn((look) => { calls.push(`look:${look}`); }),
     freezeFrame: jest.fn(() => { calls.push('freeze'); return document.createElement('canvas'); }),
+    beginExport: jest.fn(), endExport: jest.fn(),
   };
   return { viewer, calls };
 }

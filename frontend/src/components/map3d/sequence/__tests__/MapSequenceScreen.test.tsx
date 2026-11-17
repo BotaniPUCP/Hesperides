@@ -23,11 +23,11 @@ describe('pantalla de la secuencia', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('tras preparar, pide Espacio aunque React monte dos veces (StrictMode)', async () => {
+  it('tras preparar, pide Espacio o E aunque React monte dos veces (StrictMode)', async () => {
     render(<StrictMode><MapSequenceScreen /></StrictMode>);
     expect(screen.getByRole('status')).toHaveTextContent('Preparando');
     await act(async () => { await jest.advanceTimersByTimeAsync(5000); });
-    expect(screen.getByRole('status')).toHaveTextContent('Pulsa espacio');
+    expect(screen.getByRole('status')).toHaveTextContent('Espacio para verla');
     expect(mockViewer.setSequenceLook).toHaveBeenLastCalledWith('low');
   });
 });

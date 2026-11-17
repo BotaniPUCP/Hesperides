@@ -147,3 +147,27 @@ desde cero.
 - **CA-06** Las funciones de trayectoria y cronología tienen pruebas unitarias: extremos
   (t = 0, t = 12, t < 0, t > 12), los bordes de cada tramo y la continuidad de la pose.
 - **CA-07** Verificado en un navegador real de escritorio (INV-10).
+
+## 8. Exportación a MP4 (añadido el 17 nov 2026)
+
+El equipo de Jean Piero no dibuja el Atardecer en tiempo real, así que grabar la pantalla da un
+video a tirones. La pantalla exporta la toma **cuadro a cuadro**: el reloj ya no es real, cada
+cuadro se dibuja el tiempo que haga falta y lleva su marca de tiempo exacta.
+
+- En `/secuencia`, cuando pide Espacio, **E** exporta. El velo muestra el avance («Exportando…
+  37 %») y Esc cancela. Al terminar se descarga `secuencia-mapa.mp4` y la pantalla vuelve a pedir
+  Espacio o E.
+- **1920×1080, 60 fps, H.264 en MP4**: 721 cuadros, de t = 0 a t = 12 s. La resolución no depende
+  de la ventana.
+- Los efectos de §5.3 (desenfoque, brillo, escala y cuadro congelado) se dibujan en un canvas 2D
+  por cuadro. Los filtros CSS no quedan en el video.
+- Mientras exporta, el bucle de dibujo del visor se pausa: cada cuadro se dibuja una sola vez.
+- Sin WebCodecs con H.264 (navegador sin soporte), la exportación falla al inicio con un mensaje
+  en español; no se dibuja ningún cuadro.
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-07 | Mediabunny 1.64.0 (MPL-2.0, sin cambios a sus archivos) empaqueta el MP4 y maneja WebCodecs; se importa solo al exportar | Un `.h264` crudo no se abre en Windows; `mp4-muxer` está obsoleta y su autor la reemplazó por Mediabunny | WebM con `MediaRecorder` (graba en tiempo real: con un equipo lento sale a tirones); PNG + ffmpeg (no está instalado) |
+
+- **CA-08** E descarga un MP4 de 12 s a 1920×1080 que se abre con doble clic en Windows, con la
+  transición en el segundo 5 y sin tirones, aunque el equipo dibuje a menos de 60 fps.
