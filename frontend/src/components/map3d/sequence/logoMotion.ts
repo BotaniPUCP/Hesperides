@@ -6,6 +6,8 @@ import { SWAP_AT_S } from './sequenceTimeline';
  * centro, de 4 a 6 s se desliza hacia arriba a la izquierda y a los 6 s queda
  * anclado en el espacio; la cámara lo pasa por un costado. Fuera del eje de la
  * cámara, porque centrado la cámara iría directo hacia él y llenaría la pantalla.
+ * La secuencia la reproduce comprimida (`logoAt`): de 5 a 6 s muestra lo que la
+ * coreografía original muestra de 8 a 9 s, así se va justo con el desenfoque.
  * Posición en fracciones del cuadro (0-1, origen arriba a la izquierda) y ancho
  * en fracción del ancho del cuadro.
  */
@@ -106,9 +108,42 @@ function anchored(t: number, aspect: number): LogoState {
   };
 }
 
-/** `aspect`: ancho entre alto del cuadro; la posición horizontal depende de él. */
-export function logoAt(t: number, aspect: number): LogoState {
+/** La coreografía a su velocidad original. `aspect`: ancho entre alto del cuadro. */
+export function logoSourceAt(t: number, aspect: number): LogoState {
   if (t < LOGO_APPEAR_S) return { visible: false, image: 'pixel', x: 0.5, y: START_Y, width: 0, rotationDeg: 0, opacity: 0 };
   if (t < LOGO_LANDED_S) return falling(t);
   return t < LOGO_SETTLE_S ? drifting(t) : anchored(t, aspect);
+}
+
+/** Hasta aquí se ve el logo en la secuencia. */
+export const LOGO_END_S = 6;
+/** El tramo de 5 a 6 s va a velocidad original: corresponde al de 8 a 9 s. */
+const REAL_SPEED_FROM_S = 5;
+const SOURCE_AT_REAL_SPEED_S = 8;
+/** Antes de llegar a velocidad original, baja suave durante este tramo. */
+const SLOWDOWN_S = 1;
+/** Velocidad del tramo rápido: con la bajada incluida, de 2 a 5 s cubre la coreografía de 2 a 8 s. */
+const FAST_SPEED = (() => {
+  const real = REAL_SPEED_FROM_S - LOGO_APPEAR_S, source = SOURCE_AT_REAL_SPEED_S - LOGO_APPEAR_S;
+  return (source - SLOWDOWN_S / 2) / (real - SLOWDOWN_S / 2);
+})();
+/** Se desvanece al final, ya pasado el desenfoque: a los 9 s originales todavía tapa una esquina. */
+const FADE_OUT_S = 0.3;
+
+/** El tiempo de la coreografía que toca en el segundo `t` de la secuencia. */
+function sourceTime(t: number): number {
+  const slowdownAt = REAL_SPEED_FROM_S - SLOWDOWN_S;
+  if (t <= slowdownAt) return LOGO_APPEAR_S + FAST_SPEED * (t - LOGO_APPEAR_S);
+  if (t >= REAL_SPEED_FROM_S) return SOURCE_AT_REAL_SPEED_S + (t - REAL_SPEED_FROM_S);
+  const u = t - slowdownAt;
+  // La velocidad baja en línea recta de FAST_SPEED a 1.
+  return LOGO_APPEAR_S + FAST_SPEED * (slowdownAt - LOGO_APPEAR_S) + FAST_SPEED * u - ((FAST_SPEED - 1) * u * u) / (2 * SLOWDOWN_S);
+}
+
+/** El logo en el segundo `t` de la secuencia. `aspect`: ancho entre alto del cuadro. */
+export function logoAt(t: number, aspect: number): LogoState {
+  if (t >= LOGO_END_S) return { ...logoSourceAt(0, aspect), image: 'original' };
+  const state = logoSourceAt(t < LOGO_APPEAR_S ? t : sourceTime(t), aspect);
+  const fade = 1 - easeInOut(Math.min(1, Math.max(0, (t - (LOGO_END_S - FADE_OUT_S)) / FADE_OUT_S)));
+  return { ...state, image: imageAt(t), opacity: state.opacity * fade };
 }

@@ -1,4 +1,4 @@
-import { LOGO_ANCHOR_M, LOGO_APPEAR_S, LOGO_IMAGE_WIDTH, LOGO_LANDED_S, LOGO_SETTLE_S, logoAt, type LogoState } from '../logoMotion';
+import { LOGO_ANCHOR_M, LOGO_APPEAR_S, LOGO_END_S, LOGO_IMAGE_WIDTH, LOGO_LANDED_S, LOGO_SETTLE_S, logoAt, logoSourceAt, type LogoState } from '../logoMotion';
 import { SEQUENCE_DURATION_S } from '../sequencePath';
 import { SWAP_AT_S } from '../sequenceTimeline';
 
@@ -15,7 +15,8 @@ function coverage(s: LogoState, aspect: number): number {
   return x * y;
 }
 
-describe('movimiento del logo', () => {
+describe('coreografía del logo (a velocidad original)', () => {
+  const logoAt = logoSourceAt;
   it('cae de 2 a 4 s, queda en pantalla hasta los 6 s y ahí se ancla a 300 m', () => {
     expect([LOGO_APPEAR_S, LOGO_LANDED_S, LOGO_SETTLE_S, LOGO_ANCHOR_M]).toEqual([2, 4, 6, 300]);
   });
@@ -97,6 +98,57 @@ describe('movimiento del logo', () => {
       if (!a.visible || !b.visible) continue;
       expect(Math.abs(b.x - a.x)).toBeLessThan(0.05);
       expect(Math.abs(b.y - a.y)).toBeLessThan(0.05);
+    }
+  });
+});
+
+describe('el logo en la secuencia: la coreografía comprimida para irse a los 6 s', () => {
+  const same = (a: LogoState, b: LogoState) => {
+    expect(a.x).toBeCloseTo(b.x, 9);
+    expect(a.y).toBeCloseTo(b.y, 9);
+    expect(a.width).toBeCloseTo(b.width, 9);
+    expect(a.rotationDeg).toBeCloseTo(b.rotationDeg, 9);
+  };
+
+  it('se ve solo de 2 a 6 s', () => {
+    expect(LOGO_END_S).toBe(6);
+    expect(logoAt(1.99, ASPECT).visible).toBe(false);
+    expect(logoAt(2, ASPECT).visible).toBe(true);
+    expect(logoAt(LOGO_END_S, ASPECT).visible).toBe(false);
+    expect(logoAt(11, ASPECT).visible).toBe(false);
+  });
+
+  it('empieza igual que la coreografía original', () => {
+    same(logoAt(2, ASPECT), logoSourceAt(2, ASPECT));
+  });
+
+  it('de 5 a 6 s muestra exactamente lo que la coreografía original muestra de 8 a 9 s', () => {
+    for (let i = 0; i < 10; i++) same(logoAt(5 + i / 10, ASPECT), logoSourceAt(8 + i / 10, ASPECT));
+  });
+
+  it('la velocidad baja sin frenazo: justo antes del segundo 5 ya va casi a velocidad normal', () => {
+    const h = 1e-3;
+    const speedX = (f: (t: number) => LogoState, t: number) => (f(t + h).x - f(t).x) / h;
+    const at = (t: number) => logoAt(t, ASPECT), source = (t: number) => logoSourceAt(t, ASPECT);
+    expect(speedX(at, 5 - 2 * h)).toBeCloseTo(speedX(source, 8 - 2 * h), 1);
+  });
+
+  it('cambia de imagen en el segundo 5,25 real, con el mapa', () => {
+    expect(logoAt(SWAP_AT_S - 1e-6, ASPECT).image).toBe('pixel');
+    expect(logoAt(SWAP_AT_S, ASPECT).image).toBe('original');
+  });
+
+  it('se desvanece de 5,7 a 6 s, ya pasado el desenfoque', () => {
+    expect(logoAt(5.6, ASPECT).opacity).toBe(1);
+    expect(logoAt(5.85, ASPECT).opacity).toBeCloseTo(0.5, 5);
+    expect(logoAt(LOGO_END_S - 1e-6, ASPECT).opacity).toBeLessThan(0.001);
+  });
+
+  it('se mueve sin saltos entre cuadros', () => {
+    for (let t = LOGO_APPEAR_S; t < LOGO_END_S - 1 / 60; t += 1 / 60) {
+      const a = logoAt(t, ASPECT), b = logoAt(t + 1 / 60, ASPECT);
+      expect(Math.abs(b.x - a.x)).toBeLessThan(0.08);
+      expect(Math.abs(b.y - a.y)).toBeLessThan(0.08);
     }
   });
 });

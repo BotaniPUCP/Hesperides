@@ -95,7 +95,7 @@ describe('reproductor de la secuencia', () => {
     expect(s.logos.pixel.style.display).toBe('');
     expect(s.logos.original.style.display).toBe('none');
     expect(s.logos.pixel.style.transform).toMatch(/^translate\(-50%, -50%\) rotate\([\d.]+deg\)$/);
-    runTo(c, 2, now);
+    runTo(c, 1, now);
     expect(s.logos.pixel.style.display).toBe('none');
     expect(s.logos.original.style.display).toBe('');
   });

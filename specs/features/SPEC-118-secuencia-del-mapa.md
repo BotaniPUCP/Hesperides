@@ -203,3 +203,28 @@ desenfocado.
 - **CA-09** El logo aparece a los 2 s, gira una vuelta y llega al centro a los 4 s, se desliza hasta los 6 s,
   cambia de imagen a los 5,25 s sin que se note y desde los 6 s queda fijo en el espacio hasta salir
   por un costado, sin tapar nunca más de un tercio de la pantalla.
+
+### 9.1 El logo se va con el desenfoque (17 nov 2026)
+
+La tabla de §9 es la **coreografía original**. La secuencia la reproduce comprimida para que el logo
+se vaya justo cuando ocurre el desenfoque:
+
+| Tiempo de la secuencia | Tiempo de la coreografía | Velocidad |
+|---|---|---|
+| 2,0 → 4,0 s | 2,0 → 6,4 s | 2,2× (cae de 2,0 a 2,9 s, se desliza hasta 3,8 s y ahí se ancla) |
+| 4,0 → 5,0 s | 6,4 → 8,0 s | Baja en línea recta de 2,2× a 1×, sin frenazo |
+| 5,0 → 6,0 s | 8,0 → 9,0 s | 1×: exactamente lo que la coreografía muestra de 8 a 9 s |
+| ≥ 6,0 s | — | No se ve |
+
+- El cambio de imagen sigue en el segundo 5,25 de la secuencia, con el mapa.
+- A los 9 s de la coreografía la hoja todavía tapa ~30 % de la esquina superior izquierda (sale del
+  todo hacia los 10,3 s). Para que no desaparezca de golpe, se desvanece de 5,7 a 6,0 s, ya pasado
+  el desenfoque (D-10).
+- Sigue siendo 1 vuelta en la caída, que ahora dura ~0,9 s.
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-10 | Coreografía comprimida (opción A, elegida por Jean Piero) y desvanecimiento de 0,3 s al final | Se va con el desenfoque sin cortarse de golpe | Adelantar toda la animación 3 s (empezaría a media caída); comprimir solo 4-8 s a 4× (se vería apurado) |
+
+- **CA-10** El logo se ve de 2 a 6 s; de 5 a 6 s se ve igual que de 8 a 9 s de la coreografía y a los 6 s ya
+  no está.
