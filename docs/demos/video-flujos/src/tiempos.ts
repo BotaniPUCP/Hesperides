@@ -48,7 +48,8 @@ export function construirLinea(guion: Guion, manifiesto: Manifiesto): Linea {
       const { archivo, duracion } = manifiesto.frases[frase.id];
       const frames = Math.ceil(duracion * FPS - TOLERANCIA);
       const tramo: TramoFrase = { frase, escenaId: id, desde: cursor, frames, archivo };
-      fin = cursor + frames;
+      // El respiro deja la imagen correr en silencio después de la frase.
+      fin = cursor + frames + Math.round((frase.respiro ?? 0) * FPS);
       cursor = fin + FRAMES_PAUSA;
       return tramo;
     });

@@ -1,0 +1,165 @@
+{
+  "voz": "es-PE-CamilaNeural",
+  "escenas": [
+    {
+      "id": "manana",
+      "frases": [
+        {
+          "id": "h1",
+          "texto": "Seis de la mañana en el campus. Don Julio lleva treinta años cuidando estos jardines.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.5
+        },
+        {
+          "id": "h2",
+          "texto": "Hoy encuentra una rama rajada justo encima de un sendero por donde pasa mucha gente.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 1.5
+        }
+      ]
+    },
+    {
+      "id": "hoy",
+      "frases": [
+        {
+          "id": "h3",
+          "texto": "Avisa como siempre: un mensaje y una foto, que se pierden entre cientos de mensajes.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 1
+        },
+        {
+          "id": "h4",
+          "texto": "En la oficina, el jefe solo se entera si sale a recorrer el campus.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.5
+        },
+        {
+          "id": "h5",
+          "texto": "Y cuando la empresa tercerizada poda quince árboles, nadie sabe si quedaron bien.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 1.2
+        }
+      ]
+    },
+    {
+      "id": "aparece",
+      "frases": [
+        {
+          "id": "h6",
+          "texto": "¡Hola! Soy Hespo. ¿Y si todo eso quedara en un solo lugar?",
+          "hespo": {
+            "x": 1240,
+            "pose": "saluda",
+            "emocion": "feliz",
+            "luego": [
+              {
+                "x": 1240,
+                "pose": "presenta",
+                "en": 0.45
+              }
+            ]
+          },
+          "respiro": 1.2
+        }
+      ]
+    },
+    {
+      "id": "solucion",
+      "frases": [
+        {
+          "id": "h7",
+          "texto": "Don Julio lo cuenta en una frase desde su celular.",
+          "hespo": {
+            "x": 1720,
+            "pose": "senala",
+            "emocion": "feliz"
+          },
+          "respiro": 0.8
+        },
+        {
+          "id": "h8",
+          "texto": "La inteligencia artificial completa el resto, y el jefe lo revisa al instante.",
+          "hespo": {
+            "x": 1720,
+            "pose": "sorpresa",
+            "emocion": "sorpresa",
+            "luego": [
+              {
+                "x": 1720,
+                "pose": "asiente",
+                "en": 0.5
+              }
+            ]
+          },
+          "respiro": 0.5
+        },
+        {
+          "id": "h9",
+          "texto": "Lo activa, aparece en el mapa, y se programa el trabajo de la cuadrilla.",
+          "hespo": {
+            "x": 1720,
+            "pose": "senala"
+          },
+          "respiro": 1
+        },
+        {
+          "id": "h10",
+          "texto": "La cuadrilla registra el trabajo con su foto y, validado, la incidencia se cierra.",
+          "hespo": {
+            "x": 1720,
+            "pose": "pulgar",
+            "emocion": "feliz"
+          },
+          "respiro": 1.5
+        }
+      ]
+    },
+    {
+      "id": "resultado",
+      "frases": [
+        {
+          "id": "h11",
+          "texto": "Ahora todo el campus está a la vista: ordenado, visible y con seguimiento.",
+          "hespo": {
+            "x": 1560,
+            "pose": "presenta",
+            "emocion": "feliz"
+          },
+          "respiro": 1
+        },
+        {
+          "id": "h12",
+          "texto": "Hesperides. El cuidado de sus áreas verdes, en un solo lugar.",
+          "textoVoz": "Hespérides. El cuidado de sus áreas verdes, en un solo lugar.",
+          "hespo": {
+            "x": 1560,
+            "pose": "salta",
+            "emocion": "feliz",
+            "luego": [
+              {
+                "x": 1560,
+                "pose": "saluda",
+                "en": 0.4
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -19,6 +19,11 @@ const SUELO: Record<EscenaId, number> = {
   reporte: SUELO_PAGINA,
   seguimiento: SUELO_PAGINA,
   final: SUELO_Y,
+  manana: SUELO_Y,
+  hoy: SUELO_Y,
+  aparece: SUELO_Y,
+  solucion: SUELO_Y,
+  resultado: SUELO_Y,
 };
 
 /** Posición de Hespo al empezar cada escena: entra desde fuera de cuadro. */

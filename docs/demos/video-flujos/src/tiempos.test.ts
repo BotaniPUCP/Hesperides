@@ -54,6 +54,20 @@ test('las escenas dejan la transición', () => {
   expect(segunda.frases[0].desde).toBe(segunda.desde);
 });
 
+test('el respiro de una frase alarga el silencio que la sigue, también al final de la escena', () => {
+  const conRespiro: Guion = {
+    ...guion,
+    escenas: [
+      { id: 'inicio', frases: [frase('i1', { respiro: 1 }), frase('i2', { respiro: 0.5 })] },
+      { id: 'especies', frases: [frase('e1'), frase('e2')] },
+    ],
+  };
+  const [primera, segunda] = construirLinea(conRespiro, manifiesto).escenas;
+  expect(primera.frases[1].desde).toBe(30 + 30 + FRAMES_PAUSA);
+  expect(primera.frames).toBe(30 + 30 + FRAMES_PAUSA + 60 + 15);
+  expect(segunda.desde).toBe(primera.frames + FRAMES_TRANSICION);
+});
+
 test('redondea los fotogramas hacia arriba', () => {
   const corta = { ...manifiesto, frases: { ...manifiesto.frases, i1: entrada('i1', 1.01) } };
 
