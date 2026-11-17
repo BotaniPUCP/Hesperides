@@ -7,6 +7,7 @@ import {
   framesClave,
   FRAMES_PAUSA,
   FRAMES_TRANSICION,
+  opacidadDeEscena,
   problemasDeVoz,
   type Manifiesto,
 } from './tiempos';
@@ -127,4 +128,13 @@ test('framesClave da inicio, mitad y final por frase', () => {
     { id: 'i1', frame: 29, momento: 'final' },
   ]);
   claves.forEach(({ id, frame }) => expect(fraseActiva(linea, frame)?.frase.id).toBe(id));
+});
+
+test('una escena se desvanece en la transición, salvo la última, que queda en pantalla', () => {
+  const linea = construirLinea(guion, manifiesto);
+  const [primera, ultima] = linea.escenas;
+  const finPrimera = primera.desde + primera.frames;
+  expect(opacidadDeEscena(linea, primera, finPrimera - 1)).toBe(1);
+  expect(opacidadDeEscena(linea, primera, finPrimera + FRAMES_TRANSICION)).toBe(0);
+  expect(opacidadDeEscena(linea, ultima, ultima.desde + ultima.frames + FRAMES_TRANSICION + 30)).toBe(1);
 });

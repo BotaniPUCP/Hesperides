@@ -1,11 +1,11 @@
 import React from 'react';
-import { AbsoluteFill, Html5Audio, interpolate, Sequence, staticFile, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, Html5Audio, Sequence, staticFile, useCurrentFrame } from 'remotion';
 import { componenteDeEscena, type ConfigVideo } from './escenas/componentes';
 import { Hespo } from './hespo/Hespo';
 import { HespoEnEscena3D } from './hespo3d/HespoEnEscena3D';
 import { estadoHespo } from './hespo/recorrido';
 import { useApertura } from './hespo/useApertura';
-import { fraseActiva, FRAMES_TRANSICION, type Linea, type TramoEscena } from './tiempos';
+import { fraseActiva, FRAMES_TRANSICION, opacidadDeEscena, type Linea, type TramoEscena } from './tiempos';
 import { indiceFrase } from './ui/anim';
 import { Escenario } from './ui/Escenario';
 import { fontFamily } from './ui/fuente';
@@ -27,7 +27,7 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
   const Escena = componenteDeEscena(config, escena.id);
 
   // Escena y Hespo se desvanecen juntos: así el salto de Hespo a la siguiente entrada no se ve.
-  const opacidad = interpolate(frame, [fin, fin + FRAMES_TRANSICION], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const opacidad = opacidadDeEscena(linea, escena, frame);
   const ultima = escena.frases[indiceFrase(escena, frame)];
   const subtitulo = frame < fin ? ultima?.frase.texto ?? null : null;
 

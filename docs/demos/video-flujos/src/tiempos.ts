@@ -1,4 +1,12 @@
+import { interpolate } from 'remotion';
 import type { EscenaId, Frase, Guion } from './guion';
+
+/** Una escena se desvanece al terminar; la última no: queda en pantalla si el video sigue (cierre). */
+export function opacidadDeEscena(linea: Linea, escena: TramoEscena, frame: number): number {
+  if (escena === linea.escenas[linea.escenas.length - 1]) return 1;
+  const fin = escena.desde + escena.frames;
+  return interpolate(frame, [fin, fin + FRAMES_TRANSICION], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+}
 
 export const FPS = 30;
 export const FRAMES_PAUSA = 8; // 0,25 s redondeado
