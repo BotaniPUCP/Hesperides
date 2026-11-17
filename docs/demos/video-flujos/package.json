@@ -15,7 +15,8 @@
     "duracion": "tsx scripts/duracion.ts",
     "capturas": "tsx scripts/capturas.ts",
     "capturas:planificacion": "tsx scripts/capturas-planificacion.ts",
-    "capturas:venta": "tsx scripts/capturas-venta.ts"
+    "capturas:venta": "tsx scripts/capturas-venta.ts",
+    "revisar": "tsx scripts/revisar.ts"
   },
   "dependencies": {
     "@react-three/fiber": "9.1.2",
