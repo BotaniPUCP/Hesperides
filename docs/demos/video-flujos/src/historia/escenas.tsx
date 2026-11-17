@@ -301,6 +301,19 @@ export const Aparece: React.FC<PropsEscena> = ({ escena, frame }) => {
 };
 
 // ---------------- 4. Solución ----------------
+/**
+ * Puntos medidos sobre las capturas del mapa al atardecer (fracción del ancho y del alto de la
+ * imagen 1920×941): el pin «1» de la incidencia y zonas verdes del campus para los checks.
+ */
+const PIN_INCIDENCIA: [number, number] = [0.704, 0.585];
+const CHECKS_EN_CAMPUS: [number, number][] = [
+  [0.47, 0.44],
+  [0.65, 0.58],
+  [0.52, 0.73],
+  [0.4, 0.66],
+  [0.74, 0.62],
+];
+
 const Oficina: React.FC = () => (
   <Lienzo>
     <rect x={0} y={0} width={1920} height={940} fill={COLOR.barriga} />
@@ -344,9 +357,9 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
       <AbsoluteFill>
         <Oficina />
         <Persona quien="jefe" x={330} sueloY={870} escala={1.05} frame={frame} pose={{ brazoI: 30, brazoD: enMapa ? 85 : 40, miraX: 0.8 }} gesto={frame < momentoDe(escena, 'h8', 0.4) ? 'sorpresa' : 'feliz'} sentado />
-        <Laptop x={1080} y={150} ancho={ancho} captura={enMapa ? 'venta/mapa-zonas' : 'venta/incidencia-prellenada'}>
+        <Laptop x={1080} y={150} ancho={ancho} captura={enMapa ? 'venta/mapa-atardecer' : 'venta/incidencia-prellenada'}>
           {!enMapa ? <Resalte medida={{ x: pre.x * k, y: pre.y * k, ancho: pre.ancho * k, alto: pre.alto * k }} visible={apareceEn(escena, 'h8', frame, 0.15)} /> : null}
-          {enMapa && pulso >= 0 ? <Pulso x={ancho * 0.64} y={ancho * 0.49 * 0.5} progreso={pulso} /> : null}
+          {enMapa && pulso >= 0 ? <Pulso x={ancho * PIN_INCIDENCIA[0]} y={((ancho * 941) / 1920) * PIN_INCIDENCIA[1]} progreso={pulso} /> : null}
         </Laptop>
         {!enMapa ? <Tarjeta texto="✨ Prellenado por IA" visible={apareceEn(escena, 'h8', frame, 0.2)} x={1230} y={40} /> : null}
         {enMapa ? <Tarjeta texto="✓ Activada · trabajo programado" visible={apareceEn(escena, 'h9', frame, 0.55)} x={760} y={40} /> : null}
@@ -392,11 +405,12 @@ export const Resultado: React.FC<PropsEscena> = ({ escena, frame }) => {
           <rect x={0} y={780} width={1920} height={160} fill={COLOR.arena} />
           <rect x={80} y={700} width={760} height={30} rx={8} fill={COLOR.arena} stroke={COLOR.borde} strokeWidth={6} />
         </Lienzo>
-        <Laptop x={1080} y={60} ancho={ancho} captura="venta/mapa-zonas">
-          {[0.3, 0.5, 0.62, 0.7, 0.45].map((fx, i) => {
+        <Laptop x={1080} y={60} ancho={ancho} captura="venta/mapa-atardecer-maqueta">
+          {CHECKS_EN_CAMPUS.map(([fx, fy], i) => {
             const s = spring({ frame: frame - momentoDe(escena, 'h11', 0.2 + i * 0.1), fps: FPS, config: { damping: 9 } });
+            const altoPantalla = (ancho * 941) / 1920;
             return (
-              <div key={i} style={{ position: 'absolute', left: ancho * fx, top: ancho * 0.49 * (0.25 + (i % 3) * 0.2), width: 44, height: 44, borderRadius: 22, background: COLOR.verde, color: COLOR.blanco, fontSize: 30, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `scale(${s})` }}>
+              <div key={i} style={{ position: 'absolute', left: ancho * fx - 22, top: altoPantalla * fy - 22, width: 44, height: 44, borderRadius: 22, background: COLOR.verde, color: COLOR.blanco, fontSize: 30, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `scale(${s})` }}>
                 ✓
               </div>
             );
