@@ -6,7 +6,7 @@ import { ESPERA_BROTE } from '../hespo2d/semillaEnGuion';
 import { useMedida } from '../pagina/medidasCargadas';
 import { Pulso } from '../pagina/Pulso';
 import { Resalte } from '../pagina/Resalte';
-import { COLOR } from '../tema';
+import { ALTO, BANDA, COLOR } from '../tema';
 import { FPS } from '../tiempos';
 import { apareceEn, momentoDe } from '../ui/anim';
 import { Arbol, ArbolRajado, Burbuja, Celular, Cielo, Colinas, Edificios, Farol, HORIZONTE, Laptop, Lienzo, Sello, Sol, SUELO, Suelo, Tierra } from './decorado';
@@ -76,7 +76,7 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
   ]);
   const xJulio = tw(frame, [
     [h1, -160],
-    [momentoDe(escena, 'h1', 0.85), 760],
+    [momentoDe(escena, 'h1', 0.85), 680],
   ]);
   const caminando = frame < momentoDe(escena, 'h1', 0.85) ? 1 : 0;
   const mira = tw(frame, [
@@ -145,7 +145,7 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
   if (frame < h4) {
     // h3: el mensaje se pierde entre cientos.
     return (
-      <AbsoluteFill style={{ background: COLOR.verde }}>
+      <AbsoluteFill style={{ background: COLOR.verde, height: ALTO - BANDA }}>
         <Persona
           quien="julio"
           x={460}
@@ -268,6 +268,9 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
 };
 
 // ---------------- 3. Aparece Hespo ----------------
+/** Donde brota Hespo: el `x` de h6 en guion-historia.json. */
+const X_BROTE = 1080;
+
 export const Aparece: React.FC<PropsEscena> = ({ escena, frame }) => {
   const t = frame - escena.desde;
   const brota = ESPERA_BROTE;
@@ -278,14 +281,14 @@ export const Aparece: React.FC<PropsEscena> = ({ escena, frame }) => {
       <Lienzo>
         <Campus corrimiento={300} frame={frame} />
         <ArbolRajado x={1350} y={SUELO - 30} frame={frame} alerta={0} />
-        {t < brota + 4 ? <ellipse cx={1240 + temblor} cy={SUELO + 4} rx={60} ry={16} fill={COLOR.borde} opacity={0.5} /> : null}
-        <Tierra x={1240} y={SUELO} t={t - brota} />
+        {t < brota + 4 ? <ellipse cx={X_BROTE + temblor} cy={SUELO + 4} rx={60} ry={16} fill={COLOR.borde} opacity={0.5} /> : null}
+        <Tierra x={X_BROTE} y={SUELO} t={t - brota} />
       </Lienzo>
       <Persona
         quien="julio"
         x={tw(frame, [
-          [escena.desde + brota, 760],
-          [escena.desde + brota + 10, 700],
+          [escena.desde + brota, 680],
+          [escena.desde + brota + 10, 600],
         ])}
         sueloY={SUELO + 4}
         escala={0.95}
@@ -399,7 +402,7 @@ export const Resultado: React.FC<PropsEscena> = ({ escena, frame }) => {
         </Laptop>
         <Persona quien="peaton" x={250} sueloY={850} escala={0.95} frame={frame} pose={{ brazoI: 20, brazoD: 25, miraX: 0.8 }} gesto="feliz" sentado ropa={COLOR.verde} />
         <Persona quien="peaton" x={520} sueloY={850} escala={0.95} frame={frame} pose={{ brazoI: 20, brazoD: 25, miraX: 0.8 }} gesto="neutral" sentado ropa={COLOR.arena} />
-        <Persona quien="jefe" x={1560} sueloY={880} escala={1.05} frame={frame} pose={{ brazoI: 10, brazoD: 95, miraX: 0.5 }} gesto="feliz" mira={-1} />
+        <Persona quien="jefe" x={1720} sueloY={880} escala={1.05} frame={frame} pose={{ brazoI: 10, brazoD: 95, miraX: 0.5 }} gesto="feliz" mira={-1} />
       </AbsoluteFill>
     );
   }
@@ -407,7 +410,7 @@ export const Resultado: React.FC<PropsEscena> = ({ escena, frame }) => {
   const lema = apareceEn(escena, 'h12', frame, 0.3);
   const saludo = 120 + Math.sin(frame / 4) * 25;
   return (
-    <AbsoluteFill style={{ background: COLOR.verde }}>
+    <AbsoluteFill style={{ background: COLOR.verde, height: ALTO - BANDA }}>
       <div style={{ position: 'absolute', left: 0, right: 0, top: 780, bottom: 0, background: COLOR.arena }} />
       <h1 style={{ position: 'absolute', left: 0, right: 0, top: 70, margin: 0, textAlign: 'center', color: COLOR.blanco, fontSize: 150, fontWeight: 800, opacity: Math.min(1, titulo), transform: `scale(${0.7 + 0.3 * titulo})` }}>Hesperides</h1>
       <p style={{ position: 'absolute', left: 0, right: 0, top: 280, margin: 0, textAlign: 'center', color: COLOR.arena, fontSize: 52, fontWeight: 700, opacity: lema }}>El cuidado de sus áreas verdes, en un solo lugar.</p>

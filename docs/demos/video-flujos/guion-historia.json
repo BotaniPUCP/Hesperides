@@ -63,12 +63,12 @@
           "id": "h6",
           "texto": "¡Hola! Soy Hespo. ¿Y si todo eso quedara en un solo lugar?",
           "hespo": {
-            "x": 1240,
+            "x": 1080,
             "pose": "saluda",
             "emocion": "feliz",
             "luego": [
               {
-                "x": 1240,
+                "x": 1080,
                 "pose": "presenta",
                 "en": 0.45
               }
@@ -136,7 +136,7 @@
           "id": "h11",
           "texto": "Ahora todo el campus está a la vista: ordenado, visible y con seguimiento.",
           "hespo": {
-            "x": 1560,
+            "x": 800,
             "pose": "presenta",
             "emocion": "feliz"
           },
@@ -147,12 +147,12 @@
           "texto": "Hesperides. El cuidado de sus áreas verdes, en un solo lugar.",
           "textoVoz": "Hespérides. El cuidado de sus áreas verdes, en un solo lugar.",
           "hespo": {
-            "x": 1560,
+            "x": 1300,
             "pose": "salta",
             "emocion": "feliz",
             "luego": [
               {
-                "x": 1560,
+                "x": 1300,
                 "pose": "saluda",
                 "en": 0.4
               }

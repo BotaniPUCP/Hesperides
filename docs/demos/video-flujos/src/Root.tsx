@@ -11,7 +11,6 @@ import { ComparacionHespo, Hespo2DDemo } from './hespo2d/Comparacion';
 import { DURACION_DEMO } from './hespo2d/coreografia';
 import { HojaDeExpresiones, RedisenosHespo, Retratos } from './hespo2d/v2/Redisenos';
 import { VARIANTES_SEMILLA } from './hespo2d/v2/disenos';
-import { PruebaPersonas } from './historia/PruebaPersonas';
 import { CARPETA_VOZ_HISTORIA, FRAMES_COLA_HISTORIA, VideoHistoria } from './VideoHistoria';
 
 const calcularDuracion = async () => {
@@ -119,7 +118,6 @@ export const Root: React.FC = () => (
       defaultProps={{ linea: null, medidas: null }}
       calculateMetadata={calcularHistoria}
     />
-    <Composition id="PruebaPersonas" component={PruebaPersonas} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={60} />
     <Composition id="RetratosSemilla" component={Retratos} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={1} defaultProps={{ disenos: VARIANTES_SEMILLA }} />
     <Composition id="ExpresionesSemilla" component={HojaDeExpresiones} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={1} defaultProps={{ disenos: VARIANTES_SEMILLA }} />
   </>
