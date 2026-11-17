@@ -147,7 +147,10 @@ class SpeciesLifecycleIntegrationTest {
         mockMvc.perform(get(BASE + "/species/assignable").with(SUPERVISOR)
                         .param("search", species.scientificName()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(0));
+        // Desde d4b8a0a (16 nov 2026) no sale en el catálogo normal: se ve en «En proceso de retiro».
         mockMvc.perform(get(BASE + "/species").param("search", species.scientificName()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(0));
+        mockMvc.perform(get(BASE + "/species").param("search", species.scientificName()).param("retiring", "true"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(1));
         String export = mockMvc.perform(get(BASE + "/species/export.csv").with(ADMIN))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();

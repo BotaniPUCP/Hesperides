@@ -47,7 +47,7 @@ class DirectoryImportBatchesMigrationTest {
 
     @Test
     void anUnknownKindIsStillRejected() {
-        assertThatThrownBy(() -> batch("species")).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> batch("unicorns")).isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test

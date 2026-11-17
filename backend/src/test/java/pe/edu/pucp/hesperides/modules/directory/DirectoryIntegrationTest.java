@@ -33,6 +33,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import pe.edu.pucp.hesperides.support.TestDatabase;
+import pe.edu.pucp.hesperides.support.TestUsers;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /** SPEC-106 de punta a punta: organizaciones, contactos, vínculos y permisos. */
 @Testcontainers
@@ -57,6 +60,17 @@ class DirectoryIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    /** La auditoría guarda quién actúa: los usuarios simulados de estas pruebas tienen que existir. */
+    @BeforeEach
+    void actorsExist() {
+        TestUsers.ensure(jdbc, "admin@pucp.edu.pe", "ADMIN");
+        TestUsers.ensure(jdbc, "coordinador@pucp.edu.pe", "COORDINADOR");
+        TestUsers.ensure(jdbc, "capataz@pucp.edu.pe", "SUPERVISOR");
+        TestUsers.ensure(jdbc, "operario@pucp.edu.pe", "OPERARIO");
+    }
 
     private ResultActions send(org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request,
             String body) throws Exception {
