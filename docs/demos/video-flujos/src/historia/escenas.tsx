@@ -23,7 +23,7 @@ function tw(frame: number, puntos: [number, number][]): number {
   );
 }
 
-const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number }> = ({ texto, visible, x = 60, y = 50 }) => (
+export const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number }> = ({ texto, visible, x = 60, y = 50 }) => (
   <div
     style={{
       position: 'absolute',
@@ -45,7 +45,7 @@ const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number
 );
 
 /** El campus con paneo de cámara. */
-const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: number }> = ({ corrimiento, amanecer = 0, frame }) => (
+export const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: number }> = ({ corrimiento, amanecer = 0, frame }) => (
   <>
     <Cielo amanecer={amanecer} />
     {amanecer > 0 ? <Sol x={1500 - corrimiento * 0.1} y={tw(amanecer, [[0, 160], [1, 470]])} /> : <Sol x={1640} y={150} />}

@@ -3,13 +3,17 @@ import React from 'react';
 import { COLOR } from '../tema';
 
 /** Solo para personas: piel, pelo y ropa que la paleta de marca no tiene. */
-export const PIEL = { julio: '#C98E62', jefe: '#E8B791', podador: '#B57F55', peaton: '#DDA77E' } as const;
-const PELO = { canas: '#D8D4CB', oscuro: '#3A2B22' };
+export const PIEL = { julio: '#C98E62', jefe: '#E8B791', podador: '#B57F55', peaton: '#DDA77E', lucia: '#D9A07A', capataz2: '#A8754F', estudiante: '#E3B08A' } as const;
+const PELO = { canas: '#D8D4CB', oscuro: '#3A2B22', castano: '#5A3A26' };
+/** Ropa de las personas nuevas del video «¿Qué es Hesperides?». */
+const CHAQUETA_LUCIA = '#C8664B';
+const CHALECO_CAPATAZ2 = '#E59A3A';
+const BOTA = '#6B4A2E';
 const PANTALON = '#3E4A44';
 
-export type Quien = 'julio' | 'jefe' | 'podador' | 'peaton';
+export type Quien = 'julio' | 'jefe' | 'podador' | 'peaton' | 'lucia' | 'capataz2' | 'estudiante';
 export type Gesto = 'neutral' | 'feliz' | 'preocupado' | 'sorpresa' | 'pensativo';
-export type Objeto = 'nada' | 'celular' | 'podadora';
+export type Objeto = 'nada' | 'celular' | 'podadora' | 'pala' | 'llave';
 
 export type PoseP = {
   /** Grados: 0 = brazo colgando, 90 = horizontal, 180 = arriba. */
@@ -36,8 +40,10 @@ export type PropsPersona = {
   andar?: { distancia: number; w: number };
   sentado?: boolean;
   objeto?: Objeto;
-  /** Color de camisa del peatón. */
+  /** Color de camisa del peatón y de la estudiante. */
   ropa?: string;
+  /** Botas de campo en vez de zapatos. */
+  botas?: boolean;
 };
 
 const PASO = 22;
@@ -74,6 +80,18 @@ const Brazo: React.FC<{ lado: 1 | -1; grados: number; manga: string; piel: strin
         <g>
           <line x1={mano.x - 30 * d.x} y1={mano.y + 40} x2={mano.x + 120 * lado} y2={mano.y - 170} stroke={COLOR.borde} strokeWidth={7} strokeLinecap="round" />
           <path d={`M${mano.x + 120 * lado} ${mano.y - 170} l${12 * lado} -18 l${10 * lado} 10 z`} fill={COLOR.blanco} stroke={COLOR.borde} strokeWidth={3} />
+        </g>
+      ) : null}
+      {objeto === 'pala' ? (
+        <g>
+          <line x1={mano.x - 20 * lado} y1={mano.y + 60} x2={mano.x + 30 * lado} y2={mano.y - 110} stroke={COLOR.borde} strokeWidth={8} strokeLinecap="round" />
+          <path d={`M${mano.x - 20 * lado - 16} ${mano.y + 58} l32 0 l-4 40 q-12 12 -24 0 z`} fill={COLOR.arena} stroke={COLOR.borde} strokeWidth={4} />
+        </g>
+      ) : null}
+      {objeto === 'llave' ? (
+        <g transform={`rotate(${-lado * 30} ${mano.x} ${mano.y})`}>
+          <rect x={mano.x - 5} y={mano.y - 56} width={10} height={50} rx={4} fill={COLOR.blanco} stroke={COLOR.borde} strokeWidth={4} />
+          <path d={`M${mano.x - 14} ${mano.y - 62} a14 14 0 1 1 28 0 l-7 0 l0 -10 l-14 0 l0 10 z`} fill={COLOR.blanco} stroke={COLOR.borde} strokeWidth={4} />
         </g>
       ) : null}
       <circle cx={mano.x} cy={mano.y} r={12} fill={piel} stroke={COLOR.borde} strokeWidth={5} />
@@ -137,6 +155,15 @@ const Cabeza: React.FC<{ quien: Quien; piel: string; children: React.ReactNode }
   const cy = -292;
   return (
     <g>
+      {quien === 'lucia' ? (
+        <path d={`M-58 ${cy - 10} Q-66 ${cy + 70} -40 ${cy + 92} L40 ${cy + 92} Q66 ${cy + 70} 58 ${cy - 10} Z`} fill={PELO.oscuro} stroke={COLOR.borde} strokeWidth={4} />
+      ) : null}
+      {quien === 'estudiante' ? (
+        <g>
+          <path d={`M30 ${cy - 30} Q90 ${cy - 20} 78 ${cy + 50} Q66 ${cy + 20} 40 ${cy - 4} Z`} fill={PELO.castano} stroke={COLOR.borde} strokeWidth={4} />
+          <circle cx={46} cy={cy - 22} r={9} fill={COLOR.hoja} stroke={COLOR.borde} strokeWidth={3} />
+        </g>
+      ) : null}
       <ellipse cx={-50} cy={cy + 6} rx={9} ry={13} fill={piel} stroke={COLOR.borde} strokeWidth={5} />
       <ellipse cx={50} cy={cy + 6} rx={9} ry={13} fill={piel} stroke={COLOR.borde} strokeWidth={5} />
       <ellipse cx={0} cy={cy} rx={50} ry={54} fill={piel} stroke={COLOR.borde} strokeWidth={5} />
@@ -158,6 +185,22 @@ const Cabeza: React.FC<{ quien: Quien; piel: string; children: React.ReactNode }
           <rect x={-62} y={cy - 20} width={124} height={12} rx={6} fill={COLOR.hoja} stroke={COLOR.borde} strokeWidth={5} />
         </g>
       ) : null}
+      {quien === 'lucia' ? (
+        <g>
+          <path d={`M-52 ${cy + 4} Q-58 ${cy - 62} 0 ${cy - 62} Q58 ${cy - 62} 52 ${cy + 4} Q46 ${cy - 30} 8 ${cy - 34} Q-14 ${cy - 18} -40 ${cy - 22} Q-50 ${cy - 10} -52 ${cy + 4} Z`} fill={PELO.oscuro} stroke={COLOR.borde} strokeWidth={4} />
+          <circle cx={-50} cy={cy + 24} r={6} fill={COLOR.arena} stroke={COLOR.borde} strokeWidth={3} />
+          <circle cx={50} cy={cy + 24} r={6} fill={COLOR.arena} stroke={COLOR.borde} strokeWidth={3} />
+        </g>
+      ) : null}
+      {quien === 'estudiante' ? (
+        <path d={`M-50 ${cy - 4} Q-54 ${cy - 60} 0 ${cy - 60} Q54 ${cy - 60} 50 ${cy - 4} Q34 ${cy - 34} 0 ${cy - 36} Q-34 ${cy - 34} -50 ${cy - 4} Z`} fill={PELO.castano} stroke={COLOR.borde} strokeWidth={4} />
+      ) : null}
+      {quien === 'capataz2' ? (
+        <g>
+          <path d={`M-52 ${cy - 14} Q-50 ${cy - 70} 0 ${cy - 72} Q50 ${cy - 70} 52 ${cy - 14} Z`} fill={COLOR.verde} stroke={COLOR.borde} strokeWidth={5} />
+          <path d={`M10 ${cy - 22} L92 ${cy - 16} Q96 ${cy - 6} 86 ${cy - 4} L10 ${cy - 8} Z`} fill={COLOR.verde} stroke={COLOR.borde} strokeWidth={5} />
+        </g>
+      ) : null}
       {quien === 'peaton' ? (
         <path d={`M-50 ${cy - 4} Q-52 ${cy - 58} 0 ${cy - 58} Q52 ${cy - 58} 50 ${cy - 4} Q30 ${cy - 30} 0 ${cy - 32} Q-30 ${cy - 30} -50 ${cy - 4} Z`} fill={PELO.oscuro} stroke={COLOR.borde} strokeWidth={4} />
       ) : null}
@@ -166,10 +209,11 @@ const Cabeza: React.FC<{ quien: Quien; piel: string; children: React.ReactNode }
   );
 };
 
-export const Persona: React.FC<PropsPersona> = ({ quien, x, sueloY, escala, frame, pose, gesto = 'neutral', mira = 1, andar, sentado = false, objeto = 'nada', ropa }) => {
+export const Persona: React.FC<PropsPersona> = ({ quien, x, sueloY, escala, frame, pose, gesto = 'neutral', mira = 1, andar, sentado = false, objeto = 'nada', ropa, botas = false }) => {
   const piel = PIEL[quien];
-  const camisa = quien === 'jefe' ? COLOR.blanco : quien === 'peaton' ? ropa ?? COLOR.hoja : COLOR.blanco;
-  const chaleco = quien === 'julio' ? COLOR.verde : quien === 'podador' ? COLOR.arena : null;
+  const camisa = quien === 'peaton' || quien === 'estudiante' ? ropa ?? COLOR.hoja : COLOR.blanco;
+  const chaleco =
+    quien === 'julio' ? COLOR.verde : quien === 'podador' ? COLOR.arena : quien === 'capataz2' ? CHALECO_CAPATAZ2 : quien === 'lucia' ? CHAQUETA_LUCIA : null;
   const semilla = quien.length * 17;
   const w = andar?.w ?? 0;
   const dist = andar?.distancia ?? 0;
@@ -198,7 +242,17 @@ export const Persona: React.FC<PropsPersona> = ({ quien, x, sueloY, escala, fram
         <g key={l}>
           <path d={`M${15 * l} ${caderaY} L${15 * l + p.dx} ${-12 - p.alza}`} stroke={COLOR.borde} strokeWidth={24} strokeLinecap="round" />
           <path d={`M${15 * l} ${caderaY} L${15 * l + p.dx} ${-12 - p.alza}`} stroke={PANTALON} strokeWidth={15} strokeLinecap="round" />
-          <ellipse cx={15 * l + p.dx + 8} cy={-7 - p.alza} rx={22} ry={10} fill={COLOR.borde} />
+          {botas ? (
+            <path
+              d={`M${15 * l + p.dx - 12} ${-40 - p.alza} L${15 * l + p.dx + 10} ${-40 - p.alza} L${15 * l + p.dx + 10} ${-14 - p.alza} L${15 * l + p.dx + 30} ${-10 - p.alza} Q${15 * l + p.dx + 32} ${-p.alza} ${15 * l + p.dx + 24} ${-p.alza} L${15 * l + p.dx - 14} ${-p.alza} Z`}
+              fill={BOTA}
+              stroke={COLOR.borde}
+              strokeWidth={5}
+              strokeLinejoin="round"
+            />
+          ) : (
+            <ellipse cx={15 * l + p.dx + 8} cy={-7 - p.alza} rx={22} ry={10} fill={COLOR.borde} />
+          )}
         </g>
       ))}
     </g>
@@ -217,6 +271,7 @@ export const Persona: React.FC<PropsPersona> = ({ quien, x, sueloY, escala, fram
           {piernas}
           <g transform={`translate(0 ${sentado ? 22 : 0}) rotate(${pose.inclina ?? 0} 0 ${caderaY})`}>
             <g transform={`translate(0 ${respira * 0.5})`}>
+              {quien === 'estudiante' ? <rect x={-78} y={-226} width={50} height={96} rx={16} fill={COLOR.verde} stroke={COLOR.borde} strokeWidth={5} /> : null}
               <Brazo lado={-1} grados={pose.brazoI} manga={chaleco ?? camisa} piel={piel} />
               {/* Torso */}
               <rect x={-52} y={-236} width={104} height={128} rx={34} fill={camisa} stroke={COLOR.borde} strokeWidth={5} />
@@ -224,7 +279,7 @@ export const Persona: React.FC<PropsPersona> = ({ quien, x, sueloY, escala, fram
                 <g>
                   <path d="M-50 -222 Q-52 -150 -46 -112 L-12 -112 L-14 -226 Z" fill={chaleco} stroke={COLOR.borde} strokeWidth={4} />
                   <path d="M50 -222 Q52 -150 46 -112 L12 -112 L14 -226 Z" fill={chaleco} stroke={COLOR.borde} strokeWidth={4} />
-                  {quien === 'podador' ? <path d="M-48 -160 L48 -160" stroke={COLOR.blanco} strokeWidth={7} /> : <rect x={20} y={-196} width={20} height={16} rx={3} fill="none" stroke={COLOR.hoja} strokeWidth={3} />}
+                  {quien === 'podador' || quien === 'capataz2' ? <path d="M-48 -160 L48 -160" stroke={COLOR.blanco} strokeWidth={7} /> : quien === 'lucia' ? null : <rect x={20} y={-196} width={20} height={16} rx={3} fill="none" stroke={COLOR.hoja} strokeWidth={3} />}
                 </g>
               ) : null}
               {quien === 'jefe' ? <path d="M0 -232 L-8 -214 L0 -150 L8 -214 Z" fill={COLOR.verde} stroke={COLOR.borde} strokeWidth={3} /> : null}
