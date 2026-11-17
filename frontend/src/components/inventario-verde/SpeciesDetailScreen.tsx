@@ -130,6 +130,7 @@ export function SpeciesDetailScreen({ slug }: SpeciesDetailScreenProps) {
       {deactivationOpen && (
         <DefinitiveDeactivationModal
           entityLabel={species.commonName || species.scientificName}
+          activeCount={species.specimenCount}
           onCancel={() => setDeactivationOpen(false)}
           onConfirm={async (reason) => {
             await inventarioVerdeApi.deactivateSpecies(species.slug, reason);

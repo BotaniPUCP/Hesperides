@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Species } from '@shared/types';
-import { Badge, Card, ImagePlaceholder } from '@/components/ui';
-import { SpeciesStatusBadge } from './SpeciesStatusBadge';
+import { Badge, ImagePlaceholder } from '@/components/ui';
 
 export interface SpeciesCardProps {
   species: Species;
@@ -56,11 +55,6 @@ export function SpeciesCard({ species }: SpeciesCardProps) {
           <div className="absolute top-2.5 right-2.5 shadow-2xs">
             <Badge label={species.vegetationTypeName} color="brand" />
           </div>
-          {species.isActive !== true && (
-            <div className="absolute top-2.5 left-2.5 shadow-2xs">
-              <SpeciesStatusBadge isActive={species.isActive} />
-            </div>
-          )}
         </div>
 
         {/* Información taxonómica con padding interno natural */}

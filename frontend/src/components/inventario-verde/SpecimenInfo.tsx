@@ -305,7 +305,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                       </svg>
                     }
                   >
-                    Actualizar medidas
+                    Editar ejemplar
                   </Button>
                 </div>
               )}

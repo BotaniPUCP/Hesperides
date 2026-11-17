@@ -189,6 +189,7 @@ export interface LocationCount {
 export interface SpeciesFilters {
   search?: string;
   vegetationType?: string;
+  retiring?: boolean;
 }
 
 export type SpecimenSortKey = 'reference' | 'code' | 'location';

@@ -42,4 +42,27 @@ describe('DefinitiveDeactivationModal', () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
     await act(async () => resolve());
   });
+
+  it('adapts title and warning when the entity still has living specimens', async () => {
+    const user = userEvent.setup();
+    const onConfirm = jest.fn().mockResolvedValue(undefined);
+    render(
+      <DefinitiveDeactivationModal
+        entityLabel="Tara (Caesalpinia spinosa)"
+        activeCount={17}
+        onConfirm={onConfirm}
+        onCancel={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText('Confirmar proceso de retiro')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveTextContent(/Esta especie aún tiene 17 ejemplares vivos en el campus/i);
+    expect(screen.getByRole('button', { name: 'Confirmar retiro' })).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Motivo del retiro'), 'Especie en declive');
+    expect(screen.getByRole('button', { name: 'Confirmar retiro' })).not.toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Confirmar retiro' }));
+
+    expect(onConfirm).toHaveBeenCalledWith('Especie en declive');
+  });
 });

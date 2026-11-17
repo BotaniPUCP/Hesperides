@@ -78,6 +78,7 @@ public class SpeciesRepository {
     private static MapSqlParameterSource filter(SpeciesQuery query) {
         return new MapSqlParameterSource()
                 .addValue("type", query.vegetationType())
+                .addValue("retiring", query.retiring())
                 .addValue("search", LikePattern.contains(query.search()));
     }
 

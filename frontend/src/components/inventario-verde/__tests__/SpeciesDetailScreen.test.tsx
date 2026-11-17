@@ -49,7 +49,7 @@ describe('SpeciesDetailScreen', () => {
     render(<SpeciesDetailScreen slug="syagrus-romanzoffiana" />);
 
     expect(await screen.findByRole('heading', { name: palmeraReina.commonName })).toBeInTheDocument();
-    expect(screen.getByText('Inactiva')).toBeInTheDocument();
+    expect(screen.getByText('En proceso de retiro')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver ejemplares en Catastro/i })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Editar especie' })).not.toBeInTheDocument();
   });
@@ -144,10 +144,10 @@ describe('SpeciesDetailScreen', () => {
     mockUseAuth.mockReturnValue({ user: { role: { code: 'ADMIN' } } });
     render(<SpeciesDetailScreen slug="syagrus-romanzoffiana" />);
     await user.click(await screen.findByRole('button', { name: 'Dar de baja' }));
-    await user.type(screen.getByLabelText('Motivo de la baja'), 'Retiro acordado');
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Dar de baja' }));
+    await user.type(screen.getByLabelText('Motivo del retiro'), 'Retiro acordado');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar retiro' }));
 
-    await screen.findByText('Inactiva');
+    await screen.findByText('En proceso de retiro');
     expect(api.deactivateSpecies).toHaveBeenCalledWith('syagrus-romanzoffiana', 'Retiro acordado');
     expect(screen.queryByRole('button', { name: 'Dar de baja' })).not.toBeInTheDocument();
   });

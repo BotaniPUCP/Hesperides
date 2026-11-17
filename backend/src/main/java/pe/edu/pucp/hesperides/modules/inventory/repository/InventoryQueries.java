@@ -45,9 +45,15 @@ final class InventoryQueries {
 
     static final String SPECIES_FILTER = """
              WHERE s.deleted_at IS NULL
-               AND (s.is_active OR EXISTS (SELECT 1 FROM green_elements visible_element
-                    WHERE visible_element.species_id = s.id AND visible_element.is_active
-                      AND visible_element.deleted_at IS NULL))
+               AND (
+                 (CAST(:retiring AS BOOLEAN) IS TRUE AND NOT s.is_active AND EXISTS (
+                     SELECT 1 FROM green_elements visible_element
+                     WHERE visible_element.species_id = s.id AND visible_element.is_active
+                       AND visible_element.deleted_at IS NULL
+                 ))
+                 OR
+                 (CAST(:retiring AS BOOLEAN) IS NOT TRUE AND s.is_active)
+               )
                AND (CAST(:type AS TEXT) IS NULL OR t.code = :type)
                AND (CAST(:search AS TEXT) IS NULL OR unaccent(lower(concat_ws(' ', s.scientific_name, s.common_name,
                     s.family, (SELECT string_agg(n.name, ' ') FROM species_common_names n

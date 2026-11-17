@@ -313,7 +313,7 @@ describe('SpecimenEditModal', () => {
       />
     );
 
-    expect(screen.getByText(/Actualizar Medidas · EV-000001/i)).toBeInTheDocument();
+    expect(screen.getByText(/Editar ejemplar · EV-000001/i)).toBeInTheDocument();
 
     await user.clear(screen.getByLabelText(/Altura total/i));
     await user.type(screen.getByLabelText(/Altura total/i), '12');
@@ -375,7 +375,7 @@ describe('SpecimenEditModal', () => {
 
     // Se cerró el diálogo de confirmación pero el modal de edición sigue abierto
     expect(screen.queryByText(/¿Confirmas registrar esta nueva medición/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/Actualizar Medidas · EV-000001/i)).toBeInTheDocument();
+    expect(screen.getByText(/Editar ejemplar · EV-000001/i)).toBeInTheDocument();
     expect(mockCatastroApi.update).not.toHaveBeenCalled();
   });
 });

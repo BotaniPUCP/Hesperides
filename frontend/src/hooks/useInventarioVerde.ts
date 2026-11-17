@@ -12,8 +12,8 @@ export interface UseInventarioVerdeSpeciesParams extends SpeciesFilters {
 }
 
 export function useInventarioVerdeSpecies(params: UseInventarioVerdeSpeciesParams = {}) {
-  const { search = '', vegetationType, page = 0, pageSize = 16, reloadKey } = params;
-  const request = { search, vegetationType, page, size: pageSize };
+  const { search = '', vegetationType, retiring, page = 0, pageSize = 16, reloadKey } = params;
+  const request = { search, vegetationType, retiring, page, size: pageSize };
   const { data, loading, errorMessage } = useRequest(
     JSON.stringify({ ...request, reloadKey }),
     () => inventarioVerdeApi.species(request),

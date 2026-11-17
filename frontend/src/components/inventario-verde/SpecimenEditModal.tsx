@@ -179,7 +179,7 @@ export function SpecimenEditModal({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title={`Actualizar Medidas · ${specimen.code}`}
+        title={`Editar ejemplar · ${specimen.code}`}
         size="lg"
         footer={
           <div className="flex items-center justify-end gap-3 w-full">

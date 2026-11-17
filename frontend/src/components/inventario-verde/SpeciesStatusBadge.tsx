@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui';
 
 /** Evita confundir una respuesta antigua sin estado con una especie inactiva. */
-export function SpeciesStatusBadge({ isActive, inactiveLabel = 'Inactiva' }: { isActive?: boolean | null; inactiveLabel?: string }) {
+export function SpeciesStatusBadge({ isActive, inactiveLabel = 'En proceso de retiro' }: { isActive?: boolean | null; inactiveLabel?: string }) {
   if (isActive === true) return null;
 
   const isInactive = isActive === false;
