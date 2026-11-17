@@ -1,0 +1,79 @@
+{
+  "voz": "es-PE-CamilaNeural",
+  "escenas": [
+    {
+      "id": "problema",
+      "frases": [
+        { "id": "v1", "texto": "Cuarenta y una hectáreas de campus. Más de tres mil árboles.", "hespo": { "x": -220, "pose": "quieto" } },
+        { "id": "v2", "texto": "Y toda la información, repartida en hojas que no se hablan entre sí.", "hespo": { "x": -220, "pose": "quieto" } },
+        {
+          "id": "v3",
+          "texto": "¿Qué se podó? ¿Quién lo hizo? ¿Qué está atrasado? Hoy, la única forma de saberlo es recorrer el campus.",
+          "hespo": { "x": 960, "pose": "confundido" }
+        }
+      ]
+    },
+    {
+      "id": "presentacion",
+      "frases": [
+        {
+          "id": "v4",
+          "texto": "¡Hola! Soy Hespo. Y para eso existe Hesperides.",
+          "textoVoz": "¡Hola! Soy Hespo. Y para eso existe Hespérides.",
+          "hespo": { "x": 960, "pose": "saluda", "luego": [{ "x": 960, "pose": "presenta", "en": 0.55 }] }
+        }
+      ]
+    },
+    {
+      "id": "informacion",
+      "frases": [
+        {
+          "id": "v5",
+          "texto": "Cada especie y cada árbol, con su ficha y su lugar en el mapa. Una sola información maestra, siempre al día.",
+          "hespo": { "x": 1720, "pose": "senala", "luego": [{ "x": 1720, "pose": "pulgar", "en": 0.75 }] }
+        }
+      ]
+    },
+    {
+      "id": "reporte",
+      "frases": [
+        {
+          "id": "v6",
+          "texto": "¿Una rama caída? El capataz la cuenta en una frase desde el celular, y la inteligencia artificial completa el resto.",
+          "hespo": { "x": 1380, "pose": "senala", "luego": [{ "x": 1380, "pose": "sorpresa", "en": 0.7 }] }
+        },
+        {
+          "id": "v7",
+          "texto": "Coordinación la revisa, la activa, y nada se pierde en el camino.",
+          "hespo": { "x": 1720, "pose": "asiente" }
+        }
+      ]
+    },
+    {
+      "id": "seguimiento",
+      "frases": [
+        {
+          "id": "v8",
+          "texto": "Las actividades se programan según su frecuencia: ustedes ven qué está atrasado, qué vence esta semana, y si choca con una reserva de jardín.",
+          "hespo": { "x": 1720, "pose": "senala" }
+        },
+        {
+          "id": "v9",
+          "texto": "Y cada trabajo, propio o tercerizado, queda registrado con su evidencia.",
+          "hespo": { "x": 1720, "pose": "pulgar" }
+        }
+      ]
+    },
+    {
+      "id": "final",
+      "frases": [
+        {
+          "id": "v10",
+          "texto": "Hesperides. Sus áreas verdes: visibles, ordenadas y con seguimiento. ¡Nos vemos en el campus!",
+          "textoVoz": "Hespérides. Sus áreas verdes: visibles, ordenadas y con seguimiento. ¡Nos vemos en el campus!",
+          "hespo": { "x": 960, "pose": "presenta", "luego": [{ "x": 960, "pose": "salta", "en": 0.72 }, { "x": 960, "pose": "saluda", "en": 0.85 }] }
+        }
+      ]
+    }
+  ]
+}

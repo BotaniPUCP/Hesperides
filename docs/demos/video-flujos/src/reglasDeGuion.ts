@@ -11,7 +11,7 @@ const PROMESAS = [
 ];
 
 /** Las reglas que valen para cualquier guion de Hespo. */
-export function probarReglasComunes(nombre: string, guion: Guion): void {
+export function probarReglasComunes(nombre: string, guion: Guion, permitidas: string[] = []): void {
   const frases = guion.escenas.flatMap((e) => e.frases);
 
   describe(`reglas comunes del ${nombre}`, () => {
@@ -60,7 +60,7 @@ export function probarReglasComunes(nombre: string, guion: Guion): void {
 
     test('no promete funciones inexistentes', () => {
       const texto = frases.map((f) => f.texto).join(' ').toLowerCase();
-      PROMESAS.forEach((p) => expect(texto).not.toContain(p));
+      PROMESAS.filter((p) => !permitidas.includes(p)).forEach((p) => expect(texto).not.toContain(p));
     });
   });
 }

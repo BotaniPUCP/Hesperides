@@ -1,7 +1,8 @@
 import datos from '../guion.json';
 import datosPlanificacion from '../guion-planificacion.json';
+import datosVenta from '../guion-venta.json';
 
-export const POSES = ['quieto', 'saluda', 'senala', 'presenta', 'pulgar', 'sorpresa', 'asiente', 'salta'] as const;
+export const POSES = ['quieto', 'saluda', 'senala', 'presenta', 'pulgar', 'sorpresa', 'asiente', 'salta', 'confundido'] as const;
 export type Pose = (typeof POSES)[number];
 
 /** Adónde va Hespo. `y` es la altura de los pies; sin ella camina por el suelo. */
@@ -29,7 +30,13 @@ export type EscenaId =
   | 'cierre'
   | 'frecuencias'
   | 'planificacion'
-  | 'reservas';
+  | 'reservas'
+  | 'problema'
+  | 'presentacion'
+  | 'informacion'
+  | 'reporte'
+  | 'seguimiento'
+  | 'final';
 export type Escena = { id: EscenaId; frases: Frase[] };
 export type Guion = { voz: string; escenas: Escena[] };
 
@@ -37,3 +44,6 @@ export const guion = datos as Guion;
 
 /** Segundo video: frecuencias, planificación y reservas de jardines. */
 export const guionPlanificacion = datosPlanificacion as Guion;
+
+/** Tercer video: presentación de Hesperides para el cliente, con Hespo en 3D. */
+export const guionVenta = datosVenta as Guion;

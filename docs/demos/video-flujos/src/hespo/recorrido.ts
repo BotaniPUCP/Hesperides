@@ -13,6 +13,12 @@ const SUELO: Record<EscenaId, number> = {
   frecuencias: SUELO_PAGINA,
   planificacion: SUELO_PAGINA,
   reservas: SUELO_PAGINA,
+  problema: SUELO_Y,
+  presentacion: SUELO_Y,
+  informacion: SUELO_PAGINA,
+  reporte: SUELO_PAGINA,
+  seguimiento: SUELO_PAGINA,
+  final: SUELO_Y,
 };
 
 /** Posición de Hespo al empezar cada escena: entra desde fuera de cuadro. */

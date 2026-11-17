@@ -22,6 +22,8 @@ export const POSES_HESPO: Record<Pose, Articulaciones> = {
   sorpresa: { ...REPOSO, brazoI: 60, brazoD: -60, saltoY: -8 },
   asiente: { ...REPOSO, inclina: 2 },
   salta: { ...REPOSO, brazoI: 118, brazoD: -118, piernaI: 14, piernaD: -14, saltoY: -30 },
+  /** Se rasca la cabeza: el brazo derecho sube por encima. */
+  confundido: { ...REPOSO, brazoD: -150, inclina: 8, mirada: -6 },
 };
 
 export function mezclar(a: Articulaciones, b: Articulaciones, t: number): Articulaciones {
