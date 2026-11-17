@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { SpeciesImportOption } from '@shared/types';
 import { Button, Input } from '@/components/ui';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -10,7 +10,6 @@ export interface SelectorDeEspecieParaImportacionProps {
   sourceName: string;
   buttonLabel?: string;
   disabled?: boolean;
-  toolbarAction?: ReactNode;
   onSelect: (species: SpeciesImportOption) => void;
 }
 
@@ -19,7 +18,6 @@ export function SelectorDeEspecieParaImportacion({
   sourceName,
   buttonLabel = 'Seleccionar especie existente',
   disabled = false,
-  toolbarAction,
   onSelect,
 }: SelectorDeEspecieParaImportacionProps) {
   const [open, setOpen] = useState(false);
@@ -96,7 +94,6 @@ export function SelectorDeEspecieParaImportacion({
             {buttonLabel}
           </Button>
         )}
-        {toolbarAction}
       </div>
 
       {open && (

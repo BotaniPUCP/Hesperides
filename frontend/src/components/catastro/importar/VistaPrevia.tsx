@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Button, Card } from '@/components/ui';
-import { RegistroEspecieModal } from '@/components/inventario-verde';
 import { SelectorDeEspecieParaImportacion } from './SelectorDeEspecieParaImportacion';
 import { ConfirmarImportacionModal } from './ConfirmarImportacionModal';
 import { traducirMensajeCatastro } from '../mensajes';
@@ -22,9 +21,7 @@ const fotos = (n: number) => (n === 1 ? '1 foto' : `${n} fotos`);
 
 /** Lo que haría la carga, antes de hacerlo (SPEC-103 §5.2). */
 export function VistaPrevia({ imp }: { imp: Importacion }) {
-  const [especieModalOpen, setEspecieModalOpen] = useState(false);
-  const [especieParaRegistrar, setEspecieParaRegistrar] = useState('');
-  const [especieSourceKey, setEspecieSourceKey] = useState('');
+
   const [copiedIssues, setCopiedIssues] = useState(false);
   const [mostrarTodasAsociaciones, setMostrarTodasAsociaciones] = useState(false);
   const [buscarAsociacion, setBuscarAsociacion] = useState('');
@@ -248,7 +245,7 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                   </h3>
                   <p className="text-xs text-neutral-600 mt-0.5">
                     {imp.kind === 'specimens'
-                      ? 'Asocia cada grupo a una especie existente o registra una nueva. La selección solo afecta este lote; no crea alias ni modifica una especie existente.'
+                      ? 'Asocia cada grupo a una especie existente en el catálogo. La selección solo afecta este lote; no crea alias ni modifica una especie existente.'
                       : 'Estas filas no se cargarán porque la especie no está en el catálogo.'}
                   </p>
                 </div>
@@ -274,15 +271,6 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                           sourceName={s.name}
                           buttonLabel="Seleccionar especie existente"
                           disabled={reviewLocked}
-                          toolbarAction={(
-                            <Button size="sm" variant="secondary" disabled={reviewLocked} onClick={() => {
-                              setEspecieParaRegistrar(s.name);
-                              setEspecieSourceKey(s.sourceKey ?? s.name);
-                              setEspecieModalOpen(true);
-                            }}>
-                              + Registrar nueva especie
-                            </Button>
-                          )}
                           onSelect={(species) => void imp.vincularEspecie(s.sourceKey ?? s.name, species.slug)}
                         />
                       </div>
@@ -335,15 +323,6 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
         </div>
       </Card>
 
-      <RegistroEspecieModal
-        isOpen={especieModalOpen}
-        onClose={() => setEspecieModalOpen(false)}
-        initialScientificName={especieParaRegistrar}
-        onCreated={async (created) => {
-          setEspecieModalOpen(false);
-          await imp.vincularEspecie(especieSourceKey, created.slug);
-        }}
-      />
       {imp.kind === 'specimens' && imp.confirmationSummary && (
         <ConfirmarImportacionModal
           summary={imp.confirmationSummary}

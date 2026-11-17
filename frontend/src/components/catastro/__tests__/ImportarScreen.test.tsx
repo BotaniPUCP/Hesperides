@@ -258,33 +258,14 @@ describe('ImportarScreen', () => {
     expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
   });
 
-  it('permite abrir el modal de registro de especie desde la lista de especies no registradas', async () => {
+  it('no ofrece registrar una nueva especie desde la importación y solo permite asociar existentes', async () => {
     api.previewImport.mockResolvedValue(VISTA);
     pantalla();
     await subirYRevisar();
 
     expect(await screen.findByText('Planta inventada')).toBeInTheDocument();
-    const btnRegistrar = screen.getByRole('button', { name: '+ Registrar nueva especie' });
-    expect(btnRegistrar).toBeInTheDocument();
-
-    await userEvent.click(btnRegistrar);
-    expect(await screen.findByRole('dialog', { name: 'Registrar nueva especie botánica' })).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Planta inventada')).toBeInTheDocument();
-  });
-
-  it('cancelar el registro nuevo conserva el lote pendiente y no crea la especie', async () => {
-    api.previewImport.mockResolvedValue(VISTA);
-    pantalla();
-    await subirYRevisar();
-    await userEvent.click(screen.getByRole('button', { name: '+ Registrar nueva especie' }));
-    expect(await screen.findByRole('dialog', { name: 'Registrar nueva especie botánica' })).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-
-    expect(screen.queryByRole('dialog', { name: 'Registrar nueva especie botánica' })).not.toBeInTheDocument();
-    expect(screen.getByText('Planta inventada')).toBeInTheDocument();
-    expect(api.reanalyzeImport).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Confirmar carga' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: '+ Registrar nueva especie' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Seleccionar especie existente' })).toBeInTheDocument();
   });
 
   it('vincula un grupo desconocido a una especie existente y actualiza la misma vista previa', async () => {
@@ -617,41 +598,6 @@ describe('ImportarScreen', () => {
     });
     expect(screen.getByRole('option', { name: /Ficus reciente/ })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: /Ficus anterior/ })).not.toBeInTheDocument();
-  });
-
-  it('si se corrige el nombre al crear una especie, conserva la asociación con el nombre original del CSV', async () => {
-    api.previewImport.mockResolvedValue({ ...VISTA, duplicates: [] });
-    api.reanalyzeImport.mockResolvedValue({
-      ...VISTA,
-      duplicates: [],
-      unknownSpecies: [],
-      speciesBindings: [{
-        sourceKey: 'planta inventada', sourceName: 'Planta inventada', rows: 4,
-        speciesSlug: 'planta-corregida', scientificName: 'Planta corregida', active: true,
-        resolution: 'USER_SELECTED',
-      }],
-    });
-    registerSpecies.mockResolvedValue({
-      slug: 'planta-corregida', isActive: true, scientificName: 'Planta corregida', commonName: '', otherNames: [],
-      family: null, vegetationTypeCode: 'TREE', vegetationTypeName: 'Árbol', originCode: null, originName: null,
-      description: null, careNotes: null, specimenCount: 0, imageUrl: null, imageSource: null, photos: [],
-      critical: true, referenceHeightM: null, referenceHeightSourceCode: null, referenceHeightSourceName: null,
-      referenceCrownRadiusM: null, referenceCrownRadiusSourceCode: null, referenceCrownRadiusSourceName: null,
-      usesTrunkHeight: true, usesDbh: true, unmeasuredSpecimenCount: 0, extraMeasures: [],
-    });
-    pantalla();
-    await subirYRevisar();
-    await userEvent.click(screen.getByRole('button', { name: '+ Registrar nueva especie' }));
-    const scientificName = screen.getByLabelText(/Nombre científico/);
-    await userEvent.clear(scientificName);
-    await userEvent.type(scientificName, 'Planta corregida');
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar especie' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar y registrar' }));
-
-    expect(await screen.findByText('Especies que se asociarán a los ejemplares')).toBeInTheDocument();
-    expect(api.reanalyzeImport).toHaveBeenCalledWith(12, expect.any(File), null, {
-      'planta inventada': 'planta-corregida',
-    });
   });
 
   it('una asociación pendiente no permite confirmar mientras se reanaliza', async () => {
