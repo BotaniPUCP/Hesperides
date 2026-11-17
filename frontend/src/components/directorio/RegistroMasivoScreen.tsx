@@ -61,14 +61,16 @@ export function RegistroMasivoScreen() {
       <PageHeader title="Registro masivo"
         description="Sube un CSV con muchas organizaciones o contactos. Primero se revisa; si una fila tiene error, no se guarda ninguna." />
       <section className="surface-card space-y-6" aria-label="Archivo">
-        {TIPOS.map((t) => (
-          <div key={t.kind} className="space-y-3">
-            <h2 className="font-semibold text-neutral-900">{t.title}</h2>
-            <EstandarDelDirectorio kind={t.kind} />
-            <Button variant="secondary" size="sm" onClick={() => imp.template(t.kind)} disabled={imp.working}
-              aria-label={`Descargar plantilla de ${t.plural}`}>Descargar plantilla</Button>
-          </div>
-        ))}
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          {TIPOS.map((t) => (
+            <div key={t.kind} className="min-w-0 space-y-3">
+              <h2 className="font-semibold text-neutral-900">{t.title}</h2>
+              <EstandarDelDirectorio kind={t.kind} />
+              <Button variant="secondary" size="sm" onClick={() => imp.template(t.kind)} disabled={imp.working}
+                aria-label={`Descargar plantilla de ${t.plural}`}>Descargar plantilla</Button>
+            </div>
+          ))}
+        </div>
         <div className="flex flex-wrap items-center gap-3 border-t border-neutral-100 pt-4">
           <input key={imp.fileInputKey} ref={fileInput} type="file" accept=".csv,text/csv" className="sr-only"
             aria-label="Archivo CSV" tabIndex={-1} onChange={(e) => imp.upload(e.target.files?.[0] ?? null)} />
