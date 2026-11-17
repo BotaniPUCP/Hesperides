@@ -2,6 +2,8 @@ import { exportSequence, EXPORT_FPS, EXPORT_FRAMES, type ExportViewer, type Fram
 import { cameraPoseAt, SEQUENCE_DURATION_S } from '../sequencePath';
 import { SWAP_AT_S } from '../sequenceTimeline';
 
+import { composeFrame } from '../frameCompositor';
+
 jest.mock('../frameCompositor', () => ({ composeFrame: jest.fn() }));
 
 function fakeViewer() {
@@ -76,6 +78,21 @@ describe('exportación de la secuencia', () => {
     expect(sink.cancel).toHaveBeenCalled();
     expect(sink.finish).not.toHaveBeenCalled();
     expect(viewer.endExport).toHaveBeenCalled();
+  });
+
+  it('lleva el logo: pixelado y sin suavizar antes del cambio, original y suavizado después', async () => {
+    (composeFrame as jest.Mock).mockClear();
+    const pixel = document.createElement('img'), original = document.createElement('img');
+    await exportSequence({ viewer: fakeViewer().viewer, canvas: output(), breathe: async () => undefined, sink: fakeSink().sink,
+      logos: { pixel, original } });
+    const logoAtFrame = (i: number) => (composeFrame as jest.Mock).mock.calls[i][5];
+    const atFive = logoAtFrame(5 * EXPORT_FPS), atSix = logoAtFrame(6 * EXPORT_FPS);
+    expect(atFive.image).toBe(pixel);
+    expect(atFive.smooth).toBe(false);
+    expect(atFive.state.visible).toBe(true);
+    expect(atSix.image).toBe(original);
+    expect(atSix.smooth).toBe(true);
+    expect(logoAtFrame(0).state.visible).toBe(false);
   });
 
   it('si el codificador falla, el visor vuelve igual a la normalidad', async () => {

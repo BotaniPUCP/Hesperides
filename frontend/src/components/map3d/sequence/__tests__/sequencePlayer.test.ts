@@ -28,8 +28,9 @@ function fakeViewer() {
 
 function surfaces() {
   const effects = document.createElement('div'), overlay = document.createElement('div');
-  effects.append(overlay);
-  return { effects, overlay };
+  const logos = { pixel: document.createElement('img'), original: document.createElement('img') };
+  effects.append(overlay, logos.pixel, logos.original);
+  return { effects, overlay, logos };
 }
 
 /** Avanza a 60 cuadros por segundo hasta `seconds` de secuencia. */
@@ -82,6 +83,21 @@ describe('reproductor de la secuencia', () => {
     c.frame(0);
     c.frame(800);
     expect(viewer.setPoseNow).toHaveBeenLastCalledWith(cameraPoseAt(1 / 30));
+  });
+
+  it('muestra el logo que toca: nada al inicio, el pixelado cayendo y el original tras el cambio', () => {
+    const c = manualClock();
+    const s = surfaces();
+    playSequence(fakeViewer().viewer, s, jest.fn(), c.clock);
+    expect(s.logos.pixel.style.display).toBe('none');
+    expect(s.logos.original.style.display).toBe('none');
+    const now = runTo(c, 4.5);
+    expect(s.logos.pixel.style.display).toBe('');
+    expect(s.logos.original.style.display).toBe('none');
+    expect(s.logos.pixel.style.transform).toMatch(/^translate\(-50%, -50%\) rotate\([\d.]+deg\)$/);
+    runTo(c, 2, now);
+    expect(s.logos.pixel.style.display).toBe('none');
+    expect(s.logos.original.style.display).toBe('');
   });
 
   it('detenerla corta los cuadros pendientes', () => {

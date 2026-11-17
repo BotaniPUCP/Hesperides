@@ -171,3 +171,29 @@ cuadro se dibuja el tiempo que haga falta y lleva su marca de tiempo exacta.
 
 - **CA-08** E descarga un MP4 de 12 s a 1920×1080 que se abre con doble clic en Windows, con la
   transición en el segundo 5 y sin tirones, aunque el equipo dibuje a menos de 60 fps.
+
+## 9. El logo de Hespérides (añadido el 17 nov 2026)
+
+Imágenes en `frontend/public/secuencia/`: `hesperides-pixelado.png` y `hesperides-original.png`
+(1080×1080 con fondo transparente; la hoja ocupa ~965 px de ancho). La pixelada es otro dibujo,
+no solo la original pixelada: el cambio queda oculto porque el logo todavía gira y está
+desenfocado.
+
+| Tiempo | Qué hace el logo |
+|---|---|
+| < 4,0 s | No se ve |
+| 4,0 → 7,0 s | Aparece centrado en horizontal, con su centro a 15 % del borde superior y al 15 % de su tamaño. Baja al centro, crece al 100 % y gira 3 vueltas en sentido horario que van frenando, como una licuadora. Los primeros 0,3 s pasa de transparente a opaco. Todo con una curva que frena al llegar |
+| 5,25 s | Cambia de la imagen pixelada a la original, junto con el mapa y bajo el mismo desenfoque |
+| ≥ 7,0 s | Queda anclado en el espacio a **200 m** delante de la cámara, en el centro de su vista. La cámara lo pasa a ~18 m y sale del cuadro por arriba a la izquierda hacia los 10,2 s |
+
+- Al 100 %, la hoja ocupa el **40 %** del ancho del cuadro. Anclado, su tamaño en pantalla es el
+  de un cartel de ~100 m de ancho a esa distancia.
+- Se dibuja siempre de frente a la cámara y encima del mapa (D-08). La pixelada va sin suavizar y la
+  original, suavizada. Lleva el mismo desenfoque, brillo y escala de §5.3, en vivo y en el MP4.
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-08 | El logo anclado se dibuja en 2D, de frente, con la posición y el tamaño que tendría en el espacio | Conserva sus colores (el Atardecer gradúa todo lo que está en la escena) y siempre se ve completo | Un cartel dentro de la escena 3D: se inclinaría al pasarlo, pero la bruma y la gradación le cambian los colores y los edificios pueden taparlo |
+
+- **CA-09** El logo aparece a los 4 s, gira y llega al centro a los 7 s, cambia de imagen a los 5,25 s
+  sin que se note, y desde los 7 s se queda fijo en el espacio hasta salir por un costado.

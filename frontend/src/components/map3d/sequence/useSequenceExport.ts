@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Viewer } from '../viewer/createViewer';
 import { EXPORT_FPS, EXPORT_SIZE, exportSequence } from './exportSequence';
+import type { LogoState } from './logoMotion';
 import { createMp4Sink } from './mp4Sink';
+
+type LogoImages = Record<LogoState['image'], HTMLImageElement>;
 
 /** La exportación a MP4 de SPEC-118 §8, con su avance en por ciento y cómo cancelarla. */
 
@@ -21,7 +24,7 @@ export interface SequenceExport {
   /** Por ciento exportado; null si no se está exportando. */
   percent: number | null;
   /** Resuelve con null si terminó o se canceló, o con el motivo si falló. */
-  start: (viewer: Viewer) => Promise<string | null>;
+  start: (viewer: Viewer, logos?: LogoImages) => Promise<string | null>;
   cancel: () => void;
 }
 
@@ -30,14 +33,16 @@ export function useSequenceExport(): SequenceExport {
   const running = useRef<AbortController | null>(null);
   useEffect(() => () => running.current?.abort(), []);
 
-  const start = useCallback(async (viewer: Viewer) => {
+  const start = useCallback(async (viewer: Viewer, logos?: LogoImages) => {
     const controller = new AbortController();
     running.current = controller;
     setPercent(0);
     const canvas = Object.assign(document.createElement('canvas'), EXPORT_SIZE);
     try {
+      // Una imagen que no cargó haría un video sin logo: mejor fallar antes de dibujar.
+      if (logos) await Promise.all(Object.values(logos).map((image) => image.decode()));
       const sink = await createMp4Sink(canvas, EXPORT_FPS);
-      const blob = await exportSequence({ viewer, canvas, sink, signal: controller.signal,
+      const blob = await exportSequence({ viewer, canvas, sink, logos, signal: controller.signal,
         onProgress: (fraction) => setPercent(Math.floor(fraction * 100)) });
       download(blob);
       return null;

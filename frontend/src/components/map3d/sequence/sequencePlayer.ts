@@ -1,4 +1,5 @@
 import type { SequenceHooks } from '../viewer/sequenceHooks';
+import { logoAt, type LogoState } from './logoMotion';
 import { cameraPoseAt, SEQUENCE_DURATION_S } from './sequencePath';
 import { frameAt, type SequenceFrame, type SequenceLook } from './sequenceTimeline';
 
@@ -15,6 +16,8 @@ export interface SequenceSurfaces {
   effects: HTMLElement;
   /** Encima del visor, dentro de `effects`: muestra el cuadro congelado. */
   overlay: HTMLElement;
+  /** Las dos imágenes del logo de §9, dentro de `effects` y encima de `overlay`. */
+  logos?: Record<LogoState['image'], HTMLElement>;
 }
 
 export interface SequenceClock {
@@ -35,6 +38,22 @@ export function applyEffects({ effects, overlay }: SequenceSurfaces, f: Sequence
   if (f.frozenOpacity === 0 && overlay.childElementCount > 0) overlay.replaceChildren();
 }
 
+/** Solo se ve la imagen que toca; el ancho es fracción del cuadro, como en el video. */
+export function placeLogo(logos: SequenceSurfaces['logos'], state: LogoState): void {
+  if (!logos) return;
+  (Object.keys(logos) as LogoState['image'][]).forEach((key) => {
+    const el = logos[key];
+    el.style.display = state.visible && state.image === key ? '' : 'none';
+    el.style.left = `${(state.x * 100).toFixed(3)}%`;
+    el.style.top = `${(state.y * 100).toFixed(3)}%`;
+    el.style.width = `${(state.width * 100).toFixed(3)}%`;
+    el.style.opacity = String(state.opacity);
+    el.style.transform = `translate(-50%, -50%) rotate(${state.rotationDeg.toFixed(2)}deg)`;
+  });
+}
+
+const aspectOf = (el: HTMLElement) => (el.clientWidth && el.clientHeight ? el.clientWidth / el.clientHeight : 16 / 9);
+
 function freezeInto(overlay: HTMLElement, frame: HTMLCanvasElement) {
   frame.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated';
   overlay.replaceChildren(frame);
@@ -47,6 +66,7 @@ export function playSequence(viewer: SequenceHooks, surfaces: SequenceSurfaces, 
   viewer.setSequenceLook(look);
   viewer.setPoseNow(cameraPoseAt(0));
   applyEffects(surfaces, frameAt(0));
+  placeLogo(surfaces.logos, logoAt(0, aspectOf(surfaces.effects)));
 
   const tick = (now: number) => {
     t = Math.min(SEQUENCE_DURATION_S, t + (last === null ? 0 : Math.min((now - last) / 1000, MAX_STEP_S)));
@@ -58,6 +78,7 @@ export function playSequence(viewer: SequenceHooks, surfaces: SequenceSurfaces, 
       look = f.look;
     }
     applyEffects(surfaces, f);
+    placeLogo(surfaces.logos, logoAt(t, aspectOf(surfaces.effects)));
     viewer.setPoseNow(cameraPoseAt(t));
     if (t >= SEQUENCE_DURATION_S) { onDone(); return; }
     id = clock.request(tick);

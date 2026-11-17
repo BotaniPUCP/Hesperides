@@ -1,5 +1,6 @@
 import type { SequenceHooks } from '../viewer/sequenceHooks';
-import { composeFrame, type FrameSize } from './frameCompositor';
+import { composeFrame, type FrameSize, type LogoLayer } from './frameCompositor';
+import { logoAt, type LogoState } from './logoMotion';
 import { cameraPoseAt, SEQUENCE_DURATION_S } from './sequencePath';
 import { frameAt, type SequenceLook } from './sequenceTimeline';
 
@@ -29,13 +30,21 @@ export interface ExportJob {
   sink: FrameSink;
   onProgress?: (fraction: number) => void;
   signal?: AbortSignal;
+  /** Las dos imágenes del logo de §9, ya cargadas; sin ellas, el video va sin logo. */
+  logos?: Record<LogoState['image'], CanvasImageSource>;
   /** Entre cuadros: deja ver el avance y no congela la pestaña. */
   breathe?: () => Promise<unknown>;
 }
 
 const yieldToBrowser = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-async function renderFrames({ viewer, canvas, sink, onProgress, signal, breathe = yieldToBrowser }: ExportJob): Promise<void> {
+function logoLayer(t: number, logos: ExportJob['logos']): LogoLayer | undefined {
+  if (!logos) return undefined;
+  const state = logoAt(t, EXPORT_SIZE.width / EXPORT_SIZE.height);
+  return { image: logos[state.image], state, smooth: state.image === 'original' };
+}
+
+async function renderFrames({ viewer, canvas, sink, logos, onProgress, signal, breathe = yieldToBrowser }: ExportJob): Promise<void> {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('El navegador no dio un contexto 2D para componer el video');
   const step = 1 / EXPORT_FPS;
@@ -50,7 +59,7 @@ async function renderFrames({ viewer, canvas, sink, onProgress, signal, breathe 
       look = f.look;
     }
     viewer.setPoseNow(cameraPoseAt(t));
-    composeFrame(ctx, EXPORT_SIZE, viewer.freezeFrame(), f.frozenOpacity > 0 ? frozen : null, f);
+    composeFrame(ctx, EXPORT_SIZE, viewer.freezeFrame(), f.frozenOpacity > 0 ? frozen : null, f, logoLayer(t, logos));
     await sink.add(t, step);
     onProgress?.((i + 1) / EXPORT_FRAMES);
     if (signal?.aborted) throw new Error('Exportación cancelada');

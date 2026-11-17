@@ -26,6 +26,9 @@ type Phase = 'loading' | 'preparing' | 'ready' | 'playing' | 'done' | 'exporting
 const PREWARM_GOOD_MS = 3000;
 const PREWARM_LOW_MS = 600;
 const VIEWER_START: ViewerStart = { realColors: INITIAL_OPTIONS.realColors };
+/** El logo de §9: la pixelada se amplía sin suavizar. */
+const LOGO_SRC = { pixel: '/secuencia/hesperides-pixelado.png', original: '/secuencia/hesperides-original.png' } as const;
+const LOGO_CLASS = 'pointer-events-none absolute max-w-none select-none';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -62,6 +65,10 @@ export function MapSequenceScreen() {
   const viewer = useRef<Viewer | null>(null);
   const effects = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
+  const pixelLogo = useRef<HTMLImageElement>(null);
+  const originalLogo = useRef<HTMLImageElement>(null);
+  const logos = () => (pixelLogo.current && originalLogo.current
+    ? { pixel: pixelLogo.current, original: originalLogo.current } : undefined);
   const stop = useRef<(() => void) | null>(null);
   const exporter = useSequenceExport();
   const [notice, setNotice] = useState<string | null>(null);
@@ -94,12 +101,12 @@ export function MapSequenceScreen() {
         e.preventDefault();
         stop.current?.();
         setPhase('playing');
-        stop.current = playSequence(v, { effects: effects.current, overlay: overlay.current }, () => setPhase('done'));
+        stop.current = playSequence(v, { effects: effects.current, overlay: overlay.current, logos: logos() }, () => setPhase('done'));
       } else if (e.key.toLowerCase() === 'e') {
         stop.current?.();
         setNotice(null);
         setPhase('exporting');
-        void exporter.start(v).then((failure) => { setNotice(failure); setPhase('ready'); });
+        void exporter.start(v, logos()).then((failure) => { setNotice(failure); setPhase('ready'); });
       }
     };
     window.addEventListener('keydown', onKey);
@@ -118,6 +125,10 @@ export function MapSequenceScreen() {
             onHover={() => undefined} onCompass={() => undefined} />
         )}
         <div ref={overlay} className="pointer-events-none absolute inset-0" style={{ opacity: 0 }} />
+        {/* eslint-disable-next-line @next/next/no-img-element -- se mueve cuadro a cuadro y el video lo dibuja tal cual */}
+        <img ref={pixelLogo} src={LOGO_SRC.pixel} alt="" className={LOGO_CLASS} style={{ display: 'none', imageRendering: 'pixelated' }} />
+        {/* eslint-disable-next-line @next/next/no-img-element -- ídem */}
+        <img ref={originalLogo} src={LOGO_SRC.original} alt="" className={LOGO_CLASS} style={{ display: 'none' }} />
       </div>
       {veil && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/85 text-lg text-white" role="status">
