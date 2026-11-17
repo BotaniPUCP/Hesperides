@@ -243,3 +243,19 @@ Reemplaza la caída girando de §9 y §9.1. Lo demás de §9.1 sigue igual.
 | D-11 | Aparición en transparencia con un leve crecimiento (opción B, elegida por Jean Piero) | Sutil, con algo de vida, y no compite con el desenfoque del segundo 5 | Quieto sin crecer (A); enfocándose desde un desenfoque (C: repite el recurso del segundo 5); marca de agua al 30 % (D) |
 
 - **CA-11** En el primer cuadro el logo está en el centro y transparente; a los 2,5 s es opaco y nunca gira.
+
+### 9.3 La cámara gira la mirada con el logo (17 nov 2026)
+
+Mientras el logo se desliza hacia (35 %, 35 %) (de 2,9 a 3,8 s de la secuencia), la cámara gira su
+mirada con la misma curva hacia el lado contrario, a la derecha y abajo: ~10° en el pico. En el
+pico, lo que estaba en el centro de la ruta queda justo donde termina el logo, así que se mueve todo
+el encuadre y no solo la imagen. Desde ahí la mirada vuelve despacio a la ruta y a los 12 s la toma
+es la de §6.1. La cámara no cambia de lugar: solo hacia dónde mira. El logo sigue su coreografía
+(§9.1-§9.2) calculada sobre la ruta sin giro.
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-12 | Giro de la mirada (opción A, elegida por Jean Piero) | Se lee como movimiento de cámara sin cambiar el tamaño máximo del logo ni su salida con el desenfoque | Desplazar la cámara en arco con el logo anclado de verdad: para irse a los 6 s tapa casi toda la pantalla, o el arco deja de ser sutil |
+
+- **CA-12** De 2,9 a 3,8 s el encuadre gira junto con el logo; a los 12 s la toma termina en la pose
+  final de §6.1.

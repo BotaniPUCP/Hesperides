@@ -16,8 +16,8 @@ type Vec3 = [number, number, number];
 /** La coreografía, en su propio tiempo: quieto en el centro hasta 4 s, se desliza y se ancla a 6 s. */
 export const LOGO_LANDED_S = 4;
 export const LOGO_SETTLE_S = 6;
-/** Hacia dónde se desliza antes de anclarse. */
-const ANCHOR_SCREEN = { x: 0.35, y: 0.35 };
+/** Hacia dónde se desliza antes de anclarse; la mirada de la cámara gira lo mismo (sequenceCamera). */
+export const LOGO_ANCHOR_SCREEN = { x: 0.35, y: 0.35 };
 /** La hoja ocupa ~965 de los 1080 px de la imagen; en el centro ocupa el 40 % del cuadro. */
 const LEAF_SHARE = 965 / 1080;
 const LEAF_WIDTH = 0.4;
@@ -60,7 +60,7 @@ function anchorFor(aspect: number): Vec3 {
   const known = anchors.get(aspect);
   if (known) return known;
   const { position, forward, right, up } = cameraFrame(LOGO_SETTLE_S);
-  const nx = (ANCHOR_SCREEN.x - 0.5) * 2 * HALF_FOV_TAN * aspect, ny = (0.5 - ANCHOR_SCREEN.y) * 2 * HALF_FOV_TAN;
+  const nx = (LOGO_ANCHOR_SCREEN.x - 0.5) * 2 * HALF_FOV_TAN * aspect, ny = (0.5 - LOGO_ANCHOR_SCREEN.y) * 2 * HALF_FOV_TAN;
   const anchor = [0, 1, 2].map((i) => position[i] + (forward[i] + right[i] * nx + up[i] * ny) * LOGO_ANCHOR_M) as Vec3;
   anchors.set(aspect, anchor);
   return anchor;
@@ -72,7 +72,7 @@ const centered = (t: number, width: number, opacity: number): LogoState =>
 
 function drifting(t: number): LogoState {
   const e = easeInOut((t - LOGO_LANDED_S) / (LOGO_SETTLE_S - LOGO_LANDED_S));
-  return { ...centered(t, LOGO_IMAGE_WIDTH, 1), x: 0.5 + (ANCHOR_SCREEN.x - 0.5) * e, y: 0.5 + (ANCHOR_SCREEN.y - 0.5) * e };
+  return { ...centered(t, LOGO_IMAGE_WIDTH, 1), x: 0.5 + (LOGO_ANCHOR_SCREEN.x - 0.5) * e, y: 0.5 + (LOGO_ANCHOR_SCREEN.y - 0.5) * e };
 }
 
 function anchored(t: number, aspect: number): LogoState {
@@ -108,6 +108,8 @@ const FAST_SPEED = (() => {
 })();
 /** Cuando la coreografía empieza a deslizarse: hasta ahí, el logo aparece en el centro. */
 export const LOGO_APPEARED_S = WARP_FROM_S + (LOGO_LANDED_S - WARP_FROM_S) / FAST_SPEED;
+/** Cuando, en la secuencia, termina de deslizarse y queda anclado. */
+export const LOGO_ANCHORED_S = WARP_FROM_S + (LOGO_SETTLE_S - WARP_FROM_S) / FAST_SPEED;
 /** La aparición: opacidad de 0 a 1 en este tiempo, y de 92 % a 100 % de tamaño hasta LOGO_APPEARED_S. */
 const FADE_IN_S = 2.5;
 const APPEAR_SCALE = 0.92;

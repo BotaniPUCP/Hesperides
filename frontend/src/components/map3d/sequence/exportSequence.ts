@@ -1,7 +1,8 @@
 import type { SequenceHooks } from '../viewer/sequenceHooks';
 import { composeFrame, type FrameSize, type LogoLayer } from './frameCompositor';
 import { logoAt, type LogoState } from './logoMotion';
-import { cameraPoseAt, SEQUENCE_DURATION_S } from './sequencePath';
+import { SEQUENCE_DURATION_S } from './sequencePath';
+import { shotPoseAt } from './sequenceCamera';
 import { frameAt, type SequenceLook } from './sequenceTimeline';
 
 /**
@@ -58,7 +59,7 @@ async function renderFrames({ viewer, canvas, sink, logos, onProgress, signal, b
       viewer.setSequenceLook(f.look);
       look = f.look;
     }
-    viewer.setPoseNow(cameraPoseAt(t));
+    viewer.setPoseNow(shotPoseAt(t, EXPORT_SIZE.width / EXPORT_SIZE.height));
     composeFrame(ctx, EXPORT_SIZE, viewer.freezeFrame(), f.frozenOpacity > 0 ? frozen : null, f, logoLayer(t, logos));
     await sink.add(t, step);
     onProgress?.((i + 1) / EXPORT_FRAMES);

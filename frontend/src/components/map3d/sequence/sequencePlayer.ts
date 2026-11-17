@@ -1,6 +1,7 @@
 import type { SequenceHooks } from '../viewer/sequenceHooks';
 import { logoAt, type LogoState } from './logoMotion';
-import { cameraPoseAt, SEQUENCE_DURATION_S } from './sequencePath';
+import { SEQUENCE_DURATION_S } from './sequencePath';
+import { shotPoseAt } from './sequenceCamera';
 import { frameAt, type SequenceFrame, type SequenceLook } from './sequenceTimeline';
 
 /**
@@ -64,7 +65,7 @@ export function playSequence(viewer: SequenceHooks, surfaces: SequenceSurfaces, 
   clock: SequenceClock = BROWSER_CLOCK): () => void {
   let t = 0, last: number | null = null, look: SequenceLook = 'low', id = 0;
   viewer.setSequenceLook(look);
-  viewer.setPoseNow(cameraPoseAt(0));
+  viewer.setPoseNow(shotPoseAt(0, aspectOf(surfaces.effects)));
   applyEffects(surfaces, frameAt(0));
   placeLogo(surfaces.logos, logoAt(0, aspectOf(surfaces.effects)));
 
@@ -79,7 +80,7 @@ export function playSequence(viewer: SequenceHooks, surfaces: SequenceSurfaces, 
     }
     applyEffects(surfaces, f);
     placeLogo(surfaces.logos, logoAt(t, aspectOf(surfaces.effects)));
-    viewer.setPoseNow(cameraPoseAt(t));
+    viewer.setPoseNow(shotPoseAt(t, aspectOf(surfaces.effects)));
     if (t >= SEQUENCE_DURATION_S) { onDone(); return; }
     id = clock.request(tick);
   };
