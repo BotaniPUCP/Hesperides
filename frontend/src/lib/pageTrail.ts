@@ -16,6 +16,7 @@ export interface PageTrailOptions {
 const ROUTE_LABELS: Readonly<Record<string, string>> = {
   '/incidencias/nueva': 'Informar',
   '/intervenciones/nueva': 'Nueva intervención',
+  '/reservas/nueva': 'Nueva reserva',
   '/lugares/nuevo': 'Nuevo lugar',
 };
 const SEGMENT_LABELS: Readonly<Record<string, string>> = { editar: 'Editar' };

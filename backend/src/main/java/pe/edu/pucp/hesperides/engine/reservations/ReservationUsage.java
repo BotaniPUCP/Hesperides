@@ -2,7 +2,7 @@ package pe.edu.pucp.hesperides.engine.reservations;
 
 /**
  * El uso del espacio de una reserva, derivado y no guardado: las marcas sí se
- * guardan ({@code use_confirmed} y {@code space_used}), pero lo que ve el
+ * guardan ({@code space_used}), pero lo que ve el
  * usuario se calcula con el reloj (SPEC-107, enmienda del 11 nov 2026).
  *
  * <p>Es un enum de Java porque cada valor corresponde a una rama de

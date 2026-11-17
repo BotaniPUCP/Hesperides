@@ -104,7 +104,7 @@ export function ReservationForm() {
     <form className="space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
       {guard.dialog}
       <PageHeader title="Nueva reserva"
-        description="Un jardín prestable, quién lo pide y quién responde por él, todos del Directorio. Los cruces y el trabajo cercano avisan, pero no impiden guardar." />
+        description="Elige el jardín, quién lo pide y quién responde por él, con fecha y horario. Los avisos de cruce son informativos y no bloquean el registro." />
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <fieldset disabled={pending} className="surface-card space-y-5 disabled:opacity-70">
         <legend className="sr-only">Datos de la reserva</legend>
@@ -114,14 +114,15 @@ export function ReservationForm() {
           helperText="Solo aparecen los jardines prestables del catálogo de lugares."
           onChange={(option) => setPlaceId(option?.id ?? null)} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <OrganizationPicker id="reservation-requested-by" label="Pedido de" value={requestedBy}
+          <OrganizationPicker id="reservation-requested-by" label="Organización que solicita" value={requestedBy}
+            helperText="La organización que pide reservar el jardín."
             onChange={(next) => { setRequestedBy(next); setRequester(null); setResponsible(null); setResponsibleTouched(false); setDirty(true); }} />
           <ContactPicker id="reservation-requester" label="Solicitante" organization={requestedBy}
             value={requester} onChange={chooseRequester} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <OrganizationPicker id="reservation-requested-for" label="Para" value={requestedFor}
-            helperText="Solo si la usará otra organización."
+          <OrganizationPicker id="reservation-requested-for" label="Organización que usará el jardín" value={requestedFor}
+            helperText="Opcional: elige otra solo si quien lo usará no es la que solicita la reserva."
             onChange={(next) => { setRequestedFor(next); setDirty(true); }} />
           <ContactPicker id="reservation-responsible" label="Responsable" organization={null}
             searchEverywhere value={responsible}

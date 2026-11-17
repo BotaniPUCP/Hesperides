@@ -4,13 +4,12 @@ import { FollowupBlock } from '../FollowupBlock';
 
 jest.mock('@/lib/reservations-api', () => ({
   reservationsApi: {
-    confirmUse: jest.fn(),
     recordUsage: jest.fn(),
   },
 }));
 
 const { reservationsApi } = jest.requireMock('@/lib/reservations-api') as {
-  reservationsApi: { confirmUse: jest.Mock; recordUsage: jest.Mock };
+  reservationsApi: { recordUsage: jest.Mock };
 };
 
 const ENTRIES = [
@@ -22,7 +21,6 @@ function renderBlock(overrides: Partial<Parameters<typeof FollowupBlock>[0]> = {
   render(
     <FollowupBlock
       code="RES-0001"
-      kind="usage"
       version={2}
       value={false}
       entries={[]}
@@ -58,14 +56,6 @@ describe('FollowupBlock', () => {
     await waitFor(() => expect(reservationsApi.recordUsage).toHaveBeenCalledWith('RES-0001', false, 2));
   });
 
-  it('confirma por el endpoint de confirmación', async () => {
-    reservationsApi.confirmUse.mockResolvedValue({ code: 'RES-0001', useConfirmed: true });
-    renderBlock({ kind: 'confirmation', buttonLabel: 'Registrar confirmación' });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Registrar confirmación' }));
-    await waitFor(() => expect(reservationsApi.confirmUse).toHaveBeenCalledWith('RES-0001', true, 2));
-  });
-
   it('sin ventana abierta no ofrece el botón y explica por qué', () => {
     renderBlock({ open: false });
 
@@ -90,11 +80,11 @@ describe('FollowupBlock', () => {
 
   it('muestra el error traducido cuando la ventana cerró', async () => {
     reservationsApi.recordUsage.mockRejectedValue(new ApiError(422,
-      'The confirmation window is closed: it closes 20 minutes before the reservation ends'));
+      'The usage window is closed: it closes 20 minutes before the reservation ends'));
     renderBlock();
 
     fireEvent.click(screen.getByRole('button', { name: 'Marcar en uso' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'El plazo de confirmación ya cerró: solo se confirma hasta 20 minutos antes del fin de la reserva.');
+      'Ya no se puede marcar el uso: el corte es 20 minutos antes del fin de la reserva.');
   });
 });

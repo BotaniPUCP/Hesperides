@@ -62,8 +62,6 @@ public enum AuditActionCode {
     GARDEN_RESERVATION_CREATED,
     GARDEN_RESERVATION_UPDATED,
     GARDEN_RESERVATION_CANCELLED,
-    /** SPEC-107 (enmienda 11 nov 2026): la confirmación de uso del solicitante, de qué a qué. */
-    GARDEN_RESERVATION_CONFIRMATION_CHANGED,
     /** SPEC-107 (enmienda 11 nov 2026): la marca de uso del espacio, de qué a qué. */
     GARDEN_RESERVATION_USAGE_CHANGED
 }

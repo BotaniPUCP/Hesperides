@@ -111,7 +111,7 @@ export function ReservationDetailScreen({ code, startEditing = false, created = 
       )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <ReservationDetails reservation={reservation} canMaintain={canMaintain}
+        <ReservationDetails reservation={reservation}
           canRecordUsage={canRecordUsage} updateData={reload} />
         <div className="h-[360px] lg:h-auto lg:min-h-[480px]">
           <SectionsFocusMap codes={reservation.place.sectionCodes} />

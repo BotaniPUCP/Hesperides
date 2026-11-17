@@ -9,7 +9,6 @@ import { reservationsApi } from '@/lib/reservations-api';
 
 interface Props {
   code: string;
-  kind: 'confirmation' | 'usage';
   version: number;
   value: boolean;
   entries: ReservationFollowupEntry[];
@@ -25,11 +24,10 @@ interface Props {
 }
 
 /**
- * Confirmación del solicitante y marca de uso del espacio (enmienda del
- * 11 nov 2026): una marca, su botón — solo dentro de su ventana — y las
- * veces que cambió, con fecha y quién.
+ * La marca de uso del espacio (enmienda del 11 nov 2026): su botón — solo
+ * dentro de su ventana — y las veces que cambió, con fecha y quién.
  */
-export function FollowupBlock({ code, kind, version, value, entries, open, canChange,
+export function FollowupBlock({ code, version, value, entries, open, canChange,
   labelOn, labelOff, buttonLabel, buttonOff, blockedText, onChanged }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,9 +36,7 @@ export function FollowupBlock({ code, kind, version, value, entries, open, canCh
     setError(null);
     setPending(true);
     try {
-      const saved = kind === 'confirmation'
-        ? await reservationsApi.confirmUse(code, !value, version)
-        : await reservationsApi.recordUsage(code, !value, version);
+      const saved = await reservationsApi.recordUsage(code, !value, version);
       onChanged(saved);
     } catch (e) {
       setError(mensajeDeApiError(e));
