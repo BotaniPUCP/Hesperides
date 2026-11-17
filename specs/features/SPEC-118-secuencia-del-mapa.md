@@ -228,3 +228,18 @@ se vaya justo cuando ocurre el desenfoque:
 
 - **CA-10** El logo se ve de 2 a 6 s; de 5 a 6 s se ve igual que de 8 a 9 s de la coreografía y a los 6 s ya
   no está.
+
+### 9.2 Aparece en transparencia desde el inicio (17 nov 2026)
+
+Reemplaza la caída girando de §9 y §9.1. Lo demás de §9.1 sigue igual.
+
+| Tiempo de la secuencia | Qué hace el logo |
+|---|---|
+| 0,0 → 2,9 s | Aparece quieto en el centro, sin girar: la opacidad sube de 0 a 100 % entre 0 y 2,5 s (arranca lento) y el tamaño "respira" de 92 % a 100 % hasta los 2,9 s |
+| 2,9 → 6,0 s | Igual que §9.1: se desliza, se ancla, cambia de imagen a los 5,25 s y se va con el desenfoque |
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-11 | Aparición en transparencia con un leve crecimiento (opción B, elegida por Jean Piero) | Sutil, con algo de vida, y no compite con el desenfoque del segundo 5 | Quieto sin crecer (A); enfocándose desde un desenfoque (C: repite el recurso del segundo 5); marca de agua al 30 % (D) |
+
+- **CA-11** En el primer cuadro el logo está en el centro y transparente; a los 2,5 s es opaco y nunca gira.

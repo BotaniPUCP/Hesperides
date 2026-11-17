@@ -85,19 +85,22 @@ describe('reproductor de la secuencia', () => {
     expect(viewer.setPoseNow).toHaveBeenLastCalledWith(cameraPoseAt(1 / 30));
   });
 
-  it('muestra el logo que toca: nada al inicio, el pixelado cayendo y el original tras el cambio', () => {
+  it('muestra el logo que toca: transparente al inicio, pixelado y luego el original tras el cambio', () => {
     const c = manualClock();
     const s = surfaces();
     playSequence(fakeViewer().viewer, s, jest.fn(), c.clock);
-    expect(s.logos.pixel.style.display).toBe('none');
+    expect(s.logos.pixel.style.display).toBe('');
+    expect(s.logos.pixel.style.opacity).toBe('0');
     expect(s.logos.original.style.display).toBe('none');
     const now = runTo(c, 4.5);
     expect(s.logos.pixel.style.display).toBe('');
     expect(s.logos.original.style.display).toBe('none');
-    expect(s.logos.pixel.style.transform).toMatch(/^translate\(-50%, -50%\) rotate\([\d.]+deg\)$/);
-    runTo(c, 1, now);
+    expect(s.logos.pixel.style.transform).toMatch(/^translate\(-50%, -50%\) rotate\(0\.00deg\)$/);
+    const later = runTo(c, 1, now);
     expect(s.logos.pixel.style.display).toBe('none');
     expect(s.logos.original.style.display).toBe('');
+    runTo(c, 1, later);
+    expect(s.logos.original.style.display).toBe('none');
   });
 
   it('detenerla corta los cuadros pendientes', () => {

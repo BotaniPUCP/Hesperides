@@ -92,7 +92,8 @@ describe('exportación de la secuencia', () => {
     expect(atFive.state.visible).toBe(true);
     expect(atSix.image).toBe(original);
     expect(atSix.smooth).toBe(true);
-    expect(logoAtFrame(0).state.visible).toBe(false);
+    expect(logoAtFrame(0).state.opacity).toBe(0);
+    expect(logoAtFrame(7 * EXPORT_FPS).state.visible).toBe(false);
   });
 
   it('si el codificador falla, el visor vuelve igual a la normalidad', async () => {
