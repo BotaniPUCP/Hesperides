@@ -9,7 +9,8 @@ import { Resalte } from '../pagina/Resalte';
 import { ALTO, BANDA, COLOR } from '../tema';
 import { FPS } from '../tiempos';
 import { apareceEn, momentoDe } from '../ui/anim';
-import { Arbol, ArbolRajado, Burbuja, Celular, Cielo, Colinas, Edificios, Farol, HORIZONTE, Laptop, Lienzo, Sello, Sol, SUELO, Suelo, Tierra } from './decorado';
+import { Arbol, ArbolRajado, Burbuja, Celular, Cielo, Escritorio, Farol, HORIZONTE, Laptop, Lienzo, Sello, Sol, SUELO, Tierra } from './decorado';
+import { EnPantalla, HojaPapel, useParalaje } from './HojasDePapel';
 import { enDos } from './enDos';
 import { Persona } from './Persona';
 
@@ -24,43 +25,58 @@ function tw(frame: number, puntos: [number, number][]): number {
   );
 }
 
-const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number }> = ({ texto, visible, x = 100, y = 64 }) => (
-  <div
-    style={{
-      position: 'absolute',
-      left: x,
-      top: y,
-      padding: '14px 28px',
-      borderRadius: 18,
-      background: COLOR.blanco,
-      color: COLOR.verde,
-      fontSize: 42,
-      fontWeight: 800,
-      border: `5px solid ${COLOR.borde}`,
-      opacity: visible,
-      transform: `translateY(${(1 - visible) * 20}px)`,
-    }}
-  >
-    {texto}
-  </div>
+/** Tarjeta de texto fija en pantalla (no la mueve la cámara). */
+const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number }> = ({ texto, visible, x = 60, y = 50 }) => (
+  <EnPantalla>
+    <div
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y,
+        padding: '14px 28px',
+        borderRadius: 18,
+        background: COLOR.blanco,
+        color: COLOR.verde,
+        fontSize: 42,
+        fontWeight: 800,
+        border: `5px solid ${COLOR.borde}`,
+        opacity: visible,
+        transform: `translateY(${(1 - visible) * 20}px)`,
+      }}
+    >
+      {texto}
+    </div>
+  </EnPantalla>
 );
 
-/** El campus con paneo de cámara. */
-const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: number }> = ({ corrimiento, amanecer = 0, frame }) => (
-  <>
-    <Cielo amanecer={amanecer} />
-    {amanecer > 0 ? <Sol x={1500 - corrimiento * 0.1} y={tw(amanecer, [[0, 160], [1, 470]])} /> : <Sol x={1640} y={150} />}
-    <Colinas corrimiento={corrimiento} />
-    <Edificios corrimiento={corrimiento} />
-    <Suelo />
-    <g transform={`translate(${-corrimiento * 0.8} 0)`}>
-      {[180, 520, 1040, 2150].map((x, i) => (
-        <Arbol key={x} x={x} y={HORIZONTE + 70} alto={260 + (i % 2) * 60} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} vaiven={Math.sin((frame + i * 13) / 30) * 1.2} />
+/**
+ * El campus en papel recortado: cielo y sol vivos, hojas pre-renderizadas con paralaje y, delante,
+ * los árboles y lo que la escena dibuje (`children`, en el mismo SVG). Las matas del frente van
+ * aparte (`<HojaPapel id="matas" />`), después de las personas.
+ */
+const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: number; children?: React.ReactNode }> = ({ corrimiento, amanecer = 0, frame, children }) => {
+  const sol = useParalaje(0.1);
+  return (
+    <>
+      <Lienzo>
+        <Cielo amanecer={amanecer} />
+        <g transform={`translate(${sol.x} ${sol.y})`}>{amanecer > 0 ? <Sol x={1500 - corrimiento * 0.1} y={tw(amanecer, [[0, 160], [1, 470]])} /> : <Sol x={1640} y={150} />}</g>
+      </Lienzo>
+      {(['colinas-lejos', 'colinas-cerca', 'edificios', 'suelo'] as const).map((id) => (
+        <HojaPapel key={id} id={id} corrimiento={corrimiento} />
       ))}
-      <Farol x={880} y={SUELO - 30} />
-    </g>
-  </>
-);
+      <Lienzo>
+        <g transform={`translate(${-corrimiento * 0.8} 0)`}>
+          {[180, 520, 1040, 2150].map((x, i) => (
+            <Arbol key={x} x={x} y={HORIZONTE + 70} alto={260 + (i % 2) * 60} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} vaiven={Math.sin((frame + i * 13) / 30) * 1.2} />
+          ))}
+          <Farol x={880} y={SUELO - 30} />
+        </g>
+        {children}
+      </Lienzo>
+    </>
+  );
+};
 
 // ---------------- 1. Mañana ----------------
 export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
@@ -88,10 +104,9 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
   const alerta = apareceEn(escena, 'h2', frame, 0.4);
   return (
     <AbsoluteFill>
-      <Lienzo>
-        <Campus corrimiento={corrimiento} amanecer={amanecer} frame={frame} />
+      <Campus corrimiento={corrimiento} amanecer={amanecer} frame={frame}>
         <ArbolRajado x={1650 - corrimiento} y={SUELO - 30} frame={frame} alerta={alerta} />
-      </Lienzo>
+      </Campus>
       {/* Peatones que pasan bajo la rama */}
       {[0, 1].map((i) => {
         const desde = momentoDe(escena, 'h2', 0.35 + i * 0.15);
@@ -110,6 +125,7 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
         gesto={fp < momentoDe(escena, 'h2', 0.3) ? 'feliz' : mira > 0.5 ? 'preocupado' : 'neutral'}
         andar={{ distancia: xJulio, w: caminando }}
       />
+      <HojaPapel id="matas" corrimiento={corrimiento} />
       {/* La hora acompaña solo a h1: luego la cámara va hacia la rama. */}
       <Tarjeta texto="6:00 a. m." visible={apareceEn(escena, 'h1', frame, 0.05) * (1 - apareceEn(escena, 'h2', frame, 0))} />
     </AbsoluteFill>
@@ -175,18 +191,12 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
     const nube = apareceEn(escena, 'h4', frame, 0.45);
     return (
       <AbsoluteFill>
+        <HojaPapel id="pared" />
+        <HojaPapel id="ventana" />
+        <HojaPapel id="piso" />
         <Lienzo>
-          <rect x={0} y={0} width={1920} height={940} fill={COLOR.barriga} />
-          <rect x={0} y={760} width={1920} height={180} fill={COLOR.arena} />
-          <rect x={1240} y={120} width={520} height={360} rx={12} fill={COLOR.blanco} stroke={COLOR.borde} strokeWidth={8} />
-          <rect x={1256} y={136} width={488} height={328} fill={COLOR.cuerpo} />
-          <Arbol x={1380} y={470} alto={220} />
-          <Arbol x={1620} y={470} alto={260} copa={COLOR.cuerpo} />
-          <line x1={1500} y1={120} x2={1500} y2={480} stroke={COLOR.borde} strokeWidth={8} />
           {/* Escritorio con hojas de cálculo apiladas */}
-          <rect x={560} y={600} width={760} height={34} rx={8} fill={COLOR.arena} stroke={COLOR.borde} strokeWidth={6} />
-          <rect x={600} y={634} width={20} height={200} fill={COLOR.borde} />
-          <rect x={1260} y={634} width={20} height={200} fill={COLOR.borde} />
+          <Escritorio x={560} y={600} ancho={760} patas={200} />
           {Array.from({ length: Math.round(pila) }, (_, i) => (
             <g key={i} transform={`rotate(${(i % 3) - 1} ${1060} ${590 - i * 14})`}>
               <rect x={960} y={580 - i * 14} width={220} height={14} fill={COLOR.blanco} stroke={COLOR.borde} strokeWidth={3} />
@@ -223,6 +233,7 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
           </g>
         </Lienzo>
         <Persona quien="jefe" x={420} sueloY={850} escala={1.15} frame={fp} pose={{ brazoI: 40, brazoD: 165 + Math.sin(fp / 4) * 6, miraX: 0.4, miraY: -0.3 }} gesto="pensativo" sentado />
+        <HojaPapel id="maceta" />
       </AbsoluteFill>
     );
   }
@@ -238,8 +249,7 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
   const arboles = [760, 980, 1200, 1420, 1640];
   return (
     <AbsoluteFill>
-      <Lienzo>
-        <Campus corrimiento={0} frame={frame} />
+      <Campus corrimiento={0} frame={frame}>
         {arboles.map((x, i) => (
           <Arbol key={x} x={x} y={SUELO - 30} alto={300} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} vaiven={Math.sin((frame + i * 9) / 7) * (avance > i / 5 && avance < (i + 1) / 5 ? 3 : 0.5)} />
         ))}
@@ -255,7 +265,7 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
             </g>
           );
         })}
-      </Lienzo>
+      </Campus>
       {[0, 1].map((i) => (
         <Persona
           key={i}
@@ -270,6 +280,7 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
           andar={{ distancia: avanceP * 980, w: avanceP > 0 && avanceP < 1 ? 1 : 0 }}
         />
       ))}
+      <HojaPapel id="matas" />
       <Tarjeta texto={`${Math.round(avance * 15)} árboles podados · ¿bien hechos?`} visible={apareceEn(escena, 'h5', frame, 0.05)} />
     </AbsoluteFill>
   );
@@ -288,12 +299,11 @@ export const Aparece: React.FC<PropsEscena> = ({ escena, frame }) => {
   const sorpresa = tp >= brota && tp < brota + 30;
   return (
     <AbsoluteFill>
-      <Lienzo>
-        <Campus corrimiento={300} frame={frame} />
+      <Campus corrimiento={300} frame={frame}>
         <ArbolRajado x={1350} y={SUELO - 30} frame={frame} alerta={0} />
         {t < brota + 4 ? <ellipse cx={X_BROTE + temblor} cy={SUELO + 4} rx={60} ry={16} fill={COLOR.borde} opacity={0.5} /> : null}
         <Tierra x={X_BROTE} y={SUELO} t={t - brota} />
-      </Lienzo>
+      </Campus>
       <Persona
         quien="julio"
         x={tw(fp, [
@@ -306,6 +316,7 @@ export const Aparece: React.FC<PropsEscena> = ({ escena, frame }) => {
         pose={{ brazoI: sorpresa ? 70 : 12, brazoD: sorpresa ? 70 : 14, miraX: 0.8, miraY: tp < brota ? -0.6 : 0.1 }}
         gesto={tp < brota ? 'preocupado' : sorpresa ? 'sorpresa' : 'feliz'}
       />
+      <HojaPapel id="matas" />
     </AbsoluteFill>
   );
 };
@@ -324,14 +335,16 @@ const CHECKS_EN_CAMPUS: [number, number][] = [
   [0.74, 0.62],
 ];
 
+/** La oficina del jefe en papel recortado: pared, cuadro y piso; el escritorio va vivo, con sombra dura. */
 const Oficina: React.FC = () => (
-  <Lienzo>
-    <rect x={0} y={0} width={1920} height={940} fill={COLOR.barriga} />
-    <rect x={0} y={780} width={1920} height={160} fill={COLOR.arena} />
-    <rect x={120} y={120} width={360} height={300} rx={12} fill={COLOR.cuerpo} stroke={COLOR.borde} strokeWidth={8} />
-    <Arbol x={300} y={410} alto={240} />
-    <rect x={500} y={760} width={1200} height={30} rx={8} fill={COLOR.arena} stroke={COLOR.borde} strokeWidth={6} />
-  </Lienzo>
+  <>
+    <HojaPapel id="pared" />
+    <HojaPapel id="cuadro" />
+    <HojaPapel id="piso" />
+    <Lienzo>
+      <Escritorio x={500} y={760} ancho={1200} />
+    </Lienzo>
+  </>
 );
 
 export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
@@ -347,13 +360,12 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
     const k = anchoPantalla / 780;
     return (
       <AbsoluteFill>
-        <Lienzo>
-          <Campus corrimiento={300} frame={frame} />
-        </Lienzo>
+        <Campus corrimiento={300} frame={frame} />
         <Persona quien="julio" x={420} sueloY={SUELO + 4} escala={1.15} frame={fp} pose={{ brazoI: 10, brazoD: 120, miraX: 0.7 }} gesto="feliz" objeto="celular" />
         <Celular x={1060} y={50} alto={alto} captura="venta/reporte-celular">
           <Resalte medida={{ x: m.x * k, y: m.y * k, ancho: m.ancho * k, alto: m.alto * k }} visible={apareceEn(escena, 'h7', frame, 0.35)} />
         </Celular>
+        <HojaPapel id="matas" />
       </AbsoluteFill>
     );
   }
@@ -372,6 +384,7 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
           {!enMapa ? <Resalte medida={{ x: pre.x * k, y: pre.y * k, ancho: pre.ancho * k, alto: pre.alto * k }} visible={apareceEn(escena, 'h8', frame, 0.15)} /> : null}
           {enMapa && pulso >= 0 ? <Pulso x={ancho * PIN_INCIDENCIA[0]} y={((ancho * 941) / 1920) * PIN_INCIDENCIA[1]} progreso={pulso} /> : null}
         </Laptop>
+        <HojaPapel id="maceta" />
         {!enMapa ? <Tarjeta texto="✨ Prellenado por IA" visible={apareceEn(escena, 'h8', frame, 0.2)} x={1230} y={40} /> : null}
         {enMapa ? <Tarjeta texto="✓ Activada · trabajo programado" visible={apareceEn(escena, 'h9', frame, 0.55)} x={760} y={40} /> : null}
       </AbsoluteFill>
@@ -391,13 +404,13 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
   const sello = (frame - momentoDe(escena, 'h10', 0.62)) / 8;
   return (
     <AbsoluteFill>
-      <Lienzo>
-        <Campus corrimiento={300} frame={frame} />
+      <Campus corrimiento={300} frame={frame}>
         <ArbolRajado x={1350} y={SUELO - 30} frame={frame} alerta={0} corte={corte} />
-      </Lienzo>
+      </Campus>
       <Persona quien="podador" x={1000} sueloY={SUELO + 6} escala={0.9} frame={fp} pose={{ brazoI: 20, brazoD: corte < 1 ? 100 + Math.sin(fp / 2.5) * 12 : 20 }} gesto="neutral" objeto="podadora" />
       <Persona quien="podador" x={1180} sueloY={SUELO + 6} escala={0.9} frame={fp} pose={{ brazoI: 15, brazoD: fp > momentoDe(escena, 'h10', 0.4) ? 125 : 15, miraX: -0.4 }} gesto="feliz" objeto="celular" mira={-1} />
       <Persona quien="julio" x={560} sueloY={SUELO + 4} escala={0.95} frame={fp} pose={{ brazoI: 10, brazoD: sello > 0 ? 70 : 12, miraX: 0.6 }} gesto={sello > 0 ? 'feliz' : 'neutral'} />
+      <HojaPapel id="matas" />
       <AbsoluteFill style={{ background: COLOR.blanco, opacity: flash }} />
       <Sello x={960} y={330} texto="Cerrada" t={sello} />
     </AbsoluteFill>
@@ -412,10 +425,10 @@ export const Resultado: React.FC<PropsEscena> = ({ escena, frame }) => {
     const ancho = 980;
     return (
       <AbsoluteFill>
+        <HojaPapel id="pared" />
+        <HojaPapel id="piso" />
         <Lienzo>
-          <rect x={0} y={0} width={1920} height={940} fill={COLOR.barriga} />
-          <rect x={0} y={780} width={1920} height={160} fill={COLOR.arena} />
-          <rect x={80} y={700} width={760} height={30} rx={8} fill={COLOR.arena} stroke={COLOR.borde} strokeWidth={6} />
+          <Escritorio x={80} y={700} ancho={760} />
         </Lienzo>
         <Laptop x={1080} y={60} ancho={ancho} captura="venta/mapa-atardecer-maqueta">
           {CHECKS_EN_CAMPUS.map(([fx, fy], i) => {
@@ -431,6 +444,7 @@ export const Resultado: React.FC<PropsEscena> = ({ escena, frame }) => {
         <Persona quien="peaton" x={250} sueloY={850} escala={0.95} frame={fp} pose={{ brazoI: 20, brazoD: 25, miraX: 0.8 }} gesto="feliz" sentado ropa={COLOR.verde} />
         <Persona quien="peaton" x={520} sueloY={850} escala={0.95} frame={fp} pose={{ brazoI: 20, brazoD: 25, miraX: 0.8 }} gesto="neutral" sentado ropa={COLOR.arena} />
         <Persona quien="jefe" x={1720} sueloY={880} escala={1.05} frame={fp} pose={{ brazoI: 10, brazoD: 95, miraX: 0.5 }} gesto="feliz" mira={-1} />
+        <HojaPapel id="maceta" />
       </AbsoluteFill>
     );
   }

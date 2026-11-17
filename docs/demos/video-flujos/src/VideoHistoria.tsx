@@ -3,6 +3,7 @@ import { useCurrentFrame } from 'remotion';
 import { Acabado } from './historia/Acabado';
 import { camaraEn, planosDeHistoria, transformarToma } from './historia/camara';
 import { CapaDeGolpes } from './historia/Golpes';
+import { TomaContexto } from './historia/HojasDePapel';
 import { cuadroConPausa, golpesDeHistoria, pausasDe } from './historia/impacto';
 import type { ConfigVideo } from './escenas/componentes';
 import { Aparece, Hoy, Manana, Resultado, Solucion } from './historia/escenas';
@@ -16,6 +17,8 @@ export type PropsVideoHistoria = {
   /** Solo para revisar: deja la cámara quieta (mide el parpadeo sin el movimiento de cámara). */
   camaraQuieta?: boolean;
 };
+
+const TOMA_QUIETA = { x: 960, y: 470, zoom: 1, giro: 0 };
 
 export const CARPETA_VOZ_HISTORIA = 'voz/historia';
 /** El cierre queda 3 s en pantalla después de la última frase. */
@@ -37,11 +40,16 @@ const Contenido: React.FC<{ linea: Linea; medidas: Medidas; camaraQuieta: boolea
     const golpes = golpesDeHistoria(linea);
     const pausas = pausasDe(golpes);
     const planos = planosDeHistoria(linea, FRAMES_COLA_HISTORIA);
-    const Capa: ConfigVideo['capaEscena'] = ({ frame: f, children }) => (
-      <CapaDeGolpes golpes={golpes} frame={f} camara={camaraQuieta ? undefined : transformarToma(camaraEn(planos, f))}>
-        {children}
-      </CapaDeGolpes>
-    );
+    const Capa: ConfigVideo['capaEscena'] = ({ frame: f, children }) => {
+      const toma = camaraQuieta ? TOMA_QUIETA : camaraEn(planos, f);
+      return (
+        <TomaContexto.Provider value={toma}>
+          <CapaDeGolpes golpes={golpes} frame={f} camara={camaraQuieta ? undefined : transformarToma(toma)}>
+            {children}
+          </CapaDeGolpes>
+        </TomaContexto.Provider>
+      );
+    };
     return { ...BASE, capaEscena: Capa, retiempo: (f) => cuadroConPausa(f, pausas) };
   }, [linea, camaraQuieta]);
   return (

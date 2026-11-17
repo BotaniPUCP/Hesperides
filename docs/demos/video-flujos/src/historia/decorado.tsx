@@ -34,15 +34,7 @@ export const Sol: React.FC<{ x: number; y: number }> = ({ x, y }) => (
   </g>
 );
 
-/** Colinas lejanas y cercanas; `corrimiento` mueve la cámara (paralaje). */
-export const Colinas: React.FC<{ corrimiento?: number }> = ({ corrimiento = 0 }) => (
-  <g>
-    <path transform={`translate(${-corrimiento * 0.2} 0)`} d={`M-200 ${HORIZONTE} Q200 ${HORIZONTE - 140} 600 ${HORIZONTE - 40} T1400 ${HORIZONTE - 60} T2300 ${HORIZONTE} Z`} fill={COLOR.hoja} opacity={0.45} />
-    <path transform={`translate(${-corrimiento * 0.35} 0)`} d={`M-200 ${HORIZONTE + 10} Q400 ${HORIZONTE - 80} 900 ${HORIZONTE - 10} T2300 ${HORIZONTE + 10} Z`} fill={COLOR.cuerpo} opacity={0.8} />
-  </g>
-);
-
-/** Edificios del campus a lo lejos, con ventanas. */
+/** Edificios del campus a lo lejos, con ventanas (se hornean en la hoja «edificios»). */
 export const Edificios: React.FC<{ corrimiento?: number }> = ({ corrimiento = 0 }) => (
   <g transform={`translate(${-corrimiento * 0.5} 0)`}>
     {[
@@ -61,15 +53,6 @@ export const Edificios: React.FC<{ corrimiento?: number }> = ({ corrimiento = 0 
         })}
       </g>
     ))}
-  </g>
-);
-
-/** Pasto y sendero. */
-export const Suelo: React.FC<{ sendero?: boolean }> = ({ sendero = true }) => (
-  <g>
-    <rect x={0} y={HORIZONTE} width={1920} height={ALTO_ESCENA - HORIZONTE} fill={COLOR.cuerpo} />
-    <rect x={0} y={HORIZONTE} width={1920} height={60} fill={COLOR.hoja} opacity={0.35} />
-    {sendero ? <path d={`M0 ${SUELO - 40} L1920 ${SUELO - 40} L1920 ${SUELO + 34} L0 ${SUELO + 34} Z`} fill={COLOR.arena} /> : null}
   </g>
 );
 
@@ -92,6 +75,20 @@ export const Arbol: React.FC<{ x: number; y: number; alto: number; copa?: string
     </g>
   );
 };
+
+/** Escritorio vivo (encima van objetos que se animan) con sombra dura, como una hoja más. */
+export const Escritorio: React.FC<{ x: number; y: number; ancho: number; patas?: number }> = ({ x, y, ancho, patas = 0 }) => (
+  <g>
+    <rect x={x + 4} y={y + 6} width={ancho} height={32} rx={8} fill={COLOR.borde} opacity={0.25} />
+    {patas > 0 ? (
+      <g fill={COLOR.borde}>
+        <rect x={x + 40} y={y + 34} width={20} height={patas} />
+        <rect x={x + ancho - 60} y={y + 34} width={20} height={patas} />
+      </g>
+    ) : null}
+    <rect x={x} y={y} width={ancho} height={32} rx={8} fill={COLOR.arena} stroke={COLOR.borde} strokeWidth={6} />
+  </g>
+);
 
 export const Farol: React.FC<{ x: number; y: number }> = ({ x, y }) => (
   <g>
