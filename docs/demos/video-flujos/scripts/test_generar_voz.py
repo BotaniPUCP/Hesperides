@@ -24,8 +24,9 @@ class Sintetizador:
         self.textos = []
         self.falla_en = falla_en
 
-    async def __call__(self, texto, voz, destino):
+    async def __call__(self, texto, voz, destino, velocidad=None):
         self.textos.append(texto)
+        self.velocidad = velocidad
         destino.write_bytes(b"audio")
         if texto == self.falla_en:
             raise ConnectionError("corte de red")
@@ -78,6 +79,29 @@ class GenerarVoz(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(len(segunda.textos), 2)
         self.assertEqual(m["voz"], "es-PE-AlexNeural")
+
+    async def test_pasa_la_velocidad_del_guion_y_la_guarda(self):
+        g = {**guion(frase("i1", "Hola")), "velocidad": "+10%"}
+        s = Sintetizador()
+        m = await self.generar(g, s)
+
+        self.assertEqual(s.velocidad, "+10%")
+        self.assertEqual(m["velocidad"], "+10%")
+
+    async def test_sin_velocidad_no_cambia_nada(self):
+        s = Sintetizador()
+        m = await self.generar(guion(frase("i1", "Hola")), s)
+
+        self.assertIsNone(s.velocidad)
+        self.assertNotIn("velocidad", m)
+
+    async def test_regenera_todo_si_cambia_la_velocidad(self):
+        await self.generar(guion(frase("i1", "Hola"), frase("i2", "Adiós")), Sintetizador())
+
+        segunda = Sintetizador()
+        await self.generar({**guion(frase("i1", "Hola"), frase("i2", "Adiós")), "velocidad": "+10%"}, segunda)
+
+        self.assertEqual(len(segunda.textos), 2)
 
     async def test_usa_texto_voz_si_existe(self):
         s = Sintetizador()

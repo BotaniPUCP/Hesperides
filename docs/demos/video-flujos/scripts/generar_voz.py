@@ -16,7 +16,8 @@ from typing import Awaitable, Callable
 
 RAIZ = Path(__file__).resolve().parent.parent
 
-Sintetizar = Callable[[str, str, Path], Awaitable[None]]
+# texto, voz, destino y velocidad opcional de edge-tts («+10%»).
+Sintetizar = Callable[..., Awaitable[None]]
 Medir = Callable[[Path], float]
 
 
@@ -45,12 +46,13 @@ def comprobar_voz(voz: str, disponibles: list[str]) -> None:
         raise VozNoDisponible(f"La voz {voz} no está disponible")
 
 
-def _leer_manifiesto(ruta: Path, voz: str) -> dict:
+def _leer_manifiesto(ruta: Path, voz: str, velocidad: str | None) -> dict:
     if ruta.exists():
         manifiesto = json.loads(ruta.read_text(encoding="utf-8"))
-        if manifiesto["voz"] == voz:
+        if manifiesto["voz"] == voz and manifiesto.get("velocidad") == velocidad:
             return manifiesto
-    return {"voz": voz, "frases": {}}
+    # Otra voz u otra velocidad: se regenera todo.
+    return {"voz": voz, "frases": {}, **({"velocidad": velocidad} if velocidad else {})}
 
 
 def _guardar_manifiesto(ruta: Path, manifiesto: dict) -> None:
@@ -68,8 +70,9 @@ async def generar(
     solo: set[str] | None = None,
 ) -> dict:
     voz = guion["voz"]
+    velocidad = guion.get("velocidad")
     salida.mkdir(parents=True, exist_ok=True)
-    manifiesto = _leer_manifiesto(ruta_manifiesto, voz)
+    manifiesto = _leer_manifiesto(ruta_manifiesto, voz, velocidad)
 
     for frase in (f for escena in guion["escenas"] for f in escena["frases"]):
         frase_id = frase["id"]
@@ -86,7 +89,7 @@ async def generar(
         # Un audio solo toma su nombre definitivo si terminó entero.
         temporal = destino.with_suffix(".mp3.tmp")
         try:
-            await sintetizar(texto, voz, temporal)
+            await (sintetizar(texto, voz, temporal, velocidad) if velocidad else sintetizar(texto, voz, temporal))
             duracion = medir(temporal)
             os.replace(temporal, destino)
         except Exception as causa:
@@ -100,10 +103,10 @@ async def generar(
     return manifiesto
 
 
-async def _sintetizar_con_edge(texto: str, voz: str, destino: Path) -> None:
+async def _sintetizar_con_edge(texto: str, voz: str, destino: Path, velocidad: str | None = None) -> None:
     import edge_tts
 
-    await edge_tts.Communicate(texto, voz).save(str(destino))
+    await edge_tts.Communicate(texto, voz, rate=velocidad or "+0%").save(str(destino))
 
 
 def _medir_mp3(ruta: Path) -> float:
