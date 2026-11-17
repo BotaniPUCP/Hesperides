@@ -41,6 +41,22 @@ export function altura(f: number): number {
   return w * 7 * Math.abs(Math.sin(2 * Math.PI * fase)); // rebote de cada paso
 }
 
+export type Emocion = 'neutral' | 'feliz' | 'sorpresa' | 'pensativo' | 'triste';
+
+/** Cuadros en que aterriza: para el polvo. */
+export const ATERRIZAJES = [22, 290];
+
+/** La emoción de cada momento de la demo: mueve párpados, cejas, boca y hojas. */
+export function emocion(f: number): Emocion {
+  if (f < 34) return 'sorpresa';
+  if (f < 72) return 'feliz';
+  if (f < 98) return 'pensativo';
+  if (f >= 172 && f < 192) return 'feliz';
+  if (f >= 252 && f < 264) return 'pensativo';
+  if (f >= 272) return 'feliz';
+  return 'neutral';
+}
+
 export function objetivo(f: number): Objetivo {
   const { fase, w } = caminata(f);
   const balanceo = w * 18 * Math.sin(2 * Math.PI * fase);

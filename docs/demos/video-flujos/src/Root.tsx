@@ -9,6 +9,7 @@ import { CARPETA_CAPTURAS, CARPETA_VOZ, COMANDO_CAPTURAS, VideoPlanificacion } f
 import { CARPETA_VOZ_VENTA, COMANDO_CAPTURAS_VENTA, FRAMES_COLA, VideoVenta } from './VideoVenta';
 import { ComparacionHespo, Hespo2DDemo } from './hespo2d/Comparacion';
 import { DURACION_DEMO } from './hespo2d/coreografia';
+import { HojaDeExpresiones, RedisenosHespo } from './hespo2d/v2/Redisenos';
 
 const calcularDuracion = async () => {
   const respuesta = await fetch(staticFile('voz/manifiesto.json'));
@@ -91,5 +92,7 @@ export const Root: React.FC = () => (
     />
     <Composition id="ComparacionHespo" component={ComparacionHespo} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={DURACION_DEMO} />
     <Composition id="Hespo2DDemo" component={Hespo2DDemo} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={DURACION_DEMO} />
+    <Composition id="RedisenosHespo" component={RedisenosHespo} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={DURACION_DEMO} />
+    <Composition id="HojaDeExpresiones" component={HojaDeExpresiones} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={1} />
   </>
 );

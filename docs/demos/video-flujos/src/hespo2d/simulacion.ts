@@ -1,6 +1,6 @@
 // PRUEBA DESECHABLE (spike): resortes que convierten la intención en movimiento con inercia.
 // Determinista: se integra siempre desde el cuadro 0 hasta el pedido.
-import { altura, caminata, objetivo, type Objetivo } from './coreografia';
+import { altura, caminata, emocion, objetivo, type Emocion, type Objetivo } from './coreografia';
 
 type Resorte = { x: number; v: number };
 const SUBPASOS = 4;
@@ -33,6 +33,11 @@ export type EstadoSim = {
   w: number;
   ojos: Objetivo['ojos'];
   mano: Objetivo['mano'];
+  /** Temblor del cuerpo blando (modo 2 y 3 del contorno). */
+  temblor: number;
+  /** Velocidad del brazo derecho en grados/s: para el smear. */
+  velBrazoD: number;
+  emocion: Emocion;
 };
 
 export function simular(frame: number): EstadoSim {
@@ -47,6 +52,7 @@ export function simular(frame: number): EstadoSim {
   const deforma = { x: 0, v: 0 };
   const hojaI = { x: 0, v: 0 };
   const hojaD = { x: 0, v: 0 };
+  const temblor = { x: 0, v: 0 };
 
   let vhAnterior = 0;
   let vxAnterior = 0;
@@ -61,6 +67,9 @@ export function simular(frame: number): EstadoSim {
     if (vhAnterior < -50 && dvh > 0) deforma.v -= dvh * 0.0011;
     else if (vhAnterior <= 50 && dvh > 0) deforma.v += dvh * 0.0007;
     // Las hojas, por inercia, se abren al caer y se cierran al subir; se quedan atrás al arrancar.
+    // Cuerpo blando: cada impacto lo hace temblar como gelatina; los pasos, apenas.
+    if (Math.abs(dvh) > 40) temblor.v += Math.abs(dvh) * 0.0032;
+    seguir(temblor, 0, 900, 7);
     // Positivo = la hoja se abre hacia afuera (cada lado gira en sentido contrario al dibujarse).
     hojaI.v += dvh * 0.12 + dvx * 0.09;
     hojaD.v += dvh * 0.12 - dvx * 0.09;
@@ -102,5 +111,8 @@ export function simular(frame: number): EstadoSim {
     w,
     ojos: o.ojos,
     mano: o.mano,
+    temblor: temblor.x,
+    velBrazoD: brazoD.v,
+    emocion: emocion(frame),
   };
 }
