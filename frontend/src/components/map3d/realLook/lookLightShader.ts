@@ -11,6 +11,8 @@ export const GLASS_ENV_BOOST = 2;
 
 export const LOOK_LIGHT_HEAD = /* glsl */ `
 uniform vec3 lookNightGlow;
+/** El interior que se ve tras todo el vidrio al atardecer (cero de día y en el modo de siempre). */
+uniform vec3 lookInterior;
 /** Cuánto más refleja el cielo el vidrio que un muro; el Atardecer lo sube. */
 uniform float lookGlassEnv;
 
@@ -64,7 +66,7 @@ if (vLookRow > -0.5) normal = lookBump(-vViewPosition, normal, lookDH, faceDirec
 
 export const LOOK_EMISSIVE_FRAGMENT = /* glsl */ `
 #include <emissivemap_fragment>
-totalEmissiveRadiance += lookNightGlow * lookLit;
+totalEmissiveRadiance += lookNightGlow * lookLit + lookInterior * lookGlass;
 `;
 
 export const LOOK_LIGHTS_FRAGMENT = /* glsl */ `

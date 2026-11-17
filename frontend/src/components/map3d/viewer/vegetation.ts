@@ -6,7 +6,7 @@ import type { FoliageMaterials } from './foliageMaterials';
 import type { PointLayer } from './furniture';
 import { sunkenFloorAt, type SunkenArea } from './planModel';
 import { WORLD_LIFT } from './polyLayer';
-import { broadleafCrown, coniferCrown, frondTexture, palmCrown, PICK_ONLY_LAYER, trunkGeometry } from './sunsetTrees';
+import { coniferCrown, frondTexture, leafMaterials, leafTexture, leafyCrown, palmCrown, PICK_ONLY_LAYER, trunkGeometry } from './sunsetTrees';
 
 /**
  * La vegetación del catastro como instancias, con las formas y materiales del
@@ -182,8 +182,13 @@ function createGoldenVegetation(scene: THREE.Scene, plants: ScenePoint<Vegetatio
   const cones = shapes.map((s, i) => (s.shape === 'cone' ? i : -1)).filter((i) => i >= 0);
   const broad = shapes.map((s, i) => (s.shape !== 'palm' && s.shape !== 'cone' ? i : -1)).filter((i) => i >= 0);
 
+  // Copas de hoja ancha frondosas: tarjetas de hojas con el material del follaje (y su borde al sol).
+  const leaves = leafTexture();
   for (let v = 0; v < BROADLEAF_VARIANTS; v++) {
-    add(broadleafCrown(0xb10a + v * 977, 1), foliage(), broad.filter((i) => i % BROADLEAF_VARIANTS === v), crown, tint);
+    const { material, depth } = leafMaterials(leaves, foliage());
+    const before = group.children.length;
+    add(leafyCrown(0xb10a + v * 977), material, broad.filter((i) => i % BROADLEAF_VARIANTS === v), crown, (i) => tint(i).multiplyScalar(1.7));
+    group.children.slice(before).forEach((m) => { (m as THREE.Mesh).customDepthMaterial = depth; });
   }
   add(coniferCrown(0xc0f1), foliage(), cones, crown, tint);
 

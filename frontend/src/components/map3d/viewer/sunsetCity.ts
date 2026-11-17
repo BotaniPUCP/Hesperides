@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { buildStreets } from './cityStreets';
 import { withCityWindows } from './cityWindows';
-import { broadleafCrown, seeded } from './sunsetTrees';
+import { leafMaterials, leafTexture, leafyCrown, seeded } from './sunsetTrees';
 
 /**
  * El entorno real del campus para el modo Atardecer: edificios, vías y áreas
@@ -317,8 +317,8 @@ export function buildCity(data: CityData, toScene: ToScene, campus: number[][], 
       if (pointInRing(x, y, ring)) trees.push([x, y, 3 + rnd() * 3]);
     }
   }
-  const crown = new THREE.InstancedMesh(broadleafCrown(0x7ee5, 0, 4),
-    new THREE.MeshStandardMaterial({ color: '#4a6532', roughness: 1, vertexColors: true }), trees.length);
+  const crown = new THREE.InstancedMesh(leafyCrown(0x7ee5, 26),
+    leafMaterials(leafTexture(), new THREE.MeshStandardMaterial({ color: '#4a6532', roughness: 0.85 })).material, trees.length);
   const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.2, 1, 5).translate(0, 0.5, 0),
     new THREE.MeshStandardMaterial({ color: '#4d3d30', roughness: 1 }), trees.length);
   trees.forEach(([x, y, r], k) => {

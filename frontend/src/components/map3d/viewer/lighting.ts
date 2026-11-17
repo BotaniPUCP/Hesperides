@@ -19,10 +19,10 @@ const NORMAL_BIAS_TEXELS = 1.7;
  * rellenos del modo de siempre, que aplanan el volumen. Las sombras quedan frías y las caras al sol, ámbar.
  */
 const DUSK = {
-  sun: 0xff9f55, sunIntensity: 2.7,
-  hemiSky: 0x8396cc, hemiGround: 0x4a3530, hemiIntensity: 0.32,
-  rim: 0xff9a5a, rimIntensity: 0.12,
-  ambient: 0xb7a8c8, ambientIntensity: 0.1,
+  sun: 0xff9a4e, sunIntensity: 3.2,
+  hemiSky: 0xb09a92, hemiGround: 0x4a3328, hemiIntensity: 0.24,
+  rim: 0xff9a5a, rimIntensity: 0.1,
+  ambient: 0xc0a090, ambientIntensity: 0.06,
 } as const;
 
 export interface Lights {

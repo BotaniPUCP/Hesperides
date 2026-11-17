@@ -47,6 +47,7 @@ const MARKED_COLOR = '#06B6D4';
 const ADMIN_SPEED_RADIUS_M = 80;
 /** El límite de inclinación de siempre (cameraRig). */
 const ORBIT_MAX_POLAR = 1.32;
+const NO_INTERIOR = new THREE.Color(0, 0, 0);
 
 /** Con `model`, los edificios se dibujan con las mallas del plano oficial; sin él (no llegó o falló), como prismas. */
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose,
@@ -153,6 +154,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     vegetation.setGolden(dusk);
     roofs.visible = dusk && poly.campusBuildings.mesh.visible;
     realColors.setGlassEnv(dusk ? SUNSET.glassEnv : GLASS_ENV_BOOST);
+    realColors.setInterior(dusk ? SUNSET.interior.clone().multiplyScalar(1 + 1.5 * twilight) : NO_INTERIOR);
     setGroundMatte([poly.greenAreas, poly.xerophytic, poly.parking, poly.sidewalks]
       .flatMap((l) => (Array.isArray(l.mesh.material) ? l.mesh.material : [l.mesh.material])), dusk);
     realColors.setGlow(night ? 1 : dusk ? SUNSET.windowGlow * (1 + 1.2 * twilight) : 0);

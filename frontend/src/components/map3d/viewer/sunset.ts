@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { SANITIZE_GLSL, SunsetGradePass } from './sunsetGrade';
 import { buildCity, CITY_ORIGIN, CITY_RADIUS_M, CITY_URL, type CityData } from './sunsetCity';
 import { withCityWindows } from './cityWindows';
-import { broadleafCrown } from './sunsetTrees';
+import { leafMaterials, leafTexture, leafyCrown } from './sunsetTrees';
 import type { LocalPlane } from '../projection';
 import type { Polygon } from '../sceneData';
 import { createSunsetSky, DUSK_HORIZON, HORIZON } from './sunsetSky';
@@ -45,6 +45,8 @@ export const SUNSET = {
   windowGlow: 5,
   /** Cuánto refleja el cielo el vidrio de las fachadas (el modo de siempre usa 2). */
   glassEnv: 3.5,
+  /** Los interiores tras el vidrio de las fachadas: cálidos, y más a medida que baja el sol. */
+  interior: new THREE.Color().setRGB(1.0, 0.58, 0.26).multiplyScalar(0.3),
 } as const;
 
 /** Pseudoaleatorio con semilla: la ciudad de relleno no cambia entre cargas. */
@@ -191,8 +193,8 @@ function createSurroundings(campus: THREE.Box3, groundY: number, city: { x: numb
     at.push([x, z]);
   }
   // Las copas en racimo de los árboles del campus, más livianas: son miles y se ven de lejos.
-  const crownGeo = broadleafCrown(0x51ce7, 0, 4).translate(0, 1, 0);
-  const crownMat = new THREE.MeshStandardMaterial({ color: '#3f5a2c', roughness: 1, vertexColors: true });
+  const crownGeo = leafyCrown(0x51ce7, 20).translate(0, 1, 0);
+  const crownMat = leafMaterials(leafTexture(), new THREE.MeshStandardMaterial({ color: '#3f5a2c', roughness: 0.85 })).material;
   [true, false].forEach((innerPart) => {
     const idx = at.map(([x, z], i) => (isInner(x, z) === innerPart ? i : -1)).filter((i) => i >= 0);
     const trees = new THREE.InstancedMesh(crownGeo, crownMat, idx.length);

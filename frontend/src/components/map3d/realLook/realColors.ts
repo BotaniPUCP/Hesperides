@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Polygon } from '../sceneData';
 import type { PolyLayer } from '../viewer/polyLayer';
 import { classifyBuilding, type FaceAttributes } from './classifyFaces';
-import { createLookMaterial, setLookGlassEnv, setLookGlow } from './lookMaterial';
+import { createLookMaterial, setLookGlassEnv, setLookGlow, setLookInterior } from './lookMaterial';
 import { buildLookTable } from './lookTable';
 import type { BuildingLook } from './types';
 import { validateLooks } from './validateLook';
@@ -22,6 +22,8 @@ export interface RealColors {
   setGlow: (level: number) => void;
   /** Cuánto refleja el cielo el vidrio respecto de un muro. */
   setGlassEnv: (boost: number) => void;
+  /** El brillo de los interiores tras todo el vidrio. */
+  setInterior: (color: THREE.Color) => void;
 }
 
 export interface LookedBuilding {
@@ -95,6 +97,7 @@ export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], 
     },
     setGlow: (level) => setLookGlow(real, level),
     setGlassEnv: (boost) => setLookGlassEnv(real, boost),
+    setInterior: (color) => setLookInterior(real, color),
   };
 }
 

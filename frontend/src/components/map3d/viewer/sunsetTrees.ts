@@ -141,6 +141,15 @@ export function palmCrown(seed: number): THREE.BufferGeometry {
   return geo;
 }
 
+/** El material de las copas de hojas: recortadas por la textura, por las dos caras y también en la sombra. */
+export function leafMaterials(texture: THREE.Texture, base?: THREE.MeshStandardMaterial): { material: THREE.MeshStandardMaterial; depth: THREE.MeshDepthMaterial } {
+  const material = base ?? new THREE.MeshStandardMaterial({ roughness: 0.8 });
+  Object.assign(material, { map: texture, alphaTest: 0.5, side: THREE.DoubleSide, vertexColors: true, normalMap: null });
+  material.needsUpdate = true;
+  const depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: texture, alphaTest: 0.5 });
+  return { material, depth };
+}
+
 /** Textura de una fronda: raquis al centro y foliolos en diagonal; el alfa recorta lo que no es hoja. */
 export function frondTexture(): THREE.Texture {
   const W = 64, H = 256;
@@ -171,5 +180,70 @@ export function frondTexture(): THREE.Texture {
   c.moveTo(W / 2, H);
   c.lineTo(W / 2, 0);
   c.stroke();
+  return texture;
+}
+
+/**
+ * Copa frondosa en la esfera unidad: tarjetas de hojas repartidas sobre una forma con bultos, mirando hacia
+ * afuera y algo giradas, más algunas adentro para que no se vea hueca. Las normales son las de la copa
+ * (hacia afuera), así la luz es suave como en un follaje real; la textura recorta las hojas.
+ */
+export function leafyCrown(seed: number, cards = 70): THREE.BufferGeometry {
+  const rnd = seeded(seed);
+  const pos: number[] = [], nor: number[] = [], uv: number[] = [], col: number[] = [];
+  const out = new THREE.Vector3(), t1 = new THREE.Vector3(), t2 = new THREE.Vector3(), c = new THREE.Vector3();
+  const UV = [[0, 0], [1, 0], [1, 1], [0, 1]];
+  for (let k = 0; k < cards; k++) {
+    // Un punto de la copa: en la superficie con bultos o, uno de cada cinco, más adentro.
+    const z = rnd() * 2 - 1, a = rnd() * Math.PI * 2, r = Math.sqrt(1 - z * z);
+    out.set(r * Math.cos(a), z * 0.85, r * Math.sin(a)).normalize();
+    const bump = 1 + lumpNoise(out.x * 2.6, out.y * 2.6, out.z * 2.6, seed) * 0.22;
+    const inner = k % 5 === 0;
+    const depth = inner ? 0.45 + rnd() * 0.3 : 0.82 + rnd() * 0.12;
+    c.copy(out).multiplyScalar(bump * depth);
+    // La tarjeta: perpendicular a la normal, girada al azar, de 0,45 a 0,7 de lado.
+    t1.set(-out.z, 0, out.x);
+    if (t1.lengthSq() < 1e-4) t1.set(1, 0, 0);
+    t1.normalize().applyAxisAngle(out, rnd() * Math.PI);
+    t2.crossVectors(out, t1).normalize();
+    const half = (0.45 + rnd() * 0.25) / 2;
+    const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => c.clone().addScaledVector(t1, u * half).addScaledVector(t2, v * half));
+    // Más oscuro abajo y adentro: la sombra propia de la copa.
+    const shade = (0.62 + 0.38 * THREE.MathUtils.smoothstep(out.y, -0.8, 0.7)) * (inner ? 0.75 : 1) * (0.9 + rnd() * 0.2);
+    for (const i of [0, 1, 2, 0, 2, 3]) {
+      pos.push(corners[i].x, corners[i].y, corners[i].z);
+      nor.push(out.x, out.y, out.z);
+      uv.push(UV[i][0], UV[i][1]);
+      col.push(shade, shade, shade);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  return geo;
+}
+
+/** Un racimo de hojas: elipses en distintos verdes claros (el color del ejemplar las tiñe) sobre fondo transparente. */
+export function leafTexture(): THREE.Texture {
+  const S = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = S;
+  const c = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 4;
+  if (!c) return texture;
+  const rnd = seeded(0x1eaf);
+  for (let i = 0; i < 150; i++) {
+    // Más hojas al centro: el borde del racimo queda recortado.
+    const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * S * 0.42;
+    const x = S / 2 + Math.cos(a) * d, y = S / 2 + Math.sin(a) * d;
+    const g = 190 + Math.floor(rnd() * 65);
+    c.fillStyle = `rgb(${Math.floor(g * 0.82)},${g},${Math.floor(g * 0.62)})`;
+    c.beginPath();
+    c.ellipse(x, y, 4 + rnd() * 4, 2 + rnd() * 2, rnd() * Math.PI, 0, Math.PI * 2);
+    c.fill();
+  }
   return texture;
 }

@@ -146,7 +146,7 @@ void main() {
   vec3 c = gradeAces(hdr);
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   // Hora dorada: sombras hacia el azul petróleo, luces hacia el ámbar.
-  vec3 shadows = vec3(0.86, 0.95, 1.12), lights = vec3(1.1, 0.98, 0.84);
+  vec3 shadows = vec3(0.93, 0.95, 1.04), lights = vec3(1.1, 0.97, 0.82);
   c *= mix(shadows, lights, smoothstep(0.08, 0.75, l));
   c = mix(vec3(l), c, 1.18);
   c = clamp((c - 0.5) * 1.12 + 0.5, 0.0, 1.0);
