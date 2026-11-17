@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import type { DirectoryImportKind, DirectoryImportOutcome } from '@shared/types';
 import { Button, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/layouts/PageHeader';
@@ -9,10 +10,20 @@ import { ImportPreview } from './ImportPreview';
 import { MissingOrganizations } from './MissingOrganizations';
 import { useRegistroMasivo } from './useRegistroMasivo';
 
-const KINDS: { kind: DirectoryImportKind; title: string; description: string }[] = [
-  { kind: 'organizations', title: 'Organizaciones', description: 'Columnas: nombre, tipo, RUC, teléfono y otros nombres.' },
-  { kind: 'contacts', title: 'Contactos', description: 'Columnas: nombre, organizaciones, anexo, celular y correo. Carga antes sus organizaciones.' },
+const TIPOS: { kind: DirectoryImportKind; title: string; plural: string }[] = [
+  { kind: 'organizations', title: 'Registro de organizaciones masivas', plural: 'organizaciones' },
+  { kind: 'contacts', title: 'Registro de contactos masivos', plural: 'contactos' },
 ];
+
+const NOMBRE_DEL_TIPO: Record<DirectoryImportKind, string> = { organizations: 'organizaciones', contacts: 'contactos' };
+
+function UploadIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" />
+    </svg>
+  );
+}
 
 function Resultado({ outcome }: { outcome: DirectoryImportOutcome }) {
   return (
@@ -28,12 +39,14 @@ function Resultado({ outcome }: { outcome: DirectoryImportOutcome }) {
 }
 
 /**
- * Registro masivo por CSV (SPEC-106 §4.2) en el ciclo común de cargas: se revisa
- * el archivo, el servidor guarda la revisión y se confirma lo revisado. Es todo o nada.
+ * Registro masivo por CSV (SPEC-106 §4.2) en el ciclo común de cargas: se sube
+ * el archivo, se reconoce su tipo, el servidor guarda la revisión y se confirma
+ * lo revisado. Es todo o nada: con un error no se registra nada.
  */
 export function RegistroMasivoScreen() {
   const canMaintain = useCanMaintainDirectory();
   const imp = useRegistroMasivo();
+  const fileInput = useRef<HTMLInputElement>(null);
 
   if (!canMaintain) {
     return (
@@ -47,44 +60,43 @@ export function RegistroMasivoScreen() {
     <div className="space-y-6">
       <PageHeader title="Registro masivo"
         description="Sube un CSV con muchas organizaciones o contactos. Primero se revisa; si una fila tiene error, no se guarda ninguna." />
-      <fieldset className="grid gap-3 sm:grid-cols-2">
-        <legend className="sr-only">Qué registrar</legend>
-        {KINDS.map((k) => (
-          <label key={k.kind} className={`surface-card flex cursor-pointer items-start gap-3 ${imp.kind === k.kind
-            ? 'ring-2 ring-forest-700' : ''}`}>
-            <input type="radio" name="import-kind" className="mt-1" checked={imp.kind === k.kind}
-              onChange={() => imp.setKind(k.kind)} />
-            <span>
-              <span className="block font-semibold text-neutral-900">{k.title}</span>
-              <span className="block text-sm text-neutral-600">{k.description}</span>
-            </span>
-          </label>
-        ))}
-      </fieldset>
-      {imp.kind && (
-        <section className="surface-card space-y-4" aria-label="Archivo">
-          <EstandarDelDirectorio kind={imp.kind} />
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="text-sm font-medium text-neutral-900">
-              Archivo CSV
-              <input key={imp.fileInputKey} type="file" accept=".csv,text/csv"
-                className="mt-1 block text-sm" onChange={(e) => imp.setFile(e.target.files?.[0] ?? null)} />
-            </label>
-            <Button variant="secondary" onClick={imp.template} disabled={imp.working}>Descargar plantilla</Button>
-            <Button onClick={imp.review} disabled={!imp.file} loading={imp.working && imp.plan === null}>Revisar archivo</Button>
+      <section className="surface-card space-y-6" aria-label="Archivo">
+        {TIPOS.map((t) => (
+          <div key={t.kind} className="space-y-3">
+            <h2 className="font-semibold text-neutral-900">{t.title}</h2>
+            <EstandarDelDirectorio kind={t.kind} />
+            <Button variant="secondary" size="sm" onClick={() => imp.template(t.kind)} disabled={imp.working}
+              aria-label={`Descargar plantilla de ${t.plural}`}>Descargar plantilla</Button>
           </div>
-          {imp.error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{imp.error}</p>}
-          {imp.outcome && <Resultado outcome={imp.outcome} />}
-          {imp.plan && (
-            <>
-              <ImportPreview plan={imp.plan} />
-              <div className="flex justify-end">
-                <Button onClick={imp.confirm} loading={imp.working} disabled={!imp.canConfirm}>Confirmar registro</Button>
-              </div>
-            </>
+        ))}
+        <div className="flex flex-wrap items-center gap-3 border-t border-neutral-100 pt-4">
+          <input key={imp.fileInputKey} ref={fileInput} type="file" accept=".csv,text/csv" className="sr-only"
+            aria-label="Archivo CSV" tabIndex={-1} onChange={(e) => imp.upload(e.target.files?.[0] ?? null)} />
+          <Button onClick={() => fileInput.current?.click()} loading={imp.working && imp.plan === null}
+            leadingIcon={<UploadIcon />}>Subir archivo</Button>
+          {imp.file && (
+            <span className="text-sm text-neutral-700">
+              {imp.file.name}{imp.kind && ` · archivo de ${NOMBRE_DEL_TIPO[imp.kind]}`}
+            </span>
           )}
-        </section>
-      )}
+        </div>
+        {imp.error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{imp.error}</p>}
+        {imp.outcome && <Resultado outcome={imp.outcome} />}
+        {imp.plan && (
+          <div className="space-y-3">
+            <h2 className="font-semibold text-neutral-900">Revisión</h2>
+            {imp.hasErrors && (
+              <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">
+                Corrige los errores del archivo para poder subirlo.
+              </p>
+            )}
+            <ImportPreview plan={imp.plan} />
+            <div className="flex justify-end">
+              <Button onClick={imp.confirm} loading={imp.working} disabled={!imp.canConfirm}>Confirmar registro</Button>
+            </div>
+          </div>
+        )}
+      </section>
       {imp.avisoSinGuardar}
     </div>
   );

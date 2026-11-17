@@ -15,7 +15,12 @@ jest.mock('@/lib/directory-api', () => ({
 }));
 
 const api = directoryApi as jest.Mocked<typeof directoryApi>;
-const csv = () => new File(['nombre;tipo;ruc;telefono;otros_nombres\nOIE;Unidad PUCP;;;\n'], 'orgs.csv', { type: 'text/csv' });
+const CABECERAS = {
+  organizations: 'nombre;tipo;ruc;telefono;otros_nombres\nOIE;Unidad PUCP;;;\n',
+  contacts: 'nombre;organizaciones;roles;anexo;celular;correo\nAna Torres;OIE;;;;\n',
+  ajena: 'codigo;especie;altura\n',
+};
+const csv = (tipo: keyof typeof CABECERAS) => new File([CABECERAS[tipo]], `${tipo}.csv`, { type: 'text/csv' });
 
 const plan = (overrides: Partial<DirectoryImportPlan> = {}): DirectoryImportPlan => ({
   batchId: 7, kind: 'organizations', totalRows: 2, toCreate: 1, toSkip: 1, toOmit: 0, errors: 0,
@@ -27,10 +32,9 @@ const plan = (overrides: Partial<DirectoryImportPlan> = {}): DirectoryImportPlan
   ...overrides,
 });
 
-function review(kind: RegExp) {
-  fireEvent.click(screen.getByRole('radio', { name: kind }));
-  fireEvent.change(screen.getByLabelText('Archivo CSV'), { target: { files: [csv()] } });
-  fireEvent.click(screen.getByRole('button', { name: 'Revisar archivo' }));
+/** Subir el archivo basta: el tipo se reconoce por la cabecera y la revisión arranca sola. */
+function upload(tipo: keyof typeof CABECERAS) {
+  fireEvent.change(screen.getByLabelText('Archivo CSV'), { target: { files: [csv(tipo)] } });
 }
 
 beforeEach(() => {
@@ -46,7 +50,7 @@ describe('RegistroMasivoScreen', () => {
     });
     render(<RegistroMasivoScreen />);
 
-    review(/Organizaciones/);
+    upload('organizations');
 
     expect(await screen.findByText('Se crea')).toBeInTheDocument();
     expect(screen.getByText('Ya existe, se omite')).toBeInTheDocument();
@@ -65,9 +69,10 @@ describe('RegistroMasivoScreen', () => {
     }));
     render(<RegistroMasivoScreen />);
 
-    review(/Organizaciones/);
+    upload('organizations');
 
     expect(await screen.findByText('El RUC debe tener 11 dígitos y empezar con 10 o 20.')).toBeInTheDocument();
+    expect(screen.getByText('Corrige los errores del archivo para poder subirlo.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Confirmar registro' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Copiar lista de errores' })).toBeInTheDocument();
   });
@@ -83,7 +88,7 @@ describe('RegistroMasivoScreen', () => {
     }));
     render(<RegistroMasivoScreen />);
 
-    review(/Contactos/);
+    upload('contacts');
 
     expect(await screen.findByText('Se omite: falta su organización')).toBeInTheDocument();
     expect(screen.getByText('«Facultad Inexistente» no está en el Directorio.')).toBeInTheDocument();
@@ -95,7 +100,7 @@ describe('RegistroMasivoScreen', () => {
     api.previewImport.mockRejectedValue(new ApiError(400, 'The file is missing the columns: tipo', null));
     render(<RegistroMasivoScreen />);
 
-    review(/Contactos/);
+    upload('contacts');
 
     expect(await screen.findByText(/Al archivo le faltan las columnas: tipo/)).toBeInTheDocument();
     expect(api.previewImport).toHaveBeenCalledWith('contacts', expect.any(File));
@@ -106,7 +111,7 @@ describe('RegistroMasivoScreen', () => {
       'The file has unknown columns: razon_social. Check the spelling against the standard', null));
     render(<RegistroMasivoScreen />);
 
-    review(/Organizaciones/);
+    upload('organizations');
 
     expect(await screen.findByText(/columnas que no son del estándar: razon_social/)).toBeInTheDocument();
   });
@@ -116,30 +121,54 @@ describe('RegistroMasivoScreen', () => {
     api.confirmImport.mockRejectedValue(new ApiError(422, 'The preview expired: upload the file again', null));
     render(<RegistroMasivoScreen />);
 
-    review(/Organizaciones/);
+    upload('organizations');
     fireEvent.click(await screen.findByRole('button', { name: 'Confirmar registro' }));
 
     expect(await screen.findByText(/La vista previa venció/)).toBeInTheDocument();
   });
 
-  it('cambiar de tipo con una revisión pendiente pide confirmar', async () => {
+  it('reconoce el tipo del archivo y lo dice junto a su nombre', async () => {
+    api.previewImport.mockResolvedValue(plan({ kind: 'contacts' }));
+    render(<RegistroMasivoScreen />);
+
+    upload('contacts');
+
+    expect(await screen.findByText('contacts.csv · archivo de contactos')).toBeInTheDocument();
+  });
+
+  it('un archivo que no es de organizaciones ni de contactos no se envía a revisar', async () => {
+    render(<RegistroMasivoScreen />);
+
+    upload('ajena');
+
+    expect(await screen.findByText(/No se reconoce el archivo/)).toBeInTheDocument();
+    expect(api.previewImport).not.toHaveBeenCalled();
+  });
+
+  it('subir otro archivo con una revisión pendiente pide confirmar', async () => {
     api.previewImport.mockResolvedValue(plan());
     render(<RegistroMasivoScreen />);
 
-    review(/Organizaciones/);
+    upload('organizations');
     await screen.findByText('Se crea');
-    fireEvent.click(screen.getByRole('radio', { name: /Contactos/ }));
+    upload('contacts');
 
     expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
   });
 
-  it('descarga la plantilla del tipo elegido con el nombre del estándar', async () => {
+  it('el botón «Subir archivo» está a la vista', () => {
+    render(<RegistroMasivoScreen />);
+
+    expect(screen.getByRole('button', { name: 'Subir archivo' })).toBeVisible();
+  });
+
+  it('cada estándar descarga su plantilla con su nombre', async () => {
     const blob = new Blob(['x']);
     api.importTemplate.mockResolvedValue(blob);
     render(<RegistroMasivoScreen />);
 
-    fireEvent.click(screen.getByRole('radio', { name: /Contactos/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Descargar plantilla' }));
+    expect(screen.getByRole('button', { name: 'Descargar plantilla de organizaciones' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Descargar plantilla de contactos' }));
 
     await waitFor(() => expect(guardarArchivo).toHaveBeenCalledWith(blob, 'contactos.csv'));
     expect(api.importTemplate).toHaveBeenCalledWith('contacts');
