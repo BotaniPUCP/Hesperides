@@ -1,5 +1,6 @@
 import type React from 'react';
 import type { EscenaId } from '../guion';
+import type { TramoEscena } from '../tiempos';
 import type { PropsEscena } from './tipos';
 
 /** Lo que distingue a un video de otro: sus escenas, el tamaño de Hespo en cada una y dónde está su voz. */
@@ -13,6 +14,10 @@ export type ConfigVideo = {
   hespo?: '2d' | '3d' | 'semilla';
   /** Música de fondo en `public/`; baja de volumen mientras habla la voz. */
   musica?: string;
+  /** Envuelve la escena y a Hespo (no los subtítulos): cámara, sacudidas, partículas. */
+  capaEscena?: React.FC<{ frame: number; escena: TramoEscena; children: React.ReactNode }>;
+  /** Reloj de la animación de la escena y de Hespo (p. ej. pausas de impacto); la voz no cambia. */
+  retiempo?: (frame: number) => number;
 };
 
 export function componenteDeEscena(config: ConfigVideo, id: EscenaId): React.FC<PropsEscena> {

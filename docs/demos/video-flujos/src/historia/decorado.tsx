@@ -107,8 +107,9 @@ export const Farol: React.FC<{ x: number; y: number }> = ({ x, y }) => (
 export const ArbolRajado: React.FC<{ x: number; y: number; frame: number; alerta: number; corte?: number }> = ({ x, y, frame, alerta, corte = 0 }) => {
   const base = { x: x - 40, y: y - 330 };
   const vaiven = Math.sin(frame / 9) * 2.5 * (1 - corte);
-  const caida = corte * corte * 420;
-  const giro = vaiven - corte * 35;
+  // Cae: la punta se hunde mientras se suelta y la rama aterriza casi plana sobre el sendero.
+  const caida = corte * corte * 300;
+  const giro = vaiven - Math.sin(Math.PI * Math.min(1, corte)) * 35;
   return (
     <g>
       <path d={`M${x - 46} ${y} Q${x - 30} ${y - 200} ${x - 36} ${y - 420} L${x + 36} ${y - 420} Q${x + 26} ${y - 200} ${x + 46} ${y} Z`} fill={COLOR.borde} />
@@ -122,7 +123,7 @@ export const ArbolRajado: React.FC<{ x: number; y: number; frame: number; alerta
         <circle cx={x + 110} cy={y - 480} r={126} />
       </g>
       {/* La rama rajada, sobre el sendero */}
-      <g transform={`translate(0 ${caida}) rotate(${giro} ${base.x} ${base.y})`} opacity={1 - Math.max(0, corte - 0.85) * 6}>
+      <g transform={`translate(0 ${caida}) rotate(${giro} ${base.x} ${base.y})`}>
         <path d={`M${base.x} ${base.y} Q${base.x - 220} ${base.y - 30} ${base.x - 420} ${base.y + 20}`} fill="none" stroke={COLOR.borde} strokeWidth={26} strokeLinecap="round" />
         <g stroke={COLOR.borde} strokeWidth={5} fill={COLOR.cuerpo}>
           <circle cx={base.x - 400} cy={base.y + 10} r={56} />
@@ -157,8 +158,9 @@ export const Celular: React.FC<{ x: number; y: number; alto: number; captura?: s
 
 /** Laptop dibujada con una captura real en la pantalla (proporción 1920×941). */
 export const Laptop: React.FC<{ x: number; y: number; ancho: number; captura: string; children?: React.ReactNode }> = ({ x, y, ancho, captura, children }) => {
-  const altoPantalla = (ancho * 941) / 1920;
-  const marco = ancho * 0.025;
+  // Medidas enteras: el recorte de la pantalla cae en píxeles exactos y se dibuja igual en cada render.
+  const altoPantalla = Math.round((ancho * 941) / 1920);
+  const marco = Math.round(ancho * 0.025);
   return (
     <div style={{ position: 'absolute', left: x - ancho / 2 - marco, top: y }}>
       <div style={{ width: ancho + marco * 2, height: altoPantalla + marco * 2, background: COLOR.borde, borderRadius: marco * 1.2, position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>

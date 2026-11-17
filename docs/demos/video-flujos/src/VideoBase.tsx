@@ -28,6 +28,8 @@ const SemillaEnVideo: React.FC<{ escena: TramoEscena; frame: number; boca: Forma
   );
 };
 
+const SinCapa: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
+
 function escenaEn(linea: Linea, frame: number): TramoEscena {
   const actual = linea.escenas.find((e) => frame < e.desde + e.frames + FRAMES_TRANSICION);
   return actual ?? linea.escenas[linea.escenas.length - 1];
@@ -44,6 +46,8 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
   const apertura = useApertura(config.carpetaVoz, tramo?.archivo ?? null, tramo ? frame - tramo.desde : 0, reserva);
   const boca = useFormaBoca(config.carpetaVoz, tramo?.archivo ?? null, tramo ? frame - tramo.desde : 0, reserva);
   const Escena = componenteDeEscena(config, escena.id);
+  const Capa = config.capaEscena ?? SinCapa;
+  const local = config.retiempo ? config.retiempo(frame) : frame;
 
   // Escena y Hespo se desvanecen juntos: así el salto de Hespo a la siguiente entrada no se ve.
   const opacidad = opacidadDeEscena(linea, escena, frame);
@@ -54,14 +58,16 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
     <AbsoluteFill style={{ fontFamily }}>
       <Escenario />
       <AbsoluteFill style={{ opacity: opacidad }}>
-        <Escena escena={escena} frame={frame} />
-        {config.hespo === 'semilla' ? (
-          <SemillaEnVideo escena={escena} frame={frame} boca={boca} escala={config.escalas[escena.id] ?? 1} />
-        ) : config.hespo === '3d' ? (
-          <HespoEnEscena3D estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
-        ) : (
-          <Hespo estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
-        )}
+        <Capa frame={frame} escena={escena}>
+          <Escena escena={escena} frame={local} />
+          {config.hespo === 'semilla' ? (
+            <SemillaEnVideo escena={escena} frame={local} boca={boca} escala={config.escalas[escena.id] ?? 1} />
+          ) : config.hespo === '3d' ? (
+            <HespoEnEscena3D estado={estadoHespo(escena, local)} frame={local} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
+          ) : (
+            <Hespo estado={estadoHespo(escena, local)} frame={local} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
+          )}
+        </Capa>
       </AbsoluteFill>
       <Subtitulos texto={subtitulo} />
       {linea.escenas

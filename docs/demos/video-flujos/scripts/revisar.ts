@@ -4,6 +4,7 @@
  * determinismo y parpadeo. Se corre después de cada cambio visual y se MIRA la hoja.
  *
  * Uso: npm run revisar -- [--video VideoHistoria] [--corrida 7] [--claves h2:0.45,h10:0.47]
+ *                         [--golpes] [--frames 120,121] [--determinismo 1546]
  *                         [--sin-frases] [--estatico h11:0.9] [--escena solucion]
  *
  * - Por escena: inicio, mitad y final; con frases (por defecto) un cuadro más dentro de cada frase.
@@ -29,7 +30,8 @@ import path from 'node:path';
 import { bundle } from '@remotion/bundler';
 import { openBrowser, renderStill, selectComposition } from '@remotion/renderer';
 import { FPS, type Linea } from '../src/tiempos';
-import { compararPixeles, leerClaves, metricaParpadeo, muestrasDeRevision } from './revision';
+import { golpesDeHistoria } from '../src/historia/impacto';
+import { compararPixeles, leerClaves, metricaParpadeo, muestrasDeRevision, type Muestra } from './revision';
 
 const FFMPEG = path.resolve('node_modules/@remotion/compositor-win32-x64-msvc/ffmpeg.exe');
 const CLAVES_HISTORIA = 'h2:0.45,h6:0.08,h6:0.2,h9:0.22,h9:0.3,h10:0.45,h10:0.5,h10:0.64';
@@ -62,7 +64,13 @@ const render = async (frame: number, output: string) => {
 
 const escenaPedida = valor('escena');
 const claves = leerClaves(valor('claves') ?? (video === 'VideoHistoria' ? CLAVES_HISTORIA : ''));
-const muestras = muestrasDeRevision(linea, { corrida, claves, porFrase: !bandera('sin-frases') }).filter((m) => !escenaPedida || m.escena === escenaPedida);
+// --golpes: solo los golpes de la historia, cuadro a cuadro alrededor de cada uno (−2, 0, +1, +3, +8).
+const framesPedidos = valor('frames');
+const muestras: Muestra[] = framesPedidos
+  ? framesPedidos.split(',').map((f) => ({ frame: Number(f), escena: '-', tipo: 'clave' as const, etiqueta: 'pedido' }))
+  : bandera('golpes')
+  ? golpesDeHistoria(linea).flatMap((g) => [-2, 0, 1, 3, 8].map((d) => ({ frame: g.frame + d, escena: g.id, tipo: 'clave' as const, etiqueta: `${g.id} ${d >= 0 ? '+' : ''}${d}` })))
+  : muestrasDeRevision(linea, { corrida, claves, porFrase: !bandera('sin-frases') }).filter((m) => !escenaPedida || m.escena === escenaPedida);
 
 const dir = path.join(carpeta, `corrida-${corrida}`);
 mkdirSync(dir, { recursive: true });
@@ -76,7 +84,7 @@ for (const m of muestras) {
 }
 
 // Determinismo: el mismo cuadro dos veces.
-const cuadroDet = muestras[Math.floor(muestras.length / 2)]?.frame ?? 0;
+const cuadroDet = Number(valor('determinismo') ?? muestras[Math.floor(muestras.length / 2)]?.frame ?? 0);
 const detA = path.join(dir, `det-a.png`);
 const detB = path.join(dir, `det-b.png`);
 await render(cuadroDet, detA);
