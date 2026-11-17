@@ -11,6 +11,7 @@ import { ComparacionHespo, Hespo2DDemo } from './hespo2d/Comparacion';
 import { DURACION_DEMO } from './hespo2d/coreografia';
 import { HojaDeExpresiones, RedisenosHespo, Retratos } from './hespo2d/v2/Redisenos';
 import { VARIANTES_SEMILLA } from './hespo2d/v2/disenos';
+import { CARPETA_EFECTOS } from './historia/efectos';
 import { HojaDeFondo } from './historia/HojasDePapel';
 import { ALTO_HOJA, ANCHO_HOJA, rutaManifiestoFondos } from './historia/papel';
 import { CARPETA_VOZ_HISTORIA, FRAMES_COLA_HISTORIA, VideoHistoria, type PropsVideoHistoria } from './VideoHistoria';
@@ -71,6 +72,7 @@ const calcularHistoria = async ({ props }: { props: PropsVideoHistoria }) => {
   const linea = construirLinea(guionHistoria, manifiesto);
   await comprobarAudios(linea, async (archivo) => (await fetch(staticFile(`${CARPETA_VOZ_HISTORIA}/${archivo}`), { method: 'HEAD' })).ok);
   // Las hojas de papel recortado se pre-renderizan aparte (y cambian de versión con su dibujo).
+  await leerJson(`${CARPETA_EFECTOS}/manifiesto.json`, `Faltan los efectos de sonido (public/${CARPETA_EFECTOS}/manifiesto.json): ejecuta npm run efectos`);
   await leerJson(rutaManifiestoFondos(), `Faltan los fondos de papel (public/${rutaManifiestoFondos()}): ejecuta npm run fondos`);
   return { durationInFrames: linea.framesTotales + FRAMES_COLA_HISTORIA, props: { ...props, linea, medidas: conCarpeta('venta', venta) } };
 };

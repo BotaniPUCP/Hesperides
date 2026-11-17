@@ -17,7 +17,8 @@
     "capturas:planificacion": "tsx scripts/capturas-planificacion.ts",
     "capturas:venta": "tsx scripts/capturas-venta.ts",
     "revisar": "tsx scripts/revisar.ts",
-    "fondos": "tsx scripts/fondos.ts"
+    "fondos": "tsx scripts/fondos.ts",
+    "efectos": "python scripts/generar_efectos.py"
   },
   "dependencies": {
     "@react-three/fiber": "9.1.2",

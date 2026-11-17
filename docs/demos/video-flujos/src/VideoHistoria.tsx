@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { useCurrentFrame } from 'remotion';
+import { Html5Audio, Sequence, staticFile, useCurrentFrame } from 'remotion';
 import { Acabado } from './historia/Acabado';
 import { camaraEn, planosDeHistoria, transformarToma } from './historia/camara';
+import { efectosDeHistoria, rutaEfecto } from './historia/efectos';
 import { CapaDeGolpes } from './historia/Golpes';
 import { TomaContexto } from './historia/HojasDePapel';
 import { cuadroConPausa, golpesDeHistoria, pausasDe } from './historia/impacto';
@@ -36,6 +37,7 @@ const BASE: ConfigVideo = {
 const Contenido: React.FC<{ linea: Linea; medidas: Medidas; camaraQuieta: boolean }> = ({ linea, medidas, camaraQuieta }) => {
   const medida = useMemo(() => crearMedida(medidas, 'npm run capturas:venta'), [medidas]);
   const frame = useCurrentFrame();
+  const efectos = useMemo(() => efectosDeHistoria(linea), [linea]);
   const config = useMemo<ConfigVideo>(() => {
     const golpes = golpesDeHistoria(linea);
     const pausas = pausasDe(golpes);
@@ -55,6 +57,11 @@ const Contenido: React.FC<{ linea: Linea; medidas: Medidas; camaraQuieta: boolea
   return (
     <MedidasContexto.Provider value={medida}>
       <VideoBase linea={linea} config={config} />
+      {efectos.map((d, i) => (
+        <Sequence key={i} from={d.frame} layout="none">
+          <Html5Audio src={staticFile(rutaEfecto(d.efecto))} volume={d.volumen} />
+        </Sequence>
+      ))}
       <Acabado linea={linea} frame={frame} />
     </MedidasContexto.Provider>
   );
