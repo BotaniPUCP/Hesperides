@@ -60,5 +60,10 @@ export function createLookMaterial(table: LookTable): THREE.MeshStandardMaterial
 
 /** De noche se encienden los paños elegidos del vidrio (SPEC-112 D-19); de día, nada. */
 export function setLookNight(material: THREE.Material, night: boolean): void {
-  (material.userData.lookUniforms.lookNightGlow.value as THREE.Color).copy(night ? NIGHT_GLOW : NO_GLOW);
+  setLookGlow(material, night ? 1 : 0);
+}
+
+/** Cuánto se encienden los paños elegidos, respecto de la noche: al atardecer también, y más (modo Atardecer). */
+export function setLookGlow(material: THREE.Material, level: number): void {
+  (material.userData.lookUniforms.lookNightGlow.value as THREE.Color).copy(NIGHT_GLOW).multiplyScalar(level);
 }

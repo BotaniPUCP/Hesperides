@@ -14,13 +14,24 @@ const CAMPUS_LATITUDE_DEG = -12.07;
 const SUN_DISTANCE_M = 1800;
 /** El separador de la sombra en texeles: 0,6 m con el mapa de ±720 m de antes, y proporcional al achicarlo (D-21). */
 const NORMAL_BIAS_TEXELS = 1.7;
+/**
+ * Hora dorada: un sol naranja fuerte y rasante, un cielo azulado que apenas llena las sombras, y sin los
+ * rellenos del modo de siempre, que aplanan el volumen. Las sombras quedan frías y las caras al sol, ámbar.
+ */
+const DUSK = {
+  sun: 0xff9f55, sunIntensity: 2.7,
+  hemiSky: 0x8396cc, hemiGround: 0x4a3530, hemiIntensity: 0.32,
+  rim: 0xff9a5a, rimIntensity: 0.12,
+  ambient: 0xb7a8c8, ambientIntensity: 0.1,
+} as const;
 
 export interface Lights {
   sun: THREE.DirectionalLight;
   /** Hacia dónde está el sol, unitario. */
   sunDir: () => THREE.Vector3;
   setHour: (hour: number, night: boolean) => void;
-  applyTheme: (palette: ScenePalette, night: boolean) => void;
+  /** Con `dusk`, la luz de la hora dorada (modo Atardecer): manda sobre la de la paleta. */
+  applyTheme: (palette: ScenePalette, night: boolean, dusk?: boolean) => void;
   /** Centra el mapa de sombras en lo que mira la cámara (SPEC-112 D-21). */
   follow: (target: THREE.Vector3, cameraDistance: number) => void;
 }
@@ -45,6 +56,7 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
   const dir = new THREE.Vector3(0, 1, 0);
   const focus = center.clone();
   let radius = 0;
+  let dusk = false;
 
   function setRadius(r: number) {
     radius = r;
@@ -76,13 +88,16 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
     place();
     if (night) {
       sun.color.set(0xc4d5ff);
+    } else if (dusk) {
+      sun.color.set(DUSK.sun);
     } else {
       const low = Math.max(0, 1 - up * 2.2); // sol bajo: más cálido
       sun.color.setRGB(1, 1 - low * 0.18, 1 - low * 0.38);
     }
   }
 
-  function applyTheme(palette: ScenePalette, night: boolean) {
+  function applyTheme(palette: ScenePalette, night: boolean, golden = false) {
+    dusk = golden && !night;
     hemi.color.set(palette.hemiSky);
     hemi.groundColor.set(palette.hemiGround);
     hemi.intensity = palette.hemiIntensity;
@@ -93,6 +108,16 @@ export function createLights(scene: THREE.Scene, center: THREE.Vector3, coarsePo
     rim.intensity = night ? 0.3 : 0.24;
     ambient.color.set(night ? 0x7068b5 : 0xffe4c0);
     ambient.intensity = night ? 0.24 : 0.2;
+    if (!dusk) return;
+    hemi.color.set(DUSK.hemiSky);
+    hemi.groundColor.set(DUSK.hemiGround);
+    hemi.intensity = DUSK.hemiIntensity;
+    sun.intensity = DUSK.sunIntensity;
+    fill.intensity = 0;
+    rim.color.set(DUSK.rim);
+    rim.intensity = DUSK.rimIntensity;
+    ambient.color.set(DUSK.ambient);
+    ambient.intensity = DUSK.ambientIntensity;
   }
 
   return { sun, sunDir: () => dir.clone(), setHour, applyTheme, follow };

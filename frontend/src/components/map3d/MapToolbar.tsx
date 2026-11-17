@@ -10,6 +10,8 @@ export interface ViewOptions {
   labels: boolean;
   grayBuildings: boolean;
   realColors: boolean;
+  /** Hora dorada: cielo, bruma, ciudad alrededor y posprocesado. */
+  sunset: boolean;
 }
 
 export interface MapToolbarProps {
@@ -21,6 +23,7 @@ export interface MapToolbarProps {
 
 const OPTION_LABELS: Record<keyof ViewOptions, string> = {
   night: 'Noche',
+  sunset: 'Atardecer',
   shadows: 'Sombras',
   labels: 'Nombres',
   grayBuildings: 'Edificios grises',

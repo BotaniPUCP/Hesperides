@@ -61,6 +61,8 @@ export interface Viewer {
   setLayerVisible: (id: LayerId, visible: boolean) => void;
   select: (target: Target | null, focus: boolean) => void;
   setNight: (night: boolean) => void;
+  /** Modo Atardecer: hora dorada con cielo, bruma y posprocesado. De noche no se aplica. */
+  setSunset: (on: boolean) => void;
   setHour: (hour: number) => void;
   setShadows: (on: boolean) => void;
   setLabels: (on: boolean) => void;

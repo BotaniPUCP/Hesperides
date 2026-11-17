@@ -19,7 +19,7 @@ export interface MapScreenSnapshot {
 }
 
 /** El mapa arranca en colores reales y el rosado queda a un clic (SPEC-112 D-13): su visor nace así. */
-export const INITIAL_OPTIONS: ViewOptions = { night: false, shadows: true, labels: true, grayBuildings: false, realColors: true };
+export const INITIAL_OPTIONS: ViewOptions = { night: false, shadows: true, labels: true, grayBuildings: false, realColors: true, sunset: false };
 
 const startingSnapshot = (): MapScreenSnapshot => ({
   mode: 'base',

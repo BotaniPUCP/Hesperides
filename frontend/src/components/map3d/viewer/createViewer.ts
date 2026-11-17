@@ -11,6 +11,7 @@ import { createBalloonLayer } from './balloons';
 import { attachAdminMovement } from '../pilot/adminMovement';
 import { attachAdminAnchor } from './adminAnchor';
 import { createLights } from './lighting';
+import { createSunset, setGroundMatte, SUNSET, SUNSET_HOUR, SUNSET_MAX_POLAR, sunsetPose } from './sunset';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
 import { createPin } from './pin';
@@ -42,6 +43,8 @@ const MARKED_COLOR = '#06B6D4';
  * En los pilotos es el radio del edificio; el campus entero sería demasiado rápido.
  */
 const ADMIN_SPEED_RADIUS_M = 80;
+/** El límite de inclinación de siempre (cameraRig). */
+const ORBIT_MAX_POLAR = 1.32;
 
 /** Con `model`, los edificios se dibujan con las mallas del plano oficial; sin él (no llegó o falló), como prismas. */
 export function createViewer(container: HTMLElement, labelRoot: HTMLElement, data: SceneData, cb: ViewerCallbacks, initialPose?: CameraPose,
@@ -53,7 +56,8 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const coarse = window.matchMedia('(pointer: coarse)').matches;
   const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
   const lights = createLights(scene, center, coarse);
-  let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true;
+  let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true, golden = false;
+  const sunset = createSunset(renderer, scene, rig.camera, stage.box, WORLD_LIFT);
   const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
 
   const poly = createSceneLayers(scene, data, textures, state, model);
@@ -124,16 +128,23 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
 
   /** El sol mueve también el borde iluminado de las copas. */
   function relight() {
-    lights.setHour(hour, night);
-    foliage.setLighting(night, lights.sunDir());
+    lights.setHour(golden && !night ? SUNSET_HOUR : hour, night);
+    foliage.setLighting(night, lights.sunDir(), golden);
   }
 
   function applyTheme() {
-    state.palette = paletteFor(night, gray);
+    state.palette = paletteFor(night, gray, golden && !night);
     const { w, h } = size();
     stage.applyTheme(state.palette, night, w, h);
-    lights.applyTheme(state.palette, night);
-    realColors.setNight(night);
+    lights.applyTheme(state.palette, night, golden);
+    relight();
+    // Atardecer (no de noche): cielo, bruma, ciudad alrededor y posprocesado; pisa el entorno y la exposición del tema.
+    const dusk = golden && !night;
+    sunset.setEnabled(dusk, lights.sunDir());
+    stage.backdrop.style.visibility = dusk ? 'hidden' : '';
+    setGroundMatte([poly.greenAreas, poly.xerophytic, poly.parking, poly.sidewalks]
+      .flatMap((l) => (Array.isArray(l.mesh.material) ? l.mesh.material : [l.mesh.material])), dusk);
+    realColors.setGlow(night ? 1 : dusk ? SUNSET.windowGlow : 0);
     planNodes?.applyTheme(state.palette);
     relight();
     highlight.repaintAll();
@@ -143,6 +154,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   function resize() {
     const { w, h } = size();
     stage.resize(w, h);
+    sunset.resize(w, h);
     rig.camera.aspect = w / h;
     rig.camera.updateProjectionMatrix();
     applyTheme();
@@ -204,7 +216,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     if (Math.abs(distance - lastDistance) / Math.max(lastDistance, 1) > 0.04) { scaleFurniture(Object.values(points), distance); lastDistance = distance; }
     if (flew || moved || needsRender || rig.controls.autoRotate) {
       lights.follow(rig.controls.target, distance);
-      renderer.render(scene, rig.camera);
+      if (sunset.enabled()) sunset.render(distance); else renderer.render(scene, rig.camera);
       const { w, h } = size();
       labels.update(rig.camera, w, h, labelVisible);
       balloons?.update(rig.camera, w, h, distance);
@@ -291,6 +303,15 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     setNight: (v) => { night = v; applyTheme(); },
+    setSunset(v) {
+      const turnedOn = v && !golden;
+      golden = v;
+      // La toma a contraluz va casi a ras del horizonte: el modo deja bajar más la cámara.
+      rig.controls.maxPolarAngle = v ? SUNSET_MAX_POLAR : ORBIT_MAX_POLAR;
+      applyTheme();
+      // Al prenderlo, la toma del modo: oblicua y hacia el sol, como el render de referencia.
+      if (turnedOn && !night) rig.flyToPose(sunsetPose(center, lights.sunDir()));
+    },
     setHour: (h) => { hour = h; relight(); needsRender = true; },
     setShadows(on) {
       renderer.shadowMap.enabled = on;
@@ -368,6 +389,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       adminAnchor.dispose();
       cones.dispose();
       incidents.dispose();
+      sunset.dispose();
       stage.dispose();
     },
   };

@@ -83,7 +83,9 @@ export function createSceneLayers(scene: THREE.Scene, data: SceneData, textures:
   const greenColor = (i: number) => {
     const p = data.greenAreas[i].props;
     // Una categoría apagada desde la leyenda se pinta atenuada, no desaparece.
-    return state.hidden.has(categoryOf(p, state.mode)) ? state.palette.dimmed : colorOf(p, state.mode);
+    if (state.hidden.has(categoryOf(p, state.mode))) return state.palette.dimmed;
+    // En el modo General no hay nada que leer en el color: el Atardecer pone el del césped.
+    return state.mode === 'base' && state.palette.natural ? state.palette.natural.grass : colorOf(p, state.mode);
   };
   const bHeight = (i: number) => data.campusBuildings[i].props.heightM ?? DEFAULT_HEIGHT_M;
   const cHeight = (i: number) => data.contextBuildings[i].props.heightM ?? DEFAULT_HEIGHT_M;
@@ -93,9 +95,9 @@ export function createSceneLayers(scene: THREE.Scene, data: SceneData, textures:
       color: (i) => SUPERVISION_COLORS[data.supervision[i].props.code] ?? '#8090A0' }),
     greenAreas: make('greenAreas', data.greenAreas, { surface: 'green', height: () => 0.45, base: () => 0.03, color: greenColor }),
     reserve: make('reserve', data.reserve, { surface: 'plain', height: () => 0.75, base: () => 0.05, opacity: 0.45, order: 2, color: () => '#C060FF' }),
-    xerophytic: make('xerophytic', data.xerophytic, { surface: 'green', height: () => 0.6, base: () => 0.04, color: () => '#FF9030' }),
+    xerophytic: make('xerophytic', data.xerophytic, { surface: 'green', height: () => 0.6, base: () => 0.04, color: () => state.palette.natural?.xerophytic ?? '#FF9030' }),
     parking: make('parking', data.parking, { surface: 'parking', height: () => 0.12, base: () => 0.01, color: () => state.palette.parking }),
-    sidewalks: make('sidewalks', data.sidewalks, { surface: 'plain', height: () => 0.5, base: () => 0.06, opacity: 0.7, order: 3, color: () => '#FF4060' }),
+    sidewalks: make('sidewalks', data.sidewalks, { surface: 'plain', height: () => 0.5, base: () => 0.06, opacity: 0.7, order: 3, color: () => state.palette.natural?.sidewalk ?? '#FF4060' }),
     campusBuildings: createPolyLayer(scene, 'campusBuildings', data.campusBuildings.map((s) => s.g), { surface: 'building', height: bHeight,
       base: () => 0, castShadow: true, doubleSided: !!model, color: () => state.palette.building }, textures,
     mergedBuildings(data.campusBuildings, model, bHeight, () => 0)),
