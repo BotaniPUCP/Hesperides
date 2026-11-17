@@ -48,7 +48,7 @@ function wedge(headingDeg: number): THREE.BufferGeometry {
   return geo;
 }
 
-export function createViewCones(scene: THREE.Scene): ViewCones {
+export function createViewCones(scene: THREE.Object3D): ViewCones {
   const group = new THREE.Group();
   scene.add(group);
   const meshes = new Map<number, THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>>();

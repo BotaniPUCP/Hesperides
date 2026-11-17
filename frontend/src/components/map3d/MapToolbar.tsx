@@ -19,6 +19,8 @@ export interface MapToolbarProps {
   options: ViewOptions;
   compass: number;
   onOption: (key: keyof ViewOptions, value: boolean) => void;
+  /** Entra al modo captura: la maqueta sola, sin interfaz, nombres ni iconos. */
+  onCapture?: () => void;
   viewer: RefObject<Pick<Viewer, 'fit' | 'top' | 'north' | 'toggleSpin' | 'livePerspective' | 'setSunsetHour' | 'snapshot'> | null>;
 }
 
@@ -50,7 +52,7 @@ async function downloadSnapshot(viewer: MapToolbarProps['viewer']) {
 const button = 'rounded-md bg-neutral-0/95 px-2 py-1 text-xs text-neutral-700 shadow hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600';
 
 /** Controles de cámara y de apariencia. La brújula apunta al norte y, al pulsarla, orienta la vista. */
-export function MapToolbar({ options, compass, onOption, viewer }: MapToolbarProps) {
+export function MapToolbar({ options, compass, onOption, viewer, onCapture }: MapToolbarProps) {
   const onNorth = () => viewer.current?.north();
   const [sunsetHour, setSunsetHour] = useState<number>(SUNSET_HOUR);
   return (
@@ -92,6 +94,11 @@ export function MapToolbar({ options, compass, onOption, viewer }: MapToolbarPro
             }}
           />
         </label>
+      )}
+      {onCapture && (
+        <button type="button" className={button} onClick={onCapture} title="Oculta la interfaz, los nombres y los iconos; Esc para salir">
+          Modo captura
+        </button>
       )}
       <button type="button" className={button} onClick={() => void downloadSnapshot(viewer)} title="Descarga lo que se ve como imagen PNG">
         Foto

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BackButton } from '@/components/ui/BackButton';
 import { LoadingSkeleton } from '@/components/ui';
@@ -61,6 +61,27 @@ export function MapScreen() {
   // Ctrl+Shift+U: movimiento libre de administrador, con un aviso temporal al entrar y al salir.
   useAdminModeToggle(s.viewer, s.viewerEpoch > 0);
   const root = useRef<HTMLDivElement>(null);
+  // Modo captura: la maqueta sola (sin interfaz, nombres, globos ni marcadores 3D). Esc o un clic en el aviso, para salir.
+  const [capture, setCapture] = useState(false);
+  const [captureHint, setCaptureHint] = useState(false);
+  useEffect(() => {
+    s.viewer.current?.setCaptureMode(capture);
+    if (!capture) return;
+    const node = root.current;
+    const hint = setTimeout(() => setCaptureHint(false), 2000);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setCapture(false); };
+    // En pantalla completa, Esc la cierra el navegador sin pasar la tecla: al salir de ella, sale del modo.
+    const onFullscreen = () => { if (!document.fullscreenElement) setCapture(false); };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('fullscreenchange', onFullscreen);
+    return () => {
+      clearTimeout(hint);
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('fullscreenchange', onFullscreen);
+      if (node && document.fullscreenElement === node) void document.exitFullscreen().catch(() => undefined);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- s.viewer es una referencia estable
+  }, [capture, s.viewerEpoch]);
   const focusedParamRef = useRef<string | null>(null);
   const viewerSettled = s.viewerEpoch > 0 || s.unsupported;
 
@@ -117,9 +138,21 @@ export function MapScreen() {
           start={VIEWER_START}
           onIncidentPick={incidents.onIncidentPick}
           poseMemory={mapScreenPose}
+          bare={capture}
         />
       )}
 
+      {capture && (
+        <button
+          type="button"
+          onClick={() => setCapture(false)}
+          className={`absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-md bg-neutral-900/70 px-3 py-1 text-xs text-neutral-0 transition-opacity duration-700 ${captureHint ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
+        >
+          Modo captura: Esc o clic aquí para salir
+        </button>
+      )}
+
+      {!capture && (
       <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start gap-2 p-3">
         <div className="pointer-events-auto w-full max-w-sm space-y-2">
           <div className="flex items-center gap-2">
@@ -147,12 +180,19 @@ export function MapScreen() {
               compass={s.compass}
               onOption={s.setOption}
               viewer={s.viewer}
+              onCapture={() => {
+                setCapture(true);
+                setCaptureHint(true);
+                // También sin la barra de la aplicación: la maqueta a pantalla completa (el clic lo permite).
+                void root.current?.requestFullscreen?.().catch(() => undefined);
+              }}
             />
           </div>
         )}
       </div>
+      )}
 
-      {!s.unsupported && (
+      {!s.unsupported && !capture && (
         <aside className="absolute right-3 top-28 z-10 w-56 md:top-16">
           <button
             type="button"
@@ -175,12 +215,12 @@ export function MapScreen() {
       )}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-start gap-2 p-3">
-        {balloons.card && (
+        {balloons.card && !capture && (
           <div className="pointer-events-auto w-full max-w-sm">
             <BalloonCard balloon={balloons.card.balloon} gone={balloons.card.gone} onClose={balloons.closeBalloon} />
           </div>
         )}
-        {s.card && (
+        {s.card && !capture && (
           <div className="pointer-events-auto w-full max-w-sm">
             <MapInfoCard content={s.card} onClose={s.closeCard} />
           </div>
@@ -190,9 +230,11 @@ export function MapScreen() {
         </div>
       </div>
 
-      <div className="absolute bottom-3 right-3">
-        <MapFullscreenButton target={root} />
-      </div>
+      {!capture && (
+        <div className="absolute bottom-3 right-3">
+          <MapFullscreenButton target={root} />
+        </div>
+      )}
     </div>
   );
 }

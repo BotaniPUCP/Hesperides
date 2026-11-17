@@ -9,7 +9,7 @@ import * as THREE from 'three';
  */
 
 /** El color del horizonte: también el de la bruma, para que el suelo lejano se funda con el cielo. */
-export const HORIZON = new THREE.Color().setRGB(1.0, 0.5, 0.24);
+export const HORIZON = new THREE.Color().setRGB(0.92, 0.6, 0.44);
 /** El horizonte ya en el crepúsculo: violeta apagado. */
 export const DUSK_HORIZON = new THREE.Color().setRGB(0.42, 0.24, 0.3);
 
@@ -76,7 +76,7 @@ void main() {
     float el = asin(clamp(h, 0.0, 1.0)) / 0.7853982;
     vec2 ct = vec2(fract(atan(dir.z, dir.x) / 6.2831853 + 0.5 + cloudOffset), clamp(el, 0.0, 1.0));
     vec4 t = texture2D(cloudTex, ct);
-    float cover = t.a * smoothstep(0.004, 0.03, h) * (1.0 - smoothstep(0.62, 0.71, h));
+    float cover = smoothstep(0.03, 0.55, t.a) * smoothstep(0.004, 0.03, h) * (1.0 - smoothstep(0.62, 0.71, h));
     // La foto da la forma y cuánto más clara u oscura es la nube que su cielo; el color lo pone el atardecer:
     // panza violácea, lo claro en durazno y, cerca del sol, encendido.
     vec3 belly = vec3(0.24, 0.15, 0.2);

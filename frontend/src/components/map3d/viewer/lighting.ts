@@ -20,7 +20,7 @@ const NORMAL_BIAS_TEXELS = 1.7;
  */
 const DUSK = {
   sun: 0xff9a4e, sunIntensity: 3.2,
-  hemiSky: 0xb09a92, hemiGround: 0x4a3328, hemiIntensity: 0.24,
+  hemiSky: 0x7c7fc0, hemiGround: 0x4a3328, hemiIntensity: 0.3,
   rim: 0xff9a5a, rimIntensity: 0.1,
   ambient: 0xc0a090, ambientIntensity: 0.06,
 } as const;

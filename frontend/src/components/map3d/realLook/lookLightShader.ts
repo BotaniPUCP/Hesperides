@@ -66,7 +66,9 @@ if (vLookRow > -0.5) normal = lookBump(-vViewPosition, normal, lookDH, faceDirec
 
 export const LOOK_EMISSIVE_FRAGMENT = /* glsl */ `
 #include <emissivemap_fragment>
-totalEmissiveRadiance += lookNightGlow * lookLit + lookInterior * lookGlass;
+// El interior varía por vano (unos 2,4 m de ancho y un piso de alto): unos más claros, otros casi apagados.
+float lookBay = fract(sin(dot(floor(vLookFace / vec2(2.4, 3.3)), vec2(12.9898, 78.233))) * 43758.5453);
+totalEmissiveRadiance += lookNightGlow * lookLit + lookInterior * lookGlass * (0.15 + 1.1 * lookBay * lookBay);
 `;
 
 export const LOOK_LIGHTS_FRAGMENT = /* glsl */ `

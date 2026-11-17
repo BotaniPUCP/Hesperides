@@ -30,7 +30,7 @@ jest.mock('@/components/map3d/Map3DView', () => ({
 
 function fakeViewer(): jest.Mocked<Viewer> {
   return {
-    setPaint: jest.fn(), setBalloons: jest.fn(), setAdminMode: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setSunset: jest.fn(), setSunsetHour: jest.fn(), snapshot: jest.fn(), setHour: jest.fn(),
+    setPaint: jest.fn(), setBalloons: jest.fn(), setAdminMode: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setSunset: jest.fn(), setSunsetHour: jest.fn(), snapshot: jest.fn(), setCaptureMode: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), setRealColors: jest.fn(), fit: jest.fn(), top: jest.fn(),
     north: jest.fn(), toggleSpin: jest.fn(), setViewCones: jest.fn(), setIncidentMarkers: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(),
     flyToPose: jest.fn(), dispose: jest.fn(),

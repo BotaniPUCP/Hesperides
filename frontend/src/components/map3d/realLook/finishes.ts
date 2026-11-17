@@ -58,8 +58,8 @@ export const GLASS_GLOSS = {
 } as const;
 
 /** Medidas en metros del grano de cada acabado (D-17). `vary` es el cambio de tono de una pieza a otra. */
-export const BRICK = { courseM: 0.075, lengthM: 0.25, jointM: 0.012, vary: 0.07, mortar: 0.82, reliefM: 0.008 } as const;
-export const CONCRETE = { widthM: 2.4, heightM: 1.2, jointM: 0.015, vary: 0.04, joint: 0.78, reliefM: 0.005 } as const;
+export const BRICK = { courseM: 0.075, lengthM: 0.25, jointM: 0.012, vary: 0.07, mortar: 0.82, reliefM: 0.02 } as const;
+export const CONCRETE = { widthM: 2.4, heightM: 1.2, jointM: 0.015, vary: 0.04, joint: 0.78, reliefM: 0.012 } as const;
 export const METAL = { seamEveryM: 0.6, seamM: 0.04, seam: 1.08, reliefM: 0.015 } as const;
 export const PLASTER = { cellM: 1.6, vary: 0.035 } as const;
 /** Desfasa el hash del grano del de los acentos y del de las ventanas encendidas. */

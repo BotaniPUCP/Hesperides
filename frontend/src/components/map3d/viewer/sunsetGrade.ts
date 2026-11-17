@@ -143,6 +143,11 @@ void main() {
     hdr += (vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.6 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55) * hazy;
   }
   hdr += sunRays();
+  // Lo lejano pierde color: la ciudad del fondo se ve gris y brumosa, no naranja.
+  if (depth < 1.0) {
+    float far = smoothstep(700.0, 3500.0, length(p));
+    hdr = mix(hdr, vec3(dot(hdr, vec3(0.2126, 0.7152, 0.0722))), 0.55 * far);
+  }
   vec3 c = gradeAces(hdr);
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   // Hora dorada: sombras hacia el azul petróleo, luces hacia el ámbar.

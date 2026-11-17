@@ -67,6 +67,8 @@ export interface Viewer {
   setSunsetHour: (hour: number) => void;
   /** Una captura de lo que se ve, a `scale` veces la resolución de la pantalla, en PNG. */
   snapshot: (scale?: number) => Promise<Blob | null>;
+  /** Modo captura: sin marcadores 3D (pin, incidencias, conos de perspectiva). */
+  setCaptureMode: (on: boolean) => void;
   setHour: (hour: number) => void;
   setShadows: (on: boolean) => void;
   setLabels: (on: boolean) => void;

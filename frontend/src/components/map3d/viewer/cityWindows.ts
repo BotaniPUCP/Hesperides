@@ -13,7 +13,7 @@ export const CITY_WINDOWS = {
   bayM: 3.2,
   floorM: 3,
   litShare: 0.26,
-  glow: new THREE.Color('#ffb267').multiplyScalar(2.2),
+  glow: new THREE.Color('#ffb267').multiplyScalar(0.9),
   /** Cuánto oscurece el vidrio apagado y cuánto el techo. */
   glass: 0.45,
   roof: 0.72,
@@ -56,7 +56,7 @@ if (abs(cityN.y) > 0.6) {
   vec2 f = fract(cell), id = floor(cell);
   float bay = step(0.22, f.x) * step(f.x, 0.78) * step(0.32, f.y) * step(f.y, 0.82);
   float pick = cityHash(id + floor(vCityPos.xz * 0.05) * 7.0);
-  float lit = step(1.0 - ${CITY_WINDOWS.litShare.toFixed(2)}, pick) * (0.55 + 0.9 * cityHash(id.yx + 3.1));
+  float lit = step(1.0 - ${CITY_WINDOWS.litShare.toFixed(2)}, pick) * (0.15 + 1.1 * cityHash(id.yx + 3.1) * cityHash(id.yx + 3.1));
   // Lejos (un píxel cubre media celda o más), el promedio: sin moiré.
   float far = smoothstep(0.25, 0.6, max(fwidth(cell.x), fwidth(cell.y)));
   cityWin = mix(bay, 0.3, far);

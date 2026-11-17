@@ -108,8 +108,11 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     if(!referenceOutline)return;
     scene.remove(referenceOutline);referenceOutline.geometry.dispose();referenceOutline.material.dispose();referenceOutline=null;
   };
-  const pin = createPin(scene);
-  const cones = createViewCones(scene);
+  // Los marcadores (pin, conos, incidencias) cuelgan de un nodo propio: la captura los apaga de una vez.
+  const markers = new THREE.Group();
+  scene.add(markers);
+  const pin = createPin(markers);
+  const cones = createViewCones(markers);
   const admin = attachAdminMovement(renderer.domElement, rig.camera, rig.controls, () => { needsRender = true; });
   admin.fitTo(WORLD_LIFT, ADMIN_SPEED_RADIUS_M);
   const adminAnchor = attachAdminAnchor(renderer.domElement, rig.camera, rig.controls.target, scene, () => { needsRender = true; });
@@ -117,7 +120,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     onPick: (b) => cb.onBalloonPick?.(b),
     onGroup: (points) => rig.focusPoints(points),
   }) : null;
-  const incidents = createIncidentMarkers(scene);
+  const incidents = createIncidentMarkers(markers);
   const labels = createLabels(labelRoot, data, poly.campusBuildings.meta, poly.greenAreas.meta, model?.huaca);
   /** Cada clase de etiqueta se apaga con su capa; la de la huaca, solo con el botón de etiquetas. */
   const labelVisible = (kind: LabelKind) => {
@@ -322,6 +325,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     },
     setHour: (h) => { hour = h; relight(); needsRender = true; },
     setSunsetHour: (h) => { sunsetHour = h; if (golden) applyTheme(); },
+    setCaptureMode: (on) => { markers.visible = !on; needsRender = true; },
     async snapshot(scale = 2) {
       // Un cuadro a más resolución, leído en el mismo turno en que se dibuja (el lienzo no se conserva).
       const ratio = renderer.getPixelRatio();
@@ -331,7 +335,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       sunset.resize(w, h);
       const distance = rig.camera.position.distanceTo(rig.controls.target);
       lights.follow(rig.controls.target, distance);
+      const shown = markers.visible;
+      markers.visible = false;
       if (sunset.enabled()) sunset.render(distance); else renderer.render(scene, rig.camera);
+      markers.visible = shown;
       const blob = await new Promise<Blob | null>((resolve) => renderer.domElement.toBlob(resolve, 'image/png'));
       renderer.setPixelRatio(ratio);
       stage.resize(w, h);
