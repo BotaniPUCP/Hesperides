@@ -1,11 +1,13 @@
 package pe.edu.pucp.hesperides.modules.inventory.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;
+import pe.edu.pucp.hesperides.shared.event.SpecimenDeactivatedEvent;
 import pe.edu.pucp.hesperides.shared.exception.ConflictException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
@@ -20,6 +22,7 @@ public class SpecimenLifecycleService {
 
     private final JdbcTemplate jdbc;
     private final AuditService audit;
+    private final ApplicationEventPublisher eventPublisher;
 
     private record SpecimenState(long id, String code, Long speciesId) {
     }
@@ -53,6 +56,14 @@ public class SpecimenLifecycleService {
         specimenChanges.put("deletedAt", deletedAt);
         specimenChanges.put("reason", reason.trim());
         audit.record(AuditActionCode.GREEN_ELEMENT_SOFT_DELETED, "GreenElement", specimen.id(), specimenChanges);
+
+        eventPublisher.publishEvent(new SpecimenDeactivatedEvent(
+                specimen.id(),
+                specimen.code(),
+                specimen.speciesId(),
+                reason.trim(),
+                elementDeletedAt.toInstant()
+        ));
 
         if (species != null && !species.active() && noActiveSpecimens(specimen.speciesId())) {
             Timestamp speciesDeletedAt = jdbc.queryForObject("""
