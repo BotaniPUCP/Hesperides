@@ -188,25 +188,33 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                         <span className="font-semibold text-neutral-900">{binding.scientificName}</span>
                         <span className="ml-2 text-xs text-neutral-500">({binding.rows} {binding.rows === 1 ? 'fila' : 'filas'})</span>
                       </span>
-                      <span className="text-xs text-neutral-500">
-                        {binding.resolution === 'ALTERNATIVE_NAME'
-                          ? 'Nombre alternativo único'
-                          : binding.resolution === 'USER_SELECTED'
-                            ? 'Selección del usuario'
-                            : 'Coincidencia científica'}
-                      </span>
+                      {binding.resolution === 'ALTERNATIVE_NAME' ? (
+                        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-700 border border-neutral-200">
+                          Nombre alternativo
+                        </span>
+                      ) : binding.resolution === 'USER_SELECTED' ? (
+                        <span className="inline-flex items-center rounded-md bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-800 border border-brand-200">
+                          Selección del usuario
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-md bg-forest-50 px-2 py-0.5 text-[11px] font-medium text-forest-800 border border-forest-200">
+                          Especie existente en el catálogo
+                        </span>
+                      )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div>
                       <SelectorDeEspecieParaImportacion
                         sourceName={binding.sourceName}
                         buttonLabel="Cambiar especie"
                         disabled={reviewLocked}
+                        extraAction={(
+                          <Button size="sm" variant="ghost" disabled={reviewLocked}
+                            onClick={() => void imp.vincularEspecie(binding.sourceKey, null)}>
+                            Quitar asociación
+                          </Button>
+                        )}
                         onSelect={(species) => void imp.vincularEspecie(binding.sourceKey, species.slug)}
                       />
-                      <Button size="sm" variant="ghost" disabled={reviewLocked}
-                        onClick={() => void imp.vincularEspecie(binding.sourceKey, null)}>
-                        Quitar asociación
-                      </Button>
                     </div>
                   </li>
                 ))}
@@ -245,7 +253,7 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                   </h3>
                   <p className="text-xs text-neutral-600 mt-0.5">
                     {imp.kind === 'specimens'
-                      ? 'Asocia cada grupo a una especie existente en el catálogo. La selección solo afecta este lote; no crea alias ni modifica una especie existente.'
+                      ? 'Estas especies no se encuentran registradas en el catálogo. Puedes escoger una especie existente para asociarla a este lote o corregir el archivo CSV si el nombre fue ingresado de forma errónea.'
                       : 'Estas filas no se cargarán porque la especie no está en el catálogo.'}
                   </p>
                 </div>
@@ -262,6 +270,11 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                           <span>{s.rows} {s.rows === 1 ? 'fila' : 'filas'}</span>
                           {s.reason === 'AMBIGUOUS' && <span>Coincidencias ambiguas: selecciona una especie</span>}
                           {s.reason === 'USER_UNRESOLVED' && <span>Asociación pendiente de seleccionar</span>}
+                          {(s.reason === 'NOT_FOUND' || (!s.reason && s.reason !== 'AMBIGUOUS' && s.reason !== 'USER_UNRESOLVED')) && (
+                            <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 border border-amber-200/80">
+                              No registrada en el catálogo
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
