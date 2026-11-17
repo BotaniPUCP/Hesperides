@@ -11,7 +11,7 @@ const ESPERA_MS = 250;
 
 export interface BuscadorDeEspecieProps {
   valor: string;
-  onElegir: (nombreCientifico: string) => void;
+  onElegir: (nombreCientifico: string, especie?: Species) => void;
   error?: string;
 }
 
@@ -57,7 +57,7 @@ export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieP
 
   function elegir(s: Species) {
     setTexto(s.scientificName);
-    onElegir(s.scientificName);
+    onElegir(s.scientificName, s);
   }
 
   const mostrarLista = !elegida && texto.trim().length >= 2 && opciones.length > 0;
@@ -72,12 +72,12 @@ export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieP
         value={texto}
         onChange={(t) => {
           setTexto(t);
-          if (valor) onElegir('');
+          if (valor) onElegir('', undefined);
         }}
         placeholder="Nombre científico o común (ej. Ceiba speciosa)"
         required
         errorMessage={error}
-        helperText={elegida ? 'Especie seleccionada del catálogo' : 'Escribe al menos dos letras y elige de la lista'}
+        helperText={elegida ? 'Especie activa seleccionada del catálogo' : 'Escribe al menos dos letras y elige de la lista de especies activas'}
       />
 
       {buscando && (

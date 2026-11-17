@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import type { Species } from '@shared/types';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { Button, Card, Input } from '@/components/ui';
 import { LIMITES } from '@/lib/upload-limits';
@@ -19,6 +20,7 @@ const DECIMALES_COORDENADA = 6;
 export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuardar: boolean) => void }) {
   const r = useRegistroPlanta();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [especieSeleccionada, setEspecieSeleccionada] = useState<Species | null>(null);
   // La pantalla decide si avisa al salir: también al cambiar qué se registra.
   useEffect(() => onDirtyChange?.(r.sinGuardar), [r.sinGuardar, onDirtyChange]);
   const v = r.valores;
@@ -52,7 +54,14 @@ export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuar
       <form className="space-y-6" noValidate onSubmit={handlePreSubmit}>
       <Card title="Qué y dónde">
         <div className="space-y-4">
-          <BuscadorDeEspecie valor={v.especie} onElegir={(n) => r.cambiar('especie', n)} error={r.errores.especie} />
+          <BuscadorDeEspecie
+            valor={v.especie}
+            onElegir={(n, sp) => {
+              r.cambiar('especie', n);
+              setEspecieSeleccionada(sp ?? null);
+            }}
+            error={r.errores.especie}
+          />
           <MapaSelector
             lat={v.lat}
             lon={v.lon}
@@ -70,7 +79,7 @@ export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuar
         </div>
       </Card>
 
-      <CamposMedicion r={r} />
+      <CamposMedicion r={r} especie={especieSeleccionada} />
       <CamposEvaluacion r={r} />
 
       <Card title="Foto y notas">

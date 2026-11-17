@@ -211,6 +211,49 @@ describe('RegistrarScreen', () => {
     expect(screen.getByRole('radio', { name: 'Tacho' })).toBeChecked();
   });
 
+  it('deshabilita DAP y fuste si la especie no los usa y muestra zunchado en condicion estructural', async () => {
+    const ARBUSTO = {
+      slug: 'lantana-camara',
+      isActive: true,
+      scientificName: 'Lantana camara',
+      commonName: 'Cinco negritos',
+      otherNames: [],
+      family: 'Verbenaceae',
+      vegetationTypeCode: 'SHRUB',
+      vegetationTypeName: 'Arbusto',
+      specimenCount: 5,
+      imageUrl: null,
+      imageSource: null,
+      photos: [],
+      critical: false,
+      referenceHeightM: 1.5,
+      referenceHeightSourceCode: null,
+      referenceHeightSourceName: null,
+      referenceCrownRadiusM: 0.8,
+      referenceCrownRadiusSourceCode: null,
+      referenceCrownRadiusSourceName: null,
+      usesTrunkHeight: false,
+      usesDbh: false,
+      unmeasuredSpecimenCount: 0,
+      extraMeasures: [],
+    };
+
+    jest.mocked(inventarioVerdeApi.assignableSpecies).mockResolvedValue({
+      content: [ARBUSTO],
+      page: { number: 0, size: 8, totalElements: 1, totalPages: 1 },
+    });
+
+    pantalla();
+    await userEvent.type(screen.getByLabelText(/Especie/), 'Lantana');
+    await userEvent.click(await screen.findByRole('button', { name: /Lantana camara/ }));
+
+    expect(screen.getByLabelText(/Altura del fuste/i)).toBeDisabled();
+    expect(screen.getByLabelText(/DAP/i)).toBeDisabled();
+    expect(screen.getAllByText('No aplica para esta especie')).toHaveLength(2);
+    expect(screen.getByText('Condición estructural')).toBeInTheDocument();
+    expect(screen.getByText(/Zunchado/i)).toBeInTheDocument();
+  });
+
   it('no muestra el botón de registrar nueva especie al vuelo', async () => {
     pantalla();
 

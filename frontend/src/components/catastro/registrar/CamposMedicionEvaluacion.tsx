@@ -1,5 +1,6 @@
 'use client';
 
+import type { Species } from '@shared/types';
 import { Input } from '@/components/ui';
 import { todayLocal } from '@/lib/local-date';
 import { PREGUNTAS_EVALUACION } from './formularioPlanta';
@@ -29,20 +30,37 @@ function CampoFecha({ id, etiqueta, valor, onCambiar, error }: {
 }
 
 /** Opcional: si se mide algo, la fecha decide cuál medición es la vigente. */
-export function CamposMedicion({ r }: { r: RegistroPlanta }) {
+export function CamposMedicion({ r, especie }: { r: RegistroPlanta; especie?: Species | null }) {
   const v = r.valores;
+  const usaFuste = especie ? especie.usesTrunkHeight : true;
+  const usaDap = especie ? especie.usesDbh : true;
+
   return (
     <details className="surface-card" open={Boolean(v.alturaM || v.dapCm)}>
       <summary className="cursor-pointer font-semibold text-neutral-900">Medición (opcional)</summary>
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <CampoFecha id="fecha-medicion" etiqueta="Fecha de medición" valor={v.fechaMedicion}
           onCambiar={(x) => r.cambiar('fechaMedicion', x)} error={r.errores.fechaMedicion} />
         <Input id="altura" label="Altura (m)" type="number" value={v.alturaM} onChange={(x) => r.cambiar('alturaM', x)} />
-        <Input id="fuste" label="Altura del fuste (m)" type="number" value={v.alturaFusteM} onChange={(x) => r.cambiar('alturaFusteM', x)} />
-        <Input id="dap" label="DAP (cm)" type="number" value={v.dapCm} onChange={(x) => r.cambiar('dapCm', x)}
-          helperText="Diámetro a 1.30 m del suelo" />
+        <Input id="fuste" label="Altura del fuste (m)" type="number" value={usaFuste ? v.alturaFusteM : ''}
+          onChange={(x) => usaFuste && r.cambiar('alturaFusteM', x)} disabled={!usaFuste}
+          helperText={!usaFuste ? 'No aplica para esta especie' : undefined} />
+        <Input id="dap" label="DAP (cm)" type="number" value={usaDap ? v.dapCm : ''}
+          onChange={(x) => usaDap && r.cambiar('dapCm', x)} disabled={!usaDap}
+          helperText={!usaDap ? 'No aplica para esta especie' : 'Diámetro a 1.30 m del suelo'} />
         <Input id="copa" label="Radio de copa (m)" type="number" value={v.radioCopaM} onChange={(x) => r.cambiar('radioCopaM', x)} />
-        <PreguntaSiNo id="zunchado" pregunta="Zunchado" valor={v.zunchado} onCambiar={(x) => r.cambiar('zunchado', x)} />
+      </div>
+
+      <div className="mt-4 border-t border-neutral-100 pt-3">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+          Condición estructural
+        </p>
+        <PreguntaSiNo
+          id="zunchado"
+          pregunta="Zunchado (soporte o faja metálica)"
+          valor={v.zunchado}
+          onCambiar={(x) => r.cambiar('zunchado', x)}
+        />
       </div>
       {r.errores.medidas && <p className="mt-2 text-xs text-action-danger">{r.errores.medidas}</p>}
     </details>
