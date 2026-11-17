@@ -2,6 +2,8 @@
 import React from 'react';
 import { Img, random, staticFile } from 'remotion';
 import { COLOR } from '../tema';
+import { TrazoTinta } from './TrazosDeTinta';
+import { rectRedondeado } from './tinta';
 
 export const HORIZONTE = 640;
 export const SUELO = 880;
@@ -140,33 +142,62 @@ export const ArbolRajado: React.FC<{ x: number; y: number; frame: number; alerta
   );
 };
 
-/** Celular dibujado con una captura real dentro. */
-export const Celular: React.FC<{ x: number; y: number; alto: number; captura?: string; children?: React.ReactNode; inclina?: number }> = ({ x, y, alto, captura, children, inclina = 0 }) => {
+/** Opacidad del cuerpo de un aparato mientras su contorno se dibuja: aparece en la segunda mitad. */
+const rellenoTrasTrazo = (dibujo: number) => Math.min(1, Math.max(0, (dibujo - 0.45) / 0.45));
+
+/**
+ * Celular dibujado con una captura real dentro. Con `dibujo` (0 a 1) el contorno se traza en tinta
+ * y el cuerpo aparece detrás.
+ */
+export const Celular: React.FC<{ x: number; y: number; alto: number; captura?: string; children?: React.ReactNode; inclina?: number; dibujo?: number; tinta?: string }> = ({ x, y, alto, captura, children, inclina = 0, dibujo = 1, tinta = COLOR.borde }) => {
   const ancho = alto * 0.5;
+  const relleno = rellenoTrasTrazo(dibujo);
   return (
-    <div style={{ position: 'absolute', left: x - ancho / 2, top: y, width: ancho, height: alto, borderRadius: alto * 0.07, background: COLOR.borde, boxShadow: '0 20px 50px rgba(0,0,0,0.35)', transform: `rotate(${inclina}deg)` }}>
-      <div style={{ position: 'absolute', left: ancho * 0.05, top: alto * 0.045, right: ancho * 0.05, bottom: alto * 0.045, borderRadius: alto * 0.045, overflow: 'hidden', background: COLOR.blanco }}>
-        {captura ? <Img src={staticFile(`capturas/${captura}.png`)} style={{ width: '100%' }} /> : null}
-        {children}
+    <div style={{ position: 'absolute', left: x - ancho / 2, top: y, width: ancho, height: alto, transform: `rotate(${inclina}deg)` }}>
+      <div style={{ position: 'absolute', inset: 0, borderRadius: alto * 0.07, background: COLOR.borde, boxShadow: '0 20px 50px rgba(0,0,0,0.35)', opacity: relleno }}>
+        <div style={{ position: 'absolute', left: ancho * 0.05, top: alto * 0.045, right: ancho * 0.05, bottom: alto * 0.045, borderRadius: alto * 0.045, overflow: 'hidden', background: COLOR.blanco }}>
+          {captura ? <Img src={staticFile(`capturas/${captura}.png`)} style={{ width: '100%' }} /> : null}
+          {children}
+        </div>
       </div>
+      {dibujo < 1 ? (
+        <svg width={ancho} height={alto} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}>
+          <TrazoTinta puntos={rectRedondeado(-4, -4, ancho + 8, alto + 8, alto * 0.07 + 4)} progreso={Math.min(1, dibujo / 0.8)} semilla={`celular-${captura ?? 'chat'}`} ancho={8} color={tinta} />
+        </svg>
+      ) : null}
     </div>
   );
 };
 
-/** Laptop dibujada con una captura real en la pantalla (proporción 1920×941). */
-export const Laptop: React.FC<{ x: number; y: number; ancho: number; captura: string; children?: React.ReactNode }> = ({ x, y, ancho, captura, children }) => {
+/**
+ * Laptop dibujada con una captura real en la pantalla (proporción 1920×941). Con `dibujo` (0 a 1)
+ * primero se trazan la pantalla y la base en tinta, y el cuerpo aparece detrás.
+ */
+export const Laptop: React.FC<{ x: number; y: number; ancho: number; captura: string; children?: React.ReactNode; dibujo?: number }> = ({ x, y, ancho, captura, children, dibujo = 1 }) => {
   // Medidas enteras: el recorte de la pantalla cae en píxeles exactos y se dibuja igual en cada render.
   const altoPantalla = Math.round((ancho * 941) / 1920);
   const marco = Math.round(ancho * 0.025);
+  const relleno = rellenoTrasTrazo(dibujo);
+  const anchoTotal = ancho + marco * 2;
+  const altoTotal = altoPantalla + marco * 2;
+  const base = { x: -ancho * 0.09 + marco - marco, y: altoTotal, w: ancho * 1.18, h: marco * 1.6 };
   return (
     <div style={{ position: 'absolute', left: x - ancho / 2 - marco, top: y }}>
-      <div style={{ width: ancho + marco * 2, height: altoPantalla + marco * 2, background: COLOR.borde, borderRadius: marco * 1.2, position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
-        <div style={{ position: 'absolute', left: marco, top: marco, width: ancho, height: altoPantalla, overflow: 'hidden', background: COLOR.blanco }}>
-          <Img src={staticFile(`capturas/${captura}.png`)} style={{ width: ancho, height: altoPantalla }} />
-          {children}
+      <div style={{ opacity: relleno }}>
+        <div style={{ width: anchoTotal, height: altoTotal, background: COLOR.borde, borderRadius: marco * 1.2, position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
+          <div style={{ position: 'absolute', left: marco, top: marco, width: ancho, height: altoPantalla, overflow: 'hidden', background: COLOR.blanco }}>
+            <Img src={staticFile(`capturas/${captura}.png`)} style={{ width: ancho, height: altoPantalla }} />
+            {children}
+          </div>
         </div>
+        <div style={{ width: ancho * 1.18, height: marco * 1.6, marginLeft: -ancho * 0.09 + marco, background: COLOR.borde, borderRadius: `0 0 ${marco * 2}px ${marco * 2}px` }} />
       </div>
-      <div style={{ width: ancho * 1.18, height: marco * 1.6, marginLeft: -ancho * 0.09 + marco, background: COLOR.borde, borderRadius: `0 0 ${marco * 2}px ${marco * 2}px` }} />
+      {dibujo < 1 ? (
+        <svg width={anchoTotal} height={altoTotal} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}>
+          <TrazoTinta puntos={rectRedondeado(-4, -4, anchoTotal + 8, altoTotal + 8, marco * 1.2 + 4)} progreso={Math.min(1, dibujo / 0.7)} semilla="laptop-pantalla" ancho={8} />
+          <TrazoTinta puntos={rectRedondeado(base.x + marco - 4, base.y - 2, base.w + 8, base.h + 6, 6)} progreso={Math.max(0, Math.min(1, (dibujo - 0.45) / 0.45))} semilla="laptop-base" ancho={7} />
+        </svg>
+      ) : null}
     </div>
   );
 };

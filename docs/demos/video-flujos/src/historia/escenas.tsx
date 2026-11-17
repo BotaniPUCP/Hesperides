@@ -11,6 +11,9 @@ import { FPS } from '../tiempos';
 import { apareceEn, momentoDe } from '../ui/anim';
 import { Arbol, ArbolRajado, Burbuja, Celular, Cielo, Escritorio, Farol, HORIZONTE, Laptop, Lienzo, Sello, Sol, SUELO, Tierra } from './decorado';
 import { EnPantalla, HojaPapel, useParalaje } from './HojasDePapel';
+import { pinEnVideo } from './posiciones';
+import { progresoDeTrazo } from './tinta';
+import { FlechaTinta, SubrayadoTinta } from './TrazosDeTinta';
 import { enDos } from './enDos';
 import { Persona } from './Persona';
 
@@ -26,8 +29,9 @@ function tw(frame: number, puntos: [number, number][]): number {
 }
 
 /** Tarjeta de texto fija en pantalla (no la mueve la cámara). */
-const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number }> = ({ texto, visible, x = 60, y = 50 }) => (
+const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number; subrayado?: number }> = ({ texto, visible, x = 60, y = 50, subrayado = 0 }) => (
   <EnPantalla>
+
     <div
       style={{
         position: 'absolute',
@@ -46,6 +50,12 @@ const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number
     >
       {texto}
     </div>
+    {subrayado > 0 ? (
+      <svg width={1920} height={940} style={{ position: 'absolute', left: 0, top: 0, opacity: visible, transform: `translateY(${(1 - visible) * 20}px)` }}>
+        {/* Bajo el texto, dentro de la tarjeta; ancho aproximado del texto en negrita de 42 px. */}
+        <SubrayadoTinta x={x + 30} y={y + 80} largo={texto.length * 21} progreso={subrayado} semilla={`subrayado-${texto.length}`} />
+      </svg>
+    ) : null}
   </EnPantalla>
 );
 
@@ -106,6 +116,8 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
     <AbsoluteFill>
       <Campus corrimiento={corrimiento} amanecer={amanecer} frame={frame}>
         <ArbolRajado x={1650 - corrimiento} y={SUELO - 30} frame={frame} alerta={alerta} />
+        {/* Flecha a mano hacia la grieta, justo después del aviso. */}
+        <FlechaTinta desde={[1290 - corrimiento, 330]} hasta={[1548 - corrimiento, 515]} curva={-0.2} progreso={progresoDeTrazo(frame, momentoDe(escena, 'h2', 0.42), 18)} semilla="flecha-rama" ancho={9} />
       </Campus>
       {/* Peatones que pasan bajo la rama */}
       {[0, 1].map((i) => {
@@ -176,7 +188,7 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
           gesto={fp < momentoDe(escena, 'h3', 0.6) ? 'neutral' : 'preocupado'}
           objeto="celular"
         />
-        <Celular x={1180} y={60} alto={800}>
+        <Celular x={1180} y={60} alto={800} dibujo={progresoDeTrazo(frame, escena.desde, 22)} tinta={COLOR.arena}>
           <Chat frame={frame} mio={apareceEn(escena, 'h3', frame, 0.15)} inicioLluvia={momentoDe(escena, 'h3', 0.42)} />
         </Celular>
       </AbsoluteFill>
@@ -281,7 +293,7 @@ export const Hoy: React.FC<PropsEscena> = ({ escena, frame }) => {
         />
       ))}
       <HojaPapel id="matas" />
-      <Tarjeta texto={`${Math.round(avance * 15)} árboles podados · ¿bien hechos?`} visible={apareceEn(escena, 'h5', frame, 0.05)} />
+      <Tarjeta texto={`${Math.round(avance * 15)} árboles podados · ¿bien hechos?`} visible={apareceEn(escena, 'h5', frame, 0.05)} subrayado={progresoDeTrazo(frame, momentoDe(escena, 'h5', 0.05) + 14, 16)} />
     </AbsoluteFill>
   );
 };
@@ -362,7 +374,7 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
       <AbsoluteFill>
         <Campus corrimiento={300} frame={frame} />
         <Persona quien="julio" x={420} sueloY={SUELO + 4} escala={1.15} frame={fp} pose={{ brazoI: 10, brazoD: 120, miraX: 0.7 }} gesto="feliz" objeto="celular" />
-        <Celular x={1060} y={50} alto={alto} captura="venta/reporte-celular">
+        <Celular x={1060} y={50} alto={alto} captura="venta/reporte-celular" dibujo={progresoDeTrazo(frame, escena.desde, 22)}>
           <Resalte medida={{ x: m.x * k, y: m.y * k, ancho: m.ancho * k, alto: m.alto * k }} visible={apareceEn(escena, 'h7', frame, 0.35)} />
         </Celular>
         <HojaPapel id="matas" />
@@ -380,13 +392,19 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
       <AbsoluteFill>
         <Oficina />
         <Persona quien="jefe" x={330} sueloY={870} escala={1.05} frame={fp} pose={{ brazoI: 30, brazoD: enMapa ? 85 : 40, miraX: 0.8 }} gesto={fp < momentoDe(escena, 'h8', 0.4) ? 'sorpresa' : 'feliz'} sentado />
-        <Laptop x={1080} y={150} ancho={ancho} captura={enMapa ? 'venta/mapa-atardecer' : 'venta/incidencia-prellenada'}>
+        <Laptop x={1080} y={150} ancho={ancho} captura={enMapa ? 'venta/mapa-atardecer' : 'venta/incidencia-prellenada'} dibujo={progresoDeTrazo(frame, h8, 24)}>
           {!enMapa ? <Resalte medida={{ x: pre.x * k, y: pre.y * k, ancho: pre.ancho * k, alto: pre.alto * k }} visible={apareceEn(escena, 'h8', frame, 0.15)} /> : null}
           {enMapa && pulso >= 0 ? <Pulso x={ancho * PIN_INCIDENCIA[0]} y={((ancho * 941) / 1920) * PIN_INCIDENCIA[1]} progreso={pulso} /> : null}
         </Laptop>
         <HojaPapel id="maceta" />
-        {!enMapa ? <Tarjeta texto="✨ Prellenado por IA" visible={apareceEn(escena, 'h8', frame, 0.2)} x={1230} y={40} /> : null}
-        {enMapa ? <Tarjeta texto="✓ Activada · trabajo programado" visible={apareceEn(escena, 'h9', frame, 0.55)} x={760} y={40} /> : null}
+        {!enMapa ? <Tarjeta texto="✨ Prellenado por IA" visible={apareceEn(escena, 'h8', frame, 0.2)} x={1230} y={40} subrayado={progresoDeTrazo(frame, momentoDe(escena, 'h8', 0.2) + 14, 16)} /> : null}
+        {enMapa ? <Tarjeta texto="✓ Activada · trabajo programado" visible={apareceEn(escena, 'h9', frame, 0.55)} x={760} y={40} subrayado={progresoDeTrazo(frame, momentoDe(escena, 'h9', 0.55) + 14, 16)} /> : null}
+        {/* Flecha a mano hacia el pin de la incidencia. */}
+        {enMapa ? (
+          <Lienzo>
+            <FlechaTinta desde={[1130, 180]} hasta={[pinEnVideo().x - 16, pinEnVideo().y - 26]} curva={0.25} progreso={progresoDeTrazo(frame, momentoDe(escena, 'h9', 0.62), 20)} semilla="flecha-pin" color={COLOR.blanco} ancho={9} />
+          </Lienzo>
+        ) : null}
       </AbsoluteFill>
     );
   }
@@ -430,7 +448,7 @@ export const Resultado: React.FC<PropsEscena> = ({ escena, frame }) => {
         <Lienzo>
           <Escritorio x={80} y={700} ancho={760} />
         </Lienzo>
-        <Laptop x={1080} y={60} ancho={ancho} captura="venta/mapa-atardecer-maqueta">
+        <Laptop x={1080} y={60} ancho={ancho} captura="venta/mapa-atardecer-maqueta" dibujo={progresoDeTrazo(frame, escena.desde, 24)}>
           {CHECKS_EN_CAMPUS.map(([fx, fy], i) => {
             const s = spring({ frame: frame - momentoDe(escena, 'h11', 0.2 + i * 0.1), fps: FPS, config: { damping: 9 } });
             const altoPantalla = (ancho * 941) / 1920;
