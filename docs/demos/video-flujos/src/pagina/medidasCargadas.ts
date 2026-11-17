@@ -19,6 +19,11 @@ export function crearMedida(datos: Medidas, comando: string): BuscarMedida {
   };
 }
 
+/** Las medidas de una carpeta de capturas con la carpeta como prefijo («venta/mapa-zonas»), para juntar varias. */
+export function conCarpeta(carpeta: string, medidas: Medidas): Medidas {
+  return Object.fromEntries(Object.entries(medidas).map(([captura, elementos]) => [`${carpeta}/${captura}`, elementos]));
+}
+
 export const MedidasContexto = createContext<BuscarMedida | null>(null);
 
 export function useMedida(): BuscarMedida {

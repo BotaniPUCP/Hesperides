@@ -1,12 +1,12 @@
 import React from 'react';
 import { Composition, staticFile } from 'remotion';
-import { guion, guionPlanificacion } from './guion';
-import type { Medidas } from './pagina/medidasCargadas';
+import { guion, guionPlanificacion, guionVenta } from './guion';
+import { conCarpeta, type Medidas } from './pagina/medidasCargadas';
 import { comprobarAudios, construirLinea, FPS, type Manifiesto } from './tiempos';
 import { ALTO, ANCHO } from './tema';
 import { Video } from './Video';
-import { PruebaHespo3D } from './hespo3d/PruebaHespo3D';
 import { CARPETA_CAPTURAS, CARPETA_VOZ, COMANDO_CAPTURAS, VideoPlanificacion } from './VideoPlanificacion';
+import { CARPETA_VOZ_VENTA, COMANDO_CAPTURAS_VENTA, FRAMES_COLA, VideoVenta } from './VideoVenta';
 
 const calcularDuracion = async () => {
   const respuesta = await fetch(staticFile('voz/manifiesto.json'));
@@ -40,6 +40,21 @@ const calcularPlanificacion = async () => {
   return { durationInFrames: linea.framesTotales, props: { linea, medidas } };
 };
 
+const calcularVenta = async () => {
+  const manifiesto = await leerJson<Manifiesto>(
+    `${CARPETA_VOZ_VENTA}/manifiesto.json`,
+    `Falta public/${CARPETA_VOZ_VENTA}/manifiesto.json: ejecuta scripts/generar_voz.py --guion guion-venta.json --salida public/${CARPETA_VOZ_VENTA}`,
+  );
+  const venta = await leerJson<Medidas>('capturas/venta/medidas.json', `Falta public/capturas/venta/medidas.json: ejecuta ${COMANDO_CAPTURAS_VENTA}`);
+  const planificacion = await leerJson<Medidas>(`${CARPETA_CAPTURAS}/medidas.json`, FALTAN_MEDIDAS);
+  const linea = construirLinea(guionVenta, manifiesto);
+  await comprobarAudios(linea, async (archivo) => (await fetch(staticFile(`${CARPETA_VOZ_VENTA}/${archivo}`), { method: 'HEAD' })).ok);
+  return {
+    durationInFrames: linea.framesTotales + FRAMES_COLA,
+    props: { linea, medidas: { ...conCarpeta('venta', venta), ...conCarpeta('planificacion', planificacion) } },
+  };
+};
+
 export const Root: React.FC = () => (
   <>
     <Composition
@@ -62,6 +77,15 @@ export const Root: React.FC = () => (
       defaultProps={{ linea: null, medidas: null }}
       calculateMetadata={calcularPlanificacion}
     />
-    <Composition id="PruebaHespo3D" component={PruebaHespo3D} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={300} />
+    <Composition
+      id="VideoVenta"
+      component={VideoVenta}
+      width={ANCHO}
+      height={ALTO}
+      fps={FPS}
+      durationInFrames={1}
+      defaultProps={{ linea: null, medidas: null }}
+      calculateMetadata={calcularVenta}
+    />
   </>
 );

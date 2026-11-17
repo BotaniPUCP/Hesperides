@@ -23,7 +23,8 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
   const fin = escena.desde + escena.frames;
   const tramo = fraseActiva(linea, frame);
   const audio = (archivo: string) => `${config.carpetaVoz}/${archivo}`;
-  const apertura = useApertura(config.carpetaVoz, tramo?.archivo ?? null, tramo ? frame - tramo.desde : 0);
+  const reserva = linea.escenas[0].frases[0].archivo;
+  const apertura = useApertura(config.carpetaVoz, tramo?.archivo ?? null, tramo ? frame - tramo.desde : 0, reserva);
   const Escena = componenteDeEscena(config, escena.id);
 
   // Escena y Hespo se desvanecen juntos: así el salto de Hespo a la siguiente entrada no se ve.
