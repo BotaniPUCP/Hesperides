@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { useCurrentFrame } from 'remotion';
+import { Acabado } from './historia/Acabado';
 import type { ConfigVideo } from './escenas/componentes';
 import { Aparece, Hoy, Manana, Resultado, Solucion } from './historia/escenas';
 import { crearMedida, MedidasContexto, type Medidas } from './pagina/medidasCargadas';
@@ -22,9 +24,11 @@ const CONFIG: ConfigVideo = {
 
 const Contenido: React.FC<{ linea: Linea; medidas: Medidas }> = ({ linea, medidas }) => {
   const medida = useMemo(() => crearMedida(medidas, 'npm run capturas:venta'), [medidas]);
+  const frame = useCurrentFrame();
   return (
     <MedidasContexto.Provider value={medida}>
       <VideoBase linea={linea} config={CONFIG} />
+      <Acabado linea={linea} frame={frame} />
     </MedidasContexto.Provider>
   );
 };
