@@ -13,6 +13,8 @@ export type ConfigVideo = {
   hespo?: '2d' | '3d' | 'semilla';
   /** Música de fondo en `public/`; baja de volumen mientras habla la voz. */
   musica?: string;
+  /** Hespo Semilla se dibuja «a dos» (un dibujo cada dos cuadros), como los personajes. */
+  aDos?: boolean;
 };
 
 export function componenteDeEscena(config: ConfigVideo, id: EscenaId): React.FC<PropsEscena> {

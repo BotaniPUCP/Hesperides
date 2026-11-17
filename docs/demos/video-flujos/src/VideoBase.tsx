@@ -56,7 +56,7 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
       <AbsoluteFill style={{ opacity: opacidad }}>
         <Escena escena={escena} frame={frame} />
         {config.hespo === 'semilla' ? (
-          <SemillaEnVideo escena={escena} frame={frame} boca={boca} escala={config.escalas[escena.id] ?? 1} />
+          <SemillaEnVideo escena={escena} frame={config.aDos ? Math.floor(frame / 2) * 2 : frame} boca={boca} escala={config.escalas[escena.id] ?? 1} />
         ) : config.hespo === '3d' ? (
           <HespoEnEscena3D estado={estadoHespo(escena, frame)} frame={frame} apertura={apertura} escala={config.escalas[escena.id] ?? 1} />
         ) : (
