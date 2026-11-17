@@ -49,7 +49,7 @@ const Celda: React.FC<{ d: Diseno; x: number; y: number; ancho: number; alto: nu
 );
 
 /** Los cuatro diseños hacen la misma coreografía, con la misma voz. */
-export const RedisenosHespo: React.FC = () => {
+export const RedisenosHespo: React.FC<{ disenos?: Diseno[] }> = ({ disenos = DISENOS }) => {
   const frame = useCurrentFrame();
   const boca = useBoca(frame);
   const escala = 0.72;
@@ -59,7 +59,7 @@ export const RedisenosHespo: React.FC = () => {
   const animado: EstadoSim = { ...s, h: s.h * factor };
   return (
     <AbsoluteFill style={{ fontFamily, background: COLOR.negro }}>
-      {DISENOS.map((d, i) => {
+      {disenos.map((d, i) => {
         const cx = (i % 2) * 960;
         const cy = Math.floor(i / 2) * 540;
         return (
@@ -104,7 +104,7 @@ function pose(emocion: Emocion): EstadoSim {
 }
 
 /** Hoja de expresiones: cada diseño (fila) en cada emoción (columna). */
-export const HojaDeExpresiones: React.FC = () => {
+export const HojaDeExpresiones: React.FC<{ disenos?: Diseno[] }> = ({ disenos = DISENOS }) => {
   const ancho = 1920 / 6;
   const alto = (1080 - 60) / 4;
   return (
@@ -114,7 +114,7 @@ export const HojaDeExpresiones: React.FC = () => {
           {NOMBRES[e]}
         </div>
       ))}
-      {DISENOS.map((d, i) => (
+      {disenos.map((d, i) => (
         <React.Fragment key={d.id}>
           <div style={{ position: 'absolute', left: 0, top: 60 + alto * i, width: ancho, height: alto, color: COLOR.blanco, padding: 20, boxSizing: 'border-box' }}>
             <div style={{ fontSize: 32, fontWeight: 800 }}>{d.nombre}</div>
@@ -125,6 +125,26 @@ export const HojaDeExpresiones: React.FC = () => {
               <HespoV2 d={d} s={pose(e)} frame={40} boca={{ abre: 0, ancho: 0 }} x={ancho / 2} sueloY={alto * 0.9} escala={0.46} vh={0} />
             </Celda>
           ))}
+        </React.Fragment>
+      ))}
+    </AbsoluteFill>
+  );
+};
+
+/** Retratos grandes: cada diseño de cuerpo entero, para ver el detalle. */
+export const Retratos: React.FC<{ disenos?: Diseno[] }> = ({ disenos = DISENOS }) => {
+  const ancho = 1920 / disenos.length;
+  const saluda: EstadoSim = { ...pose('feliz'), brazoI: 14, brazoD: 140 };
+  return (
+    <AbsoluteFill style={{ fontFamily, background: COLOR.verde }}>
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 260, background: COLOR.arena }} />
+      {disenos.map((d, i) => (
+        <React.Fragment key={d.id}>
+          <HespoV2 d={d} s={i % 2 ? pose('neutral') : saluda} frame={40} boca={{ abre: 0, ancho: 0 }} x={ancho * i + ancho / 2} sueloY={860} escala={1.25} vh={0} />
+          <div style={{ position: 'absolute', left: ancho * i, width: ancho, top: 905, textAlign: 'center', color: COLOR.borde }}>
+            <div style={{ fontSize: 46, fontWeight: 800 }}>{d.nombre}</div>
+            <div style={{ fontSize: 24, fontWeight: 700 }}>{d.idea}</div>
+          </div>
         </React.Fragment>
       ))}
     </AbsoluteFill>

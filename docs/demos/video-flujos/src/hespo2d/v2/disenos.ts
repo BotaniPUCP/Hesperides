@@ -1,4 +1,5 @@
 // PRUEBA DESECHABLE (spike): los cuatro rediseños de Hespo como datos.
+import { COLOR } from '../../tema';
 import type { MedidasCuerpo } from './geometria';
 
 export type Diseno = {
@@ -10,9 +11,19 @@ export type Diseno = {
   base: number;
   ojos: { tipo: 'ovalo' | 'grandes' | 'puntos'; sep: number; y: number; tam: number };
   cejas: boolean;
-  brazos: 'munones' | 'flotantes' | 'hojas' | 'fideo';
-  pies: 'piernas' | 'botones' | 'ovalos';
-  hojas: 'dos' | 'tres' | 'rizo';
+  brazos: 'munones' | 'flotantes' | 'hojas' | 'fideo' | 'palitos';
+  pies: 'piernas' | 'botones' | 'ovalos' | 'palitos';
+  hojas: 'dos' | 'tres' | 'rizo' | 'brote';
+  /** Color de la cáscara; si falta, el verde del cuerpo de la marca. */
+  relleno?: string;
+  /** Parte de arriba de otro color (cáscara o gorro), con borde curvo o quebrado. */
+  gorro?: { color: string; borde: 'curva' | 'zigzag'; altura: number };
+  /** Cantidad de pecas en la cáscara. */
+  pecas?: number;
+  /** Pequitas en las mejillas. */
+  pequitas?: boolean;
+  /** Migas de tierra alrededor de los pies. */
+  migas?: boolean;
   tamHojas: number;
   contorno: number;
   sombreado: 'cel' | 'suave';
@@ -88,5 +99,67 @@ export const DISENOS: Diseno[] = [
     sombreado: 'suave',
     trazoAMano: false,
     barriga: false,
+  },
+];
+
+const ESTILO_SEMILLA = {
+  cejas: true,
+  brazos: 'palitos',
+  pies: 'palitos',
+  hojas: 'brote',
+  contorno: 4,
+  sombreado: 'cel',
+  trazoAMano: false,
+  barriga: false,
+  pequitas: true,
+  migas: true,
+  base: 296,
+} as const;
+
+/** Variantes de la Semilla en el estilo de la referencia: pecas, brote curvo, extremidades de palito y migas. */
+export const VARIANTES_SEMILLA: Diseno[] = [
+  {
+    ...ESTILO_SEMILLA,
+    id: 'crema',
+    nombre: 'A · Crema',
+    idea: 'Semilla arena con pecas y brote verde',
+    cuerpo: { forma: 'huevo', ancho: 82, alto: 90, potencia: 2.1, panza: 0.1 },
+    ojos: { tipo: 'grandes', sep: 30, y: 10, tam: 1 },
+    tamHojas: 1.1,
+    relleno: COLOR.arena,
+    pecas: 12,
+  },
+  {
+    ...ESTILO_SEMILLA,
+    id: 'almendra',
+    nombre: 'B · Almendra',
+    idea: 'Semilla verde en forma de almendra, ojos grandes',
+    cuerpo: { forma: 'gota', ancho: 82, alto: 104, potencia: 2.4, panza: 0 },
+    ojos: { tipo: 'grandes', sep: 28, y: 26, tam: 1 },
+    tamHojas: 0.85,
+    pecas: 16,
+  },
+  {
+    ...ESTILO_SEMILLA,
+    id: 'bellota',
+    nombre: 'C · Bellota',
+    idea: 'Dos tonos: cuerpo arena y gorro verde con pecas',
+    cuerpo: { forma: 'frijol', ancho: 88, alto: 88, potencia: 2.2, panza: 0.08 },
+    ojos: { tipo: 'grandes', sep: 30, y: 16, tam: 1 },
+    tamHojas: 1,
+    relleno: COLOR.arena,
+    gorro: { color: COLOR.cuerpo, borde: 'curva', altura: 0.32 },
+    pecas: 14,
+  },
+  {
+    ...ESTILO_SEMILLA,
+    id: 'brotando',
+    nombre: 'D · Brotando',
+    idea: 'Rompe su cáscara y saca el brote: el campus que crece',
+    cuerpo: { forma: 'huevo', ancho: 84, alto: 94, potencia: 2.1, panza: 0.08 },
+    ojos: { tipo: 'grandes', sep: 30, y: 16, tam: 1 },
+    tamHojas: 1.1,
+    gorro: { color: COLOR.arena, borde: 'zigzag', altura: 0.4 },
+    pecas: 12,
   },
 ];

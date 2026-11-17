@@ -9,7 +9,8 @@ import { CARPETA_CAPTURAS, CARPETA_VOZ, COMANDO_CAPTURAS, VideoPlanificacion } f
 import { CARPETA_VOZ_VENTA, COMANDO_CAPTURAS_VENTA, FRAMES_COLA, VideoVenta } from './VideoVenta';
 import { ComparacionHespo, Hespo2DDemo } from './hespo2d/Comparacion';
 import { DURACION_DEMO } from './hespo2d/coreografia';
-import { HojaDeExpresiones, RedisenosHespo } from './hespo2d/v2/Redisenos';
+import { HojaDeExpresiones, RedisenosHespo, Retratos } from './hespo2d/v2/Redisenos';
+import { VARIANTES_SEMILLA } from './hespo2d/v2/disenos';
 
 const calcularDuracion = async () => {
   const respuesta = await fetch(staticFile('voz/manifiesto.json'));
@@ -94,5 +95,8 @@ export const Root: React.FC = () => (
     <Composition id="Hespo2DDemo" component={Hespo2DDemo} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={DURACION_DEMO} />
     <Composition id="RedisenosHespo" component={RedisenosHespo} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={DURACION_DEMO} />
     <Composition id="HojaDeExpresiones" component={HojaDeExpresiones} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={1} />
+    <Composition id="VariantesSemilla" component={RedisenosHespo} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={DURACION_DEMO} defaultProps={{ disenos: VARIANTES_SEMILLA }} />
+    <Composition id="RetratosSemilla" component={Retratos} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={1} defaultProps={{ disenos: VARIANTES_SEMILLA }} />
+    <Composition id="ExpresionesSemilla" component={HojaDeExpresiones} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={1} defaultProps={{ disenos: VARIANTES_SEMILLA }} />
   </>
 );

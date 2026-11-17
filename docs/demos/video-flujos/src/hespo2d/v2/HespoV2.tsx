@@ -1,5 +1,6 @@
 // PRUEBA DESECHABLE (spike): Hespo rediseñado con técnicas de animación 2D avanzadas.
 import React, { useId } from 'react';
+import { random } from 'remotion';
 import { COLOR } from '../../tema';
 import type { FormaBoca } from '../boca';
 import { ATERRIZAJES, PASO_MEDIO, type Emocion } from '../coreografia';
@@ -45,6 +46,11 @@ const HOJAS: Record<Diseno['hojas'], DefHoja[]> = {
     { ang: -150, largo: 44, ancho: 15, lado: -1, curva: 0.3 },
     { ang: -62, largo: 100, ancho: 27, lado: 1, curva: -1.25 },
   ],
+  // Brote: dos hojitas en la punta de un tallo largo y curvo.
+  brote: [
+    { ang: -165, largo: 44, ancho: 15, lado: -1, curva: 0.45 },
+    { ang: -18, largo: 58, ancho: 20, lado: 1, curva: -0.4 },
+  ],
 };
 /** Las hojas son orejas: cada emoción las abre, las cierra o las deja caer (grados hacia arriba). */
 const OREJAS: Record<Emocion, { sube: number; tiesa: number }> = {
@@ -58,11 +64,18 @@ const OREJAS: Record<Emocion, { sube: number; tiesa: number }> = {
 const Hojas: React.FC<{ d: Diseno; s: EstadoSim; tope: number }> = ({ d, s, tope }) => {
   const oreja = OREJAS[s.emocion];
   const flex = (s.hojaD - s.hojaI) * 0.3;
-  const largoTallo = 22 * d.tamHojas;
-  const punta = { x: CX + flex, y: tope - largoTallo };
+  const brote = d.hojas === 'brote';
+  const largoTallo = (brote ? 44 : 22) * d.tamHojas;
+  // El tallo del brote se curva hacia un lado y se mece con la física de las hojas.
+  const lateral = brote ? 14 + flex * 1.5 : flex;
+  const punta = { x: CX + lateral, y: tope - largoTallo };
+  const ctrl = { x: CX + (brote ? -8 + flex * 0.5 : 0), y: tope - largoTallo * 0.55 };
   return (
     <g>
-      <path d={`M${CX} ${tope + 8} Q${CX} ${tope - largoTallo * 0.5} ${punta.x} ${punta.y}`} fill="none" stroke={COLOR.borde} strokeWidth={8} strokeLinecap="round" />
+      <path d={`M${CX} ${tope + 8} Q${ctrl.x} ${ctrl.y} ${punta.x} ${punta.y}`} fill="none" stroke={COLOR.borde} strokeWidth={brote ? 6 : 8} strokeLinecap="round" />
+      {brote ? (
+        <path d={`M${CX} ${tope + 8} Q${ctrl.x} ${ctrl.y} ${punta.x} ${punta.y}`} fill="none" stroke={COLOR.hoja} strokeWidth={2.5} strokeLinecap="round" />
+      ) : null}
       {HOJAS[d.hojas].map((h, i) => {
         const fisica = h.lado === -1 ? -s.hojaI : h.lado === 1 ? s.hojaD : (s.hojaD - s.hojaI) * 0.5;
         const angulo = h.ang + fisica + (h.lado === 0 ? 0 : -h.lado * oreja.sube);
@@ -90,6 +103,14 @@ const Mano: React.FC<{ d: Diseno; x: number; y: number; angulo: number; pulgar: 
       </g>
     );
   }
+  if (d.brazos === 'palitos') {
+    return (
+      <g opacity={opacidad}>
+        {pulgar ? <rect x={x - 4.5} y={y - 21} width={9} height={17} rx={4.5} fill={COLOR.borde} /> : null}
+        <circle cx={x} cy={y} r={8.5} fill={COLOR.borde} />
+      </g>
+    );
+  }
   if (d.brazos === 'munones') {
     return pulgar ? (
       <rect x={x - 9} y={y - 34} width={18} height={30} rx={9} fill={COLOR.cuerpo} stroke={borde} strokeWidth={d.contorno} opacity={opacidad} />
@@ -113,7 +134,7 @@ const Brazo: React.FC<{ d: Diseno; hombro: { x: number; y: number }; lado: 1 | -
   vel,
   pulgar,
 }) => {
-  const largo = d.brazos === 'munones' ? 30 : d.brazos === 'fideo' ? 58 : d.brazos === 'flotantes' ? 46 : 16;
+  const largo = d.brazos === 'munones' ? 30 : d.brazos === 'fideo' ? 58 : d.brazos === 'flotantes' ? 46 : d.brazos === 'palitos' ? 42 : 16;
   const fin = (g: number) => {
     const a = rad(g);
     return { x: hombro.x + lado * Math.sin(a) * largo, y: hombro.y + Math.cos(a) * largo, angulo: Math.atan2(Math.cos(a), lado * Math.sin(a)) };
@@ -133,6 +154,10 @@ const Brazo: React.FC<{ d: Diseno; hombro: { x: number; y: number }; lado: 1 | -
         <path d={`M${hombro.x} ${hombro.y} L${f.x} ${f.y}`} stroke={relleno} strokeWidth={grosor} strokeLinecap="round" />
       </>
     );
+  } else if (d.brazos === 'palitos') {
+    // Palito con un leve codo: se lee como brazo aun siendo tan fino.
+    const codo = { x: (hombro.x + f.x) / 2 + lado * 3, y: (hombro.y + f.y) / 2 + 2 };
+    brazo = <path d={`M${hombro.x} ${hombro.y} Q${codo.x} ${codo.y} ${f.x} ${f.y}`} fill="none" stroke={COLOR.borde} strokeWidth={6.5} strokeLinecap="round" />;
   } else if (d.brazos === 'fideo') {
     const n = { x: lado * Math.cos(rad(grados)), y: -lado * lado * Math.sin(rad(grados)) };
     const ctrl = { x: (hombro.x + f.x) / 2 + n.x * 8, y: (hombro.y + f.y) / 2 + n.y * 8 };
@@ -186,7 +211,7 @@ const Ojo: React.FC<{ d: Diseno; x: number; y: number; lado: -1 | 1; s: EstadoSi
         <>
           <path
             d={`M${x - rx - 4} ${y - ry - 6} L${x + rx + 4} ${y - ry - 6} L${x + rx + 4} ${borde + lado * p.inclina} L${x - rx - 4} ${borde - lado * p.inclina} Z`}
-            fill={COLOR.cuerpo}
+            fill={d.relleno ?? COLOR.cuerpo}
           />
           <path d={`M${x - rx - 2} ${borde - lado * p.inclina} L${x + rx + 2} ${borde + lado * p.inclina}`} stroke={COLOR.borde} strokeWidth={4} strokeLinecap="round" />
         </>
@@ -303,6 +328,55 @@ const Destellos: React.FC<{ frame: number; tope: number }> = ({ frame, tope }) =
   </g>
 );
 
+// ---------- Cáscara: gorro, pecas y migas ----------
+/** Parte de arriba de otro color: gorro de bellota (curva) o cáscara que se rompe (zigzag). */
+const Gorro: React.FC<{ d: Diseno; cy: number }> = ({ d, cy }) => {
+  if (!d.gorro) return null;
+  const y = cy - d.cuerpo.alto + 2 * d.cuerpo.alto * d.gorro.altura;
+  let borde: string;
+  if (d.gorro.borde === 'curva') {
+    borde = `M${CX + 160} ${y} Q${CX} ${y + 26} ${CX - 160} ${y}`;
+  } else {
+    const xs = Array.from({ length: 19 }, (_, i) => CX + 162 - i * 18);
+    borde = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x} ${y + (i % 2 ? 11 : -7)}`).join(' ');
+  }
+  return (
+    <g>
+      <path d={`${borde} L${CX - 160} ${y - 260} L${CX + 160} ${y - 260} Z`} fill={d.gorro.color} />
+      <path d={borde} fill="none" stroke={COLOR.borde} strokeWidth={3.5} strokeLinejoin="round" />
+    </g>
+  );
+};
+
+/** Pecas fijas en la parte de arriba de la cáscara, lejos de la cara. */
+function pecasDe(d: Diseno, cy: number) {
+  const { ancho, alto } = d.cuerpo;
+  const limite = cy + d.ojos.y - 34;
+  const pecas: { x: number; y: number; r: number }[] = [];
+  for (let i = 0; pecas.length < (d.pecas ?? 0) && i < 200; i++) {
+    const x = CX + (random(`px${d.id}${i}`) - 0.5) * 2 * ancho * 0.8;
+    const y = cy - alto + random(`py${d.id}${i}`) * (limite - (cy - alto));
+    const dentro = ((x - CX) / (ancho * 0.85)) ** 2 + ((y - cy) / (alto * 0.88)) ** 2 < 1;
+    if (dentro) pecas.push({ x, y, r: 2.2 + random(`pr${d.id}${i}`) * 2.6 });
+  }
+  return pecas;
+}
+
+/** Migas de tierra alrededor de los pies: saltan un poco cada vez que aterriza. */
+const Migas: React.FC<{ frame: number }> = ({ frame }) => (
+  <g>
+    {Array.from({ length: 8 }, (_, i) => {
+      const lado = i % 2 ? 1 : -1;
+      const x = CX + lado * (54 + random(`mx${i}`) * 60);
+      const salto = ATERRIZAJES.reduce((acc, desde) => {
+        const t = frame - desde;
+        return t >= 0 && t < 14 ? acc + Math.sin((Math.PI * t) / 14) * (8 + random(`ms${i}`) * 14) : acc;
+      }, 0);
+      return <circle key={i} cx={x} cy={SUELA - 3 - random(`my${i}`) * 6 - salto} r={2.2 + random(`mr${i}`) * 2.8} fill={COLOR.borde} opacity={0.75} />;
+    })}
+  </g>
+);
+
 // ---------- Hespo ----------
 export const HespoV2: React.FC<{ d: Diseno; s: EstadoSim; frame: number; boca: FormaBoca; x: number; sueloY: number; escala: number; vh: number }> = ({
   d,
@@ -323,7 +397,12 @@ export const HespoV2: React.FC<{ d: Diseno; s: EstadoSim; frame: number; boca: F
   const sy = 1 + s.deforma;
   const sx = 1 / Math.sqrt(sy);
   const baja = s.agachado * 16;
-  const cuerpo = curvaCerrada(contorno(d.cuerpo, s.temblor).map((p) => ({ x: p.x + CX, y: p.y + cy })));
+  const puntos = contorno(d.cuerpo, s.temblor);
+  const cuerpo = curvaCerrada(puntos.map((p) => ({ x: p.x + CX, y: p.y + cy })));
+  const corrimiento = { x: -ancho * 0.14 - s.miradaX * 6, y: -alto * 0.1 };
+  const sombraCel = curvaCerrada(puntos.map((p) => ({ x: p.x + CX + corrimiento.x, y: p.y + cy + corrimiento.y })));
+  const relleno = d.relleno ?? COLOR.cuerpo;
+  const pecas = pecasDe(d, cy);
   const tope = cy - alto * (1 - s.temblor * 0.5);
   const pieI = pie(s.fase, 0, s.w);
   const pieD = pie(s.fase, 0.5, s.w);
@@ -357,6 +436,7 @@ export const HespoV2: React.FC<{ d: Diseno; s: EstadoSim; frame: number; boca: F
         ) : null}
       </defs>
       <ellipse cx={CX} cy={SUELA - 2} rx={82 * sombra * sx} ry={11 * sombra} fill={COLOR.negro} opacity={0.2 * sombra} />
+      {d.migas ? <Migas frame={frame} /> : null}
       <Polvo frame={frame} />
       <g filter={d.trazoAMano ? `url(#${filtro})` : undefined}>
         <g transform={`translate(0 ${-s.h / escala})`}>
@@ -374,19 +454,30 @@ export const HespoV2: React.FC<{ d: Diseno; s: EstadoSim; frame: number; boca: F
                 </g>
               );
             }
+            if (d.pies === 'palitos') {
+              const cadera = { x: CX + 20 * lado, y: d.base - 8 + baja };
+              const tobillo = { x: CX + 22 * lado + p.dx, y: SUELA - 7 - p.alza };
+              return (
+                <g key={lado}>
+                  <path d={`M${cadera.x} ${cadera.y} L${tobillo.x} ${tobillo.y}`} stroke={COLOR.borde} strokeWidth={5} strokeLinecap="round" />
+                  <ellipse cx={tobillo.x + 5 * lado} cy={tobillo.y + 2} rx={11} ry={6} fill={COLOR.borde} />
+                </g>
+              );
+            }
             const sep = d.pies === 'botones' ? 30 : 36;
             return <ellipse key={lado} cx={CX + sep * lado + p.dx} cy={SUELA - 11 - p.alza} rx={d.pies === 'botones' ? 23 : 20} ry={11} fill={COLOR.borde} />;
           })}
           <g transform={`translate(${CX} ${d.base + baja}) rotate(${s.inclina}) scale(${sx} ${sy}) translate(${-CX} ${-d.base})`}>
             <Hojas d={d} s={s} tope={tope} />
-            <path d={cuerpo} fill={COLOR.cuerpo} />
+            <path d={cuerpo} fill={relleno} />
             <g clipPath={`url(#${clip})`}>
+              {d.gorro ? <Gorro d={d} cy={cy} /> : null}
+              {pecas.map((p, i) => (
+                <ellipse key={i} cx={p.x} cy={p.y} rx={p.r} ry={p.r * 0.8} fill={COLOR.borde} opacity={0.32} />
+              ))}
               {d.sombreado === 'cel' ? (
-                <>
-                  {/* Sombreado cel: media luna de sombra abajo a la derecha; se corre con la mirada. */}
-                  <rect x={CX - 200} y={cy - 200} width={400} height={400} fill={COLOR.borde} opacity={0.17} />
-                  <path d={cuerpo} fill={COLOR.cuerpo} transform={`translate(${-ancho * 0.14 - s.miradaX * 6} ${-alto * 0.1})`} />
-                </>
+                // Sombreado cel: solo la media luna de sombra (cuerpo menos su copia corrida); se corre con la mirada.
+                <path d={`${cuerpo} ${sombraCel}`} fillRule="evenodd" fill={COLOR.borde} opacity={0.17} />
               ) : (
                 <ellipse cx={CX + ancho * 0.25} cy={cy + alto * 0.85} rx={ancho} ry={alto * 0.4} fill={COLOR.borde} opacity={0.1} />
               )}
@@ -398,6 +489,17 @@ export const HespoV2: React.FC<{ d: Diseno; s: EstadoSim; frame: number; boca: F
             {/* Cara */}
             <ellipse cx={cara.x - d.ojos.sep - 16} cy={cara.y + 24} rx={12} ry={7} fill={COLOR.hoja} opacity={0.95} />
             <ellipse cx={cara.x + d.ojos.sep + 16} cy={cara.y + 24} rx={12} ry={7} fill={COLOR.hoja} opacity={0.95} />
+            {d.pequitas
+              ? ([-1, 1] as const).flatMap((lado) =>
+                  [
+                    [-5, 0],
+                    [4, -2],
+                    [0, 5],
+                  ].map(([dx, dy], i) => (
+                    <circle key={`${lado}${i}`} cx={cara.x + lado * (d.ojos.sep + 16) + dx} cy={cara.y + 24 + dy} r={1.9} fill={COLOR.borde} opacity={0.55} />
+                  )),
+                )
+              : null}
             <Ojo d={d} x={cara.x - d.ojos.sep} y={cara.y} lado={-1} s={s} cierre={cierre} />
             <Ojo d={d} x={cara.x + d.ojos.sep} y={cara.y} lado={1} s={s} cierre={cierre} />
             {d.cejas ? (
