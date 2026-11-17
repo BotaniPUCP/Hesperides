@@ -187,7 +187,7 @@ export function buildCity(data: CityData, toScene: ToScene, campus: number[][], 
       road.push(p1[0], up, p1[1], p2[0], up, p2[1], p3[0], up, p3[1], p1[0], up, p1[1], p3[0], up, p3[1], p4[0], up, p4[1]);
     }
   }
-  const asphalt = meshFrom(road, null, new THREE.MeshStandardMaterial({ color: CITY.asphalt, roughness: 0.95, side: THREE.DoubleSide }));
+  const asphalt = meshFrom(road, null, new THREE.MeshLambertMaterial({ color: CITY.asphalt, side: THREE.DoubleSide }));
   asphalt.receiveShadow = true;
   group.add(asphalt);
 
@@ -201,7 +201,7 @@ export function buildCity(data: CityData, toScene: ToScene, campus: number[][], 
       green.push(pts[i].x, up + 0.02, pts[i].y, pts[j].x, up + 0.02, pts[j].y, pts[k].x, up + 0.02, pts[k].y);
     }
   }
-  const parks = meshFrom(green, null, new THREE.MeshStandardMaterial({ color: CITY.park, roughness: 1, side: THREE.DoubleSide }));
+  const parks = meshFrom(green, null, new THREE.MeshLambertMaterial({ color: CITY.park, side: THREE.DoubleSide }));
   parks.receiveShadow = true;
   group.add(parks);
 

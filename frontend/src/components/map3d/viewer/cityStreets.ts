@@ -108,8 +108,8 @@ export function buildStreets(vias: number[][], at: ToScene, blocked: (x: number,
       for (let t = 1; t + 3 < s.len; t += 9) pushStrip(paint, s, t, t + 3, -0.09, 0.09, groundY + 0.09, at);
     }
   }
-  group.add(flatMesh(walk, new THREE.MeshStandardMaterial({ color: STREETS.sidewalk, roughness: 0.9, side: THREE.DoubleSide })));
-  group.add(flatMesh(paint, new THREE.MeshStandardMaterial({ color: STREETS.marking, roughness: 0.7, side: THREE.DoubleSide })));
+  group.add(flatMesh(walk, new THREE.MeshLambertMaterial({ color: STREETS.sidewalk, side: THREE.DoubleSide })));
+  group.add(flatMesh(paint, new THREE.MeshLambertMaterial({ color: STREETS.marking, side: THREE.DoubleSide })));
 
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p = new THREE.Vector3();
   const up = new THREE.Vector3(0, 1, 0);
@@ -161,9 +161,9 @@ export function buildStreets(vias: number[][], at: ToScene, blocked: (x: number,
       }
     }
   }
-  const body = instanced(new THREE.BoxGeometry(4.4, 0.75, 1.8).translate(0, 0.65, 0), new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.5 }), cars.length, true);
+  const body = instanced(new THREE.BoxGeometry(4.4, 0.75, 1.8).translate(0, 0.65, 0), new THREE.MeshStandardMaterial({ roughness: 0.7, metalness: 0.1 }), cars.length, true);
   const cabin = instanced(new THREE.BoxGeometry(2.3, 0.6, 1.62).translate(-0.25, 1.32, 0),
-    new THREE.MeshStandardMaterial({ color: '#1d2126', roughness: 0.15, metalness: 0.6 }), cars.length);
+    new THREE.MeshStandardMaterial({ color: '#1d2126', roughness: 0.6, metalness: 0.1 }), cars.length);
   const lightGeo = new THREE.BoxGeometry(0.06, 0.16, 0.34);
   const heads = instanced(lightGeo, new THREE.MeshBasicMaterial({ color: STREETS.headlight }), cars.length * 2);
   const tails = instanced(lightGeo, new THREE.MeshBasicMaterial({ color: STREETS.taillight }), cars.length * 2);

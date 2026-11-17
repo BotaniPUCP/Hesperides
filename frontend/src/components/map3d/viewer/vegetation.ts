@@ -146,7 +146,13 @@ export function createVegetationLayer(
 
 /** Más oliva y algo más oscuro: el verde del mapa es para leerlo, no el de una foto al atardecer. */
 const OLIVE = new THREE.Color('#4f6a33');
-const goldenTint = (hex: string) => new THREE.Color(hex).lerp(OLIVE, 0.5).multiplyScalar(0.9);
+/** Solo lo verde va hacia el oliva: una copa en flor (el morado del jacarandá, el rojo de la ponciana) conserva su color. */
+const goldenTint = (hex: string) => {
+  const color = new THREE.Color(hex);
+  const hsl = color.getHSL({ h: 0, s: 0, l: 0 });
+  const green = hsl.h > 0.17 && hsl.h < 0.45;
+  return green ? color.lerp(OLIVE, 0.5).multiplyScalar(0.9) : color.multiplyScalar(0.95);
+};
 const BROADLEAF_VARIANTS = 4;
 
 /** Los árboles del Atardecer, en las mismas posiciones y escalas que los de siempre; empiezan ocultos. */

@@ -33,8 +33,8 @@ export function duskOf(hour: number): number {
 export const SUNSET = {
   exposure: 1.3,
   /** La bruma empieza pasado lo que se mira y se cierra hacia el horizonte: múltiplos de la distancia de la cámara. */
-  fogNear: 0.85,
-  fogFar: 5.5,
+  fogNear: 1.5,
+  fogFar: 6.5,
   ground: '#4c5338',
   groundRadiusM: 8000,
   /** Umbral en HDR (antes del tono): solo el sol, sus reflejos fuertes y las ventanas encendidas. */
@@ -65,7 +65,7 @@ const DEG = Math.PI / 180;
 /** Cuánto puede bajar la cámara en el modo, en radianes desde la vertical (unos 6° sobre el horizonte). */
 export const SUNSET_MAX_POLAR = 1.47;
 
-export const SUNSET_VIEW = { yawDeg: 9, pitchDeg: 8, distanceM: 760, aheadM: 260 } as const;
+export const SUNSET_VIEW = { yawDeg: -15, pitchDeg: 12, distanceM: 1000, aheadM: 300 } as const;
 
 /** Dónde poner la cámara para la toma del atardecer, mirando al centro del campus. */
 export function sunsetPose(center: THREE.Vector3, sunDir: THREE.Vector3): { position: [number, number, number]; target: [number, number, number] } {
@@ -115,7 +115,8 @@ function createSurroundings(campus: THREE.Box3, groundY: number, city: { x: numb
   const isInner = (x: number, z: number) => Math.hypot(x - city.x, z - city.z) < CITY_RADIUS_M - 40;
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(SUNSET.groundRadiusM, 64).rotateX(-Math.PI / 2),
-    new THREE.MeshStandardMaterial({ color: SUNSET.ground, roughness: 1 }),
+    // Lambert: mirando hacia el sol desde lo alto, un suelo con brillo especular lo reflejaba como un segundo sol.
+    new THREE.MeshLambertMaterial({ color: SUNSET.ground }),
   );
   ground.position.y = groundY - 0.3;
   ground.receiveShadow = true;

@@ -28,7 +28,7 @@ export const GRADE = {
   /** Rayos de sol: cuánto avanza cada muestra hacia el sol, cuánto se apagan y su color. */
   rays: { samples: 36, density: 0.85, decay: 0.955, strength: 0.035, color: [1.0, 0.6, 0.28] },
   /** Bruma baja: escala de altura (m), densidad por metro y cuánto tapa como máximo. */
-  lowFog: { heightM: 16, density: 0.0004, max: 0.38 },
+  lowFog: { heightM: 16, density: 0.00016, max: 0.3 },
 } as const;
 
 const fragmentShader = /* glsl */ `
@@ -139,7 +139,7 @@ void main() {
   // Lo lejano ya está en la bruma: lleva el mismo halo del sol que el cielo junto al horizonte, sin costura.
   if (depth < 1.0) {
     float toward = max(dot(normalize(p), uSunView), 0.0);
-    float hazy = smoothstep(1200.0, 4200.0, length(p));
+    float hazy = smoothstep(1800.0, 4800.0, length(p));
     hdr += (vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.6 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55) * hazy;
   }
   hdr += sunRays();
