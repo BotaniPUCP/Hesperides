@@ -5,15 +5,15 @@ import type { PropsEscena } from '../escenas/tipos';
 import { ESPERA_BROTE } from '../hespo2d/semillaEnGuion';
 import { useMedida } from '../pagina/medidasCargadas';
 import { Pulso } from '../pagina/Pulso';
-import { Resalte } from '../pagina/Resalte';
 import { ALTO, BANDA, COLOR } from '../tema';
 import { FPS } from '../tiempos';
 import { apareceEn, momentoDe } from '../ui/anim';
 import { Arbol, ArbolRajado, Burbuja, Celular, Cielo, Escritorio, Farol, HORIZONTE, Laptop, Lienzo, Sello, Sol, SUELO, Tierra } from './decorado';
 import { EnPantalla, HojaPapel, useParalaje } from './HojasDePapel';
-import { CORRIMIENTO_MANANA, pinEnVideo } from './posiciones';
+import { CORRIMIENTO_MANANA } from './posiciones';
 import { progresoDeTrazo } from './tinta';
 import { FlechaTinta, SubrayadoTinta } from './TrazosDeTinta';
+import { MarcaAMano } from './MarcaAMano';
 import { enDos } from './enDos';
 import { Persona } from './Persona';
 
@@ -372,7 +372,7 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
         <Campus corrimiento={300} frame={frame} />
         <Persona quien="julio" x={420} sueloY={SUELO + 4} escala={1.15} frame={fp} pose={{ brazoI: 10, brazoD: 120, miraX: 0.7 }} gesto="feliz" objeto="celular" />
         <Celular x={1060} y={50} alto={alto} captura="venta/reporte-celular" dibujo={progresoDeTrazo(frame, escena.desde, 22)}>
-          <Resalte medida={{ x: m.x * k, y: m.y * k, ancho: m.ancho * k, alto: m.alto * k }} visible={apareceEn(escena, 'h7', frame, 0.35)} />
+          <MarcaAMano tipo="caja" x={m.x * k} y={m.y * k} ancho={m.ancho * k} alto={m.alto * k} progreso={progresoDeTrazo(frame, momentoDe(escena, 'h7', 0.35), 18)} semilla={7} />
         </Celular>
         <HojaPapel id="matas" />
       </AbsoluteFill>
@@ -390,18 +390,14 @@ export const Solucion: React.FC<PropsEscena> = ({ escena, frame }) => {
         <Oficina />
         <Persona quien="jefe" x={330} sueloY={870} escala={1.05} frame={fp} pose={{ brazoI: 30, brazoD: enMapa ? 85 : 40, miraX: 0.8 }} gesto={fp < momentoDe(escena, 'h8', 0.4) ? 'sorpresa' : 'feliz'} sentado />
         <Laptop x={1080} y={150} ancho={ancho} captura={enMapa ? 'venta/mapa-atardecer' : 'venta/incidencia-prellenada'} dibujo={progresoDeTrazo(frame, h8, 24)}>
-          {!enMapa ? <Resalte medida={{ x: pre.x * k, y: pre.y * k, ancho: pre.ancho * k, alto: pre.alto * k }} visible={apareceEn(escena, 'h8', frame, 0.15)} /> : null}
+          {!enMapa ? <MarcaAMano tipo="caja" x={pre.x * k} y={pre.y * k} ancho={pre.ancho * k} alto={pre.alto * k} progreso={progresoDeTrazo(frame, momentoDe(escena, 'h8', 0.15), 20)} semilla={8} /> : null}
           {enMapa && pulso >= 0 ? <Pulso x={ancho * PIN_INCIDENCIA[0]} y={((ancho * 941) / 1920) * PIN_INCIDENCIA[1]} progreso={pulso} /> : null}
+          {/* Círculo a mano alrededor del pin de la incidencia. */}
+          {enMapa ? <MarcaAMano tipo="circulo" x={ancho * PIN_INCIDENCIA[0] - 40} y={((ancho * 941) / 1920) * PIN_INCIDENCIA[1] - 40} ancho={80} alto={80} progreso={progresoDeTrazo(frame, momentoDe(escena, 'h9', 0.4), 20)} semilla={9} color={COLOR.blanco} /> : null}
         </Laptop>
         <HojaPapel id="maceta" />
         {!enMapa ? <Tarjeta texto="✨ Prellenado por IA" visible={apareceEn(escena, 'h8', frame, 0.2)} x={1230} y={40} subrayado={progresoDeTrazo(frame, momentoDe(escena, 'h8', 0.2) + 14, 16)} /> : null}
         {enMapa ? <Tarjeta texto="✓ Activada · trabajo programado" visible={apareceEn(escena, 'h9', frame, 0.55)} x={760} y={40} subrayado={progresoDeTrazo(frame, momentoDe(escena, 'h9', 0.55) + 14, 16)} /> : null}
-        {/* Flecha a mano hacia el pin de la incidencia. */}
-        {enMapa ? (
-          <Lienzo>
-            <FlechaTinta desde={[1130, 180]} hasta={[pinEnVideo().x - 16, pinEnVideo().y - 26]} curva={0.25} progreso={progresoDeTrazo(frame, momentoDe(escena, 'h9', 0.62), 20)} semilla="flecha-pin" color={COLOR.blanco} ancho={9} />
-          </Lienzo>
-        ) : null}
       </AbsoluteFill>
     );
   }
