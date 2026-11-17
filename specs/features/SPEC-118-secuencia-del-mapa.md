@@ -35,7 +35,8 @@ uno bien renderizado. Tomamos la técnica, no su contenido.
 
 ## 3. Cómo se entra
 
-- Ruta `/mapa?secuencia=1`, solo para usuarios con sesión. No aparece en ningún menú.
+- Ruta `/secuencia`, solo para usuarios con sesión. No aparece en ningún menú. Va fuera del panel
+  (como `/embed/mapa`): dentro de `/mapa` la barra lateral impediría la pantalla completa.
 - Al entrar se ocultan la barra, la búsqueda, la ficha, los globos, las etiquetas y los
   marcadores (lo que hoy hace `setCaptureMode`), y el visor ocupa toda la pantalla.
 - Durante la preparación (§6.4) se muestra un velo oscuro con «Preparando…» y después «Pulsa
@@ -89,7 +90,7 @@ solo plano.
 | D-01 | Trayectoria: curva limpia nueva entre el inicio y el final de la grabación de referencia | Se siente como un plano de cine; el segundo 5 cae en un tramo tranquilo | Repetir la grabación acelerada ~3×: sus giros finales se verían bruscos (elegido por Jean Piero) |
 | D-02 | Cambio en un solo cuadro, oculto por el desenfoque | Dibujar las dos versiones a la vez obliga a alternar el Atardecer en cada cuadro, que es caro | Mezclar en vivo las dos versiones con un shader |
 | D-03 | Desenfoque, brillo y pixelado en CSS, fuera de three.js | No toca el compositor del Atardecer (`sunset.ts`) y es barato | Un pase de posprocesado propio |
-| D-04 | El reloj de la secuencia avanza 1/60 s por cuadro dibujado, no con la hora real | Si un cuadro tarda (el cambio recompila shaders y vuelve a calcular el reflejo del cielo), la cámara no da un salto; solo dura un instante más la capa congelada | Reloj de pared: un tirón en el cambio se vería en la grabación |
+| D-04 | El reloj de la secuencia avanza con la hora real, pero nunca más de 1/30 s por cuadro | Si un cuadro tarda (el cambio recompila shaders y vuelve a calcular el reflejo del cielo), la cámara no da un salto; solo dura un instante más la capa congelada | Reloj de pared sin tope: un tirón en el cambio se vería en la grabación. 1/60 fijo por cuadro: en pantallas de 120 Hz iría al doble |
 | D-05 | Al pasar a buena calidad no se usa `setSunset` del visor tal cual | `setSunset(true)` vuela a la toma del Atardecer (`sunsetPose`) y movería la cámara. Se aplica el tema sin ese vuelo | — |
 | D-06 | La cámara va libre (`rig.setFree(true)`) y sin límites de órbita durante la secuencia | La pose final está a ~38 m y casi horizontal, fuera de los límites de la órbita normal | — |
 
@@ -134,7 +135,7 @@ desde cero.
 
 ## 7. Criterios de aceptación
 
-- **CA-01** `/mapa?secuencia=1` oculta toda la interfaz del mapa y, tras la preparación, espera
+- **CA-01** `/secuencia` oculta toda la interfaz del mapa y, tras la preparación, espera
   Espacio.
 - **CA-02** La toma dura 12 s ± 1 cuadro a 60 fps, empieza en la pose de inicio y termina en la
   pose final de §6.1.
