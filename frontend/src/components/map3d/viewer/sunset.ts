@@ -265,6 +265,7 @@ export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, 
     .replace('vec4 texel = texture2D( tDiffuse, vUv );', 'vec4 texel = texture2D( tDiffuse, vUv ); texel.rgb = sunsetFinite( texel.rgb );');
   composer.addPass(bloom);
   const grade = new SunsetGradePass(camera, SUNSET.exposure, !lite);
+  grade.setGround(groundY, HORIZON);
   composer.addPass(grade);
 
   let on = false;

@@ -25,6 +25,10 @@ export const GRADE = {
   ao: { radiusM: 5, strength: 1.35, farM: 1800 },
   /** Aristas que miran al sol: su brillo ámbar y hasta qué distancia se ven. */
   edge: { color: [1.0, 0.52, 0.2], strength: 0.55, farM: 1100 },
+  /** Rayos de sol: cuánto avanza cada muestra hacia el sol, cuánto se apagan y su color. */
+  rays: { samples: 36, density: 0.85, decay: 0.955, strength: 0.035, color: [1.0, 0.6, 0.28] },
+  /** Bruma baja: escala de altura (m), densidad por metro y cuánto tapa como máximo. */
+  lowFog: { heightM: 16, density: 0.0004, max: 0.38 },
 } as const;
 
 const fragmentShader = /* glsl */ `
@@ -39,7 +43,15 @@ uniform vec2 uResolution;
 uniform vec3 uAo;
 uniform vec3 uSunView;
 uniform vec4 uEdge;
+/** Sol en pantalla (uv) y cuánto se ve (0 si queda detrás de la cámara). */
+uniform vec3 uSunScreen;
+uniform vec3 uRayColor;
+uniform mat4 uViewToWorld;
+uniform float uGround;
+uniform vec3 uFogColor;
 varying vec2 vUv;
+#define RAY_SAMPLES ${GRADE.rays.samples}
+
 
 // El ACES de three (tonemapping_pars_fragment de r147).
 vec3 gradeFit(vec3 v) {
@@ -81,6 +93,24 @@ float ambientOcclusion(vec3 p, vec3 n) {
   return clamp(1.0 - uAo.y * sum / 12.0, 0.0, 1.0);
 }
 
+// Rayos de sol: hacia el sol en pantalla se suma lo que es cielo; donde algo lo tapa, queda el haz de sombra.
+vec3 sunRays() {
+  if (uSunScreen.z <= 0.0) return vec3(0.0);
+  vec2 stride = (uSunScreen.xy - vUv) * (${GRADE.rays.density.toFixed(3)} / float(RAY_SAMPLES));
+  vec2 uv = vUv;
+  float weight = 1.0, sum = 0.0;
+  for (int i = 0; i < RAY_SAMPLES; i++) {
+    uv += stride;
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) break;
+    if (texture2D(tDepth, uv).x >= 1.0) {
+      vec3 s = sunsetFinite(texture2D(tDiffuse, uv).rgb);
+      sum += min(dot(s, vec3(0.2126, 0.7152, 0.0722)), 8.0) * weight;
+    }
+    weight *= ${GRADE.rays.decay.toFixed(3)};
+  }
+  return uRayColor * sum * uSunScreen.z / float(RAY_SAMPLES);
+}
+
 void main() {
   vec3 hdr = sunsetFinite(texture2D(tDiffuse, vUv).rgb);
   float depth = texture2D(tDepth, vUv).x;
@@ -99,6 +129,14 @@ void main() {
   float sunny = smoothstep(0.05, 0.5, dot(n, uSunView));
   float near = 1.0 - smoothstep(uEdge.w * 0.6, uEdge.w, -p.z);
   if (depth < 1.0) hdr += uEdge.rgb * crease * sunny * near;
+  // Bruma baja: más espesa cerca del suelo y con la distancia, del color del horizonte.
+  if (depth < 1.0) {
+    vec3 w = (uViewToWorld * vec4(p, 1.0)).xyz;
+    float height = max(w.y - uGround, 0.0);
+    float amount = (1.0 - exp(-length(p) * ${GRADE.lowFog.density})) * exp(-height / ${GRADE.lowFog.heightM.toFixed(1)});
+    hdr = mix(hdr, uFogColor, min(amount, ${GRADE.lowFog.max}));
+  }
+  hdr += sunRays();
   vec3 c = gradeAces(hdr);
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   // Hora dorada: sombras hacia el azul petróleo, luces hacia el ámbar.
@@ -120,8 +158,8 @@ void main() {
 
 /** El pase lee también la profundidad del buffer que le toca y la cámara de este cuadro. */
 export class SunsetGradePass extends ShaderPass {
-  /** Sin `ao`, el pase no calcula la oclusión ambiental (pantallas táctiles). */
-  constructor(private readonly camera: THREE.PerspectiveCamera, exposure: number, ao = true) {
+  /** Sin `heavy` (pantallas táctiles), el pase no calcula la oclusión ambiental ni los rayos de sol. */
+  constructor(private readonly camera: THREE.PerspectiveCamera, exposure: number, private readonly heavy = true) {
     super({
       uniforms: {
         tDiffuse: { value: null },
@@ -131,9 +169,14 @@ export class SunsetGradePass extends ShaderPass {
         uProj: { value: new THREE.Matrix4() },
         uInvProj: { value: new THREE.Matrix4() },
         uResolution: { value: new THREE.Vector2(1, 1) },
-        uAo: { value: new THREE.Vector3(GRADE.ao.radiusM, GRADE.ao.strength, ao ? GRADE.ao.farM : 0) },
+        uAo: { value: new THREE.Vector3(GRADE.ao.radiusM, GRADE.ao.strength, heavy ? GRADE.ao.farM : 0) },
         uSunView: { value: new THREE.Vector3(0, 1, 0) },
         uEdge: { value: new THREE.Vector4(...GRADE.edge.color.map((v) => v * GRADE.edge.strength), GRADE.edge.farM) },
+        uSunScreen: { value: new THREE.Vector3(0.5, 0.5, 0) },
+        uRayColor: { value: new THREE.Vector3(...GRADE.rays.color.map((v) => v * GRADE.rays.strength)) },
+        uViewToWorld: { value: new THREE.Matrix4() },
+        uGround: { value: 0 },
+        uFogColor: { value: new THREE.Color(1, 0.5, 0.25) },
       },
       vertexShader,
       fragmentShader,
@@ -142,10 +185,18 @@ export class SunsetGradePass extends ShaderPass {
   }
 
   private readonly sunWorld = new THREE.Vector3(0, 1, 0);
+  private readonly sunScreen = new THREE.Vector3();
+  private readonly look = new THREE.Vector3();
 
   /** Hacia dónde está el sol (en la escena); el pase lo lleva a la vista en cada cuadro. */
   setSun(dir: THREE.Vector3) {
     this.sunWorld.copy(dir).normalize();
+  }
+
+  /** La cota de la calle y el color de la bruma baja (el del horizonte). */
+  setGround(groundY: number, fog: THREE.Color) {
+    this.uniforms.uGround.value = groundY;
+    this.uniforms.uFogColor.value.copy(fog);
   }
 
   setExposure(exposure: number) {
@@ -158,6 +209,13 @@ export class SunsetGradePass extends ShaderPass {
     this.uniforms.uInvProj.value.copy(this.camera.projectionMatrixInverse);
     this.uniforms.uResolution.value.set(readBuffer.width, readBuffer.height);
     this.uniforms.uSunView.value.copy(this.sunWorld).transformDirection(this.camera.matrixWorldInverse);
+    this.uniforms.uViewToWorld.value.copy(this.camera.matrixWorld);
+    // El sol en pantalla: un punto lejano en su dirección. Se apaga detrás de la cámara y fuera del cuadro.
+    const s = this.sunScreen.copy(this.sunWorld).multiplyScalar(5000).add(this.camera.position).project(this.camera);
+    const facing = this.sunWorld.dot(this.camera.getWorldDirection(this.look));
+    const inside = Math.max(Math.abs(s.x), Math.abs(s.y));
+    const visible = !this.heavy || facing <= 0 ? 0 : THREE.MathUtils.clamp(1.6 - inside * 0.6, 0, 1);
+    this.uniforms.uSunScreen.value.set(s.x * 0.5 + 0.5, s.y * 0.5 + 0.5, visible);
     super.render(renderer, writeBuffer, readBuffer, deltaTime, maskActive);
   }
 }
