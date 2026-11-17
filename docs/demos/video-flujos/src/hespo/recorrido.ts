@@ -24,6 +24,23 @@ const SUELO: Record<EscenaId, number> = {
   aparece: SUELO_Y,
   solucion: SUELO_Y,
   resultado: SUELO_Y,
+  queEs: SUELO_Y,
+  lucia: SUELO_Y,
+  julio: SUELO_Y,
+  campus: SUELO_Y,
+  tuberia: SUELO_Y,
+  bandeja: SUELO_Y,
+  actividad: SUELO_Y,
+  calendario: SUELO_Y,
+  cuadrilla: SUELO_Y,
+  globo: SUELO_Y,
+  observacion: SUELO_Y,
+  historial: SUELO_Y,
+  cierra: SUELO_Y,
+  sano: SUELO_Y,
+  futuro: SUELO_Y,
+  juntos: SUELO_Y,
+  logo: SUELO_Y,
 };
 
 /** Posición de Hespo al empezar cada escena: entra desde fuera de cuadro. */

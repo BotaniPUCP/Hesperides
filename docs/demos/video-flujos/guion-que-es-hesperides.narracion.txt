@@ -1,0 +1,68 @@
+¿Qué es Hesperides?
+Hesperides es una plataforma que ayuda a cuidar las áreas verdes
+trabajando juntos.
+¿Y cómo funciona?
+Ella es Lucía.
+Lucía trabaja con jardines todo el día,
+pero no de la forma en que imaginas.
+Ella coordina el cuidado de todas las áreas verdes de la PUCP:
+decide qué se riega, qué se poda y qué problema se atiende primero.
+Y lo hace en Hesperides,
+con la ayuda de su equipo: tres capataces y sus cuadrillas.
+Aunque todos cuidan el mismo campus,
+nunca están en el mismo lugar.
+Él es don Julio.
+Don Julio también trabaja con jardines todo el día.
+Solo que él sí está en los jardines, todo el día.
+Y este es el campus de la PUCP.
+Cientos de jardines, miles de árboles y plantas, cada uno con su historia.
+Hasta hace poco, todo eso vivía en hojas de Excel repartidas en distintas carpetas,
+y alguien tenía que pasarlo al mapa a mano.
+Esta mañana, don Julio encuentra una tubería de riego rota.
+Antes, eso se habría quedado en una llamada.
+Hoy, don Julio registra una incidencia en Hesperides.
+Las incidencias sirven para reportar problemas, pedir ayuda
+o dejar constancia de lo que pasa en un jardín, y de qué tan urgente es.
+Lucía es la primera en verla.
+La revisa, la aprueba y decide qué cuadrilla debe encargarse.
+Y aquí empieza lo interesante.
+Ese jardín no es el único que necesita atención.
+En todo el campus hay jardines por regar, podas pendientes y eventos programados.
+Y la vida del campus no puede detenerse
+mientras se repara una tubería.
+El equipo necesita organizar el trabajo
+sin chocar con lo que pasa en el campus.
+Por eso, Hesperides cruza cada tarea con el calendario:
+feriados, eventos y jardines prestados.
+Si el viernes hay una ceremonia en ese jardín, el sistema avisa antes de programar.
+Ahora la cuadrilla ya puede trabajar.
+Hesperides registra cada intervención y guarda la historia de lo que se hizo.
+Y en cuanto la incidencia se aprueba,
+aparece un globo sobre ese jardín en el mapa 3D del campus.
+Así, todo el equipo ve qué está pasando, dónde y con qué urgencia,
+sin tener que preguntar.
+En Hesperides, todos trabajan sobre la misma información.
+Si otro capataz pasa por ahí y nota que un árbol cercano también se afectó,
+puede sumar lo que vio a ese mismo trabajo.
+Hesperides guarda quién reportó, quién aprobó, quién trabajó y cuándo,
+junto con todo lo que ha pasado en ese jardín.
+Cuando el trabajo termina,
+Lucía cierra la incidencia.
+El globo desaparece del mapa,
+y el reporte de la semana ya lo incluye.
+Ahora todo el campus disfruta
+de un jardín sano, gracias al aviso de don Julio.
+Pero esto es solo el comienzo.
+Porque cada riego, cada poda y cada problema queda registrado,
+por primera vez el campus tiene la foto completa de sus áreas verdes:
+qué jardines piden más atención, qué especies crecen en ellos
+y cómo cambian con el tiempo.
+Y lo que hoy es un aviso de don Julio
+mañana puede ser una mejor decisión para todo el campus.
+¿Qué áreas verdes cuidas tú?
+Ya sea que coordines un equipo, trabajes en el campo,
+o simplemente cruces un jardín camino a clase,
+las áreas verdes son parte de la vida de todos.
+Hesperides es donde se cuidan.
+Es cómo se cuidan,
+juntos.

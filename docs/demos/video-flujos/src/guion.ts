@@ -2,6 +2,7 @@ import datos from '../guion.json';
 import datosPlanificacion from '../guion-planificacion.json';
 import datosVenta from '../guion-venta.json';
 import datosHistoria from '../guion-historia.json';
+import datosQueEs from '../guion-que-es-hesperides.json';
 
 export const POSES = ['quieto', 'saluda', 'senala', 'presenta', 'pulgar', 'sorpresa', 'asiente', 'salta', 'confundido'] as const;
 export type Pose = (typeof POSES)[number];
@@ -46,9 +47,31 @@ export type EscenaId =
   | 'hoy'
   | 'aparece'
   | 'solucion'
-  | 'resultado';
+  | 'resultado'
+  | 'queEs'
+  | 'lucia'
+  | 'julio'
+  | 'campus'
+  | 'tuberia'
+  | 'bandeja'
+  | 'actividad'
+  | 'calendario'
+  | 'cuadrilla'
+  | 'globo'
+  | 'observacion'
+  | 'historial'
+  | 'cierra'
+  | 'sano'
+  | 'futuro'
+  | 'juntos'
+  | 'logo';
 export type Escena = { id: EscenaId; frases: Frase[] };
-export type Guion = { voz: string; escenas: Escena[] };
+export type Guion = {
+  voz: string;
+  /** Velocidad de la voz para edge-tts («+15%»); si falta, la normal. */
+  velocidad?: string;
+  escenas: Escena[];
+};
 
 export const guion = datos as Guion;
 
@@ -60,3 +83,6 @@ export const guionVenta = datosVenta as Guion;
 
 /** Cuarto video: la venta contada como historia, con Don Julio, el jefe y Hespo Semilla. */
 export const guionHistoria = datosHistoria as Guion;
+
+/** Quinto video: «¿Qué es Hesperides?», con Lucía, don Julio y el mapa 3D al atardecer. */
+export const guionQueEs = datosQueEs as Guion;

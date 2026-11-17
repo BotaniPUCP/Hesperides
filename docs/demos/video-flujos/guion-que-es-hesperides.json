@@ -1,0 +1,545 @@
+{
+  "voz": "es-PE-CamilaNeural",
+  "velocidad": "+15%",
+  "escenas": [
+    {
+      "id": "queEs",
+      "frases": [
+        {
+          "id": "q1",
+          "texto": "¿Qué es Hesperides?",
+          "textoVoz": "¿Qué es Hespérides?",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        },
+        {
+          "id": "q2",
+          "texto": "Hesperides es una plataforma que ayuda a cuidar las áreas verdes trabajando juntos.",
+          "textoVoz": "Hespérides es una plataforma que ayuda a cuidar las áreas verdes trabajando juntos.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.5
+        },
+        {
+          "id": "q3",
+          "texto": "¿Y cómo funciona?",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        }
+      ]
+    },
+    {
+      "id": "lucia",
+      "frases": [
+        {
+          "id": "q4",
+          "texto": "Ella es Lucía.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q5",
+          "texto": "Lucía trabaja con jardines todo el día, pero no de la forma en que imaginas.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q6",
+          "texto": "Ella coordina el cuidado de todas las áreas verdes de la PUCP:",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "q7",
+          "texto": "decide qué se riega, qué se poda y qué problema se atiende primero.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        },
+        {
+          "id": "q8",
+          "texto": "Y lo hace en Hesperides, con la ayuda de su equipo: tres capataces y sus cuadrillas.",
+          "textoVoz": "Y lo hace en Hespérides, con la ayuda de su equipo: tres capataces y sus cuadrillas.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q9",
+          "texto": "Aunque todos cuidan el mismo campus, nunca están en el mismo lugar.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        }
+      ]
+    },
+    {
+      "id": "julio",
+      "frases": [
+        {
+          "id": "q10",
+          "texto": "Él es don Julio.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q11",
+          "texto": "Don Julio también trabaja con jardines todo el día.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.2
+        },
+        {
+          "id": "q12",
+          "texto": "Solo que él sí está en los jardines, todo el día.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.8
+        }
+      ]
+    },
+    {
+      "id": "campus",
+      "frases": [
+        {
+          "id": "q13",
+          "texto": "Y este es el campus de la PUCP.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q14",
+          "texto": "Cientos de jardines, miles de árboles y plantas, cada uno con su historia.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        },
+        {
+          "id": "q15",
+          "texto": "Hasta hace poco, todo eso vivía en hojas de Excel repartidas en distintas carpetas,",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "q16",
+          "texto": "y alguien tenía que pasarlo al mapa a mano.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        }
+      ]
+    },
+    {
+      "id": "tuberia",
+      "frases": [
+        {
+          "id": "q17",
+          "texto": "Esta mañana, don Julio encuentra una tubería de riego rota.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.5
+        },
+        {
+          "id": "q18",
+          "texto": "Antes, eso se habría quedado en una llamada.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        },
+        {
+          "id": "q19",
+          "texto": "Hoy, don Julio registra una incidencia en Hesperides.",
+          "textoVoz": "Hoy, don Julio registra una incidencia en Hespérides.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q20",
+          "texto": "Las incidencias sirven para reportar problemas, pedir ayuda o dejar constancia de lo que pasa en un jardín, y de qué tan urgente es.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.5
+        }
+      ]
+    },
+    {
+      "id": "bandeja",
+      "frases": [
+        {
+          "id": "q21",
+          "texto": "Lucía es la primera en verla.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.2
+        },
+        {
+          "id": "q22",
+          "texto": "La revisa, la aprueba y decide qué cuadrilla debe encargarse.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        }
+      ]
+    },
+    {
+      "id": "actividad",
+      "frases": [
+        {
+          "id": "q23",
+          "texto": "Y aquí empieza lo interesante.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q24",
+          "texto": "Ese jardín no es el único que necesita atención.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.2
+        },
+        {
+          "id": "q25",
+          "texto": "En todo el campus hay jardines por regar, podas pendientes y eventos programados.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q26",
+          "texto": "Y la vida del campus no puede detenerse mientras se repara una tubería.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.2
+        },
+        {
+          "id": "q27",
+          "texto": "El equipo necesita organizar el trabajo sin chocar con lo que pasa en el campus.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        }
+      ]
+    },
+    {
+      "id": "calendario",
+      "frases": [
+        {
+          "id": "q28",
+          "texto": "Por eso, Hesperides cruza cada tarea con el calendario: feriados, eventos y jardines prestados.",
+          "textoVoz": "Por eso, Hespérides cruza cada tarea con el calendario: feriados, eventos y jardines prestados.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q29",
+          "texto": "Si el viernes hay una ceremonia en ese jardín, el sistema avisa antes de programar.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        }
+      ]
+    },
+    {
+      "id": "cuadrilla",
+      "frases": [
+        {
+          "id": "q30",
+          "texto": "Ahora la cuadrilla ya puede trabajar.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q31",
+          "texto": "Hesperides registra cada intervención y guarda la historia de lo que se hizo.",
+          "textoVoz": "Hespérides registra cada intervención y guarda la historia de lo que se hizo.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.5
+        }
+      ]
+    },
+    {
+      "id": "globo",
+      "frases": [
+        {
+          "id": "q32",
+          "texto": "Y en cuanto la incidencia se aprueba, aparece un globo sobre ese jardín en el mapa 3D del campus.",
+          "textoVoz": "Y en cuanto la incidencia se aprueba, aparece un globo sobre ese jardín en el mapa tres D del campus.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 1.2
+        },
+        {
+          "id": "q33",
+          "texto": "Así, todo el equipo ve qué está pasando, dónde y con qué urgencia, sin tener que preguntar.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q34",
+          "texto": "En Hesperides, todos trabajan sobre la misma información.",
+          "textoVoz": "En Hespérides, todos trabajan sobre la misma información.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        }
+      ]
+    },
+    {
+      "id": "observacion",
+      "frases": [
+        {
+          "id": "q35",
+          "texto": "Si otro capataz pasa por ahí y nota que un árbol cercano también se afectó, puede sumar lo que vio a ese mismo trabajo.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        }
+      ]
+    },
+    {
+      "id": "historial",
+      "frases": [
+        {
+          "id": "q36",
+          "texto": "Hesperides guarda quién reportó, quién aprobó, quién trabajó y cuándo, junto con todo lo que ha pasado en ese jardín.",
+          "textoVoz": "Hespérides guarda quién reportó, quién aprobó, quién trabajó y cuándo, junto con todo lo que ha pasado en ese jardín.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        }
+      ]
+    },
+    {
+      "id": "cierra",
+      "frases": [
+        {
+          "id": "q37",
+          "texto": "Cuando el trabajo termina, Lucía cierra la incidencia.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.5
+        },
+        {
+          "id": "q38",
+          "texto": "El globo desaparece del mapa, y el reporte de la semana ya lo incluye.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        }
+      ]
+    },
+    {
+      "id": "sano",
+      "frases": [
+        {
+          "id": "q39",
+          "texto": "Ahora todo el campus disfruta de un jardín sano, gracias al aviso de don Julio.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.8
+        }
+      ]
+    },
+    {
+      "id": "futuro",
+      "frases": [
+        {
+          "id": "q40",
+          "texto": "Pero esto es solo el comienzo.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.3
+        },
+        {
+          "id": "q41",
+          "texto": "Porque cada riego, cada poda y cada problema queda registrado,",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "q42",
+          "texto": "por primera vez el campus tiene la foto completa de sus áreas verdes:",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "q43",
+          "texto": "qué jardines piden más atención, qué especies crecen en ellos y cómo cambian con el tiempo.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        },
+        {
+          "id": "q44",
+          "texto": "Y lo que hoy es un aviso de don Julio mañana puede ser una mejor decisión para todo el campus.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.6
+        }
+      ]
+    },
+    {
+      "id": "juntos",
+      "frases": [
+        {
+          "id": "q45",
+          "texto": "¿Qué áreas verdes cuidas tú?",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        },
+        {
+          "id": "q46",
+          "texto": "Ya sea que coordines un equipo, trabajes en el campo, o simplemente cruces un jardín camino a clase,",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          }
+        },
+        {
+          "id": "q47",
+          "texto": "las áreas verdes son parte de la vida de todos.",
+          "hespo": {
+            "x": -220,
+            "pose": "quieto"
+          },
+          "respiro": 0.4
+        }
+      ]
+    },
+    {
+      "id": "logo",
+      "frases": [
+        {
+          "id": "q48",
+          "texto": "Hesperides es donde se cuidan.",
+          "textoVoz": "Hespérides es donde se cuidan.",
+          "hespo": {
+            "x": 1500,
+            "pose": "saluda",
+            "emocion": "feliz"
+          },
+          "respiro": 0.2
+        },
+        {
+          "id": "q49",
+          "texto": "Es cómo se cuidan, juntos.",
+          "hespo": {
+            "x": 1500,
+            "pose": "salta",
+            "emocion": "feliz",
+            "luego": [
+              {
+                "x": 1500,
+                "pose": "saluda",
+                "en": 0.5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
