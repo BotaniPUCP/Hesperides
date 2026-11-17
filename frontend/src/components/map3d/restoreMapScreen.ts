@@ -9,6 +9,7 @@ import type { Viewer } from './viewer/createViewer';
 
 export const APPLY_OPTION: Record<keyof ViewOptions, (v: Viewer, on: boolean) => void> = {
   night: (v, on) => v.setNight(on),
+  sunset: (v, on) => v.setSunset(!!on),
   shadows: (v, on) => v.setShadows(on),
   labels: (v, on) => v.setLabels(on),
   grayBuildings: (v, on) => v.setGrayBuildings(on),

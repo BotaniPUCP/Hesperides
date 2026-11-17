@@ -1,4 +1,4 @@
-import { GLASS_LIGHT, GLASS_NIGHT, LIT_MEAN } from './finishes';
+import { GLASS_LIGHT, GLASS_NIGHT, GRIME, LIT_MEAN } from './finishes';
 import { finishGrain } from './finishGrain';
 import { panelPillow, paneGloss, type Gloss, type Rect } from './glassGloss';
 import { MIN_COVERAGE, NO_BOUND_M, OPAQUE, REGION_TEXELS } from './lookLayout';
@@ -67,7 +67,10 @@ function glassNear(g: Glass, x: number, y: number, aa: PixelSize, seed: number):
   const tone = 1 + g.vary * (2 * toneHash - 1);
   const accentPane = accentOn && !g.panelM;
   const pane: Rgb = accentPane ? g.accent : [g.glass[0] * tone, g.glass[1] * tone, g.glass[2] * tone];
-  const panel = accentOn ? g.accent : g.panel;
+  // Suciedad que baja desde el borde inferior del paño sobre el antepecho.
+  const grime = g.panelM > 0 ? 1 - GRIME.share * smoothstep(g.panelM - GRIME.heightM, g.panelM, fy) : 1;
+  const panelBase = accentOn ? g.accent : g.panel;
+  const panel: Rgb = [panelBase[0] * grime, panelBase[1] * grime, panelBase[2] * grime];
   const half = g.frameM / 2;
   const inPanel = g.panelM > 0 ? 1 - smoothstep(g.panelM - aa[1], g.panelM + aa[1], fy) : 0;
   const line = g.panelM > 0 ? box(fy, g.panelM - half, g.panelM + half, aa[1]) : 0;
@@ -84,7 +87,10 @@ function glassNear(g: Glass, x: number, y: number, aa: PixelSize, seed: number):
 function glassFar(g: Glass): FacadeSample {
   const panelFrac = g.panelM / g.height;
   const pane = g.panelM > 0 ? g.glass : mixRgb(g.glass, g.accent, g.share);
-  const panel = mixRgb(g.panel, g.accent, g.share);
+  // De lejos, la suciedad promedio del antepecho: la mitad de la banda, sobre su alto.
+  const grime = g.panelM > 0 ? 1 - (GRIME.share * Math.min(GRIME.heightM, g.panelM) * 0.5) / g.panelM : 1;
+  const panelMix = mixRgb(g.panel, g.accent, g.share);
+  const panel: Rgb = [panelMix[0] * grime, panelMix[1] * grime, panelMix[2] * grime];
   const frameFrac = clamp01(g.frameM / g.module + (g.frameM / g.height) * (g.panelM > 0 ? 2 : 1));
   const glass = (1 - frameFrac) * (1 - panelFrac);
   const lit = glass * GLASS_NIGHT.share * LIT_MEAN * (g.panelM > 0 ? 1 : 1 - g.share);

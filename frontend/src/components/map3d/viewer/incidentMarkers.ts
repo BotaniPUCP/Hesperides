@@ -29,7 +29,7 @@ export interface IncidentMarkers {
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 
-export function createIncidentMarkers(scene: THREE.Scene): IncidentMarkers {
+export function createIncidentMarkers(scene: THREE.Object3D): IncidentMarkers {
   const group = new THREE.Group();
   scene.add(group);
   const ball = new THREE.SphereGeometry(BALL_M, 16, 12);

@@ -75,11 +75,14 @@ describe('createRealColors', () => {
     const material = (layer.mesh.material as THREE.Material[])[1];
     const glow = (material.userData.lookUniforms.lookNightGlow.value as THREE.Color);
     expect(glow.getHex()).toBe(0);
-    real.setNight(true);
+    real.setGlow(1);
     expect(glow.r).toBeGreaterThan(glow.b);
     expect(glow.r).toBeGreaterThan(0.3);
     expect(glow.r).toBeLessThan(0.8);
-    real.setNight(false);
+    const night = glow.r;
+    real.setGlow(1.25);
+    expect(glow.r).toBeCloseTo(night * 1.25);
+    real.setGlow(0);
     expect(glow.getHex()).toBe(0);
   });
 

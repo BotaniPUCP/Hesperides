@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { Polygon } from '../sceneData';
 import type { PolyLayer } from '../viewer/polyLayer';
 import { classifyBuilding, type FaceAttributes } from './classifyFaces';
-import { createLookMaterial, setLookNight } from './lookMaterial';
+import { createLookMaterial, setLookContact, setLookEmissiveDesat, setLookPaneInset, setLookRoofRough, setLookEnvIntensity, setLookGlassEnv, setLookGlow, setLookInterior } from './lookMaterial';
 import { buildLookTable } from './lookTable';
 import type { BuildingLook } from './types';
 import { validateLooks } from './validateLook';
@@ -18,8 +18,17 @@ export interface RealColors {
   enabled: () => boolean;
   /** Cambia el material; no toca la geometría ni vuelve a clasificar. */
   setEnabled: (on: boolean) => void;
-  /** De noche se encienden en parte los paños de vidrio (SPEC-112 D-19). */
-  setNight: (night: boolean) => void;
+  /** Cuánto se encienden los paños de vidrio elegidos: 0 de día, 1 de noche (SPEC-112 D-19), más al atardecer. */
+  setGlow: (level: number) => void;
+  /** Cuánto refleja el cielo el vidrio respecto de un muro. */
+  setGlassEnv: (boost: number) => void;
+  /** El brillo de los interiores tras todo el vidrio. */
+  setInterior: (color: THREE.Color) => void;
+  setEmissiveDesat: (amount: number) => void;
+  setEnvIntensity: (intensity: number) => void;
+  setRoofRough: (rough: number) => void;
+  setPaneInset: (insetM: number) => void;
+  setContact: (amount: number) => void;
 }
 
 export interface LookedBuilding {
@@ -91,7 +100,14 @@ export function createRealColors(layer: PolyLayer, buildings: LookedBuilding[], 
       if (on) groups.forEach((g) => geometry.addGroup(g.start, g.count, g.materialIndex));
       layer.mesh.material = on ? [today, real] : today;
     },
-    setNight: (night) => setLookNight(real, night),
+    setGlow: (level) => setLookGlow(real, level),
+    setGlassEnv: (boost) => setLookGlassEnv(real, boost),
+    setInterior: (color) => setLookInterior(real, color),
+    setEmissiveDesat: (amount) => setLookEmissiveDesat(real, amount),
+    setEnvIntensity: (intensity) => setLookEnvIntensity(real, intensity),
+    setRoofRough: (rough) => setLookRoofRough(real, rough),
+    setPaneInset: (insetM) => setLookPaneInset(real, insetM),
+    setContact: (amount) => setLookContact(real, amount),
   };
 }
 

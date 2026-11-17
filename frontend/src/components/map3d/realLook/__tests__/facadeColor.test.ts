@@ -1,3 +1,4 @@
+import { GLASS_LIGHT } from '../finishes';
 import { facadeColor } from '../facadeColor';
 import { buildLookTable } from '../lookTable';
 import type { BuildingLook, Material, Side, Zone } from '../types';
@@ -109,8 +110,20 @@ describe('facadeColor: vidrio', () => {
     const t = sampler({ faces: { N: [{ material: 'muro', u: [0, 10], v: [0, 8] }] } }, {
       muro: { glass: '#000000', frame: '#ffffff', moduleM: 2, heightM: 4, frameM: 0.1, spandrel: { color: '#ff0000', heightM: 1 } },
     });
-    expectRgb(t.at('N', 1, 0.5).rgb, RED);
+    // Por debajo de la banda de suciedad, el antepecho tal cual.
+    expectRgb(t.at('N', 1, 0.25).rgb, RED);
     expectRgb(t.at('N', 1, 2.5).rgb, BLACK);
+  });
+
+  it('el antepecho se ensucia bajo el paño: más oscuro arriba, limpio abajo', () => {
+    const t = sampler({ faces: { N: [{ material: 'muro', u: [0, 10], v: [0, 8] }] } }, {
+      muro: { glass: '#000000', frame: '#ffffff', moduleM: 2, heightM: 4, frameM: 0.1, spandrel: { color: '#ff0000', heightM: 1.6 } },
+    });
+    const top = t.at('N', 1, 1.5).rgb[0], mid = t.at('N', 1, 1.2).rgb[0], clean = t.at('N', 1, 0.4).rgb[0];
+    expect(clean).toBeCloseTo(1, 3);
+    expect(mid).toBeLessThan(clean);
+    expect(top).toBeLessThan(mid);
+    expect(top).toBeGreaterThan(0.75);
   });
 
   it('lejos, la retícula se funde en su color promedio y no se ven los perfiles', () => {
@@ -200,9 +213,10 @@ describe('facadeColor: acabados y luz (SPEC-112 D-17 a D-19)', () => {
 
   it('el paño del vidrio es liso y algo metálico; el perfil, menos', () => {
     const s = sampler({ faces: { N: [{ material: 'vidrio', u: [0, 10], v: [0, 8] }] } });
-    expect(s.at('N', 1, 2).rough).toBeCloseTo(0.18, 2);
-    expect(s.at('N', 1, 2).metal).toBeCloseTo(0.1, 2);
-    expect(s.at('N', 2, 2).rough).toBeCloseTo(0.6, 2);
+    expect(s.at('N', 1, 2).rough).toBeCloseTo(GLASS_LIGHT.pane.rough, 2);
+    expect(s.at('N', 1, 2).metal).toBeCloseTo(GLASS_LIGHT.pane.metal, 2);
+    expect(s.at('N', 2, 2).rough).toBeCloseTo(GLASS_LIGHT.frame.rough, 2);
+    expect(GLASS_LIGHT.pane.rough).toBeLessThan(GLASS_LIGHT.frame.rough);
   });
 });
 

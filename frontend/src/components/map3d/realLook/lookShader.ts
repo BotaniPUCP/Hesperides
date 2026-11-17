@@ -122,7 +122,9 @@ LookSurface lookMaterial(float m, vec2 f, vec2 o, vec2 aa, float seed) {
   float d = min(lookDetail(aa.x, size.x), lookDetail(aa.y, size.y));
   LookSurface far = lookGlassFar(m);
   if (d <= 0.0) return far;
-  return lookBlend(far, lookGlassNear(m, f - o, aa, seed), d);
+  LookSurface near = lookGlassNear(m, f - o, aa, seed);
+  lookPaneW = d;
+  return lookBlend(far, near, d);
 }
 
 // Cuánto del píxel cae en la franja del piso; lejos, la proporción del piso que ocupa.
@@ -143,6 +145,7 @@ void lookAdd(inout LookSurface acc, LookSurface s, float w) {
 
 // De la última región a la primera, cada una tapa lo que está debajo; lo que queda a la vista es el muro.
 LookSurface lookDisplay(float face, vec2 f) {
+  lookPaneW = 0.0;
   vec2 aa = max(fwidth(f), vec2(1e-4));
   vec4 rec = lookAt(face);
   LookSurface acc = LookSurface(vec3(0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);

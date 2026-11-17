@@ -13,6 +13,9 @@ const RIM = {
 };
 const GLOW = { day: new THREE.Color('#FFE79C'), night: new THREE.Color('#AFC2FF'), dayOpacity: 0.085, nightOpacity: 0.165 };
 const CONTACT = { day: 0x5b5448, night: 0x5f77bf, dayOpacity: 0.15, nightOpacity: 0.18 };
+/** Atardecer: copas más oscuras y oliva, menos barniz, y el borde del lado del sol en ámbar (modo Atardecer). */
+const WHITE = new THREE.Color(0xffffff);
+const GOLDEN = { tint: new THREE.Color('#7f8f62'), rim: new THREE.Color('#FFA24E'), rimStrength: 0.38, sunInfluence: 0.7, sheen: 0.08, clearcoat: 0.08, glowOpacity: 0.04 };
 
 export interface FoliageMaterials {
   /** Un material de copa por forma: cada InstancedMesh necesita el suyo. */
@@ -20,7 +23,7 @@ export interface FoliageMaterials {
   glow: THREE.MeshBasicMaterial;
   contact: THREE.MeshBasicMaterial;
   /** Ajusta colores e intensidades al tema y a la dirección del sol. */
-  setLighting: (night: boolean, sunDirection: THREE.Vector3) => void;
+  setLighting: (night: boolean, sunDirection: THREE.Vector3, golden?: boolean) => void;
 }
 
 /**
@@ -81,21 +84,36 @@ export function createFoliageMaterials(textures: SceneTextures): FoliageMaterial
   const contact = new THREE.MeshBasicMaterial({
     map: contactTexture(), color: CONTACT.day, transparent: true, opacity: CONTACT.dayOpacity, depthWrite: false, toneMapped: false,
   });
+  const made: THREE.MeshPhysicalMaterial[] = [];
+  let goldenNow = false;
+  /** Lo que el Atardecer cambia de una copa: color, barniz y brillo de terciopelo. */
+  const tone = (m: THREE.MeshPhysicalMaterial) => {
+    m.color.copy(goldenNow ? GOLDEN.tint : WHITE);
+    m.sheen = goldenNow ? GOLDEN.sheen : 0.3;
+    m.clearcoat = goldenNow ? GOLDEN.clearcoat : 0.3;
+  };
   return {
-    foliage: () => withRim(new THREE.MeshPhysicalMaterial({
+    foliage: () => {
+      const m = withRim(new THREE.MeshPhysicalMaterial({
       color: 0xffffff, flatShading: true, roughness: 0.45, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.4,
       sheen: 0.3, sheenRoughness: 0.5, sheenColor: new THREE.Color(0x80ff80), map: textures.foliage,
       normalMap: textures.foliageNormal, normalScale: new THREE.Vector2(0.6, 0.6), envMapIntensity: 0.05,
-    }), uniforms),
+      }), uniforms);
+      made.push(m);
+      tone(m);
+      return m;
+    },
     glow,
     contact,
-    setLighting(night, sunDirection) {
-      uniforms.uRimColor.value.copy(night ? RIM.night : RIM.day);
-      uniforms.uRimStrength.value = night ? RIM.nightStrength : RIM.dayStrength;
-      uniforms.uRimSunInfluence.value = night ? RIM.sunNight : RIM.sunDay;
+    setLighting(night, sunDirection, golden = false) {
+      goldenNow = golden && !night;
+      made.forEach(tone);
+      uniforms.uRimColor.value.copy(night ? RIM.night : goldenNow ? GOLDEN.rim : RIM.day);
+      uniforms.uRimStrength.value = night ? RIM.nightStrength : goldenNow ? GOLDEN.rimStrength : RIM.dayStrength;
+      uniforms.uRimSunInfluence.value = night ? RIM.sunNight : goldenNow ? GOLDEN.sunInfluence : RIM.sunDay;
       uniforms.uRimSunDir.value.copy(sunDirection);
       glow.color.copy(night ? GLOW.night : GLOW.day);
-      glow.opacity = night ? GLOW.nightOpacity : GLOW.dayOpacity;
+      glow.opacity = night ? GLOW.nightOpacity : goldenNow ? GOLDEN.glowOpacity : GLOW.dayOpacity;
       contact.color.set(night ? CONTACT.night : CONTACT.day);
       contact.opacity = night ? CONTACT.nightOpacity : CONTACT.dayOpacity;
     },

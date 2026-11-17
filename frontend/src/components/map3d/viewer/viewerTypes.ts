@@ -61,6 +61,14 @@ export interface Viewer {
   setLayerVisible: (id: LayerId, visible: boolean) => void;
   select: (target: Target | null, focus: boolean) => void;
   setNight: (night: boolean) => void;
+  /** Modo Atardecer: hora dorada con cielo, bruma y posprocesado. De noche no se aplica. */
+  setSunset: (on: boolean) => void;
+  /** La hora del Atardecer, de la hora dorada al crepúsculo (SUNSET_HOURS). */
+  setSunsetHour: (hour: number) => void;
+  /** Una captura de lo que se ve, a `scale` veces la resolución de la pantalla, en PNG. */
+  snapshot: (scale?: number) => Promise<Blob | null>;
+  /** Modo captura: sin marcadores 3D (pin, incidencias, conos de perspectiva). */
+  setCaptureMode: (on: boolean) => void;
   setHour: (hour: number) => void;
   setShadows: (on: boolean) => void;
   setLabels: (on: boolean) => void;

@@ -24,6 +24,8 @@ export interface Map3DViewProps extends ViewerCallbacks {
   poseMemory?: PoseMemory;
   /** Cómo nace el visor; se lee solo al crearlo. */
   start?: ViewerStart;
+  /** Modo captura: sin nombres ni globos sobre la maqueta. */
+  bare?: boolean;
 }
 
 /**
@@ -31,7 +33,7 @@ export interface Map3DViewProps extends ViewerCallbacks {
  * arriba del archivo: three pesa ~600 kB y no tiene sentido en el servidor ni
  * en las pantallas que no muestran el mapa.
  */
-export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemory, start, ...callbacks }: Map3DViewProps) {
+export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemory, start, bare = false, ...callbacks }: Map3DViewProps) {
   const container = useRef<HTMLDivElement>(null);
   const labels = useRef<HTMLDivElement>(null);
   const balloons = useRef<HTMLDivElement>(null);
@@ -81,8 +83,8 @@ export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemo
   return (
     <div className="absolute inset-0 overflow-hidden" data-testid="map-3d">
       <div ref={container} className="absolute inset-0" />
-      <div ref={labels} className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true" />
-      <div ref={balloons} className="pointer-events-none absolute inset-0 overflow-hidden" role="group" aria-label="Globos del mapa" />
+      <div ref={labels} className={`pointer-events-none absolute inset-0 overflow-hidden ${bare ? 'hidden' : ''}`} aria-hidden="true" />
+      <div ref={balloons} className={`pointer-events-none absolute inset-0 overflow-hidden ${bare ? 'hidden' : ''}`} role="group" aria-label="Globos del mapa" />
     </div>
   );
 }

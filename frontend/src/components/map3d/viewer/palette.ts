@@ -18,6 +18,8 @@ export interface ScenePalette {
   sunIntensity: number;
   accent: string;
   hover: string;
+  /** Solo en el modo Atardecer: el suelo con sus colores naturales en vez de los del mapa (modo General). */
+  natural?: { grass: string; xerophytic: string; sidewalk: string };
 }
 
 export const DAY: ScenePalette = {
@@ -55,7 +57,15 @@ export const NIGHT: ScenePalette = {
 /** Variante «edificios en gris» del botón 🏢: para leer el mapa sin el rosado. */
 export const GRAY_BUILDINGS = { building: '#8A8A90', buildingEdge: '#606068', context: '#707078' };
 
-export function paletteFor(night: boolean, grayBuildings: boolean): ScenePalette {
-  const base = night ? NIGHT : DAY;
+/** Atardecer: césped, veredas y estacionamientos como se ven de verdad, y el zócalo de asfalto. */
+export const GOLDEN: Partial<ScenePalette> = {
+  plinth: '#4a4743',
+  plinthSide: '#3b3936',
+  parking: '#7d7870',
+  natural: { grass: '#5c7a48', xerophytic: '#a08a5c', sidewalk: '#b8ab98' },
+};
+
+export function paletteFor(night: boolean, grayBuildings: boolean, golden = false): ScenePalette {
+  const base = night ? NIGHT : golden ? { ...DAY, ...GOLDEN } : DAY;
   return grayBuildings ? { ...base, ...GRAY_BUILDINGS } : base;
 }
