@@ -11,11 +11,13 @@
     "render": "remotion render src/index.ts VideoFlujos out/hespo-flujos.mp4 --codec=h264",
     "render:planificacion": "remotion render src/index.ts VideoPlanificacion out/hespo-planificacion.mp4 --codec=h264",
     "render:venta": "remotion render src/index.ts VideoVenta out/hespo-venta.mp4 --codec=h264 --gl=angle",
+    "render:que-es": "remotion render src/index.ts VideoQueEsHesperides out/que-es-hesperides.mp4 --codec=h264",
     "fotogramas": "tsx scripts/fotogramas.ts",
     "duracion": "tsx scripts/duracion.ts",
     "capturas": "tsx scripts/capturas.ts",
     "capturas:planificacion": "tsx scripts/capturas-planificacion.ts",
-    "capturas:venta": "tsx scripts/capturas-venta.ts"
+    "capturas:venta": "tsx scripts/capturas-venta.ts",
+    "capturas:que-es": "tsx scripts/capturas-que-es-hesperides.ts"
   },
   "dependencies": {
     "@react-three/fiber": "9.1.2",

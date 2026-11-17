@@ -1,6 +1,6 @@
 import React from 'react';
 import { Composition, staticFile } from 'remotion';
-import { guion, guionHistoria, guionPlanificacion, guionVenta } from './guion';
+import { guion, guionHistoria, guionPlanificacion, guionQueEs, guionVenta } from './guion';
 import { conCarpeta, type Medidas } from './pagina/medidasCargadas';
 import { comprobarAudios, construirLinea, FPS, type Manifiesto } from './tiempos';
 import { ALTO, ANCHO } from './tema';
@@ -12,6 +12,8 @@ import { DURACION_DEMO } from './hespo2d/coreografia';
 import { HojaDeExpresiones, RedisenosHespo, Retratos } from './hespo2d/v2/Redisenos';
 import { VARIANTES_SEMILLA } from './hespo2d/v2/disenos';
 import { CARPETA_VOZ_HISTORIA, FRAMES_COLA_HISTORIA, VideoHistoria } from './VideoHistoria';
+import { CARPETA_VOZ_QUE_ES, COMANDO_CAPTURAS_QUE_ES, FRAMES_COLA_QUE_ES, VideoQueEsHesperides } from './VideoQueEsHesperides';
+import type { CajasDelMapa } from './queEs/piezas';
 
 const calcularDuracion = async () => {
   const respuesta = await fetch(staticFile('voz/manifiesto.json'));
@@ -71,6 +73,17 @@ const calcularHistoria = async () => {
   return { durationInFrames: linea.framesTotales + FRAMES_COLA_HISTORIA, props: { linea, medidas: conCarpeta('venta', venta) } };
 };
 
+const calcularQueEs = async () => {
+  const manifiesto = await leerJson<Manifiesto>(
+    `${CARPETA_VOZ_QUE_ES}/manifiesto.json`,
+    `Falta public/${CARPETA_VOZ_QUE_ES}/manifiesto.json: ejecuta scripts/generar_voz.py --guion guion-que-es-hesperides.json --salida public/${CARPETA_VOZ_QUE_ES}`,
+  );
+  const cajas = await leerJson<CajasDelMapa>('capturas/que-es/medidas.json', `Falta public/capturas/que-es/medidas.json: ejecuta ${COMANDO_CAPTURAS_QUE_ES}`);
+  const linea = construirLinea(guionQueEs, manifiesto);
+  await comprobarAudios(linea, async (archivo) => (await fetch(staticFile(`${CARPETA_VOZ_QUE_ES}/${archivo}`), { method: 'HEAD' })).ok);
+  return { durationInFrames: linea.framesTotales + FRAMES_COLA_QUE_ES, props: { linea, cajas } };
+};
+
 export const Root: React.FC = () => (
   <>
     <Composition
@@ -117,6 +130,16 @@ export const Root: React.FC = () => (
       durationInFrames={1}
       defaultProps={{ linea: null, medidas: null }}
       calculateMetadata={calcularHistoria}
+    />
+    <Composition
+      id="VideoQueEsHesperides"
+      component={VideoQueEsHesperides}
+      width={ANCHO}
+      height={ALTO}
+      fps={FPS}
+      durationInFrames={1}
+      defaultProps={{ linea: null, cajas: null }}
+      calculateMetadata={calcularQueEs}
     />
     <Composition id="RetratosSemilla" component={Retratos} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={1} defaultProps={{ disenos: VARIANTES_SEMILLA }} />
     <Composition id="ExpresionesSemilla" component={HojaDeExpresiones} width={ANCHO} height={ALTO} fps={FPS} durationInFrames={1} defaultProps={{ disenos: VARIANTES_SEMILLA }} />

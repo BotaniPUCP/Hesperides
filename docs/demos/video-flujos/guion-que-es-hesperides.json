@@ -1,6 +1,6 @@
 {
   "voz": "es-PE-CamilaNeural",
-  "velocidad": "+15%",
+  "velocidad": "+20%",
   "escenas": [
     {
       "id": "queEs",
@@ -13,7 +13,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         },
         {
           "id": "q2",
@@ -23,7 +23,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.5
+          "respiro": 0.3
         },
         {
           "id": "q3",
@@ -32,7 +32,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         }
       ]
     },
@@ -46,7 +46,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q5",
@@ -55,7 +55,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q6",
@@ -72,7 +72,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         },
         {
           "id": "q8",
@@ -82,7 +82,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q9",
@@ -91,7 +91,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         }
       ]
     },
@@ -105,7 +105,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q11",
@@ -114,7 +114,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.2
+          "respiro": 0.1
         },
         {
           "id": "q12",
@@ -123,7 +123,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.8
+          "respiro": 0.5
         }
       ]
     },
@@ -137,7 +137,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q14",
@@ -146,7 +146,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         },
         {
           "id": "q15",
@@ -163,7 +163,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         }
       ]
     },
@@ -177,7 +177,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.5
+          "respiro": 0.3
         },
         {
           "id": "q18",
@@ -186,7 +186,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         },
         {
           "id": "q19",
@@ -196,7 +196,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q20",
@@ -205,7 +205,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.5
+          "respiro": 0.3
         }
       ]
     },
@@ -219,7 +219,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.2
+          "respiro": 0.1
         },
         {
           "id": "q22",
@@ -228,7 +228,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         }
       ]
     },
@@ -242,7 +242,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q24",
@@ -251,7 +251,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.2
+          "respiro": 0.1
         },
         {
           "id": "q25",
@@ -260,7 +260,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q26",
@@ -269,7 +269,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.2
+          "respiro": 0.1
         },
         {
           "id": "q27",
@@ -278,7 +278,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         }
       ]
     },
@@ -293,7 +293,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q29",
@@ -302,7 +302,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         }
       ]
     },
@@ -316,7 +316,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q31",
@@ -326,7 +326,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.5
+          "respiro": 0.3
         }
       ]
     },
@@ -350,7 +350,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q34",
@@ -360,7 +360,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         }
       ]
     },
@@ -374,7 +374,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         }
       ]
     },
@@ -389,7 +389,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         }
       ]
     },
@@ -403,7 +403,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.5
+          "respiro": 0.3
         },
         {
           "id": "q38",
@@ -412,7 +412,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         }
       ]
     },
@@ -426,7 +426,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.8
+          "respiro": 0.5
         }
       ]
     },
@@ -440,7 +440,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.3
+          "respiro": 0.2
         },
         {
           "id": "q41",
@@ -465,7 +465,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         },
         {
           "id": "q44",
@@ -474,7 +474,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.6
+          "respiro": 0.4
         }
       ]
     },
@@ -488,7 +488,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         },
         {
           "id": "q46",
@@ -505,7 +505,7 @@
             "x": -220,
             "pose": "quieto"
           },
-          "respiro": 0.4
+          "respiro": 0.2
         }
       ]
     },
@@ -521,7 +521,7 @@
             "pose": "saluda",
             "emocion": "feliz"
           },
-          "respiro": 0.2
+          "respiro": 0.1
         },
         {
           "id": "q49",

@@ -48,7 +48,7 @@ test('dura cerca de 3:20: entre 520 y 600 palabras con la voz un poco más rápi
   const palabras = texto.split(/\s+/).filter(Boolean).length;
   expect(palabras).toBeGreaterThanOrEqual(520);
   expect(palabras).toBeLessThanOrEqual(600);
-  expect(guionQueEs.velocidad).toBe('+15%');
+  expect(guionQueEs.velocidad).toBe('+20%');
 });
 
 test('Hespo solo brota en el cierre, con el logo', () => {

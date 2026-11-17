@@ -13,6 +13,18 @@ const TINTE: Partial<Record<EscenaId, { color: string; fuerza: number }>> = {
   aparece: { color: COLOR.arena, fuerza: 0.12 },
   solucion: { color: COLOR.arena, fuerza: 0.22 },
   resultado: { color: COLOR.arena, fuerza: 0.28 },
+  // «¿Qué es Hesperides?»: el mapa al atardecer ya trae su luz; se tiñen sobre todo los dibujos.
+  lucia: { color: COLOR.blanco, fuerza: 0.12 },
+  julio: { color: COLOR.blanco, fuerza: 0.18 },
+  tuberia: { color: COLOR.blanco, fuerza: 0.16 },
+  bandeja: { color: COLOR.blanco, fuerza: 0.12 },
+  calendario: { color: COLOR.blanco, fuerza: 0.1 },
+  cuadrilla: { color: COLOR.arena, fuerza: 0.16 },
+  observacion: { color: COLOR.arena, fuerza: 0.16 },
+  cierra: { color: COLOR.arena, fuerza: 0.14 },
+  sano: { color: COLOR.arena, fuerza: 0.24 },
+  juntos: { color: COLOR.arena, fuerza: 0.24 },
+  logo: { color: COLOR.arena, fuerza: 0.18 },
 };
 
 /** Cuánto pesa cada escena en este cuadro: así el tinte cambia en la transición, sin saltos. */

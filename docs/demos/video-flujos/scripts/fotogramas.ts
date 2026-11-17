@@ -6,7 +6,7 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { bundle } from '@remotion/bundler';
-import { renderStill, selectComposition } from '@remotion/renderer';
+import { openBrowser, renderStill, selectComposition } from '@remotion/renderer';
 import { framesClave, type Linea } from '../src/tiempos';
 
 const valor = (nombre: string) => {
@@ -17,7 +17,9 @@ const valor = (nombre: string) => {
 const escenaPedida = valor('escena');
 const video = valor('video') ?? 'VideoFlujos';
 const serveUrl = await bundle({ entryPoint: path.resolve('src/index.ts') });
-const composition = await selectComposition({ serveUrl, id: video });
+// Un solo navegador para todos los fotogramas: abrir uno por cuadro es lento y a veces no llega a tiempo.
+const puppeteerInstance = await openBrowser('chrome');
+const composition = await selectComposition({ serveUrl, id: video, puppeteerInstance, timeoutInMilliseconds: 120000 });
 const linea = composition.props.linea as Linea;
 
 const momentos = valor('momentos');
@@ -30,9 +32,10 @@ if (momentos) {
     if (!tramo) throw new Error(`No existe la frase ${id}`);
     const frame = tramo.desde + Math.round(Number(fraccion) * tramo.frames);
     const output = `out/momentos/${video}/${id}-${fraccion}.png`;
-    await renderStill({ composition, serveUrl, output, frame, inputProps: composition.props });
+    await renderStill({ composition, serveUrl, output, frame, inputProps: composition.props, puppeteerInstance, timeoutInMilliseconds: 120000 });
     console.log(`${output} (fotograma ${frame})`);
   }
+  await puppeteerInstance.close({ silent: true });
   process.exit(0);
 }
 
@@ -43,6 +46,7 @@ const ids = new Set((escena ? [escena] : linea.escenas).flatMap((e) => e.frases.
 mkdirSync(`out/fotogramas/${video}`, { recursive: true });
 for (const { id, frame, momento } of framesClave(linea).filter((c) => ids.has(c.id))) {
   const output = `out/fotogramas/${video}/${id}-${momento}.png`;
-  await renderStill({ composition, serveUrl, output, frame, inputProps: composition.props });
+  await renderStill({ composition, serveUrl, output, frame, inputProps: composition.props, puppeteerInstance, timeoutInMilliseconds: 120000 });
   console.log(`${output} (fotograma ${frame})`);
 }
+await puppeteerInstance.close({ silent: true });
