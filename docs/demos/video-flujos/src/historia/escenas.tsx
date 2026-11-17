@@ -24,7 +24,7 @@ function tw(frame: number, puntos: [number, number][]): number {
   );
 }
 
-const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number }> = ({ texto, visible, x = 60, y = 50 }) => (
+const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?: number }> = ({ texto, visible, x = 100, y = 64 }) => (
   <div
     style={{
       position: 'absolute',
@@ -110,7 +110,8 @@ export const Manana: React.FC<PropsEscena> = ({ escena, frame }) => {
         gesto={fp < momentoDe(escena, 'h2', 0.3) ? 'feliz' : mira > 0.5 ? 'preocupado' : 'neutral'}
         andar={{ distancia: xJulio, w: caminando }}
       />
-      <Tarjeta texto="6:00 a. m." visible={apareceEn(escena, 'h1', frame, 0.05)} />
+      {/* La hora acompaña solo a h1: luego la cámara va hacia la rama. */}
+      <Tarjeta texto="6:00 a. m." visible={apareceEn(escena, 'h1', frame, 0.05) * (1 - apareceEn(escena, 'h2', frame, 0))} />
     </AbsoluteFill>
   );
 };

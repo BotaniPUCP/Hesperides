@@ -58,8 +58,9 @@ const serveUrl = await bundle({ entryPoint: path.resolve('src/index.ts') });
 const composition = await selectComposition({ serveUrl, id: video });
 const linea = composition.props.linea as Linea;
 const navegador = await openBrowser('chrome');
-const render = async (frame: number, output: string) => {
-  await renderStill({ composition, serveUrl, output, frame, inputProps: composition.props, puppeteerInstance: navegador });
+const render = async (frame: number, output: string, extra: Record<string, unknown> = {}) => {
+  const props = { ...composition.props, ...extra };
+  await renderStill({ composition: { ...composition, props }, serveUrl, output, frame, inputProps: props, puppeteerInstance: navegador });
 };
 
 const escenaPedida = valor('escena');
@@ -99,8 +100,9 @@ if (!tramoQuieto) throw new Error(`No existe la frase ${idQuieto}`);
 const n = tramoQuieto.desde + Math.round(Number(fraccionQuieto) * tramoQuieto.frames);
 const pa = path.join(dir, `parpadeo-a.png`);
 const pb = path.join(dir, `parpadeo-b.png`);
-await render(n, pa);
-await render(n + 2, pb);
+// Con la cámara quieta: el parpadeo mide grano, trazo y animación, no el movimiento de cámara.
+await render(n, pa, { camaraQuieta: true });
+await render(n + 2, pb, { camaraQuieta: true });
 const parpadeo = metricaParpadeo(pixeles(pa), pixeles(pb), composition.width, composition.height);
 await navegador.close({ silent: true });
 

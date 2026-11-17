@@ -22,25 +22,33 @@ const FiltroCromatico: React.FC<{ dx: number }> = ({ dx }) => (
   </svg>
 );
 
-export const CapaDeGolpes: React.FC<{ golpes: Golpe[]; frame: number; children: React.ReactNode }> = ({ golpes, frame, children }) => {
+/**
+ * `camara` es la transformación CSS de la cámara virtual (origen arriba a la izquierda): mueve la
+ * escena y las partículas juntas, debajo de la sacudida y del filtro cromático, que quedan en
+ * coordenadas de pantalla.
+ */
+export const CapaDeGolpes: React.FC<{ golpes: Golpe[]; frame: number; camara?: string; children: React.ReactNode }> = ({ golpes, frame, camara, children }) => {
   const e = efectoDeGolpes(golpes, frame);
   const cromatica = e.cromatica > 0.3;
   // Un poco de zoom mientras sacude: así no se ven los bordes del cuadro.
   const zoom = 1 + (Math.abs(e.x) + Math.abs(e.y)) / 500;
-  // Sin sacudida no hay transformación: las capturas quedan en píxeles exactos bajo el filtro.
-  const transform = zoom === 1 && e.giro === 0 ? undefined : `translate(${Math.round(e.x * 2) / 2}px, ${Math.round(e.y * 2) / 2}px) rotate(${e.giro}deg) scale(${zoom})`;
+  const sacudida = zoom === 1 && e.giro === 0 ? undefined : `translate(${Math.round(e.x * 2) / 2}px, ${Math.round(e.y * 2) / 2}px) rotate(${e.giro}deg) scale(${zoom})`;
   return (
     <AbsoluteFill style={{ height: ALTO - BANDA, overflow: 'hidden' }}>
       {cromatica ? <FiltroCromatico dx={Math.round(e.cromatica)} /> : null}
-      <AbsoluteFill style={{ transform, filter: cromatica ? `url(#${ID_FILTRO})` : undefined }}>
-        {children}
-        <svg width={1920} height={ALTO - BANDA} style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none' }}>
-          {golpes.flatMap((g) =>
-            particulas(g.id, frame - g.frame, g, { hacia: g.hacia }).map((p) => (
-              <circle key={`${g.id}${p.i}`} cx={p.x} cy={p.y} r={p.r} fill={COLOR[g.colores[p.i % g.colores.length]]} stroke={COLOR.borde} strokeWidth={2} opacity={p.opacidad} />
-            )),
-          )}
-        </svg>
+      <AbsoluteFill style={{ filter: cromatica ? `url(#${ID_FILTRO})` : undefined }}>
+        <AbsoluteFill style={{ transform: sacudida }}>
+          <AbsoluteFill style={{ transform: camara, transformOrigin: '0 0' }}>
+            {children}
+            <svg width={1920} height={ALTO - BANDA} style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none' }}>
+              {golpes.flatMap((g) =>
+                particulas(g.id, frame - g.frame, g, { hacia: g.hacia }).map((p) => (
+                  <circle key={`${g.id}${p.i}`} cx={p.x} cy={p.y} r={p.r} fill={COLOR[g.colores[p.i % g.colores.length]]} stroke={COLOR.borde} strokeWidth={2} opacity={p.opacidad} />
+                )),
+              )}
+            </svg>
+          </AbsoluteFill>
+        </AbsoluteFill>
       </AbsoluteFill>
       {e.blanco > 0 ? <AbsoluteFill style={{ background: COLOR.blanco, opacity: e.blanco }} /> : null}
     </AbsoluteFill>
