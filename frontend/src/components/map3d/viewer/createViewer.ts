@@ -97,7 +97,9 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     setEdgesForRealColors(poly.campusBuildings.extra, true);
   }
   // Parapetos sobre los techos planos del campus, para el modo.
-  const parapets = createParapets(scene, data.campusBuildings.map((b) => b.g),
+  // Solo en los prismas: un edificio con malla del modelo no sigue su contorno del mapa (el parapeto quedaría
+  // flotando como una cinta a la cota más alta) y ya trae sus propios bordes.
+  const parapets = createParapets(scene, data.campusBuildings.map((b) => (b.props.planKey && model?.buildings.has(b.props.planKey) ? [] : b.g)),
     (poly.campusBuildings.mesh.geometry as THREE.BufferGeometry).attributes.position.array, poly.campusBuildings.starts,
     poly.campusBuildings.mesh.position.y);
   const paletteColor = poly.campusBuildings.options.color;
