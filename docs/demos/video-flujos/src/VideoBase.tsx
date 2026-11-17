@@ -20,9 +20,11 @@ import { Subtitulos } from './ui/Subtitulos';
 const SEMILLA_CON_TRAZO_VIVO = { ...DISENOS[1], trazoAMano: true };
 
 /** Hespo Semilla (diseño elegido el 2026-11-17): brota, camina y gesticula con resortes, «en dos». */
-const SemillaEnVideo: React.FC<{ escena: TramoEscena; frame: number; boca: FormaBoca; escala: number }> = ({ escena, frame: cuadro, boca, escala }) => {
+const enDosSemilla = (cuadro: number) => Math.floor(Math.round(cuadro) / 2) * 2;
+
+const SemillaEnVideo: React.FC<{ escena: TramoEscena; frame: number; boca: FormaBoca; escala: number; reloj?: (frame: number) => number }> = ({ escena, frame: cuadro, boca, escala, reloj = enDosSemilla }) => {
   // «En dos», como las personas: resortes, pose y temblor del trazo cambian cada 2 cuadros.
-  const frame = Math.floor(cuadro / 2) * 2;
+  const frame = reloj(cuadro);
   const estado = semillaEnEscena(escena, frame);
   if (!estado || estado.tamano <= 0.01) return null;
   return (
@@ -57,7 +59,7 @@ export const VideoBase: React.FC<{ linea: Linea; config: ConfigVideo }> = ({ lin
       <Capa frame={f} escena={e}>
         <Escena escena={e} frame={local} />
         {config.hespo === 'semilla' ? (
-          <SemillaEnVideo escena={e} frame={local} boca={boca} escala={escala} />
+          <SemillaEnVideo escena={e} frame={local} boca={boca} escala={escala} reloj={config.relojHespo} />
         ) : config.hespo === '3d' ? (
           <HespoEnEscena3D estado={estadoHespo(e, local)} frame={local} apertura={apertura} escala={escala} />
         ) : (

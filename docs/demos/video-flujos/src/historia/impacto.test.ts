@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { guionHistoria } from '../guion';
 import { construirLinea, type Manifiesto } from '../tiempos';
-import { cuadroConPausa, destelloDeImpacto, efectoDeGolpes, golpesDeHistoria, particulas, sacudida, separacionCromatica } from './impacto';
+import { conDesenfoque, cuadroConPausa, destelloDeImpacto, efectoDeGolpes, golpesDeHistoria, particulas, sacudida, separacionCromatica, ventanasDeDesenfoque } from './impacto';
 
 describe('sacudida', () => {
   it('es cero antes del golpe y se amortigua bajo la envolvente amp·e^(−k·t)', () => {
@@ -104,5 +104,29 @@ describe('golpes de la historia', () => {
     const enGolpe = efectoDeGolpes(golpes, caida.frame);
     expect(enGolpe.cromatica).toBeGreaterThan(0);
     expect(efectoDeGolpes(golpes, caida.frame + 60).cromatica).toBe(0);
+  });
+});
+
+describe('ventanas de desenfoque de movimiento', () => {
+  const manifiesto: Manifiesto = {
+    voz: guionHistoria.voz,
+    frases: Object.fromEntries(guionHistoria.escenas.flatMap((e) => e.frases).map((f) => [f.id, { archivo: `${f.id}.mp3`, duracion: 4, texto: f.textoVoz ?? f.texto }])),
+  };
+  const golpes = golpesDeHistoria(construirLinea(guionHistoria, manifiesto));
+  const ventanas = ventanasDeDesenfoque(golpes);
+
+  it('solo en los movimientos rápidos: la caída de la rama y el brote de Hespo', () => {
+    expect(ventanas.map((v) => v.id)).toEqual(['brote', 'caida']);
+  });
+
+  it('son cortas y contienen su golpe', () => {
+    for (const v of ventanas) {
+      const g = golpes.find((x) => x.id === v.id)!;
+      expect(v.hasta - v.desde).toBeLessThanOrEqual(16);
+      expect(g.frame).toBeGreaterThanOrEqual(v.desde - 3);
+      expect(g.frame).toBeLessThanOrEqual(v.hasta);
+    }
+    expect(conDesenfoque(ventanas, ventanas[0].desde)).toBe(true);
+    expect(conDesenfoque(ventanas, 0)).toBe(false);
   });
 });

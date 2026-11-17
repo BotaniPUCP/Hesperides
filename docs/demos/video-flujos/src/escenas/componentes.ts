@@ -22,6 +22,8 @@ export type ConfigVideo = {
    * Si está, dibuja las escenas en vez del fundido simple (p. ej. una TransitionSeries): recibe
    * cómo dibujar una escena en un cuadro absoluto.
    */
+  /** Reloj de Hespo Semilla (por defecto «en dos»); permite animarlo en unos durante un desenfoque. */
+  relojHespo?: (frame: number) => number;
   serie?: (dibujar: (escena: TramoEscena, frame: number) => React.ReactNode) => React.ReactNode;
 };
 

@@ -6,7 +6,7 @@ import { efectosDeHistoria, rutaEfecto } from './historia/efectos';
 import { CapaDeGolpes } from './historia/Golpes';
 import { SerieDeEscenas } from './historia/SerieDeEscenas';
 import { TomaContexto } from './historia/HojasDePapel';
-import { cuadroConPausa, golpesDeHistoria, pausasDe } from './historia/impacto';
+import { conDesenfoque, cuadroConPausa, golpesDeHistoria, pausasDe, ventanasDeDesenfoque } from './historia/impacto';
 import type { ConfigVideo } from './escenas/componentes';
 import { Aparece, Hoy, Manana, Resultado, Solucion } from './historia/escenas';
 import { crearMedida, MedidasContexto, type Medidas } from './pagina/medidasCargadas';
@@ -42,8 +42,12 @@ const Contenido: React.FC<{ linea: Linea; medidas: Medidas; camaraQuieta: boolea
   const config = useMemo<ConfigVideo>(() => {
     const golpes = golpesDeHistoria(linea);
     const pausas = pausasDe(golpes);
+    const ventanas = ventanasDeDesenfoque(golpes);
     const planos = planosDeHistoria(linea, FRAMES_COLA_HISTORIA);
-    const Capa: ConfigVideo['capaEscena'] = ({ frame: f, children }) => {
+    const Capa: ConfigVideo['capaEscena'] = ({ frame: cuadro, children }) => {
+      // Cámara y golpes en cuadros enteros: en el desenfoque de movimiento solo se emborrona lo que
+      // se mueve rápido (la rama, Hespo al brotar), no la sacudida ni el fondo.
+      const f = Math.round(cuadro);
       const toma = camaraQuieta ? TOMA_QUIETA : camaraEn(planos, f);
       return (
         <TomaContexto.Provider value={toma}>
@@ -54,8 +58,17 @@ const Contenido: React.FC<{ linea: Linea; medidas: Medidas; camaraQuieta: boolea
       );
     };
     const total = linea.framesTotales + FRAMES_COLA_HISTORIA;
-    const serie: ConfigVideo['serie'] = (dibujar) => <SerieDeEscenas linea={linea} total={total} transicion={FRAMES_TRANSICION} dibujar={dibujar} />;
-    return { ...BASE, capaEscena: Capa, retiempo: (f) => cuadroConPausa(f, pausas), serie };
+    const serie: ConfigVideo['serie'] = (dibujar) => <SerieDeEscenas linea={linea} total={total} transicion={FRAMES_TRANSICION} dibujar={dibujar} desenfocar={(f) => conDesenfoque(ventanas, f)} />;
+    // Hespo «en dos», salvo durante el brote, donde va en unos para que el desenfoque lo alcance.
+    // La pausa se decide con el cuadro entero: todas las muestras del desenfoque caen del mismo lado.
+    const retiempo = (f: number) => {
+      const entero = Math.round(f);
+      const pausado = cuadroConPausa(entero, pausas);
+      return pausado === entero ? f : pausado;
+    };
+    const brote = ventanas.filter((v) => v.id === 'brote');
+    const relojHespo = (f: number) => (conDesenfoque(brote, Math.round(f)) ? f : Math.floor(Math.round(f) / 2) * 2);
+    return { ...BASE, capaEscena: Capa, retiempo, serie, relojHespo };
   }, [linea, camaraQuieta]);
   return (
     <MedidasContexto.Provider value={medida}>

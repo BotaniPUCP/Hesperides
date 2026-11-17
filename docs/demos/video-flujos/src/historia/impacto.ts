@@ -130,3 +130,19 @@ export function efectoDeGolpes(golpes: Golpe[], frame: number): EfectoGolpes {
 }
 
 export const pausasDe = (golpes: Golpe[]): Pausa[] => golpes.map((g) => ({ frame: g.frame, cuadros: g.pausa }));
+
+export type VentanaDesenfoque = { id: Golpe['id']; desde: number; hasta: number };
+
+/**
+ * Desenfoque de movimiento solo donde algo se mueve rápido: la rama que cae (los cuadros antes de
+ * aterrizar) y Hespo que brota (los cuadros después del brote).
+ */
+export function ventanasDeDesenfoque(golpes: Golpe[]): VentanaDesenfoque[] {
+  const g = (id: Golpe['id']) => golpes.find((x) => x.id === id)!.frame;
+  return [
+    { id: 'brote', desde: g('brote') - 3, hasta: g('brote') + 10 },
+    { id: 'caida', desde: g('caida') - 10, hasta: g('caida') + 1 },
+  ];
+}
+
+export const conDesenfoque = (ventanas: VentanaDesenfoque[], frame: number): boolean => ventanas.some((v) => frame >= v.desde && frame <= v.hasta);
