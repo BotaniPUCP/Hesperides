@@ -8,11 +8,13 @@ import { Campus, Tarjeta } from '../historia/escenas';
 import { Arbol, ArbolRajado, Celular, Laptop, Lienzo, Sello, SUELO } from '../historia/decorado';
 import { Persona, type PropsPersona } from '../historia/Persona';
 import { Pulso } from '../pagina/Pulso';
-import { Resalte } from '../pagina/Resalte';
 import { COLOR } from '../tema';
 import { FPS, type TramoEscena } from '../tiempos';
 import { momentoDe } from '../ui/anim';
 import { aDos, golpe, separacionCromatica, temblor } from './jugo';
+import { campoDeAtencion, type Foco } from './campo';
+import { Trazo } from './trazo';
+import { CUADROS_ENTRE_HOJAS, MOMENTOS, type Momento } from './momentos';
 import {
   AvisoCruce,
   Carpeta,
@@ -41,7 +43,11 @@ function tw(frame: number, puntos: [number, number][]): number {
   );
 }
 const m = (escena: TramoEscena, id: string, fraccion = 0) => momentoDe(escena, id, fraccion);
+/** Un momento clave compartido con los efectos de sonido (momentos.ts). */
+const mm = (escena: TramoEscena, [id, fraccion]: Momento) => momentoDe(escena, id, fraccion);
 const fin = (escena: TramoEscena) => escena.desde + escena.frames;
+/** Avance de un trazo a mano que empieza en `a`. */
+const traza = (frame: number, a: number) => interpolate(frame, [a, a + 18], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.bezier(0.33, 0, 0.2, 1) });
 const entre = (frame: number, a: number, b: number) => interpolate(frame, [a, b], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
 /** Una persona animada «a dos»: el dibujo cambia cada dos cuadros. */
@@ -186,7 +192,7 @@ export const JulioEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill>
       <Lienzo>
-        <Campus corrimiento={corrimiento} frame={frame} />
+        <Campus corrimiento={corrimiento} frame={frame} quieto />
         {[1250, 1700, 2150].map((ax, i) => (
           <g key={ax} transform={`translate(${-corrimiento} 0)`}>
             {Array.from({ length: 6 }, (_, k) => (
@@ -242,8 +248,8 @@ export const CampusEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill style={{ background: COLOR.barriga, height: 940 }}>
       {hojas.map(([x, y, g], i) => {
-        const cae = spring({ frame: frame - (q15 + i * 7), fps: FPS, config: { damping: 12 } });
-        return frame >= q15 + i * 7 ? <HojaDeCalculo key={i} x={x} y={y - (1 - cae) * 300} giro={g} opacidad={Math.min(1, cae * 2) * desvanece} /> : null;
+        const cae = spring({ frame: frame - (q15 + i * CUADROS_ENTRE_HOJAS), fps: FPS, config: { damping: 12 } });
+        return frame >= q15 + i * CUADROS_ENTRE_HOJAS ? <HojaDeCalculo key={i} x={x} y={y - (1 - cae) * 300} giro={g} opacidad={Math.min(1, cae * 2) * desvanece} /> : null;
       })}
       {[0, 1, 2].map((i) => (
         <Carpeta key={i} x={180 + i * 260} y={700} opacidad={entre(frame, m(escena, 'q15', 0.5 + i * 0.12), m(escena, 'q15', 0.5 + i * 0.12) + 10) * desvanece} />
@@ -291,7 +297,7 @@ export const TuberiaEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
     return (
       <AbsoluteFill style={{ filter: antes ? `grayscale(${0.85 * entre(frame, q18, q18 + 10)}) sepia(${0.35 * entre(frame, q18, q18 + 10)})` : undefined }}>
         <Lienzo>
-          <Campus corrimiento={300} amanecer={0.6} frame={frame} />
+          <Campus corrimiento={300} amanecer={0.6} frame={frame} quieto />
           <Tuberia x={X_TUBERIA} y={SUELO + 14} frame={frame} chorro={1} />
         </Lienzo>
         <P
@@ -343,13 +349,13 @@ export const TuberiaEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill>
       <Lienzo>
-        <Campus corrimiento={300} frame={frame} />
+        <Campus corrimiento={300} frame={frame} quieto />
         <Tuberia x={300} y={SUELO - 20} frame={frame} chorro={0.6} />
       </Lienzo>
       <P quien="julio" x={560} sueloY={SUELO + 4} escala={1.15} frame={frame} pose={{ brazoI: 10, brazoD: 120, miraX: 0.7 }} gesto="neutral" objeto="celular" botas />
       <Celular x={1060} y={50} alto={alto} captura="que-es/reporte-tuberia">
         {/* El recuadro «¿Qué pasó?», medido sobre la captura (780×1560) por su borde verde. */}
-        <Resalte medida={{ x: 44 * k, y: 802 * k, ancho: 692 * k, alto: 256 * k }} visible={entre(frame, m(escena, 'q19', 0.35), m(escena, 'q19', 0.35) + 10)} />
+        <Trazo tipo="caja" x={44 * k} y={802 * k} ancho={692 * k} alto={256 * k} progreso={traza(frame, mm(escena, MOMENTOS.enviar) - 12)} />
       </Celular>
       <Tarjeta texto="Hoy" visible={entre(frame, q19, q19 + 10)} x={70} y={40} />
       {frame >= q20 ? (
@@ -369,8 +375,8 @@ export const BandejaEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   const q22 = m(escena, 'q22');
   const ancho = 1000;
   const k = ancho / 1920;
-  const aprueba = m(escena, 'q22', 0.32);
-  const cuadrilla = m(escena, 'q22', 0.62);
+  const aprueba = mm(escena, MOMENTOS.aprobar);
+  const cuadrilla = mm(escena, MOMENTOS.cuadrilla);
   return (
     <AbsoluteFill>
       <Oficina />
@@ -381,8 +387,8 @@ export const BandejaEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
       ) : (
         <Laptop x={1260} y={130} ancho={ancho} captura="revision-aprobar">
           {/* «Aprobar registro» y «Cuadrilla responsable», medidos sobre la captura. */}
-          <Resalte medida={{ x: 1193 * k, y: 618 * k, ancho: 274 * k, alto: 72 * k }} visible={entre(frame, aprueba - 10, aprueba)} />
-          <Resalte medida={{ x: 1193 * k, y: 88 * k, ancho: 665 * k, alto: 104 * k }} visible={entre(frame, cuadrilla, cuadrilla + 10)} />
+          <Trazo tipo="circulo" x={1193 * k} y={618 * k} ancho={274 * k} alto={72 * k} progreso={traza(frame, aprueba - 18)} />
+          <Trazo tipo="subrayado" x={1193 * k} y={88 * k} ancho={665 * k} alto={104 * k} progreso={traza(frame, cuadrilla)} semilla={3} />
           <Pulso x={(1193 + 137) * k} y={(618 + 36) * k} progreso={(frame - aprueba) / 18} />
         </Laptop>
       )}
@@ -443,7 +449,7 @@ export const ActividadEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill>
       <Lienzo>
-        <Campus corrimiento={150} frame={frame} />
+        <Campus corrimiento={150} frame={frame} quieto />
         <Toldo x={1500} y={SUELO - 30} />
         <Tuberia x={330} y={SUELO + 14} frame={frame} chorro={0.5} />
       </Lienzo>
@@ -484,7 +490,7 @@ export const CalendarioEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill style={{ background: COLOR.barriga, height: 940 }}>
       <Laptop x={960} y={70} ancho={ancho} captura="planificacion/intervencion-aviso-reserva">
-        <Resalte medida={{ x: 470 * k, y: 680 * k, ancho: 1370 * k, alto: 74 * k }} visible={entre(frame, real + 8, real + 18)} />
+        <Trazo tipo="subrayado" x={470 * k} y={680 * k} ancho={1370 * k} alto={74 * k} progreso={traza(frame, real + 8)} grosor={6} />
       </Laptop>
       <Tarjeta texto="El aviso, antes de programar" visible={entre(frame, real, real + 12)} x={70} y={40} />
     </AbsoluteFill>
@@ -521,17 +527,19 @@ export const CuadrillaEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill>
       <Lienzo>
-        <Campus corrimiento={300} frame={frame} />
+        <Campus corrimiento={300} frame={frame} quieto />
         <Tuberia x={560} y={SUELO - 20} frame={frame} chorro={1 - repara} reparada={repara} />
       </Lienzo>
       <P quien="podador" x={400} sueloY={SUELO + 6} escala={0.9} frame={frame} pose={{ brazoI: 25, brazoD: repara < 1 ? 105 + Math.sin(f2 / 2.5) * 14 : 20, inclina: 8 }} gesto="neutral" objeto="llave" />
       <P quien="podador" x={740} sueloY={SUELO + 6} escala={0.9} frame={frame} pose={{ brazoI: 15, brazoD: repara < 1 ? 70 : 140, miraX: -0.4 }} gesto={repara >= 1 ? 'feliz' : 'neutral'} objeto="pala" mira={-1} />
       <Laptop x={1430} y={40} ancho={ancho} captura="que-es/intervencion-historial">
         {/* «Validada» y «Ejecutada», medidos sobre la captura. */}
-        <Resalte medida={{ x: 965 * k, y: 98 * k, ancho: 130 * k, alto: 38 * k }} visible={entre(frame, m(escena, 'q31', 0.15), m(escena, 'q31', 0.15) + 10)} />
-        <Resalte medida={{ x: 1703 * k, y: 98 * k, ancho: 128 * k, alto: 38 * k }} visible={entre(frame, m(escena, 'q31', 0.3), m(escena, 'q31', 0.3) + 10)} />
+        <Trazo tipo="circulo" x={965 * k} y={98 * k} ancho={130 * k} alto={38 * k} progreso={traza(frame, m(escena, 'q31', 0.15))} grosor={4} />
+        <Trazo tipo="circulo" x={1703 * k} y={98 * k} ancho={128 * k} alto={38 * k} progreso={traza(frame, m(escena, 'q31', 0.3))} grosor={4} semilla={11} />
       </Laptop>
       <LineaDeTiempo x={1170} y={500} frame={frame} desde={[m(escena, 'q31', 0.35), m(escena, 'q31', 0.5), m(escena, 'q31', 0.65)]} />
+      {/* La intervención queda encerrada en la historia del jardín. */}
+      <Trazo tipo="caja" x={1196} y={700} ancho={470} alto={48} progreso={traza(frame, m(escena, 'q31', 0.72))} semilla={5} />
       <Tarjeta texto="La cuadrilla trabaja" visible={entre(frame, escena.desde + 4, escena.desde + 16)} x={70} y={40} />
     </AbsoluteFill>
   );
@@ -566,7 +574,7 @@ function golpeDeGlobo(escena: TramoEscena, frame: number, inicio: number, semill
 
 export const GloboEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   const cajas = useCajas().globo ?? [];
-  const aparece = m(escena, 'q32', 0.5);
+  const aparece = mm(escena, MOMENTOS.globoAparece);
   const { g, frameToma, t, cromatica } = golpeDeGlobo(escena, frame, aparece, 'globo-aparece');
   const ritmo = 0.62;
   const pos = posicionDe('globo', frameToma, escena.desde, ritmo);
@@ -593,6 +601,16 @@ export const GloboEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
           <Chip texto="¿Con qué urgencia? Alta" frame={frame} desde={m(escena, 'q33', 0.48)} x={940} y={700} tamano={36} fondo="#F6D3CB" color="#8A2D17" />
         </>
       ) : null}
+      <Trazo
+        tipo="circulo"
+        x={(centro.x - 960) * empuje + 960 - 70}
+        y={(centro.y - 470) * empuje + 470 - 75}
+        ancho={140}
+        alto={150}
+        progreso={traza(frame, aparece + 22) * (1 - entre(frame, q34 - 10, q34))}
+        grosor={6}
+        color={COLOR.blanco}
+      />
       {frame >= q34 ? <EquipoMirando frame={frame} desde={q34} centro={{ x: (centro.x - 960) * empuje + 960, y: (centro.y - 470) * empuje + 470 }} /> : null}
     </AbsoluteFill>
   );
@@ -633,13 +651,13 @@ export const ObservacionEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill>
       <Lienzo>
-        <Campus corrimiento={420} frame={frame} />
+        <Campus corrimiento={420} frame={frame} quieto />
         <ArbolRajado x={1000} y={SUELO - 30} frame={frame} alerta={entre(frame, m(escena, 'q35', 0.32), m(escena, 'q35', 0.4))} />
       </Lienzo>
       <P quien="capataz2" x={x} sueloY={SUELO + 4} escala={1} frame={frame} pose={{ brazoI: 10, brazoD: f2 > m(escena, 'q35', 0.45) ? 120 : 20, miraX: 0.6, miraY: -0.5 }} gesto={f2 > m(escena, 'q35', 0.32) ? 'pensativo' : 'neutral'} objeto="celular" botas andar={{ distancia: x, w: f2 < m(escena, 'q35', 0.3) ? 1 : 0 }} />
       <Celular x={1600} y={60} alto={alto} captura="que-es/otro-capataz-incidencia">
         {/* «Actualizar detalle», medido sobre la captura (780×1560). */}
-        <Resalte medida={{ x: 75 * k, y: 541 * k, ancho: 381 * k, alto: 95 * k }} visible={entre(frame, m(escena, 'q35', 0.5), m(escena, 'q35', 0.5) + 10)} />
+        <Trazo tipo="circulo" x={75 * k} y={541 * k} ancho={381 * k} alto={95 * k} progreso={traza(frame, m(escena, 'q35', 0.5))} />
       </Celular>
       <Tarjeta texto="Otro capataz pasa por ahí" visible={entre(frame, escena.desde + 4, escena.desde + 16)} x={70} y={40} />
       <Chip texto="+ Lo que vio, al mismo trabajo" frame={frame} desde={nota} x={560} y={200} tamano={36} />
@@ -663,9 +681,8 @@ export const HistorialEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
       <Laptop x={960} y={40} ancho={ancho} captura="incidencia-historial">
         {ENTRADAS.map((e, i) => {
           const desde = m(escena, 'q36', 0.06 + i * 0.13);
-          const hasta = m(escena, 'q36', 0.06 + (i + 1) * 0.13);
-          const v = i === ENTRADAS.length - 1 ? entre(frame, desde, desde + 8) : entre(frame, desde, desde + 8) * (1 - entre(frame, hasta, hasta + 8));
-          return <Resalte key={i} medida={{ x: 440 * k, y: e.y * k, ancho: 690 * k, alto: e.alto * k }} visible={v} />;
+          // Cada paso firmado queda subrayado: al final se ven todos.
+          return <Trazo key={i} tipo="subrayado" x={440 * k} y={e.y * k} ancho={(i === 1 ? 500 : 280) * k} alto={e.alto * k} progreso={traza(frame, desde)} semilla={20 + i} />;
         })}
       </Laptop>
       {ENTRADAS.map((e, i) => (
@@ -682,7 +699,7 @@ export const CierraEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   const q38 = m(escena, 'q38');
   if (frame < q38) {
     // q37: el sello «Cerrada» con su golpe.
-    const sella = m(escena, 'q37', 0.62);
+    const sella = mm(escena, MOMENTOS.sello);
     const g = golpe(frame, sella);
     const t = temblor(frame, sella, 'sello', 12);
     const crom = separacionCromatica(frame, sella, 10);
@@ -718,7 +735,7 @@ export const CierraEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   const reporte = m(escena, 'q38', 0.5);
   if (frame < reporte) {
     // El globo se va del mapa: rebote hacia arriba, chispas y el jardín queda verde.
-    const se = m(escena, 'q38', 0.12);
+    const se = mm(escena, MOMENTOS.globoSeVa);
     const { frameToma, t } = golpeDeGlobo(escena, frame, se, 'globo-se-va');
     const pos = posicionDe('globo', frameToma, q38, 0.6, 210);
     const centro = centroDeGlobo(cajas, pos) ?? { x: 900, y: 400 };
@@ -741,7 +758,7 @@ export const CierraEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
     <AbsoluteFill style={{ background: COLOR.barriga, height: 940 }}>
       <Laptop x={960} y={70} ancho={ancho} captura="que-es/reporte-semanal-abajo">
         {/* «Incidencias abiertas», medida sobre la captura. */}
-        <Resalte medida={{ x: 1500 * k, y: 228 * k, ancho: 330 * k, alto: 248 * k }} visible={entre(frame, reporte + 10, reporte + 20)} />
+        <Trazo tipo="circulo" x={1500 * k} y={228 * k} ancho={330 * k} alto={248 * k} progreso={traza(frame, reporte + 10)} />
       </Laptop>
       <Tarjeta texto="Ya está en el reporte de la semana" visible={entre(frame, reporte, reporte + 12)} x={70} y={30} />
       <Chip texto="Cifras de demostración" frame={frame} desde={reporte + 6} x={1450} y={800} tamano={26} fondo={COLOR.arena} color={COLOR.borde} />
@@ -759,7 +776,7 @@ export const SanoEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill>
       <Lienzo>
-        <Campus corrimiento={300} frame={frame} />
+        <Campus corrimiento={300} frame={frame} quieto />
         {[0, 1, 2].map(arco)}
         <circle cx={960} cy={SUELO - 30} r={14} fill={COLOR.blanco} stroke={COLOR.borde} strokeWidth={5} />
         {/* Bancas del jardín */}
@@ -787,6 +804,37 @@ export const SanoEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
 };
 
 // ---------------- 15. Solo el comienzo ----------------
+/** Calor que sube despacio alrededor de los focos: estelas cálidas con un brillo suave debajo. */
+const CampoCalor: React.FC<{ frame: number; focos: Foco[]; visible: number }> = ({ frame, focos, visible }) => {
+  if (visible <= 0 || focos.length === 0) return null;
+  const particulas = campoDeAtencion(frame, focos, 'atencion', 260);
+  const color = (calor: number) => `rgb(${229}, ${Math.round(150 - 90 * Math.min(1, calor))}, ${Math.round(70 - 20 * Math.min(1, calor))})`;
+  return (
+    <svg width={1920} height={941} style={{ position: 'absolute', left: 0, top: 0, opacity: visible }}>
+      <defs>
+        <filter id="brillo-calor" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation={10} />
+        </filter>
+        <radialGradient id="base-calor">
+          <stop offset="0" stopColor="rgb(229,90,59)" stopOpacity={0.7} />
+          <stop offset="1" stopColor="rgb(229,154,58)" stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      {focos.map((f, i) => (
+        <ellipse key={i} cx={f.x} cy={f.y - 30} rx={230} ry={170} fill="url(#base-calor)" />
+      ))}
+      <g filter="url(#brillo-calor)">
+        {particulas.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={6} fill={color(p.calor)} opacity={p.opacidad * 0.6} />
+        ))}
+      </g>
+      {particulas.map((p, i) => (
+        <polyline key={i} points={p.estela.map((e) => `${e.x},${e.y}`).join(' ')} fill="none" stroke={color(p.calor)} strokeWidth={3} strokeLinecap="round" opacity={p.opacidad * 0.85} />
+      ))}
+    </svg>
+  );
+};
+
 export const FuturoEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   const q43 = m(escena, 'q43');
   const q44 = m(escena, 'q44');
@@ -800,10 +848,9 @@ export const FuturoEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill>
       <TomaMapa secuencia="final" pos={pos} escala={tw(frame, [[escena.desde, 2.2], [q43, 1.2], [fin(escena), 1.0]])} foco={{ x: 1000, y: 500 }}>
-        {/* Capa de datos: zonas de más atención (donde hay incidencias abiertas). */}
-        {globos.map((c, i) => (
-          <div key={i} style={{ position: 'absolute', left: c.x + c.ancho / 2 - 240, top: c.y + c.alto / 2 - 170, width: 480, height: 340, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(229,72,59,0.75), rgba(229,154,58,0.45) 45%, rgba(229,154,58,0) 72%)', opacity: capa * (0.8 + 0.2 * Math.sin((frame + i * 13) / 9)) }} />
-        ))}
+        {/* Capa ilustrativa «zonas de más atención» (no existe en la app): campo generativo
+            alrededor de los globos de incidencias abiertas que sí están en el mapa. */}
+        <CampoCalor frame={frame} visible={capa} focos={globos.map((c, i) => ({ x: c.x + c.ancho / 2, y: c.y + c.alto / 2, peso: i === 0 ? 1 : 0.7 }))} />
       </TomaMapa>
       <Velo fuerza={0.3} />
       <Tarjeta texto="Esto es solo el comienzo" visible={entre(frame, m(escena, 'q40', 0.1), m(escena, 'q40', 0.1) + 12) * (1 - entre(frame, q43 - 6, q43))} x={70} y={40} />
@@ -818,6 +865,7 @@ export const FuturoEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
       {enFinal && frame < q44 ? (
         <>
           <Chip texto="🔴 Zonas de más atención" frame={frame} desde={m(escena, 'q43', 0.15)} x={120} y={60} tamano={34} />
+          <Chip texto="Ilustración: capa de ejemplo" frame={frame} desde={m(escena, 'q43', 0.15) + 6} x={1500} y={820} tamano={24} fondo={COLOR.arena} color={COLOR.borde} />
           <Chip texto="🌿 Qué especies crecen" frame={frame} desde={m(escena, 'q43', 0.45)} x={120} y={170} tamano={34} />
           <Chip texto="📈 Cómo cambian con el tiempo" frame={frame} desde={m(escena, 'q43', 0.7)} x={120} y={280} tamano={34} />
         </>
@@ -841,7 +889,7 @@ export const JuntosEscena: React.FC<PropsEscena> = ({ escena, frame }) => {
   return (
     <AbsoluteFill>
       <Lienzo>
-        <Campus corrimiento={200} frame={frame} />
+        <Campus corrimiento={200} frame={frame} quieto />
         {Array.from({ length: 12 }, (_, k) => (
           <circle key={k} cx={240 + k * 130} cy={SUELO - 52 + (k % 2) * 10} r={12} fill={[COLOR.arena, COLOR.blanco, '#E7907A'][k % 3]} stroke={COLOR.borde} strokeWidth={4} />
         ))}

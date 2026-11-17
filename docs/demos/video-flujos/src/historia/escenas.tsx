@@ -45,7 +45,8 @@ export const Tarjeta: React.FC<{ texto: string; visible: number; x?: number; y?:
 );
 
 /** El campus con paneo de cámara. */
-export const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: number }> = ({ corrimiento, amanecer = 0, frame }) => (
+/** `quieto`: los árboles no se mecen (el video «¿Qué es Hesperides?» evita el vaivén constante). */
+export const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: number; quieto?: boolean }> = ({ corrimiento, amanecer = 0, frame, quieto = false }) => (
   <>
     <Cielo amanecer={amanecer} />
     {amanecer > 0 ? <Sol x={1500 - corrimiento * 0.1} y={tw(amanecer, [[0, 160], [1, 470]])} /> : <Sol x={1640} y={150} />}
@@ -54,7 +55,7 @@ export const Campus: React.FC<{ corrimiento: number; amanecer?: number; frame: n
     <Suelo />
     <g transform={`translate(${-corrimiento * 0.8} 0)`}>
       {[180, 520, 1040, 2150].map((x, i) => (
-        <Arbol key={x} x={x} y={HORIZONTE + 70} alto={260 + (i % 2) * 60} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} vaiven={Math.sin((frame + i * 13) / 30) * 1.2} />
+        <Arbol key={x} x={x} y={HORIZONTE + 70} alto={260 + (i % 2) * 60} copa={i % 2 ? COLOR.cuerpo : COLOR.hoja} vaiven={quieto ? 0 : Math.sin((frame + i * 13) / 30) * 1.2} />
       ))}
       <Farol x={880} y={SUELO - 30} />
     </g>

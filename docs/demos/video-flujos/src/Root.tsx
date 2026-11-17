@@ -12,7 +12,7 @@ import { DURACION_DEMO } from './hespo2d/coreografia';
 import { HojaDeExpresiones, RedisenosHespo, Retratos } from './hespo2d/v2/Redisenos';
 import { VARIANTES_SEMILLA } from './hespo2d/v2/disenos';
 import { CARPETA_VOZ_HISTORIA, FRAMES_COLA_HISTORIA, VideoHistoria } from './VideoHistoria';
-import { CARPETA_VOZ_QUE_ES, COMANDO_CAPTURAS_QUE_ES, FRAMES_COLA_QUE_ES, VideoQueEsHesperides } from './VideoQueEsHesperides';
+import { CARPETA_SFX, CARPETA_VOZ_QUE_ES, COMANDO_CAPTURAS_QUE_ES, FRAMES_COLA_QUE_ES, SONIDOS, VideoQueEsHesperides } from './VideoQueEsHesperides';
 import type { CajasDelMapa } from './queEs/piezas';
 
 const calcularDuracion = async () => {
@@ -81,6 +81,9 @@ const calcularQueEs = async () => {
   const cajas = await leerJson<CajasDelMapa>('capturas/que-es/medidas.json', `Falta public/capturas/que-es/medidas.json: ejecuta ${COMANDO_CAPTURAS_QUE_ES}`);
   const linea = construirLinea(guionQueEs, manifiesto);
   await comprobarAudios(linea, async (archivo) => (await fetch(staticFile(`${CARPETA_VOZ_QUE_ES}/${archivo}`), { method: 'HEAD' })).ok);
+  const presentes = await Promise.all(SONIDOS.map(async (s) => (await fetch(staticFile(`${CARPETA_SFX}/${s}.wav`), { method: 'HEAD' })).ok));
+  const faltan = SONIDOS.filter((_, i) => !presentes[i]);
+  if (faltan.length > 0) throw new Error(`Faltan los efectos de sonido ${faltan.join(', ')} en public/${CARPETA_SFX}: ejecuta npm run sfx`);
   return { durationInFrames: linea.framesTotales + FRAMES_COLA_QUE_ES, props: { linea, cajas } };
 };
 

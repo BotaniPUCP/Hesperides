@@ -1,7 +1,8 @@
 /**
  * Renderiza los fotogramas clave de cada frase para revisarlos.
  * Uso: npm run fotogramas -- [--video VideoPlanificacion] [--escena inicio] [--momentos e4:0.7,e6:0.13]
- * `--momentos` revisa un instante exacto de una frase, como una pulsación.
+ * `--momentos` revisa un instante exacto de una frase, como una pulsación; `--cuadros 120,300`,
+ * cuadros exactos del video (los cortes entre escenas no caen dentro de una frase).
  */
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -21,6 +22,18 @@ const serveUrl = await bundle({ entryPoint: path.resolve('src/index.ts') });
 const puppeteerInstance = await openBrowser('chrome');
 const composition = await selectComposition({ serveUrl, id: video, puppeteerInstance, timeoutInMilliseconds: 120000 });
 const linea = composition.props.linea as Linea;
+
+const cuadros = valor('cuadros');
+if (cuadros) {
+  mkdirSync(`out/momentos/${video}`, { recursive: true });
+  for (const frame of cuadros.split(',').map(Number)) {
+    const output = `out/momentos/${video}/cuadro-${frame}.png`;
+    await renderStill({ composition, serveUrl, output, frame, inputProps: composition.props, puppeteerInstance, timeoutInMilliseconds: 120000 });
+    console.log(output);
+  }
+  await puppeteerInstance.close({ silent: true });
+  process.exit(0);
+}
 
 const momentos = valor('momentos');
 if (momentos) {
