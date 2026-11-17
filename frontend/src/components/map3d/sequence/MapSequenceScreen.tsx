@@ -19,7 +19,7 @@ import { SWAP_AT_S } from './sequenceTimeline';
  * 12 s que pasa de poca a buena calidad. Espacio la arranca; Esc vuelve al mapa.
  */
 
-type Phase = 'loading' | 'preparing' | 'ready' | 'playing' | 'done' | 'failed';
+type Phase = 'loading' | 'preparing' | 'ready' | 'playing' | 'done' | 'failed' | 'broken';
 
 /** Cuánto se deja dibujando la buena calidad bajo el velo: compila shaders y carga la ciudad y las nubes (§6.4). */
 const PREWARM_GOOD_MS = 3000;
@@ -47,6 +47,7 @@ const VEIL_TEXT: Partial<Record<Phase, string>> = {
   preparing: 'Preparando…',
   ready: 'Pulsa espacio para empezar · Esc para salir',
   failed: 'Este navegador no puede mostrar el mapa 3D. Esc para salir.',
+  broken: 'No se pudo preparar la secuencia; el detalle está en la consola. Recarga la página.',
 };
 
 export function MapSequenceScreen() {
@@ -61,13 +62,24 @@ export function MapSequenceScreen() {
   const effects = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const stop = useRef<(() => void) | null>(null);
-  const mounted = useRef(true);
-  useEffect(() => () => { mounted.current = false; stop.current?.(); }, []);
+  // En desarrollo React monta, desmonta y vuelve a montar: la bandera se repone en cada montaje.
+  const mounted = useRef(false);
+  /** Cada visor nuevo arranca su propia preparación; solo cuenta la última. */
+  const generation = useRef(0);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; stop.current?.(); };
+  }, []);
 
   const onReady = useCallback((v: Viewer) => {
     viewer.current = v;
     setPhase('preparing');
-    void prepare(v, () => mounted.current).then(() => { if (mounted.current) setPhase('ready'); });
+    const run = ++generation.current;
+    const alive = () => mounted.current && generation.current === run;
+    prepare(v, alive).then(() => { if (alive()) setPhase('ready'); }, (error: unknown) => {
+      console.error('SPEC-118: la preparación de la secuencia falló', error);
+      if (alive()) setPhase('broken');
+    });
   }, []);
 
   useEffect(() => {
