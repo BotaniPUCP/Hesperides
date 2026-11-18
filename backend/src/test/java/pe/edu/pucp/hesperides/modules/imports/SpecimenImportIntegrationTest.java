@@ -708,12 +708,12 @@ class SpecimenImportIntegrationTest {
                 .andExpect(jsonPath("$.data.unknownSpecies[0].rows").value(1))
                 .andExpect(jsonPath("$.data.toCreate").value(0));
 
-        mockMvc.perform(get("/api/v1/imports/specimens/species-options")
-                        .param("search", "Alias ambiguo import test"))
+        // Para elegirla a mano, el selector busca en la lista de especies activas (SPEC-119):
+        // la inactiva no se ofrece y la activa se encuentra por el alias.
+        mockMvc.perform(get("/api/v1/green-inventory/species/all"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data", hasSize(1)))
-                .andExpect(jsonPath("$.data[0].slug").value("tipuana-tipu"))
-                .andExpect(jsonPath("$.data[0].active").value(true));
+                .andExpect(jsonPath("$.data[?(@.searchKey =~ /.*alias ambiguo import test.*/ && @.isActive == true)].slug",
+                        org.hamcrest.Matchers.contains("tipuana-tipu")));
     }
 
     @Test

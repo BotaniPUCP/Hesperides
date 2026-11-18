@@ -1,21 +1,16 @@
 package pe.edu.pucp.hesperides.modules.inventory.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.inventory.dto.InventorySummaryResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.LocationCountResponse;
-import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenDetailResponse;
-import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenResponse;
-import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenSearchResultResponse;
 import pe.edu.pucp.hesperides.modules.inventory.service.GreenInventoryService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
@@ -37,15 +32,10 @@ public class GreenInventoryController {
         return ResponseEntity.ok(ApiResponse.ok("Inventory summary retrieved", service.summary()));
     }
 
-    @GetMapping("/species")
-    public ResponseEntity<ApiResponse<Page<SpeciesResponse>>> species(
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String vegetationType,
-            @RequestParam(required = false) Boolean retiring,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "24") int size) {
-        SpeciesQuery query = SpeciesQuery.of(search, vegetationType, retiring, page, size);
-        return ResponseEntity.ok(ApiResponse.ok("Species retrieved", service.species(query)));
+    /** Antes que /species/{slug}: el catálogo completo, para buscarlo y filtrarlo en el navegador (SPEC-119). */
+    @GetMapping("/species/all")
+    public ResponseEntity<ApiResponse<List<SpeciesResponse>>> species() {
+        return ResponseEntity.ok(ApiResponse.ok("Species retrieved", service.allSpecies()));
     }
 
     @GetMapping("/species/{slug}")
@@ -53,50 +43,20 @@ public class GreenInventoryController {
         return ResponseEntity.ok(ApiResponse.ok("Species retrieved", service.speciesBySlug(slug)));
     }
 
-    @GetMapping("/species/{slug}/specimens")
-    public ResponseEntity<ApiResponse<Page<SpecimenResponse>>> specimens(
-            @PathVariable String slug,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) String sort,
-            @RequestParam(required = false) String direction,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-        SpecimenQuery query = SpecimenQuery.of(search, location, sort, direction, page, size);
-        return ResponseEntity.ok(ApiResponse.ok("Specimens retrieved", service.specimens(slug, query)));
-    }
-
     @GetMapping("/species/{slug}/locations")
     public ResponseEntity<ApiResponse<List<LocationCountResponse>>> locations(@PathVariable String slug) {
         return ResponseEntity.ok(ApiResponse.ok("Locations retrieved", service.locations(slug)));
     }
 
-    @GetMapping("/specimens")
-    public ResponseEntity<ApiResponse<Page<SpecimenResponse>>> allSpecimens(
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) String vegetationType,
-            @RequestParam(required = false) Boolean critical,
-            @RequestParam(required = false) Boolean measured,
-            @RequestParam(required = false) String sort,
-            @RequestParam(required = false) String direction,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-        SpecimenQuery query = SpecimenQuery.of(search, location, vegetationType, critical, measured, sort, direction,
-                page, size);
-        return ResponseEntity.ok(ApiResponse.ok("Specimens retrieved", service.allSpecimens(query)));
+    /** Antes que /specimens/{code}: todos los vigentes, para buscarlos y filtrarlos en el navegador (SPEC-119). */
+    @GetMapping("/specimens/all")
+    public ResponseEntity<ApiResponse<List<SpecimenResponse>>> allSpecimens() {
+        return ResponseEntity.ok(ApiResponse.ok("Specimens retrieved", service.allSpecimens()));
     }
 
     @GetMapping("/locations")
     public ResponseEntity<ApiResponse<List<LocationCountResponse>>> allLocations() {
         return ResponseEntity.ok(ApiResponse.ok("Locations retrieved", service.locations(null)));
-    }
-
-    @GetMapping("/specimens/search")
-    public ResponseEntity<ApiResponse<List<SpecimenSearchResultResponse>>> searchSpecimens(
-            @RequestParam(required = false, defaultValue = "") String q,
-            @RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok(ApiResponse.ok("Specimens retrieved", service.searchSpecimens(q, limit)));
     }
 
     @GetMapping("/specimens/{code}")

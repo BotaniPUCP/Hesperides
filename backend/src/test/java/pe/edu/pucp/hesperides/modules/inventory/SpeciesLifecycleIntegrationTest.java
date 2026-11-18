@@ -129,8 +129,9 @@ class SpeciesLifecycleIntegrationTest {
                 "SELECT id FROM users WHERE email=?", Long.class, ADMIN_EMAIL));
         assertThat(auditRow.get("created_at")).isNotNull();
         assertThat(auditRow.get("changes").toString()).contains(species.slug(), "Retiro de catálogo");
-        mockMvc.perform(get(BASE + "/species").param("search", species.scientificName()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(0));
+        mockMvc.perform(get(BASE + "/species/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.slug == '" + species.slug() + "')]").isEmpty());
     }
 
     @Test
@@ -144,14 +145,12 @@ class SpeciesLifecycleIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT is_active FROM green_elements WHERE code = ?", Boolean.class, code)).isTrue();
         mockMvc.perform(get(BASE + "/species/" + species.slug()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.data.isActive").value(false));
-        mockMvc.perform(get(BASE + "/species/assignable").with(SUPERVISOR)
-                        .param("search", species.scientificName()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(0));
-        // Desde d4b8a0a (16 nov 2026) no sale en el catálogo normal: se ve en «En proceso de retiro».
-        mockMvc.perform(get(BASE + "/species").param("search", species.scientificName()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(0));
-        mockMvc.perform(get(BASE + "/species").param("search", species.scientificName()).param("retiring", "true"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(1));
+        // Sigue en la lista, inactiva: el navegador la muestra solo en «En proceso de retiro» y no la
+        // ofrece para registrar ejemplares nuevos (SPEC-119).
+        mockMvc.perform(get(BASE + "/species/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.slug == '" + species.slug() + "')].isActive",
+                        org.hamcrest.Matchers.contains(false)));
         String export = mockMvc.perform(get(BASE + "/species/export.csv").with(ADMIN))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         assertThat(export).contains(species.scientificName()).doesNotContain("is_active", "deleted_at");
@@ -170,9 +169,6 @@ class SpeciesLifecycleIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.unknownSpecies[0].reason").value("INACTIVE"))
                 .andExpect(jsonPath("$.data.canConfirm").value(false));
-        mockMvc.perform(get("/api/v1/imports/specimens/species-options")
-                        .param("search", species.scientificName()).with(ADMIN))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data").isEmpty());
     }
 
     @Test
