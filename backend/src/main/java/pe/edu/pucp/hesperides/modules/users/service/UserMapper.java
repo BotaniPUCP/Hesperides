@@ -1,5 +1,6 @@
 package pe.edu.pucp.hesperides.modules.users.service;
 
+import pe.edu.pucp.hesperides.engine.search.SearchKey;
 import org.springframework.stereotype.Component;
 import pe.edu.pucp.hesperides.modules.auth.dto.RoleResponse;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
@@ -32,6 +33,7 @@ public class UserMapper {
                 user.getLastLogin(),
                 teams.stream().map(t -> new TeamSummaryResponse(t.getId(), t.getName())).toList(),
                 user.getCreatedAt(),
-                user.getUpdatedAt());
+                user.getUpdatedAt(),
+                SearchKey.of(user.getFirstName(), user.getLastName(), user.getEmail()));
     }
 }
