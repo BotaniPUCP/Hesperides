@@ -273,12 +273,14 @@ sector, encontrar dónde se trabajaba costaba. Ahora:
   tarjeta de su sector, y lo que se quita deja de verse (sin nada elegido no se ve ninguna
   tarjeta). Desmarcada, se ven todos los sectores y todo lo suyo. Buscar muestra todo lo que
   coincide, elegido o no, y desde ahí se agrega.
-- El foco se pone con un clic en la tarjeta: el mapa encuadra lo elegido en ese sector (el
-  sector entero si no tiene nada) y todo el sector se sombrea en naranja tenue, distinto del
-  verde del césped y del cian de lo elegido. Otro clic en la tarjeta quita el foco y el sombreado.
-  Si se mueve o acerca el mapa a mano, el sector queda solo sombreado; un clic en la tarjeta
-  quita también el sombreado, sin volver a poner el foco. La tarjeta lo dice con su marco: naranja lleno y «En foco», naranja
-  punteado y «Sombreado», o sin marco. Pliega y despliega una flecha propia de la tarjeta.
+- La tarjeta se usa por pasos: un clic sombrea el sector en naranja tenue (distinto del verde
+  del césped y del cian de lo elegido) sin mover la vista; otro clic pone el foco: la vista
+  encuadra lo elegido en ese sector (el sector entero si no tiene nada); otro clic suelta el foco
+  y el sombreado. Si con el foco puesto se mueve o acerca el mapa a mano, queda «Sin foco»: sigue
+  sombreado y un clic en la tarjeta lo suelta, sin volver a poner el foco. Un clic en otra
+  tarjeta la sombrea y suelta la anterior. La tarjeta lo dice con su marco: naranja y
+  «Sombreado», naranja con halo y «En foco», naranja punteado y «Sin foco», o sin marco; su
+  título dice qué hará el próximo clic. Pliega y despliega una flecha propia de la tarjeta.
 - Dos flechas grandes recorren los sectores de la lista (con «Ver solo lo elegido», solo los
   que tienen algo elegido) y ponen el foco en el anterior o el siguiente; dan la vuelta. «Ver
   campus», sobre el mapa, es la única forma de volver a todo el campus y suelta el foco.

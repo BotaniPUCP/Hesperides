@@ -48,14 +48,32 @@ interface Notice {
 }
 
 /**
- * El sector en foco: su tarjeta se eligió (o se llegó con las flechas), el mapa encuadra lo elegido
- * en él y todo el sector se pinta tenue. {@code onSelection} pasa a falso cuando se mueve el mapa:
- * el sector sigue sombreado, pero la vista ya no está sobre lo elegido.
+ * Cómo está un sector en el mapa. Un clic en su tarjeta lo sombrea (`shade`: se pinta tenue, la
+ * vista no se mueve); otro clic pone el foco (`focus`: además, la vista encuadra lo elegido en él);
+ * otro lo suelta. Si con el foco puesto se mueve el mapa, queda `lost`: sigue sombreado, la vista
+ * ya no está sobre lo elegido, y un clic lo suelta.
  */
+type Stage = 'shade' | 'focus' | 'lost';
 interface Focus {
   key: string;
-  onSelection: boolean;
+  stage: Stage;
 }
+
+/** Cómo se ve la tarjeta en cada etapa, y qué hará el próximo clic. */
+const STAGE_LOOK: Record<Stage, { frame: string; chip: string; label: string; next: string }> = {
+  shade: { frame: 'border-orange-500', chip: 'border border-orange-500 bg-neutral-0 text-orange-800', label: 'Sombreado',
+    next: 'Poner el foco en lo elegido' },
+  focus: { frame: 'border-orange-500 ring-2 ring-orange-400', chip: 'bg-orange-500 text-white', label: 'En foco',
+    next: 'Quitar el foco y el sombreado' },
+  lost: { frame: 'border-dashed border-orange-400', chip: 'border border-dashed border-orange-400 text-orange-800', label: 'Sin foco',
+    next: 'Quitar el sombreado' },
+};
+/** Lo que dice el recorrido de cada etapa. */
+const STAGE_HINT: Record<Stage, string> = {
+  shade: 'sombreado · otro clic en la tarjeta pone el foco',
+  focus: 'en foco',
+  lost: 'sombreado · moviste el mapa',
+};
 
 export interface SetMapPickerProps {
   sectors: ZoneOption[];
@@ -301,20 +319,26 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     setPlants((prev) => new Set([...prev].filter((id) => !plantIds.has(id))));
   };
 
-  /** Pone el foco en un sector: el mapa encuadra lo elegido en él (o el sector entero si no tiene nada) y lo sombrea. */
-  const focusOn = (g: SectorGroup) => {
-    const o = own(g);
-    setFocus({ key: g.key, onSelection: true });
+  /** Sombrea un sector sin mover la vista, y abre su tarjeta. */
+  const shade = (g: SectorGroup) => {
+    setFocus({ key: g.key, stage: 'shade' });
     setOpenedByHand((prev) => new Map(prev).set(g.key, true));
     setNotice((n) => (n && !n.undo ? null : n));
     queueMicrotask(() => showCard(g.key));
+  };
+  /** Pone el foco en un sector: lo sombrea y la vista encuadra lo elegido en él (el sector entero si no tiene nada). */
+  const focusOn = (g: SectorGroup) => {
+    const o = own(g);
+    shade(g);
+    setFocus({ key: g.key, stage: 'focus' });
     const inFrame = o.chosen > 0 ? o : { chosenGardens: o.gardens, chosenTrees: o.trees };
     viewer.current?.focusSections(inFrame.chosenGardens.map((s) => s.code), inFrame.chosenTrees.map((e) => e.code));
   };
-  /** Clic en la tarjeta: pone el foco; si el sector ya estaba en foco o solo sombreado, lo quita (deja de sombrear y nada más). */
+  /** Clic en la tarjeta: primero sombrea, después pone el foco, después suelta; con el foco perdido, suelta. */
   const onCardClick = (g: SectorGroup) => {
-    if (activeFocus?.key === g.key) { setFocus(null); return; }
-    focusOn(g);
+    if (activeFocus?.key !== g.key) { shade(g); return; }
+    if (activeFocus.stage === 'shade') { focusOn(g); return; }
+    setFocus(null);
   };
   /** Las flechas dan la vuelta; sin foco, la derecha va al primero y la izquierda al último. */
   const step = (delta: 1 | -1) => {
@@ -326,7 +350,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   const seeCampus = () => { setFocus(null); viewer.current?.fit(); };
 
   // Mover o acercar el mapa a mano saca la vista de lo elegido: el sector sigue sombreado.
-  const loseFocus = () => setFocus((f) => (f && f.onSelection ? { ...f, onSelection: false } : f));
+  const loseFocus = () => setFocus((f) => (f && f.stage === 'focus' ? { ...f, stage: 'lost' } : f));
   const onMapPointerDown = (e: ReactPointerEvent) => { pointerStart.current = selecting ? null : { x: e.clientX, y: e.clientY }; };
   const onMapPointerUp = (e: ReactPointerEvent) => {
     const start = pointerStart.current;
@@ -421,14 +445,14 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
               className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-neutral-900" />
             <label className="flex items-center gap-2 text-sm text-neutral-700">
               <input type="checkbox" checked={onlySelected} onChange={(e) => setOnlySelected(e.target.checked)} /> Ver solo lo elegido</label>
-            {/* Recorrer los sectores: las flechas ponen el foco en el anterior o el siguiente de la lista. */}
+            {/* Recorrer los sectores: las flechas ponen el foco en el anterior o el siguiente de la lista (sombrean y encuadran). */}
             <div role="group" aria-label="Recorrer sectores" className="flex items-center gap-2">
               <button type="button" className={STEP} onClick={() => step(-1)} disabled={!travel.length} aria-label="Sector anterior">‹</button>
               <p aria-live="polite" className="min-w-0 flex-1 text-center text-sm">
                 {focusedGroup
                   ? <><span className="block truncate font-semibold text-neutral-900">{focusedGroup.name}</span>
                     <span className="text-xs text-neutral-500">{travelIndex >= 0 ? `${travelIndex + 1} de ${travel.length} · ` : ''}
-                      {activeFocus?.onSelection ? 'en foco' : 'solo sombreado'}</span></>
+                      {activeFocus ? STAGE_HINT[activeFocus.stage] : ''}</span></>
                   : <span className="text-xs text-neutral-500">{travel.length
                     ? `Recorre ${travel.length === 1 ? 'el sector' : `los ${travel.length} sectores`}${onlySelected ? ' con algo elegido' : ''}, o toca una tarjeta.`
                     : 'Elige algo para recorrer sus sectores.'}</span>}
@@ -448,13 +472,12 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
             {visibleCards.map((g) => {
               const { gardens: ownGardens, trees: ownTrees, chosenGardens, chosenTrees, chosen } = own(g);
               const { gardens, trees } = shownIn(g);
-              const isFocused = activeFocus?.key === g.key;
-              const onSelection = isFocused && activeFocus.onSelection;
+              const stage = activeFocus?.key === g.key ? activeFocus.stage : null;
+              const isFocused = stage !== null;
+              const look = stage ? STAGE_LOOK[stage] : null;
               const open = searching || (openedByHand.get(g.key) ?? (chosen > 0 || isFocused));
-              // Naranja como el sombreado del mapa: lleno con foco sobre lo elegido, punteado si solo queda el sombreado.
-              const frame = onSelection ? 'border-orange-500 ring-2 ring-orange-400'
-                : isFocused ? 'border-dashed border-orange-400'
-                  : lit === g.key ? 'border-brand-600 ring-2 ring-brand-600' : 'border-neutral-200';
+              // Naranja como el sombreado del mapa: borde al sombrear, con halo en foco, punteado si se perdió el foco.
+              const frame = look ? look.frame : lit === g.key ? 'border-brand-600 ring-2 ring-brand-600' : 'border-neutral-200';
               return (
                 <li key={g.key} aria-label={g.name} aria-current={isFocused ? 'true' : undefined}
                   ref={(el) => { if (el) cards.current.set(g.key, el); else cards.current.delete(g.key); }}
@@ -466,12 +489,11 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                       <span aria-hidden="true" className={`transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
                     </button>
                     <button type="button" onClick={() => onCardClick(g)} aria-pressed={isFocused}
-                      title={onSelection ? 'Quitar el foco y el sombreado' : isFocused ? 'Quitar el sombreado' : 'Ver lo elegido de este sector y sombrearlo en el mapa'}
+                      title={look ? look.next : 'Sombrear este sector en el mapa'}
                       className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-neutral-900">
                       <span className="truncate">{g.name}</span>
                     </button>
-                    {isFocused && <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${onSelection
-                      ? 'bg-orange-500 text-white' : 'border border-dashed border-orange-400 text-orange-800'}`}>{onSelection ? 'En foco' : 'Sombreado'}</span>}
+                    {look && <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${look.chip}`}>{look.label}</span>}
                     {chosen > 0 && <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">{contentsLabel(chosenGardens.length, chosenTrees.length)}</span>}
                   </div>
                   <div className="space-y-1.5 px-3 pb-2 pt-1">

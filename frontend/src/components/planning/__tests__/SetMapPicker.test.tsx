@@ -152,36 +152,71 @@ describe('SetMapPicker', () => {
   });
 
   describe('foco en un sector', () => {
-    it('el clic en la tarjeta pone el foco sobre lo elegido y sombrea el sector; otro clic lo quita', async () => {
+    it('un clic sombrea el sector, otro pone el foco en lo elegido y otro lo suelta', async () => {
       const { card, focusCard } = setup([11, 21]);
+      const nav = () => screen.getByRole('group', { name: 'Recorrer sectores' });
 
       await focusCard('Sector 1');
       expect(card('Sector 1')).toHaveAttribute('aria-current', 'true');
+      expect(within(card('Sector 1')).getByText('Sombreado')).toBeInTheDocument();
+      expect(nav()).toHaveTextContent('otro clic en la tarjeta pone el foco');
+      expect(within(card('Sector 1')).getByRole('button', { name: 'Sector 1' })).toHaveAttribute('title', 'Poner el foco en lo elegido');
+
+      await focusCard('Sector 1');
       expect(within(card('Sector 1')).getByText('En foco')).toBeInTheDocument();
-      expect(within(card('Sector 1')).getByRole('button', { name: 'Sector 1' })).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByRole('group', { name: 'Recorrer sectores' })).toHaveTextContent('1 de 2 · en foco');
+      expect(card('Sector 1').className).toMatch(/ring-orange-400/);
+      expect(nav()).toHaveTextContent('1 de 2 · en foco');
 
       await focusCard('Sector 1');
       expect(card('Sector 1')).not.toHaveAttribute('aria-current');
       expect(within(card('Sector 1')).queryByText('En foco')).not.toBeInTheDocument();
+      expect(within(card('Sector 1')).queryByText('Sombreado')).not.toBeInTheDocument();
     });
 
-    it('mover el mapa deja solo el sombreado; otro clic en la tarjeta lo quita sin volver a poner el foco', async () => {
+    it('con el foco puesto, mover el mapa lo deja «Sin foco» y un clic suelta el sombreado', async () => {
       const { card, focusCard } = setup([11, 21]);
 
       await focusCard('Sector 2');
+      await focusCard('Sector 2');
       fireEvent.wheel(screen.getByRole('region', { name: 'Mapa del campus' }));
-      expect(within(card('Sector 2')).getByText('Sombreado')).toBeInTheDocument();
+      expect(within(card('Sector 2')).getByText('Sin foco')).toBeInTheDocument();
       expect(card('Sector 2').className).toMatch(/border-dashed/);
-      expect(screen.getByRole('group', { name: 'Recorrer sectores' })).toHaveTextContent('solo sombreado');
+      expect(screen.getByRole('group', { name: 'Recorrer sectores' })).toHaveTextContent('moviste el mapa');
 
       await focusCard('Sector 2');
+      expect(within(card('Sector 2')).queryByText('Sin foco')).not.toBeInTheDocument();
       expect(within(card('Sector 2')).queryByText('En foco')).not.toBeInTheDocument();
-      expect(within(card('Sector 2')).queryByText('Sombreado')).not.toBeInTheDocument();
       expect(card('Sector 2')).not.toHaveAttribute('aria-current');
       expect(card('Sector 2').className).not.toMatch(/orange/);
     });
 
+    it('solo sombreado, mover el mapa no cambia nada', async () => {
+      const { card, focusCard } = setup([11, 21]);
+
+      await focusCard('Sector 2');
+      fireEvent.wheel(screen.getByRole('region', { name: 'Mapa del campus' }));
+
+      expect(within(card('Sector 2')).getByText('Sombreado')).toBeInTheDocument();
+    });
+
+    it('un clic en otra tarjeta la sombrea y suelta la anterior', async () => {
+      const { card, focusCard } = setup([11, 21]);
+
+      await focusCard('Sector 1');
+      await focusCard('Sector 1');
+      await focusCard('Sector 2');
+
+      expect(within(card('Sector 2')).getByText('Sombreado')).toBeInTheDocument();
+      expect(card('Sector 1')).not.toHaveAttribute('aria-current');
+    });
+
+    it('las flechas llevan directo al foco del sector', async () => {
+      const { card } = setup([11, 21]);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sector siguiente' }));
+
+      expect(within(card('Sector 1')).getByText('En foco')).toBeInTheDocument();
+    });
     it('si se le quita todo al sector en foco, el foco se suelta', async () => {
       const { card, focusCard } = setup([11, 21]);
 
