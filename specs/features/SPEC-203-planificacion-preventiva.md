@@ -253,6 +253,19 @@ encuadra. En Planificación, sobre el mapa, una línea dice qué conjunto muestr
 Sector verde 02 · 247 jardines») o, sin tarjeta elegida, «Elige una tarjeta para ver su conjunto
 en el mapa».
 
+**D-20 · El rectángulo elige lo que encierra y se ve (17 nov 2026).**
+Al probar, el rectángulo elegía más jardines de los encerrados: bastaba que un vértice cayera
+dentro, y los jardines vecinos comparten bordes (con la geometría real, encerrar un solo jardín
+sumaba vecinos en 248 de 522). Ahora un jardín cuenta si queda dentro al menos la mitad de él, o
+si el rectángulo cae casi entero sobre él (Ctrl + clic, o un rectángulo chico en un jardín
+grande); los puntos detrás de la cámara no cuentan. Tampoco elige los jardines que quedan en su
+mayor parte bajo la planta de un edificio (jardineras y patios que la silueta no recorta: 89 en
+develop, 49 tras los ajustes de siluetas V053–V062), porque en el mapa no se ven; se eligen desde
+la lista. Un edificio hundido, con el techo al nivel del suelo, no tapa. La regla vive en el
+visor (`screenRectSections.ts`), así que vale igual en el mapa de Intervenciones.
+*Descartado:* decidir con un rayo desde la cámara, porque dependería del ángulo de la vista
+y costaría cientos de rayos en un rectángulo grande.
+
 ## 3. Contratos de API
 
 Sobre `{ok, message, data}` (INV-1) y envolturas de error de SPEC-C02, no se repiten.
@@ -471,9 +484,9 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
 ### 5.2 Flujo: crear un conjunto
 
 1. `/intervenciones/conjuntos` → «+ Nuevo conjunto».
-2. Abre el selector de jardines sobre el mapa: clic para agregar o quitar, **Ctrl + arrastrar**
-   para elegir varios (si todo lo que encierra el rectángulo ya estaba elegido, lo quita, con
-   «Deshacer»; si no, agrega lo que falta), buscador por nombre. No hay botón de selección
+2. Abre el selector de jardines sobre el mapa: clic para agregar o quitar, **Ctrl + arrastrar con
+   clic izquierdo** agrega lo que encierra el rectángulo y **con clic derecho** lo quita, con
+   «Deshacer» (D-20 dice qué cuenta como encerrado), buscador por nombre. No hay botón de selección
    múltiple; la rueda acerca y aleja también con Ctrl apretado. La lista de seleccionados y el
    mapa siempre coinciden.
 3. Nombre (obligatorio, único sin distinguir mayúsculas) y descripción opcional, en una fila.
@@ -597,7 +610,10 @@ Con `ref`, según el tipo de regla:
 
 **Orden de la lista:** `OVERDUE` (más días tarde primero) → `DUE` (menos días primero; sin
 registro previo al principio) → `IN_PROGRESS` → `SCHEDULED` → `NOT_DUE` (menos días primero) →
-`DONE_FOR_PERIOD` → `NOT_CONFIGURED`.
+`DONE_FOR_PERIOD` → `NOT_CONFIGURED`. Única excepción (17 nov 2026): al volver de crear o editar
+una planificación, esa va primera, marcada «Recién guardada» y ya elegida en el mapa; una nueva
+sin registro entra como `DUE` y caía debajo de todas las atrasadas, así que no se veía. Al
+recargar vuelve el orden por urgencia; el servidor no lo cambia.
 
 ### 5.6 Registro de intervención prellenado
 

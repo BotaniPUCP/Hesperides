@@ -20,7 +20,7 @@ import { createVegetationLayer } from './vegetation';
 import { WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { createViewCones } from './viewCones';
 import { sectionPoints, specimenPoints } from './frameFit';
-import { sectionCodesInScreenRect, specimenCodesInScreenRect } from './screenRectSections';
+import { sectionCodesInScreenRect, sectionsUnderBuildings, specimenCodesInScreenRect } from './screenRectSections';
 import type { Viewer, ViewerCallbacks } from './viewerTypes';
 import { createSelectionSweep, SECTION_LAYERS } from './selectionSweep';
 import { ringLines, centroid } from './geometry';
@@ -53,6 +53,8 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   // El mapa general no marca ninguna sección por defecto. Solo M7 llama a
   // setMarkedSections; así puede hacer selección múltiple sin alterar /mapa.
   const markedSectionCodes = new Set<string>();
+  /** Jardines en su mayor parte bajo un edificio: el rectángulo no los elige porque no se ven. */
+  let hiddenSections: Set<string> | null = null;
   let eligibleSectionCodes: Set<string> | null = null;
   SECTION_LAYERS.forEach((id) => {
     const layer = poly[id];
@@ -236,7 +238,11 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       highlight.repaint('vegetation');
       needsRender = true;
     },
-    sectionCodesInScreenRect: (x1, y1, x2, y2, eligible) => sectionCodesInScreenRect(data, rig.camera, renderer.domElement, x1, y1, x2, y2, eligible),
+    sectionCodesInScreenRect: (x1, y1, x2, y2, eligible) => {
+      // Se mide una sola vez, al primer rectángulo: el mapa general nunca lo usa.
+      hiddenSections ??= sectionsUnderBuildings(data);
+      return sectionCodesInScreenRect(data, rig.camera, renderer.domElement, x1, y1, x2, y2, eligible, hiddenSections);
+    },
     specimenCodesInScreenRect: (x1, y1, x2, y2, eligible) => specimenCodesInScreenRect(data, rig.camera, renderer.domElement, x1, y1, x2, y2, eligible),
     focusSections(codes, specimenCodes = []) {
       const wanted = new Set(codes);

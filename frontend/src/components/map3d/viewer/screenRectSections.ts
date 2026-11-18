@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import type { SceneData } from '../sceneData';
+import type { Ring, SceneData } from '../sceneData';
+import { insideRing } from './picking';
 import { WORLD_LIFT } from './polyLayer';
 
 type ScreenPoint = { x: number; y: number };
@@ -89,12 +90,68 @@ export function specimenCodesInScreenRect(
   }).map((plant) => plant.props.code);
 }
 
-/** Áreas elegibles que el rectángulo de pantalla (píxeles cliente) encierra, según {@link sectionInRect}. */
+type Box = { minX: number; maxX: number; minY: number; maxY: number };
+
+function boxOf(polygons: readonly Ring[][]): Box {
+  const box = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+  for (const polygon of polygons) {
+    const outer = polygon[0] ?? [];
+    for (let i = 0; i < outer.length; i += 2) {
+      box.minX = Math.min(box.minX, outer[i]); box.maxX = Math.max(box.maxX, outer[i]);
+      box.minY = Math.min(box.minY, outer[i + 1]); box.maxY = Math.max(box.maxY, outer[i + 1]);
+    }
+  }
+  return box;
+}
+
+const inPolygons = (x: number, y: number, polygons: readonly Ring[][]) =>
+  polygons.some((p) => p[0] && insideRing(x, y, p[0]) && !p.slice(1).some((hole) => insideRing(x, y, hole)));
+
+/** Lo que se toma de cada jardín para medir cuánto queda bajo techo. */
+const SAMPLES_PER_SIDE = 12;
+
+/**
+ * Los jardines que quedan en su mayor parte bajo la planta de un edificio: jardineras y patios
+ * interiores que la silueta no recorta, y que en el mapa no se ven. El rectángulo no los elige
+ * aunque los encierre; se siguen pudiendo elegir desde la lista. Un edificio hundido, cuyo techo
+ * no pasa del suelo (como un auditorio bajo el césped), no tapa lo que está encima.
+ * `defaultHeightM` es la altura con que se dibuja un edificio sin dato, como en sceneLayers.
+ */
+export function sectionsUnderBuildings(data: SceneData, defaultHeightM = 8): Set<string> {
+  const roofs = [...data.campusBuildings, ...data.contextBuildings]
+    .filter((b) => (b.props.baseM ?? 0) + (b.props.heightM ?? defaultHeightM) > 0.5)
+    .map((b) => ({ g: b.g, box: boxOf(b.g) }));
+  const hidden = new Set<string>();
+  SECTION_LAYERS.forEach((id) => {
+    for (const section of data[id]) {
+      const box = boxOf(section.g);
+      const near = roofs.filter((r) => r.box.minX <= box.maxX && r.box.maxX >= box.minX && r.box.minY <= box.maxY && r.box.maxY >= box.minY);
+      if (!near.length) continue;
+      let inside = 0, covered = 0;
+      const dx = (box.maxX - box.minX) / SAMPLES_PER_SIDE, dy = (box.maxY - box.minY) / SAMPLES_PER_SIDE;
+      for (let i = 0; i < SAMPLES_PER_SIDE; i++) {
+        for (let j = 0; j < SAMPLES_PER_SIDE; j++) {
+          const x = box.minX + (i + 0.5) * dx, y = box.minY + (j + 0.5) * dy;
+          if (!inPolygons(x, y, section.g)) continue;
+          inside++;
+          if (near.some((r) => inPolygons(x, y, r.g))) covered++;
+        }
+      }
+      if (inside > 0 && covered >= inside * MIN_SHARE_INSIDE) hidden.add(section.props.code);
+    }
+  });
+  return hidden;
+}
+
+/**
+ * Áreas elegibles que el rectángulo de pantalla (píxeles cliente) encierra, según {@link sectionInRect};
+ * `hidden` son las que no se ven ({@link sectionsUnderBuildings}) y no se eligen así.
+ */
 export function sectionCodesInScreenRect(
   data: SceneData, camera: THREE.PerspectiveCamera, canvasEl: HTMLCanvasElement,
-  x1: number, y1: number, x2: number, y2: number, eligible: readonly string[],
+  x1: number, y1: number, x2: number, y2: number, eligible: readonly string[], hidden: ReadonlySet<string> = new Set(),
 ): string[] {
-  const allowed = new Set(eligible);
+  const allowed = new Set(eligible.filter((code) => !hidden.has(code)));
   const found = new Set<string>();
   const b = toBounds(x1, y1, x2, y2);
   const project = projector(camera, canvasEl);

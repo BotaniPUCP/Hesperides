@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { SceneData } from '../sceneData';
-import { clipRing, ringArea, sectionCodesInScreenRect, sectionInRect } from '../viewer/screenRectSections';
+import { clipRing, ringArea, sectionCodesInScreenRect, sectionInRect, sectionsUnderBuildings } from '../viewer/screenRectSections';
 import { WORLD_LIFT } from '../viewer/polyLayer';
 
 const box = (left: number, top: number, right: number, bottom: number) => [
@@ -102,5 +102,52 @@ describe('sectionCodesInScreenRect', () => {
     camera.lookAt(400, WORLD_LIFT, -50);
     camera.updateMatrixWorld();
     expect(sectionCodesInScreenRect(data, camera, canvas, 0, 0, 800, 800, ['A'])).toEqual([]);
+  });
+});
+
+describe('jardines bajo un edificio', () => {
+  const square = (code: string, x0: number, y0: number, x1: number, y1: number) => ({
+    props: { code }, g: [[[x0, y0, x1, y0, x1, y1, x0, y1]]],
+  });
+  const building = (x0: number, y0: number, x1: number, y1: number, baseM: number | null = 0, heightM: number | null = 12) => ({
+    props: { baseM, heightM }, g: [[[x0, y0, x1, y0, x1, y1, x0, y1]]],
+  });
+  const scene = (buildings: ReturnType<typeof building>[], context: ReturnType<typeof building>[] = []) => ({
+    greenAreas: [
+      square('PATIO', 10, 10, 14, 14), // jardinera entera dentro del edificio
+      square('MITAD', 30, 0, 50, 20), // la mitad bajo el edificio
+      square('BORDE', 60, 0, 80, 20), // apenas un borde bajo techo
+      square('LIBRE', 100, 0, 120, 20),
+    ],
+    xerophytic: [], reserve: [], vegetation: [], campusBuildings: buildings, contextBuildings: context,
+  }) as unknown as SceneData;
+  const edificios = [building(0, 0, 40, 30), building(55, 0, 63, 20)];
+
+  it('marca los que quedan en su mayor parte bajo techo, no los que solo tienen un borde', () => {
+    expect([...sectionsUnderBuildings(scene(edificios))].sort()).toEqual(['MITAD', 'PATIO']);
+  });
+
+  it('también cuentan los edificios de alrededor del campus', () => {
+    expect([...sectionsUnderBuildings(scene([], [building(95, -5, 125, 25)]))]).toEqual(['LIBRE']);
+  });
+
+  it('un edificio hundido, con el techo al nivel del suelo, no tapa el jardín de encima', () => {
+    expect(sectionsUnderBuildings(scene([building(0, 0, 40, 30, -9, 8)])).size).toBe(0);
+    // Sin altura se dibuja con la de siempre: sí tapa.
+    expect([...sectionsUnderBuildings(scene([building(0, 0, 40, 30, null, null)]))].sort()).toEqual(['MITAD', 'PATIO']);
+  });
+
+  it('el rectángulo no elige los ocultos aunque los encierre', () => {
+    const data = scene(edificios);
+    const camera = new THREE.PerspectiveCamera(90, 1, 1, 5000);
+    camera.position.set(60, WORLD_LIFT + 400, -10);
+    camera.up.set(0, 0, -1);
+    camera.lookAt(60, WORLD_LIFT, -10);
+    camera.updateMatrixWorld();
+    const canvas = { getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 800 }) } as HTMLCanvasElement;
+    const all = ['PATIO', 'MITAD', 'BORDE', 'LIBRE'];
+    expect(sectionCodesInScreenRect(data, camera, canvas, 0, 0, 800, 800, all, sectionsUnderBuildings(data)).sort())
+      .toEqual(['BORDE', 'LIBRE']);
+    expect(sectionCodesInScreenRect(data, camera, canvas, 0, 0, 800, 800, all).sort()).toEqual([...all].sort());
   });
 });
