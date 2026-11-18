@@ -29,6 +29,31 @@ jobs:
         working-directory: services
         run: pip install -r requirements.txt
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: services
         run: python -m pytest -q
+
+      - name: Upload coverage artifact
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report-python
+          path: services/coverage.xml
+
+  upload-coverage-python:
+    needs: verify
+    if: ${{ !cancelled() && needs.verify.result == 'success' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      code-quality: write
+    steps:
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-report-python
+      - uses: actions/upload-code-coverage@v1
+        with:
+          file: coverage.xml
+          language: Python
+          label: code-coverage-agent
