@@ -111,11 +111,12 @@ Fuera de alcance: la app móvil todavía no existe.
   | Organizaciones, contactos y parecidos | `/directory`, `/imports/{id}/confirm` |
   | Lugares y «otro lugar» | `/places` (importación incluida) |
   | Cola de migración de referencias | `/places/reference-links` |
-  | Especies (tabla y campos 5 y 6) | `/green-inventory/species`, `/imports/{id}/confirm` |
+  | Especies (tabla y campos 5 y 6) | `/green-inventory/species`, `/green-inventory/specimens`, `/imports/{id}/confirm` |
   | Ejemplares | `/green-inventory/specimens`, `/green-inventory/species`, `/imports/{id}/confirm` |
 
   `/imports/{id}/confirm` no dice qué se importó, así que recarga las tres listas que se
-  alimentan de importaciones.
+  alimentan de importaciones. Especies también se recarga con los ejemplares: cada tarjeta muestra
+  cuántos tiene y una foto de uno de ellos.
 - **D-04 · Cada lista se carga una vez al abrir la pantalla o el formulario que la usa** y no
   vuelve a pedirse mientras se escribe. Al salir y volver a entrar se pide de nuevo: así se ve lo
   que registró otra persona entretanto, con una consulta por pantalla abierta y no por letra. Dos
@@ -143,16 +144,27 @@ Fuera de alcance: la app móvil todavía no existe.
 | `GET /api/v1/directory/contacts/all` | La de la lista actual | Todos, con sus organizaciones y `searchKey` (código, nombre, correo, anexo, celular) |
 | `GET /api/v1/places` | La actual | Sin `q`, `category` ni `kind`; cada fila con `searchKey` (código, nombre, padre, alias, perspectivas) |
 | `GET /api/v1/places/reference-links/queue/all` | La actual | Toda la cola pendiente, con `searchKey` (nombre) |
-| `GET /api/v1/green-inventory/species/all` | La de `GET /species` | Todas las especies de la lista (activas y en retiro), con `retiring`, `assignable` y `searchKey` (nombres científico, común y alternativos) |
-| `GET /api/v1/green-inventory/specimens/all` | La de `GET /specimens` | Todos los ejemplares activos, con `searchKey` (código, referencia, ubicación, placa, notas, nombres de la especie) |
-| `GET /api/v1/imports/specimens/species-options` | La actual | Sin `search` ni tope, con `searchKey` (incluye nombres alternativos) |
+| `GET /api/v1/green-inventory/species/all` | Pública, como el resto del inventario | Activas y en proceso de retiro (`isActive` las distingue), con `searchKey` (nombres científico, común y alternativos, familia). Sirve también a los campos 5 y 6 con las activas |
+| `GET /api/v1/green-inventory/specimens/all` | Pública | Todos los ejemplares activos, con tipo de vegetación, `speciesCritical`, `measured` y `searchKey` (código, referencia, ubicación, placa, notas, nombres de la especie). La ficha de una especie los filtra por su slug |
+
+**Retirados (D-07):** las listas paginadas con `q`/`search` de los endpoints de arriba,
+`…/organizations/similar`, `…/contacts/similar`, `/green-inventory/species/assignable`,
+`/green-inventory/species/{slug}/specimens`, `/green-inventory/specimens/search` (no la usaba ninguna
+pantalla) e `/imports/specimens/species-options`.
 
 ### 3.1 Decisiones que el código no explica
 
 - **`/all` y no `size=0`.** Una ruta propia deja claro que no hay paginación y permite retirar la
   paginada sin ambigüedad.
 - **`searchKey` se calcula en SQL con `unaccent(lower(concat_ws(' ', …)))`**, la misma expresión
-  que hoy va en el `WHERE`, para que la regla de qué se busca no se duplique en Java.
+  que iba en el `WHERE`, para que la regla de qué se busca no se duplique. Donde la respuesta se
+  arma en Java (incidencias, usuarios), `engine/search/SearchKey` aplica la misma regla.
+- **Un solo catálogo de especies para la tabla y los dos campos.** Las asignables eran las activas
+  y las opciones de importación también; filtrar por `isActive` en el navegador evita tres listas
+  casi iguales.
+- **Usuarios: sin estado elegido se ven todos.** La pantalla ya trataba la ausencia del filtro como
+  «todos», pero el backend la convertía en «solo activos», así que «también entre los desactivados»
+  no mostraba a nadie más. Al filtrar en el navegador se corrige.
 
 ## 4. Migración de base de datos
 
