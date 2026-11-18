@@ -43,13 +43,21 @@ function daysAgo(n: number): string {
 }
 
 /**
- * Cuántos jardines y ejemplares de la fila, como se diga mejor: el avance y los
- * «sin registro previo» cuentan las dos cosas juntas.
+ * El total de un «X de N» (avance, al día): con un solo tipo, su nombre («18 jardines»); en un
+ * conjunto mixto, solo el número, porque «Contiene» ya dice cuántos de cada uno y «jardines o
+ * ejemplares» no diría cuántos son de cada tipo.
  */
 export function unitsLabel(row: PlanningRow, n: number): string {
   if (row.elementCount === 0) return gardensLabel(n);
   if (row.zoneCount === 0) return specimensLabel(n);
-  return plural(n, 'jardín o ejemplar', 'jardines o ejemplares');
+  return String(n);
+}
+
+/** Cuántos de cada tipo: «2 jardines», «3 ejemplares», «1 jardín y 2 ejemplares». */
+export function countLabel(zones: number, specimens: number): string {
+  if (specimens === 0) return gardensLabel(zones);
+  if (zones === 0) return specimensLabel(specimens);
+  return `${gardensLabel(zones)} y ${specimensLabel(specimens)}`;
 }
 
 export function rowTitle(row: PlanningRow): string {
@@ -81,11 +89,15 @@ export function stateDetail(row: PlanningRow): string {
     case 'OVERDUE':
       return window ? `(la ventana cerró hace ${plural(days, 'día', 'días')})` : `(${plural(days, 'día', 'días')} tarde)`;
     case 'DUE':
-      if (row.days === null && row.neverAttendedCount > 0) return `${unitsLabel(row, row.neverAttendedCount)} sin registro previo`;
+      if (row.days === null && row.neverAttendedCount > 0) {
+        const specimens = row.neverAttendedElementCount;
+        return `${countLabel(row.neverAttendedCount - specimens, specimens)} sin registro previo`;
+      }
       if (quota && row.estimatedDate) return `(próxima estimada: ${shortDate(row.estimatedDate)})`;
       return days === 0 ? '(vence hoy)' : `(quedan ${plural(days, 'día', 'días')} de plazo)`;
     case 'IN_PROGRESS':
-      return `(${missing(days)} ${unitsLabel(row, days)})`;
+      return `(${missing(days)} ${row.remainingElementCount === null ? unitsLabel(row, days)
+        : countLabel(days - row.remainingElementCount, row.remainingElementCount)})`;
     case 'SCHEDULED':
       return row.openIntervention ? `(para el ${shortDate(row.openIntervention.scheduledDate)})` : '';
     case 'NOT_DUE':
@@ -131,11 +143,7 @@ export function partialProgress(row: PlanningRow): { upToDate: number; total: nu
 
 /** Lo que falta, por tipo: «2 jardines», «3 ejemplares», «1 jardín y 2 ejemplares». */
 export function pendingLabel(row: PlanningRow): string {
-  const zones = row.pendingZoneIds.length;
-  const specimens = row.pendingElementIds.length;
-  if (specimens === 0) return gardensLabel(zones);
-  if (zones === 0) return specimensLabel(specimens);
-  return `${gardensLabel(zones)} y ${specimensLabel(specimens)}`;
+  return countLabel(row.pendingZoneIds.length, row.pendingElementIds.length);
 }
 
 /** La historia de la fila para la tarjeta: el avance si está en curso; si no, la última vez. */

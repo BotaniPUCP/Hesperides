@@ -114,6 +114,10 @@ export interface PlanningRow {
   /** Las que faltan: les toca, están atrasadas o nunca se atendieron. */
   pendingZoneIds: number[];
   pendingElementIds: number[];
+  /** Cuántos de los «sin registro previo» son ejemplares (el resto, jardines). */
+  neverAttendedElementCount: number;
+  /** En curso: cuántos de los que faltan son ejemplares; null si no está en curso. */
+  remainingElementCount: number | null;
 }
 
 export interface RecentAttention {

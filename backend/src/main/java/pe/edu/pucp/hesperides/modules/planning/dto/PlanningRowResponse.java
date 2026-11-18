@@ -11,6 +11,9 @@ import java.util.UUID;
 /**
  * Una fila de planificación (SPEC-203 §3.2): una asignación de una frecuencia a un conjunto. {@code days} depende de {@code state}. El avance
  * y los «sin registro previo» cuentan jardines y ejemplares juntos: cada uno es una unidad.
+ * {@code neverAttendedElementCount} dice cuántos de los «sin registro previo» son ejemplares, y
+ * {@code remainingElementCount} cuántos de los que faltan en curso (nulo si no está en curso):
+ * así un conjunto mixto dice «3 jardines y 4 ejemplares» en vez de «7 jardines o ejemplares».
  */
 public record PlanningRowResponse(long setId, String setName, int zoneCount, int elementCount,
                                   long activityTypeItemId,
@@ -20,7 +23,8 @@ public record PlanningRowResponse(long setId, String setName, int zoneCount, int
                                   LocalDate estimatedDate, Integer yearCount, LocalDate suggestedDate,
                                   long assignmentId, UUID ruleKey,
                                   Integer upToDateCount, List<LastDateCount> lastDates,
-                                  List<Long> pendingZoneIds, List<Long> pendingElementIds) {
+                                  List<Long> pendingZoneIds, List<Long> pendingElementIds,
+                                  int neverAttendedElementCount, Integer remainingElementCount) {
 
     /**
      * Cuántas unidades se atendieron por última vez en esa fecha (nula: nunca). Con

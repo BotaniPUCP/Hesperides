@@ -343,6 +343,12 @@ horaria configurada. Para pruebas el builder puede inyectar un `Clock`.
 - `upToDateCount`, `lastDates`, `pendingZoneIds`, `pendingElementIds`: el desglose por unidad de
   §5.5.1 (cuántas están al día, cuántas se atendieron por última vez en cada fecha y cuáles
   faltan). Nulo y vacíos si la fila no tiene frecuencia.
+- `neverAttendedElementCount`, `remainingElementCount` (17 nov 2026): cuántos de los «sin registro
+  previo» y de los que faltan en curso son ejemplares (el resto, jardines); el segundo es nulo si
+  la fila no está en curso. Con ellos un conjunto mixto dice «3 jardines y 4 ejemplares sin
+  registro previo» o «faltan 1 jardín y 4 ejemplares» en vez de «7 jardines o ejemplares», que
+  no decía cuántos eran de cada tipo. En un «X de N» (avance, al día) de un conjunto mixto va solo
+  el número, porque «Contiene» ya da el desglose.
 
 ### 3.3 Atendido hace poco
 

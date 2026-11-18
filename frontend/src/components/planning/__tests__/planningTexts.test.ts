@@ -84,9 +84,23 @@ describe('planningTexts (SPEC-203 §7)', () => {
     expect(historyLine(planningRow({ state: 'IN_PROGRESS', zoneCount: 0, elementCount: 5, progress: { done: 1, total: 5 },
       openIntervention: { id: 81, code: 'INT-000081', scheduledDate: '2026-11-04', startedDate: '2026-11-08' } }), new Date('2026-11-08T12:00:00')).value)
       .toBe('1 de 5 ejemplares · empezó el 8 nov (hoy)');
-    expect(stateDetail(planningRow({ state: 'DUE', days: null, neverAttendedCount: 2, elementCount: 4 })))
-      .toBe('2 jardines o ejemplares sin registro previo');
-    expect(stateDetail(planningRow({ state: 'IN_PROGRESS', days: 3, zoneCount: 0, elementCount: 9 }))).toBe('(faltan 3 ejemplares)');
+    expect(stateDetail(planningRow({ state: 'DUE', days: null, neverAttendedCount: 2, zoneCount: 0, elementCount: 4, neverAttendedElementCount: 2 })))
+      .toBe('2 ejemplares sin registro previo');
+    expect(stateDetail(planningRow({ state: 'IN_PROGRESS', days: 3, zoneCount: 0, elementCount: 9, remainingElementCount: 3 }))).toBe('(faltan 3 ejemplares)');
+  });
+
+  it('en un conjunto mixto dice cuántos de cada tipo, no «jardines o ejemplares»', () => {
+    const mixed = { zoneCount: 3, elementCount: 4 };
+    expect(stateDetail(planningRow({ ...mixed, state: 'DUE', days: null, neverAttendedCount: 7, neverAttendedElementCount: 4 })))
+      .toBe('3 jardines y 4 ejemplares sin registro previo');
+    expect(stateDetail(planningRow({ ...mixed, state: 'DUE', days: null, neverAttendedCount: 2, neverAttendedElementCount: 0 })))
+      .toBe('2 jardines sin registro previo');
+    expect(stateDetail(planningRow({ ...mixed, state: 'IN_PROGRESS', days: 5, remainingElementCount: 4 })))
+      .toBe('(faltan 1 jardín y 4 ejemplares)');
+    // «X de N»: el total va solo, porque «Contiene» ya dice «3 jardines · 4 ejemplares».
+    expect(historyLine(planningRow({ ...mixed, state: 'IN_PROGRESS', progress: { done: 2, total: 7 },
+      openIntervention: { id: 81, code: 'INT-000081', scheduledDate: '2026-11-04', startedDate: '2026-11-08' } }), new Date('2026-11-08T12:00:00')).value)
+      .toBe('2 de 7 · empezó el 8 nov (hoy)');
   });
 
   it('con uno solo, el verbo va en singular', () => {
