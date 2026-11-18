@@ -277,7 +277,7 @@ sector, encontrar dónde se trabajaba costaba. Ahora:
   sector entero si no tiene nada) y todo el sector se sombrea en naranja tenue, distinto del
   verde del césped y del cian de lo elegido. Otro clic en la tarjeta quita el foco y el sombreado.
   Si se mueve o acerca el mapa a mano, el sector queda solo sombreado; un clic en la tarjeta
-  vuelve a lo elegido. La tarjeta lo dice con su marco: naranja lleno y «En foco», naranja
+  quita también el sombreado, sin volver a poner el foco. La tarjeta lo dice con su marco: naranja lleno y «En foco», naranja
   punteado y «Sombreado», o sin marco. Pliega y despliega una flecha propia de la tarjeta.
 - Dos flechas grandes recorren los sectores de la lista (con «Ver solo lo elegido», solo los
   que tienen algo elegido) y ponen el foco en el anterior o el siguiente; dan la vuelta. «Ver

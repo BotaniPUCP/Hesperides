@@ -166,7 +166,7 @@ describe('SetMapPicker', () => {
       expect(within(card('Sector 1')).queryByText('En foco')).not.toBeInTheDocument();
     });
 
-    it('mover el mapa deja solo el sombreado; otro clic en la tarjeta vuelve a lo elegido', async () => {
+    it('mover el mapa deja solo el sombreado; otro clic en la tarjeta lo quita sin volver a poner el foco', async () => {
       const { card, focusCard } = setup([11, 21]);
 
       await focusCard('Sector 2');
@@ -176,7 +176,10 @@ describe('SetMapPicker', () => {
       expect(screen.getByRole('group', { name: 'Recorrer sectores' })).toHaveTextContent('solo sombreado');
 
       await focusCard('Sector 2');
-      expect(within(card('Sector 2')).getByText('En foco')).toBeInTheDocument();
+      expect(within(card('Sector 2')).queryByText('En foco')).not.toBeInTheDocument();
+      expect(within(card('Sector 2')).queryByText('Sombreado')).not.toBeInTheDocument();
+      expect(card('Sector 2')).not.toHaveAttribute('aria-current');
+      expect(card('Sector 2').className).not.toMatch(/orange/);
     });
 
     it('si se le quita todo al sector en foco, el foco se suelta', async () => {

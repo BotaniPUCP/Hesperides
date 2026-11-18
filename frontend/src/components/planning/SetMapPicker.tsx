@@ -311,9 +311,9 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     const inFrame = o.chosen > 0 ? o : { chosenGardens: o.gardens, chosenTrees: o.trees };
     viewer.current?.focusSections(inFrame.chosenGardens.map((s) => s.code), inFrame.chosenTrees.map((e) => e.code));
   };
-  /** Clic en la tarjeta: pone el foco; si ya lo tenía sobre lo elegido, lo quita (deja de sombrear y nada más). */
+  /** Clic en la tarjeta: pone el foco; si el sector ya estaba en foco o solo sombreado, lo quita (deja de sombrear y nada más). */
   const onCardClick = (g: SectorGroup) => {
-    if (activeFocus?.key === g.key && activeFocus.onSelection) { setFocus(null); return; }
+    if (activeFocus?.key === g.key) { setFocus(null); return; }
     focusOn(g);
   };
   /** Las flechas dan la vuelta; sin foco, la derecha va al primero y la izquierda al último. */
@@ -465,8 +465,8 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100">
                       <span aria-hidden="true" className={`transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
                     </button>
-                    <button type="button" onClick={() => onCardClick(g)} aria-pressed={onSelection}
-                      title={onSelection ? 'Quitar el foco y el sombreado' : 'Ver lo elegido de este sector y sombrearlo en el mapa'}
+                    <button type="button" onClick={() => onCardClick(g)} aria-pressed={isFocused}
+                      title={onSelection ? 'Quitar el foco y el sombreado' : isFocused ? 'Quitar el sombreado' : 'Ver lo elegido de este sector y sombrearlo en el mapa'}
                       className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-neutral-900">
                       <span className="truncate">{g.name}</span>
                     </button>
