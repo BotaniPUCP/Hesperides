@@ -8,6 +8,14 @@ export interface FrequencyFlash {
   type: 'success' | 'error';
   message: string;
   warnings?: string[];
+  /** La frecuencia recién creada o editada: la lista la deja arriba para que se vea al volver. */
+  savedId?: number;
+}
+
+/** La recién guardada primero; las demás, en el orden en que llegaron. */
+export function savedFirst<T extends { id: number }>(items: T[], savedId: number | null): T[] {
+  const saved = items.find((f) => f.id === savedId);
+  return saved ? [saved, ...items.filter((f) => f !== saved)] : items;
 }
 
 const FLASH_KEY = 'hesperides:frequencies-flash';

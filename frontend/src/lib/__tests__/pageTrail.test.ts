@@ -40,6 +40,9 @@ describe('buildPageTrail', () => {
     ['/incidencias/nueva', 'Informar'],
     ['/intervenciones/nueva', 'Nueva intervención'],
     ['/lugares/nuevo', 'Nuevo lugar'],
+    ['/intervenciones/planificacion/nueva', 'Nueva planificación'],
+    ['/intervenciones/frecuencias/nueva', 'Nueva frecuencia'],
+    ['/intervenciones/conjuntos/nuevo', 'Nuevo conjunto'],
   ])('%s tiene un nombre propio y no el segmento de la URL', (ruta, nombre) => {
     expect(labels(ruta).at(-1)).toBe(nombre);
   });

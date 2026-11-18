@@ -36,24 +36,28 @@ interface Props {
   onSelect: () => void;
   /** Eliminar la planificación; la pantalla confirma y recarga. */
   onRemove?: () => void;
+  /** Recién creada o editada: va primera y se marca, aunque por urgencia le tocara otro lugar. */
+  justSaved?: boolean;
 }
 
 /**
  * Una actividad de un conjunto y cuándo hay que hacerla (SPEC-203 §7). Todas las tarjetas
  * tienen la misma forma: actividad y conjunto a la izquierda, estado a la derecha, tres datos y una acción.
  */
-export function PlanningCard({ row, selected, onSelect, onRemove }: Props) {
+export function PlanningCard({ row, selected, onSelect, onRemove, justSaved = false }: Props) {
   const history = historyLine(row);
   const rhythm = rhythmText(row);
   const partial = partialProgress(row);
   const baseDetail = stateDetail(row).replace(/^\((.*)\)$/, '$1');
-  const detail = partial && (row.state === 'OVERDUE' || row.state === 'DUE') && DELAY_IN_UNITS.includes(row.ruleKind)
+  // Sin días, el detalle ya cuenta las unidades («2 jardines sin registro previo»): no se repiten.
+  const detail = partial && row.days !== null && (row.state === 'OVERDUE' || row.state === 'DUE') && DELAY_IN_UNITS.includes(row.ruleKind)
     ? `${baseDetail} en ${pendingLabel(row)}` : baseDetail;
   return (
     <li className={cn('rounded-lg border bg-neutral-0 text-sm', selected ? 'border-brand-600 ring-1 ring-brand-600' : 'border-neutral-200')}>
       <button type="button" onClick={onSelect} aria-pressed={selected} className="block w-full p-4 text-left">
         <span className="flex items-start justify-between gap-4">
           <span className="min-w-0">
+            {justSaved && <Badge label="Recién guardada" color="brand" className="mb-1" />}
             <span className="block font-semibold text-neutral-900">{row.activityLabel ?? 'Actividad'}</span>
             <span className="block text-neutral-600">en <span className="font-medium text-neutral-800">{row.setName}</span></span>
           </span>

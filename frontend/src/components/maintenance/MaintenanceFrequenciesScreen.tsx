@@ -10,7 +10,7 @@ import { useListUrlState } from '@/hooks/useListUrlState';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { FrequenciesTable } from './FrequenciesTable';
 import { FrequencyFilters, type FilterState } from './FrequencyFilters';
-import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS, takeFrequencyFlash, type FrequencyFlash } from './frequencyListState';
+import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS, savedFirst, takeFrequencyFlash } from './frequencyListState';
 import { useFrequencyScreenData } from './useFrequencyScreenData';
 
 /** Configurar cada cuánto se hace cada actividad (SPEC-203 §5.3); solo ADMIN y COORDINADOR llegan aquí. */
@@ -26,11 +26,14 @@ export function MaintenanceFrequenciesScreen() {
     else setFilters(others);
   };
   // El aviso que deja la página de una frecuencia al guardar o desactivar.
-  const [feedback, setFeedback] = useState<FrequencyFlash | null>(() => (typeof window === 'undefined' ? null : takeFrequencyFlash()));
+  const [flash] = useState(() => (typeof window === 'undefined' ? null : takeFrequencyFlash()));
+  const [feedback, setFeedback] = useState(flash);
+  // La recién guardada queda arriba aunque se cierre el aviso: la tabla no se reordena bajo el cursor.
+  const savedId = flash?.savedId ?? null;
 
   const filteredFrequencies = useMemo(() => {
     const term = filters.search.trim().toLowerCase();
-    return frequencies.filter((f) => {
+    return savedFirst(frequencies, savedId).filter((f) => {
       const matchesSearch =
         !term ||
         f.activityType.label.toLowerCase().includes(term) ||
@@ -39,7 +42,7 @@ export function MaintenanceFrequenciesScreen() {
       const matchesRuleType = !filters.ruleType || f.frequencyRuleType.code === filters.ruleType;
       return matchesSearch && matchesRegime && matchesRuleType;
     });
-  }, [frequencies, filters]);
+  }, [frequencies, filters, savedId]);
 
   const openCreate = () => router.push(`${FREQUENCIES_PATH}/nueva`);
 
@@ -109,6 +112,7 @@ export function MaintenanceFrequenciesScreen() {
           <FrequenciesTable
             frequencies={filteredFrequencies}
             canManage
+            savedId={savedId}
             onEdit={(f) => router.push(`${FREQUENCIES_PATH}/${f.id}`)}
           />
         )}

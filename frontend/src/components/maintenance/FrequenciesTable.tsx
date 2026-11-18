@@ -11,6 +11,8 @@ interface Props {
   canManage: boolean;
   /** Abrir una frecuencia para editarla o desactivarla. */
   onEdit: (f: MaintenanceFrequency) => void;
+  /** La recién creada o editada, que va primera: se marca para encontrarla de un vistazo. */
+  savedId?: number | null;
 }
 
 const days = (n: number) => `${n} ${n === 1 ? 'día' : 'días'}`;
@@ -25,7 +27,7 @@ function ScopeCell({ frequency: f }: { frequency: MaintenanceFrequency }) {
  * se abre con un clic; editar y desactivar están dentro, así la tabla no
  * necesita una columna de botones que la obliga a desplazarse de lado.
  */
-export function FrequenciesTable({ frequencies, canManage, onEdit }: Props) {
+export function FrequenciesTable({ frequencies, canManage, onEdit, savedId = null }: Props) {
   const columns: DataTableColumn<MaintenanceFrequency>[] = [
     {
       key: 'activity', header: 'Actividad',
@@ -38,6 +40,7 @@ export function FrequenciesTable({ frequencies, canManage, onEdit }: Props) {
               {f.activityType.label}
             </button>
           ) : <span className="font-medium text-neutral-900">{f.activityType.label}</span>}
+          {f.id === savedId && <Badge label="Recién guardada" color="success" className="ml-2" />}
           {f.notes && <span className="block max-w-xs truncate text-xs text-neutral-500" title={f.notes}>{f.notes}</span>}
         </>
       ),

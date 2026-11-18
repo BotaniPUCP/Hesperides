@@ -2,6 +2,7 @@
 
 import type { CreateMaintenanceFrequencyRequest, MaintenanceFrequency, UpdateMaintenanceFrequencyRequest } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 import { LoadingSkeleton } from '@/components/ui';
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useRequest } from '@/hooks/useRequest';
@@ -24,16 +25,18 @@ export function FrequencyFormScreen({ frequencyId = null }: { frequencyId?: numb
   const data = useRequest(`frequency-form:${frequencyId ?? 'nueva'}`, () => loadForm(frequencyId));
   const editing = data.data?.frequency ?? null;
   const { ask, dialog } = useConfirmDialog();
+  // En el breadcrumb, la actividad en vez del número de la frecuencia.
+  usePageTrail(frequencyId != null && editing ? { labels: { [frequencyId]: editing.activityType.label } } : {});
 
   const submit = async (payload: CreateMaintenanceFrequencyRequest | UpdateMaintenanceFrequencyRequest) => {
     if (editing) {
       const saved = await maintenanceApi.update(editing.id, payload as UpdateMaintenanceFrequencyRequest);
       // Editar versiona: la anterior queda cerrada y esta rige desde hoy.
-      saveFrequencyFlash({ type: 'success', warnings: saved.warnings,
+      saveFrequencyFlash({ type: 'success', warnings: saved.warnings, savedId: saved.id,
         message: 'Se creó una versión nueva. Los periodos ya evaluados conservan la anterior.' });
     } else {
       const saved = await maintenanceApi.create(payload as CreateMaintenanceFrequencyRequest);
-      saveFrequencyFlash({ type: 'success', message: 'Frecuencia registrada', warnings: saved.warnings });
+      saveFrequencyFlash({ type: 'success', message: 'Frecuencia registrada', warnings: saved.warnings, savedId: saved.id });
     }
   };
 

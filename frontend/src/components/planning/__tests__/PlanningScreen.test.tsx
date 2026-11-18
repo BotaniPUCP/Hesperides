@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { PlanningScreen } from '../PlanningScreen';
 import { planningApi } from '@/lib/planning-api';
 import { planningRow } from '../__fixtures__/planningFixtures';
+import { rememberSavedPlanning } from '../savedPlanning';
 
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
@@ -21,6 +22,7 @@ const removeAssignment = planningApi.assignments.remove as jest.Mock;
 beforeEach(() => {
   jest.clearAllMocks();
   window.history.replaceState(null, '', '/intervenciones/planificacion');
+  window.sessionStorage.clear();
 });
 
 describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
@@ -49,6 +51,24 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
 
     expect(mockMap).toHaveBeenLastCalledWith(expect.objectContaining({ setId: 3 }));
     expect(screen.getByText(/En el mapa:/)).toHaveTextContent('En el mapa: Ingreso Riva-Agüero · 18 jardines');
+  });
+
+  it('al volver de crear una, va primera, marcada y ya elegida en el mapa, aunque por urgencia le tocara después', async () => {
+    rows.mockResolvedValue([planningRow(), planningRow({ setId: 6, setName: 'Sector Tambo', state: 'NOT_DUE', days: 20 })]);
+    rememberSavedPlanning({ id: 72, setId: 6, setName: 'Sector Tambo', activityTypeItemId: 30, activityLabel: 'Corte de césped', ruleKey: 'r1', warnings: [] });
+    const { unmount } = render(<PlanningScreen />);
+
+    const cards = await screen.findAllByRole('listitem');
+    expect(cards[0]).toHaveTextContent('Recién guardada');
+    expect(cards[0]).toHaveTextContent('Sector Tambo');
+    expect(cards[1]).not.toHaveTextContent('Recién guardada');
+    expect(mockMap).toHaveBeenLastCalledWith(expect.objectContaining({ setId: 6 }));
+
+    // Solo al volver: luego la lista retoma su orden por urgencia.
+    unmount();
+    render(<PlanningScreen />);
+    expect((await screen.findAllByRole('listitem'))[0]).toHaveTextContent('Ingreso Riva-Agüero');
+    expect(screen.queryByText('Recién guardada')).not.toBeInTheDocument();
   });
 
   it('sin planificaciones invita a crear una', async () => {
@@ -168,6 +188,17 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
       expect(card.getByRole('progressbar', { name: 'Al día' })).toHaveAttribute('aria-valuenow', '2');
       expect(card.getByText('6 días tarde en 2 jardines')).toBeInTheDocument();
       expect(card.getByText(/2 nov \(2\)/)).toBeInTheDocument();
+    });
+
+    it('si lo que falta nunca se atendió, no repite la cantidad («… sin registro previo en …»)', async () => {
+      rows.mockResolvedValue([planningRow({ zoneCount: 4, state: 'DUE', days: null, ruleKind: 'INTERVAL_DAYS',
+        upToDateCount: 2, neverAttendedCount: 2, pendingZoneIds: [13, 14], lastDate: '2026-11-12', daysSinceLast: 0,
+        lastDates: [{ date: '2026-11-12', count: 2 }, { date: null, count: 2 }] })]);
+      render(<PlanningScreen />);
+
+      const card = within(await screen.findByRole('listitem'));
+      expect(card.getByText('2 jardines sin registro previo')).toBeInTheDocument();
+      expect(card.queryByText(/sin registro previo en/)).not.toBeInTheDocument();
     });
 
     it('planificar propone solo lo que falta', async () => {

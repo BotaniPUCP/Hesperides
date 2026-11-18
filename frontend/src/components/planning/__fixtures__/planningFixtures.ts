@@ -28,6 +28,8 @@ export function planningRow(over: Partial<PlanningRow> = {}): PlanningRow {
     lastDates: [{ date: '2026-09-30', count: 18 }],
     pendingZoneIds: [],
     pendingElementIds: [],
+    neverAttendedElementCount: 0,
+    remainingElementCount: null,
     ...over,
   };
 }

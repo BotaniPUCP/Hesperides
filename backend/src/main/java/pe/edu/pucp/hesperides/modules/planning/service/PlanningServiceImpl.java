@@ -92,7 +92,7 @@ public class PlanningServiceImpl implements PlanningService {
                 PlanningVerdict verdict = PlanningEvaluator.evaluate(frequency, units, open, today);
                 String label = rule != null ? rule.activityLabel() : a.activityLabel();
                 scored.add(new Scored(verdict, PlanningRows.of(set, a, label, rule, verdict,
-                        UnitBreakdown.of(frequency, units, today))));
+                        UnitBreakdown.of(frequency, units, today), units)));
             }
         }
         return scored.stream().sorted(Comparator.comparing(Scored::verdict, PlanningOrder.COMPARATOR))

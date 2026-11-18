@@ -176,6 +176,23 @@ class PlanningServiceImplTest {
             assertThat(r.elementCount()).isEqualTo(1);
             assertThat(r.state()).isEqualTo(PlanningState.DUE);
             assertThat(r.neverAttendedCount()).isEqualTo(1);
+            assertThat(r.neverAttendedElementCount()).isEqualTo(1);
+            assertThat(r.remainingElementCount()).isNull();
+        });
+    }
+
+    @Test
+    void aMixedSetSaysHowManyOfTheNeverAttendedAreSpecimens() {
+        // Para que la tarjeta diga «2 jardines y 1 ejemplar sin registro previo», no «3 jardines o ejemplares».
+        when(sets.activeSets()).thenReturn(List.of(conjunto(5, "Mixto", Set.of(1L, 2L, 3L), Set.of(700L, 701L))));
+        when(rules.current()).thenReturn(List.of(general(CORTE, intervalo(1, 30, 35))));
+        completado(3, HOY.minusDays(2));
+        specimenCompletions.add(new SpecimenCompletion(701, 9, HOY.minusDays(2)));
+
+        assertThat(service.rows()).singleElement().satisfies(r -> {
+            assertThat(r.state()).isEqualTo(PlanningState.DUE);
+            assertThat(r.neverAttendedCount()).isEqualTo(3);
+            assertThat(r.neverAttendedElementCount()).isEqualTo(1);
         });
     }
 
@@ -218,6 +235,11 @@ class PlanningServiceImplTest {
         assertThat(row.state()).isEqualTo(PlanningState.IN_PROGRESS);
         assertThat(row.progress().done()).isEqualTo(1);
         assertThat(row.progress().total()).isEqualTo(2);
+        // Falta 1: es el ejemplar, no el jardín.
+        assertThat(row.days()).isEqualTo(1);
+        assertThat(row.remainingElementCount()).isEqualTo(1);
+        assertThat(row.neverAttendedCount()).isEqualTo(1);
+        assertThat(row.neverAttendedElementCount()).isEqualTo(1);
         assertThat(row.openIntervention().startedDate()).isEqualTo(HOY.minusDays(2));
     }
 
