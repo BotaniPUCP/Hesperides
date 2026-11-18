@@ -42,8 +42,8 @@ export type { Viewer, ViewerCallbacks, ViewerStart } from './viewerTypes';
 
 /** Lo marcado a la vez (secciones de un turno de riego, bloques de un lugar), distinto de la selección. */
 const MARKED_COLOR = '#06B6D4';
-/** El área en que se trabaja (el sector que se recorre en Conjuntos): el mismo tono que lo marcado, pero tenue. */
-const TINT_COLOR = '#67E8F9';
+/** El área en que se trabaja (el sector en foco en Conjuntos): naranja tenue, distinto del verde del césped y del cian de lo marcado. */
+const TINT_COLOR = '#FB923C';
 /**
  * Escala de la velocidad del modo administrador: el vuelo va a la mitad de esto en m/s.
  * En los pilotos es el radio del edificio; el campus entero sería demasiado rápido.

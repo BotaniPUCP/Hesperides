@@ -266,24 +266,29 @@ visor (`screenRectSections.ts`), así que vale igual en el mapa de Intervencione
 *Descartado:* decidir con un rayo desde la cámara, porque dependería del ángulo de la vista
 y costaría cientos de rayos en un rectángulo grande.
 
-**D-21 · El selector de Conjuntos se recorre por sectores (18 nov 2026).**
+**D-21 · El selector de Conjuntos: lo elegido a la vista y foco por sector (18 nov 2026).**
 Pedido del equipo al probar: con todas las tarjetas a la vista y un «Ver en el mapa» por
 sector, encontrar dónde se trabajaba costaba. Ahora:
-- La lista muestra por defecto solo lo elegido, en las tarjetas de su sector; se quita la
-  casilla «Ver solo lo elegido». Lo que se marca o desmarca uno a uno sigue a la vista aunque
-  deje de estar elegido, para no esconderse bajo el cursor.
-- Buscar muestra todo lo que coincide, elegido o no, y desde ahí se agrega.
-- Un solo control recorre los sectores donde estaba la casilla: «‹ [sector] ›». Las flechas
-  pasan al anterior o al siguiente (dan la vuelta) y el nombre es un desplegable para ir directo
-  a uno o volver a «Todo el campus». El sector se encuadra entero, sus jardines y ejemplares se
-  pintan de un tono tenue (lo elegido se ve encima con su color) y su tarjeta muestra todo lo
-  suyo. Reemplaza el «Ver en el mapa / Dejar de ver» de cada tarjeta y el aviso «Viendo …» del
-  mapa; mover el mapa ya no suelta el sector.
-- Al elegir o quitar algo (clic, rectángulo, barrido o lista) se ilumina la tarjeta de su
-  sector y se trae a la vista; con el rectángulo, la del sector con más de lo encerrado.
+- «Ver solo lo elegido» viene marcada siempre al abrir: la lista muestra solo lo elegido, en la
+  tarjeta de su sector, y lo que se quita deja de verse (sin nada elegido no se ve ninguna
+  tarjeta). Desmarcada, se ven todos los sectores y todo lo suyo. Buscar muestra todo lo que
+  coincide, elegido o no, y desde ahí se agrega.
+- El foco se pone con un clic en la tarjeta: el mapa encuadra lo elegido en ese sector (el
+  sector entero si no tiene nada) y todo el sector se sombrea en naranja tenue, distinto del
+  verde del césped y del cian de lo elegido. Otro clic en la tarjeta quita el foco y el sombreado.
+  Si se mueve o acerca el mapa a mano, el sector queda solo sombreado; un clic en la tarjeta
+  vuelve a lo elegido. La tarjeta lo dice con su marco: naranja lleno y «En foco», naranja
+  punteado y «Sombreado», o sin marco. Pliega y despliega una flecha propia de la tarjeta.
+- Dos flechas grandes recorren los sectores de la lista (con «Ver solo lo elegido», solo los
+  que tienen algo elegido) y ponen el foco en el anterior o el siguiente; dan la vuelta. «Ver
+  campus», sobre el mapa, es la única forma de volver a todo el campus y suelta el foco.
+  Reemplazan el «Ver en el mapa / Dejar de ver» de cada tarjeta.
+- Al elegir o quitar algo (clic, rectángulo, barrido o lista) se ilumina en verde la tarjeta de
+  su sector y se trae a la vista; con el rectángulo, la del sector con más de lo encerrado.
 - Los mapas de Conjuntos y Planificación nacen en colores reales, como el mapa principal
   (SPEC-112 D-13); la ficha de reserva sigue como estaba.
-*Descartado:* una flecha vertical sola, porque no deja ir directo a un sector lejano.
+*Descartado:* un desplegable de sectores, porque la tarjeta ya lleva a su sector; y una flecha
+vertical sola, porque no deja ir directo a un sector lejano.
 
 **D-22 · Supuesto: una planificación se atiende con una sola intervención (18 nov 2026).**
 Indicación del equipo: la planificación de una actividad sobre un conjunto se resuelve con una
@@ -519,15 +524,15 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
    clic izquierdo** agrega lo que encierra el rectángulo y **con clic derecho** lo quita, con
    «Deshacer» (D-20 dice qué cuenta como encerrado), buscador por nombre. No hay botón de selección
    múltiple; la rueda acerca y aleja también con Ctrl apretado. La lista de seleccionados y el
-   mapa siempre coinciden. La lista muestra lo elegido y los sectores se recorren con «‹ [sector] ›»
-   (D-21).
+   mapa siempre coinciden. La lista muestra lo elegido y el foco por sector va en la tarjeta (D-21).
 3. Nombre (obligatorio, único sin distinguir mayúsculas) y descripción opcional, en una fila.
    Sin actividades (D-16). Lo elegido se resume por tipo: los jardines, y los ejemplares de cada
    tipo (Palmera, Árbol…); «Ver en el mapa» lo muestra recorrido por grupos (D-18).
    El título dice qué se hace («Nuevo conjunto de áreas verdes», «Editar conjunto de áreas
    verdes») sin repetir el nombre, que se pide en «Datos del conjunto». «Cambiar jardines y
    ejemplares» (abre el selector) y «Ver en el mapa / Ocultar mapa» (solo mirar) son botones
-   distintos, con su ícono y a cada lado.
+   distintos, con su ícono, con marco y uno junto al otro (18 nov 2026: a la derecha y sin marco,
+   «Ver en el mapa» se perdía).
 4. Los botones van donde en el resto del sistema, al pie del formulario: «Eliminar conjunto» a la
    izquierda; «Cancelar» y «Guardar conjunto» a la derecha. Guardar vuelve a la lista.
 5. La tarjeta de cada conjunto dice qué contiene y sus ejemplares por tipo, sin sector ni
