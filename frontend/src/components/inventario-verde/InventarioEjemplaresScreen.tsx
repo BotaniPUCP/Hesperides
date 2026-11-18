@@ -5,10 +5,10 @@ import type { Species, SpecimenSortKey, SpecimenViewMode } from '@shared/types';
 import { useInventarioVerdeSpecimens, useInventarioVerdeStats } from '@/hooks/useInventarioVerde';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
-import { useRequest } from '@/hooks/useRequest';
+import { usePreloadedList } from '@/hooks/usePreloadedList';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
-import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { oneOf, pageFrom } from '@/lib/listUrl';
+import { speciesList } from '@/lib/preload/inventoryLists';
 import { InventarioVerdeHero } from './InventarioVerdeHero';
 import { SpecimenFiltersBar } from './SpecimenFiltersBar';
 import { SpecimenTable } from './SpecimenTable';
@@ -50,7 +50,7 @@ export function InventarioEjemplaresScreen() {
     availableLocations,
     loading,
   } = useInventarioVerdeSpecimens(null, {
-    search: values.search,
+    search: searchInput,
     location: values.location,
     vegetationType: values.type,
     critical: booleanFilter(values.critical),
@@ -62,19 +62,15 @@ export function InventarioEjemplaresScreen() {
   });
   useListScrollRestoration(LIST_PATH, query, !loading);
 
-  const allSpeciesReq = useRequest('all-species-catalog', () =>
-    typeof inventarioVerdeApi.species === 'function'
-      ? inventarioVerdeApi.species({ page: 0, size: 100 }).catch(() => null)
-      : Promise.resolve(null),
-  );
+  const allSpecies = usePreloadedList(speciesList);
 
   const speciesMap = useMemo(() => {
     const map: Record<string, Species> = {};
-    allSpeciesReq.data?.content?.forEach((s) => {
+    allSpecies.items.forEach((s) => {
       map[s.slug] = s;
     });
     return map;
-  }, [allSpeciesReq.data]);
+  }, [allSpecies.items]);
 
   const handlePageChange = (next: number) => setValues({ page: String(next) });
   const handleResetFilters = () => setValues(DEFAULTS);

@@ -52,6 +52,8 @@ export interface Species {
   usesTrunkHeight: boolean;
   usesDbh: boolean;
   unmeasuredSpecimenCount: number;
+  /** Nombres científico, común y alternativos y familia sin tildes: en qué se busca (SPEC-119 D-01). */
+  searchKey: string;
   /** Medidas propias de la especie. Solo en la ficha; en el listado viene vacío. */
   extraMeasures: ExtraMeasure[];
 }
@@ -126,6 +128,15 @@ export interface Specimen {
   speciesSlug?: string | null;
   speciesCommonName?: string | null;
   speciesScientificName?: string | null;
+}
+
+/** Un ejemplar de `/specimens/all`, con lo que el navegador necesita para filtrarlo (SPEC-119). */
+export interface SpecimenListItem extends Specimen {
+  vegetationTypeCode: string;
+  speciesCritical: boolean;
+  measured: boolean;
+  /** Código, referencia, ubicación, placa, notas y nombres de la especie sin tildes. */
+  searchKey: string;
 }
 
 /** Procedencia de las medidas (C-08). Solo MEASURED vale para decidir quién poda. */
@@ -206,13 +217,3 @@ export interface SpecimenFilters {
 }
 
 export type SpecimenViewMode = 'cards' | 'table';
-
-export interface SpecimenSearchResult {
-  code: string;
-  sourceReference: string | null;
-  sourceLocation: string | null;
-  legacyCode: string | null;
-  speciesSlug: string;
-  speciesCommonName: string;
-  speciesScientificName: string;
-}

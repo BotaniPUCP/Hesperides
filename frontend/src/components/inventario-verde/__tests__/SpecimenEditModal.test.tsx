@@ -38,6 +38,7 @@ const EJEMPLO_SPECIMEN: SpecimenDetail = {
     usesTrunkHeight: true,
     usesDbh: true,
     unmeasuredSpecimenCount: 0,
+    searchKey: '',
     extraMeasures: [],
   },
   extraMeasures: [],

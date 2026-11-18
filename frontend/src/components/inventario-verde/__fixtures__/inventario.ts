@@ -1,4 +1,5 @@
-import type { InventorySummary, Page, Species, Specimen, SpecimenDetail } from '@shared/types';
+import type { InventorySummary, Species, Specimen, SpecimenDetail, SpecimenListItem } from '@shared/types';
+import { normalize } from '@/lib/search/searchText';
 
 /** Datos de muestra con la forma de /api/v1/green-inventory, tomados del catastro real. */
 
@@ -32,6 +33,7 @@ export const palmeraReal: Species = {
   photos: [],
   ...medidasDeEspecieCritica,
   unmeasuredSpecimenCount: 130,
+  searchKey: 'roystonea regia palmera real arecaceae',
 };
 
 export const palmeraReina: Species = {
@@ -41,6 +43,7 @@ export const palmeraReina: Species = {
   commonName: 'Palmera reina',
   otherNames: ['Palmera bruja'],
   specimenCount: 13,
+  searchKey: 'syagrus romanzoffiana palmera reina arecaceae palmera bruja',
 };
 
 export const p01: Specimen = {
@@ -57,6 +60,17 @@ export const p01: Specimen = {
 };
 
 export const p02: Specimen = { ...p01, code: 'EV-000002', sourceReference: 'p02', notes: null };
+
+/** Como llegan en `/specimens/all`: con lo que el navegador usa para filtrarlos (SPEC-119). */
+export function listed(specimen: Specimen, extra: Partial<SpecimenListItem> = {}): SpecimenListItem {
+  return {
+    speciesSlug: 'roystonea-regia', speciesCommonName: 'Palmera real', speciesScientificName: 'Roystonea regia',
+    vegetationTypeCode: 'PALM', speciesCritical: true, measured: true,
+    searchKey: normalize([specimen.code, specimen.sourceReference, specimen.sourceLocation, 'palmera real roystonea regia']
+      .filter(Boolean).join(' ')),
+    ...specimen, ...extra,
+  };
+}
 
 export const p01Detail: SpecimenDetail = {
   ...p01,
@@ -95,6 +109,3 @@ export const summary: InventorySummary = {
   ],
 };
 
-export function page<T>(content: T[], totalElements = content.length, number = 0, size = 24): Page<T> {
-  return { content, page: { number, size, totalElements, totalPages: Math.max(1, Math.ceil(totalElements / size)) } };
-}

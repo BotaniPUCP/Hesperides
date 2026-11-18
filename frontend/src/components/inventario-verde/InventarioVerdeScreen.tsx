@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useInventarioVerdeSpecies, useInventarioVerdeStats } from '@/hooks/useInventarioVerde';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
@@ -14,10 +13,11 @@ const LIST_PATH = '/inventario-verde';
 const SPECIES_SORTS = ['name:asc', 'name:desc', 'count:desc', 'count:asc'] as const;
 const DEFAULTS = { search: '', type: 'ALL', sort: 'name:asc', page: '0', enRetiro: 'false' };
 
-/** El catálogo de especies. Sus filtros viven en la URL para encontrarlos igual al regresar de una ficha. */
+/**
+ * El catálogo de especies. Sus filtros viven en la URL para encontrarlos igual al regresar de una
+ * ficha; el catálogo se carga una vez y se filtra en el navegador mientras se escribe (SPEC-119).
+ */
 export function InventarioVerdeScreen() {
-  const [reloadKey] = useState(0);
-
   const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
   const [searchInput, setSearchInput] = useSearchDraft(values.search, (search) => setValues({ search, page: '0' }));
   const selectedType = values.type;
@@ -26,7 +26,7 @@ export function InventarioVerdeScreen() {
   const page = pageFrom(values.page);
   const pageSize = 16;
 
-  const { totalSpecimens, vegetationTypes } = useInventarioVerdeStats(reloadKey);
+  const { totalSpecimens, vegetationTypes } = useInventarioVerdeStats();
 
   const {
     species,
@@ -35,12 +35,11 @@ export function InventarioVerdeScreen() {
     currentPage,
     loading,
   } = useInventarioVerdeSpecies({
-    search: values.search,
+    search: searchInput,
     vegetationType: selectedType,
     retiring: enRetiro,
     page,
     pageSize,
-    reloadKey,
   });
   useListScrollRestoration(LIST_PATH, query, !loading);
 

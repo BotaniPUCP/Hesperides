@@ -22,7 +22,7 @@ jest.mock('@/hooks/useCatalog', () => ({
   }),
 }));
 jest.mock('@/lib/inventario-verde-api', () => ({
-  inventarioVerdeApi: { species: jest.fn(), assignableSpecies: jest.fn(), registerSpecies: jest.fn() },
+  inventarioVerdeApi: { allSpecies: jest.fn(), registerSpecies: jest.fn() },
 }));
 // El visor 3D no corre en jsdom: un botón hace de clic en el suelo.
 jest.mock('../registrar/MapaSelector', () => ({
@@ -32,7 +32,6 @@ jest.mock('../registrar/MapaSelector', () => ({
     </button>
   ),
 }));
-jest.mock('@/hooks/useDebouncedValue', () => ({ useDebouncedValue: <T,>(v: T) => v }));
 
 const register = jest.mocked(catastroApi.register);
 
@@ -41,6 +40,7 @@ const MOLLE = {
   family: 'Anacardiaceae', vegetationTypeCode: 'TREE', vegetationTypeName: 'Árbol', specimenCount: 3, imageUrl: null,
   imageSource: null, photos: [],
   ...medidasDeEspecieCritica,
+  searchKey: 'schinus molle molle serrano anacardiaceae',
 };
 
 function pantalla(rol = 'SUPERVISOR') {
@@ -48,10 +48,8 @@ function pantalla(rol = 'SUPERVISOR') {
   render(<RegistrarScreen />);
 }
 
+/** El catálogo se carga al abrir el formulario (SPEC-119): por defecto trae el molle. */
 async function elegirMolleYPunto() {
-  jest.mocked(inventarioVerdeApi.assignableSpecies).mockResolvedValue({
-    content: [MOLLE], page: { number: 0, size: 8, totalElements: 1, totalPages: 1 },
-  });
   await userEvent.type(screen.getByLabelText(/Especie/), 'molle');
   await userEvent.click(await screen.findByRole('button', { name: /Schinus molle/ }));
   await userEvent.click(screen.getByRole('button', { name: 'clic en el mapa' }));
@@ -60,7 +58,8 @@ async function elegirMolleYPunto() {
 describe('RegistrarScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mocked(inventarioVerdeApi.assignableSpecies).mockReset();
+    jest.mocked(inventarioVerdeApi.allSpecies).mockReset();
+    jest.mocked(inventarioVerdeApi.allSpecies).mockResolvedValue([MOLLE]);
   });
 
   it('el operario no registra', () => {
@@ -93,19 +92,32 @@ describe('RegistrarScreen', () => {
     expect(await screen.findByText('EV-000966')).toBeInTheDocument();
   });
 
-  it('muestra que está buscando especies mientras espera la API', async () => {
-    jest.mocked(inventarioVerdeApi.assignableSpecies).mockReturnValue(new Promise(() => {}));
+  it('muestra que está cargando las especies mientras espera la API', async () => {
+    jest.mocked(inventarioVerdeApi.allSpecies).mockReturnValue(new Promise(() => {}));
     pantalla();
 
     fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'molle' } });
 
-    expect(screen.getByRole('status')).toHaveTextContent('Buscando especies…');
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando especies…');
+  });
+
+  it('escribir no consulta por cada letra y no ofrece especies en retiro (SPEC-119)', async () => {
+    jest.mocked(inventarioVerdeApi.allSpecies).mockResolvedValue([MOLLE,
+      { ...MOLLE, slug: 'schinus-terebinthifolia', scientificName: 'Schinus terebinthifolia', isActive: false,
+        searchKey: 'schinus terebinthifolia' }]);
+    pantalla();
+
+    await userEvent.type(screen.getByLabelText(/Especie/), 'schinus');
+
+    expect(await screen.findByRole('button', { name: /Schinus molle/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /terebinthifolia/ })).not.toBeInTheDocument();
+    expect(inventarioVerdeApi.allSpecies).toHaveBeenCalledTimes(1);
   });
 
   it('distingue un error de carga de una búsqueda sin resultados y permite reintentar', async () => {
-    jest.mocked(inventarioVerdeApi.assignableSpecies)
+    jest.mocked(inventarioVerdeApi.allSpecies)
       .mockRejectedValueOnce(new Error('API no disponible'))
-      .mockResolvedValueOnce({ content: [MOLLE], page: { number: 0, size: 8, totalElements: 1, totalPages: 1 } });
+      .mockResolvedValueOnce([MOLLE]);
     pantalla();
 
     fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'molle' } });
@@ -114,13 +126,11 @@ describe('RegistrarScreen', () => {
     expect(screen.queryByText(/No se encontró ninguna especie/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar búsqueda' }));
     expect(await screen.findByRole('button', { name: /Schinus molle/ })).toBeInTheDocument();
-    expect(inventarioVerdeApi.assignableSpecies).toHaveBeenCalledTimes(2);
+    expect(inventarioVerdeApi.allSpecies).toHaveBeenCalledTimes(2);
   });
 
   it('muestra que no hay resultados solo cuando la búsqueda termina sin error', async () => {
-    jest.mocked(inventarioVerdeApi.assignableSpecies).mockResolvedValue({
-      content: [], page: { number: 0, size: 8, totalElements: 0, totalPages: 0 },
-    });
+    jest.mocked(inventarioVerdeApi.allSpecies).mockResolvedValue([]);
     pantalla();
 
     fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'no existe' } });
@@ -236,12 +246,10 @@ describe('RegistrarScreen', () => {
       usesDbh: false,
       unmeasuredSpecimenCount: 0,
       extraMeasures: [],
+      searchKey: 'lantana camara',
     };
 
-    jest.mocked(inventarioVerdeApi.assignableSpecies).mockResolvedValue({
-      content: [ARBUSTO],
-      page: { number: 0, size: 8, totalElements: 1, totalPages: 1 },
-    });
+    jest.mocked(inventarioVerdeApi.allSpecies).mockResolvedValue([ARBUSTO]);
 
     pantalla();
     await userEvent.type(screen.getByLabelText(/Especie/), 'Lantana');

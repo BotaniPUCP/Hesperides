@@ -6,7 +6,7 @@ import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { rememberedHref } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
-import { page, p01, p02, summary } from '../__fixtures__/inventario';
+import { listed, p01, p02, summary } from '../__fixtures__/inventario';
 
 jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
 
@@ -22,26 +22,28 @@ jest.mock('@/lib/inventario-verde-api', () => ({
     summary: jest.fn(),
     allSpecimens: jest.fn(),
     allLocations: jest.fn(),
-    specimens: jest.fn(),
+    allSpecies: jest.fn(),
     locations: jest.fn(),
   },
 }));
 
 const api = inventarioVerdeApi as jest.Mocked<typeof inventarioVerdeApi>;
 
-const mockSpecimenGlobal1 = {
-  ...p01,
-  speciesSlug: 'roystonea-regia',
-  speciesCommonName: 'Palmera real',
-  speciesScientificName: 'Roystonea regia',
-};
+/** Palmera real, crítica y medida, en Educación. */
+const mockSpecimenGlobal1 = listed(p01);
 
-const mockSpecimenGlobal2 = {
-  ...p02,
-  speciesSlug: 'syagrus-romanzoffiana',
-  speciesCommonName: 'Palmera reina',
-  speciesScientificName: 'Syagrus romanzoffiana',
-};
+/** Palmera reina, ni crítica ni medida, en la Biblioteca. */
+const mockSpecimenGlobal2 = listed({ ...p02, sourceLocation: 'Biblioteca Central' }, {
+  speciesSlug: 'syagrus-romanzoffiana', speciesCommonName: 'Palmera reina', speciesScientificName: 'Syagrus romanzoffiana',
+  vegetationTypeCode: 'TREE', speciesCritical: false, measured: false,
+  searchKey: 'ev-000002 p02 biblioteca central palmera reina syagrus romanzoffiana',
+});
+
+/** Cuarenta, para que haya más de una página: los pares son palmeras críticas y medidas. */
+const forty = Array.from({ length: 40 }, (_, i) => listed(
+  { ...p01, code: 'EV-1' + String(i).padStart(5, '0'), sourceReference: 'p' + i },
+  { speciesCritical: i % 2 === 0, measured: i % 2 === 0, vegetationTypeCode: i % 2 === 0 ? 'PALM' : 'TREE' },
+));
 
 beforeEach(() => {
   window.history.replaceState(null, '', LIST);
@@ -49,9 +51,8 @@ beforeEach(() => {
   restartTrail(LIST);
   mockUseAuth.mockReturnValue({ user: null });
   api.summary.mockResolvedValue(summary);
-  api.allSpecimens.mockImplementation(async ({ search }) =>
-    page(search ? [mockSpecimenGlobal2] : [mockSpecimenGlobal1, mockSpecimenGlobal2]),
-  );
+  api.allSpecimens.mockResolvedValue([mockSpecimenGlobal1, mockSpecimenGlobal2]);
+  api.allSpecies.mockResolvedValue([]);
   api.allLocations.mockResolvedValue([
     { location: 'Educación', count: 5 },
     { location: 'Biblioteca Central', count: 25 },
@@ -87,15 +88,11 @@ describe('InventarioEjemplaresScreen', () => {
     await userEvent.type(searchInput, 'reina');
 
     await waitFor(() => {
-      expect(api.allSpecimens).toHaveBeenCalledWith(
-        expect.objectContaining({ search: 'reina', page: 0 }),
-      );
-    });
-
-    await waitFor(() => {
       expect(screen.queryByText('EV-000001')).not.toBeInTheDocument();
       expect(screen.getByText('EV-000002')).toBeInTheDocument();
     });
+    // Se busca en la lista ya cargada: ninguna consulta por letra (SPEC-119).
+    expect(api.allSpecimens).toHaveBeenCalledTimes(1);
   });
 
   describe('conservar la pantalla para regresar', () => {
@@ -114,13 +111,8 @@ describe('InventarioEjemplaresScreen', () => {
       window.history.replaceState(null, '', `${LIST}?search=real&type=PALM&location=Educación&sort=location&view=table&page=2`);
       render(<InventarioEjemplaresScreen />);
 
-      await waitFor(() =>
-        expect(api.allSpecimens).toHaveBeenCalledWith(
-          expect.objectContaining({
-            search: 'real', vegetationType: 'PALM', location: 'Educación', sortBy: 'location', page: 2,
-          }),
-        ),
-      );
+      expect(await screen.findByText('EV-000001')).toBeInTheDocument();
+      expect(screen.queryByText('EV-000002')).not.toBeInTheDocument();
       expect(screen.getByPlaceholderText(/Buscar por código, referencia/i)).toHaveValue('real');
       expect(await screen.findByText('Código')).toBeInTheDocument();
     });
@@ -129,11 +121,8 @@ describe('InventarioEjemplaresScreen', () => {
       window.history.replaceState(null, '', `${LIST}?sort=photo_url;drop&dir=x&view=y&page=-4`);
       render(<InventarioEjemplaresScreen />);
 
-      await waitFor(() =>
-        expect(api.allSpecimens).toHaveBeenCalledWith(
-          expect.objectContaining({ sortBy: 'code', sortDirection: 'asc', page: 0 }),
-        ),
-      );
+      expect(await screen.findByText('EV-000001')).toBeInTheDocument();
+      expect(screen.getByText('EV-000002')).toBeInTheDocument();
     });
 
     it('lleva a la URL lo que se filtra y lo recuerda para el breadcrumb', async () => {
@@ -191,26 +180,22 @@ describe('InventarioEjemplaresScreen', () => {
       render(<InventarioEjemplaresScreen />);
       await screen.findByText('EV-000001');
 
-      expect(api.allSpecimens).toHaveBeenLastCalledWith(
-        expect.objectContaining({ critical: undefined, measured: undefined }),
-      );
+      expect(screen.getByText('EV-000002')).toBeInTheDocument();
     });
 
     it('se combinan entre sí y vuelven a la primera página', async () => {
-      api.allSpecimens.mockImplementation(async () => page([mockSpecimenGlobal1], 40, 0, 16));
+      api.allSpecimens.mockResolvedValue(forty);
       render(<InventarioEjemplaresScreen />);
-      await screen.findByText('EV-000001');
+      await screen.findByText('EV-100000');
       await userEvent.click(screen.getByRole('button', { name: /siguiente|next/i }));
-      await waitFor(() => expect(api.allSpecimens).toHaveBeenCalledWith(expect.objectContaining({ page: 1 })));
+      await waitFor(() => expect(window.location.search).toContain('page=1'));
 
       await userEvent.selectOptions(await critical(), 'false');
       await userEvent.selectOptions(await measured(), 'false');
 
-      await waitFor(() =>
-        expect(api.allSpecimens).toHaveBeenLastCalledWith(
-          expect.objectContaining({ critical: false, measured: false, page: 0 }),
-        ),
-      );
+      await waitFor(() => expect(window.location.search).not.toContain('page=1'));
+      expect(await screen.findByText('EV-100001')).toBeInTheDocument();
+      expect(screen.queryByText('EV-100000')).not.toBeInTheDocument();
     });
 
     it('«Medidos» y «Críticas» viajan como verdadero', async () => {
@@ -218,11 +203,8 @@ describe('InventarioEjemplaresScreen', () => {
       await userEvent.selectOptions(await critical(), 'true');
       await userEvent.selectOptions(await measured(), 'true');
 
-      await waitFor(() =>
-        expect(api.allSpecimens).toHaveBeenLastCalledWith(
-          expect.objectContaining({ critical: true, measured: true }),
-        ),
-      );
+      await waitFor(() => expect(screen.queryByText('EV-000002')).not.toBeInTheDocument());
+      expect(screen.getByText('EV-000001')).toBeInTheDocument();
     });
 
     it('restablecer los filtros también los reinicia', async () => {
@@ -247,23 +229,19 @@ describe('InventarioEjemplaresScreen', () => {
       expect(screen.queryByRole('option', { name: /Cubresuelo/ })).not.toBeInTheDocument();
     });
 
-    it('pide los ejemplares del tipo elegido y vuelve a la primera página', async () => {
-      api.allSpecimens.mockImplementation(async () => page([mockSpecimenGlobal1], 40, 0, 16));
+    it('muestra los ejemplares del tipo elegido y vuelve a la primera página', async () => {
+      api.allSpecimens.mockResolvedValue(forty);
       render(<InventarioEjemplaresScreen />);
-      await screen.findByText('EV-000001');
+      await screen.findByText('EV-100000');
       await userEvent.click(screen.getByRole('button', { name: /siguiente|next/i }));
-      await waitFor(() =>
-        expect(api.allSpecimens).toHaveBeenCalledWith(expect.objectContaining({ page: 1 })),
-      );
+      await waitFor(() => expect(window.location.search).toContain('page=1'));
 
       await screen.findByRole('option', { name: 'Palmera (250)' });
       await userEvent.selectOptions(await typeFilter(), 'PALM');
 
-      await waitFor(() =>
-        expect(api.allSpecimens).toHaveBeenLastCalledWith(
-          expect.objectContaining({ vegetationType: 'PALM', page: 0 }),
-        ),
-      );
+      await waitFor(() => expect(window.location.search).not.toContain('page=1'));
+      expect(await screen.findByText('EV-100000')).toBeInTheDocument();
+      expect(screen.queryByText('EV-100001')).not.toBeInTheDocument();
     });
 
     it('se combina con el filtro de ubicación', async () => {
@@ -274,11 +252,8 @@ describe('InventarioEjemplaresScreen', () => {
       await userEvent.selectOptions(await typeFilter(), 'PALM');
       await userEvent.selectOptions(screen.getByDisplayValue('Todas las ubicaciones'), 'Educación');
 
-      await waitFor(() =>
-        expect(api.allSpecimens).toHaveBeenLastCalledWith(
-          expect.objectContaining({ vegetationType: 'PALM', location: 'Educación' }),
-        ),
-      );
+      await waitFor(() => expect(screen.queryByText('EV-000002')).not.toBeInTheDocument());
+      expect(screen.getByText('EV-000001')).toBeInTheDocument();
     });
 
     it('«Restablecer filtros» aparece con un tipo elegido y lo quita', async () => {
@@ -290,11 +265,7 @@ describe('InventarioEjemplaresScreen', () => {
       await userEvent.click(await screen.findByRole('button', { name: 'Restablecer filtros' }));
 
       expect(await typeFilter()).toHaveValue('ALL');
-      await waitFor(() =>
-        expect(api.allSpecimens).toHaveBeenLastCalledWith(
-          expect.objectContaining({ vegetationType: 'ALL' }),
-        ),
-      );
+      expect(await screen.findByText('EV-000002')).toBeInTheDocument();
     });
   });
 

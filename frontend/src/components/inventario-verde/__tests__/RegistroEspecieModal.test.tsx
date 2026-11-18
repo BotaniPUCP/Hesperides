@@ -91,6 +91,7 @@ describe('RegistroEspecieModal', () => {
       imageSource: null,
       photos: [],
       ...medidasDeEspecieCritica,
+      searchKey: '',
     };
 
     jest.mocked(inventarioVerdeApi.registerSpecies).mockResolvedValue(mockNuevaEspecie);
