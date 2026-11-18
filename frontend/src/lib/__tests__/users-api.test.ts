@@ -10,48 +10,15 @@ const mockedGet = apiClient.get as jest.Mock;
 const mockedPost = apiClient.post as jest.Mock;
 const mockedPut = apiClient.put as jest.Mock;
 
-describe('usersApi.list', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockedGet.mockResolvedValue({ content: [], page: { number: 0, size: 20, totalElements: 0, totalPages: 0 } });
-  });
+describe('usersApi.all', () => {
+  beforeEach(() => jest.clearAllMocks());
 
-  it('omits filters that have no value instead of sending them empty', async () => {
-    // Un `?search=` vacío no es lo mismo que no filtrar: el backend lo recibiría
-    // como cadena vacía y buscaría por ella.
-    await usersApi.list({}, 0);
+  it('pide la lista completa, sin filtros: se filtra en el navegador (SPEC-119)', async () => {
+    mockedGet.mockResolvedValue([]);
 
-    const path = mockedGet.mock.calls[0][0] as string;
-    expect(path).not.toContain('search=');
-    expect(path).not.toContain('roleCode=');
-    expect(path).not.toContain('isActive=');
-    expect(path).not.toContain('teamId=');
-  });
+    await usersApi.all();
 
-  it('sends every filter that does have a value', async () => {
-    await usersApi.list({ search: 'ana', roleCode: 'OPERARIO', isActive: false, teamId: 7 }, 2);
-
-    const path = mockedGet.mock.calls[0][0] as string;
-    expect(path).toContain('search=ana');
-    expect(path).toContain('roleCode=OPERARIO');
-    expect(path).toContain('isActive=false');
-    expect(path).toContain('teamId=7');
-    expect(path).toContain('page=2');
-  });
-
-  it('keeps isActive=false in the query, because false is a filter and not an absence', async () => {
-    // El fallo clásico: `if (filters.isActive)` descarta false y el filtro
-    // "solo inactivos" deja de funcionar sin dar ningún error.
-    await usersApi.list({ isActive: false }, 0);
-
-    expect(mockedGet.mock.calls[0][0]).toContain('isActive=false');
-  });
-
-  it('encodes a search term with spaces and accents', async () => {
-    await usersApi.list({ search: 'María García' }, 0);
-
-    const path = mockedGet.mock.calls[0][0] as string;
-    expect(path).toContain('search=Mar%C3%ADa+Garc%C3%ADa');
+    expect(mockedGet).toHaveBeenCalledWith('/users/all');
   });
 });
 

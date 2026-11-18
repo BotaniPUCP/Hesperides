@@ -5,6 +5,7 @@ import { UsersAdminScreen } from '../UsersAdminScreen';
 import { ToastProvider } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { usersApi } from '@/lib/users-api';
+import { notifyWrite } from '@/lib/writeEvents';
 
 import { __resetCatalogCache } from '@/hooks/useCatalog';
 
@@ -13,7 +14,7 @@ jest.mock('@/lib/system-parameters-api');
 
 jest.mock('@/lib/users-api', () => ({
   usersApi: {
-    list: jest.fn(),
+    all: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     deactivate: jest.fn(),
@@ -40,7 +41,7 @@ jest.mock('@/hooks/useAuth', () => ({
   }),
 }));
 
-const list = usersApi.list as jest.Mock;
+const list = usersApi.all as jest.Mock;
 const create = usersApi.create as jest.Mock;
 const deactivate = usersApi.deactivate as jest.Mock;
 
@@ -59,14 +60,8 @@ function usuario(overrides: Partial<UserDetail> = {}): UserDetail {
     teams: [],
     createdAt: '2026-09-01T10:00:00Z',
     updatedAt: '2026-09-01T10:00:00Z',
+    searchKey: 'ana torres ana@pucp.edu.pe',
     ...overrides,
-  };
-}
-
-function pagina(content: UserDetail[]) {
-  return {
-    content,
-    page: { number: 0, size: 20, totalElements: content.length, totalPages: 1 },
   };
 }
 
@@ -104,15 +99,16 @@ describe('UsersAdminScreen', () => {
     __resetCatalogCache();
     jest.clearAllMocks();
     rolDeLaSesion = 'ADMIN';
-    list.mockResolvedValue(pagina([usuario()]));
+    list.mockResolvedValue([usuario()]);
   });
 
   it('abre mostrando solo las cuentas activas', async () => {
     // Es lo que se necesita el 95% de las veces (§7.1); el 5% restante lo cubre
     // el vacio, que ofrece mirar entre los desactivados.
+    list.mockResolvedValue([usuario(), usuario({ id: 6, fullName: 'Luis Gómez', isActive: false })]);
     await montarYEsperar();
 
-    expect(list).toHaveBeenCalledWith(expect.objectContaining({ isActive: true }), 0);
+    expect(screen.queryByText('Luis Gómez')).not.toBeInTheDocument();
   });
 
   it('no repite un enlace de vuelta al inicio: esa navegación la da el sidebar', async () => {
@@ -121,24 +117,15 @@ describe('UsersAdminScreen', () => {
     expect(screen.queryByRole('link', { name: /volver al inicio/i })).not.toBeInTheDocument();
   });
 
-  it('consulta una sola vez tras dejar de escribir, no una por letra', async () => {
-    jest.useFakeTimers();
-    const usuarioDePrueba = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+  it('busca en la lista cargada mientras se escribe, sin consultar por letra (SPEC-119)', async () => {
+    list.mockResolvedValue([usuario(), usuario({ id: 7, fullName: 'Rosa Núñez', searchKey: 'rosa nunez rosa@pucp.edu.pe' })]);
+    await montarYEsperar();
 
-    try {
-      montar();
-      await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+    await userEvent.type(screen.getByLabelText(/buscar/i), 'NUÑEZ');
 
-      await usuarioDePrueba.type(screen.getByLabelText(/buscar/i), 'ana');
-      expect(list).toHaveBeenCalledTimes(1);
-
-      jest.advanceTimersByTime(300);
-
-      await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
-      expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'ana' }), 0);
-    } finally {
-      jest.useRealTimers();
-    }
+    expect(await screen.findByText('Rosa Núñez')).toBeInTheDocument();
+    expect(screen.queryByText('Ana Torres')).not.toBeInTheDocument();
+    expect(list).toHaveBeenCalledTimes(1);
   });
 
   it('a un COORDINADOR le deja leer el listado pero no le ofrece escribir', async () => {
@@ -160,7 +147,11 @@ describe('UsersAdminScreen', () => {
   });
 
   it('crea un usuario y refresca el listado', async () => {
-    create.mockResolvedValue(usuario({ id: 9, email: 'nuevo@pucp.edu.pe' }));
+    // Como apiClient tras una escritura exitosa: la lista se recarga sola (SPEC-119 D-03).
+    create.mockImplementation(async () => {
+      notifyWrite('/users');
+      return usuario({ id: 9, email: 'nuevo@pucp.edu.pe' });
+    });
     await montarYEsperar();
 
     await userEvent.click(screen.getByRole('button', { name: /nuevo usuario/i }));
@@ -201,7 +192,10 @@ describe('UsersAdminScreen', () => {
   });
 
   it('pide confirmacion nombrando a la persona antes de desactivarla', async () => {
-    deactivate.mockResolvedValue(usuario({ isActive: false }));
+    deactivate.mockImplementation(async () => {
+      notifyWrite('/users/4/deactivate');
+      return usuario({ isActive: false });
+    });
     await montarYEsperar();
 
     await userEvent.click(screen.getByRole('button', { name: /desactivar/i }));
@@ -262,9 +256,7 @@ describe('UsersAdminScreen', () => {
   });
 
   it('no ofrece reenviar credenciales ni desactivar en la cuenta de la sesion', async () => {
-    list.mockResolvedValue(
-      pagina([usuario({ id: 1, fullName: 'Administrador Hesperides' }), usuario()]),
-    );
+    list.mockResolvedValue([usuario({ id: 1, fullName: 'Administrador Hesperides' }), usuario()]);
     await montarYEsperar();
 
     expect(
@@ -278,18 +270,13 @@ describe('UsersAdminScreen', () => {
   it('cuando el filtro esconde a los desactivados, el vacio ofrece mirar ahi', async () => {
     // Sin esta salida, quien no encuentra a alguien recien dado de baja acaba
     // creandolo otra vez y se topa con un 409 confuso (§5.5).
-    list.mockResolvedValue(pagina([]));
+    list.mockResolvedValue([usuario({ isActive: false })]);
     montar();
 
     const boton = await screen.findByRole('button', { name: /también entre los desactivados/i });
     await userEvent.click(boton);
 
-    await waitFor(() =>
-      expect(list).toHaveBeenLastCalledWith(
-        expect.objectContaining({ isActive: undefined }),
-        0,
-      ),
-    );
+    expect(await screen.findByText('Ana Torres')).toBeInTheDocument();
   });
 
   it('un fallo del listado se muestra en la pantalla y se puede reintentar', async () => {
@@ -298,7 +285,7 @@ describe('UsersAdminScreen', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/sin conexión/i);
 
-    list.mockResolvedValue(pagina([usuario()]));
+    list.mockResolvedValue([usuario()]);
     await userEvent.click(screen.getByRole('button', { name: /reintentar/i }));
 
     expect(await screen.findByText('Ana Torres')).toBeInTheDocument();

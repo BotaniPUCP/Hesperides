@@ -29,10 +29,9 @@ export interface UseUserMutationsResult {
  * layout: si estuviera en el componente, la próxima pantalla que desactive a
  * alguien inventaría su propio texto.
  *
- * `onChanged` refresca el listado. Se recibe en vez de devolver los datos
- * actualizados porque el backend puede haber cambiado más de una fila (una
- * reactivación no altera a nadie más, pero un cambio de rol sí puede afectar a
- * qué ve un SUPERVISOR).
+ * Tras guardar, el listado se recarga solo: toda escritura en /users vuelve a pedir la
+ * lista precargada (SPEC-119 D-03). `onChanged` queda para el 404, que no es una
+ * escritura pero sí avisa que la tabla muestra una fila que ya no existe.
  */
 export function useUserMutations(onChanged: () => void): UseUserMutationsResult {
   const { showToast } = useToast();
@@ -53,20 +52,19 @@ export function useUserMutations(onChanged: () => void): UseUserMutationsResult 
     [onChanged, showToast],
   );
 
-  /** Envuelve una acción de fila: bloquea, avisa del fallo y refresca al terminar bien. */
+  /** Envuelve una acción de fila: bloquea y avisa del fallo. */
   const ejecutar = useCallback(
     async (accion: () => Promise<void>) => {
       setIsWorking(true);
       try {
         await accion();
-        onChanged();
       } catch (error) {
         manejarFallo(error);
       } finally {
         setIsWorking(false);
       }
     },
-    [manejarFallo, onChanged],
+    [manejarFallo],
   );
 
   const create = useCallback(
@@ -74,7 +72,6 @@ export function useUserMutations(onChanged: () => void): UseUserMutationsResult 
       setIsWorking(true);
       try {
         const creado = await usersApi.create(payload);
-        onChanged();
 
         // La cuenta existe aunque el correo no haya salido: el envío queda
         // fuera de la transacción del alta a propósito (§5.3). Por eso este
@@ -97,7 +94,7 @@ export function useUserMutations(onChanged: () => void): UseUserMutationsResult 
         setIsWorking(false);
       }
     },
-    [onChanged, showToast],
+    [showToast],
   );
 
   const update = useCallback(
@@ -105,7 +102,6 @@ export function useUserMutations(onChanged: () => void): UseUserMutationsResult 
       setIsWorking(true);
       try {
         const actualizado = await usersApi.update(id, payload);
-        onChanged();
         showToast({
           variant: 'success',
           title: 'Cambios guardados',
@@ -115,7 +111,7 @@ export function useUserMutations(onChanged: () => void): UseUserMutationsResult 
         setIsWorking(false);
       }
     },
-    [onChanged, showToast],
+    [showToast],
   );
 
   const deactivate = useCallback(
