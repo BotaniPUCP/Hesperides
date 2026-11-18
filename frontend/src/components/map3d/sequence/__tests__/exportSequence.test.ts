@@ -86,7 +86,7 @@ describe('exportación de la secuencia', () => {
     await exportSequence({ viewer: fakeViewer().viewer, canvas: output(), breathe: async () => undefined, sink: fakeSink().sink,
       logos: { pixel, original } });
     const logoAtFrame = (i: number) => (composeFrame as jest.Mock).mock.calls[i][5];
-    const atFive = logoAtFrame(5 * EXPORT_FPS), atSix = logoAtFrame(6 * EXPORT_FPS);
+    const atFive = logoAtFrame(4 * EXPORT_FPS), atSix = logoAtFrame(5 * EXPORT_FPS);
     expect(atFive.image).toBe(pixel);
     expect(atFive.smooth).toBe(false);
     expect(atFive.state.visible).toBe(true);

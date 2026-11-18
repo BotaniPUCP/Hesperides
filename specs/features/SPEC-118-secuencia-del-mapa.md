@@ -273,3 +273,15 @@ Ajusta §9.2 y §9.3:
 | ID | Decisión | Por qué | Alternativa descartada |
 |---|---|---|---|
 | D-13 | Deslizamiento y giro a lo largo de 2,8 s (Jean Piero) | Lento, pasa desapercibido | El tramo de 0,9 s de D-12, que se notaba |
+
+### 9.5 Transición adelantada para que se lean las letras (17 nov 2026)
+
+La transición de §5.3 (desenfoque y cambio de calidad, con el cambio de imagen del logo) pasa del
+segundo 5,0 al **4,3**: sube de 4,30 a 4,55 s, cambia a los 4,55 s y baja hasta los 4,90 s. Al enfocarse
+se ve ~63 % de las letras del logo, ya nítidas, que antes era ~17 %. El logo se sigue yendo a los 6 s.
+Sustituye los tiempos de §4, §5.3 y CA-03/CA-04 (la poca calidad dura hasta 4,3 s y la buena empieza a
+los 4,9 s).
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-14 | Adelantar la transición 0,7 s (opción A, Jean Piero) | Las letras se leen nítidas antes de que el logo se vaya | Frenar la salida del logo (tendría que desvanecerse estando grande); acortar el desenfoque (gana poco y esconde peor el cambio) |

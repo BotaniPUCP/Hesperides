@@ -2,7 +2,7 @@ import {
   LOGO_ANCHOR_M, LOGO_ANCHORED_S, LOGO_DRIFT_FROM_S, LOGO_END_S, LOGO_IMAGE_WIDTH, LOGO_LANDED_S, LOGO_SETTLE_S, logoAt, logoSourceAt, type LogoState,
 } from '../logoMotion';
 import { SEQUENCE_DURATION_S } from '../sequencePath';
-import { SWAP_AT_S } from '../sequenceTimeline';
+import { SWAP_AT_S, TRANSITION_END_S } from '../sequenceTimeline';
 
 const ASPECT = 16 / 9;
 /** La hoja dentro de la imagen de 1080×1080. */
@@ -95,7 +95,7 @@ describe('el logo en la secuencia', () => {
     expect(speed((t) => logoAt(t, ASPECT), 5 - 2 * h)).toBeCloseTo(speed((t) => logoSourceAt(t, ASPECT), 8 - 2 * h), 1);
   });
 
-  it('cambia de imagen en el segundo 5,25, con el mapa', () => {
+  it('cambia de imagen en el segundo 4,55, con el mapa', () => {
     expect(logoAt(SWAP_AT_S - 1e-6, ASPECT).image).toBe('pixel');
     expect(logoAt(SWAP_AT_S, ASPECT).image).toBe('original');
   });
@@ -113,5 +113,19 @@ describe('el logo en la secuencia', () => {
       expect(Math.abs(b.y - a.y)).toBeLessThan(0.08);
       expect(Math.abs(b.opacity - a.opacity)).toBeLessThan(0.1);
     }
+  });
+});
+
+describe('las letras al terminar el desenfoque', () => {
+  /** Caja de las letras dentro de la imagen de 1080×1080, medida en la original. */
+  const TEXT = { x0: 165 / 1080, x1: 935 / 1080, y0: 455 / 1080, y1: 645 / 1080 };
+
+  it('al enfocarse se ve más de la mitad de las letras', () => {
+    const s = logoAt(TRANSITION_END_S, ASPECT);
+    const w = s.width, h = s.width * ASPECT, left = s.x - w / 2, top = s.y - h / 2;
+    const [x0, x1, y0, y1] = [left + TEXT.x0 * w, left + TEXT.x1 * w, top + TEXT.y0 * h, top + TEXT.y1 * h];
+    const inside = Math.max(0, Math.min(1, x1) - Math.max(0, x0)) * Math.max(0, Math.min(1, y1) - Math.max(0, y0));
+    expect(inside / ((x1 - x0) * (y1 - y0))).toBeGreaterThan(0.55);
+    expect(s.opacity).toBe(1);
   });
 });

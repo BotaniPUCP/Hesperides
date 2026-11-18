@@ -15,7 +15,8 @@ export interface SequenceFrame {
   scale: number;
 }
 
-export const TRANSITION_START_S = 5;
+/** Adelantada de 5 a 4,3 s (D-14): al enfocarse todavía se lee buena parte de las letras del logo. */
+export const TRANSITION_START_S = 4.3;
 const BLUR_RISE_S = 0.25;
 const SWAP_S = 0.1;
 const BLUR_FALL_S = 0.25;
