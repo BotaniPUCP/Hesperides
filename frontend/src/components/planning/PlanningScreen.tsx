@@ -14,6 +14,7 @@ import { NEW_PLANNING_PATH, PlanningCard } from './PlanningCard';
 import { filterRows, PLANNING_FILTERS, PlanningFilters } from './PlanningFilters';
 import { PlanningMap } from './PlanningMap';
 import { contentsLabel, partialProgress, pendingLabel } from './planningTexts';
+import { planningKey, savedPlanningFirst, takeSavedPlanning } from './savedPlanning';
 
 const PATH = '/intervenciones/planificacion';
 const NEW_LINK = 'rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700';
@@ -27,13 +28,15 @@ export function PlanningScreen() {
   const { values: filters, setValues: setFilters } = useListUrlState(PATH, PLANNING_FILTERS);
   const [reload, setReload] = useState(0);
   const planning = useRequest(`planning-rows:${reload}`, () => planningApi.rows());
-  const [selected, setSelected] = useState<string | null>(null);
+  // Al volver de crear o editar, esa planificación va primera y ya elegida, con su conjunto en el mapa.
+  const [savedKey] = useState(() => (typeof window === 'undefined' ? null : takeSavedPlanning()));
+  const [selected, setSelected] = useState<string | null>(savedKey);
   const [error, setError] = useState<string | null>(null);
   const { ask, dialog } = useConfirmDialog();
   const all = planning.data ?? [];
-  const rows = filterRows(all, filters);
+  const rows = savedPlanningFirst(filterRows(all, filters), savedKey);
   const filtered = Object.values(filters).some(Boolean);
-  const selectedRow = rows.find((r) => `${r.setId}:${r.activityTypeItemId}` === selected) ?? null;
+  const selectedRow = rows.find((r) => planningKey(r) === selected) ?? null;
   const partialSelected = selectedRow !== null && partialProgress(selectedRow) !== null;
 
   const remove = async (row: PlanningRow) => {
@@ -85,9 +88,9 @@ export function PlanningScreen() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <ul className="space-y-3">
             {rows.map((row) => {
-              const key = `${row.setId}:${row.activityTypeItemId}`;
+              const key = planningKey(row);
               return <PlanningCard key={key} row={row} selected={key === selected} onSelect={() => setSelected(key)}
-                onRemove={() => remove(row)} />;
+                onRemove={() => remove(row)} justSaved={key === savedKey} />;
             })}
           </ul>
           <div className="flex flex-col gap-2 lg:sticky lg:top-4 lg:h-[70vh]">

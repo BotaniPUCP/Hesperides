@@ -1,5 +1,6 @@
 'use client';
 
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 import { LoadingSkeleton } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
@@ -21,6 +22,8 @@ async function loadOptions(): Promise<SetOptions> {
 export function GreenAreaSetForm({ setId }: { setId?: number }) {
   const options = useRequest('green-area-set-options', loadOptions);
   const existing = useRequest(setId ? `green-area-set:${setId}` : null, () => greenAreaSetsApi.get(setId!));
+  // En el breadcrumb, el nombre del conjunto en vez de su número.
+  usePageTrail(setId && existing.data ? { labels: { [setId]: existing.data.name } } : {});
 
   const error = options.errorMessage ?? existing.errorMessage
     ?? (existing.notFound ? 'El conjunto no existe o ya fue dado de baja.' : null);

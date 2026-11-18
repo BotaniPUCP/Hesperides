@@ -11,8 +11,8 @@ import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 3, role: { code: 'SUPERVISOR' } } }) }));
 jest.mock('../FrequenciesTable', () => ({
-  FrequenciesTable: ({ frequencies }: { frequencies: MaintenanceFrequency[] }) => (
-    <ul>{frequencies.map((f) => <li key={f.id}>{f.activityType.label}</li>)}</ul>
+  FrequenciesTable: ({ frequencies, savedId }: { frequencies: MaintenanceFrequency[]; savedId?: number | null }) => (
+    <ul>{frequencies.map((f) => <li key={f.id}>{f.activityType.label}{f.id === savedId && ' (recién guardada)'}</li>)}</ul>
   ),
 }));
 jest.mock('@/lib/maintenance-api', () => ({
@@ -90,4 +90,20 @@ it('crear lleva a su propia página, y al volver la lista muestra el aviso una s
   render(<MaintenanceFrequenciesScreen />);
   await screen.findByText('Poda');
   expect(screen.queryByText('Frecuencia registrada')).not.toBeInTheDocument();
+});
+
+it('al volver de crear una, la deja primera y marcada aunque el orden alfabético la pusiera después', async () => {
+  saveFrequencyFlash({ type: 'success', message: 'Frecuencia registrada', savedId: 2 });
+  const { unmount } = render(<MaintenanceFrequenciesScreen />);
+
+  await screen.findByText('Frecuencia registrada');
+  expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Riego (recién guardada)', 'Poda']);
+  // Cerrar el aviso no reordena la tabla bajo el cursor.
+  fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
+  expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Riego (recién guardada)', 'Poda']);
+
+  unmount();
+  render(<MaintenanceFrequenciesScreen />);
+  await screen.findByText('Poda');
+  expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Poda', 'Riego']);
 });

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import type { GreenAreaSetSummary, MaintenanceFrequency, PlanningAssignment } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 import { Badge, Button, Card, LoadingSkeleton } from '@/components/ui';
 import { frequencySummary, scopeLabel } from '@/components/maintenance/frequencySummary';
 import { useRequest } from '@/hooks/useRequest';
@@ -13,6 +14,7 @@ import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 import { maintenanceApi } from '@/lib/maintenance-api';
 import { planningApi } from '@/lib/planning-api';
 import { contentsLabel } from './planningTexts';
+import { rememberSavedPlanning } from './savedPlanning';
 
 const PLANNING_PATH = '/intervenciones/planificacion';
 const NEW_FREQUENCY_PATH = '/intervenciones/frecuencias/nueva';
@@ -55,6 +57,8 @@ export function PlanningFormScreen({ assignmentId = null }: { assignmentId?: num
   const editingId = assignmentId;
   const data = useRequest('planning-form', load);
   const editing = data.data?.assignments.find((a) => a.id === editingId) ?? null;
+  // En el breadcrumb, qué se planifica y dónde en vez del número.
+  usePageTrail(editingId && editing ? { labels: { [editingId]: `${editing.activityLabel} en ${editing.setName}` } } : {});
   const [setId, setSetId] = useState<number | null>(null);
   const [activityId, setActivityId] = useState<number | null>(null);
   const [frequencyId, setFrequencyId] = useState<number | null>(null);
@@ -93,6 +97,7 @@ export function PlanningFormScreen({ assignmentId = null }: { assignmentId?: num
       const saved = target
         ? await planningApi.assignments.change(target.id, { frequencyId: chosen.id })
         : await planningApi.assignments.create({ setId: chosenSetId, frequencyId: chosen.id });
+      rememberSavedPlanning(saved);
       if (saved.warnings.length > 0) setWarnings(saved.warnings);
       else router.push(PLANNING_PATH);
     } catch (e) {
