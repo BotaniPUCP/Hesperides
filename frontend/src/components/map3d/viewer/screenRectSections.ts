@@ -143,13 +143,21 @@ export function sectionsUnderBuildings(data: SceneData, defaultHeightM = 8): Set
   return hidden;
 }
 
+/** Se mide una vez por escena, al primer rectángulo: el mapa general nunca lo usa. */
+const hiddenByScene = new WeakMap<SceneData, Set<string>>();
+function hiddenSectionsOf(data: SceneData): Set<string> {
+  let hidden = hiddenByScene.get(data);
+  if (!hidden) hiddenByScene.set(data, hidden = sectionsUnderBuildings(data));
+  return hidden;
+}
+
 /**
  * Áreas elegibles que el rectángulo de pantalla (píxeles cliente) encierra, según {@link sectionInRect};
- * `hidden` son las que no se ven ({@link sectionsUnderBuildings}) y no se eligen así.
+ * `hidden` son las que no se ven y no se eligen así (por omisión, {@link sectionsUnderBuildings}).
  */
 export function sectionCodesInScreenRect(
   data: SceneData, camera: THREE.PerspectiveCamera, canvasEl: HTMLCanvasElement,
-  x1: number, y1: number, x2: number, y2: number, eligible: readonly string[], hidden: ReadonlySet<string> = new Set(),
+  x1: number, y1: number, x2: number, y2: number, eligible: readonly string[], hidden: ReadonlySet<string> = hiddenSectionsOf(data),
 ): string[] {
   const allowed = new Set(eligible.filter((code) => !hidden.has(code)));
   const found = new Set<string>();

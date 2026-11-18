@@ -67,7 +67,7 @@ describe('sectionCodesInScreenRect', () => {
   });
   const data = {
     greenAreas: [section('A', 0, 0, 100, 100), section('B', 100, 0, 200, 100), section('C', 200, 0, 300, 100)],
-    xerophytic: [], reserve: [], vegetation: [],
+    xerophytic: [], reserve: [], vegetation: [], campusBuildings: [], contextBuildings: [],
   } as unknown as SceneData;
   const canvas = { getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 800 }) } as HTMLCanvasElement;
   const fromAbove = () => {
@@ -148,6 +148,8 @@ describe('jardines bajo un edificio', () => {
     const all = ['PATIO', 'MITAD', 'BORDE', 'LIBRE'];
     expect(sectionCodesInScreenRect(data, camera, canvas, 0, 0, 800, 800, all, sectionsUnderBuildings(data)).sort())
       .toEqual(['BORDE', 'LIBRE']);
-    expect(sectionCodesInScreenRect(data, camera, canvas, 0, 0, 800, 800, all).sort()).toEqual([...all].sort());
+    // Por omisión mide la escena; con una lista vacía elige todo lo encerrado.
+    expect(sectionCodesInScreenRect(data, camera, canvas, 0, 0, 800, 800, all).sort()).toEqual(['BORDE', 'LIBRE']);
+    expect(sectionCodesInScreenRect(data, camera, canvas, 0, 0, 800, 800, all, new Set()).sort()).toEqual([...all].sort());
   });
 });
