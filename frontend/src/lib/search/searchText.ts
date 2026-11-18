@@ -4,10 +4,12 @@
  */
 
 const COMBINING_MARKS = /\p{M}/gu;
+/** Guiones y rayas tipográficos: unaccent los convierte en «-». */
+const DASHES = /[‐-―]/g;
 
 /** Lo mismo que hace `unaccent(lower(btrim(…)))` en PostgreSQL con texto en español. */
 export function normalize(text: string): string {
-  return text.normalize('NFD').replace(COMBINING_MARKS, '').toLowerCase().trim();
+  return text.normalize('NFD').replace(COMBINING_MARKS, '').replace(DASHES, '-').toLowerCase().trim();
 }
 
 /**

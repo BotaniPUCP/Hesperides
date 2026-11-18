@@ -38,13 +38,13 @@ public class PlaceQueryService {
     private final PlaceMapViewRepository mapViews;
 
     @Transactional(readOnly = true)
-    public List<PlaceSummary> list(String search, String categoryCode, String kindCode) {
-        return reads.list(blankToNull(search), blankToNull(categoryCode), blankToNull(kindCode)).stream()
+    public List<PlaceSummary> list() {
+        return reads.list().stream()
                 .map(r -> new PlaceSummary(r.code(), r.name(),
                         r.parentCode() == null ? null : new PlaceRef(r.parentCode(), r.parentName()),
                         new CodeLabel(r.kindCode(), r.kindLabel()), new CodeLabel(r.categoryCode(), r.categoryLabel()),
                         r.mainPhotoId() == null ? null : PlaceDetailAssembler.url(r.mainPhotoId(), true),
-                        r.perspectives(), r.hasFront(), r.hasBack()))
+                        r.perspectives(), r.hasFront(), r.hasBack(), r.searchKey()))
                 .toList();
     }
 
@@ -75,9 +75,5 @@ public class PlaceQueryService {
                 mapRows.perspectives().stream().map(v -> new MapPerspective(v.id(), new PlaceRef(v.placeCode(), v.placeName()),
                         v.displayName(), v.lat(), v.lon(), v.headingDeg(),
                         v.firstPhotoId() == null ? null : PlaceDetailAssembler.url(v.firstPhotoId(), true), v.mapView())).toList());
-    }
-
-    private static String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.strip();
     }
 }

@@ -9,6 +9,10 @@ describe('normalize', () => {
     expect(normalize('Muñoz')).toBe('munoz');
   });
 
+  it('convierte rayas en guiones, como unaccent', () => {
+    expect(normalize('Tontodromo – educación')).toBe('tontodromo - educacion');
+  });
+
   it('deja vacío un texto vacío', () => {
     expect(normalize('')).toBe('');
   });

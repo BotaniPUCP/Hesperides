@@ -13,7 +13,7 @@ import pe.edu.pucp.hesperides.modules.places.dto.ReferenceLinkDtos.Progress;
 @RequiredArgsConstructor
 public class ReferenceLinkRepository {
 
-    public record GroupRow(String name, String category, List<String> codes, double lat, double lon) {
+    public record GroupRow(String name, String category, List<String> codes, double lat, double lon, String searchKey) {
     }
 
     /** Una referencia pedida por código: su id, su nombre y si ya se decidió. */
@@ -22,17 +22,10 @@ public class ReferenceLinkRepository {
 
     private final NamedParameterJdbcTemplate jdbc;
 
-    public List<GroupRow> pendingGroups(String searchPattern, int limit, int offset) {
-        MapSqlParameterSource params = new MapSqlParameterSource("search", searchPattern).addValue("limit", limit)
-                .addValue("offset", offset);
-        return jdbc.query(ReferenceLinkQueries.PENDING_GROUPS, params, (rs, i) -> new GroupRow(rs.getString("name"),
+    public List<GroupRow> pendingGroups() {
+        return jdbc.query(ReferenceLinkQueries.PENDING_GROUPS, (rs, i) -> new GroupRow(rs.getString("name"),
                 rs.getString("category"), Arrays.asList(rs.getString("codes").split(",")), rs.getDouble("lat"),
-                rs.getDouble("lon")));
-    }
-
-    public int countPendingGroups(String searchPattern) {
-        return jdbc.queryForObject(ReferenceLinkQueries.COUNT_PENDING_GROUPS, new MapSqlParameterSource("search", searchPattern),
-                Integer.class);
+                rs.getDouble("lon"), rs.getString("search_key")));
     }
 
     public Progress progress() {

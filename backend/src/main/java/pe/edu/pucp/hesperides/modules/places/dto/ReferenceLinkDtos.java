@@ -29,11 +29,9 @@ public final class ReferenceLinkDtos {
      *
      * @param detectedSide FRONT, BACK o SIDE si el texto nombra un lado; null si no
      */
+    /** {@code searchKey}: el nombre sin tildes ni mayúsculas, para buscar en el navegador (SPEC-119). */
     public record QueueGroup(String name, String category, List<String> referenceCodes, double lat, double lon,
-            String detectedSide, boolean sideUncertain, List<Suggestion> suggestions) {
-    }
-
-    public record QueuePage(int page, int size, int totalGroups, List<QueueGroup> groups) {
+            String detectedSide, boolean sideUncertain, List<Suggestion> suggestions, String searchKey) {
     }
 
     public record Progress(int total, int linked, int discarded, int pending) {

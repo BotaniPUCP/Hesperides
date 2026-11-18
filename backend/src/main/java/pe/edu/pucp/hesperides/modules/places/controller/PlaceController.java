@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.places.dto.MapViewDtos.MapView;
 import pe.edu.pucp.hesperides.modules.places.dto.PlaceRequest;
@@ -38,10 +37,10 @@ public class PlaceController {
     private final PlaceQueryService queries;
     private final PlaceMapViewService mapViews;
 
+    /** Todos los vigentes: se buscan y filtran en el navegador (SPEC-119). */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PlaceSummary>>> list(@RequestParam(required = false) String q,
-            @RequestParam(required = false) String category, @RequestParam(required = false) String kind) {
-        return ResponseEntity.ok(ApiResponse.ok("Places", queries.list(q, category, kind)));
+    public ResponseEntity<ApiResponse<List<PlaceSummary>>> list() {
+        return ResponseEntity.ok(ApiResponse.ok("Places", queries.list()));
     }
 
     /** Antes que /{code}: «map» no es un código de lugar. */

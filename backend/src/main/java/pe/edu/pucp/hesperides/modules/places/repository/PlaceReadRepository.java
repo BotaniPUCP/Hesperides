@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
 
 /** Lecturas del catálogo: tarjetas, y las partes de una ficha que no son perspectivas ni fotos. */
 @Repository
@@ -14,7 +13,7 @@ public class PlaceReadRepository {
 
     public record SummaryRow(String code, String name, String parentCode, String parentName, String kindCode,
             String kindLabel, String categoryCode, String categoryLabel, Long mainPhotoId, int perspectives,
-            boolean hasFront, boolean hasBack) {
+            boolean hasFront, boolean hasBack, String searchKey) {
     }
 
     public record CategoryRow(String kindCode, String kindLabel, String categoryCode, String categoryLabel) {
@@ -27,14 +26,12 @@ public class PlaceReadRepository {
     private final NamedParameterJdbcTemplate jdbc;
 
     /** Busca sin tildes ni mayúsculas en el nombre, los alias y los nombres de perspectiva. */
-    public List<SummaryRow> list(String search, String categoryCode, String kindCode) {
-        MapSqlParameterSource params = new MapSqlParameterSource().addValue("search", LikePattern.contains(search))
-                .addValue("category", categoryCode).addValue("kind", kindCode);
-        return jdbc.query(PlaceQueries.LIST, params, (rs, i) -> new SummaryRow(rs.getString("code"), rs.getString("name"),
+    public List<SummaryRow> list() {
+        return jdbc.query(PlaceQueries.LIST, (rs, i) -> new SummaryRow(rs.getString("code"), rs.getString("name"),
                 rs.getString("parent_code"), rs.getString("parent_name"), rs.getString("kind_code"),
                 rs.getString("kind_label"), rs.getString("category_code"), rs.getString("category_label"),
                 rs.getObject("main_photo_id", Long.class), rs.getInt("perspectives"), rs.getBoolean("has_front"),
-                rs.getBoolean("has_back")));
+                rs.getBoolean("has_back"), rs.getString("search_key")));
     }
 
     public CategoryRow kindAndCategory(long placeId) {

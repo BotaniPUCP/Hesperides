@@ -11,7 +11,6 @@ import pe.edu.pucp.hesperides.modules.places.dto.PlaceResponses.PlaceRef;
 import pe.edu.pucp.hesperides.modules.places.dto.ReferenceLinkDtos.LinkRequest;
 import pe.edu.pucp.hesperides.modules.places.dto.ReferenceLinkDtos.Progress;
 import pe.edu.pucp.hesperides.modules.places.dto.ReferenceLinkDtos.QueueGroup;
-import pe.edu.pucp.hesperides.modules.places.dto.ReferenceLinkDtos.QueuePage;
 import pe.edu.pucp.hesperides.modules.places.dto.ReferenceLinkDtos.Suggestion;
 import pe.edu.pucp.hesperides.modules.places.repository.PerspectiveRepository;
 import pe.edu.pucp.hesperides.modules.places.repository.PlaceLookupRepository;
@@ -25,7 +24,6 @@ import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
 import pe.edu.pucp.hesperides.shared.audit.AuditService;
 import pe.edu.pucp.hesperides.shared.exception.ConflictException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
-import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
 
 /**
  * La migración gradual de las referencias antiguas: el sistema sugiere el lugar
@@ -47,10 +45,8 @@ public class ReferenceMigrationService {
     private final AuditService audit;
 
     @Transactional(readOnly = true)
-    public QueuePage queue(String search, int page, int size) {
-        String pattern = search == null || search.isBlank() ? null : LikePattern.contains(search.strip());
-        List<QueueGroup> groups = links.pendingGroups(pattern, size, page * size).stream().map(this::withSuggestions).toList();
-        return new QueuePage(page, size, links.countPendingGroups(pattern), groups);
+    public List<QueueGroup> queue() {
+        return links.pendingGroups().stream().map(this::withSuggestions).toList();
     }
 
     @Transactional(readOnly = true)
@@ -100,6 +96,6 @@ public class ReferenceMigrationService {
                         Math.round(PlaceSuggester.score(c) * SCORE_ROUNDING) / SCORE_ROUNDING))
                 .toList();
         return new QueueGroup(g.name(), g.category(), g.codes(), g.lat(), g.lon(),
-                text.side() == null ? null : text.side().name(), text.sideUncertain(), ranked);
+                text.side() == null ? null : text.side().name(), text.sideUncertain(), ranked, g.searchKey());
     }
 }

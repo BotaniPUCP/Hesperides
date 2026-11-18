@@ -194,8 +194,9 @@ class PlacesIntegrationTest {
                 .andExpect(jsonPath("$.data.kind.code").value("OUTDOOR"))
                 .andExpect(jsonPath("$.data.outline.source").value("BUILDING"))
                 .andExpect(jsonPath("$.data.aliases", contains("Instituto de Radioastronomía")));
-        mockMvc.perform(get(PLACES).param("q", "radioastronom")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[*].code", contains(code)));
+        mockMvc.perform(get(PLACES)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.code == '" + code + "')].searchKey",
+                        contains(code.toLowerCase() + " inras instituto de radioastronomia")));
     }
 
     @Test

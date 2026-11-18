@@ -1,6 +1,5 @@
 package pe.edu.pucp.hesperides.modules.places;
 
-import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -38,6 +37,7 @@ import pe.edu.pucp.hesperides.support.TestDatabase;
 class ReferenceMigrationIntegrationTest {
 
     private static final String LINKS = "/api/v1/places/reference-links";
+    private static final String QUEUE = LINKS + "/queue/all";
     /** «Espalda de civil», sembrada en V011. */
     private static final String ESPALDA_CIVIL = "REF-0267";
 
@@ -89,19 +89,20 @@ class ReferenceMigrationIntegrationTest {
 
     @Test
     void repeatedNamesComeAsOneGroupLargestFirst() throws Exception {
-        mockMvc.perform(get(LINKS + "/queue")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.groups[0].name").value("Tontodromo – educación"))
-                .andExpect(jsonPath("$.data.groups[0].referenceCodes.length()").value(13));
+        mockMvc.perform(get(QUEUE)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].name").value("Tontodromo – educación"))
+                .andExpect(jsonPath("$.data[0].searchKey").value("tontodromo - educacion"))
+                .andExpect(jsonPath("$.data[0].referenceCodes.length()").value(13));
     }
 
     @Test
     void suggestsThePlaceAndTheSideOfAReference() throws Exception {
         placeOnReference("Ingeniería Civil", ESPALDA_CIVIL);
 
-        String json = mockMvc.perform(get(LINKS + "/queue").param("q", "espalda de civil"))
+        String json = mockMvc.perform(get(QUEUE))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
 
-        List<Map<String, Object>> groups = JsonPath.read(json, "$.data.groups[?(@.referenceCodes[0] == '" + ESPALDA_CIVIL + "')]");
+        List<Map<String, Object>> groups = JsonPath.read(json, "$.data[?(@.referenceCodes[0] == '" + ESPALDA_CIVIL + "')]");
         Map<String, Object> group = groups.get(0);
         org.assertj.core.api.Assertions.assertThat(group.get("detectedSide")).isEqualTo("BACK");
         org.assertj.core.api.Assertions.assertThat(JsonPath.<String>read(group, "$.suggestions[0].place.name")).isEqualTo("Ingeniería Civil");
@@ -117,8 +118,8 @@ class ReferenceMigrationIntegrationTest {
 
         org.assertj.core.api.Assertions.assertThat(pending()).isEqualTo(before - 1);
         mockMvc.perform(get("/api/v1/places/" + code)).andExpect(jsonPath("$.data.aliases", hasItem("Espalda de civil")));
-        mockMvc.perform(get(LINKS + "/queue").param("q", "espalda de civil"))
-                .andExpect(jsonPath("$.data.groups[*].referenceCodes[*]", not(hasItem(ESPALDA_CIVIL))));
+        mockMvc.perform(get(QUEUE))
+                .andExpect(jsonPath("$.data[*].referenceCodes[*]", not(hasItem(ESPALDA_CIVIL))));
     }
 
     @Test
@@ -176,13 +177,7 @@ class ReferenceMigrationIntegrationTest {
     @Test
     @WithMockUser(username = "operario@pucp.edu.pe", authorities = "OPERARIO")
     void onlyEditorsMigrate() throws Exception {
-        mockMvc.perform(get(LINKS + "/queue")).andExpect(status().isForbidden());
+        mockMvc.perform(get(QUEUE)).andExpect(status().isForbidden());
         postJson(LINKS + "/discard", "{\"referenceCodes\": [\"%s\"]}".formatted(ESPALDA_CIVIL)).andExpect(status().isForbidden());
-    }
-
-    @Test
-    void theQueueSearchMatchesAnyPartOfTheName() throws Exception {
-        mockMvc.perform(get(LINKS + "/queue").param("q", "gelarti"))
-                .andExpect(jsonPath("$.data.groups[*].name", everyItem(org.hamcrest.Matchers.containsStringIgnoringCase("gelarti"))));
     }
 }
