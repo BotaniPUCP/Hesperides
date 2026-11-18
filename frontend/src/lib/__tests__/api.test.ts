@@ -1,4 +1,5 @@
 import { apiClient, ApiError, setAccessToken, setPasswordChangeRequiredHandler } from '../api';
+import { onWrite } from '../writeEvents';
 
 describe('apiClient', () => {
   afterEach(() => {
@@ -220,6 +221,32 @@ describe('apiClient', () => {
       }) as unknown as typeof fetch;
 
       await expect(apiClient.getBlob('/green-inventory/export.csv')).rejects.toMatchObject({ status: 403 });
+    });
+  });
+
+  describe('aviso de escritura (SPEC-119 D-03)', () => {
+    const writes: string[] = [];
+    let stop: () => void;
+    beforeEach(() => {
+      writes.length = 0;
+      stop = onWrite((path) => writes.push(path));
+    });
+    afterEach(() => stop());
+
+    it('avisa tras una escritura exitosa con su ruta', async () => {
+      global.fetch = jest.fn().mockResolvedValue(okResponse()) as unknown as typeof fetch;
+      await apiClient.post('/directory/organizations', {});
+      await apiClient.del('/users/3');
+      expect(writes).toEqual(['/directory/organizations', '/users/3']);
+    });
+
+    it('no avisa en una lectura ni en una escritura fallida', async () => {
+      global.fetch = jest.fn()
+        .mockResolvedValueOnce(okResponse())
+        .mockResolvedValueOnce({ ok: false, status: 422, json: async () => ({ ok: false, message: 'x', data: null }) }) as unknown as typeof fetch;
+      await apiClient.get('/users');
+      await expect(apiClient.post('/users', {})).rejects.toBeInstanceOf(ApiError);
+      expect(writes).toEqual([]);
     });
   });
 

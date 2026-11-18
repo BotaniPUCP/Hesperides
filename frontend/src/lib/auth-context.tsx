@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { apiClient, ApiError, setAccessToken, setPasswordChangeRequiredHandler } from './api';
+import { resetPreloadedLists } from './preload/preloadedList';
 
 export interface SessionUser {
   id: number;
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // El token va a memoria antes que el usuario: si se hiciera al revés, un
     // render intermedio podría lanzar una petición sin credencial.
     setAccessToken(payload.accessToken);
+    resetPreloadedLists();
     setUser(payload.user);
   }, []);
 
@@ -90,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // El token se borra pase lo que pase: dejarlo en memoria tras cerrar
       // sesión permitiría seguir operando la API desde la misma pestaña.
       setAccessToken(null);
+      resetPreloadedLists();
       setUser(null);
     }
   }, []);
