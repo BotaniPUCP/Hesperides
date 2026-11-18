@@ -285,3 +285,15 @@ los 4,9 s).
 | ID | Decisión | Por qué | Alternativa descartada |
 |---|---|---|---|
 | D-14 | Adelantar la transición 0,7 s (opción A, Jean Piero) | Las letras se leen nítidas antes de que el logo se vaya | Frenar la salida del logo (tendría que desvanecerse estando grande); acortar el desenfoque (gana poco y esconde peor el cambio) |
+
+### 6.5 Ruta corrida al noroeste (18 nov 2026)
+
+Toda la ruta de §6.1-§6.2 (inicio, final y puntos de control) se corre **126 m al oeste y 141 m al
+norte**: la forma y los tiempos no cambian, solo el lugar. Así, a los 6 s, el edificio de
+(-30, 22, 265) —el que Jean Piero marcó en un cuadro exportado— cae abajo a la derecha (~86 %, 86 %)
+y a los 7 s ya salió del cuadro por esa esquina. La toma final termina ~190 m al noroeste de la de la
+grabación de referencia. El logo no cambia: se calcula respecto de la cámara.
+
+| ID | Decisión | Por qué | Alternativa descartada |
+|---|---|---|---|
+| D-15 | Correr toda la ruta (opción A, Jean Piero) | El edificio pasa por la esquina inferior derecha a los 6 s | Girar solo el inicio (no lo mueve: el final está junto al edificio); correr solo el inicio y volver al final de siempre (B) |

@@ -61,3 +61,24 @@ describe('la mirada de la cámara en la toma', () => {
     }
   });
 });
+
+describe('la ruta corrida al noroeste (D-15)', () => {
+  /** El edificio que Jean Piero marcó en el cuadro del segundo 6, a nivel del suelo. */
+  const BUILDING: Vec3 = [-30, 22, 265];
+
+  it('a los 6 s el edificio cae abajo a la derecha', () => {
+    const seen = screenOf(shotPoseAt(6, ASPECT), BUILDING, ASPECT);
+    expect(seen.x).toBeGreaterThan(0.8);
+    expect(seen.x).toBeLessThan(0.92);
+    expect(seen.y).toBeGreaterThan(0.8);
+    expect(seen.y).toBeLessThan(0.92);
+  });
+
+  it('al terminar el desenfoque ya va hacia esa esquina, y a los 7 s salió del cuadro', () => {
+    const early = screenOf(shotPoseAt(4.9, ASPECT), BUILDING, ASPECT);
+    expect(early.x).toBeGreaterThan(0.55);
+    expect(early.y).toBeGreaterThan(0.55);
+    const late = screenOf(shotPoseAt(7, ASPECT), BUILDING, ASPECT);
+    expect(late.x > 1 || late.y > 1).toBe(true);
+  });
+});
