@@ -334,11 +334,21 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     const inFrame = o.chosen > 0 ? o : { chosenGardens: o.gardens, chosenTrees: o.trees };
     viewer.current?.focusSections(inFrame.chosenGardens.map((s) => s.code), inFrame.chosenTrees.map((e) => e.code));
   };
+  /**
+   * Suelta el sector: la tarjeta queda sin marca (tampoco la verde de lo último elegido) y la vista
+   * se abre al sector entero, más que el foco en lo elegido pero sin llegar a todo el campus.
+   */
+  const release = (g: SectorGroup) => {
+    const o = own(g);
+    setFocus(null);
+    setLit((l) => (l === g.key ? null : l));
+    viewer.current?.focusSections(o.gardens.map((s) => s.code), o.trees.map((e) => e.code));
+  };
   /** Clic en la tarjeta: primero sombrea, después pone el foco, después suelta; con el foco perdido, suelta. */
   const onCardClick = (g: SectorGroup) => {
     if (activeFocus?.key !== g.key) { shade(g); return; }
     if (activeFocus.stage === 'shade') { focusOn(g); return; }
-    setFocus(null);
+    release(g);
   };
   /** Las flechas dan la vuelta; sin foco, la derecha va al primero y la izquierda al último. */
   const step = (delta: 1 | -1) => {

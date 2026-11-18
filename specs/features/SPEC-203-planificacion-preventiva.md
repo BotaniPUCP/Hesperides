@@ -276,7 +276,8 @@ sector, encontrar dónde se trabajaba costaba. Ahora:
 - La tarjeta se usa por pasos: un clic sombrea el sector en naranja tenue (distinto del verde
   del césped y del cian de lo elegido) sin mover la vista; otro clic pone el foco: la vista
   encuadra lo elegido en ese sector (el sector entero si no tiene nada); otro clic suelta el foco
-  y el sombreado. Si con el foco puesto se mueve o acerca el mapa a mano, queda «Sin foco»: sigue
+  y el sombreado. Al soltar, la vista se abre al sector entero (más que el foco, sin llegar a todo
+  el campus) y la tarjeta queda sin marca, tampoco la verde de lo último elegido. Si con el foco puesto se mueve o acerca el mapa a mano, queda «Sin foco»: sigue
   sombreado y un clic en la tarjeta lo suelta, sin volver a poner el foco. Un clic en otra
   tarjeta la sombrea y suelta la anterior. La tarjeta lo dice con su marco: naranja y
   «Sombreado», naranja con halo y «En foco», naranja punteado y «Sin foco», o sin marco; su

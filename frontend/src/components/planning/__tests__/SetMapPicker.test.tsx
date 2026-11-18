@@ -173,6 +173,19 @@ describe('SetMapPicker', () => {
       expect(within(card('Sector 1')).queryByText('Sombreado')).not.toBeInTheDocument();
     });
 
+    it('al soltarla, la tarjeta no queda marcada, ni con el verde de lo último elegido', async () => {
+      const { card, focusCard } = setup([11, 12, 21]);
+
+      await userEvent.click(screen.getByRole('checkbox', { name: /Berma Norte/ }));
+      expect(card('Sector 1').className).toMatch(/ring-brand-600/);
+      await focusCard('Sector 1');
+      await focusCard('Sector 1');
+      await focusCard('Sector 1');
+
+      expect(card('Sector 1').className).toMatch(/border-neutral-200/);
+      expect(card('Sector 1').className).not.toMatch(/ring-|orange/);
+    });
+
     it('con el foco puesto, mover el mapa lo deja «Sin foco» y un clic suelta el sombreado', async () => {
       const { card, focusCard } = setup([11, 21]);
 
