@@ -137,7 +137,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
                 </span>
               )}
             </div>
-            {mapOpen && contents > 0 && <div id="mapa" className="h-[60vh]"><SetMap zoneCodes={zoneCodes} specimenCodes={specimenCodes} className="h-full" /></div>}
+            {mapOpen && contents > 0 && <div id="mapa" className="h-[60vh]"><SetMap zoneCodes={zoneCodes} specimenCodes={specimenCodes} className="h-full" realColors /></div>}
             <SelectedGardensSummary groups={byType} />
           </div>
         </Card>

@@ -128,7 +128,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Ver en el mapa' }));
 
     expect(screen.getByTestId('mapa-del-conjunto')).toBeInTheDocument();
-    expect(mockSetMap).toHaveBeenLastCalledWith({ zoneCodes: ['AV-0011'], specimenCodes: ['EV-000501', 'EV-000502'], className: 'h-full' });
+    expect(mockSetMap).toHaveBeenLastCalledWith({ zoneCodes: ['AV-0011'], specimenCodes: ['EV-000501', 'EV-000502'], className: 'h-full', realColors: true });
     await userEvent.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
     expect(screen.queryByTestId('mapa-del-conjunto')).not.toBeInTheDocument();
   });

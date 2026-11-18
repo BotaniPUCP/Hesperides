@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Link from 'next/link';
 import { SetMapPicker } from '../SetMapPicker';
@@ -27,41 +27,42 @@ function setup(selectedZoneIds: number[] = [], selectedSpecimenIds: number[] = [
     card: (name: string) => screen.getByRole('listitem', { name }),
     open: (name: string) => userEvent.click(within(screen.getByRole('listitem', { name })).getByRole('button', { name: new RegExp(name) })),
     mode: (label: string) => userEvent.click(screen.getByRole('radio', { name: label })),
+    /** Lleva a un sector con el selector del recorrido. */
+    goTo: (name: string) => userEvent.selectOptions(screen.getByRole('combobox', { name: 'Sector' }), name),
   };
 }
 
 describe('SetMapPicker', () => {
   describe('tarjetas por sector', () => {
-    it('cada sector cuenta lo elegido, y los ejemplares sin sección van aparte', () => {
+    it('por defecto solo van las tarjetas con algo elegido, y en ellas solo lo elegido', () => {
       const { card } = setup([11], [501]);
 
       expect(within(card('Sector 1')).getByText('1 de 2')).toBeInTheDocument();
-      expect(within(card('Sector 1')).getByText('1 de 1')).toBeInTheDocument();
       expect(within(card('Sector 1')).getByText('1 jardín · 1 ejemplar')).toBeInTheDocument();
-      expect(within(card('Sector 2')).getByText('0 de 1')).toBeInTheDocument();
-      // Un sector sin nada elegido no lleva insignia: el contador «0 de 1» ya lo dice.
-      expect(within(card('Sector 2')).queryByText('Nada elegido')).not.toBeInTheDocument();
-      expect(card('Fuera de toda sección')).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: /^Jardín Central/ })).toBeChecked();
+      expect(screen.queryByRole('checkbox', { name: /Berma Norte/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('listitem', { name: 'Sector 2' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('listitem', { name: 'Fuera de toda sección' })).not.toBeInTheDocument();
       expect(screen.getByText('Elegido: 1 jardín · 1 ejemplar')).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox', { name: 'Ver solo lo elegido' })).not.toBeInTheDocument();
     });
 
-    it('empiezan plegadas; solo se abren las que ya tienen algo elegido', () => {
-      const { card } = setup([21]);
+    it('sin nada elegido explica cómo empezar', () => {
+      setup();
 
-      expect(within(card('Sector 1')).getByRole('button', { name: /Sector 1/ })).toHaveAttribute('aria-expanded', 'false');
-      expect(within(card('Sector 2')).getByRole('button', { name: /Sector 2/ })).toHaveAttribute('aria-expanded', 'true');
-      expect(screen.queryByRole('checkbox', { name: /Jardín Central/ })).not.toBeInTheDocument();
-      expect(screen.getByRole('checkbox', { name: /Patio Sur/ })).toBeChecked();
+      expect(screen.getByText(/Todavía no elegiste nada/)).toBeInTheDocument();
+      expect(screen.queryByRole('listitem', { name: 'Sector 1' })).not.toBeInTheDocument();
     });
 
-    it('al abrir una tarjeta se marcan y desmarcan, y el contador de esa fila cambia', async () => {
-      const { card, open, mode, onConfirm } = setup();
+    it('en el sector que se recorre se ve todo lo suyo y se marca y desmarca', async () => {
+      const { card, goTo, mode, onConfirm } = setup();
 
       await mode('Ambos');
-      await open('Sector 1');
+      await goTo('Sector 1');
       await userEvent.click(screen.getByRole('checkbox', { name: /Berma Norte/ }));
       await userEvent.click(screen.getByRole('checkbox', { name: /Palmera datilera/ }));
 
+      expect(screen.getByRole('checkbox', { name: /^Jardín Central/ })).not.toBeChecked();
       expect(within(card('Sector 1')).getByText('1 jardín · 1 ejemplar')).toBeInTheDocument();
       await userEvent.click(screen.getByRole('button', { name: 'Confirmar 1 jardín · 1 ejemplar' }));
       expect(onConfirm).toHaveBeenCalledWith([12], [501]);
@@ -77,9 +78,9 @@ describe('SetMapPicker', () => {
     });
 
     it('marcar en grupo agrega lo del sector y queda desactivado cuando ya está todo', async () => {
-      const { card, open } = setup();
+      const { card, goTo } = setup();
 
-      await open('Sector 1');
+      await goTo('Sector 1');
       await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Marcar jardines' }));
 
       expect(within(card('Sector 1')).getByText('2 de 2')).toBeInTheDocument();
@@ -99,7 +100,20 @@ describe('SetMapPicker', () => {
       expect(screen.getByRole('button', { name: 'Confirmar sin elementos' })).toBeInTheDocument();
     });
 
-    it('buscar abre las tarjetas con coincidencias y oculta las demás', async () => {
+    it('buscar muestra también lo no elegido, y desde ahí se agrega', async () => {
+      setup([11]);
+
+      await userEvent.type(screen.getByRole('searchbox'), 'patio');
+      expect(screen.queryByRole('listitem', { name: 'Sector 1' })).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('checkbox', { name: /Patio Sur/ }));
+
+      await userEvent.clear(screen.getByRole('searchbox'));
+      expect(screen.getByRole('checkbox', { name: /Patio Sur/ })).toBeChecked();
+      expect(screen.getByRole('listitem', { name: 'Sector 1' })).toBeInTheDocument();
+      expect(screen.getByText('Elegido: 2 jardines')).toBeInTheDocument();
+    });
+
+    it('buscar oculta las tarjetas sin coincidencias', async () => {
       const { mode } = setup();
 
       await mode('Ejemplares');
@@ -109,23 +123,36 @@ describe('SetMapPicker', () => {
       expect(screen.queryByRole('listitem', { name: 'Sector 1' })).not.toBeInTheDocument();
     });
 
-    it('ver solo lo elegido deja las tarjetas que tienen algo marcado', async () => {
-      setup([21]);
+    it('quitar lo último elegido no esconde la tarjeta ni el jardín bajo el cursor', async () => {
+      const { card } = setup([21]);
 
-      await userEvent.click(screen.getByRole('checkbox', { name: 'Ver solo lo elegido' }));
+      await userEvent.click(screen.getByRole('checkbox', { name: /Patio Sur/ }));
 
-      expect(screen.getByRole('listitem', { name: 'Sector 2' })).toBeInTheDocument();
-      expect(screen.queryByRole('listitem', { name: 'Sector 1' })).not.toBeInTheDocument();
+      expect(card('Sector 2')).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: /Patio Sur/ })).not.toBeChecked();
+    });
+
+    it('al elegir algo se ilumina la tarjeta de su sector', async () => {
+      const { card, goTo } = setup([21]);
+
+      await goTo('Sector 1');
+      expect(card('Sector 1').className).toMatch(/ring-2/);
+      await userEvent.click(screen.getByRole('checkbox', { name: /Patio Sur/ }));
+
+      expect(card('Sector 2').className).toMatch(/ring-2/);
+      expect(card('Sector 1').className).not.toMatch(/ring-2/);
     });
   });
 
   describe('qué se elige', () => {
-    it('sin nada elegido empieza en Jardines y las tarjetas muestran solo jardines', () => {
-      const { card } = setup();
+    it('sin nada elegido empieza en Jardines y las tarjetas muestran solo jardines', async () => {
+      const { card, goTo } = setup();
 
       expect(screen.getByRole('radio', { name: 'Jardines' })).toHaveAttribute('aria-checked', 'true');
+      await goTo('Sector 1');
       expect(within(card('Sector 1')).queryByText('Ejemplares')).not.toBeInTheDocument();
-      expect(screen.queryByRole('listitem', { name: 'Fuera de toda sección' })).not.toBeInTheDocument();
+      expect(within(screen.getByRole('combobox', { name: 'Sector' })).queryByRole('option', { name: 'Fuera de toda sección' }))
+        .not.toBeInTheDocument();
     });
 
     it('un conjunto que ya tiene ejemplares se abre en el modo que le corresponde', () => {
@@ -189,61 +216,61 @@ describe('SetMapPicker', () => {
     });
   });
 
-  describe('ver un sector en el mapa', () => {
-    it('avisa, sin impedirlo, al agregar algo de otro sector', async () => {
-      const { card, open } = setup();
+  describe('recorrer los sectores', () => {
+    it('las flechas pasan de un sector al siguiente y dan la vuelta', async () => {
+      const { card } = setup();
+      const select = screen.getByRole('combobox', { name: 'Sector' });
 
-      await open('Sector 1');
-      await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Ver en el mapa' }));
-      expect(screen.getByText('Viendo Sector 1')).toBeInTheDocument();
-      await open('Sector 2');
+      expect(select).toHaveValue('');
+      await userEvent.click(screen.getByRole('button', { name: 'Sector siguiente' }));
+      expect(select).toHaveDisplayValue('Sector 1');
+      expect(screen.getByText(/Sector 1 de 2/)).toBeInTheDocument();
+      expect(card('Sector 1')).toHaveAttribute('aria-current', 'true');
+      expect(within(card('Sector 1')).getByText('En el mapa')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sector siguiente' }));
+      expect(select).toHaveDisplayValue('Sector 2');
+      await userEvent.click(screen.getByRole('button', { name: 'Sector siguiente' }));
+      expect(select).toHaveDisplayValue('Sector 1');
+      await userEvent.click(screen.getByRole('button', { name: 'Sector anterior' }));
+      expect(select).toHaveDisplayValue('Sector 2');
+    });
+
+    it('el selector lleva directo a un sector y «Todo el campus» lo suelta', async () => {
+      const { goTo } = setup();
+
+      await goTo('Sector 2');
+      expect(screen.getByRole('checkbox', { name: /Patio Sur/ })).toBeInTheDocument();
+      await goTo('Todo el campus');
+
+      expect(screen.queryByRole('listitem', { name: 'Sector 2' })).not.toBeInTheDocument();
+      expect(screen.getByText(/Recorre los sectores con las flechas/)).toBeInTheDocument();
+    });
+
+    it('ya no hay «Ver en el mapa» por tarjeta', () => {
+      setup([11, 21]);
+
+      expect(screen.queryByRole('button', { name: 'Ver en el mapa' })).not.toBeInTheDocument();
+    });
+
+    it('avisa, sin impedirlo, al agregar algo de otro sector', async () => {
+      const { goTo } = setup();
+
+      await goTo('Sector 1');
+      await userEvent.type(screen.getByRole('searchbox'), 'patio');
       await userEvent.click(screen.getByRole('checkbox', { name: /Patio Sur/ }));
 
       expect(screen.getByRole('checkbox', { name: /Patio Sur/ })).toBeChecked();
       expect(screen.getByRole('status')).toHaveTextContent('Agregaste algo de Sector 2, fuera de Sector 1');
     });
 
-    it('acercar o mover el mapa deja de ver el sector y quita el aviso', async () => {
-      const { card, open } = setup();
+    it('con ejemplares, los que están fuera de toda sección también se recorren', async () => {
+      const { mode } = setup();
 
-      await open('Sector 1');
-      await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Ver en el mapa' }));
-      await open('Sector 2');
-      await userEvent.click(screen.getByRole('checkbox', { name: /Patio Sur/ }));
-      fireEvent.wheel(screen.getByRole('region', { name: 'Mapa del campus' }));
+      await mode('Ejemplares');
 
-      expect(screen.queryByText('Viendo Sector 1')).not.toBeInTheDocument();
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    });
-
-    it('muestra lo elegido del sector y, si no hay nada elegido, el sector entero', async () => {
-      const { card, open } = setup([21]);
-
-      await userEvent.click(within(card('Sector 2')).getByRole('button', { name: 'Ver en el mapa' }));
-      expect(screen.getByText('Viendo lo elegido en Sector 2')).toBeInTheDocument();
-
-      await open('Sector 1');
-      await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Ver en el mapa' }));
-      expect(screen.getByText('Viendo Sector 1')).toBeInTheDocument();
-    });
-
-    it('los ejemplares fuera de toda sección también se pueden ver en el mapa', async () => {
-      const { card } = setup([], [502]);
-
-      expect(within(card('Fuera de toda sección')).getByRole('button', { name: 'Ver en el mapa' })).toBeInTheDocument();
-    });
-
-    it('se deja de ver con la ✕ o con el mismo botón de la tarjeta', async () => {
-      const { card, open } = setup();
-
-      await open('Sector 1');
-      await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Ver en el mapa' }));
-      await userEvent.click(screen.getByRole('button', { name: 'Dejar de ver Sector 1' }));
-      expect(screen.queryByText('Viendo Sector 1')).not.toBeInTheDocument();
-
-      await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Ver en el mapa' }));
-      await userEvent.click(within(card('Sector 1')).getByRole('button', { name: 'Dejar de ver' }));
-      expect(screen.queryByText('Viendo Sector 1')).not.toBeInTheDocument();
+      expect(within(screen.getByRole('combobox', { name: 'Sector' })).getByRole('option', { name: 'Fuera de toda sección' }))
+        .toBeInTheDocument();
     });
   });
 
@@ -270,9 +297,9 @@ describe('SetMapPicker', () => {
     });
 
     it('«Salir sin guardar» descarta lo elegido', async () => {
-      const { onCancel, open } = setup();
+      const { onCancel, goTo } = setup();
 
-      await open('Sector 2');
+      await goTo('Sector 2');
       await userEvent.click(screen.getByRole('checkbox', { name: /Patio Sur/ }));
       await userEvent.click(screen.getByRole('button', { name: 'Cancelar y volver' }));
       await userEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
@@ -281,10 +308,10 @@ describe('SetMapPicker', () => {
     });
 
     it('con el menú a la vista, un enlace también avisa si hay cambios', async () => {
-      const { onCancel, open } = setup();
+      const { onCancel, goTo } = setup();
       render(<Link href="/incidencias">Incidencias</Link>);
 
-      await open('Sector 2');
+      await goTo('Sector 2');
       await userEvent.click(screen.getByRole('checkbox', { name: /Patio Sur/ }));
       await userEvent.click(screen.getByRole('link', { name: 'Incidencias' }));
 
