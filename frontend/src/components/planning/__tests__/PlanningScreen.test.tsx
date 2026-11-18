@@ -77,7 +77,7 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
 
     expect(await screen.findByText('Todavía no hay planificaciones')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: '+ Nueva planificación' })[0]).toHaveAttribute('href', '/intervenciones/planificacion/nueva');
-    expect(screen.queryByLabelText('Actividad')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Filtrar por actividad')).not.toBeInTheDocument();
   });
 
   describe('editar y eliminar (SPEC-203 §3.4)', () => {
@@ -126,7 +126,7 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
 
       expect(await screen.findByText('Sector Tambo')).toBeInTheDocument();
       expect(screen.queryByText('Ingreso Riva-Agüero')).not.toBeInTheDocument();
-      expect(screen.getByLabelText('Actividad')).toHaveValue('31');
+      expect(screen.getByLabelText('Filtrar por actividad')).toHaveValue('31');
       expect(screen.queryByLabelText('Frecuencia')).not.toBeInTheDocument();
       expect(screen.getByRole('status')).toHaveTextContent('Mostrando 1 de 2 planificaciones.');
 
@@ -156,7 +156,7 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
       rows.mockResolvedValue(two());
       render(<PlanningScreen />);
 
-      const estado = await screen.findByLabelText('Estado');
+      const estado = await screen.findByLabelText('Filtrar por estado');
       expect(within(estado).getAllByRole('option').map((o) => o.textContent)).toEqual(['Todos los estados', 'Atrasada', 'Pendiente']);
       await userEvent.selectOptions(estado, 'DUE');
 
@@ -184,7 +184,7 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
       render(<PlanningScreen />);
 
       const card = within(await screen.findByRole('listitem'));
-      expect(card.getByText('Al día: 2 de 4 jardines')).toBeInTheDocument();
+      expect(card.getByRole('progressbar', { name: 'Al día' }).previousElementSibling).toHaveTextContent('Al día: 2 de 4 jardines');
       expect(card.getByRole('progressbar', { name: 'Al día' })).toHaveAttribute('aria-valuenow', '2');
       expect(card.getByText('6 días tarde en 2 jardines')).toBeInTheDocument();
       expect(card.getByText(/2 nov \(2\)/)).toBeInTheDocument();
@@ -248,7 +248,11 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
       expect(card.getByText('Corte de césped')).toBeInTheDocument();
       expect(card.getByText('Ingreso Riva-Agüero')).toBeInTheDocument();
       expect(card.getByText('Última vez')).toBeInTheDocument();
-      expect(card.getByText('18 jardines · 2 ejemplares')).toBeInTheDocument();
+      const contains = card.getByText('Contiene').nextElementSibling as HTMLElement;
+      expect(contains).toHaveTextContent('18 jardines · 2 ejemplares');
+      // Las cifras van más grandes que el texto que las sigue.
+      expect(within(contains).getByText('18')).toHaveClass('text-base', 'font-bold');
+      expect(within(card.getByText('Suele realizarse').nextElementSibling as HTMLElement).getByText('30–35')).toHaveClass('text-base');
       expect(card.getByText('Suele realizarse')).toBeInTheDocument();
     });
 
