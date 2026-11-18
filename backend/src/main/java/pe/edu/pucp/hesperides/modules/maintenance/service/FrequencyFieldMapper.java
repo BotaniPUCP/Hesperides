@@ -18,8 +18,9 @@ final class FrequencyFieldMapper {
     private FrequencyFieldMapper() {
     }
 
+    /** {@code today} es la fecha civil en la zona de mantenimiento: desde ahi rige. */
     static MaintenanceFrequency toNewEntity(CreateMaintenanceFrequencyRequest r,
-                                            CatalogItem activity, CatalogItem ruleType) {
+                                            CatalogItem activity, CatalogItem ruleType, LocalDate today) {
         MaintenanceFrequency f = new MaintenanceFrequency();
         f.setActivityTypeItem(activity);
         f.setFrequencyRuleTypeItem(ruleType);
@@ -33,7 +34,7 @@ final class FrequencyFieldMapper {
         f.setSeasonStartMonth(toShort(r.seasonStartMonth()));
         f.setSeasonEndMonth(toShort(r.seasonEndMonth()));
         f.setNotes(r.notes());
-        f.setValidFrom(LocalDate.now());
+        f.setValidFrom(today);
         FrequencyVersioning.replaceSeasons(f, r.seasons());
         return f;
     }
