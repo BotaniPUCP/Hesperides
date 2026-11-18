@@ -10,6 +10,7 @@ export interface IncidentMarker { id: number; lat: number; lon: number; deadline
 import type { SelectionSweepCallbacks } from './selectionSweep';
 import type { Polygon } from '../sceneData';
 import type { Balloon } from '@shared/types';
+import type { SequenceHooks } from './sequenceHooks';
 
 /** Lo que el visor avisa a la interfaz React. */
 export interface ViewerCallbacks {
@@ -38,7 +39,7 @@ export interface ViewerStart {
 }
 
 /** Las operaciones que la interfaz React ordena al visor. */
-export interface Viewer {
+export interface Viewer extends SequenceHooks {
   /** Optional restrictions and reference outline; unused by the general map. */
   setEligibleSections?: (codes:readonly string[]|null) => void;
   setReferenceOutline?: (polygons:Polygon[],focus:boolean) => void;

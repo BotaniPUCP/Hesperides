@@ -14,7 +14,8 @@ import { createLights } from './lighting';
 import { setGrassVariation } from './grassVariation';
 import { createCascadeShadows, type CascadeShadows } from './cascadeShadows';
 import { createParapets } from './parapets';
-import { createSunset, duskOf, setGroundMatte, SUNSET, SUNSET_HOUR, SUNSET_MAX_POLAR, sunsetPose } from './sunset';
+import { createSunset, duskOf, setGroundMatte, SUNSET, SUNSET_HOUR, SUNSET_HOURS, SUNSET_MAX_POLAR, sunsetPose } from './sunset';
+import { createSequenceHooks } from './sequenceHooks';
 import { paletteFor } from './palette';
 import { groundPoint, pick } from './picking';
 import { createPin } from './pin';
@@ -143,7 +144,9 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     return kind === 'landmark' || poly.campusBuildings.mesh.visible;
   };
   const isHidden = (t: Target) => t.layer === 'greenAreas' && state.hidden.size > 0 && poly.greenAreas.options.color(t.index) === state.palette.dimmed;
-  const size = () => ({ w: container.clientWidth || 1, h: container.clientHeight || 1 });
+  // La exportación de SPEC-118 fija el tamaño; si no, manda el contenedor.
+  let fixedSize: { w: number; h: number } | null = null, paused = false;
+  const size = () => fixedSize ?? ({ w: container.clientWidth || 1, h: container.clientHeight || 1 });
 
   /** El sol mueve también el borde iluminado de las copas. */
   function relight() {
@@ -244,18 +247,35 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     },
   });
   rig.controls.addEventListener('change', () => { needsRender = true; });
+  const draw = () => {
+    lights.follow(rig.controls.target, rig.camera.position.distanceTo(rig.controls.target));
+    if (sunset.enabled()) { cascades?.update(); sunset.render(rig.camera.position.distanceTo(rig.controls.target)); } else renderer.render(scene, rig.camera);
+  };
+  // SPEC-118: la secuencia cambia de versión sin el vuelo de setSunset y sin rehacer el tema al cambiar la resolución.
+  const sequence = createSequenceHooks({ renderer, rig, backdrop: stage.backdrop, sun: lights.sun,
+    setGolden: (on, h) => { golden = on; sunsetHour = h; applyTheme(); },
+    resize: () => {
+      const { w, h } = size();
+      stage.resize(w, h); sunset.resize(w, h); cascades?.resize();
+      rig.camera.aspect = w / h;
+      rig.camera.updateProjectionMatrix();
+    },
+    layout: () => resize(),
+    setFixedSize: (s) => { fixedSize = s; },
+    setPaused: (on) => { paused = on; },
+    draw, requestRender: () => { needsRender = true; } }, SUNSET_HOURS[0]);
   const observer = new ResizeObserver(resize);
   observer.observe(container);
 
   let frame = 0, lastDistance = 0, adminMode = false;
   const loop = (now: number) => {
     frame = requestAnimationFrame(loop);
+    if (paused) return;
     const flew = rig.step(now), moved = sweeping ? false : rig.controls.update();
     const distance = rig.camera.position.distanceTo(rig.controls.target);
     if (Math.abs(distance - lastDistance) / Math.max(lastDistance, 1) > 0.04) { scaleFurniture(Object.values(points), distance); lastDistance = distance; }
     if (flew || moved || needsRender || rig.controls.autoRotate) {
-      lights.follow(rig.controls.target, distance);
-      if (sunset.enabled()) { cascades?.update(); sunset.render(distance); } else renderer.render(scene, rig.camera);
+      draw();
       const { w, h } = size();
       labels.update(rig.camera, w, h, labelVisible);
       balloons?.update(rig.camera, w, h, distance);
@@ -362,11 +382,9 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       renderer.setPixelRatio(Math.min(ratio * scale, 4));
       stage.resize(w, h);
       sunset.resize(w, h);
-      const distance = rig.camera.position.distanceTo(rig.controls.target);
-      lights.follow(rig.controls.target, distance);
       const shown = markers.visible;
       markers.visible = false;
-      if (sunset.enabled()) { cascades?.update(); sunset.render(distance); } else renderer.render(scene, rig.camera);
+      draw();
       markers.visible = shown;
       const blob = await new Promise<Blob | null>((resolve) => renderer.domElement.toBlob(resolve, 'image/png'));
       renderer.setPixelRatio(ratio);
@@ -389,6 +407,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       highlight.repaint('campusBuildings');
       needsRender = true;
     },
+    ...sequence,
     fit: rig.fit, top: rig.top, north: rig.north, toggleSpin: rig.toggleSpin, pose: rig.pose, flyToPose: rig.flyToPose,
     livePerspective() {
       const { camera, controls } = rig;
