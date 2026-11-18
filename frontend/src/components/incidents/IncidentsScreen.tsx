@@ -1,24 +1,32 @@
 'use client';
 
 import Link from 'next/link';
+import { useMemo } from 'react';
 import { Button, Card, EmptyState, Input, LoadingSkeleton, Select } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useIncidentMine, useIncidentNavigation, useIncidentOptions, useIncidents } from '@/hooks/useIncidents';
+import { useIncidentList, useIncidentMine, useIncidentNavigation, useIncidentOptions } from '@/hooks/useIncidents';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { incidentDate, incidentQuery } from '@/lib/incidentNavigation';
 import { managesIncidents } from '@/lib/incidentRoles';
+import { pageOf } from '@/lib/search/pageOf';
+import { filterByText } from '@/lib/search/searchText';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { IncidentBadges } from './IncidentBadges';
 import { IncidentMineSummary } from './IncidentMineSummary';
 
+const PAGE_SIZE = 20;
+
+/** La lista se carga una vez al abrirla y se busca, filtra y pagina en el navegador (SPEC-119). */
 export function IncidentsScreen() {
   const { user } = useAuth();
   const coordinator = managesIncidents(user?.role.code);
   const { filters, href, changeFilters } = useIncidentNavigation();
-  const debouncedSearch = useDebouncedValue(filters.search, 300);
-  const list = useIncidents({ ...filters, search: debouncedSearch });
-  useListScrollRestoration('/incidencias', incidentQuery(filters), !list.loading);
+  const list = useIncidentList();
+  const matching = useMemo(() => filterByText(list.items, filters.search)
+    .filter((i) => !filters.status || i.status.code === filters.status), [list.items, filters.search, filters.status]);
+  const shown = pageOf(matching, filters.page, PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+  useListScrollRestoration('/incidencias', incidentQuery(filters), list.loaded);
   const options = useIncidentOptions();
   const mine = useIncidentMine();
   const filtered = Boolean(filters.search || filters.status);
@@ -52,15 +60,15 @@ export function IncidentsScreen() {
         </div>}
       </Card>
 
-      {list.loading ? <LoadingSkeleton variant="card" count={3} /> : list.errorMessage ? (
+      {!list.loaded && !list.errorMessage ? <LoadingSkeleton variant="card" count={3} /> : !list.loaded ? (
         <div role="alert" className="space-y-3 rounded-lg bg-alert-danger-bg p-4 text-alert-danger-fg">
           <p>{list.errorMessage}</p><Button size="lg" variant="secondary" onClick={list.reload}>Reintentar</Button>
         </div>
-      ) : list.data && <>
-        {list.data.content.length === 0 ? (
+      ) : <>
+        {matching.length === 0 ? (
           <EmptyState title={filtered ? 'No hay incidencias con esos criterios' : 'Todavía no hay incidencias'}
             description={filtered ? 'Prueba con otro texto o cambia el estado.' : 'Cuéntalo con tus palabras y marca qué tan grave es; lo demás es opcional.'} />
-        ) : <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">{list.data.content.map((incident) => (
+        ) : <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">{shown.rows.map((incident) => (
           <li key={incident.id}>
             <Link href={href(`/incidencias/${incident.id}`)} className="block h-full rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
               <Card className="h-full space-y-3 transition-shadow hover:shadow-lg">
@@ -75,9 +83,9 @@ export function IncidentsScreen() {
           </li>
         ))}</ul>}
         <nav aria-label="Páginas de incidencias" className="surface-card flex flex-wrap items-center justify-between gap-3">
-          <Button variant="secondary" size="lg" disabled={filters.page === 0} onClick={() => changeFilters({ ...filters, page: filters.page - 1 })}>Anterior</Button>
-          <p className="text-sm text-neutral-700">{list.data.page.totalElements} registros · Página {filters.page + 1} de {Math.max(1, list.data.page.totalPages)}</p>
-          <Button variant="secondary" size="lg" disabled={filters.page + 1 >= list.data.page.totalPages} onClick={() => changeFilters({ ...filters, page: filters.page + 1 })}>Siguiente</Button>
+          <Button variant="secondary" size="lg" disabled={shown.page === 0} onClick={() => changeFilters({ ...filters, page: shown.page - 1 })}>Anterior</Button>
+          <p className="text-sm text-neutral-700">{matching.length} registros · Página {shown.page + 1} de {totalPages}</p>
+          <Button variant="secondary" size="lg" disabled={shown.page + 1 >= totalPages} onClick={() => changeFilters({ ...filters, page: shown.page + 1 })}>Siguiente</Button>
         </nav>
       </>}
     </div>

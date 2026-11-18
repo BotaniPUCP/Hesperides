@@ -1,4 +1,4 @@
-import type { Incident, IncidentDetail, IncidentMine, IncidentOptions, Page } from '@shared/types';
+import type { Incident, IncidentDetail, IncidentMine, IncidentOptions } from '@shared/types';
 
 const reported = { id: 1, code: 'REPORTED', label: 'Reportada' };
 const medium = { id: 4, code: 'MEDIUM', label: 'Media' };
@@ -15,6 +15,7 @@ export const pendingDetail: IncidentDetail = {
     reportedBy: { id: 2, fullName: 'Óscar' }, activatedBy: null, activatedAt: null, closedBy: null, closedAt: null,
     resolutionSummary: null, deadline: { dueAt: '2026-10-26T10:00:00Z', status: 'ON_TIME', met: null },
     createdAt: '2026-10-24T10:00:00Z', version: 0, editedFields: [],
+    searchKey: 'inc-2026-0007 rama rajada sobre el pontodromo',
   },
   prefill: { status: 'PENDING', suggestion: null, suggestedUrgencyCode: null, suggestsThirdParty: false, warnings: [], updatedAt: null },
   linkedInterventions: [], closureBlockers: ['NOT_ACTIVE', 'NO_LINKED_WORK'], activationGaps: ['TYPE', 'LOCATION'],
@@ -34,9 +35,8 @@ export const incidentOptions: IncidentOptions = {
   defaultRequesterName: 'Áreas verdes (hallazgo en campo)',
 };
 
-export const incidentPage: Page<Incident> = {
-  content: [pendingDetail.incident], page: { number: 0, size: 20, totalElements: 1, totalPages: 1 },
-};
+/** Lo que trae `/incidents/all`: todas las que ve quien pregunta (SPEC-119). */
+export const incidentList: Incident[] = [pendingDetail.incident];
 
 export const approvedDetail: IncidentDetail = {
   ...pendingDetail,

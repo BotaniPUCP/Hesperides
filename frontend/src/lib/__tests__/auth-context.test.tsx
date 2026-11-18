@@ -49,19 +49,19 @@ describe('AuthProvider', () => {
     global.fetch = jest.fn(async (url: string) => respuesta(200, '',
       url.endsWith('/auth/login') ? { accessToken: 't', user: { id: 2 } } : { id: 1 })) as unknown as typeof fetch;
     const lista = definePreloadedList('auth-test', async () => ['secreto'], []);
-    let auth: ReturnType<typeof useAuthContext> | null = null;
-    function Captura() {
-      auth = useAuthContext();
-      return null;
+    function Acciones() {
+      const { login, logout } = useAuthContext();
+      return <>
+        <button onClick={() => void login('a@b.pe', 'x')}>login</button>
+        <button onClick={() => void logout()}>logout</button>
+      </>;
     }
-    render(<AuthProvider><Captura /></AuthProvider>);
+    render(<AuthProvider><Acciones /></AuthProvider>);
     lista.open();
     await waitFor(() => expect(lista.snapshot().items).toEqual(['secreto']));
 
-    await act(async () => {
-      await (action === 'login' ? auth!.login('a@b.pe', 'x') : auth!.logout());
-    });
+    await act(async () => screen.getByRole('button', { name: action }).click());
 
-    expect(lista.snapshot().items).toEqual([]);
+    await waitFor(() => expect(lista.snapshot().items).toEqual([]));
   });
 });

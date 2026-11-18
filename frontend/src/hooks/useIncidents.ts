@@ -5,9 +5,11 @@ import { useSearchParams } from 'next/navigation';
 import { useAuth } from './useAuth';
 import { useRequest } from './useRequest';
 import { incidentsApi } from '@/lib/incidents-api';
+import { incidentsList } from '@/lib/preload/incidentLists';
 import { canUseIncidents } from '@/lib/incidentRoles';
 import { incidentFilters, incidentHref, incidentQuery, type IncidentFilters } from '@/lib/incidentNavigation';
 import { rememberListQuery } from '@/lib/listMemory';
+import { usePreloadedList } from './usePreloadedList';
 
 /** Includes the actor in request keys so responses cannot leak across accounts. */
 function useIncidentScope() {
@@ -30,13 +32,13 @@ export function useIncidentNavigation() {
   return { filters, href, listHref: href('/incidencias'), changeFilters };
 }
 
-export function useIncidents(filters: IncidentFilters) {
+/**
+ * Todas las incidencias que ve quien pregunta, cargadas al abrir la lista y filtradas en el
+ * navegador (SPEC-119). Al cambiar de cuenta se descartan con el cierre de sesión (D-05).
+ */
+export function useIncidentList() {
   const scope = useIncidentScope();
-  const [revision, setRevision] = useState(0);
-  const request = useRequest(scope ? JSON.stringify([scope, filters, revision]) : null,
-    () => incidentsApi.list(filters.page, filters.status, filters.search, null));
-  const reload = useCallback(() => setRevision((v) => v + 1), []);
-  return { ...request, reload };
+  return usePreloadedList(incidentsList, scope !== null);
 }
 
 export function useIncidentOptions() {

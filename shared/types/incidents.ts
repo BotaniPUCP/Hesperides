@@ -96,6 +96,8 @@ export interface Incident {
   createdAt: string;
   version: number;
   editedFields: string[];
+  /** Código, título, descripción y referencia sin tildes: en qué se busca (SPEC-119 D-01). */
+  searchKey: string;
 }
 
 export interface IncidentSuggestion {
@@ -162,7 +164,10 @@ export interface IncidentOptions {
 }
 
 /** Lo mínimo para buscar una incidencia desde Intervenciones. */
-export interface IncidentRef { id: number; code: string; title: string | null; statusCode: string; active: boolean }
+export interface IncidentRef { id: number; code: string; title: string | null; statusCode: string; active: boolean; searchKey: string }
+
+/** Una intervención no cancelada que se puede vincular; `searchKey`: código y descripción sin tildes (SPEC-119). */
+export interface InterventionCandidate { id: number; code: string; description: string | null; statusCode: string; searchKey: string }
 
 export interface IncidentMapMarker {
   id: number; code: string; title: string | null; latitude: number; longitude: number;
