@@ -22,3 +22,4 @@ if (typeof HTMLCanvasElement !== 'undefined') HTMLCanvasElement.prototype.getCon
 // Las listas precargadas viven en el módulo (SPEC-119): sin vaciarlas, lo que cargó una prueba
 // aparecería en la siguiente.
 afterEach(() => require('@/lib/preload/preloadedList').resetPreloadedLists());
+afterEach(() => require('@/lib/preload/placeDetailCache').clearPlaceDetailCache());

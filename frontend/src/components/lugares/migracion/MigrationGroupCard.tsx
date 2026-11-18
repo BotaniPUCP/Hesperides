@@ -4,9 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import type { PerspectiveSideCode, ReferenceQueueGroup } from '@shared/types';
 import { Badge, Button, useToast } from '@/components/ui';
-import { usePlace } from '@/hooks/usePlaces';
+import { useRequest } from '@/hooks/useRequest';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { placesApi } from '@/lib/places-api';
+import { cachedPlaceDetail } from '@/lib/preload/placeDetailCache';
 import { OtherPlacePicker } from './OtherPlacePicker';
 
 const SIDE_LABEL: Record<PerspectiveSideCode, string> = { FRONT: 'Frente', BACK: 'Espalda', SIDE: 'Al lado' };
@@ -28,7 +29,9 @@ export function MigrationGroupCard({ group, onDecided }: MigrationGroupCardProps
   // undefined: la que sugiere el lado del texto; null: solo el lugar.
   const [perspectiveChoice, setPerspectiveChoice] = useState<number | null | undefined>(undefined);
   const [busy, setBusy] = useState(false);
-  const { place } = usePlace(placeCode);
+  // Compartida entre tarjetas: al filtrar la cola aparecen y desaparecen en cada letra (SPEC-119).
+  const { data: place } = useRequest(placeCode ? `migration-place:${placeCode}` : null,
+    () => cachedPlaceDetail(placeCode as string, () => placesApi.detail(placeCode as string)));
   const perspectives = place?.code === placeCode ? place.perspectives : [];
   const bySide = perspectives.find((v) => v.side.code === group.detectedSide)?.id ?? null;
   const perspectiveId = perspectiveChoice === undefined ? bySide : perspectiveChoice;
