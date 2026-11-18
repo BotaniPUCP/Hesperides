@@ -12,7 +12,7 @@ function Sonda({ list, enabled = true }: { list: ReturnType<typeof definePreload
 describe('usePreloadedList', () => {
   it('pide la lista al montarse y muestra lo que llega', async () => {
     const load = jest.fn().mockResolvedValue(['a', 'b']);
-    render(<Sonda list={definePreloadedList('h1', load, [])} />);
+    render(<Sonda list={definePreloadedList<string>('h1', load, [])} />);
     expect(screen.getByText('cargando')).toBeInTheDocument();
     expect(await screen.findByText('a,b')).toBeInTheDocument();
     expect(load).toHaveBeenCalledTimes(1);
@@ -20,7 +20,7 @@ describe('usePreloadedList', () => {
 
   it('dos componentes montados juntos hacen una sola petición', async () => {
     const load = jest.fn().mockResolvedValue(['x']);
-    const list = definePreloadedList('h2', load, []);
+    const list = definePreloadedList<string>('h2', load, []);
     render(<><Sonda list={list} /><Sonda list={list} /></>);
     await waitFor(() => expect(screen.getAllByText('x')).toHaveLength(2));
     expect(load).toHaveBeenCalledTimes(1);
@@ -28,7 +28,7 @@ describe('usePreloadedList', () => {
 
   it('desactivado no pide nada', () => {
     const load = jest.fn().mockResolvedValue([]);
-    render(<Sonda list={definePreloadedList('h3', load, [])} enabled={false} />);
+    render(<Sonda list={definePreloadedList<string>('h3', load, [])} enabled={false} />);
     expect(load).not.toHaveBeenCalled();
   });
 });
