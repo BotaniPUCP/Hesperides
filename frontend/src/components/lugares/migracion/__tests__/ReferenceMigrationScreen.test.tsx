@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { PlaceDetail, ReferenceQueuePage } from '@shared/types';
+import type { PlaceDetail, ReferenceQueueGroup } from '@shared/types';
 import { rememberedHref } from '@/lib/listMemory';
 import { placesApi } from '@/lib/places-api';
+import { notifyWrite } from '@/lib/writeEvents';
 import { ReferenceMigrationScreen } from '../ReferenceMigrationScreen';
 
 jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
@@ -20,16 +21,13 @@ jest.mock('@/lib/places-api', () => ({
 
 const api = placesApi as jest.Mocked<typeof placesApi>;
 
-const queue: ReferenceQueuePage = {
-  page: 0, size: 20, totalGroups: 2,
-  groups: [
-    { name: 'Espalda de civil', category: 'Facultades', referenceCodes: ['REF-0267'], lat: -12.07, lon: -77.08,
-      detectedSide: 'BACK', sideUncertain: false,
-      suggestions: [{ place: { code: 'LUG-0005', name: 'Ingeniería Civil' }, score: 1.1 }, { place: { code: 'LUG-0006', name: 'Minas' }, score: 0.4 }] },
-    { name: 'Pabellón Z', category: 'Pabellones', referenceCodes: ['REF-0010', 'REF-0011', 'REF-0012'], lat: -12.07, lon: -77.08,
-      detectedSide: null, sideUncertain: false, suggestions: [] },
-  ],
-};
+const queue: ReferenceQueueGroup[] = [
+  { name: 'Espalda de civil', category: 'Facultades', referenceCodes: ['REF-0267'], lat: -12.07, lon: -77.08,
+    detectedSide: 'BACK', sideUncertain: false, searchKey: 'espalda de civil',
+    suggestions: [{ place: { code: 'LUG-0005', name: 'Ingeniería Civil' }, score: 1.1 }, { place: { code: 'LUG-0006', name: 'Minas' }, score: 0.4 }] },
+  { name: 'Pabellón Z', category: 'Pabellones', referenceCodes: ['REF-0010', 'REF-0011', 'REF-0012'], lat: -12.07, lon: -77.08,
+    detectedSide: null, sideUncertain: false, suggestions: [], searchKey: 'pabellon z' },
+];
 
 const civil = {
   code: 'LUG-0005', name: 'Ingeniería Civil', kind: { code: 'OUTDOOR', label: 'Exterior' },
@@ -44,7 +42,8 @@ beforeEach(() => {
   api.migrationProgress.mockResolvedValue({ total: 411, linked: 143, discarded: 8, pending: 260 });
   api.detail.mockResolvedValue(civil);
   api.list.mockResolvedValue([]);
-  api.linkReferences.mockResolvedValue(undefined);
+  // Como apiClient tras una escritura exitosa: la cola se recarga sola (SPEC-119 D-03).
+  api.linkReferences.mockImplementation(async () => notifyWrite('/places/reference-links'));
   api.discardReferences.mockResolvedValue(undefined);
 });
 
@@ -114,23 +113,41 @@ describe('ReferenceMigrationScreen', () => {
       expect(rememberedHref('/lugares/migracion')).toBe('/lugares/migracion?search=pabell%C3%B3n');
     });
 
-    it('al entrar con búsqueda y página en la dirección, pide esa misma página', async () => {
-      window.history.replaceState(null, '', '/lugares/migracion?search=gelarti&page=1');
+    it('al entrar con búsqueda en la dirección, la cola llega filtrada en el navegador', async () => {
+      window.history.replaceState(null, '', '/lugares/migracion?search=pabellon');
       render(<ReferenceMigrationScreen />);
 
-      await waitFor(() => expect(api.referenceQueue).toHaveBeenCalledWith('gelarti', 1, 20));
-      expect(screen.getByLabelText('Buscar')).toHaveValue('gelarti');
+      await card('Pabellón Z');
+      expect(screen.queryByRole('heading', { name: 'Espalda de civil' })).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Buscar')).toHaveValue('pabellon');
+      expect(api.referenceQueue).toHaveBeenCalledTimes(1);
     });
 
-    it('buscar otra cosa vuelve a la primera página', async () => {
-      api.referenceQueue.mockResolvedValue({ ...queue, totalGroups: 60 });
-      window.history.replaceState(null, '', '/lugares/migracion?page=2');
+    it('escribir no vuelve a pedir la cola (SPEC-119 CA-01)', async () => {
       render(<ReferenceMigrationScreen />);
       await card('Pabellón Z');
 
-      fireEvent.change(screen.getByLabelText('Buscar'), { target: { value: 'civil' } });
+      for (const typed of ['c', 'ci', 'civ', 'civil']) {
+        fireEvent.change(screen.getByLabelText('Buscar'), { target: { value: typed } });
+      }
 
-      await waitFor(() => expect(window.location.search).toBe('?search=civil'));
+      await waitFor(() => expect(screen.queryByRole('heading', { name: 'Pabellón Z' })).not.toBeInTheDocument());
+      expect(screen.getByRole('heading', { name: 'Espalda de civil' })).toBeInTheDocument();
+      expect(api.referenceQueue).toHaveBeenCalledTimes(1);
+    });
+
+    it('buscar otra cosa vuelve a la primera página', async () => {
+      api.referenceQueue.mockResolvedValue(Array.from({ length: 60 }, (_, i) => ({ ...queue[1], name: `Pabellón ${i}`,
+        referenceCodes: [`REF-${i}`], searchKey: `pabellon ${i}` })));
+      window.history.replaceState(null, '', '/lugares/migracion?page=2');
+      render(<ReferenceMigrationScreen />);
+      await card('Pabellón 40');
+
+      fireEvent.change(screen.getByLabelText('Buscar'), { target: { value: 'pabellon 1' } });
+
+      expect(await screen.findByRole('heading', { name: 'Pabellón 1' })).toBeInTheDocument();
+
+      await waitFor(() => expect(window.location.search).toBe('?search=pabellon+1'));
     });
   });
 

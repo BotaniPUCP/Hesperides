@@ -9,16 +9,10 @@ import type {
   PlacePerspective,
   PlacePhoto,
   PlaceSummary,
-  ReferenceQueuePage,
+  ReferenceQueueGroup,
 } from '@shared/types';
 import { apiClient } from './api';
 import { API_BASE_URL } from './constants';
-
-export interface PlaceFilters {
-  search?: string;
-  category?: string;
-  kind?: string;
-}
 
 export interface PlaceImportIssue {
   row: number;
@@ -72,19 +66,11 @@ const withMedia = (p: PlacePhoto): PlacePhoto => ({ ...p, thumbnailUrl: media(p.
 
 const segment = encodeURIComponent;
 
-function query(filters: PlaceFilters): string {
-  const q = new URLSearchParams();
-  if (filters.search?.trim()) q.set('q', filters.search.trim());
-  if (filters.category) q.set('category', filters.category);
-  if (filters.kind) q.set('kind', filters.kind);
-  const s = q.toString();
-  return s ? `?${s}` : '';
-}
-
 export const placesApi = {
-  list: (filters: PlaceFilters) =>
+  /** Todos los vigentes: se buscan y filtran en el navegador (SPEC-119). */
+  list: () =>
     apiClient
-      .get<PlaceSummary[]>(`/places${query(filters)}`)
+      .get<PlaceSummary[]>('/places')
       .then((list) => list.map((p) => ({ ...p, mainPhotoUrl: p.mainPhotoUrl ? media(p.mainPhotoUrl) : null }))),
 
   detail: (code: string) =>
@@ -144,11 +130,8 @@ export const placesApi = {
   },
   removePhoto: (code: string, photoId: number) => apiClient.del<void>(`/places/${segment(code)}/photos/${photoId}`),
 
-  referenceQueue: (search: string, page: number, size: number) => {
-    const q = new URLSearchParams({ page: String(page), size: String(size) });
-    if (search.trim()) q.set('q', search.trim());
-    return apiClient.get<ReferenceQueuePage>(`/places/reference-links/queue?${q.toString()}`);
-  },
+  /** Toda la cola pendiente, con sus sugerencias: se busca y pagina en el navegador (SPEC-119). */
+  referenceQueue: () => apiClient.get<ReferenceQueueGroup[]>('/places/reference-links/queue/all'),
   migrationProgress: () => apiClient.get<MigrationProgress>('/places/reference-links/progress'),
   linkReferences: (referenceCodes: string[], placeCode: string, perspectiveId: number | null) =>
     apiClient.post<void>('/places/reference-links', { referenceCodes, placeCode, perspectiveId }),

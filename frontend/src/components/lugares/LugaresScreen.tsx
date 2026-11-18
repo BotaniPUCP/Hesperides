@@ -1,12 +1,14 @@
 'use client';
 
+import { useMemo } from 'react';
 import type { PlaceKindCode } from '@shared/types';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
-import { usePlaces } from '@/hooks/usePlaces';
+import { usePlaceList } from '@/hooks/usePlaces';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { oneOf } from '@/lib/listUrl';
+import { filterByText } from '@/lib/search/searchText';
 import { PlaceCard } from './PlaceCard';
 import { PlaceFilters } from './PlaceFilters';
 import { PageHeader } from '@/components/layouts/PageHeader';
@@ -17,18 +19,19 @@ const DEFAULTS = { search: '', category: '', kind: '' };
 
 /**
  * El catálogo de lugares: tarjetas con buscador, categoría y tipo. Los filtros
- * viven en la URL para encontrarlos igual al regresar de una ficha.
+ * viven en la URL para encontrarlos igual al regresar de una ficha. El catálogo se
+ * carga una vez y se filtra en el navegador mientras se escribe (SPEC-119).
  */
 export function LugaresScreen() {
   const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
   const [search, setSearch] = useSearchDraft(values.search, (next) => setValues({ search: next }));
   const category = values.category || null;
   const kind = oneOf(values.kind, KIND_CODES, '') || null;
-  const { places, loading, errorMessage } = usePlaces({
-    search: values.search || undefined,
-    category: category ?? undefined,
-    kind: kind ?? undefined,
-  });
+  const { items, loaded, errorMessage } = usePlaceList();
+  const loading = !loaded;
+  const places = useMemo(() => filterByText(items, search)
+    .filter((p) => (!category || p.category.code === category) && (!kind || p.kind.code === kind)),
+  [items, search, category, kind]);
   useListScrollRestoration(LIST_PATH, query, !loading);
 
   return (
@@ -47,7 +50,7 @@ export function LugaresScreen() {
         onKind={(next) => setValues({ kind: next ?? '' })}
       />
 
-      {errorMessage ? (
+      {errorMessage && !loaded ? (
         <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">
           No se pudo cargar el catálogo. {errorMessage}
         </p>

@@ -1,15 +1,17 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import type { PlaceDetail, PlaceSummary } from '@shared/types';
-import { placesApi, type PlaceFilters } from '@/lib/places-api';
+import type { PlaceDetail } from '@shared/types';
+import { placesApi } from '@/lib/places-api';
+import { placesList } from '@/lib/preload/placeLists';
+import { usePreloadedList } from './usePreloadedList';
 import { useRequest } from './useRequest';
 
-/** Con `enabled` en false no consulta: para un buscador que todavía no tiene texto. */
-export function usePlaces(filters: PlaceFilters, enabled = true) {
-  const { data, loading, errorMessage } = useRequest(enabled ? JSON.stringify(filters) : null, () => placesApi.list(filters));
-  return { places: (data ?? []) as PlaceSummary[], loading, errorMessage };
-}
+/**
+ * Todos los lugares vigentes, para buscarlos y filtrarlos en el navegador (SPEC-119). Con
+ * `enabled` en false no se pide: un buscador que todavía no se abrió.
+ */
+export const usePlaceList = (enabled = true) => usePreloadedList(placesList, enabled);
 
 /** La ficha de un lugar. `reload` la vuelve a pedir tras editarla. */
 export function usePlace(code: string | null | undefined) {
