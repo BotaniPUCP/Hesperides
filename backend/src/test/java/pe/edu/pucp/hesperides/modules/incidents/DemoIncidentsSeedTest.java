@@ -52,8 +52,8 @@ class DemoIncidentsSeedTest {
     void seedsTheNewFlowAndRerunningAddsNothing() throws Exception {
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         assertThat(count()).isEqualTo(6);
-        assertThat(queries.list(COORDINATOR, null, null, false, 0, 50).getTotalElements()).isEqualTo(3);
-        assertThat(queries.list(COORDINATOR, null, null, true, 0, 50).getTotalElements()).isEqualTo(3);
+        assertThat(queries.all(COORDINATOR)).filteredOn(i -> !i.active()).hasSize(3);
+        assertThat(queries.all(COORDINATOR)).filteredOn(i -> i.active()).hasSize(3);
         assertThat(map.map(COORDINATOR).markers()).extracting(m -> m.deadlineStatus())
                 .contains("OVERDUE", "DUE_SOON", "ON_TIME");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM incident_intervention_links", Long.class)).isZero();
@@ -67,9 +67,9 @@ class DemoIncidentsSeedTest {
 
     @Test
     void theOperatorSeesOnlyTheirOwnReport() {
-        var own = queries.list("operario@demo.invalid", null, null, null, 0, 50).getContent();
+        var own = queries.all("operario@demo.invalid");
         assertThat(own).hasSize(1);
-        long foremans = queries.list("capataz@demo.invalid", null, null, null, 0, 50).getContent().getFirst().id();
+        long foremans = queries.all("capataz@demo.invalid").getFirst().id();
         assertThatThrownBy(() -> queries.get(foremans, "operario@demo.invalid")).isInstanceOf(ResourceNotFoundException.class);
     }
 

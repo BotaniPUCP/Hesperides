@@ -83,12 +83,15 @@ public final class IncidentContracts {
             OptionResponse source, String externalCode, PersonResponse reportedBy,
             PersonResponse activatedBy, Instant activatedAt, PersonResponse closedBy, Instant closedAt,
             String resolutionSummary, DeadlineResponse deadline, Instant createdAt, long version,
-            List<String> editedFields) {}
+            List<String> editedFields, String searchKey) {}
 
     public record PrefillResponse(String status, Map<String, Object> suggestion, String suggestedUrgencyCode,
                                   boolean suggestsThirdParty, List<String> warnings, Instant updatedAt) {}
     public record LinkedInterventionResponse(Long linkId, Long id, String code, String description,
                                              String statusCode, int locationCount, int validatedLocationCount) {}
+    /** Una intervención no cancelada que se puede vincular; {@code searchKey}: código y descripción (SPEC-119). */
+    public record InterventionCandidateResponse(Long id, String code, String description, String statusCode,
+                                                String searchKey) {}
     public record SimilarCaseResponse(Long id, String code, String title, String resolutionSummary) {}
     public record HistoryResponse(Long id, OptionResponse status, PersonResponse changedBy, Instant createdAt) {}
     public record UpdateResponse(Long id, PersonResponse author, OptionResponse kind, String body, Instant createdAt) {}
@@ -111,7 +114,8 @@ public final class IncidentContracts {
                                   List<OptionResponse> sources, List<String> heightClasses,
                                   List<TeamResponse> teams, List<ZoneResponse> sections, String defaultRequesterName) {}
     /** Lo mínimo para buscar una incidencia desde Intervenciones y mostrarla en su detalle. */
-    public record IncidentRefResponse(Long id, String code, String title, String statusCode, boolean active) {}
+    public record IncidentRefResponse(Long id, String code, String title, String statusCode, boolean active,
+                                      String searchKey) {}
     public record MapMarkerResponse(Long id, String code, String title, double latitude, double longitude,
                                     String urgencyCode, String deadlineStatus) {}
     public record MapResponse(List<MapMarkerResponse> markers, long withoutLocation) {}

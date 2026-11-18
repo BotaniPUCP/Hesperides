@@ -1,7 +1,6 @@
 package pe.edu.pucp.hesperides.modules.incidents.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ import java.util.List;
  */
 @Service @RequiredArgsConstructor @Transactional(readOnly = true)
 public class IncidentMapService {
-    private static final int SEARCH_LIMIT = 20;
     private final IncidentsRepository incidents;
     private final IncidentAccess access;
     private final IncidentListFilters filters;
@@ -48,13 +46,13 @@ public class IncidentMapService {
         return new MapResponse(List.copyOf(markers), withoutLocation);
     }
 
-    /** Para el buscador del formulario de Intervenciones: por código o título (§3.8). */
-    public List<IncidentRefResponse> search(String query, String email) {
+    /** Para el buscador del formulario de Intervenciones (§3.8): todas, se buscan en el navegador (SPEC-119). */
+    public List<IncidentRefResponse> search(String email) {
         User actor = access.actor(email);
         access.requireManager(actor);
-        var spec = filters.visibleTo(actor).and(activeAndOpen()).and(filters.matching(query, null, null));
-        return incidents.findAll(spec, PageRequest.of(0, SEARCH_LIMIT, Sort.by(Sort.Direction.DESC, "createdAt")))
-                .map(responses::ref).getContent();
+        var spec = filters.visibleTo(actor).and(activeAndOpen());
+        return incidents.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt", "id")).stream()
+                .map(responses::ref).toList();
     }
 
     /** El GPS manda; si no hay, un punto dentro de su sección. */
