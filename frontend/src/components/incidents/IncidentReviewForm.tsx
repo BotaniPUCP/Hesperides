@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import type { HeightClass, IncidentDetail, IncidentOptions, IncidentReview } from '@shared/types';
 import { Button, Card, Input, Select, Textarea } from '@/components/ui';
-import { useRequest } from '@/hooks/useRequest';
-import { directoryApi } from '@/lib/directory-api';
+import { useOrganizationList } from '@/hooks/useDirectory';
 import { HEIGHT_CLASSES } from '@/lib/incidentLabels';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { LocationFields, locationPayload } from './LocationFields';
@@ -34,12 +33,11 @@ export function IncidentReviewForm({ detail, options, busy, onSave }: {
   const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
   const guard = useUnsavedChangesGuard(dirty);
-  const companies = useRequest(thirdParty ? 'incident-providers' : null,
-    () => directoryApi.organizations({ typeCode: 'EXTERNAL_COMPANY' }, 0, 100));
+  const companies = useOrganizationList(thirdParty);
   const classLabel = (code: string | null) => options.classes.find((c) => c.code === code)?.label;
   const typeOptions: Option[] = options.types.map((t) => ({ id: t.id, code: t.code, label: [classLabel(t.classCode), t.label].filter(Boolean).join(' · ') }));
   const heightOptions: Option[] = options.heightClasses.map((h, n) => ({ id: n, code: h, label: HEIGHT_CLASSES[h] }));
-  const providerOptions: Option[] = (companies.data?.items ?? []).map((o, n) => ({ id: n, code: o.code, label: o.name }));
+  const providerOptions: Option[] = companies.items.filter((o) => o.type.code === 'EXTERNAL_COMPANY').map((o, n) => ({ id: n, code: o.code, label: o.name }));
 
   const save = async () => {
     if (!description.trim()) { setError('La descripción no puede quedar vacía.'); return; }
@@ -90,7 +88,7 @@ export function IncidentReviewForm({ detail, options, busy, onSave }: {
       </label>
       {thirdParty && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Select id="review-provider" label="Empresa del Directorio" size="lg" options={providerOptions} value={provider} disabled={busy}
-          loading={companies.loading} clearable searchable placeholder="Elige la empresa" onChange={(v) => { setProvider(v?.code ?? null); setDirty(true); }} />
+          loading={!companies.loaded} clearable searchable placeholder="Elige la empresa" onChange={(v) => { setProvider(v?.code ?? null); setDirty(true); }} />
         <Input id="review-days" label="Días pactados" type="number" size="lg" value={days} disabled={busy} onChange={setDays} />
       </div>}
       <Input id="review-requester" label="Pedido de" size="lg" value={requester} maxLength={200} disabled={busy} onChange={setRequester}

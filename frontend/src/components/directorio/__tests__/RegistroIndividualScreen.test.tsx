@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { directoryApi } from '@/lib/directory-api';
+import { organization } from '@/test-utils/directoryFixtures';
 import { RegistroIndividualScreen } from '../RegistroIndividualScreen';
 
 const mockPush = jest.fn();
@@ -11,7 +12,7 @@ const mockRole = { current: 'COORDINADOR' };
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { role: { code: mockRole.current } } }) }));
 jest.mock('@/lib/directory-api', () => ({
   ...jest.requireActual('@/lib/directory-api'),
-  directoryApi: { organizations: jest.fn(), similarOrganizations: jest.fn(), similarContacts: jest.fn(),
+  directoryApi: { allOrganizations: jest.fn(), allContacts: jest.fn(),
     createOrganization: jest.fn(), createContact: jest.fn() },
 }));
 
@@ -20,11 +21,8 @@ const api = directoryApi as jest.Mocked<typeof directoryApi>;
 beforeEach(() => {
   jest.clearAllMocks();
   mockRole.current = 'COORDINADOR';
-  api.similarOrganizations.mockResolvedValue([]);
-  api.similarContacts.mockResolvedValue([]);
-  api.organizations.mockResolvedValue({ page: 0, size: 20, total: 1, items: [
-    { code: 'ORG-0012', name: 'OIE', type: { code: 'PUCP_UNIT', label: 'Unidad PUCP' }, phone: null, contactCount: 0 },
-  ] });
+  api.allContacts.mockResolvedValue([]);
+  api.allOrganizations.mockResolvedValue([organization('ORG-0012', 'OIE')]);
 });
 
 describe('RegistroIndividualScreen', () => {

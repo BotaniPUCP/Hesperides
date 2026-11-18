@@ -24,6 +24,9 @@ export interface PreloadedList<T> {
   reload: () => void;
 }
 
+/** Confirmar una importación: la ruta no dice qué se importó (D-03). */
+export const IMPORT_CONFIRMED = /^\/imports\/[^/]+\/confirm$/;
+
 /** POST que solo calculan o descargan: no cambian ninguna lista. */
 const READ_ONLY_WRITES = [/\/preview$/, /\/confirmation-summary$/, /^\/places\/export/, /^\/map\/describe/];
 
