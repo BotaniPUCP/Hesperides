@@ -7,14 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactDetail;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactSummary;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationRef;
-import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.Page;
-import pe.edu.pucp.hesperides.modules.directory.repository.ContactFilter;
 import pe.edu.pucp.hesperides.modules.directory.repository.ContactReadRepository;
 import pe.edu.pucp.hesperides.modules.directory.repository.ContactRepository;
 import pe.edu.pucp.hesperides.modules.directory.repository.ContactRepository.ContactRow;
-import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
 
-/** Lista, parecidos y ficha de contactos. */
+/** Lista completa y ficha de contactos. Buscar, filtrar y los parecidos van en el navegador (SPEC-119). */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,19 +20,8 @@ public class ContactQueryService {
     private final ContactRepository contacts;
     private final ContactReadRepository reads;
 
-    public Page<ContactSummary> list(String q, String organizationCode, boolean withoutOrganization, int page, int size) {
-        ContactFilter filter = new ContactFilter(LikePattern.contains(DirectoryText.optional(q)),
-                DirectoryText.optional(organizationCode), withoutOrganization);
-        return new Page<>(page, size, reads.count(filter), reads.page(filter, page, size));
-    }
-
-    /** De cualquier organización: así se descubre a alguien ya registrado en otra (SPEC-106 §5.2). */
-    public List<ContactSummary> similar(String fullName) {
-        String text = DirectoryText.optional(fullName);
-        if (text == null) {
-            return List.of();
-        }
-        return reads.similar(text, DirectoryText.SIMILARITY_THRESHOLD, DirectoryText.MAX_SUGGESTIONS);
+    public List<ContactSummary> all() {
+        return reads.all();
     }
 
     public ContactDetail detail(String code) {

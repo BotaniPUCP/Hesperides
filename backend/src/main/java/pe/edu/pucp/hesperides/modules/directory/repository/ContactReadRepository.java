@@ -12,7 +12,7 @@ import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactSu
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationRef;
 import pe.edu.pucp.hesperides.modules.directory.repository.ContactRepository.ContactRow;
 
-/** Lecturas de contactos: lista paginada, parecidos y las organizaciones de cada uno. */
+/** Lecturas de contactos: la lista completa y las organizaciones de cada uno. */
 @Repository
 @RequiredArgsConstructor
 public class ContactReadRepository {
@@ -20,24 +20,19 @@ public class ContactReadRepository {
     private record Link(long contactId, OrganizationRef organization) {
     }
 
-    private static final RowMapper<ContactRow> ROW = (rs, i) -> new ContactRow(rs.getLong("id"), rs.getString("code"),
-            rs.getString("full_name"), rs.getString("extension"), rs.getString("mobile"), rs.getString("email"), true);
+    private record Listed(ContactRow row, String searchKey) {
+    }
+
+    private static final RowMapper<Listed> ROW = (rs, i) -> new Listed(new ContactRow(rs.getLong("id"),
+            rs.getString("code"), rs.getString("full_name"), rs.getString("extension"), rs.getString("mobile"),
+            rs.getString("email"), true), rs.getString("search_key"));
 
     private final NamedParameterJdbcTemplate jdbc;
 
-    public List<ContactSummary> page(ContactFilter filter, int page, int size) {
-        MapSqlParameterSource params = params(filter).addValue("size", size).addValue("offset", page * size);
-        return withOrganizations(jdbc.query(DirectoryQueries.CONTACT_PAGE, params, ROW));
-    }
-
-    public long count(ContactFilter filter) {
-        return jdbc.queryForObject("SELECT count(*) " + DirectoryQueries.CONTACT_FILTER, params(filter), Long.class);
-    }
-
-    public List<ContactSummary> similar(String text, double threshold, int limit) {
-        MapSqlParameterSource params = new MapSqlParameterSource("text", text).addValue("threshold", threshold)
-                .addValue("limit", limit);
-        return withOrganizations(jdbc.query(DirectoryQueries.CONTACT_SIMILAR, params, ROW));
+    public List<ContactSummary> all() {
+        List<Listed> listed = jdbc.query(DirectoryQueries.CONTACT_ALL, ROW);
+        Map<Long, List<OrganizationRef>> links = linksOf(listed.stream().map(l -> l.row().id()).toList());
+        return listed.stream().map(l -> summary(l, links.getOrDefault(l.row().id(), List.of()))).toList();
     }
 
     /** Vigentes primero; las dadas de baja siguen, marcadas, para que coordinación sepa qué reasignar. */
@@ -45,10 +40,10 @@ public class ContactReadRepository {
         return linksOf(List.of(contactId)).getOrDefault(contactId, List.of());
     }
 
-    private List<ContactSummary> withOrganizations(List<ContactRow> rows) {
-        Map<Long, List<OrganizationRef>> links = linksOf(rows.stream().map(ContactRow::id).toList());
-        return rows.stream().map(c -> new ContactSummary(c.code(), c.fullName(), c.extension(), c.mobile(), c.email(),
-                links.getOrDefault(c.id(), List.of()))).toList();
+    private static ContactSummary summary(Listed listed, List<OrganizationRef> organizations) {
+        ContactRow c = listed.row();
+        return new ContactSummary(c.code(), c.fullName(), c.extension(), c.mobile(), c.email(), organizations,
+                listed.searchKey());
     }
 
     private Map<Long, List<OrganizationRef>> linksOf(List<Long> contactIds) {
@@ -60,10 +55,5 @@ public class ContactReadRepository {
                         rs.getString("name"), rs.getBoolean("active"), rs.getString("role"))))
                 .stream().collect(Collectors.groupingBy(Link::contactId,
                         Collectors.mapping(Link::organization, Collectors.toList())));
-    }
-
-    private static MapSqlParameterSource params(ContactFilter filter) {
-        return new MapSqlParameterSource("search", filter.search()).addValue("organization", filter.organizationCode())
-                .addValue("withoutOrganization", filter.withoutOrganization());
     }
 }

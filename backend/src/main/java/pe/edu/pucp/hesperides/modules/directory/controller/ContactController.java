@@ -14,12 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.directory.dto.ContactRequest;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactDetail;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.ContactSummary;
-import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.Page;
 import pe.edu.pucp.hesperides.modules.directory.dto.LinkRequest;
 import pe.edu.pucp.hesperides.modules.directory.dto.RoleRequest;
 import pe.edu.pucp.hesperides.modules.directory.service.ContactQueryService;
@@ -36,20 +34,10 @@ public class ContactController {
     private final ContactService service;
     private final ContactQueryService queries;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<ContactSummary>>> list(@RequestParam(required = false) String q,
-            @RequestParam(required = false) String organizationCode,
-            @RequestParam(defaultValue = "false") boolean withoutOrganization,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-        DirectoryAccess.checkPage(page, size);
-        return ResponseEntity.ok(ApiResponse.ok("Contacts",
-                queries.list(q, organizationCode, withoutOrganization, page, size)));
-    }
-
-    @GetMapping("/similar")
-    @PreAuthorize(DirectoryAccess.MAINTAINERS)
-    public ResponseEntity<ApiResponse<List<ContactSummary>>> similar(@RequestParam String fullName) {
-        return ResponseEntity.ok(ApiResponse.ok("Similar contacts", queries.similar(fullName)));
+    /** Antes que /{code}: «all» no es un código. Toda la lista, para buscar en el navegador (SPEC-119). */
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<ContactSummary>>> all() {
+        return ResponseEntity.ok(ApiResponse.ok("Contacts", queries.all()));
     }
 
     @GetMapping("/{code}")

@@ -157,8 +157,9 @@ class DirectoryImportIntegrationTest {
                     .andExpect(jsonPath("$.data.skipped").value(0))
                     .andExpect(jsonPath("$.data.createdCodes[0]", matchesPattern("ORG-\\d{4}")));
 
-            mockMvc.perform(get("/api/v1/directory/organizations").param("q", "oficina de intercambio"))
-                    .andExpect(jsonPath("$.data.items[0].name").value("OIE"));
+            mockMvc.perform(get("/api/v1/directory/organizations/all"))
+                    .andExpect(jsonPath("$.data[?(@.name == 'OIE')].aliases[*]",
+                            contains("Oficina de Intercambio", "OIE PUCP")));
             assertThat(jdbc.queryForObject("SELECT count(*) FROM organizations WHERE import_batch_id = ?",
                     Integer.class, batch)).isEqualTo(2);
             assertThat(jdbc.queryForObject("SELECT status FROM import_batches WHERE id = ?", String.class, batch))
@@ -253,9 +254,10 @@ class DirectoryImportIntegrationTest {
                     .andExpect(jsonPath("$.data.created").value(1))
                     .andExpect(jsonPath("$.data.createdCodes[0]", matchesPattern("CON-\\d{4}")));
 
-            mockMvc.perform(get("/api/v1/directory/contacts").param("q", "villasante"))
-                    .andExpect(jsonPath("$.data.items[0].organizations.length()").value(2))
-                    .andExpect(jsonPath("$.data.items[0].extension").value("4549"));
+            mockMvc.perform(get("/api/v1/directory/contacts/all"))
+                    .andExpect(jsonPath("$.data[?(@.fullName == 'Juan Diego Villasante')].organizations.length()",
+                            contains(2)))
+                    .andExpect(jsonPath("$.data[?(@.fullName == 'Juan Diego Villasante')].extension", contains("4549")));
             assertThat(jdbc.queryForObject("SELECT count(*) FROM contacts WHERE import_batch_id = ?",
                     Integer.class, batch)).isEqualTo(1);
         }
