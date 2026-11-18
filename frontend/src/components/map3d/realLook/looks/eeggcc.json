@@ -3,24 +3,88 @@
   "name": "Estudios Generales Ciencias",
   "folder": "eeggcc",
   "photos": [
-    "lado.jpg"
+    "desde-adentro.jpg",
+    "espalda1.jpg",
+    "espalda2.jpg",
+    "espalda3.jpg",
+    "lado.jpg",
+    "lado2.jpg",
+    "lado3.jpg"
   ],
-  "notes": "Concreto rosado y bloque claro con vanos de ventanas en tres pisos (lado.jpg).",
+  "materials": {
+    "bloque": {
+      "color": "#dedbd2"
+    },
+    "rosado": {
+      "color": "#d4ad99"
+    },
+    "techo": {
+      "color": "#d2cdc4"
+    },
+    "ventanas": {
+      "glass": "#6f8088",
+      "frame": "#d6d8d4",
+      "moduleM": 1.4,
+      "heightM": 1.8,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
   "zones": [
     {
-      "id": "edificio",
-      "roof": "#d2cdc4",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#c9ae9c",
-          "photo": {
-            "tile": "eeggcc",
-            "widthM": 18,
-            "heightM": 11
+      "id": "exterior",
+      "wall": "bloque",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            11.7
+          ],
+          "floors": {
+            "everyM": 3.9,
+            "startM": 0,
+            "bandM": [
+              1.1,
+              2.9
+            ]
           }
         }
-      }
+      ]
+    },
+    {
+      "id": "patio",
+      "where": {
+        "east": [
+          0.3,
+          0.88
+        ],
+        "north": [
+          0.18,
+          0.8
+        ]
+      },
+      "wall": "rosado",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            11.7
+          ],
+          "floors": {
+            "everyM": 3.9,
+            "startM": 0,
+            "bandM": [
+              1.1,
+              2.9
+            ]
+          }
+        }
+      ]
     }
-  ]
+  ],
+  "notes": "Por fuera, volúmenes de bloque crema claro con cintas de ventanas en sus tres pisos (lado2.jpg, lado3.jpg); los paños ciegos de bloque y las escaleras de acero de atrás (espalda1.jpg a espalda3.jpg) son tramos que la foto no deja ubicar, y quedan bajo las cintas. Hacia el patio, concreto rosado con sus cintas (desde-adentro.jpg, lado.jpg): zona en el centro de la planta, que toma las caras que miran al patio."
 }

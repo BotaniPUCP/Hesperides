@@ -3,24 +3,38 @@
   "name": "Desconocido_07",
   "folder": "Desconocido_07",
   "photos": [
-    "detras - no hay edificios-eneste-lado-3.jpg"
+    "detras - no hay edificios-eneste-lado-1.jpg",
+    "detras - no hay edificios-eneste-lado-2.jpg",
+    "detras - no hay edificios-eneste-lado-3.jpg",
+    "frente1.jpg",
+    "frente2.jpg"
   ],
-  "notes": "Talleres de tableros OSB con marcos grises, puertas de madera y banda alta translúcida (detras…-3.jpg, sin el auto).",
+  "materials": {
+    "muro": {
+      "color": "#b39a83"
+    },
+    "techo": {
+      "color": "#a9aaa6"
+    },
+    "ventanas": {
+      "color": "#d6d8d2"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#9e9b95",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#7d6a55",
-          "photo": {
-            "tile": "desconocido-07",
-            "widthM": 7,
-            "heightM": 3.8
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            2.5,
+            3.2
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Talleres de tableros OSB con marcos grises y una banda alta translúcida (detras - no hay edificios-eneste-lado-2.jpg y -3.jpg); el galpón de chapa gris de detras…-1.jpg y frente1.jpg no se separa en el modelo."
 }

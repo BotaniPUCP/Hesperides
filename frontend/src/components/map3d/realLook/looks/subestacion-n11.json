@@ -3,24 +3,36 @@
   "name": "Sub-estación N-11",
   "folder": "Sub-estacion-n11",
   "photos": [
-    "detras.jpg"
+    "detras-lado.jpg",
+    "detras.jpg",
+    "lado-frente.jpg"
   ],
-  "notes": "Paneles blancos con ventanitas enrejadas y pilastras de enchape azul (detras.jpg). Sin malla en el modelo: se pinta su prisma.",
+  "materials": {
+    "muro": {
+      "color": "#e6e4df"
+    },
+    "techo": {
+      "color": "#c9c8c3"
+    },
+    "ventanas": {
+      "color": "#c0c3c4"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#d2d1cd",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#e6e4df",
-          "photo": {
-            "tile": "subestacion-n11",
-            "widthM": 7,
-            "heightM": 3.5
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            2.2,
+            2.7
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Paneles blancos con ventanitas enrejadas altas, como franja tenue (detras.jpg, detras-lado.jpg, lado-frente.jpg); las pilastras de enchape azul no se dibujan. No tiene malla en el modelo: se pinta su prisma, y la hoja de revisión no lo puede dibujar."
 }

@@ -3,24 +3,36 @@
   "name": "ADEIN y Programa de Pasantías en Energías Renovables",
   "folder": "(ADEIN) Y PROGRAMA DE PASANTÍAS EN ENERGÍAS RENOVABLES",
   "photos": [
-    "detras.jpg"
+    "detras.jpg",
+    "frente-lado.jpg",
+    "otro-lado.jpg"
   ],
-  "notes": "Caseta de paneles rojo óxido con ventanas enrejadas; el tramo de detras.jpg va en todas las caras (las otras dos fotos muestran el mismo panel).",
+  "materials": {
+    "muro": {
+      "color": "#a3473a"
+    },
+    "techo": {
+      "color": "#b3b0a8"
+    },
+    "ventanas": {
+      "color": "#7c4b44"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#a7a39b",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#8e4b42",
-          "photo": {
-            "tile": "adein",
-            "widthM": 5.5,
-            "heightM": 2.8
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Caseta de paneles rojo óxido con ventanas enrejadas sueltas, como franja tenue (detras.jpg, frente-lado.jpg, otro-lado.jpg)."
 }

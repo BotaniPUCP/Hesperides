@@ -1,0 +1,21 @@
+{
+  "planKey": "3bd329ba-5612-4e0d-bfd3-2a3142bf81a8",
+  "name": "Prototipo casa autosostenible (Grupo de Apoyo al Sector Rural)",
+  "source": "Decisión de Jean Piero (15 nov 2026): el prototipo de casa autosostenible va con el estilo de la vivienda Sumaq Wasi 2 (SPEC-112)",
+  "materials": {
+    "muro": {
+      "color": "#e8e7e1"
+    },
+    "techo": {
+      "color": "#a5614c"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Copia los colores de sumaq-wasi-2.json. El prototipo de casa autosostenible va con el estilo de la vivienda Sumaq Wasi 2."
+}

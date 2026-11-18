@@ -5,22 +5,20 @@
   "photos": [
     "lado.jpg"
   ],
-  "notes": "Caseta clara con vitrinas y toldo (lado.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#e8e8e4"
+    },
+    "techo": {
+      "color": "#cfcfcb"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#cfcdc8",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#dedbd3",
-          "photo": {
-            "tile": "quiosco-deportes",
-            "widthM": 6,
-            "heightM": 3.0
-          }
-        }
-      }
+      "wall": "muro",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Caseta clara con vitrinas y toldo (lado.jpg)."
 }

@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.CancelRequest;
-import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ConfirmationRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.UsageRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.GardenOption;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.OrganizationOption;
@@ -26,9 +25,6 @@ public interface ReservationsService {
     ReservationResponse update(String code, ReservationRequest request, String userEmail);
 
     ReservationResponse cancel(String code, CancelRequest request, String userEmail);
-
-    /** Enmienda del 11 nov 2026: el solicitante confirmó (o retiró) que usará el jardín. */
-    ReservationResponse confirm(String code, ConfirmationRequest request, String userEmail);
 
     /** Enmienda del 11 nov 2026: el encargado marca (o retira) que el espacio está en uso. */
     ReservationResponse recordUsage(String code, UsageRequest request, String userEmail);

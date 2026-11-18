@@ -3,24 +3,49 @@
   "name": "Departamento Académico de Ciencias Sociales",
   "folder": "Departamento Académico de Ciencias Sociales",
   "photos": [
-    "lado-frente-a-derecho.jpg"
+    "lado-frente-a-comedor-central.jpg",
+    "lado-frente-a-derecho.jpg",
+    "lado-frente-derecho-2.jpg"
   ],
-  "notes": "Volumen blanco con bandas de ventanas (lado-frente-a-derecho.jpg, 565 px: se ve algo borroso); sobre el tramo, blanco.",
+  "materials": {
+    "muro": {
+      "color": "#ececea"
+    },
+    "techo": {
+      "color": "#e0dfdb"
+    },
+    "ventanas": {
+      "glass": "#6d777d",
+      "frame": "#3f4446",
+      "moduleM": 1.5,
+      "heightM": 1.6,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#e0dfdb",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#f2f2f0",
-          "photo": {
-            "tile": "dpto-sociales",
-            "widthM": 13,
-            "heightM": 8.0
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            9.9
+          ],
+          "floors": {
+            "everyM": 3.3,
+            "startM": 0,
+            "bandM": [
+              0.9,
+              2.5
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Volumen blanco con una cinta de ventanas de marco oscuro en cada piso (lado-frente-a-derecho.jpg, lado-frente-derecho-2.jpg, lado-frente-a-comedor-central.jpg)."
 }

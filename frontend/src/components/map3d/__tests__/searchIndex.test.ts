@@ -54,6 +54,23 @@ describe('buildSearchIndex', () => {
     expect(search(index, 'hallazgos')[0].target).toEqual({ layer: 'references', index: 0 });
   });
 
+  it('una xerofítica se encuentra por el código del mapa del cliente y lleva su sector, como un jardín (SPEC-102 §4.3)', () => {
+    const xe = {
+      g: [], props: {
+        code: 'XE-0005', name: 'Área xerofítica 5', description: 'Ornato', parentCode: 'SEC-VERDE-02', mapCode: 'E 31', useType: null,
+        reservable: false, reservationOwner: null, areaM2: 127, landscapeType: 'XEROPHYTIC', irrigationCurrent: null, irrigationProject: null,
+      },
+    };
+    const index = buildSearchIndex({
+      campusBuildings: [], greenAreas: [], xerophytic: [xe], reserve: [], supervision: [], gates: [], bins: [], fountains: [], references: [],
+      sectorNameByCode: { 'SEC-VERDE-02': 'Sector verde 02' },
+    });
+
+    const [found] = search(index, 'e 31');
+    expect(found.target).toEqual({ layer: 'xerophytic', index: 0 });
+    expect(found.subtitle).toBe('Jardín xerofítico, E 31, Sector verde 02');
+  });
+
   const ref = (code: string, name: string, parentCode: string | null = null) => ({
     p: [0, 0] as [number, number],
     props: { code, name, category: 'Servicios PUCP', parentCode, aliases: null },

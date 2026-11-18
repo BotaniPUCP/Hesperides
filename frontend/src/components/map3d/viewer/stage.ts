@@ -115,6 +115,9 @@ export function createStage(container: HTMLElement, renderer: THREE.WebGLRendere
     renderer, scene, backdrop, box, center, plinthTop, plinthSide, modelGround,
     applyTheme(palette, night, width, height) {
       plinthTop.color.set(palette.plinth);
+      // Al atardecer el asfalto es mate: con barniz, el sol rasante lo haría ver mojado.
+      const matte = !!palette.natural;
+      [plinthTop, modelGround.top].forEach((m) => { m.clearcoat = matte ? 0 : 0.5; m.roughness = matte ? 0.92 : 0.3; });
       plinthSide.color.set(palette.plinthSide);
       modelGround.top.color.set(palette.plinth);
       modelGround.side.color.set(palette.plinthSide);

@@ -1,0 +1,178 @@
+import * as THREE from 'three';
+
+/**
+ * Cielo del modo Atardecer, dirigido a mano en vez de físico (el Sky de three,
+ * Preetham, queda beige a esta hora): cenit azul grisáceo, horizonte ámbar,
+ * halo y disco del sol, y una capa de nubes procedurales iluminadas desde el sol
+ * por debajo. Los colores van en lineal y antes de la exposición: el pase final
+ * los lleva por el mismo ACES que la escena.
+ */
+
+/** El color del horizonte: también el de la bruma, para que el suelo lejano se funda con el cielo. */
+export const HORIZON = new THREE.Color().setRGB(0.92, 0.6, 0.44);
+/** El horizonte ya en el crepúsculo: violeta apagado. */
+export const DUSK_HORIZON = new THREE.Color().setRGB(0.42, 0.24, 0.3);
+/** El horizonte con el sol alto: claro y apenas cálido. */
+export const DAY_HORIZON = new THREE.Color().setRGB(0.86, 0.85, 0.84);
+
+/** Cuánto es todavía hora dorada según la altura del sol (y de su dirección): 1 abajo, 0 desde unos 20°. */
+export function goldenOf(sunY: number): number {
+  return 1 - THREE.MathUtils.smoothstep(sunY, 0.08, 0.34);
+}
+
+const SKY_GLSL = {
+  vertex: /* glsl */ `
+varying vec3 vDir;
+void main() {
+  vDir = normalize((modelMatrix * vec4(position, 0.0)).xyz);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  gl_Position.z = gl_Position.w; // en el plano lejano: detrás de todo
+}`,
+  fragment: /* glsl */ `
+uniform vec3 sunDir;
+uniform vec3 horizonGolden;
+/** 1 en pantalla; menos al hornear los reflejos, para que el disco no deje manchas en el suelo. */
+uniform float sunPower;
+/** Crepúsculo (0 a 1): el cielo se apaga hacia el azul violáceo y el sol se va. */
+uniform float dusk;
+/** 1 con el sol bajo (paleta dorada), 0 con el sol alto (cielo de día). */
+uniform float golden;
+uniform vec3 dayHorizon;
+/** Máscara de nubes de una foto (brillo en r, máscara en a), de 0° a 45° de elevación; mientras carga, las procedurales. */
+uniform sampler2D cloudTex;
+uniform float cloudsReady;
+/** Gira el panorama para que el sol de la foto quede en el azimut del sol del mapa. */
+uniform float cloudOffset;
+varying vec3 vDir;
+
+float skyHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float skyNoise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(skyHash(i), skyHash(i + vec2(1.0, 0.0)), u.x), mix(skyHash(i + vec2(0.0, 1.0)), skyHash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float skyFbm(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 5; i++) { v += a * skyNoise(p); p = p * 2.03 + vec2(17.0, 9.0); a *= 0.5; }
+  return v;
+}
+
+void main() {
+  vec3 horizon = horizonGolden;
+  vec3 dir = normalize(vDir);
+  float h = dir.y;
+  float toward = max(dot(dir, sunDir), 0.0);
+  // Degradado: horizonte ámbar, una franja durazno, cenit azul grisáceo. Del lado del sol todo es más cálido.
+  vec3 zenith = mix(vec3(0.17, 0.3, 0.68), vec3(0.14, 0.18, 0.36), golden);
+  // Lo cálido de la franja, cerca del sol; lejos, un rosado lavanda.
+  vec3 band = mix(mix(vec3(0.5, 0.6, 0.8), vec3(0.78, 0.8, 0.85), toward * toward),
+    mix(vec3(0.58, 0.44, 0.5), vec3(1.0, 0.5, 0.24), toward * toward), golden);
+  horizon = mix(dayHorizon, horizon, golden);
+  // Justo en el horizonte el cielo es la bruma: sin costura con el suelo lejano.
+  vec3 low = horizon * (1.0 + 0.2 * toward);
+  vec3 col = mix(horizon, low, smoothstep(0.0, 0.02, h));
+  col = mix(col, band, smoothstep(0.02, 0.16, h));
+  col = mix(col, zenith, smoothstep(0.06, 0.42, h));
+  // Halo ancho, halo cercano y disco.
+  // Halo ancho y cercano: naranja con el sol bajo; con el sol alto, blanco y más chico.
+  col += mix(vec3(0.25, 0.24, 0.22), vec3(1.2, 0.42, 0.08), golden) * pow(toward, 5.0) * 0.3;
+  col += mix(vec3(0.9, 0.85, 0.75), vec3(1.6, 0.6, 0.14), golden) * pow(toward, 30.0) * 0.55;
+  col += vec3(2.4, 1.3, 0.55) * pow(toward, 90.0) * sunPower;
+  col += vec3(70.0, 44.0, 18.0) * smoothstep(0.99975, 0.99988, toward) * sunPower;
+  // Estrella del sol: ocho rayos finos, alternando largos y cortos, que se apagan lejos del disco.
+  vec3 sx = normalize(cross(sunDir, vec3(0.0, 1.0, 0.0)));
+  vec3 sy = cross(sx, sunDir);
+  float ang = atan(dot(dir, sy), dot(dir, sx));
+  float spikes = pow(abs(cos(ang * 4.0)), 80.0) + 0.6 * pow(abs(sin(ang * 4.0)), 160.0);
+  float reach = exp(-(1.0 - toward) * 180.0) * (1.0 - smoothstep(0.9998, 1.0, toward));
+  col += vec3(3.0, 1.6, 0.6) * spikes * reach * sunPower * (1.0 - dusk);
+  // Nubes en un plano alto: estratocúmulos en jirones, con el borde del lado del sol encendido.
+  if (h > 0.0 && cloudsReady > 0.5) {
+    float el = asin(clamp(h, 0.0, 1.0)) / 0.7853982;
+    vec2 ct = vec2(fract(atan(dir.z, dir.x) / 6.2831853 + 0.5 + cloudOffset), clamp(el, 0.0, 1.0));
+    // Cinco lecturas: la máscara es un WebP de 8 bits con pérdida y, ampliada y con contraste, sus escalones se
+    // verían como terrazas.
+    vec2 texel = vec2(1.5 / 4096.0, 1.5 / 512.0);
+    vec4 t = (texture2D(cloudTex, ct) * 2.0 + texture2D(cloudTex, ct + vec2(texel.x, 0.0)) + texture2D(cloudTex, ct - vec2(texel.x, 0.0))
+      + texture2D(cloudTex, ct + vec2(0.0, texel.y)) + texture2D(cloudTex, ct - vec2(0.0, texel.y))) / 6.0;
+    float cover = smoothstep(0.0, 0.7, t.a) * smoothstep(0.004, 0.03, h) * (1.0 - smoothstep(0.62, 0.71, h));
+    // La foto da la forma y cuánto más clara u oscura es la nube que su cielo; el color lo pone el atardecer:
+    // panza violácea, lo claro en durazno y, cerca del sol, encendido.
+    vec3 belly = mix(vec3(0.42, 0.45, 0.52), vec3(0.24, 0.15, 0.2), golden);
+    vec3 sunny = mix(mix(vec3(1.05, 1.03, 1.0), vec3(1.6, 1.5, 1.35), pow(toward, 6.0)),
+      mix(vec3(0.78, 0.6, 0.66), vec3(2.2, 0.9, 0.3), pow(toward, 6.0)), golden);
+    col = mix(col, mix(belly, sunny, smoothstep(0.32, 0.85, t.r)), cover * 0.95);
+  } else if (h > 0.0) {
+    vec2 uv = dir.xz / (h + 0.06) * 0.9;
+    float n = skyFbm(uv * vec2(0.9, 2.6) + vec2(3.0, 1.0));
+    float cover = smoothstep(0.42, 0.7, n) * smoothstep(0.015, 0.07, h) * (1.0 - smoothstep(0.5, 0.9, h));
+    // Panza violácea lejos del sol, borde encendido cerca; lo más denso, más oscuro.
+    float edge = smoothstep(0.46, 0.6, n) - smoothstep(0.62, 0.8, n);
+    vec3 belly = vec3(0.26, 0.17, 0.22);
+    vec3 lit = mix(belly, vec3(1.9, 0.8, 0.3), pow(toward, 9.0));
+    lit += vec3(1.3, 0.52, 0.18) * edge * (0.35 + 0.9 * pow(toward, 3.0));
+    col = mix(col, lit, cover * 0.9);
+  } else {
+    // Bajo el horizonte (detrás del suelo lejano): la bruma, con el mismo halo que le pone el pase final a lo lejano.
+    col = horizon * (1.0 + 0.2 * toward) + vec3(1.2, 0.42, 0.08) * pow(toward, 5.0) * 0.3 + vec3(1.6, 0.6, 0.14) * pow(toward, 30.0) * 0.55;
+  }
+  // Crepúsculo: arriba azul profundo, abajo un resto de naranja; el disco y su halo cercano ya no están.
+  vec3 twilight = mix(vec3(0.42, 0.24, 0.3) * (1.0 + 0.8 * toward), vec3(0.04, 0.06, 0.16), smoothstep(0.0, 0.5, max(h, 0.0)));
+  col = mix(col, twilight + col * 0.12, dusk);
+  gl_FragColor = vec4(col, 1.0);
+}`,
+};
+
+/** La foto de las nubes y el azimut de su sol (u del panorama, de 0 a 1). Ver scripts/mapa/nubes_atardecer.py. */
+export const CLOUDS = { url: '/map/sunset/clouds.webp', sunU: 0.5792 } as const;
+
+const azimuthU = (d: THREE.Vector3) => Math.atan2(d.z, d.x) / (2 * Math.PI) + 0.5;
+
+export interface SunsetSky {
+  mesh: THREE.Mesh;
+  setSun: (dir: THREE.Vector3) => void;
+  /** Para hornear los reflejos: sin disco ni halo cercano. */
+  setSunPower: (power: number) => void;
+  setDusk: (dusk: number) => void;
+}
+
+/** `onClouds`: llegó la foto de las nubes; hay que redibujar (y volver a hornear los reflejos). */
+export function createSunsetSky(radius: number, onClouds: () => void = () => undefined): SunsetSky {
+  const uniforms = {
+    sunDir: { value: new THREE.Vector3(0, 1, 0) }, horizonGolden: { value: HORIZON.clone() }, sunPower: { value: 1 }, golden: { value: 1 }, dayHorizon: { value: DAY_HORIZON.clone() },
+    cloudTex: { value: null as THREE.Texture | null }, cloudsReady: { value: 0 }, cloudOffset: { value: 0 }, dusk: { value: 0 },
+  };
+  // Sin mipmaps: el cielo siempre se ve ampliado, y así no aparece una costura donde el azimut da la vuelta.
+  new THREE.TextureLoader().load(CLOUDS.url, (texture) => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.minFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    uniforms.cloudTex.value = texture;
+    uniforms.cloudsReady.value = 1;
+    onClouds();
+  });
+  const material = new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader: SKY_GLSL.vertex,
+    fragmentShader: SKY_GLSL.fragment,
+    side: THREE.BackSide,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false,
+  });
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 24), material);
+  mesh.scale.setScalar(radius);
+  mesh.frustumCulled = false;
+  mesh.renderOrder = -20;
+  mesh.raycast = () => undefined;
+  return {
+    mesh,
+    setSun: (dir) => {
+      uniforms.sunDir.value.copy(dir).normalize();
+      uniforms.golden.value = goldenOf(uniforms.sunDir.value.y);
+      uniforms.cloudOffset.value = CLOUDS.sunU - azimuthU(uniforms.sunDir.value);
+    },
+    setSunPower: (power) => { uniforms.sunPower.value = power; },
+    setDusk: (dusk) => { uniforms.dusk.value = dusk; },
+  };
+}

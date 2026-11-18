@@ -62,6 +62,19 @@ describe('EdicionEspecieForm', () => {
     expect(onSaved).toHaveBeenCalled();
   });
 
+  it('normaliza un nombre de una palabra al editar y conserva el slug de la ficha', async () => {
+    updateSpecies.mockResolvedValue(adelfaCritica());
+    render(<EdicionEspecieForm species={adelfaCritica()} onSaved={jest.fn()} />);
+    const scientificName = screen.getByLabelText(/Nombre científico/i);
+    await userEvent.clear(scientificName);
+    await userEvent.type(scientificName, 'mANGO');
+    guardar();
+
+    await waitFor(() => expect(updateSpecies).toHaveBeenCalledWith(
+      'nerium-oleander', expect.objectContaining({ scientificName: 'Mango' }),
+    ));
+  });
+
   it('pasar a no crítica exige el promedio antes de confirmar', async () => {
     render(<EdicionEspecieForm species={adelfaCritica()} onSaved={jest.fn()} />);
 

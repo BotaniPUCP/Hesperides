@@ -36,7 +36,7 @@ Jean Piero. El resto del mapa se ve como hoy, y nada de lo que ya apunta a un ed
 | Relaciones | 133 relaciones hechas a mano por Nicolás: edificios del mapa ↔ piezas del SKP ↔ códigos oficiales | `frontend/src/components/map3d/equivalence/final-relations.json` |
 | Códigos oficiales | 128 códigos de la leyenda del plano, con su etiqueta | `…/equivalence/codes.json` |
 | Nombres, alias y excepciones | Regla de la vista unificada de Jean Piero | `…/equivalence/unification.ts`, `building-references.json` |
-| Ubicación del plano | Giro −0,41° y desplazamiento; error mediano 0,89 m contra OSM | `scripts/mapa/plano_pucp/` (`transformacion.npz`) |
+| Ubicación del plano | Giro −0,41° y desplazamiento; error mediano 0,89 m contra OSM. Corrido 2,6 m al oeste y 2,6 m al sur hacia los jardines (D-13, 14 nov 2026) | `scripts/mapa/plano_pucp/` (`transformacion.npz`), manifiesto y V053 |
 | Suelo del plano y huaca | Capas L1 (pavimento), L2 (jardinería) y L6 (huacas) del modelo | Export del SKP, fuera del repositorio |
 
 **Referencia visual aprobada.** La página de comparación «Edificios del plano en el mapa» (12 nov 2026)
@@ -120,6 +120,11 @@ Los edificios agrupados conservan su nombre y la etiqueta oficial queda en `camp
 - *Origen:* decisión del usuario del 12 nov 2026.
 - *Consecuencia:* se heredan los nombres que hoy chocan, como CIGA ×2 o Desconocido_13 ×2. Quedan listados
   en §9 y no se corrigen por cuenta propia.
+
+> **Corrección de Jean Piero, 14 nov 2026 (V052):** el código 61 es la Biblioteca de Ciencias Sociales, no la
+> facultad, y el código 32 es el Departamento Académico de Humanidades (oficinas); la Facultad de Letras y
+> Ciencias Humanas es el Pabellón H (código 41). Van como `name` en `building-references.json` (regla 1) y en una
+> migración nueva; las etiquetas oficiales de `campus_building_codes` no cambian.
 
 **D-04 · Se respetan las excepciones de Jean Piero:**
 - **Sub-estación N-7:** usa la geometría del mapa, aunque el SKP tiene la pieza.
@@ -218,6 +223,19 @@ el tooltip y en la ficha.
 **D-13 · La alineación del modelo es la del plano.** Giro −0,41°, error mediano 0,89 m. Difiere menos de
 0,52 m de la alineación que calcula la vista unificada.
 
+> **Corrección de Jean Piero, 14 nov 2026 (V053):** vistos desde arriba, los edificios pisaban los jardines;
+> deben encajar con ellos «como dos piezas de un rompecabezas». Medido sobre todo el campus, el plano estaba
+> 2,6 m al este y 2,6 m al norte de los jardines de la base, sin giro (el mismo desfase de D-15). Se corrió el
+> plano entero 2,6 m al oeste y 2,6 m al sur: el anclaje, los 27 desniveles y la huaca del manifiesto, a mano (el
+> GLB no cambia: sus posiciones son relativas al anclaje), y en V053 las huellas de lo que se dibuja con ese
+> modelo: las 125 `source = 'PUCP'` y la de la caseta del edificio 95, que es de OpenStreetMap pero lleva la malla
+> de la caseta C-3446 (D-04). Las demás de OpenStreetMap no se mueven. Lo que los edificios ocupan de jardín a su
+> mismo nivel bajó de 6498 a 1172 m².
+> - El manifiesto lleva `version` = hash del GLB + `.jardines` (§3.1).
+> - `generar_modelo.py` todavía escribe el anclaje de `transformacion.npz`: si se vuelve a correr, se reaplica
+>   el corrimiento (`scripts/mapa/plano_pucp/README.md`). `BuildingModelServiceTest` falla si el anclaje del jar
+>   no es el corregido.
+
 **D-14 · La atribución a OpenStreetMap se queda.** Siguen en OSM los 255 edificios del entorno y los
 edificios principales que no tienen pieza del SKP. Esto enmienda SPEC-102:
 - D-03 decía que la atribución desaparece al llegar los planos.
@@ -228,6 +246,143 @@ estacionamientos, puertas y el límite están corridos 2,5 m al oeste y 2,5 m al
 edificios. Corregidas, las áreas verdes calzarían con la jardinería del plano en un 76 % y no en un 57 %.
 Corregirlo mueve secciones, sectores y zonas de supervisión, así que va en un cambio aparte.
 - *Origen:* decisión del usuario del 12 nov 2026.
+
+> **Resuelto el 14 nov 2026 desde el otro lado (D-13, V053):** en lugar de correr las capas del cliente, se
+> corrió el plano hacia ellas. Áreas verdes, veredas, estacionamientos, puertas, límite, secciones, sectores y
+> zonas de supervisión no cambian. Quedan en el marco de OpenStreetMap los 255 edificios del entorno y los
+> 7 principales que se dibujan como prisma (D-04, D-14).
+
+**D-16 · Algunos edificios se ajustan uno por uno para encajar con el pasto.** Con el plano corrido (D-13),
+Jean Piero revisó el mapa desde arriba y pidió que cinco edificios encajen con el pasto como piezas de un
+rompecabezas, sin pisarlo (V054):
+- **Prismas de OpenStreetMap** (Sub-estación N-7, Prototipo Casa Autosostenible): cambia su huella. Se corren y se
+  hacen la pieza que sigue el borde del pasto. Los dos bloques de la casa se corren juntos.
+- **Mallas del plano** (Desconocido_07, Desconocido_08, Prototipo Invernadero Inteligente): el manifiesto lleva un
+  ajuste afín por edificio (`adjustments`, §3) que el visor aplica a la malla: mover y estirar en planta. Su huella
+  en la base lleva el mismo ajuste. Una prueba compara la matriz con la huella de V054, a 2 cm.
+- El GLB no se toca y la altura no cambia.
+- *Origen:* decisión del usuario del 14 nov 2026 («hazlo en el campus»).
+
+> **Segunda tanda, 14 nov 2026 (V055):** Desconocido_05 (malla) se corre 1,35 m al centro del hueco de su pasto,
+> sin cambiar su tamaño, con su ajuste en `adjustments`. La casa autosostenible baja de 8 a 4 m: «no es tan alto».
+
+> **Tercera tanda, 15 nov 2026 (V058):** la Sub-estación N-7 y el Desconocido_03, prismas de OpenStreetMap, bajan
+> a la mitad de su alto, de 8 a 4 m. La huella no cambia.
+
+> **Cuarta tanda, 15 nov 2026 (V059):** el Auditorio Juan Pablo II flotaba: su cuerpo arrancaba a 3,55 m y su
+> escalera en L, a 2,35 m, sobre la zanja del jardín hundido. Jean Piero pidió bajarlo para que el césped quede por
+> encima. Baja 3,935 m sin moverse en planta, con `liftM` en su ajuste (§3). Así la escalera llega al fondo de la
+> zanja (−1,589 m) y su losa de 3,545 m queda en la terraza de césped a −0,39 m. V059 baja su base y su alto lo
+> mismo, y su ficha de colores reales baja sus cotas.
+> Al verlo, pidió bajarlo más: desde arriba su techo bajo (4,45 y 4,90 m en el modelo) seguía tapando el césped del
+> jardín hundido a −0,05 m (AV-0170 y AV-0166). V060 lo baja 1,065 m más, 5 m en total: esos techos quedan en −0,55
+> y −0,10 m, bajo el césped. La escalera ya no apoya en el fondo de la zanja; queda bajo él.
+
+**D-17 · Una escalera que el SKP dibuja como bloque se reemplaza en el visor.** En la esquina noreste del Comedor
+Central, el SKP trae un bloque macizo en «U» de 4,35 m de alto y 25,5 m² que llega al suelo y tapa 23 m² de pasto.
+Jean Piero aclaró que es una escalera en diagonal que no se apoya en el suelo, y que el pasto de abajo debe verse.
+Con el boceto confirmado, se reemplaza así (V056):
+- El manifiesto lleva `stairs` (§3): la parte que se quita (polígono y cotas), los muros que cierran el edificio
+  donde estaba pegada, los tramos y los descansos.
+- El visor quita los triángulos que caen enteros en esa parte, agrega los muros y, al final de la malla, la escalera:
+  - **Tramo 1:** va por el brazo de afuera, del suelo a un descanso a 1,83 m (11 contrahuellas de 14,8 cm).
+  - **Tramo 2:** va por el brazo pegado al comedor, hasta 4,35 m (17 contrahuellas).
+  - **Forma:** peldaños rectos sobre una losa de 20 cm, sin barandas ni columnas.
+  - **Apoyo:** solo toca el suelo en la arista donde arranca. Bajo los tramos queda pasto, que se ve de lado y en el
+    hueco entre los brazos. Desde arriba se ven los peldaños.
+- **Colores reales (SPEC-112):** la escalera es parte del comedor (el clic la toma como él), pero no es fachada.
+  Todas sus caras llevan el techo de su zona, sin la franja de ventanas.
+- **Huella en la base:** pierde la «U» (V056). Una prueba la compara con la parte reemplazada del manifiesto, a 2 cm.
+- El GLB no se toca.
+- *Origen:* decisión del usuario del 14 nov 2026: «representan una escalera en diagonal vista desde un lado […] por
+  eso toda el área verde debe ser visible».
+
+> **Escalera del Auditorio Juan Pablo II, 15 nov 2026 (V061):** al bajar el auditorio 5 m (D-16, V060), su patio de
+> ingreso del SKP quedó a −1,455 m bajo el suelo del mapa, cerrado por muros bajos y sin escalera. Con el boceto
+> confirmado:
+> - **Escalera:** baja de la plaza a la puerta por el lado noreste del patio, en todo su ancho (11,9 m). Arriba lleva
+>   un descanso de 30 cm a cota 0 y luego 8 contrahuellas de 18,2 cm con huellas de 30 cm. Se propusieron 5 de 29 cm,
+>   pero una contrahuella debe medir menos que la losa de 20 cm. Reemplaza el muro bajo de ese lado.
+> - **Patio:** es un desnivel del manifiesto (`sunken`, a −1,455): el suelo del mapa se abre sobre él y su escalera.
+> - **Huella:** pierde la franja de la escalera y su descanso (28,5 m², V061).
+> - **Pruebas:** la de las huellas acepta, además de las esquinas del recorte, los vértices que caen sobre sus bordes,
+>   donde el borde de la huella cruza la línea del muro. La de los ajustes de V054 deja las huellas de los edificios
+>   con escalera a la prueba de las escaleras, y exige que su ajuste no los mueva en planta.
+
+**D-18 · Un edificio que el SKP dibuja dentro de la malla de otro se separa en el visor.** El mapa mostraba la
+Librería PUCP y el café Juan Valdez como un solo edificio, llamado «Juan Valdez»: V045 le puso al principal del código
+42 el nombre de su único hijo de OpenStreetMap con nombre, y el SKP dibuja el café en la misma malla. La leyenda del
+plano dice que el código 42 es la librería («LIBRERIA PUCP, ASOCIACIÓN DE EGRESADOS Y GRADUADOS, …»). Jean Piero marcó
+el café en el mapa: la caja de la esquina suroeste y el muro de su jardinera. Todo lo demás es la librería. Se separa
+así (V057):
+- **Manifiesto:** lleva `pieces` (§3). El visor le pasa al Juan Valdez los triángulos de la malla de la librería que
+  caen enteros en su polígono: 60 de 770.
+- **Base:**
+  - El principal del código 42 pasa a llamarse Librería PUCP y su huella pierde el polígono del café (39,1 m²), que
+    estaba aparte.
+  - El Juan Valdez de OpenStreetMap deja de ser su hijo y pasa a ser un principal con la `plan_key` de la pieza. Su
+    huella es la del café en el SKP, no la de OpenStreetMap, que está corrida unos 3 m. Su alto es el de la pieza
+    (3,85 m).
+  - Los otros dos hijos de OpenStreetMap siguen en la librería.
+- **Pruebas:** comparan el polígono de la pieza con la huella del Juan Valdez en V057, y la de la librería con la de
+  antes sin la pieza, a 2 cm.
+- El GLB no se toca. Con la pieza aparte, cada edificio se elige y se pinta por separado (SPEC-112).
+- *Origen:* pedido del usuario del 14 nov 2026: «en realidad son dos edificios distintos […] todo lo demás de esa
+  unidad es la librería PUCP».
+
+**D-19 · Ningún piso del modelo cubre un césped.** En los desniveles el suelo del mapa se abre (D-09) y se ve el piso del
+SKP (`suelo`), que en algunos lugares cubre áreas verdes de la base: unos 106 m² de AV-0480 (F 22) y 195 m² de
+AV-0409, en este caso con la rampa que baja 5 m por su borde oeste. El SKP corta su piso en triángulos que no siguen
+a los jardines (uno solo mide 4 163 m²), así que no se separan piezas como en D-18:
+- **Visor:** a cada triángulo del piso se le quita la parte que cae en un césped de la capa de áreas verdes que toca
+  un desnivel (`viewer/floorWithoutLawns.ts`). Lo que queda conserva su cota, su textura y su giro. Debajo se ve el
+  jardín hundido del SKP: en AV-0480 y AV-0409 el piso era una tapa a −0,3 m sobre su pendiente, que baja a −3 m.
+- Una primera versión pintaba el césped sobre el piso; Jean Piero la rechazó el mismo día: «debes eliminar la parte
+  del piso gris encima del césped».
+- **Pendiente:** donde el piso quitado era la rampa del borde oeste de AV-0409 (unos 93 m²) y 9 m² de AV-0480, debajo
+  no hay jardín sino el fondo del desnivel, a −10,5 m.
+- **Alcance:** vale para todos los céspedes, no solo para esos dos. El 15 nov 2026 también cubre parte de AV-0408,
+  AV-0359, AV-0232, AV-0068, AV-0233, AV-0265, AV-0242 (F 21), AV-0226 y AV-0048.
+- El GLB, el manifiesto y la base no cambian.
+- *Origen:* pedido del usuario del 15 nov 2026: «no debe haber partes del piso cubriendo los céspedes».
+
+> **Rampas frente al CIA, 15 nov 2026 (V062):** el recorte le quitaba 110 m² a dos de las tres rampas que bajan al
+> desnivel de AV-0409 (−5 m), porque los polígonos de la base se montaban sobre ellas. La vista superior del modelo
+> muestra el césped como es en realidad: Jean Piero confirmó que las rampas no pisan el jardín. V062 corrige los
+> polígonos, no el recorte:
+> - **AV-0409:** pasa a ser la planta del jardín hundido del modelo, sin las rampas. Mide 519,1 m² (antes 584,87).
+> - **AV-0408:** pierde la esquina de ese jardín y la franja sobre la rampa del lado del CIA. Mide 461,9 m² (antes
+>   516).
+> - **Sector SEC-VERDE-02:** se recalcula como en V011.
+> - **Resultado:** las rampas quedan enteras y el resaltado de AV-0409 al hacer clic coincide con su jardín.
+
+**D-20 · Una rampa del piso del modelo que es una escalera se escalona en el visor.** Frente al CIA, el SKP dibuja como
+planos inclinados tres escaleras que bajan al desnivel de AV-0409 (de 0,2 a −4,8 m). Jean Piero las identificó en la
+vista superior:
+- **A:** va pegada al césped y baja al sur, en 41 m. Tiene peldaños muy separados: 14 contrahuellas de 36 cm, una
+  cada 3,2 m.
+- **B:** va junto a la A y baja al sur, en 25 m. Es una escalera normal: 28 contrahuellas de 18 cm.
+- **C:** está del lado del CIA y baja al norte, en 22 m. Es normal como la B: 28 contrahuellas de 18 cm.
+
+Se escalonan así:
+- **Manifiesto:** lleva `floorSteps` (§3). Por nombre trae el polígono de cada rampa, sus dos cotas y sus
+  contrahuellas.
+- **Visor:** a cada cara del piso (`suelo`) con entre 2° y 40° de pendiente, centro en el polígono y vértices entre
+  las cotas, le aplica lo siguiente (`viewer/floorSteps.ts`, `rampSteps.ts`):
+  - **Huellas:** corta la cara por las cotas de los escalones. Cada franja es una huella horizontal a la cota de
+    arriba de la franja, así que nunca baja de la rampa.
+  - **Contrahuellas:** se levanta una vertical en cada corte. La pone la cara que sigue subiendo desde él, para que
+    no salga dos veces.
+  - **Forma:** los escalones siguen el contorno exacto de la rampa, también donde es una cuña.
+  - **Textura:** las coordenadas van como en el modelo: desde arriba en las huellas y de frente en las contrahuellas.
+- **Cuenta el centro de la cara y no sus vértices,** porque el SKP tiende triángulos de un borde a otro de la rampa.
+- **La cubierta inclinada del murete entre A y B** sube por encima de la plaza (hasta 1,22 m). Queda como está:
+  no es camino.
+- **Validación:** la lectura falla si una rampa del manifiesto no toma nada del piso, si no sube, o si sus
+  contrahuellas no son un entero de dos o más.
+- El GLB y la base no cambian.
+- *Origen:* pedido del usuario del 15 nov 2026: «lo rojo son las escaleras que van hacia abajo y lo verde también,
+  pero son escaleras con peldaños mucho más separados».
 
 ## 3. Contratos de API
 
@@ -271,6 +426,31 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
   Parking subterráneo». Cuentan como edificio principal, pero el visor no les dibuja prisma ni malla.
 - `sunken` trae, por desnivel, su polígono y la cota de su piso (`floorM`).
 - `huaca` trae la etiqueta y el punto donde se coloca (latitud, longitud y altura en metros).
+- `adjustments` (opcional, D-16) trae por `plan_key` una matriz afín `[a, b, c, d, e, f]` en metros alrededor del
+  anclaje (x este, y norte): x' = a·x + b·y + e, y' = c·x + d·y + f. Lleva también el porqué (`why`). El visor la
+  aplica a la malla de ese edificio. Si la clave no es de una malla de edificio, o la matriz voltea o aplasta la
+  malla, la lectura del modelo falla. Un `liftM` opcional sube la malla entera esos metros (negativo, la baja); si
+  no es un número finito, la lectura falla. Un ajuste solo en altura lleva la matriz identidad.
+- `stairs` (opcional, D-17) trae por `plan_key` una escalera que reemplaza parte de la malla. Todo va en metros
+  alrededor del anclaje, en el marco de la malla ya ajustada:
+  - `replaces`: el polígono y las cotas `fromM`–`toM` entre las que se quitan los triángulos.
+  - `walls`: los segmentos donde se cierra el edificio, entre las mismas cotas.
+  - `flights`: cada tramo, con su arista `from`, su arista `to`, sus cotas y sus `risers`.
+  - `landings`: cada descanso, con su polígono y su cota.
+  - `why`: el porqué.
+- `floorSteps` (opcional, D-20) trae, por nombre, una rampa del piso del modelo que es una escalera: su polígono en
+  metros alrededor del anclaje, sus cotas `fromM` y `toM`, sus contrahuellas (`risers`) y el porqué (`why`).
+- `pieces` (opcional, D-18) trae, por la `plan_key` propia de un edificio que el SKP dibuja dentro de otra malla, de
+  qué malla sale (`from`), su polígono en metros alrededor del anclaje (en el marco de esa malla ya ajustada) y el
+  porqué (`why`). El visor le pasa los triángulos que caen enteros en el polígono, a 2 cm. La pieza se separa antes
+  de la escalera de su malla, si la tiene. La lectura del modelo falla si la clave ya es un nodo del GLB, si `from`
+  no es una malla de edificio, si el polígono no toma nada o si se lleva toda la malla.
+
+  La lectura del modelo falla en cualquiera de estos casos:
+  - la clave no es de una malla de edificio;
+  - una cota no sube;
+  - una contrahuella mide lo que la losa (20 cm) o más;
+  - la parte reemplazada no quita ningún triángulo.
 
 ### 3.1 Decisiones que el código no explica
 
@@ -292,6 +472,13 @@ Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
 - **`LAYERS_FORMAT` pasa a 3:** una copia guardada antes, sin `parentId`, no debe recibir 304.
 - **El modelo está en metros locales** (x este, z = −norte) alrededor de `anchor`. El visor lo ubica con
   `projection.ts`, igual que las capas.
+
+> **Desde el 14 nov 2026 (D-13):** la etiqueta del GLB y la del manifiesto es la `version` del manifiesto, que
+> empieza con el hash del GLB y lleva un sufijo cuando el manifiesto se corrige sin regenerar el GLB
+> (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
+> arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16, de las
+> escaleras de D-17 o de las piezas de D-18 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor y
+> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5` y `-6`, el auditorio que baja; `-7`, su escalera de ingreso; `-8`, los escalones frente al CIA).
 
 ## 4. Migración de base de datos
 
@@ -452,6 +639,25 @@ Visor
 - recortar(): «Estudios Generales Ciencias» → «EE.GG. Ciencias»; «AULAS MOVILES PSICOLOGÍA» queda entero;
   «PABELLÓN I: FACULTAD …» → «PABELLÓN I»; nunca termina en «de …»
 - un edificio agrupado no se dibuja; uno principal sin nodo se dibuja como prisma
+
+Escaleras (D-17)
+- la malla pierde solo los triángulos que caen enteros en la parte reemplazada; los muros la cierran entre sus cotas
+- cada tramo sube en contrahuellas iguales y solo toca el suelo en la arista donde arranca
+- un descanso no lleva canto donde llega o arranca un tramo, ni contra un muro
+- la huella del comedor en V056 es la anterior sin la «U», a 2 cm; nada más cambia en la base
+- en colores reales, todas las caras de la escalera llevan el techo de su zona
+
+Piezas (D-18)
+- la pieza se lleva los triángulos que caen enteros en su polígono (a 2 cm); los demás quedan en su orden
+- la lectura falla si la pieza no toma nada, si se lleva toda la malla o si su malla no está en el modelo
+- la huella del Juan Valdez en V057 es el polígono de la pieza y la de la librería es la anterior sin él, a 2 cm
+- en la base solo cambian esos dos edificios; los otros hijos de OpenStreetMap siguen en la librería
+- la hoja de revisión clasifica la pieza con sus triángulos y con su polígono como huella
+
+Piso abierto sobre los céspedes (D-19)
+- el piso pierde justo la parte que cae en un césped, con sus huecos y su forma cóncava; sin césped queda igual
+- lo que queda sigue su cota, su pendiente, su textura y su giro; los muros del piso se quedan
+- solo cuentan los céspedes que tocan un desnivel
 ```
 
 ## 9. Propio de este spec

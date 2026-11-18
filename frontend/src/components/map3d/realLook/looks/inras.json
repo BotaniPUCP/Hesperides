@@ -1,0 +1,24 @@
+{
+  "planKey": "c4d51563-fef2-4107-b5a9-800795f6a0cd",
+  "name": "INRAS (Instituto de Radioastronomía)",
+  "folder": "inras",
+  "photos": [
+    "inras.jpg"
+  ],
+  "materials": {
+    "blanco": {
+      "color": "#ececea"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "blanco",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Blanco con baranda en la azotea y un ingreso vidriado (inras.jpg). Las antenas y la parabólica no son del modelo; el ingreso no se dibuja (D-04)."
+}

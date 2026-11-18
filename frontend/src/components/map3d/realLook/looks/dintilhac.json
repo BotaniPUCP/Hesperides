@@ -3,24 +3,68 @@
   "name": "Tesorería General (Dintilhac)",
   "folder": "dintilhac",
   "photos": [
-    "detras1.jpg"
+    "detras1.jpg",
+    "detras2.jpg",
+    "frente.jpg",
+    "lado1.jpg"
   ],
-  "notes": "Marco de concreto con paños de ladrillo y bandas de ventanas en dos pisos (detras1.jpg); la fachada blanca del Centro Dintilhac (frente.jpg, 551 px) es un volumen pequeño que el tramo no distingue.",
+  "materials": {
+    "ladrillo": {
+      "color": "#c99383"
+    },
+    "concreto": {
+      "color": "#dcdcd6"
+    },
+    "techo": {
+      "color": "#b8b5ae"
+    },
+    "ventanas": {
+      "glass": "#4f5962",
+      "frame": "#d9dbd8",
+      "moduleM": 1.5,
+      "heightM": 1.5,
+      "frameM": 0.07,
+      "vary": 0.05
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b8b5ae",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#a9a59d",
-          "photo": {
-            "tile": "dintilhac",
-            "widthM": 18,
-            "heightM": 7.0
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            -0.5,
+            9.8
+          ],
+          "floors": {
+            "everyM": 3.8,
+            "startM": 0,
+            "bandM": [
+              -0.3,
+              0.45
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7.6
+          ],
+          "floors": {
+            "everyM": 3.8,
+            "startM": 0,
+            "bandM": [
+              1.2,
+              2.7
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Dos pisos de paños de ladrillo rosado en un marco de concreto claro, con una cinta de ventanas oscuras en cada piso (detras1.jpg, detras2.jpg). La fachada blanca del Centro Dintilhac y la Oficina Central de Registro (frente.jpg, lado1.jpg) son volúmenes chicos que no se separan en el modelo."
 }

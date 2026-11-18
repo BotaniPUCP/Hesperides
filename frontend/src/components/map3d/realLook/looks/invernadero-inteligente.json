@@ -3,24 +3,23 @@
   "name": "Prototipo invernadero inteligente",
   "folder": "PROTOTIPO INVERNADERO INTELIGENTE (GRUPO DE APOYO AL SECTOR RURAL)",
   "photos": [
+    "lado1.jpg",
     "lado2.jpg"
   ],
-  "notes": "Marco metálico verde agua con malla y vidrios oscuros (lado2.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#6f7a76"
+    },
+    "techo": {
+      "color": "#a9aaa6"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#8d8a85",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#6f7472",
-          "photo": {
-            "tile": "invernadero-inteligente",
-            "widthM": 4.5,
-            "heightM": 3.0
-          }
-        }
-      }
+      "wall": "muro",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Marco metálico verde agua con malla y vidrios oscuros, que llevan el color (lado1.jpg, lado2.jpg); el cubo blanco de concreto no se separa."
 }

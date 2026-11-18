@@ -52,6 +52,13 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
     }
 
     @Override
+    public Page<SpeciesResponse> assignableSpecies(SpeciesQuery query) {
+        List<SpeciesResponse> content = speciesRepository.assignable(query).stream()
+                .map(row -> toResponse(row, List.of(), List.of())).toList();
+        return new PageImpl<>(content, PageRequest.of(query.page(), query.size()), speciesRepository.countAssignable(query));
+    }
+
+    @Override
     public SpeciesResponse speciesBySlug(String slug) {
         List<SpeciesPhotoResponse> photos = speciesPhotoRepository.active(slug).stream()
                 .map(p -> new SpeciesPhotoResponse(PhotoUrls.speciesPhoto(p.id(), true), PhotoUrls.speciesPhoto(p.id(), false),
@@ -92,8 +99,8 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
         boolean measured = "MEASURED".equals(row.dataSource());
         String status = PruningAssignment.measurementStatus(measured, row.speciesCritical());
         boolean reference = PruningAssignment.STATUS_REFERENCE.equals(status);
-        LocalDate lastPruning = specimenRepository.lastPruningDate(code).orElse(null);
-        return new SpecimenDetailResponse(row.code(), row.sourceReference(), row.sourceLocation(), row.legacyCode(),
+        LocalDate lastPruning = specimenRepository.lastPruningDate(row.id()).orElse(null);
+        return new SpecimenDetailResponse(row.id(), row.code(), row.sourceReference(), row.sourceLocation(), row.legacyCode(),
                 row.latitude(), row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
                 PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
                 row.trunkHeightM(), row.dbhCm(), row.crownRadiusM(), row.isBanded(), row.dataSource(),
@@ -123,7 +130,7 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
 
     private SpeciesResponse toResponse(SpeciesRow row, List<SpeciesPhotoResponse> photos,
                                        List<ExtraMeasureResponse> measures) {
-        return new SpeciesResponse(row.slug(), row.scientificName(), row.commonName(), row.otherNames(),
+        return new SpeciesResponse(row.slug(), row.active(), row.scientificName(), row.commonName(), row.otherNames(),
                 row.family(), row.typeCode(), row.typeLabel(), row.originCode(), row.originLabel(),
                 row.description(), row.careNotes(), row.specimenCount(),
                 PhotoUrls.species(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()),

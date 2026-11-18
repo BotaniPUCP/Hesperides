@@ -39,6 +39,8 @@ export function MapaSelector({
   const { data: response, isLoading } = useMapLayers();
   const [sinMapa, setSinMapa] = useState(false);
   const [viewer, setViewer] = useState<Viewer | null>(null);
+  const [obteniendoGps, setObteniendoGps] = useState(false);
+  const [errorGps, setErrorGps] = useState<string | null>(null);
   const lastPointRef = useRef<{ lat: number; lon: number } | null>(null);
 
   const data = useMemo(() => {
@@ -101,6 +103,26 @@ export function MapaSelector({
     onElegir(pickLat, pickLon);
   };
 
+  const usarMiUbicacion = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setErrorGps('GPS no disponible');
+      return;
+    }
+    setObteniendoGps(true);
+    setErrorGps(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setObteniendoGps(false);
+        handlePointPick(pos.coords.latitude, pos.coords.longitude);
+      },
+      (err) => {
+        setObteniendoGps(false);
+        setErrorGps(err.code === 1 ? 'Permiso GPS denegado' : 'No se pudo obtener señal GPS');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const handleReady = (v: Viewer) => {
     setViewer(v);
     const numLat = parseCoord(lat);
@@ -132,9 +154,29 @@ export function MapaSelector({
         onGroundPick={nada}
         onPointPick={handlePointPick}
       />
-      <p className="pointer-events-none absolute left-2 top-2 rounded bg-neutral-0/90 px-2 py-1 text-xs text-neutral-700">
-        {etiqueta}
-      </p>
+      <div className="pointer-events-none absolute left-2 top-2 z-10">
+        <p className="rounded bg-neutral-0/90 px-2 py-1 text-xs text-neutral-700 shadow-sm">
+          {etiqueta}
+        </p>
+      </div>
+
+      <div className="absolute right-2 top-2 z-10 flex flex-col items-end gap-1">
+        <button
+          type="button"
+          onClick={usarMiUbicacion}
+          disabled={obteniendoGps}
+          className="flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-0/95 px-2.5 py-1 text-xs font-medium text-neutral-800 shadow-sm transition hover:bg-neutral-50 disabled:opacity-50"
+          title="Tomar latitud y longitud desde el GPS del dispositivo"
+        >
+          <span>📍</span>
+          <span>{obteniendoGps ? 'Obteniendo GPS…' : 'Usar mi ubicación'}</span>
+        </button>
+        {errorGps && (
+          <span role="alert" className="rounded bg-action-danger/10 px-2 py-0.5 text-xs text-action-danger">
+            {errorGps}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

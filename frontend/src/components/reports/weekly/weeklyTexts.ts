@@ -26,11 +26,11 @@ export const WEEKLY_TEXTS = {
   attended: 'Secciones atendidas',
   attendedText: (covered: number, total: number) => `${covered} de ${total} secciones con trabajo aprobado`,
   irrigation: 'Riego del sector',
-  irrigationText: (irrigated: number, total: number, turns: number) =>
-    `${irrigated} de ${total} secciones regadas en ${turns} ${turns === 1 ? 'turno' : 'turnos'}`,
-  noTurn: 'Sin turno de riego registrado esta semana',
-  noTurnHelp: 'El sector puede no tener turno esta semana: el ciclo de riego es de 15 días.',
-  irrigationRule: 'Una sección cuenta como regada si figura en al menos un turno de su sector en la semana.',
+  irrigationText: (irrigated: number, total: number, irrigations: number) =>
+    `${irrigated} de ${total} secciones regadas en ${irrigations} ${irrigations === 1 ? 'riego' : 'riegos'}`,
+  noIrrigation: 'Sin riego registrado esta semana',
+  noIrrigationHelp: 'El sector puede no tener riego esta semana: el ciclo de riego es de 15 días.',
+  irrigationRule: 'Una sección cuenta como regada si una intervención de riego la completó en la semana.',
   attendedRule: 'Una sección cuenta como atendida si tiene al menos una intervención aprobada ejecutada en la semana.',
   byTypeTitle: 'Labores aprobadas por tipo',
   byTypeTotal: 'labores',

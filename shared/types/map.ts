@@ -87,6 +87,88 @@ export interface BuildingModelManifest {
   huaca: { label: string; at: [number, number, number] };
   /** Claves de los principales cuyo modelo es todo suelo (dos rampas de estacionamiento). */
   groundOnly: string[];
+  /** Ajustes por edificio (SPEC-108 D-16), por `plan_key` de una malla de edificio. Su huella en la base ya viene ajustada. */
+  adjustments?: Record<string, BuildingAdjustment>;
+  /** Escaleras que reemplazan una parte de la malla (SPEC-108 D-17), por `plan_key`. Su huella en la base ya no la incluye. */
+  stairs?: Record<string, BuildingStair>;
+  /** Edificios que el SKP dibuja dentro de la malla de otro (SPEC-108 D-18), por su propio `plan_key`. */
+  pieces?: Record<string, BuildingPiece>;
+  /** Rampas del piso del modelo que en realidad son escalones (SPEC-108 D-20), por un nombre propio. */
+  floorSteps?: Record<string, FloorSteps>;
+}
+
+/**
+ * Un edificio que el SKP dibuja dentro de la malla de otro (SPEC-108 D-18): el visor le pasa los triángulos que
+ * caen enteros en su polígono, en el marco de la malla ya ajustada (D-16). En la base, cada uno tiene su huella.
+ */
+/**
+ * Una rampa del piso del modelo (nodo `suelo`) que en realidad es una escalera (SPEC-108 D-20): el visor escalona
+ * sus caras inclinadas que caen enteras en el polígono y entre las dos cotas, en `risers` contrahuellas iguales.
+ * Todo va en metros alrededor del anclaje (este, norte).
+ */
+export interface FloorSteps {
+  polygon: PlanPoint[];
+  fromM: number;
+  toM: number;
+  risers: number;
+  /** Qué se corrigió y a pedido de quién. */
+  why: string;
+}
+
+export interface BuildingPiece {
+  /** La `plan_key` de la malla de la que sale. */
+  from: string;
+  polygon: PlanPoint[];
+  /** Qué se separó y a pedido de quién. */
+  why: string;
+}
+
+/** Un punto del plano en metros alrededor del anclaje: [este, norte]. */
+export type PlanPoint = [number, number];
+
+/** Un tramo recto: sube de la arista `from` a la arista `to`; el primer punto de las dos va del mismo costado. */
+export interface StairFlight {
+  from: [PlanPoint, PlanPoint];
+  to: [PlanPoint, PlanPoint];
+  fromM: number;
+  toM: number;
+  /** La primera contrahuella se levanta en `from` y la última sube al descanso en `to`. */
+  risers: number;
+}
+
+/** Una losa horizontal entre tramos, o donde termina la escalera. */
+export interface StairLanding {
+  polygon: PlanPoint[];
+  atM: number;
+}
+
+/**
+ * Una parte de la malla de un edificio que en realidad es una escalera (SPEC-108 D-17): el visor quita sus
+ * triángulos, cierra el edificio donde estaba pegada y dibuja la escalera, que solo toca el suelo al arrancar.
+ * Va en el marco de la malla ya ajustada (D-16), si el edificio tiene ajuste.
+ */
+export interface BuildingStair {
+  /** Se quitan los triángulos que caen enteros en el polígono y entre las dos cotas. */
+  replaces: { polygon: PlanPoint[]; fromM: number; toM: number };
+  /** Donde la parte quitada estaba pegada al edificio: un muro entre las mismas cotas por cada segmento. */
+  walls: [PlanPoint, PlanPoint][];
+  flights: StairFlight[];
+  landings: StairLanding[];
+  /** Qué se corrigió y a pedido de quién. */
+  why: string;
+}
+
+/**
+ * Una transformación afín en metros alrededor del anclaje (x este, y norte) que el visor aplica a la malla:
+ * x' = a·x + b·y + e, y' = c·x + d·y + f. La altura no cambia.
+ */
+export interface BuildingAdjustment {
+  /** [a, b, c, d, e, f] */
+  matrix: [number, number, number, number, number, number];
+  /** Metros que sube la malla entera; negativo, baja (SPEC-108 D-16). Sin él, la altura queda igual. */
+  liftM?: number;
+  /** Qué se corrigió y a pedido de quién. */
+  why: string;
 }
 
 export interface CampusFeatureProperties {

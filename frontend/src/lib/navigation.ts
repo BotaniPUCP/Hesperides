@@ -40,8 +40,6 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: INCIDENT_MEMBER_ROLES },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
-  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
   // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
   { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
@@ -65,6 +63,8 @@ export const NAVIGATION: readonly NavGroup[] = [
     items: [
       { label: 'Especies', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       { label: 'Registrar especie', href: '/inventario-verde/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Importar especies', href: '/inventario-verde/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Estándar de especies', href: '/inventario-verde/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
     ],
   },
   {
@@ -106,13 +106,15 @@ export const NAVIGATION: readonly NavGroup[] = [
   },
   {
     // SPEC-107: grupo propio. Los cuatro roles leen la agenda; registrar, uno a uno o
-    // por archivo, es de coordinación. Después recibirá los eventos bloqueantes de 1.12.
+    // por archivo, es de coordinación. SPEC-114 suma el calendario del campus (REQ 1.12).
     id: 'reservas',
     label: 'Reservas',
     icon: '📅',
     items: [
       { label: 'Agenda de reservas', href: '/reservas', icon: '📅', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       { label: 'Registro masivo', href: '/reservas/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      // SPEC-114: los eventos bloqueantes y los feriados; los cuatro roles los leen.
+      { label: 'Calendario del campus', href: '/calendario', icon: '🗓️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
     ],
   },
   {

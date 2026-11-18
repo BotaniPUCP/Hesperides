@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import type { GreenAreaSetElement } from '@shared/types';
-import type { IrrigationZone } from '@shared/types/irrigation';
+import type { ZoneOption } from '@shared/types';
 import { Button, LoadingSkeleton } from '@/components/ui';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { Map3DView } from '@/components/map3d/Map3DView';
@@ -33,7 +33,7 @@ const MAP_CHIP = 'pointer-events-auto rounded-md bg-neutral-0 text-xs font-semib
 interface SectorGroup {
   key: string;
   name: string;
-  sections: IrrigationZone[];
+  sections: ZoneOption[];
   specimens: GreenAreaSetElement[];
 }
 
@@ -44,8 +44,8 @@ interface Notice {
 }
 
 export interface SetMapPickerProps {
-  sectors: IrrigationZone[];
-  sectionsBySector: Record<number, IrrigationZone[]>;
+  sectors: ZoneOption[];
+  sectionsBySector: Record<number, ZoneOption[]>;
   specimens: GreenAreaSetElement[];
   selectedZoneIds: number[];
   selectedSpecimenIds: number[];

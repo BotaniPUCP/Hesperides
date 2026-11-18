@@ -5,22 +5,32 @@
   "photos": [
     "frente.jpg"
   ],
-  "notes": "Muro blanco con zócalo gris y puerta (frente.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#ebebe8"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "zocalo": {
+      "color": "#a3a6a5"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b3b0a9",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#ecece9",
-          "photo": {
-            "tile": "c24",
-            "widthM": 6,
-            "heightM": 2.7
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            -1,
+            0.5
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Muro blanco con zócalo gris y su puerta (frente.jpg)."
 }

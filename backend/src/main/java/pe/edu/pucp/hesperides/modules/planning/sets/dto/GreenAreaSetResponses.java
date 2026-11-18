@@ -25,6 +25,14 @@ public final class GreenAreaSetResponses {
                              String sectionName, Long sectorId, String sectorName) {
     }
 
+    /** Una zona que se puede elegir: sector o sección. */
+    public record ZoneOption(long id, String code, String name) {
+    }
+
+    /** Un sector activo con sus secciones activas, para armar un conjunto desde el mapa. */
+    public record SectorSections(long id, String code, String name, List<ZoneOption> sections) {
+    }
+
     /**
      * Un conjunto en la lista. {@code specimenTypes}: sus ejemplares por tipo, del más
      * numeroso al menos. Qué se planifica en él se ve en Planificación, no aquí.

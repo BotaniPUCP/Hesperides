@@ -68,7 +68,8 @@ public class InterventionReferencesRepository {
     }
     public List<Map<String,Object>> catalogOptions() {
         return jdbc.queryForList("""
-            select i.id,i.code,i.label,i.parent_item_id as "parentItemId",t.code as "typeCode"
+            select i.id,i.code,i.label,i.parent_item_id as "parentItemId",t.code as "typeCode",
+              coalesce((i.metadata->>'suggestsCuttingMachinery')::boolean,false) as "suggestsCuttingMachinery"
             from catalog_items i join catalog_types t on t.id=i.catalog_type_id
             where i.is_active and i.deleted_at is null and t.deleted_at is null
               and t.code in ('INTERVENTION_CLASS','INTERVENTION_TYPE','INTERVENTION_STATUS','INTERVENTION_ORIGIN','INCIDENT_SOURCE','MEASUREMENT_UNIT','EVIDENCE_MOMENT')

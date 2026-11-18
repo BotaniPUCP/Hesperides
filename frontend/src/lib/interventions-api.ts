@@ -7,6 +7,8 @@ import type { GeoJsonGeometry } from '@shared/types';
 export interface InterventionSummary {
   id: number; code: string; activityTitle?: string; version: number; classItemId: number; typeItemId: number | null;
   scheduledDate: string; planningStatusCode: string; statusCode: string;
+  /** SPEC-115: el trabajo usa maquinaria de corte. */
+  usesCuttingMachinery?: boolean;
   teamId: number | null; assignedToUserId: number | null; startedAt: string | null;
   completedAt: string | null; validatedAt: string | null;
   elapsedSeconds?: number | null;
@@ -40,7 +42,7 @@ export interface InterventionHistoryEvent {
 export interface InterventionDetail extends InterventionSummary {
   campusSelectionRevision?:string|null;
   incidentIntegrationAvailable?: boolean;
-  sourceIncidents?: { id: number; code: string | null; statusCode: string }[];
+  sourceIncidents?: InterventionSourceIncident[];
   description: string | null; locations: InterventionLocation[]; evidences: InterventionEvidence[];
   originItemId: number; reportedByItemId: number; externalCode: string | null; requestedAt: string | null;
   responsibleSupervisorUserId: number | null;
@@ -66,30 +68,41 @@ export interface InterventionZoneOptions {
 }
 export interface ZoneSelection {placeId:number;zoneId:number;zoneSelectionRevision:string;}
 export interface ZonePreview {surfaceM2:number;zones:InterventionZone[];}
+/** Incidencia vinculada, vista desde la intervención (SPEC-201 §3.8). */
+export interface InterventionSourceIncident {
+  id: number; code: string; title: string | null; statusCode: string; active: boolean; linkId: number | null;
+}
 export interface InterventionPlanning {
   campusSelectionRevision?:string|null;
   classItemId: number; typeItemId: number | null; scheduledDate: string; description: string | null;
   locations: InterventionLocation[]; version?: number; rescheduleReason?: string;
   originItemId?: number; reportedByItemId?: number; externalCode?: string | null; requestedAt?: string | null;
+  usesCuttingMachinery?: boolean;
+  /** SPEC-201 §3.8: incidencias que atiende, solo al crear. */
+  incidentIds?: number[];
 }
 export interface InterventionOptions {
   places: {id:number; code?:string; name:string}[];
   zones: {id:number; name:string}[];
   teams: { id: number; name: string; responsibleSupervisorUserId: number | null; assignees: { id: number; fullName: string }[] }[];
-  catalogs: { id: number; code: string; label: string; typeCode: string; parentItemId: number | null }[];
+  catalogs: { id: number; code: string; label: string; typeCode: string; parentItemId: number | null;
+    /** SPEC-115: el tipo marca sola la casilla de maquinaria de corte. */
+    suggestsCuttingMachinery?: boolean }[];
 }
 export type InterventionPage = Page<InterventionSummary>;
 const base = '/interventions';
 export const interventionsApi = {
   campusOptions:()=>apiClient.get<CampusOptions>(`${base}/campus-selection`),
   campusPreview:(selectionRevision:string,zoneIds:number[],specimenIds:number[])=>apiClient.post<{surfaceM2:number;areaCount:number;specimenCount:number}>(`${base}/campus-selection/preview`,{selectionRevision,zoneIds,specimenIds}),
-  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string, active?: boolean) => {
+  list: (page: number, status: string, dateFrom: string, dateTo: string, greenElementCode?: string, active?: boolean,
+    greenElementId?: number | string) => {
     const query = new URLSearchParams({ page: String(page), size: '20' });
     if (active !== undefined) query.set('active', String(active));
     if (status) query.set('statusCode', status);
     if (dateFrom) query.set('dateFrom', dateFrom);
     if (dateTo) query.set('dateTo', dateTo);
     if (greenElementCode !== undefined) query.set('greenElementCode', greenElementCode);
+    if (greenElementId !== undefined) query.set('greenElementId', String(greenElementId));
     return apiClient.get<InterventionPage>(`${base}?${query}`);
   },
   detail: (id: number) => apiClient.get<InterventionDetail>(`${base}/${id}`),

@@ -12,7 +12,7 @@ import { SpeciesGrid } from './SpeciesGrid';
 
 const LIST_PATH = '/inventario-verde';
 const SPECIES_SORTS = ['name:asc', 'name:desc', 'count:desc', 'count:asc'] as const;
-const DEFAULTS = { search: '', type: 'ALL', sort: 'name:asc', page: '0' };
+const DEFAULTS = { search: '', type: 'ALL', sort: 'name:asc', page: '0', enRetiro: 'false' };
 
 /** El catálogo de especies. Sus filtros viven en la URL para encontrarlos igual al regresar de una ficha. */
 export function InventarioVerdeScreen() {
@@ -21,6 +21,7 @@ export function InventarioVerdeScreen() {
   const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
   const [searchInput, setSearchInput] = useSearchDraft(values.search, (search) => setValues({ search, page: '0' }));
   const selectedType = values.type;
+  const enRetiro = values.enRetiro === 'true';
   const speciesSort = oneOf(values.sort, SPECIES_SORTS, 'name:asc');
   const page = pageFrom(values.page);
   const pageSize = 16;
@@ -36,6 +37,7 @@ export function InventarioVerdeScreen() {
   } = useInventarioVerdeSpecies({
     search: values.search,
     vegetationType: selectedType,
+    retiring: enRetiro,
     page,
     pageSize,
     reloadKey,
@@ -49,7 +51,7 @@ export function InventarioVerdeScreen() {
   }
 
   function handleClearFilters() {
-    setValues({ search: '', type: 'ALL', page: '0' });
+    setValues({ search: '', type: 'ALL', enRetiro: 'false', page: '0' });
   }
 
   return (
@@ -64,6 +66,8 @@ export function InventarioVerdeScreen() {
           totalAllCount={totalSpecimens}
           searchValue={searchInput}
           onSearchChange={setSearchInput}
+          enRetiro={enRetiro}
+          onEnRetiroChange={(checked) => setValues({ enRetiro: checked ? 'true' : 'false', page: '0' })}
         />
 
         <SpeciesGrid

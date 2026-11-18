@@ -1,14 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BackButton } from '@/components/ui/BackButton';
 import { LoadingSkeleton } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useMapLayers } from '@/hooks/useMapLayers';
 import { usePlanModel } from '@/hooks/usePlanModel';
+import { BalloonCard } from './balloons/BalloonCard';
+import { BalloonLegend } from './balloons/BalloonLegend';
+import { CampusNoticesBanner } from './balloons/CampusNoticesBanner';
+import { useBalloonsOnMap } from './balloons/useBalloonsOnMap';
 import { useCatalogLinkFor, useCatalogOnMap, useMapCatalog } from './catalog/useCatalogOnMap';
 import { LayerToggles } from './LayerToggles';
+import { useIncidentsOnMap } from './incidents/useIncidentsOnMap';
 import { Map3DView } from './Map3DView';
 import { MapAttribution } from './MapAttribution';
 import { MapFallback } from './MapFallback';
@@ -16,11 +21,16 @@ import { MapFullscreenButton } from './MapFullscreenButton';
 import { MapInfoCard } from './MapInfoCard';
 import { MapSearch } from './MapSearch';
 import { MapToolbar } from './MapToolbar';
-import { mapScreenPose } from './mapScreenMemory';
+import { INITIAL_OPTIONS, mapScreenPose } from './mapScreenMemory';
 import { ModeLegend } from './ModeLegend';
 import { toSceneData } from './sceneData';
 import { buildSearchIndex, isCatalogTarget } from './searchIndex';
 import { useMapScreenState } from './useMapScreenState';
+import { useAdminModeToggle } from './pilot/useAdminModeToggle';
+import type { ViewerStart } from './viewer/createViewer';
+
+/** El visor nace como dicen las opciones de inicio: `applyToViewer` solo le ordena lo que difiere de ellas. */
+const VIEWER_START: ViewerStart = { realColors: INITIAL_OPTIONS.realColors };
 
 /** El mapa del campus a pantalla completa: la maqueta 3D con buscador, capas, leyenda y ficha. */
 export function MapScreen() {
@@ -44,8 +54,34 @@ export function MapScreen() {
   // solo cuando un visor quedó listo (hay WebGL): sin WebGL se ven las listas y el modelo no sirve.
   const plan = usePlanModel(data?.plane ?? null, s.viewerEpoch > 0);
   const onMap = useCatalogOnMap(data, catalog, s);
+  const balloons = useBalloonsOnMap({ viewer: s.viewer, viewerEpoch: s.viewerEpoch, unsupported: s.unsupported,
+    cardOpen: s.card !== null, closeCard: s.closeCard });
+  const incidents = useIncidentsOnMap(s.viewer, s.viewerEpoch, s.visible);
   const index = useMemo(() => (data ? [...onMap.entries, ...buildSearchIndex(data)] : []), [data, onMap.entries]);
+  // Ctrl+Shift+U: movimiento libre de administrador, con un aviso temporal al entrar y al salir.
+  useAdminModeToggle(s.viewer, s.viewerEpoch > 0);
   const root = useRef<HTMLDivElement>(null);
+  // Modo captura: la maqueta sola (sin interfaz, nombres, globos ni marcadores 3D). Esc o un clic en el aviso, para salir.
+  const [capture, setCapture] = useState(false);
+  const [captureHint, setCaptureHint] = useState(false);
+  useEffect(() => {
+    s.viewer.current?.setCaptureMode(capture);
+    if (!capture) return;
+    const node = root.current;
+    const hint = setTimeout(() => setCaptureHint(false), 2000);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setCapture(false); };
+    // En pantalla completa, Esc la cierra el navegador sin pasar la tecla: al salir de ella, sale del modo.
+    const onFullscreen = () => { if (!document.fullscreenElement) setCapture(false); };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('fullscreenchange', onFullscreen);
+    return () => {
+      clearTimeout(hint);
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('fullscreenchange', onFullscreen);
+      if (node && document.fullscreenElement === node) void document.exitFullscreen().catch(() => undefined);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- s.viewer es una referencia estable
+  }, [capture, s.viewerEpoch]);
   const focusedParamRef = useRef<string | null>(null);
   const viewerSettled = s.viewerEpoch > 0 || s.unsupported;
 
@@ -98,11 +134,27 @@ export function MapScreen() {
           onHover={() => undefined}
           onCompass={s.onCompass}
           onViewConePick={onMap.onConePick}
+          onBalloonPick={balloons.pick}
+          start={VIEWER_START}
+          onIncidentPick={incidents.onIncidentPick}
           poseMemory={mapScreenPose}
+          bare={capture}
         />
       )}
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start gap-2 p-3">
+      {capture && (
+        <button
+          type="button"
+          onClick={() => setCapture(false)}
+          className={`absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-md bg-neutral-900/70 px-3 py-1 text-xs text-neutral-0 transition-opacity duration-700 ${captureHint ? 'opacity-100' : 'opacity-0 hover:opacity-100'}`}
+        >
+          Modo captura: Esc o clic aquí para salir
+        </button>
+      )}
+
+      {!capture && (
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start gap-2 p-3 md:pr-64">
+        {/* A la derecha queda libre la columna de «Capas y leyenda»: la barra pasa a otra línea antes de taparla. */}
         <div className="pointer-events-auto w-full max-w-sm space-y-2">
           <div className="flex items-center gap-2">
             <BackButton />
@@ -110,6 +162,7 @@ export function MapScreen() {
               <MapSearch index={index} onPick={(e) => (isCatalogTarget(e.target) ? onMap.pick(e.target) : s.select(e.target))} />
             </div>
           </div>
+          <CampusNoticesBanner notices={balloons.campusNotices} />
           {stale && (
             <p role="status" className="rounded-md bg-alert-warning-bg/95 px-3 py-1.5 text-xs text-alert-warning-fg shadow">
               Sin conexión: se muestra la última versión descargada del mapa.
@@ -127,16 +180,20 @@ export function MapScreen() {
               options={s.options}
               compass={s.compass}
               onOption={s.setOption}
-              onFit={() => s.viewer.current?.fit()}
-              onTop={() => s.viewer.current?.top()}
-              onNorth={() => s.viewer.current?.north()}
-              onSpin={() => s.viewer.current?.toggleSpin()}
+              viewer={s.viewer}
+              onCapture={() => {
+                setCapture(true);
+                setCaptureHint(true);
+                // También sin la barra de la aplicación: la maqueta a pantalla completa (el clic lo permite).
+                void root.current?.requestFullscreen?.().catch(() => undefined);
+              }}
             />
           </div>
         )}
       </div>
+      )}
 
-      {!s.unsupported && (
+      {!s.unsupported && !capture && (
         <aside className="absolute right-3 top-28 z-10 w-56 md:top-16">
           <button
             type="button"
@@ -149,14 +206,22 @@ export function MapScreen() {
           {s.panelOpen && (
             <div className="mt-2 max-h-[60vh] space-y-4 overflow-y-auto rounded-lg border border-neutral-200 bg-neutral-0/95 p-3 shadow-lg">
               <ModeLegend mode={s.mode} hidden={s.hidden} onModeChange={s.setMode} onToggleCategory={s.toggleCategory} />
+              <BalloonLegend on={balloons.on} balloons={balloons.balloons} unavailableKinds={balloons.unavailableKinds}
+                onToggle={balloons.toggle} />
               <LayerToggles visible={s.visible} onToggle={s.toggleLayer} />
+              {incidents.withoutLocation > 0 && <p className="text-xs text-neutral-700">{incidents.withoutLocation} incidencias activas sin ubicación: revísalas en Incidencias.</p>}
             </div>
           )}
         </aside>
       )}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-start gap-2 p-3">
-        {s.card && (
+        {balloons.card && !capture && (
+          <div className="pointer-events-auto w-full max-w-sm">
+            <BalloonCard balloon={balloons.card.balloon} gone={balloons.card.gone} onClose={balloons.closeBalloon} />
+          </div>
+        )}
+        {s.card && !capture && (
           <div className="pointer-events-auto w-full max-w-sm">
             <MapInfoCard content={s.card} onClose={s.closeCard} />
           </div>
@@ -166,9 +231,11 @@ export function MapScreen() {
         </div>
       </div>
 
-      <div className="absolute bottom-3 right-3">
-        <MapFullscreenButton target={root} />
-      </div>
+      {!capture && (
+        <div className="absolute bottom-3 right-3">
+          <MapFullscreenButton target={root} />
+        </div>
+      )}
     </div>
   );
 }

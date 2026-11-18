@@ -4,39 +4,60 @@
   "folder": "polideportivo",
   "photos": [
     "detras-lado-hacia-aulas-moviles.jpg",
-    "lado-hacia-eeggll.jpg"
+    "frente.jpg",
+    "lado-hacia-eeggll.jpg",
+    "otro-lado.jpg"
   ],
-  "notes": "Coliseo azul con franja de celosías y base blanca con ventanas pequeñas (lado-hacia-eeggll.jpg, sur); hacia las aulas móviles (oeste), enchape verde bajo el azul (detras-lado-hacia-aulas-moviles.jpg).",
+  "materials": {
+    "azul": {
+      "color": "#2f5694"
+    },
+    "base": {
+      "color": "#e6e4df"
+    },
+    "verde": {
+      "color": "#6f8a7c"
+    },
+    "celosias": {
+      "color": "#d9dcdf"
+    },
+    "techo": {
+      "color": "#c9cacb"
+    }
+  },
   "zones": [
     {
-      "id": "edificio",
-      "roof": "#c9cacb",
-      "faces": {
-        "W": {
-          "kind": "photo",
-          "wall": "#2e4683",
-          "photo": {
-            "tile": "poli-oeste",
-            "widthM": 30,
-            "heightM": 12
-          }
+      "id": "coliseo",
+      "wall": "azul",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "base",
+          "v": [
+            -1,
+            4.2
+          ]
         },
-        "NW": {
-          "sameAs": "W"
-        },
-        "SW": {
-          "sameAs": "W"
-        },
-        "other": {
-          "kind": "photo",
-          "wall": "#2e4683",
-          "photo": {
-            "tile": "poli-sur",
-            "widthM": 35,
-            "heightM": 12
-          }
+        {
+          "material": "celosias",
+          "v": [
+            9.0,
+            10.2
+          ]
         }
+      ],
+      "faces": {
+        "W": [
+          {
+            "material": "verde",
+            "v": [
+              -1,
+              5.5
+            ]
+          }
+        ]
       }
     }
-  ]
+  ],
+  "notes": "Coliseo de revestimiento azul con su franja de celosías claras y la base blanca (lado-hacia-eeggll.jpg, el sur; frente.jpg); hacia las aulas móviles (oeste), la base es un enchape verde (detras-lado-hacia-aulas-moviles.jpg). Las ventanas chicas de la base no se dibujan. Los anexos bajos de las esquinas, grises en otro-lado.jpg, no se separan."
 }

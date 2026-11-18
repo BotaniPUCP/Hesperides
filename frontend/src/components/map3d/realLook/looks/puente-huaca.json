@@ -1,0 +1,24 @@
+{
+  "planKey": "f3b65a42-3332-43e5-847a-12c56e105ff7",
+  "name": "Puente Huaca",
+  "folder": "puente-huaca",
+  "photos": [
+    "huaca-color.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#c63b2f"
+    },
+    "techo": {
+      "color": "#b9443a"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Rojo como el puente de arco de huaca-color.jpg, foto de referencia que mandó Jean Piero el 15 nov 2026 (no es el puente del campus). En el modelo es solo la losa del paso: va roja entera."
+}

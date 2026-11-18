@@ -5,22 +5,20 @@
   "photos": [
     "frente.jpg"
   ],
-  "notes": "Casa de muros blancos tarrajeados con puerta y ventanas de madera y techo a dos aguas rojizo (frente.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#e8e7e1"
+    },
+    "techo": {
+      "color": "#a5614c"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#7a4f3e",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#e8e7e2",
-          "photo": {
-            "tile": "sumaq-wasi-2",
-            "widthM": 8,
-            "heightM": 2.6
-          }
-        }
-      }
+      "wall": "muro",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Casa de muros blancos tarrajeados con puerta y ventanas de madera y techo a dos aguas rojizo (frente.jpg)."
 }

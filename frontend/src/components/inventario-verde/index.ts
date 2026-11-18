@@ -7,6 +7,8 @@ export { InventarioVerdeScreen } from './InventarioVerdeScreen';
 export { InventarioEjemplaresScreen } from './InventarioEjemplaresScreen';
 export { RegistroEspecieModal } from './RegistroEspecieModal';
 export { RegistroEspecieForm } from './RegistroEspecieForm';
+export { ImportarEspeciesScreen } from './ImportarEspeciesScreen';
+export { EstandarEspeciesScreen } from './EstandarEspeciesScreen';
 
 export { SpeciesInfo } from './SpeciesInfo';
 export { SpecimenViewToggle } from './SpecimenViewToggle';

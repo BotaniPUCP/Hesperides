@@ -3,24 +3,25 @@
   "name": "Auditorio de Derecho",
   "folder": "auditorio-derecho",
   "photos": [
+    "auditorio-frente-otro.jpg",
+    "frente.jpg",
+    "frente2.jpg",
     "lado1.jpg"
   ],
-  "notes": "Muro gris verdoso redondeado con ventanal oscuro (lado1.jpg); el alero de concreto del ingreso no está en el modelo.",
+  "materials": {
+    "muro": {
+      "color": "#b5bcb6"
+    },
+    "techo": {
+      "color": "#bdbdb8"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#c4c5c1",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#7f8a83",
-          "photo": {
-            "tile": "auditorio-derecho",
-            "widthM": 9,
-            "heightM": 8.0
-          }
-        }
-      }
+      "wall": "muro",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Volumen redondeado de concreto gris verdoso (frente2.jpg, lado1.jpg). El alero de concreto del ingreso no está en el modelo; el ventanal oscuro y las puertas no se dibujan."
 }

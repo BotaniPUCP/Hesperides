@@ -17,6 +17,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import pe.edu.pucp.hesperides.support.TestDatabase;
+import pe.edu.pucp.hesperides.support.TestUsers;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -64,6 +65,10 @@ class PlanningAssignmentsIntegrationTest {
 
     @BeforeEach
     void data() {
+        // La auditoría guarda quién actúa: los usuarios simulados de estas pruebas tienen que existir.
+        for (String email : List.of("a@test.local", "c@test.local", "x@test.local")) {
+            TestUsers.ensure(jdbc, email, "COORDINADOR");
+        }
         List<Long> types = jdbc.queryForList("""
                 SELECT ci.id FROM catalog_items ci JOIN catalog_types ct ON ct.id = ci.catalog_type_id
                 WHERE ct.code = 'INTERVENTION_TYPE' AND ci.deleted_at IS NULL

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { ApiError } from '@/lib/api';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { RegistroEspecieModal } from '../RegistroEspecieModal';
-import { medidasDeEspecieCritica } from '../__fixtures__/inventario';
+import { medidasDeEspecieCritica, palmeraReal } from '../__fixtures__/inventario';
 
 jest.mock('@/lib/inventario-verde-api', () => ({
   inventarioVerdeApi: {
@@ -79,6 +79,7 @@ describe('RegistroEspecieModal', () => {
   it('guarda exitosamente una nueva especie y notifica al padre', async () => {
     const mockNuevaEspecie = {
       slug: 'ginkgo-biloba',
+      isActive: true,
       scientificName: 'Ginkgo biloba',
       commonName: 'Árbol de los 40 escudos',
       otherNames: [],
@@ -128,6 +129,25 @@ describe('RegistroEspecieModal', () => {
       expect(onCreated).toHaveBeenCalledWith(mockNuevaEspecie);
       expect(onClose).toHaveBeenCalled();
     });
+  });
+
+  it('normaliza un nombre de una palabra en el modal de alta', async () => {
+    jest.mocked(inventarioVerdeApi.registerSpecies).mockResolvedValue(palmeraReal);
+    render(
+      <RegistroEspecieModal
+        isOpen={true}
+        onClose={onClose}
+        initialScientificName="mANGO"
+        onCreated={onCreated}
+      />
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar especie' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar y registrar' }));
+
+    await waitFor(() => expect(inventarioVerdeApi.registerSpecies).toHaveBeenCalledWith(
+      expect.objectContaining({ scientificName: 'Mango' }), null,
+    ));
   });
 
   it('muestra mensaje de error cuando la especie ya existe (409 Conflict)', async () => {

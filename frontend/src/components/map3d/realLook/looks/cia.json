@@ -1,0 +1,102 @@
+{
+  "planKey": "d093db0d-60f8-4064-b759-acc3263d6dc2",
+  "name": "CIA (Complejo de Innovación Académica)",
+  "folder": "cia",
+  "photos": [
+    "cia-1-vista-desde-gelarti.jpg",
+    "cia-2.jpg"
+  ],
+  "materials": {
+    "panel": {
+      "color": "#b5856e"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "vidrio": {
+      "glass": "#7d93ab",
+      "frame": "#5d4037",
+      "moduleM": 1.5,
+      "heightM": 4.2,
+      "frameM": 0.1,
+      "vary": 0.04,
+      "spandrel": {
+        "color": "#6f4b3f",
+        "heightM": 0.7
+      }
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "panel",
+      "roof": "techo",
+      "faces": {
+        "S": [
+          {
+            "material": "vidrio",
+            "u": [
+              8.7,
+              27.7
+            ],
+            "v": [
+              0.2,
+              16.9
+            ]
+          },
+          {
+            "material": "vidrio",
+            "u": [
+              -26.5,
+              -16.5
+            ],
+            "v": [
+              0.2,
+              16.9
+            ]
+          }
+        ],
+        "W": [
+          {
+            "material": "vidrio",
+            "u": [
+              4.5,
+              21.7
+            ],
+            "v": [
+              0.2,
+              16.9
+            ]
+          }
+        ],
+        "SE": [
+          {
+            "material": "vidrio",
+            "u": [
+              -34,
+              -1.6
+            ],
+            "v": [
+              0.2,
+              16.9
+            ]
+          }
+        ],
+        "SW": [
+          {
+            "material": "vidrio",
+            "u": [
+              -13,
+              8.4
+            ],
+            "v": [
+              0.2,
+              16.9
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "notes": "Paneles terracota en las caras de afuera, macizas (cia-1-vista-desde-gelarti.jpg, tomada desde Gelarti, 100 m al nor-noreste). Muro cortina de vidrio con una banda parda en cada piso y el remate macizo arriba en las puntas del sur y en las caras del patio hundido (cia-2.jpg, desde el sur). Las cintas inclinadas de vidrio de la cara noreste y las ventanas sueltas de la noroeste no se dibujan: no son rectángulos ni marcan el color (D-04). El sótano del patio hundido no tiene foto: panel, sin vidrio (D-06)."
+}

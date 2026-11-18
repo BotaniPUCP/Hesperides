@@ -1,0 +1,2 @@
+clouds.webp: máscara de nubes derivada de «Kloppenheim 06 (Pure Sky)», Poly Haven (Greg Zaal, Jarod Guest), CC0.
+https://polyhaven.com/a/kloppenheim_06_puresky — se genera con scripts/mapa/nubes_atardecer.py

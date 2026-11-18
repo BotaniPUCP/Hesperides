@@ -3,24 +3,36 @@
   "name": "Arqueología A / CIGA",
   "folder": "ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA)",
   "photos": [
+    "detras.jpg",
+    "frente-1.jpg",
     "frente2.jpg"
   ],
-  "notes": "Paneles prefabricados claros; el testero de frente2.jpg, con su ventana enrejada, va en todas las caras.",
+  "materials": {
+    "muro": {
+      "color": "#e4e2db"
+    },
+    "techo": {
+      "color": "#c4c2bc"
+    },
+    "ventanas": {
+      "color": "#b1b3b1"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#9d9a93",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#dcdad3",
-          "photo": {
-            "tile": "arqueologia-a",
-            "widthM": 6,
-            "heightM": 3.2
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            2.2,
+            3
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Paneles prefabricados claros con una cinta alta de ventanas bajo el alero (detras.jpg, frente-1.jpg, frente2.jpg)."
 }

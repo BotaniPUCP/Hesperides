@@ -5,22 +5,42 @@
   "photos": [
     "frente.jpg"
   ],
-  "notes": "Paneles blancos, puertas y ventanas enrejadas bajo celosía oscura (frente.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#e8e9e6"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "ventanas": {
+      "color": "#c0c3c2"
+    },
+    "celosias": {
+      "color": "#6f7477"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b9b7b1",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#ecedeb",
-          "photo": {
-            "tile": "c31",
-            "widthM": 12,
-            "heightM": 3.4
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
+        },
+        {
+          "material": "celosias",
+          "v": [
+            2.6,
+            3.6
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Paneles blancos con ventanas enrejadas sueltas, como franja tenue, bajo una franja alta de celosía oscura (frente.jpg)."
 }

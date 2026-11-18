@@ -3,24 +3,23 @@
   "name": "Desconocido_12",
   "folder": "Desconocido_12",
   "photos": [
-    "frente.jpg"
+    "frente.jpg",
+    "lado-frente.jpg"
   ],
-  "notes": "Galpón abierto cerrado con planchas onduladas rojas bajo estructura metálica (frente.jpg). Sin malla en el modelo: se pinta su prisma (D-09b).",
+  "materials": {
+    "muro": {
+      "color": "#a6584c"
+    },
+    "techo": {
+      "color": "#9ea2a3"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#c9c6bf",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#9c5a52",
-          "photo": {
-            "tile": "desconocido-12",
-            "widthM": 8,
-            "heightM": 3.2
-          }
-        }
-      }
+      "wall": "muro",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Galpón abierto, cerrado con planchas onduladas rojas bajo estructura metálica (frente.jpg, lado-frente.jpg). No tiene malla en el modelo: se pinta su prisma, y la hoja de revisión no lo puede dibujar."
 }

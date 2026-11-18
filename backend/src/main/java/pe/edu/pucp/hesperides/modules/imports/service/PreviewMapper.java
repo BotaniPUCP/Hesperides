@@ -5,10 +5,12 @@ import pe.edu.pucp.hesperides.modules.imports.PlannedLine;
 import pe.edu.pucp.hesperides.modules.imports.csv.Issue;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreviewResponse;
 import pe.edu.pucp.hesperides.modules.imports.features.FeaturePreview;
+import pe.edu.pucp.hesperides.modules.imports.species.SpeciesPreview;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -19,13 +21,27 @@ final class PreviewMapper {
     }
 
     static ImportPreviewResponse toResponse(long batchId, String kind, SpecimenPreview p, LocalDateTime expires) {
-        int unknownRows = p.unknownSpecies().stream().mapToInt(SpecimenPreview.SpeciesCount::rows).sum();
-        return new ImportPreviewResponse(batchId, kind, p.rows().size() + unknownRows,
+        return toResponse(batchId, kind, p, expires, null);
+    }
+
+    static ImportPreviewResponse toResponse(long batchId, String kind, SpecimenPreview p, LocalDateTime expires,
+                                            String planFingerprint) {
+        return new ImportPreviewResponse(batchId, kind, p.totalRows(),
                 count(p.rows(), r -> r.action() == ImportAction.CREATE), count(p.rows(), r -> r.action() == ImportAction.UPDATE),
-                p.unknownSpecies().stream().map(s -> new ImportPreviewResponse.UnknownSpecies(s.name(), s.rows())).toList(),
+                p.unknownSpecies().stream().map(s -> new ImportPreviewResponse.UnknownSpecies(
+                        s.name(), s.rows(), s.sourceKey(), s.reason())).toList(),
                 duplicates(p.rows(), r -> new ImportPreviewResponse.Duplicate(r.line(), r.draft().scientificName(),
                         r.speciesSlug(), r.duplicateOf(), round(r.duplicateDistanceM()))),
-                issues(p.issues()), p.decimalComma(), p.canConfirm(), expires, List.of());
+                issues(p.issues()), p.decimalComma(), p.canConfirm(), expires, List.of(),
+                p.speciesBindingSummary().stream().map(b -> new ImportPreviewResponse.SpeciesBinding(
+                        b.sourceKey(), b.sourceName(), b.rows(), b.speciesSlug(), b.scientificName(),
+                        b.active(), b.resolution())).toList(),
+                p.rows().stream()
+                        .filter(r -> r.action() == ImportAction.UPDATE
+                                && !Objects.equals(r.previousSpeciesId(), r.speciesId()))
+                        .map(r -> new ImportPreviewResponse.SpecimenSpeciesChange(r.draft().code(),
+                                r.previousSpeciesScientificName(), r.speciesScientificName()))
+                        .toList(), planFingerprint);
     }
 
     static ImportPreviewResponse toResponse(long batchId, String kind, FeaturePreview p, LocalDateTime expires) {
@@ -35,6 +51,16 @@ final class PreviewMapper {
                 duplicates(p.rows(), r -> new ImportPreviewResponse.Duplicate(r.line(), r.draft().name(), null,
                         r.duplicateOf(), round(r.duplicateDistanceM()))),
                 issues(p.issues()), p.decimalComma(), p.canConfirm(), expires, List.of());
+    }
+
+    static ImportPreviewResponse toResponse(long batchId, String kind, SpeciesPreview p, LocalDateTime expires) {
+        return new ImportPreviewResponse(batchId, kind, p.totalRows(),
+                count(p.rows(), r -> r.action() == ImportAction.CREATE),
+                count(p.rows(), r -> r.action() == ImportAction.UPDATE),
+                List.of(), List.of(),
+                issues(p.issues()), p.decimalComma(), p.canConfirm(), expires, List.of(), List.of(), List.of(), null,
+                p.skippedInactiveSpecies().stream().map(r -> new ImportPreviewResponse.SkippedInactiveSpecies(
+                        r.line(), r.scientificName())).toList());
     }
 
     private static <T> int count(List<T> rows, Predicate<T> test) {

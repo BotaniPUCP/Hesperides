@@ -74,8 +74,12 @@ function writeTriangle(p: Float32Array, t: number, row: number, tangent: [number
   }
 }
 
-/** Clasifica los vértices `from`–`to` (un edificio, en triángulos completos) y escribe sus atributos. */
-export function classifyBuilding(p: Float32Array, from: number, to: number, footprint: Polygon[], zones: ZoneRows[], out: FaceAttributes): void {
+/**
+ * Clasifica los vértices `from`–`to` (un edificio, en triángulos completos) y escribe sus atributos. Desde
+ * `plainFrom` va su escalera (SPEC-108 D-17): no es fachada, y todas sus caras llevan el techo de su zona.
+ */
+export function classifyBuilding(p: Float32Array, from: number, to: number, footprint: Polygon[], zones: ZoneRows[], out: FaceAttributes,
+  plainFrom = to): void {
   if (to <= from) return;
   const box = boxOf(p, from, to);
   for (let t = from; t + 2 < to; t += 3) {
@@ -87,7 +91,7 @@ export function classifyBuilding(p: Float32Array, from: number, to: number, foot
     const cx = (ax + p[t * 3 + 3] + p[t * 3 + 6]) / 3, cy = (ay + p[t * 3 + 4] + p[t * 3 + 7]) / 3;
     const cn = -(az + p[t * 3 + 5] + p[t * 3 + 8]) / 3;
     const zone = zoneAt(zones, box, cx, cn, cy);
-    if (Math.abs(ny / len) > HORIZONTAL_NY) {
+    if (t >= plainFrom || Math.abs(ny / len) > HORIZONTAL_NY) {
       writeTriangle(p, t, zone.roof, null, box, out);
       continue;
     }

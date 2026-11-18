@@ -1,9 +1,15 @@
 import type { ModeId } from '../modes';
 import type { LayerId, Target } from '../target';
 import type { CameraPose } from './cameraRig';
+import type { LivePerspective } from '../recording/perspectiveRecording';
 import type { ViewCone } from './viewCones';
+import type { DeadlineStatus } from '@shared/types';
+
+/** Una incidencia activa en lat/lon, como llega de la API (SPEC-201 §3.10). */
+export interface IncidentMarker { id: number; lat: number; lon: number; deadlineStatus: DeadlineStatus | null }
 import type { SelectionSweepCallbacks } from './selectionSweep';
 import type { Polygon } from '../sceneData';
+import type { Balloon } from '@shared/types';
 
 /** Lo que el visor avisa a la interfaz React. */
 export interface ViewerCallbacks {
@@ -17,6 +23,18 @@ export interface ViewerCallbacks {
   onCompass: (degrees: number) => void;
   /** Un clic sobre el cono de una perspectiva. */
   onViewConePick?: (id: number) => void;
+  /** Un clic sobre un globo (SPEC-113): la pantalla abre su ficha corta. */
+  onBalloonPick?: (balloon: Balloon) => void;
+  /** Un clic sobre el marcador de una incidencia. */
+  onIncidentPick?: (id: number) => void;
+}
+
+/** Cómo nace el visor; lo que no se dice nace como siempre. */
+export interface ViewerStart {
+  /** Los edificios con ficha nacen en sus colores reales (SPEC-112 D-13). */
+  realColors?: boolean;
+  /** Donde se dibujan los globos (SPEC-113); sin ella, el visor no muestra globos. */
+  balloonRoot?: HTMLElement;
 }
 
 /** Las operaciones que la interfaz React ordena al visor. */
@@ -43,6 +61,14 @@ export interface Viewer {
   setLayerVisible: (id: LayerId, visible: boolean) => void;
   select: (target: Target | null, focus: boolean) => void;
   setNight: (night: boolean) => void;
+  /** Modo Atardecer: hora dorada con cielo, bruma y posprocesado. De noche no se aplica. */
+  setSunset: (on: boolean) => void;
+  /** La hora del Atardecer, de la hora dorada al crepúsculo (SUNSET_HOURS). */
+  setSunsetHour: (hour: number) => void;
+  /** Una captura de lo que se ve, a `scale` veces la resolución de la pantalla, en PNG. */
+  snapshot: (scale?: number) => Promise<Blob | null>;
+  /** Modo captura: sin marcadores 3D (pin, incidencias, conos de perspectiva). */
+  setCaptureMode: (on: boolean) => void;
   setHour: (hour: number) => void;
   setShadows: (on: boolean) => void;
   setLabels: (on: boolean) => void;
@@ -54,10 +80,13 @@ export interface Viewer {
   north: () => void;
   toggleSpin: () => boolean;
   pose: () => CameraPose;
+  /** TEMPORAL: la cámara en este instante, para «Grabar vista». */
+  livePerspective: () => LivePerspective;
   /** Vuela hasta una pose guardada, con la misma animación que al buscar. */
   flyToPose: (pose: CameraPose) => void;
   /** Los conos de las perspectivas de un lugar; una lista vacía los quita. */
   setViewCones: (cones: ViewCone[]) => void;
+  setIncidentMarkers: (incidents: IncidentMarker[]) => void;
   /** Resalta un cono (o ninguno) y lleva la cámara a él. */
   focusViewCone: (id: number | null) => void;
   /** Lleva la cámara a un punto del campus. */
@@ -66,5 +95,12 @@ export interface Viewer {
   setPinLatLon?: (lat: number, lon: number) => void;
   /** Oculta el marcador/pin de la escena. */
   clearPin?: () => void;
+  /**
+   * Ctrl+Shift+U: W/S, A/D, Espacio y Shift mueven la cámara y el clic derecho mira
+   * alrededor sin moverla. Al salir se vuelve a la vista 3D inicial.
+   */
+  setAdminMode: (on: boolean) => void;
+  /** Los globos vigentes (SPEC-113); una lista vacía los quita. */
+  setBalloons: (balloons: readonly Balloon[]) => void;
   dispose: () => void;
 }

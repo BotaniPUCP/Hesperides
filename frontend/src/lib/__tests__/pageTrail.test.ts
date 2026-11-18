@@ -8,7 +8,7 @@ describe('buildPageTrail', () => {
   });
 
   it('una pantalla suelta del menú cuelga de Inicio', () => {
-    expect(buildPageTrail('/riego', { withHome: true })).toEqual([{ label: 'Inicio', href: '/' }, { label: 'Riego' }]);
+    expect(buildPageTrail('/reportes', { withHome: true })).toEqual([{ label: 'Inicio', href: '/' }, { label: 'Reportes' }]);
   });
 
   it('una pantalla de un grupo muestra el grupo, sin enlace porque no es una página', () => {

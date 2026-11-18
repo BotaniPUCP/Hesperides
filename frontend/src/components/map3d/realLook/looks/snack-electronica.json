@@ -1,0 +1,24 @@
+{
+  "planKey": "8b6b383e-f99a-4e6f-a9a9-e3a97265a151",
+  "name": "Snack de Electrónica, lactarios",
+  "folder": "snack-electronica",
+  "photos": [
+    "diodo-snack-electronica.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e6dfcb"
+    },
+    "techo": {
+      "color": "#cfccc5"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Todos los puestos de snack llevan los colores del Snack (Frutería Sociales), snack-sociales.json, por pedido de Jean Piero (15 nov 2026)."
+}

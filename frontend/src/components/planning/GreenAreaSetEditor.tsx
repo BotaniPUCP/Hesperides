@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import type { GreenAreaSetDetail, GreenAreaSetElement } from '@shared/types';
-import type { IrrigationZone } from '@shared/types/irrigation';
+import type { ZoneOption } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { Badge, Button, Card, Input } from '@/components/ui';
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -17,8 +17,8 @@ import { SetMapPicker } from './SetMapPicker';
 import { contentsLabel } from './planningTexts';
 
 export interface SetOptions {
-  sectors: IrrigationZone[];
-  sectionsBySector: Record<number, IrrigationZone[]>;
+  sectors: ZoneOption[];
+  sectionsBySector: Record<number, ZoneOption[]>;
   specimens: GreenAreaSetElement[];
 }
 

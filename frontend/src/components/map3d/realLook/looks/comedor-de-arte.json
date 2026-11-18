@@ -1,0 +1,59 @@
+{
+  "planKey": "6eb8356a-a0ec-423a-9be0-c77a8a91fa07",
+  "name": "Comedor de Arte",
+  "folder": "comedor-artes-antiguo-eeggcc",
+  "photos": [
+    "comedor-arte-antiguo.jpg",
+    "frente1.jpg",
+    "frente2.jpg",
+    "lado1.jpg",
+    "lado2.jpg"
+  ],
+  "materials": {
+    "madera": {
+      "color": "#5a3b2e"
+    },
+    "ladrillo": {
+      "color": "#a5553f"
+    },
+    "techo": {
+      "color": "#b9b6ae"
+    },
+    "vitral": {
+      "glass": "#7d979b",
+      "frame": "#5a3b2e",
+      "moduleM": 1.2,
+      "heightM": 1.1,
+      "frameM": 0.08,
+      "vary": 0.08,
+      "accent": {
+        "color": "#dca23c",
+        "share": 0.2
+      }
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "madera",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ladrillo",
+          "v": [
+            0,
+            1
+          ]
+        },
+        {
+          "material": "vitral",
+          "v": [
+            1,
+            3.2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Pabellón de estructura de madera oscura con cerchas en X, zócalo de ladrillo y paños de vidrio, algunos de colores (amarillo, naranja, turquesa), en todo su contorno (comedor-arte-antiguo.jpg y las fotos del frente y los lados). Los colores van como acento de los paños."
+}

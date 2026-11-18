@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import type { BuildingModelManifest, BuildingProperties, VegetationProperties } from '@shared/types';
+import type { BuildingModelManifest, BuildingProperties, BuildingStair, VegetationProperties } from '@shared/types';
 import { sampleLayers } from '../__fixtures__/mapLayers';
 import { LocalPlane } from '../projection';
 import { toSceneData, type Polygon, type ScenePoly } from '../sceneData';
@@ -43,7 +43,7 @@ function building(id: number, planKey: string | null, g: Polygon[] = square()): 
 
 function modelWith(buildings: Record<string, Float32Array>, extra: Partial<PlanModel> = {}): PlanModel {
   return {
-    buildings: new Map(Object.entries(buildings)), nodes: {}, sunken: [], offset: { x: 0, z: 0 },
+    buildings: new Map(Object.entries(buildings)), stairFrom: new Map(), nodes: {}, sunken: [], offset: { x: 0, z: 0 },
     huaca: { label: 'Camino Prehispánico', x: 0, y: 4.9, z: 0 }, ...extra,
   };
 }
@@ -189,6 +189,21 @@ describe('parsePlanModel', () => {
     expectClose(model.nodes.suelo?.uv ?? undefined, [0, 0, 1, 0, 0, 1]);
   });
 
+  it('escalona las rampas del piso que el manifiesto dice que son escaleras (SPEC-108 D-20)', async () => {
+    // Una rampa que baja 1 m hacia el norte (z negativo), en dos contrahuellas: ninguna cara queda inclinada.
+    const manifest = manifestWith({ nodes: { suelo: 'suelo' },
+      floorSteps: { rampa: { polygon: [[0, 0], [4, 0], [4, 10], [0, 10]], fromM: -1, toM: 0, risers: 2, why: 'prueba' } } });
+    const file = glb([{ name: 'suelo', positions: [0, 0, 0, 4, 0, 0, 4, -1, -10], uv: [0, 0, 4, 0, 4, 10] }]);
+
+    const model = await parsePlanModel(manifest, file, plane);
+    const p = model.nodes.suelo!.positions;
+    const inclined = Array.from({ length: p.length / 9 }, (_, t) => [p[t * 9 + 1], p[t * 9 + 4], p[t * 9 + 7]])
+      .filter((ys) => !ys.every((y) => y === ys[0]) && new Set(ys).size === 3);
+
+    expect(p.length).toBeGreaterThan(9);
+    expect(inclined).toEqual([]);
+  });
+
   it('junta los nodos de un mismo tipo, como los muros y el fondo de los desniveles', async () => {
     const manifest = manifestWith({ nodes: { 'muros-desnivel': 'muro', 'fondo-desnivel': 'muro' } });
     const file = glb([
@@ -214,6 +229,79 @@ describe('parsePlanModel', () => {
     expectClose(model.sunken[0].g[0][0], [0, 0, 10, 0, 10, 10, 0, 10]);
     expect(model.huaca.label).toBe('Camino Prehispánico');
     expectClose([model.huaca.x, model.huaca.y, model.huaca.z], [30, 4.9, 40]);
+  });
+
+  it('aplica el ajuste del manifiesto a la malla de ese edificio: la corre y la estira en planta sin cambiarle la altura', async () => {
+    // x' = 2x + 5 y y' = y − 3, en metros este/norte alrededor del anclaje (SPEC-108 D-16).
+    const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' },
+      adjustments: { k1: { matrix: [2, 0, 0, 1, 5, -3], why: 'prueba' } } });
+    const file = glb([{ name: 'k1', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }, { name: 'k2', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }]);
+
+    const model = await parsePlanModel(manifest, file, plane);
+
+    expect(Array.from(model.buildings.get('k1')!.slice(0, 3))).toEqual([7, 4, 1]);
+    expect(Array.from(model.buildings.get('k2')!.slice(0, 3))).toEqual([1, 4, -2]);
+  });
+
+  it('un ajuste con altura sube o baja la malla entera de ese edificio (el Auditorio Juan Pablo II baja 5 m)', async () => {
+    const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' },
+      adjustments: { k1: { matrix: [1, 0, 0, 1, 0, 0], liftM: -3, why: 'prueba' } } });
+    const file = glb([{ name: 'k1', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }, { name: 'k2', positions: [1, 4, -2, 1, 4, -2, 1, 4, -2] }]);
+
+    const model = await parsePlanModel(manifest, file, plane);
+
+    expect(Array.from(model.buildings.get('k1')!.slice(0, 3))).toEqual([1, 1, -2]);
+    expect(Array.from(model.buildings.get('k2')!.slice(0, 3))).toEqual([1, 4, -2]);
+  });
+
+  it('aplica la escalera del manifiesto: quita la parte que reemplaza, cierra el edificio y dice dónde empieza la escalera', async () => {
+    // Un techo a 3 m dentro de la parte reemplazada (sale) y otro lejos (queda), en metros alrededor del anclaje (SPEC-108 D-17).
+    const stair: BuildingStair = {
+      replaces: { polygon: [[0, 0], [4, 0], [4, 4], [0, 4]], fromM: 0, toM: 3 },
+      walls: [[[0, 0], [0, 4]]],
+      flights: [{ from: [[0, 0], [2, 0]], to: [[0, 3], [2, 3]], fromM: 0, toM: 1.5, risers: 10 }],
+      landings: [{ polygon: [[0, 3], [2, 3], [2, 4], [0, 4]], atM: 1.5 }],
+      why: 'prueba',
+    };
+    const inside = [1, 3, -1, 2, 3, -1, 1, 3, -2];
+    const outside = [10, 0, 0, 11, 0, 0, 10, 0, -1];
+    const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' }, stairs: { k1: stair } });
+    const file = glb([{ name: 'k1', positions: [...inside, ...outside] }, { name: 'k2', positions: outside }]);
+
+    const model = await parsePlanModel(manifest, file, plane);
+
+    const mesh = model.buildings.get('k1')!;
+    expectClose(mesh.slice(0, 9), outside);
+    // Tras lo que queda, el muro que cierra el edificio (dos triángulos); de ahí en adelante, la escalera.
+    expect(model.stairFrom.get('k1')).toBe(3 + 6);
+    expect(mesh.length / 3).toBeGreaterThan(9);
+    expect(model.stairFrom.has('k2')).toBe(false);
+  });
+
+  it('separa las piezas del manifiesto: sus triángulos pasan a su propio edificio, ubicado con el anclaje como los demás', async () => {
+    // Un quiosco que el SKP dibujó dentro de la malla de k1, en metros alrededor del anclaje (SPEC-108 D-18).
+    const [lat, lon] = plane.toLatLon({ x: 10, y: 0 });
+    const kiosk = [1, 3, -1, 2, 3, -1, 1, 3, -2];
+    const rest = [10, 0, 0, 11, 0, 0, 10, 0, -1];
+    const manifest = manifestWith({ anchor: { lat, lon }, pieces: { quiosco: { from: 'k1', polygon: [[0, 0], [4, 0], [4, 4], [0, 4]], why: 'prueba' } } });
+
+    const model = await parsePlanModel(manifest, glb([{ name: 'k1', positions: [...kiosk, ...rest] }]), plane);
+
+    expectClose(model.buildings.get('k1'), [20, 0, 0, 21, 0, 0, 20, 0, -1]);
+    expectClose(model.buildings.get('quiosco'), [11, 3, -1, 12, 3, -1, 11, 3, -2]);
+  });
+
+  it('una pieza cuya malla no está en el modelo hace fallar la lectura: su edificio quedaría sin malla', async () => {
+    const manifest = manifestWith({ nodes: { k1: 'edificio', k2: 'edificio' },
+      pieces: { quiosco: { from: 'k2', polygon: [[0, 0], [4, 0], [4, 4]], why: 'prueba' } } });
+
+    await expect(parsePlanModel(manifest, glb([{ name: 'k1', positions: Array.from(corner) }]), plane)).rejects.toThrow(/quiosco/);
+  });
+
+  it('un ajuste de algo que no es la malla de un edificio hace fallar la lectura: no se aplica a ciegas', async () => {
+    const manifest = manifestWith({ nodes: { suelo: 'suelo' }, adjustments: { suelo: { matrix: [1, 0, 0, 1, 1, 0], why: 'prueba' } } });
+
+    await expect(parsePlanModel(manifest, glb([{ name: 'suelo', positions: Array.from(corner) }]), plane)).rejects.toThrow(/suelo/);
   });
 
   it('un principal que es todo suelo no lleva malla ni prisma: su tramo queda vacío y los demás no se corren', async () => {

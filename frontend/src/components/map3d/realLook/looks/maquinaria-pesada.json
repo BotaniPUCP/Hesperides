@@ -3,24 +3,36 @@
   "name": "Laboratorio de Maquinaria Pesada + SS.HH.",
   "folder": "LABORATORIO DE MAQUINARIA PESADA + SS.HH",
   "photos": [
-    "detras-no hay edificios de este lado.jpg"
+    "detras-lado.jpg",
+    "detras-no hay edificios de este lado.jpg",
+    "detras.jpg"
   ],
-  "notes": "Galpón de calamina gris con portones plegables de chapa y paños translúcidos (detras-no hay edificios….jpg); sobre el tramo, calamina gris.",
+  "materials": {
+    "muro": {
+      "color": "#a6aaab"
+    },
+    "techo": {
+      "color": "#9ea2a3"
+    },
+    "translucido": {
+      "color": "#d4d6d2"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#a9adb0",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#8e9398",
-          "photo": {
-            "tile": "maquinaria-pesada",
-            "widthM": 6,
-            "heightM": 5.0
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "translucido",
+          "v": [
+            3.2,
+            4.4
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Galpón de calamina gris con portones plegables de chapa y paños translúcidos arriba (detras-lado.jpg, detras-no hay edificios de este lado.jpg). Los servicios higiénicos de ladrillo (detras.jpg) son un anexo chico que el modelo no separa."
 }

@@ -50,9 +50,8 @@ reserva**. Quedan **fuera**, a propósito (decisión del usuario, 9-11 nov 2026)
 | **Contorno del jardín** | La unión de los polígonos de las secciones del lugar (las suyas o las de sus hijos). |
 | **Cerca** | A **10 m o menos** del contorno del jardín reservado, medidos de borde a borde. «Contiguo» es el caso de 0 m. |
 | **Estado** | Se calcula, no se guarda: **Próxima** (aún no empieza), **En curso**, **Terminada** (pasó su hora de fin) o **Anulada**. |
-| **Confirmación de uso** | El solicitante avisó que usará el jardín. Lo anota coordinación por él (no tiene cuenta) y solo se acepta hasta el corte: el parámetro `RESERVATION_CONFIRMATION_MINUTES` (20 min) antes del fin. La anota quien quiera, se puede retirar dentro del plazo. |
-| **Uso del espacio** | El encargado marca que el espacio **está siendo usado**, desde el inicio y hasta el mismo corte de la confirmación: dentro de los últimos minutos ya no se puede marcar ni desmarcar (D-12). La falta no se marca: una reserva terminada sin marca se lee «No usada». |
-| **Uso derivado** | Lo que se muestra, calculado con el reloj y las dos marcas: Próxima → «Sin uso registrado» (o «Confirmada»); En curso → «En uso» o «No se está usando»; Terminada → «Usada» o «No usada»; Anulada → no muestra. |
+| **Uso del espacio** | El encargado marca que el espacio **está siendo usado**, desde el inicio y hasta el corte: el parámetro `RESERVATION_CONFIRMATION_MINUTES` (20 min) antes del fin — dentro de los últimos minutos ya no se puede marcar ni desmarcar (D-12). La falta no se marca: una reserva terminada sin marca se lee «No usada». |
+| **Uso derivado** | Lo que se muestra, calculado con el reloj y la marca: Próxima → «Sin uso registrado»; En curso → «En uso» o «No se está usando»; Terminada → «Usada» o «No usada»; Anulada → no muestra. |
 
 ### 2.2 Backend
 
@@ -60,8 +59,8 @@ reserva**. Quedan **fuera**, a propósito (decisión del usuario, 9-11 nov 2026)
 - Entidad `GardenReservation` (`garden_reservations`), repositorio JPA y consultas JDBC para
   cercanía (PostGIS).
 - Engine puro `engine/reservations/`: estado de una reserva, cruce de horarios, si una fecha
-  cae dentro de una reserva y las reglas del seguimiento de uso (corte de confirmación y
-  ventana de la marca). Sin Spring ni base de datos; el reloj se recibe.
+  cae dentro de una reserva y las reglas del seguimiento de uso (corte y ventana de la
+  marca). Sin Spring ni base de datos; el reloj se recibe.
 - Carga masiva: un `ImportHandler` con `kind = reservations`, como `DirectoryImportHandler`.
 - El aviso en el registro de intervención consulta este módulo; el módulo de intervenciones no
   depende de él (la página llama a los dos endpoints).
@@ -207,24 +206,27 @@ Terminada. *(Decisión de diseño.)*
 **D-11 · Una intervención abierta** es una intervención no cancelada ni dada de baja, con al menos
 trabajo por hacer en alguna ubicación (D-03b), juzgada ubicación por ubicación como en SPEC-203 §5.5.
 
-**D-12 · Seguimiento del uso: tres variables, dos guardadas y una calculada.** Decisión del
-usuario (11 nov 2026). El estado temporal (Próxima/En curso/Terminada/Anulada) sigue calculándose
-y no se guarda; junto a él, dos marcas con su propia ventana:
-- **Confirmación de uso** (`use_confirmed`): el solicitante avisa que usará el jardín y
-  coordinación lo anota por él (no tiene cuenta). Solo se acepta hasta el corte: el parámetro
-  `RESERVATION_CONFIRMATION_MINUTES` (20 min) antes del fin. Se puede retirar dentro del plazo.
-  Es informativa: la reserva no exige estar confirmada.
+**D-12 · Seguimiento del uso: dos variables, una guardada y una calculada.** Decisión del
+usuario (11 nov 2026; corregida el 17 nov 2026 retirando la confirmación). El estado temporal
+(Próxima/En curso/Terminada/Anulada) sigue calculándose y no se guarda; junto a él, una marca
+con su propia ventana:
 - **Uso del espacio** (`space_used`): el encargado marca que el espacio **está siendo usado**
-  («casi el único caso»), desde el inicio y **hasta el mismo corte de la confirmación** — el
-  usuario lo corrigió el 11 nov 2026: dentro de los últimos minutos ya no se puede comprobar un
-  uso que se dice en curso, así que el botón desaparece y el backend responde 422. La falta no
-  se marca: una reserva terminada sin marca se lee «No usada» — la falta queda registrada sola,
-  y el «No se está usando» del horario es automático. La marca es del capataz (SUPERVISOR)
-  además de coordinación; el operario solo lee, y los chips se ven en la agenda para los cuatro
+  («casi el único caso»), desde el inicio y **hasta el corte**: el parámetro
+  `RESERVATION_CONFIRMATION_MINUTES` (20 min) antes del fin — el usuario lo corrigió el
+  11 nov 2026: dentro de los últimos minutos ya no se puede comprobar un uso que se dice en
+  curso, así que el botón desaparece y el backend responde 422. La falta no se marca: una
+  reserva terminada sin marca se lee «No usada» — la falta queda registrada sola, y el
+  «No se está usando» del horario es automático. La marca es del capataz (SUPERVISOR)
+  además de coordinación; el operario solo lee, y el chip se ve en la agenda para los cuatro
   roles en todo momento.
-Ambas se pueden deshacer dentro de su ventana y quedan congeladas al terminar o anular la
-reserva. Cada cambio deja fila en su historial y en la auditoría. *Descartada:* la asistencia
-única NOT_RECORDED/USED/NO_SHOW de la primera iteración (V042, aplicada y retirada).
+- **La confirmación de uso se retira** (decisión del 17 nov 2026): quien reserva se supone que
+  lo usará, y si no, anula la reserva. No se pide ni se guarda nada más; V068 la saca de la
+  base y de la API. El parámetro del corte conserva su código (`RESERVATION_CONFIRMATION_MINUTES`)
+  aunque su ventana ahora es solo de la marca de uso.
+La marca se puede deshacer dentro de su ventana y queda congelada al terminar o anular la
+reserva. Cada cambio deja fila en su historial y en la auditoría. *Descartadas:* la asistencia
+única NOT_RECORDED/USED/NO_SHOW de la primera iteración (V042, aplicada y retirada) y la
+confirmación de uso (`use_confirmed`, V043, retirada en V068).
 
 ## 3. Contratos de API
 
@@ -235,7 +237,6 @@ reserva. Cada cambio deja fila en su historial y en la auditoría. *Descartada:*
 | `POST /api/v1/reservations` | ADMIN, COORDINADOR | Crea |
 | `PUT /api/v1/reservations/{code}` | ADMIN, COORDINADOR | Edita (no Terminada ni Anulada) |
 | `POST /api/v1/reservations/{code}/cancel` | ADMIN, COORDINADOR | Anula con motivo |
-| `PUT /api/v1/reservations/{code}/confirmation` | ADMIN, COORDINADOR | Confirma o retira la confirmación de uso (enmienda del 11 nov 2026; fuera del corte responde 422) |
 | `PUT /api/v1/reservations/{code}/usage` | ADMIN, COORDINADOR, SUPERVISOR | Marca o retira «el espacio está en uso» (solo dentro del horario; si no, 422) |
 | `GET /api/v1/reservations/check?placeId=&startsAt=&endsAt=&excludeCode=` | ADMIN, COORDINADOR | Avisos antes de guardar (D-07, primer sentido) |
 | `GET /api/v1/reservations/nearby?date=&zoneIds=&placeIds=&points=&elementIds=` | ADMIN, COORDINADOR | Avisos del registro de intervención (D-07, segundo sentido) |
@@ -258,7 +259,7 @@ Reserva (respuesta):
    {"contact":{"code":"CON-0019","fullName":"María Quispe"},"assignedAt":"2026-11-11T16:40:00-05:00","assignedBy":"coordinacion@pucp.edu.pe"}],
  "startsAt":"2026-11-13T10:00:00-05:00","endsAt":"2026-11-13T14:00:00-05:00",
  "purpose":"Feria de Psicología","state":"UPCOMING","cancelReason":null,
- "useConfirmed":false,"spaceUsed":false,"usageState":"NOT_RECORDED","canConfirm":true,"canRecordUsage":false,
+ "spaceUsed":false,"usageState":"NOT_RECORDED","canRecordUsage":false,
  "version":1,
  "warnings":[]}
 ```
@@ -268,14 +269,13 @@ Reserva (respuesta):
 (D-08b). `responsibleHistory` va de la más antigua a la vigente y solo viene en la ficha
 (`GET /{code}`), no en la agenda. `warnings` solo viene lleno en la respuesta de crear y editar.
 `usageState`: `NOT_RECORDED`, `IN_USE`, `NOT_IN_USE`, `USED`, `NOT_USED` — lo derivado, con el
-reloj. `canConfirm` y `canRecordUsage` dicen si la ventana de cada marca está abierta ahora;
-el frontend solo muestra el botón cuando corresponden. Los historiales
-`confirmationHistory` y `usageHistory` (`{value, at, by}`) solo vienen en la ficha.
+reloj. `canRecordUsage` dice si la ventana de la marca está abierta ahora;
+el frontend solo muestra el botón cuando corresponde. El historial
+`usageHistory` (`{value, at, by}`) solo viene en la ficha.
 
-Confirmar y marcar uso (enmienda del 11 nov 2026):
+Marcar uso (enmienda del 11 nov 2026):
 
 ```json
-PUT /reservations/RES-0042/confirmation  {"confirmed":true,"version":1}
 PUT /reservations/RES-0042/usage         {"used":true,"version":1}
 ```
 
@@ -327,14 +327,11 @@ metro.
   día».
 - `purpose` opcional, hasta 300 caracteres.
 - Editar o anular una Terminada o Anulada: «Esta reserva ya terminó o fue anulada».
-- Confirmar una Terminada o Anulada: el mismo mensaje. Confirmar dentro de los últimos
-  `RESERVATION_CONFIRMATION_MINUTES` (20 por defecto) antes del fin, o después: «El plazo de
-  confirmación ya cerró: solo se confirma hasta 20 minutos antes del fin de la reserva».
 - Marcar el uso de una Próxima o Terminada: «El espacio se marca en uso a partir de la hora de
   inicio» — el uso solo se registra dentro del horario (enmienda del 11 nov 2026).
 - Marcar o desmarcar el uso dentro de los últimos `RESERVATION_CONFIRMATION_MINUTES` (20 por
   defecto) antes del fin, o después: «Ya no se puede marcar el uso: el corte es 20 minutos
-  antes del fin de la reserva» — la misma tolerancia que la confirmación (D-12).
+  antes del fin de la reserva» (D-12).
 - `version` vieja: 409 «Otra persona cambió esta reserva. Recarga para ver su versión.»
 
 ## 4. Migración de base de datos
@@ -348,7 +345,9 @@ metro.
 > **Enmienda del seguimiento de uso (11 nov 2026):** una primera iteración de asistencia
 > (**V042**, columna `attendance` NOT_RECORDED/USED/NO_SHOW) se aplicó y se retiró del repo
 > cuando el diseño cambió a las dos marcas finas de abajo; su columna entra **V043**.
-> Propietaria: SPEC-107, con la enmienda a SPEC-106.
+> Propietaria: SPEC-107, con la enmienda a SPEC-106. **Retiro de la confirmación de uso
+> (17 nov 2026):** la decisión del usuario la quita del modelo y de la API; entra **V068**
+> (columna `use_confirmed` y tabla `garden_reservation_confirmations` fuera).
 
 ```sql
 -- D-02: quien pide y quien es responsable.
@@ -399,20 +398,15 @@ ALTER TABLE garden_reservations
     ADD CONSTRAINT chk_reservation_attendance
         CHECK (attendance IN ('NOT_RECORDED', 'USED', 'NO_SHOW'));
 
--- V043: la retirada de la V042 y las dos marcas del seguimiento de uso.
+-- V043: la retirada de la V042 y la marca de uso del seguimiento (más la
+-- confirmación de uso, retirada después por V068).
 ALTER TABLE garden_reservations DROP CONSTRAINT IF EXISTS chk_reservation_attendance;
 ALTER TABLE garden_reservations DROP COLUMN IF EXISTS attendance;
 ALTER TABLE garden_reservations
     ADD COLUMN use_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     ADD COLUMN space_used    BOOLEAN NOT NULL DEFAULT FALSE;
 
-CREATE TABLE garden_reservation_confirmations (
-    id                 BIGSERIAL   PRIMARY KEY,
-    reservation_id     BIGINT      NOT NULL REFERENCES garden_reservations(id),
-    confirmed          BOOLEAN     NOT NULL,
-    changed_by_user_id BIGINT      NOT NULL REFERENCES users(id),
-    changed_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- El corte de la marca de uso es configurable, como las demás reglas en minutos.
 CREATE TABLE garden_reservation_usages (
     id                 BIGSERIAL   PRIMARY KEY,
     reservation_id     BIGINT      NOT NULL REFERENCES garden_reservations(id),
@@ -434,6 +428,22 @@ UPDATE system_parameters
    SET label = 'Corte de confirmación y de marca de uso (min)',
        description = 'Minutos antes del fin de una reserva en los que ya no se acepta '
                      || 'confirmar el uso ni marcar que el espacio está en uso',
+       updated_at = CURRENT_TIMESTAMP
+ WHERE code = 'RESERVATION_CONFIRMATION_MINUTES' AND deleted_at IS NULL;
+```
+
+**V068** — la confirmación de uso se retira (17 nov 2026): V043 queda en el repo tal como se
+aplicó, y la columna y su historial se sacan en una migración nueva; la etiqueta del parámetro
+vuelve a hablar solo de la marca de uso (el código no se renombra):
+
+```sql
+ALTER TABLE garden_reservations DROP COLUMN use_confirmed;
+DROP TABLE IF EXISTS garden_reservation_confirmations;
+
+UPDATE system_parameters
+   SET label = 'Tolerancia del corte de la marca de uso (minutos)',
+       description = 'Minutos antes del fin de la reserva en que se cierra la '
+                     || 'ventana para marcar que el espacio está siendo usado (SPEC-107 D-12).',
        updated_at = CURRENT_TIMESTAMP
  WHERE code = 'RESERVATION_CONFIRMATION_MINUTES' AND deleted_at IS NULL;
 ```
@@ -460,12 +470,8 @@ tenía 0 reservas, así que las dos correcciones de datos no encontraron filas.
    (D-02c); al guardar o cancelar se vuelve a la ficha.
    Debajo del responsable, «Responsables anteriores» lista el historial (D-02b) con fecha y quién
    hizo el cambio; no aparece si nunca cambió.
-   Debajo del motivo, dos bloques de seguimiento (enmienda del 11 nov 2026):
-   - **Confirmación del solicitante**: badge «El solicitante confirmó el uso» o «Sin
-     confirmación del solicitante», con el botón para registrarla o retirarla — solo ADMIN y
-     COORDINADOR, y solo antes del corte; pasado el corte se muestra deshabilitado con «El plazo
-     de confirmación ya cerró: solo se confirma antes del corte.» Debajo, las veces que cambió
-     con fecha y quién (solo vienen en la ficha).
+   Debajo del motivo, el bloque de seguimiento (enmienda del 11 nov 2026; la confirmación
+   del solicitante se retiró el 17 nov 2026):
    - **Uso del espacio**: badge con el uso derivado («En uso», «No se está usando», «Usada»,
      «No usada», «Sin uso registrado»), con el botón «Marcar en uso» / «Quitar marca de uso» —
      ADMIN, COORDINADOR y SUPERVISOR, y solo durante el horario; fuera de él se muestra
@@ -489,8 +495,8 @@ tenía 0 reservas, así que las dos correcciones de datos no encontraron filas.
   su nombre, su rol y su teléfono, estado y, solo si está anulada, el motivo de anulación. La agenda **no**
   muestra al solicitante ni el motivo del pedido: eso queda en la ficha (decisión del usuario,
   11 nov 2026).
-- En cada fila no anulada, los chips del seguimiento (enmienda del 11 nov 2026), visibles para
-  los cuatro roles: «Confirmada» cuando el solicitante confirmó, y el uso derivado («En uso»,
+- En cada fila no anulada, el chip del seguimiento (enmienda del 11 nov 2026), visible para
+  los cuatro roles: el uso derivado («En uso»,
   «No se está usando», «Usada», «No usada», «Sin uso registrado»). ADMIN, COORDINADOR y
   SUPERVISOR ven además el botón rápido «Marcar en uso» / «Quitar marca de uso» en filas
   dentro de su ventana (desde el inicio y hasta el corte, D-12), que avisa en un banner cuando
@@ -539,12 +545,11 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 - El solicitante se desvincula después de «Pedido de»: la reserva lo conserva (D-02).
 - Cambiar el responsable y volver al anterior deja dos filas nuevas en el historial.
 - Una ubicación de intervención sin sección, lugar, coordenadas ni ejemplares no participa del aviso.
-- Confirmar cuando ya está confirmada (o marcar el uso ya marcado): responde 200 sin versionar
+- Marcar el uso cuando ya está marcado: responde 200 sin versionar
   ni agregar fila (enmienda del 11 nov 2026).
 - Desmarcar el uso tras el corte: rechazado con el mismo 422 que marcar — la ventana de la
   marca cierra en el corte, no en el fin (D-12).
-- Una reserva más corta que la tolerancia (corte antes del inicio): no se puede marcar el uso,
-  igual que no se puede confirmar.
+- Una reserva más corta que la tolerancia (corte antes del inicio): no se puede marcar el uso.
 - El parámetro de corte mal escrito o borrado cae al 20 por defecto; en pantalla el rango es
   0–1440 minutos.
 
@@ -568,10 +573,8 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
 | CA-12 | Editar solo deja cambiar el responsable; jardín, horario, «Pedido de», «Para» y motivo se leen como texto, y la API los rechaza | Ficha de la reserva |
 | CA-14 | Desde la agenda, un clic en la tarjeta abre la ficha, con el mapa 3D encuadrando el jardín | Agenda → ficha |
 | CA-13 | Filtrar la agenda por CF Psicología trae la reserva pedida por la OIE para ella | Agenda |
-| CA-14 | Un coordinador confirma el uso de una reserva Próxima: ficha y agenda muestran «Confirmada» y queda en el historial con fecha y quién | `PUT /{code}/confirmation` |
 | CA-15 | Dentro del horario, el capataz marca «en uso» desde la agenda y la fila pasa a «En uso»; si no marca, la fila muestra «No se está usando» y al terminar queda «No usada» | Agenda de hoy |
-| CA-16 | Confirmar dentro de los últimos 20 minutos (o después) responde 422 con «El plazo de confirmación ya cerró…»; el corte lo fija el parámetro | Parámetros + ficha |
-| CA-17 | El operario ve los chips de confirmación y de uso en la agenda, pero el botón «Marcar en uso» le responde 403 | Cuenta de operario |
+| CA-16 | El operario ve el chip de uso en la agenda, pero el botón «Marcar en uso» le responde 403 | Cuenta de operario |
 | CA-18 | A menos de 20 minutos del fin el botón «Marcar en uso» desaparece de la fila y de la ficha, y el endpoint responde 422 con «Ya no se puede marcar el uso…»; la fila sigue mostrando «No se está usando» | Agenda de hoy, reserva que termina en 10 min |
 
 ## 7. Especificación visual
@@ -580,9 +583,9 @@ botones: solo informan. Con más de 20 avisos se muestran 20 y «y N más».
   jardín y «Pedido de … para …» en la línea principal, «Responsable: <nombre> · <teléfono>» debajo
   (sin solicitante ni motivo), el estado como
   `Badge` (Próxima info, En curso success, Terminada neutral, Anulada neutral tachado), y los
-  chips del seguimiento: «Confirmada» info y el uso derivado (En uso success, No se está usando
-  warning, Usada success, No usada y Sin uso registrado neutral). En la ficha, los bloques de
-  confirmación y de uso van debajo del motivo, con su botón y el historial en gris.
+  chips del seguimiento: el uso derivado (En uso success, No se está usando
+  warning, Usada success, No usada y Sin uso registrado neutral). En la ficha, el bloque de
+  uso va debajo del motivo, con su botón y el historial en gris.
 - Avisos: el bloque ámbar de SPEC-203 para `WARNING`; para `CRITICAL`, el mismo bloque en los
   colores de peligro (`alert-danger`), con «Atención» al inicio.
 - Las pantallas usan `PageHeader` (SPEC-C01 §4.3).
@@ -595,7 +598,7 @@ Engine
 - cruce: [10,14) y [13,15) se cruzan; [10,14) y [14,16) no
 - 10:00-14:00 es un día; 23:00-01:00 no; 18:00-00:00 sí, y su día es el de inicio
 - seguimiento de uso: el corte es fin − 20 min y cierra en el corte mismo; anular o terminar
-  cierra la confirmación; la marca de uso comparte el corte (D-12): vale desde el inicio y hasta
+  congela la marca; la marca vale desde el inicio y hasta
   el corte; una reserva más corta que la tolerancia no tiene ventana;
   el uso derivado: Próxima → sin registrar, En curso → en uso o no se está usando,
   Terminada → usada o no usada, Anulada → sin registrar
@@ -606,11 +609,9 @@ Reglas
 - requestedByCode o requesterCode al editar → 422; para igual a pedido de → se guarda vacío
 - crear deja una fila en el historial; cambiar el responsable agrega otra; editar sin cambiarlo no
 - editar o anular una Terminada → 422; versión vieja → 409
-- confirmar deja una fila en su historial; desconfirmar agrega otra; confirmar con la misma marca no versiona; versión vieja → 409
-- confirmar dentro de los últimos 20 minutos → 422 con el corte en el mensaje; terminada o anulada → 422
-- capataz marca el uso en curso → 200 con usageState IN_USE; próximo o terminado → 422; desmarcar agrega fila
+- marcar el uso en curso → 200 con usageState IN_USE; próximo o terminado → 422; desmarcar agrega fila
 - marcar el uso tras el corte (fin − 20 min) → 422 con los minutos en el mensaje; antes del corte → 200
-- SUPERVISOR no confirma (403); OPERARIO no marca uso (403); el parámetro nuevo sale en la lista de parámetros y su rango 0–1440 se valida
+- OPERARIO no marca uso (403); el parámetro nuevo sale en la lista de parámetros y su rango 0–1440 se valida
 
 Cercanía (integración, PostGIS)
 - jardín contiguo (0 m) y a 6 m avisan; a 15 m no; con el parámetro en 20, sí
@@ -633,11 +634,12 @@ Registro masivo
 
 - Acciones auditables (SPEC-004 §3.2): `GARDEN_RESERVATION_CREATED`, `GARDEN_RESERVATION_UPDATED`,
   `GARDEN_RESERVATION_CANCELLED`, y de la enmienda del seguimiento de uso
-  `GARDEN_RESERVATION_CONFIRMATION_CHANGED` y `GARDEN_RESERVATION_USAGE_CHANGED`.
+  `GARDEN_RESERVATION_USAGE_CHANGED` (la de confirmación se retiró el 17 nov 2026).
   `GARDEN_RESERVATION_CANCELLED`, `GARDEN_RESERVATION_RESPONSIBLE_CHANGED`, con el código de la reserva y el del jardín; nunca el teléfono
   del contacto.
 - Enmiendas a anotar en `REGISTRO.md`: SPEC-106 (el operario ve organizaciones y contactos de una
   reserva, D-08; rol del contacto en cada organización y columna `roles` de `contactos.csv`, D-08b;
   «Pedido de» y «Para» de §9.4 resueltos para reservas, D-02), SPEC-102 §4 (la reserva guarda
   solicitante y responsable, ahora por el Directorio), Catálogo 1.12 (préstamos cubiertos; bloqueantes y recuperación siguen pendientes),
-  SPEC-001 Anexo A (fila de reservas).
+  SPEC-001 Anexo A (fila de reservas). Retiro de la confirmación de uso (17 nov 2026): V068
+  y la enmienda de D-12.

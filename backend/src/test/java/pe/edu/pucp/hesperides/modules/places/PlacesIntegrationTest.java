@@ -150,7 +150,7 @@ class PlacesIntegrationTest {
 
         mockMvc.perform(get(PLACES + "/map")).andExpect(status().isOk())
                 .andExpect(jsonPath(onTheMap(code, "buildingIds[*]"), contains((int) inrasBuildingId())))
-                .andExpect(jsonPath(onTheMap(code, "lat"), contains(org.hamcrest.Matchers.isA(Double.class))))
+                .andExpect(jsonPath(onTheMap(code, "lat"), contains(org.hamcrest.Matchers.isA(Number.class))))
                 .andExpect(jsonPath("$.data.perspectives[0].displayName").value("Espalda de INRAS"))
                 .andExpect(jsonPath("$.data.perspectives[0].place.code").value(code))
                 .andExpect(jsonPath("$.data.perspectives[0].headingDeg").value(0.0));
@@ -283,9 +283,11 @@ class PlacesIntegrationTest {
 
     private double[] center(String code) throws Exception {
         String json = mockMvc.perform(get(PLACES + "/" + code)).andReturn().getResponse().getContentAsString();
-        Double lat = JsonPath.read(json, "$.data.outline.centerLat");
-        Double lon = JsonPath.read(json, "$.data.outline.centerLon");
-        return lat == null ? null : new double[] {lat, lon};
+        // Number y no Double: json-smart lee como BigDecimal un número de más de 18 caracteres, y el centro del
+        // INRAS pasó a tener 19 cuando V053 corrió las huellas del plano (-12.065492051254203).
+        Number lat = JsonPath.read(json, "$.data.outline.centerLat");
+        Number lon = JsonPath.read(json, "$.data.outline.centerLon");
+        return lat == null ? null : new double[] {lat.doubleValue(), lon.doubleValue()};
     }
 
     @Test

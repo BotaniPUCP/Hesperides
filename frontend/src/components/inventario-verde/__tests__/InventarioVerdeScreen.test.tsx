@@ -92,6 +92,9 @@ describe('InventarioVerdeScreen', () => {
     expect(screen.getByRole('heading', { name: 'Especies' })).toBeInTheDocument();
     expect((await screen.findAllByText('965')).length).toBeGreaterThan(0);
     expect(await screen.findByText('Palmera real')).toBeInTheDocument();
+    expect(api.species).toHaveBeenCalledWith(
+      expect.objectContaining({ retiring: false }),
+    );
   });
 
   it('busca en el backend, también por los otros nombres', async () => {
@@ -102,6 +105,21 @@ describe('InventarioVerdeScreen', () => {
     await waitFor(() => expect(api.species).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'bruja', page: 0 })));
     await waitFor(() => expect(screen.queryByText('Palmera real')).not.toBeInTheDocument());
     expect(screen.getAllByText('Palmera reina').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('filtra por especies en proceso de retiro al activar el checkbox', async () => {
+    render(<InventarioVerdeScreen />);
+    await screen.findByText('Palmera real');
+
+    const checkbox = await screen.findByLabelText(/En proceso de retiro/i);
+    await userEvent.click(checkbox);
+
+    await waitFor(() =>
+      expect(api.species).toHaveBeenCalledWith(
+        expect.objectContaining({ retiring: true }),
+      ),
+    );
+    expect(window.location.search).toContain('enRetiro=true');
   });
 
   it('la búsqueda carga directamente en el inventario de especies sin popovers de ejemplares', async () => {

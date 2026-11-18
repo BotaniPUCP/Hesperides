@@ -1,0 +1,24 @@
+{
+  "planKey": "209334da-45cb-4b4e-af4f-05cbadb67a15",
+  "name": "Invernadero (adyacente a Gabinete de Proyectos Patrimoniales)",
+  "folder": "invernadero-patrimonial",
+  "photos": [
+    "invernadero-lado-patrimonial.jpg"
+  ],
+  "materials": {
+    "vidrio": {
+      "color": "#d5dcd9"
+    },
+    "techo": {
+      "color": "#dfe5e3"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "vidrio",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Estructura de aluminio con paños de vidrio claro (invernadero-lado-patrimonial.jpg); el color es el del vidrio, como el prototipo de invernadero."
+}

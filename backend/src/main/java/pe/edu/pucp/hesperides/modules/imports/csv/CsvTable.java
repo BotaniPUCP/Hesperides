@@ -20,11 +20,20 @@ public record CsvTable(List<String> header, List<CsvRow> rows) {
     private static final char QUOTE = '"';
 
     public static CsvTable parse(byte[] content) {
+        return parse(content, false);
+    }
+
+    /** Strict CSV mode for Inventory Green's specimen and species import standards. */
+    public static CsvTable parseStrict(byte[] content) {
+        return parse(content, true);
+    }
+
+    private static CsvTable parse(byte[] content, boolean strictQuotes) {
         String text = new String(content, StandardCharsets.UTF_8);
         if (text.startsWith("﻿")) {
             text = text.substring(1);
         }
-        List<Record> records = records(text);
+        List<Record> records = records(text, strictQuotes);
         if (records.isEmpty()) {
             throw new ValidationException("The file is empty");
         }
@@ -55,11 +64,12 @@ public record CsvTable(List<String> header, List<CsvRow> rows) {
     }
 
     /** Lee carácter a carácter: una celda entre comillas puede tener «;», comillas y saltos de línea. */
-    private static List<Record> records(String text) {
+    private static List<Record> records(String text, boolean strictQuotes) {
         List<Record> out = new ArrayList<>();
         List<String> cells = new ArrayList<>();
         StringBuilder cell = new StringBuilder();
         boolean quoted = false;
+        boolean quoteClosed = false;
         int line = 1, startLine = 1;
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
@@ -69,26 +79,41 @@ public record CsvTable(List<String> header, List<CsvRow> rows) {
                     i++;
                 } else if (c == QUOTE) {
                     quoted = false;
+                    quoteClosed = true;
                 } else {
                     if (c == '\n') line++;
                     cell.append(c);
                 }
             } else if (c == QUOTE) {
+                if (strictQuotes) {
+                    if (quoteClosed || !cell.toString().isBlank()) {
+                        throw new ValidationException("The file contains a misplaced quote");
+                    }
+                    cell.setLength(0);
+                }
                 quoted = true;
             } else if (c == SEPARATOR) {
                 cells.add(cell.toString());
                 cell.setLength(0);
+                quoteClosed = false;
             } else if (c == '\n' || c == '\r') {
                 if (c == '\r' && i + 1 < text.length() && text.charAt(i + 1) == '\n') i++;
                 cells.add(cell.toString());
                 out.add(new Record(startLine, List.copyOf(cells)));
                 cells.clear();
                 cell.setLength(0);
+                quoteClosed = false;
                 line++;
                 startLine = line;
             } else {
+                if (strictQuotes && quoteClosed && !Character.isWhitespace(c)) {
+                    throw new ValidationException("The file contains a misplaced quote");
+                }
                 cell.append(c);
             }
+        }
+        if (strictQuotes && quoted) {
+            throw new ValidationException("The file contains an unclosed quoted cell");
         }
         if (cell.length() > 0 || !cells.isEmpty()) {
             cells.add(cell.toString());

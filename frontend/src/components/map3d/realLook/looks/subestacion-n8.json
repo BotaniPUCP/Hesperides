@@ -5,22 +5,32 @@
   "photos": [
     "frente.jpg"
   ],
-  "notes": "Ladrillo con marco de concreto blanco, rejillas negras y puerta metálica (frente.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#b97a62"
+    },
+    "techo": {
+      "color": "#c9c7c1"
+    },
+    "concreto": {
+      "color": "#e2e2de"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#dcdbd7",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#ab6b58",
-          "photo": {
-            "tile": "subestacion-n8",
-            "widthM": 6,
-            "heightM": 3.0
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            2.4,
+            3.1
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Ladrillo con marco y remate de concreto blanco, rejillas negras y puerta metálica (frente.jpg)."
 }

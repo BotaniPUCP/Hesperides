@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.CancelRequest;
-import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.ConfirmationRequest;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.GardenOption;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.OrganizationOption;
 import pe.edu.pucp.hesperides.modules.reservations.dto.ReservationDtos.Page;
@@ -120,15 +119,6 @@ public class ReservationsController {
             @RequestBody CancelRequest request, @AuthenticationPrincipal UserDetails principal) {
         return ResponseEntity.ok(ApiResponse.ok("Reservation cancelled",
                 service.cancel(code, request, principal.getUsername())));
-    }
-
-    /** Enmienda del 11 nov 2026: la confirmación de uso la anota solo coordinación. */
-    @PutMapping("/{code}/confirmation")
-    @PreAuthorize(ReservationAccess.MAINTAINERS)
-    public ResponseEntity<ApiResponse<ReservationResponse>> confirm(@PathVariable String code,
-            @RequestBody ConfirmationRequest request, @AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(ApiResponse.ok("Reservation confirmation updated",
-                service.confirm(code, request, principal.getUsername())));
     }
 
     /** Enmienda del 11 nov 2026: la marca de uso también es del capataz. */

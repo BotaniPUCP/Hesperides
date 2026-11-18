@@ -111,10 +111,10 @@ class ReportsMonthlyFiltersIntegrationTest extends ReportsIntegrationSupport {
     void incidentStatesAreTakenAtTheEndOfThePeriodAndFilteredByTeam() throws Exception {
         var foreman = fx.account("SUPERVISOR");
         long team = fx.team(foreman.id(), sector);
-        long incident = fx.incident(foreman, team, "OPEN", "2026-10-10T10:00:00-05:00", null, null);
+        long incident = fx.incident(foreman, team, "REPORTED", "2026-10-10T10:00:00-05:00", null, null);
         fx.changeStatus(incident, "IN_PROGRESS", "2026-10-12T10:00:00-05:00", coordinator);
-        fx.changeStatus(incident, "RESOLVED", "2026-11-02T10:00:00-05:00", foreman);
-        fx.incident(foreman, fx.team(fx.account("SUPERVISOR").id(), null), "OPEN", "2026-10-11T10:00:00-05:00", null, null);
+        fx.changeStatus(incident, "CLOSED", "2026-11-02T10:00:00-05:00", foreman);
+        fx.incident(foreman, fx.team(fx.account("SUPERVISOR").id(), null), "REPORTED", "2026-10-11T10:00:00-05:00", null, null);
 
         mvc.perform(monthly().with(as(coordinator)).param("teamId", String.valueOf(team))
                         .param("dateFrom", "2026-10-01").param("dateTo", "2026-10-31"))
@@ -134,9 +134,9 @@ class ReportsMonthlyFiltersIntegrationTest extends ReportsIntegrationSupport {
         var other = fx.account("SUPERVISOR");
         long team = fx.team(foreman.id(), sector);
         long otherTeam = fx.team(other.id(), null);
-        fx.incident(foreman, otherTeam, "PENDING_APPROVAL", "2026-11-03T10:00:00-05:00", null, null);
-        fx.incident(other, team, "OPEN", "2026-11-03T11:00:00-05:00", null, null);
-        fx.incident(other, otherTeam, "OPEN", "2026-11-03T12:00:00-05:00", null, null);
+        fx.notActiveIncident(foreman, otherTeam, "2026-11-03T10:00:00-05:00");
+        fx.incident(other, team, "REPORTED", "2026-11-03T11:00:00-05:00", null, null);
+        fx.incident(other, otherTeam, "REPORTED", "2026-11-03T12:00:00-05:00", null, null);
 
         mvc.perform(monthly().with(as(foreman)))
                 .andExpect(jsonPath("$.data.incidents.pendingApproval").value(1))

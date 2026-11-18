@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 68 70" width="68" height="70" role="img" aria-label="Grupo de globos">
+  <title>Grupo de globos</title>
+  <ellipse cx="32" cy="65" rx="8" ry="2.2" fill="#000" opacity=".18"/>
+  <path d="M16.1 53.1A28 28 0 1 1 47.9 53.1L32 64Z" fill="#263238" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/>
+  <circle cx="32" cy="30" r="21.5" fill="#fff" stroke="#1F2A33" stroke-width="1.5"/>
+  <circle cx="32" cy="30" r="17" fill="none" stroke="#263238" stroke-width="2" stroke-dasharray="4 3"/>
+</svg>

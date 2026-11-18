@@ -3,24 +3,66 @@
   "name": "Arte Nuevo",
   "folder": "Arte Nuevo",
   "photos": [
-    "espalda-hacia-educacion-1.jpg"
+    "espalda-hacia-educacion-1.jpg",
+    "espalda-hacia-educacion-2.jpg",
+    "frente-1.jpg",
+    "frente-2.jpg",
+    "frente-3.jpg",
+    "lado-hacia-polideportivo.jpg"
   ],
-  "notes": "Concreto caravista en paneles con ventanales en retícula y un piso alto vidriado (espalda-hacia-educacion-1.jpg, la vista más limpia); va en todas las caras.",
+  "materials": {
+    "concreto": {
+      "color": "#c9c3b5"
+    },
+    "techo": {
+      "color": "#b9b7b1"
+    },
+    "ventanales": {
+      "glass": "#8b9ba1",
+      "frame": "#e2e3df",
+      "moduleM": 1.6,
+      "heightM": 2.1,
+      "frameM": 0.08,
+      "vary": 0.07
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b9b7b1",
+      "wall": "concreto",
+      "roof": "techo",
       "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#b5b2aa",
-          "photo": {
-            "tile": "arte-nuevo",
-            "widthM": 14,
-            "heightM": 12.7
+        "S": [
+          {
+            "material": "ventanales",
+            "v": [
+              0,
+              9.6
+            ],
+            "floors": {
+              "everyM": 3.2,
+              "startM": 0,
+              "bandM": [
+                0.8,
+                2.9
+              ]
+            }
+          },
+          {
+            "material": "ventanales",
+            "v": [
+              9.9,
+              12.4
+            ]
           }
+        ],
+        "N": {
+          "sameAs": "S",
+          "mirror": true,
+          "why": "El frente (frente-1.jpg a frente-3.jpg) lleva los mismos ventanales que la espalda, detrás de terrazas y murales que no se dibujan"
         }
       }
     }
-  ]
+  ],
+  "notes": "Barra de concreto caravista gris beige. La espalda, hacia Educación (sur), lleva un ventanal de marco blanco en cada piso y el último piso vidriado (espalda-hacia-educacion-1.jpg y -2.jpg); el frente (norte) repite los ventanales, y sus terrazas, murales y el paño de madera no se dibujan (frente-1.jpg a frente-3.jpg). Los testeros son torres de escalera ciegas de concreto (frente-3.jpg; lado-hacia-polideportivo.jpg, el oeste)."
 }

@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,8 +26,10 @@ import pe.edu.pucp.hesperides.modules.imports.service.SpecimenRegistrationServic
 import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
 import pe.edu.pucp.hesperides.modules.inventory.controller.ManagerAuthority;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesForm;
+import pe.edu.pucp.hesperides.modules.inventory.dto.DeactivationRequest;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.service.InventoryPhotoService;
+import pe.edu.pucp.hesperides.modules.inventory.service.SpecimenLifecycleService;
 import pe.edu.pucp.hesperides.modules.inventory.service.SpeciesRegistrationService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
@@ -44,6 +47,7 @@ public class SpecimenRegistrationController {
     private final SpecimenRegistrationService service;
     private final SpeciesRegistrationService speciesService;
     private final InventoryPhotoService photos;
+    private final SpecimenLifecycleService specimenLifecycle;
 
     @PostMapping(value = "/api/v1/green-inventory/specimens", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize(REGISTRARS)
@@ -62,6 +66,14 @@ public class SpecimenRegistrationController {
             @AuthenticationPrincipal UserDetails principal) {
         return ResponseEntity.ok(ApiResponse.ok("Specimen updated",
                 Map.of("code", service.update(code, form, UploadedFiles.photo(photo), principal.getUsername()))));
+    }
+
+    @PatchMapping("/api/v1/green-inventory/specimens/{code}/deactivate")
+    @PreAuthorize(MANAGERS)
+    public ResponseEntity<ApiResponse<Void>> deactivateSpecimen(
+            @PathVariable String code, @Valid @RequestBody DeactivationRequest request) {
+        specimenLifecycle.deactivate(code, request.reason());
+        return ResponseEntity.ok(ApiResponse.ok("Specimen deactivated", null));
     }
 
     @GetMapping("/api/v1/green-inventory/specimens/{code}/assessments")

@@ -20,6 +20,7 @@ export interface InventorySummary {
 /** Una especie. `slug` la identifica en la dirección de su ficha. */
 export interface Species {
   slug: string;
+  isActive: boolean;
   scientificName: string;
   commonName: string;
   /** Otros nombres coloquiales («Palmera bruja»). */
@@ -152,6 +153,8 @@ export interface MeasurementRecord {
 }
 
 export interface SpecimenDetail extends Specimen {
+  /** ID inmutable de la ficha; el código operativo puede reutilizarse tras la baja. */
+  id: number;
   legacyCode: string | null;
   elementTypeCode: string;
   elementTypeName: string;
@@ -186,6 +189,7 @@ export interface LocationCount {
 export interface SpeciesFilters {
   search?: string;
   vegetationType?: string;
+  retiring?: boolean;
 }
 
 export type SpecimenSortKey = 'reference' | 'code' | 'location';

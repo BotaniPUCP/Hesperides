@@ -3,78 +3,48 @@
   "name": "Arte Antiguo (C17, C19, C20, C22, C25, C27, C28, C29)",
   "folder": "C17, C19, C20, C22, C25, C27, C28, C29 · Izquierda 117 · SKP C-4848, C-4825, C-19, C-4876, C-4826",
   "photos": [
-    "lado-doblando-la-esquina-frente-a-edificio-sin-escalera.jpg"
+    "casetas-frente-a-dintilhac-lado L-01.jpg",
+    "casetas-frente-a-dintilhac-lado L-02.jpg",
+    "casetas-frente-a-dintilhac-lado L-03.jpg",
+    "cuadrado-interno-derecha.jpg",
+    "cuadrado-interno-izquierda.jpg",
+    "frente-a-C18 · Izquierda 124 · SKP C-5037, C-5032.jpg",
+    "frente-a-dintilhac.jpg",
+    "frente-a-pabellon-I-edificio-con-escalera.jpg",
+    "frente-a-pabellon-I-edificio-sin-escalera.jpg",
+    "lado-cercano-a-comedor-artes-antiguo-01.jpg",
+    "lado-cercano-a-comedor-artes-antiguo-02.jpg",
+    "lado-doblando-la-esquina-frente-a-edificio-sin-escalera.jpg",
+    "lado-frente-a-dintilhac-cercano-a-pabellon-I.jpg",
+    "lado-frente-a-dintilhac-lejano-a-pabellon-I.jpg",
+    "lado-L-frente-a-dintilhac.jpg"
   ],
-  "notes": "Casetas de paneles blancos con ventanas enrejadas (lado-doblando-la-esquina…jpg, la vista más limpia). La L beige del lado de Dintilhac (norte y oeste) no tiene una vista enderezable: lleva el patrón con sus colores medidos.",
+  "materials": {
+    "paneles": {
+      "color": "#e3e4e2"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "ventanas": {
+      "color": "#bdbfbf"
+    }
+  },
   "zones": [
     {
-      "id": "edificio",
-      "roof": "#bab6ae",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#ecedeb",
-          "photo": {
-            "tile": "arte-antiguo",
-            "widthM": 10,
-            "heightM": 3.0
-          }
+      "id": "casetas",
+      "wall": "paneles",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1.1,
+            2.3
+          ]
         }
-      }
-    },
-    {
-      "id": "L-norte",
-      "where": {
-        "north": [
-          0.8,
-          1
-        ],
-        "east": [
-          0,
-          0.75
-        ]
-      },
-      "roof": "#b8b3a9",
-      "faces": {
-        "other": {
-          "kind": "ribbon",
-          "wall": "#cdc5b3",
-          "glass": "#3d4246",
-          "frame": "#26292c",
-          "floorM": 3.9,
-          "sillM": 2.45,
-          "windowM": 1.0,
-          "moduleM": 1.1,
-          "frameM": 0.1
-        }
-      }
-    },
-    {
-      "id": "L-oeste",
-      "where": {
-        "east": [
-          0,
-          0.1
-        ],
-        "north": [
-          0.3,
-          1
-        ]
-      },
-      "roof": "#b8b3a9",
-      "faces": {
-        "other": {
-          "kind": "ribbon",
-          "wall": "#cdc5b3",
-          "glass": "#3d4246",
-          "frame": "#26292c",
-          "floorM": 3.9,
-          "sillM": 2.45,
-          "windowM": 1.0,
-          "moduleM": 1.1,
-          "frameM": 0.1
-        }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Casetas de paneles blancos con ventanas enrejadas sueltas, que van como franja tenue (D-04; lado-doblando-la-esquina…jpg y las demás de la carpeta). Las celosías altas y los murales no se dibujan."
 }

@@ -3,24 +3,43 @@
   "name": "Laboratorios de Hidráulica y de Mecánica de Suelos, Departamento de Arquitectura",
   "folder": "Laboratorio-Hidraulica-mecanica_suelos",
   "photos": [
+    "Frente.jpg",
     "Frente2.jpg"
   ],
-  "notes": "Naves de ladrillo con marco de concreto y portones verde petróleo (Frente2.jpg); las bóvedas de los hastiales no están en el modelo: sobre el tramo, ladrillo.",
+  "materials": {
+    "ladrillo": {
+      "color": "#b07f64"
+    },
+    "concreto": {
+      "color": "#cfcac0"
+    },
+    "techo": {
+      "color": "#b3b0a8"
+    }
+  },
   "zones": [
     {
-      "id": "edificio",
-      "roof": "#9a9893",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#a86b55",
-          "photo": {
-            "tile": "lab-hidraulica",
-            "widthM": 12,
-            "heightM": 5.0
+      "id": "naves",
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            -0.5,
+            10.7
+          ],
+          "floors": {
+            "everyM": 4.5,
+            "startM": 0,
+            "bandM": [
+              -0.3,
+              0.4
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Naves de ladrillo con vigas de concreto (Frente.jpg, Frente2.jpg). Los portones verde petróleo no se dibujan; las bóvedas de los hastiales no están en el modelo."
 }

@@ -1,0 +1,46 @@
+{
+  "planKey": "9428bc9e-5187-429a-95ce-5261c3a51d32",
+  "name": "Instituto Corrosión y Protección",
+  "folder": "instituto-corrosion",
+  "photos": [
+    "instituto-corrosion.jpg"
+  ],
+  "materials": {
+    "ladrillo": {
+      "color": "#c47a65"
+    },
+    "concreto": {
+      "color": "#cbc3b3"
+    },
+    "remate": {
+      "color": "#e0dcd2"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            4.1,
+            4.6
+          ]
+        },
+        {
+          "material": "remate",
+          "v": [
+            7.4,
+            8.4
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Dos pisos de ladrillo en un marco de concreto: la viga de concreto entre los pisos y el remate claro de arriba, el del letrero (instituto-corrosion.jpg, la cara este, la que da a la pista y al estacionamiento). Las ventanas sueltas no se dibujan: el ladrillo manda en el color (D-04), como en el CEPREPUC. Las dos escaleras exteriores de los extremos son de ladrillo y quedan bajo el mismo muro. Va igual en todas las caras."
+}

@@ -3,24 +3,35 @@
   "name": "Arqueología C y Sala de Música y Coro",
   "folder": "ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO",
   "photos": [
+    "detras.jpg",
     "frente.jpg"
   ],
-  "notes": "Frente casi frontal (frente.jpg): paneles claros, puerta doble y ventanas enrejadas; va en todas las caras.",
+  "materials": {
+    "muro": {
+      "color": "#e5e3dc"
+    },
+    "techo": {
+      "color": "#c4c2bc"
+    },
+    "ventanas": {
+      "color": "#b7b9b5"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#8e857b",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#e6e3da",
-          "photo": {
-            "tile": "arqueologia-c",
-            "widthM": 8,
-            "heightM": 2.7
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Paneles claros con puerta doble y ventanas enrejadas sueltas, como franja tenue (frente.jpg, detras.jpg)."
 }

@@ -6,6 +6,18 @@ export interface TypeCount {
   count: number;
 }
 
+/** Una zona que se puede elegir: sector o sección. */
+export interface ZoneOption {
+  id: number;
+  code: string;
+  name: string;
+}
+
+/** Un sector activo con sus secciones activas (GET /green-area-sets/section-options). */
+export interface SectorSections extends ZoneOption {
+  sections: ZoneOption[];
+}
+
 export interface GreenAreaSetZone {
   id: number;
   code: string;

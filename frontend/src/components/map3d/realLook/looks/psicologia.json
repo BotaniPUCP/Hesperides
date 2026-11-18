@@ -3,24 +3,70 @@
   "name": "Facultad de Psicología (Pabellón S)",
   "folder": "facultad-psicologia",
   "photos": [
-    "psicologia-frente-2.jpg"
+    "muroReja-entre-psicologia-y-comunicaciones.jpg",
+    "psicologia-frente-1.jpg",
+    "psicologia-frente-2.jpg",
+    "psicologia-interior-0.jpg",
+    "psicologia-interior-1-lado.jpg",
+    "psicologia-interior-2.jpg"
   ],
-  "notes": "Ladrillo con marco de concreto, ventanales y puerta roja (psicologia-frente-2.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#c38e80"
+    },
+    "techo": {
+      "color": "#b9b6af"
+    },
+    "losas": {
+      "color": "#d6d4cf"
+    },
+    "ventanas": {
+      "glass": "#68737a",
+      "frame": "#9da3a3",
+      "moduleM": 1.5,
+      "heightM": 1.3,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b9b6af",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#a76d5c",
-          "photo": {
-            "tile": "psicologia",
-            "widthM": 9,
-            "heightM": 7.0
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "losas",
+          "v": [
+            -0.5,
+            7.7
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              -0.35,
+              0.45
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7.2
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              1.3,
+              2.6
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Ladrillo con marco de concreto y una cinta de ventanales en cada piso (psicologia-frente-1.jpg, psicologia-frente-2.jpg, psicologia-interior-1-lado.jpg). Los paños blancos del patio interior (psicologia-interior-0.jpg) y la puerta roja no se dibujan."
 }

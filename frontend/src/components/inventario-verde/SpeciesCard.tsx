@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Species } from '@shared/types';
-import { Badge, Card, ImagePlaceholder } from '@/components/ui';
+import { Badge, ImagePlaceholder } from '@/components/ui';
 
 export interface SpeciesCardProps {
   species: Species;

@@ -23,6 +23,9 @@ public class WeeklyIncidentQueries {
 
     public static final String BY_COORDINATES = "COORDINATES";
     public static final String BY_TEAM = "TEAM";
+    /** Reportada y sin activar al corte: SPEC-201 (rediseño) no la considera abierta todavía. */
+    public static final String NOT_ACTIVE = "NOT_ACTIVE";
+    static final String NOT_ACTIVE_LABEL = "Por activar";
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -51,7 +54,8 @@ public class WeeklyIncidentQueries {
                 .addValue("cutoffEnd", IncidentReportQueries.endOf(cutoff, f));
         String sql = "with scoped as (select i.id, i.description, i.location_reference, i.created_at,"
                 + " u.code urgency_code, u.label urgency_label, u.sort_order urgency_order, tm.name team_name,"
-                + IncidentReportQueries.STATUS_AT_CUTOFF + " status_code,"
+                + IncidentReportQueries.STATUS_AT_CUTOFF + " raw_status,"
+                + IncidentReportQueries.ACTIVE_AT_CUTOFF + " active_at_cutoff,"
                 + SECTOR_BY_COORDINATES + " coord_sector, tm.zone_id team_sector"
                 + " from incidents i join catalog_items cs on cs.id=i.status_item_id"
                 + " left join catalog_items u on u.id=i.urgency_item_id"
@@ -59,12 +63,14 @@ public class WeeklyIncidentQueries {
                 + " where i.deleted_at is null and i.created_at < :cutoffEnd"
                 + IncidentReportQueries.scopeFilters(f, params) + "),"
                 + " located as (select sc.*, coalesce(sc.coord_sector, sc.team_sector) sector_id,"
+                + " case when sc.raw_status='REPORTED' and not sc.active_at_cutoff then '" + NOT_ACTIVE + "'"
+                + " else sc.raw_status end status_code,"
                 + " case when sc.coord_sector is not null then '" + BY_COORDINATES + "'"
                 + " when sc.team_sector is not null then '" + BY_TEAM + "' end located_by"
-                + " from scoped sc where sc.status_code in ('PENDING_APPROVAL','OPEN','IN_PROGRESS'))"
+                + " from scoped sc where sc.raw_status in ('REPORTED','IN_PROGRESS'))"
                 + " select l.*, (l.created_at at time zone :tz)::date reported_on,"
-                + " (select x.label from catalog_items x join catalog_types xt on xt.id=x.catalog_type_id"
-                + "  and xt.code='INCIDENT_STATUS' where x.code=l.status_code) status_label"
+                + " coalesce((select x.label from catalog_items x join catalog_types xt on xt.id=x.catalog_type_id"
+                + "  and xt.code='INCIDENT_STATUS' where x.code=l.status_code), '" + NOT_ACTIVE_LABEL + "') status_label"
                 + " from located l where l.sector_id=:sectorId or l.sector_id is null"
                 + " order by l.urgency_order desc nulls last, l.created_at, l.id";
         return jdbc.query(sql, params, (rs, n) -> new IncidentRow(

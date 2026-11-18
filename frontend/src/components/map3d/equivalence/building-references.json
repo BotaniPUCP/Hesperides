@@ -135,5 +135,13 @@
       "Almacén y depósito (Especialidad de Arqueología)",
       "Oficinas y archivo (Departamento Académico de Derecho)"
     ]
+  },
+  "61": {
+    "name": "Biblioteca de Ciencias Sociales",
+    "aliases": []
+  },
+  "32": {
+    "name": "Departamento Académico de Humanidades (oficinas)",
+    "aliases": []
   }
 }

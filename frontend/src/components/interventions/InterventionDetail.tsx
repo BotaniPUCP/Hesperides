@@ -6,6 +6,8 @@ import { aOutcomes, errorDeDecision, type DecisionPoda } from './cierrePoda';
 import { MedidasCierrePoda } from './MedidasCierrePoda';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { managesIncidents } from '@/lib/incidentRoles';
+import { InterventionIncidentLinks } from './InterventionIncidentLinks';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { Button, Input, LoadingSkeleton, Modal, Select, StatusBadge, useToast } from '@/components/ui';
@@ -162,15 +164,13 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     <div className="surface-card space-y-2">
       <p className="text-xs text-neutral-500">Código: {data.code}</p>
       <p>{data.description || 'Sin descripción'}</p><p>Programada: {data.scheduledDate}</p>
+      {data.usesCuttingMachinery && <p><span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-700">Con maquinaria de corte</span></p>}
       <ExecutionTime work={data}/>
       {data.executionBlockedUntil && <p role="status" className="rounded-md border border-neutral-200 p-3">El trabajo podrá ejecutarse desde el {data.executionBlockedUntil}. Si debe adelantarse, solicita al coordinador que revise la planificación.</p>}
       <p>{data.completedLocationCount}/{data.locationCount} ubicaciones terminadas · {data.validatedLocationCount}/{data.locationCount} aprobadas</p>
       <p>{data.approvedForCounting ? 'Actividad con aprobación final.' : 'La actividad contará cuando el capataz responsable o el coordinador aprueben todas las ubicaciones.'}</p>
       <p className="text-sm">{options?.teams.find(t => t.id === data.teamId)?.name ?? (data.teamId ? 'Cuadrilla asignada' : 'Sin cuadrilla asignada')}{data.responsibleSupervisorUserId ? ' · Responsable: capataz de la cuadrilla' : ''}</p>
-      {!!data.sourceIncidents?.length && <div className="space-y-2"><p className="font-medium">Incidencias relacionadas disponibles para tu cuenta</p>
-        <ul className="space-y-2">{data.sourceIncidents.map(i => <li key={i.id}><Link className="text-brand-700 underline" href={`/incidencias/${i.id}`}>{i.code ?? `Incidencia #${i.id}`}</Link></li>)}</ul>
-        <p className="text-sm text-neutral-700">Aprobar esta intervención no cierra sus incidencias. Cada una requiere una revisión final independiente.</p>
-      </div>}
+      <InterventionIncidentLinks interventionId={id} incidents={data.sourceIncidents ?? []} canManage={managesIncidents(user?.role.code) && !['CANCELLED','VALIDATED'].includes(data.statusCode)} onChanged={() => void reload()} />
       {data.pendingEvidenceCount > 0 && <p>Fotos pendientes: {data.pendingEvidenceCount}</p>}
       <div className="flex flex-wrap gap-3">
         {canPlan && <><Link href={`/intervenciones/${id}/editar`} className="px-3 py-2 text-brand-600 underline">Editar planificación</Link><Button variant="danger" disabled={busy} onClick={() => {setCancelOpen(true);setReason('');setError('');}}>Cancelar trabajo</Button></>}

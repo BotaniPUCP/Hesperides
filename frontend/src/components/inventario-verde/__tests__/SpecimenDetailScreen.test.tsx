@@ -1,11 +1,11 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SpecimenDetailScreen } from '../SpecimenDetailScreen';
 import { PageFrame } from '@/components/layouts/PageFrame';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
 import { catastroApi } from '@/lib/catastro-api';
 import { rememberListQuery } from '@/lib/listMemory';
-import { medidasDeEspecieCritica, p01Detail } from '../__fixtures__/inventario';
+import { medidasDeEspecieCritica, p01Detail, palmeraReal } from '../__fixtures__/inventario';
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -126,6 +126,28 @@ describe('SpecimenDetailScreen', () => {
     expect(await screen.findByText(/Medido el 1 ene 2026, antes de la poda del 3 mar 2026/)).toBeInTheDocument();
   });
 
+  it('distingue una especie inactiva sin cambiar el estado ni la consulta del ejemplar', async () => {
+    api.specimen.mockResolvedValue({ ...p01Detail, species: { ...palmeraReal, isActive: false } });
+
+    render(<SpecimenDetailScreen code="EV-000001" />);
+
+    expect(await screen.findByText('Especie inactiva')).toBeInTheDocument();
+    expect(screen.queryByText('Inactiva')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'EV-000001' })).toBeInTheDocument();
+  });
+
+  it('vuelve a consultar la ficha del ejemplar cuando recupera el foco', async () => {
+    api.specimen.mockResolvedValue(p01Detail);
+
+    render(<SpecimenDetailScreen code="EV-000001" />);
+
+    expect(await screen.findByRole('heading', { name: 'EV-000001' })).toBeInTheDocument();
+    fireEvent.blur(window);
+    fireEvent.focus(window);
+
+    await waitFor(() => expect(api.specimen).toHaveBeenCalledTimes(2));
+  });
+
   it('un valor que falta se muestra con un guion legible', async () => {
     api.specimen.mockResolvedValue({ ...p01Detail, trunkHeightM: null });
 
@@ -185,6 +207,7 @@ describe('SpecimenDetailScreen', () => {
 
   it('renderiza sin caerse la ficha del ejemplar del mango (EV-000660)', async () => {
     const mangoDetail = {
+      id: 660,
       code: 'EV-000660',
       sourceReference: 'SA-50',
       sourceLocation: 'Pista de Salud',
@@ -218,6 +241,7 @@ describe('SpecimenDetailScreen', () => {
       section: null,
       species: {
         slug: 'mangifera-indica',
+        isActive: true,
         scientificName: 'Mangifera indica',
         commonName: 'Mango',
         otherNames: [],

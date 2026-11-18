@@ -3,24 +3,68 @@
   "name": "Facultad de Ciencias y Artes de la Comunicación",
   "folder": "facultad-ciencias-artes-comunicaciones",
   "photos": [
-    "frente2.jpg"
+    "frente1.jpg",
+    "frente2.jpg",
+    "lado.jpg",
+    "lado2.jpg"
   ],
-  "notes": "Ladrillo con marco de concreto y bandas de ventanas en tres pisos (frente2.jpg); los árboles delante se reemplazan por el ladrillo.",
+  "materials": {
+    "muro": {
+      "color": "#b07f6c"
+    },
+    "techo": {
+      "color": "#b9b6af"
+    },
+    "losas": {
+      "color": "#d4d1ca"
+    },
+    "ventanas": {
+      "glass": "#66717a",
+      "frame": "#a3a8a8",
+      "moduleM": 1.5,
+      "heightM": 1.2,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b9b6af",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#a8705f",
-          "photo": {
-            "tile": "comunicaciones",
-            "widthM": 18,
-            "heightM": 9.5
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "losas",
+          "v": [
+            -0.5,
+            10.1
+          ],
+          "floors": {
+            "everyM": 3.2,
+            "startM": 0,
+            "bandM": [
+              -0.35,
+              0.45
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            9.6
+          ],
+          "floors": {
+            "everyM": 3.2,
+            "startM": 0,
+            "bandM": [
+              1.1,
+              2.3
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Ladrillo con marco de concreto y una cinta de ventanas en cada uno de sus tres pisos (frente1.jpg, frente2.jpg, lado.jpg, lado2.jpg)."
 }

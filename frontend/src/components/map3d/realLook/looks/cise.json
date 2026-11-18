@@ -3,24 +3,38 @@
   "name": "CISE",
   "folder": "Centro de Investigaciones y Servicios Educativos (CISE)",
   "photos": [
+    "detras.jpg",
+    "frente-hacia-comedor-letras.jpg",
+    "lado-hacia-educacion-2.jpg",
+    "lado-hacia-educacion.jpg",
     "lado-mas-cerca-hacia-educacion.jpg"
   ],
-  "notes": "Caseta de paneles beige con ventanas enrejadas y techo de fibrocemento (lado-mas-cerca-hacia-educacion.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#e3dccb"
+    },
+    "techo": {
+      "color": "#b7b4ad"
+    },
+    "ventanas": {
+      "color": "#bfbeb3"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#9d968c",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#ddd6c8",
-          "photo": {
-            "tile": "cise",
-            "widthM": 7,
-            "heightM": 3.3
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Caseta de paneles crema con ventanas enrejadas sueltas, como franja tenue, y techo de fibrocemento (frente-hacia-comedor-letras.jpg, lado-hacia-educacion*.jpg, lado-mas-cerca-hacia-educacion.jpg, detras.jpg)."
 }

@@ -3,24 +3,23 @@
   "name": "Prototipo vivienda bioclimática Sumaq Wasi 1",
   "folder": "PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 1(GRUPO DE APOYO AL SECTOR RURAL)",
   "photos": [
-    "lado der.jpg"
+    "lado der.jpg",
+    "lado izq.jpg"
   ],
-  "notes": "Casa de tablas de madera con puertas en espiga y ventanas angostas (lado der.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#9a6a47"
+    },
+    "techo": {
+      "color": "#9fa09c"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#a59f93",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#6b4a33",
-          "photo": {
-            "tile": "sumaq-wasi-1",
-            "widthM": 4.5,
-            "heightM": 2.8
-          }
-        }
-      }
+      "wall": "muro",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Casa de tablas de madera con puertas en espiga y ventanas angostas (lado der.jpg, lado izq.jpg)."
 }

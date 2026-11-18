@@ -3,24 +3,24 @@
   "name": "Snack (Frutería Sociales)",
   "folder": "SNACK (FRUTERÍA SOCIALES)",
   "photos": [
-    "detras.jpg"
+    "delante.jpg",
+    "detras.jpg",
+    "lado.jpg"
   ],
-  "notes": "Muro crema del lado de atrás (detras.jpg): las vistas del mostrador tienen gente delante y no se usan.",
+  "materials": {
+    "muro": {
+      "color": "#e6dfcb"
+    },
+    "techo": {
+      "color": "#cfccc5"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b9b6ae",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#ddd5bf",
-          "photo": {
-            "tile": "snack-sociales",
-            "widthM": 6,
-            "heightM": 2.6
-          }
-        }
-      }
+      "wall": "muro",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Muro crema de atrás (detras.jpg). El mostrador del frente, con su toldo, tiene gente delante en las fotos y no se dibuja."
 }

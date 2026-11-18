@@ -5,22 +5,32 @@
   "photos": [
     "interior.jpg"
   ],
-  "notes": "Solo hay foto de interior y se toma como exterior (D-08): murete de ladrillo de 1,1 m; encima, el comedor está abierto bajo techo y se pinta en la sombra del alero.",
+  "materials": {
+    "muro": {
+      "color": "#6b6e6d"
+    },
+    "techo": {
+      "color": "#a9aaa6"
+    },
+    "ladrillo": {
+      "color": "#a8664c"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#6f5a48",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#5f5a54",
-          "photo": {
-            "tile": "desconocido-08",
-            "widthM": 9,
-            "heightM": 1.1
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ladrillo",
+          "v": [
+            -1,
+            1.1
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Solo hay foto del interior (interior.jpg): un murete de ladrillo de 1,1 m y, encima, el comedor abierto bajo techo, que se pinta del color de la sombra del alero."
 }

@@ -1,0 +1,25 @@
+{
+  "planKey": "b9a4a553-9c25-45f2-b2fc-43592ab2b917",
+  "name": "Caseta Comedor Generales Ciencias",
+  "folder": "comedor-artes-antiguo-eeggcc",
+  "photos": [
+    "detras.jpg",
+    "lado-02.jpg"
+  ],
+  "materials": {
+    "blanco": {
+      "color": "#ebebe7"
+    },
+    "techo": {
+      "color": "#c4c7ca"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "blanco",
+      "roof": "techo"
+    }
+  ],
+  "notes": "El bloque blanco de servicio detrás del comedor de arte (detras.jpg, lado-02.jpg), liso; sus ventanas enrejadas y puertas no se dibujan (D-04). Ubicación por confirmar (Anexo A de SPEC-109)."
+}
