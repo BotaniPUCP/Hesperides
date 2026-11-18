@@ -18,7 +18,11 @@ final class PlaceQueries {
                    EXISTS (SELECT 1 FROM place_perspectives v JOIN catalog_items s ON s.id = v.side_item_id
                             WHERE v.place_id = p.id AND v.deleted_at IS NULL AND s.code = 'FRONT') AS has_front,
                    EXISTS (SELECT 1 FROM place_perspectives v JOIN catalog_items s ON s.id = v.side_item_id
-                            WHERE v.place_id = p.id AND v.deleted_at IS NULL AND s.code = 'BACK') AS has_back
+                            WHERE v.place_id = p.id AND v.deleted_at IS NULL AND s.code = 'BACK') AS has_back,
+                   concat_ws(' ', p.code, p.name, pp.name,
+                       (SELECT string_agg(a.alias, ' ') FROM place_aliases a WHERE a.place_id = p.id AND a.deleted_at IS NULL),
+                       (SELECT string_agg(v.display_name, ' ') FROM place_perspectives v
+                         WHERE v.place_id = p.id AND v.deleted_at IS NULL)) AS search_text
               FROM places p
               JOIN catalog_items k ON k.id = p.kind_item_id
               JOIN catalog_items c ON c.id = p.category_item_id

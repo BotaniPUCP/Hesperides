@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import type { PlaceKindCode } from '@shared/types';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
@@ -24,11 +25,24 @@ export function LugaresScreen() {
   const [search, setSearch] = useSearchDraft(values.search, (next) => setValues({ search: next }));
   const category = values.category || null;
   const kind = oneOf(values.kind, KIND_CODES, '') || null;
-  const { places, loading, errorMessage } = usePlaces({
-    search: values.search || undefined,
-    category: category ?? undefined,
-    kind: kind ?? undefined,
-  });
+  // El catálogo se carga una vez; la búsqueda y los filtros se resuelven en el navegador.
+  const { places: allPlaces, loading, errorMessage } = usePlaces({});
+  const places = useMemo(() => {
+    const term = normalizeSearch(search);
+    return allPlaces.filter((place) => {
+      if (category && place.category.code !== category) return false;
+      if (kind && place.kind.code !== kind) return false;
+      if (!term) return true;
+      const searchable = normalizeSearch(place.searchText ?? [
+        place.code,
+        place.name,
+        place.parent?.name,
+        place.category.label,
+        place.kind.label,
+      ].filter(Boolean).join(' '));
+      return searchable.includes(term);
+    });
+  }, [allPlaces, category, kind, search]);
   useListScrollRestoration(LIST_PATH, query, !loading);
 
   return (
@@ -70,4 +84,8 @@ export function LugaresScreen() {
       )}
     </div>
   );
+}
+
+function normalizeSearch(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().trim();
 }

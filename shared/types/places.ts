@@ -27,6 +27,8 @@ export interface PlaceSummary {
   perspectiveCount: number;
   hasFront: boolean;
   hasBack: boolean;
+  /** Texto de búsqueda del catálogo (incluye alias y nombres de perspectivas). */
+  searchText?: string;
 }
 
 /**

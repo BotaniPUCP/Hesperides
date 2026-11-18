@@ -117,7 +117,7 @@ export function PlaceWorkbookImportScreen() {
         </div>
         <Button variant="secondary" onClick={() => void downloadTemplate()} loading={busy}>Descargar plantilla .xlsx</Button>
         <div className="text-sm text-neutral-700">
-          Usa códigos del catálogo (por ejemplo, tipo <code>OUTDOOR</code>, lado <code>FRONT</code>), separa edificios y alias con punto y coma,
+          Usa códigos del catálogo (por ejemplo, tipo <code>OUTDOOR</code>, lado <code>FRONT</code>), separa los alias con punto y coma,
           e inserta cada imagen dentro de la celda «Foto perspectiva». No repitas nombres ni alias ya registrados.
         </div>
 

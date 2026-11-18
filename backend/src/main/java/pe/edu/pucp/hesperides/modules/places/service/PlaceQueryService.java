@@ -44,7 +44,7 @@ public class PlaceQueryService {
                         r.parentCode() == null ? null : new PlaceRef(r.parentCode(), r.parentName()),
                         new CodeLabel(r.kindCode(), r.kindLabel()), new CodeLabel(r.categoryCode(), r.categoryLabel()),
                         r.mainPhotoId() == null ? null : PlaceDetailAssembler.url(r.mainPhotoId(), true),
-                        r.perspectives(), r.hasFront(), r.hasBack()))
+                        r.perspectives(), r.hasFront(), r.hasBack(), r.searchText()))
                 .toList();
     }
 

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 public class PlaceWorkbookExportRepository {
 
     public record ExportPlace(long id, String code, String name, String kindCode, String categoryCode,
-            String parentCode, String aliases, String buildingIds, String zoneCode, String featureCode,
+            String parentCode, String aliases, String zoneCode, String featureCode,
             Double pointLat, Double pointLon, boolean fromChildren) {
     }
 
@@ -20,27 +20,16 @@ public class PlaceWorkbookExportRepository {
             String photoKey, String photoContentType) {
     }
 
-    private static final String BUILDING_IDS = """
-            array_to_string(
-                COALESCE(
-                    NULLIF(ARRAY(SELECT pb.building_id FROM place_buildings pb
-                                  WHERE pb.place_id = p.id AND pb.deleted_at IS NULL ORDER BY pb.building_id),
-                           '{}'::bigint[]),
-                    CASE WHEN p.building_id IS NULL THEN '{}'::bigint[] ELSE ARRAY[p.building_id] END
-                ), ';')
-            """;
-
     private final NamedParameterJdbcTemplate jdbc;
 
     public List<ExportPlace> findPlaces(String categoryCode, String alias, String parentCode, LocalDate createdFrom,
-            LocalDate createdTo, String triangleWkt) {
+            LocalDate createdTo) {
         MapSqlParameterSource parameters = new MapSqlParameterSource()
                 .addValue("category", categoryCode)
                 .addValue("alias", alias)
                 .addValue("parent", parentCode)
                 .addValue("createdFrom", createdFrom)
-                .addValue("createdTo", createdTo)
-                .addValue("triangleWkt", triangleWkt);
+                .addValue("createdTo", createdTo);
         return jdbc.query("""
                 WITH RECURSIVE location_candidates AS (
                     SELECT p.id AS place_id, p.parent_place_id AS parent_id, o.geom, 0 AS depth
@@ -63,7 +52,6 @@ public class PlaceWorkbookExportRepository {
                 SELECT p.id, p.code, p.name, kind.code, category.code, parent.code,
                        (SELECT string_agg(a.alias, ';' ORDER BY a.alias)
                           FROM place_aliases a WHERE a.place_id = p.id AND a.deleted_at IS NULL),
-                       CASE WHEN kind.code = 'OUTDOOR' THEN NULL ELSE %s END,
                        CASE WHEN kind.code = 'OUTDOOR' THEN NULL ELSE zone.code END,
                        CASE WHEN kind.code = 'OUTDOOR' THEN NULL ELSE feature.code END,
                        CASE WHEN kind.code = 'OUTDOOR' THEN ST_Y(ST_Centroid(location.geom)) END,
@@ -85,15 +73,11 @@ public class PlaceWorkbookExportRepository {
                           AND unaccent(lower(a.alias)) = unaccent(lower(:alias))))
                    AND (CAST(:createdFrom AS DATE) IS NULL OR p.created_at >= CAST(:createdFrom AS DATE))
                    AND (CAST(:createdTo AS DATE) IS NULL OR p.created_at < CAST(:createdTo AS DATE) + INTERVAL '1 day')
-                   AND (CAST(:triangleWkt AS TEXT) IS NULL OR (
-                       location.geom IS NOT NULL
-                       AND ST_Covers(ST_SetSRID(ST_GeomFromText(:triangleWkt), 4326),
-                                     ST_PointOnSurface(location.geom))))
                  ORDER BY lower(p.name), lower(parent.name) NULLS FIRST
-                """.formatted(BUILDING_IDS), parameters, (rs, row) -> new ExportPlace(
+                """, parameters, (rs, row) -> new ExportPlace(
                         rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5),
-                        rs.getString(6), rs.getString(7), rs.getString(8), rs.getString(9), rs.getString(10),
-                        rs.getObject(11, Double.class), rs.getObject(12, Double.class), rs.getBoolean(13)));
+                        rs.getString(6), rs.getString(7), rs.getString(8), rs.getString(9), rs.getObject(10, Double.class),
+                        rs.getObject(11, Double.class), rs.getBoolean(12)));
     }
 
     public List<ExportPerspective> findPerspectives(List<Long> placeIds, List<String> sides) {

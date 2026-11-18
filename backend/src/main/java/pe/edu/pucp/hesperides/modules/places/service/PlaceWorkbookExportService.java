@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -27,21 +25,21 @@ import pe.edu.pucp.hesperides.shared.storage.FileStorage;
 @RequiredArgsConstructor
 public class PlaceWorkbookExportService {
 
-    private static final int BASE_COLUMNS = 11;
+    private static final int BASE_COLUMNS = 10;
     private static final int PERSPECTIVE_COLUMNS = 5;
     private static final int MAX_PERSPECTIVES = 3;
-    private static final Set<String> VALID_SIDES = Set.of("FRONT", "BACK", "SIDE");
+    private static final List<String> ALL_SIDES = List.of("FRONT", "BACK", "SIDE");
 
     private final PlaceWorkbookExportRepository places;
     private final FileStorage storage;
 
     @Transactional(readOnly = true)
     public byte[] export(PlaceWorkbookExportRequest request) {
-        List<String> sides = validate(request);
-        String triangle = triangleWkt(request);
+        validate(request);
+        List<String> sides = request.includePerspectives() ? ALL_SIDES : List.of();
         List<ExportPlace> selected = places.findPlaces(blankToNull(request.categoryCode()),
                 blankToNull(request.alias()), blankToNull(request.parentCode()), request.createdFrom(),
-                request.createdTo(), triangle);
+                request.createdTo());
         List<Long> placeIds = selected.stream().map(ExportPlace::id).toList();
         Map<Long, List<ExportPerspective>> perspectives = places.findPerspectives(placeIds, sides).stream()
                 .collect(Collectors.groupingBy(ExportPerspective::placeId, HashMap::new, Collectors.toList()));
@@ -54,7 +52,7 @@ public class PlaceWorkbookExportService {
         return workbook(selected, perspectives, request.includePerspectives());
     }
 
-    private static List<String> validate(PlaceWorkbookExportRequest request) {
+    private static void validate(PlaceWorkbookExportRequest request) {
         if (request == null) throw new ValidationException("Indica los filtros de exportación.");
         if (request.createdFrom() != null && request.createdTo() != null
                 && request.createdFrom().isAfter(request.createdTo())) {
@@ -64,52 +62,6 @@ public class PlaceWorkbookExportService {
             throw new ValidationException("El alias no puede superar los 200 caracteres.");
         }
 
-        int coordinates = 0;
-        Double[] values = {request.point1Lat(), request.point1Lon(), request.point2Lat(), request.point2Lon(),
-                request.point3Lat(), request.point3Lon()};
-        for (Double value : values) if (value != null) coordinates++;
-        if (coordinates != 0 && coordinates != values.length) {
-            throw new ValidationException("Completa latitud y longitud de los tres puntos para filtrar por zona.");
-        }
-        if (coordinates == values.length) {
-            validateCoordinate(request.point1Lat(), request.point1Lon());
-            validateCoordinate(request.point2Lat(), request.point2Lon());
-            validateCoordinate(request.point3Lat(), request.point3Lon());
-            double area = (request.point2Lon() - request.point1Lon()) * (request.point3Lat() - request.point1Lat())
-                    - (request.point2Lat() - request.point1Lat()) * (request.point3Lon() - request.point1Lon());
-            if (Math.abs(area) < 1e-12) {
-                throw new ValidationException("Los tres puntos deben formar un triángulo con área mayor que cero.");
-            }
-        }
-
-        List<String> requestedSides = request.includePerspectives() && request.perspectiveSides() != null
-                ? request.perspectiveSides().stream().distinct().toList()
-                : List.of();
-        if (request.includePerspectives() && requestedSides.isEmpty()) {
-            throw new ValidationException("Selecciona al menos un punto cardinal para exportar perspectivas.");
-        }
-        if (requestedSides.stream().anyMatch(side -> !VALID_SIDES.contains(side))) {
-            throw new ValidationException("Los lados de perspectiva deben ser FRONT, BACK o SIDE.");
-        }
-        return requestedSides;
-    }
-
-    private static void validateCoordinate(double latitude, double longitude) {
-        if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-            throw new ValidationException("Las coordenadas deben tener latitud entre -90 y 90 y longitud entre -180 y 180.");
-        }
-    }
-
-    private static String triangleWkt(PlaceWorkbookExportRequest request) {
-        if (request.point1Lat() == null) return null;
-        return "POLYGON((" + point(request.point1Lon(), request.point1Lat()) + ","
-                + point(request.point2Lon(), request.point2Lat()) + ","
-                + point(request.point3Lon(), request.point3Lat()) + ","
-                + point(request.point1Lon(), request.point1Lat()) + "))";
-    }
-
-    private static String point(double longitude, double latitude) {
-        return String.format(Locale.ROOT, "%s %s", Double.toString(longitude), Double.toString(latitude));
     }
 
     private byte[] workbook(List<ExportPlace> selected, Map<Long, List<ExportPerspective>> perspectives,
@@ -139,14 +91,13 @@ public class PlaceWorkbookExportService {
                 row.getCell(2).setCellValue(place.categoryCode());
                 set(row, 3, place.parentCode());
                 set(row, 4, place.aliases());
-                set(row, 5, place.buildingIds());
-                set(row, 6, place.zoneCode());
-                set(row, 7, place.featureCode());
+                set(row, 5, place.zoneCode());
+                set(row, 6, place.featureCode());
                 if (place.pointLat() != null && place.pointLon() != null) {
-                    row.getCell(8).setCellValue(place.pointLat());
-                    row.getCell(9).setCellValue(place.pointLon());
+                    row.getCell(7).setCellValue(place.pointLat());
+                    row.getCell(8).setCellValue(place.pointLon());
                 }
-                row.getCell(10).setCellValue(place.fromChildren() ? "SI" : "NO");
+                row.getCell(9).setCellValue(place.fromChildren() ? "SI" : "NO");
 
                 if (!includePerspectives) continue;
                 List<ExportPerspective> selectedPerspectives = perspectives.getOrDefault(place.id(), List.of());

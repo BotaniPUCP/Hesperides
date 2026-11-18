@@ -47,7 +47,7 @@ public class PlaceWorkbookImportService {
 
     public static final String SHEET = "Lugares";
     private static final int PERSPECTIVE_COUNT = 3;
-    private static final int BASE_COLUMNS = 11;
+    private static final int BASE_COLUMNS = 10;
     public static final List<String> HEADERS = headers();
 
     public record ImportIssue(int row, String column, String value, String message) {
@@ -236,15 +236,13 @@ public class PlaceWorkbookImportService {
             if (alias.length() > 200) issue(errors, rowNumber, "Alias", alias, "Un alias no puede superar 200 caracteres.");
         }
 
-        List<Long> buildingIds = parseBuildingIds(cell(row, columns, "IDs de edificio (separados por ;)", formatter),
-                rowNumber, errors);
         String zoneCode = emptyToNull(cell(row, columns, "Código de zona", formatter));
         String featureCode = emptyToNull(cell(row, columns, "Código de estacionamiento", formatter));
         Double outlineLat = decimal(row, columns, "Latitud de punto", formatter, rowNumber, errors);
         Double outlineLon = decimal(row, columns, "Longitud de punto", formatter, rowNumber, errors);
         Boolean fromChildren = yesNo(row, columns, "Usar contorno de hijos (SI/NO)", formatter, rowNumber, errors);
         boolean missingOutdoorPoint = "OUTDOOR".equals(kind) && (outlineLat == null || outlineLon == null);
-        boolean hasOtherOutdoorSource = !buildingIds.isEmpty() || zoneCode != null || featureCode != null
+        boolean hasOtherOutdoorSource = zoneCode != null || featureCode != null
                 || Boolean.TRUE.equals(fromChildren);
         if ("OUTDOOR".equals(kind)) {
             required(rowNumber, "Latitud de punto", cell(row, columns, "Latitud de punto", formatter),
@@ -252,7 +250,7 @@ public class PlaceWorkbookImportService {
             required(rowNumber, "Longitud de punto", cell(row, columns, "Longitud de punto", formatter),
                     "La longitud del punto del mapa es obligatoria para lugares exteriores.", errors);
             if (hasOtherOutdoorSource) {
-                issue(errors, rowNumber, "Ubicación", "", "El punto del mapa debe ser la única fuente de ubicación; deja vacíos los edificios, zona, estacionamiento y contorno de hijos.");
+                issue(errors, rowNumber, "Ubicación", "", "El punto del mapa debe ser la única fuente de ubicación; deja vacíos la zona, el estacionamiento y el contorno de hijos.");
             }
         }
         if ((outlineLat == null) != (outlineLon == null)) {
@@ -268,7 +266,7 @@ public class PlaceWorkbookImportService {
         var geometry = outlineLat != null && outlineLon != null
                 ? json.valueToTree(Map.of("type", "Point", "coordinates", List.of(outlineLon, outlineLat)))
                 : null;
-        OutlineRequest outline = new OutlineRequest(buildingIds, zoneCode, featureCode, geometry,
+        OutlineRequest outline = new OutlineRequest(List.of(), zoneCode, featureCode, geometry,
                 Boolean.TRUE.equals(fromChildren));
         PlaceRequest request = name.isBlank() || kind == null || category == null
                 ? null
@@ -487,21 +485,6 @@ public class PlaceWorkbookImportService {
         return result;
     }
 
-    private static List<Long> parseBuildingIds(String value, int row, List<ImportIssue> errors) {
-        if (value.isBlank()) return List.of();
-        List<Long> ids = new ArrayList<>();
-        for (String token : value.split(";")) {
-            try {
-                long id = Long.parseLong(token.strip());
-                if (id <= 0) throw new NumberFormatException();
-                ids.add(id);
-            } catch (NumberFormatException e) {
-                issue(errors, row, "IDs de edificio", token, "Usa IDs numéricos positivos separados por punto y coma.");
-            }
-        }
-        return ids.stream().distinct().toList();
-    }
-
     private static Double decimal(Row row, Map<String, Integer> columns, String column, DataFormatter formatter,
             int rowNumber, List<ImportIssue> errors) {
         String value = cell(row, columns, column, formatter);
@@ -568,7 +551,7 @@ public class PlaceWorkbookImportService {
             case "An outdoor place needs an outline to be located on the map" ->
                 "Un lugar exterior necesita las coordenadas del punto del mapa.";
             case "Give one outline source: buildings, a zone, a feature, a drawing or the places inside it" ->
-                "El punto del mapa debe ser la única fuente de ubicación del lugar exterior; deja vacíos los edificios, zona, estacionamiento y contorno de hijos.";
+                "El punto del mapa debe ser la única fuente de ubicación del lugar exterior; deja vacíos la zona, el estacionamiento y el contorno de hijos.";
             case "An indoor place must be inside another place" ->
                 "Un lugar interior requiere el código de su lugar padre.";
             case "An indoor place is located by its parent and has no outline of its own" ->
@@ -586,7 +569,7 @@ public class PlaceWorkbookImportService {
     private static List<String> headers() {
         List<String> result = new ArrayList<>(List.of(
                 "Nombre", "Tipo", "Categoría", "Código padre", "Alias (separados por ;)",
-                "IDs de edificio (separados por ;)", "Código de zona", "Código de estacionamiento",
+                "Código de zona", "Código de estacionamiento",
                 "Latitud de punto", "Longitud de punto", "Usar contorno de hijos (SI/NO)"));
         for (int i = 1; i <= PERSPECTIVE_COUNT; i++) {
             result.add("Lado perspectiva " + i);

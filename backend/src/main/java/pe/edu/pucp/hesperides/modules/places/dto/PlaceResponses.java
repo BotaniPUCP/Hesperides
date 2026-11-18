@@ -17,7 +17,7 @@ public final class PlaceResponses {
 
     /** Una tarjeta del catálogo. */
     public record PlaceSummary(String code, String name, PlaceRef parent, CodeLabel kind, CodeLabel category,
-            String mainPhotoUrl, int perspectiveCount, boolean hasFront, boolean hasBack) {
+            String mainPhotoUrl, int perspectiveCount, boolean hasFront, boolean hasBack, String searchText) {
     }
 
     /** De dónde sale el contorno: BUILDING, ZONE, FEATURE, DRAWN o INHERITED (interiores). */

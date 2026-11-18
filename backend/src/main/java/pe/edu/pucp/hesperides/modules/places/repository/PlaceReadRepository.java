@@ -14,7 +14,7 @@ public class PlaceReadRepository {
 
     public record SummaryRow(String code, String name, String parentCode, String parentName, String kindCode,
             String kindLabel, String categoryCode, String categoryLabel, Long mainPhotoId, int perspectives,
-            boolean hasFront, boolean hasBack) {
+            boolean hasFront, boolean hasBack, String searchText) {
     }
 
     public record CategoryRow(String kindCode, String kindLabel, String categoryCode, String categoryLabel) {
@@ -34,7 +34,7 @@ public class PlaceReadRepository {
                 rs.getString("parent_code"), rs.getString("parent_name"), rs.getString("kind_code"),
                 rs.getString("kind_label"), rs.getString("category_code"), rs.getString("category_label"),
                 rs.getObject("main_photo_id", Long.class), rs.getInt("perspectives"), rs.getBoolean("has_front"),
-                rs.getBoolean("has_back")));
+                rs.getBoolean("has_back"), rs.getString("search_text")));
     }
 
     public CategoryRow kindAndCategory(long placeId) {
