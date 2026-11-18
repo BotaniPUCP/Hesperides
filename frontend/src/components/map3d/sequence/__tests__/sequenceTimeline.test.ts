@@ -1,8 +1,8 @@
 import { frameAt, PEAK_BLUR_PX, PEAK_BRIGHTNESS, SWAP_AT_S, TRANSITION_END_S, TRANSITION_START_S } from '../sequenceTimeline';
 
 describe('cronología de la secuencia', () => {
-  it('la transición dura 0,6 s desde el segundo 4,3', () => {
-    expect(TRANSITION_START_S).toBe(4.3);
+  it('la transición dura 0,6 s desde el segundo 5', () => {
+    expect(TRANSITION_START_S).toBe(5);
     expect(TRANSITION_END_S - TRANSITION_START_S).toBeCloseTo(0.6, 9);
   });
 

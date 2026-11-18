@@ -204,96 +204,11 @@ desenfocado.
   cambia de imagen a los 5,25 s sin que se note y desde los 6 s queda fijo en el espacio hasta salir
   por un costado, sin tapar nunca más de un tercio de la pantalla.
 
-### 9.1 El logo se va con el desenfoque (17 nov 2026)
+### 9.1 Variantes probadas y descartadas (17-18 nov 2026)
 
-La tabla de §9 es la **coreografía original**. La secuencia la reproduce comprimida para que el logo
-se vaya justo cuando ocurre el desenfoque:
-
-| Tiempo de la secuencia | Tiempo de la coreografía | Velocidad |
-|---|---|---|
-| 2,0 → 4,0 s | 2,0 → 6,4 s | 2,2× (cae de 2,0 a 2,9 s, se desliza hasta 3,8 s y ahí se ancla) |
-| 4,0 → 5,0 s | 6,4 → 8,0 s | Baja en línea recta de 2,2× a 1×, sin frenazo |
-| 5,0 → 6,0 s | 8,0 → 9,0 s | 1×: exactamente lo que la coreografía muestra de 8 a 9 s |
-| ≥ 6,0 s | — | No se ve |
-
-- El cambio de imagen sigue en el segundo 5,25 de la secuencia, con el mapa.
-- A los 9 s de la coreografía la hoja todavía tapa ~30 % de la esquina superior izquierda (sale del
-  todo hacia los 10,3 s). Para que no desaparezca de golpe, se desvanece de 5,7 a 6,0 s, ya pasado
-  el desenfoque (D-10).
-- Sigue siendo 1 vuelta en la caída, que ahora dura ~0,9 s.
-
-| ID | Decisión | Por qué | Alternativa descartada |
-|---|---|---|---|
-| D-10 | Coreografía comprimida (opción A, elegida por Jean Piero) y desvanecimiento de 0,3 s al final | Se va con el desenfoque sin cortarse de golpe | Adelantar toda la animación 3 s (empezaría a media caída); comprimir solo 4-8 s a 4× (se vería apurado) |
-
-- **CA-10** El logo se ve de 2 a 6 s; de 5 a 6 s se ve igual que de 8 a 9 s de la coreografía y a los 6 s ya
-  no está.
-
-### 9.2 Aparece en transparencia desde el inicio (17 nov 2026)
-
-Reemplaza la caída girando de §9 y §9.1. Lo demás de §9.1 sigue igual.
-
-| Tiempo de la secuencia | Qué hace el logo |
-|---|---|
-| 0,0 → 2,9 s | Aparece quieto en el centro, sin girar: la opacidad sube de 0 a 100 % entre 0 y 2,5 s (arranca lento) y el tamaño "respira" de 92 % a 100 % hasta los 2,9 s |
-| 2,9 → 6,0 s | Igual que §9.1: se desliza, se ancla, cambia de imagen a los 5,25 s y se va con el desenfoque |
-
-| ID | Decisión | Por qué | Alternativa descartada |
-|---|---|---|---|
-| D-11 | Aparición en transparencia con un leve crecimiento (opción B, elegida por Jean Piero) | Sutil, con algo de vida, y no compite con el desenfoque del segundo 5 | Quieto sin crecer (A); enfocándose desde un desenfoque (C: repite el recurso del segundo 5); marca de agua al 30 % (D) |
-
-- **CA-11** En el primer cuadro el logo está en el centro y transparente; a los 2,5 s es opaco y nunca gira.
-
-### 9.3 La cámara gira la mirada con el logo (17 nov 2026)
-
-Mientras el logo se desliza hacia (35 %, 35 %) (de 2,9 a 3,8 s de la secuencia), la cámara gira su
-mirada con la misma curva hacia el lado contrario, a la derecha y abajo: ~10° en el pico. En el
-pico, lo que estaba en el centro de la ruta queda justo donde termina el logo, así que se mueve todo
-el encuadre y no solo la imagen. Desde ahí la mirada vuelve despacio a la ruta y a los 12 s la toma
-es la de §6.1. La cámara no cambia de lugar: solo hacia dónde mira. El logo sigue su coreografía
-(§9.1-§9.2) calculada sobre la ruta sin giro.
-
-| ID | Decisión | Por qué | Alternativa descartada |
-|---|---|---|---|
-| D-12 | Giro de la mirada (opción A, elegida por Jean Piero) | Se lee como movimiento de cámara sin cambiar el tamaño máximo del logo ni su salida con el desenfoque | Desplazar la cámara en arco con el logo anclado de verdad: para irse a los 6 s tapa casi toda la pantalla, o el arco deja de ser sutil |
-
-- **CA-12** De 2,9 a 3,8 s el encuadre gira junto con el logo; a los 12 s la toma termina en la pose
-  final de §6.1.
-
-### 9.4 Aparición en 1 s y deslizamiento lento (17 nov 2026)
-
-Ajusta §9.2 y §9.3:
-
-| Tiempo de la secuencia | Qué pasa |
-|---|---|
-| 0,0 → 1,0 s | El logo pasa de transparente a opaco en el centro |
-| 1,0 → 3,8 s | El logo se desliza despacio hasta (35 %, 35 %) y la cámara gira la mirada con la misma curva (~10° en el pico, a los 3,8 s); el logo sigue creciendo de 92 % a 100 % |
-| 3,8 s en adelante | Igual que antes: anclado, cambio de imagen a los 5,25 s, salida con el desenfoque a los 6 s; la mirada vuelve a la ruta hasta los 12 s |
-
-| ID | Decisión | Por qué | Alternativa descartada |
-|---|---|---|---|
-| D-13 | Deslizamiento y giro a lo largo de 2,8 s (Jean Piero) | Lento, pasa desapercibido | El tramo de 0,9 s de D-12, que se notaba |
-
-### 9.5 Transición adelantada para que se lean las letras (17 nov 2026)
-
-La transición de §5.3 (desenfoque y cambio de calidad, con el cambio de imagen del logo) pasa del
-segundo 5,0 al **4,3**: sube de 4,30 a 4,55 s, cambia a los 4,55 s y baja hasta los 4,90 s. Al enfocarse
-se ve ~63 % de las letras del logo, ya nítidas, que antes era ~17 %. El logo se sigue yendo a los 6 s.
-Sustituye los tiempos de §4, §5.3 y CA-03/CA-04 (la poca calidad dura hasta 4,3 s y la buena empieza a
-los 4,9 s).
-
-| ID | Decisión | Por qué | Alternativa descartada |
-|---|---|---|---|
-| D-14 | Adelantar la transición 0,7 s (opción A, Jean Piero) | Las letras se leen nítidas antes de que el logo se vaya | Frenar la salida del logo (tendría que desvanecerse estando grande); acortar el desenfoque (gana poco y esconde peor el cambio) |
-
-### 6.5 Ruta corrida al noroeste (18 nov 2026)
-
-Toda la ruta de §6.1-§6.2 (inicio, final y puntos de control) se corre **126 m al oeste y 141 m al
-norte**: la forma y los tiempos no cambian, solo el lugar. Así, a los 6 s, el edificio de
-(-30, 22, 265) —el que Jean Piero marcó en un cuadro exportado— cae abajo a la derecha (~86 %, 86 %)
-y a los 7 s ya salió del cuadro por esa esquina. La toma final termina ~190 m al noroeste de la de la
-grabación de referencia. El logo no cambia: se calcula respecto de la cámara.
-
-| ID | Decisión | Por qué | Alternativa descartada |
-|---|---|---|---|
-| D-15 | Correr toda la ruta (opción A, Jean Piero) | El edificio pasa por la esquina inferior derecha a los 6 s | Girar solo el inicio (no lo mueve: el final está junto al edificio); correr solo el inicio y volver al final de siempre (B) |
+Después de D-09 se probaron, en este orden: que el logo se fuera con el desenfoque a los 6 s
+(coreografía comprimida), que apareciera en transparencia desde el inicio, que la cámara girara la
+mirada mientras el logo se deslizaba, la transición adelantada a 4,3 s y la ruta corrida 190 m al
+noroeste (commits `ff8864e` a `8bff311`). El 18 nov 2026 Jean Piero decidió volver a esta versión
+(D-09): logo que cae girando una vuelta, se desliza a un lado y se ancla, transición en el segundo 5 y
+ruta original. Las variantes quedan en el historial de git por si se retoman.

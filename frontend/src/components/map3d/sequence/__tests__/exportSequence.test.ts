@@ -86,14 +86,13 @@ describe('exportación de la secuencia', () => {
     await exportSequence({ viewer: fakeViewer().viewer, canvas: output(), breathe: async () => undefined, sink: fakeSink().sink,
       logos: { pixel, original } });
     const logoAtFrame = (i: number) => (composeFrame as jest.Mock).mock.calls[i][5];
-    const atFive = logoAtFrame(4 * EXPORT_FPS), atSix = logoAtFrame(5 * EXPORT_FPS);
+    const atFive = logoAtFrame(5 * EXPORT_FPS), atSix = logoAtFrame(6 * EXPORT_FPS);
     expect(atFive.image).toBe(pixel);
     expect(atFive.smooth).toBe(false);
     expect(atFive.state.visible).toBe(true);
     expect(atSix.image).toBe(original);
     expect(atSix.smooth).toBe(true);
-    expect(logoAtFrame(0).state.opacity).toBe(0);
-    expect(logoAtFrame(7 * EXPORT_FPS).state.visible).toBe(false);
+    expect(logoAtFrame(0).state.visible).toBe(false);
   });
 
   it('si el codificador falla, el visor vuelve igual a la normalidad', async () => {

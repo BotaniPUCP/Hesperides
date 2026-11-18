@@ -9,16 +9,8 @@ type Vec3 = [number, number, number];
 
 export const SEQUENCE_DURATION_S = 12;
 
-/**
- * Toda la ruta va corrida 126 m al oeste y 141 m al norte (D-15): así, a los 6 s, el
- * edificio de (-30, 265) queda abajo a la derecha y la cámara lo pasa por su lado.
- */
-const ROUTE_SHIFT: Vec3 = [-126, 0, -141];
-const shifted = (v: Vec3): Vec3 => [v[0] + ROUTE_SHIFT[0], v[1] + ROUTE_SHIFT[1], v[2] + ROUTE_SHIFT[2]];
-
-/** Las poses de la grabación de referencia, corridas. */
-export const SEQUENCE_START: CameraPose = { position: shifted([-76.463, 304.492, 1330.868]), target: shifted([-16.72, 22, 229.821]) };
-export const SEQUENCE_END: CameraPose = { position: shifted([0.666, 37.962, 256.692]), target: shifted([-16.952, 27.439, 170.911]) };
+export const SEQUENCE_START: CameraPose = { position: [-76.463, 304.492, 1330.868], target: [-16.72, 22, 229.821] };
+export const SEQUENCE_END: CameraPose = { position: [0.666, 37.962, 256.692], target: [-16.952, 27.439, 170.911] };
 
 /** Qué tan lejos avanza, sin bajar casi, el primer punto de control: primero avanza y luego desciende. */
 const FORWARD_FIRST = 0.4;
