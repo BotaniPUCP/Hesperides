@@ -69,13 +69,13 @@ export function PlanningCard({ row, selected, onSelect, onRemove, justSaved = fa
         {/* Tres columnas fijas en todas las tarjetas, aunque falte la frecuencia, para que se lean igual. */}
         <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 rounded-md bg-neutral-50 px-3 py-2 text-xs sm:grid-cols-3">
           <Datum label={history.label} value={history.value} />
-          <Datum label="Contiene" value={contentsLabel(row.zoneCount, row.elementCount)} />
-          {rhythm && <Datum label="Suele realizarse" value={rhythm} />}
+          <Datum label="Contiene" value={contentsLabel(row.zoneCount, row.elementCount)} bigNumbers />
+          {rhythm && <Datum label="Suele realizarse" value={rhythm} bigNumbers />}
         </dl>
         {/* Avance parcial: cuánto del conjunto ya está al día, como la barra de una intervención en curso. */}
         {partial && (
           <span className="mt-2 flex items-center gap-3 text-xs">
-            <span className="whitespace-nowrap font-medium text-neutral-800">Al día: {partial.upToDate} de {unitsLabel(row, partial.total)}</span>
+            <span className="whitespace-nowrap font-medium text-neutral-800"><BigNumbers text={`Al día: ${partial.upToDate} de ${unitsLabel(row, partial.total)}`} /></span>
             <span role="progressbar" aria-label="Al día" aria-valuemin={0} aria-valuemax={partial.total} aria-valuenow={partial.upToDate}
               className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200">
               <span className="block h-full rounded-full bg-brand-600" style={{ width: `${(100 * partial.upToDate) / partial.total}%` }} />
@@ -88,11 +88,20 @@ export function PlanningCard({ row, selected, onSelect, onRemove, justSaved = fa
   );
 }
 
-function Datum({ label, value }: { label: string; value: string }) {
+/**
+ * Las cifras más grandes que el texto que las sigue: lo primero que se lee de la tarjeta es cuánto
+ * contiene y cada cuánto se hace. Un rango («30–45») va junto, como una sola cifra.
+ */
+export function BigNumbers({ text }: { text: string }) {
+  return <>{text.split(/(\d+(?:\s*[–-]\s*\d+)?)/).map((part, i) =>
+    (i % 2 === 1 ? <span key={i} className="text-base font-bold leading-none text-neutral-900">{part}</span> : part))}</>;
+}
+
+function Datum({ label, value, bigNumbers = false }: { label: string; value: string; bigNumbers?: boolean }) {
   return (
     <div>
       <dt className="text-neutral-500">{label}</dt>
-      <dd className="font-medium text-neutral-800">{value}</dd>
+      <dd className="font-medium text-neutral-800">{bigNumbers ? <BigNumbers text={value} /> : value}</dd>
     </div>
   );
 }

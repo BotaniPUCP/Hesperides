@@ -48,6 +48,8 @@ export interface Viewer extends SequenceHooks {
   setMarkedSections: (codes: readonly string[]) => void;
   /** Ejemplares marcados a la vez (los de un conjunto), con el mismo color que las áreas. */
   setMarkedSpecimens: (codes: readonly string[]) => void;
+  /** Pinta tenue un área de trabajo (el sector que se recorre en Conjuntos); lo marcado se ve encima. */
+  setTintedArea?: (sectionCodes: readonly string[], specimenCodes: readonly string[]) => void;
   /**
    * Vuela hasta ver juntas esas áreas y, si se pasan, esos ejemplares; sin nada
    * reconocido, la cámara no se mueve.

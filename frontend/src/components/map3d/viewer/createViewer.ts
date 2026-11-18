@@ -43,6 +43,8 @@ export type { Viewer, ViewerCallbacks, ViewerStart } from './viewerTypes';
 
 /** Lo marcado a la vez (secciones de un turno de riego, bloques de un lugar), distinto de la selección. */
 const MARKED_COLOR = '#06B6D4';
+/** El área en que se trabaja (el sector en foco en Conjuntos): naranja tenue, distinto del verde del césped y del cian de lo marcado. */
+const TINT_COLOR = '#FB923C';
 /**
  * Escala de la velocidad del modo administrador: el vuelo va a la mitad de esto en m/s.
  * En los pilotos es el radio del edificio; el campus entero sería demasiado rápido.
@@ -77,12 +79,14 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   // El mapa general no marca ninguna sección por defecto. Solo M7 llama a
   // setMarkedSections; así puede hacer selección múltiple sin alterar /mapa.
   const markedSectionCodes = new Set<string>();
+  const tintedSectionCodes = new Set<string>();
   let eligibleSectionCodes: Set<string> | null = null;
   SECTION_LAYERS.forEach((id) => {
     const layer = poly[id];
     const originalColor = layer.options.color;
     layer.options.color = (i) => eligibleSectionCodes && !eligibleSectionCodes.has(data[id][i]?.props.code)
-      ? state.palette.dimmed : markedSectionCodes.has(data[id][i]?.props.code) ? MARKED_COLOR : originalColor(i);
+      ? state.palette.dimmed : markedSectionCodes.has(data[id][i]?.props.code) ? MARKED_COLOR
+        : tintedSectionCodes.has(data[id][i]?.props.code) ? TINT_COLOR : originalColor(i);
   });
   // Un lugar puede ser varios bloques: se marcan todos, porque la selección resalta uno solo.
   // Los ids de los edificios agrupados se traducen al principal que se dibuja.
@@ -112,8 +116,10 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const vegetation = createVegetationLayer(scene, data.vegetation, foliage, model?.sunken);
   // Como las secciones: solo Conjuntos marca ejemplares; el mapa general no lo usa.
   const markedSpecimenCodes = new Set<string>();
+  const tintedSpecimenCodes = new Set<string>();
   const plantColor = vegetation.color;
-  vegetation.color = (i) => markedSpecimenCodes.has(data.vegetation[i]?.props.code) ? MARKED_COLOR : plantColor(i);
+  vegetation.color = (i) => markedSpecimenCodes.has(data.vegetation[i]?.props.code) ? MARKED_COLOR
+    : tintedSpecimenCodes.has(data.vegetation[i]?.props.code) ? TINT_COLOR : plantColor(i);
   const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points, vegetation };
   const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
@@ -331,6 +337,15 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     setMarkedSpecimens(codes) {
       markedSpecimenCodes.clear();
       codes.forEach((code) => markedSpecimenCodes.add(code));
+      highlight.repaint('vegetation');
+      needsRender = true;
+    },
+    setTintedArea(sectionCodes, specimenCodes) {
+      tintedSectionCodes.clear();
+      sectionCodes.forEach((code) => tintedSectionCodes.add(code));
+      tintedSpecimenCodes.clear();
+      specimenCodes.forEach((code) => tintedSpecimenCodes.add(code));
+      SECTION_LAYERS.forEach((id) => highlight.repaint(id));
       highlight.repaint('vegetation');
       needsRender = true;
     },

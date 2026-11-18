@@ -21,8 +21,12 @@ const PICK_MODES: { value: PickMode; label: string }[] = [
   { value: 'GARDENS', label: 'Jardines' }, { value: 'SPECIMENS', label: 'Ejemplares' }, { value: 'BOTH', label: 'Ambos' },
 ];
 const OUTSIDE = 'fuera';
-/** Lo que se mueve el puntero antes de considerar que se arrastró el mapa y no que se hizo clic. */
+/** Los mapas de Conjuntos nacen en colores reales, como el mapa principal (SPEC-112 D-13). */
+const REAL_COLORS = { realColors: true };
+/** Lo que se mueve el puntero antes de considerar que se movió el mapa y no que se hizo clic. */
 const DRAG_PX = 6;
+/** Las flechas que recorren los sectores: grandes, porque son la forma de moverse entre sectores. */
+const STEP = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-2xl font-bold leading-none text-white shadow hover:bg-forest-700 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-400 disabled:shadow-none';
 /** Acciones de la tarjeta: pequeñas para que quepan en una fila del panel. */
 const CARD_ACTION = 'rounded-md border border-neutral-200 bg-neutral-0 px-2 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40';
 /** Herramientas que flotan sobre el mapa. */
@@ -42,6 +46,34 @@ interface Notice {
   /** Si se puede deshacer lo que causó el aviso. */
   undo?: () => void;
 }
+
+/**
+ * Cómo está un sector en el mapa. Un clic en su tarjeta lo sombrea (`shade`: se pinta tenue, la
+ * vista no se mueve); otro clic pone el foco (`focus`: además, la vista encuadra lo elegido en él);
+ * otro lo suelta. Si con el foco puesto se mueve el mapa, queda `lost`: sigue sombreado, la vista
+ * ya no está sobre lo elegido, y un clic lo suelta.
+ */
+type Stage = 'shade' | 'focus' | 'lost';
+interface Focus {
+  key: string;
+  stage: Stage;
+}
+
+/** Cómo se ve la tarjeta en cada etapa, y qué hará el próximo clic. */
+const STAGE_LOOK: Record<Stage, { frame: string; chip: string; label: string; next: string }> = {
+  shade: { frame: 'border-orange-500', chip: 'border border-orange-500 bg-neutral-0 text-orange-800 dark:text-orange-300', label: 'Sombreado',
+    next: 'Poner el foco en lo elegido' },
+  focus: { frame: 'border-orange-500 ring-2 ring-orange-400', chip: 'bg-orange-500 text-white', label: 'En foco',
+    next: 'Quitar el foco y el sombreado' },
+  lost: { frame: 'border-dashed border-orange-400', chip: 'border border-dashed border-orange-400 text-orange-800 dark:text-orange-300', label: 'Sin foco',
+    next: 'Quitar el sombreado' },
+};
+/** Lo que dice el recorrido de cada etapa. */
+const STAGE_HINT: Record<Stage, string> = {
+  shade: 'sombreado · otro clic en la tarjeta pone el foco',
+  focus: 'en foco',
+  lost: 'sombreado · moviste el mapa',
+};
 
 export interface SetMapPickerProps {
   sectors: ZoneOption[];
@@ -89,14 +121,15 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   const [plants, setPlants] = useState<Set<number>>(() => new Set(selectedSpecimenIds));
   const [mode, setMode] = useState<PickMode>(() => initialMode(selectedZoneIds, selectedSpecimenIds));
   const [term, setTerm] = useState('');
-  const [onlySelected, setOnlySelected] = useState(false);
+  /** Marcada siempre al abrir: la lista muestra lo elegido y las flechas recorren los sectores que tienen algo. */
+  const [onlySelected, setOnlySelected] = useState(true);
   const [unsupported, setUnsupported] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
-  const [focused, setFocused] = useState<string | null>(null);
+  const [focus, setFocus] = useState<Focus | null>(null);
+  /** La tarjeta iluminada: la del sector donde se eligió o quitó algo por última vez. */
+  const [lit, setLit] = useState<string | null>(null);
   /** Lo que la persona abrió o cerró a mano; si no tocó una tarjeta, se abre cuando tiene algo elegido. */
   const [openedByHand, setOpenedByHand] = useState<Map<string, boolean>>(new Map());
-  /** Qué se está viendo en el mapa: «lo elegido en …» o el sector entero. */
-  const [focusLabel, setFocusLabel] = useState('');
   const viewer = useRef<Viewer | null>(null);
   const mapRegion = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLElement>(null);
@@ -136,28 +169,59 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   const requestCancel = () => guard.confirm(onCancel);
   useEffect(() => { root.current?.scrollIntoView?.({ block: 'start' }); }, []);
 
-  const unfocus = () => {
-    setFocused(null);
-    setNotice((n) => (n && !n.undo ? null : n));
-  };
+  /** Lo que el modo deja elegir en un sector, y cuánto de eso está elegido. */
+  const own = useCallback((g: SectorGroup) => {
+    const gardens = pickGardens ? g.sections : [];
+    const trees = pickPlants ? g.specimens : [];
+    const chosenGardens = gardens.filter((s) => zones.has(s.id));
+    const chosenTrees = trees.filter((e) => plants.has(e.id));
+    return { gardens, trees, chosenGardens, chosenTrees, chosen: chosenGardens.length + chosenTrees.length };
+  }, [pickGardens, pickPlants, zones, plants]);
+  /** Los sectores con algo que el modo deja elegir. */
+  const navigable = useMemo(() => groups.filter((g) => own(g).gardens.length + own(g).trees.length > 0), [groups, own]);
 
-  /** Avisa, sin impedirlo, cuando se agrega algo de otro sector que el que se está viendo. */
-  const warnIfOutside = useCallback((group: SectorGroup, adding: boolean) => {
-    const current = groups.find((g) => g.key === focused);
-    setNotice(adding && current && current.key !== group.key
-      ? { text: `Agregaste algo de ${group.name}, fuera de ${current.name}, que es el sector que estás viendo.` } : null);
-  }, [groups, focused]);
+  const searching = term.trim() !== '';
+  const gardenMatches = (s: ZoneOption) => matches(`${s.name} ${s.code}`, term);
+  const treeMatches = (e: GreenAreaSetElement) => matches(`${e.displayName} ${e.code} ${e.sectionName ?? ''}`, term);
+  /** Lo que una tarjeta muestra: al buscar, lo que coincide; con «Ver solo lo elegido», lo elegido; si no, todo. */
+  const shownIn = (g: SectorGroup) => {
+    const o = own(g);
+    if (searching) return { gardens: o.gardens.filter(gardenMatches), trees: o.trees.filter(treeMatches) };
+    if (onlySelected) return { gardens: o.chosenGardens, trees: o.chosenTrees };
+    return { gardens: o.gardens, trees: o.trees };
+  };
+  const cardVisible = (g: SectorGroup) => {
+    if (!searching && !onlySelected) return true;
+    const shown = shownIn(g);
+    return shown.gardens.length + shown.trees.length > 0;
+  };
+  const visibleCards = navigable.filter(cardVisible);
+  // El foco vale mientras su sector esté en la lista (buscar no lo suelta): si se le quita todo con «Ver solo lo elegido», se suelta.
+  const inList = (g: SectorGroup) => !onlySelected || own(g).chosen > 0;
+  const focusedGroup = focus ? navigable.find((g) => g.key === focus.key && inList(g)) ?? null : null;
+  const activeFocus = focusedGroup ? focus : null;
+  /** Las flechas recorren los sectores de la lista: con «Ver solo lo elegido», los que tienen algo elegido. */
+  const travel = onlySelected ? navigable.filter((g) => own(g).chosen > 0) : navigable;
+  const travelIndex = focusedGroup ? travel.indexOf(focusedGroup) : -1;
+
+  /** Avisa, sin impedirlo, cuando se agrega algo de otro sector que el que está en foco. */
+  const warnIfOutside = (group: SectorGroup, adding: boolean) => {
+    setNotice(adding && focusedGroup && focusedGroup.key !== group.key
+      ? { text: `Agregaste algo de ${group.name}, fuera de ${focusedGroup.name}, que es el sector en foco.` } : null);
+  };
 
   const toggleIn = (set: Set<number>, id: number) => { const next = new Set(set); if (next.has(id)) next.delete(id); else next.add(id); return next; };
   /** Una tarjeta en la que se trabajó queda abierta, aunque se le quite todo, para no plegarse bajo el cursor. */
   const keepOpen = (key: string) => setOpenedByHand((prev) => (prev.has(key) ? prev : new Map(prev).set(key, true)));
+  const showCard = (key: string) => cards.current.get(key)?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  /** Ilumina la tarjeta del sector donde se eligió algo, para que se sepa de cuál es, y la trae a la vista. */
+  const light = (key: string) => { setLit(key); queueMicrotask(() => showCard(key)); };
   const toggleZone = (id: number, group: SectorGroup) => {
-    warnIfOutside(group, !zones.has(id)); keepOpen(group.key); setZones((prev) => toggleIn(prev, id));
+    warnIfOutside(group, !zones.has(id)); keepOpen(group.key); light(group.key); setZones((prev) => toggleIn(prev, id));
   };
   const togglePlant = (id: number, group: SectorGroup) => {
-    warnIfOutside(group, !plants.has(id)); keepOpen(group.key); setPlants((prev) => toggleIn(prev, id));
+    warnIfOutside(group, !plants.has(id)); keepOpen(group.key); light(group.key); setPlants((prev) => toggleIn(prev, id));
   };
-  const showCard = (key: string) => cards.current.get(key)?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
 
   const onMapPick = (target: Target | null, data: SceneData) => {
     // El visor deja un punto de ubicación tras el clic; al elegir no aplica, y se quita apenas termina.
@@ -168,7 +232,6 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
       const hit = specimenByCode.get(data.vegetation[target.index]?.props.code);
       if (!hit) { setNotice({ text: 'Ese ejemplar no está disponible para conjuntos.' }); return; }
       togglePlant(hit.id, hit.group);
-      showCard(hit.group.key);
       return;
     }
     if (!pickGardens) { setNotice({ text: <>Estás eligiendo ejemplares. Cambia a <strong>Jardines</strong> o <strong>Ambos</strong> para agregar jardines.</> }); return; }
@@ -179,7 +242,6 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     const hit = sectionByCode.get(data[target.layer][target.index]?.props.code);
     if (!hit) { setNotice({ text: 'Esa área no es un jardín disponible.' }); return; }
     toggleZone(hit.id, hit.group);
-    showCard(hit.group.key);
   };
 
   /** Cambiar lo que se elige quita lo del otro tipo, y se puede deshacer. */
@@ -208,6 +270,12 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
     const gardens = gardenCodes.map((code) => sectionByCode.get(code)?.id).filter((id): id is number => id !== undefined);
     const trees = plantCodes.map((code) => specimenByCode.get(code)?.id).filter((id): id is number => id !== undefined);
     if (gardens.length + trees.length === 0) { setNotice({ text: 'El rectángulo no encerró nada que se pueda elegir.' }); return; }
+    // Se ilumina el sector con más de lo que tocó el rectángulo.
+    const touched = new Map<string, number>();
+    [...gardenCodes.map((c) => sectionByCode.get(c)?.group.key), ...plantCodes.map((c) => specimenByCode.get(c)?.group.key)]
+      .forEach((key) => { if (key) touched.set(key, (touched.get(key) ?? 0) + 1); });
+    const mostTouched = [...touched.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (mostTouched) light(mostTouched);
     if (action === 'add') {
       const newGardens = gardens.filter((id) => !zones.has(id));
       const newPlants = trees.filter((id) => !plants.has(id));
@@ -233,48 +301,82 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
   const sweepAdd = (target: Target, data: SceneData) => {
     if (target.layer === 'vegetation') {
       const hit = specimenByCode.get(data.vegetation[target.index]?.props.code);
-      if (hit) setPlants((prev) => (prev.has(hit.id) ? prev : new Set([...prev, hit.id])));
+      if (hit) { setLit(hit.group.key); setPlants((prev) => (prev.has(hit.id) ? prev : new Set([...prev, hit.id]))); }
       return;
     }
     if (target.layer !== 'greenAreas' && target.layer !== 'xerophytic' && target.layer !== 'reserve') return;
     const hit = sectionByCode.get(data[target.layer][target.index]?.props.code);
-    if (hit) setZones((prev) => (prev.has(hit.id) ? prev : new Set([...prev, hit.id])));
+    if (hit) { setLit(hit.group.key); setZones((prev) => (prev.has(hit.id) ? prev : new Set([...prev, hit.id]))); }
   };
 
-  // Mover o acercar el mapa a mano deja de «ver» el sector enfocado; un clic no.
-  const onMapPointerDown = (e: ReactPointerEvent) => { pointerStart.current = selecting ? null : { x: e.clientX, y: e.clientY }; };
-  const onMapPointerUp = (e: ReactPointerEvent) => {
-    const start = pointerStart.current;
-    pointerStart.current = null;
-    if (start && focused && Math.hypot(e.clientX - start.x, e.clientY - start.y) > DRAG_PX) unfocus();
-  };
-
-  const markGardens = (g: SectorGroup) => { keepOpen(g.key); setZones((prev) => new Set([...prev, ...g.sections.map((s) => s.id)])); };
-  const markPlants = (g: SectorGroup) => { keepOpen(g.key); setPlants((prev) => new Set([...prev, ...g.specimens.map((e) => e.id)])); };
+  const markGardens = (g: SectorGroup) => { keepOpen(g.key); setLit(g.key); setZones((prev) => new Set([...prev, ...g.sections.map((s) => s.id)])); };
+  const markPlants = (g: SectorGroup) => { keepOpen(g.key); setLit(g.key); setPlants((prev) => new Set([...prev, ...g.specimens.map((e) => e.id)])); };
   const clearGroup = (g: SectorGroup) => {
-    keepOpen(g.key);
+    keepOpen(g.key); setLit(g.key);
     const ids = new Set(g.sections.map((s) => s.id));
     const plantIds = new Set(g.specimens.map((e) => e.id));
     setZones((prev) => new Set([...prev].filter((id) => !ids.has(id))));
     setPlants((prev) => new Set([...prev].filter((id) => !plantIds.has(id))));
   };
-  /** Encuadra lo elegido del sector; si no hay nada elegido, el sector entero. */
-  const look = (g: SectorGroup) => {
-    if (focused === g.key) { unfocus(); return; }
-    const chosenSections = g.sections.filter((s) => zones.has(s.id));
-    const chosenPlants = g.specimens.filter((e) => plants.has(e.id));
-    const anyChosen = chosenSections.length + chosenPlants.length > 0;
-    setFocused(g.key);
-    setFocusLabel(anyChosen ? `lo elegido en ${g.name}` : g.name);
-    setNotice((n) => (n && !n.undo ? null : n));
+
+  /** Sombrea un sector sin mover la vista, y abre su tarjeta. */
+  const shade = (g: SectorGroup) => {
+    setFocus({ key: g.key, stage: 'shade' });
     setOpenedByHand((prev) => new Map(prev).set(g.key, true));
-    viewer.current?.focusSections(
-      (anyChosen ? chosenSections : pickGardens ? g.sections : []).map((s) => s.code),
-      (anyChosen ? chosenPlants : pickPlants ? g.specimens : []).map((e) => e.code));
+    setNotice((n) => (n && !n.undo ? null : n));
+    queueMicrotask(() => showCard(g.key));
   };
+  /** Pone el foco en un sector: lo sombrea y la vista encuadra lo elegido en él (el sector entero si no tiene nada). */
+  const focusOn = (g: SectorGroup) => {
+    const o = own(g);
+    shade(g);
+    setFocus({ key: g.key, stage: 'focus' });
+    const inFrame = o.chosen > 0 ? o : { chosenGardens: o.gardens, chosenTrees: o.trees };
+    viewer.current?.focusSections(inFrame.chosenGardens.map((s) => s.code), inFrame.chosenTrees.map((e) => e.code));
+  };
+  /**
+   * Suelta el sector: la tarjeta queda sin marca (tampoco la verde de lo último elegido) y la vista
+   * se abre al sector entero, más que el foco en lo elegido pero sin llegar a todo el campus.
+   */
+  const release = (g: SectorGroup) => {
+    const o = own(g);
+    setFocus(null);
+    setLit((l) => (l === g.key ? null : l));
+    viewer.current?.focusSections(o.gardens.map((s) => s.code), o.trees.map((e) => e.code));
+  };
+  /** Clic en la tarjeta: primero sombrea, después pone el foco, después suelta; con el foco perdido, suelta. */
+  const onCardClick = (g: SectorGroup) => {
+    if (activeFocus?.key !== g.key) { shade(g); return; }
+    if (activeFocus.stage === 'shade') { focusOn(g); return; }
+    release(g);
+  };
+  /** Las flechas dan la vuelta; sin foco, la derecha va al primero y la izquierda al último. */
+  const step = (delta: 1 | -1) => {
+    if (!travel.length) return;
+    const next = travelIndex < 0 ? (delta > 0 ? 0 : travel.length - 1) : (travelIndex + delta + travel.length) % travel.length;
+    focusOn(travel[next]);
+  };
+  /** «Ver campus» es la única forma de volver a todo el campus: suelta el foco y encuadra el campus. */
+  const seeCampus = () => { setFocus(null); viewer.current?.fit(); };
+
+  // Mover o acercar el mapa a mano saca la vista de lo elegido: el sector sigue sombreado.
+  const loseFocus = () => setFocus((f) => (f && f.stage === 'focus' ? { ...f, stage: 'lost' } : f));
+  const onMapPointerDown = (e: ReactPointerEvent) => { pointerStart.current = selecting ? null : { x: e.clientX, y: e.clientY }; };
+  const onMapPointerUp = (e: ReactPointerEvent) => {
+    const start = pointerStart.current;
+    pointerStart.current = null;
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > DRAG_PX) loseFocus();
+  };
+
+  // El sector en foco se pinta tenue; lo elegido se ve encima con su color.
+  // Se repinta solo cuando cambia lo sombreado: la firma es texto, y comparar texto es barato y estable entre renders.
+  const tintSignature = JSON.stringify(focusedGroup ? [own(focusedGroup).gardens.map((s) => s.code), own(focusedGroup).trees.map((e) => e.code)] : [[], []]);
+  useEffect(() => {
+    const [sections, specimenCodes] = JSON.parse(tintSignature) as [string[], string[]];
+    viewer.current?.setTintedArea?.(sections, specimenCodes);
+  }, [tintSignature]);
+
   const toggleOpen = (key: string, open: boolean) => setOpenedByHand((prev) => new Map(prev).set(key, !open));
-  const searching = term.trim() !== '';
-  const focusedGroup = groups.find((g) => g.key === focused);
 
   return (
     <section ref={root} aria-labelledby="set-picker-title"
@@ -288,10 +390,14 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <div ref={mapRegion} role="region" aria-label="Mapa del campus" className="relative min-h-[250px] flex-[2] overflow-hidden bg-neutral-100 md:min-h-0"
           onPointerDownCapture={onMapPointerDown} onPointerUpCapture={onMapPointerUp}
-          onWheelCapture={() => { if (focused && !selecting) unfocus(); }}>
+          onWheelCapture={() => { if (!selecting) loseFocus(); }}>
           {isLoading ? <div className="p-6"><LoadingSkeleton /></div>
-            : scene && layers && !unsupported ? <Map3DView data={scene}
-              onReady={(v) => { viewer.current = v; v.setMarkedSections(markedCodes); v.setMarkedSpecimens(markedPlantCodes); v.setLayerVisible('supervision', false); }}
+            : scene && layers && !unsupported ? <Map3DView data={scene} start={REAL_COLORS}
+              onReady={(v) => {
+                viewer.current = v; v.setMarkedSections(markedCodes); v.setMarkedSpecimens(markedPlantCodes);
+                const [sections, specimenCodes] = JSON.parse(tintSignature) as [string[], string[]];
+                v.setTintedArea?.(sections, specimenCodes); v.setLayerVisible('supervision', false);
+              }}
               onUnsupported={() => setUnsupported(true)}
               onSelect={(target) => { if (!selecting) onMapPick(target, scene); }}
               selectionSweep={{ enabled: (kind) => (kind === 'section' ? pickGardens : pickPlants),
@@ -306,8 +412,8 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
             <div className="flex w-full flex-wrap items-start justify-between gap-1.5">
               <div className="flex flex-wrap items-center gap-1.5">
                 {scene && !unsupported && !isLoading && <>
-                  <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.top(); }}>Vista superior</button>
-                  <button className={TOOL} type="button" onClick={() => { unfocus(); viewer.current?.fit(); }}>Ver campus</button>
+                  <button className={TOOL} type="button" onClick={() => viewer.current?.top()}>Vista superior</button>
+                  <button className={TOOL} type="button" onClick={seeCampus}>Ver campus</button>
                   {/* Cómo elegir varios, siempre a la vista: no hay botón que active un modo. */}
                   <span className={`${MAP_CHIP} px-2.5 py-1.5 font-medium text-neutral-600`}>
                     <kbd className="rounded border border-neutral-300 bg-neutral-50 px-1 font-sans">Ctrl</kbd>: clic izquierdo elige varios, clic derecho los quita
@@ -327,11 +433,6 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                 </div>
               </div>
             </div>
-            {focusedGroup && <div className={`${MAP_CHIP} flex items-center gap-2 py-1 pl-3 pr-1`}>
-              <span>Viendo {focusLabel}</span>
-              <button type="button" onClick={unfocus} aria-label={`Dejar de ver ${focusedGroup.name}`}
-                className="rounded px-2 py-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">✕</button>
-            </div>}
           </div>
           {ctrlLayer}
           {hint.badge}
@@ -354,6 +455,20 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
               className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-neutral-900" />
             <label className="flex items-center gap-2 text-sm text-neutral-700">
               <input type="checkbox" checked={onlySelected} onChange={(e) => setOnlySelected(e.target.checked)} /> Ver solo lo elegido</label>
+            {/* Recorrer los sectores: las flechas ponen el foco en el anterior o el siguiente de la lista (sombrean y encuadran). */}
+            <div role="group" aria-label="Recorrer sectores" className="flex items-center gap-2">
+              <button type="button" className={STEP} onClick={() => step(-1)} disabled={!travel.length} aria-label="Sector anterior">‹</button>
+              <p aria-live="polite" className="min-w-0 flex-1 text-center text-sm">
+                {focusedGroup
+                  ? <><span className="block truncate font-semibold text-neutral-900">{focusedGroup.name}</span>
+                    <span className="text-xs text-neutral-500">{travelIndex >= 0 ? `${travelIndex + 1} de ${travel.length} · ` : ''}
+                      {activeFocus ? STAGE_HINT[activeFocus.stage] : ''}</span></>
+                  : <span className="text-xs text-neutral-500">{travel.length
+                    ? `Recorre ${travel.length === 1 ? 'el sector' : `los ${travel.length} sectores`}${onlySelected ? ' con algo elegido' : ''}, o toca una tarjeta.`
+                    : 'Elige algo para recorrer sus sectores.'}</span>}
+              </p>
+              <button type="button" className={STEP} onClick={() => step(1)} disabled={!travel.length} aria-label="Sector siguiente">›</button>
+            </div>
             {notice && <div role="status" className="flex items-start justify-between gap-2 rounded-md bg-alert-warning-bg px-3 py-2 text-xs text-alert-warning-fg">
               <span>{notice.text}</span>
               {notice.undo && <button type="button" onClick={notice.undo} className="shrink-0 font-semibold underline underline-offset-2">Deshacer</button>}
@@ -361,45 +476,48 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
           </div>
 
           <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3" aria-label="Sectores">
-            {groups.map((g) => {
-              const ownGardens = pickGardens ? g.sections : [];
-              const ownTrees = pickPlants ? g.specimens : [];
-              if (ownGardens.length + ownTrees.length === 0) return null;
-              const gardens = ownGardens.filter((s) => (!onlySelected || zones.has(s.id)) && matches(`${s.name} ${s.code}`, term));
-              const trees = ownTrees.filter((e) => (!onlySelected || plants.has(e.id)) && matches(`${e.displayName} ${e.code} ${e.sectionName ?? ''}`, term));
-              if ((searching || onlySelected) && gardens.length + trees.length === 0) return null;
-              const chosenGardens = ownGardens.filter((s) => zones.has(s.id)).length;
-              const chosenTrees = ownTrees.filter((e) => plants.has(e.id)).length;
-              const chosen = chosenGardens + chosenTrees;
-              const open = searching || (openedByHand.get(g.key) ?? chosen > 0);
-              const isFocused = focused === g.key;
+            {visibleCards.length === 0 && <li className="rounded-xl border border-dashed border-neutral-300 bg-neutral-0 p-4 text-center text-sm text-neutral-600">
+              {searching ? 'Nada coincide con la búsqueda.'
+                : 'Todavía no elegiste nada. Elige en el mapa o busca arriba; para ver todos los sectores, desmarca «Ver solo lo elegido».'}</li>}
+            {visibleCards.map((g) => {
+              const { gardens: ownGardens, trees: ownTrees, chosenGardens, chosenTrees, chosen } = own(g);
+              const { gardens, trees } = shownIn(g);
+              const stage = activeFocus?.key === g.key ? activeFocus.stage : null;
+              const isFocused = stage !== null;
+              const look = stage ? STAGE_LOOK[stage] : null;
+              const open = searching || (openedByHand.get(g.key) ?? (chosen > 0 || isFocused));
+              // Naranja como el sombreado del mapa: borde al sombrear, con halo en foco, punteado si se perdió el foco.
+              const frame = look ? look.frame : lit === g.key ? 'border-brand-600 ring-2 ring-brand-600' : 'border-neutral-200';
               return (
-                <li key={g.key} aria-label={g.name} ref={(el) => { if (el) cards.current.set(g.key, el); else cards.current.delete(g.key); }}
-                  className={`overflow-hidden rounded-xl border bg-neutral-0 ${isFocused ? 'border-brand-600 ring-1 ring-brand-600' : 'border-neutral-200'}`}>
-                  <div className={`flex items-center justify-between gap-2 px-3 py-2 ${chosen > 0 ? 'bg-brand-50' : 'bg-neutral-0'}`}>
+                <li key={g.key} aria-label={g.name} aria-current={isFocused ? 'true' : undefined}
+                  ref={(el) => { if (el) cards.current.set(g.key, el); else cards.current.delete(g.key); }}
+                  className={`overflow-hidden rounded-xl border-2 bg-neutral-0 transition-shadow ${frame}`}>
+                  <div className={`flex items-center gap-1 px-2 py-2 ${isFocused ? 'bg-orange-50 dark:bg-orange-950/40' : chosen > 0 ? 'bg-brand-50' : 'bg-neutral-0'}`}>
                     <button type="button" aria-expanded={open} onClick={() => toggleOpen(g.key, open)}
+                      aria-label={`${open ? 'Plegar' : 'Desplegar'} ${g.name}`}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100">
+                      <span aria-hidden="true" className={`transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
+                    </button>
+                    <button type="button" onClick={() => onCardClick(g)} aria-pressed={isFocused}
+                      title={look ? look.next : 'Sombrear este sector en el mapa'}
                       className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-neutral-900">
-                      <span aria-hidden="true" className={`text-neutral-400 transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
                       <span className="truncate" title={g.name}>{g.name}</span>
                     </button>
-                    {chosen > 0 && <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">{contentsLabel(chosenGardens, chosenTrees)}</span>}
+                    {look && <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${look.chip}`}>{look.label}</span>}
+                    {chosen > 0 && <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">{contentsLabel(chosenGardens.length, chosenTrees.length)}</span>}
                   </div>
                   <div className="space-y-1.5 px-3 pb-2 pt-1">
-                    {ownGardens.length > 0 && <Meter label="Jardines" chosen={chosenGardens} total={ownGardens.length} />}
-                    {ownTrees.length > 0 && <Meter label="Ejemplares" chosen={chosenTrees} total={ownTrees.length} />}
+                    {ownGardens.length > 0 && <Meter label="Jardines" chosen={chosenGardens.length} total={ownGardens.length} />}
+                    {ownTrees.length > 0 && <Meter label="Ejemplares" chosen={chosenTrees.length} total={ownTrees.length} />}
                   </div>
                   {open && (
                     <div className="space-y-3 border-t border-neutral-200 px-3 py-3">
                       <div className="flex flex-wrap items-center gap-1.5">
                         {ownGardens.length > 0 && <button type="button" className={CARD_ACTION}
-                          disabled={chosenGardens === ownGardens.length} onClick={() => markGardens(g)}>Marcar jardines</button>}
+                          disabled={chosenGardens.length === ownGardens.length} onClick={() => markGardens(g)}>Marcar jardines</button>}
                         {ownTrees.length > 0 && <button type="button" className={CARD_ACTION}
-                          disabled={chosenTrees === ownTrees.length} onClick={() => markPlants(g)}>Marcar ejemplares</button>}
+                          disabled={chosenTrees.length === ownTrees.length} onClick={() => markPlants(g)}>Marcar ejemplares</button>}
                         <button type="button" className={CARD_ACTION} disabled={chosen === 0} onClick={() => clearGroup(g)}>Quitar del sector</button>
-                        <button type="button" onClick={() => look(g)} aria-pressed={isFocused}
-                          title={chosen > 0 ? 'Encuadra lo elegido en este sector' : 'Encuadra el sector entero'}
-                          className="ml-auto whitespace-nowrap text-xs font-medium text-brand-700 underline underline-offset-2">
-                          {isFocused ? 'Dejar de ver' : 'Ver en el mapa'}</button>
                       </div>
                       <div className="max-h-64 space-y-3 overflow-y-auto">
                         {gardens.length > 0 && <fieldset className="space-y-1"><legend className="text-xs font-medium text-neutral-500">Jardines</legend>
