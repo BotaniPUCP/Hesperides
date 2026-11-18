@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ImportConfirmationSummary, ImportPreview, ImportResult, SpeciesImportOption } from '@shared/types';
+import type { ImportConfirmationSummary, ImportPreview, ImportResult, Species, SpeciesImportOption } from '@shared/types';
 import { ToastProvider } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { catastroApi } from '@/lib/catastro-api';
@@ -12,11 +12,11 @@ jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), repla
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
 jest.mock('@/lib/catastro-api', () => ({
   catastroApi: {
-    previewImport: jest.fn(), reanalyzeImport: jest.fn(), speciesImportOptions: jest.fn(),
+    previewImport: jest.fn(), reanalyzeImport: jest.fn(),
     confirmationSummary: jest.fn(), confirmImport: jest.fn(), template: jest.fn(), exportSpecimens: jest.fn(),
   },
 }));
-jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { registerSpecies: jest.fn() } }));
+jest.mock('@/lib/inventario-verde-api', () => ({ inventarioVerdeApi: { registerSpecies: jest.fn(), allSpecies: jest.fn() } }));
 jest.mock('@/hooks/useCatalog', () => ({
   useCatalog: (type: string) => ({
     items: type === 'SPECIES_TYPE' ? [{ id: 1, code: 'TREE', label: 'Árbol' }] : [],
@@ -27,6 +27,20 @@ jest.mock('@/hooks/useCatalog', () => ({
 
 const api = jest.mocked(catastroApi);
 const registerSpecies = jest.mocked(inventarioVerdeApi.registerSpecies);
+const catalog = jest.mocked(inventarioVerdeApi.allSpecies);
+
+/** El selector busca en el catálogo precargado, solo entre las activas (SPEC-119). */
+function asSpecies(option: SpeciesImportOption): Species {
+  return {
+    slug: option.slug, scientificName: option.scientificName, commonName: option.commonName ?? '', otherNames: [],
+    isActive: true, vegetationTypeName: option.vegetationTypeName, vegetationTypeCode: 'TREE',
+    searchKey: [option.scientificName, option.commonName].filter(Boolean).join(' ').toLowerCase(),
+  } as unknown as Species;
+}
+
+function mockCatalog(options: SpeciesImportOption[]) {
+  catalog.mockResolvedValue(options.map(asSpecies));
+}
 
 const VISTA: ImportPreview = {
   batchId: 12,
@@ -270,7 +284,7 @@ describe('ImportarScreen', () => {
 
   it('vincula un grupo desconocido a una especie existente y actualiza la misma vista previa', async () => {
     api.previewImport.mockResolvedValue(VISTA);
-    api.speciesImportOptions.mockResolvedValue([{
+    mockCatalog([{
       slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle serrano',
       vegetationTypeName: 'Árbol', active: false,
     }]);
@@ -310,7 +324,7 @@ describe('ImportarScreen', () => {
         speciesSlug: 'schinus-molle', scientificName: 'Schinus molle', active: false, resolution: 'USER_SELECTED',
       }],
     });
-    api.speciesImportOptions.mockResolvedValue([{
+    mockCatalog([{
       slug: 'tipuana-tipu', scientificName: 'Tipuana tipu', commonName: null,
       vegetationTypeName: 'Árbol', active: false,
     }]);
@@ -350,12 +364,12 @@ describe('ImportarScreen', () => {
 
   it('informa un fallo de búsqueda del catálogo y permite reintentar', async () => {
     api.previewImport.mockResolvedValue({ ...VISTA, duplicates: [] });
-    api.speciesImportOptions
+    catalog
       .mockRejectedValueOnce(new Error('network unavailable'))
-      .mockResolvedValueOnce([{
+      .mockResolvedValueOnce([asSpecies({
         slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle',
         vegetationTypeName: 'Árbol', active: true,
-      }]);
+      })]);
     api.reanalyzeImport.mockResolvedValue({ ...VISTA, duplicates: [], unknownSpecies: [] });
     pantalla();
     await subirYRevisar();
@@ -372,7 +386,7 @@ describe('ImportarScreen', () => {
 
   it('distingue una búsqueda sin coincidencias y permite limpiar para buscar otro nombre', async () => {
     api.previewImport.mockResolvedValue({ ...VISTA, duplicates: [] });
-    api.speciesImportOptions.mockResolvedValueOnce([]).mockResolvedValueOnce([{
+    mockCatalog([{
       slug: 'tipuana-tipu', scientificName: 'Tipuana tipu', commonName: null,
       vegetationTypeName: 'Árbol', active: true,
     }]);
@@ -388,13 +402,12 @@ describe('ImportarScreen', () => {
     expect(screen.getByRole('combobox', { name: /Buscar especie para/ })).toHaveValue('');
     await userEvent.type(screen.getByRole('combobox', { name: /Buscar especie para/ }), 'T');
     expect(await screen.findByRole('option', { name: /Tipuana tipu/ })).toBeInTheDocument();
-    expect(api.speciesImportOptions).toHaveBeenNthCalledWith(1, 'Z');
-    expect(api.speciesImportOptions).toHaveBeenNthCalledWith(2, 'T');
+    expect(catalog).toHaveBeenCalledTimes(1);
   });
 
   it('conserva la asociación pendiente si falla el reanálisis y permite reintentarla', async () => {
     api.previewImport.mockResolvedValue({ ...VISTA, duplicates: [] });
-    api.speciesImportOptions.mockResolvedValue([{
+    mockCatalog([{
       slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle',
       vegetationTypeName: 'Árbol', active: false,
     }]);
@@ -503,7 +516,7 @@ describe('ImportarScreen', () => {
       ...linkedPreview,
       batchId: 13,
     });
-    api.speciesImportOptions.mockResolvedValue([{
+    mockCatalog([{
       slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle',
       vegetationTypeName: 'Árbol', active: false,
     }]);
@@ -538,7 +551,7 @@ describe('ImportarScreen', () => {
       }],
     };
     api.previewImport.mockResolvedValueOnce({ ...VISTA, duplicates: [] }).mockResolvedValueOnce(linkedPreview);
-    api.speciesImportOptions.mockResolvedValue([{
+    mockCatalog([{
       slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle',
       vegetationTypeName: 'Árbol', active: false,
     }]);
@@ -561,43 +574,24 @@ describe('ImportarScreen', () => {
     });
   });
 
-  it('consulta desde la primera letra y descarta respuestas obsoletas', async () => {
+  it('busca desde la primera letra en el catálogo cargado, sin consultar por cada una (SPEC-119)', async () => {
     api.previewImport.mockResolvedValue({ ...VISTA, duplicates: [] });
-    let resolveFirst!: (value: SpeciesImportOption[]) => void;
-    let resolveSecond!: (value: SpeciesImportOption[]) => void;
-    api.speciesImportOptions
-      .mockReturnValueOnce(new Promise((resolve) => { resolveFirst = resolve; }))
-      .mockReturnValueOnce(new Promise((resolve) => { resolveSecond = resolve; }));
+    mockCatalog([
+      { slug: 'ficus-benjamina', scientificName: 'Ficus benjamina', commonName: 'Ficus', vegetationTypeName: 'Árbol', active: true },
+      { slug: 'tipuana-tipu', scientificName: 'Tipuana tipu', commonName: null, vegetationTypeName: 'Árbol', active: true },
+    ]);
     pantalla();
     await subirYRevisar();
     await userEvent.click(screen.getByRole('button', { name: 'Seleccionar especie existente' }));
 
     const search = screen.getByRole('combobox', { name: /Buscar especie para/ });
     await userEvent.type(search, 'F');
-    await waitFor(() => expect(api.speciesImportOptions).toHaveBeenCalledTimes(1));
-    expect(api.speciesImportOptions).toHaveBeenLastCalledWith('F');
+    expect(await screen.findByRole('option', { name: /Ficus benjamina/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /Tipuana tipu/ })).not.toBeInTheDocument();
 
-    await userEvent.type(search, 'i');
-    await waitFor(() => expect(api.speciesImportOptions).toHaveBeenCalledTimes(2));
-    expect(api.speciesImportOptions).toHaveBeenLastCalledWith('Fi');
-    expect(screen.getByRole('status')).toHaveTextContent('Buscando en el catálogo');
-
-    await act(async () => {
-      resolveSecond([{
-        slug: 'ficus-reciente', scientificName: 'Ficus reciente', commonName: 'Ficus nuevo',
-        vegetationTypeName: 'Árbol', active: true,
-      }]);
-    });
-    expect(await screen.findByRole('option', { name: /Ficus reciente/ })).toBeInTheDocument();
-
-    await act(async () => {
-      resolveFirst([{
-        slug: 'ficus-anterior', scientificName: 'Ficus anterior', commonName: null,
-        vegetationTypeName: 'Árbol', active: true,
-      }]);
-    });
-    expect(screen.getByRole('option', { name: /Ficus reciente/ })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: /Ficus anterior/ })).not.toBeInTheDocument();
+    await userEvent.type(search, 'icus');
+    expect(screen.getByRole('option', { name: /Ficus benjamina/ })).toBeInTheDocument();
+    expect(catalog).toHaveBeenCalledTimes(1);
   });
 
   it('una asociación pendiente no permite confirmar mientras se reanaliza', async () => {
@@ -684,7 +678,7 @@ describe('ImportarScreen', () => {
       unknownSpecies: [{ name: alias, rows: 1, sourceKey: aliasKey, reason: 'AMBIGUOUS' }],
       speciesBindings: [schinusBinding],
     });
-    api.speciesImportOptions.mockResolvedValue([
+    mockCatalog([
       { slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle', vegetationTypeName: 'Árbol', active: true },
       { slug: 'tipuana-tipu', scientificName: 'Tipuana tipu', commonName: 'Tipa', vegetationTypeName: 'Árbol', active: true },
     ]);
@@ -716,7 +710,7 @@ describe('ImportarScreen', () => {
 
     await userEvent.click(within(pending).getByRole('button', { name: 'Seleccionar especie existente' }));
     const search = screen.getByRole('combobox', { name: /Alias ambiguo prueba/ });
-    await userEvent.type(search, 'a');
+    await userEvent.type(search, 'i');
     const schinusOption = await screen.findByRole('option', { name: /Schinus molle/ });
     const tipuanaOption = await screen.findByRole('option', { name: /Tipuana tipu/ });
     await userEvent.tab();

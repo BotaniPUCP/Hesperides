@@ -1,18 +1,12 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import type {
-  ContactDetail,
-  ContactSummary,
-  DirectoryPage,
-  OrganizationDetail,
-  OrganizationSuggestion,
-  OrganizationSummary,
-} from '@shared/types';
-import { directoryApi, type ContactFilters, type OrganizationFilters } from '@/lib/directory-api';
-import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
+import { useCallback, useMemo, useState } from 'react';
+import type { ContactDetail, ContactSummary, OrganizationDetail, OrganizationSuggestion } from '@shared/types';
+import { directoryApi } from '@/lib/directory-api';
+import { contactsList, organizationsList } from '@/lib/preload/directoryLists';
+import { similarContacts, similarOrganizations } from '@/lib/search/directorySimilar';
 import { useAuth } from './useAuth';
-import { useDebouncedValue } from './useDebouncedValue';
+import { usePreloadedList } from './usePreloadedList';
 import { useRequest } from './useRequest';
 
 /** Igual que el backend (DirectoryAccess.MAINTAINERS): el capataz solo ve y busca (SPEC-106 §9.1). */
@@ -23,22 +17,11 @@ export function useCanMaintainDirectory(): boolean {
   return user !== null && MAINTAINERS.includes(user.role.code);
 }
 
-const EMPTY_PAGE = { page: 0, size: 0, total: 0, items: [] };
+/** Todas las organizaciones vigentes, para buscarlas en el navegador (SPEC-119). */
+export const useOrganizationList = (enabled = true) => usePreloadedList(organizationsList, enabled);
 
-/** `version` se sube tras guardar para volver a pedir la lista. */
-export function useOrganizations(filters: OrganizationFilters, page: number, version = 0, enabled = true) {
-  const key = enabled ? JSON.stringify([filters, page, version]) : null;
-  const { data, loading, errorMessage } = useRequest(key, () => directoryApi.organizations(filters, page),
-    { keepPreviousData: true });
-  return { result: (data ?? EMPTY_PAGE) as DirectoryPage<OrganizationSummary>, loading, errorMessage };
-}
-
-export function useContacts(filters: ContactFilters, page: number, version = 0, enabled = true) {
-  const key = enabled ? JSON.stringify([filters, page, version]) : null;
-  const { data, loading, errorMessage } = useRequest(key, () => directoryApi.contacts(filters, page),
-    { keepPreviousData: true });
-  return { result: (data ?? EMPTY_PAGE) as DirectoryPage<ContactSummary>, loading, errorMessage };
-}
+/** Todos los contactos vigentes, para buscarlos en el navegador (SPEC-119). */
+export const useContactList = (enabled = true) => usePreloadedList(contactsList, enabled);
 
 export function useOrganization(code: string) {
   const [version, setVersion] = useState(0);
@@ -55,19 +38,19 @@ export function useContact(code: string) {
   return { contact: data as ContactDetail | null, loading, errorMessage, notFound, reload };
 }
 
-/** Parecidos mientras se escribe un nombre nuevo; no consulta con menos de 3 letras ni sin permiso. */
+/** Parecidos mientras se escribe un nombre nuevo; con menos de 3 letras casi todo se parecería. */
 const MIN_SIMILAR_LENGTH = 3;
 
-export function useSimilarOrganizations(name: string, enabled: boolean) {
-  const text = useDebouncedValue(name.trim(), SEARCH_DEBOUNCE_MS);
+export function useSimilarOrganizations(name: string, enabled: boolean): OrganizationSuggestion[] {
+  const { items } = useOrganizationList(enabled);
+  const text = name.trim();
   const ask = enabled && text.length >= MIN_SIMILAR_LENGTH;
-  const { data } = useRequest(ask ? text : null, () => directoryApi.similarOrganizations(text));
-  return (ask ? (data ?? []) : []) as OrganizationSuggestion[];
+  return useMemo(() => (ask ? similarOrganizations(items, text) : []), [ask, items, text]);
 }
 
-export function useSimilarContacts(fullName: string, enabled: boolean) {
-  const text = useDebouncedValue(fullName.trim(), SEARCH_DEBOUNCE_MS);
+export function useSimilarContacts(fullName: string, enabled: boolean): ContactSummary[] {
+  const { items } = useContactList(enabled);
+  const text = fullName.trim();
   const ask = enabled && text.length >= MIN_SIMILAR_LENGTH;
-  const { data } = useRequest(ask ? text : null, () => directoryApi.similarContacts(text));
-  return (ask ? (data ?? []) : []) as ContactSummary[];
+  return useMemo(() => (ask ? similarContacts(items, text) : []), [ask, items, text]);
 }

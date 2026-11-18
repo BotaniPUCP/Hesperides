@@ -50,15 +50,14 @@ public class IncidentLinksController {
     }
 
     @GetMapping("/api/v1/incidents/intervention-candidates")
-    public ResponseEntity<ApiResponse<List<LinkedInterventionResponse>>> candidates(@RequestParam(defaultValue = "") String q,
+    public ResponseEntity<ApiResponse<List<InterventionCandidateResponse>>> candidates(
             @AuthenticationPrincipal UserDetails user) {
-        return ok(links.candidates(q, user.getUsername()));
+        return ok(links.candidates(user.getUsername()));
     }
 
     @GetMapping("/api/v1/incidents/search")
-    public ResponseEntity<ApiResponse<List<IncidentRefResponse>>> search(@RequestParam(defaultValue = "") String q,
-            @AuthenticationPrincipal UserDetails user) {
-        return ok(search.search(q, user.getUsername()));
+    public ResponseEntity<ApiResponse<List<IncidentRefResponse>>> search(@AuthenticationPrincipal UserDetails user) {
+        return ok(search.search(user.getUsername()));
     }
 
     @PostMapping("/api/v1/interventions/{interventionId}/incident-links")

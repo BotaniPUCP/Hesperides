@@ -253,6 +253,7 @@ describe('SpecimenDetailScreen', () => {
         imageSource: 'SPECIMEN' as const,
         photos: [],
         ...medidasDeEspecieCritica,
+        searchKey: '',
       },
     };
 

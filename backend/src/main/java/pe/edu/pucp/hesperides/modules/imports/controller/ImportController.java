@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,7 +19,6 @@ import pe.edu.pucp.hesperides.modules.imports.dto.ConfirmImportRequest;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportConfirmationSummary;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportOutcome;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreview;
-import pe.edu.pucp.hesperides.modules.imports.dto.SpeciesImportOption;
 import pe.edu.pucp.hesperides.modules.imports.service.CsvTemplates;
 import pe.edu.pucp.hesperides.modules.imports.service.SpeciesExportService;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenExportService;
@@ -88,13 +86,6 @@ public class ImportController {
                 () -> optionalZip("specimens", zip));
         return ResponseEntity.ok(ApiResponse.ok("Preview updated",
                 imports.reanalyze(batchId, upload, speciesBindings, principal.getUsername())));
-    }
-
-    @GetMapping("/api/v1/imports/specimens/species-options")
-    @PreAuthorize(LOADERS)
-    public ResponseEntity<ApiResponse<java.util.List<SpeciesImportOption>>> specimenSpeciesOptions(
-            @RequestParam(defaultValue = "") String search) {
-        return ResponseEntity.ok(ApiResponse.ok("Species options", specimenImports.speciesOptions(search)));
     }
 
     @GetMapping("/api/v1/imports/templates/{kind}")

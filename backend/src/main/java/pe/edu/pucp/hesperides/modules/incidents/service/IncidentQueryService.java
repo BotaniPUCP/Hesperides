@@ -1,8 +1,6 @@
 package pe.edu.pucp.hesperides.modules.incidents.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +17,6 @@ import java.util.List;
 /** Lecturas del módulo, siempre recortadas al alcance de quien pregunta (SPEC-201 §3.1). */
 @Service @RequiredArgsConstructor @Transactional(readOnly = true)
 public class IncidentQueryService {
-    static final int MAX_PAGE_SIZE = 50;
     private static final int RECENT_MINE = 8;
     private final IncidentsRepository incidents;
     private final IncidentAccess access;
@@ -29,13 +26,11 @@ public class IncidentQueryService {
     private final IncidentCatalogs catalogs;
     private final pe.edu.pucp.hesperides.modules.incidents.repository.IncidentReferenceQueries references;
 
-    public Page<IncidentResponse> list(String email, String search, String status, Boolean active, int page, int size) {
+    /** Todas las que ve quien pregunta, de la más reciente a la más antigua: se filtran en el navegador (SPEC-119). */
+    public List<IncidentResponse> all(String email) {
         User actor = access.actor(email);
-        if (status != null && !status.isBlank()) catalogs.required(IncidentCatalogs.STATUS, status);
-        var spec = filters.visibleTo(actor).and(filters.matching(search, status, active));
-        var request = PageRequest.of(Math.max(0, page), Math.clamp(size, 1, MAX_PAGE_SIZE),
-                Sort.by(Sort.Direction.DESC, "createdAt", "id"));
-        return incidents.findAll(spec, request).map(responses::of);
+        return incidents.findAll(filters.visibleTo(actor), Sort.by(Sort.Direction.DESC, "createdAt", "id")).stream()
+                .map(responses::of).toList();
     }
 
     /** Solo lo que envió el usuario, aunque vea más por su cuadrilla. */

@@ -186,7 +186,7 @@ describe('PlaceForm', () => {
 
   it('un interior no pide contorno pero sí el lugar donde está', async () => {
     list.mockResolvedValue([{ code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' },
-      category: { code: 'EDIFICIO', label: 'Edificio' }, mainPhotoUrl: null, perspectiveCount: 0, hasFront: false, hasBack: false }]);
+      category: { code: 'EDIFICIO', label: 'Edificio' }, mainPhotoUrl: null, perspectiveCount: 0, hasFront: false, hasBack: false, searchKey: 'lug-0001 cia' }]);
     create.mockResolvedValue({ code: 'LUG-0007' });
     render(<PlaceForm />);
     fillBasics();

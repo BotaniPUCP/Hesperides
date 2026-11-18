@@ -2,6 +2,7 @@ package pe.edu.pucp.hesperides.modules.incidents.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import pe.edu.pucp.hesperides.engine.search.SearchKey;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
 import pe.edu.pucp.hesperides.modules.incidents.dto.IncidentContracts.*;
 import pe.edu.pucp.hesperides.modules.incidents.entity.Incident;
@@ -28,11 +29,18 @@ public class IncidentResponses {
                 i.getHeightClass(), requester(i), references.organization(i.getRequestedForOrganizationId()).orElse(null),
                 option(i.getSource()), i.getExternalCode(), person(i.getReportedBy()), person(i.getActivatedBy()),
                 i.getActivatedAt(), person(i.getClosedBy()), i.getClosedAt(), i.getResolutionSummary(),
-                deadlines.of(i, Instant.now()), i.getCreatedAt(), i.getVersion(), List.copyOf(i.getEditedFields()));
+                deadlines.of(i, Instant.now()), i.getCreatedAt(), i.getVersion(), List.copyOf(i.getEditedFields()),
+                searchKey(i));
     }
 
     public IncidentRefResponse ref(Incident i) {
-        return new IncidentRefResponse(i.getId(), i.getCode(), i.getTitle(), i.getStatus().getCode(), i.isActive());
+        return new IncidentRefResponse(i.getId(), i.getCode(), i.getTitle(), i.getStatus().getCode(), i.isActive(),
+                searchKey(i));
+    }
+
+    /** Las columnas en que buscaba la lista (código, título, descripción, referencia), para el navegador (SPEC-119). */
+    private static String searchKey(Incident i) {
+        return SearchKey.of(i.getCode(), i.getTitle(), i.getDescription(), i.getLocationReference());
     }
 
     private RequesterResponse requester(Incident i) {

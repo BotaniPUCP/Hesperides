@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { PlaceKindCode } from '@shared/types';
 import { Button, Input, Modal, Select } from '@/components/ui';
 import { useCatalog } from '@/hooks/useCatalog';
-import { usePlaces } from '@/hooks/usePlaces';
+import { usePlaceList } from '@/hooks/usePlaces';
 import { cn } from '@/lib/cn';
 import { categoryOptions } from '../categoryOptions';
 
@@ -28,13 +28,11 @@ const KINDS: { value: PlaceKindCode; label: string; hint: string }[] = [
   { value: 'INDOOR', label: 'Interior', hint: 'Piso, terraza o patio: se ubica por el lugar donde está y tiene fotos por vista.' },
 ];
 
-const NO_FILTERS = {};
-
 export function PlaceFormFields({ values, onChange, excludeCode }: PlaceFormFieldsProps) {
   const [aliasInput, setAliasInput] = useState('');
   const [manageAliasesOpen, setManageAliasesOpen] = useState(false);
   const categories = useCatalog('REFERENCE_CATEGORY');
-  const { places } = usePlaces(NO_FILTERS);
+  const { items: places } = usePlaceList();
   const set = (patch: Partial<PlaceFormValues>) => onChange({ ...values, ...patch });
   const parents = places
     .filter((p) => p.code !== excludeCode)

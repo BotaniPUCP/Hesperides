@@ -1,10 +1,19 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
-import type { SpeciesImportOption } from '@shared/types';
+import { useId, useMemo, useState } from 'react';
+import type { Species, SpeciesImportOption } from '@shared/types';
 import { Button, Input } from '@/components/ui';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { catastroApi } from '@/lib/catastro-api';
+import { usePreloadedList } from '@/hooks/usePreloadedList';
+import { speciesList } from '@/lib/preload/inventoryLists';
+import { filterByText } from '@/lib/search/searchText';
+
+/** Las que caben en la lista sin desplazarse demasiado: lo que devolvía el backend. */
+const MAX_OPTIONS = 20;
+
+const asImportOption = (s: Species): SpeciesImportOption => ({
+  slug: s.slug, scientificName: s.scientificName, commonName: s.commonName, vegetationTypeName: s.vegetationTypeName,
+  active: s.isActive,
+});
 
 export interface SelectorDeEspecieParaImportacionProps {
   sourceName: string;
@@ -13,7 +22,10 @@ export interface SelectorDeEspecieParaImportacionProps {
   onSelect: (species: SpeciesImportOption) => void;
 }
 
-/** Search and link a catalog species without editing its global record. */
+/**
+ * Search and link an active catalog species without editing its global record. The catalog loads
+ * when the search opens and is filtered in the browser while typing (SPEC-119).
+ */
 export function SelectorDeEspecieParaImportacion({
   sourceName,
   buttonLabel = 'Seleccionar especie existente',
@@ -21,64 +33,31 @@ export function SelectorDeEspecieParaImportacion({
   onSelect,
 }: SelectorDeEspecieParaImportacionProps) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState({ text: '', revision: 0 });
-  const [response, setResponse] = useState<{
-    revision: number;
-    options: SpeciesImportOption[];
-    error: boolean;
-  } | null>(null);
-  const [retry, setRetry] = useState(0);
-  const requestId = useRef(0);
+  const [text, setText] = useState('');
+  const catalog = usePreloadedList(speciesList, open);
   const inputId = useId();
   const listId = `${inputId}-results`;
-  const debouncedQuery = useDebouncedValue(query, 250);
-  const term = debouncedQuery.text.trim();
-  const currentTerm = query.text.trim();
-  const debouncing = currentTerm.length > 0 && query.revision !== debouncedQuery.revision;
-  const hasResponse = response?.revision === debouncedQuery.revision;
-  const loading = open && currentTerm.length > 0 && (debouncing || !hasResponse);
-  const showResponse = open && currentTerm.length > 0 && !debouncing && hasResponse;
+  const term = text.trim();
+  const options = useMemo(() => (term ? filterByText(catalog.items, term).filter((s) => s.isActive) : [])
+    .slice(0, MAX_OPTIONS).map(asImportOption), [catalog.items, term]);
+  const loading = open && term.length > 0 && !catalog.loaded && catalog.errorMessage === null;
+  const failed = open && term.length > 0 && !catalog.loaded && catalog.errorMessage !== null;
+  const showResponse = open && term.length > 0 && catalog.loaded;
+  const response = { options, error: failed };
 
-  useEffect(() => {
-    if (!open || !term) return;
-
-    const currentRequest = ++requestId.current;
-    let active = true;
-    catastroApi.speciesImportOptions(term)
-      .then((result) => {
-        if (active && currentRequest === requestId.current) {
-          setResponse({ revision: debouncedQuery.revision, options: result, error: false });
-        }
-      })
-      .catch(() => {
-        if (active && currentRequest === requestId.current) {
-          setResponse({ revision: debouncedQuery.revision, options: [], error: true });
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [open, debouncedQuery.revision, retry, term]);
-
-  function changeQuery(text: string) {
-    requestId.current++;
-    setResponse(null);
-    setQuery((previous) => ({ text, revision: previous.revision + 1 }));
+  function changeQuery(next: string) {
+    setText(next);
   }
 
   function clearQuery() {
-    changeQuery('');
+    setText('');
   }
 
   function retrySearch() {
-    requestId.current++;
-    setResponse(null);
-    setRetry((count) => count + 1);
+    catalog.reload();
   }
 
   function openSearch() {
-    requestId.current++;
-    setResponse(null);
     setOpen(true);
   }
 
@@ -105,7 +84,7 @@ export function SelectorDeEspecieParaImportacion({
                 label={`Buscar especie para «${sourceName}»`}
                 type="search"
                 role="combobox"
-                value={query.text}
+                value={text}
                 onChange={changeQuery}
                 placeholder="Nombre científico o alternativo"
                 disabled={disabled}
@@ -115,7 +94,7 @@ export function SelectorDeEspecieParaImportacion({
                 aria-autocomplete="list"
               />
             </div>
-            {query.text.length > 0 && (
+            {text.length > 0 && (
               <Button size="sm" variant="ghost" disabled={disabled} onClick={clearQuery}>
                 Limpiar
               </Button>
@@ -132,7 +111,7 @@ export function SelectorDeEspecieParaImportacion({
             </p>
           )}
 
-          {showResponse && response?.error && (
+          {failed && (
             <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-action-danger/30 bg-action-danger/5 px-3 py-2">
               <p className="text-sm text-action-danger">No se pudo completar la búsqueda. Revisa tu conexión e inténtalo de nuevo.</p>
               <Button size="sm" variant="secondary" disabled={disabled} onClick={retrySearch}>
@@ -141,13 +120,13 @@ export function SelectorDeEspecieParaImportacion({
             </div>
           )}
 
-          {showResponse && !response?.error && response?.options.length === 0 && (
+          {showResponse && response.options.length === 0 && (
             <p role="status" aria-live="polite" className="rounded-lg bg-neutral-0 px-3 py-2 text-sm text-neutral-600">
               Sin coincidencias para «{term}».
             </p>
           )}
 
-          {showResponse && !response?.error && response && response.options.length > 0 && (
+          {showResponse && response.options.length > 0 && (
             <ul
               id={listId}
               role="listbox"
@@ -177,7 +156,7 @@ export function SelectorDeEspecieParaImportacion({
             </ul>
           )}
 
-          {!query.text.trim() && (
+          {!term && (
             <p className="text-xs text-neutral-500">Escribe una letra para buscar por nombre científico o alternativo.</p>
           )}
         </div>

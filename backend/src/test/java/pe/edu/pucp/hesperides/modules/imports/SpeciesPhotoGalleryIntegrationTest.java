@@ -185,9 +185,10 @@ class SpeciesPhotoGalleryIntegrationTest {
     void theSpeciesListOnlyCarriesTheMainPhoto() throws Exception {
         load(HEADER + "Schinus molle;a.png;;;;\nSchinus molle;b.png;;;;\n", "a.png", "b.png");
 
-        mockMvc.perform(get("/api/v1/green-inventory/species").param("search", "Schinus"))
-                .andExpect(jsonPath("$.data.content[0].imageUrl", startsWith("/files/species/")))
-                .andExpect(jsonPath("$.data.content[0].photos", hasSize(0)));
+        mockMvc.perform(get("/api/v1/green-inventory/species/all"))
+                .andExpect(jsonPath("$.data[?(@.slug == 'schinus-molle')].imageUrl",
+                        org.hamcrest.Matchers.contains(startsWith("/files/species/"))))
+                .andExpect(jsonPath("$.data[?(@.slug == 'schinus-molle')].photos[*]").isEmpty());
     }
 
     @Test

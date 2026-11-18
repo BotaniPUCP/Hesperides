@@ -81,11 +81,14 @@ class IncidentMapIntegrationTest extends IncidentTestSupport {
     }
 
     @Test
-    void searchFindsActiveIncidentsByCodeForCoordinationOnly() {
+    void searchListsEveryActiveOpenIncidentWithItsSearchKeyForCoordinationOnly() {
         var active = activeIncident().incident();
+        long notActive = reportAs(foreman).incident().id();
 
-        assertThat(map.search(active.code(), coordinator)).extracting(IncidentRefResponse::id).containsExactly(active.id());
-        assertThat(map.search(reportAs(foreman).incident().code(), coordinator)).isEmpty();
-        assertThatThrownBy(() -> map.search(active.code(), foreman)).isInstanceOf(AccessDeniedException.class);
+        var found = map.search(coordinator);
+        assertThat(found).extracting(IncidentRefResponse::id).contains(active.id()).doesNotContain(notActive);
+        assertThat(found).filteredOn(i -> i.id().equals(active.id())).singleElement()
+                .satisfies(i -> assertThat(i.searchKey()).startsWith(active.code().toLowerCase()));
+        assertThatThrownBy(() -> map.search(foreman)).isInstanceOf(AccessDeniedException.class);
     }
 }

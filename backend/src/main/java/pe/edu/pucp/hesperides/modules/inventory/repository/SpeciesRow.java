@@ -10,5 +10,6 @@ public record SpeciesRow(String slug, String scientificName, String commonName, 
                          Long speciesPhotoId, Long specimenPhotoId, boolean critical, BigDecimal referenceHeightM,
                          String referenceHeightSourceCode, String referenceHeightSourceName,
                          BigDecimal referenceCrownRadiusM, String referenceCrownRadiusSourceCode,
-                         String referenceCrownRadiusSourceName, boolean usesTrunkHeight, boolean usesDbh, long unmeasuredSpecimenCount) {
+                         String referenceCrownRadiusSourceName, boolean usesTrunkHeight, boolean usesDbh, long unmeasuredSpecimenCount,
+                         String searchKey) {
 }

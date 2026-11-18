@@ -83,7 +83,7 @@ class IncidentCaptureIntegrationTest extends IncidentTestSupport {
         long own = reportAs(operator).incident().id();
         long foremans = reportAs(foreman).incident().id();
 
-        assertThat(queries.list(operator, null, null, null, 0, 20).getContent())
+        assertThat(queries.all(operator))
                 .extracting(IncidentResponse::id).contains(own).doesNotContain(foremans);
         assertThatThrownBy(() -> queries.get(foremans, operator)).isInstanceOf(ResourceNotFoundException.class);
     }

@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useMemo } from 'react';
 import type { ContactSummary } from '@shared/types';
 import { DataTable, EmptyState, type DataTableColumn } from '@/components/ui';
-import { useContacts } from '@/hooks/useDirectory';
+import { useContactList } from '@/hooks/useDirectory';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
 import { DIRECTORY_PAGE_SIZE } from '@/lib/directory-api';
+import { pageOf } from '@/lib/search/pageOf';
+import { filterByText } from '@/lib/search/searchText';
 
 interface ContactsTabProps {
   search: string;
@@ -31,10 +34,14 @@ const COLUMNS: DataTableColumn<ContactSummary>[] = [
  * Contactos vigentes. «Sin organización vigente» reúne a los que quedaron sin
  * unidad tras una baja, para que coordinación los reasigne (SPEC-106 §5.5).
  * Se registran en «Registro individual», desde la ficha de su organización o desde un formulario.
+ * La lista se carga una vez y se filtra en el navegador mientras se escribe (SPEC-119).
  */
 export function ContactsTab({ search, withoutOrganization, page, onChange }: ContactsTabProps) {
   const [draft, setDraft] = useSearchDraft(search, (next) => onChange({ search: next }));
-  const { result, loading, errorMessage } = useContacts({ search, withoutOrganization }, page);
+  const { items, loaded, errorMessage } = useContactList();
+  const matching = useMemo(() => filterByText(items, draft)
+    .filter((c) => !withoutOrganization || !c.organizations.some((o) => o.active)), [items, draft, withoutOrganization]);
+  const shown = pageOf(matching, page, DIRECTORY_PAGE_SIZE);
 
   return (
     <div className="surface-card space-y-4">
@@ -43,16 +50,16 @@ export function ContactsTab({ search, withoutOrganization, page, onChange }: Con
           onChange={(e) => onChange({ sinOrg: e.target.checked ? 'true' : '' })} />
         Sin organización vigente
       </label>
-      {errorMessage ? (
+      {errorMessage && !loaded ? (
         <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">
           No se pudo cargar el directorio. {errorMessage}
         </p>
       ) : (
-        <DataTable columns={COLUMNS} rows={result.items} rowKey={(c) => c.code} totalElements={result.total}
-          page={page} pageSize={DIRECTORY_PAGE_SIZE} onPageChange={(p) => onChange({ page: String(p) })}
-          searchValue={draft} onSearchChange={setDraft} loading={loading}
-          emptyState={<EmptyState title={search || withoutOrganization ? 'No hay contactos que coincidan' : 'Aún no hay contactos'}
-            description={search || withoutOrganization ? undefined
+        <DataTable columns={COLUMNS} rows={shown.rows} rowKey={(c) => c.code} totalElements={matching.length}
+          page={shown.page} pageSize={DIRECTORY_PAGE_SIZE} onPageChange={(p) => onChange({ page: String(p) })}
+          searchValue={draft} onSearchChange={setDraft} loading={!loaded}
+          emptyState={<EmptyState title={draft || withoutOrganization ? 'No hay contactos que coincidan' : 'Aún no hay contactos'}
+            description={draft || withoutOrganization ? undefined
               : 'Regístralos en «Registro individual» o desde la ficha de su organización.'} />} />
       )}
     </div>

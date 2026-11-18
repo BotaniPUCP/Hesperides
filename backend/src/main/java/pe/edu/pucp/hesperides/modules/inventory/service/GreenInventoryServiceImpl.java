@@ -1,9 +1,6 @@
 package pe.edu.pucp.hesperides.modules.inventory.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.engine.pruning.PruningAssignment;
@@ -11,12 +8,9 @@ import pe.edu.pucp.hesperides.modules.inventory.dto.ExtraMeasureResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.InventorySummaryResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.LocationCountResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesPhotoResponse;
-import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenDetailResponse;
-import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenResponse;
-import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenSearchResultResponse;
 import pe.edu.pucp.hesperides.modules.inventory.repository.ExtraMeasureRepository;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpeciesPhotoRepository;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpeciesRepository;
@@ -45,17 +39,8 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
     }
 
     @Override
-    public Page<SpeciesResponse> species(SpeciesQuery query) {
-        List<SpeciesResponse> content = speciesRepository.page(query).stream()
-                .map(row -> toResponse(row, List.of(), List.of())).toList();
-        return new PageImpl<>(content, PageRequest.of(query.page(), query.size()), speciesRepository.count(query));
-    }
-
-    @Override
-    public Page<SpeciesResponse> assignableSpecies(SpeciesQuery query) {
-        List<SpeciesResponse> content = speciesRepository.assignable(query).stream()
-                .map(row -> toResponse(row, List.of(), List.of())).toList();
-        return new PageImpl<>(content, PageRequest.of(query.page(), query.size()), speciesRepository.countAssignable(query));
+    public List<SpeciesResponse> allSpecies() {
+        return speciesRepository.all().stream().map(row -> toResponse(row, List.of(), List.of())).toList();
     }
 
     @Override
@@ -68,20 +53,8 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
     }
 
     @Override
-    public Page<SpecimenResponse> specimens(String speciesSlug, SpecimenQuery query) {
-        requireSpecies(speciesSlug);
-        List<SpecimenResponse> content = specimenRepository.page(speciesSlug, query).stream()
-                .map(this::toResponse).toList();
-        return new PageImpl<>(content, PageRequest.of(query.page(), query.size()),
-                specimenRepository.count(speciesSlug, query));
-    }
-
-    @Override
-    public Page<SpecimenResponse> allSpecimens(SpecimenQuery query) {
-        List<SpecimenResponse> content = specimenRepository.page(null, query).stream()
-                .map(this::toResponse).toList();
-        return new PageImpl<>(content, PageRequest.of(query.page(), query.size()),
-                specimenRepository.count(null, query));
+    public List<SpecimenResponse> allSpecimens() {
+        return specimenRepository.all().stream().map(this::toResponse).toList();
     }
 
     @Override
@@ -118,11 +91,6 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
         return measured && measuredAt != null && lastPruning != null && lastPruning.isAfter(measuredAt);
     }
 
-    @Override
-    public List<SpecimenSearchResultResponse> searchSpecimens(String query, int limit) {
-        return specimenRepository.search(query, limit);
-    }
-
     private SpeciesRow requireSpecies(String slug) {
         return speciesRepository.bySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Species not found: " + slug));
@@ -137,13 +105,14 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
                 PhotoUrls.speciesSource(row.speciesPhotoId(), row.specimenPhotoId(), row.photoUrl()), photos,
                 row.critical(), row.referenceHeightM(), row.referenceHeightSourceCode(), row.referenceHeightSourceName(),
                 row.referenceCrownRadiusM(), row.referenceCrownRadiusSourceCode(), row.referenceCrownRadiusSourceName(),
-                row.usesTrunkHeight(), row.usesDbh(), row.unmeasuredSpecimenCount(), measures);
+                row.usesTrunkHeight(), row.usesDbh(), row.unmeasuredSpecimenCount(), measures, row.searchKey());
     }
 
     private SpecimenResponse toResponse(SpecimenRow row) {
         return new SpecimenResponse(row.code(), row.sourceReference(), row.sourceLocation(), row.latitude(),
                 row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
                 PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(),
-                row.speciesSlug(), row.speciesCommonName(), row.speciesScientificName());
+                row.speciesSlug(), row.speciesCommonName(), row.speciesScientificName(), row.vegetationTypeCode(),
+                row.speciesCritical(), "MEASURED".equals(row.dataSource()), row.searchKey());
     }
 }

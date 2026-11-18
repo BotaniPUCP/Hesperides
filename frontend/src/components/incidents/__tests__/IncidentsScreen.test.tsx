@@ -4,16 +4,16 @@ import { IncidentDetailScreen } from '../IncidentDetailScreen';
 import { IncidentCaptureScreen } from '../IncidentCaptureScreen';
 import { PageFrame } from '@/components/layouts/PageFrame';
 import { useAuth } from '@/hooks/useAuth';
-import { useIncidentDetail, useIncidentMine, useIncidentNavigation, useIncidentOptions, useIncidents } from '@/hooks/useIncidents';
+import { useIncidentDetail, useIncidentList, useIncidentMine, useIncidentNavigation, useIncidentOptions } from '@/hooks/useIncidents';
 import { incidentHref } from '@/lib/incidentNavigation';
 import { rememberedHref, rememberListQuery } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
 import { restartTrail } from '@/lib/navigationTrail';
-import { incidentMine, incidentOptions, incidentPage, pendingDetail } from '../__fixtures__/incidents';
+import { incidentList, incidentMine, incidentOptions, pendingDetail } from '../__fixtures__/incidents';
 
 jest.mock('@/hooks/useAuth', () => ({ useAuth: jest.fn() }));
 jest.mock('@/hooks/useIncidents', () => ({
-  useIncidentNavigation: jest.fn(), useIncidents: jest.fn(), useIncidentOptions: jest.fn(), useIncidentMine: jest.fn(), useIncidentDetail: jest.fn(),
+  useIncidentNavigation: jest.fn(), useIncidentList: jest.fn(), useIncidentOptions: jest.fn(), useIncidentMine: jest.fn(), useIncidentDetail: jest.fn(),
 }));
 let mockPathname = '/incidencias';
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }), usePathname: () => mockPathname }));
@@ -33,7 +33,7 @@ beforeEach(() => {
   jest.mocked(useIncidentNavigation).mockReturnValue({
     filters, href: (path) => incidentHref(path, filters), listHref: incidentHref('/incidencias', filters), changeFilters: jest.fn(),
   });
-  jest.mocked(useIncidents).mockReturnValue({ ...idle, data: incidentPage });
+  jest.mocked(useIncidentList).mockReturnValue({ items: incidentList, loaded: true, loading: false, errorMessage: null, reload: jest.fn() });
   jest.mocked(useIncidentOptions).mockReturnValue({ ...idle, data: incidentOptions });
   jest.mocked(useIncidentMine).mockReturnValue({ ...idle, data: incidentMine });
   jest.mocked(useIncidentDetail).mockReturnValue({ ...idle, data: pendingDetail });

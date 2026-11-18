@@ -7,7 +7,6 @@ import pe.edu.pucp.hesperides.modules.imports.ImportAction;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreviewResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportConfirmationSummary;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportResultResponse;
-import pe.edu.pucp.hesperides.modules.imports.dto.SpeciesImportOption;
 import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository;
 import pe.edu.pucp.hesperides.modules.imports.service.ImportBatchGate.Claimed;
 import pe.edu.pucp.hesperides.modules.imports.service.ImportBatchGate.Opened;
@@ -38,10 +37,6 @@ public class SpecimenImportService implements ImportHandler {
     private final BatchPhotoZips zips;
     private final SpecimenImportWriter writer;
     private final SpecimenLookupRepository lookup;
-
-    public List<SpeciesImportOption> speciesOptions(String search) {
-        return lookup.speciesImportOptions(search, 20);
-    }
 
     @Override
     public Set<String> kinds() {

@@ -1,30 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import type { LocationCount, Species, SpeciesFilters, SpecimenFilters, Specimen } from '@shared/types';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { sortSpecimens, speciesMatching, specimensMatching } from '@/lib/inventory/inventoryLists';
+import { speciesList, specimensList } from '@/lib/preload/inventoryLists';
+import { pageOf } from '@/lib/search/pageOf';
+import { usePreloadedList } from './usePreloadedList';
 import { useRequest } from './useRequest';
 
 export interface UseInventarioVerdeSpeciesParams extends SpeciesFilters {
   page?: number;
   pageSize?: number;
-  reloadKey?: number;
 }
 
+/**
+ * El catálogo de especies, cargado una vez al abrir la pantalla y filtrado y paginado en el
+ * navegador (SPEC-119). Registrar o editar una especie o un ejemplar lo vuelve a pedir solo.
+ */
 export function useInventarioVerdeSpecies(params: UseInventarioVerdeSpeciesParams = {}) {
-  const { search = '', vegetationType, retiring, page = 0, pageSize = 16, reloadKey } = params;
-  const request = { search, vegetationType, retiring, page, size: pageSize };
-  const { data, loading, errorMessage } = useRequest(
-    JSON.stringify({ ...request, reloadKey }),
-    () => inventarioVerdeApi.species(request),
-  );
+  const { search = '', vegetationType, retiring, page = 0, pageSize = 16 } = params;
+  const list = usePreloadedList(speciesList);
+  const matching = useMemo(() => speciesMatching(list.items, { search, vegetationType, retiring }),
+    [list.items, search, vegetationType, retiring]);
+  const shown = pageOf(matching, page, pageSize);
   return {
-    species: data?.content ?? [],
-    totalElements: data?.page.totalElements ?? 0,
-    totalPages: Math.max(data?.page.totalPages ?? 1, 1),
-    currentPage: page,
-    loading,
-    errorMessage,
+    species: shown.rows,
+    totalElements: matching.length,
+    totalPages: Math.max(Math.ceil(matching.length / pageSize), 1),
+    currentPage: shown.page,
+    loading: !list.loaded && list.errorMessage === null,
+    errorMessage: list.loaded ? null : list.errorMessage,
   };
 }
 
@@ -41,34 +47,36 @@ export interface UseInventarioVerdeSpecimensParams extends SpecimenFilters {
   pageSize?: number;
 }
 
+/**
+ * Los ejemplares de una especie (o todos, sin `slug`), filtrados, ordenados y paginados en el
+ * navegador sobre la lista precargada (SPEC-119). Las ubicaciones del filtro siguen viniendo
+ * del backend: se piden una vez y no dependen de lo que se escribe.
+ */
 export function useInventarioVerdeSpecimens(
   slug: string | null | undefined,
   params: UseInventarioVerdeSpecimensParams = {},
 ) {
   const { search = '', location = 'ALL', vegetationType, critical, measured, sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12 } =
     params;
-  const request = { search, location, vegetationType, critical, measured, sortBy, sortDirection, page, size: pageSize };
-  const key = slug ? `${slug}:${JSON.stringify(request)}` : `all:${JSON.stringify(request)}`;
-  const specimens = useRequest(
-    key,
-    () => (slug ? inventarioVerdeApi.specimens(slug, request) : inventarioVerdeApi.allSpecimens(request)),
-    { keepPreviousData: true },
-  );
+  const list = usePreloadedList(specimensList);
+  const matching = useMemo(() => sortSpecimens(
+    specimensMatching(list.items, { slug, search, location, vegetationType, critical, measured }), sortBy, sortDirection),
+  [list.items, slug, search, location, vegetationType, critical, measured, sortBy, sortDirection]);
+  const shown = pageOf(matching, page, pageSize);
   const locationsKey = slug ? `locations:${slug}` : 'locations:all';
   const locations = useRequest(locationsKey, () =>
     slug ? inventarioVerdeApi.locations(slug) : inventarioVerdeApi.allLocations(),
   );
-  const total = specimens.data?.page.totalElements ?? 0;
 
   return {
-    specimens: (specimens.data?.content ?? []) as Specimen[],
-    allFilteredCount: total,
-    totalElements: total,
-    totalPages: Math.max(specimens.data?.page.totalPages ?? 1, 1),
-    currentPage: specimens.data?.page.number ?? page,
+    specimens: shown.rows as Specimen[],
+    allFilteredCount: matching.length,
+    totalElements: matching.length,
+    totalPages: Math.max(Math.ceil(matching.length / pageSize), 1),
+    currentPage: shown.page,
     availableLocations: (locations.data ?? []) as LocationCount[],
-    loading: specimens.loading,
-    errorMessage: specimens.errorMessage,
+    loading: !list.loaded && list.errorMessage === null,
+    errorMessage: list.loaded ? null : list.errorMessage,
   };
 }
 

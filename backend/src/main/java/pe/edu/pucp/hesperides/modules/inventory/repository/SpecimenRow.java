@@ -11,5 +11,5 @@ public record SpecimenRow(long id, String code, String sourceReference, String s
                           String speciesSlug, Long attachmentId, String speciesCommonName, String speciesScientificName,
                           LocalDate measuredAt, boolean speciesCritical, BigDecimal referenceHeightM,
                           BigDecimal referenceCrownRadiusM, String referenceHeightSourceName,
-                          String referenceCrownRadiusSourceName) {
+                          String referenceCrownRadiusSourceName, String vegetationTypeCode, String searchKey) {
 }

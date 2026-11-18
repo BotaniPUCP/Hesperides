@@ -39,9 +39,9 @@ public class IncidentLinksService {
 
     /** Para el buscador del detalle: intervenciones que se pueden vincular (§3.8). */
     @Transactional(readOnly = true)
-    public List<LinkedInterventionResponse> candidates(String search, String email) {
+    public List<InterventionCandidateResponse> candidates(String email) {
         access.requireManager(access.actor(email));
-        return workLinks.candidates(search);
+        return workLinks.candidates();
     }
 
     @Transactional

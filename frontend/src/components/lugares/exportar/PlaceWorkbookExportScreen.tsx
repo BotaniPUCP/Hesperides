@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/layouts/PageHeader';
 import { Button, EmptyState, Input, Select } from '@/components/ui';
 import { useCanEditPlaces } from '@/components/lugares/edit/useCanEditPlaces';
 import { useCatalog } from '@/hooks/useCatalog';
-import { usePlaces } from '@/hooks/usePlaces';
+import { usePlaceList } from '@/hooks/usePlaces';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { placesApi, type PlaceWorkbookExportFilters } from '@/lib/places-api';
 
@@ -16,7 +16,6 @@ const SIDES: { code: SideCode; label: string }[] = [
   { code: 'BACK', label: 'Espalda' },
   { code: 'SIDE', label: 'Lateral' },
 ];
-const EMPTY_FILTERS = { search: '', category: '', kind: '' } as const;
 
 function downloadWorkbook(blob: Blob) {
   const url = URL.createObjectURL(blob);
@@ -46,7 +45,7 @@ function coordinates(points: PointInput[]): [number, number][] | null {
 export function PlaceWorkbookExportScreen() {
   const canEdit = useCanEditPlaces();
   const categories = useCatalog('REFERENCE_CATEGORY');
-  const { places, errorMessage: placesError } = usePlaces(EMPTY_FILTERS);
+  const { items: places, errorMessage: placesError } = usePlaceList();
   const [categoryCode, setCategoryCode] = useState<string | null>(null);
   const [alias, setAlias] = useState('');
   const [parentCode, setParentCode] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 import type {
   Assessment, AssessmentForm, FeatureForm, ImportConfirmationSummary, ImportKind, ImportPreview, ImportResult, MeasurementRecord,
-  SpeciesImportOption, SpecimenForm,
+  SpecimenForm,
 } from '@shared/types';
 import { apiClient } from './api';
 
@@ -61,9 +61,6 @@ export const catastroApi = {
     data.append('speciesBindings', new Blob([JSON.stringify(speciesBindings)], { type: 'application/json' }));
     return apiClient.postForm<ImportPreview>(`/imports/${batchId}/reanalyze`, data);
   },
-
-  speciesImportOptions: (search: string) =>
-    apiClient.get<SpeciesImportOption[]>(`/imports/specimens/species-options?search=${encodeURIComponent(search)}`),
 
   /** Counts the exact specimen rows the backend will write for these duplicate decisions. */
   confirmationSummary: (batchId: number, duplicates: Record<number, boolean>, planFingerprint: string) =>

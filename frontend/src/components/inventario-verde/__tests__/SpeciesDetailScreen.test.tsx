@@ -5,7 +5,7 @@ import { PageFrame } from '@/components/layouts/PageFrame';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
 import { rememberListQuery } from '@/lib/listMemory';
-import { p01, page, palmeraReina } from '../__fixtures__/inventario';
+import { palmeraReina } from '../__fixtures__/inventario';
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -14,7 +14,7 @@ jest.mock('next/navigation', () => ({
 const mockUseAuth = jest.fn(() => ({ user: null as { role: { code: string } } | null }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
 jest.mock('@/lib/inventario-verde-api', () => ({
-  inventarioVerdeApi: { speciesBySlug: jest.fn(), specimens: jest.fn(), locations: jest.fn(), deactivateSpecies: jest.fn() },
+  inventarioVerdeApi: { speciesBySlug: jest.fn(), locations: jest.fn(), deactivateSpecies: jest.fn() },
 }));
 
 const api = inventarioVerdeApi as jest.Mocked<typeof inventarioVerdeApi>;

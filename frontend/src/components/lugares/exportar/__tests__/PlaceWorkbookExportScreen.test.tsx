@@ -8,13 +8,14 @@ const mockCatalog = {
   errorMessage: null,
 };
 const mockPlaces = {
-  places: [{ code: 'LUG-0001', name: 'Biblioteca', parent: null }],
+  items: [{ code: 'LUG-0001', name: 'Biblioteca', parent: null }],
+  loaded: true,
   errorMessage: null,
 };
 
 jest.mock('@/components/lugares/edit/useCanEditPlaces', () => ({ useCanEditPlaces: () => true }));
 jest.mock('@/hooks/useCatalog', () => ({ useCatalog: () => mockCatalog }));
-jest.mock('@/hooks/usePlaces', () => ({ usePlaces: () => mockPlaces }));
+jest.mock('@/hooks/usePlaces', () => ({ usePlaceList: () => mockPlaces }));
 jest.mock('@/lib/places-api', () => ({ placesApi: { exportPlaces: jest.fn() } }));
 
 const exportPlaces = placesApi.exportPlaces as jest.MockedFunction<typeof placesApi.exportPlaces>;

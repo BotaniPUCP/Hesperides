@@ -14,12 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationDetail;
-import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSuggestion;
 import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.OrganizationSummary;
-import pe.edu.pucp.hesperides.modules.directory.dto.DirectoryResponses.Page;
 import pe.edu.pucp.hesperides.modules.directory.dto.OrganizationRequest;
 import pe.edu.pucp.hesperides.modules.directory.service.OrganizationQueryService;
 import pe.edu.pucp.hesperides.modules.directory.service.OrganizationService;
@@ -35,19 +32,10 @@ public class OrganizationController {
     private final OrganizationService service;
     private final OrganizationQueryService queries;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<OrganizationSummary>>> list(@RequestParam(required = false) String q,
-            @RequestParam(required = false) String typeCode, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        DirectoryAccess.checkPage(page, size);
-        return ResponseEntity.ok(ApiResponse.ok("Organizations", queries.list(q, typeCode, page, size)));
-    }
-
-    /** Antes que /{code}: «similar» no es un código. Solo lo usa quien puede crear. */
-    @GetMapping("/similar")
-    @PreAuthorize(DirectoryAccess.MAINTAINERS)
-    public ResponseEntity<ApiResponse<List<OrganizationSuggestion>>> similar(@RequestParam String name) {
-        return ResponseEntity.ok(ApiResponse.ok("Similar organizations", queries.similar(name)));
+    /** Antes que /{code}: «all» no es un código. Toda la lista, para buscar en el navegador (SPEC-119). */
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<OrganizationSummary>>> all() {
+        return ResponseEntity.ok(ApiResponse.ok("Organizations", queries.all()));
     }
 
     @GetMapping("/{code}")

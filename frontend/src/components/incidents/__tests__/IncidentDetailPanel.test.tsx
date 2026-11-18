@@ -77,7 +77,7 @@ it('closes with the applied solution once all linked work is validated', async (
 it('offers to replace a cancelled intervention and asks for a reason', async () => {
   const cancelled = { ...approvedDetail, closureBlockers: ['CANCELLED_WORK' as const],
     linkedInterventions: [{ linkId: 5, id: 11, code: 'INT-000011', description: 'Poda', statusCode: 'CANCELLED', locationCount: 1, validatedLocationCount: 0 }] };
-  api.candidates.mockResolvedValue([{ linkId: null, id: 12, code: 'INT-000012', description: 'Poda del tercero', statusCode: 'PLANNED', locationCount: 1, validatedLocationCount: 0 }]);
+  api.candidates.mockResolvedValue([{ id: 12, code: 'INT-000012', description: 'Poda del tercero', statusCode: 'PLANNED', searchKey: 'int-000012 poda del tercero' }]);
   api.replace.mockResolvedValue(approvedDetail);
   render(<Panel initial={cancelled} />);
   expect(screen.getByText(/Una intervención vinculada está cancelada/)).toBeInTheDocument();
@@ -90,7 +90,7 @@ it('offers to replace a cancelled intervention and asks for a reason', async () 
 });
 
 it('links an existing intervention found by its code', async () => {
-  api.candidates.mockResolvedValue([{ linkId: null, id: 12, code: 'INT-000012', description: 'Poda', statusCode: 'PLANNED', locationCount: 1, validatedLocationCount: 0 }]);
+  api.candidates.mockResolvedValue([{ id: 12, code: 'INT-000012', description: 'Poda', statusCode: 'PLANNED', searchKey: 'int-000012 poda' }]);
   api.link.mockResolvedValue(approvedDetail);
   render(<Panel initial={approvedDetail} />);
   await userEvent.type(screen.getByLabelText('Buscar intervención por código o descripción'), 'INT');

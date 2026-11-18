@@ -5,9 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pe.edu.pucp.hesperides.engine.duplicates.Nearby;
 import pe.edu.pucp.hesperides.shared.persistence.UserIds;
-import pe.edu.pucp.hesperides.modules.imports.dto.SpeciesImportOption;
 import pe.edu.pucp.hesperides.shared.text.SpeciesNameKey;
-import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -97,25 +95,6 @@ public class SpecimenLookupRepository {
     }
 
     /** Search options are restricted to species eligible for new specimen rows. */
-    public List<SpeciesImportOption> speciesImportOptions(String search, int limit) {
-        String pattern = LikePattern.contains(search == null ? "" : search.trim());
-        return jdbc.query("""
-                SELECT s.slug, s.scientific_name, s.common_name, t.label AS vegetation_type, s.is_active
-                  FROM species s
-                  JOIN catalog_items t ON t.id = s.species_type_item_id
-                  WHERE s.deleted_at IS NULL AND s.is_active
-                   AND (unaccent(lower(concat_ws(' ', s.scientific_name, s.common_name)))
-                          LIKE unaccent(lower(?))
-                     OR EXISTS (SELECT 1 FROM species_common_names n
-                                 WHERE n.species_id = s.id AND n.deleted_at IS NULL
-                                   AND unaccent(lower(n.name)) LIKE unaccent(lower(?))))
-                  ORDER BY s.scientific_name
-                 LIMIT ?
-                """, (rs, i) -> new SpeciesImportOption(rs.getString("slug"), rs.getString("scientific_name"),
-                rs.getString("common_name"), rs.getString("vegetation_type"), rs.getBoolean("is_active")),
-                pattern, pattern, Math.max(1, Math.min(limit, 50)));
-    }
-
     public Set<String> existingCodes() {
         return jdbc.queryForList("SELECT code FROM green_elements WHERE deleted_at IS NULL", String.class)
                 .stream().collect(Collectors.toSet());

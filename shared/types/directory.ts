@@ -7,13 +7,6 @@ export interface DirectoryCodeLabel {
   label: string;
 }
 
-export interface DirectoryPage<T> {
-  page: number;
-  size: number;
-  total: number;
-  items: T[];
-}
-
 /** `active` en false: dada de baja, pero sigue apareciendo en lo que ya la usaba. */
 export interface OrganizationRef {
   code: string;
@@ -29,6 +22,9 @@ export interface OrganizationSummary {
   type: DirectoryCodeLabel;
   phone: string | null;
   contactCount: number;
+  aliases: string[];
+  /** En qué se busca en el navegador (SPEC-119 D-01): código, nombre, RUC y alias, sin tildes. */
+  searchKey: string;
 }
 
 export interface ContactCard {
@@ -59,9 +55,12 @@ export interface OrganizationSuggestion {
 
 export interface ContactSummary extends ContactCard {
   organizations: OrganizationRef[];
+  /** Código, nombre, correo, anexo y celular, sin tildes (SPEC-119 D-01). */
+  searchKey: string;
 }
 
-export interface ContactDetail extends ContactSummary {
+export interface ContactDetail extends ContactCard {
+  organizations: OrganizationRef[];
   active: boolean;
   hasActiveOrganization: boolean;
 }

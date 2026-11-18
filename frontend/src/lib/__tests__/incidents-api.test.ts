@@ -16,11 +16,9 @@ it('creates through the central client with an explicit idempotency header', () 
   expect(apiClient.post).toHaveBeenCalledWith('/incidents', capture, { 'Idempotency-Key': 'stable-reference' });
 });
 
-it('lists with the activity filter only when it is chosen', () => {
-  incidentsApi.list(2, 'REPORTED', 'rama', null);
-  expect(apiClient.get).toHaveBeenLastCalledWith('/incidents?page=2&size=20&status=REPORTED&search=rama');
-  incidentsApi.list(0, '', '', false);
-  expect(apiClient.get).toHaveBeenLastCalledWith('/incidents?page=0&size=20&status=&search=&active=false');
+it('pide la lista completa para filtrarla en el navegador (SPEC-119)', () => {
+  incidentsApi.all();
+  expect(apiClient.get).toHaveBeenLastCalledWith('/incidents/all');
 });
 
 it('activates and closes with the version that the screen saw', () => {
@@ -39,14 +37,14 @@ it('links, removes and replaces work on the incident side', () => {
   expect(apiClient.post).toHaveBeenCalledWith('/incidents/7/links/5/replace', { version: 3, interventionId: 12, reason: 'Pasa al tercero' });
 });
 
-it('finds interventions to link by code from the incident', () => {
-  incidentsApi.candidates('INT-0001');
-  expect(apiClient.get).toHaveBeenCalledWith('/incidents/intervention-candidates?q=INT-0001');
+it('pide todas las intervenciones que se pueden vincular, sin texto', () => {
+  incidentsApi.candidates();
+  expect(apiClient.get).toHaveBeenCalledWith('/incidents/intervention-candidates');
 });
 
 it('searches incidents and links them from an intervention', () => {
-  incidentsApi.search('INC-2026');
-  expect(apiClient.get).toHaveBeenCalledWith('/incidents/search?q=INC-2026');
+  incidentsApi.search();
+  expect(apiClient.get).toHaveBeenCalledWith('/incidents/search');
   incidentsApi.linkFromWork(11, 7);
   expect(apiClient.post).toHaveBeenCalledWith('/interventions/11/incident-links', { incidentId: 7 });
   incidentsApi.unlinkFromWork(11, 5, 'Equivocada');

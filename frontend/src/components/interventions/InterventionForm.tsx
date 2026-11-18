@@ -41,7 +41,7 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
   // La incidencia de origen entra preseleccionada una sola vez, cuando llega su detalle.
   const [originSeeded,setOriginSeeded]=useState(false);
   if(origin&&sourceAvailable&&source.data&&!originSeeded){
-    const i=source.data.incident;setIncidents([{id:i.id,code:i.code,title:i.title,statusCode:i.status.code,active:i.active}]);setOriginSeeded(true);
+    const i=source.data.incident;setIncidents([{id:i.id,code:i.code,title:i.title,statusCode:i.status.code,active:i.active,searchKey:i.searchKey}]);setOriginSeeded(true);
   }
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);

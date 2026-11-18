@@ -2,7 +2,6 @@ package pe.edu.pucp.hesperides.modules.incidents.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,6 +12,7 @@ import pe.edu.pucp.hesperides.modules.incidents.service.*;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @RestController @RequiredArgsConstructor
@@ -27,12 +27,10 @@ public class IncidentsController {
     private final IncidentReviewService review;
     private final IncidentClosureService closure;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<IncidentResponse>>> list(
-            @RequestParam(required = false) String search, @RequestParam(required = false) String status,
-            @RequestParam(required = false) Boolean active, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size, @AuthenticationPrincipal UserDetails user) {
-        return ok(queries.list(user.getUsername(), search, status, active, page, size));
+    /** Antes que /{id}: todas las que ve quien pregunta, para filtrarlas en el navegador (SPEC-119). */
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<IncidentResponse>>> all(@AuthenticationPrincipal UserDetails user) {
+        return ok(queries.all(user.getUsername()));
     }
 
     @GetMapping("/mine")

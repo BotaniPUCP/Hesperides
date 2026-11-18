@@ -1,5 +1,6 @@
 import type { ApiResponse } from '@shared/types';
 import { API_BASE_URL } from './constants';
+import { notifyWrite } from './writeEvents';
 
 /** Error carrying the HTTP status so callers can react per SPEC-C02. */
 export class ApiError extends Error {
@@ -141,6 +142,7 @@ async function send(
     }
   }
 
+  if (method !== 'GET' && response.ok) notifyWrite(path);
   return response;
 }
 

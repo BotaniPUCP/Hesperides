@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Species } from '@shared/types';
 import { Input } from '@/components/ui';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
+import { usePreloadedList } from '@/hooks/usePreloadedList';
+import { speciesList } from '@/lib/preload/inventoryLists';
+import { filterByText } from '@/lib/search/searchText';
 
 const SUGERENCIAS = 8;
-const ESPERA_MS = 250;
+/** Con una sola letra casi todo el catálogo coincide (SPEC-119 D-08). */
+const MINIMO_LETRAS = 2;
 
 export interface BuscadorDeEspecieProps {
   valor: string;
@@ -16,53 +18,27 @@ export interface BuscadorDeEspecieProps {
 }
 
 /**
- * Busca en el catálogo por nombre científico o común. Permite elegir una
- * especie existente del inventario botánico.
+ * Busca en el catálogo por nombre científico, común o alternativo. Solo ofrece especies activas:
+ * una en retiro no recibe ejemplares nuevos. El catálogo se carga al abrir el formulario y se
+ * filtra en el navegador mientras se escribe (SPEC-119).
  */
 export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieProps) {
   const [texto, setTexto] = useState(valor);
-  const [reintentos, setReintentos] = useState(0);
-  // La respuesta guarda el texto que la produjo: así «buscando» y las opciones se
-  // derivan en el render y el efecto solo escribe estado al resolver la promesa.
-  const [respuesta, setRespuesta] = useState<{
-    texto: string;
-    reintentos: number;
-    opciones: Species[];
-    fallo: boolean;
-  } | null>(null);
+  const catalogo = usePreloadedList(speciesList);
+  const activas = useMemo(() => catalogo.items.filter((s) => s.isActive), [catalogo.items]);
 
-  const buscado = useDebouncedValue(texto, ESPERA_MS);
   const elegida = valor !== '' && texto === valor;
-  const consultable = buscado.trim().length >= 2 && buscado !== valor;
-  const respondida = respuesta?.texto === buscado && respuesta.reintentos === reintentos;
-  const opciones = consultable && respondida ? (respuesta?.opciones ?? []) : [];
-  const buscando = consultable && !respondida;
-
-  useEffect(() => {
-    if (!consultable) return;
-    let vigente = true;
-    inventarioVerdeApi
-      .assignableSpecies({ search: buscado, page: 0, size: SUGERENCIAS })
-      .then((p) => {
-        if (vigente) setRespuesta({ texto: buscado, reintentos, opciones: p.content, fallo: false });
-      })
-      .catch(() => {
-        if (vigente) setRespuesta({ texto: buscado, reintentos, opciones: [], fallo: true });
-      });
-
-    return () => {
-      vigente = false;
-    };
-  }, [buscado, consultable, reintentos]);
+  const consultable = texto.trim().length >= MINIMO_LETRAS && !elegida;
+  const opciones = useMemo(() => (consultable ? filterByText(activas, texto).slice(0, SUGERENCIAS) : []),
+    [activas, consultable, texto]);
+  const cargando = consultable && !catalogo.loaded && catalogo.errorMessage === null;
+  const fallo = consultable && !catalogo.loaded && catalogo.errorMessage !== null;
+  const sinResultados = consultable && catalogo.loaded && opciones.length === 0;
 
   function elegir(s: Species) {
     setTexto(s.scientificName);
     onElegir(s.scientificName, s);
   }
-
-  const mostrarLista = !elegida && texto.trim().length >= 2 && opciones.length > 0;
-  const mostrarSinResultados = !elegida && respondida && !respuesta?.fallo && texto.trim().length >= 2 && opciones.length === 0;
-  const mostrarError = !elegida && respondida && respuesta?.fallo === true;
 
   return (
     <div className="relative">
@@ -80,13 +56,13 @@ export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieP
         helperText={elegida ? 'Especie activa seleccionada del catálogo' : 'Escribe al menos dos letras y elige de la lista de especies activas'}
       />
 
-      {buscando && (
+      {cargando && (
         <p role="status" className="mt-1 text-sm text-neutral-500" aria-live="polite">
-          Buscando especies…
+          Cargando especies…
         </p>
       )}
 
-      {mostrarLista && (
+      {opciones.length > 0 && (
         <ul
           aria-label="Especies encontradas"
           className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-neutral-200 bg-neutral-0 shadow-lg"
@@ -111,24 +87,24 @@ export function BuscadorDeEspecie({ valor, onElegir, error }: BuscadorDeEspecieP
         </ul>
       )}
 
-      {mostrarSinResultados && (
+      {sinResultados && (
         <div
           role="region"
           aria-label="Sin resultados de especie"
           className="absolute z-20 mt-1 w-full rounded-md border border-neutral-200 bg-neutral-0 p-3 shadow-lg text-sm"
         >
           <p className="text-neutral-600">
-            No se encontró ninguna especie con «<strong className="text-neutral-900">{buscado}</strong>». Verifica el nombre o regístrala desde el Catálogo botánico.
+            No se encontró ninguna especie con «<strong className="text-neutral-900">{texto.trim()}</strong>». Verifica el nombre o regístrala desde el Catálogo botánico.
           </p>
         </div>
       )}
 
-      {mostrarError && (
+      {fallo && (
         <div role="alert" className="absolute z-20 mt-1 w-full rounded-md border border-alert-danger-border bg-alert-danger-bg p-3 text-sm text-alert-danger-fg shadow-lg">
           <p>No se pudo cargar la lista de especies.</p>
           <button
             type="button"
-            onClick={() => setReintentos((actual) => actual + 1)}
+            onClick={catalogo.reload}
             className="mt-1 font-semibold underline underline-offset-2"
           >
             Reintentar búsqueda
