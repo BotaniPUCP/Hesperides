@@ -15,6 +15,8 @@ const customJestConfig = {
   // .next/standalone ships its own package.json, which otherwise collides
   // with this project's package.json in Jest's haste module map.
   modulePathIgnorePatterns: ['<rootDir>/.next/'],
+  collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/*.d.ts'],
+  coverageReporters: ['text', 'cobertura'],
 };
 
 module.exports = createJestConfig(customJestConfig);
