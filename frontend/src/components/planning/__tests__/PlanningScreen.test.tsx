@@ -190,6 +190,17 @@ describe('PlanningScreen (SPEC-203 §5.1, §7)', () => {
       expect(card.getByText(/2 nov \(2\)/)).toBeInTheDocument();
     });
 
+    it('si lo que falta nunca se atendió, no repite la cantidad («… sin registro previo en …»)', async () => {
+      rows.mockResolvedValue([planningRow({ zoneCount: 4, state: 'DUE', days: null, ruleKind: 'INTERVAL_DAYS',
+        upToDateCount: 2, neverAttendedCount: 2, pendingZoneIds: [13, 14], lastDate: '2026-11-12', daysSinceLast: 0,
+        lastDates: [{ date: '2026-11-12', count: 2 }, { date: null, count: 2 }] })]);
+      render(<PlanningScreen />);
+
+      const card = within(await screen.findByRole('listitem'));
+      expect(card.getByText('2 jardines sin registro previo')).toBeInTheDocument();
+      expect(card.queryByText(/sin registro previo en/)).not.toBeInTheDocument();
+    });
+
     it('planificar propone solo lo que falta', async () => {
       rows.mockResolvedValue([partial()]);
       render(<PlanningScreen />);

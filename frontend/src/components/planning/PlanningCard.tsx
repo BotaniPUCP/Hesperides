@@ -49,7 +49,8 @@ export function PlanningCard({ row, selected, onSelect, onRemove, justSaved = fa
   const rhythm = rhythmText(row);
   const partial = partialProgress(row);
   const baseDetail = stateDetail(row).replace(/^\((.*)\)$/, '$1');
-  const detail = partial && (row.state === 'OVERDUE' || row.state === 'DUE') && DELAY_IN_UNITS.includes(row.ruleKind)
+  // Sin días, el detalle ya cuenta las unidades («2 jardines sin registro previo»): no se repiten.
+  const detail = partial && row.days !== null && (row.state === 'OVERDUE' || row.state === 'DUE') && DELAY_IN_UNITS.includes(row.ruleKind)
     ? `${baseDetail} en ${pendingLabel(row)}` : baseDetail;
   return (
     <li className={cn('rounded-lg border bg-neutral-0 text-sm', selected ? 'border-brand-600 ring-1 ring-brand-600' : 'border-neutral-200')}>
