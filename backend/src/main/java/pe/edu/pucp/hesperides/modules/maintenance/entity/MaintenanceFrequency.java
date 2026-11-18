@@ -90,8 +90,14 @@ public class MaintenanceFrequency extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    /**
+     * Sin valor por defecto: "hoy" depende de la zona configurada
+     * (hesperides.maintenance.time-zone), no del reloj de la maquina, y solo el
+     * servicio la conoce. Un default con LocalDate.now() daba manana entre las
+     * 19:00 y la medianoche de Lima en un servidor en UTC.
+     */
     @Column(name = "valid_from", nullable = false)
-    private LocalDate validFrom = LocalDate.now();
+    private LocalDate validFrom;
 
     /** Null es la version vigente. */
     @Column(name = "valid_to")

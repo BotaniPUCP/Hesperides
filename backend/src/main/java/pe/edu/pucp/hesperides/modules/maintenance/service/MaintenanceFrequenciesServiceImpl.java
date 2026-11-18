@@ -1,8 +1,9 @@
 package pe.edu.pucp.hesperides.modules.maintenance.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.pucp.hesperides.engine.reporting.ReportPeriods;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
 import pe.edu.pucp.hesperides.modules.catalogs.repository.CatalogItemsRepository;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.ComplianceResponse;
@@ -16,11 +17,12 @@ import pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequenciesService {
 
     private static final String RULE_TYPE_CATALOG = "FREQUENCY_RULE_TYPE";
@@ -30,6 +32,27 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
     private final CatalogItemsRepository catalogItemsRepository;
     private final ComplianceReader complianceReader;
     private final GreenAreaSetLookup setLookup;
+    private final Clock clock;
+    private final ZoneId zone;
+
+    /**
+     * El reloj es el compartido (UTC) y la zona, la misma que usan planificacion
+     * y reportes: la vigencia de una frecuencia empieza y termina en el dia de
+     * Lima, que es el que evalua el plan.
+     */
+    public MaintenanceFrequenciesServiceImpl(MaintenanceFrequenciesRepository frequenciesRepository,
+                                             CatalogItemsRepository catalogItemsRepository,
+                                             ComplianceReader complianceReader,
+                                             GreenAreaSetLookup setLookup,
+                                             Clock clock,
+                                             @Value("${hesperides.maintenance.time-zone:America/Lima}") String timeZone) {
+        this.frequenciesRepository = frequenciesRepository;
+        this.catalogItemsRepository = catalogItemsRepository;
+        this.complianceReader = complianceReader;
+        this.setLookup = setLookup;
+        this.clock = clock;
+        this.zone = ZoneId.of(timeZone);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -60,7 +83,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 r.seasonStartMonth(), r.seasonEndMonth(), r.seasons());
         FrequencyScopeRules.requireNoCurrentDuplicate(frequenciesRepository, activity.getId(), r.regime(), r.scope(), null);
 
-        MaintenanceFrequency f = FrequencyFieldMapper.toNewEntity(r, activity, ruleType);
+        MaintenanceFrequency f = FrequencyFieldMapper.toNewEntity(r, activity, ruleType, today());
         return withWarnings(frequenciesRepository.save(f));
     }
 
@@ -88,11 +111,12 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         FrequencyScopeRules.requireNoCurrentDuplicate(frequenciesRepository, current.getActivityTypeItem().getId(), fields.regime(),
                 fields.scope(), current.getId());
 
+        LocalDate today = today();
         MaintenanceFrequency target = current;
-        if (FrequencyVersioning.requiresNewVersion(current)) {
-            FrequencyVersioning.closeYesterday(current);
+        if (FrequencyVersioning.requiresNewVersion(current, today)) {
+            FrequencyVersioning.closeYesterday(current, today);
             frequenciesRepository.saveAndFlush(current);
-            target = FrequencyVersioning.copyForNewVersion(current);
+            target = FrequencyVersioning.copyForNewVersion(current, today);
         }
 
         FrequencyFieldMapper.apply(target, fields);
@@ -111,8 +135,9 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         f.softDelete();
         f.setActive(false);
         // Una frecuencia retirada no sigue rigiendo.
-        if (f.getValidTo() == null && !f.getValidFrom().isAfter(LocalDate.now())) {
-            f.setValidTo(LocalDate.now());
+        LocalDate today = today();
+        if (f.getValidTo() == null && !f.getValidFrom().isAfter(today)) {
+            f.setValidTo(today);
         }
         frequenciesRepository.save(f);
     }
@@ -138,6 +163,11 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
     }
 
     // ── apoyo ───────────────────────────────────────────────────────────────
+
+    /** La fecha civil en la zona de mantenimiento, no la del servidor. */
+    private LocalDate today() {
+        return ReportPeriods.today(clock, zone);
+    }
 
     /** Mezcla lo que el request pide cambiar con lo que la version vigente ya tiene. */
     private FrequencyFieldMapper.ResolvedFields resolve(UpdateMaintenanceFrequencyRequest r,
