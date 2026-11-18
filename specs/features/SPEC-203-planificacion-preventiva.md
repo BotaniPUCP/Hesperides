@@ -266,6 +266,31 @@ visor (`screenRectSections.ts`), así que vale igual en el mapa de Intervencione
 *Descartado:* decidir con un rayo desde la cámara, porque dependería del ángulo de la vista
 y costaría cientos de rayos en un rectángulo grande.
 
+**D-21 · El selector de Conjuntos se recorre por sectores (18 nov 2026).**
+Pedido del equipo al probar: con todas las tarjetas a la vista y un «Ver en el mapa» por
+sector, encontrar dónde se trabajaba costaba. Ahora:
+- La lista muestra por defecto solo lo elegido, en las tarjetas de su sector; se quita la
+  casilla «Ver solo lo elegido». Lo que se marca o desmarca uno a uno sigue a la vista aunque
+  deje de estar elegido, para no esconderse bajo el cursor.
+- Buscar muestra todo lo que coincide, elegido o no, y desde ahí se agrega.
+- Un solo control recorre los sectores donde estaba la casilla: «‹ [sector] ›». Las flechas
+  pasan al anterior o al siguiente (dan la vuelta) y el nombre es un desplegable para ir directo
+  a uno o volver a «Todo el campus». El sector se encuadra entero, sus jardines y ejemplares se
+  pintan de un tono tenue (lo elegido se ve encima con su color) y su tarjeta muestra todo lo
+  suyo. Reemplaza el «Ver en el mapa / Dejar de ver» de cada tarjeta y el aviso «Viendo …» del
+  mapa; mover el mapa ya no suelta el sector.
+- Al elegir o quitar algo (clic, rectángulo, barrido o lista) se ilumina la tarjeta de su
+  sector y se trae a la vista; con el rectángulo, la del sector con más de lo encerrado.
+- Los mapas de Conjuntos y Planificación nacen en colores reales, como el mapa principal
+  (SPEC-112 D-13); la ficha de reserva sigue como estaba.
+*Descartado:* una flecha vertical sola, porque no deja ir directo a un sector lejano.
+
+**D-22 · Supuesto: una planificación se atiende con una sola intervención (18 nov 2026).**
+Indicación del equipo: la planificación de una actividad sobre un conjunto se resuelve con una
+sola intervención, no repartida en varias. La fila sigue a esa intervención (programada, en
+curso y su avance). Si una intervención termina sin cubrir todo el conjunto, lo que falta se ve
+como avance parcial (§5.5.1).
+
 ## 3. Contratos de API
 
 Sobre `{ok, message, data}` (INV-1) y envolturas de error de SPEC-C02, no se repiten.
@@ -494,7 +519,8 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
    clic izquierdo** agrega lo que encierra el rectángulo y **con clic derecho** lo quita, con
    «Deshacer» (D-20 dice qué cuenta como encerrado), buscador por nombre. No hay botón de selección
    múltiple; la rueda acerca y aleja también con Ctrl apretado. La lista de seleccionados y el
-   mapa siempre coinciden.
+   mapa siempre coinciden. La lista muestra lo elegido y los sectores se recorren con «‹ [sector] ›»
+   (D-21).
 3. Nombre (obligatorio, único sin distinguir mayúsculas) y descripción opcional, en una fila.
    Sin actividades (D-16). Lo elegido se resume por tipo: los jardines, y los ejemplares de cada
    tipo (Palmera, Árbol…); «Ver en el mapa» lo muestra recorrido por grupos (D-18).
@@ -544,8 +570,9 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
 
 ### 5.3.2 Filtros de la planificación
 
-- Buscar conjunto (por nombre, sin distinguir mayúsculas ni tildes), Actividad y Estado. Las
-  opciones salen de las tarjetas que hay.
+- Buscar conjunto (por nombre, sin distinguir mayúsculas ni tildes), «Filtrar por actividad» y
+  «Filtrar por estado» (18 nov 2026: la etiqueta dice qué hace). Las opciones salen de las
+  tarjetas que hay.
 - Los filtros van en la URL (`?conjunto=&actividad=&estado=`). «Ver en Planificación», desde una
   frecuencia, abre la planificación con su actividad puesta.
 - Con algún filtro se lee «Mostrando X de Y planificaciones» y «Ver todas» los quita.
@@ -735,6 +762,9 @@ Bocetos aprobados en la conversación de diseño (8 nov 2026); el texto manda so
 3. En pequeño, cada cuánto: «Cada 30–35 días en primavera», «Cada 15 días», «4 al año · van 3»,
    «1 al año, entre diciembre y enero». Sin la palabra «ritmo» y sin marcar si la regla es
    propia del conjunto.
+
+Las cifras de «Contiene» (jardines y ejemplares), de «Suele realizarse» (la frecuencia) y del
+«Al día» van más grandes que el texto que las sigue (18 nov 2026): es lo primero que se lee.
 
 Botón «Planificar intervención» en `DUE`, `OVERDUE` y `NOT_DUE`; «Ver intervención» en
 `IN_PROGRESS` y `SCHEDULED`.
