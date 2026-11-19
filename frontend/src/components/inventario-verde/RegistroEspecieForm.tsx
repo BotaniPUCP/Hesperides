@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Species, SpeciesForm } from '@shared/types';
-import { Button, Card, Input, Select, type SelectOption } from '@/components/ui';
+import { Button, Card, Input, Select, Textarea, type SelectOption } from '@/components/ui';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { useCatalog } from '@/hooks/useCatalog';
 import { LIMITES } from '@/lib/upload-limits';
@@ -223,7 +223,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
                 if (fieldErrors.scientificName) setFieldErrors((e) => ({ ...e, scientificName: '' }));
                 onDirtyChange?.(true);
               }}
-              placeholder="Ej. Delonix regia, Jacaranda mimosifolia"
+              placeholder="Ej. Delonix regia"
               required
               errorMessage={fieldErrors.scientificName}
               helperText="El formato se normaliza automáticamente; no se verifica la taxonomía"
@@ -238,7 +238,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
               setCommonName(v);
               onDirtyChange?.(true);
             }}
-            placeholder="Ej. Flamboyán, Jacarandá"
+            placeholder="Ej. Flamboyán"
             helperText="Nombre más extendido en el campus"
           />
 
@@ -250,7 +250,7 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
               setFamily(v);
               onDirtyChange?.(true);
             }}
-            placeholder="Ej. Fabaceae, Bignoniaceae"
+            placeholder="Ej. Fabaceae"
             helperText="Familia taxonómica (opcional)"
           />
 
@@ -310,39 +310,29 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
 
       <Card title="Descripción y cuidados botánicos">
         <div className="space-y-4">
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-neutral-800 mb-1">
-              Descripción taxonómica
-            </label>
-            <textarea
-              id="description"
-              rows={3}
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                onDirtyChange?.(true);
-              }}
-              placeholder="Características de la copa, floración, tronco, follaje..."
-              className="w-full rounded-xl border border-neutral-300 p-3 text-sm text-neutral-900 focus:border-brand-600 focus:outline-hidden focus:ring-1 focus:ring-brand-600"
-            />
-          </div>
+          <Textarea
+            id="description"
+            label="Descripción taxonómica"
+            rows={3}
+            value={description}
+            onChange={(v) => {
+              setDescription(v);
+              onDirtyChange?.(true);
+            }}
+            placeholder="Características de la copa, floración, tronco, follaje..."
+          />
 
-          <div>
-            <label htmlFor="care-notes" className="block text-sm font-medium text-neutral-800 mb-1">
-              Requerimientos y mantenimiento
-            </label>
-            <textarea
-              id="care-notes"
-              rows={3}
-              value={careNotes}
-              onChange={(e) => {
-                setCareNotes(e.target.value);
-                onDirtyChange?.(true);
-              }}
-              placeholder="Necesidad hídrica, exposición solar, susceptibilidad a plagas, poda..."
-              className="w-full rounded-xl border border-neutral-300 p-3 text-sm text-neutral-900 focus:border-brand-600 focus:outline-hidden focus:ring-1 focus:ring-brand-600"
-            />
-          </div>
+          <Textarea
+            id="care-notes"
+            label="Requerimientos y mantenimiento"
+            rows={3}
+            value={careNotes}
+            onChange={(v) => {
+              setCareNotes(v);
+              onDirtyChange?.(true);
+            }}
+            placeholder="Necesidad hídrica, exposición solar, susceptibilidad a plagas, poda..."
+          />
         </div>
       </Card>
 

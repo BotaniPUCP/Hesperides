@@ -26,6 +26,7 @@ import pe.edu.pucp.hesperides.modules.imports.service.SpecimenRegistrationServic
 import pe.edu.pucp.hesperides.modules.imports.dto.UploadedPhoto;
 import pe.edu.pucp.hesperides.modules.inventory.controller.ManagerAuthority;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesForm;
+import pe.edu.pucp.hesperides.modules.inventory.dto.BulkSpecimenDeactivationRequest;
 import pe.edu.pucp.hesperides.modules.inventory.dto.DeactivationRequest;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.service.InventoryPhotoService;
@@ -74,6 +75,17 @@ public class SpecimenRegistrationController {
             @PathVariable String code, @Valid @RequestBody DeactivationRequest request) {
         specimenLifecycle.deactivate(code, request.reason());
         return ResponseEntity.ok(ApiResponse.ok("Specimen deactivated", null));
+    }
+
+    @PatchMapping("/api/v1/green-inventory/specimens/deactivate-batch")
+    @PreAuthorize(MANAGERS)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> deactivateSpecimensBatch(
+            @Valid @RequestBody BulkSpecimenDeactivationRequest request) {
+        List<String> deactivated = specimenLifecycle.deactivateBatch(request.codes(), request.reason());
+        return ResponseEntity.ok(ApiResponse.ok("Specimens deactivated", Map.of(
+                "count", deactivated.size(),
+                "codes", deactivated
+        )));
     }
 
     @GetMapping("/api/v1/green-inventory/specimens/{code}/assessments")

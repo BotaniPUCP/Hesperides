@@ -2,9 +2,12 @@ package pe.edu.pucp.hesperides.modules.inventory.service;
 
 import pe.edu.pucp.hesperides.modules.inventory.dto.InventorySummaryResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.LocationCountResponse;
+import pe.edu.pucp.hesperides.modules.inventory.dto.RetiredSpecimenResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenDetailResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenResponse;
+
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -24,4 +27,11 @@ public interface GreenInventoryService {
     List<LocationCountResponse> locations(String speciesSlug);
 
     SpecimenDetailResponse specimenByCode(String code);
+
+    /** Un retirado solo lo ve quien puede consultar retirados (ADMIN y COORDINADOR). */
+    SpecimenDetailResponse specimenByCode(String code, boolean canViewRetired);
+
+    Page<RetiredSpecimenResponse> retiredSpecimens(String search, int page, int size);
+
+    RetiredSpecimenResponse retiredSpecimenByCode(String code);
 }

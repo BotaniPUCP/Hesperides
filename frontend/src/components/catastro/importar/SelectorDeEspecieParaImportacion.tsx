@@ -20,6 +20,7 @@ export interface SelectorDeEspecieParaImportacionProps {
   buttonLabel?: string;
   disabled?: boolean;
   extraAction?: ReactNode;
+  leftContent?: ReactNode;
   onSelect: (species: SpeciesImportOption) => void;
 }
 
@@ -32,6 +33,7 @@ export function SelectorDeEspecieParaImportacion({
   buttonLabel = 'Seleccionar especie existente',
   disabled = false,
   extraAction,
+  leftContent,
   onSelect,
 }: SelectorDeEspecieParaImportacionProps) {
   const [open, setOpen] = useState(false);
@@ -65,17 +67,20 @@ export function SelectorDeEspecieParaImportacion({
 
   return (
     <div className="w-full space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        {open ? (
-          <Button size="sm" variant="ghost" disabled={disabled} onClick={() => setOpen(false)}>
-            Cerrar búsqueda
-          </Button>
-        ) : (
-          <Button size="sm" variant="secondary" disabled={disabled} onClick={openSearch}>
-            {buttonLabel}
-          </Button>
-        )}
-        {extraAction}
+      <div className={`flex flex-wrap items-center gap-2 ${leftContent ? 'justify-between' : ''}`}>
+        {leftContent}
+        <div className={`flex flex-wrap items-center gap-2 ${leftContent ? 'sm:ml-auto' : ''}`}>
+          {open ? (
+            <Button size="sm" variant="ghost" disabled={disabled} onClick={() => setOpen(false)}>
+              Cerrar búsqueda
+            </Button>
+          ) : (
+            <Button size="sm" variant="secondary" disabled={disabled} onClick={openSearch}>
+              {buttonLabel}
+            </Button>
+          )}
+          {extraAction}
+        </div>
       </div>
 
       {open && (

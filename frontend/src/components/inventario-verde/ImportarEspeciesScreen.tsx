@@ -35,7 +35,7 @@ export function ImportarEspeciesScreen() {
             <Link href="/inventario-verde/estandares" className="text-brand-700 underline font-medium">
               estándar de especies
             </Link>
-            . Las especies nuevas se crean y las activas existentes se actualizan sin borrar celdas vacías; las inactivas se omiten y no se editan ni reactivan.
+            . Las especies nuevas se crean y las activas existentes se actualizan sin borrar celdas vacías; las inactivas se omiten y no se editan.
           </>
         }
       >
@@ -47,14 +47,7 @@ export function ImportarEspeciesScreen() {
       ) : imp.vista && imp.fase !== 'revisando' ? (
         <VistaPrevia imp={imp} />
       ) : (
-        <>
-          <SelectorDeArchivos imp={imp} ocultarSelectorDeTipo />
-          {imp.error && (
-            <p role="alert" className="text-sm text-action-danger">
-              {imp.error}
-            </p>
-          )}
-        </>
+        <SelectorDeArchivos imp={imp} ocultarSelectorDeTipo />
       )}
       {imp.avisoSinGuardar}
     </div>

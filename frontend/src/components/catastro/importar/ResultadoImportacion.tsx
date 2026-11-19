@@ -33,7 +33,7 @@ export function ResultadoImportacion({ imp }: { imp: Importacion }) {
           )}
           {imp.kind === 'species' && (r.omittedInactiveSpecies ?? 0) > 0 && (
             <li>
-              <strong>{r.omittedInactiveSpecies}</strong> filas de especies inactivas omitidas; no se editaron ni reactivaron
+              <strong>{r.omittedInactiveSpecies}</strong> filas de especies inactivas omitidas; no se modificaron
             </li>
           )}
         </ul>

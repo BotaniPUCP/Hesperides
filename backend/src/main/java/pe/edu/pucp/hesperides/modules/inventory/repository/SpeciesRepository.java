@@ -45,6 +45,11 @@ public class SpeciesRepository {
                 .stream().findFirst();
     }
 
+    public Optional<SpeciesRow> bySlugIncludeDeleted(String slug) {
+        return jdbc.query(InventoryQueries.SPECIES_BY_SLUG_ANY, new MapSqlParameterSource("slug", slug), ROW)
+                .stream().findFirst();
+    }
+
     /** [especies, ejemplares] vigentes. */
     public long[] totals() {
         return jdbc.queryForObject(InventoryQueries.TOTALS, new MapSqlParameterSource(),

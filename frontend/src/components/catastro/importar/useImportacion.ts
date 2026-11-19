@@ -49,8 +49,15 @@ export function useImportacion(initialKind: ImportKind = 'specimens') {
   const guard = useUnsavedChangesGuard(fase !== 'hecho' && (csv !== null || zip !== null || vista !== null));
 
   const pendientes = vista ? vista.duplicates.filter((d) => decisiones[d.line] === undefined).length : 0;
+  const duplicadosOmitidos = vista ? vista.duplicates.filter((d) => decisiones[d.line] === false).length : 0;
+  const toCreateEfectivo = vista ? Math.max(0, vista.toCreate - duplicadosOmitidos) : 0;
+  const totalOperaciones = toCreateEfectivo + (vista?.toUpdate ?? 0)
+    + (kind === 'species-photos' ? (vista?.photoSets.length ?? 0) : 0)
+    + (kind === 'specimens' ? (vista?.speciesChanges?.length ?? 0) : 0);
+  const sinOperaciones = vista !== null && vista.totalRows > 0 && vista.issues.length === 0 && totalOperaciones === 0;
+
   const planConfirmable = vista !== null && vista.canConfirm && pendientes === 0 && fase === 'vista'
-    && !reanalizando && !bindingsPending;
+    && !reanalizando && !bindingsPending && !sinOperaciones;
   const puedeConfirmar = planConfirmable && !summaryLoading && !confirmationOpen;
 
   function invalidarResumen() {
@@ -257,6 +264,7 @@ export function useImportacion(initialKind: ImportKind = 'specimens') {
   return {
     kind, estandar: estandar(kind), setKind,
     fase, csv, zip, vista, decisiones, resultado, error, pendientes, puedeConfirmar, planConfirmable,
+    toCreateEfectivo, duplicadosOmitidos, sinOperaciones,
     reanalizando, bindingsPending, speciesBindings, recuperacion, reanalizar, renovarVistaPrevia, vincularEspecie,
     confirmationSummary, confirmationOpen, summaryLoading,
     setCsv, setZip, revisar, confirmar, confirmarResumen, volverARevision,

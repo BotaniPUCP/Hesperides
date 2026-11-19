@@ -78,8 +78,8 @@ export function DefinitiveDeactivationModal({
           </div>
         ) : (
           <p>
-            La baja de <strong className="text-neutral-900">{entityLabel}</strong> es definitiva. No se borrarán
-            sus historiales ni se podrá reactivar la ficha.
+            La baja de <strong className="text-neutral-900">{entityLabel}</strong> es definitiva e irreversible. No se borrarán
+            sus historiales.
           </p>
         )}
         <div className="space-y-1.5">

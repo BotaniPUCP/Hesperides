@@ -19,14 +19,14 @@ function Casilla({ id, etiqueta, marcada, deshabilitada = false, onCambiar }: {
   id: string; etiqueta: string; marcada: boolean; deshabilitada?: boolean; onCambiar: (marcada: boolean) => void;
 }) {
   return (
-    <label htmlFor={id} className="flex items-start gap-2 text-sm text-neutral-800">
+    <label htmlFor={id} className={`flex items-start gap-2 text-sm text-neutral-800 ${deshabilitada ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
       <input
         id={id}
         type="checkbox"
         checked={marcada}
         disabled={deshabilitada}
         onChange={(e) => onCambiar(e.target.checked)}
-        className="mt-0.5 h-4 w-4 rounded-xs border-neutral-300 disabled:opacity-60"
+        className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-forest-600 accent-forest-600 focus:ring-forest-500 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
       />
       <span>{etiqueta}</span>
     </label>

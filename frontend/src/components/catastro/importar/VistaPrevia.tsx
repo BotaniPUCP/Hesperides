@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { Button, Card } from '@/components/ui';
 import { CopiarErrores } from '@/components/importar/CopiarErrores';
-import { SelectorDeEspecieParaImportacion } from './SelectorDeEspecieParaImportacion';
+import { EspeciesDelArchivoSection } from './EspeciesDelArchivoSection';
 import { ConfirmarImportacionModal } from './ConfirmarImportacionModal';
 import { traducirMensajeCatastro } from '../mensajes';
 import { DecisionesDeDuplicados } from './DecisionesDeDuplicados';
@@ -22,22 +21,10 @@ const fotos = (n: number) => (n === 1 ? '1 foto' : `${n} fotos`);
 
 /** Lo que haría la carga, antes de hacerlo (SPEC-103 §5.2). */
 export function VistaPrevia({ imp }: { imp: Importacion }) {
-  const [mostrarTodasAsociaciones, setMostrarTodasAsociaciones] = useState(false);
-  const [buscarAsociacion, setBuscarAsociacion] = useState('');
-
   const vista = imp.vista;
   if (!vista) return null;
   const especiesOmitidas = vista.unknownSpecies.reduce((n, s) => n + s.rows, 0);
   const especiesInactivasOmitidas = vista.skippedInactiveSpecies?.length ?? 0;
-  const asociaciones = vista.speciesBindings ?? [];
-  const consultaAsociacion = buscarAsociacion.trim().toLowerCase();
-  const asociacionesFiltradas = consultaAsociacion
-    ? asociaciones.filter((binding) =>
-      `${binding.sourceName} ${binding.scientificName}`.toLowerCase().includes(consultaAsociacion))
-    : asociaciones;
-  const asociacionesVisibles = !mostrarTodasAsociaciones
-    ? asociacionesFiltradas.slice(0, 5)
-    : asociacionesFiltradas;
   const reviewLocked = imp.reanalizando || imp.summaryLoading || imp.confirmationOpen || imp.fase === 'confirmando';
 
   return (
@@ -46,7 +33,7 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Cifra valor={vista.totalRows} etiqueta="filas en el archivo" />
-            {imp.kind !== 'species-photos' && <Cifra valor={vista.toCreate} etiqueta={imp.estandar.textos.nuevos} />}
+            {imp.kind !== 'species-photos' && <Cifra valor={imp.toCreateEfectivo} etiqueta={imp.estandar.textos.nuevos} />}
             <Cifra valor={vista.toUpdate} etiqueta={imp.estandar.textos.aCorregir} />
             {imp.estandar.porEspecie && <Cifra valor={especiesOmitidas} etiqueta="filas omitidas por especie" />}
             {imp.kind === 'species' && especiesInactivasOmitidas > 0 && (
@@ -57,7 +44,7 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
           {imp.kind === 'species' && especiesInactivasOmitidas > 0 && (
             <section role="status" aria-label="Especies inactivas omitidas" className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
               <p className="text-sm font-semibold text-neutral-800">
-                Las especies inactivas no se editarán ni reactivarán. Estas filas se omitirán:
+                Las especies inactivas no se modificarán. Estas filas se omitirán:
               </p>
               <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700">
                 {vista.skippedInactiveSpecies?.map((row) => (
@@ -132,83 +119,13 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
             </section>
           )}
 
-          {imp.kind === 'specimens' && (vista.speciesBindings?.length ?? 0) > 0 && (
-            <section aria-labelledby="asociaciones-especies" className="space-y-2">
-              <h3 id="asociaciones-especies" className="font-semibold text-neutral-900">
-                Especies que se asociarán a los ejemplares
-              </h3>
-              {asociaciones.length > 5 && (
-                <div className="flex flex-wrap items-end gap-3">
-                  <label className="min-w-56 flex-1 space-y-1 text-sm font-medium text-neutral-700">
-                    <span>Buscar asociación</span>
-                    <input
-                      type="search"
-                      value={buscarAsociacion}
-                      onChange={(event) => setBuscarAsociacion(event.target.value)}
-                      aria-label="Buscar asociación por nombre de origen o especie"
-                      autoComplete="off"
-                      className="min-h-10 w-full rounded-lg border border-neutral-300 bg-neutral-0 px-3 text-sm text-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
-                    />
-                  </label>
-                  {(asociacionesFiltradas.length > 5 || mostrarTodasAsociaciones) && (
-                    <button
-                      type="button"
-                      aria-expanded={mostrarTodasAsociaciones}
-                      aria-controls="lista-asociaciones-especies"
-                      onClick={() => setMostrarTodasAsociaciones((visible) => !visible)}
-                      className="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-neutral-200 bg-neutral-0 px-3 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
-                    >
-                      {mostrarTodasAsociaciones ? 'Mostrar menos' : `Ver todas (${asociacionesFiltradas.length})`}
-                    </button>
-                  )}
-                </div>
-              )}
-              {asociacionesVisibles.length === 0 ? (
-                <p role="status" className="text-sm text-neutral-600">No hay asociaciones que coincidan con la búsqueda.</p>
-              ) : (
-              <ul id="lista-asociaciones-especies" aria-label="Asociaciones de especies" className="space-y-2">
-                {asociacionesVisibles.map((binding) => (
-                  <li key={binding.sourceKey} className="space-y-2 rounded-xl border border-neutral-200 bg-neutral-0 p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                      <span className="min-w-0">
-                        <span className="italic">{binding.sourceName}</span>
-                        <span className="mx-2 text-neutral-400">→</span>
-                        <span className="font-semibold text-neutral-900">{binding.scientificName}</span>
-                        <span className="ml-2 text-xs text-neutral-500">({binding.rows} {binding.rows === 1 ? 'fila' : 'filas'})</span>
-                      </span>
-                      {binding.resolution === 'ALTERNATIVE_NAME' ? (
-                        <span className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-700 border border-neutral-200">
-                          Nombre alternativo
-                        </span>
-                      ) : binding.resolution === 'USER_SELECTED' ? (
-                        <span className="inline-flex items-center rounded-md bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-800 border border-brand-200">
-                          Selección del usuario
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-md bg-forest-50 px-2 py-0.5 text-[11px] font-medium text-forest-800 border border-forest-200">
-                          Especie existente en el catálogo
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <SelectorDeEspecieParaImportacion
-                        sourceName={binding.sourceName}
-                        buttonLabel="Cambiar especie"
-                        disabled={reviewLocked}
-                        extraAction={(
-                          <Button size="sm" variant="ghost" disabled={reviewLocked}
-                            onClick={() => void imp.vincularEspecie(binding.sourceKey, null)}>
-                            Quitar asociación
-                          </Button>
-                        )}
-                        onSelect={(species) => void imp.vincularEspecie(binding.sourceKey, species.slug)}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              )}
-            </section>
+          {imp.kind === 'specimens' && (
+            <EspeciesDelArchivoSection
+              bindings={vista.speciesBindings ?? []}
+              unknownSpecies={vista.unknownSpecies ?? []}
+              disabled={reviewLocked}
+              onVincular={imp.vincularEspecie}
+            />
           )}
 
           {vista.photoSets.length > 0 && (
@@ -226,7 +143,7 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
             </section>
           )}
 
-          {vista.unknownSpecies.length > 0 && (
+          {imp.kind !== 'specimens' && vista.unknownSpecies.length > 0 && (
             <section
               aria-labelledby="especies-desconocidas"
               className="rounded-2xl border border-neutral-200/90 bg-neutral-50/60 p-4 space-y-3"
@@ -234,15 +151,13 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
               <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-neutral-200/60">
                 <div>
                   <h3 id="especies-desconocidas" className="font-bold text-sm text-neutral-900 flex items-center gap-2">
-                    <span>{imp.kind === 'specimens' ? 'Especies pendientes de asociación' : 'Especies no registradas en el catálogo'}</span>
+                    <span>Especies no registradas en el catálogo</span>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-neutral-200 text-neutral-700">
                       {vista.unknownSpecies.length}
                     </span>
                   </h3>
                   <p className="text-xs text-neutral-600 mt-0.5">
-                    {imp.kind === 'specimens'
-                      ? 'Estas especies no se encuentran registradas en el catálogo. Puedes escoger una especie existente para asociarla a este lote o corregir el archivo CSV si el nombre fue ingresado de forma errónea.'
-                      : 'Estas filas no se cargarán porque la especie no está en el catálogo.'}
+                    Estas filas no se cargarán porque la especie no está en el catálogo.
                   </p>
                 </div>
               </div>
@@ -256,26 +171,12 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                         <p className="break-words font-semibold italic text-neutral-900">{s.name}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-600">
                           <span>{s.rows} {s.rows === 1 ? 'fila' : 'filas'}</span>
-                          {s.reason === 'AMBIGUOUS' && <span>Coincidencias ambiguas: selecciona una especie</span>}
-                          {s.reason === 'USER_UNRESOLVED' && <span>Asociación pendiente de seleccionar</span>}
-                          {(s.reason === 'NOT_FOUND' || (!s.reason && s.reason !== 'AMBIGUOUS' && s.reason !== 'USER_UNRESOLVED')) && (
-                            <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 border border-amber-200/80">
-                              No registrada en el catálogo
-                            </span>
-                          )}
+                          <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 border border-amber-200/80">
+                            No registrada en el catálogo
+                          </span>
                         </div>
                       </div>
                     </div>
-                    {imp.kind === 'specimens' && (
-                      <div className="mt-4">
-                        <SelectorDeEspecieParaImportacion
-                          sourceName={s.name}
-                          buttonLabel="Seleccionar especie existente"
-                          disabled={reviewLocked}
-                          onSelect={(species) => void imp.vincularEspecie(s.sourceKey ?? s.name, species.slug)}
-                        />
-                      </div>
-                    )}
                   </li>
                 ))}
               </ul>
@@ -312,6 +213,54 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
           )}
 
           {imp.error && <p role="alert" className="text-sm text-action-danger">{imp.error}</p>}
+
+          {vista.issues.length > 0 && (
+            <div
+              role="status"
+              aria-label="No se puede continuar con la importación"
+              className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-900 flex items-start gap-3"
+            >
+              <span className="text-base mt-0.5" aria-hidden="true">⚠️</span>
+              <div className="space-y-0.5">
+                <p className="font-semibold text-neutral-900">No se puede continuar con la importación</p>
+                <p className="text-xs text-neutral-600">
+                  Corrige los errores indicados en el archivo CSV y vuelve a subirlo. No se importará ningún ejemplar hasta que se solucionen.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {vista.issues.length === 0 && imp.sinOperaciones && (
+            <div
+              role="status"
+              aria-label="No hay registros que se puedan importar"
+              className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-900 flex items-start gap-3"
+            >
+              <span className="text-base mt-0.5" aria-hidden="true">⚠️</span>
+              <div className="space-y-0.5">
+                <p className="font-semibold text-neutral-900">
+                  {imp.kind === 'specimens'
+                    ? 'No hay ejemplares que se puedan importar'
+                    : imp.kind === 'species'
+                      ? 'No hay especies que se puedan importar'
+                      : imp.kind === 'waste-bins'
+                        ? 'No hay tachos que se puedan importar'
+                        : imp.kind === 'drinking-fountains'
+                          ? 'No hay bebederos que se puedan importar'
+                          : 'No hay registros que se puedan importar'}
+                </p>
+                <p className="text-xs text-neutral-600">
+                  {imp.kind === 'specimens'
+                    ? 'Todas las filas del archivo serán omitidas debido a duplicados descartados o especies sin asociación. Puedes cambiar tus decisiones o subir otro archivo.'
+                    : imp.kind === 'species'
+                      ? (especiesInactivasOmitidas > 0
+                        ? 'Todas las filas del archivo corresponden a especies inactivas que no se pueden modificar. Sube otro archivo con especies nuevas o activas.'
+                        : 'El archivo no contiene especies nuevas ni cambios para actualizar. Sube otro archivo.')
+                      : 'Todas las filas del archivo serán omitidas debido a duplicados descartados. Puedes cambiar tus decisiones o subir otro archivo.'}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Button onClick={imp.confirmar} disabled={!imp.puedeConfirmar} loading={imp.summaryLoading || imp.fase === 'confirmando' || imp.reanalizando}>

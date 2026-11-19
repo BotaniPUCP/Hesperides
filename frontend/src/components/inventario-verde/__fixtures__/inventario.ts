@@ -1,4 +1,4 @@
-import type { InventorySummary, Species, Specimen, SpecimenDetail, SpecimenListItem } from '@shared/types';
+import type { InventorySummary, Page, Species, Specimen, SpecimenDetail, SpecimenListItem } from '@shared/types';
 import { normalize } from '@/lib/search/searchText';
 
 /** Datos de muestra con la forma de /api/v1/green-inventory, tomados del catastro real. */
@@ -109,3 +109,7 @@ export const summary: InventorySummary = {
   ],
 };
 
+/** Una página del backend: solo los retirados se siguen paginando en el servidor. */
+export function page<T>(content: T[], totalElements = content.length, number = 0, size = 24): Page<T> {
+  return { content, page: { number, size, totalElements, totalPages: Math.max(1, Math.ceil(totalElements / size)) } };
+}

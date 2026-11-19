@@ -114,20 +114,13 @@ describe('ImportarEspeciesScreen', () => {
     expect(screen.getByText('especies actualizadas')).toBeInTheDocument();
   });
 
-  it('informa y omite las filas de especies inactivas sin editar ni reactivar', async () => {
+  it('informa y omite las filas de especies inactivas e impide confirmar si no hay operaciones que aplicar', async () => {
     api.previewImport.mockResolvedValue({
       ...VISTA_ESPECIES,
       totalRows: 1,
       toCreate: 0,
       toUpdate: 0,
       skippedInactiveSpecies: [{ line: 2, scientificName: 'Schinus molle' }],
-    });
-    api.confirmImport.mockResolvedValue({
-      ...RESULTADO_ESPECIES,
-      created: 0,
-      updated: 0,
-      createdCodes: [],
-      omittedInactiveSpecies: 1,
     });
     pantalla('ADMIN');
 
@@ -138,9 +131,41 @@ describe('ImportarEspeciesScreen', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Revisar archivo' }));
 
     expect(await screen.findByRole('status', { name: 'Especies inactivas omitidas' }))
-      .toHaveTextContent('Las especies inactivas no se editarán ni reactivarán');
+      .toHaveTextContent('Las especies inactivas no se modificarán');
     expect(screen.getByText('Schinus molle')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Confirmar carga' }));
+    expect(screen.getByText('No hay especies que se puedan importar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirmar carga' })).toBeDisabled();
+    expect(api.confirmImport).not.toHaveBeenCalled();
+  });
+
+  it('permite confirmar la carga de especies válidas omitiendo las especies inactivas del mismo archivo', async () => {
+    api.previewImport.mockResolvedValue({
+      ...VISTA_ESPECIES,
+      totalRows: 2,
+      toCreate: 1,
+      toUpdate: 0,
+      skippedInactiveSpecies: [{ line: 3, scientificName: 'Schinus molle' }],
+    });
+    api.confirmImport.mockResolvedValue({
+      ...RESULTADO_ESPECIES,
+      created: 1,
+      updated: 0,
+      createdCodes: ['species-01'],
+      omittedInactiveSpecies: 1,
+    });
+    pantalla('ADMIN');
+
+    await userEvent.upload(
+      screen.getByLabelText('Archivo CSV de especies'),
+      new File(['nombre_cientifico;nombre_comun\nTabebuia rosea;Guayacan\nSchinus molle;Molle'], 'especies.csv', { type: 'text/csv' }),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Revisar archivo' }));
+
+    expect(await screen.findByRole('status', { name: 'Especies inactivas omitidas' }))
+      .toHaveTextContent('Las especies inactivas no se modificarán');
+    const confirmar = screen.getByRole('button', { name: 'Confirmar carga' });
+    expect(confirmar).toBeEnabled();
+    await userEvent.click(confirmar);
     expect(await screen.findByText(/filas de especies inactivas omitidas/)).toBeInTheDocument();
     expect(api.confirmImport).toHaveBeenCalledWith(44, {});
   });

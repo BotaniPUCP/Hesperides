@@ -2,6 +2,8 @@ import type {
   ExtraMeasure,
   InventorySummary,
   LocationCount,
+  Page,
+  RetiredSpecimen,
   Species,
   SpeciesForm,
   SpecimenDetail,
@@ -10,6 +12,21 @@ import type {
 } from '@shared/types';
 import { apiClient } from './api';
 import { API_BASE_URL } from './constants';
+
+export interface RetiredSpecimenParams {
+  search?: string;
+  page: number;
+  size: number;
+}
+
+/** Arma el query string sin los filtros vacíos: el backend los toma como «todos». */
+function query(params: Record<string, string | number | boolean | undefined>): string {
+  const q = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') q.set(key, String(value));
+  }
+  return q.toString();
+}
 
 /**
  * Las fotos guardadas en nuestro almacenamiento llegan como ruta de la API
@@ -69,4 +86,15 @@ export const inventarioVerdeApi = {
 
   deactivateSpecimen: (code: string, reason: string) =>
     apiClient.patch<void>(`/green-inventory/specimens/${segment(code)}/deactivate`, { reason }),
+
+  deactivateSpecimensBatch: (codes: string[], reason: string) =>
+    apiClient.patch<{ count: number; codes: string[] }>('/green-inventory/specimens/deactivate-batch', { codes, reason }),
+
+  retiredSpecimens: (p: RetiredSpecimenParams) =>
+    apiClient.get<Page<RetiredSpecimen>>(
+      `/green-inventory/specimens/retired?${query({ search: p.search?.trim(), page: p.page, size: p.size })}`,
+    ),
+
+  retiredSpecimen: (code: string) =>
+    apiClient.get<RetiredSpecimen>(`/green-inventory/specimens/retired/${segment(code)}`),
 };

@@ -91,7 +91,7 @@ export const NAVIGATION: readonly NavGroup[] = [
       // Inventario georreferenciado de ejemplares botánicos censados en el campus.
       { label: 'Ejemplares', href: '/catastro/ejemplares', icon: '🌳', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       // D-03: el supervisor registra por formulario (plantas, tachos, bebederos); la carga masiva es de quien coordina.
-      { label: 'Registrar en el catastro', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Registrar ejemplar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
       { label: 'Importar al catastro', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
     ],

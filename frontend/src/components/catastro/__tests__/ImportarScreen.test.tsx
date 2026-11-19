@@ -116,7 +116,7 @@ describe('ImportarScreen', () => {
     await subirYRevisar();
 
     expect(await screen.findByText('ejemplares nuevos')).toBeInTheDocument();
-    expect(screen.getByText('Planta inventada')).toBeInTheDocument();
+    expect(screen.getAllByText('Planta inventada')[0]).toBeInTheDocument();
     expect(screen.getByText(/4 filas/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'EV-000001' })).toHaveAttribute(
       'href',
@@ -134,7 +134,8 @@ describe('ImportarScreen', () => {
 
     const confirmar = await screen.findByRole('button', { name: 'Confirmar carga' });
     expect(confirmar).toBeDisabled();
-    expect(screen.getByText('1 pendiente')).toBeInTheDocument();
+    const dupSection = screen.getByRole('region', { name: /Posibles.*duplicados/ });
+    expect(within(dupSection).getByText('1 pendiente')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('radio', { name: 'Omitir' }));
     expect(confirmar).toBeEnabled();
@@ -225,6 +226,8 @@ describe('ImportarScreen', () => {
     expect(await screen.findByText(/1 error de formato/)).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: 'latitud' })).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: 'Es obligatorio y está vacío' })).toBeInTheDocument();
+    expect(screen.getByText('No se puede continuar con la importación')).toBeInTheDocument();
+    expect(screen.queryByText('No hay ejemplares que se puedan importar')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Confirmar carga' })).toBeDisabled();
   });
 
@@ -277,7 +280,7 @@ describe('ImportarScreen', () => {
     pantalla();
     await subirYRevisar();
 
-    expect(await screen.findByText('Planta inventada')).toBeInTheDocument();
+    expect((await screen.findAllByText('Planta inventada'))[0]).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '+ Registrar nueva especie' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Seleccionar especie existente' })).toBeInTheDocument();
   });
@@ -306,8 +309,8 @@ describe('ImportarScreen', () => {
     expect(result).not.toHaveTextContent(/activa|inactiva/i);
     await userEvent.click(result);
 
-    expect(await screen.findByText('Especies que se asociarán a los ejemplares')).toBeInTheDocument();
-    expect(screen.getByText('Planta inventada')).toBeInTheDocument();
+    expect(await screen.findByText('Especies del archivo')).toBeInTheDocument();
+    expect(screen.getAllByText('Planta inventada')[0]).toBeInTheDocument();
     expect(screen.queryByText(/inactiva/i)).not.toBeInTheDocument();
     expect(api.reanalyzeImport).toHaveBeenCalledWith(12, expect.any(File), null, {
       'planta inventada': 'schinus-molle',
@@ -433,7 +436,7 @@ describe('ImportarScreen', () => {
     expect(screen.getByRole('button', { name: 'Confirmar carga' })).toBeDisabled();
 
     await userEvent.click(screen.getByRole('button', { name: 'Re-analizar cambios' }));
-    expect(await screen.findByText('Especies que se asociarán a los ejemplares')).toBeInTheDocument();
+    expect(await screen.findByText('Especies del archivo')).toBeInTheDocument();
     expect(api.reanalyzeImport).toHaveBeenCalledTimes(2);
     expect(api.reanalyzeImport).toHaveBeenLastCalledWith(12, expect.any(File), null, {
       'planta inventada': 'schinus-molle',
@@ -496,9 +499,9 @@ describe('ImportarScreen', () => {
     expect(screen.queryByRole('dialog', { name: 'Confirmar importación' })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Actualizar vista previa' }));
 
-    expect(await screen.findByText('Especies pendientes de asociación')).toBeInTheDocument();
+    expect(await screen.findByText('Especies del archivo')).toBeInTheDocument();
     expect(api.reanalyzeImport).toHaveBeenCalledWith(12, expect.any(File), null, {});
-    expect(screen.queryByText('1 pendiente')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: /Posibles.*duplicados/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Confirmar carga' })).toBeEnabled();
   });
 
@@ -532,7 +535,7 @@ describe('ImportarScreen', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Crear una vista previa nueva' }));
 
-    expect(await screen.findByText('Especies que se asociarán a los ejemplares')).toBeInTheDocument();
+    expect(await screen.findByText('Especies del archivo')).toBeInTheDocument();
     expect(api.previewImport).toHaveBeenNthCalledWith(2, 'specimens', expect.any(File), null, {
       'planta inventada': 'schinus-molle',
     });
@@ -568,7 +571,7 @@ describe('ImportarScreen', () => {
     expect(await screen.findByRole('button', { name: 'Crear una vista previa nueva' })).toBeEnabled();
     await userEvent.click(screen.getByRole('button', { name: 'Crear una vista previa nueva' }));
 
-    expect(await screen.findByText('Especies que se asociarán a los ejemplares')).toBeInTheDocument();
+    expect(await screen.findByText('Especies del archivo')).toBeInTheDocument();
     expect(api.previewImport).toHaveBeenNthCalledWith(2, 'specimens', expect.any(File), null, {
       'planta inventada': 'schinus-molle',
     });
@@ -622,7 +625,7 @@ describe('ImportarScreen', () => {
     expect(await screen.findByText(/asociación pendiente de seleccionar/i)).toBeInTheDocument();
   });
 
-  it('compacta y busca asociaciones largas sin ocultar grupos no resueltos', async () => {
+  it('unifica especies con paginación de 5 por página, pendientes primero y navegación entre páginas', async () => {
     const speciesBindings = Array.from({ length: 7 }, (_, index) => ({
       sourceKey: `origen ${index + 1}`,
       sourceName: `Origen ${index + 1}`,
@@ -641,24 +644,27 @@ describe('ImportarScreen', () => {
     pantalla();
     await subirYRevisar();
 
-    const list = screen.getByRole('list', { name: 'Asociaciones de especies' });
-    expect(within(list).getAllByRole('listitem')).toHaveLength(5);
-    expect(screen.getByRole('button', { name: 'Ver todas (7)' })).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByText('Pendiente sin resolver')).toBeInTheDocument();
-
-    const expand = screen.getByRole('button', { name: 'Ver todas (7)' });
-    expand.focus();
-    await userEvent.keyboard('{Enter}');
-    expect(within(list).getAllByRole('listitem')).toHaveLength(7);
-    expect(screen.getByRole('button', { name: 'Mostrar menos' })).toHaveAttribute('aria-expanded', 'true');
-    screen.getByRole('button', { name: 'Mostrar menos' }).focus();
-    await userEvent.keyboard(' ');
+    expect(await screen.findByText('Especies del archivo')).toBeInTheDocument();
+    expect(screen.getByText('Mostrando 1–5 de 8 especies')).toBeInTheDocument();
+    const list = screen.getByRole('list', { name: 'Especies del archivo' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(5);
 
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar asociación por nombre de origen o especie' }), 'Origen 7');
-    expect(within(list).getAllByRole('listitem')).toHaveLength(1);
-    expect(within(list).getByText('Especie 7')).toBeInTheDocument();
-    expect(screen.getByText('Pendiente sin resolver')).toBeInTheDocument();
+    // La pendiente aparece primero
+    expect(within(list).getAllByText('Pendiente sin resolver')[0]).toBeInTheDocument();
+    expect(within(list).getByText('Pendiente')).toBeInTheDocument();
+
+    // Navegar a la página 2
+    const btnSiguiente = screen.getByRole('button', { name: 'Siguiente' });
+    await userEvent.click(btnSiguiente);
+
+    expect(screen.getByText('Mostrando 6–8 de 8 especies')).toBeInTheDocument();
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+
+    // Volver a la página 1
+    const btnAnterior = screen.getByRole('button', { name: 'Anterior' });
+    await userEvent.click(btnAnterior);
+    expect(screen.getByText('Mostrando 1–5 de 8 especies')).toBeInTheDocument();
+    expect(within(list).getAllByText('Pendiente sin resolver')[0]).toBeInTheDocument();
   });
 
   it('mantiene pendiente un alias ambiguo y solo lo asocia tras una selección explícita por teclado', async () => {
@@ -700,15 +706,18 @@ describe('ImportarScreen', () => {
     pantalla();
     await subirYRevisar();
 
-    const pending = screen.getByRole('region', { name: /Especies pendientes de asociación/ });
-    expect(within(pending).getByText(alias)).toBeInTheDocument();
-    expect(within(pending).getByText('Coincidencias ambiguas: selecciona una especie')).toBeInTheDocument();
-    const initialBindings = screen.getByRole('list', { name: 'Asociaciones de especies' });
-    expect(within(initialBindings).getAllByRole('listitem')).toHaveLength(1);
-    expect(within(initialBindings).getByRole('listitem')).toHaveTextContent('Schinus molle');
-    expect(within(initialBindings).queryByText(alias)).not.toBeInTheDocument();
+    const section = screen.getByRole('region', { name: /Especies del archivo/ });
+    expect(within(section).getAllByText(alias)[0]).toBeInTheDocument();
+    expect(within(section).getByText(/Coincidencias ambiguas: selecciona una especie/)).toBeInTheDocument();
+    const list = screen.getByRole('list', { name: 'Especies del archivo' });
+    const items = within(list).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    // Pendiente primero (alias)
+    expect(within(items[0]).getAllByText(alias)[0]).toBeInTheDocument();
+    // Asociada después (Schinus molle)
+    expect(items[1]).toHaveTextContent('Schinus molle');
 
-    await userEvent.click(within(pending).getByRole('button', { name: 'Seleccionar especie existente' }));
+    await userEvent.click(within(items[0]).getByRole('button', { name: 'Seleccionar especie existente' }));
     const search = screen.getByRole('combobox', { name: /Alias ambiguo prueba/ });
     await userEvent.type(search, 'i');
     const schinusOption = await screen.findByRole('option', { name: /Schinus molle/ });
@@ -723,12 +732,12 @@ describe('ImportarScreen', () => {
     expect(api.reanalyzeImport).toHaveBeenCalledWith(12, expect.any(File), null, {
       [aliasKey]: 'tipuana-tipu',
     });
-    const updatedBindings = screen.getByRole('list', { name: 'Asociaciones de especies' });
-    await waitFor(() => expect(within(updatedBindings).getByText(alias)).toBeInTheDocument());
-    const aliasBinding = within(updatedBindings).getByText(alias).closest('li');
+    const updatedBindings = screen.getByRole('list', { name: 'Especies del archivo' });
+    await waitFor(() => expect(within(updatedBindings).getAllByText(alias)[0]).toBeInTheDocument());
+    const aliasBinding = within(updatedBindings).getAllByText(alias)[0].closest('li');
     expect(aliasBinding).toBeInTheDocument();
     expect(aliasBinding).toHaveTextContent('Tipuana tipu');
-    expect(aliasBinding).toHaveTextContent('Selección del usuario');
+    expect(aliasBinding).toHaveTextContent('En catálogo de especies');
   });
 
   it('muestra la especie anterior y la propuesta para una actualización', async () => {
@@ -746,6 +755,39 @@ describe('ImportarScreen', () => {
     expect(within(changes).getByText('EV-000001')).toBeInTheDocument();
     expect(within(changes).getByText('Roystonea regia')).toBeInTheDocument();
     expect(within(changes).getByText('Schinus molle')).toBeInTheDocument();
+  });
+
+  it('descuenta duplicados omitidos en ejemplares nuevos y bloquea confirmar si no hay nada que importar', async () => {
+    api.previewImport.mockResolvedValue({
+      ...VISTA,
+      totalRows: 1,
+      toCreate: 1,
+      toUpdate: 0,
+      unknownSpecies: [],
+      duplicates: [{ line: 2, label: 'Schinus molle', speciesSlug: 'schinus-molle', duplicateOf: 'EV-000147', distanceM: 1.02 }],
+    });
+    pantalla();
+    await subirYRevisar();
+
+    // Inicialmente toCreateEfectivo es 1
+    const nuevosCard = screen.getByText('ejemplares nuevos').parentElement!;
+    expect(within(nuevosCard).getByText('1')).toBeInTheDocument();
+
+    // Marcar como omitir
+    await userEvent.click(screen.getByRole('radio', { name: 'Omitir' }));
+
+    // Cifra se recalcula a 0 ejemplares nuevos y etiqueta cambia a "Decisión: Omitir"
+    expect(within(nuevosCard).getByText('0')).toBeInTheDocument();
+    expect(screen.getByText('Decisión: Omitir')).toBeInTheDocument();
+    expect(screen.getByText('No hay ejemplares que se puedan importar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirmar carga' })).toBeDisabled();
+
+    // Si cambia de opinión y marca ingresar
+    await userEvent.click(screen.getByRole('radio', { name: 'Ingresar' }));
+    expect(within(nuevosCard).getByText('1')).toBeInTheDocument();
+    expect(screen.getByText('Decisión: Ingresar')).toBeInTheDocument();
+    expect(screen.queryByText('No hay ejemplares que se puedan importar')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirmar carga' })).toBeEnabled();
   });
 });
 

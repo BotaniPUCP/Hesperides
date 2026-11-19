@@ -65,7 +65,7 @@ describe('CamposMedidasAdicionales', () => {
     expect(screen.getByTestId('estado')).toHaveTextContent('[]');
   });
 
-  it('un coordinador crea una medida nueva y queda elegida', async () => {
+  it('un coordinador crea una medida nueva y queda elegida tras confirmar', async () => {
     api.createExtraMeasure.mockResolvedValue({ code: 'DIAMETRO', label: 'Diámetro', unitCode: 'M', referenceNote: null });
     render(<Conjunto />);
 
@@ -73,8 +73,29 @@ describe('CamposMedidasAdicionales', () => {
     await userEvent.selectOptions(screen.getByLabelText(/Unidad/), 'M');
     await userEvent.click(screen.getByRole('button', { name: 'Crear medida' }));
 
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Crear medida adicional' })).toBeInTheDocument();
+    expect(screen.getByText('Se registrará una nueva medida en el catálogo global del sistema.')).toBeInTheDocument();
+    expect(screen.getByText('Diámetro')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar creación' }));
+
     await waitFor(() => expect(api.createExtraMeasure).toHaveBeenCalledWith({ label: 'Diámetro', unitCode: 'M' }));
     expect(await screen.findByRole('group', { name: 'Diámetro' })).toBeInTheDocument();
+  });
+
+  it('si el usuario cancela la confirmación, no se crea la medida en el catálogo', async () => {
+    render(<Conjunto />);
+
+    await userEvent.type(await screen.findByLabelText(/Nueva medida/), 'Diámetro');
+    await userEvent.selectOptions(screen.getByLabelText(/Unidad/), 'M');
+    await userEvent.click(screen.getByRole('button', { name: 'Crear medida' }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(api.createExtraMeasure).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('avisa si la medida nueva ya existe', async () => {
@@ -84,6 +105,7 @@ describe('CamposMedidasAdicionales', () => {
     await userEvent.type(await screen.findByLabelText(/Nueva medida/), 'Diámetro');
     await userEvent.selectOptions(screen.getByLabelText(/Unidad/), 'M');
     await userEvent.click(screen.getByRole('button', { name: 'Crear medida' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar creación' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe la medida');
   });

@@ -39,4 +39,16 @@ describe('CampoArchivo', () => {
     expect(onElegir).toHaveBeenCalledWith(expect.any(File));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+
+  it('permite quitar el archivo seleccionado', async () => {
+    const onElegir = jest.fn();
+    const file = archivo(1024);
+    render(<CampoArchivo id="f" etiqueta="Foto" acepta="image/*" limite={LIMITES.foto} archivo={file} onElegir={onElegir} />);
+
+    const botonQuitar = screen.getByRole('button', { name: 'Quitar' });
+    expect(botonQuitar).toBeInTheDocument();
+    await userEvent.click(botonQuitar);
+
+    expect(onElegir).toHaveBeenCalledWith(null);
+  });
 });

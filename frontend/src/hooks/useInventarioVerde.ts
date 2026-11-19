@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { LocationCount, Species, SpeciesFilters, SpecimenFilters, Specimen } from '@shared/types';
+import type { LocationCount, RetiredSpecimen, Species, SpeciesFilters, SpecimenFilters, Specimen } from '@shared/types';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { sortSpecimens, speciesMatching, specimensMatching } from '@/lib/inventory/inventoryLists';
 import { speciesList, specimensList } from '@/lib/preload/inventoryLists';
@@ -45,6 +45,7 @@ export function useInventarioVerdeSpeciesBySlug(slug: string | null | undefined,
 export interface UseInventarioVerdeSpecimensParams extends SpecimenFilters {
   page?: number;
   pageSize?: number;
+  reloadKey?: number;
 }
 
 /**
@@ -56,7 +57,7 @@ export function useInventarioVerdeSpecimens(
   slug: string | null | undefined,
   params: UseInventarioVerdeSpecimensParams = {},
 ) {
-  const { search = '', location = 'ALL', vegetationType, critical, measured, sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12 } =
+  const { search = '', location = 'ALL', vegetationType, critical, measured, sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12, reloadKey } =
     params;
   const list = usePreloadedList(specimensList);
   const matching = useMemo(() => sortSpecimens(
@@ -77,6 +78,36 @@ export function useInventarioVerdeSpecimens(
     availableLocations: (locations.data ?? []) as LocationCount[],
     loading: !list.loaded && list.errorMessage === null,
     errorMessage: list.loaded ? null : list.errorMessage,
+  };
+}
+
+export interface UseInventarioVerdeRetiredSpecimensParams {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  reloadKey?: number;
+}
+
+export function useInventarioVerdeRetiredSpecimens(
+  params: UseInventarioVerdeRetiredSpecimensParams = {},
+  enabled = true,
+) {
+  const { search = '', page = 0, pageSize = 12, reloadKey } = params;
+  const request = { search, page, size: pageSize };
+  const queryKey = enabled ? `retired:${JSON.stringify({ ...request, reloadKey })}` : null;
+  const { data, loading, errorMessage } = useRequest(
+    queryKey,
+    () => inventarioVerdeApi.retiredSpecimens(request),
+    { keepPreviousData: true },
+  );
+
+  return {
+    specimens: (data?.content ?? []) as RetiredSpecimen[],
+    totalElements: data?.page.totalElements ?? 0,
+    totalPages: Math.max(data?.page.totalPages ?? 1, 1),
+    currentPage: data?.page.number ?? page,
+    loading: enabled ? loading : false,
+    errorMessage: enabled ? errorMessage : null,
   };
 }
 

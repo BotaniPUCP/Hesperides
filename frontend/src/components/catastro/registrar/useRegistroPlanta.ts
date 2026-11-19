@@ -34,6 +34,18 @@ export function useRegistroPlanta() {
     });
   }
 
+  function cambiarCoordenadas(lat: string, lon: string) {
+    setValores((v) => ({ ...v, lat, lon }));
+    setError(null);
+    setErrores((prev) => {
+      if (!prev.lat && !prev.lon) return prev;
+      const next = { ...prev };
+      delete next.lat;
+      delete next.lon;
+      return next;
+    });
+  }
+
   async function enviar(confirmarDuplicado = false) {
     const { form, errores: encontrados } = aSpecimenForm(valores);
     setErrores(encontrados);
@@ -65,7 +77,7 @@ export function useRegistroPlanta() {
 
   return {
     valores, foto, errores, enviando, duplicado, error, registrado, sinGuardar,
-    cambiar, setFoto, enviar, registrarOtra, descartarDuplicado: () => setDuplicado(null),
+    cambiar, cambiarCoordenadas, setFoto, enviar, registrarOtra, descartarDuplicado: () => setDuplicado(null),
   };
 }
 

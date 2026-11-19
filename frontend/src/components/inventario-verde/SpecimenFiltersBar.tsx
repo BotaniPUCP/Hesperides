@@ -32,6 +32,10 @@ export interface SpecimenFiltersBarProps {
   onReset?: () => void;
   viewMode?: SpecimenViewMode;
   onViewModeChange?: (mode: SpecimenViewMode) => void;
+  selectable?: boolean;
+  isAllSelected?: boolean;
+  onToggleSelectAll?: () => void;
+  pageItemCount?: number;
 }
 
 export function SpecimenFiltersBar({
@@ -58,6 +62,10 @@ export function SpecimenFiltersBar({
   onReset,
   viewMode = 'cards',
   onViewModeChange,
+  selectable = false,
+  isAllSelected = false,
+  onToggleSelectAll,
+  pageItemCount = 0,
 }: SpecimenFiltersBarProps) {
   const hasActiveFilters =
     Boolean(searchValue.trim()) ||
@@ -117,7 +125,7 @@ export function SpecimenFiltersBar({
             <option value="ALL">Todos los tipos</option>
             {availableTypes.map((type) => (
               <option key={type.code} value={type.code}>
-                {type.label} ({type.count})
+                {type.label}
               </option>
             ))}
           </select>
@@ -133,7 +141,7 @@ export function SpecimenFiltersBar({
             <option value="ALL">Todas las ubicaciones</option>
             {availableLocations.map((loc) => (
               <option key={loc.location} value={loc.location}>
-                {loc.location} ({loc.count})
+                {loc.location}
               </option>
             ))}
           </select>
@@ -167,8 +175,8 @@ export function SpecimenFiltersBar({
 
       {/* Fila inferior: Estado a la izquierda y controles a la derecha */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-neutral-500 pt-1 border-b border-neutral-100 pb-3 min-h-[42px]">
-        {/* Lado izquierdo: Cantidad de ejemplares coincidentes / estado de carga */}
-        <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+        {/* Lado izquierdo: Cantidad de ejemplares coincidentes / estado de carga y selector de página */}
+        <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto flex-wrap">
           {loading ? (
             <div className="flex items-center gap-2 text-xs text-neutral-500 py-0.5" role="status">
               <span
@@ -178,13 +186,32 @@ export function SpecimenFiltersBar({
               <span>Actualizando catálogo...</span>
             </div>
           ) : (
-            <span className="whitespace-nowrap">
-              Mostrando{' '}
-              <strong className="text-neutral-800 font-semibold">{fromItem}</strong>–
-              <strong className="text-neutral-800 font-semibold">{toItem}</strong> de{' '}
-              <strong className="text-neutral-900 font-semibold">{totalFilteredCount}</strong>{' '}
-              {totalFilteredCount === 1 ? 'ejemplar' : 'ejemplares'}
-            </span>
+            <div className="flex items-center gap-2.5 flex-wrap text-xs text-neutral-600">
+              <span className="whitespace-nowrap">
+                Mostrando{' '}
+                <strong className="text-neutral-800 font-semibold">{fromItem}</strong>–
+                <strong className="text-neutral-800 font-semibold">{toItem}</strong> de{' '}
+                <strong className="text-neutral-900 font-semibold">{totalFilteredCount}</strong>{' '}
+                {totalFilteredCount === 1 ? 'ejemplar' : 'ejemplares'}
+              </span>
+
+              {selectable && pageItemCount > 0 && (
+                <label className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-neutral-900 cursor-pointer pl-2.5 border-l border-neutral-300">
+                  <input
+                    type="checkbox"
+                    aria-label={`Seleccionar los ${pageItemCount} ejemplares mostrados`}
+                    checked={isAllSelected}
+                    onChange={onToggleSelectAll}
+                    className="h-3.5 w-3.5 rounded border-neutral-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                  />
+                  <span className="font-medium select-none">
+                    {isAllSelected
+                      ? `Deseleccionar los ${pageItemCount} mostrados`
+                      : `Seleccionar los ${pageItemCount} mostrados`}
+                  </span>
+                </label>
+              )}
+            </div>
           )}
 
           {hasActiveFilters && (
