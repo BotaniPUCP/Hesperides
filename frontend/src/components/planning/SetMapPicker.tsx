@@ -61,11 +61,11 @@ interface Focus {
 
 /** Cómo se ve la tarjeta en cada etapa, y qué hará el próximo clic. */
 const STAGE_LOOK: Record<Stage, { frame: string; chip: string; label: string; next: string }> = {
-  shade: { frame: 'border-orange-500', chip: 'border border-orange-500 bg-neutral-0 text-orange-800', label: 'Sombreado',
+  shade: { frame: 'border-orange-500', chip: 'border border-orange-500 bg-neutral-0 text-orange-800 dark:text-orange-300', label: 'Sombreado',
     next: 'Poner el foco en lo elegido' },
   focus: { frame: 'border-orange-500 ring-2 ring-orange-400', chip: 'bg-orange-500 text-white', label: 'En foco',
     next: 'Quitar el foco y el sombreado' },
-  lost: { frame: 'border-dashed border-orange-400', chip: 'border border-dashed border-orange-400 text-orange-800', label: 'Sin foco',
+  lost: { frame: 'border-dashed border-orange-400', chip: 'border border-dashed border-orange-400 text-orange-800 dark:text-orange-300', label: 'Sin foco',
     next: 'Quitar el sombreado' },
 };
 /** Lo que dice el recorrido de cada etapa. */
@@ -492,7 +492,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                 <li key={g.key} aria-label={g.name} aria-current={isFocused ? 'true' : undefined}
                   ref={(el) => { if (el) cards.current.set(g.key, el); else cards.current.delete(g.key); }}
                   className={`overflow-hidden rounded-xl border-2 bg-neutral-0 transition-shadow ${frame}`}>
-                  <div className={`flex items-center gap-1 px-2 py-2 ${isFocused ? 'bg-orange-50' : chosen > 0 ? 'bg-brand-50' : 'bg-neutral-0'}`}>
+                  <div className={`flex items-center gap-1 px-2 py-2 ${isFocused ? 'bg-orange-50 dark:bg-orange-950/40' : chosen > 0 ? 'bg-brand-50' : 'bg-neutral-0'}`}>
                     <button type="button" aria-expanded={open} onClick={() => toggleOpen(g.key, open)}
                       aria-label={`${open ? 'Plegar' : 'Desplegar'} ${g.name}`}
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100">
@@ -501,7 +501,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                     <button type="button" onClick={() => onCardClick(g)} aria-pressed={isFocused}
                       title={look ? look.next : 'Sombrear este sector en el mapa'}
                       className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-neutral-900">
-                      <span className="truncate">{g.name}</span>
+                      <span className="truncate" title={g.name}>{g.name}</span>
                     </button>
                     {look && <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${look.chip}`}>{look.label}</span>}
                     {chosen > 0 && <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">{contentsLabel(chosenGardens.length, chosenTrees.length)}</span>}
