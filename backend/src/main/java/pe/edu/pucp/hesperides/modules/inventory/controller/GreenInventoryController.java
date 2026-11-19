@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.inventory.dto.InventorySummaryResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.LocationCountResponse;
+import pe.edu.pucp.hesperides.modules.inventory.dto.RetiredSpecimenResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenDetailResponse;
@@ -18,6 +19,8 @@ import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpecimenSearchResultResponse;
 import pe.edu.pucp.hesperides.modules.inventory.service.GreenInventoryService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -100,7 +103,28 @@ public class GreenInventoryController {
     }
 
     @GetMapping("/specimens/{code}")
-    public ResponseEntity<ApiResponse<SpecimenDetailResponse>> specimen(@PathVariable String code) {
-        return ResponseEntity.ok(ApiResponse.ok("Specimen retrieved", service.specimenByCode(code)));
+    public ResponseEntity<ApiResponse<SpecimenDetailResponse>> specimen(
+            @PathVariable String code,
+            Authentication authentication) {
+        boolean canViewRetired = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ADMIN".equals(a.getAuthority()) || "COORDINADOR".equals(a.getAuthority()));
+        return ResponseEntity.ok(ApiResponse.ok("Specimen retrieved", service.specimenByCode(code, canViewRetired)));
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COORDINADOR')")
+    @GetMapping("/specimens/retired")
+    public ResponseEntity<ApiResponse<Page<RetiredSpecimenResponse>>> retiredSpecimens(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.ok("Retired specimens retrieved",
+                service.retiredSpecimens(search, page, size)));
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'COORDINADOR')")
+    @GetMapping("/specimens/retired/{code}")
+    public ResponseEntity<ApiResponse<RetiredSpecimenResponse>> retiredSpecimen(@PathVariable String code) {
+        return ResponseEntity.ok(ApiResponse.ok("Retired specimen retrieved",
+                service.retiredSpecimenByCode(code)));
     }
 }

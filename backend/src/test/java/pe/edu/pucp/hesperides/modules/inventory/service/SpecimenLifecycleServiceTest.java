@@ -123,4 +123,57 @@ class SpecimenLifecycleServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Specimen not found");
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void deactivateBatchProcessesMultipleSpecimensInSortedOrder() {
+        String code1 = "AR-000002";
+        String code2 = "AR-000001";
+        String reason = "Retiro por obra civil";
+        Timestamp now = Timestamp.from(Instant.now());
+
+        when(jdbc.query(anyString(), any(RowMapper.class), eq(code1)))
+                .thenAnswer(invocation -> {
+                    RowMapper<?> mapper = invocation.getArgument(1);
+                    java.sql.ResultSet rs = org.mockito.Mockito.mock(java.sql.ResultSet.class);
+                    when(rs.getLong("id")).thenReturn(43L);
+                    when(rs.getString("code")).thenReturn(code1);
+                    when(rs.getObject("species_id", Long.class)).thenReturn(10L);
+                    return List.of(mapper.mapRow(rs, 0));
+                });
+
+        when(jdbc.query(anyString(), any(RowMapper.class), eq(code2)))
+                .thenAnswer(invocation -> {
+                    RowMapper<?> mapper = invocation.getArgument(1);
+                    java.sql.ResultSet rs = org.mockito.Mockito.mock(java.sql.ResultSet.class);
+                    when(rs.getLong("id")).thenReturn(42L);
+                    when(rs.getString("code")).thenReturn(code2);
+                    when(rs.getObject("species_id", Long.class)).thenReturn(10L);
+                    return List.of(mapper.mapRow(rs, 0));
+                });
+
+        when(jdbc.query(anyString(), any(RowMapper.class), eq(10L)))
+                .thenAnswer(invocation -> {
+                    RowMapper<?> mapper = invocation.getArgument(1);
+                    java.sql.ResultSet rs = org.mockito.Mockito.mock(java.sql.ResultSet.class);
+                    when(rs.getString("slug")).thenReturn("ficus-elastica");
+                    when(rs.getBoolean("is_active")).thenReturn(true);
+                    return List.of(mapper.mapRow(rs, 0));
+                });
+
+        when(jdbc.queryForObject(anyString(), any(RowMapper.class), eq(42L))).thenReturn(now);
+        when(jdbc.queryForObject(anyString(), any(RowMapper.class), eq(43L))).thenReturn(now);
+
+        List<String> result = service.deactivateBatch(List.of(code1, code2), reason);
+
+        assertThat(result).containsExactly("AR-000001", "AR-000002");
+        verify(audit).record(eq(AuditActionCode.GREEN_ELEMENT_SOFT_DELETED), eq("GreenElement"), eq(42L), any());
+        verify(audit).record(eq(AuditActionCode.GREEN_ELEMENT_SOFT_DELETED), eq("GreenElement"), eq(43L), any());
+    }
+
+    @Test
+    void deactivateBatchReturnsEmptyOnNullOrEmpty() {
+        assertThat(service.deactivateBatch(null, "Motivo")).isEmpty();
+        assertThat(service.deactivateBatch(List.of(), "Motivo")).isEmpty();
+    }
 }

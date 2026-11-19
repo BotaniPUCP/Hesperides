@@ -83,6 +83,8 @@ final class InventoryQueries {
             + " AND (s.is_active OR EXISTS (SELECT 1 FROM green_elements visible_element"
             + " WHERE visible_element.species_id = s.id AND visible_element.is_active AND visible_element.deleted_at IS NULL))";
 
+    static final String SPECIES_BY_SLUG_ANY = SPECIES_COLUMNS + " WHERE s.slug = :slug";
+
     static final String TOTALS = """
             SELECT (SELECT count(*) FROM species s WHERE s.deleted_at IS NULL
                       AND (s.is_active OR EXISTS (SELECT 1 FROM green_elements active_element
@@ -191,4 +193,67 @@ final class InventoryQueries {
                e.code
              LIMIT :limit
             """.formatted(ACTIVE_ELEMENT);
+
+    static final String RETIRED_SPECIMEN_COLUMNS = """
+            SELECT e.id,
+                   e.code,
+                   s.scientific_name,
+                   s.common_name,
+                   s.slug AS species_slug,
+                   st.label AS vegetation_type,
+                   e.source_location,
+                   e.source_reference,
+                   e.notes,
+                   ST_Y(e.location) AS lat,
+                   ST_X(e.location) AS lon,
+                   e.deleted_at AS retired_at,
+                   al.changes ->> 'reason' AS reason,
+                   NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), '') AS retired_by_name,
+                   u.email AS retired_by_email,
+                   (SELECT count(*) FROM intervention_elements ie WHERE ie.green_element_id = e.id AND ie.deleted_at IS NULL) AS interventions_count
+              FROM green_elements e
+              JOIN species s ON s.id = e.species_id
+              LEFT JOIN catalog_items st ON st.id = s.species_type_item_id
+              LEFT JOIN LATERAL (
+                  SELECT al_inner.user_id, al_inner.changes
+                    FROM audit_log al_inner
+                   WHERE al_inner.entity_type = 'GreenElement'
+                     AND al_inner.entity_id = e.id
+                     AND al_inner.action = 'GREEN_ELEMENT_SOFT_DELETED'
+                   ORDER BY al_inner.id DESC
+                   LIMIT 1
+              ) al ON true
+              LEFT JOIN users u ON u.id = al.user_id
+             WHERE e.deleted_at IS NOT NULL
+            """;
+
+    static final String RETIRED_SPECIMEN_FILTER = """
+              AND (CAST(:search AS TEXT) IS NULL OR unaccent(lower(concat_ws(' ', e.code, s.scientific_name, s.common_name,
+                   e.source_location, e.source_reference, COALESCE(al.changes ->> 'reason', '')))) LIKE unaccent(lower(:search)))
+            """;
+
+    static final String RETIRED_SPECIMEN_PAGE = RETIRED_SPECIMEN_COLUMNS + RETIRED_SPECIMEN_FILTER
+            + " ORDER BY e.deleted_at DESC, e.code DESC LIMIT :limit OFFSET :offset";
+
+    static final String RETIRED_SPECIMEN_COUNT = """
+            SELECT count(*)
+              FROM green_elements e
+              JOIN species s ON s.id = e.species_id
+              LEFT JOIN catalog_items st ON st.id = s.species_type_item_id
+              LEFT JOIN LATERAL (
+                  SELECT al_inner.user_id, al_inner.changes
+                    FROM audit_log al_inner
+                   WHERE al_inner.entity_type = 'GreenElement'
+                     AND al_inner.entity_id = e.id
+                     AND al_inner.action = 'GREEN_ELEMENT_SOFT_DELETED'
+                   ORDER BY al_inner.id DESC
+                   LIMIT 1
+              ) al ON true
+              LEFT JOIN users u ON u.id = al.user_id
+             WHERE e.deleted_at IS NOT NULL
+            """ + RETIRED_SPECIMEN_FILTER;
+
+    static final String RETIRED_SPECIMEN_BY_CODE = RETIRED_SPECIMEN_COLUMNS + " AND e.code = :code";
+
+    static final String RETIRED_SPECIMEN_ROW_BY_CODE = SPECIMEN_COLUMNS + " WHERE e.code = :code AND e.deleted_at IS NOT NULL";
 }

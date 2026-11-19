@@ -25,6 +25,8 @@ export function ConfirmarImportacionModal({
     if (!isWorking) onBack();
   };
 
+  const sinOperacionesModal = summary.toCreate === 0 && summary.toUpdate === 0;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -38,7 +40,7 @@ export function ConfirmarImportacionModal({
           <Button variant="ghost" size="sm" onClick={back} disabled={isWorking}>
             Volver
           </Button>
-          <Button variant="primary" size="sm" onClick={onConfirm} loading={isWorking} disabled={isWorking}>
+          <Button variant="primary" size="sm" onClick={onConfirm} loading={isWorking} disabled={isWorking || sinOperacionesModal}>
             Confirmar e importar
           </Button>
         </div>
@@ -56,6 +58,11 @@ export function ConfirmarImportacionModal({
             <dd className="text-2xl font-bold text-neutral-900">{summary.toUpdate}</dd>
           </div>
         </dl>
+        {sinOperacionesModal && (
+          <p role="alert" className="text-xs font-medium text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+            No hay ejemplares que se puedan importar. Todas las filas del archivo serán omitidas debido a duplicados descartados o especies sin asociación.
+          </p>
+        )}
         {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}
       </div>
     </Modal>

@@ -55,7 +55,12 @@ export function SpecimenDetailScreen({ code }: SpecimenDetailScreenProps) {
       <SpecimenInfo specimen={specimen} onSpecimenUpdated={() => setReloadKey((k) => k + 1)} />
 
       <SpecimenInterventions id={specimen.id} code={specimen.code} refreshKey={focusRevision} />
-      <SpecimenAssessments key={reloadKey} code={specimen.code} refreshKey={focusRevision} />
+      <SpecimenAssessments
+        key={reloadKey}
+        code={specimen.code}
+        refreshKey={focusRevision}
+        isRetired={Boolean(specimen.retiredAt || specimen.isActive === false)}
+      />
     </div>
   );
 }

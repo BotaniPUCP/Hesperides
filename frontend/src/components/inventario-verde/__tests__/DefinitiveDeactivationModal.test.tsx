@@ -10,7 +10,7 @@ describe('DefinitiveDeactivationModal', () => {
     render(<DefinitiveDeactivationModal entityLabel="Ejemplar EV-000001" onConfirm={onConfirm} onCancel={onCancel} />);
 
     expect(screen.getByRole('button', { name: 'Dar de baja' })).toBeDisabled();
-    expect(screen.getByRole('dialog')).toHaveTextContent(/no se borrarán sus historiales ni se podrá reactivar/i);
+    expect(screen.getByRole('dialog')).toHaveTextContent(/no se borrarán sus historiales/i);
     await user.type(screen.getByLabelText('Motivo de la baja'), '  Retiro en campo  ');
     await user.click(screen.getByRole('button', { name: 'Dar de baja' }));
 

@@ -15,6 +15,9 @@ export interface SpecimenGridProps {
   pageSize: number;
   onPageChange: (page: number) => void;
   onClearFilters?: () => void;
+  selectedCodes?: Set<string>;
+  onToggleSelect?: (code: string) => void;
+  selectable?: boolean;
 }
 
 export function SpecimenGrid({
@@ -28,6 +31,9 @@ export function SpecimenGrid({
   pageSize,
   onPageChange,
   onClearFilters,
+  selectedCodes,
+  onToggleSelect,
+  selectable = false,
 }: SpecimenGridProps) {
   if (loading && specimens.length === 0) {
     return (
@@ -67,6 +73,9 @@ export function SpecimenGrid({
             key={specimen.code}
             specimen={specimen}
             species={speciesMap?.[specimen.speciesSlug ?? ''] || species}
+            selectable={selectable}
+            isSelected={selectedCodes?.has(specimen.code) ?? false}
+            onToggleSelect={onToggleSelect}
           />
         ))}
       </div>

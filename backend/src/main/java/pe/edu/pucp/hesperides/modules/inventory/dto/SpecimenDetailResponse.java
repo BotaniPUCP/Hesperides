@@ -1,6 +1,7 @@
 package pe.edu.pucp.hesperides.modules.inventory.dto;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,5 +20,6 @@ public record SpecimenDetailResponse(long id, String code, String sourceReferenc
                                      BigDecimal referenceCrownRadiusM, String referenceHeightSourceName,
                                      String referenceCrownRadiusSourceName, LocalDate lastPruningDate,
                                      boolean measuredBeforeLastPruning, String pruningAssignment,
-                                     List<SpecimenExtraMeasureResponse> extraMeasures) {
+                                     List<SpecimenExtraMeasureResponse> extraMeasures,
+                                     boolean isActive, Instant retiredAt, String retirementReason, String retiredByName) {
 }

@@ -10,6 +10,7 @@ import pe.edu.pucp.hesperides.engine.pruning.PruningAssignment;
 import pe.edu.pucp.hesperides.modules.inventory.dto.ExtraMeasureResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.InventorySummaryResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.LocationCountResponse;
+import pe.edu.pucp.hesperides.modules.inventory.dto.RetiredSpecimenResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesPhotoResponse;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesQuery;
 import pe.edu.pucp.hesperides.modules.inventory.dto.SpeciesResponse;
@@ -25,8 +26,10 @@ import pe.edu.pucp.hesperides.modules.inventory.repository.SpecimenRepository;
 import pe.edu.pucp.hesperides.modules.inventory.repository.SpecimenRow;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -60,11 +63,17 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
 
     @Override
     public SpeciesResponse speciesBySlug(String slug) {
+        return speciesBySlug(slug, false);
+    }
+
+    private SpeciesResponse speciesBySlug(String slug, boolean includeDeleted) {
         List<SpeciesPhotoResponse> photos = speciesPhotoRepository.active(slug).stream()
                 .map(p -> new SpeciesPhotoResponse(PhotoUrls.speciesPhoto(p.id(), true), PhotoUrls.speciesPhoto(p.id(), false),
                         p.author(), p.license(), p.sourcePage()))
                 .toList();
-        return toResponse(requireSpecies(slug), photos, extraMeasures.ofSpecies(slug));
+        SpeciesRow row = (includeDeleted ? speciesRepository.bySlugIncludeDeleted(slug) : speciesRepository.bySlug(slug))
+                .orElseThrow(() -> new ResourceNotFoundException("Species not found: " + slug));
+        return toResponse(row, photos, extraMeasures.ofSpecies(slug));
     }
 
     @Override
@@ -94,8 +103,32 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
 
     @Override
     public SpecimenDetailResponse specimenByCode(String code) {
-        SpecimenRow row = specimenRepository.byCode(code)
+        return specimenByCode(code, false);
+    }
+
+    @Override
+    public SpecimenDetailResponse specimenByCode(String code, boolean canViewRetired) {
+        Optional<SpecimenRow> active = specimenRepository.byCode(code);
+        if (active.isPresent()) {
+            return toDetailResponse(active.get(), true, null, null, null);
+        }
+
+        if (!canViewRetired) {
+            throw new ResourceNotFoundException("Specimen not found: " + code);
+        }
+
+        SpecimenRow retiredRow = specimenRepository.retiredSpecimenRowByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Specimen not found: " + code));
+        RetiredSpecimenResponse retiredMeta = specimenRepository.retiredByCode(code).orElse(null);
+        Instant retiredAt = retiredMeta != null ? retiredMeta.retiredAt() : null;
+        String reason = retiredMeta != null ? retiredMeta.reason() : null;
+        String retiredByName = retiredMeta != null ? retiredMeta.retiredByName() : null;
+
+        return toDetailResponse(retiredRow, false, retiredAt, reason, retiredByName);
+    }
+
+    private SpecimenDetailResponse toDetailResponse(SpecimenRow row, boolean isActive, Instant retiredAt,
+                                                    String retirementReason, String retiredByName) {
         boolean measured = "MEASURED".equals(row.dataSource());
         String status = PruningAssignment.measurementStatus(measured, row.speciesCritical());
         boolean reference = PruningAssignment.STATUS_REFERENCE.equals(status);
@@ -104,13 +137,14 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
                 row.latitude(), row.longitude(), row.photoUrl(), PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), false),
                 PhotoUrls.specimen(row.attachmentId(), row.photoUrl(), true), row.quantity(), row.notes(), row.elementTypeCode(), row.elementTypeName(), row.heightM(),
                 row.trunkHeightM(), row.dbhCm(), row.crownRadiusM(), row.isBanded(), row.dataSource(),
-                specimenRepository.sectionOf(code).orElse(null), speciesBySlug(row.speciesSlug()), row.measuredAt(),
+                specimenRepository.sectionOf(row.code()).orElse(null), speciesBySlug(row.speciesSlug(), !isActive), row.measuredAt(),
                 row.speciesCritical(), status, reference ? row.referenceHeightM() : null,
                 reference ? row.referenceCrownRadiusM() : null, reference ? row.referenceHeightSourceName() : null,
                 reference ? row.referenceCrownRadiusSourceName() : null, lastPruning,
                 measuredBeforePruning(measured, row.measuredAt(), lastPruning),
                 PruningAssignment.propose(row.speciesCritical(), measured, row.heightM()),
-                extraMeasures.latestOfSpecimen(code));
+                extraMeasures.latestOfSpecimen(row.code()),
+                isActive, retiredAt, retirementReason, retiredByName);
     }
 
     /** Una poda del mismo día no invalida la medida: pudo tomarse justo después. */
@@ -121,6 +155,21 @@ public class GreenInventoryServiceImpl implements GreenInventoryService {
     @Override
     public List<SpecimenSearchResultResponse> searchSpecimens(String query, int limit) {
         return specimenRepository.search(query, limit);
+    }
+
+    @Override
+    public Page<RetiredSpecimenResponse> retiredSpecimens(String search, int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(100, Math.max(1, size));
+        List<RetiredSpecimenResponse> content = specimenRepository.retiredPage(search, safePage, safeSize);
+        long total = specimenRepository.retiredCount(search);
+        return new PageImpl<>(content, PageRequest.of(safePage, safeSize), total);
+    }
+
+    @Override
+    public RetiredSpecimenResponse retiredSpecimenByCode(String code) {
+        return specimenRepository.retiredByCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException("Retired specimen not found: " + code));
     }
 
     private SpeciesRow requireSpecies(String slug) {

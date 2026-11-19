@@ -30,6 +30,18 @@ export function useRegistroComponente(kind: FeatureForm['kind']) {
     });
   }
 
+  function cambiarCoordenadas(lat: string, lon: string) {
+    setValores((v) => ({ ...v, lat, lon }));
+    setError(null);
+    setErrores((prev) => {
+      if (!prev.lat && !prev.lon) return prev;
+      const next = { ...prev };
+      delete next.lat;
+      delete next.lon;
+      return next;
+    });
+  }
+
   async function enviar(confirmarDuplicado = false) {
     const { form, errores: encontrados } = aFeatureForm(valores);
     setErrores(encontrados);
@@ -58,7 +70,7 @@ export function useRegistroComponente(kind: FeatureForm['kind']) {
 
   return {
     valores, foto, errores, enviando, duplicado, error, registrado, sinGuardar,
-    cambiar, setFoto, enviar, registrarOtro, descartarDuplicado: () => setDuplicado(null),
+    cambiar, cambiarCoordenadas, setFoto, enviar, registrarOtro, descartarDuplicado: () => setDuplicado(null),
   };
 }
 

@@ -3,6 +3,7 @@ import type {
   InventorySummary,
   LocationCount,
   Page,
+  RetiredSpecimen,
   Species,
   SpeciesForm,
   SpecimenDetail,
@@ -29,6 +30,12 @@ export interface SpecimenParams {
   measured?: boolean;
   sortBy: SpecimenSortKey;
   sortDirection: 'asc' | 'desc';
+  page: number;
+  size: number;
+}
+
+export interface RetiredSpecimenParams {
+  search?: string;
   page: number;
   size: number;
 }
@@ -143,4 +150,15 @@ export const inventarioVerdeApi = {
 
   deactivateSpecimen: (code: string, reason: string) =>
     apiClient.patch<void>(`/green-inventory/specimens/${segment(code)}/deactivate`, { reason }),
+
+  deactivateSpecimensBatch: (codes: string[], reason: string) =>
+    apiClient.patch<{ count: number; codes: string[] }>('/green-inventory/specimens/deactivate-batch', { codes, reason }),
+
+  retiredSpecimens: (p: RetiredSpecimenParams) =>
+    apiClient.get<Page<RetiredSpecimen>>(
+      `/green-inventory/specimens/retired?${query({ search: p.search?.trim(), page: p.page, size: p.size })}`,
+    ),
+
+  retiredSpecimen: (code: string) =>
+    apiClient.get<RetiredSpecimen>(`/green-inventory/specimens/retired/${segment(code)}`),
 };

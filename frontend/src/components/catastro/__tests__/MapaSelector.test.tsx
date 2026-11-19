@@ -155,31 +155,10 @@ describe('MapaSelector - Sincronización Bidireccional', () => {
     expect(mockFocusLatLon).not.toHaveBeenCalled();
   });
 
-  it('obtiene coordenadas desde el GPS del dispositivo al pulsar "Usar mi ubicación"', async () => {
+  it('no muestra el botón "Usar mi ubicación" al ser un módulo web no móvil', () => {
     const onElegir = jest.fn();
-    const mockGeolocation = {
-      getCurrentPosition: jest.fn().mockImplementation((success) => {
-        success({
-          coords: {
-            latitude: -12.069500,
-            longitude: -77.080500,
-          },
-        });
-      }),
-    };
-    Object.defineProperty(global.navigator, 'geolocation', {
-      value: mockGeolocation,
-      configurable: true,
-    });
-
     render(<MapaSelector onElegir={onElegir} />);
 
-    const botonGps = screen.getByRole('button', { name: /Usar mi ubicación/i });
-    expect(botonGps).toBeInTheDocument();
-
-    fireEvent.click(botonGps);
-
-    expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
-    expect(onElegir).toHaveBeenCalledWith(-12.069500, -77.080500);
+    expect(screen.queryByRole('button', { name: /Usar mi ubicación/i })).not.toBeInTheDocument();
   });
 });

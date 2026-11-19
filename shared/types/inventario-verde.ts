@@ -179,6 +179,10 @@ export interface SpecimenDetail extends Specimen {
   measuredBeforeLastPruning: boolean;
   pruningAssignment: PruningAssignment;
   extraMeasures: SpecimenExtraMeasure[];
+  isActive?: boolean;
+  retiredAt?: string | null;
+  retirementReason?: string | null;
+  retiredByName?: string | null;
 }
 
 export interface LocationCount {
@@ -216,3 +220,24 @@ export interface SpecimenSearchResult {
   speciesCommonName: string;
   speciesScientificName: string;
 }
+
+/** Trazabilidad de un ejemplar botánico dado de baja lógicamente. */
+export interface RetiredSpecimen {
+  id: number;
+  code: string;
+  scientificName: string;
+  commonName: string;
+  speciesSlug: string;
+  vegetationType: string;
+  sourceLocation: string;
+  sourceReference: string | null;
+  notes: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  retiredAt: string;
+  reason: string | null;
+  retiredByName: string | null;
+  retiredByEmail: string | null;
+  interventionsCount: number;
+}
+

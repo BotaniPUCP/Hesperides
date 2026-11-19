@@ -12,6 +12,7 @@ import pe.edu.pucp.hesperides.shared.exception.ConflictException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.sql.Timestamp;
 
@@ -28,6 +29,25 @@ public class SpecimenLifecycleService {
     }
 
     private record SpeciesState(String slug, boolean active) {
+    }
+
+    @Transactional
+    public List<String> deactivateBatch(List<String> codes, String reason) {
+        if (codes == null || codes.isEmpty()) {
+            return List.of();
+        }
+        List<String> sortedCodes = codes.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(String::trim)
+                .filter(c -> !c.isEmpty())
+                .distinct()
+                .sorted()
+                .toList();
+
+        for (String code : sortedCodes) {
+            deactivate(code, reason);
+        }
+        return sortedCodes;
     }
 
     @Transactional

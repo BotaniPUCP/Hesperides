@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { LocationCount, Species, SpeciesFilters, SpecimenFilters, Specimen } from '@shared/types';
+import type { LocationCount, RetiredSpecimen, Species, SpeciesFilters, SpecimenFilters, Specimen } from '@shared/types';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { useRequest } from './useRequest';
 
@@ -39,22 +39,23 @@ export function useInventarioVerdeSpeciesBySlug(slug: string | null | undefined,
 export interface UseInventarioVerdeSpecimensParams extends SpecimenFilters {
   page?: number;
   pageSize?: number;
+  reloadKey?: number;
 }
 
 export function useInventarioVerdeSpecimens(
   slug: string | null | undefined,
   params: UseInventarioVerdeSpecimensParams = {},
 ) {
-  const { search = '', location = 'ALL', vegetationType, critical, measured, sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12 } =
+  const { search = '', location = 'ALL', vegetationType, critical, measured, sortBy = 'reference', sortDirection = 'asc', page = 0, pageSize = 12, reloadKey } =
     params;
   const request = { search, location, vegetationType, critical, measured, sortBy, sortDirection, page, size: pageSize };
-  const key = slug ? `${slug}:${JSON.stringify(request)}` : `all:${JSON.stringify(request)}`;
+  const key = slug ? `${slug}:${JSON.stringify({ ...request, reloadKey })}` : `all:${JSON.stringify({ ...request, reloadKey })}`;
   const specimens = useRequest(
     key,
     () => (slug ? inventarioVerdeApi.specimens(slug, request) : inventarioVerdeApi.allSpecimens(request)),
     { keepPreviousData: true },
   );
-  const locationsKey = slug ? `locations:${slug}` : 'locations:all';
+  const locationsKey = slug ? `locations:${slug}:${reloadKey ?? 0}` : `locations:all:${reloadKey ?? 0}`;
   const locations = useRequest(locationsKey, () =>
     slug ? inventarioVerdeApi.locations(slug) : inventarioVerdeApi.allLocations(),
   );
@@ -69,6 +70,36 @@ export function useInventarioVerdeSpecimens(
     availableLocations: (locations.data ?? []) as LocationCount[],
     loading: specimens.loading,
     errorMessage: specimens.errorMessage,
+  };
+}
+
+export interface UseInventarioVerdeRetiredSpecimensParams {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  reloadKey?: number;
+}
+
+export function useInventarioVerdeRetiredSpecimens(
+  params: UseInventarioVerdeRetiredSpecimensParams = {},
+  enabled = true,
+) {
+  const { search = '', page = 0, pageSize = 12, reloadKey } = params;
+  const request = { search, page, size: pageSize };
+  const queryKey = enabled ? `retired:${JSON.stringify({ ...request, reloadKey })}` : null;
+  const { data, loading, errorMessage } = useRequest(
+    queryKey,
+    () => inventarioVerdeApi.retiredSpecimens(request),
+    { keepPreviousData: true },
+  );
+
+  return {
+    specimens: (data?.content ?? []) as RetiredSpecimen[],
+    totalElements: data?.page.totalElements ?? 0,
+    totalPages: Math.max(data?.page.totalPages ?? 1, 1),
+    currentPage: data?.page.number ?? page,
+    loading: enabled ? loading : false,
+    errorMessage: enabled ? errorMessage : null,
   };
 }
 

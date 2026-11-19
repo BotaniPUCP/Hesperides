@@ -11,6 +11,9 @@ export interface SpecimenCardProps {
     imageUrl?: string | null;
     vegetationTypeName?: string;
   };
+  selectable?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (code: string) => void;
 }
 
 const VEGETATION_TYPE_FALLBACK: Record<string, string> = {
@@ -27,7 +30,13 @@ const VEGETATION_TYPE_FALLBACK: Record<string, string> = {
   OTHER: 'Vegetación',
 };
 
-export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
+export function SpecimenCard({
+  specimen,
+  species,
+  selectable = false,
+  isSelected = false,
+  onToggleSelect,
+}: SpecimenCardProps) {
   const [imageError, setImageError] = useState(false);
   const [speciesError, setSpeciesError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -48,9 +57,57 @@ export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
       href={detailUrl}
       className="group block focus:outline-hidden focus-visible:ring-2 focus-visible:ring-forest-600 focus-visible:ring-offset-2 rounded-2xl transition-all duration-300 hover:-translate-y-1"
     >
-      <div className="overflow-hidden border border-neutral-200/90 bg-neutral-0 shadow-xs transition-all duration-300 group-hover:shadow-lg group-hover:shadow-neutral-900/5 group-hover:border-neutral-300/90 flex flex-col h-full rounded-2xl">
+      <div
+        className={`overflow-hidden border bg-neutral-0 shadow-xs transition-all duration-300 group-hover:shadow-lg group-hover:shadow-neutral-900/5 flex flex-col h-full rounded-2xl ${
+          isSelected
+            ? 'border-forest-600 ring-2 ring-forest-500/25 shadow-md bg-forest-50/10'
+            : 'border-neutral-200/90 group-hover:border-neutral-300/90'
+        }`}
+      >
         {/* Foto a sangre con altura equilibrada de 176px (h-44), idéntica a SpeciesCard */}
         <div className="relative h-44 w-full overflow-hidden bg-neutral-100 shrink-0">
+          {/* Checkbox de selección múltiple (para roles autorizados como ADMIN / COORDINADOR) */}
+          {selectable && (
+            <div
+              className={`absolute top-2.5 left-2.5 z-10 w-6 h-6 rounded-md flex items-center justify-center transition-all duration-150 cursor-pointer ${
+                isSelected
+                  ? 'bg-forest-600 border-2 border-white ring-1 ring-forest-700 shadow-xs'
+                  : 'bg-white border-2 border-neutral-400 hover:border-neutral-600 shadow-xs'
+              }`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleSelect?.(specimen.code);
+              }}
+            >
+              <input
+                type="checkbox"
+                aria-label={`Seleccionar ejemplar ${specimen.code}`}
+                checked={isSelected}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect?.(specimen.code);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                className="sr-only"
+              />
+              {isSelected && (
+                <svg
+                  className="w-3.5 h-3.5 text-white stroke-[3] pointer-events-none"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+          )}
           {displaySrc ? (
             <>
               {!imageLoaded && (
@@ -92,7 +149,7 @@ export function SpecimenCard({ specimen, species }: SpecimenCardProps) {
 
           {/* Badge de tipo de vegetación en la esquina superior derecha, consistente con SpeciesCard */}
           <div className="absolute top-2.5 right-2.5 shadow-2xs">
-            <Badge label={typeBadgeLabel} color="brand" />
+            <Badge label={typeBadgeLabel} color="neutral" />
           </div>
         </div>
 

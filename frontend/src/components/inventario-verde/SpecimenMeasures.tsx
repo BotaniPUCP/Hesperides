@@ -189,6 +189,7 @@ export function SpecimenMeasures({
         speciesName={specimen.species.commonName || specimen.species.scientificName}
         isOpen={historyOpen}
         onClose={() => setHistoryOpen(false)}
+        isRetired={Boolean(specimen.retiredAt || specimen.isActive === false)}
       />
     </section>
   );

@@ -254,6 +254,41 @@ class SpeciesLifecycleIntegrationTest {
         assertThat(auditRows).allSatisfy(row -> assertThat(row[4]).isNotNull());
         assertThat(auditRows.get(0)[5].toString()).contains(code, "Retiro en campo");
         assertThat(auditRows.get(1)[5].toString()).contains("NO_ACTIVE_SPECIMENS_REMAIN", code, "specimenId");
+
+        // Retired endpoints require ADMIN or COORDINADOR
+        mockMvc.perform(get(BASE + "/specimens/retired").param("search", code).with(SUPERVISOR))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get(BASE + "/specimens/retired").param("search", code).with(ADMIN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", org.hamcrest.Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].code").value(code))
+                .andExpect(jsonPath("$.data.content[0].reason").value("Retiro en campo"))
+                .andExpect(jsonPath("$.data.content[0].retiredByName").value("Administrador Hesperides"))
+                .andExpect(jsonPath("$.data.content[0].scientificName").value(species.scientificName()));
+
+        mockMvc.perform(get(BASE + "/specimens/retired/" + code).with(COORDINATOR))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.code").value(code))
+                .andExpect(jsonPath("$.data.reason").value("Retiro en campo"))
+                .andExpect(jsonPath("$.data.retiredByName").value("Administrador Hesperides"))
+                .andExpect(jsonPath("$.data.scientificName").value(species.scientificName()));
+
+        mockMvc.perform(get(BASE + "/specimens/retired/NO-EXISTE").with(ADMIN))
+                .andExpect(status().isNotFound());
+
+        // Specimen detail endpoint: retired specimen is hidden (404) for unauthorized users
+        mockMvc.perform(get(BASE + "/specimens/" + code).with(SUPERVISOR))
+                .andExpect(status().isNotFound());
+
+        // Specimen detail endpoint: accessible with full history and retirement info for ADMIN
+        mockMvc.perform(get(BASE + "/specimens/" + code).with(ADMIN))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.code").value(code))
+                .andExpect(jsonPath("$.data.isActive").value(false))
+                .andExpect(jsonPath("$.data.retiredAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.retirementReason").value("Retiro en campo"))
+                .andExpect(jsonPath("$.data.retiredByName").value("Administrador Hesperides"));
     }
 
     @Test

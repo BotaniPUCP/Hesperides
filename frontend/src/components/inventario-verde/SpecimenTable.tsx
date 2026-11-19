@@ -18,6 +18,11 @@ export interface SpecimenTableProps {
   onSortChange?: (sort: DataTableSort) => void;
   onViewOnMap?: (specimen: Specimen) => void;
   loading?: boolean;
+  selectedCodes?: Set<string>;
+  onToggleSelect?: (code: string) => void;
+  onToggleSelectAll?: () => void;
+  isAllSelected?: boolean;
+  selectable?: boolean;
 }
 
 function SpecimenThumbnail({
@@ -78,6 +83,11 @@ export function SpecimenTable({
   pageSize,
   onPageChange,
   loading = false,
+  selectedCodes,
+  onToggleSelect,
+  onToggleSelectAll,
+  isAllSelected = false,
+  selectable = false,
 }: SpecimenTableProps) {
   const desde = page * pageSize + 1;
   const hasta = Math.min((page + 1) * pageSize, totalElements);
@@ -116,8 +126,19 @@ export function SpecimenTable({
       {/* Tabla estructurada con cabecera y filas alineadas */}
       <div className={`overflow-hidden rounded-xl border border-neutral-200 bg-neutral-0 shadow-2xs divide-y divide-neutral-200/80 transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         {/* Cabecera de columnas en pantallas medianas y grandes */}
-        <div className="hidden sm:grid sm:grid-cols-12 gap-3 px-4 py-2.5 bg-neutral-50/80 border-b border-neutral-200 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-          <div className="sm:col-span-5">Código</div>
+        <div className="hidden sm:grid sm:grid-cols-12 gap-3 px-4 py-2.5 bg-neutral-50/80 border-b border-neutral-200 text-xs font-semibold text-neutral-500 uppercase tracking-wider items-center">
+          <div className="sm:col-span-5 flex items-center gap-3">
+            {selectable && (
+              <input
+                type="checkbox"
+                aria-label="Seleccionar todos los ejemplares de la página"
+                checked={isAllSelected}
+                onChange={onToggleSelectAll}
+                className="h-4 w-4 rounded border-neutral-300 accent-forest-600 cursor-pointer"
+              />
+            )}
+            <span>Código</span>
+          </div>
           <div className="sm:col-span-4">Ubicación</div>
           <div className="sm:col-span-3 text-right">Referencia</div>
         </div>
@@ -125,17 +146,37 @@ export function SpecimenTable({
         {specimens.map((item) => {
           const specSpecies = speciesMap?.[item.speciesSlug ?? ''] || species;
           const detailUrl = `/catastro/ejemplares/${item.code}`;
-
+          const isSelected = selectedCodes?.has(item.code) ?? false;
           const hasNotes = Boolean(item.notes);
 
           return (
             <Link
               key={item.code}
               href={detailUrl}
-              className="group relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center gap-2.5 sm:gap-3 p-3.5 sm:px-4 sm:py-3 cursor-pointer hover:bg-brand-50/40 transition-all duration-150"
+              className={`group relative flex flex-col sm:grid sm:grid-cols-12 sm:items-center gap-2.5 sm:gap-3 p-3.5 sm:px-4 sm:py-3 cursor-pointer transition-all duration-150 ${
+                isSelected ? 'bg-forest-50/60' : 'hover:bg-brand-50/30'
+              }`}
             >
-              {/* Columna 1 (5 cols): Miniatura + Código */}
-              <div className="flex items-center gap-3.5 min-w-0 sm:col-span-5">
+              {/* Columna 1 (5 cols): Checkbox + Miniatura + Código */}
+              <div className="flex items-center gap-3 min-w-0 sm:col-span-5">
+                {selectable && (
+                  <div
+                    className="shrink-0 flex items-center"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="checkbox"
+                      aria-label={`Seleccionar ejemplar ${item.code}`}
+                      checked={isSelected}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        onToggleSelect?.(item.code);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-4 w-4 rounded border-neutral-300 accent-forest-600 cursor-pointer"
+                    />
+                  </div>
+                )}
                 <SpecimenThumbnail
                   specimen={item}
                   fallbackUrl={specSpecies?.imageUrl}
