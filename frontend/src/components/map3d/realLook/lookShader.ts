@@ -34,7 +34,8 @@ vLookLift = aLookLift;
 `;
 
 const LOOK_CORE_GLSL = /* glsl */ `
-uniform sampler2D lookTable;
+// highp: sin él el sampler es lowp y Mali lee la tabla en 16 bits; los índices sobre 2048 se corren.
+uniform highp sampler2D lookTable;
 uniform float lookRows;
 varying float vLookRow;
 varying vec2 vLookFace;
