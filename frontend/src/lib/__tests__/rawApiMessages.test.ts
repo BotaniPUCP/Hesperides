@@ -13,6 +13,8 @@ const SRC = path.resolve(__dirname, '../..');
 const ALLOWED = new Set([
   'lib/api.ts',
   'lib/api-errors.ts',
+  // Solo muestra el mensaje de un UserFacingError, que redactamos en español.
+  'lib/userFacingError.ts',
   'lib/interventions-api.ts',
   'components/catastro/mensajes.ts',
   // status 0: el mensaje de red ya viene redactado en español desde api.ts.
@@ -23,6 +25,7 @@ const ALLOWED = new Set([
   'components/interventions/InterventionDetail.tsx',
   'components/interventions/InterventionForm.tsx',
   'components/users/ChangePasswordForm.tsx',
+  'components/catastro/importar/useImportacion.ts',
 ]);
 
 function sources(dir: string): string[] {

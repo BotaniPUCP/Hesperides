@@ -2,6 +2,7 @@ import { createEquivalenceViewer, type EquivalenceViewer } from './equivalenceVi
 import { relationCodes, relationTitle, conflicts, parseRelations, toggleId, type Relation } from './relations';
 import type { PortablePayload } from './portableExport';
 import codes from './codes.json';
+import { UserFacingError, userFacingMessage } from '../../../lib/userFacingError';
 
 const payload = JSON.parse(document.getElementById('payload')!.textContent!) as PortablePayload;
 const style = document.createElement('style');
@@ -87,10 +88,10 @@ el('export').onclick = () => {
 input('import').onchange = async () => {
   const chosen = input('import').files?.[0]; input('import').value = ''; if (!chosen) return;
   try {
-    if (chosen.size > 15_000_000) throw new Error('Archivo demasiado grande.');
+    if (chosen.size > 15_000_000) throw new UserFacingError('Archivo demasiado grande.');
     const incoming = validate(JSON.parse(await chosen.text()));
     if (confirm(`Importar ${incoming.relations.length} relaciones reemplazará las ${relations.length} actuales.${incoming.mapVersion !== payload.mapVersion ? ' La versión del mapa es distinta.' : ''} ¿Continuar?`)) { storageBlocked = false; replace(incoming.relations); clear(); }
-  } catch (error) { el('message').textContent = error instanceof Error ? error.message : 'No se pudo importar.'; }
+  } catch (error) { el('message').textContent = userFacingMessage(error, 'No se pudo importar: el archivo no es un JSON de equivalencias válido.'); }
 };
 const bytes = Uint8Array.from(atob(payload.glb), (c) => c.charCodeAt(0));
 const modelUrl = URL.createObjectURL(new Blob([bytes], { type: 'model/gltf-binary' }));

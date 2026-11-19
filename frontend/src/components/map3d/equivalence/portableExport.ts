@@ -1,12 +1,13 @@
 import type { SceneData } from '../sceneData';
 import type { Manifest, Relation } from './relations';
+import { UserFacingError } from '../../../lib/userFacingError';
 
 export interface PortablePayload { scene: SceneData; manifest: Manifest; relations: Relation[]; mapVersion: number; packageId: string; glb: string }
 
 export async function downloadPortable(scene: SceneData, manifest: Manifest, relations: Relation[], mapVersion: number) {
   const [runtime, model] = await Promise.all([
-    fetch('/models/equivalence/portable.js').then((r) => { if (!r.ok) throw new Error('No se pudo cargar el módulo portátil.'); return r.text(); }),
-    fetch('/models/equivalence/campus.glb').then((r) => { if (!r.ok) throw new Error('No se pudo cargar el modelo SKP.'); return r.blob(); }),
+    fetch('/models/equivalence/portable.js').then((r) => { if (!r.ok) throw new UserFacingError('No se pudo cargar el módulo portátil.'); return r.text(); }),
+    fetch('/models/equivalence/campus.glb').then((r) => { if (!r.ok) throw new UserFacingError('No se pudo cargar el modelo SKP.'); return r.blob(); }),
   ]);
   const glb = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]); reader.onerror = reject; reader.readAsDataURL(model);

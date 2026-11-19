@@ -7,10 +7,11 @@ import { polygonShapes } from '../viewer/geometry';
 import { WORLD_LIFT } from '../viewer/polyLayer';
 import { alignmentFor, exceptions, type UnifiedEntry } from './unification';
 import type { Manifest, Relation } from './relations';
+import { UserFacingError } from '../../../lib/userFacingError';
 
 export async function loadUnifiedMeshes(data: SceneData, manifest: Manifest, relations: Relation[], entries: UnifiedEntry[]) {
   const response = await fetch('/models/equivalence/campus.glb');
-  if (!response.ok) throw new Error('No se pudo cargar la geometría SKP.');
+  if (!response.ok) throw new UserFacingError('No se pudo cargar la geometría SKP.');
   const { scene: original } = await new GLTFLoader().parseAsync(await response.arrayBuffer(), '');
   const source = new Map<string, THREE.Mesh>();
   original.updateMatrixWorld(true);
@@ -27,14 +28,14 @@ export async function loadUnifiedMeshes(data: SceneData, manifest: Manifest, rel
   try {
     for (const entry of entries) {
       if (entry.source === 'SKP') {
-        for (const id of entry.skpIds) { const mesh = source.get(id); if (!mesh) throw new Error(`Falta la pieza ${id}.`); const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld).applyMatrix4(transform); add(geometry, entry); }
+        for (const id of entry.skpIds) { const mesh = source.get(id); if (!mesh) throw new UserFacingError(`Falta la pieza ${id}.`); const geometry = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld).applyMatrix4(transform); add(geometry, entry); }
       } else if (entry.source === 'Mapa izquierdo') {
         for (const b of data.campusBuildings.filter((b) => entry.mapIds.includes(String(b.props.id)))) for (const shape of polygonShapes(b.g)) {
           const geometry = new THREE.ExtrudeGeometry(shape, { depth: b.props.heightM ?? 8, bevelEnabled: false, curveSegments: 1 }); geometry.rotateX(-Math.PI / 2); geometry.translate(0, WORLD_LIFT, 0); add(geometry, entry);
         }
       } else {
         const template = source.get(exceptions.template), building = data.campusBuildings.find((b) => entry.mapIds.includes(String(b.props.id)));
-        if (!template || !building) throw new Error('Falta el modelo o las medidas para la caseta del comedor.');
+        if (!template || !building) throw new UserFacingError('Falta el modelo o las medidas para la caseta del comedor.');
         const geometry = template.geometry.clone().applyMatrix4(template.matrixWorld);
         const targetPoints = building.g.flatMap((p) => Array.from({ length: p[0].length / 2 }, (_, i) => new THREE.Vector3(p[0][2 * i], 0, -p[0][2 * i + 1])));
         adaptKiosk(geometry, targetPoints, building.props.heightM ?? 8, WORLD_LIFT);

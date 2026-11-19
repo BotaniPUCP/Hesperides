@@ -8,11 +8,12 @@ import type { EquivalenceViewer } from './equivalenceViewer';
 import type { Manifest, Relation } from './relations';
 import { unifiedEntries, alignmentFor, entryMatches, type UnifiedEntry } from './unification';
 import snapshot from './final-relations.json';
+import { UserFacingError, userFacingMessage } from '../../../lib/userFacingError';
 
 export function UnifiedWorkbench() {
   const { data, errorMessage } = useMapLayers();
   const [manifest, setManifest] = useState<Manifest | null>(null), [error, setError] = useState('');
-  useEffect(() => { const abort = new AbortController(); fetch('/models/equivalence/manifest.json', { signal: abort.signal }).then((r) => { if (!r.ok) throw new Error('No se pudo cargar el inventario.'); return r.json(); }).then((m: Manifest) => { if (m.sourceHash !== snapshot.sourceHash) throw new Error('El SKP cambió respecto a las relaciones finales.'); setManifest(m); }).catch((e) => { if (!abort.signal.aborted) setError(String(e)); }); return () => abort.abort(); }, []);
+  useEffect(() => { const abort = new AbortController(); fetch('/models/equivalence/manifest.json', { signal: abort.signal }).then((r) => { if (!r.ok) throw new UserFacingError('No se pudo cargar el inventario.'); return r.json(); }).then((m: Manifest) => { if (m.sourceHash !== snapshot.sourceHash) throw new UserFacingError('El SKP cambió respecto a las relaciones finales.'); setManifest(m); }).catch((e) => { if (!abort.signal.aborted) setError(userFacingMessage(e, 'No se pudo cargar el inventario.')); }); return () => abort.abort(); }, []);
   const scene = useMemo(() => data ? toSceneData(data) : null, [data]);
   if (error || errorMessage && !data) return <p role="alert">{error || errorMessage}</p>;
   if (!scene || !manifest || !data) return <p>Cargando mapa unificado…</p>;
@@ -35,7 +36,7 @@ function Review({ scene, manifest, mapVersion }: { scene: SceneData; manifest: M
       viewer.current = createUnifiedViewer(root.current, scene, result.meshes, setSelected);
       viewer.current.update({ selected: selectedRef.current ? [selectedRef.current] : [], linked: [], buildings: true, casetas: true, small: true });
       setStatus('');
-    }).catch((e) => { if (active) setStatus(`No se pudo preparar la vista: ${e instanceof Error ? e.message : String(e)}`); });
+    }).catch((e) => { if (active) setStatus(`No se pudo preparar la vista: ${userFacingMessage(e, 'falló al cargar o armar los modelos.')}`); });
     return () => { active = false; viewer.current?.dispose(); viewer.current = null; };
   }, [scene, manifest, entries]);
   useEffect(() => { selectedRef.current = selected; viewer.current?.update({ selected: selected ? [selected] : [], linked: [], buildings: true, casetas: true, small: true }); }, [selected, status]);

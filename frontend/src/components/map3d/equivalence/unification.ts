@@ -3,6 +3,7 @@ import type { Manifest, Relation } from './relations';
 import { relationCodes } from './relations';
 import codes from './codes.json';
 import references from './building-references.json';
+import { UserFacingError } from '../../../lib/userFacingError';
 interface BuildingReference { name?: string; aliases: string[]; floors?: { floor: string; places: string[] }[] }
 const referenceByCode: Record<string, BuildingReference> = references;
 export const normalizeSearch = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
@@ -39,7 +40,7 @@ export function unifiedEntries(data: SceneData, relations: Relation[]): UnifiedE
 }
 export interface Anchor { id: string; from: [number, number]; to: [number, number] }
 export function rigidAlignment(anchors: Anchor[]) {
-  if (anchors.length < 3) throw new Error('Se necesitan al menos tres correspondencias para alinear los mapas.');
+  if (anchors.length < 3) throw new UserFacingError('Se necesitan al menos tres correspondencias para alinear los mapas.');
   const avg = (key: 'from' | 'to', i: number) => anchors.reduce((sum, a) => sum + a[key][i], 0) / anchors.length;
   const fx = avg('from', 0), fz = avg('from', 1), tx = avg('to', 0), tz = avg('to', 1);
   let dot = 0, cross = 0;

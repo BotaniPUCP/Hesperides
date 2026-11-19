@@ -16,8 +16,9 @@ function csvCell(value: string): string {
 function downloadErrors(errors: PlaceImportIssue[]) {
   const content = [
     ['Fila', 'Columna', 'Valor', 'Error'].map(csvCell).join(';'),
-    ...errors.map((error) =>
-      [String(error.row), error.column, error.value, error.message].map(csvCell).join(';'),
+    // Filas del informe de validación: el backend ya las redacta en español.
+    ...errors.map((issue) =>
+      [String(issue.row), issue.column, issue.value, issue.message].map(csvCell).join(';'),
     ),
   ].join('\r\n');
   const url = URL.createObjectURL(new Blob(['\uFEFF', content], { type: 'text/csv;charset=utf-8' }));

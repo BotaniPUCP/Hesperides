@@ -1,10 +1,11 @@
+import { UserFacingError } from '../../../lib/userFacingError';
 export interface Relation { id: string; code: string; codes?: string[]; name?: string; mapIds: string[]; skpIds: string[]; note: string; updatedAt: string }
 export const relationCodes = (r: Relation): string[] => r.codes ?? (r.code ? [r.code] : []);
 export const relationTitle = (r: Relation): string => r.name?.trim() || relationCodes(r).join(', ');
 export interface Manifest { origin: number[]; version: number; sourceHash: string; parts: { id: string; category: string; faceIndices: number[]; small: boolean; min: number[]; max: number[] }[] }
 export interface RelationFile { version: 1 | 2; sourceHash: string; mapVersion: number; relations: Relation[] }
 export function parseRelations(value: unknown, sourceHash: string, codes: Set<string>, mapIds: Set<string>, skpIds: Set<string>): RelationFile {
-  const fail = () => { throw new Error('Archivo incompatible: revisa el SKP, los códigos y los identificadores de las estructuras.'); };
+  const fail = () => { throw new UserFacingError('Archivo incompatible: revisa el SKP, los códigos y los identificadores de las estructuras.'); };
   if (!value || typeof value !== 'object') return fail();
   const data = value as RelationFile;
   const mergedCode = 'C06-C07';

@@ -71,7 +71,7 @@ function bindModifiedSelection(dom, onPick, onBox) {
     };
 }
 
-;// ./node_modules/three/build/three.module.js
+;// ../../../../frontend/node_modules/three/build/three.module.js
 /**
  * @license
  * Copyright 2010-2022 Three.js Authors
@@ -211,9 +211,9 @@ const ZeroSlopeEnding = 2401;
 const WrapAroundEnding = 2402;
 const NormalAnimationBlendMode = 2500;
 const AdditiveAnimationBlendMode = 2501;
-const TrianglesDrawMode = 0;
-const TriangleStripDrawMode = 1;
-const TriangleFanDrawMode = 2;
+const three_module_TrianglesDrawMode = 0;
+const three_module_TriangleStripDrawMode = 1;
+const three_module_TriangleFanDrawMode = 2;
 const LinearEncoding = 3000;
 const sRGBEncoding = 3001;
 const BasicDepthPacking = 3200;
@@ -4331,11 +4331,11 @@ class Quaternion {
 
 }
 
-class Vector3 {
+class three_module_Vector3 {
 
 	constructor( x = 0, y = 0, z = 0 ) {
 
-		Vector3.prototype.isVector3 = true;
+		three_module_Vector3.prototype.isVector3 = true;
 
 		this.x = x;
 		this.y = y;
@@ -5039,12 +5039,12 @@ class Vector3 {
 
 }
 
-const _vector$c = /*@__PURE__*/ new Vector3();
+const _vector$c = /*@__PURE__*/ new three_module_Vector3();
 const _quaternion$4 = /*@__PURE__*/ new Quaternion();
 
 class Box3 {
 
-	constructor( min = new Vector3( + Infinity, + Infinity, + Infinity ), max = new Vector3( - Infinity, - Infinity, - Infinity ) ) {
+	constructor( min = new three_module_Vector3( + Infinity, + Infinity, + Infinity ), max = new three_module_Vector3( - Infinity, - Infinity, - Infinity ) ) {
 
 		this.isBox3 = true;
 
@@ -5514,36 +5514,36 @@ class Box3 {
 }
 
 const _points = [
-	/*@__PURE__*/ new Vector3(),
-	/*@__PURE__*/ new Vector3(),
-	/*@__PURE__*/ new Vector3(),
-	/*@__PURE__*/ new Vector3(),
-	/*@__PURE__*/ new Vector3(),
-	/*@__PURE__*/ new Vector3(),
-	/*@__PURE__*/ new Vector3(),
-	/*@__PURE__*/ new Vector3()
+	/*@__PURE__*/ new three_module_Vector3(),
+	/*@__PURE__*/ new three_module_Vector3(),
+	/*@__PURE__*/ new three_module_Vector3(),
+	/*@__PURE__*/ new three_module_Vector3(),
+	/*@__PURE__*/ new three_module_Vector3(),
+	/*@__PURE__*/ new three_module_Vector3(),
+	/*@__PURE__*/ new three_module_Vector3(),
+	/*@__PURE__*/ new three_module_Vector3()
 ];
 
-const _vector$b = /*@__PURE__*/ new Vector3();
+const _vector$b = /*@__PURE__*/ new three_module_Vector3();
 
 const _box$3 = /*@__PURE__*/ new Box3();
 
 // triangle centered vertices
 
-const _v0$2 = /*@__PURE__*/ new Vector3();
-const _v1$7 = /*@__PURE__*/ new Vector3();
-const _v2$4 = /*@__PURE__*/ new Vector3();
+const _v0$2 = /*@__PURE__*/ new three_module_Vector3();
+const _v1$7 = /*@__PURE__*/ new three_module_Vector3();
+const _v2$4 = /*@__PURE__*/ new three_module_Vector3();
 
 // triangle edge vectors
 
-const _f0 = /*@__PURE__*/ new Vector3();
-const _f1 = /*@__PURE__*/ new Vector3();
-const _f2 = /*@__PURE__*/ new Vector3();
+const _f0 = /*@__PURE__*/ new three_module_Vector3();
+const _f1 = /*@__PURE__*/ new three_module_Vector3();
+const _f2 = /*@__PURE__*/ new three_module_Vector3();
 
-const _center = /*@__PURE__*/ new Vector3();
-const _extents = /*@__PURE__*/ new Vector3();
-const _triangleNormal = /*@__PURE__*/ new Vector3();
-const _testAxis = /*@__PURE__*/ new Vector3();
+const _center = /*@__PURE__*/ new three_module_Vector3();
+const _extents = /*@__PURE__*/ new three_module_Vector3();
+const _triangleNormal = /*@__PURE__*/ new three_module_Vector3();
+const _testAxis = /*@__PURE__*/ new three_module_Vector3();
 
 function satForAxes( axes, v0, v1, v2, extents ) {
 
@@ -5572,12 +5572,12 @@ function satForAxes( axes, v0, v1, v2, extents ) {
 }
 
 const _box$2 = /*@__PURE__*/ new Box3();
-const _v1$6 = /*@__PURE__*/ new Vector3();
-const _v2$3 = /*@__PURE__*/ new Vector3();
+const _v1$6 = /*@__PURE__*/ new three_module_Vector3();
+const _v2$3 = /*@__PURE__*/ new three_module_Vector3();
 
 class Sphere {
 
-	constructor( center = new Vector3(), radius = - 1 ) {
+	constructor( center = new three_module_Vector3(), radius = - 1 ) {
 
 		this.center = center;
 		this.radius = radius;
@@ -5810,18 +5810,18 @@ class Sphere {
 
 }
 
-const _vector$a = /*@__PURE__*/ new Vector3();
-const _segCenter = /*@__PURE__*/ new Vector3();
-const _segDir = /*@__PURE__*/ new Vector3();
-const _diff = /*@__PURE__*/ new Vector3();
+const _vector$a = /*@__PURE__*/ new three_module_Vector3();
+const _segCenter = /*@__PURE__*/ new three_module_Vector3();
+const _segDir = /*@__PURE__*/ new three_module_Vector3();
+const _diff = /*@__PURE__*/ new three_module_Vector3();
 
-const _edge1 = /*@__PURE__*/ new Vector3();
-const _edge2 = /*@__PURE__*/ new Vector3();
-const _normal$1 = /*@__PURE__*/ new Vector3();
+const _edge1 = /*@__PURE__*/ new three_module_Vector3();
+const _edge2 = /*@__PURE__*/ new three_module_Vector3();
+const _normal$1 = /*@__PURE__*/ new three_module_Vector3();
 
 class Ray {
 
-	constructor( origin = new Vector3(), direction = new Vector3( 0, 0, - 1 ) ) {
+	constructor( origin = new three_module_Vector3(), direction = new three_module_Vector3( 0, 0, - 1 ) ) {
 
 		this.origin = origin;
 		this.direction = direction;
@@ -7149,13 +7149,13 @@ class Matrix4 {
 
 }
 
-const _v1$5 = /*@__PURE__*/ new Vector3();
+const _v1$5 = /*@__PURE__*/ new three_module_Vector3();
 const _m1$2 = /*@__PURE__*/ new Matrix4();
-const _zero = /*@__PURE__*/ new Vector3( 0, 0, 0 );
-const _one = /*@__PURE__*/ new Vector3( 1, 1, 1 );
-const _x = /*@__PURE__*/ new Vector3();
-const _y = /*@__PURE__*/ new Vector3();
-const _z = /*@__PURE__*/ new Vector3();
+const _zero = /*@__PURE__*/ new three_module_Vector3( 0, 0, 0 );
+const _one = /*@__PURE__*/ new three_module_Vector3( 1, 1, 1 );
+const _x = /*@__PURE__*/ new three_module_Vector3();
+const _y = /*@__PURE__*/ new three_module_Vector3();
+const _z = /*@__PURE__*/ new three_module_Vector3();
 
 const _matrix$1 = /*@__PURE__*/ new Matrix4();
 const _quaternion$3 = /*@__PURE__*/ new Quaternion();
@@ -7536,18 +7536,18 @@ class Layers {
 
 let _object3DId = 0;
 
-const _v1$4 = /*@__PURE__*/ new Vector3();
+const _v1$4 = /*@__PURE__*/ new three_module_Vector3();
 const _q1 = /*@__PURE__*/ new Quaternion();
 const _m1$1 = /*@__PURE__*/ new Matrix4();
-const _target = /*@__PURE__*/ new Vector3();
+const _target = /*@__PURE__*/ new three_module_Vector3();
 
-const _position$3 = /*@__PURE__*/ new Vector3();
-const _scale$2 = /*@__PURE__*/ new Vector3();
+const _position$3 = /*@__PURE__*/ new three_module_Vector3();
+const _scale$2 = /*@__PURE__*/ new three_module_Vector3();
 const _quaternion$2 = /*@__PURE__*/ new Quaternion();
 
-const _xAxis = /*@__PURE__*/ new Vector3( 1, 0, 0 );
-const _yAxis = /*@__PURE__*/ new Vector3( 0, 1, 0 );
-const _zAxis = /*@__PURE__*/ new Vector3( 0, 0, 1 );
+const _xAxis = /*@__PURE__*/ new three_module_Vector3( 1, 0, 0 );
+const _yAxis = /*@__PURE__*/ new three_module_Vector3( 0, 1, 0 );
+const _zAxis = /*@__PURE__*/ new three_module_Vector3( 0, 0, 1 );
 
 const _addedEvent = { type: 'added' };
 const _removedEvent = { type: 'removed' };
@@ -7572,10 +7572,10 @@ class Object3D extends EventDispatcher {
 
 		this.up = Object3D.DefaultUp.clone();
 
-		const position = new Vector3();
+		const position = new three_module_Vector3();
 		const rotation = new Euler();
 		const quaternion = new Quaternion();
-		const scale = new Vector3( 1, 1, 1 );
+		const scale = new three_module_Vector3( 1, 1, 1 );
 
 		function onRotationChange() {
 
@@ -8464,25 +8464,25 @@ class Object3D extends EventDispatcher {
 
 }
 
-Object3D.DefaultUp = /*@__PURE__*/ new Vector3( 0, 1, 0 );
+Object3D.DefaultUp = /*@__PURE__*/ new three_module_Vector3( 0, 1, 0 );
 Object3D.DefaultMatrixAutoUpdate = true;
 Object3D.DefaultMatrixWorldAutoUpdate = true;
 
-const _v0$1 = /*@__PURE__*/ new Vector3();
-const _v1$3 = /*@__PURE__*/ new Vector3();
-const _v2$2 = /*@__PURE__*/ new Vector3();
-const _v3$1 = /*@__PURE__*/ new Vector3();
+const _v0$1 = /*@__PURE__*/ new three_module_Vector3();
+const _v1$3 = /*@__PURE__*/ new three_module_Vector3();
+const _v2$2 = /*@__PURE__*/ new three_module_Vector3();
+const _v3$1 = /*@__PURE__*/ new three_module_Vector3();
 
-const _vab = /*@__PURE__*/ new Vector3();
-const _vac = /*@__PURE__*/ new Vector3();
-const _vbc = /*@__PURE__*/ new Vector3();
-const _vap = /*@__PURE__*/ new Vector3();
-const _vbp = /*@__PURE__*/ new Vector3();
-const _vcp = /*@__PURE__*/ new Vector3();
+const _vab = /*@__PURE__*/ new three_module_Vector3();
+const _vac = /*@__PURE__*/ new three_module_Vector3();
+const _vbc = /*@__PURE__*/ new three_module_Vector3();
+const _vap = /*@__PURE__*/ new three_module_Vector3();
+const _vbp = /*@__PURE__*/ new three_module_Vector3();
+const _vcp = /*@__PURE__*/ new three_module_Vector3();
 
 class Triangle {
 
-	constructor( a = new Vector3(), b = new Vector3(), c = new Vector3() ) {
+	constructor( a = new three_module_Vector3(), b = new three_module_Vector3(), c = new three_module_Vector3() ) {
 
 		this.a = a;
 		this.b = b;
@@ -9328,10 +9328,10 @@ class MeshBasicMaterial extends Material {
 
 }
 
-const _vector$9 = /*@__PURE__*/ new Vector3();
+const _vector$9 = /*@__PURE__*/ new three_module_Vector3();
 const _vector2$1 = /*@__PURE__*/ new Vector2();
 
-class BufferAttribute {
+class three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9698,7 +9698,7 @@ class BufferAttribute {
 
 //
 
-class Int8BufferAttribute extends BufferAttribute {
+class Int8BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9708,7 +9708,7 @@ class Int8BufferAttribute extends BufferAttribute {
 
 }
 
-class Uint8BufferAttribute extends BufferAttribute {
+class Uint8BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9718,7 +9718,7 @@ class Uint8BufferAttribute extends BufferAttribute {
 
 }
 
-class Uint8ClampedBufferAttribute extends BufferAttribute {
+class Uint8ClampedBufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9728,7 +9728,7 @@ class Uint8ClampedBufferAttribute extends BufferAttribute {
 
 }
 
-class Int16BufferAttribute extends BufferAttribute {
+class Int16BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9738,7 +9738,7 @@ class Int16BufferAttribute extends BufferAttribute {
 
 }
 
-class Uint16BufferAttribute extends BufferAttribute {
+class Uint16BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9748,7 +9748,7 @@ class Uint16BufferAttribute extends BufferAttribute {
 
 }
 
-class Int32BufferAttribute extends BufferAttribute {
+class Int32BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9758,7 +9758,7 @@ class Int32BufferAttribute extends BufferAttribute {
 
 }
 
-class Uint32BufferAttribute extends BufferAttribute {
+class Uint32BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9768,7 +9768,7 @@ class Uint32BufferAttribute extends BufferAttribute {
 
 }
 
-class Float16BufferAttribute extends BufferAttribute {
+class Float16BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9781,7 +9781,7 @@ class Float16BufferAttribute extends BufferAttribute {
 }
 
 
-class Float32BufferAttribute extends BufferAttribute {
+class three_module_Float32BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9791,7 +9791,7 @@ class Float32BufferAttribute extends BufferAttribute {
 
 }
 
-class Float64BufferAttribute extends BufferAttribute {
+class Float64BufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
@@ -9805,10 +9805,10 @@ let _id$1 = 0;
 
 const _m1 = /*@__PURE__*/ new Matrix4();
 const _obj = /*@__PURE__*/ new Object3D();
-const _offset = /*@__PURE__*/ new Vector3();
+const _offset = /*@__PURE__*/ new three_module_Vector3();
 const _box$1 = /*@__PURE__*/ new Box3();
 const _boxMorphTargets = /*@__PURE__*/ new Box3();
-const _vector$8 = /*@__PURE__*/ new Vector3();
+const _vector$8 = /*@__PURE__*/ new three_module_Vector3();
 
 class BufferGeometry extends EventDispatcher {
 
@@ -10072,7 +10072,7 @@ class BufferGeometry extends EventDispatcher {
 
 		}
 
-		this.setAttribute( 'position', new Float32BufferAttribute( position, 3 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( position, 3 ) );
 
 		return this;
 
@@ -10094,8 +10094,8 @@ class BufferGeometry extends EventDispatcher {
 			console.error( 'THREE.BufferGeometry.computeBoundingBox(): GLBufferAttribute requires a manual bounding box. Alternatively set "mesh.frustumCulled" to "false".', this );
 
 			this.boundingBox.set(
-				new Vector3( - Infinity, - Infinity, - Infinity ),
-				new Vector3( + Infinity, + Infinity, + Infinity )
+				new three_module_Vector3( - Infinity, - Infinity, - Infinity ),
+				new three_module_Vector3( + Infinity, + Infinity, + Infinity )
 			);
 
 			return;
@@ -10163,7 +10163,7 @@ class BufferGeometry extends EventDispatcher {
 
 			console.error( 'THREE.BufferGeometry.computeBoundingSphere(): GLBufferAttribute requires a manual bounding sphere. Alternatively set "mesh.frustumCulled" to "false".', this );
 
-			this.boundingSphere.set( new Vector3(), Infinity );
+			this.boundingSphere.set( new three_module_Vector3(), Infinity );
 
 			return;
 
@@ -10287,7 +10287,7 @@ class BufferGeometry extends EventDispatcher {
 
 		if ( this.hasAttribute( 'tangent' ) === false ) {
 
-			this.setAttribute( 'tangent', new BufferAttribute( new Float32Array( 4 * nVertices ), 4 ) );
+			this.setAttribute( 'tangent', new three_module_BufferAttribute( new Float32Array( 4 * nVertices ), 4 ) );
 
 		}
 
@@ -10297,21 +10297,21 @@ class BufferGeometry extends EventDispatcher {
 
 		for ( let i = 0; i < nVertices; i ++ ) {
 
-			tan1[ i ] = new Vector3();
-			tan2[ i ] = new Vector3();
+			tan1[ i ] = new three_module_Vector3();
+			tan2[ i ] = new three_module_Vector3();
 
 		}
 
-		const vA = new Vector3(),
-			vB = new Vector3(),
-			vC = new Vector3(),
+		const vA = new three_module_Vector3(),
+			vB = new three_module_Vector3(),
+			vC = new three_module_Vector3(),
 
 			uvA = new Vector2(),
 			uvB = new Vector2(),
 			uvC = new Vector2(),
 
-			sdir = new Vector3(),
-			tdir = new Vector3();
+			sdir = new three_module_Vector3(),
+			tdir = new three_module_Vector3();
 
 		function handleTriangle( a, b, c ) {
 
@@ -10378,8 +10378,8 @@ class BufferGeometry extends EventDispatcher {
 
 		}
 
-		const tmp = new Vector3(), tmp2 = new Vector3();
-		const n = new Vector3(), n2 = new Vector3();
+		const tmp = new three_module_Vector3(), tmp2 = new three_module_Vector3();
+		const n = new three_module_Vector3(), n2 = new three_module_Vector3();
 
 		function handleVertex( v ) {
 
@@ -10436,7 +10436,7 @@ class BufferGeometry extends EventDispatcher {
 
 			if ( normalAttribute === undefined ) {
 
-				normalAttribute = new BufferAttribute( new Float32Array( positionAttribute.count * 3 ), 3 );
+				normalAttribute = new three_module_BufferAttribute( new Float32Array( positionAttribute.count * 3 ), 3 );
 				this.setAttribute( 'normal', normalAttribute );
 
 			} else {
@@ -10451,9 +10451,9 @@ class BufferGeometry extends EventDispatcher {
 
 			}
 
-			const pA = new Vector3(), pB = new Vector3(), pC = new Vector3();
-			const nA = new Vector3(), nB = new Vector3(), nC = new Vector3();
-			const cb = new Vector3(), ab = new Vector3();
+			const pA = new three_module_Vector3(), pB = new three_module_Vector3(), pC = new three_module_Vector3();
+			const nA = new three_module_Vector3(), nB = new three_module_Vector3(), nC = new three_module_Vector3();
+			const cb = new three_module_Vector3(), ab = new three_module_Vector3();
 
 			// indexed elements
 
@@ -10574,7 +10574,7 @@ class BufferGeometry extends EventDispatcher {
 
 			}
 
-			return new BufferAttribute( array2, itemSize, normalized );
+			return new three_module_BufferAttribute( array2, itemSize, normalized );
 
 		}
 
@@ -10884,24 +10884,24 @@ const _inverseMatrix$2 = /*@__PURE__*/ new Matrix4();
 const _ray$2 = /*@__PURE__*/ new Ray();
 const _sphere$3 = /*@__PURE__*/ new Sphere();
 
-const _vA$1 = /*@__PURE__*/ new Vector3();
-const _vB$1 = /*@__PURE__*/ new Vector3();
-const _vC$1 = /*@__PURE__*/ new Vector3();
+const _vA$1 = /*@__PURE__*/ new three_module_Vector3();
+const _vB$1 = /*@__PURE__*/ new three_module_Vector3();
+const _vC$1 = /*@__PURE__*/ new three_module_Vector3();
 
-const _tempA = /*@__PURE__*/ new Vector3();
-const _tempB = /*@__PURE__*/ new Vector3();
-const _tempC = /*@__PURE__*/ new Vector3();
+const _tempA = /*@__PURE__*/ new three_module_Vector3();
+const _tempB = /*@__PURE__*/ new three_module_Vector3();
+const _tempC = /*@__PURE__*/ new three_module_Vector3();
 
-const _morphA = /*@__PURE__*/ new Vector3();
-const _morphB = /*@__PURE__*/ new Vector3();
-const _morphC = /*@__PURE__*/ new Vector3();
+const _morphA = /*@__PURE__*/ new three_module_Vector3();
+const _morphB = /*@__PURE__*/ new three_module_Vector3();
+const _morphC = /*@__PURE__*/ new three_module_Vector3();
 
 const _uvA$1 = /*@__PURE__*/ new Vector2();
 const _uvB$1 = /*@__PURE__*/ new Vector2();
 const _uvC$1 = /*@__PURE__*/ new Vector2();
 
-const _intersectionPoint = /*@__PURE__*/ new Vector3();
-const _intersectionPointWorld = /*@__PURE__*/ new Vector3();
+const _intersectionPoint = /*@__PURE__*/ new three_module_Vector3();
+const _intersectionPointWorld = /*@__PURE__*/ new three_module_Vector3();
 
 class Mesh extends Object3D {
 
@@ -11251,7 +11251,7 @@ function checkBufferGeometryIntersection( object, material, raycaster, ray, posi
 			a: a,
 			b: b,
 			c: c,
-			normal: new Vector3(),
+			normal: new three_module_Vector3(),
 			materialIndex: 0
 		};
 
@@ -11314,9 +11314,9 @@ class BoxGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 		function buildPlane( u, v, w, udir, vdir, width, height, depth, gridX, gridY, materialIndex ) {
 
@@ -11333,7 +11333,7 @@ class BoxGeometry extends BufferGeometry {
 			let vertexCounter = 0;
 			let groupCount = 0;
 
-			const vector = new Vector3();
+			const vector = new three_module_Vector3();
 
 			// generate vertices, normals and uvs
 
@@ -12261,13 +12261,13 @@ class WebGLCubeRenderTarget extends WebGLRenderTarget {
 
 }
 
-const _vector1 = /*@__PURE__*/ new Vector3();
-const _vector2 = /*@__PURE__*/ new Vector3();
+const _vector1 = /*@__PURE__*/ new three_module_Vector3();
+const _vector2 = /*@__PURE__*/ new three_module_Vector3();
 const _normalMatrix = /*@__PURE__*/ new Matrix3();
 
 class Plane {
 
-	constructor( normal = new Vector3( 1, 0, 0 ), constant = 0 ) {
+	constructor( normal = new three_module_Vector3( 1, 0, 0 ), constant = 0 ) {
 
 		this.isPlane = true;
 
@@ -12463,7 +12463,7 @@ class Plane {
 }
 
 const _sphere$2 = /*@__PURE__*/ new Sphere();
-const _vector$7 = /*@__PURE__*/ new Vector3();
+const _vector$7 = /*@__PURE__*/ new three_module_Vector3();
 
 class Frustum {
 
@@ -12933,9 +12933,9 @@ class PlaneGeometry extends BufferGeometry {
 		}
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 	}
 
@@ -13848,7 +13848,7 @@ const ShaderLib = {
 			UniformsLib.common,
 			UniformsLib.displacementmap,
 			{
-				referencePosition: { value: /*@__PURE__*/ new Vector3() },
+				referencePosition: { value: /*@__PURE__*/ new three_module_Vector3() },
 				nearDistance: { value: 1 },
 				farDistance: { value: 1000 }
 			}
@@ -15356,16 +15356,16 @@ const INV_PHI = 1 / PHI;
 // Vertices of a dodecahedron (except the opposites, which represent the
 // same axis), used as axis directions evenly spread on a sphere.
 const _axisDirections = [
-	/*@__PURE__*/ new Vector3( 1, 1, 1 ),
-	/*@__PURE__*/ new Vector3( - 1, 1, 1 ),
-	/*@__PURE__*/ new Vector3( 1, 1, - 1 ),
-	/*@__PURE__*/ new Vector3( - 1, 1, - 1 ),
-	/*@__PURE__*/ new Vector3( 0, PHI, INV_PHI ),
-	/*@__PURE__*/ new Vector3( 0, PHI, - INV_PHI ),
-	/*@__PURE__*/ new Vector3( INV_PHI, 0, PHI ),
-	/*@__PURE__*/ new Vector3( - INV_PHI, 0, PHI ),
-	/*@__PURE__*/ new Vector3( PHI, INV_PHI, 0 ),
-	/*@__PURE__*/ new Vector3( - PHI, INV_PHI, 0 ) ];
+	/*@__PURE__*/ new three_module_Vector3( 1, 1, 1 ),
+	/*@__PURE__*/ new three_module_Vector3( - 1, 1, 1 ),
+	/*@__PURE__*/ new three_module_Vector3( 1, 1, - 1 ),
+	/*@__PURE__*/ new three_module_Vector3( - 1, 1, - 1 ),
+	/*@__PURE__*/ new three_module_Vector3( 0, PHI, INV_PHI ),
+	/*@__PURE__*/ new three_module_Vector3( 0, PHI, - INV_PHI ),
+	/*@__PURE__*/ new three_module_Vector3( INV_PHI, 0, PHI ),
+	/*@__PURE__*/ new three_module_Vector3( - INV_PHI, 0, PHI ),
+	/*@__PURE__*/ new three_module_Vector3( PHI, INV_PHI, 0 ),
+	/*@__PURE__*/ new three_module_Vector3( - PHI, INV_PHI, 0 ) ];
 
 /**
  * This class generates a Prefiltered, Mipmapped Radiance Environment Map
@@ -15933,9 +15933,9 @@ function _createPlanes( lodMax ) {
 		}
 
 		const planes = new BufferGeometry();
-		planes.setAttribute( 'position', new BufferAttribute( position, positionSize ) );
-		planes.setAttribute( 'uv', new BufferAttribute( uv, uvSize ) );
-		planes.setAttribute( 'faceIndex', new BufferAttribute( faceIndex, faceIndexSize ) );
+		planes.setAttribute( 'position', new three_module_BufferAttribute( position, positionSize ) );
+		planes.setAttribute( 'uv', new three_module_BufferAttribute( uv, uvSize ) );
+		planes.setAttribute( 'faceIndex', new three_module_BufferAttribute( faceIndex, faceIndexSize ) );
 		lodPlanes.push( planes );
 
 		if ( lod > LOD_MIN ) {
@@ -15970,7 +15970,7 @@ function _setViewport( target, x, y, width, height ) {
 function _getBlurShader( lodMax, width, height ) {
 
 	const weights = new Float32Array( MAX_SAMPLES );
-	const poleAxis = new Vector3( 0, 1, 0 );
+	const poleAxis = new three_module_Vector3( 0, 1, 0 );
 	const shaderMaterial = new ShaderMaterial( {
 
 		name: 'SphericalGaussianBlur',
@@ -20123,15 +20123,15 @@ function UniformsCache() {
 
 				case 'DirectionalLight':
 					uniforms = {
-						direction: new Vector3(),
+						direction: new three_module_Vector3(),
 						color: new Color()
 					};
 					break;
 
 				case 'SpotLight':
 					uniforms = {
-						position: new Vector3(),
-						direction: new Vector3(),
+						position: new three_module_Vector3(),
+						direction: new three_module_Vector3(),
 						color: new Color(),
 						distance: 0,
 						coneCos: 0,
@@ -20142,7 +20142,7 @@ function UniformsCache() {
 
 				case 'PointLight':
 					uniforms = {
-						position: new Vector3(),
+						position: new three_module_Vector3(),
 						color: new Color(),
 						distance: 0,
 						decay: 0
@@ -20151,7 +20151,7 @@ function UniformsCache() {
 
 				case 'HemisphereLight':
 					uniforms = {
-						direction: new Vector3(),
+						direction: new three_module_Vector3(),
 						skyColor: new Color(),
 						groundColor: new Color()
 					};
@@ -20160,9 +20160,9 @@ function UniformsCache() {
 				case 'RectAreaLight':
 					uniforms = {
 						color: new Color(),
-						position: new Vector3(),
-						halfWidth: new Vector3(),
-						halfHeight: new Vector3()
+						position: new three_module_Vector3(),
+						halfWidth: new three_module_Vector3(),
+						halfHeight: new three_module_Vector3()
 					};
 					break;
 
@@ -20295,9 +20295,9 @@ function WebGLLights( extensions, capabilities ) {
 
 	};
 
-	for ( let i = 0; i < 9; i ++ ) state.probe.push( new Vector3() );
+	for ( let i = 0; i < 9; i ++ ) state.probe.push( new three_module_Vector3() );
 
-	const vector3 = new Vector3();
+	const vector3 = new three_module_Vector3();
 	const matrix4 = new Matrix4();
 	const matrix42 = new Matrix4();
 
@@ -20828,7 +20828,7 @@ class MeshDistanceMaterial extends Material {
 
 		this.type = 'MeshDistanceMaterial';
 
-		this.referencePosition = new Vector3();
+		this.referencePosition = new three_module_Vector3();
 		this.nearDistance = 1;
 		this.farDistance = 1000;
 
@@ -20909,7 +20909,7 @@ function WebGLShadowMap( _renderer, _objects, _capabilities ) {
 	const fullScreenTri = new BufferGeometry();
 	fullScreenTri.setAttribute(
 		'position',
-		new BufferAttribute(
+		new three_module_BufferAttribute(
 			new Float32Array( [ - 1, - 1, 0.5, 3, - 1, 0.5, - 1, 3, 0.5 ] ),
 			3
 		)
@@ -24837,9 +24837,9 @@ class WebXRController {
 			this._targetRay.matrixAutoUpdate = false;
 			this._targetRay.visible = false;
 			this._targetRay.hasLinearVelocity = false;
-			this._targetRay.linearVelocity = new Vector3();
+			this._targetRay.linearVelocity = new three_module_Vector3();
 			this._targetRay.hasAngularVelocity = false;
-			this._targetRay.angularVelocity = new Vector3();
+			this._targetRay.angularVelocity = new three_module_Vector3();
 
 		}
 
@@ -24855,9 +24855,9 @@ class WebXRController {
 			this._grip.matrixAutoUpdate = false;
 			this._grip.visible = false;
 			this._grip.hasLinearVelocity = false;
-			this._grip.linearVelocity = new Vector3();
+			this._grip.linearVelocity = new three_module_Vector3();
 			this._grip.hasAngularVelocity = false;
-			this._grip.angularVelocity = new Vector3();
+			this._grip.angularVelocity = new three_module_Vector3();
 
 		}
 
@@ -25574,8 +25574,8 @@ class WebXRManager extends EventDispatcher {
 
 		//
 
-		const cameraLPos = new Vector3();
-		const cameraRPos = new Vector3();
+		const cameraLPos = new three_module_Vector3();
+		const cameraRPos = new three_module_Vector3();
 
 		/**
 		 * Assumes 2 cameras that are parallel and share an X-axis, and that
@@ -27128,7 +27128,7 @@ function WebGLRenderer( parameters = {} ) {
 	const _projScreenMatrix = new Matrix4();
 
 	const _vector2 = new Vector2();
-	const _vector3 = new Vector3();
+	const _vector3 = new three_module_Vector3();
 
 	const _emptyScene = { background: null, fog: null, environment: null, overrideMaterial: null, isScene: true };
 
@@ -29340,7 +29340,7 @@ class Scene extends Object3D {
 
 }
 
-class InterleavedBuffer {
+class three_module_InterleavedBuffer {
 
 	constructor( array, stride ) {
 
@@ -29481,9 +29481,9 @@ class InterleavedBuffer {
 
 }
 
-const _vector$6 = /*@__PURE__*/ new Vector3();
+const _vector$6 = /*@__PURE__*/ new three_module_Vector3();
 
-class InterleavedBufferAttribute {
+class three_module_InterleavedBufferAttribute {
 
 	constructor( interleavedBuffer, itemSize, offset, normalized = false ) {
 
@@ -29725,7 +29725,7 @@ class InterleavedBufferAttribute {
 
 			}
 
-			return new BufferAttribute( new this.array.constructor( array ), this.itemSize, this.normalized );
+			return new three_module_BufferAttribute( new this.array.constructor( array ), this.itemSize, this.normalized );
 
 		} else {
 
@@ -29741,7 +29741,7 @@ class InterleavedBufferAttribute {
 
 			}
 
-			return new InterleavedBufferAttribute( data.interleavedBuffers[ this.data.uuid ], this.itemSize, this.offset, this.normalized );
+			return new three_module_InterleavedBufferAttribute( data.interleavedBuffers[ this.data.uuid ], this.itemSize, this.offset, this.normalized );
 
 		}
 
@@ -29858,17 +29858,17 @@ class SpriteMaterial extends Material {
 
 let _geometry;
 
-const _intersectPoint = /*@__PURE__*/ new Vector3();
-const _worldScale = /*@__PURE__*/ new Vector3();
-const _mvPosition = /*@__PURE__*/ new Vector3();
+const _intersectPoint = /*@__PURE__*/ new three_module_Vector3();
+const _worldScale = /*@__PURE__*/ new three_module_Vector3();
+const _mvPosition = /*@__PURE__*/ new three_module_Vector3();
 
 const _alignedPosition = /*@__PURE__*/ new Vector2();
 const _rotatedPosition = /*@__PURE__*/ new Vector2();
 const _viewWorldMatrix = /*@__PURE__*/ new Matrix4();
 
-const _vA = /*@__PURE__*/ new Vector3();
-const _vB = /*@__PURE__*/ new Vector3();
-const _vC = /*@__PURE__*/ new Vector3();
+const _vA = /*@__PURE__*/ new three_module_Vector3();
+const _vB = /*@__PURE__*/ new three_module_Vector3();
+const _vC = /*@__PURE__*/ new three_module_Vector3();
 
 const _uvA = /*@__PURE__*/ new Vector2();
 const _uvB = /*@__PURE__*/ new Vector2();
@@ -29895,11 +29895,11 @@ class Sprite extends Object3D {
 				- 0.5, 0.5, 0, 0, 1
 			] );
 
-			const interleavedBuffer = new InterleavedBuffer( float32Array, 5 );
+			const interleavedBuffer = new three_module_InterleavedBuffer( float32Array, 5 );
 
 			_geometry.setIndex( [ 0, 1, 2,	0, 2, 3 ] );
-			_geometry.setAttribute( 'position', new InterleavedBufferAttribute( interleavedBuffer, 3, 0, false ) );
-			_geometry.setAttribute( 'uv', new InterleavedBufferAttribute( interleavedBuffer, 2, 3, false ) );
+			_geometry.setAttribute( 'position', new three_module_InterleavedBufferAttribute( interleavedBuffer, 3, 0, false ) );
+			_geometry.setAttribute( 'uv', new three_module_InterleavedBufferAttribute( interleavedBuffer, 2, 3, false ) );
 
 		}
 
@@ -30026,8 +30026,8 @@ function transformVertex( vertexPosition, mvPosition, center, scale, sin, cos ) 
 
 }
 
-const _v1$2 = /*@__PURE__*/ new Vector3();
-const _v2$1 = /*@__PURE__*/ new Vector3();
+const _v1$2 = /*@__PURE__*/ new three_module_Vector3();
+const _v2$1 = /*@__PURE__*/ new three_module_Vector3();
 
 class LOD extends Object3D {
 
@@ -30235,12 +30235,12 @@ class LOD extends Object3D {
 
 }
 
-const _basePosition = /*@__PURE__*/ new Vector3();
+const _basePosition = /*@__PURE__*/ new three_module_Vector3();
 
 const _skinIndex = /*@__PURE__*/ new Vector4();
 const _skinWeight = /*@__PURE__*/ new Vector4();
 
-const _vector$5 = /*@__PURE__*/ new Vector3();
+const _vector$5 = /*@__PURE__*/ new three_module_Vector3();
 const _matrix = /*@__PURE__*/ new Matrix4();
 
 class SkinnedMesh extends Mesh {
@@ -30683,7 +30683,7 @@ class Skeleton {
 
 }
 
-class InstancedBufferAttribute extends BufferAttribute {
+class three_module_InstancedBufferAttribute extends three_module_BufferAttribute {
 
 	constructor( array, itemSize, normalized, meshPerAttribute = 1 ) {
 
@@ -30735,7 +30735,7 @@ class InstancedMesh extends Mesh {
 
 		this.isInstancedMesh = true;
 
-		this.instanceMatrix = new InstancedBufferAttribute( new Float32Array( count * 16 ), 16 );
+		this.instanceMatrix = new three_module_InstancedBufferAttribute( new Float32Array( count * 16 ), 16 );
 		this.instanceColor = null;
 
 		this.count = count;
@@ -30821,7 +30821,7 @@ class InstancedMesh extends Mesh {
 
 		if ( this.instanceColor === null ) {
 
-			this.instanceColor = new InstancedBufferAttribute( new Float32Array( this.instanceMatrix.count * 3 ), 3 );
+			this.instanceColor = new three_module_InstancedBufferAttribute( new Float32Array( this.instanceMatrix.count * 3 ), 3 );
 
 		}
 
@@ -30888,8 +30888,8 @@ class LineBasicMaterial extends Material {
 
 }
 
-const _start$1 = /*@__PURE__*/ new Vector3();
-const _end$1 = /*@__PURE__*/ new Vector3();
+const _start$1 = /*@__PURE__*/ new three_module_Vector3();
+const _end$1 = /*@__PURE__*/ new three_module_Vector3();
 const _inverseMatrix$1 = /*@__PURE__*/ new Matrix4();
 const _ray$1 = /*@__PURE__*/ new Ray();
 const _sphere$1 = /*@__PURE__*/ new Sphere();
@@ -30943,7 +30943,7 @@ class Line extends Object3D {
 
 			}
 
-			geometry.setAttribute( 'lineDistance', new Float32BufferAttribute( lineDistances, 1 ) );
+			geometry.setAttribute( 'lineDistance', new three_module_Float32BufferAttribute( lineDistances, 1 ) );
 
 		} else {
 
@@ -30980,10 +30980,10 @@ class Line extends Object3D {
 		const localThreshold = threshold / ( ( this.scale.x + this.scale.y + this.scale.z ) / 3 );
 		const localThresholdSq = localThreshold * localThreshold;
 
-		const vStart = new Vector3();
-		const vEnd = new Vector3();
-		const interSegment = new Vector3();
-		const interRay = new Vector3();
+		const vStart = new three_module_Vector3();
+		const vEnd = new three_module_Vector3();
+		const interSegment = new three_module_Vector3();
+		const interRay = new three_module_Vector3();
 		const step = this.isLineSegments ? 2 : 1;
 
 		const index = geometry.index;
@@ -31100,8 +31100,8 @@ class Line extends Object3D {
 
 }
 
-const _start = /*@__PURE__*/ new Vector3();
-const _end = /*@__PURE__*/ new Vector3();
+const _start = /*@__PURE__*/ new three_module_Vector3();
+const _end = /*@__PURE__*/ new three_module_Vector3();
 
 class LineSegments extends Line {
 
@@ -31136,7 +31136,7 @@ class LineSegments extends Line {
 
 			}
 
-			geometry.setAttribute( 'lineDistance', new Float32BufferAttribute( lineDistances, 1 ) );
+			geometry.setAttribute( 'lineDistance', new three_module_Float32BufferAttribute( lineDistances, 1 ) );
 
 		} else {
 
@@ -31213,7 +31213,7 @@ class PointsMaterial extends Material {
 const _inverseMatrix = /*@__PURE__*/ new Matrix4();
 const _ray = /*@__PURE__*/ new Ray();
 const _sphere = /*@__PURE__*/ new Sphere();
-const _position$2 = /*@__PURE__*/ new Vector3();
+const _position$2 = /*@__PURE__*/ new three_module_Vector3();
 
 class Points extends Object3D {
 
@@ -31343,7 +31343,7 @@ function testPoint( point, index, localThresholdSq, matrixWorld, raycaster, inte
 
 	if ( rayPointDistanceSq < localThresholdSq ) {
 
-		const intersectPoint = new Vector3();
+		const intersectPoint = new three_module_Vector3();
 
 		_ray.closestPointToPoint( point, intersectPoint );
 		intersectPoint.applyMatrix4( matrixWorld );
@@ -31731,7 +31731,7 @@ class Curve {
 		const pt1 = this.getPoint( t1 );
 		const pt2 = this.getPoint( t2 );
 
-		const tangent = optionalTarget || ( ( pt1.isVector2 ) ? new Vector2() : new Vector3() );
+		const tangent = optionalTarget || ( ( pt1.isVector2 ) ? new Vector2() : new three_module_Vector3() );
 
 		tangent.copy( pt2 ).sub( pt1 ).normalize();
 
@@ -31750,13 +31750,13 @@ class Curve {
 
 		// see http://www.cs.indiana.edu/pub/techreports/TR425.pdf
 
-		const normal = new Vector3();
+		const normal = new three_module_Vector3();
 
 		const tangents = [];
 		const normals = [];
 		const binormals = [];
 
-		const vec = new Vector3();
+		const vec = new three_module_Vector3();
 		const mat = new Matrix4();
 
 		// compute the tangent vectors for each segment on the curve
@@ -31765,15 +31765,15 @@ class Curve {
 
 			const u = i / segments;
 
-			tangents[ i ] = this.getTangentAt( u, new Vector3() );
+			tangents[ i ] = this.getTangentAt( u, new three_module_Vector3() );
 
 		}
 
 		// select an initial normal vector perpendicular to the first tangent vector,
 		// and in the direction of the minimum tangent xyz component
 
-		normals[ 0 ] = new Vector3();
-		binormals[ 0 ] = new Vector3();
+		normals[ 0 ] = new three_module_Vector3();
+		binormals[ 0 ] = new three_module_Vector3();
 		let min = Number.MAX_VALUE;
 		const tx = Math.abs( tangents[ 0 ].x );
 		const ty = Math.abs( tangents[ 0 ].y );
@@ -32144,7 +32144,7 @@ function CubicPoly() {
 
 //
 
-const tmp = /*@__PURE__*/ new Vector3();
+const tmp = /*@__PURE__*/ new three_module_Vector3();
 const px = /*@__PURE__*/ new CubicPoly();
 const py = /*@__PURE__*/ new CubicPoly();
 const pz = /*@__PURE__*/ new CubicPoly();
@@ -32166,7 +32166,7 @@ class CatmullRomCurve3 extends Curve {
 
 	}
 
-	getPoint( t, optionalTarget = new Vector3() ) {
+	getPoint( t, optionalTarget = new three_module_Vector3() ) {
 
 		const point = optionalTarget;
 
@@ -32304,7 +32304,7 @@ class CatmullRomCurve3 extends Curve {
 		for ( let i = 0, l = json.points.length; i < l; i ++ ) {
 
 			const point = json.points[ i ];
-			this.points.push( new Vector3().fromArray( point ) );
+			this.points.push( new three_module_Vector3().fromArray( point ) );
 
 		}
 
@@ -32471,7 +32471,7 @@ class CubicBezierCurve extends Curve {
 
 class CubicBezierCurve3 extends Curve {
 
-	constructor( v0 = new Vector3(), v1 = new Vector3(), v2 = new Vector3(), v3 = new Vector3() ) {
+	constructor( v0 = new three_module_Vector3(), v1 = new three_module_Vector3(), v2 = new three_module_Vector3(), v3 = new three_module_Vector3() ) {
 
 		super();
 
@@ -32486,7 +32486,7 @@ class CubicBezierCurve3 extends Curve {
 
 	}
 
-	getPoint( t, optionalTarget = new Vector3() ) {
+	getPoint( t, optionalTarget = new three_module_Vector3() ) {
 
 		const point = optionalTarget;
 
@@ -32631,7 +32631,7 @@ class LineCurve extends Curve {
 
 class LineCurve3 extends Curve {
 
-	constructor( v1 = new Vector3(), v2 = new Vector3() ) {
+	constructor( v1 = new three_module_Vector3(), v2 = new three_module_Vector3() ) {
 
 		super();
 
@@ -32643,7 +32643,7 @@ class LineCurve3 extends Curve {
 		this.v2 = v2;
 
 	}
-	getPoint( t, optionalTarget = new Vector3() ) {
+	getPoint( t, optionalTarget = new three_module_Vector3() ) {
 
 		const point = optionalTarget;
 
@@ -32771,7 +32771,7 @@ class QuadraticBezierCurve extends Curve {
 
 class QuadraticBezierCurve3 extends Curve {
 
-	constructor( v0 = new Vector3(), v1 = new Vector3(), v2 = new Vector3() ) {
+	constructor( v0 = new three_module_Vector3(), v1 = new three_module_Vector3(), v2 = new three_module_Vector3() ) {
 
 		super();
 
@@ -32785,7 +32785,7 @@ class QuadraticBezierCurve3 extends Curve {
 
 	}
 
-	getPoint( t, optionalTarget = new Vector3() ) {
+	getPoint( t, optionalTarget = new three_module_Vector3() ) {
 
 		const point = optionalTarget;
 
@@ -33410,11 +33410,11 @@ class LatheGeometry extends BufferGeometry {
 		// helper variables
 
 		const inverseSegments = 1.0 / segments;
-		const vertex = new Vector3();
+		const vertex = new three_module_Vector3();
 		const uv = new Vector2();
-		const normal = new Vector3();
-		const curNormal = new Vector3();
-		const prevNormal = new Vector3();
+		const normal = new three_module_Vector3();
+		const curNormal = new three_module_Vector3();
+		const prevNormal = new three_module_Vector3();
 		let dx = 0;
 		let dy = 0;
 
@@ -33535,9 +33535,9 @@ class LatheGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
 
 	}
 
@@ -33604,7 +33604,7 @@ class CircleGeometry extends BufferGeometry {
 
 		// helper variables
 
-		const vertex = new Vector3();
+		const vertex = new three_module_Vector3();
 		const uv = new Vector2();
 
 		// center point
@@ -33648,9 +33648,9 @@ class CircleGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 	}
 
@@ -33714,14 +33714,14 @@ class CylinderGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 		function generateTorso() {
 
-			const normal = new Vector3();
-			const vertex = new Vector3();
+			const normal = new three_module_Vector3();
+			const vertex = new three_module_Vector3();
 
 			let groupCount = 0;
 
@@ -33819,7 +33819,7 @@ class CylinderGeometry extends BufferGeometry {
 			const centerIndexStart = index;
 
 			const uv = new Vector2();
-			const vertex = new Vector3();
+			const vertex = new three_module_Vector3();
 
 			let groupCount = 0;
 
@@ -33993,9 +33993,9 @@ class PolyhedronGeometry extends BufferGeometry {
 
 		// build non-indexed geometry
 
-		this.setAttribute( 'position', new Float32BufferAttribute( vertexBuffer, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( vertexBuffer.slice(), 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvBuffer, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertexBuffer, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( vertexBuffer.slice(), 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvBuffer, 2 ) );
 
 		if ( detail === 0 ) {
 
@@ -34011,9 +34011,9 @@ class PolyhedronGeometry extends BufferGeometry {
 
 		function subdivide( detail ) {
 
-			const a = new Vector3();
-			const b = new Vector3();
-			const c = new Vector3();
+			const a = new three_module_Vector3();
+			const b = new three_module_Vector3();
+			const c = new three_module_Vector3();
 
 			// iterate over all faces and apply a subdivision with the given detail value
 
@@ -34098,7 +34098,7 @@ class PolyhedronGeometry extends BufferGeometry {
 
 		function applyRadius( radius ) {
 
-			const vertex = new Vector3();
+			const vertex = new three_module_Vector3();
 
 			// iterate over the entire buffer and apply the radius to each vertex
 
@@ -34120,7 +34120,7 @@ class PolyhedronGeometry extends BufferGeometry {
 
 		function generateUVs() {
 
-			const vertex = new Vector3();
+			const vertex = new three_module_Vector3();
 
 			for ( let i = 0; i < vertexBuffer.length; i += 3 ) {
 
@@ -34187,11 +34187,11 @@ class PolyhedronGeometry extends BufferGeometry {
 
 		function correctUVs() {
 
-			const a = new Vector3();
-			const b = new Vector3();
-			const c = new Vector3();
+			const a = new three_module_Vector3();
+			const b = new three_module_Vector3();
+			const c = new three_module_Vector3();
 
-			const centroid = new Vector3();
+			const centroid = new three_module_Vector3();
 
 			const uvA = new Vector2();
 			const uvB = new Vector2();
@@ -34324,9 +34324,9 @@ class DodecahedronGeometry extends PolyhedronGeometry {
 
 }
 
-const _v0 = /*@__PURE__*/ new Vector3();
-const _v1$1 = /*@__PURE__*/ new Vector3();
-const _normal = /*@__PURE__*/ new Vector3();
+const _v0 = /*@__PURE__*/ new three_module_Vector3();
+const _v1$1 = /*@__PURE__*/ new three_module_Vector3();
+const _normal = /*@__PURE__*/ new three_module_Vector3();
 const _triangle = /*@__PURE__*/ new Triangle();
 
 class EdgesGeometry extends BufferGeometry {
@@ -34451,7 +34451,7 @@ class EdgesGeometry extends BufferGeometry {
 
 			}
 
-			this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+			this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
 
 		}
 
@@ -35484,8 +35484,8 @@ class ExtrudeGeometry extends BufferGeometry {
 
 		// build geometry
 
-		this.setAttribute( 'position', new Float32BufferAttribute( verticesArray, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvArray, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( verticesArray, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvArray, 2 ) );
 
 		this.computeVertexNormals();
 
@@ -35531,9 +35531,9 @@ class ExtrudeGeometry extends BufferGeometry {
 
 				// console.log(splineTube, 'splineTube', splineTube.normals.length, 'steps', steps, 'extrudePts', extrudePts.length);
 
-				binormal = new Vector3();
-				normal = new Vector3();
-				position2 = new Vector3();
+				binormal = new three_module_Vector3();
+				normal = new three_module_Vector3();
+				position2 = new three_module_Vector3();
 
 			}
 
@@ -36330,7 +36330,7 @@ class RingGeometry extends BufferGeometry {
 
 		let radius = innerRadius;
 		const radiusStep = ( ( outerRadius - innerRadius ) / phiSegments );
-		const vertex = new Vector3();
+		const vertex = new three_module_Vector3();
 		const uv = new Vector2();
 
 		// generate vertices, normals and uvs
@@ -36396,9 +36396,9 @@ class RingGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 	}
 
@@ -36459,9 +36459,9 @@ class ShapeGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 
 		// helper functions
@@ -36614,8 +36614,8 @@ class SphereGeometry extends BufferGeometry {
 		let index = 0;
 		const grid = [];
 
-		const vertex = new Vector3();
-		const normal = new Vector3();
+		const vertex = new three_module_Vector3();
+		const normal = new three_module_Vector3();
 
 		// buffers
 
@@ -36696,9 +36696,9 @@ class SphereGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 	}
 
@@ -36769,9 +36769,9 @@ class TorusGeometry extends BufferGeometry {
 
 		// helper variables
 
-		const center = new Vector3();
-		const vertex = new Vector3();
-		const normal = new Vector3();
+		const center = new three_module_Vector3();
+		const vertex = new three_module_Vector3();
+		const normal = new three_module_Vector3();
 
 		// generate vertices, normals and uvs
 
@@ -36832,9 +36832,9 @@ class TorusGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 	}
 
@@ -36875,15 +36875,15 @@ class TorusKnotGeometry extends BufferGeometry {
 
 		// helper variables
 
-		const vertex = new Vector3();
-		const normal = new Vector3();
+		const vertex = new three_module_Vector3();
+		const normal = new three_module_Vector3();
 
-		const P1 = new Vector3();
-		const P2 = new Vector3();
+		const P1 = new three_module_Vector3();
+		const P2 = new three_module_Vector3();
 
-		const B = new Vector3();
-		const T = new Vector3();
-		const N = new Vector3();
+		const B = new three_module_Vector3();
+		const T = new three_module_Vector3();
+		const N = new three_module_Vector3();
 
 		// generate vertices, normals and uvs
 
@@ -36969,9 +36969,9 @@ class TorusKnotGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 		// this function calculates the current position on the torus curve
 
@@ -37000,7 +37000,7 @@ class TorusKnotGeometry extends BufferGeometry {
 
 class TubeGeometry extends BufferGeometry {
 
-	constructor( path = new QuadraticBezierCurve3( new Vector3( - 1, - 1, 0 ), new Vector3( - 1, 1, 0 ), new Vector3( 1, 1, 0 ) ), tubularSegments = 64, radius = 1, radialSegments = 8, closed = false ) {
+	constructor( path = new QuadraticBezierCurve3( new three_module_Vector3( - 1, - 1, 0 ), new three_module_Vector3( - 1, 1, 0 ), new three_module_Vector3( 1, 1, 0 ) ), tubularSegments = 64, radius = 1, radialSegments = 8, closed = false ) {
 
 		super();
 
@@ -37024,10 +37024,10 @@ class TubeGeometry extends BufferGeometry {
 
 		// helper variables
 
-		const vertex = new Vector3();
-		const normal = new Vector3();
+		const vertex = new three_module_Vector3();
+		const normal = new three_module_Vector3();
 		const uv = new Vector2();
-		let P = new Vector3();
+		let P = new three_module_Vector3();
 
 		// buffer
 
@@ -37043,9 +37043,9 @@ class TubeGeometry extends BufferGeometry {
 		// build geometry
 
 		this.setIndex( indices );
-		this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		this.setAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
-		this.setAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
+		this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		this.setAttribute( 'normal', new three_module_Float32BufferAttribute( normals, 3 ) );
+		this.setAttribute( 'uv', new three_module_Float32BufferAttribute( uvs, 2 ) );
 
 		// functions
 
@@ -37204,8 +37204,8 @@ class WireframeGeometry extends BufferGeometry {
 
 			// helper variables
 
-			const start = new Vector3();
-			const end = new Vector3();
+			const start = new three_module_Vector3();
+			const end = new three_module_Vector3();
 
 			if ( geometry.index !== null ) {
 
@@ -37287,7 +37287,7 @@ class WireframeGeometry extends BufferGeometry {
 
 			// build geometry
 
-			this.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
+			this.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
 
 		}
 
@@ -41063,8 +41063,8 @@ class HemisphereLight extends Light {
 }
 
 const _projScreenMatrix$1 = /*@__PURE__*/ new Matrix4();
-const _lightPositionWorld$1 = /*@__PURE__*/ new Vector3();
-const _lookTarget$1 = /*@__PURE__*/ new Vector3();
+const _lightPositionWorld$1 = /*@__PURE__*/ new three_module_Vector3();
+const _lookTarget$1 = /*@__PURE__*/ new three_module_Vector3();
 
 class LightShadow {
 
@@ -41314,8 +41314,8 @@ class SpotLight extends Light {
 }
 
 const _projScreenMatrix = /*@__PURE__*/ new Matrix4();
-const _lightPositionWorld = /*@__PURE__*/ new Vector3();
-const _lookTarget = /*@__PURE__*/ new Vector3();
+const _lightPositionWorld = /*@__PURE__*/ new three_module_Vector3();
+const _lookTarget = /*@__PURE__*/ new three_module_Vector3();
 
 class PointLightShadow extends LightShadow {
 
@@ -41358,13 +41358,13 @@ class PointLightShadow extends LightShadow {
 		];
 
 		this._cubeDirections = [
-			new Vector3( 1, 0, 0 ), new Vector3( - 1, 0, 0 ), new Vector3( 0, 0, 1 ),
-			new Vector3( 0, 0, - 1 ), new Vector3( 0, 1, 0 ), new Vector3( 0, - 1, 0 )
+			new three_module_Vector3( 1, 0, 0 ), new three_module_Vector3( - 1, 0, 0 ), new three_module_Vector3( 0, 0, 1 ),
+			new three_module_Vector3( 0, 0, - 1 ), new three_module_Vector3( 0, 1, 0 ), new three_module_Vector3( 0, - 1, 0 )
 		];
 
 		this._cubeUps = [
-			new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ), new Vector3( 0, 1, 0 ),
-			new Vector3( 0, 1, 0 ), new Vector3( 0, 0, 1 ),	new Vector3( 0, 0, - 1 )
+			new three_module_Vector3( 0, 1, 0 ), new three_module_Vector3( 0, 1, 0 ), new three_module_Vector3( 0, 1, 0 ),
+			new three_module_Vector3( 0, 1, 0 ), new three_module_Vector3( 0, 0, 1 ),	new three_module_Vector3( 0, 0, - 1 )
 		];
 
 	}
@@ -41591,7 +41591,7 @@ class SphericalHarmonics3 {
 
 		for ( let i = 0; i < 9; i ++ ) {
 
-			this.coefficients.push( new Vector3() );
+			this.coefficients.push( new three_module_Vector3() );
 
 		}
 
@@ -42025,7 +42025,7 @@ class MaterialLoader extends Loader {
 						break;
 
 					case 'v3':
-						material.uniforms[ name ].value = new Vector3().fromArray( uniform.value );
+						material.uniforms[ name ].value = new three_module_Vector3().fromArray( uniform.value );
 						break;
 
 					case 'v4':
@@ -42347,7 +42347,7 @@ class BufferGeometryLoader extends Loader {
 			const buffer = getArrayBuffer( json, interleavedBuffer.buffer );
 
 			const array = getTypedArray( interleavedBuffer.type, buffer );
-			const ib = new InterleavedBuffer( array, interleavedBuffer.stride );
+			const ib = new three_module_InterleavedBuffer( array, interleavedBuffer.stride );
 			ib.uuid = interleavedBuffer.uuid;
 
 			interleavedBufferMap[ uuid ] = ib;
@@ -42378,7 +42378,7 @@ class BufferGeometryLoader extends Loader {
 		if ( index !== undefined ) {
 
 			const typedArray = getTypedArray( index.type, index.array );
-			geometry.setIndex( new BufferAttribute( typedArray, 1 ) );
+			geometry.setIndex( new three_module_BufferAttribute( typedArray, 1 ) );
 
 		}
 
@@ -42392,12 +42392,12 @@ class BufferGeometryLoader extends Loader {
 			if ( attribute.isInterleavedBufferAttribute ) {
 
 				const interleavedBuffer = getInterleavedBuffer( json.data, attribute.data );
-				bufferAttribute = new InterleavedBufferAttribute( interleavedBuffer, attribute.itemSize, attribute.offset, attribute.normalized );
+				bufferAttribute = new three_module_InterleavedBufferAttribute( interleavedBuffer, attribute.itemSize, attribute.offset, attribute.normalized );
 
 			} else {
 
 				const typedArray = getTypedArray( attribute.type, attribute.array );
-				const bufferAttributeConstr = attribute.isInstancedBufferAttribute ? InstancedBufferAttribute : BufferAttribute;
+				const bufferAttributeConstr = attribute.isInstancedBufferAttribute ? three_module_InstancedBufferAttribute : three_module_BufferAttribute;
 				bufferAttribute = new bufferAttributeConstr( typedArray, attribute.itemSize, attribute.normalized );
 
 			}
@@ -42434,12 +42434,12 @@ class BufferGeometryLoader extends Loader {
 					if ( attribute.isInterleavedBufferAttribute ) {
 
 						const interleavedBuffer = getInterleavedBuffer( json.data, attribute.data );
-						bufferAttribute = new InterleavedBufferAttribute( interleavedBuffer, attribute.itemSize, attribute.offset, attribute.normalized );
+						bufferAttribute = new three_module_InterleavedBufferAttribute( interleavedBuffer, attribute.itemSize, attribute.offset, attribute.normalized );
 
 					} else {
 
 						const typedArray = getTypedArray( attribute.type, attribute.array );
-						bufferAttribute = new BufferAttribute( typedArray, attribute.itemSize, attribute.normalized );
+						bufferAttribute = new three_module_BufferAttribute( typedArray, attribute.itemSize, attribute.normalized );
 
 					}
 
@@ -42480,7 +42480,7 @@ class BufferGeometryLoader extends Loader {
 
 		if ( boundingSphere !== undefined ) {
 
-			const center = new Vector3();
+			const center = new three_module_Vector3();
 
 			if ( boundingSphere.center !== undefined ) {
 
@@ -43321,8 +43321,8 @@ class ObjectLoader extends Loader {
 				const instanceColor = data.instanceColor;
 
 				object = new InstancedMesh( geometry, material, count );
-				object.instanceMatrix = new InstancedBufferAttribute( new Float32Array( instanceMatrix.array ), 16 );
-				if ( instanceColor !== undefined ) object.instanceColor = new InstancedBufferAttribute( new Float32Array( instanceColor.array ), instanceColor.itemSize );
+				object.instanceMatrix = new three_module_InstancedBufferAttribute( new Float32Array( instanceMatrix.array ), 16 );
+				if ( instanceColor !== undefined ) object.instanceColor = new three_module_InstancedBufferAttribute( new Float32Array( instanceColor.array ), instanceColor.itemSize );
 
 				break;
 
@@ -43707,8 +43707,8 @@ class HemisphereLightProbe extends LightProbe {
 		const color1 = new Color().set( skyColor );
 		const color2 = new Color().set( groundColor );
 
-		const sky = new Vector3( color1.r, color1.g, color1.b );
-		const ground = new Vector3( color2.r, color2.g, color2.b );
+		const sky = new three_module_Vector3( color1.r, color1.g, color1.b );
+		const ground = new three_module_Vector3( color2.r, color2.g, color2.b );
 
 		// without extra factor of PI in the shader, should = 1 / Math.sqrt( Math.PI );
 		const c0 = Math.sqrt( Math.PI );
@@ -43906,10 +43906,10 @@ function now() {
 
 }
 
-const _position$1 = /*@__PURE__*/ new Vector3();
+const _position$1 = /*@__PURE__*/ new three_module_Vector3();
 const _quaternion$1 = /*@__PURE__*/ new Quaternion();
-const _scale$1 = /*@__PURE__*/ new Vector3();
-const _orientation$1 = /*@__PURE__*/ new Vector3();
+const _scale$1 = /*@__PURE__*/ new three_module_Vector3();
+const _orientation$1 = /*@__PURE__*/ new three_module_Vector3();
 
 class AudioListener extends Object3D {
 
@@ -44424,10 +44424,10 @@ class Audio extends Object3D {
 
 }
 
-const _position = /*@__PURE__*/ new Vector3();
+const _position = /*@__PURE__*/ new three_module_Vector3();
 const _quaternion = /*@__PURE__*/ new Quaternion();
-const _scale = /*@__PURE__*/ new Vector3();
-const _orientation = /*@__PURE__*/ new Vector3();
+const _scale = /*@__PURE__*/ new three_module_Vector3();
+const _orientation = /*@__PURE__*/ new three_module_Vector3();
 
 class PositionalAudio extends Audio {
 
@@ -47569,7 +47569,7 @@ class UniformsGroup extends EventDispatcher {
 
 }
 
-class InstancedInterleavedBuffer extends InterleavedBuffer {
+class InstancedInterleavedBuffer extends three_module_InterleavedBuffer {
 
 	constructor( array, stride, meshPerAttribute = 1 ) {
 
@@ -48120,12 +48120,12 @@ class Box2 {
 
 }
 
-const _startP = /*@__PURE__*/ new Vector3();
-const _startEnd = /*@__PURE__*/ new Vector3();
+const _startP = /*@__PURE__*/ new three_module_Vector3();
+const _startEnd = /*@__PURE__*/ new three_module_Vector3();
 
 class Line3 {
 
-	constructor( start = new Vector3(), end = new Vector3() ) {
+	constructor( start = new three_module_Vector3(), end = new three_module_Vector3() ) {
 
 		this.start = start;
 		this.end = end;
@@ -48231,7 +48231,7 @@ class Line3 {
 
 }
 
-const _vector$3 = /*@__PURE__*/ new Vector3();
+const _vector$3 = /*@__PURE__*/ new three_module_Vector3();
 
 class SpotLightHelper extends Object3D {
 
@@ -48270,7 +48270,7 @@ class SpotLightHelper extends Object3D {
 
 		}
 
-		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( positions, 3 ) );
 
 		const material = new LineBasicMaterial( { fog: false, toneMapped: false } );
 
@@ -48316,7 +48316,7 @@ class SpotLightHelper extends Object3D {
 
 }
 
-const _vector$2 = /*@__PURE__*/ new Vector3();
+const _vector$2 = /*@__PURE__*/ new three_module_Vector3();
 const _boneMatrix = /*@__PURE__*/ new Matrix4();
 const _matrixWorldInv = /*@__PURE__*/ new Matrix4();
 
@@ -48350,8 +48350,8 @@ class SkeletonHelper extends LineSegments {
 
 		}
 
-		geometry.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		geometry.setAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		geometry.setAttribute( 'color', new three_module_Float32BufferAttribute( colors, 3 ) );
 
 		const material = new LineBasicMaterial( { vertexColors: true, depthTest: false, depthWrite: false, toneMapped: false, transparent: true } );
 
@@ -48520,7 +48520,7 @@ class PointLightHelper extends Mesh {
 
 }
 
-const _vector$1 = /*@__PURE__*/ new Vector3();
+const _vector$1 = /*@__PURE__*/ new three_module_Vector3();
 const _color1 = /*@__PURE__*/ new Color();
 const _color2 = /*@__PURE__*/ new Color();
 
@@ -48548,7 +48548,7 @@ class HemisphereLightHelper extends Object3D {
 		const position = geometry.getAttribute( 'position' );
 		const colors = new Float32Array( position.count * 3 );
 
-		geometry.setAttribute( 'color', new BufferAttribute( colors, 3 ) );
+		geometry.setAttribute( 'color', new three_module_BufferAttribute( colors, 3 ) );
 
 		this.add( new Mesh( geometry, this.material ) );
 
@@ -48626,8 +48626,8 @@ class GridHelper extends LineSegments {
 		}
 
 		const geometry = new BufferGeometry();
-		geometry.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		geometry.setAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		geometry.setAttribute( 'color', new three_module_Float32BufferAttribute( colors, 3 ) );
 
 		const material = new LineBasicMaterial( { vertexColors: true, toneMapped: false } );
 
@@ -48714,8 +48714,8 @@ class PolarGridHelper extends LineSegments {
 		}
 
 		const geometry = new BufferGeometry();
-		geometry.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		geometry.setAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		geometry.setAttribute( 'color', new three_module_Float32BufferAttribute( colors, 3 ) );
 
 		const material = new LineBasicMaterial( { vertexColors: true, toneMapped: false } );
 
@@ -48734,9 +48734,9 @@ class PolarGridHelper extends LineSegments {
 
 }
 
-const _v1 = /*@__PURE__*/ new Vector3();
-const _v2 = /*@__PURE__*/ new Vector3();
-const _v3 = /*@__PURE__*/ new Vector3();
+const _v1 = /*@__PURE__*/ new three_module_Vector3();
+const _v2 = /*@__PURE__*/ new three_module_Vector3();
+const _v3 = /*@__PURE__*/ new three_module_Vector3();
 
 class DirectionalLightHelper extends Object3D {
 
@@ -48756,7 +48756,7 @@ class DirectionalLightHelper extends Object3D {
 		if ( size === undefined ) size = 1;
 
 		let geometry = new BufferGeometry();
-		geometry.setAttribute( 'position', new Float32BufferAttribute( [
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( [
 			- size, size, 0,
 			size, size, 0,
 			size, - size, 0,
@@ -48770,7 +48770,7 @@ class DirectionalLightHelper extends Object3D {
 		this.add( this.lightPlane );
 
 		geometry = new BufferGeometry();
-		geometry.setAttribute( 'position', new Float32BufferAttribute( [ 0, 0, 0, 0, 0, 1 ], 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( [ 0, 0, 0, 0, 0, 1 ], 3 ) );
 
 		this.targetLine = new Line( geometry, material );
 		this.add( this.targetLine );
@@ -48818,7 +48818,7 @@ class DirectionalLightHelper extends Object3D {
 
 }
 
-const _vector = /*@__PURE__*/ new Vector3();
+const _vector = /*@__PURE__*/ new three_module_Vector3();
 const _camera = /*@__PURE__*/ new Camera();
 
 /**
@@ -48909,8 +48909,8 @@ class CameraHelper extends LineSegments {
 
 		}
 
-		geometry.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		geometry.setAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		geometry.setAttribute( 'color', new three_module_Float32BufferAttribute( colors, 3 ) );
 
 		super( geometry, material );
 
@@ -49088,8 +49088,8 @@ class BoxHelper extends LineSegments {
 		const positions = new Float32Array( 8 * 3 );
 
 		const geometry = new BufferGeometry();
-		geometry.setIndex( new BufferAttribute( indices, 1 ) );
-		geometry.setAttribute( 'position', new BufferAttribute( positions, 3 ) );
+		geometry.setIndex( new three_module_BufferAttribute( indices, 1 ) );
+		geometry.setAttribute( 'position', new three_module_BufferAttribute( positions, 3 ) );
 
 		super( geometry, new LineBasicMaterial( { color: color, toneMapped: false } ) );
 
@@ -49193,9 +49193,9 @@ class Box3Helper extends LineSegments {
 
 		const geometry = new BufferGeometry();
 
-		geometry.setIndex( new BufferAttribute( indices, 1 ) );
+		geometry.setIndex( new three_module_BufferAttribute( indices, 1 ) );
 
-		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( positions, 3 ) );
 
 		super( geometry, new LineBasicMaterial( { color: color, toneMapped: false } ) );
 
@@ -49241,7 +49241,7 @@ class PlaneHelper extends Line {
 		const positions = [ 1, - 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, - 1, 0, 1, 1, 0 ];
 
 		const geometry = new BufferGeometry();
-		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( positions, 3 ) );
 		geometry.computeBoundingSphere();
 
 		super( geometry, new LineBasicMaterial( { color: color, toneMapped: false } ) );
@@ -49255,7 +49255,7 @@ class PlaneHelper extends Line {
 		const positions2 = [ 1, 1, 0, - 1, 1, 0, - 1, - 1, 0, 1, 1, 0, - 1, - 1, 0, 1, - 1, 0 ];
 
 		const geometry2 = new BufferGeometry();
-		geometry2.setAttribute( 'position', new Float32BufferAttribute( positions2, 3 ) );
+		geometry2.setAttribute( 'position', new three_module_Float32BufferAttribute( positions2, 3 ) );
 		geometry2.computeBoundingSphere();
 
 		this.add( new Mesh( geometry2, new MeshBasicMaterial( { color: color, opacity: 0.2, transparent: true, depthWrite: false, toneMapped: false } ) ) );
@@ -49287,14 +49287,14 @@ class PlaneHelper extends Line {
 
 }
 
-const _axis = /*@__PURE__*/ new Vector3();
+const _axis = /*@__PURE__*/ new three_module_Vector3();
 let _lineGeometry, _coneGeometry;
 
 class ArrowHelper extends Object3D {
 
 	// dir is assumed to be normalized
 
-	constructor( dir = new Vector3( 0, 0, 1 ), origin = new Vector3( 0, 0, 0 ), length = 1, color = 0xffff00, headLength = length * 0.2, headWidth = headLength * 0.2 ) {
+	constructor( dir = new three_module_Vector3( 0, 0, 1 ), origin = new three_module_Vector3( 0, 0, 0 ), length = 1, color = 0xffff00, headLength = length * 0.2, headWidth = headLength * 0.2 ) {
 
 		super();
 
@@ -49303,7 +49303,7 @@ class ArrowHelper extends Object3D {
 		if ( _lineGeometry === undefined ) {
 
 			_lineGeometry = new BufferGeometry();
-			_lineGeometry.setAttribute( 'position', new Float32BufferAttribute( [ 0, 0, 0, 0, 1, 0 ], 3 ) );
+			_lineGeometry.setAttribute( 'position', new three_module_Float32BufferAttribute( [ 0, 0, 0, 0, 1, 0 ], 3 ) );
 
 			_coneGeometry = new CylinderGeometry( 0, 0.5, 1, 5, 1 );
 			_coneGeometry.translate( 0, - 0.5, 0 );
@@ -49406,8 +49406,8 @@ class AxesHelper extends LineSegments {
 		];
 
 		const geometry = new BufferGeometry();
-		geometry.setAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
-		geometry.setAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+		geometry.setAttribute( 'position', new three_module_Float32BufferAttribute( vertices, 3 ) );
+		geometry.setAttribute( 'color', new three_module_Float32BufferAttribute( colors, 3 ) );
 
 		const material = new LineBasicMaterial( { vertexColors: true, toneMapped: false } );
 
@@ -50223,7 +50223,7 @@ if ( typeof window !== 'undefined' ) {
 
 
 
-;// ./node_modules/three/examples/jsm/controls/OrbitControls.js
+;// ../../../../frontend/node_modules/three/examples/jsm/controls/OrbitControls.js
 
 
 // This set of controls performs orbiting, dollying (zooming), and panning.
@@ -50251,7 +50251,7 @@ class OrbitControls extends EventDispatcher {
 		this.enabled = true;
 
 		// "target" sets the location of focus, where the object orbits around
-		this.target = new Vector3();
+		this.target = new three_module_Vector3();
 
 		// How far you can dolly in and out ( PerspectiveCamera only )
 		this.minDistance = 0;
@@ -50368,13 +50368,13 @@ class OrbitControls extends EventDispatcher {
 		// this method is exposed, but perhaps it would be better if we can make it private...
 		this.update = function () {
 
-			const offset = new Vector3();
+			const offset = new three_module_Vector3();
 
 			// so camera.up is the orbit axis
-			const quat = new Quaternion().setFromUnitVectors( object.up, new Vector3( 0, 1, 0 ) );
+			const quat = new Quaternion().setFromUnitVectors( object.up, new three_module_Vector3( 0, 1, 0 ) );
 			const quatInverse = quat.clone().invert();
 
-			const lastPosition = new Vector3();
+			const lastPosition = new three_module_Vector3();
 			const lastQuaternion = new Quaternion();
 
 			const twoPI = 2 * Math.PI;
@@ -50555,7 +50555,7 @@ class OrbitControls extends EventDispatcher {
 		const sphericalDelta = new Spherical();
 
 		let scale = 1;
-		const panOffset = new Vector3();
+		const panOffset = new three_module_Vector3();
 		let zoomChanged = false;
 
 		const rotateStart = new Vector2();
@@ -50599,7 +50599,7 @@ class OrbitControls extends EventDispatcher {
 
 		const panLeft = function () {
 
-			const v = new Vector3();
+			const v = new three_module_Vector3();
 
 			return function panLeft( distance, objectMatrix ) {
 
@@ -50614,7 +50614,7 @@ class OrbitControls extends EventDispatcher {
 
 		const panUp = function () {
 
-			const v = new Vector3();
+			const v = new three_module_Vector3();
 
 			return function panUp( distance, objectMatrix ) {
 
@@ -50640,7 +50640,7 @@ class OrbitControls extends EventDispatcher {
 		// deltaX and deltaY are in pixels; right and down are positive
 		const pan = function () {
 
-			const offset = new Vector3();
+			const offset = new three_module_Vector3();
 
 			return function pan( deltaX, deltaY ) {
 
@@ -51504,10 +51504,10 @@ class MapControls extends OrbitControls {
 
 
 
-;// ./node_modules/three/examples/jsm/loaders/GLTFLoader.js
+;// ../../../../frontend/node_modules/three/examples/jsm/loaders/GLTFLoader.js
 
 
-class GLTFLoader extends Loader {
+class GLTFLoader_GLTFLoader extends Loader {
 
 	constructor( manager ) {
 
@@ -52924,9 +52924,9 @@ class GLTFMeshGpuInstancing {
 
 				// Temporal variables
 				const m = new Matrix4();
-				const p = new Vector3();
+				const p = new three_module_Vector3();
 				const q = new Quaternion();
-				const s = new Vector3( 1, 1, 1 );
+				const s = new three_module_Vector3( 1, 1, 1 );
 
 				const instancedMesh = new InstancedMesh( mesh.geometry, mesh.material, count );
 
@@ -54169,7 +54169,7 @@ class GLTFParser {
 			const normalized = accessorDef.normalized === true;
 
 			const array = new TypedArray( accessorDef.count * itemSize );
-			return Promise.resolve( new BufferAttribute( array, itemSize, normalized ) );
+			return Promise.resolve( new three_module_BufferAttribute( array, itemSize, normalized ) );
 
 		}
 
@@ -54221,13 +54221,13 @@ class GLTFParser {
 					array = new TypedArray( bufferView, ibSlice * byteStride, accessorDef.count * byteStride / elementBytes );
 
 					// Integer parameters to IB/IBA are in array elements, not bytes.
-					ib = new InterleavedBuffer( array, byteStride / elementBytes );
+					ib = new three_module_InterleavedBuffer( array, byteStride / elementBytes );
 
 					parser.cache.add( ibCacheKey, ib );
 
 				}
 
-				bufferAttribute = new InterleavedBufferAttribute( ib, itemSize, ( byteOffset % byteStride ) / elementBytes, normalized );
+				bufferAttribute = new three_module_InterleavedBufferAttribute( ib, itemSize, ( byteOffset % byteStride ) / elementBytes, normalized );
 
 			} else {
 
@@ -54241,7 +54241,7 @@ class GLTFParser {
 
 				}
 
-				bufferAttribute = new BufferAttribute( array, itemSize, normalized );
+				bufferAttribute = new three_module_BufferAttribute( array, itemSize, normalized );
 
 			}
 
@@ -54260,7 +54260,7 @@ class GLTFParser {
 				if ( bufferView !== null ) {
 
 					// Avoid modifying the original ArrayBuffer, if the bufferView wasn't initialized with zeroes.
-					bufferAttribute = new BufferAttribute( bufferAttribute.array.slice(), bufferAttribute.itemSize, bufferAttribute.normalized );
+					bufferAttribute = new three_module_BufferAttribute( bufferAttribute.array.slice(), bufferAttribute.itemSize, bufferAttribute.normalized );
 
 				}
 
@@ -54919,11 +54919,11 @@ class GLTFParser {
 
 					if ( primitive.mode === WEBGL_CONSTANTS.TRIANGLE_STRIP ) {
 
-						mesh.geometry = toTrianglesDrawMode( mesh.geometry, TriangleStripDrawMode );
+						mesh.geometry = toTrianglesDrawMode( mesh.geometry, three_module_TriangleStripDrawMode );
 
 					} else if ( primitive.mode === WEBGL_CONSTANTS.TRIANGLE_FAN ) {
 
-						mesh.geometry = toTrianglesDrawMode( mesh.geometry, TriangleFanDrawMode );
+						mesh.geometry = toTrianglesDrawMode( mesh.geometry, three_module_TriangleFanDrawMode );
 
 					}
 
@@ -55596,8 +55596,8 @@ function computeBounds( geometry, primitiveDef, parser ) {
 		if ( min !== undefined && max !== undefined ) {
 
 			box.set(
-				new Vector3( min[ 0 ], min[ 1 ], min[ 2 ] ),
-				new Vector3( max[ 0 ], max[ 1 ], max[ 2 ] )
+				new three_module_Vector3( min[ 0 ], min[ 1 ], min[ 2 ] ),
+				new three_module_Vector3( max[ 0 ], max[ 1 ], max[ 2 ] )
 			);
 
 			if ( accessor.normalized ) {
@@ -55626,8 +55626,8 @@ function computeBounds( geometry, primitiveDef, parser ) {
 
 	if ( targets !== undefined ) {
 
-		const maxDisplacement = new Vector3();
-		const vector = new Vector3();
+		const maxDisplacement = new three_module_Vector3();
+		const vector = new three_module_Vector3();
 
 		for ( let i = 0, il = targets.length; i < il; i ++ ) {
 
@@ -55790,7 +55790,7 @@ function toTrianglesDrawMode( geometry, drawMode ) {
 	const numberOfTriangles = index.count - 2;
 	const newIndices = [];
 
-	if ( drawMode === TriangleFanDrawMode ) {
+	if ( drawMode === three_module_TriangleFanDrawMode ) {
 
 		// gl.TRIANGLE_FAN
 
@@ -55846,7 +55846,7 @@ function toTrianglesDrawMode( geometry, drawMode ) {
 
 ;// ./src/components/map3d/viewer/frameFit.ts
 
-const UP = new Vector3(0, 1, 0);
+const UP = new three_module_Vector3(0, 1, 0);
 /** Vértices del contorno exterior de las áreas pedidas: los huecos no amplían lo que hay que ver. */
 function sectionPoints(sections, codes) {
     const points = [];
@@ -55861,9 +55861,13 @@ function sectionPoints(sections, codes) {
     }
     return points;
 }
+/** Los ejemplares pedidos, como puntos del suelo para encuadrarlos. */
+function specimenPoints(plants, codes) {
+    return plants.filter((plant) => codes.has(plant.props.code)).map((plant) => ({ x: plant.p[0], z: -plant.p[1] }));
+}
 function framingTarget(points, groundY) {
     const xs = points.map((p) => p.x), zs = points.map((p) => p.z);
-    return new Vector3((Math.min(...xs) + Math.max(...xs)) / 2, groundY, (Math.min(...zs) + Math.max(...zs)) / 2);
+    return new three_module_Vector3((Math.min(...xs) + Math.max(...xs)) / 2, groundY, (Math.min(...zs) + Math.max(...zs)) / 2);
 }
 /**
  * La distancia más corta, desde `target` en la dirección `dir`, a la que todos
@@ -55881,7 +55885,7 @@ function fitDistance(points, target, dir, view) {
     const tanV = Math.tan(MathUtils.degToRad(view.fovDeg / 2)) * view.fill;
     const tanH = tanV * view.aspect;
     let distance = 0;
-    const w = new Vector3();
+    const w = new three_module_Vector3();
     for (const p of points) {
         w.set(p.x - target.x, 0, p.z - target.z);
         const towardCamera = -w.dot(forward);
@@ -55911,13 +55915,19 @@ const GROUP_FILL = 0.9;
 const GROUP_ELEVATION_DEG = 58;
 /** Un jardín suelto no debe quedar tan cerca que se pierda el contexto alrededor. */
 const GROUP_MIN_DISTANCE_M = 70;
+/** En el modo libre, el anclaje puede quedar muy cerca: un árbol a pocos metros. */
+const FREE_MIN_DISTANCE_M = 0.5;
 function createCameraRig(dom, box, center, reducedMotion, initialPose) {
     const camera = new PerspectiveCamera(38, 1, 2, 9000);
     const controls = new MapControls(camera, dom);
     Object.assign(controls, { enableDamping: true, dampingFactor: 0.09, maxPolarAngle: 1.32, minDistance: 35, maxDistance: 2600, zoomSpeed: 1.1, rotateSpeed: 0.7 });
     controls.touches = { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_ROTATE };
     let flight = null;
+    let free = false;
+    const orbitDistances = { minDistance: controls.minDistance, maxDistance: controls.maxDistance };
     controls.addEventListener('change', () => {
+        if (free)
+            return;
         const t = controls.target;
         const cx = MathUtils.clamp(t.x, box.min.x - PAN_MARGIN_M, box.max.x + PAN_MARGIN_M);
         const cz = MathUtils.clamp(t.z, box.min.z - PAN_MARGIN_M, box.max.z + PAN_MARGIN_M);
@@ -55944,7 +55954,7 @@ function createCameraRig(dom, box, center, reducedMotion, initialPose) {
     function fitPose() {
         const radius = Math.hypot(box.max.x - box.min.x, box.max.z - box.min.z) / 2;
         const dist = distanceToFit(radius) * (camera.aspect < 1 ? 0.92 : 0.8);
-        const dir = new Vector3(0.2, 0.78, 0.6).normalize();
+        const dir = new three_module_Vector3(0.2, 0.78, 0.6).normalize();
         return [center.clone().addScaledVector(dir, dist), center.clone()];
     }
     function horizontalOffset() {
@@ -55955,7 +55965,7 @@ function createCameraRig(dom, box, center, reducedMotion, initialPose) {
         return off.normalize();
     }
     function focusAt(target, dist, ms = FLIGHT_MS) {
-        flyTo(target.clone().addScaledVector(horizontalOffset(), dist * 0.62).add(new Vector3(0, dist * 0.72, 0)), target, ms);
+        flyTo(target.clone().addScaledVector(horizontalOffset(), dist * 0.62).add(new three_module_Vector3(0, dist * 0.72, 0)), target, ms);
     }
     function focusPoints(points) {
         if (points.length === 0)
@@ -55966,7 +55976,7 @@ function createCameraRig(dom, box, center, reducedMotion, initialPose) {
         const dist = Math.max(GROUP_MIN_DISTANCE_M, fitDistance(points, target, dir, { fovDeg: camera.fov, aspect: camera.aspect, fill: GROUP_FILL }));
         flyTo(target.clone().addScaledVector(dir, dist), target, GROUP_FLIGHT_MS);
     }
-    const [p, t] = initialPose ? [new Vector3(...initialPose.position), new Vector3(...initialPose.target)] : fitPose();
+    const [p, t] = initialPose ? [new three_module_Vector3(...initialPose.position), new three_module_Vector3(...initialPose.target)] : fitPose();
     camera.position.copy(p);
     controls.target.copy(t);
     controls.update();
@@ -55976,14 +55986,14 @@ function createCameraRig(dom, box, center, reducedMotion, initialPose) {
         fit: () => flyTo(...fitPose()),
         top: () => {
             const target = controls.target.clone(), d = Math.max(camera.position.distanceTo(target), 700);
-            flyTo(new Vector3(target.x, d, target.z + 0.01), target);
+            flyTo(new three_module_Vector3(target.x, d, target.z + 0.01), target);
         },
         north: () => {
             const target = controls.target.clone(), off = camera.position.clone().sub(target);
-            flyTo(new Vector3(target.x, camera.position.y, target.z + Math.hypot(off.x, off.z)), target, 700);
+            flyTo(new three_module_Vector3(target.x, camera.position.y, target.z + Math.hypot(off.x, off.z)), target, 700);
         },
-        focus: (meta, heightHint = 0) => focusAt(new Vector3(meta.x, center.y + heightHint, meta.z), Math.max(FOCUS_MIN_DISTANCE_M, meta.r * 4.6)),
-        focusPoint: (x, z) => focusAt(new Vector3(x, center.y, z), FOCUS_MIN_DISTANCE_M),
+        focus: (meta, heightHint = 0) => focusAt(new three_module_Vector3(meta.x, center.y + heightHint, meta.z), Math.max(FOCUS_MIN_DISTANCE_M, meta.r * 4.6)),
+        focusPoint: (x, z) => focusAt(new three_module_Vector3(x, center.y, z), FOCUS_MIN_DISTANCE_M),
         focusPoints,
         toggleSpin: () => {
             controls.autoRotate = !controls.autoRotate;
@@ -56004,8 +56014,15 @@ function createCameraRig(dom, box, center, reducedMotion, initialPose) {
         cancelFlight: () => {
             flight = null;
         },
-        flyToPose: (pose) => flyTo(new Vector3(...pose.position), new Vector3(...pose.target)),
-        pose: () => ({ position: camera.position.toArray(), target: controls.target.toArray() }),
+        flying: () => flight !== null,
+        flyToPose: (pose) => flyTo(new three_module_Vector3(...pose.position), new three_module_Vector3(...pose.target)),
+        setFree: (on) => {
+            free = on;
+            Object.assign(controls, on ? { minDistance: FREE_MIN_DISTANCE_M, maxDistance: Infinity } : orbitDistances);
+        },
+        pose: () => flight
+            ? { position: flight.p1.toArray(), target: flight.t1.toArray() }
+            : { position: camera.position.toArray(), target: controls.target.toArray() },
     };
 }
 
@@ -56049,6 +56066,25 @@ function centroid(g) {
         area: (maxx - minx) * (maxy - miny),
     };
 }
+/** El prisma de un elemento: un extruido sin índice por polígono, de `base` a `base + height`. */
+function prismParts(g, height, base) {
+    const parts = [];
+    for (const shape of polygonShapes(g)) {
+        let geo;
+        try {
+            geo = new ExtrudeGeometry(shape, { depth: height, bevelEnabled: false, curveSegments: 1 });
+        }
+        catch {
+            continue; // un anillo degenerado no debe tumbar la capa entera
+        }
+        geo.rotateX(-Math.PI / 2);
+        geo.translate(0, base, 0);
+        if (geo.index)
+            geo = geo.toNonIndexed();
+        parts.push(geo);
+    }
+    return parts;
+}
 /** Extruye todos los elementos de una capa en una sola geometría (una llamada de dibujo). */
 function merged(feats, shapeOf, heightOf, baseOf) {
     const parts = [];
@@ -56056,18 +56092,7 @@ function merged(feats, shapeOf, heightOf, baseOf) {
     let n = 0;
     feats.forEach((f) => {
         starts.push(n);
-        for (const shape of polygonShapes(shapeOf(f))) {
-            let geo;
-            try {
-                geo = new ExtrudeGeometry(shape, { depth: heightOf(f), bevelEnabled: false, curveSegments: 1 });
-            }
-            catch {
-                continue; // un anillo degenerado no debe tumbar la capa entera
-            }
-            geo.rotateX(-Math.PI / 2);
-            geo.translate(0, baseOf(f), 0);
-            if (geo.index)
-                geo = geo.toNonIndexed();
+        for (const geo of prismParts(shapeOf(f), heightOf(f), baseOf(f))) {
             parts.push(geo);
             n += geo.attributes.position.count;
         }
@@ -56075,6 +56100,11 @@ function merged(feats, shapeOf, heightOf, baseOf) {
     starts.push(n);
     return assemble(parts, starts, n);
 }
+/**
+ * Junta las partes (sin índice, con posición y normal) en una sola geometría
+ * con su sombreado tonal. `starts` marca el primer vértice de cada elemento y
+ * cierra con el total `n`. Las partes se liberan al copiarlas.
+ */
 function assemble(parts, starts, n) {
     const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3), uv = new Float32Array(n * 2);
     let o = 0;
@@ -56088,14 +56118,19 @@ function assemble(parts, starts, n) {
     }
     const { tone, warm } = shading(pos, nor, starts, n);
     const geo = new BufferGeometry();
-    geo.setAttribute('position', new BufferAttribute(pos, 3));
-    geo.setAttribute('normal', new BufferAttribute(nor, 3));
-    geo.setAttribute('color', new BufferAttribute(col, 3));
-    geo.setAttribute('uv', new BufferAttribute(uv, 2));
+    geo.setAttribute('position', new three_module_BufferAttribute(pos, 3));
+    geo.setAttribute('normal', new three_module_BufferAttribute(nor, 3));
+    geo.setAttribute('color', new three_module_BufferAttribute(col, 3));
+    geo.setAttribute('uv', new three_module_BufferAttribute(uv, 2));
     geo.computeBoundingSphere();
     return { geo, starts, tone, warm };
 }
-/** El sombreado tonal del prototipo: techo claro, laterales en degradado, base oscura. */
+/**
+ * El sombreado tonal del prototipo: techo claro y laterales en degradado. Toda
+ * cara horizontal se tiñe como techo, también la que mira abajo: el SKP trae
+ * techos invertidos, que se dibujan por las dos caras y three voltea su normal
+ * al iluminarlos. Las bases de los prismas, que miraban abajo, nunca se ven.
+ */
 function shading(pos, nor, starts, n) {
     const tone = new Float32Array(n), warm = new Float32Array(n);
     for (let fi = 0; fi < starts.length - 1; fi++) {
@@ -56110,13 +56145,9 @@ function shading(pos, nor, starts, n) {
         const span = yMax - yMin || 1;
         for (let v = s0; v < s1; v++) {
             const ny = nor[v * 3 + 1], yNorm = (pos[v * 3 + 1] - yMin) / span;
-            if (ny > 0.5) {
+            if (Math.abs(ny) > 0.5) {
                 tone[v] = 1.12 + yNorm * 0.1;
                 warm[v] = 0;
-            }
-            else if (ny < -0.5) {
-                tone[v] = 0.55;
-                warm[v] = 0.95;
             }
             else {
                 tone[v] = 0.58 + yNorm * 0.28;
@@ -56141,7 +56172,7 @@ function ringLines(feats, shapeOf, yOf) {
             }
     });
     const g = new BufferGeometry();
-    g.setAttribute('position', new Float32BufferAttribute(v, 3));
+    g.setAttribute('position', new three_module_Float32BufferAttribute(v, 3));
     return g;
 }
 /** Índice del elemento al que pertenece un vértice (búsqueda binaria sobre `starts`). */
@@ -56161,8 +56192,9 @@ function elementOfVertex(starts, vertex) {
 
 
 /** Altura a la que flota la maqueta sobre el plano de la escena (la del prototipo). */
-const WORLD_LIFT = 22;
-function material(surface, textures, opacity) {
+const polyLayer_WORLD_LIFT = 22;
+/** El material de cada superficie, con colores por vértice (los pinta `paintPoly`). */
+function polyLayer_surfaceMaterial(surface, textures, opacity) {
     const common = { vertexColors: true, transparent: !!opacity, opacity: opacity ?? 1, depthWrite: !opacity };
     switch (surface) {
         case 'building':
@@ -56183,11 +56215,17 @@ function material(surface, textures, opacity) {
             return new MeshStandardMaterial({ ...common, roughness: 0.4, metalness: 0.05 });
     }
 }
-function createPolyLayer(scene, id, shapes, options, textures) {
+/** Sin `geometry`, cada elemento es su prisma; con ella (un tramo por elemento), se dibuja esa. */
+function createPolyLayer(scene, id, shapes, options, textures, geometry) {
     const indices = shapes.map((_, i) => i);
-    const { geo, starts, tone, warm } = merged(indices, (i) => shapes[i], options.height, options.base);
-    const mesh = new Mesh(geo, material(options.surface, textures, options.opacity));
-    mesh.position.y = WORLD_LIFT;
+    const { geo, starts, tone, warm } = geometry ?? merged(indices, (i) => shapes[i], options.height, options.base);
+    const surface = polyLayer_surfaceMaterial(options.surface, textures, options.opacity);
+    if (options.doubleSided) {
+        surface.side = DoubleSide;
+        surface.shadowSide = BackSide;
+    }
+    const mesh = new Mesh(geo, surface);
+    mesh.position.y = polyLayer_WORLD_LIFT;
     mesh.receiveShadow = true;
     mesh.castShadow = !!options.castShadow;
     mesh.renderOrder = options.order ?? 0;
@@ -56269,7 +56307,7 @@ function coloured(parts) {
         const c = new Color(hex), n = geo.attributes.position.count, col = new Float32Array(n * 3);
         for (let i = 0; i < n; i++)
             col.set([c.r, c.g, c.b], i * 3);
-        geo.setAttribute('color', new BufferAttribute(col, 3));
+        geo.setAttribute('color', new three_module_BufferAttribute(col, 3));
         return geo;
     });
     const n = geos.reduce((s, g) => s + g.attributes.position.count, 0);
@@ -56282,9 +56320,9 @@ function coloured(parts) {
         o += g.attributes.position.count;
     }
     const out = new BufferGeometry();
-    out.setAttribute('position', new BufferAttribute(pos, 3));
-    out.setAttribute('normal', new BufferAttribute(nor, 3));
-    out.setAttribute('color', new BufferAttribute(col, 3));
+    out.setAttribute('position', new three_module_BufferAttribute(pos, 3));
+    out.setAttribute('normal', new three_module_BufferAttribute(nor, 3));
+    out.setAttribute('color', new three_module_BufferAttribute(col, 3));
     return out;
 }
 function createPointLayer(scene, id, points, opts) {
@@ -56297,7 +56335,7 @@ function createPointLayer(scene, id, points, opts) {
     for (const [model, idx] of groups) {
         const make = (geo) => {
             const m = new InstancedMesh(geo, new MeshLambertMaterial({ vertexColors: true }), idx.length);
-            m.position.y = WORLD_LIFT;
+            m.position.y = polyLayer_WORLD_LIFT;
             m.castShadow = m.receiveShadow = true;
             m.userData = { layer, map: idx };
             layer.meshes.push(m);
@@ -56382,6 +56420,9 @@ const RIM = {
 };
 const GLOW = { day: new Color('#FFE79C'), night: new Color('#AFC2FF'), dayOpacity: 0.085, nightOpacity: 0.165 };
 const CONTACT = { day: 0x5b5448, night: 0x5f77bf, dayOpacity: 0.15, nightOpacity: 0.18 };
+/** Atardecer: copas más oscuras y oliva, menos barniz, y el borde del lado del sol en ámbar (modo Atardecer). */
+const foliageMaterials_WHITE = new Color(0xffffff);
+const GOLDEN = { tint: new Color('#7f8f62'), rim: new Color('#FFA24E'), rimStrength: 0.38, sunInfluence: 0.7, sheen: 0.08, clearcoat: 0.08, glowOpacity: 0.04 };
 /**
  * El borde depende del ángulo con que se ve cada cara (Fresnel), no de una luz
  * más: por eso se suma como emisión en el shader en vez de añadir una lámpara.
@@ -56432,7 +56473,7 @@ function createFoliageMaterials(textures) {
     // Uniformes compartidos: todas las copas se reajustan con un solo cambio.
     const uniforms = {
         uRimColor: { value: RIM.day.clone() }, uRimStrength: { value: RIM.dayStrength }, uRimPower: { value: RIM.power },
-        uRimSunDir: { value: new Vector3(0, 1, 0) }, uRimSunInfluence: { value: RIM.sunDay },
+        uRimSunDir: { value: new three_module_Vector3(0, 1, 0) }, uRimSunInfluence: { value: RIM.sunDay },
     };
     const glow = new MeshBasicMaterial({
         color: GLOW.day.clone(), transparent: true, opacity: GLOW.dayOpacity, depthWrite: false, toneMapped: false,
@@ -56441,21 +56482,36 @@ function createFoliageMaterials(textures) {
     const contact = new MeshBasicMaterial({
         map: contactTexture(), color: CONTACT.day, transparent: true, opacity: CONTACT.dayOpacity, depthWrite: false, toneMapped: false,
     });
+    const made = [];
+    let goldenNow = false;
+    /** Lo que el Atardecer cambia de una copa: color, barniz y brillo de terciopelo. */
+    const tone = (m) => {
+        m.color.copy(goldenNow ? GOLDEN.tint : foliageMaterials_WHITE);
+        m.sheen = goldenNow ? GOLDEN.sheen : 0.3;
+        m.clearcoat = goldenNow ? GOLDEN.clearcoat : 0.3;
+    };
     return {
-        foliage: () => withRim(new MeshPhysicalMaterial({
-            color: 0xffffff, flatShading: true, roughness: 0.45, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.4,
-            sheen: 0.3, sheenRoughness: 0.5, sheenColor: new Color(0x80ff80), map: textures.foliage,
-            normalMap: textures.foliageNormal, normalScale: new Vector2(0.6, 0.6), envMapIntensity: 0.05,
-        }), uniforms),
+        foliage: () => {
+            const m = withRim(new MeshPhysicalMaterial({
+                color: 0xffffff, flatShading: true, roughness: 0.45, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.4,
+                sheen: 0.3, sheenRoughness: 0.5, sheenColor: new Color(0x80ff80), map: textures.foliage,
+                normalMap: textures.foliageNormal, normalScale: new Vector2(0.6, 0.6), envMapIntensity: 0.05,
+            }), uniforms);
+            made.push(m);
+            tone(m);
+            return m;
+        },
         glow,
         contact,
-        setLighting(night, sunDirection) {
-            uniforms.uRimColor.value.copy(night ? RIM.night : RIM.day);
-            uniforms.uRimStrength.value = night ? RIM.nightStrength : RIM.dayStrength;
-            uniforms.uRimSunInfluence.value = night ? RIM.sunNight : RIM.sunDay;
+        setLighting(night, sunDirection, golden = false) {
+            goldenNow = golden && !night;
+            made.forEach(tone);
+            uniforms.uRimColor.value.copy(night ? RIM.night : goldenNow ? GOLDEN.rim : RIM.day);
+            uniforms.uRimStrength.value = night ? RIM.nightStrength : goldenNow ? GOLDEN.rimStrength : RIM.dayStrength;
+            uniforms.uRimSunInfluence.value = night ? RIM.sunNight : goldenNow ? GOLDEN.sunInfluence : RIM.sunDay;
             uniforms.uRimSunDir.value.copy(sunDirection);
             glow.color.copy(night ? GLOW.night : GLOW.day);
-            glow.opacity = night ? GLOW.nightOpacity : GLOW.dayOpacity;
+            glow.opacity = night ? GLOW.nightOpacity : goldenNow ? GOLDEN.glowOpacity : GLOW.dayOpacity;
             contact.color.set(night ? CONTACT.night : CONTACT.day);
             contact.opacity = night ? CONTACT.nightOpacity : CONTACT.dayOpacity;
         },
@@ -56500,19 +56556,1595 @@ const NIGHT = {
 };
 /** Variante «edificios en gris» del botón 🏢: para leer el mapa sin el rosado. */
 const GRAY_BUILDINGS = { building: '#8A8A90', buildingEdge: '#606068', context: '#707078' };
-function paletteFor(night, grayBuildings) {
-    const base = night ? NIGHT : DAY;
+/** Atardecer: césped, veredas y estacionamientos como se ven de verdad, y el zócalo de asfalto. */
+const palette_GOLDEN = {
+    plinth: '#4a4743',
+    plinthSide: '#3b3936',
+    parking: '#7d7870',
+    natural: { grass: '#5c7a48', xerophytic: '#a08a5c', sidewalk: '#b8ab98' },
+};
+function paletteFor(night, grayBuildings, golden = false) {
+    const base = night ? NIGHT : golden ? { ...DAY, ...palette_GOLDEN } : DAY;
     return grayBuildings ? { ...base, ...GRAY_BUILDINGS } : base;
+}
+
+;// ../../../../frontend/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js
+
+
+function computeTangents() {
+
+	throw new Error( 'BufferGeometryUtils: computeTangents renamed to computeMikkTSpaceTangents.' );
+
+}
+
+function computeMikkTSpaceTangents( geometry, MikkTSpace, negateSign = true ) {
+
+	if ( ! MikkTSpace || ! MikkTSpace.isReady ) {
+
+		throw new Error( 'BufferGeometryUtils: Initialized MikkTSpace library required.' );
+
+	}
+
+	if ( ! geometry.hasAttribute( 'position' ) || ! geometry.hasAttribute( 'normal' ) || ! geometry.hasAttribute( 'uv' ) ) {
+
+		throw new Error( 'BufferGeometryUtils: Tangents require "position", "normal", and "uv" attributes.' );
+
+	}
+
+	function getAttributeArray( attribute ) {
+
+		if ( attribute.normalized || attribute.isInterleavedBufferAttribute ) {
+
+			const dstArray = new Float32Array( attribute.getCount() * attribute.itemSize );
+
+			for ( let i = 0, j = 0; i < attribute.getCount(); i ++ ) {
+
+				dstArray[ j ++ ] = attribute.getX( i );
+				dstArray[ j ++ ] = attribute.getY( i );
+
+				if ( attribute.itemSize > 2 ) {
+
+					dstArray[ j ++ ] = attribute.getZ( i );
+
+				}
+
+			}
+
+			return dstArray;
+
+		}
+
+		if ( attribute.array instanceof Float32Array ) {
+
+			return attribute.array;
+
+		}
+
+		return new Float32Array( attribute.array );
+
+	}
+
+	// MikkTSpace algorithm requires non-indexed input.
+
+	const _geometry = geometry.index ? geometry.toNonIndexed() : geometry;
+
+	// Compute vertex tangents.
+
+	const tangents = MikkTSpace.generateTangents(
+
+		getAttributeArray( _geometry.attributes.position ),
+		getAttributeArray( _geometry.attributes.normal ),
+		getAttributeArray( _geometry.attributes.uv )
+
+	);
+
+	// Texture coordinate convention of glTF differs from the apparent
+	// default of the MikkTSpace library; .w component must be flipped.
+
+	if ( negateSign ) {
+
+		for ( let i = 3; i < tangents.length; i += 4 ) {
+
+			tangents[ i ] *= - 1;
+
+		}
+
+	}
+
+	//
+
+	_geometry.setAttribute( 'tangent', new BufferAttribute( tangents, 4 ) );
+
+	if ( geometry !== _geometry ) {
+
+		geometry.copy( _geometry );
+
+	}
+
+	return geometry;
+
+}
+
+/**
+ * @param  {Array<BufferGeometry>} geometries
+ * @param  {Boolean} useGroups
+ * @return {BufferGeometry}
+ */
+function BufferGeometryUtils_mergeBufferGeometries( geometries, useGroups = false ) {
+
+	const isIndexed = geometries[ 0 ].index !== null;
+
+	const attributesUsed = new Set( Object.keys( geometries[ 0 ].attributes ) );
+	const morphAttributesUsed = new Set( Object.keys( geometries[ 0 ].morphAttributes ) );
+
+	const attributes = {};
+	const morphAttributes = {};
+
+	const morphTargetsRelative = geometries[ 0 ].morphTargetsRelative;
+
+	const mergedGeometry = new BufferGeometry();
+
+	let offset = 0;
+
+	for ( let i = 0; i < geometries.length; ++ i ) {
+
+		const geometry = geometries[ i ];
+		let attributesCount = 0;
+
+		// ensure that all geometries are indexed, or none
+
+		if ( isIndexed !== ( geometry.index !== null ) ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.' );
+			return null;
+
+		}
+
+		// gather attributes, exit early if they're different
+
+		for ( const name in geometry.attributes ) {
+
+			if ( ! attributesUsed.has( name ) ) {
+
+				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure "' + name + '" attribute exists among all geometries, or in none of them.' );
+				return null;
+
+			}
+
+			if ( attributes[ name ] === undefined ) attributes[ name ] = [];
+
+			attributes[ name ].push( geometry.attributes[ name ] );
+
+			attributesCount ++;
+
+		}
+
+		// ensure geometries have the same number of attributes
+
+		if ( attributesCount !== attributesUsed.size ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. Make sure all geometries have the same number of attributes.' );
+			return null;
+
+		}
+
+		// gather morph attributes, exit early if they're different
+
+		if ( morphTargetsRelative !== geometry.morphTargetsRelative ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. .morphTargetsRelative must be consistent throughout all geometries.' );
+			return null;
+
+		}
+
+		for ( const name in geometry.morphAttributes ) {
+
+			if ( ! morphAttributesUsed.has( name ) ) {
+
+				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '.  .morphAttributes must be consistent throughout all geometries.' );
+				return null;
+
+			}
+
+			if ( morphAttributes[ name ] === undefined ) morphAttributes[ name ] = [];
+
+			morphAttributes[ name ].push( geometry.morphAttributes[ name ] );
+
+		}
+
+		if ( useGroups ) {
+
+			let count;
+
+			if ( isIndexed ) {
+
+				count = geometry.index.count;
+
+			} else if ( geometry.attributes.position !== undefined ) {
+
+				count = geometry.attributes.position.count;
+
+			} else {
+
+				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. The geometry must have either an index or a position attribute' );
+				return null;
+
+			}
+
+			mergedGeometry.addGroup( offset, count, i );
+
+			offset += count;
+
+		}
+
+	}
+
+	// merge indices
+
+	if ( isIndexed ) {
+
+		let indexOffset = 0;
+		const mergedIndex = [];
+
+		for ( let i = 0; i < geometries.length; ++ i ) {
+
+			const index = geometries[ i ].index;
+
+			for ( let j = 0; j < index.count; ++ j ) {
+
+				mergedIndex.push( index.getX( j ) + indexOffset );
+
+			}
+
+			indexOffset += geometries[ i ].attributes.position.count;
+
+		}
+
+		mergedGeometry.setIndex( mergedIndex );
+
+	}
+
+	// merge attributes
+
+	for ( const name in attributes ) {
+
+		const mergedAttribute = mergeBufferAttributes( attributes[ name ] );
+
+		if ( ! mergedAttribute ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed while trying to merge the ' + name + ' attribute.' );
+			return null;
+
+		}
+
+		mergedGeometry.setAttribute( name, mergedAttribute );
+
+	}
+
+	// merge morph attributes
+
+	for ( const name in morphAttributes ) {
+
+		const numMorphTargets = morphAttributes[ name ][ 0 ].length;
+
+		if ( numMorphTargets === 0 ) break;
+
+		mergedGeometry.morphAttributes = mergedGeometry.morphAttributes || {};
+		mergedGeometry.morphAttributes[ name ] = [];
+
+		for ( let i = 0; i < numMorphTargets; ++ i ) {
+
+			const morphAttributesToMerge = [];
+
+			for ( let j = 0; j < morphAttributes[ name ].length; ++ j ) {
+
+				morphAttributesToMerge.push( morphAttributes[ name ][ j ][ i ] );
+
+			}
+
+			const mergedMorphAttribute = mergeBufferAttributes( morphAttributesToMerge );
+
+			if ( ! mergedMorphAttribute ) {
+
+				console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed while trying to merge the ' + name + ' morphAttribute.' );
+				return null;
+
+			}
+
+			mergedGeometry.morphAttributes[ name ].push( mergedMorphAttribute );
+
+		}
+
+	}
+
+	return mergedGeometry;
+
+}
+
+/**
+ * @param {Array<BufferAttribute>} attributes
+ * @return {BufferAttribute}
+ */
+function mergeBufferAttributes( attributes ) {
+
+	let TypedArray;
+	let itemSize;
+	let normalized;
+	let arrayLength = 0;
+
+	for ( let i = 0; i < attributes.length; ++ i ) {
+
+		const attribute = attributes[ i ];
+
+		if ( attribute.isInterleavedBufferAttribute ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeBufferAttributes() failed. InterleavedBufferAttributes are not supported.' );
+			return null;
+
+		}
+
+		if ( TypedArray === undefined ) TypedArray = attribute.array.constructor;
+		if ( TypedArray !== attribute.array.constructor ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeBufferAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.' );
+			return null;
+
+		}
+
+		if ( itemSize === undefined ) itemSize = attribute.itemSize;
+		if ( itemSize !== attribute.itemSize ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeBufferAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.' );
+			return null;
+
+		}
+
+		if ( normalized === undefined ) normalized = attribute.normalized;
+		if ( normalized !== attribute.normalized ) {
+
+			console.error( 'THREE.BufferGeometryUtils: .mergeBufferAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.' );
+			return null;
+
+		}
+
+		arrayLength += attribute.array.length;
+
+	}
+
+	const array = new TypedArray( arrayLength );
+	let offset = 0;
+
+	for ( let i = 0; i < attributes.length; ++ i ) {
+
+		array.set( attributes[ i ].array, offset );
+
+		offset += attributes[ i ].array.length;
+
+	}
+
+	return new three_module_BufferAttribute( array, itemSize, normalized );
+
+}
+
+/**
+ * @param {BufferAttribute}
+ * @return {BufferAttribute}
+ */
+function deepCloneAttribute( attribute ) {
+
+	if ( attribute.isInstancedInterleavedBufferAttribute || attribute.isInterleavedBufferAttribute ) {
+
+		return deinterleaveAttribute( attribute );
+
+	}
+
+	if ( attribute.isInstancedBufferAttribute ) {
+
+		return new InstancedBufferAttribute().copy( attribute );
+
+	}
+
+	return new BufferAttribute().copy( attribute );
+
+}
+
+/**
+ * @param {Array<BufferAttribute>} attributes
+ * @return {Array<InterleavedBufferAttribute>}
+ */
+function interleaveAttributes( attributes ) {
+
+	// Interleaves the provided attributes into an InterleavedBuffer and returns
+	// a set of InterleavedBufferAttributes for each attribute
+	let TypedArray;
+	let arrayLength = 0;
+	let stride = 0;
+
+	// calculate the length and type of the interleavedBuffer
+	for ( let i = 0, l = attributes.length; i < l; ++ i ) {
+
+		const attribute = attributes[ i ];
+
+		if ( TypedArray === undefined ) TypedArray = attribute.array.constructor;
+		if ( TypedArray !== attribute.array.constructor ) {
+
+			console.error( 'AttributeBuffers of different types cannot be interleaved' );
+			return null;
+
+		}
+
+		arrayLength += attribute.array.length;
+		stride += attribute.itemSize;
+
+	}
+
+	// Create the set of buffer attributes
+	const interleavedBuffer = new InterleavedBuffer( new TypedArray( arrayLength ), stride );
+	let offset = 0;
+	const res = [];
+	const getters = [ 'getX', 'getY', 'getZ', 'getW' ];
+	const setters = [ 'setX', 'setY', 'setZ', 'setW' ];
+
+	for ( let j = 0, l = attributes.length; j < l; j ++ ) {
+
+		const attribute = attributes[ j ];
+		const itemSize = attribute.itemSize;
+		const count = attribute.count;
+		const iba = new InterleavedBufferAttribute( interleavedBuffer, itemSize, offset, attribute.normalized );
+		res.push( iba );
+
+		offset += itemSize;
+
+		// Move the data for each attribute into the new interleavedBuffer
+		// at the appropriate offset
+		for ( let c = 0; c < count; c ++ ) {
+
+			for ( let k = 0; k < itemSize; k ++ ) {
+
+				iba[ setters[ k ] ]( c, attribute[ getters[ k ] ]( c ) );
+
+			}
+
+		}
+
+	}
+
+	return res;
+
+}
+
+// returns a new, non-interleaved version of the provided attribute
+function deinterleaveAttribute( attribute ) {
+
+	const cons = attribute.data.array.constructor;
+	const count = attribute.count;
+	const itemSize = attribute.itemSize;
+	const normalized = attribute.normalized;
+
+	const array = new cons( count * itemSize );
+	let newAttribute;
+	if ( attribute.isInstancedInterleavedBufferAttribute ) {
+
+		newAttribute = new InstancedBufferAttribute( array, itemSize, normalized, attribute.meshPerAttribute );
+
+	} else {
+
+		newAttribute = new BufferAttribute( array, itemSize, normalized );
+
+	}
+
+	for ( let i = 0; i < count; i ++ ) {
+
+		newAttribute.setX( i, attribute.getX( i ) );
+
+		if ( itemSize >= 2 ) {
+
+			newAttribute.setY( i, attribute.getY( i ) );
+
+		}
+
+		if ( itemSize >= 3 ) {
+
+			newAttribute.setZ( i, attribute.getZ( i ) );
+
+		}
+
+		if ( itemSize >= 4 ) {
+
+			newAttribute.setW( i, attribute.getW( i ) );
+
+		}
+
+	}
+
+	return newAttribute;
+
+}
+
+// deinterleaves all attributes on the geometry
+function deinterleaveGeometry( geometry ) {
+
+	const attributes = geometry.attributes;
+	const morphTargets = geometry.morphTargets;
+	const attrMap = new Map();
+
+	for ( const key in attributes ) {
+
+		const attr = attributes[ key ];
+		if ( attr.isInterleavedBufferAttribute ) {
+
+			if ( ! attrMap.has( attr ) ) {
+
+				attrMap.set( attr, deinterleaveAttribute( attr ) );
+
+			}
+
+			attributes[ key ] = attrMap.get( attr );
+
+		}
+
+	}
+
+	for ( const key in morphTargets ) {
+
+		const attr = morphTargets[ key ];
+		if ( attr.isInterleavedBufferAttribute ) {
+
+			if ( ! attrMap.has( attr ) ) {
+
+				attrMap.set( attr, deinterleaveAttribute( attr ) );
+
+			}
+
+			morphTargets[ key ] = attrMap.get( attr );
+
+		}
+
+	}
+
+}
+
+/**
+ * @param {Array<BufferGeometry>} geometry
+ * @return {number}
+ */
+function estimateBytesUsed( geometry ) {
+
+	// Return the estimated memory used by this geometry in bytes
+	// Calculate using itemSize, count, and BYTES_PER_ELEMENT to account
+	// for InterleavedBufferAttributes.
+	let mem = 0;
+	for ( const name in geometry.attributes ) {
+
+		const attr = geometry.getAttribute( name );
+		mem += attr.count * attr.itemSize * attr.array.BYTES_PER_ELEMENT;
+
+	}
+
+	const indices = geometry.getIndex();
+	mem += indices ? indices.count * indices.itemSize * indices.array.BYTES_PER_ELEMENT : 0;
+	return mem;
+
+}
+
+/**
+ * @param {BufferGeometry} geometry
+ * @param {number} tolerance
+ * @return {BufferGeometry}
+ */
+function mergeVertices( geometry, tolerance = 1e-4 ) {
+
+	tolerance = Math.max( tolerance, Number.EPSILON );
+
+	// Generate an index buffer if the geometry doesn't have one, or optimize it
+	// if it's already available.
+	const hashToIndex = {};
+	const indices = geometry.getIndex();
+	const positions = geometry.getAttribute( 'position' );
+	const vertexCount = indices ? indices.count : positions.count;
+
+	// next value for triangle indices
+	let nextIndex = 0;
+
+	// attributes and new attribute arrays
+	const attributeNames = Object.keys( geometry.attributes );
+	const tmpAttributes = {};
+	const tmpMorphAttributes = {};
+	const newIndices = [];
+	const getters = [ 'getX', 'getY', 'getZ', 'getW' ];
+	const setters = [ 'setX', 'setY', 'setZ', 'setW' ];
+
+	// Initialize the arrays, allocating space conservatively. Extra
+	// space will be trimmed in the last step.
+	for ( let i = 0, l = attributeNames.length; i < l; i ++ ) {
+
+		const name = attributeNames[ i ];
+		const attr = geometry.attributes[ name ];
+
+		tmpAttributes[ name ] = new BufferAttribute(
+			new attr.array.constructor( attr.count * attr.itemSize ),
+			attr.itemSize,
+			attr.normalized
+		);
+
+		const morphAttr = geometry.morphAttributes[ name ];
+		if ( morphAttr ) {
+
+			tmpMorphAttributes[ name ] = new BufferAttribute(
+				new morphAttr.array.constructor( morphAttr.count * morphAttr.itemSize ),
+				morphAttr.itemSize,
+				morphAttr.normalized
+			);
+
+		}
+
+	}
+
+	// convert the error tolerance to an amount of decimal places to truncate to
+	const decimalShift = Math.log10( 1 / tolerance );
+	const shiftMultiplier = Math.pow( 10, decimalShift );
+	for ( let i = 0; i < vertexCount; i ++ ) {
+
+		const index = indices ? indices.getX( i ) : i;
+
+		// Generate a hash for the vertex attributes at the current index 'i'
+		let hash = '';
+		for ( let j = 0, l = attributeNames.length; j < l; j ++ ) {
+
+			const name = attributeNames[ j ];
+			const attribute = geometry.getAttribute( name );
+			const itemSize = attribute.itemSize;
+
+			for ( let k = 0; k < itemSize; k ++ ) {
+
+				// double tilde truncates the decimal value
+				hash += `${ ~ ~ ( attribute[ getters[ k ] ]( index ) * shiftMultiplier ) },`;
+
+			}
+
+		}
+
+		// Add another reference to the vertex if it's already
+		// used by another index
+		if ( hash in hashToIndex ) {
+
+			newIndices.push( hashToIndex[ hash ] );
+
+		} else {
+
+			// copy data to the new index in the temporary attributes
+			for ( let j = 0, l = attributeNames.length; j < l; j ++ ) {
+
+				const name = attributeNames[ j ];
+				const attribute = geometry.getAttribute( name );
+				const morphAttr = geometry.morphAttributes[ name ];
+				const itemSize = attribute.itemSize;
+				const newarray = tmpAttributes[ name ];
+				const newMorphArrays = tmpMorphAttributes[ name ];
+
+				for ( let k = 0; k < itemSize; k ++ ) {
+
+					const getterFunc = getters[ k ];
+					const setterFunc = setters[ k ];
+					newarray[ setterFunc ]( nextIndex, attribute[ getterFunc ]( index ) );
+
+					if ( morphAttr ) {
+
+						for ( let m = 0, ml = morphAttr.length; m < ml; m ++ ) {
+
+							newMorphArrays[ m ][ setterFunc ]( nextIndex, morphAttr[ m ][ getterFunc ]( index ) );
+
+						}
+
+					}
+
+				}
+
+			}
+
+			hashToIndex[ hash ] = nextIndex;
+			newIndices.push( nextIndex );
+			nextIndex ++;
+
+		}
+
+	}
+
+	// generate result BufferGeometry
+	const result = geometry.clone();
+	for ( const name in geometry.attributes ) {
+
+		const tmpAttribute = tmpAttributes[ name ];
+
+		result.setAttribute( name, new BufferAttribute(
+			tmpAttribute.array.slice( 0, nextIndex * tmpAttribute.itemSize ),
+			tmpAttribute.itemSize,
+			tmpAttribute.normalized,
+		) );
+
+		if ( ! ( name in tmpMorphAttributes ) ) continue;
+
+		for ( let j = 0; j < tmpMorphAttributes[ name ].length; j ++ ) {
+
+			const tmpMorphAttribute = tmpMorphAttributes[ name ][ j ];
+
+			result.morphAttributes[ name ][ j ] = new BufferAttribute(
+				tmpMorphAttribute.array.slice( 0, nextIndex * tmpMorphAttribute.itemSize ),
+				tmpMorphAttribute.itemSize,
+				tmpMorphAttribute.normalized,
+			);
+
+		}
+
+	}
+
+	// indices
+
+	result.setIndex( newIndices );
+
+	return result;
+
+}
+
+/**
+ * @param {BufferGeometry} geometry
+ * @param {number} drawMode
+ * @return {BufferGeometry}
+ */
+function BufferGeometryUtils_toTrianglesDrawMode( geometry, drawMode ) {
+
+	if ( drawMode === TrianglesDrawMode ) {
+
+		console.warn( 'THREE.BufferGeometryUtils.toTrianglesDrawMode(): Geometry already defined as triangles.' );
+		return geometry;
+
+	}
+
+	if ( drawMode === TriangleFanDrawMode || drawMode === TriangleStripDrawMode ) {
+
+		let index = geometry.getIndex();
+
+		// generate index if not present
+
+		if ( index === null ) {
+
+			const indices = [];
+
+			const position = geometry.getAttribute( 'position' );
+
+			if ( position !== undefined ) {
+
+				for ( let i = 0; i < position.count; i ++ ) {
+
+					indices.push( i );
+
+				}
+
+				geometry.setIndex( indices );
+				index = geometry.getIndex();
+
+			} else {
+
+				console.error( 'THREE.BufferGeometryUtils.toTrianglesDrawMode(): Undefined position attribute. Processing not possible.' );
+				return geometry;
+
+			}
+
+		}
+
+		//
+
+		const numberOfTriangles = index.count - 2;
+		const newIndices = [];
+
+		if ( drawMode === TriangleFanDrawMode ) {
+
+			// gl.TRIANGLE_FAN
+
+			for ( let i = 1; i <= numberOfTriangles; i ++ ) {
+
+				newIndices.push( index.getX( 0 ) );
+				newIndices.push( index.getX( i ) );
+				newIndices.push( index.getX( i + 1 ) );
+
+			}
+
+		} else {
+
+			// gl.TRIANGLE_STRIP
+
+			for ( let i = 0; i < numberOfTriangles; i ++ ) {
+
+				if ( i % 2 === 0 ) {
+
+					newIndices.push( index.getX( i ) );
+					newIndices.push( index.getX( i + 1 ) );
+					newIndices.push( index.getX( i + 2 ) );
+
+				} else {
+
+					newIndices.push( index.getX( i + 2 ) );
+					newIndices.push( index.getX( i + 1 ) );
+					newIndices.push( index.getX( i ) );
+
+				}
+
+			}
+
+		}
+
+		if ( ( newIndices.length / 3 ) !== numberOfTriangles ) {
+
+			console.error( 'THREE.BufferGeometryUtils.toTrianglesDrawMode(): Unable to generate correct amount of triangles.' );
+
+		}
+
+		// build final geometry
+
+		const newGeometry = geometry.clone();
+		newGeometry.setIndex( newIndices );
+		newGeometry.clearGroups();
+
+		return newGeometry;
+
+	} else {
+
+		console.error( 'THREE.BufferGeometryUtils.toTrianglesDrawMode(): Unknown draw mode:', drawMode );
+		return geometry;
+
+	}
+
+}
+
+/**
+ * Calculates the morphed attributes of a morphed/skinned BufferGeometry.
+ * Helpful for Raytracing or Decals.
+ * @param {Mesh | Line | Points} object An instance of Mesh, Line or Points.
+ * @return {Object} An Object with original position/normal attributes and morphed ones.
+ */
+function computeMorphedAttributes( object ) {
+
+	if ( object.geometry.isBufferGeometry !== true ) {
+
+		console.error( 'THREE.BufferGeometryUtils: Geometry is not of type BufferGeometry.' );
+		return null;
+
+	}
+
+	const _vA = new Vector3();
+	const _vB = new Vector3();
+	const _vC = new Vector3();
+
+	const _tempA = new Vector3();
+	const _tempB = new Vector3();
+	const _tempC = new Vector3();
+
+	const _morphA = new Vector3();
+	const _morphB = new Vector3();
+	const _morphC = new Vector3();
+
+	function _calculateMorphedAttributeData(
+		object,
+		attribute,
+		morphAttribute,
+		morphTargetsRelative,
+		a,
+		b,
+		c,
+		modifiedAttributeArray
+	) {
+
+		_vA.fromBufferAttribute( attribute, a );
+		_vB.fromBufferAttribute( attribute, b );
+		_vC.fromBufferAttribute( attribute, c );
+
+		const morphInfluences = object.morphTargetInfluences;
+
+		if ( morphAttribute && morphInfluences ) {
+
+			_morphA.set( 0, 0, 0 );
+			_morphB.set( 0, 0, 0 );
+			_morphC.set( 0, 0, 0 );
+
+			for ( let i = 0, il = morphAttribute.length; i < il; i ++ ) {
+
+				const influence = morphInfluences[ i ];
+				const morph = morphAttribute[ i ];
+
+				if ( influence === 0 ) continue;
+
+				_tempA.fromBufferAttribute( morph, a );
+				_tempB.fromBufferAttribute( morph, b );
+				_tempC.fromBufferAttribute( morph, c );
+
+				if ( morphTargetsRelative ) {
+
+					_morphA.addScaledVector( _tempA, influence );
+					_morphB.addScaledVector( _tempB, influence );
+					_morphC.addScaledVector( _tempC, influence );
+
+				} else {
+
+					_morphA.addScaledVector( _tempA.sub( _vA ), influence );
+					_morphB.addScaledVector( _tempB.sub( _vB ), influence );
+					_morphC.addScaledVector( _tempC.sub( _vC ), influence );
+
+				}
+
+			}
+
+			_vA.add( _morphA );
+			_vB.add( _morphB );
+			_vC.add( _morphC );
+
+		}
+
+		if ( object.isSkinnedMesh ) {
+
+			object.boneTransform( a, _vA );
+			object.boneTransform( b, _vB );
+			object.boneTransform( c, _vC );
+
+		}
+
+		modifiedAttributeArray[ a * 3 + 0 ] = _vA.x;
+		modifiedAttributeArray[ a * 3 + 1 ] = _vA.y;
+		modifiedAttributeArray[ a * 3 + 2 ] = _vA.z;
+		modifiedAttributeArray[ b * 3 + 0 ] = _vB.x;
+		modifiedAttributeArray[ b * 3 + 1 ] = _vB.y;
+		modifiedAttributeArray[ b * 3 + 2 ] = _vB.z;
+		modifiedAttributeArray[ c * 3 + 0 ] = _vC.x;
+		modifiedAttributeArray[ c * 3 + 1 ] = _vC.y;
+		modifiedAttributeArray[ c * 3 + 2 ] = _vC.z;
+
+	}
+
+	const geometry = object.geometry;
+	const material = object.material;
+
+	let a, b, c;
+	const index = geometry.index;
+	const positionAttribute = geometry.attributes.position;
+	const morphPosition = geometry.morphAttributes.position;
+	const morphTargetsRelative = geometry.morphTargetsRelative;
+	const normalAttribute = geometry.attributes.normal;
+	const morphNormal = geometry.morphAttributes.position;
+
+	const groups = geometry.groups;
+	const drawRange = geometry.drawRange;
+	let i, j, il, jl;
+	let group;
+	let start, end;
+
+	const modifiedPosition = new Float32Array( positionAttribute.count * positionAttribute.itemSize );
+	const modifiedNormal = new Float32Array( normalAttribute.count * normalAttribute.itemSize );
+
+	if ( index !== null ) {
+
+		// indexed buffer geometry
+
+		if ( Array.isArray( material ) ) {
+
+			for ( i = 0, il = groups.length; i < il; i ++ ) {
+
+				group = groups[ i ];
+
+				start = Math.max( group.start, drawRange.start );
+				end = Math.min( ( group.start + group.count ), ( drawRange.start + drawRange.count ) );
+
+				for ( j = start, jl = end; j < jl; j += 3 ) {
+
+					a = index.getX( j );
+					b = index.getX( j + 1 );
+					c = index.getX( j + 2 );
+
+					_calculateMorphedAttributeData(
+						object,
+						positionAttribute,
+						morphPosition,
+						morphTargetsRelative,
+						a, b, c,
+						modifiedPosition
+					);
+
+					_calculateMorphedAttributeData(
+						object,
+						normalAttribute,
+						morphNormal,
+						morphTargetsRelative,
+						a, b, c,
+						modifiedNormal
+					);
+
+				}
+
+			}
+
+		} else {
+
+			start = Math.max( 0, drawRange.start );
+			end = Math.min( index.count, ( drawRange.start + drawRange.count ) );
+
+			for ( i = start, il = end; i < il; i += 3 ) {
+
+				a = index.getX( i );
+				b = index.getX( i + 1 );
+				c = index.getX( i + 2 );
+
+				_calculateMorphedAttributeData(
+					object,
+					positionAttribute,
+					morphPosition,
+					morphTargetsRelative,
+					a, b, c,
+					modifiedPosition
+				);
+
+				_calculateMorphedAttributeData(
+					object,
+					normalAttribute,
+					morphNormal,
+					morphTargetsRelative,
+					a, b, c,
+					modifiedNormal
+				);
+
+			}
+
+		}
+
+	} else {
+
+		// non-indexed buffer geometry
+
+		if ( Array.isArray( material ) ) {
+
+			for ( i = 0, il = groups.length; i < il; i ++ ) {
+
+				group = groups[ i ];
+
+				start = Math.max( group.start, drawRange.start );
+				end = Math.min( ( group.start + group.count ), ( drawRange.start + drawRange.count ) );
+
+				for ( j = start, jl = end; j < jl; j += 3 ) {
+
+					a = j;
+					b = j + 1;
+					c = j + 2;
+
+					_calculateMorphedAttributeData(
+						object,
+						positionAttribute,
+						morphPosition,
+						morphTargetsRelative,
+						a, b, c,
+						modifiedPosition
+					);
+
+					_calculateMorphedAttributeData(
+						object,
+						normalAttribute,
+						morphNormal,
+						morphTargetsRelative,
+						a, b, c,
+						modifiedNormal
+					);
+
+				}
+
+			}
+
+		} else {
+
+			start = Math.max( 0, drawRange.start );
+			end = Math.min( positionAttribute.count, ( drawRange.start + drawRange.count ) );
+
+			for ( i = start, il = end; i < il; i += 3 ) {
+
+				a = i;
+				b = i + 1;
+				c = i + 2;
+
+				_calculateMorphedAttributeData(
+					object,
+					positionAttribute,
+					morphPosition,
+					morphTargetsRelative,
+					a, b, c,
+					modifiedPosition
+				);
+
+				_calculateMorphedAttributeData(
+					object,
+					normalAttribute,
+					morphNormal,
+					morphTargetsRelative,
+					a, b, c,
+					modifiedNormal
+				);
+
+			}
+
+		}
+
+	}
+
+	const morphedPositionAttribute = new Float32BufferAttribute( modifiedPosition, 3 );
+	const morphedNormalAttribute = new Float32BufferAttribute( modifiedNormal, 3 );
+
+	return {
+
+		positionAttribute: positionAttribute,
+		normalAttribute: normalAttribute,
+		morphedPositionAttribute: morphedPositionAttribute,
+		morphedNormalAttribute: morphedNormalAttribute
+
+	};
+
+}
+
+function mergeGroups( geometry ) {
+
+	if ( geometry.groups.length === 0 ) {
+
+		console.warn( 'THREE.BufferGeometryUtils.mergeGroups(): No groups are defined. Nothing to merge.' );
+		return geometry;
+
+	}
+
+	let groups = geometry.groups;
+
+	// sort groups by material index
+
+	groups = groups.sort( ( a, b ) => {
+
+		if ( a.materialIndex !== b.materialIndex ) return a.materialIndex - b.materialIndex;
+
+		return a.start - b.start;
+
+	} );
+
+	// create index for non-indexed geometries
+
+	if ( geometry.getIndex() === null ) {
+
+		const positionAttribute = geometry.getAttribute( 'position' );
+		const indices = [];
+
+		for ( let i = 0; i < positionAttribute.count; i += 3 ) {
+
+			indices.push( i, i + 1, i + 2 );
+
+		}
+
+		geometry.setIndex( indices );
+
+	}
+
+	// sort index
+
+	const index = geometry.getIndex();
+
+	const newIndices = [];
+
+	for ( let i = 0; i < groups.length; i ++ ) {
+
+		const group = groups[ i ];
+
+		const groupStart = group.start;
+		const groupLength = groupStart + group.count;
+
+		for ( let j = groupStart; j < groupLength; j ++ ) {
+
+			newIndices.push( index.getX( j ) );
+
+		}
+
+	}
+
+	geometry.dispose(); // Required to force buffer recreation
+	geometry.setIndex( newIndices );
+
+	// update groups indices
+
+	let start = 0;
+
+	for ( let i = 0; i < groups.length; i ++ ) {
+
+		const group = groups[ i ];
+
+		group.start = start;
+		start += group.count;
+
+	}
+
+	// merge groups
+
+	let currentGroup = groups[ 0 ];
+
+	geometry.groups = [ currentGroup ];
+
+	for ( let i = 1; i < groups.length; i ++ ) {
+
+		const group = groups[ i ];
+
+		if ( currentGroup.materialIndex === group.materialIndex ) {
+
+			currentGroup.count += group.count;
+
+		} else {
+
+			currentGroup = group;
+			geometry.groups.push( currentGroup );
+
+		}
+
+	}
+
+	return geometry;
+
+}
+
+
+// Creates a new, non-indexed geometry with smooth normals everywhere except faces that meet at
+// an angle greater than the crease angle.
+function toCreasedNormals( geometry, creaseAngle = Math.PI / 3 /* 60 degrees */ ) {
+
+	const creaseDot = Math.cos( creaseAngle );
+	const hashMultiplier = ( 1 + 1e-10 ) * 1e2;
+
+	// reusable vertors
+	const verts = [ new Vector3(), new Vector3(), new Vector3() ];
+	const tempVec1 = new Vector3();
+	const tempVec2 = new Vector3();
+	const tempNorm = new Vector3();
+	const tempNorm2 = new Vector3();
+
+	// hashes a vector
+	function hashVertex( v ) {
+
+		const x = ~ ~ ( v.x * hashMultiplier );
+		const y = ~ ~ ( v.y * hashMultiplier );
+		const z = ~ ~ ( v.z * hashMultiplier );
+		return `${x},${y},${z}`;
+
+	}
+
+	const resultGeometry = geometry.toNonIndexed();
+	const posAttr = resultGeometry.attributes.position;
+	const vertexMap = {};
+
+	// find all the normals shared by commonly located vertices
+	for ( let i = 0, l = posAttr.count / 3; i < l; i ++ ) {
+
+		const i3 = 3 * i;
+		const a = verts[ 0 ].fromBufferAttribute( posAttr, i3 + 0 );
+		const b = verts[ 1 ].fromBufferAttribute( posAttr, i3 + 1 );
+		const c = verts[ 2 ].fromBufferAttribute( posAttr, i3 + 2 );
+
+		tempVec1.subVectors( c, b );
+		tempVec2.subVectors( a, b );
+
+		// add the normal to the map for all vertices
+		const normal = new Vector3().crossVectors( tempVec1, tempVec2 ).normalize();
+		for ( let n = 0; n < 3; n ++ ) {
+
+			const vert = verts[ n ];
+			const hash = hashVertex( vert );
+			if ( ! ( hash in vertexMap ) ) {
+
+				vertexMap[ hash ] = [];
+
+			}
+
+			vertexMap[ hash ].push( normal );
+
+		}
+
+	}
+
+	// average normals from all vertices that share a common location if they are within the
+	// provided crease threshold
+	const normalArray = new Float32Array( posAttr.count * 3 );
+	const normAttr = new BufferAttribute( normalArray, 3, false );
+	for ( let i = 0, l = posAttr.count / 3; i < l; i ++ ) {
+
+		// get the face normal for this vertex
+		const i3 = 3 * i;
+		const a = verts[ 0 ].fromBufferAttribute( posAttr, i3 + 0 );
+		const b = verts[ 1 ].fromBufferAttribute( posAttr, i3 + 1 );
+		const c = verts[ 2 ].fromBufferAttribute( posAttr, i3 + 2 );
+
+		tempVec1.subVectors( c, b );
+		tempVec2.subVectors( a, b );
+
+		tempNorm.crossVectors( tempVec1, tempVec2 ).normalize();
+
+		// average all normals that meet the threshold and set the normal value
+		for ( let n = 0; n < 3; n ++ ) {
+
+			const vert = verts[ n ];
+			const hash = hashVertex( vert );
+			const otherNormals = vertexMap[ hash ];
+			tempNorm2.set( 0, 0, 0 );
+
+			for ( let k = 0, lk = otherNormals.length; k < lk; k ++ ) {
+
+				const otherNorm = otherNormals[ k ];
+				if ( tempNorm.dot( otherNorm ) > creaseDot ) {
+
+					tempNorm2.add( otherNorm );
+
+				}
+
+			}
+
+			tempNorm2.normalize();
+			normAttr.setXYZ( i3 + n, tempNorm2.x, tempNorm2.y, tempNorm2.z );
+
+		}
+
+	}
+
+	resultGeometry.setAttribute( 'normal', normAttr );
+	return resultGeometry;
+
+}
+
+
+
+;// ./src/components/map3d/viewer/sunsetTrees.ts
+
+
+/**
+ * Árboles del modo Atardecer: los mismos ejemplares del catastro, con formas más
+ * creíbles que las del mapa (que son las del prototipo y se quedan para el modo de
+ * siempre). Copas de hoja ancha en racimo, con bultos y oscuras por debajo; palmeras
+ * con tronco curvo y penacho de frondas recortadas; coníferas en pisos. Todo es
+ * procedural e instanciado: no se descargan modelos.
+ */
+/** Capa de three que la cámara no dibuja pero el clic sí toca: las copas del modo de siempre, en el Atardecer. */
+const PICK_ONLY_LAYER = 1;
+/** Pseudoaleatorio con semilla. */
+function seeded(seed) {
+    let s = seed >>> 0;
+    return () => {
+        s = (s * 1664525 + 1013904223) >>> 0;
+        return s / 4294967296;
+    };
+}
+/** Ruido de valor 3D barato, de -1 a 1: los bultos de la copa. */
+function lumpNoise(x, y, z, seed) {
+    const h = (i, j, k) => {
+        const n = Math.sin(i * 127.1 + j * 311.7 + k * 74.7 + seed * 13.13) * 43758.5453;
+        return n - Math.floor(n);
+    };
+    const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+    const f = (t) => t * t * (3 - 2 * t);
+    const fx = f(x - xi), fy = f(y - yi), fz = f(z - zi);
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const c = (dy, dz) => lerp(h(xi, yi + dy, zi + dz), h(xi + 1, yi + dy, zi + dz), fx);
+    return lerp(lerp(c(0, 0), c(1, 0), fy), lerp(c(0, 1), c(1, 1), fy), fz) * 2 - 1;
+}
+/** Color por vértice: más oscuro abajo y adentro (oclusión), con algo de variación. */
+function shadeVertices(geo, rnd, base = 0.5) {
+    const pos = geo.attributes.position;
+    const colors = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+        const y = pos.getY(i);
+        const out = Math.hypot(pos.getX(i), pos.getZ(i));
+        const ao = base + (1 - base) * MathUtils.smoothstep(y + out * 0.35, -0.7, 0.75);
+        const v = ao * (0.92 + rnd() * 0.16);
+        colors.set([v, v, v], i * 3);
+    }
+    geo.setAttribute('color', new three_module_BufferAttribute(colors, 3));
+}
+/**
+ * Copa de hoja ancha en la esfera unidad: un racimo de esferas desiguales, fundidas y con bultos. El
+ * modo de siempre usa una sola esfera con la misma escala, así que se apoya igual.
+ */
+function broadleafCrown(seed, detail = 2, minLobes = 7) {
+    const rnd = seeded(seed);
+    const parts = [];
+    const lobes = minLobes + Math.floor(rnd() * 4);
+    for (let i = 0; i < lobes; i++) {
+        const a = rnd() * Math.PI * 2, e = (rnd() - 0.35) * 1.2, d = 0.25 + rnd() * 0.3;
+        const r = 0.38 + rnd() * 0.22;
+        parts.push(new THREE.IcosahedronGeometry(r, detail).translate(Math.cos(a) * Math.cos(e) * d, Math.sin(e) * d * 0.8, Math.sin(a) * Math.cos(e) * d));
+    }
+    const geo = mergeBufferGeometries(parts);
+    parts.forEach((p) => p.dispose());
+    const pos = geo.attributes.position;
+    const v = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        const n = lumpNoise(v.x * 3.2, v.y * 3.2, v.z * 3.2, seed) * 0.6 + lumpNoise(v.x * 8, v.y * 8, v.z * 8, seed + 7) * 0.4;
+        v.multiplyScalar(1 + n * 0.12);
+        pos.setXYZ(i, v.x, v.y, v.z);
+    }
+    geo.computeVertexNormals();
+    shadeVertices(geo, rnd, 0.42);
+    return geo;
+}
+/** Conífera en la unidad (base en 0, punta en 1): tres pisos de follaje algo torcidos. */
+function coniferCrown(seed) {
+    const rnd = seeded(seed);
+    const tiers = [0, 0.3, 0.56].map((y, i) => new ConeGeometry(1 - i * 0.24, 0.55 - i * 0.08, 9, 2)
+        .rotateY(rnd() * Math.PI).translate((rnd() - 0.5) * 0.06, y + (0.55 - i * 0.08) / 2, (rnd() - 0.5) * 0.06));
+    const geo = BufferGeometryUtils_mergeBufferGeometries(tiers);
+    geo.computeVertexNormals();
+    shadeVertices(geo, rnd, 0.5);
+    return geo;
+}
+/** Tronco en la unidad (de 0 a 1 de alto, radio 1 abajo), cónico y con una curva suave. */
+function trunkGeometry(bend) {
+    const geo = new CylinderGeometry(0.62, 1, 1, 8, 6).translate(0, 0.5, 0);
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+        const y = pos.getY(i);
+        pos.setX(i, pos.getX(i) + bend * y * y);
+    }
+    geo.computeVertexNormals();
+    return geo;
+}
+/**
+ * Penacho de palmera en la unidad (radio 1): frondas que salen hacia arriba y caen en arco, cada una una
+ * cinta que la textura recorta en foliolos.
+ */
+function palmCrown(seed) {
+    const rnd = seeded(seed);
+    const fronds = [];
+    const count = 13;
+    const SEG = 10;
+    for (let f = 0; f < count; f++) {
+        const yaw = (f / count) * Math.PI * 2 + rnd() * 0.3;
+        const lift = 0.55 + rnd() * 0.5 - (f % 3) * 0.25; // unas suben, otras ya cuelgan
+        const positions = [], uvs = [], index = [];
+        for (let s = 0; s <= SEG; s++) {
+            const t = s / SEG;
+            const reach = t;
+            const y = Math.sin(lift) * t - t * t * 0.75;
+            const w = 0.2 * Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.05)), 0.6) + 0.015;
+            // Cinta en el plano de la fronda, algo plegada en V a lo largo del raquis.
+            const along = new three_module_Vector3(Math.cos(yaw) * reach * Math.cos(lift * 0.5), y, Math.sin(yaw) * reach * Math.cos(lift * 0.5));
+            const side = new three_module_Vector3(-Math.sin(yaw), 0, Math.cos(yaw)).multiplyScalar(w);
+            const fold = new three_module_Vector3(0, -w * 0.35, 0);
+            positions.push(...along.clone().sub(side).add(fold).toArray(), ...along.clone().add(side).add(fold).toArray());
+            uvs.push(0, t, 1, t);
+            if (s < SEG) {
+                const i = s * 2;
+                index.push(i, i + 1, i + 2, i + 1, i + 3, i + 2);
+            }
+        }
+        const g = new BufferGeometry();
+        g.setAttribute('position', new three_module_Float32BufferAttribute(positions, 3));
+        g.setAttribute('uv', new three_module_Float32BufferAttribute(uvs, 2));
+        g.setIndex(index);
+        g.computeVertexNormals();
+        fronds.push(g);
+    }
+    const geo = BufferGeometryUtils_mergeBufferGeometries(fronds);
+    shadeVertices(geo, rnd, 0.55);
+    return geo;
+}
+/** El material de las copas de hojas: recortadas por la textura, por las dos caras y también en la sombra. */
+function leafMaterials(texture, base) {
+    const material = base ?? new MeshStandardMaterial({ roughness: 0.8 });
+    Object.assign(material, { map: texture, alphaTest: 0.5, side: DoubleSide, vertexColors: true, normalMap: null });
+    material.needsUpdate = true;
+    const depth = new MeshDepthMaterial({ depthPacking: RGBADepthPacking, map: texture, alphaTest: 0.5 });
+    return { material, depth };
+}
+/** Textura de una fronda: raquis al centro y foliolos en diagonal; el alfa recorta lo que no es hoja. */
+function frondTexture() {
+    const W = 64, H = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const c = canvas.getContext('2d');
+    const texture = new CanvasTexture(canvas);
+    texture.anisotropy = 4;
+    // Sin canvas 2D (pruebas, navegadores raros), una textura vacía: las frondas no se ven, pero nada se rompe.
+    if (!c)
+        return texture;
+    c.clearRect(0, 0, W, H);
+    c.strokeStyle = '#ffffff';
+    c.lineCap = 'round';
+    const rnd = seeded(0xfa1a);
+    for (let y = 8; y < H - 4; y += 4) {
+        const len = (W / 2 - 3) * (0.75 + rnd() * 0.25);
+        c.lineWidth = 2.2;
+        for (const dir of [-1, 1]) {
+            c.beginPath();
+            c.moveTo(W / 2, H - y);
+            c.lineTo(W / 2 + dir * len, H - y - len * 0.55);
+            c.stroke();
+        }
+    }
+    c.lineWidth = 3;
+    c.beginPath();
+    c.moveTo(W / 2, H);
+    c.lineTo(W / 2, 0);
+    c.stroke();
+    return texture;
+}
+/**
+ * Copa frondosa en la esfera unidad: tarjetas de hojas repartidas sobre una forma con bultos, mirando hacia
+ * afuera y algo giradas, más algunas adentro para que no se vea hueca. Las normales son las de la copa
+ * (hacia afuera), así la luz es suave como en un follaje real; la textura recorta las hojas.
+ */
+function leafyCrown(seed, cards = 110) {
+    const rnd = seeded(seed);
+    const pos = [], nor = [], uv = [], col = [];
+    const out = new three_module_Vector3(), t1 = new three_module_Vector3(), t2 = new three_module_Vector3(), c = new three_module_Vector3();
+    const UV = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    for (let k = 0; k < cards; k++) {
+        // Un punto de la copa: en la superficie con bultos o, uno de cada cinco, más adentro.
+        const z = rnd() * 2 - 1, a = rnd() * Math.PI * 2, r = Math.sqrt(1 - z * z);
+        out.set(r * Math.cos(a), z * 0.85, r * Math.sin(a)).normalize();
+        const bump = 1 + lumpNoise(out.x * 2.6, out.y * 2.6, out.z * 2.6, seed) * 0.22;
+        const inner = k % 5 === 0;
+        const depth = inner ? 0.45 + rnd() * 0.3 : 0.82 + rnd() * 0.12;
+        c.copy(out).multiplyScalar(bump * depth);
+        // La tarjeta: perpendicular a la normal, girada al azar, de 0,45 a 0,7 de lado.
+        t1.set(-out.z, 0, out.x);
+        if (t1.lengthSq() < 1e-4)
+            t1.set(1, 0, 0);
+        t1.normalize().applyAxisAngle(out, rnd() * Math.PI);
+        t2.crossVectors(out, t1).normalize();
+        const half = (0.5 + rnd() * 0.28) / 2;
+        const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => c.clone().addScaledVector(t1, u * half).addScaledVector(t2, v * half));
+        // Más oscuro abajo y adentro: la sombra propia de la copa.
+        const shade = (0.62 + 0.38 * MathUtils.smoothstep(out.y, -0.8, 0.7)) * (inner ? 0.75 : 1) * (0.9 + rnd() * 0.2);
+        for (const i of [0, 1, 2, 0, 2, 3]) {
+            pos.push(corners[i].x, corners[i].y, corners[i].z);
+            nor.push(out.x, out.y, out.z);
+            uv.push(UV[i][0], UV[i][1]);
+            col.push(shade, shade, shade);
+        }
+    }
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new three_module_Float32BufferAttribute(pos, 3));
+    geo.setAttribute('normal', new three_module_Float32BufferAttribute(nor, 3));
+    geo.setAttribute('uv', new three_module_Float32BufferAttribute(uv, 2));
+    geo.setAttribute('color', new three_module_Float32BufferAttribute(col, 3));
+    return geo;
+}
+/** Un racimo de hojas: elipses en distintos verdes claros (el color del ejemplar las tiñe) sobre fondo transparente. */
+function leafTexture() {
+    const S = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = S;
+    const c = canvas.getContext('2d');
+    const texture = new CanvasTexture(canvas);
+    texture.anisotropy = 4;
+    if (!c)
+        return texture;
+    const rnd = seeded(0x1eaf);
+    for (let i = 0; i < 260; i++) {
+        // Más hojas al centro: el borde del racimo queda recortado.
+        const a = rnd() * Math.PI * 2, d = Math.sqrt(rnd()) * S * 0.42;
+        const x = S / 2 + Math.cos(a) * d, y = S / 2 + Math.sin(a) * d;
+        const g = 190 + Math.floor(rnd() * 65);
+        c.fillStyle = `rgb(${Math.floor(g * 0.82)},${g},${Math.floor(g * 0.62)})`;
+        c.beginPath();
+        c.ellipse(x, y, 4 + rnd() * 4, 2 + rnd() * 2, rnd() * Math.PI, 0, Math.PI * 2);
+        c.fill();
+    }
+    return texture;
 }
 
 ;// ./src/components/map3d/viewer/picking.ts
 
 
 
+
 const raycaster = new Raycaster();
+// También lo que la cámara no dibuja pero se puede elegir (las copas de siempre en el Atardecer).
+raycaster.layers.enable(PICK_ONLY_LAYER);
 const ndc = new Vector2();
-const groundPlane = new Plane(new Vector3(0, 1, 0), -WORLD_LIFT);
-function insideRing(x, y, ring) {
+const groundPlane = new Plane(new three_module_Vector3(0, 1, 0), -polyLayer_WORLD_LIFT);
+function picking_insideRing(x, y, ring) {
     let inside = false;
     for (let i = 0, j = ring.length - 2; i < ring.length; j = i, i += 2) {
         const xi = ring[i], yi = ring[i + 1], xj = ring[j], yj = ring[j + 1];
@@ -56554,7 +58186,7 @@ function groundPoint(clientX, clientY, dom, camera, campus) {
     const v = new THREE.Vector3();
     if (!raycaster.ray.intersectPlane(groundPlane, v))
         return null;
-    const inside = campus.some((poly) => insideRing(v.x, -v.z, poly[0]) && !poly.slice(1).some((hole) => insideRing(v.x, -v.z, hole)));
+    const inside = campus.some((poly) => picking_insideRing(v.x, -v.z, poly[0]) && !poly.slice(1).some((hole) => picking_insideRing(v.x, -v.z, hole)));
     return inside ? v : null;
 }
 
@@ -56566,30 +58198,98 @@ function groundPoint(clientX, clientY, dom, camera, campus) {
 /** Un clic que se desplaza más de esto es un arrastre, no una selección. */
 const CLICK_TOLERANCE_PX = 6;
 function bindPointer(dom, handlers) {
-    let downAt = null;
+    let press = null;
+    let timer = null;
+    const clearTimer = () => { if (timer !== null)
+        clearTimeout(timer); timer = null; };
+    const finish = () => {
+        clearTimer();
+        const active = press?.active;
+        press = null;
+        if (active)
+            handlers.sweep?.onEnd();
+    };
     const onDown = (e) => {
-        downAt = [e.clientX, e.clientY];
+        finish();
         handlers.onPress();
+        if (e.button !== 0)
+            return;
+        const current = { id: e.pointerId, x: e.clientX, y: e.clientY, active: false, moved: false };
+        press = current;
+        const sweep = handlers.sweep;
+        if (e.pointerType !== 'mouse' || !sweep?.enabled() || !sweep.canStart(e.clientX, e.clientY))
+            return;
+        timer = setTimeout(() => {
+            timer = null;
+            if (press !== current || current.moved || !sweep.enabled() || !sweep.canStart(current.x, current.y))
+                return;
+            current.active = true;
+            sweep.onStart(current.x, current.y);
+        }, 2000);
     };
     const onUp = (e) => {
-        if (!downAt || e.button !== 0)
+        if (!press || press.id !== e.pointerId || e.button !== 0)
             return;
-        const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]);
-        downAt = null;
-        if (moved <= CLICK_TOLERANCE_PX)
+        const current = press;
+        finish();
+        if (!current.active && !current.moved && Math.hypot(e.clientX - current.x, e.clientY - current.y) <= CLICK_TOLERANCE_PX)
             handlers.onClick(e.clientX, e.clientY);
     };
     const onMove = (e) => {
+        if (press && e.pointerId === press.id) {
+            if (!(e.buttons & 1)) {
+                finish();
+                return;
+            }
+            if (press.active) {
+                if (!handlers.sweep?.enabled()) {
+                    finish();
+                    return;
+                }
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                handlers.sweep.onMove(e.clientX, e.clientY);
+                return;
+            }
+            if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > CLICK_TOLERANCE_PX) {
+                press.moved = true;
+                clearTimer();
+            }
+        }
         if (e.pointerType === 'mouse' && !e.buttons)
             handlers.onHover(e.clientX, e.clientY);
     };
-    dom.addEventListener('pointerdown', onDown);
-    dom.addEventListener('pointerup', onUp);
-    dom.addEventListener('pointermove', onMove);
+    const cancel = (e) => { if (press?.id === e.pointerId)
+        finish(); };
+    const leave = () => { if (!press?.active)
+        finish(); };
+    const escape = (e) => { if (e.key === 'Escape')
+        finish(); };
+    const hidden = () => { if (document.hidden)
+        finish(); };
+    // Capture consumes active brush moves before OrbitControls can rotate the camera.
+    dom.addEventListener('pointerdown', onDown, true);
+    dom.addEventListener('pointerup', onUp, true);
+    dom.addEventListener('pointermove', onMove, true);
+    dom.addEventListener('pointercancel', cancel);
+    dom.addEventListener('lostpointercapture', cancel);
+    dom.addEventListener('pointerleave', leave);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('blur', finish);
+    window.addEventListener('keydown', escape);
+    document.addEventListener('visibilitychange', hidden);
     return () => {
-        dom.removeEventListener('pointerdown', onDown);
-        dom.removeEventListener('pointerup', onUp);
-        dom.removeEventListener('pointermove', onMove);
+        finish();
+        dom.removeEventListener('pointerdown', onDown, true);
+        dom.removeEventListener('pointerup', onUp, true);
+        dom.removeEventListener('pointermove', onMove, true);
+        dom.removeEventListener('pointercancel', cancel);
+        dom.removeEventListener('lostpointercapture', cancel);
+        dom.removeEventListener('pointerleave', leave);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('blur', finish);
+        window.removeEventListener('keydown', escape);
+        document.removeEventListener('visibilitychange', hidden);
     };
 }
 
@@ -56597,7 +58297,7 @@ function bindPointer(dom, handlers) {
 /** Color de una categoría que el modo no declara: visible, pero distinto. */
 const FALLBACK_COLOR = '#60E880';
 const cat = (key, label, color) => ({ key, label, color });
-const MODES = {
+const modes_MODES = {
     base: { label: 'General', cats: [cat('base', 'Área verde', '#1A9828')] },
     uso: {
         label: 'Uso',
@@ -56672,79 +58372,495 @@ function categoryOf(props, mode) {
 }
 function colorOf(props, mode) {
     const key = categoryOf(props, mode);
-    return MODES[mode].cats.find((c) => c.key === key)?.color ?? FALLBACK_COLOR;
+    return modes_MODES[mode].cats.find((c) => c.key === key)?.color ?? FALLBACK_COLOR;
 }
 
-;// ./src/components/map3d/viewer/sceneLayers.ts
+;// ./src/components/map3d/projection.ts
+/**
+ * Plano tangente local: latitud y longitud WGS 84 a metros alrededor de un
+ * origen. Es la misma fórmula que usa el backend (LocalPlane.java): el prototipo
+ * mezclaba dos factores de latitud y desalineaba lugares y polígonos hasta 4 m
+ * (SPEC-102 D-06). Esta es la única conversión del visor.
+ */
+const SEMI_MAJOR_AXIS_M = 6378137;
+const ECCENTRICITY_SQ = 0.00669437999014;
+const DEG = Math.PI / 180;
+class projection_LocalPlane {
+    constructor(lat0, lon0) {
+        this.lat0 = lat0;
+        this.lon0 = lon0;
+        const phi = lat0 * DEG;
+        const w = 1 - ECCENTRICITY_SQ * Math.sin(phi) ** 2;
+        const meridianRadius = (SEMI_MAJOR_AXIS_M * (1 - ECCENTRICITY_SQ)) / w ** 1.5;
+        const normalRadius = SEMI_MAJOR_AXIS_M / Math.sqrt(w);
+        this.metresPerDegreeLat = DEG * meridianRadius;
+        this.metresPerDegreeLon = DEG * normalRadius * Math.cos(phi);
+    }
+    toPlane(lat, lon) {
+        return {
+            x: (lon - this.lon0) * this.metresPerDegreeLon,
+            y: (lat - this.lat0) * this.metresPerDegreeLat,
+        };
+    }
+    /** Inversa de toPlane: devuelve [lat, lon]. */
+    toLatLon(p) {
+        return [this.lat0 + p.y / this.metresPerDegreeLat, this.lon0 + p.x / this.metresPerDegreeLon];
+    }
+}
 
+;// ./src/components/map3d/sceneData.ts
 
-
-
-/** Altura de un edificio sin dato en OpenStreetMap (la que usaba el prototipo). */
-const DEFAULT_HEIGHT_M = 8;
-const CONTEXT_BASE_M = -1.6;
-const SUPERVISION_COLORS = { 'ZS-1': '#4F8FEA', 'ZS-2': '#E66A8A', 'ZS-3': '#55B88A', 'ZS-4': '#D49A45' };
-function buildingEdges(shapes, heightOf) {
-    const v = [];
-    shapes.forEach((b, i) => {
-        const top = heightOf(i);
-        for (const polygon of b.g)
-            for (const r of polygon) {
-                const m = r.length / 2;
-                for (let k = 0; k < m; k++) {
-                    const k2 = (k + 1) % m, kp = (k - 1 + m) % m;
-                    const x = r[2 * k], z = -r[2 * k + 1], x2 = r[2 * k2], z2 = -r[2 * k2 + 1];
-                    v.push(x, top, z, x2, top, z2);
-                    // Aristas verticales solo en esquinas marcadas: si no, las curvas se llenan de líneas.
-                    const a1 = Math.atan2(z - -r[2 * kp + 1], x - r[2 * kp]), a2 = Math.atan2(z2 - z, x2 - x);
-                    let d = Math.abs(a1 - a2);
-                    if (d > Math.PI)
-                        d = 2 * Math.PI - d;
-                    if (d > 0.35)
-                        v.push(x, 0, z, x, top, z);
-                }
-            }
+function ringToPlane(ring, plane) {
+    const closed = ring.length > 1 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1];
+    const vertices = closed ? ring.slice(0, -1) : ring;
+    return vertices.flatMap(([lon, lat]) => {
+        const p = plane.toPlane(lat, lon);
+        return [p.x, p.y];
     });
-    const g = new BufferGeometry();
-    g.setAttribute('position', new Float32BufferAttribute(v, 3));
-    return g;
 }
-function outline(scene, layer, y, color, opacity = 1) {
-    const lines = new LineSegments(ringLines(layer.shapes.map((_, i) => i), (i) => layer.shapes[i], () => y), new LineBasicMaterial({ color, transparent: opacity < 1, opacity }));
-    lines.position.y = WORLD_LIFT;
-    scene.add(lines);
-    layer.extra.push(lines);
+/** Un Polygon o MultiPolygon de GeoJSON, en metros del plano local. */
+function sceneData_polygons(geometry, plane) {
+    if (geometry.type === 'Polygon') {
+        return [geometry.coordinates.map((r) => ringToPlane(r, plane))];
+    }
+    if (geometry.type === 'MultiPolygon') {
+        return geometry.coordinates.map((poly) => poly.map((r) => ringToPlane(r, plane)));
+    }
+    throw new Error(`Geometría no poligonal: ${geometry.type}`);
 }
-function createSceneLayers(scene, data, textures, state) {
-    const make = (id, shapes, opts) => createPolyLayer(scene, id, shapes.map((s) => s.g), opts, textures);
-    const greenColor = (i) => {
-        const p = data.greenAreas[i].props;
-        // Una categoría apagada desde la leyenda se pinta atenuada, no desaparece.
-        return state.hidden.has(categoryOf(p, state.mode)) ? state.palette.dimmed : colorOf(p, state.mode);
+function point(geometry, plane) {
+    const [lon, lat] = geometry.coordinates;
+    const p = plane.toPlane(lat, lon);
+    return [p.x, p.y];
+}
+const toPoly = (plane) => (f) => ({ g: sceneData_polygons(f.geometry, plane), props: f.properties });
+const toPoint = (plane) => (f) => ({ p: point(f.geometry, plane), props: f.properties });
+/** Las capas que el visor necesita. Una respuesta sin alguna no se puede dibujar. */
+const LAYER_KEYS = (/* unused pure expression or super */ null && ([
+    'sectors', 'sections', 'subsections', 'supervisionZones', 'references', 'buildings', 'features', 'vegetation',
+]));
+function missingLayers(response) {
+    return LAYER_KEYS.filter((k) => !Array.isArray(response.layers?.[k]?.features));
+}
+/** Los índices de los principales a pintar cuando se marcan ids de edificios (un hijo marca a su principal). */
+function markedPrincipalIndexes(buildingIndexById, ids) {
+    const out = new Set();
+    ids.forEach((id) => {
+        const index = buildingIndexById.get(id);
+        if (index !== undefined)
+            out.add(index);
+    });
+    return out;
+}
+/**
+ * Reparte los edificios del campus en principales y agrupados. Sin `parentId`
+ * (capas guardadas en formato 2) o con un padre que no llegó, es principal.
+ */
+function splitCampusBuildings(features, poly) {
+    const campus = features.filter((b) => b.properties.campus);
+    const principalIds = new Set(campus.filter((b) => b.properties.parentId == null).map((b) => b.properties.id));
+    const isGrouped = (b) => b.properties.parentId != null && principalIds.has(b.properties.parentId);
+    const campusBuildings = campus.filter((b) => !isGrouped(b)).map(poly);
+    const groupedBuildings = campus.filter(isGrouped).map(poly);
+    const buildingIndexById = new Map();
+    campusBuildings.forEach((b, i) => buildingIndexById.set(b.props.id, i));
+    groupedBuildings.forEach((b) => buildingIndexById.set(b.props.id, buildingIndexById.get(b.props.parentId)));
+    return { campusBuildings, groupedBuildings, buildingIndexById };
+}
+function toSceneData(response) {
+    const missing = missingLayers(response);
+    if (missing.length) {
+        throw new Error(`Faltan capas del mapa: ${missing.join(', ')}`);
+    }
+    const plane = new LocalPlane(response.origin.lat, response.origin.lon);
+    const poly = toPoly(plane);
+    const pt = toPoint(plane);
+    const { layers } = response;
+    const features = layers.features.features;
+    const ofType = (type) => features.filter((f) => f.properties.type === type);
+    const boundary = ofType('CAMPUS_BOUNDARY')[0];
+    if (!boundary) {
+        throw new Error('Falta el límite del campus: sin él no se puede armar la maqueta');
+    }
+    const sections = layers.sections.features;
+    const { campusBuildings, groupedBuildings, buildingIndexById } = splitCampusBuildings(layers.buildings.features, poly);
+    return {
+        plane,
+        campus: sceneData_polygons(boundary.geometry, plane),
+        greenAreas: sections.filter((f) => f.properties.landscapeType !== 'XEROPHYTIC').map(poly),
+        xerophytic: sections.filter((f) => f.properties.landscapeType === 'XEROPHYTIC').map(poly),
+        reserve: [...sections.filter((f) => f.properties.reservable), ...layers.subsections.features].map(poly),
+        supervision: layers.supervisionZones.features.map(poly),
+        campusBuildings,
+        groupedBuildings,
+        buildingIndexById,
+        contextBuildings: layers.buildings.features.filter((b) => !b.properties.campus).map(poly),
+        parking: ofType('PARKING').map(poly),
+        sidewalks: ofType('RISKY_SIDEWALK').map(poly),
+        bins: ofType('WASTE_BIN').map(pt),
+        fountains: ofType('DRINKING_FOUNTAIN').map(pt),
+        gates: ofType('GATE').map(pt),
+        fauna: ofType('FAUNA').map(pt),
+        references: layers.references.features.map(pt),
+        vegetation: layers.vegetation.features.map(pt),
+        sectorNameByCode: Object.fromEntries(layers.sectors.features.map((s) => [s.properties.code, s.properties.name])),
     };
-    const bHeight = (i) => data.campusBuildings[i].props.heightM ?? DEFAULT_HEIGHT_M;
-    const cHeight = (i) => data.contextBuildings[i].props.heightM ?? DEFAULT_HEIGHT_M;
-    const layers = {
-        supervision: make('supervision', data.supervision, { surface: 'plain', height: () => 0.16, base: () => -0.02, opacity: 0.24, order: 1,
-            color: (i) => SUPERVISION_COLORS[data.supervision[i].props.code] ?? '#8090A0' }),
-        greenAreas: make('greenAreas', data.greenAreas, { surface: 'green', height: () => 0.45, base: () => 0.03, color: greenColor }),
-        reserve: make('reserve', data.reserve, { surface: 'plain', height: () => 0.75, base: () => 0.05, opacity: 0.45, order: 2, color: () => '#C060FF' }),
-        xerophytic: make('xerophytic', data.xerophytic, { surface: 'green', height: () => 0.6, base: () => 0.04, color: () => '#FF9030' }),
-        parking: make('parking', data.parking, { surface: 'parking', height: () => 0.12, base: () => 0.01, color: () => state.palette.parking }),
-        sidewalks: make('sidewalks', data.sidewalks, { surface: 'plain', height: () => 0.5, base: () => 0.06, opacity: 0.7, order: 3, color: () => '#FF4060' }),
-        campusBuildings: make('campusBuildings', data.campusBuildings, { surface: 'building', height: bHeight, base: () => 0, castShadow: true,
-            color: () => state.palette.building }),
-        contextBuildings: make('contextBuildings', data.contextBuildings, { surface: 'plain', height: cHeight, base: () => CONTEXT_BASE_M,
-            opacity: 0.6, color: () => state.palette.context }),
+}
+
+;// ./src/components/map3d/viewer/planPolygon.ts
+
+
+/** Un vértice a menos de esto del borde de un polígono del manifiesto cae en él: el manifiesto redondea al milímetro. */
+const PLAN_TOLERANCE_M = 0.02;
+/** Un punto del manifiesto bien escrito: dos números finitos. */
+const planPolygon_isPlanPoint = (p) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
+/** Si un punto en planta (este, norte) cae en el polígono o a menos de la tolerancia de su borde (SPEC-108 D-17 y D-18). */
+function planPolygon_inPlanPolygon(polygon) {
+    const ring = polygon.flat();
+    const edges = polygon.map((a, i) => [a, polygon[(i + 1) % polygon.length]]);
+    return (east, north) => insideRing(east, north, ring) || edges.some((e) => distanceToSegment([east, north], e) < PLAN_TOLERANCE_M);
+}
+
+;// ./src/components/map3d/viewer/floorSteps.ts
+
+
+/**
+ * Rampas del piso del modelo que en realidad son escaleras (SPEC-108 D-20): el SKP dibuja como un plano inclinado
+ * lo que tiene escalones. El visor escalona las caras inclinadas de cada rampa del manifiesto; el GLB no se toca.
+ */
+/** Una cara entre estas pendientes es rampa: más plana es piso; más empinada, muro o grada. */
+const MIN_RAMP_DEG = 2;
+const MAX_RAMP_DEG = 40;
+/** Una cota a menos de esto de las del manifiesto cae dentro: el manifiesto redondea al centímetro. */
+const HEIGHT_TOLERANCE_M = 0.01;
+function validate(key, s) {
+    if (!Array.isArray(s.polygon) || s.polygon.length < 3 || !s.polygon.every(isPlanPoint))
+        throw new Error(`El polígono de los escalones ${key} necesita tres o más puntos de dos números finitos`);
+    if (!(s.toM > s.fromM))
+        throw new Error(`La rampa de los escalones ${key} no sube`);
+    if (!Number.isInteger(s.risers) || s.risers < 2)
+        throw new Error(`Los escalones ${key} necesitan dos o más contrahuellas enteras`);
+}
+/** Los escalones del manifiesto, validados. */
+function floorSteps_floorStepsOf(manifest) {
+    const out = new Map();
+    for (const [key, steps] of Object.entries(manifest.floorSteps ?? {})) {
+        validate(key, steps);
+        out.set(key, steps);
+    }
+    return out;
+}
+/** Un triángulo del modelo (x este, y arriba, z = −norte) como puntos [este, norte, cota]. */
+const triangleAt = (p, t) => [0, 3, 6].map((o) => [p[t + o], -p[t + o + 2], p[t + o + 1]]);
+function slopeDeg([a, b, c]) {
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], w = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]];
+    const length = Math.hypot(n[0], n[1], n[2]);
+    return length > 0 && n[2] > 0 ? (Math.acos(n[2] / length) * 180) / Math.PI : null;
+}
+/**
+ * La rampa del manifiesto que toma el triángulo: inclinado, con su centro en el polígono y sin pasarse de sus cotas.
+ * Cuenta el centro y no los tres vértices porque el SKP tiende triángulos de un borde a otro de la rampa.
+ */
+function stepsFor(tri, steps) {
+    const slope = slopeDeg(tri);
+    if (slope === null || slope < MIN_RAMP_DEG || slope > MAX_RAMP_DEG)
+        return undefined;
+    const [e, n] = [0, 1].map((k) => (tri[0][k] + tri[1][k] + tri[2][k]) / 3);
+    return steps.find(([, s, inside]) => inside(e, n)
+        && tri.every(([, , z]) => z >= s.fromM - HEIGHT_TOLERANCE_M && z <= s.toM + HEIGHT_TOLERANCE_M));
+}
+/** Coordenadas de textura en metros, como las del modelo: desde arriba en las huellas y de frente en las contrahuellas. */
+function uvOf(face, vertical) {
+    if (!vertical)
+        return face.flatMap(([e, n]) => [e, n]);
+    const eastWest = Math.abs(face[1][1] - face[0][1]) >= Math.abs(face[1][0] - face[0][0]);
+    return face.flatMap(([e, n, z]) => (eastWest ? [n, z] : [e, z]));
+}
+/** El piso con sus rampas escalonadas: lo demás queda igual y en su orden; los escalones van en el lugar de su rampa. */
+function floorSteps_withFloorSteps(floor, steps) {
+    const list = [...steps].map(([key, s]) => [key, s, inPlanPolygon(s.polygon)]);
+    const taken = new Set();
+    const pos = [], tex = [];
+    const emit = (face, uv) => { face.forEach(([e, n, z]) => pos.push(e, z, -n)); tex.push(...uv); };
+    const { positions: p, uv } = floor;
+    for (let t = 0; t < p.length; t += 9) {
+        const tri = triangleAt(p, t);
+        const match = stepsFor(tri, list);
+        if (!match) {
+            emit(tri, uv ? Array.from(uv.slice((t / 3) * 2, (t / 3) * 2 + 6)) : []);
+            continue;
+        }
+        const [key, s] = match;
+        taken.add(key);
+        const levels = Array.from({ length: s.risers + 1 }, (_, k) => s.fromM + ((s.toM - s.fromM) * k) / s.risers);
+        const { treads, risers } = stepTriangle(tri, levels);
+        treads.forEach((face) => emit(face, uvOf(face, false)));
+        risers.forEach(([a, b, c, d]) => { emit([a, b, c], uvOf([a, b, c], true)); emit([a, c, d], uvOf([a, c, d], true)); });
+    }
+    const unused = list.map(([key]) => key).filter((key) => !taken.has(key));
+    if (unused.length)
+        throw new Error(`Los escalones ${unused.join(', ')} no toman nada del piso: el manifiesto no calza con el modelo`);
+    return { positions: new Float32Array(pos), uv: uv ? new Float32Array(tex) : null };
+}
+
+;// ./src/components/map3d/viewer/pieces.ts
+
+/**
+ * Edificios que el SKP dibuja dentro de la malla de otro (SPEC-108 D-18): el café Juan Valdez venía en la malla de
+ * la Librería PUCP. El visor le pasa a cada pieza los triángulos que caen enteros en su polígono; el GLB no se toca.
+ */
+const MIN_POLYGON_POINTS = 3;
+function pieces_validate(key, piece, manifest) {
+    if (manifest.nodes[key])
+        throw new Error(`La pieza ${key} ya es un nodo del modelo: serían dos mallas con la misma clave`);
+    if (manifest.nodes[piece.from] !== 'edificio')
+        throw new Error(`La pieza ${key} sale de ${piece.from}, que no es la malla de un edificio del modelo`);
+    if (piece.polygon.length < MIN_POLYGON_POINTS)
+        throw new Error(`El polígono de la pieza ${key} necesita tres puntos o más`);
+    if (!piece.polygon.every(isPlanPoint))
+        throw new Error(`El polígono de la pieza ${key} tiene un punto que no son dos números finitos`);
+}
+/** Las piezas del manifiesto, validadas: cada una tiene su propia clave y sale de la malla de un edificio. */
+function pieces_piecesOf(manifest) {
+    const out = new Map();
+    for (const [key, piece] of Object.entries(manifest.pieces ?? {})) {
+        pieces_validate(key, piece, manifest);
+        out.set(key, piece);
+    }
+    return out;
+}
+/** Separa de la malla los triángulos que caen enteros en el polígono; los demás quedan en su orden. */
+function pieces_splitPiece(p, polygon, key) {
+    const inside = inPlanPolygon(polygon);
+    const at = (v) => inside(p[v], -p[v + 2]);
+    const kept = [];
+    const taken = [];
+    for (let t = 0; t < p.length; t += 9) {
+        const out = at(t) && at(t + 3) && at(t + 6) ? taken : kept;
+        for (let k = t; k < t + 9; k++)
+            out.push(p[k]);
+    }
+    if (!taken.length)
+        throw new Error(`La pieza ${key} no toma nada de su malla: el manifiesto no calza con el modelo`);
+    if (!kept.length)
+        throw new Error(`La pieza ${key} se lleva toda la malla de la que sale: eso no es separar un edificio de otro`);
+    return { kept: Float32Array.from(kept), piece: Float32Array.from(taken) };
+}
+
+;// ./src/components/map3d/viewer/stairs.ts
+
+
+/**
+ * Escaleras que reemplazan una parte de la malla de un edificio (SPEC-108 D-17): el SKP dibuja como un bloque
+ * macizo lo que es una escalera abierta, y el bloque tapa el pasto. El visor quita el bloque, cierra el edificio
+ * donde estaba pegado y dibuja la escalera; el GLB no se toca.
+ */
+const stairs_HEIGHT_TOLERANCE_M = 0.01;
+function pointsOf(s) {
+    return [...s.replaces.polygon, ...s.walls.flat(), ...s.flights.flatMap((f) => [...f.from, ...f.to]), ...s.landings.flatMap((l) => l.polygon)];
+}
+function stairs_validate(key, s) {
+    if (!pointsOf(s).every(isPlanPoint))
+        throw new Error(`La escalera de ${key} tiene un punto que no son dos números finitos`);
+    if (!(s.replaces.toM > s.replaces.fromM))
+        throw new Error(`La parte que reemplaza la escalera de ${key} no sube`);
+    if (!s.landings.every((l) => Number.isFinite(l.atM)))
+        throw new Error(`Un descanso de la escalera de ${key} no tiene cota`);
+    for (const f of s.flights) {
+        if (!(f.toM > f.fromM))
+            throw new Error(`Un tramo de la escalera de ${key} no sube`);
+        if (!Number.isInteger(f.risers) || f.risers < 2)
+            throw new Error(`Un tramo de la escalera de ${key} necesita dos o más contrahuellas enteras`);
+        if ((f.toM - f.fromM) / f.risers >= STAIR_SLAB_M)
+            throw new Error(`Una contrahuella de la escalera de ${key} mide lo que la losa o más`);
+    }
+}
+/** Las escaleras del manifiesto, validadas: solo de mallas de edificio, con cotas que suben y peldaños que la losa sostiene. */
+function stairs_stairsOf(manifest) {
+    const out = new Map();
+    for (const [key, stair] of Object.entries(manifest.stairs ?? {})) {
+        if (manifest.nodes[key] !== 'edificio')
+            throw new Error(`La escalera de ${key} no es de la malla de un edificio del modelo`);
+        stairs_validate(key, stair);
+        out.set(key, stair);
+    }
+    return out;
+}
+/** Los triángulos que no caen enteros en el prisma de la parte reemplazada (planta y cotas), en su orden. */
+function keptTriangles(p, { polygon, fromM, toM }) {
+    const inPlan = inPlanPolygon(polygon);
+    const inPart = (v) => {
+        const y = p[v + 1];
+        if (y < fromM - stairs_HEIGHT_TOLERANCE_M || y > toM + stairs_HEIGHT_TOLERANCE_M)
+            return false;
+        return inPlan(p[v], -p[v + 2]);
     };
-    layers.contextBuildings.mesh.material.depthWrite = true;
-    outline(scene, layers.supervision, 0.18, 0x6a7390, 0.75);
-    outline(scene, layers.reserve, 0.8, 0xc060ff);
-    const edges = new LineSegments(buildingEdges(data.campusBuildings, bHeight), new LineBasicMaterial({ color: state.palette.buildingEdge, transparent: true, opacity: 0.45 }));
-    edges.position.y = WORLD_LIFT;
-    scene.add(edges);
-    layers.campusBuildings.extra.push(edges);
-    return layers;
+    const out = [];
+    for (let t = 0; t < p.length; t += 9) {
+        if (!(inPart(t) && inPart(t + 3) && inPart(t + 6)))
+            for (let k = t; k < t + 9; k++)
+                out.push(p[k]);
+    }
+    return Float32Array.from(out);
+}
+/**
+ * La malla con su escalera: sin los triángulos que caen enteros en la parte reemplazada, con los muros que cierran
+ * el edificio y, al final, la escalera. `stairFrom` es el primer vértice de la escalera: de ahí al final no es fachada.
+ */
+function stairs_withStair(p, stair, key) {
+    const kept = keptTriangles(p, stair.replaces);
+    if (kept.length === p.length)
+        throw new Error(`La escalera de ${key} no reemplaza nada de su malla: el manifiesto no calza con el modelo`);
+    const { fromM, toM } = stair.replaces;
+    const walls = stair.walls.flatMap(([a, b]) => wallTriangles(a, b, fromM, toM));
+    // Un descanso no lleva canto donde llega o arranca un tramo, ni contra un muro: ahí no se ve.
+    const attached = [...stair.walls, ...stair.flights.flatMap((f) => [f.from, f.to])];
+    const steps = [
+        ...stair.flights.flatMap((f) => flightTriangles(f, fromM, stair.walls)),
+        ...stair.landings.flatMap((l) => landingTriangles(l, attached)),
+    ];
+    const positions = new Float32Array(kept.length + walls.length + steps.length);
+    positions.set(kept);
+    positions.set(walls, kept.length);
+    positions.set(steps, kept.length + walls.length);
+    return { positions, stairFrom: (kept.length + walls.length) / 3 };
+}
+
+;// ./src/components/map3d/viewer/planModel.ts
+
+
+
+
+
+
+
+
+
+/** Lee el GLB con su manifiesto. Lanza si el archivo no es un GLB válido: quien llama cae a los prismas. */
+async function parsePlanModel(manifest, glb, plane) {
+    const fixes = { adjustments: adjustmentsOf(manifest), lifts: liftsOf(manifest), stairs: stairsOf(manifest), pieces: piecesOf(manifest) };
+    const floorSteps = floorStepsOf(manifest);
+    const { scene } = await new GLTFLoader().parseAsync(glb, '');
+    const anchor = plane.toPlane(manifest.anchor.lat, manifest.anchor.lon);
+    const offset = { x: anchor.x, z: -anchor.y };
+    const buildings = new Map();
+    const stairFrom = new Map();
+    const parts = {};
+    scene.traverse((object) => {
+        const mesh = object;
+        if (!mesh.isMesh)
+            return;
+        // GLTFLoader limpia el nombre del nodo («unified:lugar-prestado» pierde los dos puntos); el original queda en userData.
+        const key = mesh.userData.name ?? mesh.name;
+        const kind = manifest.nodes[key];
+        if (!kind)
+            return;
+        const geo = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry;
+        const positions = geo.attributes.position.array;
+        if (kind !== 'edificio') {
+            (parts[kind] ?? (parts[kind] = [])).push({ positions, uv: geo.attributes.uv?.array ?? null });
+            return;
+        }
+        const fixed = fixedMesh(key, positions, fixes);
+        buildings.set(key, shifted(fixed.positions, offset));
+        if (fixed.stairFrom !== undefined)
+            stairFrom.set(key, fixed.stairFrom);
+        fixed.pieces.forEach((piece, pieceKey) => buildings.set(pieceKey, shifted(piece, offset)));
+    });
+    for (const key of fixes.pieces.keys())
+        if (!buildings.has(key))
+            throw new Error(`La pieza ${key} sale de una malla que no está en el modelo`);
+    // Sus piezas pasaron todas a ser suelo: ni malla ni prisma, pero su tramo sigue en la capa (D-08).
+    manifest.groundOnly.forEach((key) => buildings.set(key, new Float32Array(0)));
+    const [lat, lon, zM] = manifest.huaca.at;
+    const huaca = plane.toPlane(lat, lon);
+    return {
+        buildings,
+        stairFrom,
+        nodes: Object.fromEntries(Object.entries(parts).map(([kind, list]) => [kind, kind === 'suelo' ? withFloorSteps(joined(list), floorSteps) : joined(list)])),
+        sunken: manifest.sunken.map((s) => ({ g: polygons(s.polygon, plane), floorM: s.floorM })),
+        offset,
+        huaca: { label: manifest.huaca.label, x: huaca.x, y: zM, z: -huaca.y },
+    };
+}
+/**
+ * La malla de un edificio con lo que el manifiesto le corrige, sin tocar el GLB: primero su ajuste en planta y en altura (D-16),
+ * luego le salen las piezas que son otros edificios (D-18) y, sobre lo que queda, va su escalera (D-17).
+ */
+function fixedMesh(key, raw, fixes) {
+    const adjustment = fixes.adjustments.get(key);
+    const lift = fixes.lifts.get(key);
+    let positions = adjustment ? adjusted(raw, adjustment) : raw;
+    if (lift !== undefined)
+        positions = lifted(positions, lift);
+    const pieces = new Map();
+    for (const [pieceKey, piece] of fixes.pieces) {
+        if (piece.from !== key)
+            continue;
+        const split = splitPiece(positions, piece.polygon, pieceKey);
+        positions = split.kept;
+        pieces.set(pieceKey, split.piece);
+    }
+    const stair = fixes.stairs.get(key);
+    return { ...(stair ? withStair(positions, stair, key) : { positions }), pieces };
+}
+function shifted(p, offset) {
+    const out = new Float32Array(p.length);
+    for (let i = 0; i < p.length; i += 3) {
+        out[i] = p[i] + offset.x;
+        out[i + 1] = p[i + 1];
+        out[i + 2] = p[i + 2] + offset.z;
+    }
+    return out;
+}
+function concat(arrays) {
+    const out = new Float32Array(arrays.reduce((n, a) => n + a.length, 0));
+    let at = 0;
+    arrays.forEach((a) => { out.set(a, at); at += a.length; });
+    return out;
+}
+function joined(list) {
+    if (list.length === 1)
+        return list[0];
+    const uv = list.some((n) => n.uv) ? concat(list.map((n) => n.uv ?? new Float32Array((n.positions.length / 3) * 2))) : null;
+    return { positions: concat(list.map((n) => n.positions)), uv };
+}
+/** Una malla sin índice con la normal de cada cara: con vértices compartidos la luz se suavizaría en las esquinas (D-11). */
+function planModel_facetedGeometry(positions, uv = null) {
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new three_module_BufferAttribute(positions, 3));
+    if (uv)
+        geo.setAttribute('uv', new three_module_BufferAttribute(uv, 2));
+    geo.computeVertexNormals();
+    return geo;
+}
+/**
+ * Los edificios principales en una sola geometría: cada uno con su malla del
+ * modelo si la tiene y, si no (sin `planKey`, solo del mapa, o sin modelo), con
+ * su prisma de hoy. Un tramo por edificio, en el orden de `feats`, para que el
+ * clic, el resaltado y el repintado sigan funcionando por índice.
+ */
+function mergedBuildings(feats, model, heightOf, baseOf) {
+    const parts = [];
+    const starts = [];
+    let n = 0;
+    feats.forEach((f, i) => {
+        starts.push(n);
+        const mesh = f.props.planKey ? model?.buildings.get(f.props.planKey) : undefined;
+        const geos = mesh ? (mesh.length ? [planModel_facetedGeometry(mesh)] : []) : prismParts(f.g, heightOf(i), baseOf(i));
+        for (const geo of geos) {
+            parts.push(geo);
+            n += geo.attributes.position.count;
+        }
+    });
+    starts.push(n);
+    return assemble(parts, starts, n);
+}
+/** La cota del piso del desnivel que contiene el punto (metros del plano) o 0 si no cae en ninguno. */
+function sunkenFloorAt(sunken, x, y) {
+    const area = sunken.find((s) => s.g.some((poly) => picking_insideRing(x, y, poly[0]) && !poly.slice(1).some((hole) => picking_insideRing(x, y, hole))));
+    return area?.floorM ?? 0;
 }
 
 ;// ./src/components/map3d/viewer/backdrop.ts
@@ -56755,7 +58871,7 @@ function createSceneLayers(scene, data, textures, state) {
  * cielo estrellado con luna de noche.
  */
 /** Pseudoaleatorio con semilla: las estrellas no cambian de sitio entre redibujos. */
-function seeded(seed) {
+function backdrop_seeded(seed) {
     let s = seed >>> 0;
     return () => {
         s = (s * 1664525 + 1013904223) >>> 0;
@@ -56801,7 +58917,7 @@ function triangles(c, w, h, night) {
     }
 }
 function starsAndMoon(c, w, h) {
-    const rnd = seeded(0x6d2b79f5);
+    const rnd = backdrop_seeded(0x6d2b79f5);
     for (let i = 0; i < 260; i++) {
         const x = rnd() * w, y = rnd() * h * 0.68, r = 0.5 + rnd() * 1.6, a = 0.24 + rnd() * 0.65;
         c.fillStyle = `rgba(245,248,255,${a})`;
@@ -56875,7 +58991,43 @@ function createRenderer() {
     renderer.toneMappingExposure = 1.4;
     return renderer;
 }
-function createStage(container, renderer, campus, textures) {
+/**
+ * Marca en el stencil los desniveles, antes que todo lo demás (D-09): ni pinta
+ * ni toca la profundidad. Queda a la altura del zócalo, así su cara de arriba
+ * se abre justo en el borde; las capas del suelo, unos centímetros más arriba,
+ * se ven recortadas como si tuvieran canto.
+ */
+function createSunkenMask(scene, sunken) {
+    const geo = new ShapeGeometry(sunken.flatMap((s) => polygonShapes(s.g)));
+    geo.rotateX(-Math.PI / 2);
+    const mask = new Mesh(geo, new MeshBasicMaterial({
+        colorWrite: false, depthWrite: false, side: DoubleSide,
+        stencilWrite: true, stencilRef: 1, stencilZPass: ReplaceStencilOp,
+    }));
+    mask.position.y = polyLayer_WORLD_LIFT;
+    mask.renderOrder = -10;
+    scene.add(mask);
+    return mask;
+}
+/**
+ * Lo que se dibuja con este material se salta lo marcado por la máscara. En
+ * three 0.147 la prueba de stencil solo se activa con `stencilWrite`; las
+ * operaciones quedan en «conservar», así que no escribe nada.
+ */
+function openOverSunken(material) {
+    material.stencilWrite = true;
+    material.stencilFunc = NotEqualStencilFunc;
+    material.stencilRef = 1;
+}
+/** Como las mallas del SKP: por las dos caras, con la sombra de las traseras para que no se sombreen a sí mismas (D-11). */
+function doubleSided(material) {
+    const copy = material.clone();
+    copy.side = DoubleSide;
+    copy.shadowSide = BackSide;
+    return copy;
+}
+/** Con desniveles, la cara de arriba del zócalo se abre sobre ellos. */
+function createStage(container, renderer, campus, textures, sunken = []) {
     const backdrop = document.createElement('canvas');
     backdrop.className = 'pointer-events-none absolute inset-0 h-full w-full';
     renderer.domElement.className = 'absolute inset-0 h-full w-full touch-none outline-hidden';
@@ -56893,18 +59045,28 @@ function createStage(container, renderer, campus, textures) {
     });
     const plinthGeo = new ExtrudeGeometry(polygonShapes(campus)[0], { depth: PLINTH_DEPTH_M, bevelEnabled: false });
     plinthGeo.rotateX(-Math.PI / 2);
-    plinthGeo.translate(0, -PLINTH_DEPTH_M + WORLD_LIFT, 0);
+    plinthGeo.translate(0, -PLINTH_DEPTH_M + polyLayer_WORLD_LIFT, 0);
+    const modelGround = { top: doubleSided(plinthTop), side: doubleSided(plinthSide) };
     const plinth = new Mesh(plinthGeo, [plinthTop, plinthSide]);
     plinth.receiveShadow = true;
     scene.add(plinth);
+    if (sunken.length) {
+        createSunkenMask(scene, sunken);
+        openOverSunken(plinthTop);
+    }
     plinthGeo.computeBoundingBox();
     const box = plinthGeo.boundingBox;
-    const center = new Vector3((box.min.x + box.max.x) / 2, WORLD_LIFT, (box.min.z + box.max.z) / 2);
+    const center = new three_module_Vector3((box.min.x + box.max.x) / 2, polyLayer_WORLD_LIFT, (box.min.z + box.max.z) / 2);
     return {
-        renderer, scene, backdrop, box, center, plinthTop, plinthSide,
+        renderer, scene, backdrop, box, center, plinthTop, plinthSide, modelGround,
         applyTheme(palette, night, width, height) {
             plinthTop.color.set(palette.plinth);
+            // Al atardecer el asfalto es mate: con barniz, el sol rasante lo haría ver mojado.
+            const matte = !!palette.natural;
+            [plinthTop, modelGround.top].forEach((m) => { m.clearcoat = matte ? 0 : 0.5; m.roughness = matte ? 0.92 : 0.3; });
             plinthSide.color.set(palette.plinthSide);
+            modelGround.top.color.set(palette.plinth);
+            modelGround.side.color.set(palette.plinthSide);
             scene.environment = night ? envNight : envDay;
             renderer.toneMappingExposure = night ? 1.18 : 1.38;
             drawBackdrop(backdrop, width, height, night);
@@ -56922,45 +59084,204 @@ function createStage(container, renderer, campus, textures) {
     };
 }
 
+;// ./src/components/map3d/viewer/sceneLayers.ts
+
+
+
+
+
+
+
+/** Altura de un edificio sin dato en OpenStreetMap (la que usaba el prototipo). */
+const DEFAULT_HEIGHT_M = 8;
+const CONTEXT_BASE_M = -1.6;
+const SUPERVISION_COLORS = { 'ZS-1': '#4F8FEA', 'ZS-2': '#E66A8A', 'ZS-3': '#55B88A', 'ZS-4': '#D49A45' };
+/** Las capas del suelo que se abren sobre los desniveles, como la cara de arriba del zócalo (D-09). */
+const GROUND_LAYERS = ['greenAreas', 'xerophytic', 'parking', 'sidewalks', 'reserve', 'supervision'];
+/** Aristas de los modelos: donde las caras se quiebran más de esto, como en la página de comparación aprobada. */
+const MODEL_EDGE_ANGLE_DEG = 30;
+function meshEdges(positions, out) {
+    const source = new BufferGeometry();
+    source.setAttribute('position', new three_module_BufferAttribute(positions, 3));
+    const edges = new EdgesGeometry(source, MODEL_EDGE_ANGLE_DEG);
+    for (const x of edges.attributes.position.array)
+        out.push(x);
+    edges.dispose();
+}
+/** Bordes de los prismas (contorno arriba y aristas en las esquinas marcadas) y de las mallas del modelo. */
+function buildingEdges(shapes, heightOf, model) {
+    const v = [];
+    shapes.forEach((b, i) => {
+        const mesh = b.props.planKey ? model?.buildings.get(b.props.planKey) : undefined;
+        if (mesh) {
+            meshEdges(mesh, v);
+            return;
+        }
+        const top = heightOf(i);
+        for (const polygon of b.g)
+            for (const r of polygon) {
+                const m = r.length / 2;
+                for (let k = 0; k < m; k++) {
+                    const k2 = (k + 1) % m, kp = (k - 1 + m) % m;
+                    const x = r[2 * k], z = -r[2 * k + 1], x2 = r[2 * k2], z2 = -r[2 * k2 + 1];
+                    v.push(x, top, z, x2, top, z2);
+                    // Aristas verticales solo en esquinas marcadas: si no, las curvas se llenan de líneas.
+                    const a1 = Math.atan2(z - -r[2 * kp + 1], x - r[2 * kp]), a2 = Math.atan2(z2 - z, x2 - x);
+                    let d = Math.abs(a1 - a2);
+                    if (d > Math.PI)
+                        d = 2 * Math.PI - d;
+                    if (d > 0.35)
+                        v.push(x, 0, z, x, top, z);
+                }
+            }
+    });
+    const g = new BufferGeometry();
+    g.setAttribute('position', new three_module_Float32BufferAttribute(v, 3));
+    return g;
+}
+function outline(scene, layer, y, color, opacity = 1) {
+    const lines = new LineSegments(ringLines(layer.shapes.map((_, i) => i), (i) => layer.shapes[i], () => y), new LineBasicMaterial({ color, transparent: opacity < 1, opacity }));
+    lines.position.y = polyLayer_WORLD_LIFT;
+    scene.add(lines);
+    layer.extra.push(lines);
+}
+/** Con modelo, los edificios principales con nodo se dibujan con su malla y el suelo se abre en los desniveles. */
+function createSceneLayers(scene, data, textures, state, model = null) {
+    const make = (id, shapes, opts) => createPolyLayer(scene, id, shapes.map((s) => s.g), opts, textures);
+    const greenColor = (i) => {
+        const p = data.greenAreas[i].props;
+        // Una categoría apagada desde la leyenda se pinta atenuada, no desaparece.
+        if (state.hidden.has(categoryOf(p, state.mode)))
+            return state.palette.dimmed;
+        // En el modo General no hay nada que leer en el color: el Atardecer pone el del césped.
+        return state.mode === 'base' && state.palette.natural ? state.palette.natural.grass : colorOf(p, state.mode);
+    };
+    const bHeight = (i) => data.campusBuildings[i].props.heightM ?? DEFAULT_HEIGHT_M;
+    const cHeight = (i) => data.contextBuildings[i].props.heightM ?? DEFAULT_HEIGHT_M;
+    const layers = {
+        supervision: make('supervision', data.supervision, { surface: 'plain', height: () => 0.16, base: () => -0.02, opacity: 0.24, order: 1,
+            color: (i) => SUPERVISION_COLORS[data.supervision[i].props.code] ?? '#8090A0' }),
+        greenAreas: make('greenAreas', data.greenAreas, { surface: 'green', height: () => 0.45, base: () => 0.03, color: greenColor }),
+        reserve: make('reserve', data.reserve, { surface: 'plain', height: () => 0.75, base: () => 0.05, opacity: 0.45, order: 2, color: () => '#C060FF' }),
+        xerophytic: make('xerophytic', data.xerophytic, { surface: 'green', height: () => 0.6, base: () => 0.04, color: () => state.palette.natural?.xerophytic ?? '#FF9030' }),
+        parking: make('parking', data.parking, { surface: 'parking', height: () => 0.12, base: () => 0.01, color: () => state.palette.parking }),
+        sidewalks: make('sidewalks', data.sidewalks, { surface: 'plain', height: () => 0.5, base: () => 0.06, opacity: 0.7, order: 3, color: () => state.palette.natural?.sidewalk ?? '#FF4060' }),
+        campusBuildings: createPolyLayer(scene, 'campusBuildings', data.campusBuildings.map((s) => s.g), { surface: 'building', height: bHeight,
+            base: () => 0, castShadow: true, doubleSided: !!model, color: () => state.palette.building }, textures, mergedBuildings(data.campusBuildings, model, bHeight, () => 0)),
+        contextBuildings: make('contextBuildings', data.contextBuildings, { surface: 'plain', height: cHeight, base: () => CONTEXT_BASE_M,
+            opacity: 0.6, color: () => state.palette.context }),
+    };
+    layers.contextBuildings.mesh.material.depthWrite = true;
+    if (model?.sunken.length)
+        GROUND_LAYERS.forEach((id) => openOverSunken(layers[id].mesh.material));
+    outline(scene, layers.supervision, 0.18, 0x6a7390, 0.75);
+    outline(scene, layers.reserve, 0.8, 0xc060ff);
+    const edges = new LineSegments(buildingEdges(data.campusBuildings, bHeight, model), new LineBasicMaterial({ color: state.palette.buildingEdge, transparent: true, opacity: 0.45 }));
+    edges.position.y = polyLayer_WORLD_LIFT;
+    scene.add(edges);
+    layers.campusBuildings.extra.push(edges);
+    return layers;
+}
+/** El piso del modelo sin la parte que tapa un césped de la base en un desnivel (D-19): debajo se ve el jardín. */
+function openOverLawns(model, kind, node, lawns) {
+    if (kind !== 'suelo')
+        return node;
+    const near = lawnsOverSunken(lawns, model.sunken.map((s) => s.g));
+    return near.length ? floorWithoutLawns(node, near, model.offset) : node;
+}
+/** Un material de superficie con un solo color en vez de colores por vértice, por las dos caras como las mallas del SKP. */
+function solid(surface, textures, color) {
+    const material = surfaceMaterial(surface, textures);
+    material.vertexColors = false;
+    material.color.set(color);
+    material.side = THREE.DoubleSide;
+    material.shadowSide = THREE.BackSide;
+    return material;
+}
+/** Tierra mate en todos los acabados: el barro no brilla (D-10). */
+function earth(map, normalMap) {
+    return new THREE.MeshStandardMaterial({
+        color: 0xffffff, map, normalMap, normalScale: new THREE.Vector2(0.9, 0.9), roughness: 0.95, metalness: 0,
+        side: THREE.DoubleSide, shadowSide: THREE.BackSide,
+    });
+}
+/**
+ * El suelo, los desniveles, la huaca y la decoración del modelo (D-08 a D-10).
+ * Se ubican en el anclaje del modelo y nadie los cliquea. El jardín hundido no
+ * proyecta sombra, como en la página aprobada. El piso se abre sobre los céspedes de la
+ * base (D-19).
+ */
+function createPlanNodes(scene, model, textures, ground, palette, lawns = []) {
+    const decoration = solid('building', textures, palette.building);
+    const materials = {
+        suelo: ground.top,
+        muro: ground.side,
+        jardin: solid('green', textures, MODES.base.cats[0].color),
+        'huaca-muro': earth(textures.tapial, textures.tapialNormal),
+        'huaca-tope': earth(textures.tierra, textures.tierraNormal),
+        decoracion: decoration,
+    };
+    let decorationMesh = null;
+    for (const [kind, raw] of Object.entries(model.nodes)) {
+        const node = openOverLawns(model, kind, raw, lawns);
+        const mesh = new THREE.Mesh(facetedGeometry(node.positions, node.uv), materials[kind]);
+        mesh.position.set(model.offset.x, WORLD_LIFT, model.offset.z);
+        mesh.castShadow = kind !== 'jardin';
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+        if (kind === 'decoracion')
+            decorationMesh = mesh;
+    }
+    return { decoration: decorationMesh, applyTheme: (p) => decoration.color.set(p.building) };
+}
+
 ;// ./src/components/map3d/viewer/textures.ts
 
-function canvasTexture(size, paint, anisotropy, repeat) {
+function canvasOf(w, h) {
     const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = size;
-    paint(canvas.getContext('2d'), size);
+    canvas.width = w;
+    canvas.height = h;
+    return canvas;
+}
+/** La textura se repite `rx × ry` veces por metro: las coordenadas de textura van en metros. */
+function repeated(canvas, anisotropy, rx, ry) {
     const t = new CanvasTexture(canvas);
     t.wrapS = t.wrapT = RepeatWrapping;
     t.anisotropy = anisotropy;
-    t.repeat.set(repeat, repeat);
+    t.repeat.set(rx, ry);
     return t;
 }
+function rectTexture(w, h, paint, anisotropy, rx, ry) {
+    const canvas = canvasOf(w, h);
+    paint(canvas.getContext('2d'), w, h);
+    return repeated(canvas, anisotropy, rx, ry);
+}
+function canvasTexture(size, paint, anisotropy, repeat) {
+    return rectTexture(size, size, paint, anisotropy, repeat, repeat);
+}
 /** Normal map a partir de un mapa de alturas en escala de grises. */
-function normalTexture(size, paintHeight, strength, anisotropy, repeat) {
-    const src = document.createElement('canvas');
-    src.width = src.height = size;
-    const sc = src.getContext('2d');
-    paintHeight(sc, size);
-    const h = sc.getImageData(0, 0, size, size).data;
-    const at = (x, y) => h[(((y + size) % size) * size + ((x + size) % size)) * 4] / 255;
-    const out = document.createElement('canvas');
-    out.width = out.height = size;
+function rectNormal(w, h, paintHeight, strength, anisotropy, rx, ry) {
+    const sc = canvasOf(w, h).getContext('2d');
+    paintHeight(sc, w, h);
+    const d = sc.getImageData(0, 0, w, h).data;
+    const at = (x, y) => d[(((y + h) % h) * w + ((x + w) % w)) * 4] / 255;
+    const out = canvasOf(w, h);
     const oc = out.getContext('2d');
-    const img = oc.createImageData(size, size);
-    for (let y = 0; y < size; y++)
-        for (let x = 0; x < size; x++) {
+    const img = oc.createImageData(w, h);
+    for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++) {
             const dx = (at(x - 1, y) - at(x + 1, y)) * strength, dy = (at(x, y - 1) - at(x, y + 1)) * strength;
-            const len = Math.sqrt(dx * dx + dy * dy + 1), i = (y * size + x) * 4;
+            const len = Math.sqrt(dx * dx + dy * dy + 1), i = (y * w + x) * 4;
             img.data[i] = (dx / len * 0.5 + 0.5) * 255;
             img.data[i + 1] = (dy / len * 0.5 + 0.5) * 255;
             img.data[i + 2] = (1 / len * 0.5 + 0.5) * 255;
             img.data[i + 3] = 255;
         }
     oc.putImageData(img, 0, 0);
-    const t = new CanvasTexture(out);
-    t.wrapS = t.wrapT = RepeatWrapping;
-    t.anisotropy = anisotropy;
-    t.repeat.set(repeat, repeat);
-    return t;
+    return repeated(out, anisotropy, rx, ry);
+}
+function normalTexture(size, paintHeight, strength, anisotropy, repeat) {
+    return rectNormal(size, size, paintHeight, strength, anisotropy, repeat, repeat);
 }
 function grid(c, s, div, color, width) {
     const cs = s / div;
@@ -57136,8 +59457,147 @@ const groundRelief = (c, s) => {
     grid(c, s, 4, '#484848', 8);
     grain(c, s, 3000, 110, 30, 2.5);
 };
+/** Siempre la misma serie de azar: el tapial se ve igual en cada visita. */
+function textures_seeded(seed) {
+    let s = seed;
+    return () => {
+        s = (s * 1664525 + 1013904223) >>> 0;
+        return s / 4294967296;
+    };
+}
+function stain(c, x, y, r, inner, outer) {
+    const g = c.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, inner);
+    g.addColorStop(1, outer);
+    c.fillStyle = g;
+    c.fillRect(x - r, y - r, 2 * r, 2 * r);
+}
+/**
+ * Tapial y tierra del Camino Prehispánico (SPEC-108 D-10), los de la página de
+ * comparación aprobada: muros erosionados, grumosos y picados, con estratos de
+ * apisonado ondulados y las juntas casi borradas; piso de tierra polvorienta.
+ * Los colores se midieron en la foto «Camino Inca» de Google Maps (julio 2026):
+ * muro #4A2011 / #7F5337 / #A47959 y piso #815633 / #966B4C / #AC825F, de la
+ * sombra al sol. Lienzos de 128 px por metro.
+ */
+function huacaPainters(random) {
+    return {
+        tapial(c, w, h) {
+            // Tono parejo con manchas sueltas (un degradado se repetiría cada 2 m y marcaría franjas)
+            c.fillStyle = '#8E6440';
+            c.fillRect(0, 0, w, h);
+            for (let i = 0; i < 30; i++) {
+                const light = random() < 0.5;
+                stain(c, random() * w, random() * h, 25 + random() * 50, light ? 'rgba(164,121,89,0.35)' : 'rgba(110,72,44,0.30)', light ? 'rgba(164,121,89,0)' : 'rgba(110,72,44,0)');
+            }
+            // Estratos de apisonado: bandas onduladas de tono algo distinto, cada 25 a 45 cm
+            for (let y = 0; y < h;) {
+                const band = 32 + random() * 26, light = random() < 0.5, phase = random() * 6;
+                c.fillStyle = light ? 'rgba(182,138,107,0.20)' : 'rgba(79,40,18,0.13)';
+                c.beginPath();
+                c.moveTo(0, y);
+                for (let x = 0; x <= w; x += 8)
+                    c.lineTo(x, y + Math.sin(x * 0.03 + phase) * 3);
+                for (let x = w; x >= 0; x -= 8)
+                    c.lineTo(x, y + band + Math.sin(x * 0.025 + phase) * 4);
+                c.fill();
+                y += band;
+            }
+            // Huecos de erosión
+            for (let i = 0; i < 10; i++)
+                stain(c, random() * w, random() * h, 10 + random() * 22, 'rgba(74,32,17,0.38)', 'rgba(74,32,17,0)');
+            // Grumos: relieve con luz arriba y su sombra abajo
+            for (let i = 0; i < 700; i++) {
+                const x = random() * w, y = random() * h, r = 3 + random() * 8;
+                stain(c, x, y + r * 0.45, r * 1.1, 'rgba(74,32,17,0.22)', 'rgba(74,32,17,0)');
+                stain(c, x, y, r, 'rgba(182,138,107,0.38)', 'rgba(182,138,107,0)');
+            }
+            // Picaduras
+            for (let i = 0; i < 1100; i++) {
+                const x = random() * w, y = random() * h, r = 0.7 + random() * 2;
+                c.fillStyle = 'rgba(74,32,17,0.55)';
+                c.beginPath();
+                c.arc(x, y, r, 0, 7);
+                c.fill();
+                c.fillStyle = 'rgba(190,150,115,0.35)';
+                c.beginPath();
+                c.arc(x, y - r, r * 0.7, 0, 7);
+                c.fill();
+            }
+            // Juntas verticales entre tapias, casi borradas
+            for (const x of [w / 4 + random() * 20, (3 * w) / 4 + random() * 20]) {
+                c.strokeStyle = 'rgba(74,32,17,0.14)';
+                c.lineWidth = 2;
+                c.beginPath();
+                for (let y = 0; y <= h; y += 6)
+                    c.lineTo(x + Math.sin(y * 0.2) * 2, y);
+                c.stroke();
+            }
+        },
+        tapialRelief(c, w, h) {
+            c.fillStyle = '#808080';
+            c.fillRect(0, 0, w, h);
+            for (let y = 0; y < h; y += 36) {
+                c.fillStyle = 'rgba(0,0,0,0.10)';
+                c.fillRect(0, y, w, 3);
+            }
+            for (let i = 0; i < 10; i++)
+                stain(c, random() * w, random() * h, 10 + random() * 22, 'rgba(30,30,30,0.6)', 'rgba(30,30,30,0)');
+            for (let i = 0; i < 700; i++)
+                stain(c, random() * w, random() * h, 3 + random() * 8, 'rgba(200,200,200,0.55)', 'rgba(200,200,200,0)');
+            for (let i = 0; i < 1100; i++) {
+                c.fillStyle = 'rgba(20,20,20,0.7)';
+                c.beginPath();
+                c.arc(random() * w, random() * h, 0.7 + random() * 2, 0, 7);
+                c.fill();
+            }
+        },
+        tierra(c, w, h) {
+            c.fillStyle = '#966B4C';
+            c.fillRect(0, 0, w, h);
+            for (let i = 0; i < 45; i++) {
+                const light = random() < 0.55;
+                stain(c, random() * w, random() * h, 15 + random() * 45, light ? 'rgba(178,138,104,0.35)' : 'rgba(129,86,51,0.30)', light ? 'rgba(178,138,104,0)' : 'rgba(129,86,51,0)');
+            }
+            for (let i = 0; i < 1800; i++) {
+                c.fillStyle = random() < 0.5 ? 'rgba(190,152,118,0.6)' : 'rgba(100,66,40,0.5)';
+                const s = 0.8 + random() * 2.4;
+                c.fillRect(random() * w, random() * h, s, s);
+            }
+            c.strokeStyle = 'rgba(100,66,40,0.25)';
+            c.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                let x = random() * w, y = random() * h;
+                c.beginPath();
+                c.moveTo(x, y);
+                for (let k = 0; k < 6; k++) {
+                    x += (random() - 0.5) * 30;
+                    y += (random() - 0.5) * 30;
+                    c.lineTo(x, y);
+                }
+                c.stroke();
+            }
+        },
+        tierraRelief(c, w, h) {
+            c.fillStyle = '#808080';
+            c.fillRect(0, 0, w, h);
+            for (let i = 0; i < 300; i++)
+                stain(c, random() * w, random() * h, 2 + random() * 6, 'rgba(190,190,190,0.5)', 'rgba(190,190,190,0)');
+            for (let i = 0; i < 1500; i++) {
+                c.fillStyle = random() < 0.5 ? '#9a9a9a' : '#666666';
+                c.fillRect(random() * w, random() * h, 2, 2);
+            }
+        },
+    };
+}
 function createTextures(renderer) {
     const aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    // En el orden de la página aprobada: los cuatro comparten la misma serie de azar.
+    const huaca = huacaPainters(textures_seeded(20131));
+    const tapial = rectTexture(512, 256, huaca.tapial, aniso, 1 / 4, 1 / 2);
+    const tapialNormal = rectNormal(512, 256, huaca.tapialRelief, 4.5, aniso, 1 / 4, 1 / 2);
+    const tierra = rectTexture(256, 256, huaca.tierra, aniso, 1 / 2, 1 / 2);
+    const tierraNormal = rectNormal(256, 256, huaca.tierraRelief, 2.5, aniso, 1 / 2, 1 / 2);
     return {
         building: canvasTexture(256, building, aniso, 0.07),
         buildingNormal: normalTexture(256, buildingRelief, 4, aniso, 0.07),
@@ -57148,6 +59608,7 @@ function createTextures(renderer) {
         parking: canvasTexture(128, parking, aniso, 0.1),
         foliage: canvasTexture(128, foliage, aniso, 0.3),
         foliageNormal: normalTexture(128, foliageRelief, 3, aniso, 0.3),
+        tapial, tapialNormal, tierra, tierraNormal,
     };
 }
 
@@ -57220,6 +59681,8 @@ function plantShape(p) {
 
 
 
+
+
 const GEOMETRY = {
     ico: () => new IcosahedronGeometry(1, 1),
     palm: () => new IcosahedronGeometry(1, 0),
@@ -57266,16 +59729,29 @@ function placeCrown(s, woody, tree) {
 }
 function instanced(scene, geo, mat, count) {
     const mesh = new InstancedMesh(geo, mat, count);
-    mesh.position.y = WORLD_LIFT;
+    mesh.position.y = polyLayer_WORLD_LIFT;
     scene.add(mesh);
     return mesh;
 }
-function createVegetationLayer(scene, plants, materials) {
+function createVegetationLayer(scene, plants, materials, sunken = []) {
     const shapes = plants.map((p) => plantShape(p.props));
+    const floor = plants.map((p) => sunkenFloorAt(sunken, p.p[0], p.p[1]));
     const colors = shapes.map((s) => `#${new Color(s.color).offsetHSL(...s.jitter).getHexString()}`);
+    // Los del Atardecer se arman recién la primera vez que se prende el modo.
+    let golden = null;
     const layer = {
         id: 'vegetation', kind: 'inst', count: plants.length, meshes: [], slots: [], items: [], scaleRange: [1, 1],
         color: (i) => colors[i], meta: plants.map((p) => ({ x: p.p[0], z: -p.p[1], r: 25, area: 0 })),
+        // Las copas de siempre quedan para el clic (la cámara no las dibuja); se ven los árboles del Atardecer.
+        setGolden(on) {
+            if (on && !golden)
+                golden = createGoldenVegetation(scene, plants, shapes, floor, colors, materials);
+            layer.meshes.forEach((m) => m.layers.set(on ? PICK_ONLY_LAYER : 0));
+            if (!golden)
+                return;
+            // Con la capa apagada desde el panel, tampoco se ven.
+            golden.visible = on && (layer.meshes[0]?.visible ?? true);
+        },
     };
     // Las mallas auxiliares (halo, sombra) se encienden con la capa pero el clic
     // las atraviesa: no llevan la capa en userData.
@@ -57300,6 +59776,7 @@ function createVegetationLayer(scene, plants, materials) {
             vegetation_dummy.position.set(x, 0, -y);
             vegetation_dummy.rotation.set(0, (i * 2.39) % 6.28, 0);
             placeCrown(shapes[i], isWoody(plants[i].props), plants[i].props.typeCode === 'TREE');
+            vegetation_dummy.position.y += floor[i];
             vegetation_dummy.updateMatrix();
             mesh.setMatrixAt(k, vegetation_dummy.matrix);
             mesh.setColorAt(k, new Color(colors[i]));
@@ -57318,7 +59795,7 @@ function createVegetationLayer(scene, plants, materials) {
         trunks.forEach((i, k) => {
             const s = shapes[i];
             const radius = s.shape === 'palm' ? MathUtils.clamp(s.heightM / 45, 0.18, 0.4) : MathUtils.clamp(s.crownRadiusM / 9, 0.15, 0.45);
-            vegetation_dummy.position.set(plants[i].p[0], 0, -plants[i].p[1]);
+            vegetation_dummy.position.set(plants[i].p[0], floor[i], -plants[i].p[1]);
             vegetation_dummy.rotation.set(0, 0, 0);
             vegetation_dummy.scale.set(radius, s.shape === 'palm' ? s.heightM : s.heightM * 0.75, radius);
             vegetation_dummy.updateMatrix();
@@ -57330,13 +59807,91 @@ function createVegetationLayer(scene, plants, materials) {
     auxiliary(contact);
     shapes.forEach((s, i) => {
         const woody = isWoody(plants[i].props), palm = s.shape === 'palm';
-        vegetation_dummy.position.set(plants[i].p[0], 0.05, -plants[i].p[1]);
+        vegetation_dummy.position.set(plants[i].p[0], floor[i] + 0.05, -plants[i].p[1]);
         vegetation_dummy.rotation.set(0, (i * 1.37) % Math.PI, 0);
         vegetation_dummy.scale.set(Math.max(0.95, s.crownRadiusM * (palm ? 2.4 : woody ? 2.05 : 1.55)), 1, Math.max(0.75, s.crownRadiusM * (palm ? 1.7 : woody ? 1.8 : 1.35)));
         vegetation_dummy.updateMatrix();
         contact.setMatrixAt(i, vegetation_dummy.matrix);
     });
     return layer;
+}
+/** Más oliva y algo más oscuro: el verde del mapa es para leerlo, no el de una foto al atardecer. */
+const OLIVE = new Color('#4f6a33');
+/** Solo lo verde va hacia el oliva: una copa en flor (el morado del jacarandá, el rojo de la ponciana) conserva su color. */
+const goldenTint = (hex) => {
+    const color = new Color(hex);
+    const hsl = color.getHSL({ h: 0, s: 0, l: 0 });
+    const green = hsl.h > 0.17 && hsl.h < 0.45;
+    return green ? color.lerp(OLIVE, 0.5).multiplyScalar(0.9) : color.multiplyScalar(0.95);
+};
+const BROADLEAF_VARIANTS = 4;
+/** Los árboles del Atardecer, en las mismas posiciones y escalas que los de siempre; empiezan ocultos. */
+function createGoldenVegetation(scene, plants, shapes, floor, colors, materials) {
+    const group = new Group();
+    group.position.y = polyLayer_WORLD_LIFT;
+    group.visible = false;
+    scene.add(group);
+    const add = (geo, mat, list, place, tint) => {
+        if (!list.length)
+            return;
+        const mesh = new InstancedMesh(geo, mat, list.length);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.raycast = () => undefined;
+        list.forEach((i, k) => {
+            vegetation_dummy.position.set(plants[i].p[0], 0, -plants[i].p[1]);
+            vegetation_dummy.rotation.set(0, (i * 2.39) % 6.28, 0);
+            vegetation_dummy.scale.set(1, 1, 1);
+            place(i);
+            vegetation_dummy.position.y += floor[i];
+            vegetation_dummy.updateMatrix();
+            mesh.setMatrixAt(k, vegetation_dummy.matrix);
+            if (tint)
+                mesh.setColorAt(k, tint(i));
+        });
+        group.add(mesh);
+    };
+    const foliage = () => { const m = materials.foliage(); m.vertexColors = true; return m; };
+    const tint = (i) => goldenTint(colors[i]);
+    const crown = (i) => placeCrown(shapes[i], isWoody(plants[i].props), plants[i].props.typeCode === 'TREE');
+    const palms = shapes.map((s, i) => (s.shape === 'palm' ? i : -1)).filter((i) => i >= 0);
+    const cones = shapes.map((s, i) => (s.shape === 'cone' ? i : -1)).filter((i) => i >= 0);
+    const broad = shapes.map((s, i) => (s.shape !== 'palm' && s.shape !== 'cone' ? i : -1)).filter((i) => i >= 0);
+    // Copas de hoja ancha frondosas: tarjetas de hojas con el material del follaje (y su borde al sol).
+    const leaves = leafTexture();
+    for (let v = 0; v < BROADLEAF_VARIANTS; v++) {
+        const { material, depth } = leafMaterials(leaves, foliage());
+        const before = group.children.length;
+        add(leafyCrown(0xb10a + v * 977), material, broad.filter((i) => i % BROADLEAF_VARIANTS === v), crown, (i) => tint(i).multiplyScalar(1.7));
+        group.children.slice(before).forEach((m) => { m.customDepthMaterial = depth; });
+    }
+    add(coniferCrown(0xc0f1), foliage(), cones, crown, tint);
+    // Palmeras: el penacho arriba del tronco, y frondas recortadas por la textura (también en la sombra).
+    const fronds = frondTexture();
+    const palmMat = new MeshStandardMaterial({ map: fronds, alphaTest: 0.45, side: DoubleSide, vertexColors: true, roughness: 0.75 });
+    const palmDepth = new MeshDepthMaterial({ depthPacking: RGBADepthPacking, map: fronds, alphaTest: 0.45 });
+    const before = group.children.length;
+    add(palmCrown(0x9a1), palmMat, palms, (i) => {
+        const { heightM: h, crownRadiusM: r } = shapes[i];
+        vegetation_dummy.position.y = h * 0.97;
+        vegetation_dummy.scale.set(r * 1.15, r * 0.95, r * 1.15);
+    }, (i) => goldenTint(colors[i]).multiplyScalar(1.1));
+    group.children.slice(before).forEach((m) => { m.customDepthMaterial = palmDepth; });
+    // Troncos: los de palmera, largos, finos y algo curvos; los demás, hasta la copa.
+    const bark = new MeshStandardMaterial({ color: '#5a4636', roughness: 0.92 });
+    const palmBark = new MeshStandardMaterial({ color: '#8b7d6b', roughness: 0.9 });
+    const trunks = shapes.map((s, i) => (s.trunk ? i : -1)).filter((i) => i >= 0);
+    [0, 2.5, 5].forEach((bend, b) => add(trunkGeometry(bend), palmBark, trunks.filter((i) => shapes[i].shape === 'palm' && i % 3 === b), (i) => {
+        const s = shapes[i];
+        const r = MathUtils.clamp(s.heightM / 45, 0.16, 0.34);
+        vegetation_dummy.scale.set(r, s.heightM, r);
+    }));
+    add(trunkGeometry(0), bark, trunks.filter((i) => shapes[i].shape !== 'palm'), (i) => {
+        const s = shapes[i];
+        const r = MathUtils.clamp(s.crownRadiusM / 10, 0.12, 0.4);
+        vegetation_dummy.scale.set(r, s.heightM * 0.7, r);
+    });
+    return group;
 }
 
 ;// ./src/components/map3d/equivalence/currentMapViewer.ts
@@ -57393,7 +59948,7 @@ function createCurrentMapViewer(container, data, onPick, onReady, unifiedMeshes)
     }
     scene.add(new HemisphereLight(0xffffff, 0x777777, 0.85));
     const sun = new DirectionalLight(0xffffff, 0.65);
-    sun.position.copy(center).add(new Vector3(-300, 500, 200));
+    sun.position.copy(center).add(new three_module_Vector3(-300, 500, 200));
     scene.add(sun);
     renderer.domElement.setAttribute('aria-label', unifiedMeshes ? 'Mapa unificado: geometría SKP y edificios del mapa izquierdo' : 'Mapa actual completo, edificios rosas y césped verde; edificios seleccionables');
     let dirty = true, frame = 0, disposed = false, lastDistance = 0, framed = false;
@@ -57431,13 +59986,13 @@ function createCurrentMapViewer(container, data, onPick, onReady, unifiedMeshes)
     const buildingCenters = data.campusBuildings.map((_, index) => {
         const bounds = new Box3(), position = poly.campusBuildings.mesh.geometry.attributes.position;
         for (let vertex = poly.campusBuildings.starts[index]; vertex < poly.campusBuildings.starts[index + 1]; vertex++)
-            bounds.expandByPoint(new Vector3().fromBufferAttribute(position, vertex));
-        return bounds.getCenter(new Vector3()).add(poly.campusBuildings.mesh.position);
+            bounds.expandByPoint(new three_module_Vector3().fromBufferAttribute(position, vertex));
+        return bounds.getCenter(new three_module_Vector3()).add(poly.campusBuildings.mesh.position);
     });
     const unbindModified = bindModifiedSelection(renderer.domElement, selectAt, (box) => {
         rig.cancelFlight();
         if (unifiedMeshes) {
-            const ids = new Set(unifiedMeshes.filter((mesh) => !selectedIds.has(String(mesh.userData.entryId)) && insideSelection(new Box3().setFromObject(mesh).getCenter(new Vector3()), rig.camera, renderer.domElement, box)).map((mesh) => String(mesh.userData.entryId)));
+            const ids = new Set(unifiedMeshes.filter((mesh) => !selectedIds.has(String(mesh.userData.entryId)) && insideSelection(new Box3().setFromObject(mesh).getCenter(new three_module_Vector3()), rig.camera, renderer.domElement, box)).map((mesh) => String(mesh.userData.entryId)));
             ids.forEach(onPick);
             return;
         }
@@ -57581,11 +60136,11 @@ function createEquivalenceViewer(container, source, onPick, onReady, onError) {
     function fitBounds(bounds, top = false) {
         if (bounds.isEmpty())
             return;
-        const center = bounds.getCenter(new Vector3()), size = bounds.getSize(new Vector3());
+        const center = bounds.getCenter(new three_module_Vector3()), size = bounds.getSize(new three_module_Vector3());
         const half = Math.min(MathUtils.degToRad(camera.fov / 2), Math.atan(Math.tan(MathUtils.degToRad(camera.fov / 2)) * camera.aspect));
         const distance = Math.max(20, size.length() / 2 / Math.sin(half) * 1.1);
         controls.target.copy(center);
-        camera.position.copy(center).addScaledVector(new Vector3(0, top ? 1 : 1.3, top ? 0.001 : 1).normalize(), distance);
+        camera.position.copy(center).addScaledVector(new three_module_Vector3(0, top ? 1 : 1.3, top ? 0.001 : 1).normalize(), distance);
         controls.update();
         render();
     }
@@ -57605,13 +60160,13 @@ function createEquivalenceViewer(container, source, onPick, onReady, onError) {
         old.forEach((m) => m.dispose());
         mesh.material = new MeshStandardMaterial({ color: '#c1b9a9', roughness: 0.9, side: DoubleSide });
         mesh.geometry.computeBoundingBox();
-        const extent = mesh.geometry.boundingBox.getSize(new Vector3());
+        const extent = mesh.geometry.boundingBox.getSize(new three_module_Vector3());
         mesh.userData.small = Math.max(extent.x, extent.y, extent.z) < 1;
         meshes.push(mesh);
     }
     function finish() {
         box.setFromObject(scene);
-        const size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
+        const size = box.getSize(new three_module_Vector3()), center = box.getCenter(new three_module_Vector3());
         const pixels = new Uint8Array(64 * 64 * 4);
         let seed = 73;
         for (let i = 0; i < pixels.length; i += 4) {
@@ -57642,7 +60197,7 @@ function createEquivalenceViewer(container, source, onPick, onReady, onError) {
     if (typeof source === 'string') {
         fetch(source, { signal: abort.signal }).then((r) => { if (!r.ok)
             throw new Error('SKP unavailable'); return r.arrayBuffer(); })
-            .then((b) => new GLTFLoader().parseAsync(b, '')).then(({ scene: model }) => {
+            .then((b) => new GLTFLoader_GLTFLoader().parseAsync(b, '')).then(({ scene: model }) => {
             if (disposed) {
                 model.traverse((o) => { if (o instanceof Mesh) {
                     o.geometry.dispose();
@@ -57687,7 +60242,7 @@ function createEquivalenceViewer(container, source, onPick, onReady, onError) {
             onPick(String(hit.object.userData.partId));
     }, (box) => {
         const selected = new Set(state.selected);
-        const ids = meshes.filter((mesh) => mesh.visible && !selected.has(String(mesh.userData.partId)) && insideSelection(new Box3().setFromObject(mesh).getCenter(new Vector3()), camera, renderer.domElement, box)).map((mesh) => String(mesh.userData.partId));
+        const ids = meshes.filter((mesh) => mesh.visible && !selected.has(String(mesh.userData.partId)) && insideSelection(new Box3().setFromObject(mesh).getCenter(new three_module_Vector3()), camera, renderer.domElement, box)).map((mesh) => String(mesh.userData.partId));
         ids.forEach(onPick);
     });
     function cancel() { down = null; }
@@ -57736,11 +60291,30 @@ function createEquivalenceViewer(container, source, onPick, onReady, onError) {
         } };
 }
 
+;// ./src/lib/userFacingError.ts
+/**
+ * Un fallo que nuestro propio código explica en español para la persona. Es el
+ * único error, fuera de los de la API (mensajeDeApiError), cuyo mensaje se
+ * muestra tal cual: los demás (JSON inválido, red, el navegador) pueden venir en
+ * inglés técnico (SPEC-000).
+ */
+class UserFacingError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'UserFacingError';
+    }
+}
+/** El mensaje para la persona: el propio si es un UserFacingError; si no, `fallback`. */
+function userFacingMessage(error, fallback) {
+    return error instanceof UserFacingError ? error.message : fallback;
+}
+
 ;// ./src/components/map3d/equivalence/relations.ts
+
 const relationCodes = (r) => r.codes ?? (r.code ? [r.code] : []);
 const relationTitle = (r) => r.name?.trim() || relationCodes(r).join(', ');
 function parseRelations(value, sourceHash, codes, mapIds, skpIds) {
-    const fail = () => { throw new Error('Archivo incompatible: revisa el SKP, los códigos y los identificadores de las estructuras.'); };
+    const fail = () => { throw new UserFacingError('Archivo incompatible: revisa el SKP, los códigos y los identificadores de las estructuras.'); };
     if (!value || typeof value !== 'object')
         return fail();
     const data = value;
@@ -57791,6 +60365,7 @@ const codes_namespaceObject = /*#__PURE__*/JSON.parse('[{"code":"1","label":"FAC
 
 
 
+
 const payload = JSON.parse(document.getElementById('payload').textContent);
 const style = document.createElement('style');
 style.textContent = `*{box-sizing:border-box}body{margin:0;background:#f2f5f3;color:#172b22;font:16px system-ui}main{max-width:1200px;margin:auto;padding:12px}h1{font-size:22px}h2{font-size:18px}button,select,input{font:inherit;padding:10px;border:1px solid #a6b7ae;border-radius:7px;background:white;color:#172b22}button{min-height:44px;cursor:pointer}button:disabled{opacity:.45}button.active,#save{background:#176b46;color:white}label{display:block;margin:10px 0}input[type=search],select,input[type=text]{width:100%}.row{display:flex;gap:8px;flex-wrap:wrap}.panel{background:white;border:1px solid #bcc8c1;border-radius:9px;padding:10px;margin:10px 0}.canvas{height:52vh;min-height:280px;position:relative;overflow:hidden}.canvas canvas{position:absolute;inset:0;width:100%;height:100%}.hidden{display:none!important}.small{font-size:13px}#message{white-space:pre-wrap;font-weight:600}#results{max-height:190px;overflow:auto}#saved .row{padding:10px;border-bottom:1px solid #ccc;align-items:center}#saved span{flex:1}#search{margin-top:10px}@media(min-width:950px){.maps{display:grid;grid-template-columns:1fr 1fr;gap:12px}.map.hidden{display:block!important}.canvas{height:52vh}}`;
@@ -57801,15 +60376,15 @@ const input = (id) => el(id);
 const mapIds = new Set(payload.scene.campusBuildings.map((b) => String(b.props.id)));
 const skpIds = new Set(payload.manifest.parts.map((p) => p.id));
 const validCodes = new Set(codes_namespaceObject.map((c) => c.code));
-const validate = (value) => parseRelations(value, payload.manifest.sourceHash, validCodes, mapIds, skpIds);
+const portableApp_validate = (value) => parseRelations(value, payload.manifest.sourceHash, validCodes, mapIds, skpIds);
 const file = (relations) => ({ version: 2, sourceHash: payload.manifest.sourceHash, mapVersion: payload.mapVersion, relations });
-let relations = validate(file(payload.relations)).relations;
+let relations = portableApp_validate(file(payload.relations)).relations;
 const storageKey = `hesperides-portable:${payload.packageId}`;
 let storageBlocked = false;
 try {
     const saved = localStorage.getItem(storageKey);
     if (saved)
-        relations = validate(JSON.parse(saved)).relations;
+        relations = portableApp_validate(JSON.parse(saved)).relations;
 }
 catch {
     storageBlocked = true;
@@ -57926,8 +60501,8 @@ input('import').onchange = async () => {
         return;
     try {
         if (chosen.size > 15000000)
-            throw new Error('Archivo demasiado grande.');
-        const incoming = validate(JSON.parse(await chosen.text()));
+            throw new UserFacingError('Archivo demasiado grande.');
+        const incoming = portableApp_validate(JSON.parse(await chosen.text()));
         if (confirm(`Importar ${incoming.relations.length} relaciones reemplazará las ${relations.length} actuales.${incoming.mapVersion !== payload.mapVersion ? ' La versión del mapa es distinta.' : ''} ¿Continuar?`)) {
             storageBlocked = false;
             replace(incoming.relations);
@@ -57935,7 +60510,7 @@ input('import').onchange = async () => {
         }
     }
     catch (error) {
-        el('message').textContent = error instanceof Error ? error.message : 'No se pudo importar.';
+        el('message').textContent = userFacingMessage(error, 'No se pudo importar: el archivo no es un JSON de equivalencias válido.');
     }
 };
 const bytes = Uint8Array.from(atob(payload.glb), (c) => c.charCodeAt(0));
