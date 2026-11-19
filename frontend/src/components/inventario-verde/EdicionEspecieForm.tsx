@@ -109,14 +109,20 @@ export function EdicionEspecieForm({ species, onSaved, onCancel, onDirtyChange }
               <Input id="scientific-name" label="Nombre científico" value={nombre} onChange={setNombre} required
                 errorMessage={errorNombre ?? undefined} helperText="La dirección de la ficha no cambia al corregirlo" />
             </div>
-            <Input id="common-name" label="Nombre común" value={comun} onChange={setComun} />
-            <Input id="family" label="Familia botánica" value={familia} onChange={setFamilia} />
+            <Input id="common-name" label="Nombre común" value={comun} onChange={setComun} placeholder="Ej. Jacarandá" />
+            <Input id="family" label="Familia botánica" value={familia} onChange={setFamilia} placeholder="Ej. Bignoniaceae" />
             <Select id="vegetation-type" label="Tipo de vegetación" options={opciones(tipos)} value={tipo}
               onChange={(o) => setTipo(o?.code ?? null)} loading={cargandoTipos} required />
             <Select id="origin" label="Origen biogeográfico" options={opciones(origenes)} value={origen}
               onChange={(o) => setOrigen(o?.code ?? null)} loading={cargandoOrigenes} clearable />
             <div className="sm:col-span-2">
-              <Input id="other-names" label="Otros nombres comunes (separados por coma)" value={otros} onChange={setOtros} />
+              <Input
+                id="other-names"
+                label="Otros nombres comunes (separados por coma)"
+                value={otros}
+                onChange={setOtros}
+                placeholder="Ej. Tarco, Gualanday"
+              />
             </div>
           </div>
         </Card>
@@ -130,8 +136,20 @@ export function EdicionEspecieForm({ species, onSaved, onCancel, onDirtyChange }
 
         <Card title="Descripción y cuidados botánicos">
           <div className="space-y-4">
-            <Textarea id="description" label="Descripción taxonómica" value={descripcion} onChange={setDescripcion} />
-            <Textarea id="care-notes" label="Requerimientos y mantenimiento" value={cuidados} onChange={setCuidados} />
+            <Textarea
+              id="description"
+              label="Descripción taxonómica"
+              value={descripcion}
+              onChange={setDescripcion}
+              placeholder="Características morfológicas, porte, floración o signos distintivos para reconocimiento botánico en campo..."
+            />
+            <Textarea
+              id="care-notes"
+              label="Requerimientos y mantenimiento"
+              value={cuidados}
+              onChange={setCuidados}
+              placeholder="Requerimientos de exposición solar, riego recomendado, frecuencia de poda o advertencias fitosanitarias..."
+            />
           </div>
         </Card>
 

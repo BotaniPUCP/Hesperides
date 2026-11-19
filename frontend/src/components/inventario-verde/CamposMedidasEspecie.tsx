@@ -54,7 +54,9 @@ export function CamposMedidasEspecie({ valores, onCambiar, errores = {}, aviso }
           />
           <p className="pl-6 text-xs text-neutral-500">
             {puedeCambiar
-              ? 'Un árbol de más de 5 m va con grúa y una trepadora alta puede requerir escalera. Si no es crítica, sus ejemplares sin medir muestran el promedio.'
+              ? (valores.critical
+                  ? 'Esta especie está marcada como crítica: por seguridad operativa sus ejemplares en campo requieren medición física obligatoria (con grúa o escaleras) y no adoptan promedios automáticos. La altura y radio promedio aquí son referenciales.'
+                  : 'Esta especie no es crítica: sus ejemplares sin medir en catastro adoptan el promedio registrado aquí para estimaciones operativas. Altura y radio de copa son obligatorios.')
               : 'Solo Administración o Coordinación pueden cambiar la criticidad.'}
           </p>
           {aviso && <p className="pl-6 text-xs font-medium text-alert-warning-fg">{aviso}</p>}
@@ -69,6 +71,7 @@ export function CamposMedidasEspecie({ valores, onCambiar, errores = {}, aviso }
             required={!valores.critical}
             errorMessage={errores.altura}
             placeholder="Ej. 2.5"
+            helperText={valores.critical ? 'Referencial para orientar mediciones en campo' : 'Obligatorio para estimar ejemplares sin medir'}
           />
           <Select
             id="fuente-altura"
@@ -89,6 +92,7 @@ export function CamposMedidasEspecie({ valores, onCambiar, errores = {}, aviso }
             required={!valores.critical}
             errorMessage={errores.radio}
             placeholder="Ej. 1.2"
+            helperText={valores.critical ? 'Referencial para orientar mediciones en campo' : 'Obligatorio para estimar ejemplares sin medir'}
           />
           <Select
             id="fuente-radio"

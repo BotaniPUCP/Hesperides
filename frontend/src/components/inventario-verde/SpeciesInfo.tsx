@@ -1,29 +1,25 @@
 'use client';
 
-import Link from 'next/link';
 import type { Species } from '@shared/types';
 import { Badge } from '@/components/ui';
 import { SpeciesCover } from './SpeciesCover';
 import { SpeciesStatusBadge } from './SpeciesStatusBadge';
+import { unidadCorta } from './medidasEspecie';
 import type { ReactNode } from 'react';
 
 export interface SpeciesInfoProps {
   species: Species;
   availableLocations?: { location: string; count: number }[];
-  /** Lo que puede hacer quien edita, junto al conteo de ejemplares. */
+  /** Lo que puede hacer quien edita, junto al encabezado de la especie. */
   actions?: ReactNode;
 }
 
 /**
- * Cabecera compacta y profesional para el detalle de una especie botánica.
- * Diseñada para alta densidad informativa sin ocupar espacio vertical excesivo.
+ * Cabecera estructurada y profesional para la ficha de detalle de una especie botánica.
+ * Jerarquía clara: Nombre común > Nombre científico > Taxonomía/Estado > Medidas botánicas.
  */
-export function SpeciesInfo({ species, availableLocations = [], actions }: SpeciesInfoProps) {
+export function SpeciesInfo({ species, actions }: SpeciesInfoProps) {
   const isNameIdentical = species.commonName.trim().toLowerCase() === species.scientificName.trim().toLowerCase();
-
-  // Filtrar 'ALL' si viene en availableLocations y mostrar todos los sectores donde está presente
-  const locations = availableLocations.filter((l) => l.location !== 'ALL' && l.count > 0);
-  const speciesSearchTerm = species.commonName || species.scientificName;
   const hasNotesOrDescription = Boolean(species.description?.trim() || species.careNotes?.trim());
 
   return (
@@ -31,42 +27,40 @@ export function SpeciesInfo({ species, availableLocations = [], actions }: Speci
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-start">
         <SpeciesCover species={species} />
 
-        {/* Información taxonómica estructurada */}
+        {/* Información taxonómica y botánica estructurada */}
         <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch py-0.5">
           <div>
-            {/* Barra superior de taxonomía y conteo */}
-            <div className="flex flex-wrap items-center justify-between gap-2.5 mb-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge label={species.vegetationTypeName} color="brand" />
-                <SpeciesStatusBadge isActive={species.isActive} />
-                <Badge label={species.critical ? 'Crítica' : 'No crítica'} color={species.critical ? 'warning' : 'neutral'} />
-                {species.family && (
-                  <Badge label={`Fam. ${species.family}`} color="neutral" />
-                )}
-                {species.originName && (
-                  <Badge label={species.originName} color="neutral" />
+            {/* Encabezado: Título principal y acciones de gestión */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-2">
+              <div className="min-w-0">
+                <h1 className="page-title">
+                  {species.commonName || species.scientificName}
+                </h1>
+                {!isNameIdentical && species.commonName && (
+                  <p className="text-sm sm:text-base italic text-neutral-500 font-serif mt-0.5">
+                    ({species.scientificName})
+                  </p>
                 )}
               </div>
 
-              {/* Indicador de ejemplares censados */}
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  label={`${species.specimenCount} ${species.specimenCount === 1 ? 'ejemplar censado' : 'ejemplares censados'}`}
-                  color="brand"
-                />
-                {actions}
-              </div>
+              {/* Acciones principales claramente agrupadas (Editar, Dar de baja) */}
+              {actions && (
+                <div className="shrink-0 flex items-center gap-2 pt-0.5">
+                  {actions}
+                </div>
+              )}
             </div>
 
-            {/* Nombre común y científico */}
-            <div className="flex flex-wrap items-baseline gap-2.5 mt-1">
-              <h1 className="page-title">
-                {species.commonName}
-              </h1>
-              {!isNameIdentical && (
-                <span className="text-base italic text-neutral-500 font-serif">
-                  ({species.scientificName})
-                </span>
+            {/* Etiquetas secundarias agrupadas: Tipo, Familia, Estado, Criticidad, Origen */}
+            <div className="flex items-center gap-2 flex-wrap mb-3">
+              <Badge label={species.vegetationTypeName} color="brand" />
+              {species.family && (
+                <Badge label={`Fam. ${species.family}`} color="neutral" />
+              )}
+              <SpeciesStatusBadge isActive={species.isActive} />
+              <Badge label={species.critical ? 'Crítica' : 'No crítica'} color={species.critical ? 'warning' : 'neutral'} />
+              {species.originName && (
+                <Badge label={species.originName} color="neutral" />
               )}
             </div>
 
@@ -104,25 +98,84 @@ export function SpeciesInfo({ species, availableLocations = [], actions }: Speci
               </div>
             )}
 
-            {/* Distribución por sectores en campus */}
-            {locations.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap mt-3 pt-2.5 border-t border-neutral-100 text-xs text-neutral-500">
-                <span className="font-semibold text-neutral-700">Presencia en campus:</span>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {locations.map((loc) => (
-                    <Link
-                      key={loc.location}
-                      href={`/catastro/ejemplares?search=${encodeURIComponent(speciesSearchTerm)}&location=${encodeURIComponent(loc.location)}`}
-                      title={`Ver ejemplares de ${species.commonName} en ${loc.location}`}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-100 hover:bg-brand-50 hover:text-brand-700 border border-transparent hover:border-brand-200 text-neutral-700 text-xs font-medium transition-colors"
-                    >
-                      <span>{loc.location}</span>
-                      <span className="text-[10px] text-neutral-400 font-bold font-mono">({loc.count})</span>
-                    </Link>
-                  ))}
+            {/* Parámetros dendrométricos y medidas botánicas de referencia */}
+            <div className="mt-4 pt-3 border-t border-neutral-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                  Medidas botánicas de referencia
+                </span>
+                <span className="text-[11px] text-neutral-400">
+                  {species.critical ? 'Especie crítica' : 'Valores referenciales'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-100">
+                  <span className="block text-[11px] font-medium text-neutral-500">Altura promedio</span>
+                  <span className="text-sm font-bold text-neutral-900 font-mono">
+                    {species.referenceHeightM != null ? `${species.referenceHeightM} m` : '—'}
+                  </span>
+                  {species.referenceHeightSourceName ? (
+                    <span className="block text-[10px] text-neutral-400 truncate mt-0.5" title={species.referenceHeightSourceName}>
+                      {species.referenceHeightSourceName}
+                    </span>
+                  ) : (
+                    <span className="block text-[10px] text-neutral-400 mt-0.5">Sin fuente</span>
+                  )}
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-100">
+                  <span className="block text-[11px] font-medium text-neutral-500">Radio copa prom.</span>
+                  <span className="text-sm font-bold text-neutral-900 font-mono">
+                    {species.referenceCrownRadiusM != null ? `${species.referenceCrownRadiusM} m` : '—'}
+                  </span>
+                  {species.referenceCrownRadiusSourceName ? (
+                    <span className="block text-[10px] text-neutral-400 truncate mt-0.5" title={species.referenceCrownRadiusSourceName}>
+                      {species.referenceCrownRadiusSourceName}
+                    </span>
+                  ) : (
+                    <span className="block text-[10px] text-neutral-400 mt-0.5">Sin fuente</span>
+                  )}
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-100">
+                  <span className="block text-[11px] font-medium text-neutral-500">Medición de fuste</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-800 mt-1">
+                    <span className={`w-2 h-2 rounded-full ${species.usesTrunkHeight ? 'bg-forest-600' : 'bg-neutral-300'}`} />
+                    {species.usesTrunkHeight ? 'Aplica medición' : 'No aplica'}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-100">
+                  <span className="block text-[11px] font-medium text-neutral-500">Medición de DAP</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-800 mt-1">
+                    <span className={`w-2 h-2 rounded-full ${species.usesDbh ? 'bg-forest-600' : 'bg-neutral-300'}`} />
+                    {species.usesDbh ? 'Aplica medición' : 'No aplica'}
+                  </span>
                 </div>
               </div>
-            )}
+
+              {/* Medidas adicionales configuradas */}
+              {species.extraMeasures && species.extraMeasures.length > 0 && (
+                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-neutral-500 font-medium">Medidas adicionales:</span>
+                  {species.extraMeasures.map((em) => (
+                    <span
+                      key={em.code}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100 border border-neutral-200/60 text-xs text-neutral-800 font-medium"
+                    >
+                      <span>{em.label}</span>
+                      <span className="text-[10px] font-mono text-neutral-500 bg-white px-1 py-0.5 rounded border border-neutral-200">
+                        {unidadCorta(em.unitCode)}
+                      </span>
+                      {em.referenceNote && (
+                        <span className="text-[11px] text-neutral-500 italic">({em.referenceNote})</span>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

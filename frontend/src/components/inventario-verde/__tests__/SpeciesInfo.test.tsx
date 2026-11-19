@@ -33,4 +33,30 @@ describe('SpeciesInfo', () => {
     expect(screen.getByText('Fam. Arecaceae')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Ver las/ })).not.toBeInTheDocument();
   });
+
+  it('muestra las medidas botánicas de referencia y aplicabilidad de fuste y DAP', () => {
+    const conMedidas: Species = {
+      ...palmeraReal,
+      referenceHeightM: 12.5,
+      referenceHeightSourceName: 'Catálogo de flora PUCP',
+      referenceCrownRadiusM: 3.2,
+      referenceCrownRadiusSourceName: 'Literatura botánica',
+      usesTrunkHeight: true,
+      usesDbh: true,
+      extraMeasures: [
+        { code: 'STEM_COUNT', label: 'Número de estípites', unitCode: 'UNIT', referenceNote: 'Generalmente 1' },
+      ],
+    };
+
+    render(<SpeciesInfo species={conMedidas} />);
+
+    expect(screen.getByText('Medidas botánicas de referencia')).toBeInTheDocument();
+    expect(screen.getByText('12.5 m')).toBeInTheDocument();
+    expect(screen.getByText('Catálogo de flora PUCP')).toBeInTheDocument();
+    expect(screen.getByText('3.2 m')).toBeInTheDocument();
+    expect(screen.getByText('Literatura botánica')).toBeInTheDocument();
+    expect(screen.getAllByText('Aplica medición')).toHaveLength(2);
+    expect(screen.getByText('Número de estípites')).toBeInTheDocument();
+    expect(screen.getByText(/Generalmente 1/)).toBeInTheDocument();
+  });
 });

@@ -76,6 +76,9 @@ describe('SpeciesDetailScreen', () => {
     expect(await screen.findByRole('heading', { name: 'Palmera reina' })).toBeInTheDocument();
     expect(screen.getByText('Palmera bruja')).toBeInTheDocument();
     expect(screen.getByText(/Presencia y Catastro de Ejemplares/i)).toBeInTheDocument();
+    expect(screen.getByText('Con medidas de campo')).toBeInTheDocument();
+    expect(screen.getByText('Pendientes de medición')).toBeInTheDocument();
+    expect(screen.getByText('Educación')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver ejemplares en Catastro/i })).toBeInTheDocument();
     expect(api.speciesBySlug).toHaveBeenCalledWith('syagrus-romanzoffiana');
   });
