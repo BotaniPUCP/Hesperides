@@ -63,7 +63,7 @@ describe('SpeciesInfo', () => {
   it('renderiza correctamente cuando la especie no tiene nombre común (null o vacío)', () => {
     const sinComun: Species = {
       ...palmeraReal,
-      commonName: null,
+      commonName: null as unknown as string,
       scientificName: 'Kkkkkk',
     };
 
@@ -71,5 +71,24 @@ describe('SpeciesInfo', () => {
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Kkkkkk');
     expect(screen.queryByText('(Kkkkkk)')).not.toBeInTheDocument();
+  });
+
+  it('muestra estado vacío claro cuando la especie no tiene ninguna medida configurada', () => {
+    const sinMedidas: Species = {
+      ...palmeraReal,
+      referenceHeightM: null,
+      referenceCrownRadiusM: null,
+      usesTrunkHeight: false,
+      usesDbh: false,
+      extraMeasures: [],
+    };
+
+    render(<SpeciesInfo species={sinMedidas} />);
+
+    expect(screen.getByText('Medidas botánicas de referencia')).toBeInTheDocument();
+    expect(
+      screen.getByText('Esta especie no tiene medidas botánicas de referencia ni parámetros dendrométricos configurados.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Altura promedio')).not.toBeInTheDocument();
   });
 });

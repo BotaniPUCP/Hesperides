@@ -62,6 +62,9 @@ function SpecimenRowThumbnail({
   );
 }
 
+const SPECIMENS_PER_PAGE = 5;
+const MAX_VISIBLE_CODES = 8;
+
 export function BulkDeactivationModal({
   isOpen,
   specimens,
@@ -70,6 +73,8 @@ export function BulkDeactivationModal({
   onConfirm,
 }: BulkDeactivationModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
+  const [page, setPage] = useState(1);
+  const [expandedCodes, setExpandedCodes] = useState(false);
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +85,8 @@ export function BulkDeactivationModal({
     if (saving) return;
     guard.confirm(() => {
       setStep(1);
+      setPage(1);
+      setExpandedCodes(false);
       onClose();
     });
   };
@@ -167,42 +174,83 @@ export function BulkDeactivationModal({
 
             {/* Listado compacto de ejemplares a retirar */}
             <div>
-              <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-2">
-                Ejemplares a retirar ({count})
-              </label>
-              <div className="max-h-52 overflow-y-auto rounded-xl border border-neutral-200 bg-neutral-50/50 divide-y divide-neutral-200">
-                {specimens.map((specimen) => {
-                  const specSpecies = speciesMap?.[specimen.speciesSlug ?? ''];
-                  const commonName = specimen.speciesCommonName || specSpecies?.commonName || 'Ejemplar botánico';
-                  const scientificName = specimen.speciesScientificName || specSpecies?.scientificName;
-                  const location = specimen.sourceLocation || 'Campus PUCP';
-
-                  return (
-                    <div key={specimen.code} className="flex items-center gap-3 p-2.5 hover:bg-neutral-100/60 transition-colors">
-                      <SpecimenRowThumbnail specimen={specimen} fallbackUrl={specSpecies?.imageUrl} />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-neutral-900">{specimen.code}</span>
-                          {specimen.sourceReference && (
-                            <span className="font-mono text-[10px] text-neutral-500 bg-neutral-200/60 px-1.5 py-0.5 rounded">
-                              Ref: {specimen.sourceReference}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-neutral-800 font-medium truncate">
-                          {commonName}
-                          {scientificName && (
-                            <span className="italic text-neutral-500 font-serif font-normal ml-1.5">
-                              ({scientificName})
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-[11px] text-neutral-500 truncate">📍 {location}</p>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider">
+                  Ejemplares a retirar ({count})
+                </label>
+                {count > SPECIMENS_PER_PAGE && (
+                  <span className="text-xs text-neutral-500 font-medium">
+                    Página {page} de {Math.ceil(count / SPECIMENS_PER_PAGE)}
+                  </span>
+                )}
               </div>
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50/50 divide-y divide-neutral-200">
+                {specimens
+                  .slice((page - 1) * SPECIMENS_PER_PAGE, page * SPECIMENS_PER_PAGE)
+                  .map((specimen) => {
+                    const specSpecies = speciesMap?.[specimen.speciesSlug ?? ''];
+                    const commonName = specimen.speciesCommonName || specSpecies?.commonName || 'Ejemplar botánico';
+                    const scientificName = specimen.speciesScientificName || specSpecies?.scientificName;
+                    const location = specimen.sourceLocation || 'Campus PUCP';
+
+                    return (
+                      <div key={specimen.code} className="flex items-center gap-3 p-2.5 hover:bg-neutral-100/60 transition-colors">
+                        <SpecimenRowThumbnail specimen={specimen} fallbackUrl={specSpecies?.imageUrl} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-neutral-900">{specimen.code}</span>
+                            {specimen.sourceReference && (
+                              <span className="font-mono text-[10px] text-neutral-500 bg-neutral-200/60 px-1.5 py-0.5 rounded">
+                                Ref: {specimen.sourceReference}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-neutral-800 font-medium truncate">
+                            {commonName}
+                            {scientificName && (
+                              <span className="italic text-neutral-500 font-serif font-normal ml-1.5">
+                                ({scientificName})
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-neutral-500 truncate">📍 {location}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Paginador si hay más de SPECIMENS_PER_PAGE */}
+              {count > SPECIMENS_PER_PAGE && (
+                <div className="flex items-center justify-between pt-2 px-1 text-xs text-neutral-500">
+                  <span>
+                    Mostrando {(page - 1) * SPECIMENS_PER_PAGE + 1}–{Math.min(page * SPECIMENS_PER_PAGE, count)} de {count} ejemplares
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="px-2 py-0.5 rounded-md border border-neutral-200 bg-neutral-0 text-neutral-700 font-medium hover:bg-neutral-100 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                      aria-label="Página anterior de ejemplares"
+                    >
+                      ← Anterior
+                    </button>
+                    <span className="font-medium text-neutral-700 px-1">
+                      {page} / {Math.ceil(count / SPECIMENS_PER_PAGE)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPage((p) => Math.min(Math.ceil(count / SPECIMENS_PER_PAGE), p + 1))}
+                      disabled={page === Math.ceil(count / SPECIMENS_PER_PAGE)}
+                      className="px-2 py-0.5 rounded-md border border-neutral-200 bg-neutral-0 text-neutral-700 font-medium hover:bg-neutral-100 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                      aria-label="Página siguiente de ejemplares"
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Motivo de baja compartido */}
@@ -265,11 +313,22 @@ export function BulkDeactivationModal({
 
             {/* Ejemplares afectados */}
             <div className="rounded-xl border border-neutral-200 bg-neutral-50/70 p-3 space-y-1.5">
-              <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wider block">
-                Ejemplares afectados ({count}):
-              </span>
-              <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-0.5">
-                {specimens.map((s) => (
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wider block">
+                  Ejemplares afectados ({count}):
+                </span>
+                {count > MAX_VISIBLE_CODES && (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedCodes((prev) => !prev)}
+                    className="text-xs font-semibold text-brand-700 hover:text-brand-900 hover:underline cursor-pointer"
+                  >
+                    {expandedCodes ? 'Mostrar menos' : `Ver todos (${count})`}
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-0.5">
+                {(expandedCodes ? specimens : specimens.slice(0, MAX_VISIBLE_CODES)).map((s) => (
                   <span
                     key={s.code}
                     className="inline-flex items-center font-mono text-xs font-bold bg-neutral-0 text-neutral-800 px-2 py-0.5 rounded-md border border-neutral-200 shadow-2xs"
@@ -277,6 +336,15 @@ export function BulkDeactivationModal({
                     {s.code}
                   </span>
                 ))}
+                {!expandedCodes && count > MAX_VISIBLE_CODES && (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedCodes(true)}
+                    className="inline-flex items-center font-mono text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 px-2 py-0.5 rounded-md border border-brand-200 cursor-pointer transition-colors"
+                  >
+                    +{count - MAX_VISIBLE_CODES} más (ver todos)
+                  </button>
+                )}
               </div>
             </div>
 

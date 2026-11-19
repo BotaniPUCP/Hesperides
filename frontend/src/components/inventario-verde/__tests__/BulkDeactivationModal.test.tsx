@@ -141,4 +141,63 @@ describe('BulkDeactivationModal', () => {
     await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('paginates specimens in step 1 and collapses codes with +N more in step 2 when count is large', async () => {
+    const user = userEvent.setup();
+    const manySpecimens: Specimen[] = Array.from({ length: 12 }, (_, i) => ({
+      code: `EV-${String(i + 1).padStart(6, '0')}`,
+      speciesSlug: 'ficus-benjamina',
+      speciesCommonName: `Ficus ${i + 1}`,
+      sourceLocation: `Sector ${i + 1}`,
+      sourceReference: null,
+      latitude: null,
+      longitude: null,
+      photoUrl: null,
+      imageUrl: null,
+      thumbnailUrl: null,
+      quantity: 1,
+      notes: null,
+    }));
+
+    render(
+      <BulkDeactivationModal
+        isOpen
+        specimens={manySpecimens}
+        onClose={jest.fn()}
+        onConfirm={jest.fn()}
+      />,
+    );
+
+    // Paso 1: muestra página 1 de 3 (ejemplares 1 a 5)
+    expect(screen.getByText('Página 1 de 3')).toBeInTheDocument();
+    expect(screen.getByText('EV-000001')).toBeInTheDocument();
+    expect(screen.getByText('EV-000005')).toBeInTheDocument();
+    expect(screen.queryByText('EV-000006')).not.toBeInTheDocument();
+
+    // Navegar a página 2
+    await user.click(screen.getByRole('button', { name: 'Página siguiente de ejemplares' }));
+    expect(screen.getByText('EV-000006')).toBeInTheDocument();
+    expect(screen.queryByText('EV-000001')).not.toBeInTheDocument();
+
+    // Llenar motivo y pasar al Paso 2
+    await user.type(screen.getByLabelText(/Motivo del retiro/i), 'Obras generales');
+    await user.click(screen.getByRole('button', { name: 'Continuar →' }));
+
+    // Paso 2: Solo primeros 8 chips visibles + botón '+4 más (ver todos)'
+    expect(screen.getByText('EV-000001')).toBeInTheDocument();
+    expect(screen.getByText('EV-000008')).toBeInTheDocument();
+    expect(screen.queryByText('EV-000009')).not.toBeInTheDocument();
+
+    const expandBtn = screen.getByRole('button', { name: '+4 más (ver todos)' });
+    expect(expandBtn).toBeInTheDocument();
+
+    // Expandir para ver todos
+    await user.click(expandBtn);
+    expect(screen.getByText('EV-000009')).toBeInTheDocument();
+    expect(screen.getByText('EV-000012')).toBeInTheDocument();
+
+    // Colapsar
+    await user.click(screen.getByRole('button', { name: 'Mostrar menos' }));
+    expect(screen.queryByText('EV-000009')).not.toBeInTheDocument();
+  });
 });
