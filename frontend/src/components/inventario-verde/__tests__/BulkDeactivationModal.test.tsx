@@ -83,4 +83,48 @@ describe('BulkDeactivationModal', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Conflicto: un ejemplar ya fue retirado');
   });
+
+  it('sin motivo escrito, cancelar cierra directamente; con motivo escrito, pide confirmación', async () => {
+    const user = userEvent.setup();
+    const onClose = jest.fn();
+
+    const { rerender } = render(
+      <BulkDeactivationModal
+        isOpen
+        specimens={MOCK_SPECIMENS}
+        onClose={onClose}
+        onConfirm={jest.fn()}
+      />,
+    );
+
+    // Sin motivo: cancelar cierra directamente
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    // Con motivo escrito: cancelar pide confirmación
+    onClose.mockClear();
+    rerender(
+      <BulkDeactivationModal
+        isOpen
+        specimens={MOCK_SPECIMENS}
+        onClose={onClose}
+        onConfirm={jest.fn()}
+      />,
+    );
+    await user.type(screen.getByLabelText(/Motivo del retiro/i), 'Motivo de prueba');
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Seguir editando conserva los datos
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }));
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Motivo del retiro/i)).toHaveValue('Motivo de prueba');
+
+    // Salir sin guardar descarta y cierra
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });

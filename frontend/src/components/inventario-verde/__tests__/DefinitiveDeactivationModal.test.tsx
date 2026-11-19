@@ -65,4 +65,45 @@ describe('DefinitiveDeactivationModal', () => {
 
     expect(onConfirm).toHaveBeenCalledWith('Especie en declive');
   });
+
+  it('sin motivo escrito, cancelar cierra directamente; con motivo escrito, pide confirmación', async () => {
+    const user = userEvent.setup();
+    const onCancel = jest.fn();
+    const { rerender } = render(
+      <DefinitiveDeactivationModal
+        entityLabel="Ejemplar EV-000001"
+        onConfirm={jest.fn()}
+        onCancel={onCancel}
+      />
+    );
+
+    // Sin motivo: cancelar cierra directamente
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+
+    // Con motivo escrito: cancelar pide confirmación
+    onCancel.mockClear();
+    rerender(
+      <DefinitiveDeactivationModal
+        entityLabel="Ejemplar EV-000001"
+        onConfirm={jest.fn()}
+        onCancel={onCancel}
+      />
+    );
+    await user.type(screen.getByLabelText('Motivo de la baja'), 'Justificación de prueba');
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+    expect(onCancel).not.toHaveBeenCalled();
+
+    // Seguir editando conserva los datos
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }));
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Motivo de la baja')).toHaveValue('Justificación de prueba');
+
+    // Salir sin guardar descarta y cierra
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 });

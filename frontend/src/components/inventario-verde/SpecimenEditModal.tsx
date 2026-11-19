@@ -42,8 +42,6 @@ export function SpecimenEditModal({
   const [verificado, setVerificado] = useState(false);
   // Sin precarga: una medida adicional solo se registra si alguien la midió esta vez.
   const [adicionales, setAdicionales] = useState<Record<string, string>>({});
-  const [sourceReference, setSourceReference] = useState(specimen.sourceReference ?? '');
-  const [legacyCode, setLegacyCode] = useState(specimen.legacyCode ?? '');
   const [notes, setNotes] = useState(specimen.notes ?? '');
   const [photo, setPhoto] = useState<File | null>(null);
 
@@ -73,8 +71,6 @@ export function SpecimenEditModal({
   const isDirty =
     medidasCambiaron ||
     medidasEscritas().length > 0 ||
-    sourceReference.trim() !== (specimen.sourceReference ?? '').trim() ||
-    legacyCode.trim() !== (specimen.legacyCode ?? '').trim() ||
     notes.trim() !== (specimen.notes ?? '').trim() ||
     photo !== null ||
     fechaMedicion !== hoy ||
@@ -155,8 +151,8 @@ export function SpecimenEditModal({
       lat: specimen.latitude ?? 0,
       lon: specimen.longitude ?? 0,
       quantity: specimen.quantity ?? 1,
-      sourceReference: sourceReference.trim() || null,
-      legacyCode: legacyCode.trim() || null,
+      sourceReference: specimen.sourceReference,
+      legacyCode: specimen.legacyCode,
       sourceLocation: specimen.sourceLocation,
       notes: notes.trim() || null,
       measurement: registraMedicion
@@ -295,16 +291,25 @@ export function SpecimenEditModal({
             )}
 
             {ofreceVerificar && (
-              <label htmlFor="edit-specimen-verified" className="flex items-start gap-2 text-xs text-neutral-700">
-                <input
-                  id="edit-specimen-verified"
-                  type="checkbox"
-                  checked={verificado}
-                  onChange={(e) => setVerificado(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded-xs border-neutral-300"
-                />
-                <span>Verifiqué en campo: las medidas siguen igual. Se registra como una medición nueva con la fecha indicada.</span>
-              </label>
+              <div className="rounded-xl p-3 bg-brand-50/50 border border-brand-200/80 transition-colors">
+                <label htmlFor="edit-specimen-verified" className="flex items-start gap-2.5 text-xs text-neutral-800 cursor-pointer">
+                  <input
+                    id="edit-specimen-verified"
+                    type="checkbox"
+                    checked={verificado}
+                    onChange={(e) => setVerificado(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded-xs border-neutral-300 text-brand-600 focus:ring-brand-500"
+                  />
+                  <div className="space-y-0.5">
+                    <span className="font-semibold text-neutral-900 block">
+                      Verifiqué en campo: las medidas siguen igual.
+                    </span>
+                    <span className="text-neutral-600 text-[11px] block leading-relaxed">
+                      Se registra como una medición nueva en el historial con la fecha indicada sin alterar las dimensiones actuales.
+                    </span>
+                  </div>
+                </label>
+              </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
@@ -340,27 +345,12 @@ export function SpecimenEditModal({
             </div>
           </div>
 
-          {/* Sección: Referencias y Foto */}
+          {/* Sección: Fotografía y Observaciones */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between pb-1 border-b border-neutral-100">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-700">
-                Referencias y Registro
+                Fotografía y Observaciones
               </h3>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <Input
-                id="edit-specimen-source-ref"
-                label="Referencia de cuadrilla (ej. p01, JC-1)"
-                value={sourceReference}
-                onChange={setSourceReference}
-              />
-              <Input
-                id="edit-specimen-legacy-code"
-                label="Código de placa heredado"
-                value={legacyCode}
-                onChange={setLegacyCode}
-              />
             </div>
 
             <div className="space-y-1">

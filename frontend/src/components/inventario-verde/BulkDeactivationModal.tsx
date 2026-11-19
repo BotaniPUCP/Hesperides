@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Species, Specimen } from '@shared/types';
 import { Button, Modal } from '@/components/ui';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 
 export interface BulkDeactivationModalProps {
   isOpen: boolean;
@@ -72,6 +73,13 @@ export function BulkDeactivationModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isDirty = reason.trim().length > 0;
+  const guard = useUnsavedChangesGuard(isOpen && isDirty);
+  const cerrar = () => {
+    if (saving) return;
+    guard.confirm(onClose);
+  };
+
   if (!isOpen) return null;
 
   async function handleConfirm() {
@@ -91,30 +99,31 @@ export function BulkDeactivationModal({
   const count = specimens.length;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={() => { if (!saving) onClose(); }}
-      title={`Confirmar baja definitiva (${count} ${count === 1 ? 'ejemplar' : 'ejemplares'})`}
-      size="md"
-      closeOnOverlayClick={!saving}
-      closeOnEsc={!saving}
-      footer={(
-        <div className="flex w-full justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleConfirm}
-            loading={saving}
-            disabled={saving || !reason.trim()}
-          >
-            {saving ? 'Dando de baja...' : `Dar de baja ${count} ${count === 1 ? 'ejemplar' : 'ejemplares'}`}
-          </Button>
-        </div>
-      )}
-    >
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={cerrar}
+        title={`Confirmar baja definitiva (${count} ${count === 1 ? 'ejemplar' : 'ejemplares'})`}
+        size="md"
+        closeOnOverlayClick={!saving}
+        closeOnEsc={!saving}
+        footer={(
+          <div className="flex w-full justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={cerrar} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleConfirm}
+              loading={saving}
+              disabled={saving || !reason.trim()}
+            >
+              {saving ? 'Dando de baja...' : `Dar de baja ${count} ${count === 1 ? 'ejemplar' : 'ejemplares'}`}
+            </Button>
+          </div>
+        )}
+      >
       <div className="space-y-4 text-sm text-neutral-700">
         {/* Advertencia preventiva */}
         <div className="rounded-xl border border-red-200 bg-red-50/70 p-3.5 text-xs text-red-900 leading-relaxed space-y-1">
@@ -196,5 +205,7 @@ export function BulkDeactivationModal({
         )}
       </div>
     </Modal>
+    {guard.dialog}
+  </>
   );
 }

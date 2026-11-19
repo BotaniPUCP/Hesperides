@@ -74,6 +74,17 @@ const REGLAS: readonly Regla[] = [
   [/^Possible duplicate of (.+)$/, (m) => `Podría ser el ejemplar ${m[1]}, que ya está registrado`],
   [/^The file is not a (supported|readable) image$/, () => 'El archivo no es una imagen válida (JPG o PNG)'],
   [/^Specimen not found: (.+)$/, (m) => `No existe el ejemplar ${m[1]}`],
+  [/^Trunk height cannot exceed total height$/, () => 'La altura del fuste no puede superar la altura total'],
+  [/^«(.*)» cannot be in the future$/, (m) => `«${m[1]}» no puede ser una fecha futura`],
+  [/^A new specimen relationship must use an active species$/, () => 'Los ejemplares solo pueden vincularse a especies activas'],
+  [/^The selected species is no longer available\. Re-analyze the file$/, () => 'La especie seleccionada ya no está disponible. Vuelve a analizar el archivo'],
+  [/^A species selection no longer matches a name in the file$/, () => 'Una selección de especie ya no coincide con un nombre en el archivo'],
+  [/^Could not read the uploaded file$/, () => 'No se pudo leer el archivo subido'],
+  [/^Template missing from the build/, () => 'La plantilla del archivo no está disponible en el sistema'],
+  [/^The inbox is not configured/, () => 'La carpeta de entrada no está configurada'],
+  [/^The inbox has photos but no (.*)$/, (m) => `La carpeta de entrada contiene fotos pero falta ${m[1]}`],
+  [/^Not listed in (.*)$/, (m) => `No figura en ${m[1]}`],
+  [/^Its species is not in the catalog$/, () => 'Su especie no está en el catálogo'],
   ...IMPORT_PATTERNS,
 ];
 

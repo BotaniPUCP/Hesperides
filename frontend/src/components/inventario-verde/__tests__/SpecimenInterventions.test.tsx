@@ -40,10 +40,15 @@ it('revalida el historial al recuperar el foco y conserva la página actual',asy
 it('distingue ausencia de trabajos autorizados de un fallo recuperable',async()=>{
   jest.mocked(interventionsApi.list).mockRejectedValueOnce(new ApiError(503,'Unavailable'));
   render(<SpecimenInterventions id={1} code="EV-000001"/>);
-  await screen.findByRole('alert');expect(screen.queryByText(/No hay intervenciones vinculadas/)).not.toBeInTheDocument();
+  await screen.findByRole('alert');expect(screen.queryByText(/No hay intervenciones registradas/)).not.toBeInTheDocument();
   jest.mocked(interventionsApi.list).mockResolvedValue({content:[],page:{number:0,size:20,totalElements:0,totalPages:0}});
   fireEvent.click(screen.getByRole('button',{name:'Reintentar historial'}));
-  expect(await screen.findByText('No hay intervenciones vinculadas a este ejemplar disponibles para tu cuenta.')).toBeInTheDocument();
+  expect(await screen.findByText('No hay intervenciones registradas para este ejemplar.')).toBeInTheDocument();
+});
+it('muestra mensaje específico de intervenciones históricas cuando el ejemplar está retirado',async()=>{
+  jest.mocked(interventionsApi.list).mockResolvedValue({content:[],page:{number:0,size:20,totalElements:0,totalPages:0}});
+  render(<SpecimenInterventions id={1} code="EV-000001" isRetired />);
+  expect(await screen.findByText('No se registran intervenciones históricas vinculadas a este ejemplar.')).toBeInTheDocument();
 });
 it('descarta respuestas tardías del ejemplar anterior',async()=>{
   let resolveFirst!:(value:InterventionPage)=>void;
@@ -59,7 +64,7 @@ it('limpia el historial al cambiar de lector y al cerrar sesión',async()=>{
   jest.mocked(interventionsApi.list).mockResolvedValue({content:[],page:{number:0,size:20,totalElements:0,totalPages:0}});
   reader={id:2,role:{code:'OPERARIO'}};view.rerender(<SpecimenInterventions id={1} code="EV-000001"/>);
   expect(screen.queryByRole('link',{name:'INT-000001'})).not.toBeInTheDocument();
-  await screen.findByText(/No hay intervenciones vinculadas/);
+  await screen.findByText(/No hay intervenciones registradas/);
   reader=null;view.rerender(<SpecimenInterventions id={1} code="EV-000001"/>);
   expect(screen.queryByText('Intervenciones del ejemplar')).not.toBeInTheDocument();
 });
