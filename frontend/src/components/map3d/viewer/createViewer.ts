@@ -35,6 +35,7 @@ import { ringLines, centroid } from './geometry';
 import { BUILDING_LOOKS } from '../realLook/looks';
 import { createRealColors, NEUTRAL, setEdgesForRealColors } from '../realLook/realColors';
 import { GLASS_ENV_BOOST } from '../realLook/lookLightShader';
+import { createTargetBadges } from './targetBadges';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
 
@@ -76,12 +77,14 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   // El mapa general no marca ninguna sección por defecto. Solo M7 llama a
   // setMarkedSections; así puede hacer selección múltiple sin alterar /mapa.
   const markedSectionCodes = new Set<string>();
+  const targetSectionColors=new Map<string,string>(),targetSpecimenColors=new Map<string,string>();
+  const targetBadges=createTargetBadges(labelRoot,(lat,lon)=>data.plane.toPlane(lat,lon),WORLD_LIFT);
   let eligibleSectionCodes: Set<string> | null = null;
   SECTION_LAYERS.forEach((id) => {
     const layer = poly[id];
     const originalColor = layer.options.color;
     layer.options.color = (i) => eligibleSectionCodes && !eligibleSectionCodes.has(data[id][i]?.props.code)
-      ? state.palette.dimmed : markedSectionCodes.has(data[id][i]?.props.code) ? MARKED_COLOR : originalColor(i);
+      ? state.palette.dimmed : targetSectionColors.get(data[id][i]?.props.code) ?? (markedSectionCodes.has(data[id][i]?.props.code) ? MARKED_COLOR : originalColor(i));
   });
   // Un lugar puede ser varios bloques: se marcan todos, porque la selección resalta uno solo.
   // Los ids de los edificios agrupados se traducen al principal que se dibuja.
@@ -112,7 +115,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   // Como las secciones: solo Conjuntos marca ejemplares; el mapa general no lo usa.
   const markedSpecimenCodes = new Set<string>();
   const plantColor = vegetation.color;
-  vegetation.color = (i) => markedSpecimenCodes.has(data.vegetation[i]?.props.code) ? MARKED_COLOR : plantColor(i);
+  vegetation.color = (i) => targetSpecimenColors.get(data.vegetation[i]?.props.code) ?? (markedSpecimenCodes.has(data.vegetation[i]?.props.code) ? MARKED_COLOR : plantColor(i));
   const all: Partial<Record<LayerId, PolyLayer | PointLayer>> = { ...poly, ...points, vegetation };
   const pickables: THREE.Object3D[] = [...Object.values(poly).map((l) => l.mesh), ...[...Object.values(points), vegetation].flatMap((l) => l.meshes)];
   const highlight = createHighlight(scene, all, () => state.palette);
@@ -258,6 +261,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       if (sunset.enabled()) { cascades?.update(); sunset.render(distance); } else renderer.render(scene, rig.camera);
       const { w, h } = size();
       labels.update(rig.camera, w, h, labelVisible);
+      targetBadges.update(rig.camera,w,h,markers.visible);
       balloons?.update(rig.camera, w, h, distance);
       const off = rig.camera.position.clone().sub(rig.controls.target);
       cb.onCompass((Math.atan2(off.x, off.z) * 180) / Math.PI);
@@ -280,6 +284,11 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   };
 
   return {
+    setTargetMarks(marks) {
+      targetSectionColors.clear();targetSpecimenColors.clear();
+      marks.sections.forEach(m=>targetSectionColors.set(m.code,m.color));marks.specimens.forEach(m=>targetSpecimenColors.set(m.code,m.color));
+      targetBadges.set(marks.badges);SECTION_LAYERS.forEach(id=>highlight.repaint(id));highlight.repaint('vegetation');needsRender=true;
+    },
     setEligibleSections(codes) {
       eligibleSectionCodes=codes===null?null:new Set(codes);
       SECTION_LAYERS.forEach((id) => highlight.repaint(id));
@@ -440,6 +449,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     dispose() {
+      targetBadges.dispose();
       clearReference();
       cancelAnimationFrame(frame);
       observer.disconnect();

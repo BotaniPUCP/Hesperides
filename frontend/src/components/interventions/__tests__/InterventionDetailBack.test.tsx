@@ -35,7 +35,7 @@ it('sin recorrido, breadcrumb y flecha llevan al listado con sus últimos filtro
   rememberListQuery(LIST, 'status=COMPLETED&page=2');
   render(<PageFrame><InterventionDetail id={10} /></PageFrame>);
 
-  const crumb = await screen.findByRole('link', { name: 'Intervenciones' });
+  const crumb = await screen.findByRole('link', { name: 'Actividades' });
   expect(crumb).toHaveAttribute('href', `${LIST}?status=COMPLETED&page=2`);
   expect(screen.getByRole('link', { name: 'Volver' })).toHaveAttribute('href', `${LIST}?status=COMPLETED&page=2`);
 });

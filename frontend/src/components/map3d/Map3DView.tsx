@@ -70,7 +70,10 @@ export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemo
           latest.current.onBalloonPick && balloons.current ? { ...latest.current.start, balloonRoot: balloons.current } : latest.current.start);
         latest.current.onReady(viewer);
       })
-      .catch(() => {
+      .catch((error: unknown) => {
+        console.error('No se pudo inicializar el visor 3D.', error);
+        viewer?.dispose();
+        viewer = null;
         if (mounted) latest.current.onUnsupported();
       });
     return () => {

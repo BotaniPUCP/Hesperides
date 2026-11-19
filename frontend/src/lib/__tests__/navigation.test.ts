@@ -149,7 +149,7 @@ describe('visibleNavigation', () => {
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Lugares',
       'Catálogo botánico',
-      'Intervenciones',
+      'Actividades',
       'Catastro verde',
       'Directorio',
       'Reservas',

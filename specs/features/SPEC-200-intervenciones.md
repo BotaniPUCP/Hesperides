@@ -6,7 +6,7 @@
 | Autor | Propuesta elaborada con Codex para revisión del equipo |
 | Estado | En progreso: núcleo/web probados; T08 y T09 local implementados con validación visual pendiente; T10 requiere conciliar contrato con incidencias |
 | Fecha | 22 oct 2026 |
-| Revisión | §2.12 reemplaza el flujo por lugares: mapa único, áreas de todo el campus y ejemplares individuales; R5 implementado, R6 pendiente |
+| Revisión | §2.13 consolida Actividades y avance global (18 nov); modelo V072, backend, planificación/listado y formulario global de avance implementados. Revisión visual pendiente; §2.12 describe la versión anterior |
 | Plataforma | Web; contrato de evidencias preparado para un futuro cliente Android |
 | Sprint | S2, sujeto a planificación del equipo |
 | Dependencias | SPEC-001, SPEC-002 §4.6, SPEC-003, SPEC-004, SPEC-005, SPEC-101, SPEC-102, SPEC-C01, SPEC-C02, SPEC-C03 |
@@ -14,6 +14,13 @@
 > Lectura obligatoria: [REGLAS.md](../REGLAS.md). Este documento propone la primera entrega
 > de intervenciones. Sus decisiones nuevas se identifican como propuestas, no como requisitos
 > confirmados por el cliente. No autoriza cambios en código ni en bases existentes.
+
+> **Actualización 18 nov 2026:** los requisitos nuevos confirmados de §2.13 prevalecen
+> sobre los flujos anteriores donde exista contradicción. El modelo y la API del flujo
+> global están implementados de forma aditiva. La creación/edición web usa el contrato
+> nuevo y el listado admite ambos. Las actividades históricas conservan su flujo y datos;
+> el formulario web global incorpora mapa/lista de objetivos, porcentaje manual, historial
+> y fotos. La revisión visual permanece pendiente por falta de conexión al navegador.
 >
 > El DDL implementado se referencia desde §4. El backend implementa las rutas de consulta,
 > opciones, creación, edición, asignación, cancelación, inicio/avance y anuncio/subida/lectura
@@ -1319,3 +1326,82 @@ Las intervenciones nuevas solo se programan para hoy o una fecha futura según e
 #### Presentación y filtro de actividades (R5, 2026-11-12)
 
 El título principal se compone de clase y tipo; el código queda como referencia secundaria. Los estados incluyen texto, color e ícono. La web muestra activas por defecto; COMPLETED, VALIDATED y CANCELLED son inactivas y OBSERVED sigue activa. Se ofrecen ambos grupos y todas las actividades. El filtro se aplica antes de paginar y conserva los permisos existentes.
+
+### 2.13 Actividades y avance global — 18 nov 2026
+
+**Modelo, backend y planificación/listado web implementados; avance global web pendiente.**
+Las reglas confirmadas aquí sustituyen los requisitos operativos anteriores en caso
+de contradicción. El contrato anterior y sus datos históricos siguen disponibles.
+Detalle y decisiones: [Actividades — etapa 1](../../docs/planes/SPEC-200-actividades-etapa-1.md).
+
+- Nombre visible: Actividades. Creación con selección de jardines/ejemplares y Capataz
+  responsable opcional, sin Cuadrilla. No existe estado Asignada.
+- Subir avance registra una única operación global: porcentaje acumulado manual 0–100,
+  descripción, autor, fecha y estado de cada objetivo. El mapa y la lista muestran solo
+  objetivos de la actividad, permiten seleccionarlos y distinguen sin avance, terminado
+  y parcial; cada parcial tiene su descripción. No agregan objetivos nuevos.
+- Desaparecen Cantidad solicitada, Cantidad ejecutada, Enviar a revisión, Observada,
+  Subsanar observación y el sistema de intentos del flujo nuevo. Se conserva su historia.
+- Cien por ciento exige todos los objetivos terminados, y todos terminados exige 100 %.
+  El porcentaje no se deduce de contar jardines/ejemplares o sus superficies.
+- Planificada hasta guardar un primer avance válido. Abrir/cancelar el formulario no
+  inicia trabajo ni asigna responsable. Al guardar, sin responsable previo, lo asume
+  el capataz autor; con responsable previo solo él puede subir avances. El coordinador
+  puede reasignar. Se conserva la restricción de inicio por fecha planificada.
+- En ejecución para avance inferior a 100 %. Ejecutada al guardar 100 %, sin botón
+  adicional de envío. Ambas comparten colores y tienen íconos distintos.
+- El coordinador aprueba globalmente y pasa a Terminada, que sustituye el nombre visible
+  Validada/Aprobada. El capataz ya no realiza aprobación final en el nuevo contrato.
+- Hasta esa aprobación se pueden corregir avances, incluso disminuir el porcentaje:
+  bajar de 100 % devuelve a En ejecución, con historial y objetivos coherentes.
+  Las correcciones se coordinan fuera de la plataforma y no crean observaciones/intentos.
+- Solo el coordinador cancela; se admite cancelar durante ejecución con motivo opcional
+  y sin perder avances anteriores. No se introducen reapertura de Cancelada, cancelación
+  de Terminada o edición posterior a la aprobación final.
+
+La planificación/listado y el formulario global se implementan en etapas 4–5; la etapa 6
+corresponde a verificación integrada, demostración y entrega.
+Se revisan los consumidores de estados y responsabilidad (incluidas incidencias,
+indicadores y datos de demo), sin renombrar
+automáticamente tablas, rutas o códigos compartidos ni editar migraciones publicadas.
+
+**Modelo de etapa 2 (18 nov):** V072 prepara `activity_executions`,
+`activity_progress_entries`, `activity_progress_targets` y `activity_evidences`, con
+entidades JPA y catálogos propios `ACTIVITY_STATUS` / `ACTIVITY_TARGET_STATUS`.
+La ausencia de fila en `activity_executions` identifica el contrato anterior; no se
+inventan porcentajes, responsables o fechas al migrar. Los registros previos, sus
+cantidades e intentos, quedan intactos. La instantánea de cada avance es inmutable,
+abarca todos los objetivos y valida la equivalencia entre 100 % y todos terminados.
+V072 solo se comprueba en bases temporales en esta etapa; el servicio/web anteriores
+no activan automáticamente el flujo nuevo. Ver [modelo y compatibilidad](../../docs/planes/SPEC-200-actividades-etapa-2.md).
+
+**Backend de etapa 3 (18 nov):** `/api/v1/activities` crea actividades globales sin
+cuadrilla y guarda porcentaje, descripción, autor e instantánea completa en una
+transacción. Aplica responsabilidad automática al primer guardado, reasignación por
+coordinador, fecha programada, correcciones hasta aprobación y cancelación durante
+ejecución con motivo opcional. Evidencias privadas, versiones e idempotencia protegen
+el registro. Los comandos anteriores no modifican actividades globales.
+Las consultas compartidas proyectan EXECUTED→COMPLETED y FINISHED→VALIDATED, conservando
+la separación entre aprobación de actividad y resolución de incidencia. El responsable
+global reemplaza la dependencia de cuadrilla para consultar su trabajo aceptado.
+No se modifica todavía la interfaz ni se migra una base persistente.
+Ver [API, permisos y compatibilidad](../../docs/planes/SPEC-200-actividades-etapa-3.md).
+
+**Web de etapa 4 (18 nov):** nombre visible Actividades, creación y edición global
+sin cuadrilla, capataz responsable opcional y reintento de solicitud completa.
+La consulta compartida conserva filtros/paginación e identifica registros anteriores;
+las tarjetas globales muestran porcentaje y estados nuevos. El detalle global no
+expone comandos anteriores de ubicación/intento. El formulario Subir avance está implementado
+en etapa 5, con mapa/lista sincronizados, porcentaje manual, historial global y evidencias.
+La revisión visual de etapas 4–5 queda pendiente por limitación de las herramientas
+de control, sin atribuirla a las pruebas automáticas aprobadas.
+Ver [implementación y verificación](../../docs/planes/SPEC-200-actividades-etapa-4.md).
+El avance operativo y sus verificaciones están en [etapa 5](../../docs/planes/SPEC-200-actividades-etapa-5.md).
+
+**Corrección de brechas y continuidad confirmada (18 nov):** el filtro y las etiquetas
+visibles presentan solo los cinco estados acordados. V073 incorpora actividades anteriores
+abiertas al flujo global conservando sus datos, autores, reportes y fotos originales.
+El capataz registra el primer porcentaje real; no se calcula desde cantidades anteriores.
+Las actividades anteriores cerradas quedan consultables, sin los comandos retirados.
+El mapa de avance usa una consulta autorizada y limitada a la actividad; el capataz no
+depende de la ruta de planificación del coordinador. Ver [revisión de acuerdos](../../docs/planes/SPEC-200-cierre-de-brechas-etapas-1-5.md).

@@ -14,14 +14,18 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
     String FILTERS = """
         where i.deleted_at is null
           and (:role in ('ADMIN','COORDINADOR')
-            or (:role='OPERARIO' and i.assigned_to_user_id=:actor)
+            or (gx.id IS NOT NULL and :role='SUPERVISOR' and (gx.responsible_supervisor_user_id=:actor or (gx.responsible_supervisor_user_id IS NULL and (gs.code='PLANNED' or (gx.legacy_baseline_pending and gs.code<>'CANCELLED')))))
+            or (gx.id IS NULL and ((:role='OPERARIO' and i.assigned_to_user_id=:actor)
             or (:role='SUPERVISOR' and exists(select 1 from teams t where t.id=i.team_id
-                and t.supervisor_user_id=:actor and t.is_active and t.deleted_at is null)))
+                and t.supervisor_user_id=:actor and t.is_active and t.deleted_at is null)))))
           and (cast(:classId as bigint) is null or i.intervention_class_item_id=:classId)
           and (cast(:typeId as bigint) is null or i.intervention_type_item_id=:typeId)
           and (cast(:team as bigint) is null or i.team_id=:team)
-          and (cast(:assignee as bigint) is null or i.assigned_to_user_id=:assignee)
+          and (cast(:assignee as bigint) is null or (case when gx.id is not null then gx.responsible_supervisor_user_id else i.assigned_to_user_id end)=:assignee)
           and (cast(:status as varchar) is null or a.status_code=:status)
+          and (cast(:activityStatus as varchar) is null or
+            (case a.status_code when 'ASSIGNED' then 'PLANNED' when 'OBSERVED' then 'IN_PROGRESS'
+              when 'COMPLETED' then 'EXECUTED' when 'VALIDATED' then 'FINISHED' else a.status_code end)=:activityStatus)
           and (cast(:active as boolean) is null
             or (:active=true and a.status_code not in ('COMPLETED','VALIDATED','CANCELLED'))
             or (:active=false and a.status_code in ('COMPLETED','VALIDATED','CANCELLED')))
@@ -49,5 +53,5 @@ public interface InterventionSearchRepository extends Repository<Intervention,Lo
         @Param("assignee") Long assignee,@Param("status") String status,@Param("dateFrom") LocalDate dateFrom,
         @Param("dateTo") LocalDate dateTo,@Param("zone") Long zone,@Param("place") Long place,
         @Param("localStatus") String localStatus,@Param("element") Long element,
-        @Param("elementCode") String elementCode,@Param("incidentId") Long incidentId,@Param("active") Boolean active,Pageable pageable);
+        @Param("elementCode") String elementCode,@Param("incidentId") Long incidentId,@Param("active") Boolean active,@Param("activityStatus") String activityStatus,Pageable pageable);
 }

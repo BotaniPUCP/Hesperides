@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PlannedInterventionForm } from '../PlannedInterventionForm';
 import { InterventionForm } from '../InterventionForm';
-import { interventionsApi } from '@/lib/interventions-api';
+import { activitiesApi, interventionsApi } from '@/lib/interventions-api';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
 import { planningApi } from '@/lib/planning-api';
 import { planningRow } from '@/components/planning/__fixtures__/planningFixtures';
@@ -12,10 +12,7 @@ jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { id: 1, role: { c
 jest.mock('@/components/forms/unsaved/useUnsavedChangesGuard', () => ({
   useUnsavedChangesGuard: () => ({ confirm: (fn: () => void) => fn(), dialog: null, navigate: jest.fn() }),
 }));
-jest.mock('@/lib/interventions-api', () => ({
-  ...jest.requireActual('@/lib/interventions-api'),
-  interventionsApi: { options: jest.fn(), create: jest.fn(), campusOptions: jest.fn(), campusPreview: jest.fn() },
-}));
+jest.mock('@/lib/interventions-api', () => {const interventionsApi={options:jest.fn(),campusOptions:jest.fn(),campusPreview:jest.fn()};return {...jest.requireActual('@/lib/interventions-api'),interventionsApi,activitiesApi:{options:()=>interventionsApi.options().then((o:import('@/lib/interventions-api').InterventionOptions)=>({...o,supervisors:[],statuses:[]})),create:jest.fn()}};});
 jest.mock('@/lib/green-area-sets-api', () => ({ greenAreaSetsApi: { get: jest.fn() } }));
 jest.mock('@/lib/planning-api', () => ({ planningApi: { rows: jest.fn(), recentAttention: jest.fn() } }));
 // El mapa 3D no corre en jsdom: se reemplaza por lo que interesa aquí, lo que llega marcado.
@@ -53,20 +50,20 @@ function givenSet(zoneIds: number[], elementIds: number[] = []) {
     activities: [], warnings: [], zones: zoneIds.map(setZone), elements: elementIds.map((id) => ({ id, code: `EV-000${id}` })) });
 }
 
-const createdBody = () => (interventionsApi.create as jest.Mock).mock.calls[0][0];
+const createdBody = () => (activitiesApi.create as jest.Mock).mock.calls[0][0].planning;
 const counter = (text: string) => screen.findByText(text, { selector: 'p[role="status"]' });
 
 async function createIntervention() {
-  const submit = screen.getByRole('button', { name: 'Crear intervención' });
+  const submit = screen.getByRole('button', { name: 'Crear actividad' });
   await waitFor(() => expect(submit).toBeEnabled());
   await userEvent.click(submit);
-  await waitFor(() => expect(interventionsApi.create).toHaveBeenCalled());
+  await waitFor(() => expect(activitiesApi.create).toHaveBeenCalled());
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
   (interventionsApi.options as jest.Mock).mockResolvedValue(options);
-  (interventionsApi.create as jest.Mock).mockResolvedValue({ id: 99 });
+  (activitiesApi.create as jest.Mock).mockResolvedValue({ id: 99 });
   (interventionsApi.campusOptions as jest.Mock).mockResolvedValue(campus([112, 113, ...ids(530)]));
   (interventionsApi.campusPreview as jest.Mock).mockImplementation(async (_: string, zones: number[], specimens: number[]) =>
     ({ surfaceM2: zones.length * 100, areaCount: zones.length, specimenCount: specimens.length }));
@@ -160,7 +157,7 @@ describe('Registro de intervención desde la planificación (SPEC-203 §5.6)', (
 
     expect(await screen.findByRole('link', { name: 'INT-000081' })).toHaveAttribute('href', '/intervenciones/81');
     expect(screen.getByText(/Ya hay una intervención abierta para esto/)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Crear intervención' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Crear actividad' })).toBeEnabled());
   });
 
   it('el aviso también sale en una intervención creada a mano', async () => {

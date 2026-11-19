@@ -10,6 +10,7 @@ import { Button, EmptyState, LoadingSkeleton, Select, StatusBadge } from '@/comp
 import { interventionsApi, interventionError, type InterventionPage } from '@/lib/interventions-api';
 import { isoDateFrom, pageFrom } from '@/lib/listUrl';
 import { PageHeader } from '@/components/layouts/PageHeader';
+import { ACTIVITY_STATUS_CODES, activityFilter, activityStatus, activityStatusLabel } from './activityPresentation';
 
 const LIST_PATH = '/intervenciones';
 // La identidad estable y el código visible los fija el enlace de entrada; van aquí para que filtrar no los borre de la URL.
@@ -17,10 +18,11 @@ const DEFAULTS = { greenElementCode: '', greenElementId: '', status: '', activit
 
 export function InterventionsList({ greenElementCode, greenElementId }: { greenElementCode?:string; greenElementId?:string }) {
   const { user } = useAuth();
-  const statuses = useCatalog('INTERVENTION_STATUS');
+  const activityStatuses = useCatalog('ACTIVITY_STATUS');
+  const statusLabel=(code:string)=>activityStatuses.items.find(s=>s.code===activityStatus(code))?.label??activityStatusLabel(code);
   const { values, setValues, query } = useListUrlState(LIST_PATH, DEFAULTS);
   const page = pageFrom(values.page);
-  const status = values.status;
+  const status = activityFilter(values.status);
   const activity = ['active','inactive','all'].includes(values.activity) ? values.activity : status ? 'all' : 'active';
   const activeFilter = activity === 'all' ? undefined : activity === 'active';
   const from = isoDateFrom(values.from);
@@ -45,30 +47,32 @@ export function InterventionsList({ greenElementCode, greenElementId }: { greenE
   const change = (patch: Partial<typeof DEFAULTS>) => { setLoading(true); setValues({ ...patch, page: '0' }); };
   const goToPage = (next: number) => { setLoading(true); setValues({ page: String(next) }); };
   return <section className="space-y-6">
-    <PageHeader title="Intervenciones" description="Actividades y avances por ubicación" actions={['ADMIN','COORDINADOR'].includes(user?.role.code ?? '') && <Link className="rounded-md bg-brand-600 px-4 py-3 text-white" href="/intervenciones/nueva">Nueva intervención</Link>} />
-    {greenElementCode !== undefined && <p className="rounded-md border border-neutral-200 p-3">Ejemplar: <strong>{greenElementCode}</strong> · <Link href="/intervenciones" className="text-brand-600 underline">Ver todas las intervenciones</Link></p>}
+    <PageHeader title="Actividades" description="Planificación y seguimiento del trabajo en jardines y ejemplares" actions={['ADMIN','COORDINADOR'].includes(user?.role.code ?? '') && <Link className="rounded-md bg-brand-600 px-4 py-3 text-white" href="/intervenciones/nueva">Nueva actividad</Link>} />
+    {greenElementCode !== undefined && <p className="rounded-md border border-neutral-200 p-3">Ejemplar: <strong>{greenElementCode}</strong> · <Link href="/intervenciones" className="text-brand-600 underline">Ver todas las actividades</Link></p>}
     <div className="surface-card grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <label className="grid gap-1 text-sm">Mostrar<select className="h-11 rounded-md border border-neutral-200 bg-neutral-0 p-2" value={activity} onChange={e=>change({activity:e.target.value,status:''})}>
         <option value="active">Activas</option><option value="inactive">Inactivas</option><option value="all">Todas</option>
       </select></label>
       <Select id="intervention-status" label="Estado" value={status} onChange={o => change({ status: o?.code ?? '', activity: o ? 'all' : '' })}
-        options={statuses.items.map((s,i) => ({ id:i, code:s.code, label:s.label }))} placeholder="Todos los estados" clearable />
+        options={ACTIVITY_STATUS_CODES.map((code,id) => ({ id, code, label:statusLabel(code) }))} placeholder="Todos los estados" clearable />
       <label className="grid gap-1 text-sm">Desde<input className="h-11 rounded-md border border-neutral-200 p-2" type="date" value={from} onChange={e => change({ from: e.target.value })} /></label>
       <label className="grid gap-1 text-sm">Hasta<input className="h-11 rounded-md border border-neutral-200 p-2" type="date" value={to} onChange={e => change({ to: e.target.value })} /></label>
-      <p className="text-xs text-neutral-500 sm:col-span-2 lg:col-span-4">Inactivas: terminadas, aprobadas o canceladas. Las observadas siguen activas.</p>
+      <p className="text-xs text-neutral-500 sm:col-span-2 lg:col-span-4">Inactivas: ejecutadas, terminadas o canceladas. Los registros anteriores conservan su historial.</p>
     </div>
     {error && <div role="alert" className="rounded-lg border border-action-danger p-4"><p>{error}</p><Button onClick={reload}>Reintentar</Button></div>}
-    {loading ? <LoadingSkeleton variant="card" /> : !error && result?.content.length === 0 ? <EmptyState title="No hay intervenciones" description="Prueba con otras fechas o estados." /> : !error && <>
+    {loading ? <LoadingSkeleton variant="card" /> : !error && result?.content.length === 0 ? <EmptyState title="No hay actividades" description="Prueba con otras fechas o estados." /> : !error && <>
       <p className="surface-pill text-sm text-neutral-500">{result?.page.totalElements} actividades</p>
       <div className="grid gap-4 lg:grid-cols-2">{result?.content.map(work => <article key={work.id} className="surface-card space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2"><Link href={`/intervenciones/${work.id}`} className="font-semibold text-brand-600 underline">{work.activityTitle || 'Actividad sin clasificación'}</Link>
-          <StatusBadge showIcon code={work.statusCode} label={statuses.items.find(s => s.code === work.statusCode)?.label ?? work.statusCode} /></div>
+          <StatusBadge showIcon code={activityStatus(work.statusCode)} label={statusLabel(work.statusCode)} /></div>
         <p className="text-xs text-neutral-500">{work.code}</p>
-        <p>Programada: {work.scheduledDate}</p><p>{work.completedLocationCount}/{work.locationCount} ubicaciones terminadas · {work.validatedLocationCount} aprobadas</p>
+        <p>Programada: {work.scheduledDate}</p>
+        {work.activityWorkflow?<><p>Avance acumulado: {work.progressPercentage==null?(work.legacyBaselinePending?'Porcentaje global pendiente de registrar':'Sin avances registrados'):`${work.progressPercentage} %`}</p><p>{work.locationCount} jardines y ejemplares</p></>
+          :<p>{work.locationCount} jardines y ejemplares · Historial conservado</p>}
         {work.pendingEvidenceCount > 0 && <p className="text-sm">Fotos pendientes: {work.pendingEvidenceCount}</p>}
         {work.approvedForCounting && <p className="text-sm text-brand-600">Aprobación final recibida</p>}
       </article>)}</div>
-      <nav aria-label="Páginas de intervenciones" className="surface-card flex items-center justify-between gap-3">
+      <nav aria-label="Páginas de actividades" className="surface-card flex items-center justify-between gap-3">
         <Button variant="secondary" disabled={page === 0} onClick={() => goToPage(page - 1)}>Anterior</Button>
         <span>Página {page + 1} de {Math.max(1, result?.page.totalPages ?? 0)}</span>
         <Button variant="secondary" disabled={page + 1 >= (result?.page.totalPages ?? 0)} onClick={() => goToPage(page + 1)}>Siguiente</Button>

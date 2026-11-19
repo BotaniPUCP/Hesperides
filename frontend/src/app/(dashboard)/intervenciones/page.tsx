@@ -1,6 +1,6 @@
 import { InterventionsList } from '@/components/interventions/InterventionsList';
 
-export const metadata = { title:'Intervenciones · Hesperides' };
+export const metadata = { title:'Actividades · Hesperides' };
 export default async function InterventionsPage({searchParams}:{searchParams:Promise<{greenElementCode?:string|string[];greenElementId?:string|string[]}>}) {
   const {greenElementCode, greenElementId} = await searchParams;
   const code = Array.isArray(greenElementCode) ? greenElementCode[0] : greenElementCode;

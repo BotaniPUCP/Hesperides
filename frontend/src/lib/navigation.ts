@@ -4,7 +4,7 @@
  * componentes.
  *
  * Los grupos siguen los módulos del dominio (M1 Configuración, M2 Catastro,
- * M3 Intervenciones…), no un único «Administración» que lo agrupe todo: cuando
+ * M3 Actividades…), no un único «Administración» que lo agrupe todo: cuando
  * lleguen el catastro o el riego, cada uno entra como su propio grupo en vez de
  * mezclar la configuración con el trabajo diario.
  *
@@ -69,10 +69,10 @@ export const NAVIGATION: readonly NavGroup[] = [
   },
   {
     id: 'intervenciones',
-    label: 'Intervenciones',
+    label: 'Actividades',
     icon: '🧰',
     items: [
-      { label: 'Intervenciones', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+      { label: 'Actividades', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       // SPEC-203 D-12: planificar, armar conjuntos y fijar cada cuánto es trabajo de coordinación.
       { label: 'Planificación preventiva', href: '/intervenciones/planificacion', icon: '📅', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Conjuntos de áreas verdes', href: '/intervenciones/conjuntos', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR'] },

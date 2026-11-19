@@ -82,6 +82,11 @@ public final class InterventionRequests {
             Long zoneId, Long placeId, Long greenElementId, Long teamId, Long assignedToUserId,
             @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE) LocalDate dateTo, Long incidentId,
-            @Size(min=1,max=100) String greenElementCode, Boolean active) {}
+            @Size(min=1,max=100) String greenElementCode, Boolean active,
+            @Pattern(regexp="PLANNED|IN_PROGRESS|EXECUTED|FINISHED|CANCELLED") String activityStatusCode) {
+        public Filter(String statusCode,String locationStatusCode,Long classItemId,Long typeItemId,Long zoneId,Long placeId,Long greenElementId,Long teamId,Long assignedToUserId,LocalDate dateFrom,LocalDate dateTo,Long incidentId,String greenElementCode,Boolean active) {
+            this(statusCode,locationStatusCode,classItemId,typeItemId,zoneId,placeId,greenElementId,teamId,assignedToUserId,dateFrom,dateTo,incidentId,greenElementCode,active,null);
+        }
+    }
 }
 

@@ -6,10 +6,7 @@ import type { IncidentDetail, LinkedIncidentIntervention } from '@shared/types';
 import { Button, Card, Input, StatusBadge } from '@/components/ui';
 import { InterventionPicker } from './InterventionPicker';
 
-const WORK_STATUS: Record<string, string> = {
-  PLANNED: 'Planificada', ASSIGNED: 'Asignada', IN_PROGRESS: 'En ejecución', COMPLETED: 'Ejecutada, falta validar',
-  VALIDATED: 'Validada', OBSERVED: 'Observada', CANCELLED: 'Cancelada', UNAVAILABLE: 'No disponible',
-};
+import { activityStatus, activityStatusLabel } from '@/components/interventions/activityPresentation';
 
 /** Una acción sobre un vínculo: quitarlo, o quitarlo y vincular otra en un paso. */
 function LinkAction({ work, replace, busy, onRemove, onReplace }: {
@@ -37,15 +34,15 @@ export function IncidentWorkLinks({ detail, busy, createHref, onLink, onRemove, 
   const canLink = detail.capabilities.canLink;
   const [selected, setSelected] = useState<number | null>(null);
   const [action, setAction] = useState<{ linkId: number; replace: boolean } | null>(null);
-  return <Card title="Intervenciones vinculadas">
+  return <Card title="Actividades vinculadas">
     <div className="space-y-4">
-      <p className="text-sm text-neutral-700">Se ejecutan y validan en Intervenciones. La incidencia se cierra cuando todas están validadas.</p>
-      {detail.linkedInterventions.length === 0 ? <p className="text-sm text-neutral-700">Aún no hay intervenciones vinculadas.</p> :
+      <p className="text-sm text-neutral-700">Se ejecutan y aprueban en Actividades. La incidencia se resuelve por separado, cuando el trabajo requerido ha terminado.</p>
+      {detail.linkedInterventions.length === 0 ? <p className="text-sm text-neutral-700">Aún no hay actividades vinculadas.</p> :
         <ul className="space-y-3">{detail.linkedInterventions.map((work) => <li key={work.linkId} className="space-y-2 rounded-md border border-neutral-200 p-3">
-          <StatusBadge code={work.statusCode} label={WORK_STATUS[work.statusCode] ?? work.statusCode} />
+          <StatusBadge code={activityStatus(work.statusCode)} label={work.statusCode==='UNAVAILABLE'?'No disponible':activityStatusLabel(work.statusCode)} />
           {work.code ? <Link href={`/intervenciones/${work.id}`} className="block break-words font-semibold text-brand-700 underline">
-            {work.code} · {work.description || 'Ver intervención'}</Link> : <p>Intervención no disponible.</p>}
-          <p className="text-sm text-neutral-700">{work.validatedLocationCount}/{work.locationCount} ubicaciones validadas</p>
+            {work.code} · {work.description || 'Ver actividad'}</Link> : <p>Actividad no disponible.</p>}
+          <p className="text-sm text-neutral-700">{work.validatedLocationCount}/{work.locationCount} objetivos aprobados</p>
           {canLink && work.linkId !== null && <div className="flex flex-wrap gap-2">
             {work.statusCode === 'CANCELLED' && <Button type="button" size="lg" variant="secondary" disabled={busy}
               onClick={() => setAction({ linkId: work.linkId!, replace: true })}>Reemplazar {work.code}</Button>}
@@ -58,10 +55,10 @@ export function IncidentWorkLinks({ detail, busy, createHref, onLink, onRemove, 
         </li>)}</ul>}
       {canLink && !action && <div className="space-y-3 border-t border-neutral-200 pt-4">
         <Link href={createHref} className="inline-flex min-h-12 items-center rounded-md border border-neutral-200 px-4 font-medium text-brand-700">
-          Crear intervención para esta incidencia</Link>
+          Crear actividad para esta incidencia</Link>
         <InterventionPicker value={selected} onChange={setSelected} disabled={busy} />
         <Button type="button" size="lg" disabled={busy || selected === null}
-          onClick={async () => { if (selected !== null && await onLink(selected)) setSelected(null); }}>Vincular intervención</Button>
+          onClick={async () => { if (selected !== null && await onLink(selected)) setSelected(null); }}>Vincular actividad</Button>
       </div>}
     </div>
   </Card>;
