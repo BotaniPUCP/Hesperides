@@ -35,7 +35,7 @@ const MOCK_SPECIMENS: Specimen[] = [
 ];
 
 describe('BulkDeactivationModal', () => {
-  it('renders list of selected specimens and disables confirm until reason is entered', async () => {
+  it('renders list of selected specimens, navigates to step 2 review, and confirms', async () => {
     const user = userEvent.setup();
     const onConfirm = jest.fn().mockResolvedValue(undefined);
     const onClose = jest.fn();
@@ -55,12 +55,25 @@ describe('BulkDeactivationModal', () => {
     expect(screen.getByText('Molle costeño')).toBeInTheDocument();
     expect(screen.getByText('Ficus')).toBeInTheDocument();
 
-    const submitBtn = screen.getByRole('button', { name: /Dar de baja 2 ejemplares/i });
-    expect(submitBtn).toBeDisabled();
+    const continueBtn = screen.getByRole('button', { name: 'Continuar →' });
+    expect(continueBtn).toBeDisabled();
 
     await user.type(screen.getByLabelText(/Motivo del retiro/i), 'Retiro por obras civiles');
-    expect(submitBtn).toBeEnabled();
+    expect(continueBtn).toBeEnabled();
+    await user.click(continueBtn);
 
+    // Paso 2: Resumen y confirmación final
+    expect(screen.getByText(/Resumen de la baja definitiva \(2 ejemplares\) · Paso 2 de 2/)).toBeInTheDocument();
+    expect(screen.getByText(/Impacto de la acción:/)).toBeInTheDocument();
+    expect(screen.getByText(/Retiro por obras civiles/)).toBeInTheDocument();
+
+    // Permite regresar a editar con Atrás
+    await user.click(screen.getByRole('button', { name: '← Atrás' }));
+    expect(screen.getByText(/Paso 1 de 2/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Motivo del retiro/i)).toHaveValue('Retiro por obras civiles');
+    await user.click(screen.getByRole('button', { name: 'Continuar →' }));
+
+    const submitBtn = screen.getByRole('button', { name: /Dar de baja 2 ejemplares/i });
     await user.click(submitBtn);
     expect(onConfirm).toHaveBeenCalledWith('Retiro por obras civiles');
   });
@@ -79,6 +92,7 @@ describe('BulkDeactivationModal', () => {
     );
 
     await user.type(screen.getByLabelText(/Motivo del retiro/i), 'Motivo de prueba');
+    await user.click(screen.getByRole('button', { name: 'Continuar →' }));
     await user.click(screen.getByRole('button', { name: /Dar de baja 2 ejemplares/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Conflicto: un ejemplar ya fue retirado');

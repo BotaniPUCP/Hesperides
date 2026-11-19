@@ -1,6 +1,6 @@
 'use client';
 
-import type { ImportConfirmationSummary } from '@shared/types';
+import type { ImportConfirmationSummary, ImportKind } from '@shared/types';
 import { Button, Modal } from '@/components/ui';
 
 export interface ConfirmarImportacionModalProps {
@@ -10,6 +10,7 @@ export interface ConfirmarImportacionModalProps {
   error: string | null;
   onBack: () => void;
   onConfirm: () => void;
+  kind?: ImportKind;
 }
 
 /** Solo confirma las cantidades del plan; el detalle permanece en la vista previa. */
@@ -20,6 +21,7 @@ export function ConfirmarImportacionModal({
   error,
   onBack,
   onConfirm,
+  kind,
 }: ConfirmarImportacionModalProps) {
   const back = () => {
     if (!isWorking) onBack();
@@ -60,7 +62,9 @@ export function ConfirmarImportacionModal({
         </dl>
         {sinOperacionesModal && (
           <p role="alert" className="text-xs font-medium text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-            No hay ejemplares que se puedan importar. Todas las filas del archivo serán omitidas debido a duplicados descartados o especies sin asociación.
+            {kind === 'species'
+              ? 'No hay especies que se puedan importar.'
+              : 'No hay ejemplares que se puedan importar. Todas las filas del archivo serán omitidas debido a duplicados descartados o especies sin asociación.'}
           </p>
         )}
         {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}

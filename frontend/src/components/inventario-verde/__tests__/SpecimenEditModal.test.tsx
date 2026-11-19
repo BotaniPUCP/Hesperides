@@ -153,6 +153,11 @@ describe('SpecimenEditModal', () => {
       await user.clear(screen.getByLabelText(/Altura total/i));
       await user.type(screen.getByLabelText(/Altura total/i), '10.0');
 
+      // Al no haber ningún cambio real numérico, el botón de guardar permanece deshabilitado
+      expect(screen.getByRole('button', { name: /Guardar cambios/i })).toBeDisabled();
+
+      // Si además se edita una nota, se permite guardar pero sin registrar medición dendrométrica
+      await user.type(screen.getByLabelText(/observaciones|notas/i), ' nota');
       expect((await guardarYConfirmar(user)).measurement).toBeNull();
     });
 
@@ -244,6 +249,11 @@ describe('SpecimenEditModal', () => {
         />,
       );
 
+      // Sin cambios, el botón de guardar está deshabilitado
+      expect(screen.getByRole('button', { name: /Guardar cambios/i })).toBeDisabled();
+
+      // Si se añade solo una observación, se puede guardar sin registrar medición dendrométrica
+      await user.type(screen.getByLabelText(/observaciones|notas/i), 'Inspección visual');
       expect((await guardarYConfirmar(user)).measurement).toBeNull();
     });
   });
@@ -394,6 +404,7 @@ describe('SpecimenEditModal', () => {
     await user.click(screen.getByRole('button', { name: 'Cancelar' }));
     expect(handleClose).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled();
   });
 
   it('con cambios, cancelar pide confirmación; «Seguir editando» conserva los datos y «Salir sin guardar» cierra', async () => {

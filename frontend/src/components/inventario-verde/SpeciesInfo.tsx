@@ -19,7 +19,7 @@ export interface SpeciesInfoProps {
  * Jerarquía clara: Nombre común > Nombre científico > Taxonomía/Estado > Medidas botánicas.
  */
 export function SpeciesInfo({ species, actions }: SpeciesInfoProps) {
-  const isNameIdentical = species.commonName.trim().toLowerCase() === species.scientificName.trim().toLowerCase();
+  const isNameIdentical = Boolean(species.commonName) && species.commonName?.trim().toLowerCase() === species.scientificName?.trim().toLowerCase();
   const hasNotesOrDescription = Boolean(species.description?.trim() || species.careNotes?.trim());
 
   return (

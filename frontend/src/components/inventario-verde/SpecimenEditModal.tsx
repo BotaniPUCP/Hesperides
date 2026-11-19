@@ -81,6 +81,7 @@ export function SpecimenEditModal({
 
   function handleRequestSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
+    if (!isDirty) return;
     setErrorMessage(null);
 
     const parsedHeight = parseNumber(alturaM);
@@ -193,7 +194,7 @@ export function SpecimenEditModal({
             <Button variant="secondary" onClick={cerrar} disabled={saving}>
               Cancelar
             </Button>
-            <Button variant="primary" onClick={() => void handleRequestSubmit()} loading={saving}>
+            <Button variant="primary" onClick={() => void handleRequestSubmit()} loading={saving} disabled={saving || !isDirty}>
               Guardar cambios
             </Button>
           </div>

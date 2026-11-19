@@ -148,6 +148,7 @@ describe('SpeciesDetailScreen', () => {
     render(<SpeciesDetailScreen slug="syagrus-romanzoffiana" />);
     await user.click(await screen.findByRole('button', { name: 'Dar de baja' }));
     await user.type(screen.getByLabelText('Motivo del retiro'), 'Retiro acordado');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Continuar →' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar retiro' }));
 
     await screen.findByText('En proceso de retiro');

@@ -59,4 +59,17 @@ describe('SpeciesInfo', () => {
     expect(screen.getByText('Número de estípites')).toBeInTheDocument();
     expect(screen.getByText(/Generalmente 1/)).toBeInTheDocument();
   });
+
+  it('renderiza correctamente cuando la especie no tiene nombre común (null o vacío)', () => {
+    const sinComun: Species = {
+      ...palmeraReal,
+      commonName: null,
+      scientificName: 'Kkkkkk',
+    };
+
+    render(<SpeciesInfo species={sinComun} />);
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Kkkkkk');
+    expect(screen.queryByText('(Kkkkkk)')).not.toBeInTheDocument();
+  });
 });
