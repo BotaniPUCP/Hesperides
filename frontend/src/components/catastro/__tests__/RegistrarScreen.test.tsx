@@ -6,8 +6,9 @@ import { catastroApi } from '@/lib/catastro-api';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { RegistrarScreen } from '../registrar/RegistrarScreen';
 
+const mockPush = jest.fn();
 const mockUseAuth = jest.fn();
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn() }) }));
+jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush, replace: jest.fn() }) }));
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => mockUseAuth() }));
 jest.mock('@/lib/catastro-api', () => ({ catastroApi: { register: jest.fn(), registerFeature: jest.fn() } }));
 jest.mock('@/hooks/useCatalog', () => ({
@@ -258,6 +259,37 @@ describe('RegistrarScreen', () => {
     pantalla();
 
     expect(screen.queryByRole('button', { name: /\+ Nueva especie/ })).not.toBeInTheDocument();
+  });
+
+  it('el botón Cancelar sin cambios navega a /catastro/ejemplares sin preguntar', async () => {
+    pantalla();
+
+    const cancelBtn = screen.getByRole('button', { name: 'Cancelar' });
+    await userEvent.click(cancelBtn);
+
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+    expect(mockPush).toHaveBeenCalledWith('/catastro/ejemplares');
+  });
+
+  it('el botón Cancelar con cambios pide confirmación; «Seguir editando» conserva los datos y «Salir sin guardar» navega', async () => {
+    pantalla();
+    await elegirMolleYPunto();
+
+    const cancelBtn = screen.getByRole('button', { name: 'Cancelar' });
+    await userEvent.click(cancelBtn);
+
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+
+    // Seguir editando conserva los datos
+    await userEvent.click(screen.getByRole('button', { name: 'Seguir editando' }));
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Latitud/)).toHaveValue('-12.070200');
+
+    // Salir sin guardar navega
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(mockPush).toHaveBeenCalledWith('/catastro/ejemplares');
   });
 });
 

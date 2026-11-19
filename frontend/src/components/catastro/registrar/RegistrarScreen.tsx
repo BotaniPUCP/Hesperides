@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { EmptyState } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,10 +20,12 @@ const OPCIONES: [QueSeRegistra, string][] = [
 
 /** Registro por formulario (SPEC-103 §5.1): una planta, un tacho o un bebedero. ADMIN, COORDINADOR y SUPERVISOR (D-03). */
 export function RegistrarScreen() {
+  const router = useRouter();
   const { user } = useAuth();
   const [que, setQue] = useState<QueSeRegistra>('planta');
   const [sinGuardar, setSinGuardar] = useState(false);
   const guard = useUnsavedChangesGuard(sinGuardar);
+  const cancelar = () => guard.confirm(() => router.push('/catastro/ejemplares'));
 
   if (!puedeRegistrar(user?.role.code)) {
     return <EmptyState title="El registro del catastro es de supervisión, coordinación y administración" />;
@@ -45,9 +48,9 @@ export function RegistrarScreen() {
       </PageHeader>
       {/* La clave reinicia el formulario al cambiar de tipo: lo escrito para un tacho no vale para un bebedero. */}
       {que === 'planta' ? (
-        <RegistroPlantaForm onDirtyChange={setSinGuardar} />
+        <RegistroPlantaForm onDirtyChange={setSinGuardar} onCancel={cancelar} />
       ) : (
-        <RegistroComponenteForm key={que} kind={que} onDirtyChange={setSinGuardar} />
+        <RegistroComponenteForm key={que} kind={que} onDirtyChange={setSinGuardar} onCancel={cancelar} />
       )}
       {guard.dialog}
     </div>

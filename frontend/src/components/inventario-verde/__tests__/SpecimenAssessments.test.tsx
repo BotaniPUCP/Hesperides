@@ -52,6 +52,24 @@ const EJEMPLO_HISTORIAL: Assessment[] = [
   },
 ];
 
+const MOCK_COORDINADOR_AUTH = {
+  user: {
+    id: 1,
+    email: 'coordinador@pucp.edu.pe',
+    firstName: 'Coordinador',
+    lastName: 'Catastro',
+    fullName: 'Coordinador Catastro',
+    role: { id: 2, code: 'COORDINADOR', label: 'Coordinador' },
+    isActive: true,
+    lastLogin: null,
+    mustChangePassword: false,
+  },
+  isLoading: false,
+  login: jest.fn(),
+  logout: jest.fn(),
+  refreshSession: jest.fn(),
+};
+
 describe('SpecimenAssessments', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -126,23 +144,7 @@ describe('SpecimenAssessments', () => {
 
   it('permite registrar una nueva evaluación con confirmación previa y actualiza la lista', async () => {
     const user = userEvent.setup();
-    mockUseAuth.mockReturnValue({
-      user: {
-        id: 1,
-        email: 'coordinador@pucp.edu.pe',
-        firstName: 'Coordinador',
-        lastName: 'Catastro',
-        fullName: 'Coordinador Catastro',
-        role: { id: 2, code: 'COORDINADOR', label: 'Coordinador' },
-        isActive: true,
-        lastLogin: null,
-        mustChangePassword: false,
-      },
-      isLoading: false,
-      login: jest.fn(),
-      logout: jest.fn(),
-      refreshSession: jest.fn(),
-    });
+    mockUseAuth.mockReturnValue(MOCK_COORDINADOR_AUTH);
 
     const NUEVA_LISTA: Assessment[] = [
       {
@@ -192,5 +194,48 @@ describe('SpecimenAssessments', () => {
     // Se cerró el modal y se actualizó la lista mostrando la nueva observación
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByText(/Evaluación post-lluvia sin anomalías/)).toBeInTheDocument();
+  });
+
+  it('sin cambios, cancelar cierra el modal de evaluación directamente', async () => {
+    const user = userEvent.setup();
+    mockUseAuth.mockReturnValue(MOCK_COORDINADOR_AUTH);
+
+    render(<SpecimenAssessments code="EV-000001" />);
+
+    const newBtn = await screen.findByRole('button', { name: /Nueva evaluación/i });
+    await user.click(newBtn);
+
+    expect(screen.getByText(/Registrar evaluación fitosanitaria e inspección/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.queryByText(/Registrar evaluación fitosanitaria e inspección/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+  });
+
+  it('con respuestas o notas en evaluación, cancelar pide confirmación; «Seguir editando» conserva los datos y «Salir sin guardar» cierra', async () => {
+    const user = userEvent.setup();
+    mockUseAuth.mockReturnValue(MOCK_COORDINADOR_AUTH);
+
+    render(<SpecimenAssessments code="EV-000001" />);
+
+    const newBtn = await screen.findByRole('button', { name: /Nueva evaluación/i });
+    await user.click(newBtn);
+
+    const obsInput = screen.getByLabelText(/Observaciones de campo/i);
+    await user.type(obsInput, 'Presencia de termitas en base');
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+
+    // Seguir editando conserva los cambios
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }));
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Observaciones de campo/i)).toHaveValue('Presencia de termitas en base');
+
+    // Salir sin guardar cierra el modal de evaluación
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(screen.queryByText(/Registrar evaluación fitosanitaria e inspección/i)).not.toBeInTheDocument();
   });
 });

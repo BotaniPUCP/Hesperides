@@ -169,4 +169,21 @@ describe('RegistroEspecieForm', () => {
     ));
     expect(await screen.findByText(/Especie registrada exitosamente/i)).toBeInTheDocument();
   });
+
+  it('notifica onDirtyChange al ingresar datos y ejecuta onCancel al hacer clic en Cancelar', async () => {
+    const onDirtyChange = jest.fn();
+    const onCancel = jest.fn();
+
+    render(<RegistroEspecieForm onDirtyChange={onDirtyChange} onCancel={onCancel} />);
+
+    expect(onDirtyChange).toHaveBeenCalledWith(false);
+
+    await userEvent.type(screen.getByLabelText(/Nombre científico/i), 'Jacaranda');
+    expect(onDirtyChange).toHaveBeenCalledWith(true);
+
+    const cancelBtn = screen.getByRole('button', { name: 'Cancelar' });
+    await userEvent.click(cancelBtn);
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 });

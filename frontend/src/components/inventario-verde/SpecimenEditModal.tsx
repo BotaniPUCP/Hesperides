@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { SpecimenDetail, SpecimenForm } from '@shared/types';
 import { Button, Input, Modal } from '@/components/ui';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { catastroApi } from '@/lib/catastro-api';
 import { todayLocal } from '@/lib/local-date';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
@@ -68,6 +69,19 @@ export function SpecimenEditModal({
     .some((valor) => valor !== null);
   const ofreceVerificar = tieneMedidas && !medidasCambiaron;
   const registraMedicion = medidasCambiaron || medidasEscritas().length > 0 || (ofreceVerificar && verificado);
+
+  const isDirty =
+    medidasCambiaron ||
+    medidasEscritas().length > 0 ||
+    sourceReference.trim() !== (specimen.sourceReference ?? '').trim() ||
+    legacyCode.trim() !== (specimen.legacyCode ?? '').trim() ||
+    notes.trim() !== (specimen.notes ?? '').trim() ||
+    photo !== null ||
+    fechaMedicion !== hoy ||
+    verificado;
+
+  const guard = useUnsavedChangesGuard(isOpen && isDirty);
+  const cerrar = () => guard.confirm(onClose);
 
   function handleRequestSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
@@ -175,12 +189,12 @@ export function SpecimenEditModal({
     <>
       <Modal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={cerrar}
         title={`Editar ejemplar · ${specimen.code}`}
         size="lg"
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
-            <Button variant="secondary" onClick={onClose} disabled={saving}>
+            <Button variant="secondary" onClick={cerrar} disabled={saving}>
               Cancelar
             </Button>
             <Button variant="primary" onClick={() => void handleRequestSubmit()} loading={saving}>
@@ -447,6 +461,7 @@ export function SpecimenEditModal({
           </>
         )}
       </ConfirmSaveModal>
+      {guard.dialog}
     </>
   );
 }

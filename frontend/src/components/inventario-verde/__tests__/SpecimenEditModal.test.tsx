@@ -378,4 +378,53 @@ describe('SpecimenEditModal', () => {
     expect(screen.getByText(/Editar ejemplar · EV-000001/i)).toBeInTheDocument();
     expect(mockCatastroApi.update).not.toHaveBeenCalled();
   });
+
+  it('sin cambios, cancelar cierra directamente', async () => {
+    const user = userEvent.setup();
+    const handleClose = jest.fn();
+    render(
+      <SpecimenEditModal
+        specimen={EJEMPLO_SPECIMEN}
+        isOpen={true}
+        onClose={handleClose}
+        onSuccess={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(handleClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+  });
+
+  it('con cambios, cancelar pide confirmación; «Seguir editando» conserva los datos y «Salir sin guardar» cierra', async () => {
+    const user = userEvent.setup();
+    const handleClose = jest.fn();
+    render(
+      <SpecimenEditModal
+        specimen={EJEMPLO_SPECIMEN}
+        isOpen={true}
+        onClose={handleClose}
+        onSuccess={jest.fn()}
+      />
+    );
+
+    await user.clear(screen.getByLabelText(/Altura total/i));
+    await user.type(screen.getByLabelText(/Altura total/i), '15.5');
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+    expect(handleClose).not.toHaveBeenCalled();
+
+    // Seguir editando conserva los cambios
+    await user.click(screen.getByRole('button', { name: 'Seguir editando' }));
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Altura total/i)).toHaveValue(15.5);
+    expect(handleClose).not.toHaveBeenCalled();
+
+    // Salir sin guardar descarta y cierra
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await user.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
 });
