@@ -21,6 +21,8 @@ export const SPANISH_BACKEND_MESSAGES: readonly RegExp[] = [
   /^La semana debe empezar un lunes$/,
   /^(La semana no puede ser posterior a la semana en curso|El mes no puede ser posterior al mes en curso)$/,
   /^Elige un sector$/,
+  // SPEC-202 D-20: la lista de intervenciones detrás de una cifra.
+  /^(Indica qué intervenciones listar|Elige la sección)$/,
   // Catálogos y medidas adicionales (SPEC-105)
   /^Ya existe un ítem con el código .+ en .+$/,
   // SPEC-203 §3.4: nombra el conjunto y la actividad; se muestra tal cual.

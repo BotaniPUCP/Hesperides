@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { MonthlyReport } from '@shared/types';
 import { Card } from '@/components/ui';
+import type { MonthlyFilters } from '@/lib/reportNavigation';
+import { InterventionDrilldown } from '../InterventionDrilldown';
 import { ReportBadge } from '../charts/ReportBadge';
 import { formatAreaOf, formatCount, formatPercent } from '../reportFormat';
 import { MONTHLY_TEXTS } from '../reportTexts';
@@ -14,8 +16,11 @@ function Kpi({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** Coverage, approved work and incidents of the period (SPEC-202 §5.1 step 3). */
-export function MonthlySummary({ report }: { report: MonthlyReport }) {
+/**
+ * Coverage, approved work and incidents of the period (SPEC-202 §5.1 step 3).
+ * {@code filters} carry the resolved period, so each figure opens its own works (D-20).
+ */
+export function MonthlySummary({ report, filters }: { report: MonthlyReport; filters: MonthlyFilters }) {
   const { coverage, interventions, incidents } = report;
   return (
     <section aria-labelledby="monthly-kpis" className="space-y-3">
@@ -46,10 +51,12 @@ export function MonthlySummary({ report }: { report: MonthlyReport }) {
         </Kpi>
         <Kpi label={MONTHLY_TEXTS.approved}>
           <p className="text-3xl font-semibold text-neutral-900">{formatCount(interventions.approved)}</p>
+          <InterventionDrilldown kind="APPROVED" filters={filters} total={interventions.approved} />
         </Kpi>
         <Kpi label={MONTHLY_TEXTS.pendingApproval}>
           <p className="text-3xl font-semibold text-neutral-900">{formatCount(interventions.pendingApproval)}</p>
           <p className="text-xs text-neutral-700">{MONTHLY_TEXTS.pendingApprovalHelp}</p>
+          <InterventionDrilldown kind="PENDING_APPROVAL" filters={filters} total={interventions.pendingApproval} />
         </Kpi>
         <Kpi label={MONTHLY_TEXTS.incidents}>
           <p className="text-lg font-semibold text-neutral-900">{MONTHLY_TEXTS.incidentsOpen(incidents.open, incidents.inProgress)}</p>

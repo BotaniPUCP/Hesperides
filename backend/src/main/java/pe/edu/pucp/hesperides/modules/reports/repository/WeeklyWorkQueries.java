@@ -62,15 +62,24 @@ public class WeeklyWorkQueries {
      * figure of the week).
      */
     public long pendingPhotos(ReportFilter f, Collection<Long> sectionIds) {
-        var params = new MapSqlParameterSource("sections", ReportSql.ids(sectionIds));
-        String sql = "select count(*) from intervention_evidences e"
+        var params = new MapSqlParameterSource();
+        Long count = jdbc.queryForObject("select count(*)" + pendingPhotosFrom(f, sectionIds, params), params, Long.class);
+        return count == null ? 0 : count;
+    }
+
+    /**
+     * The evidence that {@link #pendingPhotos} counts, alias {@code e} over
+     * intervention {@code i}. The list of works behind that figure (SPEC-202
+     * D-20) groups this same fragment by work.
+     */
+    static String pendingPhotosFrom(ReportFilter f, Collection<Long> sectionIds, MapSqlParameterSource params) {
+        params.addValue("sections", ReportSql.ids(sectionIds));
+        return " from intervention_evidences e"
                 + " join interventions i on i.id=e.intervention_id and i.deleted_at is null"
                 + " where e.uploaded_at is null and e.deleted_at is null" + ReportSql.workFilters(f, params)
                 + " and exists(select 1 from intervention_locations tl " + ReportSql.sectionJoins("tl")
                 + " where tl.intervention_id=i.id and tl.deleted_at is null and "
                 + ReportSql.sectionOf("tl") + " in (:sections))";
-        Long count = jdbc.queryForObject(sql, params, Long.class);
-        return count == null ? 0 : count;
     }
 
     /** Active teams whose sector is {@code sectorId}; for a SUPERVISOR only the ones they lead (D-08). */

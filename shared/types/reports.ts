@@ -196,3 +196,18 @@ export interface DirectionReport {
   coverageSeries: { target: number | null; points: CoverageSeriesPoint[] };
   generatedAt: string;
 }
+
+/** SPEC-202 D-20, §3.7: the report figure whose works a list shows. */
+export type ReportInterventionKind = 'APPROVED' | 'PENDING_APPROVAL' | 'PENDING_PHOTOS' | 'ATTENDED_SECTION';
+
+/** One work behind a figure; the screen links it to `/intervenciones/{id}`. */
+export interface ReportInterventionRow {
+  id: number;
+  code: string;
+  classLabel: string;
+  typeLabel: string | null;
+  teamName: string | null;
+  /** Null for a work not executed yet. */
+  lastExecutionDate: string | null;
+  pendingPhotos: number;
+}

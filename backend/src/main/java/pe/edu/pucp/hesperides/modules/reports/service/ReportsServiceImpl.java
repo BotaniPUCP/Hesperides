@@ -15,7 +15,9 @@ import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse.Defaults
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse.Period;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse.SectorOption;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse.TeamOption;
+import pe.edu.pucp.hesperides.modules.reports.dto.ReportInterventionRow;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportSectionResponse;
+import pe.edu.pucp.hesperides.modules.reports.dto.TopList;
 import pe.edu.pucp.hesperides.modules.reports.dto.WeeklyReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.repository.InterventionReportQueries;
 import pe.edu.pucp.hesperides.modules.users.entity.Team;
@@ -40,6 +42,7 @@ public class ReportsServiceImpl implements ReportsService {
     private final MonthlyReportBuilder monthlyReports;
     private final WeeklyReportBuilder weeklyReports;
     private final DirectionReportBuilder directionReports;
+    private final InterventionListBuilder interventionLists;
 
     @Override
     @Transactional(readOnly = true)
@@ -78,6 +81,15 @@ public class ReportsServiceImpl implements ReportsService {
     public MonthlyReportResponse monthly(MonthlyReportFilter filter, String email) {
         ReportScope scope = scopes.resolve(email);
         return monthlyReports.build(monthlyFilters.resolve(filter, scope), scope);
+    }
+
+    /** §3.7: same filters, validation and scope as the monthly report (D-20). */
+    @Override
+    @Transactional(readOnly = true)
+    public TopList<ReportInterventionRow> interventions(String kind, MonthlyReportFilter filter, String email) {
+        InterventionListBuilder.checkKind(kind, filter.sectionId());
+        ReportScope scope = scopes.resolve(email);
+        return interventionLists.build(kind, monthlyFilters.resolve(filter, scope));
     }
 
     /** §3.3: the week starts on Monday and cannot be later than the current one; the sector is required. */

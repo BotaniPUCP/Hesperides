@@ -1,4 +1,7 @@
-import type { DirectionReport, MonthlyReport, ReportOptions, ReportSection, WeeklyReport } from '@shared/types';
+import type {
+  DirectionReport, MonthlyReport, ReportInterventionKind, ReportInterventionRow, ReportOptions, ReportSection,
+  ReportTopList, WeeklyReport,
+} from '@shared/types';
 import { apiClient } from './api';
 import type { MonthlyFilters, WeeklyParams } from './reportNavigation';
 
@@ -21,4 +24,7 @@ export const reportsApi = {
   weekly: (params: WeeklyParams) => apiClient.get<WeeklyReport>(`${path}/weekly${query({ ...params })}`),
   monthly: (filters: MonthlyFilters) => apiClient.get<MonthlyReport>(`${path}/monthly${query({ ...filters })}`),
   direction: (month: string | null) => apiClient.get<DirectionReport>(`${path}/direction${query({ month })}`),
+  /** The works behind a weekly or monthly figure (SPEC-202 §3.7), with the report's own filters. */
+  interventions: (kind: ReportInterventionKind, filters: MonthlyFilters) =>
+    apiClient.get<ReportTopList<ReportInterventionRow>>(`${path}/interventions${query({ kind, ...filters })}`),
 };

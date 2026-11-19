@@ -68,7 +68,21 @@ public class InterventionReportQueries {
      */
     private long countByWorkDate(String state, ReportFilter f, Collection<Long> sectionIds) {
         var params = ReportSql.periodParams(f);
-        StringBuilder sql = new StringBuilder("select count(*) from (select i.id, ")
+        String sql = "select count(*) from (" + worksByDate(state, f, sectionIds, params)
+                + ") w where w.work_date between :from and :to";
+        Long count = jdbc.queryForObject(sql, params, Long.class);
+        return count == null ? 0 : count;
+    }
+
+    /**
+     * The works in {@code state} with their date ({@code id}, {@code work_date}),
+     * before cutting by period. The counters and the list behind each counter
+     * (SPEC-202 D-20) read this same fragment, so a figure and its list cannot
+     * disagree.
+     */
+    static String worksByDate(String state, ReportFilter f, Collection<Long> sectionIds,
+                              MapSqlParameterSource params) {
+        StringBuilder sql = new StringBuilder("select i.id, ")
                 .append(ReportSql.civilDateOfUtc("max(l.completed_at)")).append(" work_date")
                 .append(" from interventions i join intervention_locations l")
                 .append(" on l.intervention_id=i.id and l.deleted_at is null where ").append(state)
@@ -79,9 +93,7 @@ public class InterventionReportQueries {
                     .append(ReportSql.sectionOf("tl")).append(" in (:sections))");
             params.addValue("sections", ReportSql.ids(sectionIds));
         }
-        sql.append(" group by i.id) w where w.work_date between :from and :to");
-        Long count = jdbc.queryForObject(sql.toString(), params, Long.class);
-        return count == null ? 0 : count;
+        return sql.append(" group by i.id").toString();
     }
 
     /** Active classes with their active types (SPEC-200 §2.4). A type under an inactive class is not offered. */

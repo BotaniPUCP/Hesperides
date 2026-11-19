@@ -3,8 +3,10 @@ package pe.edu.pucp.hesperides.modules.reports.service;
 import pe.edu.pucp.hesperides.modules.reports.dto.DirectionReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportFilter;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse;
+import pe.edu.pucp.hesperides.modules.reports.dto.ReportInterventionRow;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportSectionResponse;
+import pe.edu.pucp.hesperides.modules.reports.dto.TopList;
 import pe.edu.pucp.hesperides.modules.reports.dto.WeeklyReportResponse;
 
 import java.time.LocalDate;
@@ -19,6 +21,12 @@ public interface ReportsService {
     List<ReportSectionResponse> sections(Long sectorId, String email);
 
     MonthlyReportResponse monthly(MonthlyReportFilter filter, String email);
+
+    /**
+     * The works behind a weekly or monthly figure (D-20): {@code kind} names the
+     * figure and {@code filter} carries the same filters and scope as the report.
+     */
+    TopList<ReportInterventionRow> interventions(String kind, MonthlyReportFilter filter, String email);
 
     /** {@code weekStart} null means the current week. */
     WeeklyReportResponse weekly(LocalDate weekStart, Long sectorId, String email);
