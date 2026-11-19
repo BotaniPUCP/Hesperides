@@ -402,6 +402,7 @@ describe('InventarioEjemplaresScreen', () => {
       const reasonInput = screen.getByLabelText(/Motivo del retiro/i);
       await user.type(reasonInput, 'Retiro por obras del nuevo pabellón');
 
+      await user.click(screen.getByRole('button', { name: 'Continuar →' }));
       await user.click(screen.getByRole('button', { name: /Dar de baja 1 ejemplar/i }));
 
       expect(api.deactivateSpecimensBatch).toHaveBeenCalledWith(

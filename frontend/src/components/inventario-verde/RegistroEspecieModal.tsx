@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Species, SpeciesForm } from '@shared/types';
 import { Button, Input, Modal, Select, type SelectOption } from '@/components/ui';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { CampoArchivo } from '@/components/forms/CampoArchivo';
 import { useCatalog } from '@/hooks/useCatalog';
 import { LIMITES } from '@/lib/upload-limits';
@@ -65,6 +66,34 @@ function RegistroEspecieDialog({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const isDirty = Boolean(
+    scientificName !== (initialScientificName ?? '') ||
+    commonName.trim() !== '' ||
+    family.trim() !== '' ||
+    vegetationTypeCode !== 'TREE' ||
+    originCode !== null ||
+    otherNamesText.trim() !== '' ||
+    description.trim() !== '' ||
+    careNotes.trim() !== '' ||
+    photo !== null ||
+    medidas.alturaM !== '' ||
+    medidas.radioM !== '' ||
+    medidas.fuenteAltura !== null ||
+    medidas.fuenteRadio !== null ||
+    !medidas.usaFuste ||
+    !medidas.usaDap ||
+    medidas.adicionales.length > 0
+  );
+
+  const guard = useUnsavedChangesGuard(isOpen && isDirty);
+  const cerrar = () => {
+    if (saving) return;
+    guard.confirm(() => {
+      resetForm();
+      onClose();
+    });
+  };
 
   const { items: catalogTypes, isLoading: loadingTypes } = useCatalog('SPECIES_TYPE');
   const { items: originTypes, isLoading: loadingOrigins } = useCatalog('SPECIES_ORIGIN');
@@ -166,12 +195,7 @@ function RegistroEspecieDialog({
     <>
       <Modal
         isOpen={isOpen}
-        onClose={() => {
-          if (!saving) {
-            resetForm();
-            onClose();
-          }
-        }}
+        onClose={cerrar}
         title="Registrar nueva especie botánica"
         size="lg"
         footer={
@@ -179,10 +203,7 @@ function RegistroEspecieDialog({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => {
-                resetForm();
-                onClose();
-              }}
+              onClick={cerrar}
               disabled={saving}
             >
               Cancelar
@@ -358,6 +379,7 @@ function RegistroEspecieDialog({
           Esta especie quedará disponible en el catálogo botánico para el censo y registro de ejemplares del campus.
         </p>
       </ConfirmSaveModal>
+      {guard.dialog}
     </>
   );
 }

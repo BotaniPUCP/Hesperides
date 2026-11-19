@@ -45,6 +45,11 @@ it('distingue ausencia de trabajos autorizados de un fallo recuperable',async()=
   fireEvent.click(screen.getByRole('button',{name:'Reintentar historial'}));
   expect(await screen.findByText('No hay actividades vinculadas a este ejemplar disponibles para tu cuenta.')).toBeInTheDocument();
 });
+it('muestra mensaje específico de actividades históricas cuando el ejemplar está retirado',async()=>{
+  jest.mocked(interventionsApi.list).mockResolvedValue({content:[],page:{number:0,size:20,totalElements:0,totalPages:0}});
+  render(<SpecimenInterventions id={1} code="EV-000001" isRetired />);
+  expect(await screen.findByText('No se registran actividades históricas vinculadas a este ejemplar.')).toBeInTheDocument();
+});
 it('descarta respuestas tardías del ejemplar anterior',async()=>{
   let resolveFirst!:(value:InterventionPage)=>void;
   jest.mocked(interventionsApi.list).mockImplementationOnce(()=>new Promise(resolve=>{resolveFirst=resolve;})).mockResolvedValueOnce(page('INT-NUEVA'));

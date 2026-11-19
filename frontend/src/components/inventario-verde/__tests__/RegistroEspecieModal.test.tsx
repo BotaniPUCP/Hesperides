@@ -177,4 +177,47 @@ describe('RegistroEspecieModal', () => {
     expect(onCreated).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('sin cambios, cancelar cierra directamente', async () => {
+    render(
+      <RegistroEspecieModal
+        isOpen={true}
+        onClose={onClose}
+        initialScientificName=""
+        onCreated={onCreated}
+      />
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+  });
+
+  it('con cambios en modal, cancelar pide confirmación; «Seguir editando» conserva los datos y «Salir sin guardar» cierra', async () => {
+    render(
+      <RegistroEspecieModal
+        isOpen={true}
+        onClose={onClose}
+        initialScientificName=""
+        onCreated={onCreated}
+      />
+    );
+
+    await userEvent.type(screen.getByLabelText(/Nombre común/i), 'Jacarandá');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByRole('dialog', { name: 'Cambios sin guardar' })).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Seguir editando
+    await userEvent.click(screen.getByRole('button', { name: 'Seguir editando' }));
+    expect(screen.queryByRole('dialog', { name: 'Cambios sin guardar' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Nombre común/i)).toHaveValue('Jacarandá');
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Salir sin guardar
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });

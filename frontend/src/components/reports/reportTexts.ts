@@ -137,3 +137,28 @@ export const DEMO_TEXTS = {
   turnOff: 'Volver a los datos reales',
   banner: 'Datos de demostración: las cifras son de ejemplo y no salen del sistema.',
 };
+
+/** The list of works behind a figure (SPEC-202 D-20, §3.7). */
+export const DRILLDOWN_TEXTS = {
+  open: 'Ver cuáles',
+  openSection: (count: string) => `${count} · ver`,
+  openSectionLabel: (section: string) => `Ver las intervenciones de ${section}`,
+  titles: {
+    APPROVED: 'Intervenciones aprobadas',
+    PENDING_APPROVAL: 'Ejecutadas pendientes de aprobación',
+    PENDING_PHOTOS: 'Intervenciones con fotos sin subir',
+    ATTENDED_SECTION: 'Intervenciones aprobadas en la sección',
+  },
+  sectionTitle: (section: string) => `Intervenciones aprobadas en ${section}`,
+  loading: 'Cargando intervenciones…',
+  error: 'No se pudo cargar la lista.',
+  empty: 'Ya no hay intervenciones en esta lista: el reporte cambió desde que se abrió.',
+  executed: (date: string) => `Ejecutada el ${date}`,
+  notExecuted: 'Aún sin ejecutar',
+  noTeam: 'Sin cuadrilla',
+  pendingPhotos: (count: number) => (count === 1 ? '1 foto sin subir' : `${count} fotos sin subir`),
+  showing: (shown: number, total: number) => `Se muestran las ${shown} más recientes de ${total}.`,
+  help: 'Abre una intervención para ver su detalle, sus fotos y su historial.',
+  demo: 'Datos de demostración: estas intervenciones no existen, así que no se pueden abrir.',
+  close: 'Cerrar',
+};

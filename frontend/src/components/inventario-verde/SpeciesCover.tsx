@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Species } from '@shared/types';
 import { ImagePlaceholder } from '@/components/ui';
+import { cn } from '@/lib/cn';
 import { SpeciesPhotoViewer } from './SpeciesPhotoViewer';
 
 /** Cuántas fotos, en palabras, para el nombre accesible del botón. */
@@ -12,7 +13,7 @@ const verFotos = (n: number) => (n === 1 ? 'Ver la foto' : `Ver las ${n} fotos`)
  * La foto principal de la ficha de especie (SPEC-104 §5.2). Con fotos genéricas
  * muestra «1/3» y abre la galería; sin ellas cae a la de un ejemplar y lo dice.
  */
-export function SpeciesCover({ species }: { species: Species }) {
+export function SpeciesCover({ species, className }: { species: Species; className?: string }) {
   const [imageError, setImageError] = useState(false);
   const [abierta, setAbierta] = useState(false);
 
@@ -49,7 +50,12 @@ export function SpeciesCover({ species }: { species: Species }) {
   );
 
   return (
-    <div className="relative w-full sm:w-64 md:w-72 h-40 sm:h-44 rounded-xl overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200/90 shadow-2xs">
+    <div
+      className={cn(
+        'relative w-full sm:w-64 md:w-72 h-40 sm:h-48 rounded-xl overflow-hidden bg-neutral-100 shrink-0 border border-neutral-200/90 shadow-2xs',
+        className,
+      )}
+    >
       {conGaleria ? (
         <button
           type="button"

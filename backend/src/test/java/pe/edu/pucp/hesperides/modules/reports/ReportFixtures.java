@@ -180,6 +180,16 @@ final class ReportFixtures {
             """, lon, lat, zoneId);
     }
 
+    /** A photo announced from the field for {@code locationId} that has not reached the server yet. */
+    void pendingPhoto(long workId, long locationId, Account uploader) {
+        jdbc.update("""
+            insert into intervention_evidences(intervention_id,intervention_location_id,attempt_number,
+                client_reference,moment_item_id,uploaded_by_user_id)
+            select l.intervention_id, l.id, greatest(l.attempt_number, 1), gen_random_uuid(), ?, ?
+            from intervention_locations l where l.id=? and l.intervention_id=?
+            """, item("EVIDENCE_MOMENT", "AFTER"), uploader.id(), locationId, workId);
+    }
+
     /** One approved work with a single location in {@code zoneId}, executed at {@code completedUtc}. */
     long approvedWork(long typeId, long teamId, Account operator, Account coordinator, Long zoneId, String completedUtc) {
         long work = work(typeId, teamId, operator, coordinator, "ASSIGNED");

@@ -25,11 +25,13 @@ function Content({ report, filters, options }: { report: Report; filters: Filter
     && !options.teams.some((team) => team.sectorId === filters.sectorId);
   const noSections = report.coverage.available && report.coverage.totalSections === 0;
   const noWork = report.interventions.approved === 0 && report.coverage.coveredSections === 0;
+  // The lists behind the figures ask with the period this report resolved, not the empty one of the URL (D-20).
+  const listFilters = { ...filters, dateFrom: report.period.dateFrom, dateTo: report.period.dateTo };
   return (
     <>
       <p className="text-sm font-medium text-neutral-700">{formatPeriod(report.period.dateFrom, report.period.dateTo)}</p>
       {noOwnTeam && <p className="rounded-md bg-alert-warning-bg p-3 text-sm text-alert-warning-fg">{MONTHLY_TEXTS.noOwnTeam}</p>}
-      <MonthlySummary report={report} />
+      <MonthlySummary report={report} filters={listFilters} />
       {noSections ? (
         <EmptyState title={MONTHLY_TEXTS.noSections} description={MONTHLY_TEXTS.noSectionsHelp} />
       ) : (
@@ -43,7 +45,7 @@ function Content({ report, filters, options }: { report: Report; filters: Filter
             }))} />
           )}
           <ComplianceTable rows={report.compliance} teamFiltered={filters.teamId !== null} />
-          <SectionLists mostAttended={report.mostAttended} unattended={report.unattended} />
+          <SectionLists mostAttended={report.mostAttended} unattended={report.unattended} filters={listFilters} />
         </>
       )}
     </>

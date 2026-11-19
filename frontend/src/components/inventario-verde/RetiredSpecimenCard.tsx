@@ -66,9 +66,12 @@ export function RetiredSpecimenCard({ specimen, species }: RetiredSpecimenCardPr
             </div>
           )}
 
-          {/* Badge superior de tipo */}
-          <div className="absolute top-2.5 right-2.5 shadow-2xs">
-            <Badge label={specimen.vegetationType || 'Ejemplar'} color="neutral" />
+          {/* Badge superior de tipo con contraste garantizado sobre foto o placeholder */}
+          <div className="absolute top-2.5 right-2.5">
+            <Badge
+              label={specimen.vegetationType || 'Ejemplar'}
+              className="bg-neutral-0/95 text-neutral-800 border border-neutral-200/90 backdrop-blur-xs shadow-2xs font-medium"
+            />
           </div>
         </div>
 
