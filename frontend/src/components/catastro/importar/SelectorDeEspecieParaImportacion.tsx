@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import type { Species, SpeciesImportOption } from '@shared/types';
 import { Button, Input } from '@/components/ui';
 import { usePreloadedList } from '@/hooks/usePreloadedList';
@@ -19,6 +19,7 @@ export interface SelectorDeEspecieParaImportacionProps {
   sourceName: string;
   buttonLabel?: string;
   disabled?: boolean;
+  extraAction?: ReactNode;
   onSelect: (species: SpeciesImportOption) => void;
 }
 
@@ -30,6 +31,7 @@ export function SelectorDeEspecieParaImportacion({
   sourceName,
   buttonLabel = 'Seleccionar especie existente',
   disabled = false,
+  extraAction,
   onSelect,
 }: SelectorDeEspecieParaImportacionProps) {
   const [open, setOpen] = useState(false);
@@ -73,6 +75,7 @@ export function SelectorDeEspecieParaImportacion({
             {buttonLabel}
           </Button>
         )}
+        {extraAction}
       </div>
 
       {open && (
