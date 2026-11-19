@@ -17,10 +17,11 @@ export function organization(code: string, name: string,
 }
 
 export function contact(code: string, fullName: string, organizations: OrganizationRef[] = [],
-  extra: Partial<Pick<ContactSummary, 'extension' | 'mobile' | 'email'>> = {}): ContactSummary {
-  const fields = { extension: null, mobile: null, email: null, ...extra };
+  extra: Partial<Pick<ContactSummary, 'extension' | 'mobile' | 'email' | 'active'>> = {}): ContactSummary {
+  const { active = true, ...rest } = extra;
+  const fields = { extension: null, mobile: null, email: null, ...rest };
   return {
-    code, fullName, organizations, ...fields,
+    code, fullName, organizations, active, ...fields,
     searchKey: normalize([code, fullName, fields.email, fields.extension, fields.mobile].filter(Boolean).join(' ')),
   };
 }

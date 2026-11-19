@@ -106,6 +106,20 @@ describe('ContactPicker', () => {
     expect(screen.queryByRole('button', { name: /Vincular|Registrar/ })).not.toBeInTheDocument();
   });
 
+  it('un contacto dado de baja sigue apareciendo, marcado, pero no se puede elegir ni vincular', async () => {
+    api.allContacts.mockResolvedValue([
+      contact('CON-0009', 'Juana Baja', [PSICOLOGIA], { active: false }),
+      contact('CON-0010', 'Juana Otra', [{ code: 'ORG-0012', name: 'OIE', active: true }], { active: false }),
+    ]);
+    render(<ContactPicker id="c" label="Contacto" organization={PSICOLOGIA} value={null} onChange={jest.fn()} />);
+
+    fireEvent.change(screen.getByLabelText('Contacto'), { target: { value: 'juana' } });
+
+    expect(await screen.findByText('Juana Baja')).toBeInTheDocument();
+    expect(screen.getByText(/Dado de baja/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Juana Baja/ })).not.toBeInTheDocument();
+  });
+
   it('sin organización elegida no busca', () => {
     render(<ContactPicker id="c" label="Contacto" organization={null} value={null} onChange={jest.fn()} />);
 

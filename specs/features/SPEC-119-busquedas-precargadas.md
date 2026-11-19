@@ -141,7 +141,7 @@ Fuera de alcance: la app móvil todavía no existe.
 | `GET /api/v1/incidents/intervention-candidates` | La actual | Sin `q` ni tope: todas las intervenciones no canceladas, con `searchKey` (código, descripción) |
 | `GET /api/v1/incidents/search` | La actual | Sin `q` ni tope: todas las incidencias activas y abiertas, con `searchKey` |
 | `GET /api/v1/directory/organizations/all` | La de la lista actual | Todas, con `aliases` y `searchKey` (código, nombre, RUC, alias) |
-| `GET /api/v1/directory/contacts/all` | La de la lista actual | Todos, con sus organizaciones y `searchKey` (código, nombre, correo, anexo, celular) |
+| `GET /api/v1/directory/contacts/all` | La de la lista actual | Todos, también los dados de baja (`active` en false), con sus organizaciones y `searchKey` (código, nombre, correo, anexo, celular). Los buscadores los muestran marcados, sin dejarlos elegir ni vincular; la tabla de Contactos muestra solo los vigentes (decisión del 18 nov 2026) |
 | `GET /api/v1/places` | La actual | Sin `q`, `category` ni `kind`; cada fila con `searchKey` (código, nombre, padre, alias, perspectivas) |
 | `GET /api/v1/places/reference-links/queue/all` | La actual | Toda la cola pendiente, con `searchKey` (nombre) |
 | `GET /api/v1/green-inventory/species/all` | Pública, como el resto del inventario | Activas y en proceso de retiro (`isActive` las distingue), con `searchKey` (nombres científico, común y alternativos, familia). Sirve también a los campos 5 y 6 con las activas |

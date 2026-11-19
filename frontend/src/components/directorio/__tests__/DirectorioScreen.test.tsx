@@ -24,6 +24,7 @@ beforeEach(() => {
   api.allContacts.mockResolvedValue([
     contact('CON-0007', 'Juan Diego Villasante', [{ code: 'ORG-0001', name: 'OIE', active: true }], { extension: '4549' }),
     contact('CON-0008', 'Ana Torres', [{ code: 'ORG-0009', name: 'DAF', active: false }]),
+    contact('CON-0010', 'Pedro Dado de Baja', [], { active: false }),
   ]);
 });
 
@@ -59,6 +60,8 @@ describe('DirectorioScreen', () => {
 
     await waitFor(() => expect(screen.queryAllByText('Juan Diego Villasante')).toHaveLength(0));
     expect(screen.getAllByText('Ana Torres').length).toBeGreaterThan(0);
+    // La tabla es de contactos vigentes: los dados de baja solo salen en los buscadores.
+    expect(screen.queryAllByText('Pedro Dado de Baja')).toHaveLength(0);
     expect(api.allContacts).toHaveBeenCalledTimes(1);
   });
 

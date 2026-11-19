@@ -54,6 +54,8 @@ export interface OrganizationSuggestion {
 }
 
 export interface ContactSummary extends ContactCard {
+  /** En false: dado de baja. Sigue apareciendo en los buscadores, marcado (decisión del 18 nov 2026). */
+  active: boolean;
   organizations: OrganizationRef[];
   /** Código, nombre, correo, anexo y celular, sin tildes (SPEC-119 D-01). */
   searchKey: string;

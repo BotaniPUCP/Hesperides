@@ -5,7 +5,7 @@ const org = (code: string, name: string, aliases: string[] = []): OrganizationSu
   code, name, aliases, type: { code: 'PUCP_UNIT', label: 'Unidad PUCP' }, phone: null, contactCount: 0, searchKey: '',
 });
 const contact = (code: string, fullName: string): ContactSummary => ({
-  code, fullName, extension: null, mobile: null, email: null, organizations: [], searchKey: '',
+  code, fullName, extension: null, mobile: null, email: null, active: true, organizations: [], searchKey: '',
 });
 
 describe('similarOrganizations (lo que hacía ORGANIZATION_SIMILAR)', () => {

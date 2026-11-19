@@ -26,6 +26,13 @@ const RESULTS = 8;
 const organizationsOf = (c: ContactSummary) => c.organizations.map((o) => o.name).join(', ');
 
 /**
+ * Un dado de baja sigue en el buscador, marcado, para no registrarlo de nuevo (decisión del 18 nov
+ * 2026); no se puede elegir ni vincular: reservas e incidencias no guardan contactos de baja.
+ */
+const withStatus = (c: ContactSummary, detail: string | undefined) =>
+  c.active ? detail : ['Dado de baja', detail].filter(Boolean).join(' · ');
+
+/**
  * Pide el rol del vínculo (D-08b) antes de crearlo; vacío es sin rol. Si el
  * contacto ya pertenece, el backend responde 409 y el mismo diálogo pasa a
  * editar el rol de su vínculo, sin crear otro.
@@ -134,12 +141,12 @@ export function ContactPicker({ id, label, organization, searchEverywhere = fals
           )}>
           {inside.slice(0, RESULTS).map((c) => (
             <PickerOption key={c.code} label={c.fullName}
-              detail={free || organization === null ? organizationsOf(c)
-                : c.organizations.find((o) => o.code === organization.code)?.role ?? undefined}
-              onClick={() => pick({ code: c.code, fullName: c.fullName })} />
+              detail={withStatus(c, free || organization === null ? organizationsOf(c)
+                : c.organizations.find((o) => o.code === organization.code)?.role ?? undefined)}
+              onClick={c.active ? () => pick({ code: c.code, fullName: c.fullName }) : undefined} />
           ))}
           {others.slice(0, RESULTS).map((c) => (
-            <PickerOption key={c.code} label={c.fullName} detail={organizationsOf(c)} action={linkButton(c)} />
+            <PickerOption key={c.code} label={c.fullName} detail={withStatus(c, organizationsOf(c))} action={c.active && linkButton(c)} />
           ))}
           {!canMaintain && !free && others.length > 0 && organization && (
             <li className="px-2 text-sm text-neutral-600">

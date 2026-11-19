@@ -25,11 +25,14 @@ final class DirectoryQueries {
              WHERE o.deleted_at IS NULL
              ORDER BY lower(o.name)""".formatted(CONTACT_COUNT, ALIASES, ALIASES);
 
+    /**
+     * Todos, también los dados de baja (marcados con {@code active}): los buscadores los muestran
+     * para que no se registre de nuevo a alguien que ya estuvo (decisión del 18 nov 2026).
+     */
     static final String CONTACT_ALL = """
-            SELECT c.id, c.code, c.full_name, c.extension, c.mobile, c.email,
+            SELECT c.id, c.code, c.full_name, c.extension, c.mobile, c.email, c.deleted_at IS NULL AS active,
                    directory_key(concat_ws(' ', c.code, c.full_name, c.email, c.extension, c.mobile)) AS search_key
               FROM contacts c
-             WHERE c.deleted_at IS NULL
              ORDER BY lower(c.full_name), c.code""";
 
     /** Organizaciones de varios contactos a la vez, para no consultar una por fila. */

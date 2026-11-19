@@ -370,6 +370,7 @@ class DirectoryIntegrationTest {
             String contact = createContact("Juan Diego Villasante", createOrg("OIE"));
 
             mockMvc.perform(get(ALL_CONTACTS))
+                    .andExpect(jsonPath(row(contact, "active"), contains(true)))
                     .andExpect(jsonPath(row(contact, "organizations[0].name"), contains("OIE")))
                     .andExpect(jsonPath(row(contact, "searchKey"), contains(contact.toLowerCase() + " juan diego villasante")));
         }
@@ -401,11 +402,11 @@ class DirectoryIntegrationTest {
         }
 
         @Test
-        void aDeactivatedContactLeavesTheList() throws Exception {
+        void aDeactivatedContactStaysInTheListMarkedSoTheSearchersStillFindIt() throws Exception {
             String contact = createContact("Juan Diego Villasante", createOrg("OIE"));
             mockMvc.perform(delete(CONTACTS + "/" + contact)).andExpect(status().isOk());
 
-            mockMvc.perform(get(ALL_CONTACTS)).andExpect(jsonPath("$.data[*].code", not(hasItem(contact))));
+            mockMvc.perform(get(ALL_CONTACTS)).andExpect(jsonPath(row(contact, "active"), contains(false)));
             mockMvc.perform(get(CONTACTS + "/" + contact)).andExpect(jsonPath("$.data.active").value(false));
         }
 
@@ -621,7 +622,7 @@ class DirectoryIntegrationTest {
             String contact = createContact("Juan Diego Villasante", createOrg("OIE"));
 
             mockMvc.perform(delete(CONTACTS + "/" + contact)).andExpect(status().isOk());
-            mockMvc.perform(get(ALL_CONTACTS)).andExpect(jsonPath("$.data[*].code", not(hasItem(contact))));
+            mockMvc.perform(get(ALL_CONTACTS)).andExpect(jsonPath(row(contact, "active"), contains(false)));
         }
     }
 }

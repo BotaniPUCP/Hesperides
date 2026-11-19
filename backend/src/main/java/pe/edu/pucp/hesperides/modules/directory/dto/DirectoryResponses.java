@@ -34,8 +34,9 @@ public final class DirectoryResponses {
     public record OrganizationSuggestion(String code, String name) {
     }
 
+    /** {@code active} en false: dado de baja; sigue en los buscadores, marcado. */
     public record ContactSummary(String code, String fullName, String extension, String mobile, String email,
-            List<OrganizationRef> organizations, String searchKey) {
+            boolean active, List<OrganizationRef> organizations, String searchKey) {
     }
 
     public record ContactDetail(String code, String fullName, String extension, String mobile, String email,

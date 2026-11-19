@@ -25,7 +25,7 @@ public class ContactReadRepository {
 
     private static final RowMapper<Listed> ROW = (rs, i) -> new Listed(new ContactRow(rs.getLong("id"),
             rs.getString("code"), rs.getString("full_name"), rs.getString("extension"), rs.getString("mobile"),
-            rs.getString("email"), true), rs.getString("search_key"));
+            rs.getString("email"), rs.getBoolean("active")), rs.getString("search_key"));
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -42,8 +42,8 @@ public class ContactReadRepository {
 
     private static ContactSummary summary(Listed listed, List<OrganizationRef> organizations) {
         ContactRow c = listed.row();
-        return new ContactSummary(c.code(), c.fullName(), c.extension(), c.mobile(), c.email(), organizations,
-                listed.searchKey());
+        return new ContactSummary(c.code(), c.fullName(), c.extension(), c.mobile(), c.email(), c.active(),
+                organizations, listed.searchKey());
     }
 
     private Map<Long, List<OrganizationRef>> linksOf(List<Long> contactIds) {

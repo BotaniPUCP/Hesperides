@@ -40,7 +40,9 @@ export function ContactsTab({ search, withoutOrganization, page, onChange }: Con
   const [draft, setDraft] = useSearchDraft(search, (next) => onChange({ search: next }));
   const { items, loaded, errorMessage } = useContactList();
   const matching = useMemo(() => filterByText(items, draft)
-    .filter((c) => !withoutOrganization || !c.organizations.some((o) => o.active)), [items, draft, withoutOrganization]);
+    // La tabla es de vigentes; los dados de baja solo siguen en los buscadores.
+    .filter((c) => c.active && (!withoutOrganization || !c.organizations.some((o) => o.active))),
+  [items, draft, withoutOrganization]);
   const shown = pageOf(matching, page, DIRECTORY_PAGE_SIZE);
 
   return (
