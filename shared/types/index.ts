@@ -10,3 +10,8 @@ export * from './map';
 export * from './places';
 export * from './incidents';
 export * from './reports';
+export * from './directory';
+export * from './planning';
+export * from './reservations';
+export * from './balloons';
+export * from './campusEvents';

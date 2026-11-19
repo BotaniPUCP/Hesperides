@@ -1,0 +1,24 @@
+{
+  "planKey": "e667899d-a0cf-4bd7-8bdf-55246c1237d3",
+  "name": "Estación Meteorológica «Hipólito Unanue»",
+  "folder": "estacion-meteorologica",
+  "photos": [
+    "estacion-meteorologica-pucp.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e4e7ec"
+    },
+    "techo": {
+      "color": "#c4c7ca"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Caseta blanca con un costado celeste grisáceo, dentro del cerco de los instrumentos (estacion-meteorologica-pucp.jpg). Va blanca azulada."
+}

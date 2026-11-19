@@ -33,6 +33,7 @@ public class SpeciesImportService implements ImportHandler {
     private final SpeciesImportRepository repository;
     private final SpeciesResolver resolver;
     private final ImportBatchGate gate;
+    private final BatchPhotoZips zips;
     private final SpeciesImportWriter writer;
 
     @Override
@@ -41,11 +42,13 @@ public class SpeciesImportService implements ImportHandler {
     }
 
     @Override
-    public ImportPreviewResponse preview(String kind, byte[] csv, String fileName, byte[] zip, String userEmail) {
+    public ImportPreviewResponse preview(String kind, ImportUpload upload, String userEmail) {
+        byte[] zip = upload.zip().get();
         Map<String, byte[]> photos = zip == null ? Map.of() : PhotoFiles.readStrict(zip);
-        SpeciesCsvSchema.Parsed parsed = SpeciesCsvSchema.parse(CsvTable.parseStrict(csv), repository.vocabulary());
+        SpeciesCsvSchema.Parsed parsed = SpeciesCsvSchema.parse(CsvTable.parseStrict(upload.csv()), repository.vocabulary());
         SpeciesPreview preview = resolver.resolve(parsed, Set.copyOf(photos.keySet()));
-        Opened opened = gate.open(KIND, fileName, userEmail, preview, zip);
+        Opened opened = gate.open(KIND, upload.fileName(), userEmail, preview);
+        zips.keep(opened.batchId(), zip);
         return PreviewMapper.toResponse(opened.batchId(), KIND, preview, opened.expiresAt());
     }
 

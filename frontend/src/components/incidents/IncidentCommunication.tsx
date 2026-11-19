@@ -13,19 +13,19 @@ function ReviewChanges({ body }: { body: string }) {
     if (parsed?.before && parsed?.after) change = parsed;
   } catch { /* Older entries can omit structured change details. */ }
   if (!change) return <p>Datos de atención revisados.</p>;
-  const labels: Record<string, string> = { description: 'Descripción', locationReference: 'Referencia', latitude: 'Latitud', longitude: 'Longitud',
-    type: 'Categoría operativa', urgency: 'Urgencia', team: 'Cuadrilla', service: 'Servicio', company: 'Empresa',
-    process: 'Proceso N2', subprocess: 'Subproceso', severity: 'Severidad', impacts: 'Impactos', responsible: 'Responsable',
-    immediateAction: 'Acción inmediata', rootCauseItem: 'Causa catalogada', rootCause: 'Causa detallada',
-    preventiveAction: 'Prevención / mejora', impactedProcess: 'Proceso impactado', observations: 'Observaciones' };
+  const labels: Record<string, string> = { title: 'Título', description: 'Descripción', urgencyCode: 'Urgencia',
+    typeCode: 'Tipo', zoneId: 'Sección', reference: 'Referencia', latitude: 'Latitud', longitude: 'Longitud',
+    teamId: 'Cuadrilla', thirdParty: 'La atiende un tercero', providerOrganizationId: 'Empresa del tercero',
+    agreedDays: 'Días pactados', heightClass: 'Clase de altura', requestedByName: 'Pedido de',
+    sourceCode: 'Origen', externalCode: 'Código OSG o Centuria' };
   const format = (value: unknown): string => {
     if (value === null || value === undefined || value === '') return 'Sin determinar';
+    if (typeof value === 'boolean') return value ? 'Sí' : 'No';
     if (Array.isArray(value)) return value.map(format).join(', ') || 'Sin determinar';
     if (typeof value === 'object') { const item = value as { label?: string; fullName?: string }; return item.label ?? item.fullName ?? 'Sin determinar'; }
     return String(value);
   };
-  const before = { ...change.before, ...((change.before.matrix as object) ?? {}) };
-  const after = { ...change.after, ...((change.after.matrix as object) ?? {}) };
+  const { before, after } = change;
   const fields = Object.keys(labels).filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]));
   if (fields.length === 0) return <p>Revisión confirmada sin cambios de datos.</p>;
   return <details><summary className="cursor-pointer text-brand-700">Ver cambios de la revisión</summary>
@@ -45,7 +45,7 @@ export function IncidentCommunication({ updates, busy, onComment }: {
     {updates.length > 0 ? <ol className="mb-5 space-y-4">{updates.map((update) => <li key={update.id} className="space-y-2 border-l-2 border-neutral-200 pl-3 text-sm">
       <p className="font-semibold">{update.kind.label} · {update.author.fullName}</p>
       <p className="text-neutral-700">{incidentDate(update.createdAt)}</p>
-      {['REVIEW','REPORT_RESUBMITTED'].includes(update.kind.code) ? <ReviewChanges body={update.body} /> : <p className="whitespace-pre-wrap break-words">{update.body}</p>}
+      {update.kind.code === 'REVIEW' ? <ReviewChanges body={update.body} /> : <p className="whitespace-pre-wrap break-words">{update.body}</p>}
     </li>)}</ol> : <p className="mb-4 text-sm text-neutral-700">Todavía no hay actualizaciones.</p>}
     <form className="space-y-3" onSubmit={async (e) => {
       e.preventDefault();

@@ -27,7 +27,7 @@ class ImportServiceTest {
         Batch batch = new Batch(12, "specimens", "PREVIEWED", 7, "current-report", LocalDateTime.now().plusMinutes(10));
         ImportBatchGate.Claimed claimed = new ImportBatchGate.Claimed(batch, 7);
         Map<Integer, Boolean> currentDecisions = Map.of(3, false);
-        String staleFingerprint = ImportBatchGate.confirmationFingerprint(batch, Map.of(3, true));
+        String staleFingerprint = ImportFingerprints.confirmationFingerprint(batch, Map.of(3, true));
 
         when(specimens.kinds()).thenReturn(Set.of("specimens"));
         ImportService service = new ImportService(java.util.List.of(specimens), gate, new ImportLock());
@@ -49,7 +49,7 @@ class ImportServiceTest {
         Batch batch = new Batch(12, "specimens", "PREVIEWED", 7, "current-report", LocalDateTime.now().plusMinutes(10));
         ImportBatchGate.Claimed claimed = new ImportBatchGate.Claimed(batch, 7);
         Map<Integer, Boolean> decisions = Map.of(3, false);
-        String fingerprint = ImportBatchGate.confirmationFingerprint(batch, decisions);
+        String fingerprint = ImportFingerprints.confirmationFingerprint(batch, decisions);
         ImportResultResponse result = new ImportResultResponse(12, 1, 0, 1, java.util.List.of(), java.util.List.of(),
                 java.util.List.of("EV-000966"));
 
@@ -94,7 +94,7 @@ class ImportServiceTest {
         ImportService service = new ImportService(java.util.List.of(specimens), gate, new ImportLock());
         when(gate.claim(12, "admin@example.test")).thenReturn(claimed);
 
-        String stalePreviewFingerprint = ImportBatchGate.planFingerprint(12, "old-report");
+        String stalePreviewFingerprint = ImportFingerprints.planFingerprint(12, "old-report");
         assertThatThrownBy(() -> service.confirmationSummary(
                 12, decisions, stalePreviewFingerprint, "admin@example.test"))
                 .isInstanceOf(BusinessRuleException.class)
@@ -102,7 +102,7 @@ class ImportServiceTest {
 
         verify(specimens, never()).confirmationSummary(claimed, decisions);
 
-        String currentFingerprint = ImportBatchGate.planFingerprint(12, batch.report());
+        String currentFingerprint = ImportFingerprints.planFingerprint(12, batch.report());
         ImportConfirmationSummary expected = new ImportConfirmationSummary(12, 1, 2, "summary-fingerprint");
         when(specimens.confirmationSummary(claimed, decisions)).thenReturn(expected);
         assertThat(service.confirmationSummary(12, decisions, currentFingerprint, "admin@example.test"))

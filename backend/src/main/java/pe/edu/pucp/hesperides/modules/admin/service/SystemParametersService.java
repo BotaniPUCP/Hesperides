@@ -39,7 +39,11 @@ public class SystemParametersService {
     private static final int PASSWORD_MIN_LENGTH_CEILING = PasswordMinLengthRange.CEILING;
 
     private static final int MAX_LOGIN_ATTEMPTS = 50;
+    private static final int MAX_RESERVATION_NEARBY_METERS = 100;
+    /** Un día: una reserva dura máximo siete, y el corte no puede superar la mitad del plazo útil. */
+    private static final int MAX_CONFIRMATION_MINUTES = 1440;
     private static final BigDecimal MAX_CAMPUS_HECTARES = new BigDecimal("100000");
+    private static final BigDecimal MAX_REPORT_TARGET = BigDecimal.valueOf(100);
 
     /**
      * Fallback de la longitud mínima cuando la fila falta o está mal escrita.
@@ -158,6 +162,20 @@ public class SystemParametersService {
             throw new ValidationException(
                     "El número de intentos de acceso debe estar entre 1 y " + MAX_LOGIN_ATTEMPTS);
         }
+        // Un negativo apagaría los avisos sin que nadie lo note (SPEC-107 D-05).
+        if (code.equals(SystemParameterCodes.RESERVATION_NEARBY_METERS)
+                && (value < 0 || value > MAX_RESERVATION_NEARBY_METERS)) {
+            throw new ValidationException(
+                    "La distancia de aviso por reservas debe estar entre 0 y " + MAX_RESERVATION_NEARBY_METERS);
+        }
+        // Más de un día no tiene sentido: una reserva dura máximo siete, y una
+        // confirmación que cerrara al registrarla no serviría de nada.
+        if (code.equals(SystemParameterCodes.RESERVATION_CONFIRMATION_MINUTES)
+                && (value < 0 || value > MAX_CONFIRMATION_MINUTES)) {
+            throw new ValidationException(
+                    "El corte de las marcas de uso debe estar entre 0 y " + MAX_CONFIRMATION_MINUTES
+                            + " minutos");
+        }
 
         return value.toString();
     }
@@ -172,6 +190,14 @@ public class SystemParametersService {
                 && (value.signum() < 0 || value.compareTo(MAX_CAMPUS_HECTARES) > 0)) {
             throw new ValidationException(
                     "Las hectáreas del campus deben estar entre 0 y " + MAX_CAMPUS_HECTARES);
+        }
+        if (code.equals(SystemParameterCodes.REPORT_COVERAGE_TARGET_PERCENT)
+                && (value.compareTo(BigDecimal.ONE) < 0 || value.compareTo(MAX_REPORT_TARGET) > 0)) {
+            throw new ValidationException("La meta de cobertura mensual debe estar entre 1 y 100");
+        }
+        if (code.equals(SystemParameterCodes.REPORT_IRRIGATION_TARGET_PERCENT)
+                && (value.compareTo(BigDecimal.ONE) < 0 || value.compareTo(MAX_REPORT_TARGET) > 0)) {
+            throw new ValidationException("La meta de riego mensual debe estar entre 1 y 100");
         }
         return value.stripTrailingZeros().toPlainString();
     }

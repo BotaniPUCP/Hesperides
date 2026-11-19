@@ -19,14 +19,14 @@ class FrequencyEvaluatorTest {
     private static final LocalDate DESDE = LocalDate.of(2026, 1, 1);
     private static final LocalDate HASTA = LocalDate.of(2026, 12, 31);
 
-    private static FrequencyRule intervalo(Integer target, Integer min, Integer max,
+    private static FrequencyRule intervalo(Integer min, Integer max,
                                            List<SeasonalInterval> seasons) {
-        return new FrequencyRule(1L, "INTERVAL_DAYS", target, min, max, null, null,
+        return new FrequencyRule(1L, "INTERVAL_DAYS", min, max, null, null,
                 null, null, seasons, LocalDate.of(2020, 1, 1), null);
     }
 
     private static FrequencyRule cuotaAnual(int cuota, Integer mesIni, Integer mesFin, String tipo) {
-        return new FrequencyRule(2L, tipo, null, null, null, cuota, null,
+        return new FrequencyRule(2L, tipo, null, null, cuota, null,
                 mesIni, mesFin, List.of(), LocalDate.of(2020, 1, 1), null);
     }
 
@@ -38,7 +38,7 @@ class FrequencyEvaluatorTest {
         @DisplayName("dentro del objetivo da ON_TARGET")
         void dentroDelObjetivo() {
             // Cesped: objetivo 30, limite 45. Dos cortes separados 30 dias.
-            var regla = intervalo(30, 30, 45, List.of());
+            var regla = intervalo(30, 45, List.of());
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 12, 1)),
                     DESDE, LocalDate.of(2026, 12, 1));
@@ -49,21 +49,21 @@ class FrequencyEvaluatorTest {
         }
 
         @Test
-        @DisplayName("pasado el objetivo pero bajo el limite da WITHIN_TOLERANCE")
+        @DisplayName("dentro del rango, aunque cerca del maximo, da ON_TARGET")
         void dentroDeTolerancia() {
-            var regla = intervalo(30, 30, 45, List.of());
+            var regla = intervalo(30, 45, List.of());
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 10, 18), LocalDate.of(2026, 12, 1)),
                     DESDE, LocalDate.of(2026, 12, 1));
 
-            assertThat(r.status()).isEqualTo(ComplianceStatus.WITHIN_TOLERANCE);
+            assertThat(r.status()).isEqualTo(ComplianceStatus.ON_TARGET);
             assertThat(r.observedValue()).isEqualTo(44);
         }
 
         @Test
         @DisplayName("pasado el limite da OVERDUE")
         void pasadoElLimite() {
-            var regla = intervalo(30, 30, 45, List.of());
+            var regla = intervalo(30, 45, List.of());
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 10, 16), LocalDate.of(2026, 12, 1)),
                     DESDE, LocalDate.of(2026, 12, 1));
@@ -77,7 +77,7 @@ class FrequencyEvaluatorTest {
         void unaSolaEjecucion() {
             // Un intervalo necesita dos puntos. Acusar de incumplimiento por un
             // dato que no existe seria culpar al equipo del vacio del sistema.
-            var regla = intervalo(30, 30, 45, List.of());
+            var regla = intervalo(30, 45, List.of());
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 11, 20)),
                     DESDE, LocalDate.of(2026, 12, 1));
@@ -91,7 +91,7 @@ class FrequencyEvaluatorTest {
         void unaSolaEjecucionVieja() {
             // Aqui si hay evidencia de incumplimiento: paso mas tiempo que el
             // limite desde la unica ejecucion conocida.
-            var regla = intervalo(30, 30, 45, List.of());
+            var regla = intervalo(30, 45, List.of());
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 1, 15)),
                     DESDE, LocalDate.of(2026, 12, 1));
@@ -102,7 +102,7 @@ class FrequencyEvaluatorTest {
         @Test
         @DisplayName("sin ninguna ejecucion da NOT_APPLICABLE")
         void sinEjecuciones() {
-            var regla = intervalo(30, 30, 45, List.of());
+            var regla = intervalo(30, 45, List.of());
             var r = FrequencyEvaluator.evaluate(regla, List.of(), DESDE, HASTA);
 
             assertThat(r.status()).isEqualTo(ComplianceStatus.NOT_APPLICABLE);
@@ -114,7 +114,7 @@ class FrequencyEvaluatorTest {
         void abandonoTrasIntervaloBueno() {
             // Dos cortes perfectos en enero y luego nada en todo el ano. Mirar
             // solo el ultimo intervalo diria ON_TARGET y escondería el abandono.
-            var regla = intervalo(30, 30, 45, List.of());
+            var regla = intervalo(30, 45, List.of());
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31)),
                     DESDE, HASTA);
@@ -124,18 +124,64 @@ class FrequencyEvaluatorTest {
         }
     }
 
+    /** SPEC-203 D-05: el rango de dias es lo normal; antes del minimo es atender de mas. */
+    @Nested
+    @DisplayName("Rango normal")
+    class RangoNormal {
+
+        private static final LocalDate PRIMERO = LocalDate.of(2026, 10, 1);
+        private static final List<SeasonalInterval> PRIMAVERA =
+                List.of(new SeasonalInterval("PRIMAVERA", 10, 12, 30, 35));
+
+        private ComplianceStatus separados(int dias, List<SeasonalInterval> estaciones) {
+            var regla = intervalo(30, 35, estaciones);
+            LocalDate segundo = PRIMERO.plusDays(dias);
+            return FrequencyEvaluator.evaluate(regla, List.of(PRIMERO, segundo), PRIMERO, segundo).status();
+        }
+
+        @Test
+        void diezDiasEsAntesDelMinimo() {
+            assertThat(separados(10, List.of())).isEqualTo(ComplianceStatus.EARLY);
+        }
+
+        @Test
+        void treintaYTresEsEnPlazo() {
+            assertThat(separados(33, List.of())).isEqualTo(ComplianceStatus.ON_TARGET);
+        }
+
+        @Test
+        void treintaYSeisEsVencido() {
+            assertThat(separados(36, List.of())).isEqualTo(ComplianceStatus.OVERDUE);
+        }
+
+        @Test
+        void conEstacionDiezDiasEsAntesDelMinimo() {
+            assertThat(separados(10, PRIMAVERA)).isEqualTo(ComplianceStatus.EARLY);
+        }
+
+        @Test
+        void conEstacionTreintaYTresEsEnPlazo() {
+            assertThat(separados(33, PRIMAVERA)).isEqualTo(ComplianceStatus.ON_TARGET);
+        }
+
+        @Test
+        void conEstacionTreintaYSeisEsVencido() {
+            assertThat(separados(36, PRIMAVERA)).isEqualTo(ComplianceStatus.OVERDUE);
+        }
+    }
+
     @Nested
     @DisplayName("Estacionalidad")
     class Estaciones {
 
         private static final List<SeasonalInterval> VERANO_E_INVIERNO = List.of(
-                new SeasonalInterval("VERANO", 1, 3, 30, 35, 21),
-                new SeasonalInterval("INVIERNO", 7, 9, 40, 45, 21));
+                new SeasonalInterval("VERANO", 1, 3, 30, 35),
+                new SeasonalInterval("INVIERNO", 7, 9, 40, 45));
 
         @Test
         @DisplayName("en verano rige el intervalo corto")
         void enVerano() {
-            var regla = intervalo(30, 30, 60, VERANO_E_INVIERNO);
+            var regla = intervalo(30, 60, VERANO_E_INVIERNO);
             // 36 dias en verano: pasa el limite de 35 aunque cabria en el general.
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 1, 20), LocalDate.of(2026, 2, 25)),
@@ -150,25 +196,25 @@ class FrequencyEvaluatorTest {
         void enInvierno() {
             // Lo que el resumen de texto no podia hacer: 43 dias es aceptable en
             // invierno y no en verano, y el veredicto lo refleja.
-            var regla = intervalo(30, 30, 60, VERANO_E_INVIERNO);
+            var regla = intervalo(30, 60, VERANO_E_INVIERNO);
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 7, 15), LocalDate.of(2026, 8, 27)),
                     DESDE, LocalDate.of(2026, 8, 27));
 
-            assertThat(r.status()).isEqualTo(ComplianceStatus.WITHIN_TOLERANCE);
+            assertThat(r.status()).isEqualTo(ComplianceStatus.ON_TARGET);
             assertThat(r.season()).isEqualTo("INVIERNO");
         }
 
         @Test
         @DisplayName("fuera de toda estacion rige el intervalo general")
         void fueraDeEstacion() {
-            var regla = intervalo(30, 30, 60, VERANO_E_INVIERNO);
+            var regla = intervalo(30, 60, VERANO_E_INVIERNO);
             var r = FrequencyEvaluator.evaluate(regla,
                     List.of(LocalDate.of(2026, 5, 1), LocalDate.of(2026, 6, 15)),
                     DESDE, LocalDate.of(2026, 6, 15));
 
             assertThat(r.season()).isNull();
-            assertThat(r.status()).isEqualTo(ComplianceStatus.WITHIN_TOLERANCE);
+            assertThat(r.status()).isEqualTo(ComplianceStatus.ON_TARGET);
         }
 
         @Test
@@ -176,7 +222,7 @@ class FrequencyEvaluatorTest {
         void estacionQueCruzaElAno() {
             // El error clasico: comparar con un between deja diciembre-enero sin
             // cubrir ningun mes.
-            var ventana = new SeasonalInterval("VERANO_LARGO", 12, 2, 30, 35, null);
+            var ventana = new SeasonalInterval("VERANO_LARGO", 12, 2, 30, 35);
 
             assertThat(ventana.cubre(12)).isTrue();
             assertThat(ventana.cubre(1)).isTrue();
@@ -276,7 +322,7 @@ class FrequencyEvaluatorTest {
         @Test
         @DisplayName("ON_DEMAND nunca incumple")
         void aDemanda() {
-            var regla = new FrequencyRule(3L, "ON_DEMAND", null, null, null, null, null,
+            var regla = new FrequencyRule(3L, "ON_DEMAND", null, null, null, null,
                     null, null, List.of(), LocalDate.of(2020, 1, 1), null);
             var r = FrequencyEvaluator.evaluate(regla, List.of(), DESDE, HASTA);
 
@@ -297,7 +343,7 @@ class FrequencyEvaluatorTest {
         void tipoDesconocido() {
             // Fail Fast: un codigo sembrado sin su evaluador debe romper aqui y
             // no devolver un veredicto silencioso que nadie calculo.
-            var regla = new FrequencyRule(4L, "INVENTADO", null, null, null, null, null,
+            var regla = new FrequencyRule(4L, "INVENTADO", null, null, null, null,
                     null, null, List.of(), LocalDate.of(2020, 1, 1), null);
 
             assertThatThrownBy(() -> FrequencyEvaluator.evaluate(regla, List.of(), DESDE, HASTA))
@@ -315,9 +361,9 @@ class FrequencyEvaluatorTest {
         void elPasadoNoSeReescribe() {
             // La razon de ser de la vigencia: relajar el limite en noviembre no
             // puede volver cumplidos los meses juzgados como incumplidos.
-            var reglaVieja = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 30, 45, null, null,
+            var reglaVieja = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 45, null, null,
                     null, null, List.of(), LocalDate.of(2026, 1, 1), LocalDate.of(2026, 10, 31));
-            var reglaNueva = new FrequencyRule(11L, "INTERVAL_DAYS", 30, 30, 90, null, null,
+            var reglaNueva = new FrequencyRule(11L, "INTERVAL_DAYS", 30, 90, null, null,
                     null, null, List.of(), LocalDate.of(2026, 11, 1), null);
 
             var ejecuciones = List.of(LocalDate.of(2026, 3, 1), LocalDate.of(2026, 4, 20));
@@ -337,9 +383,9 @@ class FrequencyEvaluatorTest {
         void unTramoPorVersion() {
             // No se promedian: un promedio entre dos limites distintos no
             // significa nada y borraria con que regla se juzgo cada tramo.
-            var v1 = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 30, 45, null, null,
+            var v1 = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 45, null, null,
                     null, null, List.of(), LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30));
-            var v2 = new FrequencyRule(11L, "INTERVAL_DAYS", 30, 30, 90, null, null,
+            var v2 = new FrequencyRule(11L, "INTERVAL_DAYS", 30, 90, null, null,
                     null, null, List.of(), LocalDate.of(2026, 7, 1), null);
 
             var r = FrequencyEvaluator.evaluateAcrossVersions(List.of(v1, v2),
@@ -357,9 +403,9 @@ class FrequencyEvaluatorTest {
         @Test
         @DisplayName("una version fuera del periodo consultado no aparece")
         void versionFueraDelPeriodo() {
-            var vieja = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 30, 45, null, null,
+            var vieja = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 45, null, null,
                     null, null, List.of(), LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31));
-            var actual = new FrequencyRule(11L, "INTERVAL_DAYS", 30, 30, 45, null, null,
+            var actual = new FrequencyRule(11L, "INTERVAL_DAYS", 30, 45, null, null,
                     null, null, List.of(), LocalDate.of(2026, 1, 1), null);
 
             var r = FrequencyEvaluator.evaluateAcrossVersions(List.of(vieja, actual),
@@ -372,7 +418,7 @@ class FrequencyEvaluatorTest {
         @Test
         @DisplayName("sin ninguna version vigente en el periodo da NOT_CONFIGURED")
         void sinVersionVigente() {
-            var vieja = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 30, 45, null, null,
+            var vieja = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 45, null, null,
                     null, null, List.of(), LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31));
 
             var r = FrequencyEvaluator.evaluateAcrossVersions(List.of(vieja), List.of(), DESDE, HASTA);
@@ -384,7 +430,7 @@ class FrequencyEvaluatorTest {
         @Test
         @DisplayName("rigeEn incluye el ultimo dia de vigencia")
         void vigenciaInclusiva() {
-            var v = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 30, 45, null, null,
+            var v = new FrequencyRule(10L, "INTERVAL_DAYS", 30, 45, null, null,
                     null, null, List.of(), LocalDate.of(2026, 1, 1), LocalDate.of(2026, 6, 30));
 
             assertThat(v.rigeEn(LocalDate.of(2026, 6, 30))).isTrue();

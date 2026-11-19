@@ -1,0 +1,75 @@
+{
+  "period": { "dateFrom": "2026-10-01", "dateTo": "2026-10-31", "timeZone": "America/Lima" },
+  "scope": "CAMPUS",
+  "coverage": {
+    "rule": "PROVISIONAL_ONE_APPROVED_PER_SECTION", "available": true, "unavailableReason": null,
+    "coveredAreaM2": 98250.30, "totalAreaM2": 156120.00, "percent": 62.9,
+    "coveredSections": 214, "totalSections": 531, "sectionsWithoutArea": 3
+  },
+  "interventions": { "approved": 45, "pendingApproval": 7 },
+  "incidents": { "pendingApproval": 2, "open": 5, "inProgress": 3, "reportedInPeriod": 12, "resolvedInPeriod": 9 },
+  "sectors": [
+    { "sectorId": 1, "code": "SEC-VERDE-01", "name": "Sector verde 01",
+      "coveredAreaM2": 34100.00, "totalAreaM2": 45500.00, "percent": 74.9,
+      "coveredSections": 88, "totalSections": 121, "approvedInterventions": 18 },
+    { "sectorId": 2, "code": "SEC-VERDE-02", "name": "Sector verde 02",
+      "coveredAreaM2": 30150.30, "totalAreaM2": 40600.00, "percent": 74.3,
+      "coveredSections": 79, "totalSections": 118, "approvedInterventions": 15 },
+    { "sectorId": 3, "code": "SEC-VERDE-03", "name": "Sector verde 03",
+      "coveredAreaM2": 27800.00, "totalAreaM2": 48820.00, "percent": 56.9,
+      "coveredSections": 41, "totalSections": 172, "approvedInterventions": 10 },
+    { "sectorId": 4, "code": "SEC-POLIDEPORT", "name": "Sector Polideportivo",
+      "coveredAreaM2": 6200.00, "totalAreaM2": 18000.00, "percent": 34.4,
+      "coveredSections": 6, "totalSections": 110, "approvedInterventions": 2 },
+    { "sectorId": null, "code": null, "name": "Sin sector",
+      "coveredAreaM2": 0, "totalAreaM2": 3200.00, "percent": 0.0,
+      "coveredSections": 0, "totalSections": 10, "approvedInterventions": 0 }
+  ],
+  "compliance": [
+    { "activityTypeItemId": 42, "activityLabel": "Corte de césped", "regime": "IN_HOUSE",
+      "evaluable": true, "notEvaluableReason": null,
+      "onTarget": 18, "early": 4, "overdue": 2, "notApplicable": 3,
+      "overdueTargets": [
+        { "targetKind": "ZONE", "targetId": 50, "label": "Jardín Frutas", "lastExecutionDate": "2026-08-30" },
+        { "targetKind": "ZONE", "targetId": 77, "label": "Jardín de Física", "lastExecutionDate": "2026-09-02" }
+      ] },
+    { "activityTypeItemId": 41, "activityLabel": "Deshierbo", "regime": "IN_HOUSE",
+      "evaluable": true, "notEvaluableReason": null,
+      "onTarget": 12, "early": 3, "overdue": 1, "notApplicable": 1,
+      "overdueTargets": [
+        { "targetKind": "PLACE", "targetId": 7, "label": "Pontódromo", "lastExecutionDate": "2026-09-10" }
+      ] },
+    { "activityTypeItemId": 30, "activityLabel": "Poda de mantenimiento", "regime": "IN_HOUSE",
+      "evaluable": true, "notEvaluableReason": null,
+      "onTarget": 9, "early": 1, "overdue": 0, "notApplicable": 2, "overdueTargets": [] },
+    { "activityTypeItemId": 31, "activityLabel": "Poda sanitaria", "regime": "OUTSOURCED",
+      "evaluable": false, "notEvaluableReason": "OUTSOURCED",
+      "onTarget": 0, "early": 0, "overdue": 0, "notApplicable": 0, "overdueTargets": [] },
+    { "activityTypeItemId": 50, "activityLabel": "Riego manual", "regime": "IN_HOUSE",
+      "evaluable": false, "notEvaluableReason": "BY_SECTOR",
+      "onTarget": 0, "early": 0, "overdue": 0, "notApplicable": 0, "overdueTargets": [] }
+  ],
+  "mostAttended": { "total": 214, "items": [
+    { "sectionId": 50, "code": "AV-0151", "name": "Jardín Frutas", "sectorName": "Sector verde 01",
+      "areaM2": 1250.40, "approvedInterventions": 5, "lastAttendedOn": "2026-10-28" },
+    { "sectionId": 52, "code": "AV-0160", "name": "Explanada de Ciencias", "sectorName": "Sector verde 01",
+      "areaM2": 3980.75, "approvedInterventions": 4, "lastAttendedOn": "2026-10-27" },
+    { "sectionId": 78, "code": "AV-0310", "name": "Pontódromo", "sectorName": "Sector verde 02",
+      "areaM2": 1875.20, "approvedInterventions": 4, "lastAttendedOn": "2026-10-30" },
+    { "sectionId": 79, "code": "AV-0318", "name": "Jardín de la Biblioteca", "sectorName": "Sector verde 02",
+      "areaM2": 2640.00, "approvedInterventions": 3, "lastAttendedOn": "2026-10-22" },
+    { "sectionId": 51, "code": "AV-0152", "name": "Jardín de Letras", "sectorName": "Sector verde 01",
+      "areaM2": 2310.00, "approvedInterventions": 3, "lastAttendedOn": "2026-10-19" }
+  ] },
+  "unattended": { "total": 317, "items": [
+    { "sectionId": 77, "code": "AV-0302", "name": "Jardín de Física", "sectorName": "Sector verde 02",
+      "areaM2": 2100.00, "approvedInterventions": 0, "lastAttendedOn": null },
+    { "sectionId": 90, "code": "AV-0410", "name": "Talud del Polideportivo", "sectorName": "Sector Polideportivo",
+      "areaM2": 5400.00, "approvedInterventions": 0, "lastAttendedOn": null },
+    { "sectionId": 91, "code": "AV-0212", "name": "Jardín de Arquitectura", "sectorName": "Sector verde 03",
+      "areaM2": 1980.00, "approvedInterventions": 0, "lastAttendedOn": "2026-08-14" },
+    { "sectionId": 92, "code": "AV-0221", "name": "Patio de Ingeniería", "sectorName": "Sector verde 03",
+      "areaM2": 1420.50, "approvedInterventions": 0, "lastAttendedOn": "2026-09-03" }
+  ] },
+  "generatedAt": "2026-11-04T15:00:00Z"
+}

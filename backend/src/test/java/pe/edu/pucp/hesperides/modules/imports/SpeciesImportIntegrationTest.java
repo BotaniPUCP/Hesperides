@@ -69,12 +69,12 @@ class SpeciesImportIntegrationTest {
 
     @Test
     void theSpeciesTemplateMatchesTheDocumentedOneAndHeaderStandard() throws Exception {
-        byte[] documented = Files.readAllBytes(Path.of("..", "docs", "estandares", "plantillas", "especies.csv"));
+        // Desde la reorganizaci\u00F3n de docs (11 nov 2026) la plantilla tiene una sola fuente: la del backend.
+        byte[] documented = Files.readAllBytes(Path.of("src", "main", "resources", "imports", "templates", "especies.csv"));
         byte[] downloaded = mockMvc.perform(get("/api/v1/imports/templates/species"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsByteArray();
-        assertThat(new String(downloaded, StandardCharsets.UTF_8).replaceFirst("^\uFEFF", "").getBytes(StandardCharsets.UTF_8))
-                .containsExactly(documented);
+        assertThat(downloaded).containsExactly(documented);
         String template = new String(downloaded, StandardCharsets.UTF_8);
 
         assertThat(template.lines().findFirst().orElseThrow().replaceFirst("^\uFEFF", "").split(";"))

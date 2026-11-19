@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 68 70" width="68" height="70" role="img" aria-label="Incidencia abierta, sin urgencia">
+  <title>Incidencia abierta, sin urgencia</title>
+  <ellipse cx="32" cy="65" rx="8" ry="2.2" fill="#000" opacity=".18"/>
+  <path d="M16.1 53.1A28 28 0 1 1 47.9 53.1L32 64Z" fill="#FFFFFF" stroke="#1F2A33" stroke-width="2.4" stroke-linejoin="round"/>
+  <circle cx="32" cy="30" r="21.5" fill="#fff" stroke="#1F2A33" stroke-width="1.5"/>
+  <g transform="translate(16 14)" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M16 3L30.5 28H1.5Z" fill="#FFC928" stroke="#1F2A33" stroke-width="2"/>
+    <path d="M16 11v8" stroke="#1F2A33" stroke-width="3"/>
+    <circle cx="16" cy="23.5" r="1.8" fill="#1F2A33"/>
+    <path d="M24 9c4-3 7-2 7-2s0 4-4 6c-2 1-3 0-3-4Z" fill="#43A047" stroke="#1F2A33" stroke-width="1.2"/>
+  </g>
+</svg>

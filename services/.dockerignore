@@ -1,0 +1,9 @@
+# `COPY . .` copia la carpeta entera: fuera los entornos y cachés locales de Python.
+.venv
+venv
+__pycache__
+**/__pycache__
+.pytest_cache
+*.pyc
+.env
+.env.*

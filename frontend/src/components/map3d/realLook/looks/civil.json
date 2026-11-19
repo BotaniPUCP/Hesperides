@@ -1,0 +1,67 @@
+{
+  "planKey": "2643a26d-e46b-4ae9-ad6d-89639dcef770",
+  "name": "Sección Ingeniería Civil",
+  "folder": "Facultad_Civil",
+  "photos": [
+    "frente.jpeg"
+  ],
+  "materials": {
+    "ladrillo": {
+      "color": "#b47a62"
+    },
+    "concreto": {
+      "color": "#cdbda3"
+    },
+    "techo": {
+      "color": "#b5b2aa"
+    },
+    "ventanas": {
+      "glass": "#808c91",
+      "frame": "#9aa0a0",
+      "moduleM": 1.5,
+      "heightM": 1.4,
+      "frameM": 0.08,
+      "vary": 0.05
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            -0.5,
+            7.7
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              -0.35,
+              0.45
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7.2
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              1.3,
+              2.7
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Marco de concreto tostado con paños de ladrillo bajo las ventanas enrejadas, en dos pisos (frente.jpeg): losas de concreto y una cinta de ventanas por piso sobre el ladrillo. La nave alta de chapa beige que se ve detrás no se separa."
+}

@@ -1,0 +1,30 @@
+{
+  "version": 0,
+  "asset": "/models/pabellon-g-v0.glb?revision=reflected-x",
+  "correction": { "reflectionAxis": "local X", "reason": "User-confirmed lateral inversion", "determinant": -1 },
+  "source": {
+    "fileName": "Campus SKP.skp",
+    "sha256": "080499f4343b0ab47562f34499d418ae8be070fd00f40fa2fbf41a91a960beb6",
+    "units": "meters",
+    "georeferenced": false,
+    "coordinates": "SKP local coordinates, centered horizontally, base at y=0, y-up",
+    "sourceCenterM": [
+      441.8304151621077,
+      286.16082429513347,
+      91.53970000149012
+    ],
+    "persistentFaceIds": {
+      "1500": 3185164,
+      "1516": 3185172,
+      "37733": 3165590,
+      "37784": 3165601
+    }
+  },
+  "measurements": {
+    "mainHeightM": 5.999999903142452,
+    "sideHeightM": 3.1000000461935855,
+    "mainBaseAreaM2": 322.5488934150344,
+    "mainRoofAreaM2": 316.30338880479394,
+    "sideBaseAreaM2": 120.0618042210408
+  }
+}

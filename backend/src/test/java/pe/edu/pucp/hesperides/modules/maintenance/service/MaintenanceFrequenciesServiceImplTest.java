@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogItem;
+import pe.edu.pucp.hesperides.modules.catalogs.entity.CatalogType;
 import pe.edu.pucp.hesperides.modules.catalogs.repository.CatalogItemsRepository;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequencyRequest;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
@@ -19,7 +20,7 @@ import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequency
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequency;
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequencySeason;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceFrequenciesRepository;
-import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceZoneQueries;
+import pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup;
 import pe.edu.pucp.hesperides.shared.entity.BaseEntity;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
@@ -52,7 +53,7 @@ class MaintenanceFrequenciesServiceImplTest {
     private ComplianceReader complianceReader;
 
     @Mock
-    private MaintenanceZoneQueries zoneQueries;
+    private GreenAreaSetLookup setLookup;
 
     private MaintenanceFrequenciesServiceImpl service;
 
@@ -64,9 +65,10 @@ class MaintenanceFrequenciesServiceImplTest {
     @BeforeEach
     void setUp() throws Exception {
         service = new MaintenanceFrequenciesServiceImpl(
-                frequenciesRepository, catalogItemsRepository, complianceReader, zoneQueries);
+                frequenciesRepository, catalogItemsRepository, complianceReader, setLookup);
 
         activityItem = catalogItem(10L, "CORTE_CESPED", "Corte de césped");
+        activityItem.setCatalogType(catalogType("INTERVENTION_TYPE"));
         intervalDaysRuleItem = catalogItem(101L, "INTERVAL_DAYS", "Intervalo por rango de días");
         seasonalRuleItem = catalogItem(102L, "SEASONAL_PERIOD", "Periodicidad estacional");
         onDemandRuleItem = catalogItem(105L, "ON_DEMAND", "A demanda");
@@ -78,7 +80,7 @@ class MaintenanceFrequenciesServiceImplTest {
                 .thenReturn(Optional.of(seasonalRuleItem));
         when(catalogItemsRepository.findActiveItemByTypeAndCode("FREQUENCY_RULE_TYPE", "ON_DEMAND"))
                 .thenReturn(Optional.of(onDemandRuleItem));
-        when(frequenciesRepository.findDuplicateCurrent(any(), any(), any(), any(), any()))
+        when(frequenciesRepository.findDuplicateCampusWide(any(), any(), any()))
                 .thenReturn(Optional.empty());
         when(frequenciesRepository.save(any(MaintenanceFrequency.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
@@ -95,6 +97,12 @@ class MaintenanceFrequenciesServiceImplTest {
         return item;
     }
 
+    private static CatalogType catalogType(String code) {
+        CatalogType type = new CatalogType();
+        type.setCode(code);
+        return type;
+    }
+
     private void setId(BaseEntity entity, Long id) throws Exception {
         Field idField = BaseEntity.class.getDeclaredField("id");
         idField.setAccessible(true);
@@ -105,15 +113,15 @@ class MaintenanceFrequenciesServiceImplTest {
                                                            Integer annual, Integer coverage,
                                                            List<SeasonalIntervalPayload> seasons) {
         return new CreateMaintenanceFrequencyRequest(
-                10L, "IN_HOUSE", ruleCode, "CAMPUS_WIDE", null,
-                null, min, max, annual, coverage, null, null, null, seasons, null);
+                10L, "IN_HOUSE", ruleCode, "CAMPUS_WIDE",
+                min, max, annual, coverage, null, null, null, seasons, null);
     }
 
     private static UpdateMaintenanceFrequencyRequest editar(Integer min, Integer max,
                                                             List<SeasonalIntervalPayload> seasons,
                                                             String notes) {
-        return new UpdateMaintenanceFrequencyRequest(null, null, null, null,
-                null, min, max, null, null, null, null, null, seasons, notes, null);
+        return new UpdateMaintenanceFrequencyRequest(null, null, null,
+                min, max, null, null, null, null, null, seasons, notes, null);
     }
 
     /** Una frecuencia vigente creada hace dias, como la que ya lleva tiempo en uso. */
@@ -145,85 +153,67 @@ class MaintenanceFrequenciesServiceImplTest {
     class Creacion {
 
         @Test
-        void zoneRequiredBeforePersisting() {
+        void aRuleForSetsNamesNoSet() {
             var request = new CreateMaintenanceFrequencyRequest(
-                    10L, "OUTSOURCED", "ON_DEMAND", "BY_ZONE", null,
-                    null, null, null, null, null, 3, null, null, null, null);
-
-            assertThatThrownBy(() -> service.create(request))
-                    .isInstanceOf(BusinessRuleException.class)
-                    .hasMessageContaining("Selecciona una sección");
-            verify(frequenciesRepository, never()).save(any());
-        }
-
-        @Test
-        void zoneMustBeAnActiveSection() {
-            when(zoneQueries.isActiveSection(999L)).thenReturn(false);
-            var request = new CreateMaintenanceFrequencyRequest(
-                    10L, "OUTSOURCED", "ON_DEMAND", "BY_ZONE", 999L,
-                    null, null, null, null, null, 3, null, null, null, null);
-
-            assertThatThrownBy(() -> service.create(request))
-                    .isInstanceOf(BusinessRuleException.class)
-                    .hasMessageContaining("no existe o no está activa");
-            verify(frequenciesRepository, never()).save(any());
-        }
-
-        @Test
-        void byZoneFrequencyKeepsTheChosenSection() {
-            when(zoneQueries.isActiveSection(7L)).thenReturn(true);
-            var request = new CreateMaintenanceFrequencyRequest(
-                    10L, "OUTSOURCED", "ON_DEMAND", "BY_ZONE", 7L,
-                    null, null, null, null, null, 3, null, null, null, null);
+                    10L, "IN_HOUSE", "INTERVAL_DAYS", "BY_SET",
+                    5, 8, null, null, null, null, null, null, null);
 
             var response = service.create(request);
 
-            assertThat(response.scope()).isEqualTo("BY_ZONE");
-            assertThat(response.zoneId()).isEqualTo(7L);
+            // Se asigna a los conjuntos en Planificación (SPEC-203 §3.4).
+            assertThat(response.scope()).isEqualTo("BY_SET");
+            assertThat(response.ruleKey()).isNotNull();
+            assertThat(response.assignedSetCount()).isZero();
         }
 
         @Test
-        void campusWideCannotCarryAZone() {
+        void severalRulesForSetsOfTheSameActivityAreAllowed() {
             var request = new CreateMaintenanceFrequencyRequest(
-                    10L, "OUTSOURCED", "ON_DEMAND", "CAMPUS_WIDE", 7L,
-                    null, null, null, null, null, 3, null, null, null, null);
+                    10L, "IN_HOUSE", "INTERVAL_DAYS", "BY_SET",
+                    5, 8, null, null, null, null, null, null, null);
 
-            assertThatThrownBy(() -> service.create(request))
-                    .isInstanceOf(BusinessRuleException.class)
-                    .hasMessageContaining("Solo una frecuencia por sección");
-            verify(frequenciesRepository, never()).save(any());
+            service.create(request);
+
+            verify(frequenciesRepository, never()).findDuplicateCampusWide(any(), any(), any());
         }
 
         @Test
-        void leavingByZoneDropsTheZone() throws Exception {
+        void aNewVersionKeepsTheRuleSoItsAssignmentsFollowIt() throws Exception {
             var current = vigenteAntigua();
-            current.setScope("BY_ZONE");
-            current.setZoneId(7L);
+            var rule = current.getRuleKey();
             when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(current));
+
+            var response = service.update(500L, editar(20, 30, null, null));
+
+            assertThat(current.getValidTo()).isNotNull();
+            assertThat(response.validFrom()).isEqualTo(LocalDate.now());
+            assertThat(response.ruleKey()).isEqualTo(rule);
+        }
+
+        @Test
+        void turningAnAssignedRuleOutsourcedWarnsThatItStopsPlanning() throws Exception {
+            var current = vigenteAntigua();
+            when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(current));
+            when(setLookup.assignedSetCounts(any())).thenReturn(java.util.Map.of(current.getRuleKey(), 2));
             var request = new UpdateMaintenanceFrequencyRequest(
-                    null, null, "CAMPUS_WIDE", null, null, null, null, null,
-                    null, null, null, null, null, null, null);
+                    "OUTSOURCED", null, null, null, null, null, null,
+                    null, null, null, null, null, null);
 
             var response = service.update(500L, request);
 
-            assertThat(response.scope()).isEqualTo("CAMPUS_WIDE");
-            assertThat(response.zoneId()).isNull();
+            assertThat(response.assignedSetCount()).isEqualTo(2);
+            assertThat(response.warnings()).containsExactly(
+                    "Se usa en 2 planificaciones: al ser tercerizada, quedan «Sin frecuencia configurada»");
         }
 
         @Test
-        void updateRequiresZoneBeforeClosingCurrentVersion() throws Exception {
+        void theListSaysHowManySetsUseEachRule() throws Exception {
             var current = vigenteAntigua();
-            when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(current));
-            var request = new UpdateMaintenanceFrequencyRequest(
-                    null, null, "BY_ZONE", null, null, null, null, null,
-                    null, null, null, null, null, null, null);
+            when(frequenciesRepository.searchCurrent(null, null, null)).thenReturn(List.of(current));
+            when(setLookup.assignedSetCounts(any())).thenReturn(java.util.Map.of(current.getRuleKey(), 3));
 
-            assertThatThrownBy(() -> service.update(500L, request))
-                    .isInstanceOf(BusinessRuleException.class)
-                    .hasMessageContaining("Selecciona una sección");
-            assertThat(current.getValidTo()).isNull();
-            verify(frequenciesRepository, never()).saveAndFlush(any());
-            verify(frequenciesRepository, never()).save(any());
+            assertThat(service.findAll(null, null, null)).singleElement()
+                    .satisfies(r -> assertThat(r.assignedSetCount()).isEqualTo(3));
         }
 
         @Test
@@ -241,8 +231,8 @@ class MaintenanceFrequenciesServiceImplTest {
         @DisplayName("las estaciones se persisten como filas, no como texto")
         void conEstaciones() {
             var seasons = List.of(
-                    new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35, 21),
-                    new SeasonalIntervalPayload("INVIERNO", 7, 9, 40, 45, 21));
+                    new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35),
+                    new SeasonalIntervalPayload("INVIERNO", 7, 9, 40, 45));
 
             var res = service.create(crear("INTERVAL_DAYS", 30, 45, null, null, seasons));
 
@@ -270,7 +260,7 @@ class MaintenanceFrequenciesServiceImplTest {
         @Test
         @DisplayName("el intervalo general puede faltar si las estaciones lo cubren")
         void soloEstaciones() {
-            var seasons = List.of(new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35, null));
+            var seasons = List.of(new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35));
             var res = service.create(crear("INTERVAL_DAYS", null, null, null, null, seasons));
 
             assertThat(res.seasons()).hasSize(1);
@@ -297,8 +287,8 @@ class MaintenanceFrequenciesServiceImplTest {
         @DisplayName("una estacion repetida se rechaza")
         void estacionRepetida() {
             var seasons = List.of(
-                    new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35, null),
-                    new SeasonalIntervalPayload("VERANO", 1, 2, 25, 30, null));
+                    new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35),
+                    new SeasonalIntervalPayload("VERANO", 1, 2, 25, 30));
 
             assertThatThrownBy(() -> service.create(crear("INTERVAL_DAYS", 30, 45, null, null, seasons)))
                     .isInstanceOf(BusinessRuleException.class)
@@ -308,7 +298,7 @@ class MaintenanceFrequenciesServiceImplTest {
         @Test
         @DisplayName("un duplicado vigente se rechaza")
         void duplicado() throws Exception {
-            when(frequenciesRepository.findDuplicateCurrent(eq(10L), eq("IN_HOUSE"), eq("CAMPUS_WIDE"), any(), any()))
+            when(frequenciesRepository.findDuplicateCampusWide(eq(10L), eq("IN_HOUSE"), any()))
                     .thenReturn(Optional.of(vigenteAntigua()));
 
             assertThatThrownBy(() -> service.create(crear("INTERVAL_DAYS", 30, 45, null, null, null)))
@@ -323,6 +313,17 @@ class MaintenanceFrequenciesServiceImplTest {
             assertThatThrownBy(() -> service.create(crear("INTERVAL_DAYS", 30, 45, null, null, null)))
                     .isInstanceOf(BusinessRuleException.class)
                     .hasMessageContaining("no está activo");
+        }
+
+        @Test
+        @DisplayName("un grupo de actividades no se acepta como actividad")
+        void grupoDeActividades() {
+            activityItem.setCatalogType(catalogType("INTERVENTION_CLASS"));
+
+            assertThatThrownBy(() -> service.create(crear("INTERVAL_DAYS", 30, 45, null, null, null)))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("no un grupo");
+            verify(frequenciesRepository, never()).save(any());
         }
     }
 

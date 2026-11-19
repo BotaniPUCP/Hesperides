@@ -10,6 +10,7 @@ import { useRequest } from '@/hooks/useRequest';
 import { ApiError } from '@/lib/api';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { unidadCorta, type MedidaAdicional } from './medidasEspecie';
+import { mensajeDeApiError } from '@/lib/api-errors';
 
 export interface CamposMedidasAdicionalesProps {
   valores: MedidaAdicional[];
@@ -50,7 +51,7 @@ export function CamposMedidasAdicionales({ valores, onCambiar }: CamposMedidasAd
       setNombre('');
       setUnidad(null);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'No se pudo crear la medida.');
+      setError(err instanceof ApiError ? mensajeDeApiError(err) : 'No se pudo crear la medida.');
     } finally {
       setCreando(false);
     }

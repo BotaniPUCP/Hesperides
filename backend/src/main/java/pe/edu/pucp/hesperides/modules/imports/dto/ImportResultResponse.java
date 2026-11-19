@@ -10,7 +10,7 @@ import java.util.List;
 public record ImportResultResponse(long batchId, int created, int updated, int omittedDuplicates,
                                    List<ImportPreviewResponse.UnknownSpecies> unknownSpecies,
                                    List<ImportPreviewResponse.Issue> photoWarnings, List<String> createdCodes,
-                                   int omittedInactiveSpecies) {
+                                   int omittedInactiveSpecies) implements ImportOutcome {
 
     public ImportResultResponse(long batchId, int created, int updated, int omittedDuplicates,
                                 List<ImportPreviewResponse.UnknownSpecies> unknownSpecies,

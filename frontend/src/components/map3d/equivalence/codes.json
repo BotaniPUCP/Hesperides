@@ -1,0 +1,642 @@
+[
+  {
+    "code": "1",
+    "label": "FACULTAD DE CIENCIAS E INGENIERÍA",
+    "category": "building"
+  },
+  {
+    "code": "2",
+    "label": "PABELLÓN C",
+    "category": "building"
+  },
+  {
+    "code": "3",
+    "label": "PABELLÓN U: SECCIÓN INGENIERÍA MECÁNICA",
+    "category": "building"
+  },
+  {
+    "code": "4",
+    "label": "PABELLÓN M: SECCIÓN INGENIERÍA DE MINAS",
+    "category": "building"
+  },
+  {
+    "code": "5",
+    "label": "PABELLÓN V: SECCIÓN INGENIERÍA DE TELECOMUNICACIONES, SECCIÓN INGENIERÍA INFORMÁTICA, SECCIÓN INGENIERÍA ELECTRÓNICA",
+    "category": "building"
+  },
+  {
+    "code": "6",
+    "label": "SECCIÓN INGENIERÍA INDUSTRIAL",
+    "category": "building"
+  },
+  {
+    "code": "7",
+    "label": "PABELLÓN K: FABCORE, SECCIÓN INGENIERÍA MECATRÓNICA",
+    "category": "building"
+  },
+  {
+    "code": "8",
+    "label": "INSTITUTO DE CORROSIÓN Y PROTECCIÓN",
+    "category": "building"
+  },
+  {
+    "code": "9",
+    "label": "DEPARTAMENTO DE INGENIERÍA, SECCIÓN INGENIERÍA CIVIL, LABORATORIOS DE ESTRUCTURAS ANTISÍSMICAS",
+    "category": "building"
+  },
+  {
+    "code": "10",
+    "label": "DEPARTAMENTO ACADÉMICO DE CIENCIAS, SECCIÓN MATEMÁTICAS",
+    "category": "building"
+  },
+  {
+    "code": "11",
+    "label": "PABELLÓN F: SECCIÓN FÍSICA",
+    "category": "building"
+  },
+  {
+    "code": "12",
+    "label": "PABELLÓN Q: SECCIÓN QUÍMICA",
+    "category": "building"
+  },
+  {
+    "code": "13",
+    "label": "PABELLÓN P: CEPREPUCP",
+    "category": "building"
+  },
+  {
+    "code": "14",
+    "label": "PABELLÓN G: FACULTAD DE CIENCIAS CONTABLES (EDIFICIO 1)",
+    "category": "building"
+  },
+  {
+    "code": "15",
+    "label": "PABELLÓN G: FACULTAD DE CIENCIAS CONTABLES (EDIFICIO 2)",
+    "category": "building"
+  },
+  {
+    "code": "16",
+    "label": "PABELLÓN E: ESTUDIOS GENERALES CIENCIAS",
+    "category": "building"
+  },
+  {
+    "code": "17",
+    "label": "PABELLÓN I: FACULTAD DE ARTE Y DISEÑO, DEPARTAMENTO ACADÉMICO DE ARTE Y DISEÑO, CIDE",
+    "category": "building"
+  },
+  {
+    "code": "18",
+    "label": "PABELLÓN J: FACULTAD DE CIENCIAS SOCIALES",
+    "category": "building"
+  },
+  {
+    "code": "19",
+    "label": "DIRECCIÓN DE TECNOLOGÍAS DE INFORMACIÓN, DEPARTAMENTO DE CIENCIAS SOCIALES, DEPARTAMENTO DE ECONOMÍA , CISEPA",
+    "category": "building"
+  },
+  {
+    "code": "20",
+    "label": "AUDITORIO DE DERECHO",
+    "category": "building"
+  },
+  {
+    "code": "21",
+    "label": "PABELLÓN D: FACULTAD DE DERECHO, DEPARTAMENTO ACADÉMICO DE DERECHO",
+    "category": "building"
+  },
+  {
+    "code": "22",
+    "label": "AUDITORIO JUAN PABLO II",
+    "category": "building"
+  },
+  {
+    "code": "23",
+    "label": "CENTRO DE ASESORIA PASTORAL UNIVERSITARIA (CAPU)",
+    "category": "building"
+  },
+  {
+    "code": "24",
+    "label": "EDIFICIO DINTILHAC",
+    "category": "building"
+  },
+  {
+    "code": "25",
+    "label": "BIBLIOTECA CENTRAL",
+    "category": "building"
+  },
+  {
+    "code": "26",
+    "label": "DEPARTAMENTO ACADÉMICO DE TEOLOGÍA",
+    "category": "building"
+  },
+  {
+    "code": "27",
+    "label": "FACULTAD DE GESTIÓN Y ALTA DIRECCIÓN, DEPARTAMENTO DE CIENCIAS DE LA GESTIÓN",
+    "category": "building"
+  },
+  {
+    "code": "28",
+    "label": "PABELLÓN Z",
+    "category": "building"
+  },
+  {
+    "code": "29",
+    "label": "FACULTAD DE CIENCIAS Y ARTES DE LA COMUNICACIÓN",
+    "category": "building"
+  },
+  {
+    "code": "30",
+    "label": "PABELLÓN S: DEPARTAMENTO ACADÉMICO DE PSICOLOGÍA, FACULTAD DE PSICOLOGÍA",
+    "category": "building"
+  },
+  {
+    "code": "31",
+    "label": "DEPARTAMENTO ACADÉMICO DE HUMANIDADES (JEFATURA)",
+    "category": "building"
+  },
+  {
+    "code": "32",
+    "label": "DEPARTAMENTO ACADÉMICO DE HUMANIDADES (OFICINAS)",
+    "category": "building"
+  },
+  {
+    "code": "33",
+    "label": "AUDITORIO DE HUMANIDADES",
+    "category": "building"
+  },
+  {
+    "code": "34",
+    "label": "PABELLÓN L: ESTUDIOS GENERALES LETRAS",
+    "category": "building"
+  },
+  {
+    "code": "35",
+    "label": "FACULTAD DE EDUCACIÓN (OFICINAS)",
+    "category": "building"
+  },
+  {
+    "code": "36",
+    "label": "PABELLÓN R: FACULTAD DE EDUCACIÓN (AULAS)",
+    "category": "building"
+  },
+  {
+    "code": "37",
+    "label": "FACULTAD DE EDUCACIÓN (AULA R102)",
+    "category": "building"
+  },
+  {
+    "code": "38",
+    "label": "DEPARTAMENTO ACADÉMICO DE EDUCACIÓN",
+    "category": "building"
+  },
+  {
+    "code": "39",
+    "label": "OFICINA DE LOGÍSTICA, OFICINA DE SERVICIOS GENERALES, OFICINA DE SEGURIDAD INTEGRAL, ALMACÉN CENTRAL, MAESTRANZA",
+    "category": "building"
+  },
+  {
+    "code": "40",
+    "label": "COMEDOR CENTRAL",
+    "category": "building"
+  },
+  {
+    "code": "41",
+    "label": "PABELLÓN H: FACULTAD DE LETRAS Y CIENCIAS HUMANAS",
+    "category": "building"
+  },
+  {
+    "code": "42",
+    "label": "LIBRERIA PUCP, ASOCIACIÓN DE EGRESADOS Y GRADUADOS, DIRECCIÓN DE RELACIONES INSTITUCIONALES, FONDO EDITORIAL",
+    "category": "building"
+  },
+  {
+    "code": "43",
+    "label": "DIRECCIÓN DE ADMISIÓN (DIAD)",
+    "category": "building"
+  },
+  {
+    "code": "44",
+    "label": "PABELLÓN T: FACULTAD DE ARQUITECTURA Y URBANISMO",
+    "category": "building"
+  },
+  {
+    "code": "45",
+    "label": "COLISEO POLIDEPORTIVO",
+    "category": "building"
+  },
+  {
+    "code": "46",
+    "label": "LABORATORIO DE CERTIFICACIÓN",
+    "category": "building"
+  },
+  {
+    "code": "47",
+    "label": "LABORATORIO DE INVESTIGACIÓN EN EL REGISTRO, DIAGNÓSTICO Y CONSERVACIÓN DEL PATRIMONIO",
+    "category": "building"
+  },
+  {
+    "code": "48",
+    "label": "ESTUDIO TV 2",
+    "category": "building"
+  },
+  {
+    "code": "49",
+    "label": "PABELLÓN N: COMPLEJO FELIPE MAC GREGOR S.J.",
+    "category": "building"
+  },
+  {
+    "code": "50",
+    "label": "PABELLÓN Y: FACULTAD DE ARTE Y DISEÑO, DEPARTAMENTO ACADÉMICO DE ARTE Y DISEÑO",
+    "category": "building"
+  },
+  {
+    "code": "51",
+    "label": "SALA CUNA",
+    "category": "building"
+  },
+  {
+    "code": "52",
+    "label": "SNACK DE ELECTRÓNICA, LACTARIOS",
+    "category": "building"
+  },
+  {
+    "code": "53",
+    "label": "PABELLÓN W: ESPACIOS CULTURALES",
+    "category": "building"
+  },
+  {
+    "code": "54",
+    "label": "INSTITUTO DE RADIOASTRONOMÍA",
+    "category": "building"
+  },
+  {
+    "code": "55",
+    "label": "EDIFICIO DE SERVICIOS ADMINISTRATIVOS (ESA)",
+    "category": "building"
+  },
+  {
+    "code": "56",
+    "label": "PABELLÓN O",
+    "category": "building"
+  },
+  {
+    "code": "57",
+    "label": "EDIFICIO DE SERVICIOS ESTUDIANTILES (TINKUY)",
+    "category": "building"
+  },
+  {
+    "code": "58",
+    "label": "LABORATORIO DE MAQUINARIA PESADA + SS.HH.",
+    "category": "building"
+  },
+  {
+    "code": "59",
+    "label": "PABELLÓN A (AULARIO DEL COMPLEJO DE INNOVACIÓN ACADÉMICA)",
+    "category": "building"
+  },
+  {
+    "code": "60",
+    "label": "BIBLIOTECA (COMPLEJO DE INNOVACIÓN ACADEMICA)",
+    "category": "building"
+  },
+  {
+    "code": "61",
+    "label": "COMPLEJO DE CIENCIAS SOCIALES",
+    "category": "building"
+  },
+  {
+    "code": "62",
+    "label": "EDIFICIO DE INVESTIGACIÓN",
+    "category": "building"
+  },
+  {
+    "code": "63",
+    "label": "FACULTAD DE GASTRONOMÍA, HOTELERÍA Y TURISMO",
+    "category": "building"
+  },
+  {
+    "code": "C01",
+    "label": "GRUPO DE APOYO AL SECTOR RURAL (OFICINAS)",
+    "category": "caseta"
+  },
+  {
+    "code": "C02",
+    "label": "ASOCIACIÓN DE ESTUDIANTES Y EGRESADOS DE INGENIERÍA INDUSTRIAL (ADEIN) Y PROGRAMA DE PASANTÍAS EN ENERGÍAS RENOVABLES",
+    "category": "caseta"
+  },
+  {
+    "code": "C03",
+    "label": "TIENDECITA VERDE",
+    "category": "caseta"
+  },
+  {
+    "code": "C04",
+    "label": "ESTACIÓN METEREOLÓGICA \"HIPÓLITO UNANUE\"",
+    "category": "caseta"
+  },
+  {
+    "code": "C06-C07",
+    "label": "LABORATORIO DE COCINAS MEJORADAS / TALLERES (GRUPO DE APOYO AL SECTOR RURAL Y SECCIÓN INGENIERÍA ELECTRÓNICA)",
+    "category": "caseta"
+  },
+  {
+    "code": "C09",
+    "label": "PROTOTIPO CASA AUTOSOSTENIBLE (GRUPO DE APOYO AL SECTOR RURAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C10",
+    "label": "DEPÓSITO OCR Y ALMACENES CEMDUC",
+    "category": "caseta"
+  },
+  {
+    "code": "C11",
+    "label": "PUNTO DE ACOPIO",
+    "category": "caseta"
+  },
+  {
+    "code": "C12",
+    "label": "HELADERÍA",
+    "category": "caseta"
+  },
+  {
+    "code": "C13",
+    "label": "PROTOTIPO SS.HH. (GRUPO DE APOYO AL SECTOR RURAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C14",
+    "label": "INSTITUTO DE ETNOMUSICOLOGÍA - AIESEC - MESA DE AYUDA DAF",
+    "category": "caseta"
+  },
+  {
+    "code": "C15",
+    "label": "DEPARTAMENTO DE CIENCIAS CONTABLES",
+    "category": "caseta"
+  },
+  {
+    "code": "C16",
+    "label": "COMEDOR DE ARTE",
+    "category": "caseta"
+  },
+  {
+    "code": "C17",
+    "label": "TALLER DE ARTE I-137 (ESCULTURA)",
+    "category": "caseta"
+  },
+  {
+    "code": "C18",
+    "label": "SERVICIOS HIGIÉNICOS (FACULTAD DE ARTE)",
+    "category": "caseta"
+  },
+  {
+    "code": "C19",
+    "label": "TALLER I-118 (PINTURA)",
+    "category": "caseta"
+  },
+  {
+    "code": "C20",
+    "label": "TALLERES T-35 AL T-44 (PINTURA)",
+    "category": "caseta"
+  },
+  {
+    "code": "C21",
+    "label": "SALA DE MARCACIÓN, UTILERÍA, AULA/TALLER I-122 (PINTURA), AULA/TALLER I-121, DEPÓSITO (PINTURA), TALLERES DEL T-55 AL T-67 (PINTURA), LIBRERÍA",
+    "category": "caseta"
+  },
+  {
+    "code": "C22",
+    "label": "TALLERES DE ARTE I-25 AL I-34 (PINTURA), CUARTO DE TABLEROS",
+    "category": "caseta"
+  },
+  {
+    "code": "C23",
+    "label": "AULA/TALLER I-114 (PINTURA)",
+    "category": "caseta"
+  },
+  {
+    "code": "C24",
+    "label": "AULA/TALLER I-117 (PINTURA)",
+    "category": "caseta"
+  },
+  {
+    "code": "C25",
+    "label": "TALLERES DE ARTE I-138 (ESCULTURA) TALLER DE FIERRO I-139 (ESCULTURA), OFICINA, DEPÓSITO",
+    "category": "caseta"
+  },
+  {
+    "code": "C26",
+    "label": "TALLERES T-55 AL T-71 (ESCULTURA), SALA DE PROFESORES",
+    "category": "caseta"
+  },
+  {
+    "code": "C27",
+    "label": "TALLER DE CERÁMICA I-106 (D. INDUSTRIAL), TALLER DE CERÁMICA I-135 (ESCULTURA), TALLER DE MADERA I-136 (D.INDUSTRIAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C28",
+    "label": "AULA/TALLER I-108 (D. INDUSTRIAL), TALLER DE METAL I-134 (D.INDUSTRIAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C29",
+    "label": "OFICINA I-133 (GRUPO AXIS), OFICINA DE SEGUROS",
+    "category": "caseta"
+  },
+  {
+    "code": "C30",
+    "label": "DEPÓSITOS (FACULTAD DE ARTE Y DISEÑO)",
+    "category": "caseta"
+  },
+  {
+    "code": "C31",
+    "label": "AULA/TALLER I-123 AL I-125, I-204 AL I-206 (DISEÑO INDUSTRIAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C32",
+    "label": "AULA/TALLER I-111, I-201 AL I-203",
+    "category": "caseta"
+  },
+  {
+    "code": "C34",
+    "label": "DEPÓSITO DE LIMPIEZA, ARCHIVO DE HISTORIAS",
+    "category": "caseta"
+  },
+  {
+    "code": "C35",
+    "label": "FARMACIA",
+    "category": "caseta"
+  },
+  {
+    "code": "C36",
+    "label": "SNACK (FRUTERÍA SOCIALES)",
+    "category": "caseta"
+  },
+  {
+    "code": "C37",
+    "label": "TAMBO ACTORAL, EDUCACIÓN CONTINUA (FARES), CENTRO DE INVESTIGACIÓN Y DOCUMENTACIÓN DE LAS ARTES ESCÉNICAS (CEDARES), REPRESENTANTES DE COMUNICACIONES (REPCOM) - CENTRO FEDERADO DE COMUNICACIONES (CFCOM)",
+    "category": "caseta"
+  },
+  {
+    "code": "C38",
+    "label": "COMEDOR DE LETRAS",
+    "category": "caseta"
+  },
+  {
+    "code": "C39",
+    "label": "CENTRO DE INVESTIGACIONES Y SERVICIOS EDUCATIVOS (CISE), SALA DE ESTUDIO (FAC. DE EDUCACIÓN), AULA INFORMÁTICA (FAC. DE EDUCACIÓN), SERVICIO DE IMPRESIÓN, REA, MI CAMPUS, COMISIÓN ESPECIAL PARA LA INTERVENCIÓN FRENTE AL HOSTIGAMIENTO SEXUAL, ISA, CIEE, IFSA",
+    "category": "caseta"
+  },
+  {
+    "code": "C40",
+    "label": "OFICINA DE LOGÍSTICA",
+    "category": "caseta"
+  },
+  {
+    "code": "C41",
+    "label": "DEPÓSITO ASUNTOS ACADEMICOS",
+    "category": "caseta"
+  },
+  {
+    "code": "C42",
+    "label": "VESTIDORES SEGURIDAD (MAESTRANZA)",
+    "category": "caseta"
+  },
+  {
+    "code": "C43",
+    "label": "COMEDOR OBREROS - DEPOSITO INFRAESTRUCTURA - TRIBUNAL DE HONOR - DEPOSITO CEMDUC - DEPOSITO CONTABILIDAD",
+    "category": "caseta"
+  },
+  {
+    "code": "C44",
+    "label": "ARQUEOLOGÍA A",
+    "category": "caseta"
+  },
+  {
+    "code": "C45",
+    "label": "ARQUEOLOGÍA B",
+    "category": "caseta"
+  },
+  {
+    "code": "C46",
+    "label": "ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO",
+    "category": "caseta"
+  },
+  {
+    "code": "C47",
+    "label": "PULSO PUCP, ALMACÉN Y DEPÓSITO (ESPECIALIDAD DE ARQUEOLOGÍA), OFICINAS Y ARCHIVO (DEPARTAMENTO ACADÉMICO DE DERECHO)",
+    "category": "caseta"
+  },
+  {
+    "code": "C48",
+    "label": "CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA)",
+    "category": "caseta"
+  },
+  {
+    "code": "C49",
+    "label": "INVERNADERO (ADYACENTE A GABINETE DE PROYECTOS PATRIMONIALES)",
+    "category": "caseta"
+  },
+  {
+    "code": "C50",
+    "label": "OFICINAS CEMDUC - SALA DE DANZA - GIMNASIO - VESTIDORES",
+    "category": "caseta"
+  },
+  {
+    "code": "C51",
+    "label": "PABELLÓN X: FACULTAD DE ARTES ESCÉNICAS, DEPARTAMENTO ACADÉMICO DE ARTES ESCÉNICAS",
+    "category": "caseta"
+  },
+  {
+    "code": "C52",
+    "label": "AULAS MOVILES B",
+    "category": "caseta"
+  },
+  {
+    "code": "C53",
+    "label": "AULAS MOVILES A",
+    "category": "caseta"
+  },
+  {
+    "code": "C54",
+    "label": "AULAS MOVILES C",
+    "category": "caseta"
+  },
+  {
+    "code": "C55",
+    "label": "GABINETE DE PROYECTOS PATRIMONIALES",
+    "category": "caseta"
+  },
+  {
+    "code": "C56",
+    "label": "CENTRO DE FOTOCOPIADO (ADYACENTE A PABELLÓN Z)",
+    "category": "caseta"
+  },
+  {
+    "code": "C57",
+    "label": "CENTRO DE FOTOCOPIADO (ADYACENTE A EE.GG.CC.)",
+    "category": "caseta"
+  },
+  {
+    "code": "C58",
+    "label": "CENTRO DE FOTOCOPIADO (ADYACENTE A EE.GG.LL.)",
+    "category": "caseta"
+  },
+  {
+    "code": "C59",
+    "label": "CENTRO DE FOTOCOPIADO (ADYACENTE A DERECHO)",
+    "category": "caseta"
+  },
+  {
+    "code": "C60",
+    "label": "PROTOTIPO INVERNADERO (GRUPO DE APOYO AL SECTOR RURAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C61",
+    "label": "AULAS MOVILES PSICOLOGÍA",
+    "category": "caseta"
+  },
+  {
+    "code": "C62",
+    "label": "PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 1(GRUPO DE APOYO AL SECTOR RURAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C63",
+    "label": "PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 2(GRUPO DE APOYO AL SECTOR RURAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C64",
+    "label": "PROTOTIPO INVERNADERO INTELIGENTE (GRUPO DE APOYO AL SECTOR RURAL)",
+    "category": "caseta"
+  },
+  {
+    "code": "C65",
+    "label": "FABCORE 4 - IMPRESORA 3D",
+    "category": "caseta"
+  },
+  {
+    "code": "C66",
+    "label": "QUIOSCO (SOCIALES)",
+    "category": "caseta"
+  },
+  {
+    "code": "C67",
+    "label": "SNACK (FRUTERÍA LETRAS)",
+    "category": "caseta"
+  },
+  {
+    "code": "C68",
+    "label": "QUIOSCO (LETRAS)",
+    "category": "caseta"
+  },
+  {
+    "code": "C69",
+    "label": "QUIOSCO (DEPORTES)",
+    "category": "caseta"
+  }
+]

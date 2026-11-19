@@ -39,7 +39,14 @@ const snapshot = (values: PlaceFormValues, picked: PickedOutline | null) => JSON
 const splitAliases = (text: string) => text.split(/[,\n]/).map((a) => a.trim()).filter(Boolean);
 
 /** Alta (sin `place`) o edición de un lugar. Al guardar abre su ficha. */
-export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; defaultName?: string }) {
+export interface PlaceFormProps {
+  place?: PlaceDetail;
+  defaultName?: string;
+  /** Un alta que llega desde otra pantalla (la migración) vuelve a ella al guardar o cancelar. */
+  returnTo?: string;
+}
+
+export function PlaceForm({ place, defaultName, returnTo }: PlaceFormProps) {
   const [values, setValues] = useState(() => initialValues(place, defaultName));
   const [picked, setPicked] = useState<PickedOutline | null>(() => (place ? currentOutline(place) : null));
   const [initial] = useState(() => snapshot(values, picked));
@@ -63,7 +70,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
     setError(null);
     try {
       const code = place ? (await placesApi.update(place.code, input), place.code) : (await placesApi.create(input)).code;
-      guard.navigate(`/lugares/${code}`);
+      guard.navigate(returnTo ? rememberedHref(returnTo) : `/lugares/${code}`);
     } catch (e) {
       setError(mensajeDeApiError(e));
       setSaving(false);
@@ -82,7 +89,7 @@ export function PlaceForm({ place, defaultName }: { place?: PlaceDetail; default
       {outdoor && <OutlinePicker picked={picked} onPick={setPicked} />}
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={() => guard.confirm(() => guard.navigate(place ? `/lugares/${place.code}` : rememberedHref('/lugares')))}>
+        <Button variant="secondary" onClick={() => guard.confirm(() => guard.navigate(place ? `/lugares/${place.code}` : rememberedHref(returnTo ?? '/lugares')))}>
           Cancelar
         </Button>
         <Button type="submit" disabled={!ready} loading={saving}>

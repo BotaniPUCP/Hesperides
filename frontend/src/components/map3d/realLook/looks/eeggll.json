@@ -1,0 +1,53 @@
+{
+  "planKey": "7f886877-7663-451f-a5cf-55047ed97c79",
+  "name": "Estudios Generales Letras",
+  "folder": "eeggll",
+  "photos": [
+    "detras1.jpg",
+    "detras2.jpg",
+    "lado-frente-a-polideportivo.jpg",
+    "lado-hacia-polideportivo-2.jpg",
+    "vista-interior-desde-arriba.jpg"
+  ],
+  "materials": {
+    "crema": {
+      "color": "#e2dfd4"
+    },
+    "techo": {
+      "color": "#dcdad4"
+    },
+    "ventanas": {
+      "glass": "#7a8990",
+      "frame": "#e6e6e1",
+      "moduleM": 1.4,
+      "heightM": 1.6,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "crema",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            9.4
+          ],
+          "floors": {
+            "everyM": 3.1,
+            "startM": 0,
+            "bandM": [
+              1,
+              2.6
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Bloque crema de tres pisos con una cinta corrida de ventanas de marco blanco en cada piso: la cara norte, frente al Polideportivo (lado-frente-a-polideportivo.jpg, lado-hacia-polideportivo-2.jpg), y las del patio (vista-interior-desde-arriba.jpg). Atrás hay paños ciegos de bloque crema y escaleras de acero (detras1.jpg, detras2.jpg): son tramos chicos que la foto no deja ubicar en el modelo, así que las cintas van en todas las caras."
+}

@@ -30,7 +30,7 @@ export interface ReportSection { id: number; code: string; name: string; areaM2:
 export interface ReportTopList<T> { total: number; items: T[] }
 
 export type CoverageUnavailableReason = 'NO_SECTOR_ASSIGNED';
-export type NotEvaluableReason = 'OUTSOURCED' | 'BY_SECTOR';
+export type NotEvaluableReason = 'OUTSOURCED';
 
 export interface MonthlyCoverage {
   rule: string;
@@ -65,7 +65,7 @@ export interface ActivityCompliance {
   evaluable: boolean;
   notEvaluableReason: NotEvaluableReason | null;
   onTarget: number;
-  withinTolerance: number;
+  early: number;
   overdue: number;
   notApplicable: number;
   overdueTargets: OverdueTarget[];
@@ -91,5 +91,108 @@ export interface MonthlyReport {
   compliance: ActivityCompliance[];
   mostAttended: ReportTopList<MonthlySectionRow>;
   unattended: ReportTopList<MonthlySectionRow>;
+  generatedAt: string;
+}
+
+/* ---------- Weekly report of the sector (SPEC-202 §3.3) ---------- */
+
+export interface ReportCodeLabel { code: string; label: string }
+
+export interface WeeklyPlaceRef { kind: 'ZONE' | 'PLACE'; id: number; label: string }
+
+export interface WeeklyWorkRow {
+  id: number;
+  code: string;
+  classLabel: string;
+  typeLabel: string | null;
+  lastExecutionDate: string;
+  approvedOn: string | null;
+  places: WeeklyPlaceRef[];
+}
+
+export interface WeeklyTypeRow { classLabel: string; typeItemId: number | null; typeLabel: string; approved: number; places: string[] }
+
+export interface WeeklyNotIrrigated { sectionId: number; code: string; name: string; lastIrrigatedOn: string | null }
+
+export interface WeeklyIncidentRow {
+  id: number;
+  description: string;
+  locationReference: string | null;
+  urgency: ReportCodeLabel | null;
+  status: ReportCodeLabel;
+  teamName: string | null;
+  reportedOn: string;
+  daysOpen: number;
+  locatedBy: 'COORDINATES' | 'TEAM';
+}
+
+export interface WeeklyReport {
+  week: { weekStart: string; weekEnd: string; timeZone: string; inProgress: boolean; cutoffDate: string };
+  scope: 'SECTOR' | 'TEAMS';
+  sector: { id: number; code: string; name: string; totalSections: number; totalAreaM2: number };
+  teams: { id: number; name: string; supervisorName: string | null }[];
+  interventions: {
+    approved: number;
+    approvedPreviousWeek: number;
+    pendingApproval: number;
+    pendingPhotos: number;
+    byType: WeeklyTypeRow[];
+    items: ReportTopList<WeeklyWorkRow>;
+  };
+  attendedSections: { rule: string; covered: number; total: number; percent: number | null };
+  irrigation: {
+    rule: string;
+    /** Intervenciones de clase Riego que llegaron al sector en la semana. */
+    irrigations: number;
+    irrigatedSections: number;
+    totalSections: number;
+    percent: number | null;
+    notIrrigated: ReportTopList<WeeklyNotIrrigated>;
+  };
+  incidents: {
+    asOf: string;
+    open: number;
+    pendingApproval: number;
+    unlocatedInScope: number | null;
+    items: ReportTopList<WeeklyIncidentRow>;
+  };
+  generatedAt: string;
+}
+
+/* ---------- Summary for the direction (SPEC-202 §3.5) ---------- */
+
+export type DirectionIndicatorCode =
+  | 'COVERAGE' | 'IRRIGATION_COVERAGE' | 'APPROVED_INTERVENTIONS' | 'RESOLVED_INCIDENTS' | 'TREE_INVENTORY'
+  | 'IRRIGATION_CYCLES' | 'PHYTOSANITARY_CONTROLS' | 'MAJOR_PRUNING' | 'HIGH_URGENCY_ON_TIME';
+
+export type IndicatorUnavailableReason = 'RULE_NOT_DEFINED' | 'UNIT_NOT_MODELED' | 'NOT_RECORDED' | 'NO_DEADLINES_CONFIGURED';
+export type IndicatorTargetReason = 'NO_TARGET' | 'TARGET_NOT_STORED';
+
+export interface DirectionIndicator {
+  code: DirectionIndicatorCode;
+  unit: 'PERCENT' | 'COUNT';
+  available: boolean;
+  unavailableReason: IndicatorUnavailableReason | null;
+  value: number | null;
+  previousValue: number | null;
+  delta: number | null;
+  trend: 'UP' | 'DOWN' | 'FLAT' | null;
+  higherIsBetter: boolean | null;
+  target: number | null;
+  targetReason: IndicatorTargetReason | null;
+  progress: number | null;
+  provisional: boolean;
+}
+
+export interface CoverageSeriesPoint { month: string; percent: number | null; recorded: boolean }
+
+export interface DirectionReport {
+  month: string;
+  previousMonth: string;
+  timeZone: string;
+  inProgress: boolean;
+  header: { greenAreaM2: number; campusHectares: number | null; sections: number; activeTeams: number };
+  indicators: DirectionIndicator[];
+  coverageSeries: { target: number | null; points: CoverageSeriesPoint[] };
   generatedAt: string;
 }

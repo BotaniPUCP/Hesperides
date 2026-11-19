@@ -65,7 +65,7 @@ describe('ImportarEspeciesScreen', () => {
 
   it('las columnas de ESTANDAR_ESPECIES coinciden con la plantilla especies.csv en orden', () => {
     const plantilla = readFileSync(
-      join(__dirname, '../../../../../docs/estandares/plantillas', ESTANDAR_ESPECIES.archivo),
+      join(__dirname, '../../../../../backend/src/main/resources/imports/templates', ESTANDAR_ESPECIES.archivo),
       'utf8',
     ).replace(/^\uFEFF/, '');
     const cabecera = plantilla.split(/\r?\n/)[0].split(';');

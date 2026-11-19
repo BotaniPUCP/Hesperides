@@ -8,7 +8,7 @@ import { PlaceForm } from './PlaceForm';
 import { useCanEditPlaces } from './useCanEditPlaces';
 
 /** Alta (sin `code`) o edición de un lugar. Solo para quien puede editar el catálogo. */
-export function PlaceFormScreen({ code, defaultName }: { code?: string; defaultName?: string }) {
+export function PlaceFormScreen({ code, defaultName, returnTo }: { code?: string; defaultName?: string; returnTo?: string }) {
   const canEdit = useCanEditPlaces();
   const { place, loading } = usePlace(code);
   usePageTrail(place ? { labels: { [place.code]: place.name } } : {});
@@ -22,7 +22,7 @@ export function PlaceFormScreen({ code, defaultName }: { code?: string; defaultN
   return (
     <div className="space-y-6">
       <PageHeader title={place ? `Editar ${place.name}` : 'Nuevo lugar'} />
-      <PlaceForm place={place ?? undefined} defaultName={defaultName} />
+      <PlaceForm place={place ?? undefined} defaultName={defaultName} returnTo={returnTo} />
     </div>
   );
 }

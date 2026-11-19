@@ -1,0 +1,108 @@
+{
+  "planKey": "efc7e845-a52e-41ee-93a0-395454a8fd31",
+  "name": "Pabellón G",
+  "folder": "Pabellon-G",
+  "photos": [
+    "pabellon-G-de-frente-escalera.jpg",
+    "pabellon-G-de-lado.jpg"
+  ],
+  "materials": {
+    "blanco": {
+      "color": "#ebebe7"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "zocalo": {
+      "color": "#5d6266"
+    },
+    "ventanas": {
+      "color": "#b3b6b6"
+    },
+    "cinta": {
+      "glass": "#3a3f42",
+      "frame": "#2b2b2b",
+      "moduleM": 1.4,
+      "heightM": 1.3,
+      "frameM": 0.08
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "blanco",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            0,
+            0.4
+          ]
+        }
+      ],
+      "faces": {
+        "N": [
+          {
+            "material": "ventanas",
+            "u": [
+              -16.4,
+              7.8
+            ],
+            "v": [
+              1.1,
+              2.8
+            ]
+          },
+          {
+            "material": "ventanas",
+            "u": [
+              -16.4,
+              7.8
+            ],
+            "v": [
+              3.9,
+              5.1
+            ]
+          }
+        ],
+        "S": [
+          {
+            "material": "ventanas",
+            "u": [
+              -8.2,
+              18.5
+            ],
+            "v": [
+              0.4,
+              2.7
+            ]
+          },
+          {
+            "material": "cinta",
+            "u": [
+              -0.5,
+              12.4
+            ],
+            "v": [
+              4,
+              5
+            ]
+          },
+          {
+            "material": "cinta",
+            "u": [
+              -8.2,
+              -3.9
+            ],
+            "v": [
+              4,
+              5
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "notes": "Edificio 2 de la Facultad de Ciencias Contables (código 15): el bloque de dos pisos con el ala baja, como en las fotos. Muros blancos con zócalo gris oscuro. Al norte (pabellon-G-de-frente-escalera.jpg), las filas de ventanas de los dos pisos van como franjas tenues (D-04), y la escalera sube a la azotea del ala baja. Al sur (pabellon-G-de-lado.jpg), la cinta de ventanas del segundo piso y una ventana suelta; en el primero, las ventanas angostas como franja tenue. El este y el oeste no tienen foto: blanco con su zócalo (D-06)."
+}

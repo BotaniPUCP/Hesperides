@@ -1,5 +1,5 @@
 import { infoFor, type InfoCard } from './infoCard';
-import { LAYER_TOGGLES, PERSPECTIVES_TOGGLE } from './layerList';
+import { LAYER_TOGGLES, OVERLAY_TOGGLES } from './layerList';
 import type { MapCardContent } from './MapInfoCard';
 import { INITIAL_OPTIONS, type MapScreenSnapshot } from './mapScreenMemory';
 import type { ViewOptions } from './MapToolbar';
@@ -9,16 +9,18 @@ import type { Viewer } from './viewer/createViewer';
 
 export const APPLY_OPTION: Record<keyof ViewOptions, (v: Viewer, on: boolean) => void> = {
   night: (v, on) => v.setNight(on),
+  sunset: (v, on) => v.setSunset(!!on),
   shadows: (v, on) => v.setShadows(on),
   labels: (v, on) => v.setLabels(on),
   grayBuildings: (v, on) => v.setGrayBuildings(on),
+  realColors: (v, on) => v.setRealColors(on),
 };
 
 type ViewerState = Pick<MapScreenSnapshot, 'mode' | 'hidden' | 'visible' | 'options'>;
 
 /** Un visor nuevo nace con todo encendido y sin pintar: solo se le ordena lo que difiere de eso. */
 export function applyToViewer(viewer: Viewer, { mode, hidden, visible, options }: ViewerState): void {
-  LAYER_TOGGLES.filter((t) => t.id !== PERSPECTIVES_TOGGLE && !visible[t.id])
+  LAYER_TOGGLES.filter((t) => !OVERLAY_TOGGLES.has(t.id) && !visible[t.id])
     .forEach((t) => viewer.setLayerVisible(t.id as Target['layer'], false));
   if (mode !== 'base' || hidden.size > 0) viewer.setPaint(mode, hidden);
   (Object.keys(APPLY_OPTION) as (keyof ViewOptions)[])

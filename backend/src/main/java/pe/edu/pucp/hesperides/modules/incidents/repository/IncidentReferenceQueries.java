@@ -1,0 +1,76 @@
+package pe.edu.pucp.hesperides.modules.incidents.repository;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+import pe.edu.pucp.hesperides.modules.incidents.dto.IncidentContracts.OrganizationResponse;
+import pe.edu.pucp.hesperides.modules.incidents.dto.IncidentContracts.ZoneResponse;
+
+import java.util.Optional;
+
+/** Zonas, organizaciones y contactos que una incidencia cita por id, leídos sin JPA. */
+@Repository @RequiredArgsConstructor
+public class IncidentReferenceQueries {
+    private final JdbcTemplate jdbc;
+
+    public Optional<ZoneResponse> zone(Long id) {
+        if (id == null) return Optional.empty();
+        return jdbc.query("SELECT id,code,name FROM zones WHERE id=? AND deleted_at IS NULL",
+                (r, n) -> new ZoneResponse(r.getLong("id"), r.getString("code"), r.getString("name")), id).stream().findFirst();
+    }
+
+    /** Secciones activas del campus, para ubicar una incidencia al revisarla (§3.6). */
+    public java.util.List<ZoneResponse> sections() {
+        return jdbc.query("""
+            SELECT z.id,z.code,z.name FROM zones z JOIN catalog_items t ON t.id=z.zone_type_item_id
+             WHERE z.deleted_at IS NULL AND z.is_active AND t.code='SECTION' ORDER BY z.name, z.id
+            """, (r, n) -> new ZoneResponse(r.getLong("id"), r.getString("code"), r.getString("name")));
+    }
+
+    public Optional<OrganizationResponse> organization(Long id) {
+        if (id == null) return Optional.empty();
+        return jdbc.query("SELECT code,name FROM organizations WHERE id=? AND deleted_at IS NULL",
+                (r, n) -> new OrganizationResponse(r.getString("code"), r.getString("name")), id).stream().findFirst();
+    }
+
+    public Optional<Long> organizationId(String code) {
+        if (code == null || code.isBlank()) return Optional.empty();
+        return jdbc.query("SELECT id FROM organizations WHERE code=? AND deleted_at IS NULL",
+                (r, n) -> r.getLong(1), code.trim()).stream().findFirst();
+    }
+
+    public Optional<Long> contactId(String code) {
+        if (code == null || code.isBlank()) return Optional.empty();
+        return jdbc.query("SELECT id FROM contacts WHERE code=? AND deleted_at IS NULL",
+                (r, n) -> r.getLong(1), code.trim()).stream().findFirst();
+    }
+
+    public Optional<String> contactCode(Long id) {
+        if (id == null) return Optional.empty();
+        return jdbc.query("SELECT code FROM contacts WHERE id=? AND deleted_at IS NULL",
+                (r, n) -> r.getString(1), id).stream().findFirst();
+    }
+
+    /** Un tercero es una empresa externa del Directorio (SPEC-106, `EXTERNAL_COMPANY`). */
+    public boolean isExternalCompany(Long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("""
+            SELECT EXISTS(SELECT 1 FROM organizations o JOIN catalog_items t ON t.id=o.type_item_id
+             WHERE o.id=? AND o.deleted_at IS NULL AND t.code='EXTERNAL_COMPANY')
+            """, Boolean.class, id));
+    }
+
+    public Optional<String> contactName(Long id) {
+        if (id == null) return Optional.empty();
+        return jdbc.query("SELECT full_name FROM contacts WHERE id=? AND deleted_at IS NULL",
+                (r, n) -> r.getString(1), id).stream().findFirst();
+    }
+
+    /** Punto dentro de la sección, no su centroide, que puede caer fuera del polígono (§3.10). */
+    public Optional<double[]> pointInside(Long zoneId) {
+        if (zoneId == null) return Optional.empty();
+        return jdbc.query("""
+            SELECT ST_Y(p) lat, ST_X(p) lng FROM (SELECT ST_PointOnSurface(boundary) p FROM zones
+             WHERE id=? AND boundary IS NOT NULL AND deleted_at IS NULL) s
+            """, (r, n) -> new double[]{r.getDouble("lat"), r.getDouble("lng")}, zoneId).stream().findFirst();
+    }
+}

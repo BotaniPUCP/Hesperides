@@ -1,0 +1,37 @@
+{
+  "planKey": "3dfcb7ca-5d19-45ad-9bbb-de84034b1fe5",
+  "name": "Arqueología, C45",
+  "folder": "C45 · Izquierda 59 · SKP C-129",
+  "photos": [
+    "detras.jpg",
+    "frente-a-ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e5e3dc"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "ventanas": {
+      "color": "#b7b9b5"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Caseta de paneles claros con ventanas enrejadas sueltas, como franja tenue, y puerta doble (frente-a-ARQUEOLOGÍA C…jpg, detras.jpg)."
+}

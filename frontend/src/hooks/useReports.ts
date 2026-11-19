@@ -4,16 +4,24 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from './useAuth';
 import { useRequest } from './useRequest';
+import { demoDirection, demoMonthly, demoOptions, demoSections, demoWeekly } from '@/components/reports/demo/demoReports';
 import { rememberListQuery } from '@/lib/listMemory';
+import { useReportDemo } from '@/lib/reportDemo';
 import { reportsApi } from '@/lib/reports-api';
 import {
-  allowedTabs, parseMonthly, monthlyHref, resolveTab, tabHref, type MonthlyFilters, type ReportTab,
+  allowedTabs, directionHref, monthlyHref, parseDirection, parseMonthly, parseWeekly, resolveTab, tabHref,
+  weeklyHref, type MonthlyFilters, type ReportTab, type WeeklyParams,
 } from '@/lib/reportNavigation';
 
-/** The reader goes into every key, so a response never leaks from one account to another. */
+/**
+ * The reader goes into every key, so a response never leaks from one account
+ * to another; so does the demo switch, so demo figures never pass for real ones.
+ */
 function useReportScope(): string | null {
   const { user } = useAuth();
-  return user && allowedTabs(user.role.code).length > 0 ? `${user.id}:${user.role.code}` : null;
+  const [demo] = useReportDemo();
+  if (!user || allowedTabs(user.role.code).length === 0) return null;
+  return `${user.id}:${user.role.code}${demo ? ':demo' : ''}`;
 }
 
 function useRevision() {
@@ -22,18 +30,36 @@ function useRevision() {
   return { revision, reload };
 }
 
+/** The demo answers at once from the JSON files instead of the backend. */
+function source<T>(demo: boolean, fromDemo: () => T, fromApi: () => Promise<T>): () => Promise<T> {
+  return demo ? () => Promise.resolve(fromDemo()) : fromApi;
+}
+
 export function useReportOptions() {
   const scope = useReportScope();
+  const [demo] = useReportDemo();
   const { revision, reload } = useRevision();
-  const request = useRequest(scope ? `${scope}:report-options:${revision}` : null, () => reportsApi.options());
+  const request = useRequest(scope ? `${scope}:report-options:${revision}` : null,
+    source(demo, demoOptions, () => reportsApi.options()));
   return { ...request, reload };
 }
 
 export function useReportSections(sectorId: number | null) {
   const scope = useReportScope();
-  const request = useRequest(scope && sectorId ? `${scope}:report-sections:${sectorId}` : null,
-    () => reportsApi.sections(sectorId as number));
-  return request;
+  const [demo] = useReportDemo();
+  return useRequest(scope && sectorId ? `${scope}:report-sections:${sectorId}` : null,
+    source(demo, demoSections, () => reportsApi.sections(sectorId as number)));
+}
+
+/** With {@code params} null (invalid URL or no sector yet) nothing is requested. */
+export function useWeeklyReport(params: WeeklyParams | null) {
+  const scope = useReportScope();
+  const [demo] = useReportDemo();
+  const { revision, reload } = useRevision();
+  const request = useRequest(scope && params ? JSON.stringify([scope, 'weekly', params, revision]) : null,
+    source(demo, () => demoWeekly(params as WeeklyParams), () => reportsApi.weekly(params as WeeklyParams)),
+    { keepPreviousData: true });
+  return { ...request, reload };
 }
 
 /**
@@ -42,9 +68,22 @@ export function useReportSections(sectorId: number | null) {
  */
 export function useMonthlyReport(filters: MonthlyFilters | null) {
   const scope = useReportScope();
+  const [demo] = useReportDemo();
   const { revision, reload } = useRevision();
   const request = useRequest(scope && filters ? JSON.stringify([scope, 'monthly', filters, revision]) : null,
-    () => reportsApi.monthly(filters as MonthlyFilters), { keepPreviousData: true });
+    source(demo, () => demoMonthly(filters as MonthlyFilters), () => reportsApi.monthly(filters as MonthlyFilters)),
+    { keepPreviousData: true });
+  return { ...request, reload };
+}
+
+/** {@code month} undefined means an invalid URL: nothing is requested. */
+export function useDirectionReport(month: string | null | undefined) {
+  const scope = useReportScope();
+  const [demo] = useReportDemo();
+  const { revision, reload } = useRevision();
+  const request = useRequest(scope && month !== undefined ? JSON.stringify([scope, 'direction', month, revision]) : null,
+    source(demo, () => demoDirection(month ?? null), () => reportsApi.direction(month ?? null)),
+    { keepPreviousData: true });
   return { ...request, reload };
 }
 
@@ -73,9 +112,17 @@ export function useReportNavigation(role: string | null) {
 
   const selectTab = useCallback((next: ReportTab) => router.push(tabHref(next), { scroll: false }), [router]);
   const monthly = useMemo(() => parseMonthly(params), [params]);
+  const weekly = useMemo(() => parseWeekly(params), [params]);
+  const direction = useMemo(() => parseDirection(params), [params]);
   const changeMonthly = useCallback((filters: MonthlyFilters) => {
     window.history.replaceState(null, '', monthlyHref(filters));
   }, []);
+  const changeWeekly = useCallback((next: WeeklyParams) => {
+    window.history.replaceState(null, '', weeklyHref(next));
+  }, []);
+  const changeDirection = useCallback((month: string | null) => {
+    window.history.replaceState(null, '', directionHref(month));
+  }, []);
 
-  return { tab, selectTab, monthly, changeMonthly };
+  return { tab, selectTab, monthly, changeMonthly, weekly, changeWeekly, direction, changeDirection };
 }

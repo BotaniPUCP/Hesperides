@@ -1,0 +1,17 @@
+{
+  "izquierda": "249a8c11-620a-48d6-98aa-df74d1f90f69",
+  "caseta": "b9a4a553-9c25-45f2-b2fc-43592ab2b917",
+  "plantilla_caseta": "C-3446",
+  "separada": {
+    "de_codigo": "39",
+    "piezas": ["C-161", "C-1970"],
+    "plan_key": "unified:lugar-prestado",
+    "nombre": "Lugar prestado",
+    "alias": ["Caseta junto a Maestranza"]
+  },
+  "nombres_fijos": {
+    "codigo:62": "Instituto de Ciencias Ómicas y Biotecnología Aplicada",
+    "mapa:22": "Aulas Móviles A"
+  },
+  "retirados": ["2"]
+}

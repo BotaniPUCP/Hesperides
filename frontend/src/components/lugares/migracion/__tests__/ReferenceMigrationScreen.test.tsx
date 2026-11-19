@@ -1,8 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { PlaceDetail, ReferenceQueuePage } from '@shared/types';
+import { rememberedHref } from '@/lib/listMemory';
 import { placesApi } from '@/lib/places-api';
 import { ReferenceMigrationScreen } from '../ReferenceMigrationScreen';
 
+jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
 const mockRole = { current: 'COORDINADOR' };
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { role: { code: mockRole.current } } }) }));
 jest.mock('@/components/ui', () => ({
@@ -48,6 +50,8 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.clearAllMocks();
+  window.history.replaceState(null, '', '/');
+  window.sessionStorage.clear();
   mockRole.current = 'COORDINADOR';
 });
 
@@ -95,7 +99,39 @@ describe('ReferenceMigrationScreen', () => {
 
     expect(within(z).getByText('×3')).toBeInTheDocument();
     expect(within(z).getByRole('button', { name: 'Enlazar' })).toBeDisabled();
-    expect(within(z).getByRole('link', { name: 'Crear lugar' })).toHaveAttribute('href', '/lugares/nuevo?nombre=Pabell%C3%B3n%20Z');
+    expect(within(z).getByRole('link', { name: 'Crear lugar' })).toHaveAttribute('href', '/lugares/nuevo?nombre=Pabell%C3%B3n%20Z&desde=migracion');
+  });
+
+  describe('al volver de crear un lugar, la cola sigue como estaba', () => {
+    it('la búsqueda y la página quedan en la dirección y en la memoria del listado', async () => {
+      window.history.replaceState(null, '', '/lugares/migracion');
+      render(<ReferenceMigrationScreen />);
+      await card('Pabellón Z');
+
+      fireEvent.change(screen.getByLabelText('Buscar'), { target: { value: 'pabellón' } });
+
+      await waitFor(() => expect(window.location.search).toBe('?search=pabell%C3%B3n'));
+      expect(rememberedHref('/lugares/migracion')).toBe('/lugares/migracion?search=pabell%C3%B3n');
+    });
+
+    it('al entrar con búsqueda y página en la dirección, pide esa misma página', async () => {
+      window.history.replaceState(null, '', '/lugares/migracion?search=gelarti&page=1');
+      render(<ReferenceMigrationScreen />);
+
+      await waitFor(() => expect(api.referenceQueue).toHaveBeenCalledWith('gelarti', 1, 20));
+      expect(screen.getByLabelText('Buscar')).toHaveValue('gelarti');
+    });
+
+    it('buscar otra cosa vuelve a la primera página', async () => {
+      api.referenceQueue.mockResolvedValue({ ...queue, totalGroups: 60 });
+      window.history.replaceState(null, '', '/lugares/migracion?page=2');
+      render(<ReferenceMigrationScreen />);
+      await card('Pabellón Z');
+
+      fireEvent.change(screen.getByLabelText('Buscar'), { target: { value: 'civil' } });
+
+      await waitFor(() => expect(window.location.search).toBe('?search=civil'));
+    });
   });
 
   it('quien no edita el catálogo no puede migrar', () => {

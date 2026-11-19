@@ -22,3 +22,17 @@ it('envía solo los filtros presentes, por id', () => {
   reportsApi.monthly({ ...EMPTY_MONTHLY_FILTERS, dateFrom: '2026-10-01', dateTo: '2026-10-31', sectorId: 2, typeItemId: 41 });
   expect(apiClient.get).toHaveBeenCalledWith('/reports/monthly?dateFrom=2026-10-01&dateTo=2026-10-31&sectorId=2&typeItemId=41');
 });
+
+it('pide la semanal con la semana y el sector presentes', () => {
+  reportsApi.weekly({ weekStart: '2026-10-26', sectorId: 2 });
+  reportsApi.weekly({ weekStart: null, sectorId: 2 });
+  expect(apiClient.get).toHaveBeenNthCalledWith(1, '/reports/weekly?weekStart=2026-10-26&sectorId=2');
+  expect(apiClient.get).toHaveBeenNthCalledWith(2, '/reports/weekly?sectorId=2');
+});
+
+it('pide el resumen sin mes para que el backend use el último mes cerrado', () => {
+  reportsApi.direction(null);
+  reportsApi.direction('2026-09');
+  expect(apiClient.get).toHaveBeenNthCalledWith(1, '/reports/direction');
+  expect(apiClient.get).toHaveBeenNthCalledWith(2, '/reports/direction?month=2026-09');
+});

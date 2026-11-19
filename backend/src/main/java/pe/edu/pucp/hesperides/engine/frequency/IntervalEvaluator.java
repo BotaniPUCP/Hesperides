@@ -56,12 +56,12 @@ final class IntervalEvaluator {
 
         ComplianceStatus status;
         String explicacion;
-        if (esperado != null && medido <= esperado) {
-            status = ComplianceStatus.ON_TARGET;
-            explicacion = "El intervalo de " + medido + " dias esta dentro del objetivo de " + esperado;
+        if (esperado != null && medido < esperado) {
+            status = ComplianceStatus.EARLY;
+            explicacion = "El intervalo de " + medido + " dias es menor que el minimo de " + esperado;
         } else if (medido <= limite) {
-            status = ComplianceStatus.WITHIN_TOLERANCE;
-            explicacion = "El intervalo de " + medido + " dias supera el objetivo pero no el limite de " + limite;
+            status = ComplianceStatus.ON_TARGET;
+            explicacion = "El intervalo de " + medido + " dias esta dentro del rango normal, hasta " + limite;
         } else {
             status = ComplianceStatus.OVERDUE;
             explicacion = "El intervalo de " + medido + " dias supera el limite de " + limite;
@@ -108,12 +108,8 @@ final class IntervalEvaluator {
         if (esCiclo) {
             return coverage > 0 ? coverage : null;
         }
-        FrequencyRule.Interval iv = rule.intervaloEn(fecha);
-        // En una estacion, su propio minimo es el objetivo; fuera de toda
-        // estacion manda el teorico general si existe.
-        if (iv.season() != null) {
-            return iv.min();
-        }
-        return rule.targetDaysInterval() != null ? rule.targetDaysInterval() : iv.min();
+        // El rango es lo normal (SPEC-203 D-05): su minimo separa "en plazo" de
+        // "antes de tiempo". El teorico ya no interviene (D-06).
+        return rule.intervaloEn(fecha).min();
     }
 }

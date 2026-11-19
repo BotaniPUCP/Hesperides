@@ -45,8 +45,12 @@ public class InterventionsServiceImpl implements InterventionsService {
     private final InterventionEvidenceFiles evidenceFiles;
     private final InterventionReviewPolicy reviewPolicy;
     private final InterventionExecutionSchedule schedule;
+    private final CuttingMachineryRule machinery;
     private final InterventionAccess access;
+    private final InterventionZoneSelectionsService zoneSelections;
+    private final InterventionCampusSelections campusSelections;
     private final pe.edu.pucp.hesperides.modules.incidents.repository.IncidentLinkQueries incidentLinks;
+    private final pe.edu.pucp.hesperides.modules.incidents.service.IncidentLinksService incidentLinking;
 
     private void validate(Object request) {
         if(request==null)throw new ValidationException("Request is required");
@@ -163,11 +167,21 @@ public class InterventionsServiceImpl implements InterventionsService {
         var grouped=new LinkedHashMap<Long,List<Map<String,Object>>>();
         localRows.stream().filter(m->m.get("unitItemId")!=null).forEach(m->grouped.computeIfAbsent((Long)m.get("unitItemId"),k->new ArrayList<>()).add(m));
         var totals=new ArrayList<Map<String,Object>>();
+        var savedSurface=zoneSelections.plannedSurface(id);
+        var plannedSurface=savedSurface==null&&d.getCampusSelectionRevision()!=null?BigDecimal.ZERO:savedSurface;
+        d.setPlannedSurfaceM2(plannedSurface);
         grouped.forEach((unit,rows)->{
             var m=new LinkedHashMap<String,Object>();m.put("unitItemId",unit);
             for(String field:List.of("requestedQuantity","progressQuantity","executedQuantity")){
                 m.put(field,rows.stream().anyMatch(r->r.get(field)==null)?null:rows.stream().map(r->(BigDecimal)r.get(field)).reduce(BigDecimal.ZERO,BigDecimal::add));
-            }totals.add(m);
+            }
+            if(plannedSurface!=null && rows.stream().anyMatch(r->r.get("zoneSelectionRevision")!=null)
+                && rows.stream().noneMatch(r->r.get("requestedQuantity")==null)) {
+                var legacy=rows.stream().filter(r->r.get("zoneSelectionRevision")==null)
+                    .map(r->(BigDecimal)r.get("requestedQuantity")).reduce(BigDecimal.ZERO,BigDecimal::add);
+                m.put("requestedQuantity",legacy.add(plannedSurface));
+            }
+            totals.add(m);
         });
         d.setQuantityTotals(totals);return d;
     }
@@ -181,6 +195,10 @@ public class InterventionsServiceImpl implements InterventionsService {
         m.put("zoneId",l.getZoneId());m.put("placeId",l.getPlaceId());m.put("location",point(l.getLocation()));
         m.put("description",l.getDescription());m.put("locationDescription",l.getLocationDescription());m.put("unitItemId",l.getUnitItemId());
         m.put("requestedQuantity",l.getRequestedQuantity());
+        if(l.getZoneSelectionRevision()!=null) {
+            m.put("zoneSelectionRevision",l.getZoneSelectionRevision());
+            m.put("zoneBoundary",l.getZoneBoundarySnapshot());
+        }
         m.put("linkedElementCodes",references.linkedElementCodes(l.getId()));
         m.put("elementIds",elements.findByInterventionLocationIdAndDeletedAtIsNull(l.getId()).stream().map(InterventionElement::getGreenElementId).toList());return m;
     }
@@ -202,6 +220,18 @@ public class InterventionsServiceImpl implements InterventionsService {
         }
         return Map.of("teams",rows,"catalogs",references.catalogOptions(),"places",references.placeOptions(),"zones",references.zoneOptions());
     }
+    @Override public InterventionZoneSelections.Options zoneOptions(long placeId) {
+        var u=actor();
+        return zoneSelections.options(placeId,Set.of("ADMIN","COORDINADOR").contains(u.getRoleCode()));
+    }
+    @Override @Transactional public InterventionZoneSelections.Options reviewZones(long placeId,InterventionZoneSelections.Review request) {
+        var u=actor();role(u,"ADMIN","COORDINADOR");validate(request);
+        return zoneSelections.review(placeId,request,u.getId());
+    }
+    @Override @Transactional public InterventionZoneSelections.PreviewResponse previewZones(InterventionZoneSelections.Preview request) {
+        var u=actor();role(u,"ADMIN","COORDINADOR");validate(request);
+        return zoneSelections.preview(request);
+    }
     @Override @Transactional public Creation create(Planning r,UUID key){
         var u=actor();role(u,"ADMIN","COORDINADOR");
         validate(r);
@@ -217,11 +247,14 @@ public class InterventionsServiceImpl implements InterventionsService {
             }
             s.softDelete();submissions.saveAndFlush(s);
         }
+        schedule.requirePlanningDate(r.scheduledDate());
+        if(r.machinery())machinery.requireAllowed(r.scheduledDate());
         var i=new Intervention();i.setCode(references.nextCode());i.setVersion(0L);i.setCreatedByUserId(u.getId());
         i.setPlanningStatusItemId(status("PLANNED"));
         applyHeader(i,r);interventions.saveAndFlush(i);
         applyLocations(i,r.locations(),false);locations.flush();elements.flush();
         event(i,u,"CREATED",null,null,Map.of("planning",snapshot(i)));
+        incidentLinking.linkFromIntervention(i.getId(),r.incidentIds(),u);
         var s=new InterventionSubmission();s.setActorUserId(u.getId());s.setOperation("CREATE");s.setIdempotencyKey(key);
         s.setRequestSha256(hash);s.setInterventionId(i.getId());s.setExpiresAt(Instant.now().plus(24,ChronoUnit.HOURS));
         submissions.saveAndFlush(s);return new Creation(detail(i.getId(),u),false);
@@ -232,6 +265,8 @@ public class InterventionsServiceImpl implements InterventionsService {
         var before=snapshot(i);var oldDate=i.getScheduledDate();
         boolean rescheduled=!Objects.equals(oldDate,r.scheduledDate());
         if(rescheduled&&(r.rescheduleReason()==null||r.rescheduleReason().isBlank()))throw new BusinessRuleException("Reschedule reason is required");
+        // SPEC-115 §5.3: una fecha vieja ya inválida solo cuenta si cambian la fecha o la marca.
+        if(r.machinery()&&(rescheduled||!i.isUsesCuttingMachinery()))machinery.requireAllowed(r.scheduledDate());
         applyHeader(i,r);applyLocations(i,r.locations(),true);i.setVersion(i.getVersion()+1);interventions.saveAndFlush(i);
         locations.flush();elements.flush();
         event(i,u,"UPDATED",i.getPlanningStatusItemId(),null,Map.of("previous",before,"current",snapshot(i)));
@@ -695,6 +730,9 @@ public class InterventionsServiceImpl implements InterventionsService {
         if(id==null)throw new BusinessRuleException("Required intervention status is unavailable");return id;
     }
     private void applyHeader(Intervention i,Planning r){
+        if(i.getCampusSelectionRevision()!=null&&r.campusSelectionRevision()==null)
+            throw new BusinessRuleException("A campus plan must keep its selection mode");
+        i.setCampusSelectionRevision(r.campusSelectionRevision());
         i.setInterventionClassItemId(item(r.classItemId(),"INTERVENTION_CLASS",i.getInterventionClassItemId()));
         if(r.typeItemId()==null){if(references.hasActiveChildren(r.classItemId()))throw new BusinessRuleException("Intervention type is required for this class");}
         else {
@@ -708,13 +746,20 @@ public class InterventionsServiceImpl implements InterventionsService {
         if(references.code(origin).equals("FINDING")&&references.code(reported).equals("NONE"))throw new BusinessRuleException("Finding requires a report source");
         if(r.requestedAt()!=null&&r.requestedAt().isAfter(r.scheduledDate()))throw new BusinessRuleException("Request date cannot follow scheduled date");
         i.setOriginItemId(origin);i.setReportedByItemId(reported);i.setScheduledDate(r.scheduledDate());i.setDescription(r.description());
+        i.setUsesCuttingMachinery(r.machinery());
         i.setExternalCode(r.externalCode());i.setRequestedAt(r.requestedAt());
     }
     private void applyLocations(Intervention i,List<Location> requests,boolean editing){
         if(requests==null||requests.isEmpty())throw new BusinessRuleException("At least one location is required");
+        var campus=i.getCampusSelectionRevision()==null?null:campusSelections.resolve(requests,i.getCampusSelectionRevision());
+        var mapped=campus==null?zoneSelections.resolve(requests):campus.zones();
+        if(campus!=null)requests=campus.locations();
         var all=locations.findByInterventionIdOrderById(i.getId());
         var seenIds=new HashSet<Long>();var seenRefs=new HashSet<UUID>();
-        for(var r:requests){
+        for(var source:requests){
+            var selection=mapped.get(source.clientReference());
+            final Location r=selection==null?source:new Location(source.id(),source.clientReference(),source.zoneId(),source.placeId(),
+                selection.zone().point(),List.of(),source.description(),selection.unitId(),selection.zone().areaM2(),List.of(),source.zoneSelectionRevision());
             if(!seenRefs.add(r.clientReference()))throw new ValidationException("Duplicate location reference");
             var l=new InterventionLocation();
             if(r.id()!=null){
@@ -724,6 +769,16 @@ public class InterventionsServiceImpl implements InterventionsService {
             }else{
                 if(all.stream().anyMatch(v->v.getClientReference().equals(r.clientReference())))throw new ConflictException("Location reference was already used");
                 l.setInterventionId(i.getId());l.setClientReference(r.clientReference());l.setStatusItemId(i.getPlanningStatusItemId());
+            }
+            if(selection!=null) {
+                if(l.getId()!=null && l.getZoneSelectionRevision()==null)
+                    throw new BusinessRuleException("Keep the original legacy location; retire it explicitly before adding a new mapped location");
+                var zone=selection.zone();
+                l.setZoneSelectionRevision(r.zoneSelectionRevision());
+                @SuppressWarnings("unchecked") Map<String,Object> boundary=json.readValue(json.writeValueAsString(zone.geometry()),Map.class);
+                l.setZoneBoundarySnapshot(boundary);
+            } else if(l.getZoneSelectionRevision()!=null) {
+                throw new BusinessRuleException("A mapped location must be edited using its reviewed zone selection");
             }
             if(new HashSet<>(r.elementIds()).size()!=r.elementIds().size())throw new ValidationException("Duplicate element in location");
             var requestedElements = new LinkedHashSet<Long>(r.elementIds());
@@ -765,7 +820,8 @@ public class InterventionsServiceImpl implements InterventionsService {
     }
     private Map<String,Object> snapshot(Intervention i){
         var m=new LinkedHashMap<String,Object>();m.put("classItemId",i.getInterventionClassItemId());m.put("typeItemId",i.getInterventionTypeItemId());
-        m.put("scheduledDate",i.getScheduledDate());m.put("description",i.getDescription());m.put("teamId",i.getTeamId());
+        m.put("campusSelectionRevision",i.getCampusSelectionRevision());
+        m.put("scheduledDate",i.getScheduledDate());m.put("usesCuttingMachinery",i.isUsesCuttingMachinery());m.put("description",i.getDescription());m.put("teamId",i.getTeamId());
         m.put("assignedToUserId",i.getAssignedToUserId());m.put("originItemId",i.getOriginItemId());m.put("reportedByItemId",i.getReportedByItemId());
         m.put("externalCode",i.getExternalCode());m.put("requestedAt",i.getRequestedAt());
         m.put("locations",locations.findByInterventionIdAndDeletedAtIsNullOrderById(i.getId()).stream().map(this::locationSnapshot).toList());return m;

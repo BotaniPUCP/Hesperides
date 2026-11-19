@@ -24,7 +24,8 @@ export function Badge({ label, color = 'neutral', icon, className }: BadgeProps)
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
+        // Siempre en una línea: una insignia partida en dos se vuelve un óvalo y descuadra la fila.
+        'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium',
         COLORS[color],
         className,
       )}

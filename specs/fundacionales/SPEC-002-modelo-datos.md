@@ -112,7 +112,7 @@ Este spec no expone endpoints propios. Fija los invariantes que toda API constru
 | V003 | `V003__create_system_parameters.sql` | SPEC-002 §4.9 | ✅ Aplicada. La tabla `system_parameters` de §4.9 |
 | V004 | `V004__enable_postgis.sql` | SPEC-002 | ✅ Aplicada con SPEC-102 |
 | V005 | `V005__create_zones.sql` | SPEC-002 | ✅ Aplicada con SPEC-102, que añade contorno, reserva, tipo de paisaje y riego |
-| V012 | `V012__create_species.sql` | SPEC-002 | ✅ Aplicada con el inventario verde (docs/inventario-verde/README.md) |
+| V012 | `V012__create_species.sql` | SPEC-002 | ✅ Aplicada con el inventario verde (docs/modulos/inventario-verde.md) |
 | V013 | `V013__create_green_elements.sql` | SPEC-002 | ✅ Aplicada con el inventario verde, sin `zone_id` y con medidas (README §2) |
 | V025 | `V025__create_interventions.sql` | SPEC-200, concilia SPEC-002/005 | Implementada y probada en bases temporales; ejecución independiente por ubicación. API y base de trabajo pendientes |
 | Por asignar | Creación de contratos | SPEC-002 | Diseño histórico abajo; asignar número al implementar |
@@ -295,7 +295,7 @@ CREATE TABLE species (
 
 CREATE UNIQUE INDEX idx_species_scientific_name_active
     ON species(scientific_name) WHERE deleted_at IS NULL;
--- Final schema: V036 replaces V012's partial slug index with permanent reservation.
+-- Final schema: V070 replaces V012's partial slug index with permanent reservation.
 CREATE UNIQUE INDEX idx_species_slug_historical ON species(slug);
 CREATE INDEX idx_species_common_name ON species(common_name);
 ```
@@ -1010,7 +1010,7 @@ Se descartó una tabla `attachments` única y polimórfica (con `entity_type` + 
 
 #### 5.2.5 Índices parciales para convivir con el soft delete
 
-El código de `green_elements` identifica una ficha histórica y nunca se reutiliza ni se modifica. La baja no libera el código: un ejemplar nuevo recibe otro código de la secuencia. La BD lo impone con un índice único global (`idx_green_elements_code_historical`) y un trigger que impide cambiar el código; V037 aborta si ya existen duplicados históricos. La unicidad parcial sigue siendo apropiada para otras identidades reutilizables, pero no para códigos de ejemplares ni para slugs de especies.
+El código de `green_elements` identifica una ficha histórica y nunca se reutiliza ni se modifica. La baja no libera el código: un ejemplar nuevo recibe otro código de la secuencia. La BD lo impone con un índice único global (`idx_green_elements_code_historical`) y un trigger que impide cambiar el código; V071 aborta si ya existen duplicados históricos. La unicidad parcial sigue siendo apropiada para otras identidades reutilizables, pero no para códigos de ejemplares ni para slugs de especies.
 
 #### 5.2.6 Fuera de alcance confirmado
 
@@ -1027,8 +1027,8 @@ Distinción explícita para que ningún SPEC-1XX duplique validaciones ni las d�
 | Una incidencia tiene elemento o coordenada | **BD** | `CHECK chk_incidents_location` |
 | `end_date >= start_date` en contratos | **BD** | `CHECK chk_contracts_dates` |
 | Cantidad de insumo positiva | **BD** | `CHECK quantity > 0` |
-| Código permanente, único entre todos los ejemplares y no modificable | **BD** | índice único global y trigger de inmutabilidad (V037) |
-| No eliminar físicamente ni reactivar especies/ejemplares | **BD** | triggers de protección (V037); los servicios usan baja lógica |
+| Código permanente, único entre todos los ejemplares y no modificable | **BD** | índice único global y trigger de inmutabilidad (V071) |
+| No eliminar físicamente ni reactivar especies/ejemplares | **BD** | triggers de protección (V071); los servicios usan baja lógica |
 | Validador y fecha de validación van juntos | **BD** | `CHECK chk_interventions_validation` |
 | El flujo de estados de incidencia respeta el orden | **Servicio** | Los estados son filas de catálogo; la BD no conoce las transiciones válidas. `incident_status_history` deja el rastro. |
 | Coordinador o capataz responsable valida una intervención, sin autoaprobación | **Servicio** | La FK apunta a `users`, no a un rol. La autorización es de SPEC-001. |

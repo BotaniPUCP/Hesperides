@@ -1,0 +1,26 @@
+{
+"type": "FeatureCollection",
+"name": "fauna",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1, "Animal": "Aves" }, "geometry": { "type": "Point", "coordinates": [ -77.080801916938753, -12.066190782918735 ] } },
+{ "type": "Feature", "properties": { "id": 1, "Animal": "Aves" }, "geometry": { "type": "Point", "coordinates": [ -77.078641380909218, -12.065211999530218 ] } },
+{ "type": "Feature", "properties": { "id": 1, "Animal": "Aves" }, "geometry": { "type": "Point", "coordinates": [ -77.079648300499358, -12.072471155138395 ] } },
+{ "type": "Feature", "properties": { "id": 1, "Animal": "Aves" }, "geometry": { "type": "Point", "coordinates": [ -77.08021103391151, -12.072622006430107 ] } },
+{ "type": "Feature", "properties": { "id": 1, "Animal": "Aves" }, "geometry": { "type": "Point", "coordinates": [ -77.079432167075694, -12.072535616145153 ] } },
+{ "type": "Feature", "properties": { "id": 1, "Animal": "Aves" }, "geometry": { "type": "Point", "coordinates": [ -77.081449359566975, -12.070459552827804 ] } },
+{ "type": "Feature", "properties": { "id": 2, "Animal": "Canes" }, "geometry": { "type": "Point", "coordinates": [ -77.079107086921724, -12.068998136375773 ] } },
+{ "type": "Feature", "properties": { "id": 2, "Animal": "Canes" }, "geometry": { "type": "Point", "coordinates": [ -77.080907074493254, -12.070946990421065 ] } },
+{ "type": "Feature", "properties": { "id": 3, "Animal": "Insectos" }, "geometry": { "type": "Point", "coordinates": [ -77.078925562526535, -12.068133163026447 ] } },
+{ "type": "Feature", "properties": { "id": 3, "Animal": "Insectos" }, "geometry": { "type": "Point", "coordinates": [ -77.080896206199199, -12.070930626143722 ] } },
+{ "type": "Feature", "properties": { "id": 3, "Animal": "Insectos" }, "geometry": { "type": "Point", "coordinates": [ -77.081154364673907, -12.07314003462243 ] } },
+{ "type": "Feature", "properties": { "id": 4, "Animal": "Gallinazos" }, "geometry": { "type": "Point", "coordinates": [ -77.080161412288803, -12.066501104169859 ] } },
+{ "type": "Feature", "properties": { "id": 5, "Animal": "Ardillas" }, "geometry": { "type": "Point", "coordinates": [ -77.079378852691804, -12.068254880579707 ] } },
+{ "type": "Feature", "properties": { "id": 5, "Animal": "Ardillas" }, "geometry": { "type": "Point", "coordinates": [ -77.079319594984568, -12.069392417086718 ] } },
+{ "type": "Feature", "properties": { "id": 6, "Animal": "Roedores" }, "geometry": { "type": "Point", "coordinates": [ -77.079513365040881, -12.070297237504892 ] } },
+{ "type": "Feature", "properties": { "id": 6, "Animal": "Roedores" }, "geometry": { "type": "Point", "coordinates": [ -77.081313214139797, -12.070526353365631 ] } },
+{ "type": "Feature", "properties": { "id": 6, "Animal": "Roedores" }, "geometry": { "type": "Point", "coordinates": [ -77.079461344662718, -12.068118000947967 ] } },
+{ "type": "Feature", "properties": { "id": 6, "Animal": "Roedores" }, "geometry": { "type": "Point", "coordinates": [ -77.079905789453605, -12.068330821651658 ] } },
+{ "type": "Feature", "properties": { "id": 7, "Animal": "Colonia Fe" }, "geometry": { "type": "Point", "coordinates": [ -77.079285008919697, -12.073828164288608 ] } }
+]
+}

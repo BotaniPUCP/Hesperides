@@ -46,6 +46,7 @@ class InterventionsIntegrationTest {
     @Autowired pe.edu.pucp.hesperides.modules.maintenance.service.ExecutionHistoryProvider executionHistory;
     @Autowired org.springframework.context.ApplicationContext applicationContext;
     @MockitoSpyBean FileStorage storage;
+    @MockitoSpyBean pe.edu.pucp.hesperides.modules.interventions.service.InterventionExecutionSchedule schedule;
     long planner, coordinator, supervisor, operator, otherSupervisor, otherOperator, team, otherTeam, classId, typeId;
 
     @BeforeEach void data() {
@@ -70,7 +71,7 @@ class InterventionsIntegrationTest {
     }
     Map<String,Object> plan() {
         var body=new LinkedHashMap<String,Object>();
-        body.put("classItemId",classId); body.put("typeItemId",typeId); body.put("scheduledDate","2026-10-23");
+        body.put("classItemId",classId); body.put("typeItemId",typeId); body.put("scheduledDate",java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
         body.put("locations",new ArrayList<>(List.of(location(-12.1,-77.1),location(-12.2,-77.2),location(-12.3,-77.3))));
         return body;
     }
@@ -92,6 +93,41 @@ class InterventionsIntegrationTest {
         assertThat(d.get("completedAt").isNull()).isTrue();
         assertThat(java.time.Duration.between(java.time.Instant.parse(d.get("createdAt").asString()),java.time.Instant.now()).abs().getSeconds()).isLessThan(20);
     }
+    @Test void activityTitlesAndActiveFilterApplyBeforePagination() throws Exception {
+        for(var state:List.of("PLANNED","OBSERVED","COMPLETED","VALIDATED","CANCELLED")) {
+            var created=create(plan(),UUID.randomUUID().toString(),201);
+            long id=created.get("id").asLong();
+            String expected=jdbc.queryForObject("select label from catalog_items where id=?",String.class,classId)
+                +" \u00b7 "+jdbc.queryForObject("select label from catalog_items where id=?",String.class,typeId);
+            assertThat(created.get("activityTitle").asString()).isEqualTo(expected);
+            var planning=Set.of("PLANNED","CANCELLED").contains(state)?state:"ASSIGNED";
+            jdbc.update("update interventions set planning_status_item_id=(select id from catalog_items where code=? and catalog_type_id=(select id from catalog_types where code='INTERVENTION_STATUS')) where id=?",planning,id);
+            if(!state.equals("CANCELLED"))jdbc.update("update intervention_locations set status_item_id=(select id from catalog_items where code=? and catalog_type_id=(select id from catalog_types where code='INTERVENTION_STATUS')) where intervention_id=?",state,id);
+        }
+        for(boolean active:List.of(true,false)) {
+            var response=json.readTree(mvc.perform(get("/api/v1/interventions").param("active",String.valueOf(active)).param("size","1"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("data");
+            assertThat(response.get("page").get("totalElements").asInt()).isEqualTo(active?2:3);
+            assertThat(response.get("content").size()).isEqualTo(1);
+            assertThat(response.get("content").get(0).get("activityTitle").asString()).contains(" \u00b7 ");
+            boolean inactive=Set.of("COMPLETED","VALIDATED","CANCELLED").contains(response.get("content").get(0).get("statusCode").asString());
+            assertThat(inactive).isEqualTo(!active);
+        }
+    }
+
+    @Test void cannotCreatePastPlansButCanReplayAnExistingSubmissionAfterItsDate() throws Exception {
+        var body=plan();var key=UUID.randomUUID().toString();
+        var first=create(body,key,201);
+        var yesterday=java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).minusDays(1).toString();
+        body.put("scheduledDate",yesterday);
+        create(body,UUID.randomUUID().toString(),422);
+        body.put("scheduledDate",first.get("scheduledDate").asString());
+        // Advance the planning policy while preserving the original retry payload.
+        doThrow(new pe.edu.pucp.hesperides.shared.exception.BusinessRuleException("Scheduled date cannot be in the past"))
+            .when(schedule).requirePlanningDate(java.time.LocalDate.parse(first.get("scheduledDate").asString()));
+        assertThat(create(body,key,200).get("id").asLong()).isEqualTo(first.get("id").asLong());
+    }
+
     @Test void idempotentRetryDoesNotDuplicateAndChangedBodyConflicts() throws Exception {
         var body=plan(); var key=UUID.randomUUID().toString(); var first=create(body,key,201);
         assertThat(create(body,key,200).get("id").asLong()).isEqualTo(first.get("id").asLong());
@@ -126,11 +162,47 @@ class InterventionsIntegrationTest {
         var refs=jdbc.queryForList("select id,client_reference from intervention_locations where intervention_id=? order by id",id);
         @SuppressWarnings("unchecked") var locations=(List<Map<String,Object>>)body.get("locations");
         for(int i=0;i<3;i++)locations.get(i).put("id",refs.get(i).get("id"));
-        body.put("version",0);body.put("scheduledDate","2026-10-24");
+        body.put("version",0);body.put("scheduledDate",java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).plusDays(1).toString());
         mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isUnprocessableEntity());
         body.put("rescheduleReason","Crew availability");
         mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isOk());
-        assertThat(jdbc.queryForObject("select details->>'previousDate' from intervention_events where action_code='REPROGRAMMED' and intervention_id=?",String.class,id)).isEqualTo("2026-10-23");
+        assertThat(jdbc.queryForObject("select details->>'previousDate' from intervention_events where action_code='REPROGRAMMED' and intervention_id=?",String.class,id)).isEqualTo(java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
+    }
+    /** SPEC-115: el próximo día de la semana pedido, desde mañana. */
+    static java.time.LocalDate next(java.time.DayOfWeek day) {
+        var d=java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).plusDays(1);
+        while(d.getDayOfWeek()!=day)d=d.plusDays(1);
+        return d;
+    }
+    @Test void cuttingMachineryOnlyOnSaturdaysSundaysOrHolidays() throws Exception {
+        var tuesday=next(java.time.DayOfWeek.TUESDAY);
+        var body=plan();body.put("scheduledDate",tuesday.toString());body.put("usesCuttingMachinery",true);
+        var error=json.readTree(mvc.perform(post("/api/v1/interventions").header("Idempotency-Key",UUID.randomUUID().toString()).contentType("application/json").content(json.writeValueAsString(body)))
+            .andExpect(status().isUnprocessableEntity()).andReturn().getResponse().getContentAsString());
+        assertThat(error.get("message").asString()).isEqualTo("Cutting machinery can only be scheduled on Saturdays, Sundays or holidays");
+        body.put("usesCuttingMachinery",false);
+        assertThat(create(body,UUID.randomUUID().toString(),201).get("usesCuttingMachinery").asBoolean()).isFalse();
+        body=plan();body.put("scheduledDate",next(java.time.DayOfWeek.SATURDAY).toString());body.put("usesCuttingMachinery",true);
+        assertThat(create(body,UUID.randomUUID().toString(),201).get("usesCuttingMachinery").asBoolean()).isTrue();
+        jdbc.update("""
+            insert into campus_events(name,type_item_id,scope,start_date,end_date,created_by_user_id)
+            values ('Feriado de prueba',(select i.id from catalog_items i join catalog_types t on t.id=i.catalog_type_id
+              where t.code='CAMPUS_EVENT_TYPE' and i.code='HOLIDAY'),'CAMPUS',?,?,?)""",tuesday,tuesday,planner);
+        body=plan();body.put("scheduledDate",tuesday.toString());body.put("usesCuttingMachinery",true);
+        create(body,UUID.randomUUID().toString(),201);
+        jdbc.update("update campus_events set deleted_at=current_timestamp where name='Feriado de prueba'");
+    }
+    @Test void anOldInvalidDateOnlyMattersWhenTheDateOrTheMarkChanges() throws Exception {
+        var body=plan();body.put("scheduledDate",next(java.time.DayOfWeek.WEDNESDAY).toString());
+        long id=create(body,UUID.randomUUID().toString(),201).get("id").asLong();
+        jdbc.update("update interventions set uses_cutting_machinery=true where id=?",id);
+        var refs=jdbc.queryForList("select id from intervention_locations where intervention_id=? order by id",id);
+        @SuppressWarnings("unchecked") var locations=(List<Map<String,Object>>)body.get("locations");
+        for(int i=0;i<3;i++)locations.get(i).put("id",refs.get(i).get("id"));
+        body.put("version",0);body.put("usesCuttingMachinery",true);body.put("description","Solo cambia la descripción");
+        mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isOk());
+        body.put("version",1);body.put("scheduledDate",next(java.time.DayOfWeek.THURSDAY).toString());body.put("rescheduleReason","Otra fecha");
+        mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isUnprocessableEntity());
     }
     @Test void corsAllowsIdempotencyHeader() throws Exception {
         mvc.perform(options("/api/v1/interventions").header("Origin","http://localhost:3000").header("Access-Control-Request-Method","POST").header("Access-Control-Request-Headers","Content-Type,Idempotency-Key"))
@@ -1320,14 +1392,19 @@ class InterventionsIntegrationTest {
         assertThat(executionHistory.executionDates(typeId,"IN_HOUSE",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).isEmpty();
         assertThat(executionHistory.locationExecutions(typeId,"OUTSOURCED",java.time.LocalDate.of(2026,10,1),java.time.LocalDate.of(2026,10,31))).isEmpty();
     }
-    @Test void complianceEndpointReturnsOnlyTheConfiguredZoneAndBothDatesWithoutDoubleCounting() throws Exception {
+    @Test void complianceEndpointReturnsOnlyTheConfiguredSetAndBothDatesWithoutDoubleCounting() throws Exception {
         var d=acceptedHistoryFixture();long location=d.get("locations").get(0).get("id").asLong();
         long zone=jdbc.queryForObject("select zone_id from intervention_locations where id=?",Long.class,location);
+        long set=jdbc.queryForObject("insert into green_area_sets(name) values ('Conjunto de prueba') returning id",Long.class);
+        jdbc.update("insert into green_area_set_zones(set_id,zone_id) values (?,?)",set,zone);
         long config=jdbc.queryForObject("""
-            insert into maintenance_frequencies(activity_type_item_id,frequency_rule_type_item_id,regime,scope,zone_id,annual_target_count,valid_from)
+            insert into maintenance_frequencies(activity_type_item_id,frequency_rule_type_item_id,regime,scope,annual_target_count,valid_from)
             values (?,(select i.id from catalog_items i join catalog_types t on t.id=i.catalog_type_id
-                where t.code='FREQUENCY_RULE_TYPE' and i.code='SEASONAL_PERIOD'),'IN_HOUSE','BY_ZONE',?,2,'2026-01-01') returning id
-            """,Long.class,typeId,zone);
+                where t.code='FREQUENCY_RULE_TYPE' and i.code='SEASONAL_PERIOD'),'IN_HOUSE','BY_SET',2,'2026-01-01') returning id
+            """,Long.class,typeId);
+        // SPEC-203 §3.4: la regla para conjuntos rige en los jardines del conjunto al que se asigna.
+        jdbc.update("insert into planning_assignments(set_id,activity_type_item_id,frequency_rule_key) select ?,?,rule_key from maintenance_frequencies where id=?",
+            set,typeId,config);
         var result=json.readTree(mvc.perform(get("/api/v1/maintenance/frequencies/compliance")
             .with(user("planner@test.local").authorities(()->"ADMIN"))
             .param("from","2026-10-19").param("to","2026-10-19").param("activityTypeItemId",Long.toString(typeId)))

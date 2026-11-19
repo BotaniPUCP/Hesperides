@@ -11,73 +11,32 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 
 El dominio funcional y las características específicas se definen en los specs de `specs/`. Este repositorio contiene por ahora la arquitectura base, las convenciones comunes y un sistema de catálogos configurables que permite extender tipos, estados y categorías sin recompilación.
 
-## Incidencias — registro y atención web
+## Incidencias de áreas verdes
 
-Disponible en `/incidencias` para `SUPERVISOR` (capataz) y `COORDINADOR`.
-Spec: [`SPEC-201`](specs/features/SPEC-201-incidencias.md).
+Disponible en `/incidencias` para los cuatro roles. Spec: [`SPEC-201`](specs/features/SPEC-201-incidencias.md)
+(rediseño del 15 nov 2026: tres estados y modelo propio, sin la matriz OSG del cliente).
 
-Captura en `/incidencias/nueva` y detalle enlazable en `/incidencias/{id}`.
-Los filtros y la página del listado viajan en la URL y se conservan al volver.
-La interfaz reutiliza los controles y el tema claro/oscuro del producto.
+- Capataz u operario: escribe qué pasó y marca la gravedad. Fotos, ubicación y sección son
+  opcionales. Su reporte nace **no activo**; el operario solo ve lo suyo.
+- Agente de IA: después de guardar, prellena título, tipo, sección, referencia, clase de
+  altura y un plan sugerido. Nunca recibe el nombre del reportante, «Pedido de», contactos ni
+  fotos. Si falla, el reporte queda guardado y coordinación puede reintentar.
+- Coordinación (y administración): revisa, puede modificar todo (lo original queda aparte) y
+  activa. Activar exige tipo, urgencia y sección o GPS; un árbol de 5 m o más va a un tercero
+  del Directorio con sus días pactados.
+- Estados: **Reportada → En proceso → Cerrada**. Pasa a En proceso al vincular la primera
+  intervención (desde Incidencias o desde Intervenciones: es el mismo vínculo). Se cierra solo
+  con todas las intervenciones vinculadas **validadas** y la solución aplicada. Una cancelada
+  bloquea hasta quitarla o «Reemplazarla».
+- Plazos desde la recepción: 24/48/72 h por urgencia (parámetros provisionales del sistema) o
+  los días pactados con el tercero. El mapa pinta cada incidencia activa de verde, ámbar (último
+  cuarto) o rojo (vencida).
+- Código propio `INC-AAAA-NNNN`. El código OSG o de Centuria real, si existe, se guarda aparte.
 
-- Capataz: enviar una frase, añadir fotos/ubicación opcionales y seguir sus envíos.
-- Coordinación: revisar, aprobar y asignar la atención a una cuadrilla.
-- Equipo encargado: ejecutar y finalizar intervenciones reales. Coordinación valida
-  el trabajo y después el cierre de cada incidencia, con resumen de resolución.
-  Las intervenciones se pueden compartir entre incidencias mediante vínculos N:M.
-- El tablero de coordinación cuenta estos casos y sus intervenciones, no el
-  mantenimiento rutinario de otros módulos. Las categorías son provisionales;
-  no hay IA ni aplicación React Native en esta entrega.
+El agente usa Ollama Cloud: configurar `OLLAMA_API_KEY` (y si hace falta `OLLAMA_MODEL`,
+`OLLAMA_BASE_URL`) en `.env`. Sin clave el módulo funciona igual, sin prellenado.
 
-### Matriz OSG y seguimiento
-
-La ampliación de SPEC-201 incorpora servicio/proceso/subproceso, empresa, severidad,
-impactos múltiples, responsable, causas raíz y acciones/mejora. La urgencia operativa
-anterior permanece separada de la severidad. Los correlativos `OSG-####` se asignan
-al aprobar, son propios de la plataforma y no se reinician por año. Los pendientes
-conservan su ID técnico. Los correlativos no se reutilizan; pueden tener huecos por
-transacciones abortadas.
-
-Cada vínculo de trabajo requerido indica mitigación o prevención. Para cerrar deben
-estar todas las intervenciones requeridas validadas por coordinación; texto y comentarios
-no acreditan ejecución ni validación. La comunicación queda dentro del caso, con autor y hora, sin
-integración WhatsApp. Coordinación puede exportar los aprobados a CSV UTF-8 con las
-23 columnas de la matriz; no exporta borradores ni aplica las fórmulas rotas del Excel.
-
-La duración cuenta días hábiles inclusivos entre recepción y cierre: lunes a martes
-= 2, un único día hábil = 1, solo fin de semana = 0. Configurar `INCIDENT_TIME_ZONE`
-(por defecto `America/Lima`) y **completar `INCIDENT_HOLIDAYS`** con fechas ISO separadas
-por comas. No hay feriados implícitos. Los cierres nuevos conservan el resultado; para
-casos cerrados anteriores a V028 se calcula con el calendario configurado. No hay SLA
-ni clasificación IA. Las referencias conocidas se buscan por nombre/alias sin inventar GPS.
-
-V028 amplía el esquema sin reescribir V001–V027. Reconstruir el backend antes de usar
-los contratos nuevos. No es necesario borrar la BD ni los volúmenes.
-
-### Registro y cierre separados; intervenciones reales (V029)
-
-La confirmación inicial de coordinación registra oficialmente y asigna OSG, incluso
-sin intervenciones. Opcionalmente puede devolver el reporte con motivo; el remitente
-corrige y reenvía el mismo registro, conservando la recepción y el texto original.
-
-Después se seleccionan intervenciones del módulo real, con relación N:M. «Registrar
-nueva intervención» abre su formulario y vuelve con el trabajo preseleccionado; el
-vínculo requiere confirmación. Se conserva la navegación filtrada y se advierten
-ediciones pendientes. Las intervenciones nuevas desde este flujo son hallazgos; la
-clasificación de origen se selecciona explícitamente.
-
-El equipo ejecuta y reporta finalización; coordinación valida u observa; el capataz
-reabre y corrige. Solo después de validar todas las intervenciones requeridas puede
-**coordinación** cerrar cada incidencia, con breve resumen obligatorio de resolución.
-No hay cierre automático de incidencias compartidas. Observar/reabrir una incidencia
-no invalida automáticamente intervenciones aprobadas.
-
-Los trabajos antiguos permanecen de solo lectura: no equivalen a intervenciones
-validadas ni se convierten inventando fechas o ubicaciones. En casos abiertos,
-coordinación debe asociarlos expresamente a intervenciones reales antes del cierre.
-Los cierres históricos se conservan. V029 es aditiva; no requiere borrar volúmenes.
-
-Solo la descripción es obligatoria para informar o aprobar. Fotos JPEG/PNG/WebP:
+Fotos JPEG/PNG/WebP:
 máximo seis por incidencia y 5 MiB por archivo. La posición del teléfono se obtiene
 solo al solicitarla; puede corregirse o quitarse. Geolocalización desde un teléfono
 requiere **HTTPS**: abrir una IP de la red local por HTTP no basta. La captura sigue
@@ -102,7 +61,7 @@ El perfil `dev` carga automáticamente las cuentas y los casos de demostración
 mediante Flyway, después de crear el esquema. El SQL vive en
 `backend/src/main/resources/db/dev-migration/R__seed_demo_incidents.sql`; no se
 ejecuta desde la configuración común sin dev. La guía y las cuentas para una
-**base aislada** están en [`docs/demos/incidencias.md`](docs/demos/incidencias.md).
+**base aislada** están en [`docs/modulos/demo-incidencias.md`](docs/modulos/demo-incidencias.md).
 No activar `dev` en una base real: Compose base lo usa por defecto y el override
 dev lo fuerza; producción debe seleccionar otro perfil sin ese override.
 

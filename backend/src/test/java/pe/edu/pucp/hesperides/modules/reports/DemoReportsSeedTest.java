@@ -71,7 +71,14 @@ class DemoReportsSeedTest {
         // Sections 6, 7 and 8 of the sector are attended in the previous month.
         assertThat(report.coverage().coveredSections()).isGreaterThanOrEqualTo(3);
         assertThat(report.compliance()).anySatisfy(row -> assertThat(row.notEvaluableReason()).isEqualTo("OUTSOURCED"));
-        assertThat(report.compliance()).anySatisfy(row -> assertThat(row.notEvaluableReason()).isEqualTo("BY_SECTOR"));
+        // SPEC-203 §3.4: the irrigation demo rule for sets is assigned to the sector's set, once.
+        assertThat(jdbc.queryForObject("""
+                SELECT count(*) FROM planning_assignments pa
+                JOIN green_area_sets s ON s.id = pa.set_id AND s.deleted_at IS NULL
+                JOIN maintenance_frequencies f ON f.rule_key = pa.frequency_rule_key AND f.scope = 'BY_SET'
+                  AND f.deleted_at IS NULL AND f.valid_to IS NULL
+                WHERE pa.deleted_at IS NULL
+                """, Long.class)).isEqualTo(1);
 
         assertThat(reports.options("capataz@demo.invalid").sectors())
                 .extracting(s -> s.code()).containsExactly("SEC-VERDE-02");

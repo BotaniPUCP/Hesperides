@@ -1,5 +1,7 @@
 import type { SceneData } from '../sceneData';
 import { infoFor } from '../infoCard';
+import { toSceneData } from '../sceneData';
+import { layersWithGroups } from '../__fixtures__/mapLayers';
 
 const data = {
   sectorNameByCode: { 'SEC-VERDE-02': 'Sector verde 02' },
@@ -90,5 +92,45 @@ describe('infoFor', () => {
 
   it('un código de bebedero desconocido se muestra tal cual en vez de esconderse', () => {
     expect(infoFor(data, { layer: 'fountains', index: 1 }).rows).toEqual(expect.arrayContaining([['Tipo', 'RARO']]));
+  });
+});
+
+describe('ficha de un edificio del plano', () => {
+  const card = infoFor(toSceneData(layersWithGroups), { layer: 'campusBuildings', index: 0 });
+  const row = (label: string) => card.rows.find(([l]) => l === label)?.[1];
+
+  it('muestra los códigos oficiales', () => {
+    expect(row('Códigos oficiales')).toBe('C51 · PABELLÓN X; C52 · PABELLÓN Y');
+  });
+
+  it('dice cuántos edificios del mapa agrupa y cuáles son', () => {
+    expect(row('Agrupa 2 edificios del mapa')).toBe('CEMDUC, Teatro');
+  });
+});
+
+describe('ficha de un edificio: filas que no informan', () => {
+  const building = data.campusBuildings[0].props;
+  const cardOf = (props: Partial<typeof building>) =>
+    infoFor({ ...data, campusBuildings: [{ g: [], props: { ...building, inferredName: false, ...props } }] } as SceneData, { layer: 'campusBuildings', index: 0 });
+  const row = (info: ReturnType<typeof infoFor>, label: string) => info.rows.find(([l]) => l === label)?.[1];
+
+  it('una rampa que es solo suelo (groundOnly, 0 o 0,1 m) no muestra su altura', () => {
+    for (const heightM of [0, 0.1]) {
+      const info = cardOf({ name: 'Entrada Parking subterráneo 1', heightM });
+      expect(row(info, 'Altura')).toBeUndefined();
+      expect(info.note).toBeUndefined();
+    }
+  });
+
+  it('un edificio con altura del plano la muestra', () => {
+    expect(row(cardOf({ heightM: 12.5 }), 'Altura')).toBe('12.5 m');
+  });
+
+  it('«También se le dice» omite los alias que repiten el nombre, sin mirar mayúsculas ni tildes', () => {
+    expect(row(cardOf({ name: 'Tesorería General', aliases: ['TESORERIA GENERAL', 'Caja'] }), 'También se le dice')).toBe('Caja');
+  });
+
+  it('si su único alias es el nombre, no muestra la fila', () => {
+    expect(row(cardOf({ name: 'CETAM', aliases: ['cetam'] }), 'También se le dice')).toBeUndefined();
   });
 });

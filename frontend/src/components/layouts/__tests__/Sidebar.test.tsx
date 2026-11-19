@@ -176,7 +176,8 @@ describe('Sidebar', () => {
   );
 
   describe('un grupo con un solo enlace visible no es un desplegable', () => {
-    it('Intervenciones es enlace directo para todos', () => {
+    it('Intervenciones es enlace directo para quien no planifica', () => {
+      comoRol('SUPERVISOR', 'Supervisor');
       mockPathname = '/intervenciones/10';
       render(<Sidebar />);
 
@@ -184,13 +185,13 @@ describe('Sidebar', () => {
       expect(screen.queryByRole('button', { name: /intervenciones/i })).not.toBeInTheDocument();
     });
 
-    it('al OPERARIO no le queda ningún desplegable: ve directo las pantallas que consulta', () => {
+    it('al OPERARIO solo le queda desplegable Reservas (agenda y calendario, SPEC-114); el resto lo ve directo', () => {
       comoRol('OPERARIO', 'Operario de campo');
       render(<Sidebar />);
 
       const nav = screen.getByRole('navigation', { name: /principal/i });
-      expect(within(nav).queryAllByRole('button')).toHaveLength(0);
-      for (const nombre of ['Catálogo de lugares', 'Especies', 'Intervenciones', 'Ejemplares', 'Frecuencias de mantenimiento']) {
+      expect(within(nav).queryAllByRole('button').map((b) => b.textContent)).toEqual([expect.stringContaining('Reservas')]);
+      for (const nombre of ['Catálogo de lugares', 'Especies', 'Intervenciones', 'Ejemplares']) {
         expect(within(nav).getByRole('link', { name: nombre })).toBeInTheDocument();
       }
     });
@@ -201,8 +202,15 @@ describe('Sidebar', () => {
 
       expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Intervenciones' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /administración/i })).toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: 'Usuarios' })).not.toBeInTheDocument();
+      // SPEC-203 D-12: sin Frecuencias, a Administración solo le queda Usuarios, que pasa a ser directo.
+      expect(screen.getByRole('link', { name: 'Usuarios' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /administración/i })).not.toBeInTheDocument();
+    });
+
+    it('a quien planifica, Intervenciones es desplegable con Planificación, Conjuntos y Frecuencias (SPEC-203)', () => {
+      render(<Sidebar />);
+
+      expect(screen.getByRole('button', { name: 'Intervenciones' })).toBeInTheDocument();
     });
 
     it('a ADMIN, Lugares sigue siendo desplegable porque tiene dos enlaces', () => {
@@ -212,6 +220,7 @@ describe('Sidebar', () => {
     });
 
     it('un enlace directo avisa al navegar, para cerrar el panel móvil', async () => {
+      comoRol('SUPERVISOR', 'Supervisor');
       const onNavigate = jest.fn();
       render(<Sidebar onNavigate={onNavigate} />);
       const link = screen.getByRole('link', { name: 'Intervenciones' });
@@ -230,13 +239,14 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /catálogos/i })).toHaveAttribute('href', '/admin/catalogos');
   });
 
-  it('a un OPERARIO no le muestra usuarios, catálogos ni parámetros', () => {
+  it('a un OPERARIO no le muestra usuarios, catálogos, parámetros ni la planificación', () => {
     comoRol('OPERARIO', 'Operario de campo');
-    mockPathname = '/admin/frecuencias';
+    mockPathname = '/intervenciones';
     render(<Sidebar />);
 
     const nav = screen.getByRole('navigation', { name: /principal/i });
-    expect(within(nav).getByRole('link', { name: /frecuencias/i })).toBeInTheDocument();
+    expect(within(nav).queryByRole('link', { name: /frecuencias/i })).not.toBeInTheDocument();
+    expect(within(nav).queryByRole('link', { name: /planificación/i })).not.toBeInTheDocument();
     expect(within(nav).queryByRole('link', { name: /usuarios/i })).not.toBeInTheDocument();
     expect(within(nav).queryByRole('link', { name: /catálogos/i })).not.toBeInTheDocument();
     expect(within(nav).queryByRole('link', { name: /parámetros/i })).not.toBeInTheDocument();

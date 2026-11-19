@@ -61,7 +61,7 @@ solo con lo que ya está registrado en el sistema.
 | `ComplianceReader.evaluate(from, to, null)` (SPEC-101, T09) | Cumplimiento por lugar; ya aplica el alcance del lector y la aprobación final |
 | Predicado de aprobación final de `InterventionExecutionHistoryProvider` | Qué trabajo cuenta (D-02). Se extrae a una constante compartida del módulo `interventions` para que exista **una sola definición** |
 | `IrrigationZoneQueries.activeSectorsOfSupervisor` y `sectionsOf` (M7) | Sectores del SUPERVISOR y secciones de un sector, con **la misma regla** que ya aplica riego. `sectionsOf` no devuelve `area_m2`: se añade en la misma clase un método hermano con el mismo `WHERE`, sin cambiar el contrato de riego |
-| `irrigation_turns`, `irrigation_turn_sections` (V024) | Riego registrado |
+| `interventions` de clase `RIEGO` e `intervention_locations` | Riego registrado (los turnos de V024 se eliminaron en V063, SPEC-113 D-08) |
 | `incidents`, `incident_status_history` (V026) | Incidencias y su estado en una fecha (el alta ya escribe su estado inicial en el historial) |
 | `zones` (`parent_zone_id`, `area_m2`, `boundary`, `ZONE_TYPE`) (V005), `places.zone_id` (V018) | Jerarquía, superficie y ubicación |
 | `green_elements` (`GREEN_ELEMENT_TYPE = INDIVIDUAL`) y `species.species_type_item_id` (V012-V013) | Ejemplares del catastro |
@@ -86,6 +86,8 @@ solo con lo que ya está registrado en el sistema.
 | `TrendLine` | Línea de tendencia con la meta marcada como línea discontinua; los meses sin registros quedan como hueco | Resumen para OSG (cobertura de los últimos 6 meses) |
 | `ProgressMeter` | Barra de avance de un valor contra su meta o total | Semanal (secciones atendidas, riego) y Resumen para OSG (cada indicador con meta) |
 | `ReportBadge` | Badge de estado sobre `Badge` de SPEC-C01: veredicto de cumplimiento, variación ▲▼=, «Sin datos», «Regla provisional» | Los tres. Las incidencias usan `StatusBadge` y `UrgencyBadge`, que ya existen |
+| `DonutChart` | Torta (dona) de parte del todo, ≤ 4 partes: el total al centro y la parte señalada al pasar el cursor o el foco; leyenda con cifra y porcentaje. Más de tres categorías se juntan en «Otros» gris (`chartTones.categorical`) | Semanal (labores por tipo) y Mensual (incidencias por estado, cumplimiento de frecuencias, labores por sector) |
+| `RingGauge` | Anillo de un porcentaje con su meta marcada; la cifra va escrita al centro | Mensual (cobertura) y Resumen para OSG (cobertura y riego) |
 
 - **Reutilizados de SPEC-C01**, sin redefinir sus props: `Card`, `Select`, `Button`, `Badge`,
   `StatusBadge`, `UrgencyBadge`, `DataTable`/`DataTableCards`, `EmptyState`,
@@ -129,19 +131,20 @@ pestaña Semanal es la suya.
 | **D-02** | **Qué trabajo cuenta:** solo con aprobación final, es decir, planificación `ASSIGNED` y todas sus ubicaciones activas `VALIDATED` (SPEC-200 D-06). La fecha es la **ejecución física** (`completed_at`) en fecha civil de la zona configurada. Por trabajo y sección cuenta una vez, en la última ejecución de sus piezas allí (T09). Se consulta en forma retrospectiva: la aprobación debe existir al consultar. | Usar la fecha de aprobación: un trabajo del 30/10 aprobado el 3/11 caería en noviembre |
 | **D-03** | **Sección del objetivo:** `intervention_locations.zone_id` o, si es nula, `places.zone_id`. Una subsección cuenta para su sección padre. Una ubicación sin sección no cubre nada. | Ubicar el trabajo por su punto GPS: SPEC-200 D-06 prohíbe inferir cobertura desde un punto |
 | **D-04** | **Denominador de cobertura:** secciones activas y no borradas dentro del filtro. Las que no tienen `area_m2` se cuentan aparte (`sectionsWithoutArea`). Las que no tienen sector padre forman la fila «Sin sector». `CAMPUS_TOTAL_HECTARES` (41 ha) **no** sirve de denominador porque es el campus entero: solo se muestra en la cabecera del resumen. | Excluir los sectores sin cuadrilla propia: escondería que su trabajo aún no se registra |
-| **D-05** | **Cumplimiento:** se agregan los resultados por lugar de `ComplianceReader`. El veredicto de un lugar es su tramo más grave (`OVERDUE` > `WITHIN_TOLERANCE` > `ON_TARGET` > `NOT_APPLICABLE`); `NOT_CONFIGURED` suma en `notApplicable`. `OUTSOURCED` y `BY_SECTOR` se muestran «No evaluable», con `notEvaluableReason` igual a `OUTSOURCED` o `BY_SECTOR`. Para distinguir `BY_SECTOR`, `ComplianceResponse` gana el campo `scope`. | Reimplementar la evaluación de frecuencias |
+| **D-05** | **Cumplimiento:** se agregan los resultados por lugar de `ComplianceReader`. El veredicto de un lugar es su tramo más grave (`OVERDUE` > `EARLY` > `ON_TARGET` > `NOT_APPLICABLE`); `NOT_CONFIGURED` suma en `notApplicable`. `OUTSOURCED` se muestra «No evaluable», con `notEvaluableReason` igual a `OUTSOURCED`. *(Enmienda SPEC-203 §5.8, 9 nov 2026: `WITHIN_TOLERANCE` y `BY_SECTOR` desaparecen; el conteo `withinTolerance` pasa a `early`, «Antes del mínimo», y cada jardín se juzga con su regla efectiva.)* | Reimplementar la evaluación de frecuencias |
 | **D-06** | **Incidencias:** «abiertas» = `OPEN` + `IN_PROGRESS`; `PENDING_APPROVAL` va aparte. El **estado en una fecha** se reconstruye con `incident_status_history`. Una incidencia pertenece a un sector en este orden: (1) sus coordenadas caen dentro de una sección del sector (`ST_Covers`); (2) si no tiene coordenadas, la cuadrilla asignada tiene ese sector (`teams.zone_id`). Si no cumple ninguna, es «sin sector identificable» y se cuenta aparte. **Días abierta** = fecha civil del corte − fecha civil del registro. | Mostrar «En plazo»: los plazos por urgencia no están confirmados (catálogo 5.6) |
 | **D-07** | **Permisos por pestaña** (Anexo A, filas 5 y 6). Se declaran **explícitamente** en este controller y **no** se cambia el mapeo global de roles: ADMIN entra aunque su authority no incluya la de COORDINADOR. La tabla y su justificación están debajo de esta. | Implementar el superconjunto ADMIN ⊃ COORDINADOR en `CustomUserDetailsService`: cambio transversal que necesita su propio spec |
-| **D-08** | **Alcance del SUPERVISOR:** sus cuadrillas son las que dirige (`teams.supervisor_user_id`, activas). Sus sectores son los `teams.zone_id` de esas cuadrillas, **la misma regla que ya aplica el módulo de riego** (`activeSectorsOfSupervisor`). Sin sectores, la Semanal muestra «Tu cuadrilla no tiene sector asignado» y la cobertura de la Mensual queda `available: false` con `unavailableReason: NO_SECTOR_ASSIGNED`. Aprobado el 4 nov 2026 aunque hoy ninguna cuadrilla real tenga sector: la pantalla lo avisa. | Deducir su sector de los turnos de riego que registró: un dato de actividad no define una asignación |
+| **D-08** | **Alcance del SUPERVISOR:** sus cuadrillas son las que dirige (`teams.supervisor_user_id`, activas). Sus sectores son los `teams.zone_id` de esas cuadrillas, **la misma regla que aplicaba el módulo de riego, hoy en `SectorQueries.activeSectorsOfSupervisor`**. Sin sectores, la Semanal muestra «Tu cuadrilla no tiene sector asignado» y la cobertura de la Mensual queda `available: false` con `unavailableReason: NO_SECTOR_ASSIGNED`. Aprobado el 4 nov 2026 aunque hoy ninguna cuadrilla real tenga sector: la pantalla lo avisa. | Deducir su sector de los turnos de riego que registró: un dato de actividad no define una asignación |
 | **D-09** | **Un solo enlace directo «Reportes»** en el sidebar, como Riego e Incidencias. Las tres pestañas viven dentro de la pantalla. | Tres ítems en un grupo M6: el usuario pidió una sola pantalla |
 | **D-10** | **Sin caché ni vistas materializadas:** se calcula al consultar, así que el reporte cambia con cada aprobación (F-01). Es un sistema de bajo volumen (dominio §12). | Vista materializada: refrescos programados y migración sin necesidad medida |
 | **D-11** | **Listas de tope fijo**, con `total`: secciones más atendidas, sin atención y sin regar (10); intervenciones de la semana (50); incidencias abiertas de la semana (50); lugares vencidos por actividad (5). No son listados navegables y no usan `Page<T>`. | Tres paginadores en un tablero |
 | **D-12** | **Sector y superficie vigentes:** los meses pasados se recalculan con el `parent_zone_id` y el `area_m2` actuales. La vigencia histórica (A-07) no existe. | Una tabla de vigencias: pertenece al spec de A-07 |
 | **D-13** | **Una pantalla, tres pestañas, pestaña en la URL:** `?tab=semanal|mensual|direccion`. Por defecto, `semanal` para SUPERVISOR y `mensual` para ADMIN y COORDINADOR. Una pestaña inválida o no permitida se reemplaza por la del rol (`router.replace`, sin error). Cada pestaña tiene sus propios parámetros (§3.6). Cambiar de pestaña hace `router.push` con los parámetros de la nueva, así «Atrás» vuelve a la anterior. | Tres rutas: el usuario pidió una sola pantalla |
 | **D-14** | **Periodos:** semana de **lunes a domingo** en la zona configurada; por defecto, la semana en curso, rotulada «en curso». Mensual: por defecto, el mes en curso. Resumen: por defecto, el **último mes cerrado**, porque se entrega a fin de mes; el mes en curso se rotula «parcial». | Semana de domingo a sábado: el riego y la programación del cliente corren de lunes a sábado |
-| **D-15** | **Regla provisional de sección regada:** una sección está regada en un periodo si figura en ≥1 turno de riego **de su sector** con `irrigation_date` dentro del periodo. Si el sector no tuvo ningún turno en la semana, se muestra «Sin turno de riego registrado esta semana» y no un 0 %: el sector puede no tener turno esa semana (ciclo de 15 días). | Medir el ciclo de 15 días: la definición está pendiente (catálogo 7.2) |
+| **D-15** | **Regla provisional de sección regada** *(enmendada por SPEC-113 D-08, 15 nov 2026: los turnos de riego se eliminaron)*: una sección está regada en un periodo si una intervención de clase `RIEGO`, no cancelada, completó allí una ubicación (`COMPLETED` o `VALIDATED`) con fecha local dentro del periodo; es la misma lectura que la «última vez» de SPEC-203 §5.4, sin esperar la aprobación final. Si no hubo ningún riego en la semana, se muestra «Sin riego registrado esta semana» y no un 0 %: el sector puede no regarse esa semana (ciclo de 15 días). | Medir el ciclo de 15 días: la definición está pendiente (catálogo 7.2) |
 | **D-16** | **Indicadores del resumen:** una lista cerrada de **códigos calculados**, con la misma justificación que `ComplianceStatus`: cada código existe porque el backend sabe calcularlo, no es un dato administrable. Cada indicador trae valor, meta, valor del mes anterior y variación. Las metas salen de `system_parameters` (§4). Los indicadores sin fuente se envían con `available: false` y un código de motivo. | Escribir las metas en el código: viola INV-9 y el KPI 4 del proyecto |
 | **D-17** | **Gráficos locales a la feature:** van en `components/reports/charts/` y no en `components/ui`. Por ahora solo los usa esta feature y cumplen uno solo de los criterios de SPEC-C01 §10.2. Pasan al catálogo, con su enmienda, cuando otra feature los necesite. Se pintan con clases de tokens (`fill-brand-600`, `stroke-neutral-500`), que cambian solas en modo oscuro. | Ponerlos ya en el catálogo compartido: §10.2 lo prohíbe con un solo uso |
+| **D-19** | **Datos de demostración en JSON** (pedido del líder, 12 nov 2026): un botón «Ver con datos de demostración» reemplaza las respuestas por los JSON de `components/reports/demo/`, movidos al periodo y sector elegidos. Un aviso fijo dice que las cifras son de ejemplo; la elección dura la sesión del navegador y la clave de cada consulta la incluye, así que nunca se mezclan con datos reales. Sirve para presentar sin datos cargados | Sembrar cifras de ejemplo en la BD: se confundirían con datos reales |
 | **D-18** | **Nombre del nivel de dirección:** el endpoint y el valor de la pestaña son `direction`/`direccion`. «Resumen para OSG» es un texto de la UI que se puede externalizar. Así el nombre de una oficina del cliente no queda en la API (INV-9 y KPI 4). | `/reports/osg` |
 
 **Permisos por pestaña (D-07):**
@@ -163,7 +166,7 @@ sobre `Badge` existente, en el mismo orden neutro → ámbar → rojo:
 | Badge | Color |
 |---|---|
 | `ON_TARGET` | `success` |
-| `WITHIN_TOLERANCE` | `warning` |
+| `EARLY` («Antes del mínimo», SPEC-203) | `neutral` |
 | `OVERDUE` | `danger` |
 | «No evaluable», `NOT_APPLICABLE` y «Sin datos» | `neutral` |
 | «Regla provisional» | `info` |
@@ -185,7 +188,7 @@ muestra «Sin datos», y se lista en §9 «Por validar».
 | 3 | Ejecutadas pendientes de aprobación | Semanal · Mensual | `intervention_locations.status_item_id` | Disponible | Mostrar como informativo; no suma a cobertura |
 | 4 | Fotos pendientes de subir | Semanal | `intervention_evidences.uploaded_at IS NULL` | Disponible | Mostrar |
 | 5 | Secciones atendidas / secciones del sector | Semanal | Ídem 1 + `zones` | Disponible (provisional, D-01) | Mostrar |
-| 6 | Secciones regadas / secciones del sector | Semanal | `irrigation_turns`, `irrigation_turn_sections`, `zones` | Disponible (provisional, D-15) | Mostrar |
+| 6 | Secciones regadas / secciones del sector | Semanal | `interventions` de clase `RIEGO`, `intervention_locations`, `zones` | Disponible (provisional, D-15) | Mostrar |
 | 7 | Secciones sin regar, con su último riego | Semanal | Ídem | Disponible | Mostrar (máx. 10 + total) |
 | 8 | Incidencias abiertas del sector y sus días abiertas | Semanal | `incidents`, `incident_status_history`, coordenadas ∩ `zones.boundary`, `teams.zone_id` | Parcial: la incidencia no guarda su sección y las coordenadas son opcionales | Mostrar; las no ubicables se cuentan aparte (D-06) |
 | 9 | Capataz y cuadrilla del sector | Semanal | `teams.zone_id`, `teams.supervisor_user_id`, `users` | Parcial: ninguna cuadrilla real tiene sector cargado | Mostrar si existe; si no, «Sin cuadrilla asignada» |
@@ -197,7 +200,7 @@ muestra «Sin datos», y se lista en §9 «Por validar».
 | 15 | Incidencias por estado; registradas y resueltas en el periodo | Mensual | `incidents` | Disponible | Mostrar |
 | 16 | Cumplimiento de frecuencias por actividad | Mensual | `maintenance_frequencies` + `ComplianceReader` | Parcial: solo personal propio, frecuencia configurada y evaluación por lugar | Mostrar; el resto «No evaluable» |
 | 17 | Secciones más atendidas y sin atención | Mensual | Ídem 12 | Disponible | Mostrar |
-| 18 | Ciclos de riego completos | Mensual · OSG | Existen `irrigation_turns`, pero no la definición de «ciclo completo» | Falta definición | Mensual: omitir · OSG: «Sin datos» · Por validar |
+| 18 | Ciclos de riego completos | Mensual · OSG | Existen las intervenciones de riego, pero no la definición de «ciclo completo» | Falta definición | Mensual: omitir · OSG: «Sin datos» · Por validar |
 | 19 | Incidencias atendidas en plazo; tiempo medio por urgencia | Mensual · OSG | Existen `created_at`/`resolved_at`, pero no los plazos por urgencia | Falta | Mensual: omitir · OSG: «Sin datos» · Por validar |
 | 20 | Variación frente al mes anterior | OSG | Mismas fuentes, mes anterior | Disponible | Mostrar |
 | 21 | Cobertura de los últimos 6 meses | OSG | Ídem 12 | Disponible (recalculada con sectores y superficies vigentes, D-12) | Mostrar |
@@ -526,8 +529,7 @@ Al editar estas metas se valida un rango de 1 a 100 con un chequeo explícito pa
 código en `SystemParametersService`, igual que cada parámetro numérico tiene el suyo: no
 existe un rango genérico. Las lecturas usan los índices existentes:
 `idx_intervention_locations_zone`, `idx_intervention_locations_completed`,
-`idx_interventions_team_plan`, `idx_zones_parent_zone_id`, `idx_zones_boundary` (GIST) e
-`idx_irrigation_turns_date_sector`.
+`idx_interventions_team_plan`, `idx_zones_parent_zone_id` e `idx_zones_boundary` (GIST).
 
 ## 5. Comportamiento
 
@@ -561,8 +563,8 @@ existe un rango genérico. Las lecturas usan los índices existentes:
   - Si pide `?tab=direccion`, la URL se reemplaza por `?tab=semanal`.
   - Si no tiene sectores, la Semanal muestra el estado vacío «Tu cuadrilla no tiene sector
     asignado; pide a la jefatura que lo registre».
-- **Sector sin turno de riego en la semana:** el bloque de riego dice «Sin turno de riego
-  registrado esta semana» y no muestra un 0 % (D-15).
+- **Sector sin riego en la semana:** el bloque de riego dice «Sin riego registrado esta
+  semana» y no muestra un 0 % (D-15).
 - **Sector sin cuadrilla propia** (Polideportivo, Bosque húmedo): la Semanal muestra «Sin
   cuadrilla asignada». La Mensual añade la nota «Mantenimiento tercerizado o a demanda: su
   trabajo aún no se registra en el sistema».
@@ -629,7 +631,7 @@ existe un rango genérico. Las lecturas usan los índices existentes:
 |---|----------|------------------|
 | CA-S01 | Lista las intervenciones aprobadas de la semana con tipo y lugar | Aprobar una intervención ejecutada el miércoles en una sección del sector 2: aparece con su tipo, sus lugares y su fecha de ejecución. Una con una ubicación aún `COMPLETED` no aparece y suma en «pendientes de aprobación» |
 | CA-S02 | Compara con la semana anterior | Con 11 aprobadas la semana pasada y 14 en esta, el KPI dice «14» y «3 más que la semana anterior» |
-| CA-S03 | Muestra el riego del sector y lo que quedó sin regar | Registrar un turno del sector 2 con 115 de sus 118 secciones: el bloque dice «115 de 118 secciones regadas» y lista las 3 restantes con su último riego. En una semana sin turnos dice «Sin turno de riego registrado esta semana» |
+| CA-S03 | Muestra el riego del sector y lo que quedó sin regar | Completar una intervención de riego en 115 de las 118 secciones del sector 2: el bloque dice «115 de 118 secciones regadas en 1 riego» y lista las 3 restantes con su último riego. En una semana sin riegos dice «Sin riego registrado esta semana» |
 | CA-S04 | Muestra las incidencias abiertas del sector con sus días abiertas | Una incidencia con coordenadas en una sección del sector 2, registrada hace 3 días y en atención, aparece con «3 días», su urgencia y su estado. Al resolverla y recargar, desaparece de la semana en curso |
 | CA-S05 | Las semanas pasadas reflejan el estado de esa semana | Una incidencia abierta al cierre del domingo 25/10 y resuelta el martes 27/10 aparece en la semana del 19/10 y no en la del 26/10 |
 | CA-S06 | El SUPERVISOR solo ve su sector y sus cuadrillas | Como SUPERVISOR, el selector de sector solo lista los de sus cuadrillas, y `GET /reports/weekly?sectorId=<otro>` responde 404 |
@@ -785,7 +787,7 @@ Cobertura (D-01, D-03, D-04, D-12)
 Semanal
 - intervención con ubicaciones en dos sectores → aparece en ambos, cada uno con sus lugares
 - aprobadas de la semana anterior se calculan con la misma regla
-- riego: sección en un turno de otro sector → no cuenta para este; sin turnos → turns 0 y percent null
+- riego: solo cuenta la clase RIEGO completada; en curso o cancelada no cuenta; sin riegos → irrigations 0 y percent null
 - incidencia con coordenadas dentro de una sección del sector → locatedBy COORDINATES
 - incidencia sin coordenadas y con cuadrilla de ese sector → locatedBy TEAM
 - incidencia no ubicable → solo suma en unlocatedInScope

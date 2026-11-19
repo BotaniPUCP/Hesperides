@@ -44,7 +44,7 @@ public record MonthlyReportResponse(
 
     public record ActivityCompliance(Long activityTypeItemId, String activityLabel, String regime,
                                      boolean evaluable, String notEvaluableReason,
-                                     int onTarget, int withinTolerance, int overdue, int notApplicable,
+                                     int onTarget, int early, int overdue, int notApplicable,
                                      List<OverdueTarget> overdueTargets) {
     }
 

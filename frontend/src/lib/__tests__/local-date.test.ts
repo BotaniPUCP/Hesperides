@@ -1,4 +1,4 @@
-import { dateLocal, todayLocal } from '../local-date';
+import { dateLocal, todayLocal, todayLima } from '../local-date';
 
 describe('dateLocal', () => {
   // Ambos extremos del día: en cualquier zona que no sea UTC, uno de los dos
@@ -24,3 +24,8 @@ describe('todayLocal', () => {
     expect(todayLocal()).toBe('2026-11-06');
   });
 });
+
+ it('usa el d?a de Lima al cruzar medianoche UTC y Lima', () => {
+   expect(todayLima(new Date('2026-11-06T00:30:00Z'))).toBe('2026-11-05');
+   expect(todayLima(new Date('2026-11-06T05:00:00Z'))).toBe('2026-11-06');
+ });

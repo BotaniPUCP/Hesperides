@@ -1,86 +1,32 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import type {
-  CreateMaintenanceFrequencyRequest,
-  MaintenanceFrequency,
-  MaintenanceZoneOption,
-  UpdateMaintenanceFrequencyRequest,
-} from '@shared/types';
-import { Button, Card, EmptyState, LoadingSkeleton } from '@/components/ui';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { PageHeader } from '@/components/layouts/PageHeader';
+import { Card, EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useListScrollRestoration } from '@/hooks/useListScrollRestoration';
 import { useListUrlState } from '@/hooks/useListUrlState';
 import { useSearchDraft } from '@/hooks/useSearchDraft';
-import { maintenanceApi } from '@/lib/maintenance-api';
 import { FrequenciesTable } from './FrequenciesTable';
 import { FrequencyFilters, type FilterState } from './FrequencyFilters';
-import { FrequencyFormModal } from './FrequencyFormModal';
-import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS } from './frequencyListState';
-import { LocationCompliancePanel } from './LocationCompliancePanel';
-import { PageHeader } from '@/components/layouts/PageHeader';
+import { FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS, takeFrequencyFlash, type FrequencyFlash } from './frequencyListState';
+import { useFrequencyScreenData } from './useFrequencyScreenData';
 
-interface CatalogOption {
-  id: number;
-  code: string;
-  label: string;
-  parentCode?: string | null;
-}
-
+/** Configurar cada cuánto se hace cada actividad (SPEC-203 §5.3); solo ADMIN y COORDINADOR llegan aquí. */
 export function MaintenanceFrequenciesScreen() {
-  const { user } = useAuth();
-  const roleCode = user?.role?.code ?? '';
-  const canManage = roleCode === 'ADMIN' || roleCode === 'COORDINADOR';
-
-  const [frequencies, setFrequencies] = useState<MaintenanceFrequency[]>([]);
-  const [activities, setActivities] = useState<CatalogOption[]>([]);
-  const [ruleTypes, setRuleTypes] = useState<CatalogOption[]>([]);
-  const [zones, setZones] = useState<MaintenanceZoneOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { frequencies, ruleTypes, loading, failed } = useFrequencyScreenData(0);
+  // Los filtros viven en la URL: al volver a la pantalla, la tabla sigue filtrada.
   const { values: filters, setValues: setFilters, query } = useListUrlState(FREQUENCIES_PATH, FREQUENCY_LIST_DEFAULTS);
   useListScrollRestoration(FREQUENCIES_PATH, query, !loading);
   const [searchInput, setSearchInput] = useSearchDraft(filters.search, (search) => setFilters({ search }));
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingFrequency, setEditingFrequency] = useState<MaintenanceFrequency | null>(null);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
-  const [reloadToken, setReloadToken] = useState(0);
-
-  // Recargar solo mueve el token: quien pide los datos es el efecto, y el
-  // estado se toca en los callbacks de la promesa, nunca en su cuerpo.
-  const loadData = () => {
-    setLoading(true);
-    setReloadToken((token) => token + 1);
+  const handleFiltersChange = ({ search, ...others }: Partial<FilterState>) => {
+    if (search !== undefined) setSearchInput(search);
+    else setFilters(others);
   };
-
-  useEffect(() => {
-    let vigente = true;
-
-    Promise.all([
-      maintenanceApi.list().catch(() => []),
-      maintenanceApi.getActivityTypes().catch(() => []),
-      maintenanceApi.getRuleTypes().catch(() => []),
-      maintenanceApi.getZones().catch(() => []),
-    ])
-      .then(([freqRes, actRes, ruleRes, zoneRes]) => {
-        if (!vigente) return;
-        setFrequencies(Array.isArray(freqRes) ? freqRes : []);
-        setActivities(Array.isArray(actRes) ? actRes : []);
-        setRuleTypes(Array.isArray(ruleRes) ? ruleRes : []);
-        setZones(Array.isArray(zoneRes) ? zoneRes : []);
-      })
-      .catch(() => {
-        if (vigente) setFeedback({ type: 'error', message: 'Error al cargar las frecuencias de mantenimiento' });
-      })
-      .finally(() => {
-        if (vigente) setLoading(false);
-      });
-
-    return () => {
-      vigente = false;
-    };
-  }, [reloadToken]);
+  // El aviso que deja la página de una frecuencia al guardar o desactivar.
+  const [feedback, setFeedback] = useState<FrequencyFlash | null>(() => (typeof window === 'undefined' ? null : takeFrequencyFlash()));
 
   const filteredFrequencies = useMemo(() => {
     const term = filters.search.trim().toLowerCase();
@@ -95,62 +41,22 @@ export function MaintenanceFrequenciesScreen() {
     });
   }, [frequencies, filters]);
 
-  const handleFiltersChange = ({ search, ...others }: Partial<FilterState>) => {
-    if (search !== undefined) setSearchInput(search);
-    else setFilters(others);
-  };
-
-  const handleOpenCreate = () => {
-    setEditingFrequency(null);
-    setIsModalOpen(true);
-  };
-
-  const handleDeactivate = async (id: number) => {
-    const confirmado = confirm(
-      '¿Deseas desactivar esta frecuencia de mantenimiento?\n\n' +
-        'Se aplicará borrado lógico: la frecuencia dejará de estar activa para planificar ' +
-        'intervenciones, pero se conservará en la base de datos para no perder el historial ' +
-        'ni la trazabilidad.'
-    );
-    if (!confirmado) return;
-
-    try {
-      await maintenanceApi.delete(id);
-      setFeedback({ type: 'success', message: 'Frecuencia desactivada y retirada de la lista activa.' });
-      loadData();
-    } catch {
-      setFeedback({ type: 'error', message: 'No se pudo desactivar la frecuencia' });
-    }
-  };
-
-  const handleFormSubmit = async (
-    payload: CreateMaintenanceFrequencyRequest | UpdateMaintenanceFrequencyRequest
-  ) => {
-    if (editingFrequency) {
-      await maintenanceApi.update(editingFrequency.id, payload as UpdateMaintenanceFrequencyRequest);
-      // Editar versiona: la anterior queda cerrada y esta rige desde hoy.
-      setFeedback({
-        type: 'success',
-        message: 'Se creó una versión nueva. Los periodos ya evaluados conservan la anterior.',
-      });
-    } else {
-      await maintenanceApi.create(payload as CreateMaintenanceFrequencyRequest);
-      setFeedback({ type: 'success', message: 'Frecuencia registrada con éxito' });
-    }
-    loadData();
-  };
+  const openCreate = () => router.push(`${FREQUENCIES_PATH}/nueva`);
 
   const hayFiltros = Boolean(filters.search || filters.regime || filters.ruleType);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Frecuencias de Mantenimiento"
-        description="Periodicidades teóricas, rangos por estación y ciclos operativos del campus."
-        actions={canManage && (<Button variant="primary" onClick={handleOpenCreate}>
-              + Nueva frecuencia
-            </Button>)}
+        title="Frecuencias"
+        description="Cada cuánto se hace cada actividad, en todo el campus o solo en algunas áreas. Dónde se usa cada una se decide en Planificación."
+        actions={<Link href={`${FREQUENCIES_PATH}/nueva`} className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+          + Nueva frecuencia</Link>}
       />
+
+      {failed && !feedback && (
+        <p role="alert" className="text-sm text-action-danger">Error al cargar las frecuencias de mantenimiento</p>
+      )}
 
       {feedback && (
         <div
@@ -160,7 +66,10 @@ export function MaintenanceFrequenciesScreen() {
               : 'bg-rose-50 text-rose-800 border-rose-200'
           }`}
         >
-          <span>{feedback.message}</span>
+          <span>
+            {feedback.message}
+            {feedback.warnings?.map((w) => <span key={w} className="block text-alert-warning-fg">{w}</span>)}
+          </span>
           <button
             onClick={() => setFeedback(null)}
             className="text-xs font-semibold hover:underline shrink-0"
@@ -193,36 +102,17 @@ export function MaintenanceFrequenciesScreen() {
                   ? 'No se encontraron resultados con los filtros aplicados.'
                   : 'Registra las periodicidades para poda, corte de césped, fitosanitario o riego.'
               }
-              action={
-                canManage ? { label: 'Configurar primera frecuencia', onClick: handleOpenCreate } : undefined
-              }
+              action={{ label: 'Configurar primera frecuencia', onClick: openCreate }}
             />
           </div>
         ) : (
           <FrequenciesTable
             frequencies={filteredFrequencies}
-            zones={zones}
-            canManage={canManage}
-            onEdit={(f) => {
-              setEditingFrequency(f);
-              setIsModalOpen(true);
-            }}
-            onDeactivate={handleDeactivate}
+            canManage
+            onEdit={(f) => router.push(`${FREQUENCIES_PATH}/${f.id}`)}
           />
         )}
       </Card>
-
-      <LocationCompliancePanel key={`${user?.id}:${roleCode}`} />
-
-      <FrequencyFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        frequencyToEdit={editingFrequency}
-        activities={activities}
-        ruleTypes={ruleTypes}
-        zones={zones}
-        onSubmit={handleFormSubmit}
-      />
     </div>
   );
 }

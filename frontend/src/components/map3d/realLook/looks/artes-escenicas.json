@@ -1,0 +1,44 @@
+{
+  "planKey": "403f4c21-8155-474c-8339-7499bbac5976",
+  "name": "Artes Escénicas / FARES",
+  "folder": "Artes Escénicas  Facultad de Artes Escénicas (FARES)",
+  "photos": [
+    "Caseta · pieza C-1658 · C-1658-Caseta · pieza C-2172 · C-2172 y Caseta · pieza C-2162 · C-2162-Caseta · pieza C-2213 · C-2213.jpg",
+    "detras Caseta · pieza C-2476 · C-2476-Caseta · pieza C-2536 · C-2536.jpg",
+    "frente - Caseta · pieza C-2220 · C-2220- Caseta · pieza C-2438 · C-2438.jpg",
+    "Caseta · pieza C-2546 · C-2546-Caseta · pieza C-2659 · C-2659.jpg"
+  ],
+  "materials": {
+    "paneles": {
+      "color": "#dcd1b9"
+    },
+    "techo": {
+      "color": "#a9a69f"
+    },
+    "ventanas-altas": {
+      "glass": "#5d6870",
+      "frame": "#e5e6e2",
+      "moduleM": 1.2,
+      "heightM": 1.0,
+      "frameM": 0.06,
+      "vary": 0.05
+    }
+  },
+  "zones": [
+    {
+      "id": "casetas",
+      "wall": "paneles",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas-altas",
+          "v": [
+            2.2,
+            2.8
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Casetas de paneles beige con una cinta alta de ventanas bajo el techo de fibrocemento: es el tipo que más se repite en las 16 fotos de la carpeta. Las casetas blancas con remate azul (Caseta · pieza C-2546…jpg, frente Caseta pieza C-2180…jpg) y los contenedores azules no se distinguen en el modelo."
+}

@@ -61,13 +61,6 @@ public class MaintenanceFrequencySeason {
     @Column(name = "max_days_interval", nullable = false)
     private Integer maxDaysInterval;
 
-    /**
-     * El intervalo de manual, que suele diferir del operativo: el cesped tiene
-     * teorico de 21 dias y en la practica se corta cada 30-45. Guardarlo permite
-     * mostrar la brecha entre norma y realidad.
-     */
-    @Column(name = "target_days_interval")
-    private Integer targetDaysInterval;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

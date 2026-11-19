@@ -11,7 +11,7 @@ export const metadata = {
 // cabecera que AppShell solo muestra en móvil.
 export default function MapaPage() {
   return (
-    <div className="-m-4 h-[calc(100dvh-3.25rem)] md:-m-6 md:h-dvh">
+    <div className="relative -m-4 h-[calc(100dvh-3.25rem)] md:-m-6 md:h-dvh">
       <Suspense fallback={<LoadingSkeleton />}>
         <MapScreen />
       </Suspense>

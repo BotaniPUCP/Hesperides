@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAuth } from '@/hooks/useAuth';
 import { rememberedHref } from '@/lib/listMemory';
+import { resetReportDemo } from '@/lib/reportDemo';
 import { reportsApi } from '@/lib/reports-api';
 import { ReportsScreen } from '../ReportsScreen';
 
@@ -20,6 +21,8 @@ jest.mock('@/lib/reports-api', () => ({
     options: jest.fn(() => new Promise(() => undefined)),
     sections: jest.fn(() => new Promise(() => undefined)),
     monthly: jest.fn(() => new Promise(() => undefined)),
+    weekly: jest.fn(() => new Promise(() => undefined)),
+    direction: jest.fn(() => new Promise(() => undefined)),
   },
 }));
 
@@ -86,5 +89,24 @@ describe('ReportsScreen (SPEC-202 D-13, CA-G01, CA-G03)', () => {
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
     expect(screen.getByText('No tienes acceso a los reportes')).toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('ReportsScreen: datos de demostración', () => {
+  afterEach(() => {
+    window.sessionStorage.clear();
+    resetReportDemo();
+  });
+
+  it('el interruptor muestra los JSON de demostración sin consultar el backend, y avisa que son de ejemplo', async () => {
+    as('COORDINADOR', 'tab=direccion');
+    expect(reportsApi.direction).toHaveBeenCalledTimes(1);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Ver con datos de demostración' }));
+
+    expect(await screen.findByText(/Datos de demostración: las cifras son de ejemplo/)).toBeInTheDocument();
+    expect(await screen.findByRole('img', { name: /Cobertura de los últimos 6 meses/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Volver a los datos reales' })).toBeInTheDocument();
+    expect(reportsApi.direction).toHaveBeenCalledTimes(1);
+    expect(reportsApi.options).toHaveBeenCalledTimes(1);
   });
 });

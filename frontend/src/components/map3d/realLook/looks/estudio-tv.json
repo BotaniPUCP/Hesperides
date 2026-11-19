@@ -1,0 +1,44 @@
+{
+  "planKey": "533742e5-3167-4f4a-842c-45ba81cceefb",
+  "name": "Estudio de TV 2",
+  "folder": "estudio-tv",
+  "photos": [
+    "estudio-tv.jpg"
+  ],
+  "materials": {
+    "crema": {
+      "color": "#d9d1bb"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "celosias": {
+      "color": "#9c978a"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "crema",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "celosias",
+          "v": [
+            0,
+            10.9
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              1.3,
+              2.3
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Muros crema con una celosía oscura por piso y el ingreso negro (estudio-tv.jpg). Las celosías van como franja tenue de cada piso (D-04)."
+}

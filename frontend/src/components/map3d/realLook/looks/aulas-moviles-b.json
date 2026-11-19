@@ -1,0 +1,52 @@
+{
+  "planKey": "8ec02178-b752-40cc-a4b5-a2f462b04528",
+  "name": "Aulas móviles (B)",
+  "folder": "aula-moviles-B",
+  "photos": [
+    "frente-ambos-edificios.jpg",
+    "frente-un-edificio.jpg",
+    "lado-edificio1.jpg",
+    "lado-edificio2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#d2d6da"
+    },
+    "techo": {
+      "color": "#c4c7ca"
+    },
+    "ventanas": {
+      "glass": "#66737b",
+      "frame": "#e1e3e4",
+      "moduleM": 1.5,
+      "heightM": 1.2,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            6.6
+          ],
+          "floors": {
+            "everyM": 3.3,
+            "startM": 0,
+            "bandM": [
+              1,
+              2.2
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Módulos prefabricados gris claro con una cinta de ventanas en cada piso (lado-edificio1.jpg, lado-edificio2.jpg); los testeros, ciegos con sus arriostres (frente-ambos-edificios.jpg), quedan bajo la misma cinta. Equipos de aire y escaleras no se dibujan."
+}

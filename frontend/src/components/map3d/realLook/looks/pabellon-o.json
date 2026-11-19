@@ -1,0 +1,44 @@
+{
+  "planKey": "d0e95525-8efa-484e-bc1b-f82a38030691",
+  "name": "Pabellón O",
+  "folder": "pabellon-o",
+  "photos": [
+    "patio-pabellon-o.png"
+  ],
+  "materials": {
+    "blanco": {
+      "color": "#ebebe7"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "sombra": {
+      "color": "#6f7576"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "blanco",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "sombra",
+          "v": [
+            0,
+            19.2
+          ],
+          "floors": {
+            "everyM": 3.8,
+            "startM": 0,
+            "bandM": [
+              1.4,
+              2.9
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Blanco, con pasillos abiertos de baranda blanca y, detrás, la franja oscura de ventanas y sombra en cada piso (patio-pabellon-o.png). Sin otras fotos, todas las caras repiten la del patio; la torre calada de la escalera no se dibuja."
+}

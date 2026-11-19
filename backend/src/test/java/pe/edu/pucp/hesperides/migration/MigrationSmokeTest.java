@@ -119,6 +119,19 @@ class MigrationSmokeTest {
     }
 
     @Test
+    void frequencyRuleTypesHaveShortLabels() {
+        // V046: los nombres largos partian la insignia en varias lineas.
+        List<String> labels = jdbcTemplate.queryForList("""
+                SELECT ci.label FROM catalog_items ci
+                JOIN catalog_types ct ON ct.id = ci.catalog_type_id
+                WHERE ct.code = 'FREQUENCY_RULE_TYPE' ORDER BY ci.sort_order
+                """, String.class);
+
+        assertThat(labels).containsExactly(
+                "Rango de días", "Cuota anual", "Ventana anual", "Ciclo de cobertura", "A demanda");
+    }
+
+    @Test
     void theRoleCatalogCarriesOnlyTheFourRealRoles() {
         // El historial anterior sembraba un USER generico que una migracion
         // posterior desactivaba. El baseline declara el estado final, asi que ese
@@ -438,7 +451,7 @@ class MigrationSmokeTest {
 
     @Test
     void theTwoDescriptionsConfirmedByTheClientAreVerbatim() {
-        // Las únicas dos que constan en material del cliente (docs/dominio/README.md
+        // Las únicas dos que constan en material del cliente (docs/dominio/negocio.md
         // §5.4). El resto son provisionales y se contrastarán con el Excel DAF-OSG.
         String canteo = jdbcTemplate.queryForObject("""
                 SELECT ci.metadata->>'description' FROM catalog_items ci
@@ -483,8 +496,17 @@ class MigrationSmokeTest {
         // MAIL_FROM no esta y no debe volver: un remitente solo vale si el
         // proveedor lo tiene verificado, y esta aplicacion no puede comprobarlo.
         // Vive en SMTP_FROM, con el resto de la configuracion del proveedor.
+        // RESERVATION_NEARBY_METERS es de SPEC-107: 10 m desde el borde del jardín.
+        // RESERVATION_CONFIRMATION_MINUTES es la enmienda del seguimiento de uso:
+        // 20 minutos antes del fin en que ya no se marca el espacio en uso. El
+        // nombre no se renombra (V044) aunque la confirmación ya no existe (V068).
+        // Las dos metas del resumen de reportes salen de V051 (SPEC-202 §4).
+        // Los tres plazos de incidencias por urgencia salen de V067 (SPEC-201 §3.9).
         assertThat(codes).containsExactly(
-                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH");
+                "CAMPUS_TOTAL_HECTARES", "INCIDENT_DEADLINE_HIGH_HOURS", "INCIDENT_DEADLINE_LOW_HOURS",
+                "INCIDENT_DEADLINE_MEDIUM_HOURS", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH",
+                "REPORT_COVERAGE_TARGET_PERCENT", "REPORT_IRRIGATION_TARGET_PERCENT",
+                "RESERVATION_CONFIRMATION_MINUTES", "RESERVATION_NEARBY_METERS");
     }
 
     @Test
@@ -513,6 +535,17 @@ class MigrationSmokeTest {
         Integer live = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
                 Integer.class);
-        assertThat(live).isEqualTo(3);
+        // Tres sembradas por V003, la de cercanía por V039, la del corte de la marca de uso por V043, las
+        // dos metas de reportes por V051 y los tres plazos de incidencias por V067.
+        assertThat(live).isEqualTo(10);
+    }
+
+    @Test
+    void irrigationTurnTablesAreGoneBecausePlanningOwnsIrrigation() {
+        Integer tables = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_name IN ('irrigation_turns', 'irrigation_turn_sections')
+                """, Integer.class);
+        assertThat(tables).isZero();
     }
 }

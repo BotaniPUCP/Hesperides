@@ -91,6 +91,14 @@ final class ReportFixtures {
             """, Long.class);
     }
 
+    /** The intervention type with {@code code}, such as {@code RIEGO_MANUAL}. */
+    long type(String code) {
+        return jdbc.queryForObject("""
+            select t.id from catalog_items t join catalog_types tt on tt.id=t.catalog_type_id
+            where tt.code='INTERVENTION_TYPE' and t.code=? and t.deleted_at is null
+            """, Long.class, code);
+    }
+
     long classOf(long typeId) {
         return jdbc.queryForObject("select parent_item_id from catalog_items where id=?", Long.class, typeId);
     }
@@ -127,23 +135,33 @@ final class ReportFixtures {
     }
 
     /**
-     * An incident registered at {@code createdAt} (ISO-8601 with offset) whose
-     * history starts with {@code initialStatus}. The current status is set by
-     * {@link #changeStatus}.
+     * An active incident registered at {@code createdAt} (ISO-8601 with offset) whose history
+     * starts with {@code initialStatus}. The current status is set by {@link #changeStatus}.
      */
     long incident(Account reporter, Long teamId, String initialStatus, String createdAt, Double lat, Double lon) {
+        return incident(reporter, teamId, initialStatus, createdAt, lat, lon, true);
+    }
+
+    /** Reported but not activated yet (SPEC-201 redesign): reports count it as pending. */
+    long notActiveIncident(Account reporter, Long teamId, String createdAt) {
+        return incident(reporter, teamId, "REPORTED", createdAt, null, null, false);
+    }
+
+    private long incident(Account reporter, Long teamId, String initialStatus, String createdAt,
+                          Double lat, Double lon, boolean active) {
         long id = jdbc.queryForObject("""
-            insert into incidents(original_description,description,latitude,longitude,status_item_id,
-                reported_by_user_id,team_id,client_reference,request_hash,created_at,updated_at)
-            values (?,?,?,?,?,?,?,gen_random_uuid(),'test',?::timestamptz,?::timestamptz) returning id
+            insert into incidents(code,original_description,description,latitude,longitude,status_item_id,
+                reported_by_user_id,team_id,activated_at,requested_by_name,client_reference,request_hash,created_at,updated_at)
+            values ('T-' || substr(md5(random()::text),1,16),?,?,?,?,?,?,?,case when ? then ?::timestamptz end,
+                'Áreas verdes (hallazgo en campo)',gen_random_uuid(),'test',?::timestamptz,?::timestamptz) returning id
             """, Long.class, "Incidencia de prueba", "Incidencia de prueba", lat, lon,
-                item("INCIDENT_STATUS", initialStatus), reporter.id(), teamId, createdAt, createdAt);
+                item("INCIDENT_STATUS", initialStatus), reporter.id(), teamId, active, createdAt, createdAt, createdAt);
         history(id, initialStatus, createdAt, reporter);
         return id;
     }
 
     void changeStatus(long incidentId, String status, String at, Account by) {
-        jdbc.update("update incidents set status_item_id=?, resolved_at=case when ?='RESOLVED' then ?::timestamptz end where id=?",
+        jdbc.update("update incidents set status_item_id=?, closed_at=case when ?='CLOSED' then ?::timestamptz end where id=?",
                 item("INCIDENT_STATUS", status), status, at, incidentId);
         history(incidentId, status, at, by);
     }
@@ -153,6 +171,13 @@ final class ReportFixtures {
             insert into incident_status_history(incident_id,status_item_id,changed_by_user_id,created_at,updated_at)
             values (?,?,?,?::timestamptz,?::timestamptz)
             """, incidentId, item("INCIDENT_STATUS", status), by.id(), at, at);
+    }
+
+    /** Draws {@code zoneId} as a small square centered on a point, so an incident there falls inside it. */
+    void square(long zoneId, double lon, double lat) {
+        jdbc.update("""
+            update zones set boundary=ST_Multi(ST_Expand(ST_SetSRID(ST_MakePoint(?,?),4326), 0.0005)) where id=?
+            """, lon, lat, zoneId);
     }
 
     /** One approved work with a single location in {@code zoneId}, executed at {@code completedUtc}. */

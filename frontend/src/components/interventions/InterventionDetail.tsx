@@ -6,6 +6,8 @@ import { aOutcomes, errorDeDecision, type DecisionPoda } from './cierrePoda';
 import { MedidasCierrePoda } from './MedidasCierrePoda';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { managesIncidents } from '@/lib/incidentRoles';
+import { InterventionIncidentLinks } from './InterventionIncidentLinks';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useRememberedHref } from '@/hooks/useRememberedHref';
 import { Button, Input, LoadingSkeleton, Modal, Select, StatusBadge, useToast } from '@/components/ui';
@@ -68,7 +70,7 @@ function EvidenceUpload({ work, location, pendingEvidence, onChange }: { work:De
       <Select id={`moment-${location.id}`} label="Momento" value={selectedMoment} onChange={o => setMoment(o?.code ?? '')} options={momentOptions.map((m,index) => ({id:index,code:m.code,label:m.label}))} loading={moments.isLoading} />
     </fieldset>}
     <label className="block text-sm">Foto JPEG, PNG o WebP · máximo {LIMITES.foto.etiqueta}
-      <input ref={input} className="block min-h-11 w-full py-2" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => {setFile(e.target.files?.[0] ?? null);setError('');}} />
+      <input ref={input} className="block min-h-11 w-full py-2 file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-neutral-200 file:bg-neutral-0 file:px-4 file:py-2 file:text-sm file:font-medium file:text-neutral-900 hover:file:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-brand-600 disabled:file:cursor-not-allowed disabled:file:opacity-50" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => {setFile(e.target.files?.[0] ?? null);setError('');}} />
     </label>
     {error && <p role="alert" className="text-sm text-action-danger">{error}</p>}
     <Button variant="secondary" loading={busy} onClick={submit}>{attempted ? 'Reintentar subida' : 'Subir foto'}</Button>
@@ -82,7 +84,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
   const listHref = useRememberedHref(LIST_PATH);
   const { showToast } = useToast();
   const [data, setData] = useState<Detail | null>(null);
-  usePageTrail(data ? { labels: { [id]: data.code } } : {});
+  usePageTrail(data ? { labels: { [id]: data.activityTitle || 'Detalle de actividad' } } : {});
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -156,21 +158,19 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     void mutate(() => interventionsApi.command(id,selected.location.id!,selected.action,body));
   };
   return <section className="space-y-6">
-    <div className="surface-card flex flex-wrap items-center justify-between gap-3"><h1 className="page-title">{data.code}</h1><StatusBadge code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
+    <div className="surface-card flex flex-wrap items-center justify-between gap-3"><h1 className="page-title">{data.activityTitle || [options?.catalogs.find(c=>c.id===data.classItemId)?.label,options?.catalogs.find(c=>c.id===data.typeItemId)?.label].filter(Boolean).join(' · ') || 'Actividad sin clasificación'}</h1><StatusBadge showIcon code={data.statusCode} label={label('INTERVENTION_STATUS',data.statusCode)} /></div>
     {error && !selected && !cancelOpen && <p role="alert" className="text-action-danger">{error}</p>}
     {notice && !selected && <p role="status">{notice}</p>}
     <div className="surface-card space-y-2">
-      <p className="font-medium">{unit(data.classItemId)}{data.typeItemId ? ` · ${unit(data.typeItemId)}` : ''}</p>
+      <p className="text-xs text-neutral-500">Código: {data.code}</p>
       <p>{data.description || 'Sin descripción'}</p><p>Programada: {data.scheduledDate}</p>
+      {data.usesCuttingMachinery && <p><span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-700">Con maquinaria de corte</span></p>}
       <ExecutionTime work={data}/>
       {data.executionBlockedUntil && <p role="status" className="rounded-md border border-neutral-200 p-3">El trabajo podrá ejecutarse desde el {data.executionBlockedUntil}. Si debe adelantarse, solicita al coordinador que revise la planificación.</p>}
       <p>{data.completedLocationCount}/{data.locationCount} ubicaciones terminadas · {data.validatedLocationCount}/{data.locationCount} aprobadas</p>
       <p>{data.approvedForCounting ? 'Actividad con aprobación final.' : 'La actividad contará cuando el capataz responsable o el coordinador aprueben todas las ubicaciones.'}</p>
       <p className="text-sm">{options?.teams.find(t => t.id === data.teamId)?.name ?? (data.teamId ? 'Cuadrilla asignada' : 'Sin cuadrilla asignada')}{data.responsibleSupervisorUserId ? ' · Responsable: capataz de la cuadrilla' : ''}</p>
-      {!!data.sourceIncidents?.length && <div className="space-y-2"><p className="font-medium">Incidencias relacionadas disponibles para tu cuenta</p>
-        <ul className="space-y-2">{data.sourceIncidents.map(i => <li key={i.id}><Link className="text-brand-700 underline" href={`/incidencias/${i.id}`}>{i.code ?? `Incidencia #${i.id}`}</Link></li>)}</ul>
-        <p className="text-sm text-neutral-700">Aprobar esta intervención no cierra sus incidencias. Cada una requiere una revisión final independiente.</p>
-      </div>}
+      <InterventionIncidentLinks interventionId={id} incidents={data.sourceIncidents ?? []} canManage={managesIncidents(user?.role.code) && !['CANCELLED','VALIDATED'].includes(data.statusCode)} onChanged={() => void reload()} />
       {data.pendingEvidenceCount > 0 && <p>Fotos pendientes: {data.pendingEvidenceCount}</p>}
       <div className="flex flex-wrap gap-3">
         {canPlan && <><Link href={`/intervenciones/${id}/editar`} className="px-3 py-2 text-brand-600 underline">Editar planificación</Link><Button variant="danger" disabled={busy} onClick={() => {setCancelOpen(true);setReason('');setError('');}}>Cancelar trabajo</Button></>}
@@ -188,7 +188,7 @@ export function InterventionDetail({ id, edit = false }: { id:number; edit?:bool
     <div className="grid gap-5 xl:grid-cols-2">{data.locations.map((location,index) => {
       const photos = data.evidences.filter(e => e.interventionLocationId === location.id);
       return <article key={location.id} className="surface-card space-y-4">
-        <div className="flex flex-wrap justify-between gap-2"><h3 className="font-semibold">Ubicación {index + 1}</h3><StatusBadge code={location.statusCode ?? ''} label={label('INTERVENTION_STATUS',location.statusCode ?? '')} /></div>
+        <div className="flex flex-wrap justify-between gap-2"><h3 className="font-semibold">Ubicación {index + 1}</h3><StatusBadge showIcon code={location.statusCode ?? ''} label={label('INTERVENTION_STATUS',location.statusCode ?? '')} /></div>
         <p>{location.locationDescription || location.description}</p>{location.description && <p>{location.description}</p>}
         <dl className="grid grid-cols-2 gap-2 text-sm"><dt>Cantidad solicitada</dt><dd>{location.requestedQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd>
           <dt>Avance acumulado</dt><dd>{location.progressQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd><dt>Cantidad ejecutada</dt><dd>{location.executedQuantity ?? 'Sin dato'} {unit(location.unitItemId)}</dd><dt>Intento</dt><dd>{location.attemptNumber}</dd></dl>

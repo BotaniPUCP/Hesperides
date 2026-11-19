@@ -21,6 +21,8 @@ import java.util.Map;
 @Setter
 @NoArgsConstructor
 public class Intervention extends BaseEntity {
+    @Column(name="campus_selection_revision")
+    private String campusSelectionRevision;
     @Column(name = "code")
     private String code;
     @Column(name = "version")
@@ -41,6 +43,9 @@ public class Intervention extends BaseEntity {
     private Long createdByUserId;
     @Column(name = "scheduled_date")
     private LocalDate scheduledDate;
+    /** SPEC-115: el trabajo usa motosierra, podadora de altura u otra máquina ruidosa de corte. */
+    @Column(name = "uses_cutting_machinery", nullable = false)
+    private boolean usesCuttingMachinery;
     @Column(name = "description")
     private String description;
     @Column(name = "origin_item_id")

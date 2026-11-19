@@ -36,7 +36,7 @@ export const CHILDREN_OUTLINE: PickedOutline = {
 
 /** El nombre de un edificio en el mapa; si ya no está, su id. */
 export function buildingName(data: SceneData, id: number): string {
-  const building = data.campusBuildings.find((b) => b.props.id === id);
+  const building = [...data.campusBuildings, ...data.groupedBuildings].find((b) => b.props.id === id);
   if (!building) return `Edificio ${id}`;
   return building.props.name ?? `Edificio sin nombre (${id})`;
 }

@@ -1,6 +1,6 @@
 # Estándar de especies (`especies.csv`)
 
-Plantilla: [`plantillas/especies.csv`](plantillas/especies.csv), con dos filas de ejemplo (una completa y una solo con obligatorios) que hay que borrar antes de cargar. Las reglas comunes están en el [README](README.md).
+Plantilla: [`especies.csv`](../../backend/src/main/resources/imports/templates/especies.csv), con dos filas de ejemplo (una completa y una solo con obligatorios) que hay que borrar antes de cargar. Las reglas comunes están en el [README](estandares-de-carga.md).
 
 Sirve tanto para registrar especies nuevas como para actualizar especies activas del catálogo botánico:
 si el `nombre_cientifico` no tiene una ficha vigente, crea la especie; si tiene ficha activa, actualiza

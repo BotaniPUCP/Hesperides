@@ -10,12 +10,10 @@ import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequency
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.SeasonalIntervalPayload;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequencyRequest;
-import pe.edu.pucp.hesperides.modules.maintenance.dto.ZoneOptionResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequency;
 import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceFrequenciesRepository;
-import pe.edu.pucp.hesperides.modules.maintenance.repository.MaintenanceZoneQueries;
+import pe.edu.pucp.hesperides.modules.maintenance.repository.GreenAreaSetLookup;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
-import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
 import java.time.LocalDate;
@@ -26,46 +24,44 @@ import java.util.List;
 public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequenciesService {
 
     private static final String RULE_TYPE_CATALOG = "FREQUENCY_RULE_TYPE";
+    private static final String ACTIVITY_CATALOG = "INTERVENTION_TYPE";
 
     private final MaintenanceFrequenciesRepository frequenciesRepository;
     private final CatalogItemsRepository catalogItemsRepository;
     private final ComplianceReader complianceReader;
-    private final MaintenanceZoneQueries zoneQueries;
+    private final GreenAreaSetLookup setLookup;
 
     @Override
     @Transactional(readOnly = true)
     public List<MaintenanceFrequencyResponse> findAll(String regime, Long activityTypeItemId, Boolean active) {
-        return frequenciesRepository.searchCurrent(regime, activityTypeItemId, active)
-                .stream().map(MaintenanceFrequencyResponse::from).toList();
+        return withAssignedSets(frequenciesRepository.searchCurrent(regime, activityTypeItemId, active));
     }
 
     @Override
     @Transactional(readOnly = true)
     public MaintenanceFrequencyResponse findById(Long id) {
-        return MaintenanceFrequencyResponse.from(load(id));
+        return withAssignedSets(List.of(load(id))).get(0);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<MaintenanceFrequencyResponse> findHistory(Long activityTypeItemId, String regime) {
-        return frequenciesRepository.findHistory(activityTypeItemId, regime)
-                .stream().map(MaintenanceFrequencyResponse::from).toList();
+        return withAssignedSets(frequenciesRepository.findHistory(activityTypeItemId, regime));
     }
 
     @Override
     @Transactional
     public MaintenanceFrequencyResponse create(CreateMaintenanceFrequencyRequest r) {
-        validateScope(r.scope(), r.zoneId());
         CatalogItem activity = loadActivity(r.activityTypeItemId());
         CatalogItem ruleType = loadRuleType(r.frequencyRuleTypeCode());
 
         FrequencyRuleValidator.validate(r.frequencyRuleTypeCode(), r.minDaysInterval(),
                 r.maxDaysInterval(), r.annualTargetCount(), r.coverageTargetDays(),
                 r.seasonStartMonth(), r.seasonEndMonth(), r.seasons());
-        requireNoCurrentDuplicate(activity.getId(), r.regime(), r.scope(), r.zoneId(), null);
+        FrequencyScopeRules.requireNoCurrentDuplicate(frequenciesRepository, activity.getId(), r.regime(), r.scope(), null);
 
         MaintenanceFrequency f = FrequencyFieldMapper.toNewEntity(r, activity, ruleType);
-        return MaintenanceFrequencyResponse.from(frequenciesRepository.save(f));
+        return withWarnings(frequenciesRepository.save(f));
     }
 
     /**
@@ -82,7 +78,6 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         }
 
         FrequencyFieldMapper.ResolvedFields fields = resolve(r, current);
-        validateScope(fields.scope(), fields.zoneId());
         List<SeasonalIntervalPayload> seasons = r.seasons() != null
                 ? r.seasons()
                 : current.getSeasons().stream().map(FrequencyVersioning::toPayload).toList();
@@ -90,8 +85,8 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         FrequencyRuleValidator.validate(fields.ruleType().getCode(), fields.minDays(),
                 fields.maxDays(), fields.annualCount(), fields.coverageDays(),
                 fields.windowStart(), fields.windowEnd(), seasons);
-        requireNoCurrentDuplicate(current.getActivityTypeItem().getId(), fields.regime(),
-                fields.scope(), fields.zoneId(), current.getId());
+        FrequencyScopeRules.requireNoCurrentDuplicate(frequenciesRepository, current.getActivityTypeItem().getId(), fields.regime(),
+                fields.scope(), current.getId());
 
         MaintenanceFrequency target = current;
         if (FrequencyVersioning.requiresNewVersion(current)) {
@@ -105,7 +100,7 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         if (r.active() != null) target.setActive(r.active());
         if (r.seasons() != null) FrequencyVersioning.replaceSeasons(target, r.seasons());
 
-        return MaintenanceFrequencyResponse.from(frequenciesRepository.save(target));
+        return withWarnings(frequenciesRepository.save(target));
     }
 
     @Override
@@ -142,12 +137,6 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 .map(MaintenanceFrequencyResponse.FrequencyRuleTypeSummary::from).toList();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ZoneOptionResponse> getZoneOptions() {
-        return zoneQueries.activeSections();
-    }
-
     // ── apoyo ───────────────────────────────────────────────────────────────
 
     /** Mezcla lo que el request pide cambiar con lo que la version vigente ya tiene. */
@@ -161,8 +150,6 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 ruleType,
                 pick(r.regime(), current.getRegime()),
                 pick(r.scope(), current.getScope()),
-                resolveZoneId(r, current),
-                pick(r.targetDaysInterval(), current.getTargetDaysInterval()),
                 pick(r.minDaysInterval(), current.getMinDaysInterval()),
                 pick(r.maxDaysInterval(), current.getMaxDaysInterval()),
                 pick(r.annualTargetCount(), current.getAnnualTargetCount()),
@@ -172,27 +159,17 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
                 pick(r.seasonEndMonth(), FrequencyFieldMapper.toInt(current.getSeasonEndMonth())));
     }
 
-    /**
-     * Quien deja de ser "por sección" suelta la sección: si no, la versión nueva
-     * heredaría una sección que ya no es su ámbito.
-     */
-    private static Long resolveZoneId(UpdateMaintenanceFrequencyRequest r, MaintenanceFrequency current) {
-        if (r.zoneId() != null) return r.zoneId();
-        if (r.scope() != null && !"BY_ZONE".equals(r.scope())) return null;
-        return current.getZoneId();
+    /** Lo guardado, con a cuántos conjuntos está asignada y el aviso si eso cambia su planificación. */
+    private MaintenanceFrequencyResponse withWarnings(MaintenanceFrequency saved) {
+        var response = withAssignedSets(List.of(saved)).get(0);
+        return response.withWarnings(FrequencyScopeRules.regimeWarnings(saved.getRegime(), response.assignedSetCount()));
     }
 
-    private void validateScope(String scope, Long zoneId) {
-        if ("BY_ZONE".equals(scope)) {
-            if (zoneId == null) {
-                throw new BusinessRuleException("Selecciona una sección para configurar una frecuencia por sección");
-            }
-            if (!zoneQueries.isActiveSection(zoneId)) {
-                throw new BusinessRuleException("La sección seleccionada no existe o no está activa");
-            }
-        } else if (zoneId != null) {
-            throw new BusinessRuleException("Solo una frecuencia por sección lleva una sección asociada");
-        }
+    /** Cada frecuencia con a cuántos conjuntos está asignada su regla (SPEC-203). */
+    private List<MaintenanceFrequencyResponse> withAssignedSets(List<MaintenanceFrequency> frequencies) {
+        var counts = setLookup.assignedSetCounts(frequencies.stream().map(MaintenanceFrequency::getRuleKey).toList());
+        return frequencies.stream().map(f -> MaintenanceFrequencyResponse.from(f)
+                .withAssignedSetCount(counts.getOrDefault(f.getRuleKey(), 0))).toList();
     }
 
     private MaintenanceFrequency load(Long id) {
@@ -206,21 +183,15 @@ public class MaintenanceFrequenciesServiceImpl implements MaintenanceFrequencies
         if (!activity.isActive() || activity.isDeleted()) {
             throw new BusinessRuleException("El tipo de actividad seleccionado no está activo");
         }
+        if (activity.getCatalogType() == null || !ACTIVITY_CATALOG.equals(activity.getCatalogType().getCode())) {
+            throw new BusinessRuleException("Elige una actividad concreta, no un grupo de actividades");
+        }
         return activity;
     }
 
     private CatalogItem loadRuleType(String code) {
         return catalogItemsRepository.findActiveItemByTypeAndCode(RULE_TYPE_CATALOG, code)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de regla de frecuencia no válido"));
-    }
-
-    private void requireNoCurrentDuplicate(Long activityId, String regime, String scope,
-                                           Long zoneId, Long excludeId) {
-        frequenciesRepository.findDuplicateCurrent(activityId, regime, scope, zoneId, excludeId)
-                .ifPresent(f -> {
-                    throw new DuplicateResourceException(
-                            "Ya existe una frecuencia vigente para esta actividad, modalidad y ámbito");
-                });
     }
 
     private static <T> T pick(T requested, T fallback) {

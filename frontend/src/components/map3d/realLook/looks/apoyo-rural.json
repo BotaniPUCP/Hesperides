@@ -1,0 +1,45 @@
+{
+  "planKey": "9baa19ac-bc66-4955-a5a1-8fa6024b3c93",
+  "name": "Grupo de Apoyo al Sector Rural (oficinas)",
+  "folder": "GRUPO DE APOYO AL SECTOR RURAL (OFICINAS)",
+  "photos": [
+    "espalda.jpg",
+    "frente.jpg",
+    "lado.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#c2b3a0"
+    },
+    "techo": {
+      "color": "#a9a59c"
+    },
+    "oxido": {
+      "color": "#9a4a3c"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "oxido",
+          "v": [
+            -1,
+            0.9
+          ]
+        },
+        {
+          "material": "oxido",
+          "v": [
+            2.45,
+            2.9
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Bloques de tierra con un zócalo alto y una viga rojo óxido (espalda.jpg, frente.jpg, lado.jpg). La baranda de madera de la azotea no se dibuja."
+}

@@ -17,15 +17,16 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import pe.edu.pucp.hesperides.modules.imports.dto.ConfirmImportRequest;
-import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreviewResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportConfirmationSummary;
-import pe.edu.pucp.hesperides.modules.imports.dto.ImportResultResponse;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportOutcome;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreview;
+import pe.edu.pucp.hesperides.modules.imports.dto.SpeciesImportOption;
 import pe.edu.pucp.hesperides.modules.imports.service.CsvTemplates;
 import pe.edu.pucp.hesperides.modules.imports.service.SpeciesExportService;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenExportService;
 import pe.edu.pucp.hesperides.modules.imports.service.ImportService;
+import pe.edu.pucp.hesperides.modules.imports.service.ImportUpload;
 import pe.edu.pucp.hesperides.modules.imports.service.SpecimenImportService;
-import pe.edu.pucp.hesperides.modules.imports.dto.SpeciesImportOption;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
 import java.nio.charset.StandardCharsets;
@@ -45,17 +46,19 @@ public class ImportController {
 
     @PostMapping(value = "/api/v1/imports/{kind}/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize(LOADERS)
-    public ResponseEntity<ApiResponse<ImportPreviewResponse>> preview(
+    public ResponseEntity<ApiResponse<ImportPreview>> preview(
             @PathVariable String kind, @RequestPart("file") MultipartFile csv, @RequestPart(value = "photos", required = false) MultipartFile zip,
             @RequestPart(value = "speciesBindings", required = false) java.util.Map<String, String> speciesBindings,
             @AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(ApiResponse.ok("Preview ready", imports.preview(kind, UploadedFiles.required(csv),
-                csv.getOriginalFilename(), () -> optionalZip(kind, zip), speciesBindings, principal.getUsername())));
+        ImportUpload upload = new ImportUpload(UploadedFiles.required(csv), csv.getOriginalFilename(),
+                () -> optionalZip(kind, zip));
+        return ResponseEntity.ok(ApiResponse.ok("Preview ready",
+                imports.preview(kind, upload, speciesBindings, principal.getUsername())));
     }
 
     @PostMapping("/api/v1/imports/{batchId}/confirm")
     @PreAuthorize(LOADERS)
-    public ResponseEntity<ApiResponse<ImportResultResponse>> confirm(
+    public ResponseEntity<ApiResponse<ImportOutcome>> confirm(
             @PathVariable long batchId, @RequestBody(required = false) ConfirmImportRequest request,
             @AuthenticationPrincipal UserDetails principal) {
         ConfirmImportRequest body = request == null ? new ConfirmImportRequest(null, null, null) : request;
@@ -75,15 +78,16 @@ public class ImportController {
 
     @PostMapping(value = "/api/v1/imports/{batchId}/reanalyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize(LOADERS)
-    public ResponseEntity<ApiResponse<ImportPreviewResponse>> reanalyze(
+    public ResponseEntity<ApiResponse<ImportPreview>> reanalyze(
             @PathVariable long batchId,
             @RequestPart("file") MultipartFile csv,
             @RequestPart(value = "photos", required = false) MultipartFile zip,
             @RequestPart(value = "speciesBindings", required = false) java.util.Map<String, String> speciesBindings,
             @AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(ApiResponse.ok("Preview updated", imports.reanalyze(batchId,
-                UploadedFiles.required(csv), csv.getOriginalFilename(), optionalZip("specimens", zip),
-                speciesBindings, principal.getUsername())));
+        ImportUpload upload = new ImportUpload(UploadedFiles.required(csv), csv.getOriginalFilename(),
+                () -> optionalZip("specimens", zip));
+        return ResponseEntity.ok(ApiResponse.ok("Preview updated",
+                imports.reanalyze(batchId, upload, speciesBindings, principal.getUsername())));
     }
 
     @GetMapping("/api/v1/imports/specimens/species-options")

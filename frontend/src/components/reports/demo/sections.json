@@ -1,0 +1,8 @@
+[
+  { "id": 50, "code": "AV-0151", "name": "Jardín Frutas", "areaM2": 1250.40 },
+  { "id": 51, "code": "AV-0152", "name": "Jardín de Letras", "areaM2": 2310.00 },
+  { "id": 52, "code": "AV-0160", "name": "Explanada de Ciencias", "areaM2": 3980.75 },
+  { "id": 77, "code": "AV-0302", "name": "Jardín de Física", "areaM2": 2100.00 },
+  { "id": 78, "code": "AV-0310", "name": "Pontódromo", "areaM2": 1875.20 },
+  { "id": 79, "code": "AV-0318", "name": "Jardín de la Biblioteca", "areaM2": 2640.00 }
+]

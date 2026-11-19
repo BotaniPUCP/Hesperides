@@ -1,14 +1,14 @@
 """Lee las fuentes del catastro y las une en ejemplares listos para cargar.
 
-Las reglas de esta union estan explicadas en docs/inventario-verde/README.md.
+Las reglas de esta union estan explicadas en docs/modulos/inventario-verde.md.
 """
 import csv
 from dataclasses import dataclass, field
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
-DATOS = RAIZ / "docs/dominio/datos"
-FUENTES = DATOS / "fuentes-catastro"
+DATOS = RAIZ / "docs/datos/procesados"
+FUENTES = DATOS / "catastro"
 
 # Palmeras: p01-p42 conservan su nombre; p43-p76 son Mec-Pal-1..34 (README §6).
 PRIMERA_PALMERA_DE_MECANICA = 43

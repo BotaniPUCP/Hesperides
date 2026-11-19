@@ -1,0 +1,55 @@
+{
+  "planKey": "b1fcb95c-009f-4dcb-a883-a0cc3f32df68",
+  "name": "Departamento Académico de Humanidades (jefatura)",
+  "source": "Decisión de Jean Piero (15 nov 2026): diseño de color similar al del Departamento Académico de Educación, leído como los edificios de la Facultad de Educación, códigos 35 y 38 (SPEC-112, por confirmar)",
+  "materials": {
+    "muro": {
+      "color": "#c69a8a"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "losas": {
+      "color": "#e2e3df"
+    },
+    "ventanas": {
+      "glass": "#66717a",
+      "frame": "#e3e4e1",
+      "moduleM": 1.5,
+      "heightM": 1.3,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "losas",
+          "v": [
+            -0.5,
+            0.45
+          ]
+        },
+        {
+          "material": "losas",
+          "v": [
+            3.3,
+            3.75
+          ]
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            1.1,
+            2.4
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Con el sistema de educacion-1.json y educacion-2.json en su único piso: paño de ladrillo en un marco de concreto blanco con una cinta de ventanas."
+}

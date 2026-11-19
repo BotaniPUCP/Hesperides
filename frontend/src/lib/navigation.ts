@@ -13,6 +13,8 @@
  * validando por su cuenta: ocultar un enlace no es una medida de seguridad.
  */
 
+import { INCIDENT_MEMBER_ROLES } from './incidentRoles';
+
 export interface NavItem {
   label: string;
   href: string;
@@ -35,11 +37,9 @@ export const HOME_ITEM = { label: 'Inicio', href: '/', icon: '🏠' } as const;
  * un desplegable con un solo ítem obliga a un clic de más.
  */
 export const DIRECT_LINKS: readonly NavItem[] = [
-  { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: ['COORDINADOR', 'SUPERVISOR'] },
+  { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: INCIDENT_MEMBER_ROLES },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
-  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
   // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
   { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
@@ -71,7 +71,13 @@ export const NAVIGATION: readonly NavGroup[] = [
     id: 'intervenciones',
     label: 'Intervenciones',
     icon: '🧰',
-    items: [{ label: 'Intervenciones', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] }],
+    items: [
+      { label: 'Intervenciones', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+      // SPEC-203 D-12: planificar, armar conjuntos y fijar cada cuánto es trabajo de coordinación.
+      { label: 'Planificación preventiva', href: '/intervenciones/planificacion', icon: '📅', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Conjuntos de áreas verdes', href: '/intervenciones/conjuntos', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Frecuencias', href: '/intervenciones/frecuencias', icon: '🔁', roles: ['ADMIN', 'COORDINADOR'] },
+    ],
   },
   {
     // M2 · SPEC-103. Registrar el campus es trabajo diario, no configuración.
@@ -88,6 +94,30 @@ export const NAVIGATION: readonly NavGroup[] = [
     ],
   },
   {
+    // SPEC-106: el capataz consulta; registrar, uno a uno o por archivo, es de coordinación.
+    id: 'directorio',
+    label: 'Directorio',
+    icon: '📇',
+    items: [
+      { label: 'Directorio', href: '/directorio', icon: '📇', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Registro individual', href: '/directorio/registrar', icon: '➕', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Registro masivo', href: '/directorio/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+    ],
+  },
+  {
+    // SPEC-107: grupo propio. Los cuatro roles leen la agenda; registrar, uno a uno o
+    // por archivo, es de coordinación. SPEC-114 suma el calendario del campus (REQ 1.12).
+    id: 'reservas',
+    label: 'Reservas',
+    icon: '📅',
+    items: [
+      { label: 'Agenda de reservas', href: '/reservas', icon: '📅', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+      { label: 'Registro masivo', href: '/reservas/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      // SPEC-114: los eventos bloqueantes y los feriados; los cuatro roles los leen.
+      { label: 'Calendario del campus', href: '/calendario', icon: '🗓️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+    ],
+  },
+  {
     id: 'administracion',
     label: 'Administración',
     icon: '🛠️',
@@ -101,13 +131,6 @@ export const NAVIGATION: readonly NavGroup[] = [
       },
       // SPEC-003 §4: el backend responde 403 a quien no es ADMIN.
       { label: 'Catálogos', href: '/admin/catalogos', icon: '🗂️', roles: ['ADMIN'] },
-      // SPEC-101: ADMIN y COORDINADOR configuran; SUPERVISOR y OPERARIO consultan.
-      {
-        label: 'Frecuencias de mantenimiento',
-        href: '/admin/frecuencias',
-        icon: '📅',
-        roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'],
-      },
       // SPEC-003 §5.6: configuración global. Quien no es ADMIN no debe ver
       // siquiera que existe, porque enseñaría qué gobierna la validación.
       { label: 'Parámetros del sistema', href: '/admin/parametros', icon: '⚙️', roles: ['ADMIN'] },

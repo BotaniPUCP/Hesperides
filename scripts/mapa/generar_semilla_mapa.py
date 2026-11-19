@@ -1,4 +1,4 @@
-"""Genera V011__seed_map_data.sql a partir de las fuentes de docs/dominio/datos.
+"""Genera V011__seed_map_data.sql a partir de las fuentes de docs/datos/procesados.
 
 La carga del mapa no se escribe a mano: este script la produce desde archivos
 versionados, para que cualquiera pueda repetirla y revisar de dónde sale cada
@@ -12,6 +12,8 @@ from zonas import aplicar_reserva, reserva, secciones, sectores, supervision, un
 
 SALIDA = RAIZ / "backend/src/main/resources/db/migration/V011__seed_map_data.sql"
 
+# Este texto se copia dentro de una migracion ya aplicada: conserva la ruta antigua
+# (docs/dominio/datos, hoy docs/datos/procesados) para no cambiar su checksum en Flyway.
 CABECERA = """-- Propiedad de SPEC-102 §4 y SPEC-005 §4.4. ARCHIVO GENERADO: no se edita a mano.
 -- Lo produce scripts/mapa/generar_semilla_mapa.py desde docs/dominio/datos/.
 -- Para cambiar un dato, se corrige la fuente y se vuelve a generar.

@@ -1,0 +1,36 @@
+{
+  "planKey": "9d9846b2-72fd-420b-8dad-6b03f84fc8ef",
+  "name": "Desconocido_08",
+  "folder": "Desconocido_08",
+  "photos": [
+    "interior.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#6b6e6d"
+    },
+    "techo": {
+      "color": "#a9aaa6"
+    },
+    "ladrillo": {
+      "color": "#a8664c"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ladrillo",
+          "v": [
+            -1,
+            1.1
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Solo hay foto del interior (interior.jpg): un murete de ladrillo de 1,1 m y, encima, el comedor abierto bajo techo, que se pinta del color de la sombra del alero."
+}

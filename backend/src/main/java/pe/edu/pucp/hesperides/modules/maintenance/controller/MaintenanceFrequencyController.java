@@ -18,7 +18,6 @@ import pe.edu.pucp.hesperides.modules.maintenance.dto.ComplianceResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequencyRequest;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequencyRequest;
-import pe.edu.pucp.hesperides.modules.maintenance.dto.ZoneOptionResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.service.MaintenanceFrequenciesService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
@@ -31,8 +30,8 @@ import java.util.List;
 @RequestMapping("/api/v1/maintenance/frequencies")
 public class MaintenanceFrequencyController {
 
-    /** Los cuatro roles leen: un operario consulta el ritmo de su trabajo. */
-    private static final String READERS = "hasAnyAuthority('ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO')";
+    /** SPEC-203 D-12: fijar y consultar cada cuánto se hace cada actividad es de coordinación. */
+    private static final String READERS = "hasAnyAuthority('ADMIN', 'COORDINADOR')";
 
     /** Configurar es de ADMIN y COORDINADOR: es decision de gestion, no de campo. */
     private static final String MANAGERS = "hasAnyAuthority('ADMIN', 'COORDINADOR')";
@@ -62,13 +61,6 @@ public class MaintenanceFrequencyController {
     public ResponseEntity<ApiResponse<List<MaintenanceFrequencyResponse.FrequencyRuleTypeSummary>>> getRuleTypes() {
         return ResponseEntity.ok(ApiResponse.ok("Tipos de regla obtenidos exitosamente",
                 frequenciesService.getFrequencyRuleTypes()));
-    }
-
-    @GetMapping("/zones")
-    @PreAuthorize(READERS)
-    public ResponseEntity<ApiResponse<List<ZoneOptionResponse>>> getZones() {
-        return ResponseEntity.ok(ApiResponse.ok("Zonas obtenidas exitosamente",
-                frequenciesService.getZoneOptions()));
     }
 
     /**

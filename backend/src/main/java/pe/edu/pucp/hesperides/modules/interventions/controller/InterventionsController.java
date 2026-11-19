@@ -22,6 +22,18 @@ import java.util.UUID;
 @RequestMapping("/api/v1/interventions")
 @PreAuthorize("hasAnyAuthority('ADMIN','COORDINADOR','SUPERVISOR','OPERARIO')")
 public class InterventionsController {
+    private final pe.edu.pucp.hesperides.modules.interventions.service.InterventionCampusSelections campus;
+    @GetMapping("/campus-selection")
+    @PreAuthorize("hasAnyAuthority('ADMIN','COORDINADOR')")
+    public ResponseEntity<ApiResponse<pe.edu.pucp.hesperides.modules.interventions.service.InterventionCampusSelections.Options>> campusOptions() {
+        return ResponseEntity.ok(ApiResponse.ok("Campus selection",campus.options()));
+    }
+    @PostMapping("/campus-selection/preview")
+    @PreAuthorize("hasAnyAuthority('ADMIN','COORDINADOR')")
+    public ResponseEntity<ApiResponse<pe.edu.pucp.hesperides.modules.interventions.service.InterventionCampusSelections.Surface>> campusPreview(
+            @Valid @RequestBody pe.edu.pucp.hesperides.modules.interventions.service.InterventionCampusSelections.Preview request) {
+        return ResponseEntity.ok(ApiResponse.ok("Campus surface",campus.preview(request)));
+    }
     private final InterventionsService service;
     @ExceptionHandler({org.springframework.http.converter.HttpMessageNotReadableException.class,
         org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
@@ -41,6 +53,22 @@ public class InterventionsController {
     @GetMapping("/options")
     public ResponseEntity<ApiResponse<Map<String,Object>>> getOptions(){
         return ResponseEntity.ok(ApiResponse.ok("Assignment options retrieved",service.options()));
+    }
+    @GetMapping("/places/{placeId}/zones")
+    public ResponseEntity<ApiResponse<InterventionZoneSelections.Options>> getZoneOptions(@PathVariable long placeId) {
+        return ResponseEntity.ok(ApiResponse.ok("Place-zone selection retrieved",service.zoneOptions(placeId)));
+    }
+    @PutMapping("/places/{placeId}/zones")
+    @PreAuthorize("hasAnyAuthority('ADMIN','COORDINADOR')")
+    public ResponseEntity<ApiResponse<InterventionZoneSelections.Options>> reviewZones(@PathVariable long placeId,
+            @Valid @RequestBody InterventionZoneSelections.Review request) {
+        return ResponseEntity.ok(ApiResponse.ok("Direct place-zone associations reviewed",service.reviewZones(placeId,request)));
+    }
+    @PostMapping("/zone-selection/preview")
+    @PreAuthorize("hasAnyAuthority('ADMIN','COORDINADOR')")
+    public ResponseEntity<ApiResponse<InterventionZoneSelections.PreviewResponse>> previewZones(
+            @Valid @RequestBody InterventionZoneSelections.Preview request) {
+        return ResponseEntity.ok(ApiResponse.ok("Selected surface calculated",service.previewZones(request)));
     }
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN','COORDINADOR')")

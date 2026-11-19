@@ -1,0 +1,38 @@
+{
+  "planKey": "41eec3bc-c9f0-46df-8e39-4aa72c7b0410",
+  "name": "Sub-estación N-11",
+  "folder": "Sub-estacion-n11",
+  "photos": [
+    "detras-lado.jpg",
+    "detras.jpg",
+    "lado-frente.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e6e4df"
+    },
+    "techo": {
+      "color": "#c9c8c3"
+    },
+    "ventanas": {
+      "color": "#c0c3c4"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            2.2,
+            2.7
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Paneles blancos con ventanitas enrejadas altas, como franja tenue (detras.jpg, detras-lado.jpg, lado-frente.jpg); las pilastras de enchape azul no se dibujan. No tiene malla en el modelo: se pinta su prisma, y la hoja de revisión no lo puede dibujar."
+}

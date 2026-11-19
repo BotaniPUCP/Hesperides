@@ -22,8 +22,8 @@ public record ComplianceResponse(
         List<Segment> segments,
         List<LocationCompliance> locations,
         /*
-         * Territorial scope of the frequency (CAMPUS_WIDE, BY_SECTOR, BY_ZONE).
-         * The reports need it to show BY_SECTOR as "not evaluable" (SPEC-202 D-05).
+         * Territorial scope of the frequency (CAMPUS_WIDE or BY_SET, SPEC-203 D-07).
+         * Kept in the response so a client can tell a set rule from the general one.
          */
         String scope
 ) {

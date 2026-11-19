@@ -21,6 +21,7 @@ import pe.edu.pucp.hesperides.shared.entity.BaseEntity;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Una version de la regla de periodicidad de una actividad.
@@ -57,11 +58,12 @@ public class MaintenanceFrequency extends BaseEntity {
     @Column(nullable = false, length = 30)
     private String scope = "CAMPUS_WIDE";
 
-    @Column(name = "zone_id")
-    private Long zoneId;
-
-    @Column(name = "target_days_interval")
-    private Integer targetDaysInterval;
+    /**
+     * La regla a la que pertenece esta versión: todas sus versiones la comparten y
+     * las asignaciones de planificación apuntan a ella, no a una versión (SPEC-203).
+     */
+    @Column(name = "rule_key", nullable = false, updatable = false)
+    private UUID ruleKey = UUID.randomUUID();
 
     @Column(name = "min_days_interval")
     private Integer minDaysInterval;
@@ -132,14 +134,12 @@ public class MaintenanceFrequency extends BaseEntity {
                         s.getStartMonth(),
                         s.getEndMonth(),
                         s.getMinDaysInterval(),
-                        s.getMaxDaysInterval(),
-                        s.getTargetDaysInterval()))
+                        s.getMaxDaysInterval()))
                 .toList();
 
         return new FrequencyRule(
                 getId(),
                 frequencyRuleTypeItem.getCode(),
-                targetDaysInterval,
                 minDaysInterval,
                 maxDaysInterval,
                 annualTargetCount,

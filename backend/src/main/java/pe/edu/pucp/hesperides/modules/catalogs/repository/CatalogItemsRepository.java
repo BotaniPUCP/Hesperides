@@ -67,12 +67,16 @@ public interface CatalogItemsRepository extends JpaRepository<CatalogItem, Long>
             + "AND ci.active = TRUE AND ci.deletedAt IS NULL")
     Optional<CatalogItem> findActiveItemByTypeAndCode(@Param("typeCode") String typeCode, @Param("itemCode") String itemCode);
 
-    /** Clases y tipos de intervencion juntos: el selector de actividad los ofrece en una sola lista. */
+    /**
+     * Las actividades que se pueden elegir, con su grupo. Una clase de intervencion
+     * solo agrupa: ninguna intervencion la registra como tipo, asi que una regla o un
+     * conjunto sobre ella nunca encontraria trabajo que medir.
+     */
     @Query("SELECT ci FROM CatalogItem ci "
-            + "LEFT JOIN FETCH ci.parentItem "
-            + "WHERE ci.catalogType.code IN ('INTERVENTION_CLASS', 'INTERVENTION_TYPE') "
+            + "LEFT JOIN FETCH ci.parentItem p "
+            + "WHERE ci.catalogType.code = 'INTERVENTION_TYPE' "
             + "AND ci.active = TRUE AND ci.deletedAt IS NULL "
-            + "ORDER BY ci.label ASC")
+            + "ORDER BY p.sortOrder ASC, ci.label ASC")
     List<CatalogItem> findAvailableActivityTypes();
 
     /** Los tipos de regla de frecuencia que puebla el selector del formulario. */

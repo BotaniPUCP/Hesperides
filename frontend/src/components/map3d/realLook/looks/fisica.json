@@ -1,0 +1,67 @@
+{
+  "planKey": "a3d4665c-9adc-4749-a0af-6613e4149543",
+  "name": "Física",
+  "folder": "Facultad_Fisica",
+  "photos": [
+    "frente.jpg"
+  ],
+  "materials": {
+    "ladrillo": {
+      "color": "#c7ad84"
+    },
+    "concreto": {
+      "color": "#d9d4c8"
+    },
+    "techo": {
+      "color": "#b9b6ae"
+    },
+    "ventanas": {
+      "glass": "#5d686e",
+      "frame": "#c9cbc6",
+      "moduleM": 1.5,
+      "heightM": 1.4,
+      "frameM": 0.08,
+      "vary": 0.05
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            -0.5,
+            14.9
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              -0.35,
+              0.45
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            14.4
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              1.2,
+              2.6
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Marco de concreto con paños de ladrillo tostado y una cinta de ventanas en cada piso (frente.jpg, la única foto, chica). El ingreso vidriado y el letrero no se dibujan."
+}

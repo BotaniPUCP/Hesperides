@@ -65,13 +65,21 @@ describe('visibleNavigation', () => {
       '/inventario-verde/importar',
       '/inventario-verde/estandares',
       '/intervenciones',
+      '/intervenciones/planificacion',
+      '/intervenciones/conjuntos',
+      '/intervenciones/frecuencias',
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
+      '/directorio',
+      '/directorio/registrar',
+      '/directorio/importar',
+      '/reservas',
+      '/reservas/importar',
+      '/calendario',
       '/admin/usuarios',
       '/admin/catalogos',
-      '/admin/frecuencias',
       '/admin/parametros',
     ]);
   });
@@ -87,12 +95,20 @@ describe('visibleNavigation', () => {
       '/inventario-verde/importar',
       '/inventario-verde/estandares',
       '/intervenciones',
+      '/intervenciones/planificacion',
+      '/intervenciones/conjuntos',
+      '/intervenciones/frecuencias',
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/importar',
       '/catastro/estandares',
+      '/directorio',
+      '/directorio/registrar',
+      '/directorio/importar',
+      '/reservas',
+      '/reservas/importar',
+      '/calendario',
       '/admin/usuarios',
-      '/admin/frecuencias',
     ]);
   });
 
@@ -107,40 +123,45 @@ describe('visibleNavigation', () => {
       '/catastro/ejemplares',
       '/catastro/registrar',
       '/catastro/estandares',
+      '/directorio',
+      '/reservas',
+      '/calendario',
       '/admin/usuarios',
-      '/admin/frecuencias',
     ]);
   });
 
-  it('a un OPERARIO le muestra lugares, especies, intervenciones, ejemplares y frecuencias, que puede consultar', () => {
+  it('a un OPERARIO le muestra lugares, especies, intervenciones y ejemplares; las frecuencias son de coordinación (SPEC-203 D-12)', () => {
     expect(hrefsDe('OPERARIO')).toEqual([
       '/lugares',
       '/inventario-verde',
       '/intervenciones',
       '/catastro/ejemplares',
-      '/admin/frecuencias',
+      '/reservas',
+      '/calendario',
     ]);
   });
 
-  it('el mapa es directo para los cuatro roles; incidencias, riego y reportes, para quien los opera', () => {
-    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/mapa', '/riego', '/reportes']);
-    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
-    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/riego', '/reportes']);
-    expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/mapa']);
+  it('el mapa es directo para los cuatro roles; incidencias y reportes, para quien los opera o supervisa', () => {
+    expect(visibleDirectLinks('ADMIN').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/reportes']);
+    expect(visibleDirectLinks('COORDINADOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/reportes']);
+    expect(visibleDirectLinks('SUPERVISOR').map((l) => l.href)).toEqual(['/incidencias', '/mapa', '/reportes']);
+    expect(visibleDirectLinks('OPERARIO').map((l) => l.href)).toEqual(['/incidencias', '/mapa']);
     expect(visibleNavigation('ADMIN').map((g) => g.label)).toEqual([
       'Lugares',
       'Catálogo botánico',
       'Intervenciones',
       'Catastro verde',
+      'Directorio',
+      'Reservas',
       'Administración',
     ]);
   });
 
-  it('solo coordinación y capataces ven el acceso directo a incidencias', () => {
-    for (const role of ['COORDINADOR', 'SUPERVISOR']) {
+  it('los cuatro roles ven el acceso directo a incidencias; el operario reporta y ve lo suyo (SPEC-201 §3.1)', () => {
+    for (const role of ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO']) {
       expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(true);
     }
-    for (const role of ['ADMIN', 'OPERARIO', 'DESCONOCIDO']) {
+    for (const role of ['DESCONOCIDO']) {
       expect(visibleDirectLinks(role).some((item) => item.href === '/incidencias')).toBe(false);
     }
   });
@@ -152,6 +173,11 @@ describe('visibleNavigation', () => {
     }
     expect(visibleDirectLinks('OPERARIO').some((item) => item.href === '/reportes')).toBe(false);
     expect(NAVIGATION.some((group) => group.items.some((item) => item.href === '/reportes'))).toBe(false);
+  });
+
+  it('el capataz consulta el Directorio pero no registra; el operario no lo ve (SPEC-106 §9.1)', () => {
+    expect(hrefsDe('SUPERVISOR').filter((href) => href.startsWith('/directorio'))).toEqual(['/directorio']);
+    expect(hrefsDe('OPERARIO').some((href) => href.startsWith('/directorio'))).toBe(false);
   });
 
   it('un rol desconocido no ve enlaces directos', () => {

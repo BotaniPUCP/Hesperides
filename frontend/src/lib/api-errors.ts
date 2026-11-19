@@ -1,6 +1,14 @@
 import type { FieldError, ValidationErrors } from '@shared/types';
 import { ApiError, PASSWORD_CHANGE_REQUIRED_MESSAGE } from './api';
+import { isSpanishBackendMessage } from './backendSpanishMessages';
+import { CAMPUS_EVENT_MESSAGES, CAMPUS_EVENT_PATTERNS } from './campusEventErrorMessages';
+import { DIRECTORY_MESSAGES, DIRECTORY_PATTERNS } from './directoryErrorMessages';
+import { IMPORT_PATTERNS } from './importErrorMessages';
+import { INCIDENT_MESSAGES, INCIDENT_PATTERNS } from './incidentErrorMessages';
 import { PLACE_MESSAGES, PLACE_PATTERNS, type MessagePattern } from './placeErrorMessages';
+import { PLANNING_MESSAGES, PLANNING_PATTERNS } from './planningErrorMessages';
+import { RESERVATION_MESSAGES, RESERVATION_PATTERNS } from './reservationErrorMessages';
+import { SHARED_MESSAGES, SHARED_PATTERNS } from './sharedErrorMessages';
 
 /**
  * Traduce un fallo de la API a algo que una persona pueda leer y accionar,
@@ -14,6 +22,15 @@ import { PLACE_MESSAGES, PLACE_PATTERNS, type MessagePattern } from './placeErro
 
 /** Mensajes de regla de negocio (422) y conflicto (409) de SPEC-100 §3. */
 const MENSAJES: Record<string, string> = {
+  'Campus inventory changed; reload the selection': 'El inventario cambió. Actualiza el mapa y revisa la selección antes de guardar.',
+  'Selected campus target is no longer available': 'Un área o ejemplar seleccionado ya no está disponible. Actualiza el mapa y retíralo de la selección.',
+  'Duplicate or invalid campus target': 'Una misma área o ejemplar no puede seleccionarse dos veces.',
+  'Select at least one campus target': 'Selecciona al menos un área verde o un ejemplar.',
+  'Place-zone review is missing or changed; reload the available zones': 'Las asociaciones del lugar cambiaron o necesitan revisión. Actualiza las zonas y confirma la selección.',
+  'Spatial inventory changed; reload before reviewing': 'El mapa cambió. Actualiza las zonas antes de continuar.',
+  'Zone review changed; reload before reviewing': 'Las asociaciones cambiaron. Actualiza las zonas antes de continuar.',
+  'Zone is not directly associated with this place': 'Una zona seleccionada ya no está habilitada para este lugar.',
+  'A zone cannot be planned twice in the same activity': 'Una misma zona no puede seleccionarse en dos lugares de la actividad.',
   'Started work cannot be removed from required interventions': 'El trabajo ya comenzó. Debe completar su ejecución y revisión; no puede retirarse para evitar la validación.',
   'Invalid incident request': 'Revisa los datos: el motivo o resumen no puede quedar vacío y debe respetar los límites.',
   'Resubmit the report before registration': 'El remitente debe corregir y reenviar el reporte antes del registro oficial.',
@@ -66,18 +83,30 @@ const MENSAJES: Record<string, string> = {
   'El padre debe pertenecer a un catálogo distinto: la jerarquía es de dos niveles':
     'La clase debe venir de otro catálogo: la jerarquía admite solo dos niveles.',
   ...PLACE_MESSAGES,
+  ...SHARED_MESSAGES,
+  ...DIRECTORY_MESSAGES,
+  ...PLANNING_MESSAGES,
+  ...RESERVATION_MESSAGES,
+  ...CAMPUS_EVENT_MESSAGES,
+  ...INCIDENT_MESSAGES,
 };
 
 /** Los mensajes que traen un dato no caben en un diccionario de textos exactos. */
-const PATRONES: readonly MessagePattern[] = [...PLACE_PATTERNS];
+const PATRONES: readonly MessagePattern[] = [...PLACE_PATTERNS, ...SHARED_PATTERNS, ...DIRECTORY_PATTERNS, ...IMPORT_PATTERNS,
+  ...PLANNING_PATTERNS, ...RESERVATION_PATTERNS, ...CAMPUS_EVENT_PATTERNS, ...INCIDENT_PATTERNS];
 
-function traducir(message: string, porDefecto: string): string {
+/** La traducción de un mensaje conocido del backend; null si no se conoce. */
+export function traducirConocido(message: string, patrones: readonly MessagePattern[] = PATRONES): string | null {
   if (MENSAJES[message]) return MENSAJES[message];
-  for (const [patron, traduccion] of PATRONES) {
+  for (const [patron, traduccion] of patrones) {
     const match = message.match(patron);
     if (match) return traduccion(match);
   }
-  return porDefecto;
+  return isSpanishBackendMessage(message) ? message : null;
+}
+
+function traducir(message: string, porDefecto: string): string {
+  return traducirConocido(message) ?? porDefecto;
 }
 
 export function mensajeDeApiError(error: unknown): string {

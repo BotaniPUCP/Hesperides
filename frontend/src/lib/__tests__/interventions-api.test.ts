@@ -9,7 +9,7 @@ it('conserva el código del ejemplar junto con los filtros y la página',async()
 });
 it('permite consultar el historial por ID inmutable sin resolver un código reutilizable',async()=>{
   jest.spyOn(apiClient,'get').mockResolvedValue({});
-  await interventionsApi.list(0,'','','',undefined,42);
+  await interventionsApi.list(0,'','','',undefined,undefined,42);
   expect(apiClient.get).toHaveBeenCalledWith('/interventions?page=0&size=20&greenElementId=42');
 });
 it('preserva Idempotency-Key al refrescar sesión y reintentar el mismo anuncio',async()=>{

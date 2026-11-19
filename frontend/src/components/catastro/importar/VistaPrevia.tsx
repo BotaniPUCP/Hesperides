@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button, Card } from '@/components/ui';
+import { CopiarErrores } from '@/components/importar/CopiarErrores';
 import { SelectorDeEspecieParaImportacion } from './SelectorDeEspecieParaImportacion';
 import { ConfirmarImportacionModal } from './ConfirmarImportacionModal';
 import { traducirMensajeCatastro } from '../mensajes';
@@ -21,8 +22,6 @@ const fotos = (n: number) => (n === 1 ? '1 foto' : `${n} fotos`);
 
 /** Lo que haría la carga, antes de hacerlo (SPEC-103 §5.2). */
 export function VistaPrevia({ imp }: { imp: Importacion }) {
-
-  const [copiedIssues, setCopiedIssues] = useState(false);
   const [mostrarTodasAsociaciones, setMostrarTodasAsociaciones] = useState(false);
   const [buscarAsociacion, setBuscarAsociacion] = useState('');
 
@@ -108,20 +107,9 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                   {vista.issues.length === 1 ? '1 error de formato' : `${vista.issues.length} errores de formato`}: corrige el
                   archivo y vuelve a subirlo
                 </h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const text = vista.issues
-                      .map((i) => `Línea ${i.line}, columna ${i.column}: ${traducirMensajeCatastro(i.message)}`)
-                      .join('\n');
-                    navigator.clipboard.writeText(text);
-                    setCopiedIssues(true);
-                    setTimeout(() => setCopiedIssues(false), 2000);
-                  }}
-                  className="text-xs font-medium text-neutral-600 hover:text-neutral-900 border border-neutral-200 bg-neutral-0 px-2.5 py-1 rounded-md shadow-2xs transition-colors"
-                >
-                  {copiedIssues ? '✓ Errores copiados' : 'Copiar lista de errores'}
-                </button>
+                <CopiarErrores
+                  errores={vista.issues.map((i) => ({ ...i, mensaje: traducirMensajeCatastro(i.message) }))}
+                />
               </div>
               <table className="w-full text-left text-sm">
                 <thead className="text-neutral-500">

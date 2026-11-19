@@ -1,7 +1,7 @@
 # Estándar de bebederos (`bebederos.csv`)
 
-Plantilla: [plantillas/bebederos.csv](plantillas/bebederos.csv), con una fila de ejemplo que hay
-que borrar antes de cargar. Las reglas comunes están en el [README](README.md).
+Plantilla: [bebederos.csv](../../backend/src/main/resources/imports/templates/bebederos.csv), con una fila de ejemplo que hay
+que borrar antes de cargar. Las reglas comunes están en el [README](estandares-de-carga.md).
 
 | Columna | Obligatoria | Qué va |
 |---|---|---|

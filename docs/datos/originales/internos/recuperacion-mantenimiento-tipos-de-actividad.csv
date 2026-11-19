@@ -1,0 +1,46 @@
+Clase,Tipo de actividad,Descripción,,Clase,Descripción,
+Habilitación de jardines,Preparación del terreno,"Limpieza, nivelación y acondicionamiento del terreno previo a la instalación del jardín.",,Habilitación de jardines,Creación e implementación de nuevas áreas verdes.,jardineros
+,Incorporación de sustrato,"Colocación o reposición de tierra vegetal, compost u otros sustratos.",,Rehabilitación de jardines,Recuperación o renovación de jardines existentes.,jardineros
+,Instalación de plantas,"Siembra o plantación de especies ornamentales, arbustos, árboles o cubresuelos.",,Mantenimiento de jardines,Conservación rutinaria de las áreas verdes.,jardineros
+,Instalación de césped,Colocación de champas o siembra de césped.,,Poda,"Corte y manejo de árboles, arbustos y otras plantas.",jardineros
+,Colocación de cobertura ornamental,"Instalación de confitillo, ladrillo molido o mulch como acabado paisajístico.",,Propagación y plantación,"Producción, multiplicación e instalación de plantas.",jardineros
+,Instalación de tutores,Colocación de tutores para árboles o arbustos recién plantados.,,Riego,Aplicación de agua y mantenimiento del sistema de riego.,jardineros
+Rehabilitación y rediseño de jardines,Reposición de plantas,Sustitución de plantas deterioradas o muertas.,,Manejo fitosanitario,Prevención y control de plagas y enfermedades.,herts
+,Recuperación de áreas verdes,Restauración de jardines con bajo estado de conservación.,,Manejo de residuos vegetales,Recolección y aprovechamiento de residuos vegetales.,jardineros/ herts
+,Renovación de jardineras,Cambio parcial o total de especies ornamentales.,,Inspección y monitoreo,Evaluación y seguimiento del estado de las áreas verdes.,Roobert
+,Mejoramiento del suelo,"Incorporación de enmiendas, compost o sustrato para recuperar la calidad del suelo.",,,,
+,Renovación de cobertura ornamental,"Reposición de confitillo, ladrillo molido o mulch deteriorado.",,,,
+,Resiembra,Instalación de nuevas plantas en espacios vacíos.,,,,
+,Reubicación de macetas,El cambio de ubicación forma parte de una rehabilitación o rediseño del jardín.,,,,
+Mantenimiento de jardines,Canteo,Delimitar y perfilar los bordes de jardineras o macizos.,,,Plano Riego PUCP,
+,Deshierbo,Eliminar malezas manualmente o con herramientas.,,,,
+,Escarda,Remover superficialmente el suelo para controlar malezas y mejorar la aireación.,,,,
+,Limpieza de hojarasca,"Recolectar hojas, flores, frutos y ramas caídas sobre el suelo.",,,,
+,Limpieza de plantas,"Retirar hojas secas, flores marchitas y tallos deteriorados directamente de las plantas.",,,,
+,Aireación del suelo,Aflojar el suelo para favorecer la infiltración y el desarrollo radicular.,,,,
+,Limpieza integral de jardineras,"Mantenimiento completo de una jardinera (canteo, deshierbo, limpieza de plantas y hojarasca).",,,,
+,Fertilización,Aplicación de fertilizantes para favorecer el crecimiento de las plantas.,,,,
+,Aplicación de enmiendas,Incorporación de materiales que mejoran las propiedades del suelo.,,,,
+,Traslado de macetas,"Solo se mueve la maceta de ubicación, sin intervenir la planta.",,,,
+Poda,Poda de mantenimiento,"Eliminación de ramas secas, débiles o cruzadas para conservar el árbol.",,,,
+,Poda de formación,Orienta el crecimiento y la estructura de árboles jóvenes.,,,,
+,Poda sanitaria,"Retiro de ramas enfermas, dañadas o afectadas por plagas.",,,,
+,Poda de despeje/reducción,Reducción de la copa para evitar interferencias con infraestructura o zonas de tránsito.,,,,
+Propagación y plantación,Propagación por división de matas,Obtención de nuevas plantas mediante la división de matas.,,,,
+,Propagación por esquejes,Producción de plantas a partir de fragmentos vegetativos.,,,,
+,Trasplante,Cambio de ubicación de plantas conservando el sistema radicular.,,,,
+,Siembra de plantas,Instalación de nuevas plantas en jardines o jardineras.,,,,
+,Plantación de árboles,Siembra de especies arbóreas.,,,,
+,Plantación de arbustos,Siembra de especies arbustivas.,,,,
+,Plantación de cubresuelos,Instalación de especies de cobertura.,,,,
+,Plantación en macetas,Se instala una planta en una maceta,,,,
+,Trasplante a macetas,Una planta extraída del terreno o de otra maceta se traslada a una maceta.,,,,
+,Cambio de maceta,Se reemplaza una maceta por otra de mayor o menor tamaño.,,,,
+Riego,Riego manual,Aplicación de agua mediante manguera u otro equipo portátil.,,,,
+,Riego nocturno,Riego programado durante la noche.,,,,
+,Riego de establecimiento,Riego posterior a la siembra o trasplante.,,,,
+,Verificación del sistema de riego,"Inspección del funcionamiento de aspersores, goteros y válvulas.",,,,
+Manejo de residuos vegetales,Recolección de hojarasca,Retiro de hojas acumuladas en áreas verdes.,,,,
+,Recolección de ramas,Retiro de ramas producto de podas o caídas naturales.,,,,
+,Triturado de residuos,Reducción del tamaño de residuos vegetales mediante trituradora.,,,,
+,Disposición o aprovechamiento de residuos,"Traslado de residuos para compostaje, mulch u otra valorización.",,,,

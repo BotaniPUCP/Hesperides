@@ -1,0 +1,21 @@
+{
+  "planKey": "f6169da3-11fa-436f-a521-fca2617426d7",
+  "name": "Quiosco (Letras)",
+  "source": "Decisión de Jean Piero (15 nov 2026): todos los quioscos llevan el diseño del Quiosco (Deportes) (SPEC-112)",
+  "materials": {
+    "muro": {
+      "color": "#e8e8e4"
+    },
+    "techo": {
+      "color": "#cfcfcb"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Copia los colores de quiosco-deportes.json: todos los quioscos llevan el mismo diseño."
+}

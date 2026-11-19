@@ -13,8 +13,6 @@ export interface FormState {
   regime: MaintenanceRegime;
   ruleTypeCode: FrequencyRuleTypeCode;
   scope: MaintenanceScope;
-  /** Solo cuenta cuando el ámbito es por sección. */
-  zoneId: number | null;
   fields: RuleFieldsState;
   estimatedDuration: string;
   notes: string;
@@ -39,12 +37,6 @@ function num(value: string): number | null {
  * cortesía de la interfaz, nunca la garantía.
  */
 export function buildFrequencyPayload(s: FormState): BuildResult {
-  if (s.scope === 'BY_SECTOR') {
-    return { error: 'Las frecuencias por sector aún no se evalúan. Elige Todo el campus o Por sección.' };
-  }
-  if (s.scope === 'BY_ZONE' && !s.zoneId) {
-    return { error: 'Selecciona la sección a la que aplica la frecuencia' };
-  }
   if (!s.isEditing && !s.activityTypeItemId) {
     return { error: 'Selecciona el tipo de actividad' };
   }
@@ -53,7 +45,6 @@ export function buildFrequencyPayload(s: FormState): BuildResult {
   let seasons: SeasonalInterval[] = [];
   let min: number | null = null;
   let max: number | null = null;
-  let target: number | null = null;
   let annual: number | null = null;
   let coverage: number | null = null;
   let windowStart: number | null = null;
@@ -69,7 +60,6 @@ export function buildFrequencyPayload(s: FormState): BuildResult {
       }
       min = num(f.minDays);
       max = num(f.maxDays);
-      target = num(f.targetDays);
       if (min === null || max === null) return { error: 'Indica los días mínimo y máximo' };
       if (min > max) return { error: 'El mínimo no puede superar al máximo' };
       break;
@@ -103,10 +93,8 @@ export function buildFrequencyPayload(s: FormState): BuildResult {
       regime: s.regime,
       frequencyRuleTypeCode: s.ruleTypeCode,
       scope: s.scope,
-      zoneId: s.scope === 'BY_ZONE' ? s.zoneId : null,
       minDaysInterval: min,
       maxDaysInterval: max,
-      targetDaysInterval: target,
       annualTargetCount: annual,
       coverageTargetDays: coverage,
       estimatedDurationDays: num(s.estimatedDuration),

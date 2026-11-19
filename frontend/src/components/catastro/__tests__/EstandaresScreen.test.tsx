@@ -26,8 +26,9 @@ describe('EstandaresScreen', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it.each(ESTANDARES.map((e) => [e.titulo, e] as const))('las columnas de %s son las de su plantilla, en su orden', (_, e) => {
-    // La plantilla es la misma que sirve el backend (un test del backend lo vigila).
-    const plantilla = readFileSync(join(__dirname, '../../../../../docs/estandares/plantillas', e.archivo), 'utf8')
+    // La plantilla es la misma que sirve el backend (se lee del mismo archivo).
+    // Las plantillas llevan BOM para que Excel las abra en UTF-8.
+    const plantilla = readFileSync(join(__dirname, '../../../../../backend/src/main/resources/imports/templates', e.archivo), 'utf8')
       .replace(/^\uFEFF/, '');
     const cabecera = plantilla.split(/\r?\n/)[0].split(';');
 

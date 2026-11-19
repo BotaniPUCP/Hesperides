@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTheme } from '@/hooks/useTheme';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { mapApi } from '@/lib/map-api';
 import { infoFor, type InfoCard } from './infoCard';
-import { PERSPECTIVES_TOGGLE, type ToggleId } from './layerList';
+import { OVERLAY_TOGGLES, type ToggleId } from './layerList';
 import type { MapCardContent } from './MapInfoCard';
 import { recallMapScreen, rememberMapScreen } from './mapScreenMemory';
 import type { ViewOptions } from './MapToolbar';
@@ -25,8 +26,16 @@ export type CardLinkFor = (target: Target) => InfoCard['link'] | null;
 export function useMapScreenState(data: SceneData | null, person: string, linkFor?: CardLinkFor) {
   const viewer = useRef<Viewer | null>(null);
   const describeSeq = useRef(0);
-  const marked = useRef(false);
-  const [saved] = useState(() => recallMapScreen(person));
+  // Los bloques marcados de un lugar: un visor nuevo (al llegar el modelo del plano) debe volver a marcarlos.
+  const markedIds = useRef<readonly number[]>([]);
+  // La noche del mapa sigue al tema de la app (claro, oscuro o el del sistema), como el fondo de los módulos.
+  const themeNight = useTheme().resolved === 'dark';
+  const [saved] = useState(() => {
+    const memory = recallMapScreen(person);
+    // Lo elegido a mano se conserva al volver, salvo que el tema haya cambiado mientras tanto.
+    const night = memory.nightTheme === themeNight ? memory.options.night : themeNight;
+    return { ...memory, options: { ...memory.options, night } };
+  });
   const [mode, setModeState] = useState<ModeId>(saved.mode);
   const [hidden, setHidden] = useState<Set<string>>(saved.hidden);
   const [visible, setVisible] = useState<Record<string, boolean>>(saved.visible);
@@ -38,15 +47,24 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
   const [unsupported, setUnsupported] = useState(false);
   // Cuenta los visores listos: lo que depende del visor debe repetirse cuando llega uno nuevo.
   const [viewerEpoch, setViewerEpoch] = useState(0);
+  // Si el tema cambia con el mapa abierto, el mapa lo sigue; el botón «Noche» lo cambia a mano hasta entonces.
+  const [nightTheme, setNightTheme] = useState(themeNight);
+  if (nightTheme !== themeNight) {
+    setNightTheme(themeNight);
+    setOptions((o) => ({ ...o, night: themeNight }));
+  }
+  useEffect(() => {
+    viewer.current?.setNight(nightTheme);
+  }, [nightTheme]);
 
   useEffect(() => {
-    rememberMapScreen({ mode, hidden, visible, options, panelOpen, selected, card });
-  }, [mode, hidden, visible, options, panelOpen, selected, card]);
+    rememberMapScreen({ mode, hidden, visible, options, panelOpen, selected, card, nightTheme });
+  }, [mode, hidden, visible, options, panelOpen, selected, card, nightTheme]);
 
   /** Los bloques de un lugar del catálogo; cualquier otra ficha los quita. */
   const markBuildings = useCallback((ids: readonly number[]) => {
-    if (!marked.current && ids.length === 0) return;
-    marked.current = ids.length > 0;
+    if (markedIds.current.length === 0 && ids.length === 0) return;
+    markedIds.current = ids;
     viewer.current?.setMarkedBuildings(ids);
   }, []);
   const clearMarks = useCallback(() => markBuildings([]), [markBuildings]);
@@ -74,6 +92,7 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
       else setSelected(null);
     }
     if (card?.kind === 'location') v.setPinLatLon?.(card.lat, card.lon);
+    if (markedIds.current.length > 0) v.setMarkedBuildings(markedIds.current);
     setViewerEpoch((epoch) => epoch + 1);
   };
 
@@ -110,7 +129,7 @@ export function useMapScreenState(data: SceneData | null, person: string, linkFo
   /** Los conos de «Perspectivas» los pone quien tiene el catálogo, al ver este estado. */
   const toggleLayer = (id: ToggleId, on: boolean) => {
     setVisible((v) => ({ ...v, [id]: on }));
-    if (id !== PERSPECTIVES_TOGGLE) viewer.current?.setLayerVisible(id as LayerId, on);
+    if (!OVERLAY_TOGGLES.has(id)) viewer.current?.setLayerVisible(id as LayerId, on);
   };
 
   const showCard = (content: MapCardContent) => {

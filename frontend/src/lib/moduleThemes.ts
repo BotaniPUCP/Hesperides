@@ -8,11 +8,11 @@
 export type ModuleId =
   | 'catastro'
   | 'catalogo'
-  | 'riego'
   | 'intervenciones'
   | 'lugares'
   | 'incidencias'
   | 'reportes'
+  | 'directorio'
   | 'administracion';
 
 export interface ModuleTheme {
@@ -35,11 +35,6 @@ export const MODULE_THEMES: Readonly<Record<ModuleId, ModuleTheme>> = {
     night: ['#0A0D02', '#181F06', '#28330C', '#3A4A12'],
     nightAccent: '163, 230, 53',
   },
-  riego: {
-    day: ['#0B5F8A', '#0EA5E9', '#7DD3FC', '#F0F9FF'],
-    night: ['#020810', '#061726', '#0A2A42', '#103C5C'],
-    nightAccent: '56, 189, 248',
-  },
   intervenciones: {
     day: ['#0F6E6E', '#14B8A6', '#7DE3D4', '#F0FDFA'],
     night: ['#020B0B', '#051A1A', '#0A2C2B', '#103E3C'],
@@ -60,6 +55,11 @@ export const MODULE_THEMES: Readonly<Record<ModuleId, ModuleTheme>> = {
     night: ['#04050F', '#0C0F28', '#161B44', '#20285F'],
     nightAccent: '129, 140, 248',
   },
+  directorio: {
+    day: ['#4C2A85', '#7C4DCC', '#C4A8F0', '#F7F3FE'],
+    night: ['#07040E', '#140C26', '#221541', '#321F5C'],
+    nightAccent: '167, 139, 250',
+  },
   administracion: {
     day: ['#334155', '#64748B', '#B4BFCC', '#F8FAFC'],
     night: ['#05070B', '#0F141C', '#1B2330', '#283446'],
@@ -79,8 +79,8 @@ const MODULE_ROUTES: readonly (readonly [RegExp, ModuleId])[] = [
   [/^\/lugares(\/|$)/, 'lugares'],
   [/^\/intervenciones(\/|$)/, 'intervenciones'],
   [/^\/incidencias(\/|$)/, 'incidencias'],
-  [/^\/riego(\/|$)/, 'riego'],
   [/^\/reportes(\/|$)/, 'reportes'],
+  [/^\/directorio(\/|$)/, 'directorio'],
   [/^\/admin(\/|$)/, 'administracion'],
 ];
 

@@ -1,0 +1,50 @@
+{
+  "planKey": "ba27bbc0-4e80-4cf8-ae10-d67e7ad5925e",
+  "name": "CIGA (Pulso PUCP), C47",
+  "folder": "CIGA-Pulso-pucp",
+  "photos": [
+    "entrada a espacio interior.jpg",
+    "frente-aulas-moviles.jpg",
+    "lado-directament-frente-a-ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA).jpg",
+    "lado-frente-a-C45 · Izquierda 59 · SKP C-129.jpg",
+    "vista-espacio-interior-desde-fuera.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e9eae7"
+    },
+    "techo": {
+      "color": "#cfcfcb"
+    },
+    "ventanas": {
+      "color": "#c5c9c5"
+    },
+    "vidrio-alto": {
+      "color": "#56636a"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
+        },
+        {
+          "material": "vidrio-alto",
+          "v": [
+            2.5,
+            3.2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Paneles blancos con ventanas enrejadas sueltas, como franja tenue, y una cinta alta de vidrio oscuro bajo el alero (lado-directament…jpg, lado-frente-a-C45…jpg, entrada a espacio interior.jpg)."
+}

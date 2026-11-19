@@ -13,6 +13,13 @@ public final class SystemParameterCodes {
     public static final String PASSWORD_MIN_LENGTH = "PASSWORD_MIN_LENGTH";
     public static final String LOGIN_MAX_ATTEMPTS = "LOGIN_MAX_ATTEMPTS";
     public static final String CAMPUS_TOTAL_HECTARES = "CAMPUS_TOTAL_HECTARES";
+    /** Metas del resumen de dirección de los reportes (SPEC-202 §4), de 1 a 100. */
+    public static final String REPORT_COVERAGE_TARGET_PERCENT = "REPORT_COVERAGE_TARGET_PERCENT";
+    public static final String REPORT_IRRIGATION_TARGET_PERCENT = "REPORT_IRRIGATION_TARGET_PERCENT";
+    /** Plazos de incidencias por urgencia, en horas; provisionales (SPEC-201 §3.9). */
+    public static final String INCIDENT_DEADLINE_HIGH_HOURS = "INCIDENT_DEADLINE_HIGH_HOURS";
+    public static final String INCIDENT_DEADLINE_MEDIUM_HOURS = "INCIDENT_DEADLINE_MEDIUM_HOURS";
+    public static final String INCIDENT_DEADLINE_LOW_HOURS = "INCIDENT_DEADLINE_LOW_HOURS";
 
     // No hay MAIL_FROM, y no debe volver: el remitente de correo solo es valido
     // si el proveedor lo tiene verificado, y esta aplicacion no puede
@@ -39,4 +46,8 @@ public final class SystemParameterCodes {
     public static final String DUPLICATE_SHRUB_M = "DUPLICATE_SHRUB_M";
     public static final String DUPLICATE_HERB_M = "DUPLICATE_HERB_M";
     public static final String DUPLICATE_FEATURE_M = "DUPLICATE_FEATURE_M";
+    /** SPEC-107 D-05: metros desde el borde de un jardín reservado dentro de los que se avisa. */
+    public static final String RESERVATION_NEARBY_METERS = "RESERVATION_NEARBY_METERS";
+    /** SPEC-107 (enmienda 11 nov 2026): minutos antes del fin en que ya no se acepta confirmar el uso. */
+    public static final String RESERVATION_CONFIRMATION_MINUTES = "RESERVATION_CONFIRMATION_MINUTES";
 }

@@ -7,7 +7,9 @@ export type FrequencyRuleTypeCode =
 
 export type MaintenanceRegime = 'IN_HOUSE' | 'OUTSOURCED';
 
-export type MaintenanceScope = 'CAMPUS_WIDE' | 'BY_SECTOR' | 'BY_ZONE';
+/** Todo el campus o un conjunto de áreas verdes (SPEC-203 D-07). */
+/** `BY_SET`: una regla para conjuntos, que se asigna a cada uno en Planificación. */
+export type MaintenanceScope = 'CAMPUS_WIDE' | 'BY_SET';
 
 export type SeasonKey = 'VERANO' | 'OTONO' | 'INVIERNO' | 'PRIMAVERA';
 
@@ -24,14 +26,12 @@ export interface SeasonalInterval {
   endMonth: number;
   minDaysInterval: number;
   maxDaysInterval: number;
-  /** El intervalo de manual, que suele diferir del operativo. */
-  targetDaysInterval?: number | null;
 }
 
 /** Estado de cumplimiento que devuelve el motor; no es un catalogo editable. */
 export type ComplianceStatus =
   | 'ON_TARGET'
-  | 'WITHIN_TOLERANCE'
+  | 'EARLY'
   | 'OVERDUE'
   | 'NOT_APPLICABLE'
   | 'NOT_CONFIGURED';
@@ -55,8 +55,8 @@ export interface MaintenanceFrequency {
   regime: MaintenanceRegime;
   frequencyRuleType: FrequencyRuleTypeSummary;
   scope: MaintenanceScope;
-  zoneId: number | null;
-  targetDaysInterval: number | null;
+  /** La regla, compartida por todas sus versiones; a ella apuntan las asignaciones de Planificación. */
+  ruleKey: string;
   minDaysInterval: number | null;
   maxDaysInterval: number | null;
   annualTargetCount: number | null;
@@ -75,15 +75,10 @@ export interface MaintenanceFrequency {
   active: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-/** Una sección del campus que puede ser el ámbito de una frecuencia por sección. */
-export interface MaintenanceZoneOption {
-  id: number;
-  code: string;
-  name: string;
-  sectorId: number | null;
-  sectorName: string | null;
+  /** A cuántos conjuntos está asignada en Planificación (SPEC-203 §3.4). */
+  assignedSetCount: number;
+  /** Avisos al guardar, como que una regla asignada pasó a tercerizada. */
+  warnings?: string[];
 }
 
 export interface CreateMaintenanceFrequencyRequest {
@@ -91,8 +86,6 @@ export interface CreateMaintenanceFrequencyRequest {
   regime: MaintenanceRegime;
   frequencyRuleTypeCode: FrequencyRuleTypeCode;
   scope: MaintenanceScope;
-  zoneId?: number | null;
-  targetDaysInterval?: number | null;
   minDaysInterval?: number | null;
   maxDaysInterval?: number | null;
   annualTargetCount?: number | null;
@@ -113,8 +106,6 @@ export interface UpdateMaintenanceFrequencyRequest {
   regime?: MaintenanceRegime;
   frequencyRuleTypeCode?: FrequencyRuleTypeCode;
   scope?: MaintenanceScope;
-  zoneId?: number | null;
-  targetDaysInterval?: number | null;
   minDaysInterval?: number | null;
   maxDaysInterval?: number | null;
   annualTargetCount?: number | null;

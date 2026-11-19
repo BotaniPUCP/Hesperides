@@ -65,15 +65,15 @@ class MaintenanceFrequencyControllerTest {
                 "OUTSOURCED",
                 new MaintenanceFrequencyResponse.FrequencyRuleTypeSummary(101L, "INTERVAL_DAYS", "Intervalo por rango de dias"),
                 "CAMPUS_WIDE",
-                null,
-                21, 30, 45,
+                java.util.UUID.randomUUID(),
+                30, 45,
                 null, null, 3,
                 null, null,
-                List.of(new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35, 21)),
+                List.of(new SeasonalIntervalPayload("VERANO", 1, 3, 30, 35)),
                 "Notas",
                 LocalDate.now(), null,
                 true, true,
-                Instant.now(), Instant.now());
+                Instant.now(), Instant.now(), 0, List.of());
     }
 
     @Test
@@ -82,9 +82,22 @@ class MaintenanceFrequencyControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    /** SPEC-203 D-12: las frecuencias pasan a ser de coordinación; el campo ya no las lee. */
+    @Test
+    @WithMockUser(authorities = "SUPERVISOR")
+    void getAll_asSupervisor_isForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/maintenance/frequencies")).andExpect(status().isForbidden());
+    }
+
     @Test
     @WithMockUser(authorities = "OPERARIO")
-    void getAll_asOperario_returnsOk() throws Exception {
+    void getAll_asOperario_isForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/maintenance/frequencies")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "COORDINADOR")
+    void getAll_asCoordinador_returnsOk() throws Exception {
         MaintenanceFrequencyResponse dummy = dummyResponse();
 
         when(frequenciesService.findAll(any(), any(), any())).thenReturn(List.of(dummy));

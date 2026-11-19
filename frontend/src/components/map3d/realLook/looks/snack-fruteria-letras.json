@@ -1,0 +1,21 @@
+{
+  "planKey": "dd472bfd-24aa-4792-8073-c05d7062dbbb",
+  "name": "Snack (Frutería Letras)",
+  "source": "Decisión de Jean Piero (15 nov 2026): todos los puestos de snack van con los colores del Snack (Frutería Sociales) (SPEC-112)",
+  "materials": {
+    "muro": {
+      "color": "#e6dfcb"
+    },
+    "techo": {
+      "color": "#cfccc5"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Todos los puestos de snack llevan los colores del Snack (Frutería Sociales), snack-sociales.json, por pedido de Jean Piero (15 nov 2026)."
+}

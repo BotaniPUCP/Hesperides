@@ -10,6 +10,7 @@ import java.util.Map;
 @Getter
 @Setter
 public class InterventionDetailResponse extends InterventionSummaryResponse {
+    private String campusSelectionRevision;
     private String description;
     private Long responsibleSupervisorUserId;
     private Long originItemId;
@@ -23,6 +24,7 @@ public class InterventionDetailResponse extends InterventionSummaryResponse {
     private List<Map<String,Object>> evidences;
     private List<Map<String,Object>> history;
     private List<Map<String,Object>> quantityTotals;
+    private java.math.BigDecimal plannedSurfaceM2;
     private boolean incidentIntegrationAvailable = false;
     private List<Object> sourceIncidents = List.of();
 }

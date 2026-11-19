@@ -1,0 +1,110 @@
+{
+  "planKey": "4ee6b413-6f00-4a87-a25c-c7aa5b6cfcae",
+  "name": "Librería PUCP",
+  "folder": "libreria-pucp",
+  "photos": [
+    "libreria-pucp.jpg",
+    "libreria-pucp-2.png",
+    "juan-valdez-pucp.jpg"
+  ],
+  "materials": {
+    "beige": {
+      "color": "#d9d1bc"
+    },
+    "blanco": {
+      "color": "#ebebe7"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "vitrinas": {
+      "glass": "#4d575c",
+      "frame": "#d9d9d6",
+      "moduleM": 1.8,
+      "heightM": 2.9,
+      "frameM": 0.06,
+      "vary": 0.06
+    },
+    "cintas": {
+      "glass": "#8a979e",
+      "frame": "#e6e6e3",
+      "moduleM": 1.6,
+      "heightM": 1.2,
+      "frameM": 0.06,
+      "vary": 0.05
+    }
+  },
+  "zones": [
+    {
+      "id": "libreria",
+      "wall": "beige",
+      "roof": "techo",
+      "faces": {
+        "S": [
+          {
+            "material": "vitrinas",
+            "u": [
+              -4.3,
+              0.5
+            ],
+            "v": [
+              0.3,
+              3.2
+            ]
+          }
+        ],
+        "SW": [
+          {
+            "material": "vitrinas",
+            "v": [
+              0.3,
+              3.2
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "curva",
+      "where": {
+        "east": [
+          0.3,
+          0.82
+        ],
+        "heightM": [
+          4.5,
+          9
+        ]
+      },
+      "wall": "blanco",
+      "roof": "techo",
+      "faces": {
+        "S": [
+          {
+            "material": "cintas",
+            "v": [
+              5.3,
+              6.4
+            ]
+          },
+          {
+            "material": "cintas",
+            "v": [
+              7.2,
+              8.3
+            ]
+          }
+        ],
+        "SE": {
+          "sameAs": "S",
+          "why": "El volumen blanco es curvo: sus cintas de ventanas siguen la curva (libreria-pucp.jpg, juan-valdez-pucp.jpg)"
+        },
+        "SW": {
+          "sameAs": "S",
+          "why": "El volumen blanco es curvo: sus cintas de ventanas siguen la curva (libreria-pucp.jpg, juan-valdez-pucp.jpg)"
+        }
+      }
+    }
+  ],
+  "notes": "Muros beige y, encima de la librería, el volumen curvo blanco de dos pisos con sus cintas de ventanas, que reflejan el cielo (libreria-pucp.jpg, juan-valdez-pucp.jpg). Abajo, en el frente sur, las vitrinas y el ingreso de la librería, y la esquina de vidrio que da al Juan Valdez (libreria-pucp-2.png). El Juan Valdez es otro edificio desde SPEC-108 D-18, con su propia ficha. La columna de parasoles oscuros y las ventanas sueltas del bloque beige del oeste no se dibujan (D-04)."
+}

@@ -128,3 +128,35 @@ describe('erroresDeCampo', () => {
     expect(erroresDeCampo(new Error('boom'))).toEqual([]);
   });
 });
+
+describe('errores de otros módulos', () => {
+  it('un mensaje que el backend ya escribe en español se muestra tal cual, no el genérico', () => {
+    expect(mensajeDeApiError(new ApiError(400, 'No repitas secciones en un mismo turno'))).toBe('No repitas secciones en un mismo turno');
+    expect(mensajeDeApiError(new ApiError(409, 'La especie «Ficus sp.» ya está registrada en el catálogo'))).toMatch(/«Ficus sp\.»/);
+  });
+
+  it('un mensaje en español que no está en la lista no se muestra tal cual', () => {
+    expect(mensajeDeApiError(new ApiError(422, 'Mensaje nuevo sin revisar'))).toBe('La operación no cumple una regla del sistema.');
+  });
+
+  it('traduce los errores en inglés de usuarios y fotos', () => {
+    expect(mensajeDeApiError(new ApiError(422, "Role 'JEFE' does not exist or is not active"))).toMatch(/rol elegido/);
+    expect(mensajeDeApiError(new ApiError(400, 'The photo is larger than 10 MB'))).toBe('La foto pesa más de 10 MB. Elige una más liviana.');
+  });
+});
+
+describe('errores de conjuntos y planificación (SPEC-203)', () => {
+  it('muestra las reglas de conjuntos en español', () => {
+    expect(mensajeDeApiError(new ApiError(422, 'Ya existe un conjunto con ese nombre'))).toBe('Ya existe un conjunto con ese nombre.');
+    expect(mensajeDeApiError(new ApiError(409, 'Otra persona cambió este conjunto. Recarga para ver su versión.')))
+      .toBe('Otra persona cambió este conjunto mientras lo editabas. Recarga para ver su versión.');
+    expect(mensajeDeApiError(new ApiError(422, 'Las frecuencias tercerizadas no se planifican'))).toMatch(/personal propio/);
+    expect(mensajeDeApiError(new ApiError(409, '«Ingreso» ya tiene una planificación de Riego manual. Edítala en vez de crear otra.')))
+      .toBe('«Ingreso» ya tiene una planificación de Riego manual. Edítala en vez de crear otra.');
+  });
+
+  it('un mensaje con ids al final se reconoce por su comienzo', () => {
+    expect(mensajeDeApiError(new ApiError(422, 'Solo se pueden agregar secciones: 7, 9')))
+      .toBe('Solo se pueden agregar jardines. Revisa la selección.');
+  });
+});

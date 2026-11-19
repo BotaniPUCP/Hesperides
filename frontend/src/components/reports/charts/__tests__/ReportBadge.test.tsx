@@ -4,7 +4,7 @@ import { ReportBadge } from '../ReportBadge';
 describe('ReportBadge (enmienda de SPEC-202 a SPEC-C01 §3.1)', () => {
   it.each([
     ['OVERDUE', 'Fuera de plazo', 'text-action-danger'],
-    ['WITHIN_TOLERANCE', 'Dentro de tolerancia', 'text-status-in-review-fg'],
+    ['EARLY', 'Antes del mínimo', 'text-neutral-700'],
     ['ON_TARGET', 'En objetivo', 'text-success-600'],
     ['NOT_EVALUABLE', 'No evaluable', 'text-neutral-700'],
     ['NOT_APPLICABLE', 'No aplica', 'text-neutral-700'],

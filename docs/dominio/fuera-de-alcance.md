@@ -7,10 +7,10 @@
 > 2. **No se planea incluir** — queda fuera del producto, con su motivo.
 >
 > **Para qué sirve.** Que nadie reintroduzca por descuido algo descartado, ni dé por olvidado algo
-> que solo se pospuso. Si una historia del [backlog](../PRODUCT-BACKLOG.md) toca algo de esta
+> que solo se pospuso. Si una historia del [backlog](../producto/product-backlog.md) toca algo de esta
 > lista, se detiene y se discute.
 >
-> **Fuentes:** entrevistas 1 y 2 con el cliente, [KICK-OFF.md §4](../../KICK-OFF.md) y las
+> **Fuentes:** entrevistas 1 y 2 con el cliente, [kick-off §4](../producto/kick-off.md) y las
 > decisiones del equipo al **25 de septiembre de 2026**.
 
 ---

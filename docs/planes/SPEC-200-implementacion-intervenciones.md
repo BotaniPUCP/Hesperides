@@ -2,6 +2,38 @@
 
 Fecha: 22 oct 2026.
 
+## Rediseño solicitado el 10 nov 2026
+
+**Cambio confirmado posteriormente (11 nov):** las nuevas actividades usan un mapa único
+con áreas verdes de todo el campus y ejemplares individuales; se elimina la dependencia
+de lugares y vecindad. §2.12 de SPEC-200 reemplaza esa parte de R1–R4. No hace falta
+registrar otros lugares ni revisar sus asociaciones para este flujo. Ver
+[implementación del mapa único](SPEC-200-mapa-unico-campus.md). R5 (presentación/listado)
+está implementado (12 nov). El usuario confirmó el funcionamiento y decidió no ampliar R6.
+
+La secuencia R1–R6 es del rediseño actual, distinta de las seis etapas históricas inferiores.
+Contrato vigente del rediseño: [SPEC-200 §2.11](../../specs/features/SPEC-200-intervenciones.md#211-rediseño-de-actividad-lugares-y-zonas-verdes--10-nov-2026).
+
+| Etapa | Alcance | Estado |
+|-------|---------|--------|
+| R1 | Reglas del mapa único, áreas completas, ejemplares independientes y superficie | Vigente §2.12: sustituye las reglas anteriores de lugares y vecindad. Activo/inactivo implementado en R5. |
+| R2 | Disponibilidad del inventario | Las asociaciones directas anteriores quedan como historia/compatibilidad. Las nuevas actividades pueden usar las 531 áreas y 965 ejemplares locales válidos sin registrar lugares. |
+| R3 | API, persistencia, superficie y compatibilidad | V036 y selección global implementadas y aplicadas localmente tras respaldo. Se conservan los registros y endpoints anteriores. Guardado mixto, edición e idempotencia comprobados por API. |
+| R4 | Un mapa 3D, árboles visibles, selección de áreas y ejemplares, lista resumida | Implementado: cinco áreas recientes, «Mostrar más» con todas las áreas y ejemplares, contadores y m². Pendiente revisión visual del nuevo flujo. Ver [informe vigente](SPEC-200-mapa-unico-campus.md). |
+| R5 | Títulos por actividad, estados distinguibles y filtro activo/inactivo | Implementado: clase y tipo como título, código secundario, colores e íconos, activas por defecto. Inactivas: COMPLETED, VALIDATED y CANCELLED; OBSERVED sigue activa. Filtro SQL previo a paginación, opcional para consumidores anteriores. |
+| R6 | Cálculo, permisos, datos anteriores, integración y recorrido real | El usuario confirmó sus pruebas sin otras observaciones y pidió no continuar esta etapa. Se conserva la evidencia previa; no se afirma una nueva validación exhaustiva. |
+
+**Base verificada para R1:** `modulo-intervenciones` y la referencia remota recién consultada
+`origin/feature/lugar-varios-edificios` coinciden en `fc2c1a3` (0 commits exclusivos por lado).
+No se cambió de rama ni se mezclaron commits; R1 modifica únicamente documentación.
+Volver a comprobar la rama fuente antes de iniciar la siguiente etapa.
+
+**Regla validada por el usuario en R5:** Activas por defecto; COMPLETED, VALIDATED y
+CANCELLED aparecen en Inactivas. OBSERVED permanece activa. El usuario confirmó que
+el listado y los filtros funcionan correctamente, sin observaciones.
+
+## Historial de implementación anterior
+
 **Actualización 5 nov 2026:** T10 se delega al responsable de incidencias. Se retiró nuestra
 implementación local de vínculos y V027, sin aplicar esa migración a la base habitual.
 Se conservan aprobación por capataz responsable/coordinador y tiempos de ejecución.

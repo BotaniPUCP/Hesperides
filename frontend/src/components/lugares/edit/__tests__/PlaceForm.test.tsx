@@ -196,6 +196,29 @@ describe('PlaceForm', () => {
     window.sessionStorage.clear();
   });
 
+  describe('desde la migración de referencias', () => {
+    it('al guardar vuelve a la cola de migración con su búsqueda, no a la ficha', async () => {
+      rememberListQuery('/lugares/migracion', 'search=pabell%C3%B3n');
+      create.mockResolvedValue({ code: 'LUG-0010' });
+      render(<PlaceForm defaultName="Pabellón Z" returnTo="/lugares/migracion" />);
+      fireEvent.change(screen.getByLabelText(/Categoría/), { target: { value: 'EDIFICIO' } });
+      act(() => map.onSelect({ layer: 'campusBuildings', index: 0 }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Guardar lugar' }));
+
+      await waitFor(() => expect(replace).toHaveBeenCalledWith('/lugares/migracion?search=pabell%C3%B3n'));
+      window.sessionStorage.clear();
+    });
+
+    it('cancelar también vuelve a la cola', () => {
+      render(<PlaceForm returnTo="/lugares/migracion" />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+      expect(push).toHaveBeenCalledWith('/lugares/migracion');
+    });
+  });
+
   it('cancelar sin haber escrito nada sale sin preguntar', () => {
     render(<PlaceForm />);
 

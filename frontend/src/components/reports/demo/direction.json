@@ -1,0 +1,45 @@
+{
+  "month": "2026-10", "previousMonth": "2026-09", "timeZone": "America/Lima", "inProgress": false,
+  "header": { "greenAreaM2": 156120.00, "campusHectares": 41.0, "sections": 531, "activeTeams": 3 },
+  "indicators": [
+    { "code": "COVERAGE", "unit": "PERCENT", "available": true, "unavailableReason": null,
+      "value": 62.9, "previousValue": 58.1, "delta": 4.8, "trend": "UP", "higherIsBetter": true,
+      "target": 100.0, "targetReason": null, "progress": 62.9, "provisional": true },
+    { "code": "IRRIGATION_COVERAGE", "unit": "PERCENT", "available": true, "unavailableReason": null,
+      "value": 71.4, "previousValue": 73.0, "delta": -1.6, "trend": "DOWN", "higherIsBetter": true,
+      "target": 100.0, "targetReason": null, "progress": 71.4, "provisional": true },
+    { "code": "APPROVED_INTERVENTIONS", "unit": "COUNT", "available": true, "unavailableReason": null,
+      "value": 45, "previousValue": 38, "delta": 7, "trend": "UP", "higherIsBetter": null,
+      "target": null, "targetReason": "NO_TARGET", "progress": null, "provisional": false },
+    { "code": "RESOLVED_INCIDENTS", "unit": "COUNT", "available": true, "unavailableReason": null,
+      "value": 9, "previousValue": 6, "delta": 3, "trend": "UP", "higherIsBetter": null,
+      "target": null, "targetReason": "NO_TARGET", "progress": null, "provisional": false },
+    { "code": "TREE_INVENTORY", "unit": "COUNT", "available": true, "unavailableReason": null,
+      "value": 1012, "previousValue": 985, "delta": 27, "trend": "UP", "higherIsBetter": true,
+      "target": null, "targetReason": "TARGET_NOT_STORED", "progress": null, "provisional": false },
+    { "code": "IRRIGATION_CYCLES", "unit": "COUNT", "available": false, "unavailableReason": "RULE_NOT_DEFINED",
+      "value": null, "previousValue": null, "delta": null, "trend": null, "higherIsBetter": true,
+      "target": null, "targetReason": null, "progress": null, "provisional": false },
+    { "code": "PHYTOSANITARY_CONTROLS", "unit": "COUNT", "available": false, "unavailableReason": "UNIT_NOT_MODELED",
+      "value": null, "previousValue": null, "delta": null, "trend": null, "higherIsBetter": true,
+      "target": null, "targetReason": null, "progress": null, "provisional": false },
+    { "code": "MAJOR_PRUNING", "unit": "COUNT", "available": false, "unavailableReason": "NOT_RECORDED",
+      "value": null, "previousValue": null, "delta": null, "trend": null, "higherIsBetter": true,
+      "target": null, "targetReason": null, "progress": null, "provisional": false },
+    { "code": "HIGH_URGENCY_ON_TIME", "unit": "PERCENT", "available": false, "unavailableReason": "NO_DEADLINES_CONFIGURED",
+      "value": null, "previousValue": null, "delta": null, "trend": null, "higherIsBetter": true,
+      "target": null, "targetReason": null, "progress": null, "provisional": false }
+  ],
+  "coverageSeries": {
+    "target": 100.0,
+    "points": [
+      { "month": "2026-05", "percent": null, "recorded": false },
+      { "month": "2026-06", "percent": 36.8, "recorded": true },
+      { "month": "2026-07", "percent": 44.5, "recorded": true },
+      { "month": "2026-08", "percent": 41.2, "recorded": true },
+      { "month": "2026-09", "percent": 58.1, "recorded": true },
+      { "month": "2026-10", "percent": 62.9, "recorded": true }
+    ]
+  },
+  "generatedAt": "2026-11-04T15:00:00Z"
+}

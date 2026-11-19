@@ -57,6 +57,15 @@ spring:
       mail.smtp.writetimeout: 5000
 server:
   port: ${BACKEND_PORT:8080}
+  # Para el modelo de edificios del plano (SPEC-108 D-06): pesa unos 7,6 MB y gzip
+  # lo deja en unos 1,8 MB. La lista reemplaza la de Tomcat por defecto. Tomcat no
+  # comprime una respuesta con ETag fuerte: por eso el del modelo es débil. Las
+  # respuestas JSON también se comprimen, salvo las que llevan ETag fuerte (/layers
+  # y el manifiesto del modelo), que viajan como antes y se revalidan con 304.
+  compression:
+    enabled: true
+    mime-types: model/gltf-binary,application/json
+    min-response-size: 2048
 
 # SPEC-200: provisional workflow details, independent from the mandatory-photo rule.
 interventions:
@@ -66,8 +75,13 @@ interventions:
 
 hesperides:
   incidents:
-    time-zone: ${INCIDENT_TIME_ZONE:America/Lima}
-    holidays: ${INCIDENT_HOLIDAYS:}
+    # SPEC-201 §3.4: agente de prellenado. Sin clave el reporte se guarda igual y el
+    # prellenado queda fallido, con reintento manual: la IA nunca impide reportar.
+    prefill:
+      base-url: ${OLLAMA_BASE_URL:https://ollama.com}
+      model: ${OLLAMA_MODEL:gpt-oss:20b}
+      api-key: ${OLLAMA_API_KEY:}
+      timeout-seconds: ${OLLAMA_TIMEOUT_SECONDS:30}
   maintenance:
     time-zone: ${MAINTENANCE_TIME_ZONE:America/Lima}
   security:

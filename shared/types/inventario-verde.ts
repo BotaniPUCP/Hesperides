@@ -1,6 +1,6 @@
 /**
  * Inventario verde: especies del catastro y sus ejemplares, tal como los
- * entrega /api/v1/green-inventory (docs/inventario-verde/README.md).
+ * entrega /api/v1/green-inventory (docs/modulos/inventario-verde.md).
  */
 
 /** Un tipo de vegetación del catálogo SPECIES_TYPE con su número de ejemplares. */

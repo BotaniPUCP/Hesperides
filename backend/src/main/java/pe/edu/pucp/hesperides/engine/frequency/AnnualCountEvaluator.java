@@ -62,7 +62,7 @@ final class AnnualCountEvaluator {
             return 0;
         }
         SeasonalInterval ventana = new SeasonalInterval(
-                null, rule.seasonStartMonth(), rule.seasonEndMonth(), null, null, null);
+                null, rule.seasonStartMonth(), rule.seasonEndMonth(), null, null);
         return (int) enPeriodo.stream()
                 .filter(d -> !ventana.cubre(d.getMonthValue()))
                 .count();

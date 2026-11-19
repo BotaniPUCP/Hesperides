@@ -1,0 +1,554 @@
+<title>Plano PUCP en 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: maqueta 3D a pantalla casi completa; panel de control y detalle a la derecha (abajo en el teléfono). */
+:root {
+  --bg: #eef2ee;
+  --surface: #ffffff;
+  --cielo: #e9eef0;
+  --ink: #16201a;
+  --muted: #5a685f;
+  --line: #d5ddd6;
+  --brand: #02591f;
+  --brand-ink: #ffffff;
+  --suelo: #d7dbd3;
+  --jardin3d: #a8cf97;
+  --muro3d: #b9574c;
+  --huaca3d: #b98a5c;
+  --osm: #2a63c4;
+  --osm3d: #cbd2dc;
+  --entorno3d: #e1e4e8;
+  --t-coincide: #2f8f55;
+  --t-desplazado: #0f8a8c;
+  --t-forma: #c07c00;
+  --t-plano_agrupa: #4f56c9;
+  --t-osm_agrupa: #c2547a;
+  --t-mixto: #8a6a3a;
+  --t-solo_osm: #d23c30;
+  --t-solo_plano: #7b3fc0;
+  --h1: #f5e3a3; --h2: #efb45c; --h3: #dd7c3a; --h4: #b54a2c; --h5: #7a2a1f;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d120f; --surface: #151c17; --cielo: #111815; --ink: #e3eae4; --muted: #95a49a; --line: #28332b;
+    --brand: #5cc488; --brand-ink: #07140c; --suelo: #2b322d; --jardin3d: #34502f; --muro3d: #a5554b; --huaca3d: #8f6a45;
+    --osm: #72a7ff; --osm3d: #5d6878; --entorno3d: #262c33;
+    --t-coincide: #52c47f; --t-desplazado: #3cc6c8; --t-forma: #f0b13d; --t-plano_agrupa: #8e95ff;
+    --t-osm_agrupa: #f07fa6; --t-mixto: #c9a36a; --t-solo_osm: #ff6b5d; --t-solo_plano: #c08cf5;
+    --h1: #4c3d18; --h2: #7f5c20; --h3: #b6722c; --h4: #e28e47; --h5: #ffc583;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d120f; --surface: #151c17; --cielo: #111815; --ink: #e3eae4; --muted: #95a49a; --line: #28332b;
+  --brand: #5cc488; --brand-ink: #07140c; --suelo: #2b322d; --jardin3d: #34502f; --muro3d: #a5554b; --huaca3d: #8f6a45;
+  --osm: #72a7ff; --osm3d: #5d6878; --entorno3d: #262c33;
+  --t-coincide: #52c47f; --t-desplazado: #3cc6c8; --t-forma: #f0b13d; --t-plano_agrupa: #8e95ff;
+  --t-osm_agrupa: #f07fa6; --t-mixto: #c9a36a; --t-solo_osm: #ff6b5d; --t-solo_plano: #c08cf5;
+  --h1: #4c3d18; --h2: #7f5c20; --h3: #b6722c; --h4: #e28e47; --h5: #ffc583;
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+.app {
+  height: 100%; box-sizing: border-box; display: grid; grid-template-rows: auto 1fr; gap: 12px;
+  padding-block: 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+h1 { font-family: var(--font-head); font-weight: 600; font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); min-width: 0; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; min-height: 0; }
+.escena { position: relative; min-height: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--cielo); }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; cursor: grab; }
+canvas:active { cursor: grabbing; }
+canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--brand); }
+.estado-carga {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px;
+  color: var(--muted); font-size: 14px; background: var(--cielo);
+}
+.esquina { position: absolute; top: 10px; right: 10px; }
+.boton {
+  font: 500 13px/1 var(--font-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 11px; cursor: pointer;
+}
+.boton:focus-visible, .seg button:focus-visible, .tipo:focus-visible, input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ayuda { position: absolute; left: 10px; bottom: 10px; font-size: 12px; color: var(--muted); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; max-width: calc(100% - 20px); }
+.tooltip {
+  position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; font-size: 12px; max-width: 260px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.14); z-index: 3;
+}
+.tooltip strong { display: block; font-size: 13px; margin-bottom: 2px; }
+
+.panel { min-height: 0; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.panel section { padding: 14px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.panel section:last-child { border-bottom: 0; }
+h2 { font-family: var(--font-head); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin: 0; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--bg); border-radius: 8px; padding: 3px; }
+.seg button { font: 500 13px/1.2 var(--font-body); color: var(--ink); background: transparent; border: 0; border-radius: 6px; padding: 8px 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+.nota { color: var(--muted); font-size: 12px; margin: 0; }
+input[type="range"] { width: 100%; accent-color: var(--brand); }
+.tipos { display: grid; gap: 2px; }
+.tipo {
+  display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; text-align: left;
+  font: inherit; color: var(--ink); background: transparent; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer;
+}
+.tipo:hover { background: var(--bg); }
+.tipo[aria-pressed="true"] { background: var(--bg); box-shadow: inset 3px 0 0 var(--brand); }
+.tipo .n { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.cuadro { width: 12px; height: 12px; border-radius: 3px; }
+dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 5px 12px; }
+dt { color: var(--muted); }
+dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; overflow-wrap: anywhere; }
+.detalle h3 { font-family: var(--font-head); font-size: 1.05rem; font-weight: 600; margin: 0; text-wrap: balance; }
+.estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+
+@media (max-width: 880px) {
+  html, body { height: auto; }
+  .app { height: auto; }
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  .escena { height: 66vh; min-height: 380px; }
+  .panel { overflow: visible; }
+}
+</style>
+
+<div class="app">
+  <header>
+    <h1>Plano PUCP en 3D</h1>
+    <p>El modelo del plano <code>PUCP_BASE_FINAL</code> ubicado en el campus, junto a los edificios de OpenStreetMap que hoy levanta Hesperides.</p>
+  </header>
+  <div class="workspace">
+    <div class="escena" id="escena">
+      <canvas id="lienzo" tabindex="0" aria-label="Maqueta 3D del campus: arrastra para girar, clic derecho o dos dedos para desplazar, rueda o pellizco para acercar, clic en un edificio para ver su caso"></canvas>
+      <div class="estado-carga" id="carga">Cargando el modelo 3D del plano…</div>
+      <div class="esquina"><button type="button" class="boton" id="inicial">Vista inicial</button></div>
+      <div class="ayuda">Arrastra para girar · clic derecho para desplazar · rueda para acercar · doble clic para centrar</div>
+      <div class="tooltip" id="tooltip" hidden></div>
+    </div>
+
+    <aside class="panel">
+      <section>
+        <h2>Qué ver</h2>
+        <div class="seg" role="group" aria-label="Modo de la maqueta">
+          <button type="button" id="modo-comparar" data-modo="comparar">Comparar</button>
+          <button type="button" id="modo-plano" data-modo="plano">Plano</button>
+          <button type="button" id="modo-hoy" data-modo="hoy">Hesperides hoy</button>
+          <button type="button" id="modo-cortina" data-modo="cortina">Cortina</button>
+        </div>
+        <p class="nota" id="explica-modo"></p>
+        <div id="control-cortina" hidden>
+          <label class="nota" for="cortina">Posición del corte (oeste → este)</label>
+          <input type="range" id="cortina" min="-300" max="300" step="1" value="0">
+        </div>
+      </section>
+
+      <section>
+        <h2>Color del plano</h2>
+        <div class="seg" role="group" aria-label="Color de los edificios del plano">
+          <button type="button" id="color-caso" data-color="caso">Por caso</button>
+          <button type="button" id="color-alto" data-color="alto">Por altura</button>
+        </div>
+        <div class="tipos" id="leyenda"></div>
+        <p class="nota" id="nota-leyenda"></p>
+      </section>
+
+      <section class="detalle" id="detalle">
+        <h2>Caso seleccionado</h2>
+        <p class="nota">Haz clic en un edificio de la maqueta para ver su caso. Doble clic lo centra.</p>
+      </section>
+
+      <section>
+        <h2>Cómo leerla</h2>
+        <p class="nota">Los volúmenes del plano son la geometría real del modelo de SketchUp, con sus techos, retiros y plazas hundidas. Los de OpenStreetMap son la huella levantada a su altura: 8 m cuando OpenStreetMap no la registra, como hace hoy el mapa de Hesperides.</p>
+        <p class="nota">Altura cero es el suelo del modelo (z = 91,44 m). La escala vertical es real, sin exagerar.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+(async () => {
+  'use strict';
+  const carga = document.getElementById('carga');
+  if (!window.THREE || !THREE.OrbitControls) { carga.textContent = 'No se pudo cargar Three.js. Revisa la conexión y recarga la página.'; return; }
+  if (!('DecompressionStream' in window)) { carga.textContent = 'Este navegador no puede descomprimir el modelo. Ábrelo en una versión reciente de Chrome, Edge, Firefox o Safari.'; return; }
+
+  const D = JSON.parse(document.getElementById('datos').textContent);
+  const n1 = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  const n0 = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 0 });
+  const pct = new Intl.NumberFormat('es-PE', { style: 'percent', maximumFractionDigits: 0 });
+  const signo = (v) => (v < 0 ? '−' : '') + n1.format(Math.abs(v));
+  const alto = (v) => `${n1.format(v)} m`;
+  const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const TIPOS = {
+    coincide: 'Coincide', desplazado: 'Desplazado', forma: 'Forma distinta', plano_agrupa: 'El plano agrupa varios',
+    osm_agrupa: 'OSM agrupa varios', mixto: 'Mixto', solo_osm: 'No está en el plano', solo_plano: 'Solo en el plano',
+  };
+  const ORDEN = Object.keys(TIPOS);
+  const CLASES_ALTO = [[0, 5], [5, 10], [10, 20], [20, 30], [30, Infinity]];
+  const claseAlto = (h) => CLASES_ALTO.findIndex(([a, b]) => (h ?? 0) >= a && (h ?? 0) < b);
+  const MODOS = {
+    comparar: 'El plano sólido, coloreado por caso, con los edificios de OpenStreetMap como fantasmas azules encima.',
+    plano: 'Solo el modelo 3D del plano.',
+    hoy: 'Lo que hoy muestra el mapa 3D de Hesperides: la huella de OpenStreetMap levantada a su altura.',
+    cortina: 'Al oeste del corte, los edificios de OpenStreetMap; al este, el plano. Mueve el corte con el control.',
+  };
+
+  // ---------- Descompresión del modelo ----------
+  let buffer;
+  try {
+    const crudo = Uint8Array.from(atob(D.binario), (c) => c.charCodeAt(0));
+    buffer = await new Response(new Blob([crudo]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  } catch (e) {
+    carga.textContent = 'No se pudo descomprimir el modelo del plano.'; return;
+  }
+  const IDX = new Uint32Array(buffer, 0, D.bytes_indices / 4);
+  const POS = new Int16Array(buffer, D.bytes_indices);
+
+  // ---------- Escena ----------
+  const escena = document.getElementById('escena');
+  const lienzo = document.getElementById('lienzo');
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true });
+  } catch (e) {
+    carga.textContent = 'Este navegador no tiene WebGL activado, que la maqueta 3D necesita.'; return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.localClippingEnabled = true;
+  const scene = new THREE.Scene();
+  const camara = new THREE.PerspectiveCamera(42, 1, 1, 6000);
+  const controles = new THREE.OrbitControls(camara, lienzo);
+  controles.enableDamping = !reducido;
+  controles.dampingFactor = 0.1;
+  controles.maxPolarAngle = Math.PI * 0.49;
+  controles.minDistance = 15;
+  controles.maxDistance = 2600;
+  const VISTA_INICIAL = { pos: new THREE.Vector3(430, 470, 760), objetivo: new THREE.Vector3(0, 0, -40) };
+  camara.position.copy(VISTA_INICIAL.pos);
+  controles.target.copy(VISTA_INICIAL.objetivo);
+
+  const cielo = new THREE.HemisphereLight(0xffffff, 0x8a8f86, 0.75);
+  const sol = new THREE.DirectionalLight(0xffffff, 0.8);
+  sol.position.set(-320, 620, 380);
+  scene.add(cielo, sol);
+
+  // Del marco del plano (x este, y norte, z arriba) al de Three.js (y arriba): (x, z, -y)
+  function geometria(e) {
+    const pos = new Float32Array(e.vcount * 3);
+    for (let i = 0, j = e.voff * 3; i < e.vcount; i++, j += 3) {
+      pos[i * 3] = POS[j] * D.paso;
+      pos[i * 3 + 1] = POS[j + 2] * D.paso;
+      pos[i * 3 + 2] = -POS[j + 1] * D.paso;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setIndex(new THREE.BufferAttribute(IDX.slice(e.ioff, e.ioff + e.icount), 1));
+    g.computeVertexNormals();
+    g.computeBoundingBox();
+    return g;
+  }
+  const material = (opciones = {}) => new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0, flatShading: true, side: THREE.DoubleSide, ...opciones });
+
+  // Colores desde los tokens del tema
+  const css = () => getComputedStyle(document.documentElement);
+  const color = (nombre) => new THREE.Color(css().getPropertyValue('--' + nombre).trim());
+
+  const M = {
+    pavimento: material(), jardineria: material(), muro: material(), huacas: material(),
+    caso: Object.fromEntries(ORDEN.map((k) => [k, material()])),
+    alto: CLASES_ALTO.map(() => material()),
+    tenue: material({ transparent: true, opacity: 0.12, depthWrite: false }),
+    seleccion: material({ emissiveIntensity: 0.35 }),
+    osmFantasma: new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.22, depthWrite: false, roughness: 1 }),
+    osmSolido: material(),
+    entorno: material(),
+    bordes: new THREE.LineBasicMaterial({ transparent: true, opacity: 0.85 }),
+    bordesSel: new THREE.LineBasicMaterial(),
+  };
+  function aplicarColores() {
+    scene.background = color('cielo');
+    M.pavimento.color = color('suelo'); M.jardineria.color = color('jardin3d');
+    M.muro.color = color('muro3d'); M.huacas.color = color('huaca3d');
+    for (const k of ORDEN) M.caso[k].color = color(`t-${k}`);
+    M.alto.forEach((m, i) => { m.color = color(`h${i + 1}`); });
+    M.tenue.color = color('osm3d');
+    M.seleccion.color = color('brand'); M.seleccion.emissive = color('brand');
+    M.osmFantasma.color = color('osm'); M.osmSolido.color = color('osm3d'); M.entorno.color = color('entorno3d');
+    M.bordes.color = color('osm'); M.bordesSel.color = color('brand');
+    pedirCuadro();
+  }
+
+  // Suelo, muro y huacas del plano
+  for (const nombre of ['pavimento', 'jardineria', 'muro', 'huacas']) {
+    const m = new THREE.Mesh(geometria(D.grupos[nombre]), M[nombre]);
+    if (nombre === 'pavimento' || nombre === 'jardineria') { m.material.polygonOffset = true; m.material.polygonOffsetFactor = 1; }
+    scene.add(m);
+  }
+
+  // Casos
+  const casos = new Map(D.casos.map((c) => [c.numero, { ...c, mallas: [], osmMallas: [], bordes: [] }]));
+  for (const c of casos.values()) {
+    const nombres = [...new Set(c.nombres || [])];
+    c.titulo = nombres.length ? nombres.join(' · ') : c.plano.length ? `Edificio ${c.plano.join(', ')} del plano` : c.osm.join(', ');
+  }
+
+  // Edificios del plano
+  const plano = [];
+  for (const u of D.unidades) {
+    const malla = new THREE.Mesh(geometria(u), M.caso.coincide);
+    malla.userData = { u, c: casos.get(u.caso) || null };
+    if (malla.userData.c) malla.userData.c.mallas.push(malla);
+    plano.push(malla); scene.add(malla);
+  }
+
+  // Edificios de OpenStreetMap, levantados como en el mapa de Hesperides
+  const osm = [];
+  for (const b of D.osm) {
+    const forma = new THREE.Shape(b.anillos[0].map(([x, y]) => new THREE.Vector2(x, y)));
+    for (const h of b.anillos.slice(1)) forma.holes.push(new THREE.Path(h.map(([x, y]) => new THREE.Vector2(x, y))));
+    const g = new THREE.ExtrudeGeometry(forma, { depth: b.alto_osm || 8, bevelEnabled: false });
+    g.rotateX(-Math.PI / 2);
+    g.translate(0, 0.05, 0);
+    g.computeBoundingBox();
+    const malla = new THREE.Mesh(g, b.campus ? M.osmFantasma : M.entorno);
+    malla.renderOrder = 2;
+    const bordes = new THREE.LineSegments(new THREE.EdgesGeometry(g, 25), M.bordes);
+    bordes.renderOrder = 3;
+    malla.userData = { b, c: casos.get(b.caso) || null };
+    if (malla.userData.c) { malla.userData.c.osmMallas.push(malla); malla.userData.c.bordes.push(bordes); }
+    osm.push({ malla, bordes, campus: b.campus });
+    scene.add(malla, bordes);
+  }
+
+  // ---------- Estado de la vista ----------
+  let modo = 'comparar';
+  let colorPor = 'caso';
+  let aislado = null;
+  let seleccionado = null;
+  let cortinaActiva = false;
+  const corteOsm = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+  const cortePlano = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+  const MATERIALES_PLANO = () => [...Object.values(M.caso), ...M.alto, M.tenue, M.seleccion];
+
+  function materialPlano(malla) {
+    const { u, c } = malla.userData;
+    if (c && c === seleccionado) return M.seleccion;
+    if (aislado && (!c || c.tipo !== aislado)) return M.tenue;
+    return colorPor === 'alto' ? M.alto[claseAlto(u.alto)] : M.caso[c ? c.tipo : 'solo_plano'];
+  }
+  function actualizar() {
+    const verPlano = modo !== 'hoy';
+    const verOsm = modo !== 'plano';
+    for (const m of plano) { m.visible = verPlano; m.material = materialPlano(m); }
+    for (const o of osm) {
+      const c = o.malla.userData.c;
+      const fueraDelAislado = aislado && (!c || c.tipo !== aislado);
+      o.malla.visible = verOsm && (!o.campus || !fueraDelAislado || modo !== 'comparar');
+      o.malla.material = !o.campus ? M.entorno : modo === 'comparar' ? M.osmFantasma : M.osmSolido;
+      o.bordes.visible = o.malla.visible && o.campus && modo === 'comparar';
+      o.bordes.material = c && c === seleccionado ? M.bordesSel : M.bordes;
+    }
+    const cortina = modo === 'cortina';
+    if (cortina !== cortinaActiva) {  // cambiar los planos de corte recompila los materiales: solo al entrar o salir
+      cortinaActiva = cortina;
+      for (const m of [M.osmSolido, M.entorno, M.osmFantasma]) m.clippingPlanes = cortina ? [corteOsm] : [];
+      for (const m of MATERIALES_PLANO()) m.clippingPlanes = cortina ? [cortePlano] : [];
+      for (const m of [M.osmSolido, M.entorno, M.osmFantasma, ...MATERIALES_PLANO()]) m.needsUpdate = true;
+    }
+    document.getElementById('control-cortina').hidden = !cortina;
+    document.getElementById('explica-modo').textContent = MODOS[modo];
+    pintarLeyenda();
+    pedirCuadro();
+  }
+  const moverCorte = (x) => { corteOsm.constant = x; cortePlano.constant = -x; pedirCuadro(); };
+  document.getElementById('cortina').addEventListener('input', (ev) => moverCorte(Number(ev.target.value)));
+
+  document.querySelectorAll('[data-modo]').forEach((b) => b.addEventListener('click', () => {
+    modo = b.dataset.modo;
+    document.querySelectorAll('[data-modo]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    actualizar();
+  }));
+  document.querySelectorAll('[data-color]').forEach((b) => b.addEventListener('click', () => {
+    colorPor = b.dataset.color; aislado = null;
+    document.querySelectorAll('[data-color]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    actualizar();
+  }));
+
+  const conteo = Object.fromEntries(ORDEN.map((k) => [k, D.casos.filter((c) => c.tipo === k).length]));
+  function pintarLeyenda() {
+    const el = document.getElementById('leyenda');
+    el.innerHTML = '';
+    const nota = document.getElementById('nota-leyenda');
+    if (colorPor === 'alto') {
+      CLASES_ALTO.forEach(([a, b], i) => {
+        const fila = document.createElement('div'); fila.className = 'tipo'; fila.style.cursor = 'default';
+        fila.innerHTML = `<span class="cuadro" style="background:var(--h${i + 1})"></span><span></span><span class="n"></span>`;
+        fila.children[1].textContent = b === Infinity ? `${a} m o más` : `${a} a ${b} m de alto`;
+        fila.children[2].textContent = String(D.unidades.filter((u) => claseAlto(u.alto) === i).length);
+        el.append(fila);
+      });
+      nota.textContent = 'Altura máxima de cada edificio del plano sobre el suelo del modelo.';
+      return;
+    }
+    for (const k of ORDEN) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tipo'; b.setAttribute('aria-pressed', String(aislado === k));
+      b.innerHTML = `<span class="cuadro" style="background:var(--t-${k})"></span><span></span><span class="n"></span>`;
+      b.children[1].textContent = TIPOS[k]; b.children[2].textContent = String(conteo[k]);
+      b.addEventListener('click', () => { aislado = aislado === k ? null : k; actualizar(); });
+      el.append(b);
+    }
+    nota.textContent = aislado ? 'Mostrando solo este tipo de caso. Vuelve a pulsarlo para ver todos.' :
+      'Pulsa un tipo para aislarlo. Los casos «No está en el plano» se ven como fantasmas sin volumen del plano.';
+  }
+
+  // ---------- Selección y detalle ----------
+  const detalle = document.getElementById('detalle');
+  function mostrarDetalle(c) {
+    if (!c) {
+      detalle.innerHTML = '<h2>Caso seleccionado</h2><p class="nota">Haz clic en un edificio de la maqueta para ver su caso. Doble clic lo centra.</p>';
+      return;
+    }
+    const filas = [];
+    if (c.plano.length) filas.push(['Edificios del plano', c.mallas.map((m) => m.userData.u)
+      .map((u) => `${u.codigo}${u.alto ? ` (${alto(u.alto)})` : ''}`).join(', ') || c.plano.join(', ')]);
+    if (c.osm.length) filas.push(['Edificios de OSM', c.osmMallas.map((m) => m.userData.b.nombre || m.userData.b.id).join(', ')]);
+    filas.push(['Área en planta', [c.area_plano && `plano ${n0.format(c.area_plano)} m²`, c.area_osm && `OSM ${n0.format(c.area_osm)} m²`].filter(Boolean).join(' · ')]);
+    if (c.iou !== null && c.iou !== undefined) filas.push(['Superposición (IoU)', pct.format(c.iou)]);
+    if (c.desplazamiento_m !== null && c.desplazamiento_m !== undefined) filas.push(['Distancia entre centros', `${n1.format(c.desplazamiento_m)} m`]);
+    if (c.plano.length) filas.push(['Altura en el plano', c.alto_plano ? alto(c.alto_plano) : 'Sin volumen']);
+    if (c.osm.length) filas.push(['Altura en OSM', c.alto_osm_medido ? `${alto(c.alto_osm_medido)} (medida)` : '8 m estimados']);
+    if (c.base_plano !== null && c.base_plano !== undefined) filas.push(['Base en el plano', c.base_plano < -1 ? `${signo(c.base_plano)} m: hundido` : 'A nivel del suelo']);
+    detalle.innerHTML = `<h2>Caso ${c.numero}</h2><h3></h3><span class="estado"><span class="punto" style="background:var(--t-${c.tipo})"></span>${TIPOS[c.tipo]}</span><dl></dl>`;
+    detalle.querySelector('h3').textContent = c.titulo;
+    detalle.querySelector('dl').append(...filas.flatMap(([k, v]) => {
+      const dt = document.createElement('dt'); dt.textContent = k;
+      const dd = document.createElement('dd'); dd.textContent = v;
+      return [dt, dd];
+    }));
+  }
+  function seleccionar(c) { seleccionado = c; mostrarDetalle(c); actualizar(); }
+
+  function cajaDe(c) {
+    const caja = new THREE.Box3();
+    for (const m of [...c.mallas, ...c.osmMallas]) caja.union(m.geometry.boundingBox);
+    return caja;
+  }
+  let vuelo = null;
+  function volarA(objetivo, posicion) {
+    if (reducido) { controles.target.copy(objetivo); camara.position.copy(posicion); pedirCuadro(); return; }
+    vuelo = { t0: performance.now(), d: 700, o0: controles.target.clone(), o1: objetivo, p0: camara.position.clone(), p1: posicion };
+    pedirCuadro();
+  }
+  function centrarEn(c) {
+    const caja = cajaDe(c);
+    if (caja.isEmpty()) return;
+    const centro = caja.getCenter(new THREE.Vector3());
+    const tam = Math.max(caja.getSize(new THREE.Vector3()).length(), 40);
+    const dir = camara.position.clone().sub(controles.target).normalize();
+    volarA(centro, centro.clone().add(dir.multiplyScalar(tam * 1.6)));
+  }
+  document.getElementById('inicial').addEventListener('click', () => volarA(VISTA_INICIAL.objetivo.clone(), VISTA_INICIAL.pos.clone()));
+
+  // ---------- Puntero ----------
+  const rayo = new THREE.Raycaster();
+  const puntero = new THREE.Vector2();
+  const tooltip = document.getElementById('tooltip');
+  function tocar(ev) {
+    const r = lienzo.getBoundingClientRect();
+    puntero.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    rayo.setFromCamera(puntero, camara);
+    const candidatos = [...plano.filter((m) => m.visible && m.material !== M.tenue), ...osm.filter((o) => o.campus && o.malla.visible).map((o) => o.malla)];
+    for (const hit of rayo.intersectObjects(candidatos, false)) {
+      if (modo === 'cortina') {
+        const lado = hit.object.userData.u ? 'plano' : 'osm';
+        const x = hit.point.x, corte = corteOsm.constant;
+        if ((lado === 'plano' && x < corte) || (lado === 'osm' && x > corte)) continue;
+      }
+      return { ...hit.object.userData, x: ev.clientX - r.left, y: ev.clientY - r.top };
+    }
+    return null;
+  }
+  let pendiente = null;
+  lienzo.addEventListener('pointermove', (ev) => {
+    if (ev.buttons) { tooltip.hidden = true; return; }
+    if (pendiente) return;
+    pendiente = requestAnimationFrame(() => {
+      pendiente = null;
+      const t = tocar(ev);
+      if (!t || !t.c) { tooltip.hidden = true; return; }
+      const c = t.c;
+      tooltip.innerHTML = '<strong></strong><span class="estado"><span class="punto"></span><span class="tipo-t"></span></span><div class="t-1"></div>';
+      tooltip.querySelector('strong').textContent = c.titulo;
+      tooltip.querySelector('.punto').style.background = `var(--t-${c.tipo})`;
+      tooltip.querySelector('.tipo-t').textContent = `Caso ${c.numero} · ${TIPOS[c.tipo]}`;
+      tooltip.querySelector('.t-1').textContent = t.u
+        ? `${t.u.codigo}: ${t.u.alto ? alto(t.u.alto) : 'sin volumen'}${t.u.base < -1 ? `, base ${signo(t.u.base)} m` : ''}`
+        : `OSM: ${t.b.alto_osm ? alto(t.b.alto_osm) : '8 m'}${t.b.alto_osm_estimado ? ' estimados' : ''}`;
+      tooltip.hidden = false;
+      const w = escena.clientWidth, h = escena.clientHeight;
+      tooltip.style.left = `${Math.min(t.x + 14, w - tooltip.offsetWidth - 8)}px`;
+      tooltip.style.top = `${t.y + 14 + tooltip.offsetHeight > h ? t.y - tooltip.offsetHeight - 10 : t.y + 14}px`;
+    });
+  });
+  lienzo.addEventListener('pointerleave', () => { tooltip.hidden = true; });
+  let inicio = null;
+  lienzo.addEventListener('pointerdown', (ev) => { inicio = [ev.clientX, ev.clientY]; });
+  lienzo.addEventListener('pointerup', (ev) => {
+    if (!inicio || Math.hypot(ev.clientX - inicio[0], ev.clientY - inicio[1]) > 4 || ev.button !== 0) return;
+    const t = tocar(ev);
+    seleccionar(t ? t.c : null);
+  });
+  lienzo.addEventListener('dblclick', (ev) => { const t = tocar(ev); if (t && t.c) { seleccionar(t.c); centrarEn(t.c); } });
+
+  // ---------- Bucle ----------
+  let sucio = true;
+  function pedirCuadro() { sucio = true; }
+  controles.addEventListener('change', pedirCuadro);
+  function ajustar() {
+    const w = escena.clientWidth, h = escena.clientHeight;
+    renderer.setSize(w, h, false);
+    camara.aspect = w / Math.max(h, 1);
+    camara.updateProjectionMatrix();
+    pedirCuadro();
+  }
+  new ResizeObserver(ajustar).observe(escena);
+  function bucle(ahora) {
+    requestAnimationFrame(bucle);
+    if (vuelo) {
+      const k = Math.min((ahora - vuelo.t0) / vuelo.d, 1), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+      controles.target.lerpVectors(vuelo.o0, vuelo.o1, e);
+      camara.position.lerpVectors(vuelo.p0, vuelo.p1, e);
+      if (k === 1) vuelo = null;
+      sucio = true;
+    }
+    if (controles.update() || sucio) { renderer.render(scene, camara); sucio = false; }
+  }
+
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', aplicarColores);
+  new MutationObserver(aplicarColores).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+
+  aplicarColores();
+  document.getElementById('modo-comparar').setAttribute('aria-pressed', 'true');
+  document.getElementById('color-caso').setAttribute('aria-pressed', 'true');
+  ['plano', 'hoy', 'cortina'].forEach((m) => document.getElementById(`modo-${m}`).setAttribute('aria-pressed', 'false'));
+  document.getElementById('color-alto').setAttribute('aria-pressed', 'false');
+  actualizar();
+  ajustar();
+  carga.hidden = true;
+  requestAnimationFrame(bucle);
+})();
+</script>

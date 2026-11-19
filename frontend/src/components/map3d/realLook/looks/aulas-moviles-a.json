@@ -1,0 +1,49 @@
+{
+  "planKey": "5c5f0f57-5307-4a9b-ba08-50f2926c428c",
+  "name": "Aulas Móviles A",
+  "folder": "aulas-moviles-A",
+  "photos": [
+    "aulas-moviles-A.jpg"
+  ],
+  "materials": {
+    "panel": {
+      "color": "#e4e2dc"
+    },
+    "techo": {
+      "color": "#c4c7ca"
+    },
+    "ventanas": {
+      "color": "#cfcfcb"
+    }
+  },
+  "zones": [
+    {
+      "id": "bloques",
+      "wall": "panel",
+      "roof": "techo"
+    },
+    {
+      "id": "cara-oeste",
+      "where": {
+        "east": [
+          0,
+          0.4
+        ]
+      },
+      "wall": "panel",
+      "roof": "techo",
+      "faces": {
+        "W": [
+          {
+            "material": "ventanas",
+            "v": [
+              0.5,
+              1.7
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "notes": "Dos bloques prefabricados de paneles blancos con techo a dos aguas (aulas-moviles-A.jpg). La foto es la cara oeste del bloque oeste, con el letrero «Banco de Libros» en su extremo sur (el punto de referencia del mapa está ahí) y los testeros norte, ciegos, a la izquierda. Sus ventanas sueltas van como una franja tenue (D-04) solo en esa cara; las otras no salen en la foto y quedan del color del panel (D-06)."
+}

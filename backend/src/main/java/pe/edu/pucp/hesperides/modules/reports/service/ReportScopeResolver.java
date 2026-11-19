@@ -6,8 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
 import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
-import pe.edu.pucp.hesperides.modules.irrigation.dto.IrrigationZoneResponse;
-import pe.edu.pucp.hesperides.modules.irrigation.repository.IrrigationZoneQueries;
+import pe.edu.pucp.hesperides.modules.reports.repository.SectorQueries;
 import pe.edu.pucp.hesperides.modules.users.entity.Team;
 import pe.edu.pucp.hesperides.modules.users.repository.TeamsRepository;
 
@@ -17,7 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Resolves the reader's scope with the same rule irrigation applies (SPEC-202
+ * Resolves the reader's scope (SPEC-202
  * D-08): a SUPERVISOR's sectors are the {@code teams.zone_id} of the active teams
  * they lead. ADMIN gets the campus explicitly, without changing the global role
  * mapping (D-07).
@@ -28,7 +27,7 @@ public class ReportScopeResolver {
 
     private final UsersRepository users;
     private final TeamsRepository teams;
-    private final IrrigationZoneQueries zones;
+    private final SectorQueries zones;
 
     @Transactional(readOnly = true)
     public ReportScope resolve(String email) {
@@ -36,7 +35,7 @@ public class ReportScopeResolver {
                 .filter(User::isActive)
                 .orElseThrow(() -> new AccessDeniedException("Sin sesión válida"));
         Set<Long> activeSectors = zones.sectors().stream()
-                .map(IrrigationZoneResponse::id)
+                .map(SectorQueries.ZoneOption::id)
                 .collect(Collectors.toSet());
         String role = user.getRoleCode();
         if ("ADMIN".equals(role) || "COORDINADOR".equals(role)) {

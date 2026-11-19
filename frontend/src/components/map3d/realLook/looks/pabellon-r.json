@@ -1,0 +1,70 @@
+{
+  "planKey": "568cf341-f016-402f-b41b-b594693591a1",
+  "name": "Pabellón R: Facultad de Educación (aulas)",
+  "folder": "Pabellón R Facultad de Educación (aulas)",
+  "photos": [
+    "detras-1.jpg",
+    "detras-2.jpg",
+    "frente-hacia-eeggll.jpg",
+    "lado.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#cfcbc3"
+    },
+    "techo": {
+      "color": "#c7c4bd"
+    },
+    "ventanas": {
+      "glass": "#66717a",
+      "frame": "#d8d8d3",
+      "moduleM": 1.5,
+      "heightM": 1.6,
+      "frameM": 0.07,
+      "vary": 0.06
+    },
+    "ladrillo": {
+      "color": "#bf8f74"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ladrillo",
+          "v": [
+            0,
+            7
+          ],
+          "floors": {
+            "everyM": 3.5,
+            "startM": 0,
+            "bandM": [
+              0.1,
+              0.9
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7
+          ],
+          "floors": {
+            "everyM": 3.5,
+            "startM": 0,
+            "bandM": [
+              0.9,
+              2.5
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Marco de concreto gris con antepechos de ladrillo y una cinta de ventanas en cada piso (lado.jpg, frente-hacia-eeggll.jpg); atrás, concreto ciego (detras-1.jpg, detras-2.jpg). Los letreros no se dibujan."
+}

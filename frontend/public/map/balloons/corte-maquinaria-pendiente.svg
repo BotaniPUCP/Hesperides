@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 68 70" width="68" height="70" role="img" aria-label="Corte con maquinaria pendiente">
+  <title>Corte con maquinaria pendiente</title>
+  <ellipse cx="32" cy="65" rx="8" ry="2.2" fill="#000" opacity=".18"/>
+  <path d="M16.1 53.1A28 28 0 1 1 47.9 53.1L32 64Z" fill="#546E7A" stroke="#1F2A33" stroke-width="2.4" stroke-linejoin="round"/>
+  <circle cx="32" cy="30" r="21.5" fill="#fff" stroke="#1F2A33" stroke-width="1.5"/>
+  <g transform="translate(16 14)" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M6 22L1.5 6" stroke="#1F2A33" stroke-width="2"/>
+    <path d="M0 6.5h4.5" stroke="#1F2A33" stroke-width="2.6"/>
+    <path d="M5 16h14l4 6H4Z" fill="#E53935" stroke="#1F2A33" stroke-width="1.6"/>
+    <rect x="9" y="11.5" width="7" height="4.5" rx="1" fill="#546E7A" stroke="#1F2A33" stroke-width="1.4"/>
+    <circle cx="8" cy="25" r="3.4" fill="#37474F" stroke="#1F2A33" stroke-width="1.4"/>
+    <circle cx="19.5" cy="25" r="3.4" fill="#37474F" stroke="#1F2A33" stroke-width="1.4"/>
+    <rect x="21.5" y="1.5" width="10" height="10" rx="1.6" fill="#fff" stroke="#1F2A33" stroke-width="1.4"/>
+    <path d="M21.5 3.1a1.6 1.6 0 0 1 1.6-1.6h6.8a1.6 1.6 0 0 1 1.6 1.6V5h-10Z" fill="#78909C" stroke="#1F2A33" stroke-width="1.4"/>
+    <path d="M23.8 8.2h1.6M26.6 8.2h1.6" stroke="#B0BEC5" stroke-width="1.6"/><rect x="28.7" y="7" width="2.2" height="2.6" rx=".5" fill="#E53935"/>
+  </g>
+</svg>

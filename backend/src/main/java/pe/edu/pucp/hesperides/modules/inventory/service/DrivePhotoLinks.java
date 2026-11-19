@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 /**
  * Las fotos del catastro son enlaces de Google Drive para «ver» el archivo, que
  * no sirven como imagen. Su miniatura sí, mientras el archivo esté compartido
- * públicamente (docs/inventario-verde/README.md, D-9).
+ * públicamente (docs/modulos/inventario-verde.md, D-9).
  */
 public final class DrivePhotoLinks {
 

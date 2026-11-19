@@ -55,7 +55,7 @@ function AuthorizedHistory({ id, code, refreshKey = 0 }: SpecimenInterventionsPr
   useEffect(() => {
     let active = true;
     interventionsApi
-      .list(page, '', '', '', undefined, id)
+      .list(page, '', '', '', undefined, undefined, id)
       .then((data) => {
         if (active) {
           setResult(data);

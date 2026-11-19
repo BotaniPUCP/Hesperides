@@ -1,0 +1,51 @@
+{
+  "planKey": "80d344a8-1c7d-40eb-aa62-718b483bc480",
+  "name": "Pabellón H (Facultad de Letras y Ciencias Humanas)",
+  "folder": "Pabellon-H",
+  "photos": [
+    "frente-interno.jpg",
+    "frente.jpg",
+    "lado externo.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e2dac9"
+    },
+    "techo": {
+      "color": "#d6d3cb"
+    },
+    "ventanas": {
+      "glass": "#6f7c84",
+      "frame": "#e6e6e1",
+      "moduleM": 1.5,
+      "heightM": 1.6,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            14.4
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              1,
+              2.6
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Muros crema con una cinta de ventanas de marco claro en cada piso, en la fachada curva del frente (frente.jpg) y en los lados (lado externo.jpg, frente-interno.jpg). La franja naranja del lado externo y las galerías no se dibujan. Emparejamiento confirmado por Jean Piero el 14 nov (Anexo A, fila 45)."
+}

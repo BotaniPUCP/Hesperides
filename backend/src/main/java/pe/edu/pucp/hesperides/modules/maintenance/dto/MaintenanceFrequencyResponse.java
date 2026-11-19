@@ -7,6 +7,7 @@ import pe.edu.pucp.hesperides.modules.maintenance.entity.MaintenanceFrequencySea
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 public record MaintenanceFrequencyResponse(
         Long id,
@@ -14,8 +15,8 @@ public record MaintenanceFrequencyResponse(
         String regime,
         FrequencyRuleTypeSummary frequencyRuleType,
         String scope,
-        Long zoneId,
-        Integer targetDaysInterval,
+        /** La regla, compartida por todas sus versiones; a ella apuntan las asignaciones. */
+        UUID ruleKey,
         Integer minDaysInterval,
         Integer maxDaysInterval,
         Integer annualTargetCount,
@@ -31,8 +32,26 @@ public record MaintenanceFrequencyResponse(
         boolean current,
         boolean active,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        /** A cuántos conjuntos está asignada en Planificación. */
+        int assignedSetCount,
+        /** Avisos al guardar, como el cruce de frecuencias propias (SPEC-203 D-08). Nunca bloquean. */
+        List<String> warnings
 ) {
+    public MaintenanceFrequencyResponse withWarnings(List<String> w) {
+        return new MaintenanceFrequencyResponse(id, activityType, regime, frequencyRuleType, scope, ruleKey,
+                minDaysInterval, maxDaysInterval, annualTargetCount, coverageTargetDays, estimatedDurationDays,
+                seasonStartMonth, seasonEndMonth, seasons, notes, validFrom, validTo, current, active,
+                createdAt, updatedAt, assignedSetCount, List.copyOf(w));
+    }
+
+    public MaintenanceFrequencyResponse withAssignedSetCount(int count) {
+        return new MaintenanceFrequencyResponse(id, activityType, regime, frequencyRuleType, scope, ruleKey,
+                minDaysInterval, maxDaysInterval, annualTargetCount, coverageTargetDays, estimatedDurationDays,
+                seasonStartMonth, seasonEndMonth, seasons, notes, validFrom, validTo, current, active,
+                createdAt, updatedAt, count, warnings);
+    }
+
     public record ActivityTypeSummary(
             Long id,
             String code,
@@ -63,8 +82,7 @@ public record MaintenanceFrequencyResponse(
                 (int) s.getStartMonth(),
                 (int) s.getEndMonth(),
                 s.getMinDaysInterval(),
-                s.getMaxDaysInterval(),
-                s.getTargetDaysInterval());
+                s.getMaxDaysInterval());
     }
 
     public static MaintenanceFrequencyResponse from(MaintenanceFrequency entity) {
@@ -74,8 +92,7 @@ public record MaintenanceFrequencyResponse(
                 entity.getRegime(),
                 FrequencyRuleTypeSummary.from(entity.getFrequencyRuleTypeItem()),
                 entity.getScope(),
-                entity.getZoneId(),
-                entity.getTargetDaysInterval(),
+                entity.getRuleKey(),
                 entity.getMinDaysInterval(),
                 entity.getMaxDaysInterval(),
                 entity.getAnnualTargetCount(),
@@ -90,7 +107,9 @@ public record MaintenanceFrequencyResponse(
                 entity.isCurrent(),
                 entity.isActive(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                0,
+                List.of()
         );
     }
 }

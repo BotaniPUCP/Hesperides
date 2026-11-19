@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 68 70" width="68" height="70" role="img" aria-label="Evento bloqueante">
+  <title>Evento bloqueante</title>
+  <ellipse cx="32" cy="65" rx="8" ry="2.2" fill="#000" opacity=".18"/>
+  <path d="M16.1 53.1A28 28 0 1 1 47.9 53.1L32 64Z" fill="#8E24AA" stroke="#1F2A33" stroke-width="2.4" stroke-linejoin="round"/>
+  <circle cx="32" cy="30" r="21.5" fill="#fff" stroke="#1F2A33" stroke-width="1.5"/>
+  <g transform="translate(16 14)" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="2" y="5" width="22" height="21" rx="2.5" fill="#fff" stroke="#1F2A33" stroke-width="1.6"/>
+    <path d="M2 7.5a2.5 2.5 0 0 1 2.5-2.5h17a2.5 2.5 0 0 1 2.5 2.5V11H2Z" fill="#AB47BC" stroke="#1F2A33" stroke-width="1.6"/>
+    <path d="M7.5 2.5v5M18.5 2.5v5" stroke="#1F2A33" stroke-width="2"/>
+    <path d="M6 15h3M11.5 15h3M17 15h3M6 20h3M11.5 20h3" stroke="#B0BEC5" stroke-width="2"/>
+    <circle cx="23" cy="23" r="7.5" fill="#fff" stroke="#E53935" stroke-width="2.6"/>
+    <path d="M17.8 28.2l10.4-10.4" stroke="#E53935" stroke-width="2.6"/>
+  </g>
+</svg>

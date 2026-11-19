@@ -97,6 +97,11 @@ local no evita la licencia**: va con los datos, no con el lugar donde se guardan
 usen, el mapa muestra «© colaboradores de OpenStreetMap». Los planos de la PUCP llegan en una
 semana; al cargarlos, `source` pasa a `PUCP` y la atribución desaparece para esos edificios.
 
+> **Enmienda (SPEC-108 D-14, 12 nov 2026).** «Enmendado por SPEC-108, 12 nov 2026»: los planos ya
+> llegaron y los edificios del campus se dibujan con sus modelos (`source = 'PUCP'` cuando la geometría es
+> del plano). **La atribución se queda**: siguen en OpenStreetMap los 255 edificios del entorno y los
+> principales sin pieza del plano, y la licencia va con los datos.
+
 **D-04 · El algoritmo de cercanía vive en el Engine del backend.** Así web y Android describen una
 ubicación exactamente igual, y la descripción que se guarda en una incidencia es reproducible. Es
 el del prototipo, sin cambios de criterio:
@@ -130,7 +135,7 @@ GeoJSON de origen tienen coordenadas reales; cargarlos en PostGIS y proyectar en
 elimina el problema.
 
 **D-07 · El catastro se arma desde sus tres archivos, no desde la capa del HTML.**
-*(Implementado: el catastro está en la base, `V012`–`V014`, ver `docs/inventario-verde/README.md`, y el mapa lo dibuja en la capa `vegetation`. Las alturas medidas viajan desde la base; las ilustrativas las calcula el visor, `plantShape.ts`, y nunca se guardan.)* La capa de
+*(Implementado: el catastro está en la base, `V012`–`V014`, ver `docs/modulos/inventario-verde.md`, y el mapa lo dibuja en la capa `vegetation`. Las alturas medidas viajan desde la base; las ilustrativas las calcula el visor, `plantShape.ts`, y nunca se guardan.)* La capa de
 vegetación del HTML (1081 plantas) mezcla fuentes y solo 941 plantas coinciden con el catastro por
 coordenada exacta. La carga une, por coordenada exacta (< 0.2 m):
 
@@ -142,7 +147,7 @@ coordenada exacta. La carga une, por coordenada exacta (< 0.2 m):
 
 Las **128 plantas** del HTML que no aparecen en ninguno de los tres archivos (100 árboles, 23
 palmeras y 5 arbustos, todas dentro del campus y con especie) **no se cargan**: están listadas para
-revisión en [`plantas-sin-fuente.csv`](../../docs/dominio/datos/plantas-sin-fuente.csv), con su
+revisión en [`plantas-sin-fuente.csv`](../../docs/datos/procesados/plantas-sin-fuente.csv), con su
 fuente más cercana y la distancia. 109 se concentran en Universitaria (78) y Jardín Central (31); 9
 tienen su código en el catastro a 1–4 m, probablemente la misma planta medida otra vez. Tres filas
 de las mediciones tienen la longitud mal escrita (`-7,708…` por `-77,08…`: palmera 52 y cafetos 3 y
@@ -203,7 +208,7 @@ cronológica del [mapa de migraciones](../REGISTRO.md#mapa-de-migraciones):
 | V008 | Edificios (contorno, altura, pisos, fuente, categoría) y sus alias |
 | V009 | Mobiliario y elementos puntuales |
 | V010 | La versión de datos y los triggers que la incrementan |
-| V011 | La semilla, generada por `scripts/mapa/generar_semilla_mapa.py` desde `docs/dominio/datos/fuentes-mapa/` |
+| V011 | La semilla, generada por `scripts/mapa/generar_semilla_mapa.py` desde `docs/datos/procesados/mapa/` |
 
 La descripción congelada en la incidencia (§4.4) queda reservada como `V026`, después de la
 migración que crea `incidents`.
@@ -241,6 +246,11 @@ Semilla: los 417 edificios de OpenStreetMap; el vocabulario del prototipo (74 ed
 término, 12 deducidos) como `name` e `is_inferred_name`; sus 12 categorías como `BUILDING_CATEGORY`;
 sus 178 alias como `campus_building_aliases`.
 
+> **Enmienda (SPEC-108 §4, 12 nov 2026).** «Enmendado por SPEC-108, 12 nov 2026»: `campus_buildings` gana
+> `parent_building_id`, `plan_key` y `base_m` (migración `V045__group_buildings_by_plan.sql`), y aparece
+> `campus_building_codes` con los códigos oficiales del plano. Los edificios del campus se agrupan bajo 133
+> principales; los 71 agrupados conservan su `id`, alias y lugares. Ver SPEC-108 D-02.
+
 ### 4.2 Mobiliario
 
 ```sql
@@ -269,10 +279,28 @@ se promueve a su propia tabla.
 
 - **Áreas xerofíticas:** las 10 entran como **secciones sin sector** (`parent_zone_id` nulo),
   con su clase («Ornato») en `description`. No pertenecen a ninguno de los 5 sectores.
+  > **Enmienda del 15 nov 2026 (pedido de Jean Piero, V066; nació como V063 y se renumeró al integrar):** ocho de las diez repetían el polígono de un jardín
+  > de `areas_verdes.geojson`, porque `zonas.py` creó una sección por cada área de `xerofitica.geojson`. Esas
+  > áreas son xerofíticas, no jardines:
+  > - XE-0001 a XE-0005, XE-0008 y XE-0009 **heredan de su jardín** el uso, el riego actual, el proyecto de riego,
+  >   el sector, el código del mapa del cliente («D 14», «E 31») y la reserva. Conservan su código, su nombre, su
+  >   clase y su polígono. Con el sector pasan a tener capataz y pueden entrar en turnos de riego.
+  > - Los ocho jardines (AV-0248, -0253, -0264, -0287, -0383, -0455, -0466, -0483) se borran lógicamente.
+  >   También XE-0007, que caía entero dentro de XE-0005 (E 31): AV-0455 estaba dentro de AV-0383 y se contaba dos
+  >   veces en SEC-VERDE-02, cuya área baja en 118 m². El contorno de los sectores no cambia.
+  > - En todo conjunto, cada jardín borrado pasa a ser su xerofítica, una sola vez, y el conjunto sube su versión.
+  > - «Mismo polígono» es con menos de 0,01 m² de diferencia (no coinciden vértice a vértice). Si un par ya no
+  >   coincide, V066 falla sin tocar nada.
+  > - XE-0006 y XE-0010 quedan como estaban: son una parte de jardines más grandes (AV-0401 y D 1), no copias.
+  > - El buscador encuentra una xerofítica por su código del mapa y muestra su sector, como a un jardín.
 - **Reserva:** `zones` gana `is_reservable` y `reservation_owner_item_id` (`RESERVATION_OWNER`:
   `DAF`, `UNIDADES`). Los 20 jardines de reserva con geometría caen al 100 % dentro de una sección:
   se marcan esas secciones, no se crean zonas. `JR-0021` se descarta: repite a `JR-0010` y no tiene
   geometría.
+  > **Enmienda SPEC-107 (11 nov 2026):** las reservas guardan quién las pide (organización y
+  > solicitante), para quién son y su responsable, **por el Directorio** (SPEC-106). La importación del calendario de la OSG ya no es
+  > «sin nombres ni teléfonos de contacto»: el préstamo se registra en un módulo propio con esos
+  > datos. El calendario de la OSG queda solo como referencia de fechas y horarios.
 - **Subsecciones:** «Jardín Frutas» y «Jardín Frutas-Lado FCCSS» son dos subsecciones de
   `AV-0151`, con la geometría de sus jardines de reserva.
 - **Geometría:** de `areas_verdes.geojson` (WGS 84), que coincide con el HTML en sus 521 áreas
@@ -360,6 +388,11 @@ La del prototipo v39: misma escena, colores, día/noche, leyenda y buscador. Cam
 | `hooks/useMapLayers.ts` | Descarga condicional y copia local |
 | `MapScreen.tsx` y sus paneles | La pantalla: buscador, barra, leyenda, capas, ficha, atribución, listas sin WebGL |
 
+> **Enmienda (SPEC-108 §2.2, 12 nov 2026).** «Enmendado por SPEC-108, 12 nov 2026»: `viewer/` dibuja los
+> modelos del plano con suelo, desniveles y huaca; `viewer/labels.ts` recorta los nombres por ancho
+> medido; `viewer/planModel.ts` y el hook `hooks/usePlanModel.ts` (en `src/hooks/`) leen el modelo y su manifiesto; `infoCard.ts` y
+> `searchIndex.ts` conocen los códigos y los grupos. Detalle en SPEC-108.
+
 ---
 
 ## 8. Tests
@@ -399,9 +432,9 @@ Frontend (Jest, visor simulado)
 | # | Qué falta | Bloquea |
 |---|---|---|
 | P-01 | Modelos de los 5 equipos Android y si el mapa debe abrir sin señal | CA-09 |
-| P-02 | Planos de edificios de la PUCP (≈ 1 semana) | Retirar la atribución de OpenStreetMap |
+| P-02 | Planos de edificios de la PUCP (≈ 1 semana) | ~~Retirar la atribución de OpenStreetMap~~ Los planos llegaron (SPEC-108, 12 nov 2026), pero la atribución se queda (enmendado por SPEC-108, 12 nov 2026) |
 | P-03 | Fuente de los 67 bebederos | Su capa |
-| P-04 | Revisión de las 128 plantas del HTML sin fuente (`docs/dominio/datos/plantas-sin-fuente.csv`) | Su carga |
+| P-04 | Revisión de las 128 plantas del HTML sin fuente (`docs/datos/procesados/plantas-sin-fuente.csv`) | Su carga |
 
 **Origen de los datos de carga:** `Documentos_Port/internos` (GeoJSON de áreas verdes, reserva,
 xerofíticas, zonas de supervisión, fauna, puertas y estacionamientos; CSV de tachos y mediciones),

@@ -9,8 +9,8 @@ import java.io.UncheckedIOException;
 import java.util.Map;
 
 /**
- * Las plantillas descargables de cada estándar. Son copia de las de
- * {@code docs/estandares/plantillas/}; un test vigila que no se separen.
+ * Las plantillas descargables de cada estándar, tal como están en
+ * {@code src/main/resources/imports/templates/}; los estándares de docs/estandares/ enlazan ahí.
  */
 @Component
 public class CsvTemplates {
@@ -20,7 +20,10 @@ public class CsvTemplates {
             "waste-bins", "tachos.csv",
             "drinking-fountains", "bebederos.csv",
             "species-photos", "fotos-especies.csv",
-            "species", "especies.csv");
+            "species", "especies.csv",
+            "organizations", "organizaciones.csv",
+            "contacts", "contactos.csv",
+            "reservations", "reservas.csv");
 
     public record Template(String fileName, byte[] content) {
     }

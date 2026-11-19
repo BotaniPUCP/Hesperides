@@ -1,0 +1,88 @@
+{
+  "planKey": "77291032-303e-4a40-a509-49ec843b2e15",
+  "name": "Aulas Móviles C",
+  "folder": "aulas-moviles-C",
+  "photos": [
+    "aulas-moviles-C.jpg"
+  ],
+  "materials": {
+    "panel": {
+      "color": "#dcdee0"
+    },
+    "techo": {
+      "color": "#c4c7ca"
+    },
+    "metal": {
+      "color": "#3d4144"
+    },
+    "ventanas": {
+      "glass": "#6b7876",
+      "frame": "#e3e5e6",
+      "moduleM": 1.2,
+      "heightM": 1.2,
+      "frameM": 0.06,
+      "vary": 0.05
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "panel",
+      "roof": "techo",
+      "faces": {
+        "S": [
+          {
+            "material": "ventanas",
+            "u": [
+              -11.5,
+              21.3
+            ],
+            "v": [
+              -0.4,
+              5.4
+            ],
+            "floors": {
+              "everyM": 2.9,
+              "startM": -0.4,
+              "bandM": [
+                1,
+                2.2
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "escalera-oeste",
+      "where": {
+        "east": [
+          0.22,
+          0.36
+        ],
+        "north": [
+          0,
+          0.25
+        ]
+      },
+      "wall": "metal",
+      "roof": "metal"
+    },
+    {
+      "id": "escalera-este",
+      "where": {
+        "east": [
+          0.85,
+          1
+        ],
+        "north": [
+          0.2,
+          0.4
+        ]
+      },
+      "wall": "metal",
+      "roof": "metal"
+    }
+  ],
+  "notes": "Paneles prefabricados gris claro en dos pisos (aulas-moviles-C.jpg, tomada desde el estacionamiento de grava, al sur). El bloque largo lleva una cinta de ventanas en cada piso sobre su pasillo de la cara sur; el bloque de techo a dos aguas del oeste es ciego, con sus arriostres, y queda del color del panel. Las dos escaleras de metal negro van oscuras. La cara norte, la «espalda» del mapa, no sale en la foto y queda sin vidrio (D-06)."
+}

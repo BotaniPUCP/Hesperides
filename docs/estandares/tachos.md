@@ -1,8 +1,8 @@
 # Estándar de tachos (`tachos.csv`)
 
-Una fila es un tacho o una batería de tachos. Plantilla: [plantillas/tachos.csv](plantillas/tachos.csv),
+Una fila es un tacho o una batería de tachos. Plantilla: [tachos.csv](../../backend/src/main/resources/imports/templates/tachos.csv),
 con una fila de ejemplo que hay que borrar antes de cargar. Las reglas comunes están en el
-[README](README.md).
+[README](estandares-de-carga.md).
 
 | Columna | Obligatoria | Qué va |
 |---|---|---|

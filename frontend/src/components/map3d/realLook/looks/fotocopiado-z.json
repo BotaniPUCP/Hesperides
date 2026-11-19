@@ -1,0 +1,37 @@
+{
+  "planKey": "cb1dbda1-6c1a-4853-967b-9f90c8c47df4",
+  "name": "Centro de fotocopiado (adyacente a Pabellón Z)",
+  "folder": "fotocopiado-z",
+  "photos": [
+    "ladofrente-1.jpg",
+    "ladofrente-2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#ececea"
+    },
+    "techo": {
+      "color": "#d0d0cc"
+    },
+    "ventanas": {
+      "color": "#b7bcbd"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Caseta de paneles claros con una cinta de ventanales de aluminio, como franja, y techo de fibrocemento (ladofrente-1.jpg, ladofrente-2.jpg). Desde el 15 nov 2026 lleva los colores del de EE.GG.LL., como todos los centros de fotocopiado (pedido de Jean Piero)."
+}

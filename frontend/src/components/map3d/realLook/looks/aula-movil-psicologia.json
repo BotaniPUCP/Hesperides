@@ -1,0 +1,49 @@
+{
+  "planKey": "b8811ba2-310a-4701-806c-2b385175a201",
+  "name": "Aulas móviles Psicología",
+  "folder": "aula-movil-psicologia",
+  "photos": [
+    "frente.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e4dfcf"
+    },
+    "techo": {
+      "color": "#cfcdc6"
+    },
+    "ventanas": {
+      "glass": "#6b7880",
+      "frame": "#e6e6e1",
+      "moduleM": 1.5,
+      "heightM": 1.6,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7.2
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              1,
+              2.6
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Módulo prefabricado crema de dos pisos con una cinta de ventanales en cada uno (frente.jpg); la escalera exterior no está en el modelo."
+}

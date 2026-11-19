@@ -1,0 +1,36 @@
+{
+  "planKey": "e6f2bed2-5baf-4dea-bb63-385be50ae9bc",
+  "name": "Aula/Taller I-117 (Pintura), C24",
+  "folder": "C24 · Izquierda 122 · SKP C-3902, C-3882",
+  "photos": [
+    "frente.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#ebebe8"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "zocalo": {
+      "color": "#a3a6a5"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            -1,
+            0.5
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Muro blanco con zócalo gris y su puerta (frente.jpg)."
+}

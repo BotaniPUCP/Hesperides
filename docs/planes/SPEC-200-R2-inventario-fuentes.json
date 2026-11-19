@@ -1,0 +1,67 @@
+{
+  "authorizesSelection": false,
+  "placesFromDatabaseVerified": false,
+  "sources": [
+    {
+      "file": "areas_verdes.geojson",
+      "sha256": "a49722c742ba4554c85c9f73dc9e5e2893217092fbd264d879dc9a12789ccba6",
+      "zoneCount": 521,
+      "multipartZones": [
+        "AV-0003",
+        "AV-0100",
+        "AV-0104",
+        "AV-0106",
+        "AV-0128",
+        "AV-0129",
+        "AV-0145",
+        "AV-0147",
+        "AV-0155",
+        "AV-0168",
+        "AV-0169",
+        "AV-0189",
+        "AV-0214",
+        "AV-0235",
+        "AV-0253",
+        "AV-0421",
+        "AV-0437",
+        "AV-0441",
+        "AV-0451",
+        "AV-0460",
+        "AV-0462",
+        "AV-0467",
+        "AV-0474",
+        "AV-0478",
+        "AV-0503",
+        "AV-0505",
+        "AV-0506",
+        "AV-0514"
+      ]
+    },
+    {
+      "file": "xerofitica.geojson",
+      "sha256": "d629e31806d299e4ea8e5d8653af8c5e50d1e040e583d33ae9e2fd19344b6ac1",
+      "zoneCount": 10,
+      "multipartZones": [
+        "XE-0002"
+      ]
+    }
+  ],
+  "buildings": {
+    "count": 417,
+    "sha256": "9bdd352fe0ece2ef6bed7836e869629566a6f5e28f61e72377978376eaae1c42",
+    "librarySource": [
+      {
+        "layer": "edificios_campus",
+        "h": 8.0,
+        "n": "Biblioteca Central Luis Jaime Cisneros",
+        "c": 1,
+        "t": "university",
+        "id": "way/157964892",
+        "e": 1,
+        "lv": "",
+        "feature_index": 18
+      }
+    ],
+    "note": "Building geometry is not proof of a registered place or of its neighbors."
+  }
+}

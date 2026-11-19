@@ -1,8 +1,9 @@
 package pe.edu.pucp.hesperides.modules.imports.service;
 
 import org.springframework.stereotype.Service;
-import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreviewResponse;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportConfirmationSummary;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportOutcome;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreview;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportResultResponse;
 import pe.edu.pucp.hesperides.modules.imports.service.ImportBatchGate.Claimed;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
@@ -13,11 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 
 /** Lleva cada carga a quien sabe leer su estándar, según el tipo de la URL o del lote. */
 @Service
 public class ImportService {
+
+    /** Tipos cuyo resultado queda en el lote: confirmar dos veces devuelve el mismo resultado. */
+    private static final Set<String> RETRYABLE = Set.of("specimens", "species");
 
     private final Map<String, ImportHandler> byKind = new HashMap<>();
     private final ImportBatchGate gate;
@@ -34,24 +37,23 @@ public class ImportService {
      * ZIP llega como proveedor para leerlo recién con el permiso: una segunda carga
      * se rechaza sin haber ocupado sus 250 MB.
      */
-    public ImportPreviewResponse preview(String kind, byte[] csv, String fileName, Supplier<byte[]> zip, String userEmail) {
-        return preview(kind, csv, fileName, zip, Map.of(), userEmail);
+    public ImportPreview preview(String kind, ImportUpload upload, String userEmail) {
+        return preview(kind, upload, Map.of(), userEmail);
     }
 
-    public ImportPreviewResponse preview(String kind, byte[] csv, String fileName, Supplier<byte[]> zip,
-                                         Map<String, String> speciesBindings, String userEmail) {
-        return lock.run(() -> handler(kind).previewWithBindings(kind, csv, fileName, zip.get(),
-                speciesBindings == null ? Map.of() : speciesBindings, userEmail));
+    public ImportPreview preview(String kind, ImportUpload upload, Map<String, String> speciesBindings, String userEmail) {
+        return lock.run(() -> handler(kind).previewWithBindings(kind, upload, orEmpty(speciesBindings), userEmail));
     }
 
-    public ImportResultResponse confirm(long batchId, Map<Integer, Boolean> decisions, String userEmail) {
+    public ImportOutcome confirm(long batchId, Map<Integer, Boolean> decisions, String userEmail) {
         return confirm(batchId, decisions, null, userEmail);
     }
 
-    public ImportResultResponse confirm(long batchId, Map<Integer, Boolean> decisions, String summaryFingerprint,
-                                        String userEmail) {
+    /** Los ejemplares se confirman contra el resumen que vio el usuario: su huella es obligatoria. */
+    public ImportOutcome confirm(long batchId, Map<Integer, Boolean> decisions, String summaryFingerprint,
+                                 String userEmail) {
         return lock.run(() -> {
-            Optional<ImportResultResponse> completed = gate.confirmedResult(batchId, userEmail, Set.of("specimens", "species"));
+            Optional<ImportResultResponse> completed = gate.confirmedResult(batchId, userEmail, RETRYABLE);
             if (completed.isPresent()) return completed.get();
             Claimed claimed = gate.claim(batchId, userEmail);
             if ("specimens".equals(claimed.batch().kind())
@@ -59,29 +61,31 @@ public class ImportService {
                 throw new ValidationException("A confirmation summary is required before importing specimens");
             }
             if (summaryFingerprint != null) {
-                ImportBatchGate.verifyConfirmationFingerprint(claimed.batch(), decisions, summaryFingerprint);
+                ImportFingerprints.verifyConfirmationFingerprint(claimed.batch(), decisions, summaryFingerprint);
             }
-            return handler(claimed.batch().kind()).confirm(claimed, decisions == null ? Map.of() : decisions);
+            return handler(claimed.batch().kind()).confirm(claimed, orEmpty(decisions));
         });
     }
 
     public ImportConfirmationSummary confirmationSummary(long batchId, Map<Integer, Boolean> decisions,
-                                                          String planFingerprint, String userEmail) {
+                                                         String planFingerprint, String userEmail) {
         return lock.run(() -> {
             Claimed claimed = gate.claim(batchId, userEmail);
-            ImportBatchGate.verifyPlanFingerprint(claimed.batch(), planFingerprint);
-            return handler(claimed.batch().kind()).confirmationSummary(claimed,
-                    decisions == null ? Map.of() : decisions);
+            ImportFingerprints.verifyPlanFingerprint(claimed.batch(), planFingerprint);
+            return handler(claimed.batch().kind()).confirmationSummary(claimed, orEmpty(decisions));
         });
     }
 
-    public ImportPreviewResponse reanalyze(long batchId, byte[] csv, String fileName, byte[] zip,
-                                           Map<String, String> speciesBindings, String userEmail) {
+    public ImportPreview reanalyze(long batchId, ImportUpload upload, Map<String, String> speciesBindings,
+                                   String userEmail) {
         return lock.run(() -> {
             Claimed claimed = gate.claim(batchId, userEmail);
-            return handler(claimed.batch().kind()).reanalyze(claimed, csv, fileName, zip,
-                    speciesBindings == null ? Map.of() : speciesBindings);
+            return handler(claimed.batch().kind()).reanalyze(claimed, upload, orEmpty(speciesBindings));
         });
+    }
+
+    private static <K, V> Map<K, V> orEmpty(Map<K, V> map) {
+        return map == null ? Map.of() : map;
     }
 
     private ImportHandler handler(String kind) {

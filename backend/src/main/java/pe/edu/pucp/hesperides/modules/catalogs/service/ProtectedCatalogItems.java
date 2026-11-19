@@ -22,7 +22,7 @@ final class ProtectedCatalogItems {
             "EVIDENCE_MOMENT", Set.of("BEFORE", "AFTER"),
             "CONTRACT_STATUS", Set.of("DRAFT", "ACTIVE", "EXPIRED", "TERMINATED"),
             "EXECUTION_STATUS", Set.of("PLANNED", "EXECUTED", "MISSED", "OBSERVED"),
-            "INCIDENT_STATUS", Set.of("REPORTED", "IN_REVIEW", "IN_PROGRESS", "RESOLVED"),
+            "INCIDENT_STATUS", Set.of("REPORTED", "IN_PROGRESS", "CLOSED"),
             "URGENCY_LEVEL", Set.of("LOW", "MEDIUM", "HIGH", "CRITICAL"));
 
     private ProtectedCatalogItems() {

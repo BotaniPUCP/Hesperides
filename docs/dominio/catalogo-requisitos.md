@@ -130,6 +130,7 @@ M5 10/11 · M6 9/10 · M7 5/5 · M8 3/3 · M9 4/4
 > los servicios tercerizados a fase futura, solo 6.10 lo toca. No es un olvido: **no tenemos
 > información del proceso tercerizado** (ni un contrato ni un informe de proveedor), y construir
 > sobre suposiciones sería peor que esperar. D6 conserva además 6.9, de prioridad Media.
+> Las frecuencias (1.7, SPEC-203) atacan **D5** y apenas tocan D2: solo miden el trabajo del personal propio.
 >
 > ⚠️ **D1 pierde su requisito central.** Sin la integración con el mapa del cliente (2.8), Carolina
 > seguirá alimentándolo a mano. D1 se ataca desde el registro en campo (3.4, 3.7) y el tablero
@@ -201,14 +202,14 @@ cinco requisitos nuevos que ya estaban construidos sin figurar aquí.
 | 1.2 | Gestión de roles y permisos | `HAB` | 1 | — | ✅ | 100% | **`ADMIN` incluye todos los permisos de `COORDINADOR`**. `OPERARIO` sin cuentas |
 | 1.3 | Autenticación y login | `HAB` | 1 | — | ✅ | 100% | Implementado (SPEC-001) |
 | 1.4 | Catálogo de tipos de intervención | `HAB` | 1 | — | ✅ | 100% | 9 clases → 45 tipos. Fitosanitario e Inspección con tipos provisionales (P-10) |
-| 1.5 | Catálogo de especies | `HAB` | 1 | — | ✅ | 80% | 🔒 → ✅ **90 especies** limpias (de 91 nombres), con familia y nombres alternativos **por validar**, consultables en el inventario verde. **Galería de 230 fotos genéricas** (1 a 4 por especie) con autor y licencia (SPEC-104). Falta la pantalla para administrarlas. Ver `docs/inventario-verde/README.md` |
+| 1.5 | Catálogo de especies | `HAB` | 1 | — | ✅ | 80% | 🔒 → ✅ **90 especies** limpias (de 91 nombres), con familia y nombres alternativos **por validar**, consultables en el inventario verde. **Galería de 230 fotos genéricas** (1 a 4 por especie) con autor y licencia (SPEC-104). Falta la pantalla para administrarlas. Ver `docs/modulos/inventario-verde.md` |
 | 1.6 | Catálogo de zonas del campus | `HAB` | 1 | — | 🔶 | 40% | **Sector (5) → sección (521 + 10 xerofíticas) → subsección.** Cargado con SPEC-102; falta la pantalla de administración. Todo sale del mapa v32. Las **411 referencias** oficiales se están migrando a lugares (9.4). Ver nota |
-| 1.7 | Configuración de frecuencias de mantenimiento | Media | 2 | D2 | ✅ | 60% | SPEC-101 (supera a SPEC-006): pantalla `/admin/frecuencias`, versionado y evaluador de cumplimiento. Medir el cumplimiento real espera a las intervenciones (M3) |
-| 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 60% | Pantalla `/admin/parametros`: política de contraseñas, intentos de inicio de sesión y hectáreas del campus. Falta la **lista de feriados** que usa 5.11 |
+| 1.7 | Configuración de frecuencias de mantenimiento | Media | 2 | D5 | ✅ | 70% | SPEC-101 y SPEC-203: cada cuánto por actividad, para todo el campus o un conjunto de jardines, y la planificación preventiva que dice qué toca y dónde. Falta validarlo en navegador y confirmar con el cliente que manda la estación de la última vez |
+| 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 60% | Pantalla `/admin/parametros`: política de contraseñas, intentos de inicio de sesión y hectáreas del campus. La **lista de feriados** vive en el calendario del campus (SPEC-114, 15 nov 2026) |
 | 1.9 | Gestión de cuadrillas y asignación a sectores | **Alta** | 3 | D5 D7 | 🔶 | 0% | 3 sectores verdes (9+9+7 personas), un capataz cada uno; Polideportivo y Bosque húmedo sin cuadrilla propia. La asignación de secciones **tiene vigencia**. Falta P-15 |
 | 1.10 | Catálogo de insumos y materiales | `HAB` | 1 | — | ✅ | 0% | Lista extraída del Excel |
 | 1.11 | Catálogo de unidades de medida | `HAB` | 1 | — | ✅ | 0% | und · m · m² · m³ |
-| **1.12** | **Eventos del campus** | Media | 2 | D5 D7 | ✅ | 0% | 🆕 Periodos bloqueantes y de préstamo, sobre el campus, un sector o una sección. Ver nota |
+| **1.12** | **Eventos del campus** | Media | 2 | D5 D7 | ✅ | 80% | 🆕 Periodos bloqueantes y de préstamo, sobre el campus, un sector o una sección. Préstamos: SPEC-107. Bloqueantes y feriados: SPEC-114 (15 nov 2026), con avisos al programar y al reservar, y en el mapa. Falta la recuperación del jardín tras un préstamo, fuera por decisión del usuario. Ver nota |
 
 **Sobre 1.4 — la taxonomía es de dos niveles.** El Excel define **9 clases** (Habilitación,
 Rehabilitación, Mantenimiento, Poda, Propagación, Riego, Manejo fitosanitario, Residuos,
@@ -246,6 +247,9 @@ meses anteriores se sigue contando en el sector que la tenía entonces.
 - **Un préstamo marca la sección** mientras dura. Al terminar, la sección aparece como **«requiere
   recuperación»**: OSG presta unos 12 jardines de forma recurrente y *«esos espacios nos demandan
   mucho tiempo para recuperarlos»*.
+- **Todo jardín prestable es un lugar** (M9), con los nombres del calendario de la OSG como alias.
+  Los 19 actuales se crearon en `V035`. Cuando el sistema permita marcar una sección como
+  prestable, **exigirá crear su lugar** en la misma operación.
 
 **Sobre 1.7 — las frecuencias no son fijas.** Césped 30-45 días *según estación*; fitosanitario
 4 al año *mínimo, más si el clima lo exige*; poda mayor 1 al año. En 2026, un «verano eterno»
@@ -423,7 +427,7 @@ llenan los capataces con ayuda de las ingenieras de la sección o del propio pre
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
 | 4.1 | Registro de contratos/servicios | Media | 2 | D2 | ⏭️ | 0% | No hemos visto un contrato tipo |
-| 4.2 | Registro de proveedor | Media | 2 | D2 | ✅ | 0% | 🔶 → ✅ **Solo datos básicos**, sembrados con **datos de prueba** |
+| 4.2 | Registro de proveedor | Media | 2 | D2 | ✅ | 80% | 🔶 → ✅ **Solo datos básicos**. SPEC-106 (8 nov 2026): el proveedor es una **empresa externa del Directorio** (nombre, RUC, teléfono y contactos); falta cargar las empresas de la matriz de la OSG |
 | 4.3 | Seguimiento de ejecución del servicio | **Alta** | 3 | D2 | ⏭️ | 0% | Falta un reporte de cierre del proveedor |
 | 4.4 | Carga de informe final del proveedor | Media | 2 | D2 | ⏭️ | 0% | Robert los está compilando |
 | 4.5 | Comparativo frecuencia pactada vs. real | **Alta** | 3 | D2 D5 | ⏭️ | 0% | Falta si las frecuencias están en el contrato |
@@ -453,7 +457,7 @@ llenan los capataces con ayuda de las ingenieras de la sección o del propio pre
 | 5.8 | Marca de origen Centuria | Baja ⬇️ | 1 | D1 | ✅ | 0% | **Reformulado:** una marca de que la solicitud llegó por Centuria. Ver nota |
 | 5.9 | Distinguir hallazgo de mantenimiento rutinario | Media | 2 | D7 | ✅ | 0% | El Excel ya lo distingue |
 | 5.10 | Avisar a la unidad solicitante al cerrar | Media | 2 | D7 | ⏭️ | 0% | Las unidades no son usuarias y su canal es Centuria |
-| **5.11** | **Maquinaria de corte solo en sábados, domingos y feriados** | Media | 2 | D7 | ✅ | 0% | 🆕 Ver nota |
+| **5.11** | **Maquinaria de corte solo en sábados, domingos y feriados** | Media | 2 | D7 | ✅ | 90% | 🆕 SPEC-115 (16 nov 2026): casilla en la intervención, sugerida por el tipo; impide guardar fuera de sábado, domingo o feriado del calendario. Falta validar con el cliente la lista de tipos que la sugieren. Ver nota |
 
 ### Sobre 5.1 — la urgencia depende de dónde está el problema
 
@@ -530,7 +534,7 @@ un fin de ciclo—, el sistema **avisa**, pero no impide.
 | 6.7 | Indicadores de rendimiento | Baja | 1 | D2 | ⏭️ | 0% | Depende de 4.10 |
 | 6.8 | Cobertura mensual del 100% de las 15.6 ha | **Alta** | 3 | D5 | 🔶 | 0% | Falta qué cuenta como zona cubierta |
 | 6.9 | Mapa de calor de intervenciones por zona | Media | 2 | D6 | ✅ | 0% | 🔶 → ✅ **Entra en nuestro modelado**, sobre el mapa propio (2.1) |
-| 6.10 | Cumplimiento de frecuencias por servicio | **Alta** | 3 | D2 D5 | ✅ | 0% | Frecuencias de SPEC-006 |
+| 6.10 | Cumplimiento de frecuencias por servicio | **Alta** | 3 | D2 D5 | ✅ | 60% | Reporte mensual (SPEC-202) con un veredicto por jardín y una sola regla por jardín (SPEC-203 §5.8). Lo tercerizado sigue «No evaluable» |
 
 ### Sobre 6.8 y 6.9 — son las métricas que el cliente ya usa
 
@@ -562,7 +566,7 @@ eso lo incluimos en nuestro modelado aunque su mapa ya lo tenga.
 
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
-| 7.1 | Registro del turno de riego por sector | **Alta** | 3 | D5 | ✅ | 0% | Ciclo bien explicado en la 2.ª entrevista |
+| 7.1 | Registro del turno de riego por sector | **Alta** | 3 | D5 | ✅ | 0% | Ciclo bien explicado en la 2.ª entrevista. **15 nov 2026:** el riego se registra como intervención de clase Riego desde Planificación (SPEC-203); el módulo de turnos se eliminó (SPEC-113 D-08) |
 | 7.2 | Cobertura del campus en la ventana de 15 días | **Alta** | 3 | D5 | 🔶 | 0% | Falta qué cuenta como «zona regada» |
 | 7.3 | Zonas que requieren más de una pasada | Media | 2 | D5 | 🔒 | 0% | Falta la lista de esas zonas |
 | 7.4 | Control de la ventana horaria | Baja | 1 | — | ✅ | 0% | 6:30-7:00 a 11:30 |

@@ -6,8 +6,8 @@ import unicodedata
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
-FUENTES = RAIZ / "docs/dominio/datos/fuentes-mapa"
-DATOS = RAIZ / "docs/dominio/datos"
+FUENTES = RAIZ / "docs/datos/procesados/mapa"
+DATOS = RAIZ / "docs/datos/procesados"
 
 
 def q(texto):

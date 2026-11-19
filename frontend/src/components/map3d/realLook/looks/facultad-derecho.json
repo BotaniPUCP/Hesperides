@@ -1,0 +1,111 @@
+{
+  "planKey": "c315d792-aa51-4f25-b2fd-77adf2729a99",
+  "name": "Facultad de Derecho",
+  "folder": "facuttad-derecho",
+  "photos": [
+    "frente1.jpg",
+    "frente2.jpg",
+    "frente3.jpg",
+    "lado1.jpg",
+    "desde_adentro.jpg"
+  ],
+  "materials": {
+    "blanco": {
+      "color": "#e8e8e4"
+    },
+    "techo": {
+      "color": "#c9c7c1"
+    },
+    "ventanas": {
+      "color": "#8f989c"
+    },
+    "concreto": {
+      "color": "#c8c6c0"
+    },
+    "caqui": {
+      "color": "#b4ad96"
+    },
+    "vidrio": {
+      "glass": "#6c8288",
+      "frame": "#d0d4d2",
+      "moduleM": 1.5,
+      "heightM": 3.4,
+      "frameM": 0.06,
+      "spandrel": {
+        "color": "#577077",
+        "heightM": 1.0
+      },
+      "vary": 0.08
+    }
+  },
+  "zones": [
+    {
+      "id": "alas",
+      "wall": "blanco",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            8.1
+          ],
+          "floors": {
+            "everyM": 3.9,
+            "startM": 0.2,
+            "bandM": [
+              1.0,
+              2.6
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bloque-entrada",
+      "where": {
+        "north": [
+          0,
+          0.2
+        ],
+        "east": [
+          0.45,
+          1
+        ]
+      },
+      "wall": "caqui",
+      "roof": "techo"
+    },
+    {
+      "id": "torre",
+      "where": {
+        "east": [
+          0.68,
+          1
+        ],
+        "north": [
+          0.25,
+          1
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo",
+      "faces": {
+        "W": [
+          {
+            "material": "vidrio",
+            "u": [
+              -18.1,
+              5.2
+            ],
+            "v": [
+              4.0,
+              20.5
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "notes": "Frente al sur (la torre queda detrás y a la derecha en frente1.jpg). Alas blancas de dos pisos con su fila de ventanas en cada piso (frente2.jpg, lado1.jpg, desde_adentro.jpg; D-04). Bloque de entrada y pórtico caqui (frente1.jpg, frente2.jpg). Torre de concreto caravista con el muro cortina en el tramo central de su cara oeste, del segundo piso arriba (frente3.jpg); la cara este no tiene foto y queda de concreto, excepción confirmada a la coherencia de D-06 (13 nov). Las letras no se dibujan."
+}

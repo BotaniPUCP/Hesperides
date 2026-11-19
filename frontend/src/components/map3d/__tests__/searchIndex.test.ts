@@ -1,3 +1,5 @@
+import { toSceneData } from '../sceneData';
+import { layersWithGroups } from '../__fixtures__/mapLayers';
 import { buildSearchIndex, normalize, search, type SearchEntry } from '../searchIndex';
 
 describe('normalize', () => {
@@ -50,6 +52,23 @@ describe('buildSearchIndex', () => {
     });
 
     expect(search(index, 'hallazgos')[0].target).toEqual({ layer: 'references', index: 0 });
+  });
+
+  it('una xerofítica se encuentra por el código del mapa del cliente y lleva su sector, como un jardín (SPEC-102 §4.3)', () => {
+    const xe = {
+      g: [], props: {
+        code: 'XE-0005', name: 'Área xerofítica 5', description: 'Ornato', parentCode: 'SEC-VERDE-02', mapCode: 'E 31', useType: null,
+        reservable: false, reservationOwner: null, areaM2: 127, landscapeType: 'XEROPHYTIC', irrigationCurrent: null, irrigationProject: null,
+      },
+    };
+    const index = buildSearchIndex({
+      campusBuildings: [], greenAreas: [], xerophytic: [xe], reserve: [], supervision: [], gates: [], bins: [], fountains: [], references: [],
+      sectorNameByCode: { 'SEC-VERDE-02': 'Sector verde 02' },
+    });
+
+    const [found] = search(index, 'e 31');
+    expect(found.target).toEqual({ layer: 'xerophytic', index: 0 });
+    expect(found.subtitle).toBe('Jardín xerofítico, E 31, Sector verde 02');
   });
 
   const ref = (code: string, name: string, parentCode: string | null = null) => ({
@@ -105,10 +124,24 @@ describe('buildSearchIndex', () => {
 
   it('no indexa edificios sin nombre: no se pueden buscar', () => {
     const index = buildSearchIndex({
-      campusBuildings: [{ g: [], props: { id: 1, name: null, inferredName: false, category: null, campus: true, heightM: 8, levels: null, source: 'OSM', aliases: null } }],
+      campusBuildings: [{ g: [], props: { id: 1, name: null, inferredName: false, category: null, campus: true, heightM: 8, levels: null, source: 'OSM', aliases: null, parentId: null, planKey: null, baseM: null, codes: null } }],
       greenAreas: [], xerophytic: [], reserve: [], supervision: [], gates: [], bins: [], fountains: [], references: [], sectorNameByCode: {},
     });
 
     expect(index).toHaveLength(0);
+  });
+});
+
+describe('edificios del plano en el buscador', () => {
+  const index = buildSearchIndex(toSceneData(layersWithGroups));
+
+  it('encuentra el principal por el nombre o el alias de un hijo', () => {
+    expect(search(index, 'cemduc').map((e) => e.title)).toEqual(['Artes Escénicas']);
+    expect(search(index, 'centro de musica').map((e) => e.title)).toEqual(['Artes Escénicas']);
+  });
+
+  it('encuentra el principal por su código o su etiqueta oficial', () => {
+    expect(search(index, 'C51').map((e) => e.title)).toEqual(['Artes Escénicas']);
+    expect(search(index, 'pabellon y').map((e) => e.title)).toEqual(['Artes Escénicas']);
   });
 });

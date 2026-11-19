@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Meta } from './geometry';
+import { fitDistance, framingTarget, type GroundPoint } from './frameFit';
 
 /**
  * Cámara y controles del prototipo v39: arrastrar desplaza, clic derecho o dos
@@ -12,11 +13,22 @@ const FLIGHT_MS = 1100;
 /** Cuánto puede alejarse el centro de la vista del borde del campus, en metros. */
 const PAN_MARGIN_M = 300;
 const FOCUS_MIN_DISTANCE_M = 230;
+/** Encuadrar un grupo es un viaje más largo que ir a un elemento: más lento para que se lea el recorrido. */
+const GROUP_FLIGHT_MS = 1800;
+/** Fracción de la pantalla que puede ocupar el grupo: lo máximo sin que los jardines del borde toquen el marco. */
+const GROUP_FILL = 0.9;
+/** Inclinación del encuadre: bastante cenital para que el área se vea grande, sin perder el relieve 3D. */
+const GROUP_ELEVATION_DEG = 58;
+/** Un jardín suelto no debe quedar tan cerca que se pierda el contexto alrededor. */
+const GROUP_MIN_DISTANCE_M = 70;
 
 type Vec3 = [number, number, number];
 
 /** Dónde está la cámara y hacia dónde mira: basta para devolverla a la misma vista. */
 export interface CameraPose { position: Vec3; target: Vec3 }
+
+/** En el modo libre, el anclaje puede quedar muy cerca: un árbol a pocos metros. */
+const FREE_MIN_DISTANCE_M = 0.5;
 
 interface Flight { p0: THREE.Vector3; t0: THREE.Vector3; p1: THREE.Vector3; t1: THREE.Vector3; start: number; ms: number }
 
@@ -28,13 +40,23 @@ export interface CameraRig {
   north: () => void;
   focus: (meta: Meta, heightHint?: number) => void;
   focusPoint: (x: number, z: number) => void;
+  /** Vuela hasta que esos puntos del suelo llenen la pantalla, sin cambiar el rumbo actual. */
+  focusPoints: (points: readonly GroundPoint[]) => void;
   toggleSpin: () => boolean;
   /** Avanza el vuelo en curso; true si la cámara se movió. */
   step: (now: number) => boolean;
   cancelFlight: () => void;
+  /** Si un vuelo programado está moviendo la cámara ahora. */
+  flying: () => boolean;
+  /** La vista actual o, durante un vuelo, la de su destino: un visor que se rearma a mitad de vuelo debe terminar donde iba. */
   pose: () => CameraPose;
   /** Vuela hasta una pose guardada. */
   flyToPose: (pose: CameraPose) => void;
+  /**
+   * Modo de administrador: el anclaje va a donde se mira, así que no se encierra en el
+   * campus ni se limita la distancia; al salir vuelven los límites de la órbita.
+   */
+  setFree: (free: boolean) => void;
 }
 
 export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE.Vector3, reducedMotion: boolean, initialPose?: CameraPose): CameraRig {
@@ -43,8 +65,11 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
   Object.assign(controls, { enableDamping: true, dampingFactor: 0.09, maxPolarAngle: 1.32, minDistance: 35, maxDistance: 2600, zoomSpeed: 1.1, rotateSpeed: 0.7 });
   controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
   let flight: Flight | null = null;
+  let free = false;
+  const orbitDistances = { minDistance: controls.minDistance, maxDistance: controls.maxDistance };
 
   controls.addEventListener('change', () => {
+    if (free) return;
     const t = controls.target;
     const cx = THREE.MathUtils.clamp(t.x, box.min.x - PAN_MARGIN_M, box.max.x + PAN_MARGIN_M);
     const cz = THREE.MathUtils.clamp(t.z, box.min.z - PAN_MARGIN_M, box.max.z + PAN_MARGIN_M);
@@ -65,10 +90,15 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
     flight = { p0: camera.position.clone(), t0: controls.target.clone(), p1: position, t1: target, start: performance.now(), ms };
   }
 
+  /** Distancia a la que una esfera de ese radio entra en el campo de visión más estrecho. */
+  function distanceToFit(radius: number): number {
+    const vf = THREE.MathUtils.degToRad(camera.fov / 2), hf = Math.atan(Math.tan(vf) * camera.aspect);
+    return radius / Math.sin(Math.min(vf, hf));
+  }
+
   function fitPose(): [THREE.Vector3, THREE.Vector3] {
     const radius = Math.hypot(box.max.x - box.min.x, box.max.z - box.min.z) / 2;
-    const vf = THREE.MathUtils.degToRad(camera.fov / 2), hf = Math.atan(Math.tan(vf) * camera.aspect);
-    const dist = (radius / Math.sin(Math.min(vf, hf))) * (camera.aspect < 1 ? 0.92 : 0.8);
+    const dist = distanceToFit(radius) * (camera.aspect < 1 ? 0.92 : 0.8);
     const dir = new THREE.Vector3(0.2, 0.78, 0.6).normalize();
     return [center.clone().addScaledVector(dir, dist), center.clone()];
   }
@@ -80,8 +110,17 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
     return off.normalize();
   }
 
-  function focusAt(target: THREE.Vector3, dist: number) {
-    flyTo(target.clone().addScaledVector(horizontalOffset(), dist * 0.62).add(new THREE.Vector3(0, dist * 0.72, 0)), target);
+  function focusAt(target: THREE.Vector3, dist: number, ms = FLIGHT_MS) {
+    flyTo(target.clone().addScaledVector(horizontalOffset(), dist * 0.62).add(new THREE.Vector3(0, dist * 0.72, 0)), target, ms);
+  }
+
+  function focusPoints(points: readonly GroundPoint[]) {
+    if (points.length === 0) return;
+    const target = framingTarget(points, center.y);
+    const tilt = THREE.MathUtils.degToRad(GROUP_ELEVATION_DEG);
+    const dir = horizontalOffset().multiplyScalar(Math.cos(tilt)).setY(Math.sin(tilt));
+    const dist = Math.max(GROUP_MIN_DISTANCE_M, fitDistance(points, target, dir, { fovDeg: camera.fov, aspect: camera.aspect, fill: GROUP_FILL }));
+    flyTo(target.clone().addScaledVector(dir, dist), target, GROUP_FLIGHT_MS);
   }
 
   const [p, t] = initialPose ? [new THREE.Vector3(...initialPose.position), new THREE.Vector3(...initialPose.target)] : fitPose();
@@ -103,6 +142,7 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
     },
     focus: (meta, heightHint = 0) => focusAt(new THREE.Vector3(meta.x, center.y + heightHint, meta.z), Math.max(FOCUS_MIN_DISTANCE_M, meta.r * 4.6)),
     focusPoint: (x, z) => focusAt(new THREE.Vector3(x, center.y, z), FOCUS_MIN_DISTANCE_M),
+    focusPoints,
     toggleSpin: () => {
       controls.autoRotate = !controls.autoRotate;
       controls.autoRotateSpeed = -0.6;
@@ -120,7 +160,14 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
     cancelFlight: () => {
       flight = null;
     },
+    flying: () => flight !== null,
     flyToPose: (pose) => flyTo(new THREE.Vector3(...pose.position), new THREE.Vector3(...pose.target)),
-    pose: () => ({ position: camera.position.toArray() as Vec3, target: controls.target.toArray() as Vec3 }),
+    setFree: (on) => {
+      free = on;
+      Object.assign(controls, on ? { minDistance: FREE_MIN_DISTANCE_M, maxDistance: Infinity } : orbitDistances);
+    },
+    pose: () => flight
+      ? { position: flight.p1.toArray() as Vec3, target: flight.t1.toArray() as Vec3 }
+      : { position: camera.position.toArray() as Vec3, target: controls.target.toArray() as Vec3 },
   };
 }

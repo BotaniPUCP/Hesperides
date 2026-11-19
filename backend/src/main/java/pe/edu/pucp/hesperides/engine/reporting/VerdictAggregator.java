@@ -15,7 +15,7 @@ public final class VerdictAggregator {
     /** From most to least severe. NOT_CONFIGURED is folded into NOT_APPLICABLE. */
     private static final List<ComplianceStatus> SEVERITY = List.of(
             ComplianceStatus.OVERDUE,
-            ComplianceStatus.WITHIN_TOLERANCE,
+            ComplianceStatus.EARLY,
             ComplianceStatus.ON_TARGET,
             ComplianceStatus.NOT_APPLICABLE);
 

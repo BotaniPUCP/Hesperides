@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { MaintenanceFrequency } from '@shared/types';
 import { MaintenanceFrequenciesScreen } from '../MaintenanceFrequenciesScreen';
+import { saveFrequencyFlash } from '../frequencyListState';
 import { PageFrame } from '@/components/layouts/PageFrame';
 import { rememberedHref, rememberListQuery } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
@@ -16,11 +17,11 @@ jest.mock('../FrequenciesTable', () => ({
 }));
 jest.mock('@/lib/maintenance-api', () => ({
   maintenanceApi: {
-    list: jest.fn(), getActivityTypes: jest.fn(), getRuleTypes: jest.fn(), getZones: jest.fn(), getCompliance: jest.fn(),
+    list: jest.fn(), getActivityTypes: jest.fn(), getRuleTypes: jest.fn(),
   },
 }));
 
-const LIST = '/admin/frecuencias';
+const LIST = '/intervenciones/frecuencias';
 const frequency = (id: number, label: string, regime: string) => ({
   id, regime, notes: null, activityType: { label }, frequencyRuleType: { code: 'INTERVAL_DAYS' },
 }) as unknown as MaintenanceFrequency;
@@ -32,8 +33,6 @@ beforeEach(() => {
   jest.mocked(maintenanceApi.list).mockResolvedValue([frequency(1, 'Poda', 'IN_HOUSE'), frequency(2, 'Riego', 'OUTSOURCED')]);
   jest.mocked(maintenanceApi.getActivityTypes).mockResolvedValue([]);
   jest.mocked(maintenanceApi.getRuleTypes).mockResolvedValue([]);
-  jest.mocked(maintenanceApi.getZones).mockResolvedValue([]);
-  jest.mocked(maintenanceApi.getCompliance).mockResolvedValue([]);
 });
 
 it('la flecha regresa a Reportes, con su pestaña y mes, si se llegó desde allí', async () => {
@@ -65,24 +64,8 @@ it('reabre con los filtros que trae la URL', async () => {
   expect(screen.getByLabelText('Modalidad de ejecución')).toHaveValue('OUTSOURCED');
 });
 
-it('un filtro de la tabla no borra el periodo consultado, y viceversa', async () => {
-  window.history.replaceState(null, '', `${LIST}?from=2026-10-01&to=2026-10-31`);
-  render(<MaintenanceFrequenciesScreen />);
-  await screen.findByText('Poda');
-
-  fireEvent.change(screen.getByLabelText('Modalidad de ejecución'), { target: { value: 'IN_HOUSE' } });
-
-  await waitFor(() => expect(window.location.search).toBe('?regime=IN_HOUSE&from=2026-10-01&to=2026-10-31'));
-  await waitFor(() => expect(rememberedHref(LIST)).toBe(`${LIST}?regime=IN_HOUSE&from=2026-10-01&to=2026-10-31`));
-
-  fireEvent.change(screen.getByLabelText('Fecha final'), { target: { value: '2026-11-30' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Consultar cumplimiento por lugar' }));
-
-  await waitFor(() => expect(window.location.search).toBe('?regime=IN_HOUSE&from=2026-10-01&to=2026-11-30'));
-});
-
 it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de cero', async () => {
-  window.history.replaceState(null, '', `${LIST}?search=poda&regime=IN_HOUSE&from=2026-10-01&to=2026-10-31`);
+  window.history.replaceState(null, '', `${LIST}?search=poda&regime=IN_HOUSE`);
   render(<MaintenanceFrequenciesScreen />);
   await screen.findByText('Poda');
   expect(screen.getByLabelText('Buscar actividad')).toHaveValue('poda');
@@ -91,7 +74,20 @@ it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de c
 
   await waitFor(() => expect(screen.getByLabelText('Buscar actividad')).toHaveValue(''));
   expect(screen.getByLabelText('Modalidad de ejecución')).toHaveValue('');
-  expect(screen.getByLabelText('Fecha inicial')).toHaveValue('');
   expect(screen.getByText('Riego')).toBeInTheDocument();
   await waitFor(() => expect(rememberedHref(LIST)).toBe(LIST));
+});
+
+it('crear lleva a su propia página, y al volver la lista muestra el aviso una sola vez', async () => {
+  saveFrequencyFlash({ type: 'success', message: 'Frecuencia registrada', warnings: ['Un aviso'] });
+  const { unmount } = render(<MaintenanceFrequenciesScreen />);
+
+  expect(await screen.findByText('Frecuencia registrada')).toBeInTheDocument();
+  expect(screen.getByText('Un aviso')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '+ Nueva frecuencia' })).toHaveAttribute('href', `${LIST}/nueva`);
+
+  unmount();
+  render(<MaintenanceFrequenciesScreen />);
+  await screen.findByText('Poda');
+  expect(screen.queryByText('Frecuencia registrada')).not.toBeInTheDocument();
 });

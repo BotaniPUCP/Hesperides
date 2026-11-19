@@ -1,0 +1,693 @@
+# SPEC-108 — Edificios del plano oficial en el mapa
+
+| Campo | Valor |
+|-------|-------|
+| HU relacionada | SPEC-102 P-02 (planos de edificios de la PUCP) |
+| Autor | Luis (`luisenriowo`), con Claude |
+| Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android (SPEC-102) |
+| Sprint | — |
+| Estado | Implementada y verificada en web el 12 nov 2026 (12 de 13 criterios; CA-11 se corrigió después). Falta el `WebView` real de Android (CA-14, P-14) |
+| Dependencias | SPEC-102 (lo enmienda), relaciones del SKP (rama `3d-test/relaciones-edificios-skp-completo`), catálogo de lugares (V018, V034) |
+
+> **Lectura obligatoria:** `specs/REGLAS.md`.
+> **Específico de este spec:** SPEC-102 D-02 (la base es la fuente de verdad), D-03 (atribución), D-04
+> (cercanía), D-05 (descripción congelada), §3 (ETag y formato de `/layers`), §4.1 (`campus_buildings`) y
+> §7.1 (módulos de `components/map3d/`); `scripts/mapa/plano_pucp/README.md` (cómo se ubicó el plano).
+
+> **La regla de este spec: contiene lo que el código NO dice.**
+> Mientras la feature no esté verificada en navegador, este spec es la fuente de verdad.
+
+---
+
+## 1. Objetivo
+
+Que el mapa 3D dibuje los edificios con los modelos del plano oficial de la PUCP (el SKP). Los
+edificios se agrupan según las relaciones que Nicolás hizo a mano y llevan los nombres que resuelve
+Jean Piero. El resto del mapa se ve como hoy, y nada de lo que ya apunta a un edificio se rompe.
+
+## 2. Contexto
+
+### 2.0 De dónde sale cada cosa
+
+| Pieza | Fuente | Dónde está |
+|---|---|---|
+| Modelo del plano | `PUCP_BASE_FINAL.dwg`, entregado como `Campus SKP.skp` | Fuera del repositorio (unos 400 MB, material del cliente) |
+| Piezas del SKP | 755 piezas extraídas con el SDK de SketchUp por Jean Piero | `frontend/public/models/equivalence/campus.glb` y `manifest.json` |
+| Relaciones | 133 relaciones hechas a mano por Nicolás: edificios del mapa ↔ piezas del SKP ↔ códigos oficiales | `frontend/src/components/map3d/equivalence/final-relations.json` |
+| Códigos oficiales | 128 códigos de la leyenda del plano, con su etiqueta | `…/equivalence/codes.json` |
+| Nombres, alias y excepciones | Regla de la vista unificada de Jean Piero | `…/equivalence/unification.ts`, `building-references.json` |
+| Ubicación del plano | Giro −0,41° y desplazamiento; error mediano 0,89 m contra OSM. Corrido 2,6 m al oeste y 2,6 m al sur hacia los jardines (D-13, 14 nov 2026) | `scripts/mapa/plano_pucp/` (`transformacion.npz`), manifiesto y V053 |
+| Suelo del plano y huaca | Capas L1 (pavimento), L2 (jardinería) y L6 (huacas) del modelo | Export del SKP, fuera del repositorio |
+
+**Referencia visual aprobada.** La página de comparación «Edificios del plano en el mapa» (12 nov 2026)
+muestra la app de hoy y esta propuesta con la misma cámara. Todo lo que sigue reproduce lo que el
+usuario aprobó en ella.
+
+### 2.1 Backend
+
+- Paquete: `pe.edu.pucp.hesperides.modules.map`.
+- `MapLayerQueries.BUILDINGS`: cada edificio agrega `parentId`, `planKey`, `baseM` y `codes`.
+- `MapController.LAYERS_FORMAT`: pasa de 2 a 3.
+- Endpoints nuevos para el modelo (§3).
+- `ProximityDataRepository`: solo lee los edificios principales, los que tienen `parent_building_id` nulo.
+- No hay entidad JPA de edificios: se leen con consultas nativas y ninguna pantalla los escribe.
+
+### 2.2 Frontend web
+
+Todo vive en `frontend/src/components/map3d/`:
+
+- **`viewer/sceneLayers.ts`.** Un edificio con nodo en el modelo se dibuja con sus mallas. Un edificio
+  sin nodo, como la Sub-estación N-7 o los que solo están en el mapa, sigue con su prisma de hoy. Los
+  edificios agrupados no se dibujan por separado: los dibuja su edificio principal.
+- **`viewer/stage.ts` y `sceneLayers.ts`.** El zócalo y las capas del suelo se abren en los desniveles
+  al dibujar (D-09).
+- **`viewer/textures.ts`.** Texturas nuevas para la huaca: tapial y tierra.
+- **`viewer/labels.ts`.** Recorte de nombres (D-12).
+- **`infoCard.ts`.** La ficha muestra los códigos oficiales y cuántos edificios del mapa agrupa.
+- **`searchIndex.ts`.** La búsqueda encuentra también por código y por etiqueta oficial.
+- **`app/(dashboard)/mapa/page.tsx`.** Salen los botones «Relacionar mapa y SKP» y «Piloto G, Z y N». Sus
+  páginas siguen existiendo en su ruta.
+
+### 2.3 Móvil
+
+No hay trabajo propio: Android abre el mismo visor en un `WebView`.
+
+### 2.4 Restricciones técnicas
+
+- **DEBE usar:**
+  - `scripts/mapa/sql_util.py` para escribir el SQL.
+  - El entorno de `scripts/mapa/plano_pucp/` (numpy, scipy, shapely) para generar el modelo y la migración.
+- **NO debe:**
+  - **Ejecutar `generar_semilla_mapa.py`:** reescribiría `V011`.
+  - **Editar migraciones publicadas.**
+  - **Servir el modelo desde `public/`:** quedaría descargable sin sesión (D-06).
+- **Catálogos aplicables:** `BUILDING_CATEGORY`, sin cambios. Los códigos oficiales son datos del plano y
+  no un catálogo editable (D-02).
+
+### 2.5 Decisiones propias de este spec
+
+**D-01 · Mandan las relaciones de Nicolás.** El archivo `final-relations.json` define qué piezas del SKP
+y qué edificios del mapa forman cada edificio.
+- *Por qué:* son el trabajo manual final del equipo; las revisó una persona que conoce el campus.
+- *Origen:* decisión del usuario del 11 nov 2026.
+- *Alternativa descartada:* el emparejamiento automático de `scripts/mapa/plano_pucp/emparejar.py`. Queda
+  solo como control.
+
+**D-02 · Un edificio principal por relación, y los del mapa se agrupan bajo él, sin borrarse.** Quedan 133
+edificios principales: 132 relaciones (sin el Pabellón C) más el «Lugar prestado» (D-04).
+- **91 relaciones con un solo edificio del mapa:** ese mismo registro pasa a ser el principal.
+- **22 relaciones con varios (71 edificios):** se crea un principal. Los 71 conservan su `id`, alias y
+  lugares, y apuntan a él con `parent_building_id`.
+- **20 sin edificio en el mapa:** se crea su registro.
+
+Los códigos oficiales (127) quedan en `campus_building_codes`, colgados del principal.
+- *Por qué:*
+  - Hay claves foráneas a `campus_buildings.id` desde los alias (V008), `places.building_id` (V018),
+    `place_buildings` (V034) e `incidents.described_building_id`.
+  - Una relación puede tener varios códigos oficiales: la de Maestranza tiene 9.
+  - El usuario pidió «aglomerar varios edificios bajo una denominación», no borrar.
+- *Alternativa descartada:* fusionar los edificios en uno y dar de baja los demás.
+
+**D-03 · Los nombres son los de Jean Piero.** Se aplica su regla en este orden y se guarda en `name` del
+edificio principal:
+1. La corrección de `building-references.json`.
+2. El nombre fijado en `unification.ts`.
+3. El nombre escrito en la relación.
+4. Los nombres del mapa actual unidos con « / ».
+5. La etiqueta oficial del código.
+
+Los edificios agrupados conservan su nombre y la etiqueta oficial queda en `campus_building_codes`.
+- *Origen:* decisión del usuario del 12 nov 2026.
+- *Consecuencia:* se heredan los nombres que hoy chocan, como CIGA ×2 o Desconocido_13 ×2. Quedan listados
+  en §9 y no se corrigen por cuenta propia.
+
+> **Corrección de Jean Piero, 14 nov 2026 (V052):** el código 61 es la Biblioteca de Ciencias Sociales, no la
+> facultad, y el código 32 es el Departamento Académico de Humanidades (oficinas); la Facultad de Letras y
+> Ciencias Humanas es el Pabellón H (código 41). Van como `name` en `building-references.json` (regla 1) y en una
+> migración nueva; las etiquetas oficiales de `campus_building_codes` no cambian.
+
+**D-04 · Se respetan las excepciones de Jean Piero:**
+- **Sub-estación N-7:** usa la geometría del mapa, aunque el SKP tiene la pieza.
+- **Caseta del edificio 95:** toma la forma de la caseta C-3446, ajustada a las medidas del edificio del
+  mapa y con 8 m de alto.
+- **«Lugar prestado»:** las piezas C-161 y C-1970 se separan de la relación de Maestranza, con el alias
+  «Caseta junto a Maestranza».
+
+Se escriben como datos del generador, no en el código del visor (INV-9).
+- *Origen:* decisión del usuario del 11 nov 2026.
+
+**D-05 · El Pabellón C (código 2) no entra.** No se dibuja, no se inserta y no queda como pendiente.
+- *Origen:* decisión del usuario del 12 nov 2026.
+
+**D-06 · El modelo es un archivo generado y lo sirve el backend con sesión.**
+- **Qué se genera:** un script arma un GLB con un nodo por edificio principal (con nombre `plan_key`) y
+  los nodos de suelo, desniveles, huaca y decoración. Arma también un manifiesto con los polígonos de los
+  desniveles y el anclaje del modelo.
+- **Dónde va:** los dos se versionan en `backend/src/main/resources/mapa/`.
+- **Qué guarda la base:** huella, altura y base de cada edificio, para la cercanía y la ficha. La malla
+  no se guarda en la base.
+- *Por qué:*
+  - La malla no cabe razonablemente en PostGIS, y la cercanía necesita la huella en la base.
+  - Desde `public/`, el modelo del cliente se descargaría sin iniciar sesión.
+- *Alternativa descartada:* que el visor lea `final-relations.json` en el navegador, como la vista
+  unificada. La cercanía, la búsqueda y Android no sabrían de los grupos.
+
+**D-07 · Los patios del SKP se vacían.** El SKP modela las losas de cada piso enteras, cruzando los
+patios.
+- **Dónde:** en los 9 edificios con patio en el mapa actual. El contorno del patio sale de los muros del
+  propio SKP, con el patio de OSM como guía (hasta 1,5 m alrededor).
+- **Qué se quita:** las losas a cualquier altura, y sus cantos y contrahuellas (piezas de menos de 0,6 m
+  de alto).
+- *Por qué:* sin esto, los patios se ven rellenos de losa rosada.
+- *Límite:* un patio que OSM no dibujó sigue relleno.
+
+**D-08 · Lo bajo del SKP se dibuja como suelo.** Pasan a un nodo de suelo, con el material del zócalo y
+la textura proyectada según la orientación de cada cara:
+- todo lo que está entero al ras (|z| ≤ 0,6 m);
+- dentro de un desnivel o un patio, y hasta 2 m del borde de un desnivel, todo lo que no supera 2 m de
+  alto: pisos, gradas, rampas, muros de contención, barandas y taludes. **La franja de 2 m rodea solo los
+  desniveles, no los patios** (como en la página de comparación aprobada).
+
+Se descarta lo que coincide con el zócalo fuera de un desnivel, porque titila contra él, y lo que ya
+cubre el fondo del plano.
+- *Por qué:* borrarlo dejaba cantos rosados sueltos, y dejarlo como edificio pintaba de rosado los
+  pisos, las gradas y las rampas.
+
+**D-09 · Los desniveles se ven.** Son 27 zonas y 4411 m² donde el suelo del plano baja de −0,3 m, como
+el jardín hundido del CIA (−8,4 m según los datos del plano, con pisos a −8,0 y −8,4 m) o el patio de Estudios Generales Letras (−2,1 m).
+- **El zócalo y las capas del suelo** se abren solo donde hay piso debajo: 4351 m².
+- **Cada abertura es una caja cerrada,** con muros hasta un fondo a −10,5 m. Así una rendija entre dos
+  niveles muestra suelo y no cielo.
+- **Los árboles dentro de un desnivel** se apoyan en su fondo.
+- **La abertura se hace al dibujar** (máscara o recorte en el visor). Las geometrías de secciones y capas
+  del cliente no cambian en la base.
+
+**D-10 · La huaca se dibuja con textura de tapial.** La capa L6 del plano es el Camino Prehispánico: 461
+× 17 m, con muros de hasta 4,9 m.
+- **Las texturas** son procedurales y están calibradas con fotos del lugar. Los colores se midieron en la
+  foto «Camino Inca» de Google Maps (julio 2026):
+
+  | Zona | Sombra | Tono medio | Con sol |
+  |---|---|---|---|
+  | Muro | `#4A2011` | `#7F5337` | `#A47959` |
+  | Piso | `#815633` | `#966B4C` | `#AC825F` |
+
+- **Su aspecto:**
+  - superficie grumosa, picada y con huecos de erosión;
+  - estratos de apisonado ondulados;
+  - juntas casi borradas;
+  - tierra mate en todos los acabados.
+- **No se copia la foto:** tiene derechos de autor. Solo se miden sus colores.
+- Lleva la etiqueta «Camino Prehispánico».
+
+**D-11 · El acabado se conserva.** Barniz, reflejos y sombras duras del visor de hoy, por decisión del
+usuario del 12 nov 2026. Los modelos del SKP necesitan dos correcciones que no cambian el estilo:
+- **Normales por cara:** malla sin índice. Con vértices compartidos, la luz se suaviza en las esquinas
+  de 90°.
+- **Sombra por las caras traseras:** se dibujan por las dos caras, porque el SKP trae caras invertidas,
+  pero la sombra la proyectan las caras traseras. Si no, cada techo se sombrea a sí mismo y salen rayas.
+
+**D-12 · Los nombres de las etiquetas se recortan por ancho medido.** Se mide con la fuente de la
+etiqueta y se aplica en este orden:
+1. Abreviaturas de uso en la PUCP: «EE.GG.», «Dpto.», «Lab.», «Inst.», «Ing.», «Inv.», «Asoc.», «Serv.»,
+   «Univ.». En un nombre en mayúsculas se escriben en mayúsculas.
+2. Hasta 160 px queda tal cual. Si apenas se pasa, hasta 190 px, queda entero.
+3. Si no, la primera parte antes de « / », «, », «: », « - », « + » o « (», si dice algo.
+4. Si no, palabras enteras con «…», sin dejar un conector colgando.
+
+El ancho se mide con la fuente calculada de la propia etiqueta, y la app no carga Inter.
+Se aplica a todo el mapa: edificios y jardines, en la app y en la propuesta. El nombre completo sigue en
+el tooltip y en la ficha.
+- *Medido el 12 nov 2026:* de 148 nombres, 36 se acortan y 16 llevan «…»; la etiqueta más ancha mide 179 px.
+
+**D-13 · La alineación del modelo es la del plano.** Giro −0,41°, error mediano 0,89 m. Difiere menos de
+0,52 m de la alineación que calcula la vista unificada.
+
+> **Corrección de Jean Piero, 14 nov 2026 (V053):** vistos desde arriba, los edificios pisaban los jardines;
+> deben encajar con ellos «como dos piezas de un rompecabezas». Medido sobre todo el campus, el plano estaba
+> 2,6 m al este y 2,6 m al norte de los jardines de la base, sin giro (el mismo desfase de D-15). Se corrió el
+> plano entero 2,6 m al oeste y 2,6 m al sur: el anclaje, los 27 desniveles y la huaca del manifiesto, a mano (el
+> GLB no cambia: sus posiciones son relativas al anclaje), y en V053 las huellas de lo que se dibuja con ese
+> modelo: las 125 `source = 'PUCP'` y la de la caseta del edificio 95, que es de OpenStreetMap pero lleva la malla
+> de la caseta C-3446 (D-04). Las demás de OpenStreetMap no se mueven. Lo que los edificios ocupan de jardín a su
+> mismo nivel bajó de 6498 a 1172 m².
+> - El manifiesto lleva `version` = hash del GLB + `.jardines` (§3.1).
+> - `generar_modelo.py` todavía escribe el anclaje de `transformacion.npz`: si se vuelve a correr, se reaplica
+>   el corrimiento (`scripts/mapa/plano_pucp/README.md`). `BuildingModelServiceTest` falla si el anclaje del jar
+>   no es el corregido.
+
+**D-14 · La atribución a OpenStreetMap se queda.** Siguen en OSM los 255 edificios del entorno y los
+edificios principales que no tienen pieza del SKP. Esto enmienda SPEC-102:
+- D-03 decía que la atribución desaparece al llegar los planos.
+- P-02 hacía depender de ellos retirarla.
+
+**D-15 · El desfase de las capas del cliente no se corrige aquí.** Las áreas verdes, veredas,
+estacionamientos, puertas y el límite están corridos 2,5 m al oeste y 2,5 m al sur respecto de los
+edificios. Corregidas, las áreas verdes calzarían con la jardinería del plano en un 76 % y no en un 57 %.
+Corregirlo mueve secciones, sectores y zonas de supervisión, así que va en un cambio aparte.
+- *Origen:* decisión del usuario del 12 nov 2026.
+
+> **Resuelto el 14 nov 2026 desde el otro lado (D-13, V053):** en lugar de correr las capas del cliente, se
+> corrió el plano hacia ellas. Áreas verdes, veredas, estacionamientos, puertas, límite, secciones, sectores y
+> zonas de supervisión no cambian. Quedan en el marco de OpenStreetMap los 255 edificios del entorno y los
+> 7 principales que se dibujan como prisma (D-04, D-14).
+
+**D-16 · Algunos edificios se ajustan uno por uno para encajar con el pasto.** Con el plano corrido (D-13),
+Jean Piero revisó el mapa desde arriba y pidió que cinco edificios encajen con el pasto como piezas de un
+rompecabezas, sin pisarlo (V054):
+- **Prismas de OpenStreetMap** (Sub-estación N-7, Prototipo Casa Autosostenible): cambia su huella. Se corren y se
+  hacen la pieza que sigue el borde del pasto. Los dos bloques de la casa se corren juntos.
+- **Mallas del plano** (Desconocido_07, Desconocido_08, Prototipo Invernadero Inteligente): el manifiesto lleva un
+  ajuste afín por edificio (`adjustments`, §3) que el visor aplica a la malla: mover y estirar en planta. Su huella
+  en la base lleva el mismo ajuste. Una prueba compara la matriz con la huella de V054, a 2 cm.
+- El GLB no se toca y la altura no cambia.
+- *Origen:* decisión del usuario del 14 nov 2026 («hazlo en el campus»).
+
+> **Segunda tanda, 14 nov 2026 (V055):** Desconocido_05 (malla) se corre 1,35 m al centro del hueco de su pasto,
+> sin cambiar su tamaño, con su ajuste en `adjustments`. La casa autosostenible baja de 8 a 4 m: «no es tan alto».
+
+> **Tercera tanda, 15 nov 2026 (V058):** la Sub-estación N-7 y el Desconocido_03, prismas de OpenStreetMap, bajan
+> a la mitad de su alto, de 8 a 4 m. La huella no cambia.
+
+> **Cuarta tanda, 15 nov 2026 (V059):** el Auditorio Juan Pablo II flotaba: su cuerpo arrancaba a 3,55 m y su
+> escalera en L, a 2,35 m, sobre la zanja del jardín hundido. Jean Piero pidió bajarlo para que el césped quede por
+> encima. Baja 3,935 m sin moverse en planta, con `liftM` en su ajuste (§3). Así la escalera llega al fondo de la
+> zanja (−1,589 m) y su losa de 3,545 m queda en la terraza de césped a −0,39 m. V059 baja su base y su alto lo
+> mismo, y su ficha de colores reales baja sus cotas.
+> Al verlo, pidió bajarlo más: desde arriba su techo bajo (4,45 y 4,90 m en el modelo) seguía tapando el césped del
+> jardín hundido a −0,05 m (AV-0170 y AV-0166). V060 lo baja 1,065 m más, 5 m en total: esos techos quedan en −0,55
+> y −0,10 m, bajo el césped. La escalera ya no apoya en el fondo de la zanja; queda bajo él.
+
+**D-17 · Una escalera que el SKP dibuja como bloque se reemplaza en el visor.** En la esquina noreste del Comedor
+Central, el SKP trae un bloque macizo en «U» de 4,35 m de alto y 25,5 m² que llega al suelo y tapa 23 m² de pasto.
+Jean Piero aclaró que es una escalera en diagonal que no se apoya en el suelo, y que el pasto de abajo debe verse.
+Con el boceto confirmado, se reemplaza así (V056):
+- El manifiesto lleva `stairs` (§3): la parte que se quita (polígono y cotas), los muros que cierran el edificio
+  donde estaba pegada, los tramos y los descansos.
+- El visor quita los triángulos que caen enteros en esa parte, agrega los muros y, al final de la malla, la escalera:
+  - **Tramo 1:** va por el brazo de afuera, del suelo a un descanso a 1,83 m (11 contrahuellas de 14,8 cm).
+  - **Tramo 2:** va por el brazo pegado al comedor, hasta 4,35 m (17 contrahuellas).
+  - **Forma:** peldaños rectos sobre una losa de 20 cm, sin barandas ni columnas.
+  - **Apoyo:** solo toca el suelo en la arista donde arranca. Bajo los tramos queda pasto, que se ve de lado y en el
+    hueco entre los brazos. Desde arriba se ven los peldaños.
+- **Colores reales (SPEC-112):** la escalera es parte del comedor (el clic la toma como él), pero no es fachada.
+  Todas sus caras llevan el techo de su zona, sin la franja de ventanas.
+- **Huella en la base:** pierde la «U» (V056). Una prueba la compara con la parte reemplazada del manifiesto, a 2 cm.
+- El GLB no se toca.
+- *Origen:* decisión del usuario del 14 nov 2026: «representan una escalera en diagonal vista desde un lado […] por
+  eso toda el área verde debe ser visible».
+
+> **Escalera del Auditorio Juan Pablo II, 15 nov 2026 (V061):** al bajar el auditorio 5 m (D-16, V060), su patio de
+> ingreso del SKP quedó a −1,455 m bajo el suelo del mapa, cerrado por muros bajos y sin escalera. Con el boceto
+> confirmado:
+> - **Escalera:** baja de la plaza a la puerta por el lado noreste del patio, en todo su ancho (11,9 m). Arriba lleva
+>   un descanso de 30 cm a cota 0 y luego 8 contrahuellas de 18,2 cm con huellas de 30 cm. Se propusieron 5 de 29 cm,
+>   pero una contrahuella debe medir menos que la losa de 20 cm. Reemplaza el muro bajo de ese lado.
+> - **Patio:** es un desnivel del manifiesto (`sunken`, a −1,455): el suelo del mapa se abre sobre él y su escalera.
+> - **Huella:** pierde la franja de la escalera y su descanso (28,5 m², V061).
+> - **Pruebas:** la de las huellas acepta, además de las esquinas del recorte, los vértices que caen sobre sus bordes,
+>   donde el borde de la huella cruza la línea del muro. La de los ajustes de V054 deja las huellas de los edificios
+>   con escalera a la prueba de las escaleras, y exige que su ajuste no los mueva en planta.
+
+**D-18 · Un edificio que el SKP dibuja dentro de la malla de otro se separa en el visor.** El mapa mostraba la
+Librería PUCP y el café Juan Valdez como un solo edificio, llamado «Juan Valdez»: V045 le puso al principal del código
+42 el nombre de su único hijo de OpenStreetMap con nombre, y el SKP dibuja el café en la misma malla. La leyenda del
+plano dice que el código 42 es la librería («LIBRERIA PUCP, ASOCIACIÓN DE EGRESADOS Y GRADUADOS, …»). Jean Piero marcó
+el café en el mapa: la caja de la esquina suroeste y el muro de su jardinera. Todo lo demás es la librería. Se separa
+así (V057):
+- **Manifiesto:** lleva `pieces` (§3). El visor le pasa al Juan Valdez los triángulos de la malla de la librería que
+  caen enteros en su polígono: 60 de 770.
+- **Base:**
+  - El principal del código 42 pasa a llamarse Librería PUCP y su huella pierde el polígono del café (39,1 m²), que
+    estaba aparte.
+  - El Juan Valdez de OpenStreetMap deja de ser su hijo y pasa a ser un principal con la `plan_key` de la pieza. Su
+    huella es la del café en el SKP, no la de OpenStreetMap, que está corrida unos 3 m. Su alto es el de la pieza
+    (3,85 m).
+  - Los otros dos hijos de OpenStreetMap siguen en la librería.
+- **Pruebas:** comparan el polígono de la pieza con la huella del Juan Valdez en V057, y la de la librería con la de
+  antes sin la pieza, a 2 cm.
+- El GLB no se toca. Con la pieza aparte, cada edificio se elige y se pinta por separado (SPEC-112).
+- *Origen:* pedido del usuario del 14 nov 2026: «en realidad son dos edificios distintos […] todo lo demás de esa
+  unidad es la librería PUCP».
+
+**D-19 · Ningún piso del modelo cubre un césped.** En los desniveles el suelo del mapa se abre (D-09) y se ve el piso del
+SKP (`suelo`), que en algunos lugares cubre áreas verdes de la base: unos 106 m² de AV-0480 (F 22) y 195 m² de
+AV-0409, en este caso con la rampa que baja 5 m por su borde oeste. El SKP corta su piso en triángulos que no siguen
+a los jardines (uno solo mide 4 163 m²), así que no se separan piezas como en D-18:
+- **Visor:** a cada triángulo del piso se le quita la parte que cae en un césped de la capa de áreas verdes que toca
+  un desnivel (`viewer/floorWithoutLawns.ts`). Lo que queda conserva su cota, su textura y su giro. Debajo se ve el
+  jardín hundido del SKP: en AV-0480 y AV-0409 el piso era una tapa a −0,3 m sobre su pendiente, que baja a −3 m.
+- Una primera versión pintaba el césped sobre el piso; Jean Piero la rechazó el mismo día: «debes eliminar la parte
+  del piso gris encima del césped».
+- **Pendiente:** donde el piso quitado era la rampa del borde oeste de AV-0409 (unos 93 m²) y 9 m² de AV-0480, debajo
+  no hay jardín sino el fondo del desnivel, a −10,5 m.
+- **Alcance:** vale para todos los céspedes, no solo para esos dos. El 15 nov 2026 también cubre parte de AV-0408,
+  AV-0359, AV-0232, AV-0068, AV-0233, AV-0265, AV-0242 (F 21), AV-0226 y AV-0048.
+- El GLB, el manifiesto y la base no cambian.
+- *Origen:* pedido del usuario del 15 nov 2026: «no debe haber partes del piso cubriendo los céspedes».
+
+> **Rampas frente al CIA, 15 nov 2026 (V062):** el recorte le quitaba 110 m² a dos de las tres rampas que bajan al
+> desnivel de AV-0409 (−5 m), porque los polígonos de la base se montaban sobre ellas. La vista superior del modelo
+> muestra el césped como es en realidad: Jean Piero confirmó que las rampas no pisan el jardín. V062 corrige los
+> polígonos, no el recorte:
+> - **AV-0409:** pasa a ser la planta del jardín hundido del modelo, sin las rampas. Mide 519,1 m² (antes 584,87).
+> - **AV-0408:** pierde la esquina de ese jardín y la franja sobre la rampa del lado del CIA. Mide 461,9 m² (antes
+>   516).
+> - **Sector SEC-VERDE-02:** se recalcula como en V011.
+> - **Resultado:** las rampas quedan enteras y el resaltado de AV-0409 al hacer clic coincide con su jardín.
+
+**D-20 · Una rampa del piso del modelo que es una escalera se escalona en el visor.** Frente al CIA, el SKP dibuja como
+planos inclinados tres escaleras que bajan al desnivel de AV-0409 (de 0,2 a −4,8 m). Jean Piero las identificó en la
+vista superior:
+- **A:** va pegada al césped y baja al sur, en 41 m. Tiene peldaños muy separados: 14 contrahuellas de 36 cm, una
+  cada 3,2 m.
+- **B:** va junto a la A y baja al sur, en 25 m. Es una escalera normal: 28 contrahuellas de 18 cm.
+- **C:** está del lado del CIA y baja al norte, en 22 m. Es normal como la B: 28 contrahuellas de 18 cm.
+
+Se escalonan así:
+- **Manifiesto:** lleva `floorSteps` (§3). Por nombre trae el polígono de cada rampa, sus dos cotas y sus
+  contrahuellas.
+- **Visor:** a cada cara del piso (`suelo`) con entre 2° y 40° de pendiente, centro en el polígono y vértices entre
+  las cotas, le aplica lo siguiente (`viewer/floorSteps.ts`, `rampSteps.ts`):
+  - **Huellas:** corta la cara por las cotas de los escalones. Cada franja es una huella horizontal a la cota de
+    arriba de la franja, así que nunca baja de la rampa.
+  - **Contrahuellas:** se levanta una vertical en cada corte. La pone la cara que sigue subiendo desde él, para que
+    no salga dos veces.
+  - **Forma:** los escalones siguen el contorno exacto de la rampa, también donde es una cuña.
+  - **Textura:** las coordenadas van como en el modelo: desde arriba en las huellas y de frente en las contrahuellas.
+- **Cuenta el centro de la cara y no sus vértices,** porque el SKP tiende triángulos de un borde a otro de la rampa.
+- **La cubierta inclinada del murete entre A y B** sube por encima de la plaza (hasta 1,22 m). Queda como está:
+  no es camino.
+- **Validación:** la lectura falla si una rampa del manifiesto no toma nada del piso, si no sube, o si sus
+  contrahuellas no son un entero de dos o más.
+- El GLB y la base no cambian.
+- *Origen:* pedido del usuario del 15 nov 2026: «lo rojo son las escaleras que van hacia abajo y lo verde también,
+  pero son escaleras con peldaños mucho más separados».
+
+## 3. Contratos de API
+
+| Endpoint | Autorización | Qué resuelve |
+|---|---|---|
+| `GET /api/v1/map/layers` | `ADMIN`, `COORDINADOR`, `SUPERVISOR`, `OPERARIO` | Las capas. Cada edificio trae `parentId`, `planKey`, `baseM` y `codes` |
+| `GET /api/v1/map/models/buildings` | Igual | El GLB del plano (`model/gltf-binary`), con `ETag` débil |
+| `GET /api/v1/map/models/buildings/manifest` | Igual | Anclaje del modelo, nodos y polígonos de los desniveles, con `ETag` fuerte (el del GLB) y 304 |
+
+Propiedades de un edificio principal en `/layers`:
+
+```json
+{
+  "id": 40, "name": "Artes Escénicas / Facultad de Artes Escénicas (FARES)", "inferredName": false,
+  "category": null, "campus": true, "heightM": 14.2, "levels": null, "baseM": -0.4, "source": "PUCP",
+  "parentId": null, "planKey": "6f1c…", "aliases": ["…"],
+  "codes": [{ "code": "C51", "label": "PABELLÓN X: FACULTAD DE ARTES ESCÉNICAS, …" }]
+}
+```
+
+Un edificio agrupado trae `"parentId": 40`, y su `planKey` y `codes` vienen nulos.
+
+Manifiesto (dentro del sobre `{ok, message, data}`, en `data.manifest`):
+
+```json
+{
+  "version": "sha256 del GLB",
+  "anchor": { "lat": -12.06959406, "lon": -77.08018610 },
+  "nodes": { "6f1c…": "edificio", "suelo": "suelo", "jardin-hundido": "jardin", "muros-desnivel": "muro",
+             "fondo-desnivel": "muro", "huaca-muro": "huaca-muro", "huaca-tope": "huaca-tope",
+             "decoracion": "decoracion" },
+  "groundOnly": ["8be4…", "…"],
+  "sunken": [{ "polygon": { "type": "Polygon", "coordinates": [[[-77.0812, -12.0731], "…"]] }, "floorM": -8.4 }],
+  "huaca": { "label": "Camino Prehispánico", "at": [-12.0728, -77.0811, 4.9] }
+}
+```
+
+- `nodes` da el tipo de cada nodo del GLB: `edificio` (uno por principal con pieza del SKP, con su
+  `plan_key` como nombre), `suelo`, `jardin`, `muro`, `huaca-muro`, `huaca-tope` y `decoracion`.
+- `groundOnly` lista las entradas (`plan_key`) cuyo modelo es todo suelo, como las dos rampas de «Entrada
+  Parking subterráneo». Cuentan como edificio principal, pero el visor no les dibuja prisma ni malla.
+- `sunken` trae, por desnivel, su polígono y la cota de su piso (`floorM`).
+- `huaca` trae la etiqueta y el punto donde se coloca (latitud, longitud y altura en metros).
+- `adjustments` (opcional, D-16) trae por `plan_key` una matriz afín `[a, b, c, d, e, f]` en metros alrededor del
+  anclaje (x este, y norte): x' = a·x + b·y + e, y' = c·x + d·y + f. Lleva también el porqué (`why`). El visor la
+  aplica a la malla de ese edificio. Si la clave no es de una malla de edificio, o la matriz voltea o aplasta la
+  malla, la lectura del modelo falla. Un `liftM` opcional sube la malla entera esos metros (negativo, la baja); si
+  no es un número finito, la lectura falla. Un ajuste solo en altura lleva la matriz identidad.
+- `stairs` (opcional, D-17) trae por `plan_key` una escalera que reemplaza parte de la malla. Todo va en metros
+  alrededor del anclaje, en el marco de la malla ya ajustada:
+  - `replaces`: el polígono y las cotas `fromM`–`toM` entre las que se quitan los triángulos.
+  - `walls`: los segmentos donde se cierra el edificio, entre las mismas cotas.
+  - `flights`: cada tramo, con su arista `from`, su arista `to`, sus cotas y sus `risers`.
+  - `landings`: cada descanso, con su polígono y su cota.
+  - `why`: el porqué.
+- `floorSteps` (opcional, D-20) trae, por nombre, una rampa del piso del modelo que es una escalera: su polígono en
+  metros alrededor del anclaje, sus cotas `fromM` y `toM`, sus contrahuellas (`risers`) y el porqué (`why`).
+- `pieces` (opcional, D-18) trae, por la `plan_key` propia de un edificio que el SKP dibuja dentro de otra malla, de
+  qué malla sale (`from`), su polígono en metros alrededor del anclaje (en el marco de esa malla ya ajustada) y el
+  porqué (`why`). El visor le pasa los triángulos que caen enteros en el polígono, a 2 cm. La pieza se separa antes
+  de la escalera de su malla, si la tiene. La lectura del modelo falla si la clave ya es un nodo del GLB, si `from`
+  no es una malla de edificio, si el polígono no toma nada o si se lleva toda la malla.
+
+  La lectura del modelo falla en cualquiera de estos casos:
+  - la clave no es de una malla de edificio;
+  - una cota no sube;
+  - una contrahuella mide lo que la losa (20 cm) o más;
+  - la parte reemplazada no quita ningún triángulo.
+
+### 3.1 Decisiones que el código no explica
+
+- **El GLB va sin el sobre `{ok, message, data}`** porque es un binario. Los errores sí lo usan (INV-1).
+- **El modelo tiene su propio `ETag`** (hash del archivo), aparte de la versión de datos. El modelo
+  cambia solo con un despliegue; las capas, con cada edición.
+- **El GLB sale con `ETag` débil `W/"<sha256>"`** para que el servidor pueda comprimirlo (con un `ETag`
+  fuerte no lo comprime: de 7,6 MB baja a unos 1,8 MB). El manifiesto y la versión usan el hash fuerte.
+  Un proxy que exija `ETag` fuerte no revalidaría y descargaría de nuevo.
+- **El manifiesto se revalida:** lleva el `ETag` del GLB (igual a su `version`) y `Cache-Control: no-cache`,
+  y responde 304 si `If-None-Match` coincide. Sin eso, Spring Security le pondría `no-store` y el navegador
+  bajaría sus 225 kB en cada visita. Con `ETag` fuerte, Tomcat no lo comprime.
+- **Sin WebGL no se descarga el modelo:** la pantalla lo pide cuando un visor quedó listo. Sin WebGL se ven
+  las listas, que no lo usan.
+- **`/describe` nombra solo a los principales** (filtro de cercanía): un punto dentro de un grupo se
+  describe con el nombre del grupo.
+- **Si el visor no puede comprobar la versión del modelo** (sin red o sesión vencida), conserva el que ya
+  leyó en memoria; solo dibuja prismas si nunca lo obtuvo (CA-13).
+- **`LAYERS_FORMAT` pasa a 3:** una copia guardada antes, sin `parentId`, no debe recibir 304.
+- **El modelo está en metros locales** (x este, z = −norte) alrededor de `anchor`. El visor lo ubica con
+  `projection.ts`, igual que las capas.
+
+> **Desde el 14 nov 2026 (D-13):** la etiqueta del GLB y la del manifiesto es la `version` del manifiesto, que
+> empieza con el hash del GLB y lleva un sufijo cuando el manifiesto se corrige sin regenerar el GLB
+> (`.jardines`). Con el hash solo, el navegador recibiría 304 y seguiría con el anclaje viejo. El backend no
+> arranca si la versión no empieza con el hash del GLB del jar. Cada cambio de los ajustes de D-16, de las
+> escaleras de D-17 o de las piezas de D-18 sube el sufijo (`.jardines.piezas-3` trae la escalera del comedor y
+> `.jardines.piezas-4`, el Juan Valdez; `.jardines.piezas-5` y `-6`, el auditorio que baja; `-7`, su escalera de ingreso; `-8`, los escalones frente al CIA).
+
+## 4. Migración de base de datos
+
+**`V045__group_buildings_by_plan.sql`**. Nació como V040 en `feature/spec-108-edificios-del-plano`; al integrarse
+con reservas (`integra/12-noviembre`, 12 nov 2026) pasó a V045, porque `feature/spec-107-reservas-jardines` ya tenía
+V040–V044 aplicadas en bases de trabajo y esta era una sola. Una base que aplicó la V040 del plano se recrea. El archivo
+es **generado** por `scripts/mapa/plano_pucp/generar_migracion.py` y no se edita a mano ni se regenera una vez
+publicado.
+
+Si esta migración se renumera, cambian:
+
+- el nombre del archivo (`git mv`; el SQL no lleva su número dentro);
+- `PREVIOUS_VERSION` y `PLAN_VERSION` en `backend/src/test/java/pe/edu/pucp/hesperides/migration/PlanBuildingsMigrationTest.java`;
+- la ruta del paso 2 en `scripts/mapa/plano_pucp/README.md`;
+- en `specs/REGISTRO.md`, la fila del mapa de migraciones, el siguiente número libre y la fila de pendientes;
+- esta sección (§4) y la enmienda de SPEC-102 §4.1 que cita `V045__group_buildings_by_plan.sql`.
+
+```sql
+-- Propiedad de SPEC-108. ARCHIVO GENERADO: no se edita a mano ni se regenera.
+
+ALTER TABLE campus_buildings
+    ADD COLUMN parent_building_id BIGINT REFERENCES campus_buildings(id),
+    ADD COLUMN plan_key           VARCHAR(64),
+    ADD COLUMN base_m             NUMERIC(6, 2);
+CREATE UNIQUE INDEX uq_campus_buildings_plan_key ON campus_buildings(plan_key) WHERE plan_key IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX idx_campus_buildings_parent ON campus_buildings(parent_building_id);
+
+CREATE TABLE campus_building_codes (
+    id             BIGSERIAL PRIMARY KEY,
+    building_id    BIGINT       NOT NULL REFERENCES campus_buildings(id),
+    code           VARCHAR(10)  NOT NULL,
+    official_label VARCHAR(300) NOT NULL,
+    created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at     TIMESTAMP
+);
+CREATE UNIQUE INDEX uq_campus_building_codes_code ON campus_building_codes(code) WHERE deleted_at IS NULL;
+
+-- 91 edificios del mapa pasan a ser el principal de su relación: plan_key, nombre (D-03), huella,
+--    altura y base del SKP; source = 'PUCP' si la geometría es del SKP.
+-- 42 edificios principales nuevos: 22 grupos y 20 que solo están en el SKP.
+-- 71 edificios del mapa apuntan a su principal con parent_building_id.
+-- 127 códigos oficiales, y los alias de building-references.json en campus_building_aliases.
+-- Al final, un DO comprueba 133 principales, 71 agrupados y 127 códigos; si no cuadra, aborta.
+```
+
+Lo que el DDL no dice:
+
+- **`source_ref` no cambia.** Conserva la referencia de OSM con la que nació la fila, porque es la clave
+  con la que otras migraciones encuentran un edificio. `plan_key` es el identificador de la relación.
+- **La huella de un principal** es la unión de las piezas del SKP, sin lo que pasó a ser suelo (D-08).
+  Su altura es la cota más alta y su base, la más baja. Un grupo sin piezas del SKP toma la unión de sus
+  edificios del mapa.
+- **La categoría de un principal nuevo** es la de sus edificios, si todos coinciden; si no, queda nula.
+- **`campus_building_codes` no es un catálogo** (INV-2): es el registro de un documento externo, la
+  leyenda del plano, y nadie lo edita.
+
+## 5. Comportamiento
+
+### 5.1 Flujo principal: del plano al mapa
+
+1. **Generar el modelo y el manifiesto.** `generar_modelo.py` parte de `campus.glb`, las relaciones, la
+   transformación del plano y las capas L1, L2 y L6. Aplica D-03 a D-05 y D-07 a D-10 y escribe los dos
+   archivos en `backend/src/main/resources/mapa/`.
+2. **Generar la migración.** `generar_migracion.py` escribe la migración con los mismos datos.
+3. **Aplicar.** Flyway aplica la migración al arrancar. Los triggers de `V010` suben la versión del mapa.
+4. **Dibujar.** El visor descarga las capas (formato 3), el manifiesto y el GLB, y dibuja:
+   - los edificios principales con su malla o, si no la tienen, con su prisma;
+   - el suelo, los desniveles y la huaca.
+
+Los edificios agrupados no se dibujan por separado.
+
+### 5.2 Flujos alternativos
+
+- **El modelo no descarga:** el visor dibuja todos los edificios como prismas, con la huella de la base, y
+  muestra un aviso discreto. El mapa sigue siendo usable.
+- **La base no cuadra con lo esperado:** el `DO` aborta y no se aplica nada.
+- **Nicolás o Jean Piero corrigen una relación:** se regeneran el modelo y el manifiesto, y se escribe
+  una migración nueva solo con el cambio.
+
+### 5.3 Casos límite
+
+- **Cercanía:** describe con el edificio principal y su huella del SKP. Un punto dentro de un patio
+  vaciado cae fuera del edificio. Las descripciones ya guardadas no cambian (SPEC-102 D-05).
+- **Lugares:** un lugar ligado a un edificio agrupado sigue funcionando. En el mapa se resalta el
+  principal que lo contiene.
+- **Búsqueda:** por nombre, alias, código («C51») o etiqueta oficial, lleva al principal.
+- **Piezas del SKP sin relación** (22, de 0,4 m² o menos): se dibujan como decoración, sin ficha.
+- **Desnivel en el borde del campus:** si un desnivel cruza el límite, la abertura se recorta al zócalo.
+
+## 6. Criterios de aceptación
+
+| # | Criterio | Cómo verificarlo |
+|---|----------|------------------|
+| CA-01 | Cifras | La base migrada tiene 133 principales, 71 agrupados, 127 códigos y 255 edificios del entorno sin cambios |
+| CA-02 | Identidad | Biblioteca Central conserva su `id`, sus alias y sus lugares, y se dibuja con su modelo del SKP |
+| CA-03 | Grupo | Al hacer clic en Artes Escénicas se ve un solo edificio, con el código C51 y «Agrupa 13 edificios del mapa» |
+| CA-04 | Excepciones | La Sub-estación N-7 es un prisma, la caseta del edificio 95 tiene la forma de C-3446 y existe «Lugar prestado» |
+| CA-05 | Sin Pabellón C | No hay modelo, fila ni código 2 |
+| CA-06 | Patios | Los patios de Ciencias Humanas, Pabellón Z y Arquitectura se ven abiertos hasta el suelo |
+| CA-07 | Suelo | No hay cantos rosados sueltos ni rayas que titilen bajo el pórtico del Polideportivo |
+| CA-08 | Desniveles | Junto al CIA se ve el desnivel con su fondo, rampas y muros del color del suelo; por ninguna rendija se ve el cielo |
+| CA-09 | Huaca | El Camino Prehispánico se ve con muros de tapial ocre y la etiqueta «Camino Prehispánico» |
+| CA-10 | Acabado | Barniz y luces iguales a los de hoy, sin manchas ni rayas en los techos de los modelos |
+| CA-11 | Etiquetas | Ninguna etiqueta pasa de 190 px; los nombres largos se recortan según el ancho medido con la fuente con la que se dibujan (con Inter, «Estudios Generales Ciencias» se lee «EE.GG. Ciencias»; con la fuente del sistema de Windows entra completo) |
+| CA-12 | Seguridad | Sin sesión, `/api/v1/map/models/buildings` responde 401 |
+| CA-13 | Sin modelo | Con el endpoint del modelo caído, el mapa abre con prismas |
+| CA-14 | Navegador (INV-10) | `/mapa` en web y en Android, claro y oscuro: se ve como la página de comparación aprobada |
+
+**Verificación en navegador (12 nov 2026).** En web (Chromium, 1440×900 y 390×844, claro y oscuro, con una
+base aislada) pasaron 12 de los 13 criterios que se ven en pantalla (CA-02 a CA-14); CA-01 se comprobó en la
+base. CA-11 no pasó: la app dibuja las etiquetas con la fuente del sistema y no con Inter, y el recorte medía
+con Inter. Se corrigió midiendo con la fuente calculada de cada etiqueta (commit `cc12646`) y CA-11 se reescribió.
+
+- El cambio de `cc12646` (medir con la fuente calculada) no se volvió a comprobar en navegador.
+- Los lugares de Biblioteca Central (CA-02) no se vieron en pantalla: la semilla de desarrollo no liga
+  lugares a edificios. Los cubre `PlanBuildingsMigrationTest`.
+- Falta el `WebView` real de Android (CA-14): P-14.
+
+## 7. Especificación visual
+
+- La referencia es la página de comparación aprobada, del lado «Propuesta» con acabado «Brillante»
+  (D-11).
+- Colores, luces, cielo, texturas del zócalo y del césped, árboles y etiquetas: los del visor de hoy.
+  Novedades: la huaca (D-10), el suelo de los modelos (D-08) y los desniveles (D-09).
+- Ficha del edificio: agrega «Códigos oficiales» (código y etiqueta). En un grupo, agrega «Agrupa N
+  edificios del mapa», con sus nombres. No muestra la altura de las rampas que son solo suelo (0,1 m o
+  menos) ni, en «También se le dice», los alias que repiten el nombre (sin distinguir mayúsculas ni tildes).
+- Móvil: la misma vista dentro del `WebView`.
+
+## 8. Tests
+
+```
+Migración (Testcontainers: base en la versión anterior → la nueva)
+- 133 principales (parent_building_id nulo, plan_key único) y 71 agrupados con un principal existente
+- los ids de los 162 edificios del campus se conservan; alias, places y place_buildings intactos
+- los 255 del entorno quedan idénticos
+- 127 códigos, sin el 2; cada uno en un principal
+- source_ref de los edificios reutilizados no cambia
+- si falta un edificio del mapa esperado, la migración falla y la tabla queda como estaba
+- un borrado lógico libera su plan_key (INV-4)
+
+Generador (scripts, se ejecutan a mano)
+- el GLB tiene un nodo por principal con pieza del SKP, más suelo, desniveles, huaca y decoración
+- en los patios vaciados no queda ninguna cara horizontal por encima de 0,6 m
+- en los desniveles abiertos no queda ninguna zona sin piso debajo
+- ninguna cara de los edificios queda al ras del zócalo fuera de un desnivel
+
+API
+- /layers: un principal trae planKey y codes; un agrupado, parentId; el ETag termina en -f3
+- /models/buildings: 401 sin sesión, 200 con sesión y ETag; 304 con If-None-Match vigente
+- /models/buildings/manifest: 200 con el ETag del GLB y no-cache; 304 con If-None-Match vigente
+
+Cercanía
+- solo compite el principal: un punto dentro de un grupo se describe con el nombre del grupo
+
+Visor
+- recortar(): «Estudios Generales Ciencias» → «EE.GG. Ciencias»; «AULAS MOVILES PSICOLOGÍA» queda entero;
+  «PABELLÓN I: FACULTAD …» → «PABELLÓN I»; nunca termina en «de …»
+- un edificio agrupado no se dibuja; uno principal sin nodo se dibuja como prisma
+
+Escaleras (D-17)
+- la malla pierde solo los triángulos que caen enteros en la parte reemplazada; los muros la cierran entre sus cotas
+- cada tramo sube en contrahuellas iguales y solo toca el suelo en la arista donde arranca
+- un descanso no lleva canto donde llega o arranca un tramo, ni contra un muro
+- la huella del comedor en V056 es la anterior sin la «U», a 2 cm; nada más cambia en la base
+- en colores reales, todas las caras de la escalera llevan el techo de su zona
+
+Piezas (D-18)
+- la pieza se lleva los triángulos que caen enteros en su polígono (a 2 cm); los demás quedan en su orden
+- la lectura falla si la pieza no toma nada, si se lleva toda la malla o si su malla no está en el modelo
+- la huella del Juan Valdez en V057 es el polígono de la pieza y la de la librería es la anterior sin él, a 2 cm
+- en la base solo cambian esos dos edificios; los otros hijos de OpenStreetMap siguen en la librería
+- la hoja de revisión clasifica la pieza con sus triángulos y con su polígono como huella
+
+Piso abierto sobre los céspedes (D-19)
+- el piso pierde justo la parte que cae en un césped, con sus huecos y su forma cóncava; sin césped queda igual
+- lo que queda sigue su cota, su pendiente, su textura y su giro; los muros del piso se quedan
+- solo cuentan los céspedes que tocan un desnivel
+```
+
+## 9. Propio de este spec
+
+### 9.1 Pendientes para Nicolás, Jean Piero o Luis
+
+| # | Qué revisar |
+|---|---|
+| P-01 | **CIGA ×2:** el edificio 13 se llama «CIGA» en el mapa, pero es C47 (Pulso PUCP); el CIGA oficial es C48 (edificio 61) |
+| P-02 | **«Desconocido_13» ×2,** a 725 m uno del otro, y otras 13 relaciones sin nombre (Desconocido_01 a _14) |
+| P-03 | **Relación C06-C07:** su pieza y el edificio 109 no se superponen (IoU 0) |
+| P-04 | **Códigos C05, C08 y C33,** descartados de la leyenda sin explicación |
+| P-05 | **Nombres repetidos:** Facultad de Ciencias Sociales ×2, Facultad de Educación ×2, Facultad de Letras y Ciencias Humanas ×2, Arte Antiguo ×3 |
+| P-06 | **Edificio 95:** el mapa lo llama «Comedor de Arte Antiguo», pero está a 7 m de Estudios Generales Ciencias |
+| P-07 | **Huacas 20 y 64:** no están en la capa L6 del plano y no se dibujan |
+| P-08 | **Los archivos de la vista unificada en `public/`** (`campus.glb`, `portable.js`, pilotos) se pueden descargar sin sesión |
+| P-09 | **Las dos rampas «Entrada Parking subterráneo»** se dibujan solo como suelo (`groundOnly`) y no se pueden cliquear en 3D; siguen en la búsqueda y la cercanía. Decide Luis si deben ser clicables |
+| P-10 | **Páginas de equivalencias (`map3d/equivalence/*`):** el banco de trabajo y la vista unificada leen `campusBuildings` y ya no ven a los edificios agrupados. Jean Piero decide si las adapta |
+| P-11 | **Principales nuevos «Desconocido_*»:** quedan con `is_inferred_name = false`, aunque el nombre es un marcador. Nicolás o Jean Piero deciden su nombre real o si deben marcarse como deducidos |
+| P-12 | **Pabellón C (relación del código 2):** queda fuera por D-05. Nicolás confirma que no debe volver |
+| P-13 | **Test heredado `frontend/src/lib/__tests__/rawApiMessages.test.ts` en rojo:** señala tres usos del `error.message` crudo en las herramientas de equivalencias: `frontend/src/components/map3d/equivalence/EquivalenceWorkbench.tsx:80`, `frontend/src/components/map3d/equivalence/portableApp.ts:93` y `frontend/src/components/map3d/equivalence/UnifiedWorkbench.tsx:38`. Viene del commit 662eb6e y esta rama no toca esos archivos. Jean Piero decide si los adapta o los excluye del test |
+| P-14 | **`WebView` real de Android (CA-14):** la verificación del 12 nov 2026 fue solo en web. Falta abrir `/mapa` en el `WebView` de un Android real, en claro y oscuro. Lo verifica Luis |
+
+### 9.2 Para el equipo
+
+- **Números de migración:** la migración del plano es V045 desde la integración del 12 nov 2026 (§4). Quien
+  aplicó la antigua V040 del plano recrea su base de trabajo.
+- **El desfase de 3,5 m de las capas del cliente** espera su propio cambio (D-15).
+
+### 9.3 Lo que no se versiona
+
+El `.skp`, su exportación y `plano-pucp-datos/trabajo/` quedan fuera del repositorio. Se versionan el
+GLB y el manifiesto generados, en `backend/src/main/resources/mapa/`, y la migración.

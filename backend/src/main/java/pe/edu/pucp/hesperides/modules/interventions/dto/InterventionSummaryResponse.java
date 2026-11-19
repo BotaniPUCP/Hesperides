@@ -12,6 +12,7 @@ import java.time.LocalDate;
 public class InterventionSummaryResponse {
     private Long id;
     private String code;
+    private String activityTitle;
     private Long version;
     private Long classItemId;
     private Long typeItemId;
@@ -20,6 +21,8 @@ public class InterventionSummaryResponse {
     private Long teamId;
     private Long assignedToUserId;
     private LocalDate scheduledDate;
+    /** SPEC-115. */
+    private boolean usesCuttingMachinery;
     private Instant startedAt;
     private Instant completedAt;
     private Instant validatedAt;

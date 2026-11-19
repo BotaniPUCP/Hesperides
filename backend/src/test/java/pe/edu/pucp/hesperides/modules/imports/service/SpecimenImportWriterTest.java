@@ -23,7 +23,7 @@ class SpecimenImportWriterTest {
     void rejectsSpecimenOrTargetSpeciesChangesSincePreview() {
         SpecimenLookupRepository lookup = mock(SpecimenLookupRepository.class);
         SpecimenImportWriter writer = new SpecimenImportWriter(mock(SpecimenWriter.class),
-                mock(PhotoRepository.class), mock(ImportPhotos.class), mock(ImportBatchGate.class), lookup,
+                mock(PhotoRepository.class), mock(ImportPhotos.class), mock(ImportBatchGate.class), mock(BatchPhotoZips.class), lookup,
                 mock(pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenResolver.class),
                 mock(TransactionTemplate.class));
         PlannedRow row = new PlannedRow(

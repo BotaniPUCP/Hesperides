@@ -1,0 +1,64 @@
+{
+  "planKey": "5c6e8c9f-26bb-4285-b29c-26b5edd25c35",
+  "name": "Juan Valdez",
+  "folder": "juan-valdez",
+  "photos": [
+    "juan-valdez-pucp.jpg"
+  ],
+  "materials": {
+    "madera": {
+      "color": "#a87c55"
+    },
+    "vino": {
+      "color": "#7a2236"
+    },
+    "negro": {
+      "color": "#2b2b2b"
+    },
+    "techo": {
+      "color": "#4b4a47"
+    },
+    "helechos": {
+      "color": "#6f8f4e"
+    }
+  },
+  "zones": [
+    {
+      "id": "cafe",
+      "wall": "madera",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "negro",
+          "v": [
+            3.59,
+            3.85
+          ]
+        }
+      ],
+      "faces": {
+        "S": [
+          {
+            "material": "vino",
+            "v": [
+              1.55,
+              3.59
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "jardinera",
+      "where": {
+        "heightM": [
+          0,
+          1.56
+        ]
+      },
+      "wall": "helechos",
+      "roof": "helechos"
+    }
+  ],
+  "notes": "La caja del café, separada de la malla de la Librería PUCP (SPEC-108 D-18). En la foto (juan-valdez-pucp.jpg) su frente, al sur, es un paño vino con el letrero, enmarcado en negro; el costado oeste es de listones de madera con una ventana corrida, que no se dibuja (D-04). Las caras que no se ven siguen de madera. Delante y al oeste, la jardinera de piedra cubierta de helechos (la zona de abajo, hasta 1,55 m), que va verde."
+}

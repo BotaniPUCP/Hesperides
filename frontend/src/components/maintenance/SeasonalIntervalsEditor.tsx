@@ -57,7 +57,7 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-wrap gap-4">
             <label className="block">
               <span className="block text-xs font-medium text-neutral-600 mb-1">Mín. días</span>
               <input
@@ -66,7 +66,7 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
                 value={row.minDays}
                 onChange={(e) => update(row.id, 'minDays', e.target.value)}
                 placeholder="30"
-                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-hidden"
+                className="w-28 rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-hidden"
               />
             </label>
             <label className="block">
@@ -77,21 +77,7 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
                 value={row.maxDays}
                 onChange={(e) => update(row.id, 'maxDays', e.target.value)}
                 placeholder="35"
-                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-hidden"
-              />
-            </label>
-            <label className="block">
-              <span className="block text-xs font-medium text-neutral-600 mb-1">
-                Teórico
-                <span className="font-normal text-neutral-400"> (opc.)</span>
-              </span>
-              <input
-                type="number"
-                min={1}
-                value={row.targetDays}
-                onChange={(e) => update(row.id, 'targetDays', e.target.value)}
-                placeholder="21"
-                className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-hidden"
+                className="w-28 rounded-md border border-neutral-300 px-2 py-1.5 text-sm focus:border-primary-500 focus:outline-hidden"
               />
             </label>
           </div>
@@ -105,8 +91,7 @@ export function SeasonalIntervalsEditor({ rows, onChange }: Props) {
       )}
 
       <p className="text-xs text-neutral-500">
-        El intervalo <strong>teórico</strong> es el del manual; el mínimo y el máximo son el rango
-        operativo real. Guardar ambos permite ver la brecha entre la norma y lo que el clima impone.
+        Entre el mínimo y el máximo es lo normal: antes del mínimo aún no toca; después del máximo, está atrasado.
       </p>
     </div>
   );

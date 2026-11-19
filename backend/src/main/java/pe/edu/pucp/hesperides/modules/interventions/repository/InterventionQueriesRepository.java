@@ -42,6 +42,8 @@ public class InterventionQueriesRepository {
         """;
     public static final String SELECT = """
         select i.*,ps.code planning_status_code,a.*,
+          concat_ws(' · ', (select c.label from catalog_items c where c.id=i.intervention_class_item_id),
+            (select c.label from catalog_items c where c.id=i.intervention_type_item_id)) activity_title,
           (select count(*) from intervention_evidences e join intervention_locations el on el.id=e.intervention_location_id
            where e.intervention_id=i.id and e.uploaded_at is null and e.deleted_at is null and el.deleted_at is null) pending_evidence_count
         """;
@@ -59,16 +61,17 @@ public class InterventionQueriesRepository {
         if(page.getSort().getOrderFor("id")==null)order.add(Sort.Order.desc("id"));
         var result=search.search(actor,role,f.classItemId(),f.typeItemId(),f.teamId(),f.assignedToUserId(),f.statusCode(),
             f.dateFrom(),f.dateTo(),f.zoneId(),f.placeId(),f.locationStatusCode(),f.greenElementId(),f.greenElementCode(),
-            f.incidentId(),PageRequest.of(page.getPageNumber(),page.getPageSize(),Sort.by(order)));
+            f.incidentId(),f.active(),PageRequest.of(page.getPageNumber(),page.getPageSize(),Sort.by(order)));
         return new PageImpl<>(result.getContent().stream().map(this::summary).toList(),page,result.getTotalElements());
     }
     private InterventionSummaryResponse summary(Map<String,Object> r){
         var d=new InterventionSummaryResponse();
-        d.setId(number(r,"id"));d.setCode((String)r.get("code"));d.setVersion(number(r,"version"));
+        d.setActivityTitle((String)r.get("activity_title"));d.setId(number(r,"id"));d.setCode((String)r.get("code"));d.setVersion(number(r,"version"));
         d.setClassItemId(number(r,"intervention_class_item_id"));d.setTypeItemId(number(r,"intervention_type_item_id"));
         d.setPlanningStatusCode((String)r.get("planning_status_code"));d.setStatusCode((String)r.get("status_code"));
         d.setTeamId(number(r,"team_id"));d.setAssignedToUserId(number(r,"assigned_to_user_id"));
         Object date=r.get("scheduled_date");d.setScheduledDate(date instanceof java.sql.Date sqlDate?sqlDate.toLocalDate():(java.time.LocalDate)date);
+        d.setUsesCuttingMachinery(Boolean.TRUE.equals(r.get("uses_cutting_machinery")));
         d.setStartedAt(instant(r.get("started_at")));d.setCompletedAt(instant(r.get("completed_at")));d.setValidatedAt(instant(r.get("validated_at")));
         d.setLocationCount(number(r,"location_count").intValue());d.setCompletedLocationCount(number(r,"completed_location_count").intValue());
         d.setValidatedLocationCount(number(r,"validated_location_count").intValue());d.setPendingEvidenceCount(number(r,"pending_evidence_count").intValue());return d;
@@ -83,6 +86,7 @@ public class InterventionQueriesRepository {
     public Optional<InterventionDetailResponse> detail(Long id){
         return jdbc.query(SELECT+FROM+" where i.id=:id and i.deleted_at is null",Map.of("id",id),(r,n)->{
             var d=summary(r,new InterventionDetailResponse());
+            d.setCampusSelectionRevision(r.getString("campus_selection_revision"));
             d.setDescription(r.getString("description"));d.setOriginItemId(r.getLong("origin_item_id"));d.setReportedByItemId(r.getLong("reported_by_item_id"));
             d.setExternalCode(r.getString("external_code"));var requested=r.getDate("requested_at");d.setRequestedAt(requested==null?null:requested.toLocalDate());
             d.setCreatedAt(instant(r.getObject("created_at",java.time.LocalDateTime.class)));
@@ -90,11 +94,12 @@ public class InterventionQueriesRepository {
         }).stream().findFirst();
     }
     private <T extends InterventionSummaryResponse> T summary(ResultSet r,T d)throws SQLException{
-        d.setId(r.getLong("id"));d.setCode(r.getString("code"));d.setVersion(r.getLong("version"));
+        d.setActivityTitle(r.getString("activity_title"));d.setId(r.getLong("id"));d.setCode(r.getString("code"));d.setVersion(r.getLong("version"));
         d.setClassItemId(r.getLong("intervention_class_item_id"));d.setTypeItemId(r.getObject("intervention_type_item_id",Long.class));
         d.setPlanningStatusCode(r.getString("planning_status_code"));d.setStatusCode(r.getString("status_code"));
         d.setTeamId(r.getObject("team_id",Long.class));d.setAssignedToUserId(r.getObject("assigned_to_user_id",Long.class));
         d.setScheduledDate(r.getDate("scheduled_date").toLocalDate());
+        d.setUsesCuttingMachinery(r.getBoolean("uses_cutting_machinery"));
         // V025 timestamps persist UTC without a zone, as Hibernate does for Instant.
         // Read the stored wall time explicitly, independently of the JVM time zone.
         d.setStartedAt(instant(r.getObject("started_at",java.time.LocalDateTime.class)));

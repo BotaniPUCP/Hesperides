@@ -1,0 +1,71 @@
+{
+  "planKey": "6d51e9a1-7ff7-4b21-b472-bef79a5060aa",
+  "name": "Facultad de Educación (código 35)",
+  "folder": "Ambos edificios-facultad-de-educacion",
+  "photos": [
+    "espalda.jpg",
+    "frente-hacia-eeggll-1.jpg",
+    "frente-hacia-eeggll-2.jpg",
+    "lado-hacia-arte-nuevo-1.jpg",
+    "lado-hacia-arte-nuevo-2.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#c69a8a"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "losas": {
+      "color": "#e2e3df"
+    },
+    "ventanas": {
+      "glass": "#66717a",
+      "frame": "#e3e4e1",
+      "moduleM": 1.5,
+      "heightM": 1.3,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "losas",
+          "v": [
+            -0.5,
+            6.7
+          ],
+          "floors": {
+            "everyM": 3.1,
+            "startM": 0,
+            "bandM": [
+              -0.35,
+              0.45
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            6.2
+          ],
+          "floors": {
+            "everyM": 3.1,
+            "startM": 0,
+            "bandM": [
+              1.1,
+              2.4
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Paños de ladrillo en un marco de concreto blanco, con una cinta de ventanas en cada uno de sus dos pisos: el mismo sistema que el otro edificio de Educación, en la misma carpeta (frente-hacia-eeggll-2.jpg y las demás)."
+}

@@ -32,6 +32,7 @@ class SpecimenImportServiceTest {
 
     @Mock private SpecimenResolver resolver;
     @Mock private ImportBatchGate gate;
+    @Mock private BatchPhotoZips zips;
     @Mock private SpecimenImportWriter writer;
     @Mock private SpecimenLookupRepository lookup;
 
@@ -42,7 +43,7 @@ class SpecimenImportServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SpecimenImportService(resolver, gate, writer, lookup);
+        service = new SpecimenImportService(resolver, gate, zips, writer, lookup);
         batch = new Batch(12, "specimens", "PREVIEWED", 7, "saved-preview", LocalDateTime.now().plusMinutes(30));
         claimed = new Claimed(batch, 7);
         preview = new SpecimenPreview(3, false, List.of(
@@ -63,7 +64,7 @@ class SpecimenImportServiceTest {
         assertThat(summary.toCreate()).isEqualTo(1);
         assertThat(summary.toUpdate()).isEqualTo(1);
         assertThat(summary.fingerprint())
-                .isEqualTo(ImportBatchGate.confirmationFingerprint(batch, decisions));
+                .isEqualTo(ImportFingerprints.confirmationFingerprint(batch, decisions));
         verify(writer).verifyVersions(preview.rows(), false);
         verify(resolver).verifyDuplicatePlanCurrent(preview.rows());
     }
@@ -83,14 +84,14 @@ class SpecimenImportServiceTest {
 
     @Test
     void fingerprintChangesWhenTheSavedPlanOrDuplicateDecisionChanges() {
-        String original = ImportBatchGate.confirmationFingerprint(batch, Map.of(3, true));
+        String original = ImportFingerprints.confirmationFingerprint(batch, Map.of(3, true));
         Batch changedPlan = new Batch(12, "specimens", "PREVIEWED", 7,
                 "a-different-saved-preview", batch.expiresAt());
 
-        assertThat(ImportBatchGate.confirmationFingerprint(batch, Map.of(3, false))).isNotEqualTo(original);
-        assertThat(ImportBatchGate.confirmationFingerprint(changedPlan, Map.of(3, true))).isNotEqualTo(original);
-        assertThat(ImportBatchGate.confirmationFingerprint(batch, Map.of(3, true)))
-                .isEqualTo(ImportBatchGate.confirmationFingerprint(batch, Map.of(3, true)));
+        assertThat(ImportFingerprints.confirmationFingerprint(batch, Map.of(3, false))).isNotEqualTo(original);
+        assertThat(ImportFingerprints.confirmationFingerprint(changedPlan, Map.of(3, true))).isNotEqualTo(original);
+        assertThat(ImportFingerprints.confirmationFingerprint(batch, Map.of(3, true)))
+                .isEqualTo(ImportFingerprints.confirmationFingerprint(batch, Map.of(3, true)));
     }
 
     @Test
@@ -102,22 +103,22 @@ class SpecimenImportServiceTest {
         secondOrder.put(3, true);
         secondOrder.put(7, false);
 
-        assertThat(ImportBatchGate.confirmationFingerprint(batch, firstOrder))
-                .isEqualTo(ImportBatchGate.confirmationFingerprint(batch, secondOrder));
+        assertThat(ImportFingerprints.confirmationFingerprint(batch, firstOrder))
+                .isEqualTo(ImportFingerprints.confirmationFingerprint(batch, secondOrder));
     }
 
     @Test
     void rejectsConfirmationWhenThePreviewOrDecisionsNoLongerMatchTheSummary() {
-        String fingerprint = ImportBatchGate.confirmationFingerprint(batch, Map.of(3, false));
+        String fingerprint = ImportFingerprints.confirmationFingerprint(batch, Map.of(3, false));
 
-        ImportBatchGate.verifyConfirmationFingerprint(batch, Map.of(3, false), fingerprint);
-        assertThatThrownBy(() -> ImportBatchGate.verifyConfirmationFingerprint(batch, Map.of(3, true), fingerprint))
+        ImportFingerprints.verifyConfirmationFingerprint(batch, Map.of(3, false), fingerprint);
+        assertThatThrownBy(() -> ImportFingerprints.verifyConfirmationFingerprint(batch, Map.of(3, true), fingerprint))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("This preview changed");
 
         Batch changed = new Batch(batch.id(), batch.kind(), batch.status(), batch.createdBy(),
                 "re-analyzed-report", batch.expiresAt());
-        assertThatThrownBy(() -> ImportBatchGate.verifyConfirmationFingerprint(changed, Map.of(3, false), fingerprint))
+        assertThatThrownBy(() -> ImportFingerprints.verifyConfirmationFingerprint(changed, Map.of(3, false), fingerprint))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("This preview changed");
     }

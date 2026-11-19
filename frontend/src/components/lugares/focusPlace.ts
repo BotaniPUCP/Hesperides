@@ -11,7 +11,8 @@ export function highlightBuilding(viewer: Viewer, data: SceneData, place: PlaceD
   const ids = place.outline.buildingIds;
   // El mapa de las fichas es el mismo de un lugar a otro: las marcas del anterior no deben quedarse.
   viewer.setMarkedBuildings(ids.length > 1 ? ids : []);
-  const building = ids.length === 1 ? data.campusBuildings.findIndex((b) => b.props.id === ids[0]) : -1;
+  // Un lugar ligado a un edificio agrupado se resuelve por su principal.
+  const building = ids.length === 1 ? (data.buildingIndexById.get(ids[0]) ?? -1) : -1;
   if (building < 0) {
     viewer.select(null, false);
     return false;

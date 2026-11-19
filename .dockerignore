@@ -1,0 +1,19 @@
+# Contexto del frontend (docker-compose: context ".", dockerfile frontend/Dockerfile).
+# Se usa la raíz porque el frontend importa shared/; solo entran esas dos carpetas.
+# Sin esto, `COPY frontend .` copiaba el node_modules de Windows encima del que
+# instala `npm ci` en Linux, y un módulo nativo o una versión distinta rompía el build.
+*
+!frontend
+!shared
+
+frontend/node_modules
+frontend/.next
+frontend/coverage
+frontend/test-results
+frontend/playwright-report
+frontend/*.tsbuildinfo
+shared/node_modules
+
+# Las variables públicas llegan como ARG al build; un .env local no debe quedar dentro de la imagen.
+**/.env
+**/.env.*

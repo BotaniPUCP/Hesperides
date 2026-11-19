@@ -4,7 +4,6 @@ import pe.edu.pucp.hesperides.modules.maintenance.dto.ComplianceResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.CreateMaintenanceFrequencyRequest;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.MaintenanceFrequencyResponse;
 import pe.edu.pucp.hesperides.modules.maintenance.dto.UpdateMaintenanceFrequencyRequest;
-import pe.edu.pucp.hesperides.modules.maintenance.dto.ZoneOptionResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,5 +31,4 @@ public interface MaintenanceFrequenciesService {
     List<MaintenanceFrequencyResponse.FrequencyRuleTypeSummary> getFrequencyRuleTypes();
 
     /** Las secciones entre las que se elige el ámbito de una frecuencia por sección. */
-    List<ZoneOptionResponse> getZoneOptions();
 }

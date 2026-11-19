@@ -14,7 +14,7 @@ export const TAB_TEXTS: Record<ReportTab, { label: string; shortLabel: string }>
 /** Labels of the report badges (SPEC-C01 §3.1, amended by SPEC-202). */
 export const BADGE_TEXTS = {
   ON_TARGET: 'En objetivo',
-  WITHIN_TOLERANCE: 'Dentro de tolerancia',
+  EARLY: 'Antes del mínimo',
   OVERDUE: 'Fuera de plazo',
   NOT_APPLICABLE: 'No aplica',
   NOT_EVALUABLE: 'No evaluable',
@@ -27,6 +27,13 @@ export const CHART_TEXTS = {
   sectorColumn: 'Sector',
   percentColumn: 'Porcentaje',
   detailColumn: 'Superficie',
+  noRecords: 'Sin registros',
+  categoryColumn: 'Categoría',
+  valueColumn: 'Cantidad',
+  monthColumn: 'Mes',
+  others: 'Otros',
+  target: (value: string) => `meta ${value}`,
+  targetShort: 'Meta',
 };
 
 export const FILTER_TEXTS = {
@@ -67,6 +74,17 @@ export const MONTHLY_TEXTS = {
       + 'Sin sector no se puede medir la cobertura.',
   },
   sectorsTitle: 'Cobertura por sector',
+  visualHeading: 'Resumen visual del periodo',
+  coverageRing: 'Cobertura del periodo',
+  coverageRingCaption: (covered: string, total: string) => `${covered} de ${total}`,
+  incidentsDonut: 'Incidencias por estado',
+  incidentsDonutTotal: 'incidencias',
+  incidentStates: { PENDING_APPROVAL: 'Pendientes de aprobación', OPEN: 'Pendientes de atención', IN_PROGRESS: 'En atención', RESOLVED: 'Resueltas en el periodo' },
+  complianceDonut: 'Cumplimiento de frecuencias',
+  complianceDonutCaption: 'Lugares evaluados en todas las actividades',
+  complianceDonutTotal: 'lugares',
+  worksDonut: 'Labores aprobadas por sector',
+  worksDonutTotal: 'labores',
   noSections: 'Tu filtro no encontró secciones',
   noSectionsHelp: 'Prueba con otro sector, sección o periodo.',
   noWork: 'No hay trabajo aprobado en este periodo',
@@ -78,7 +96,6 @@ export const MONTHLY_TEXTS = {
 
 export const COMPLIANCE_TEXTS = {
   title: 'Cumplimiento de frecuencias por actividad',
-  detailLink: 'Ver detalle por lugar',
   activity: 'Actividad',
   status: 'Estado por lugar',
   overdueTargets: 'Lugares fuera de plazo',
@@ -87,7 +104,6 @@ export const COMPLIANCE_TEXTS = {
   teamDoesNotApply: 'El filtro de cuadrilla no aplica al cumplimiento: la ejecución por lugar no registra la cuadrilla.',
   notEvaluable: {
     OUTSOURCED: 'Tercerizado: su ejecución no se registra por lugar.',
-    BY_SECTOR: 'Frecuencia por sector: aún no se evalúa por lugar.',
   },
   lastExecution: (date: string) => `última ejecución el ${date}`,
 };
@@ -113,6 +129,11 @@ export const SCREEN_TEXTS = {
   showing: (tab: ReportTab) => `Mostrando ${TAB_TEXTS[tab].label}`,
   noAccessTitle: 'No tienes acceso a los reportes',
   noAccessDescription: 'Los reportes están disponibles para administración, coordinación y capataces.',
-  comingSoonTitle: 'Próximamente',
-  comingSoonDescription: 'Esta pestaña llega en la siguiente entrega.',
+};
+
+/** The demonstration switch: the figures come from the JSON files of components/reports/demo. */
+export const DEMO_TEXTS = {
+  turnOn: 'Ver con datos de demostración',
+  turnOff: 'Volver a los datos reales',
+  banner: 'Datos de demostración: las cifras son de ejemplo y no salen del sistema.',
 };

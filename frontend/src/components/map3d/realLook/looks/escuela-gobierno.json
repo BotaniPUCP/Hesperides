@@ -1,0 +1,44 @@
+{
+  "planKey": "a836d9c8-54c5-4b99-beea-a9bfb4ddf30f",
+  "name": "Escuela de Gobierno y Políticas Públicas",
+  "folder": "escuela-gobierno",
+  "photos": [
+    "escuela-gobienro.jpg"
+  ],
+  "materials": {
+    "concreto": {
+      "color": "#c9bea8"
+    },
+    "ladrillo": {
+      "color": "#b4664f"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "concreto",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ladrillo",
+          "v": [
+            0,
+            11
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              1.2,
+              2.6
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Marco de concreto caravista con losas gruesas y, en cada piso, paños de ladrillo entre las ventanas y celosías de madera (escuela-gobienro.jpg, rótulo «Pabellón I · Escuela de Gobierno y Políticas Públicas»). El ladrillo va como franja de cada piso; las celosías y la escalera metálica no se dibujan."
+}

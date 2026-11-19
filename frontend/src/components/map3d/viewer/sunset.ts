@@ -1,0 +1,361 @@
+import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { SANITIZE_GLSL, SunsetGradePass } from './sunsetGrade';
+import { buildCity, CITY_ORIGIN, CITY_RADIUS_M, CITY_URL, type CityData } from './sunsetCity';
+import { withCityWindows } from './cityWindows';
+import { leafMaterials, leafTexture, leafyCrown } from './sunsetTrees';
+import type { LocalPlane } from '../projection';
+import type { Polygon } from '../sceneData';
+import { createSunsetSky, DAY_HORIZON, DUSK_HORIZON, goldenOf, HORIZON } from './sunsetSky';
+
+/**
+ * Modo «Atardecer»: el campus a la hora dorada, como un render de arquitectura.
+ * Cielo de atardecer con nubes (`sunsetSky.ts`), reflejos tomados de ese
+ * mismo cielo, bruma cálida que funde lo lejano con el horizonte, una ciudad de
+ * relleno alrededor para que el campus no flote, y posprocesado: bloom del sol y
+ * de las ventanas encendidas, y una gradación cálida con viñeta.
+ *
+ * Con el modo encendido la escena se dibuja en un render target de media
+ * precisión sin tone mapping; el pase final aplica el mismo ACES con la misma
+ * exposición que los materiales (y, como el mapa, sin pasar a sRGB), así el color
+ * de las fichas de fachada no cambia (SPEC-109 D-07).
+ */
+
+export { SUNSET_HOUR, SUNSET_HOURS } from './sunsetHours';
+
+/** Cuánto es ya crepúsculo (0 a 1): el cielo se apaga hacia el violeta, el sol directo se va y las luces suben. */
+export function duskOf(hour: number): number {
+  return THREE.MathUtils.smoothstep(hour, 17.95, 18.6);
+}
+
+export const SUNSET = {
+  exposure: 1.4,
+  /** La exposición con el sol alto (unos 20° o más). */
+  dayExposure: 0.9,
+  /** El umbral del bloom con el sol alto. */
+  dayBloomThreshold: 4,
+  /** La bruma empieza pasado lo que se mira y se cierra hacia el horizonte: múltiplos de la distancia de la cámara. */
+  fogNear: 1.5,
+  fogFar: 6.5,
+  ground: '#4c5338',
+  groundRadiusM: 8000,
+  /** Umbral en HDR (antes del tono): solo el sol, sus reflejos fuertes y las ventanas encendidas. */
+  bloom: { strength: 0.6, radius: 0.28, threshold: 2.2 },
+  /** Ciudad de relleno: manzanas de `blockM` separadas por calles de `streetM`, hasta `outerM` del centro. */
+  city: { blockM: 70, streetM: 18, innerMarginM: 60, outerM: 4200, fill: 0.8, trees: 14000, lowWithinM: 700 },
+  /** Cuánto se encienden las ventanas al atardecer respecto de la noche. */
+  windowGlow: 2.3,
+  /** Cuánto se desaturan los emisivos de las fachadas hacia su luminancia, antes del tono. */
+  emissiveDesat: 0.2,
+  /** Cuánto refleja el cielo el vidrio de las fachadas (el modo de siempre usa 2). */
+  glassEnv: 1.5,
+  /** Cuánto se hunden los paños de vidrio respecto de la fachada. */
+  paneInsetM: 0.22,
+  /** Los interiores tras el vidrio de las fachadas: cálidos, y más a medida que baja el sol. */
+  interior: new THREE.Color().setRGB(1.0, 0.62, 0.32).multiplyScalar(0.16),
+} as const;
+
+/** Pseudoaleatorio con semilla: la ciudad de relleno no cambia entre cargas. */
+function seeded(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+const noRaycast = () => undefined;
+const DEG = Math.PI / 180;
+
+/** La toma del modo: oblicua, mirando hacia el sol pero ladeada, como un render de arquitectura a contraluz. */
+/** Cuánto puede bajar la cámara en el modo, en radianes desde la vertical (unos 6° sobre el horizonte). */
+export const SUNSET_MAX_POLAR = 1.47;
+
+export const SUNSET_VIEW = { yawDeg: -100, pitchDeg: 14, distanceM: 950, aheadM: 250 } as const;
+
+/** Dónde poner la cámara para la toma del atardecer, mirando al centro del campus. */
+export function sunsetPose(center: THREE.Vector3, sunDir: THREE.Vector3): { position: [number, number, number]; target: [number, number, number] } {
+  const look = new THREE.Vector3(sunDir.x, 0, sunDir.z).normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), SUNSET_VIEW.yawDeg * DEG);
+  const pitch = SUNSET_VIEW.pitchDeg * DEG;
+  // Se mira un poco más allá del centro: el campus llena la mitad de abajo y el cielo, la franja de arriba.
+  const target = center.clone().addScaledVector(look, SUNSET_VIEW.aheadM);
+  const position = target.clone()
+    .addScaledVector(look, -SUNSET_VIEW.distanceM * Math.cos(pitch))
+    .add(new THREE.Vector3(0, SUNSET_VIEW.distanceM * Math.sin(pitch), 0));
+  return { position: position.toArray() as [number, number, number], target: target.toArray() as [number, number, number] };
+}
+
+interface Finish { roughness: number; clearcoat: number; sheen: number }
+
+/**
+ * Al atardecer el suelo es mate: con el sol rasante, el barniz y el terciopelo del césped y el brillo del
+ * asfalto lo harían ver mojado. Guarda el acabado de siempre en el material para devolverlo.
+ */
+export function setGroundMatte(materials: THREE.Material[], on: boolean): void {
+  materials.forEach((m) => {
+    const s = m as THREE.MeshStandardMaterial & Partial<Finish>;
+    const kept = (s.userData.finish ??= { roughness: s.roughness, clearcoat: s.clearcoat ?? 0, sheen: s.sheen ?? 0 }) as Finish;
+    s.roughness = on ? 0.95 : kept.roughness;
+    if (s.clearcoat !== undefined) s.clearcoat = on ? 0 : kept.clearcoat;
+    if (s.sheen !== undefined) s.sheen = on ? 0 : kept.sheen;
+  });
+}
+
+export interface Sunset {
+  enabled: () => boolean;
+  /** Prende o apaga el modo; `sunDir` es hacia dónde está el sol y `dusk`, cuánto es ya crepúsculo. */
+  setEnabled: (on: boolean, sunDir: THREE.Vector3, dusk?: number) => void;
+  /** `distance`: de la cámara a lo que mira; la bruma se mide desde ahí. */
+  render: (distance: number) => void;
+  resize: (width: number, height: number) => void;
+  dispose: () => void;
+}
+
+/**
+ * Suelo lejano y ciudad de relleno alrededor del campus: la bruma los funde con el horizonte. Lo que cae
+ * dentro del radio de la ciudad real (`sunsetCity.ts`, centrada en `city`) va aparte, en `inner`: se oculta
+ * cuando esa ciudad llega.
+ */
+function createSurroundings(campus: THREE.Box3, groundY: number, city: { x: number; z: number }): { group: THREE.Group; inner: THREE.Object3D[] } {
+  const group = new THREE.Group();
+  const isInner = (x: number, z: number) => Math.hypot(x - city.x, z - city.z) < CITY_RADIUS_M - 40;
+  const ground = new THREE.Mesh(
+    new THREE.CircleGeometry(SUNSET.groundRadiusM, 64).rotateX(-Math.PI / 2),
+    // Lambert: mirando hacia el sol desde lo alto, un suelo con brillo especular lo reflejaba como un segundo sol.
+    new THREE.MeshLambertMaterial({ color: SUNSET.ground }),
+  );
+  ground.position.y = groundY - 0.3;
+  ground.receiveShadow = true;
+  ground.raycast = noRaycast;
+  group.add(ground);
+
+  const cx = (campus.min.x + campus.max.x) / 2, cz = (campus.min.z + campus.max.z) / 2;
+  const half = [(campus.max.x - campus.min.x) / 2 + SUNSET.city.innerMarginM, (campus.max.z - campus.min.z) / 2 + SUNSET.city.innerMarginM];
+  const rnd = seeded(0x51ce7);
+  const inside = (x: number, z: number) => Math.abs(x - cx) < half[0] && Math.abs(z - cz) < half[1];
+  /** Un punto al azar alrededor del campus; con `bias` mayor que 1, más denso cerca. */
+  const around = (bias = 0.5): [number, number] => {
+    for (;;) {
+      const a = rnd() * Math.PI * 2, r = Math.pow(rnd(), bias) * SUNSET.city.outerM;
+      const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
+      if (!inside(x, z)) return [x, z];
+    }
+  };
+
+  const palette = ['#a8705a', '#94654f', '#b5a189', '#a9a196', '#8a5a46', '#bdb09c', '#7f766d', '#9c907f'].map((c) => new THREE.Color(c));
+  // Una trama de manzanas alineada con el campus: en cada manzana, de uno a cuatro edificios bajos y algún alto.
+  const { blockM, streetM, outerM, fill } = SUNSET.city;
+  const pitch = blockM + streetM, cells = Math.ceil(outerM / pitch);
+  const lots: [number, number, number, number, number][] = [];
+  for (let i = -cells; i <= cells; i++) {
+    for (let j = -cells; j <= cells; j++) {
+      const bx = cx + i * pitch, bz = cz + j * pitch;
+      const r = Math.hypot(bx - cx, bz - cz);
+      if (r > outerM || inside(bx, bz) || rnd() > fill * (1 - 0.35 * (r / outerM))) continue;
+      const split = 1 + Math.floor(rnd() * 2);
+      const w = blockM / split;
+      for (let a = 0; a < split; a++) {
+        for (let b = 0; b < split; b++) {
+          if (rnd() < 0.12) continue;
+          const x = bx - blockM / 2 + w * (a + 0.5), z = bz - blockM / 2 + w * (b + 0.5);
+          if (inside(x, z)) continue;
+          // Cerca del campus la ciudad es baja: no tapa la toma. Las torres quedan lejos, en la bruma.
+          const near = Math.hypot(x - cx, z - cz) - Math.hypot(half[0], half[1]) < SUNSET.city.lowWithinM;
+          const tall = !near && rnd() < 0.05;
+          const h = tall ? 28 + rnd() * 50 : near ? 3 + rnd() * 6 : 4 + rnd() * 10 + (rnd() < 0.3 ? 6 : 0);
+          lots.push([x, z, w * (0.62 + rnd() * 0.3), h, w * (0.62 + rnd() * 0.3)]);
+        }
+      }
+    }
+  }
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
+  const inner: THREE.Object3D[] = [];
+  const boxGeo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+  const boxMat = withCityWindows(new THREE.MeshStandardMaterial({ roughness: 0.9 }), groundY);
+  [lots.filter(([x, z]) => isInner(x, z)), lots.filter(([x, z]) => !isInner(x, z))].forEach((part, k) => {
+    const blocks = new THREE.InstancedMesh(boxGeo, boxMat, part.length);
+    part.forEach(([x, z, w, h, d], i) => {
+      m.compose(p.set(x, groundY, z), q, s.set(w, h, d));
+      blocks.setMatrixAt(i, m);
+      // Lo bajo y cercano, más oscuro: no compite con el campus.
+      const tint = palette[Math.floor(rnd() * palette.length)].clone();
+      blocks.setColorAt(i, h < 10 ? tint.multiplyScalar(0.72) : tint);
+    });
+    blocks.castShadow = true;
+    blocks.receiveShadow = true;
+    blocks.raycast = noRaycast;
+    group.add(blocks);
+    if (k === 0) inner.push(blocks);
+  });
+
+  const placed: THREE.Matrix4[] = [];
+  const at: [number, number][] = [];
+  for (let i = 0; i < SUNSET.city.trees; i++) {
+    // En las calles: sobre una línea de la trama, en un punto al azar de ella.
+    let [x, z] = around(1.4);
+    if (rnd() < 0.5) x = cx + (Math.round((x - cx) / pitch - 0.5) + 0.5) * pitch;
+    else z = cz + (Math.round((z - cz) / pitch - 0.5) + 0.5) * pitch;
+    const r = 3.5 + rnd() * 4.5;
+    placed.push(new THREE.Matrix4().compose(p.set(x, groundY, z), q.identity(), s.set(r, r * (1.1 + rnd() * 0.6), r)));
+    at.push([x, z]);
+  }
+  // Las copas en racimo de los árboles del campus, más livianas: son miles y se ven de lejos.
+  const crownGeo = leafyCrown(0x51ce7, 28).translate(0, 1, 0);
+  const leaves = leafMaterials(leafTexture(), new THREE.MeshStandardMaterial({ color: '#3f5a2c', roughness: 0.85 }));
+  const crownMat = leaves.material;
+  [true, false].forEach((innerPart) => {
+    const idx = at.map(([x, z], i) => (isInner(x, z) === innerPart ? i : -1)).filter((i) => i >= 0);
+    const trees = new THREE.InstancedMesh(crownGeo, crownMat, idx.length);
+    idx.forEach((i, k) => trees.setMatrixAt(k, placed[i]));
+    trees.customDepthMaterial = leaves.depth;
+    trees.raycast = noRaycast;
+    group.add(trees);
+    if (innerPart) inner.push(trees);
+  });
+  group.visible = false;
+  return { group, inner };
+}
+
+export interface SunsetOptions {
+  /** El plano de la escena y el límite del campus: ubican la ciudad real y dejan libre el campus. */
+  plane: LocalPlane;
+  campus: Polygon[];
+  /** Algo llegó tarde (la foto de las nubes, la ciudad) y hay que redibujar. */
+  onChange?: () => void;
+  /** En pantallas táctiles: sin oclusión ambiental y con menos muestras de antialiasing. */
+  lite?: boolean;
+}
+
+export function createSunset(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, campus: THREE.Box3,
+  groundY: number, { plane, campus: campusPolygons, onChange = () => undefined, lite = false }: SunsetOptions): Sunset {
+  const { mesh: sky, setSun, setSunPower, setDusk } = createSunsetSky(SUNSET.groundRadiusM, () => {
+    // Las nubes también se reflejan: con el modo prendido, se vuelve a hornear el entorno.
+    env?.dispose();
+    env = null;
+    if (on) {
+      bakeEnvironment(bakedSun.clone());
+      scene.environment = (env as THREE.WebGLRenderTarget | null)?.texture ?? null;
+    }
+    onChange();
+  });
+  sky.visible = false;
+  const cityOrigin = plane.toPlane(CITY_ORIGIN[0], CITY_ORIGIN[1]);
+  const { group: surroundings, inner } = createSurroundings(campus, groundY, { x: cityOrigin.x, z: -cityOrigin.y });
+  scene.add(sky, surroundings);
+  let cityRequested = false;
+
+  /** La ciudad real, una sola vez y recién cuando se prende el modo; si no llega, queda la de relleno. */
+  function loadCity() {
+    if (cityRequested) return;
+    cityRequested = true;
+    fetch(CITY_URL)
+      .then((r) => (r.ok ? (r.json() as Promise<CityData>) : Promise.reject(new Error(String(r.status)))))
+      .then((data) => {
+        const o = plane.toPlane(data.origen[0], data.origen[1]);
+        const toFile = (ring: number[]) => ring.map((v, i) => v - (i % 2 === 0 ? o.x : o.y));
+        const city = buildCity(data, (x, y) => [x + o.x, -(y + o.y)], campusPolygons.map((poly) => toFile(poly[0])), groundY);
+        surroundings.add(city);
+        inner.forEach((obj) => { obj.visible = false; });
+        onChange();
+      })
+      .catch(() => undefined);
+  }
+  const fog = new THREE.Fog(HORIZON.clone(), 1000, 6000);
+
+  const size = renderer.getSize(new THREE.Vector2());
+  // Media precisión (el sol y las ventanas pasan del blanco), 4 muestras (el antialiasing que el compositor
+  // le quita al renderer) y la profundidad, que el pase final usa para la oclusión ambiental.
+  const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: lite ? 2 : 4 });
+  target.depthTexture = new THREE.DepthTexture(size.x, size.y, THREE.UnsignedIntType);
+  const composer = new EffectComposer(renderer, target);
+  composer.addPass(new RenderPass(scene, camera));
+  const { strength, radius, threshold } = SUNSET.bloom;
+  const bloom = new UnrealBloomPass(size.clone(), strength, radius, threshold);
+  // Sus buffers, también de media precisión: si no, el brillo se corta en 1 y el sol queda como un disco pálido.
+  [bloom.renderTargetBright, ...bloom.renderTargetsHorizontal, ...bloom.renderTargetsVertical]
+    .forEach((rt) => { rt.texture.type = THREE.HalfFloatType; });
+  // El filtro de brillo del bloom lee la escena: también lo sanea (ver SANITIZE_GLSL).
+  const highPass = bloom.materialHighPassFilter;
+  highPass.fragmentShader = SANITIZE_GLSL + highPass.fragmentShader
+    .replace('vec4 texel = texture2D( tDiffuse, vUv );', 'vec4 texel = texture2D( tDiffuse, vUv ); texel.rgb = sunsetFinite( texel.rgb );');
+  composer.addPass(bloom);
+  const grade = new SunsetGradePass(camera, SUNSET.exposure, !lite);
+  grade.setGround(groundY, HORIZON);
+  composer.addPass(grade);
+
+  let on = false;
+  let env: THREE.WebGLRenderTarget | null = null;
+
+  const bakedSun = new THREE.Vector3(0, -1, 0);
+
+  /** Los reflejos salen del mismo cielo: el vidrio y los techos toman el naranja del atardecer. Solo si el sol se movió. */
+  let bakedDusk = 0;
+  function bakeEnvironment(sunDir: THREE.Vector3, dusk = bakedDusk) {
+    if (env && bakedSun.distanceToSquared(sunDir) < 1e-8 && Math.abs(bakedDusk - dusk) < 1e-3) return;
+    bakedSun.copy(sunDir);
+    bakedDusk = dusk;
+    const only = new THREE.Scene();
+    const copy = new THREE.Mesh(sky.geometry, sky.material);
+    copy.scale.setScalar(1000);
+    only.add(copy);
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    env?.dispose();
+    setSunPower(0);
+    env = pmrem.fromScene(only, 0, 0.1, 2000);
+    setSunPower(1);
+    pmrem.dispose();
+  }
+
+  return {
+    enabled: () => on,
+    setEnabled(next, sunDir, dusk = 0) {
+      if (next) {
+        loadCity();
+        setSun(sunDir);
+        setDusk(dusk);
+        // La bruma (lejana y baja) se apaga con el cielo.
+        // La bruma es el horizonte del cielo: de día clara, al atardecer dorada, al crepúsculo violeta.
+        fog.color.copy(DAY_HORIZON).lerp(HORIZON, goldenOf(sunDir.y)).lerp(DUSK_HORIZON, dusk);
+        grade.setGround(groundY, fog.color);
+        grade.setSun(sunDir);
+        bakeEnvironment(sunDir, dusk);
+        scene.environment = env?.texture ?? null;
+        scene.fog = fog;
+        renderer.toneMapping = THREE.NoToneMapping;
+        // Con el sol alto la luz pega de frente: menos exposición que con el sol rasante.
+        const exposure = THREE.MathUtils.lerp(SUNSET.dayExposure, SUNSET.exposure, goldenOf(sunDir.y)) * (1 + 0.45 * dusk);
+        renderer.toneMappingExposure = exposure;
+        grade.setExposure(exposure);
+        // Los rayos de sol son de la hora dorada: con el sol alto, apenas.
+        grade.setRays(THREE.MathUtils.lerp(0.25, 1, goldenOf(sunDir.y)));
+        // Con el sol alto, techos y vidrio reflejan de frente: solo lo muy brillante florece.
+        bloom.threshold = THREE.MathUtils.lerp(SUNSET.dayBloomThreshold, SUNSET.bloom.threshold, goldenOf(sunDir.y));
+      } else {
+        // El entorno y la exposición del tema los repone stage.applyTheme, que el visor llama después.
+        scene.fog = null;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      }
+      on = next;
+      sky.visible = next;
+      surroundings.visible = next;
+    },
+    render(distance) {
+      sky.position.copy(camera.position);
+      fog.near = distance * SUNSET.fogNear;
+      fog.far = distance * SUNSET.fogFar;
+      composer.render();
+    },
+    resize(width, height) {
+      composer.setPixelRatio(renderer.getPixelRatio());
+      composer.setSize(width, height);
+    },
+    dispose() {
+      env?.dispose();
+      target.dispose();
+      composer.passes.forEach((pass) => (pass as unknown as { dispose?: () => void }).dispose?.());
+      scene.remove(sky, surroundings);
+    },
+  };
+}

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PICK_ONLY_LAYER } from './sunsetTrees';
 import type { Polygon } from '../sceneData';
 import type { Target } from '../target';
 import type { PointLayer } from './furniture';
@@ -16,10 +17,12 @@ export interface Hit {
 }
 
 const raycaster = new THREE.Raycaster();
+// También lo que la cámara no dibuja pero se puede elegir (las copas de siempre en el Atardecer).
+raycaster.layers.enable(PICK_ONLY_LAYER);
 const ndc = new THREE.Vector2();
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -WORLD_LIFT);
 
-function insideRing(x: number, y: number, ring: number[]): boolean {
+export function insideRing(x: number, y: number, ring: number[]): boolean {
   let inside = false;
   for (let i = 0, j = ring.length - 2; i < ring.length; j = i, i += 2) {
     const xi = ring[i], yi = ring[i + 1], xj = ring[j], yj = ring[j + 1];

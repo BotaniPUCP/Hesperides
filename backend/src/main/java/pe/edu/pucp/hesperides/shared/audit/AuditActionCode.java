@@ -45,5 +45,37 @@ public enum AuditActionCode {
     PLACE_PHOTO_DELETED,
     /** Migración de referencias: quién decidió a qué lugar va cada referencia antigua, o que no es un lugar. */
     PLACE_REFERENCES_LINKED,
-    PLACE_REFERENCES_DISCARDED
+    PLACE_REFERENCES_DISCARDED,
+    /** SPEC-203: quién asignó, cambió o quitó la frecuencia que se planifica en un conjunto. */
+    PLANNING_ASSIGNMENT_CREATED,
+    PLANNING_ASSIGNMENT_UPDATED,
+    PLANNING_ASSIGNMENT_DELETED,
+    /** SPEC-106: quién creó, cambió o dio de baja una organización del Directorio. */
+    ORGANIZATION_CREATED,
+    ORGANIZATION_UPDATED,
+    ORGANIZATION_DEACTIVATED,
+    /** SPEC-106: lo mismo para un contacto; el detalle dice qué campos cambiaron, nunca sus valores. */
+    CONTACT_CREATED,
+    CONTACT_UPDATED,
+    CONTACT_DEACTIVATED,
+    /** SPEC-106: a qué organización se vinculó un contacto existente. */
+    CONTACT_LINKED,
+    /** SPEC-106 §4.3: rol del contacto en una organización (cambio de rol, sin valor). */
+    CONTACT_LINK_ROLE_UPDATED,
+    /** SPEC-107 D-02b: quién quedó a cargo de una reserva; con los códigos de contacto. */
+    GARDEN_RESERVATION_RESPONSIBLE_CHANGED,
+    /** SPEC-203: quién creó, cambió o dio de baja un conjunto de áreas verdes, y con cuántos jardines. */
+    GREEN_AREA_SET_CREATED,
+    GREEN_AREA_SET_UPDATED,
+    GREEN_AREA_SET_DELETED,
+    /** SPEC-107: quién reservó, editó o anuló un jardín; con el código de la reserva y el del jardín. */
+    GARDEN_RESERVATION_CREATED,
+    GARDEN_RESERVATION_UPDATED,
+    GARDEN_RESERVATION_CANCELLED,
+    /** SPEC-107 (enmienda 11 nov 2026): la marca de uso del espacio, de qué a qué. */
+    GARDEN_RESERVATION_USAGE_CHANGED,
+    /** SPEC-114: el calendario del campus (eventos bloqueantes y feriados). */
+    CAMPUS_EVENT_CREATED,
+    CAMPUS_EVENT_UPDATED,
+    CAMPUS_EVENT_DELETED
 }

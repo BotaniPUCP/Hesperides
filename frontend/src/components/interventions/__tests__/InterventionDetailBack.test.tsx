@@ -41,7 +41,7 @@ it('sin recorrido, breadcrumb y flecha llevan al listado con sus últimos filtro
 });
 
 it.each([
-  ['Frecuencias, con su reporte consultado', '/admin/frecuencias', 'from=2026-10-01&to=2026-10-31'],
+  ['la planificación preventiva (SPEC-203)', '/intervenciones/planificacion', ''],
   ['la ficha del ejemplar', '/catastro/ejemplares/EV-000001', ''],
   ['la incidencia, con sus filtros', '/incidencias/7', 'search=rama&status=OPEN'],
   ['el listado, con sus filtros', LIST, 'status=COMPLETED'],

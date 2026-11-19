@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pe.edu.pucp.hesperides.engine.duplicates.Nearby;
+import pe.edu.pucp.hesperides.shared.persistence.UserIds;
 import pe.edu.pucp.hesperides.modules.imports.dto.SpeciesImportOption;
 import pe.edu.pucp.hesperides.shared.text.SpeciesNameKey;
 import pe.edu.pucp.hesperides.shared.persistence.LikePattern;
@@ -39,6 +40,7 @@ public class SpecimenLookupRepository {
     }
 
     private final JdbcTemplate jdbc;
+    private final UserIds users;
 
     /** Por nombre científico normalizado ({@link SpeciesNameKey#key(String)}). */
     public Map<String, SpeciesRef> speciesByName() {
@@ -198,11 +200,6 @@ public class SpecimenLookupRepository {
     }
 
     public long userId(String email) {
-        Long id = jdbc.queryForObject("SELECT id FROM users WHERE lower(email) = lower(?) AND deleted_at IS NULL",
-                Long.class, email);
-        if (id == null) {
-            throw new IllegalStateException("Usuario de la sesión inexistente: " + email);
-        }
-        return id;
+        return users.of(email);
     }
 }

@@ -8,6 +8,7 @@ import { EMPTY_MONTHLY_FILTERS, type MonthlyFilters as Filters, type ParsedMonth
 import { SectorBars } from './charts/SectorBars';
 import { ComplianceTable } from './monthly/ComplianceTable';
 import { MonthlySummary } from './monthly/MonthlySummary';
+import { MonthlyVisuals } from './monthly/MonthlyVisuals';
 import { SectionLists } from './monthly/SectionLists';
 import { MonthlyFilters } from './MonthlyFilters';
 import { formatAreaOf, formatPeriod } from './reportFormat';
@@ -33,7 +34,8 @@ function Content({ report, filters, options }: { report: Report; filters: Filter
         <EmptyState title={MONTHLY_TEXTS.noSections} description={MONTHLY_TEXTS.noSectionsHelp} />
       ) : (
         <>
-          {noWork && <EmptyState title={MONTHLY_TEXTS.noWork} description={MONTHLY_TEXTS.noWorkHelp} />}
+          {noWork ? <EmptyState title={MONTHLY_TEXTS.noWork} description={MONTHLY_TEXTS.noWorkHelp} />
+            : <MonthlyVisuals report={report} />}
           {report.sectors.length > 0 && (
             <SectorBars title={MONTHLY_TEXTS.sectorsTitle} rows={report.sectors.map((sector) => ({
               key: String(sector.sectorId ?? 'none'), label: sector.name, percent: sector.percent,

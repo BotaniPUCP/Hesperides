@@ -12,6 +12,7 @@ import { CamposMedidasEspecie } from './CamposMedidasEspecie';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
 import { aFormulario, criticaPorTipo, erroresMedidas, medidasPorTipo, type ErroresMedidas } from './medidasEspecie';
 import { normalizarNombreCientifico, validarNombreCientifico } from './validacionesEspecie';
+import { mensajeDeApiError } from '@/lib/api-errors';
 
 export interface RegistroEspecieModalProps {
   isOpen: boolean;
@@ -148,11 +149,11 @@ function RegistroEspecieDialog({
     } catch (err: unknown) {
       setConfirmOpen(false);
       if (err instanceof ApiError && err.status === 409) {
-        setError(err.message || `La especie «${scientificName}» ya está registrada en el catálogo`);
+        setError(mensajeDeApiError(err));
       } else if (err instanceof ApiError && err.status === 500) {
         setError('Error del servidor al registrar la especie. Inténtalo más tarde.');
       } else if (err instanceof ApiError) {
-        setError(err.message);
+        setError(mensajeDeApiError(err));
       } else {
         setError('Ocurrió un error al registrar la especie. Inténtalo nuevamente.');
       }

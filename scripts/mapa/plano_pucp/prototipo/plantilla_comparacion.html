@@ -1,0 +1,1228 @@
+<meta charset="utf-8">
+<title>Edificios del plano en el mapa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: dos maquetas 3D en una sola vista (la app hoy | la propuesta) con división arrastrable; panel de control a la derecha (abajo en el teléfono). */
+:root {
+  --bg: #f1f3f7;
+  --surface: #ffffff;
+  --ink: #171a22;
+  --muted: #5b6070;
+  --line: #d9dce5;
+  --brand: #c4105f;
+  --brand-ink: #ffffff;
+  --aviso: #b42318;
+  --aviso-bg: #fdecea;
+  /* Escena y etiquetas: los colores del visor, iguales en los dos temas como en la app */
+  --et-edificio: #5a1080;
+  --et-jardin: #e0ffe8;
+  --et-puerta: #5a6c99;
+  --et-halo: #ffffff;
+  --lado-bg: rgb(20 22 30 / 0.74);
+  --lado-ink: #ffffff;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1117; --surface: #171a23; --ink: #e6e8ef; --muted: #9aa0b1; --line: #2a2e3a;
+    --brand: #ff5ca0; --brand-ink: #1a0610; --aviso: #ff8a80; --aviso-bg: #3a1714;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1117; --surface: #171a23; --ink: #e6e8ef; --muted: #9aa0b1; --line: #2a2e3a;
+  --brand: #ff5ca0; --brand-ink: #1a0610; --aviso: #ff8a80; --aviso-bg: #3a1714;
+  color-scheme: dark;
+}
+
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+.app {
+  height: 100%; box-sizing: border-box; display: grid; grid-template-rows: auto 1fr; gap: 12px;
+  padding-block: 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+h1 { font-family: var(--font-head); font-weight: 600; font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); min-width: 0; max-width: 90ch; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 12px; min-height: 0; }
+.escena { position: relative; min-height: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #c9f3ff; }
+#fondo, #lienzo { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#lienzo { touch-action: none; outline: none; cursor: grab; }
+#lienzo:active { cursor: grabbing; }
+#lienzo:focus-visible { box-shadow: inset 0 0 0 2px var(--brand); }
+.etiquetas { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.et { position: absolute; left: 0; top: 0; white-space: nowrap; visibility: hidden; font-family: var(--font-body); font-weight: 600; }
+.et-b { font-size: 12px; color: var(--et-edificio); text-shadow: 0 0 2px var(--et-halo), 0 0 3px var(--et-halo), 0 0 5px var(--et-halo); }
+.et-g { font-size: 11.5px; color: var(--et-jardin); text-shadow: 0 0 3px rgb(0 0 0 / 0.7), 0 1px 2px rgb(0 0 0 / 0.8); }
+.et-p { font-size: 11px; color: var(--et-puerta); text-shadow: 0 0 2px var(--et-halo), 0 0 3px var(--et-halo), 0 0 5px var(--et-halo); }
+.divisor { position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid var(--et-halo); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25); pointer-events: none; }
+.asa {
+  position: absolute; top: 50%; left: -18px; width: 34px; height: 34px; margin-top: -17px; border-radius: 50%; pointer-events: auto; touch-action: none;
+  display: grid; place-items: center; cursor: ew-resize; font: 600 15px/1 var(--font-body); color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); box-shadow: 0 2px 8px rgb(0 0 0 / 0.22);
+}
+.etiqueta-lado { position: absolute; top: 10px; font: 600 12px/1 var(--font-body); color: var(--lado-ink); background: var(--lado-bg); border-radius: 6px; padding: 6px 8px; pointer-events: none; }
+.estado-carga { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: #2b3140; font-size: 14px; background: #c9f3ff; }
+.esquina { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; }
+.boton {
+  font: 500 13px/1 var(--font-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 11px; cursor: pointer;
+}
+.boton:focus-visible, .seg button:focus-visible, .tipo:focus-visible, input:focus-visible, .fila:focus-visible, .asa:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ayuda { position: absolute; left: 10px; bottom: 10px; font-size: 12px; color: var(--muted); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; max-width: calc(100% - 20px); }
+.tooltip {
+  position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 10px; font-size: 12px; max-width: 280px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.16);
+}
+.tooltip strong { display: block; font-size: 13px; margin-bottom: 2px; }
+
+.panel { min-height: 0; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.panel section { padding: 14px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.panel section:last-child { border-bottom: 0; }
+h2 { font-family: var(--font-head); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin: 0; }
+h3.sub-titulo { font-size: 13px; font-weight: 600; margin: 0; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--bg); border-radius: 8px; padding: 3px; }
+.seg3 { grid-template-columns: repeat(3, 1fr); }
+.seg button { font: 500 13px/1.2 var(--font-body); color: var(--ink); background: transparent; border: 0; border-radius: 6px; padding: 8px 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+.nota { color: var(--muted); font-size: 12px; margin: 0; }
+input[type="search"] { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; box-sizing: border-box; }
+.checks { display: grid; gap: 6px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.check input { accent-color: var(--brand); }
+.tipos { display: grid; gap: 2px; }
+.tipo {
+  display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; text-align: left;
+  font: inherit; color: var(--ink); background: transparent; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer;
+}
+.tipo:hover { background: var(--bg); }
+.tipo[aria-pressed="true"] { background: var(--bg); box-shadow: inset 3px 0 0 var(--brand); }
+.n { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.cuadro { width: 12px; height: 12px; border-radius: 3px; }
+.lista { display: grid; gap: 2px; max-height: 260px; overflow-y: auto; }
+.fila {
+  display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; text-align: left; width: 100%;
+  font: inherit; color: var(--ink); background: transparent; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer;
+}
+.fila:hover, .fila[aria-current="true"] { background: var(--bg); }
+.fila .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 8px; background: var(--bg); color: var(--muted); }
+.chip.aviso { background: var(--aviso-bg); color: var(--aviso); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; }
+dt { color: var(--muted); }
+dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; overflow-wrap: anywhere; }
+.detalle h3 { font-family: var(--font-head); font-size: 1.05rem; font-weight: 600; margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+.avisos { margin: 0; padding: 10px 12px 10px 28px; background: var(--aviso-bg); color: var(--aviso); border-radius: 8px; display: grid; gap: 4px; font-size: 13px; }
+.sub { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: 13px; }
+.sub li span { color: var(--muted); }
+details summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+
+@media (max-width: 880px) {
+  html, body { height: auto; }
+  .app { height: auto; }
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  .escena { height: 66vh; min-height: 380px; }
+  .panel { overflow: visible; }
+}
+</style>
+
+<div class="app">
+  <header>
+    <h1>Edificios del plano en el mapa</h1>
+    <p>La app de Hesperides tal como abre hoy, frente a la propuesta: los modelos del SKP con las relaciones de Nicolás y los nombres y excepciones de Jean Piero, con todo lo demás del mapa.</p>
+  </header>
+  <div class="workspace">
+    <div class="escena" id="escena">
+      <canvas id="fondo" aria-hidden="true"></canvas>
+      <canvas id="lienzo" tabindex="0" aria-label="Maqueta 3D del campus: arrastra para girar, clic derecho o dos dedos para desplazar, rueda o pellizco para acercar, clic en un edificio para ver su ficha"></canvas>
+      <div class="etiquetas" id="etiquetas" aria-hidden="true"></div>
+      <div class="divisor" id="divisor" hidden><button type="button" class="asa" id="asa" aria-label="Mover la división entre la app de hoy y la propuesta">↔</button></div>
+      <span class="etiqueta-lado" id="lado-hoy" hidden>La app hoy</span>
+      <span class="etiqueta-lado" id="lado-prop" hidden>Propuesta</span>
+      <div class="esquina"><button type="button" class="boton" id="inicial">Vista inicial</button></div>
+      <div class="ayuda">Arrastra para girar · clic derecho para desplazar · rueda para acercar · doble clic para centrar</div>
+      <div class="tooltip" id="tooltip" hidden></div>
+      <div class="estado-carga" id="carga">Cargando las dos maquetas…</div>
+    </div>
+
+    <aside class="panel">
+      <section>
+        <h2>Qué ver</h2>
+        <div class="seg" role="group" aria-label="Qué mostrar">
+          <button type="button" data-modo="comparar">Comparar</button>
+          <button type="button" data-modo="hoy">La app hoy</button>
+          <button type="button" data-modo="propuesta">Propuesta</button>
+          <button type="button" data-modo="superponer">Superponer</button>
+        </div>
+        <p class="nota" id="explica-modo"></p>
+      </section>
+
+      <section>
+        <h2>La propuesta</h2>
+        <h3 class="sub-titulo">Acabado</h3>
+        <div class="seg seg3" role="group" aria-label="Acabado de la propuesta">
+          <button type="button" data-estilo="mate">Mate</button>
+          <button type="button" data-estilo="plano">Plano</button>
+          <button type="button" data-estilo="actual">Brillante</button>
+        </div>
+        <p class="nota" id="explica-estilo"></p>
+        <label class="check" for="corregir"><input type="checkbox" id="corregir" checked> Corregir el desfase del suelo (3,5 m)</label>
+        <p class="nota">Las áreas verdes, veredas, estacionamientos, puertas y el límite vienen del mapa del cliente y están corridos 2,5 m al oeste y 2,5 m al sur respecto de los edificios. Corregidas, las áreas verdes calzan con la jardinería del plano en un 76 % en vez de un 57 %. La app de hoy se muestra siempre sin corregir.</p>
+      </section>
+
+      <section>
+        <h2>Capas, en los dos lados</h2>
+        <div class="checks">
+          <label class="check" for="capa-arboles"><input type="checkbox" id="capa-arboles" checked> Árboles y plantas</label>
+          <label class="check" for="capa-etiquetas"><input type="checkbox" id="capa-etiquetas" checked> Nombres</label>
+          <label class="check" for="capa-puertas"><input type="checkbox" id="capa-puertas" checked> Puertas</label>
+          <label class="check" for="capa-entorno"><input type="checkbox" id="capa-entorno"> Edificios del entorno</label>
+          <label class="check" for="capa-veredas"><input type="checkbox" id="capa-veredas"> Veredas en riesgo</label>
+        </div>
+        <p class="nota">Empiezan encendidas y apagadas como abre la app.</p>
+      </section>
+
+      <section>
+        <h2>Color de los edificios</h2>
+        <div class="seg" role="group" aria-label="Color de los edificios">
+          <button type="button" data-color="mapa">Como el mapa</button>
+          <button type="button" data-color="geometria">Geometría</button>
+          <button type="button" data-color="relacion">Relación</button>
+          <button type="button" data-color="avisos">Avisos</button>
+        </div>
+        <div class="tipos" id="leyenda"></div>
+        <p class="nota" id="nota-leyenda"></p>
+      </section>
+
+      <section>
+        <h2>Buscar edificio</h2>
+        <input type="search" id="buscar" placeholder="Nombre, código, alias u oficina" aria-label="Buscar edificio">
+        <label class="check" for="solo-avisos"><input type="checkbox" id="solo-avisos"> Solo los que tienen avisos</label>
+        <div class="lista" id="lista" role="list"></div>
+        <p class="nota" id="cuenta-lista"></p>
+      </section>
+
+      <section class="detalle" id="detalle"></section>
+
+      <section>
+        <h2>Cómo leerla</h2>
+        <p class="nota">«La app hoy» reproduce el visor de Hesperides al abrir de día: edificios de OpenStreetMap con su nombre, acabado brillante con reflejos, texturas del zócalo, del césped y de los estacionamientos, árboles con su borde iluminado, sol de las 15:30 y las capas que trae encendidas. No incluye el modo noche, las perspectivas ni los modelos 3D de las puertas, que aquí son postes.</p>
+        <p class="nota">En la propuesta, los edificios con piezas en el SKP son su modelo real; los que solo están en el mapa conservan su prisma. Los nombres son los de Jean Piero y cambian respecto de hoy.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+(async () => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const carga = $('carga');
+  if (!window.THREE || !THREE.OrbitControls) { carga.textContent = 'No se pudo cargar Three.js. Revisa la conexión y recarga la página.'; return; }
+  if (!('DecompressionStream' in window)) { carga.textContent = 'Este navegador no puede descomprimir el modelo. Ábrelo en una versión reciente de Chrome, Edge, Firefox o Safari.'; return; }
+
+  const D = JSON.parse($('datos').textContent);
+  const n1 = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  const n0 = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 0 });
+  const m = (v) => `${n1.format(v)} m`;
+  const reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarse = matchMedia('(pointer: coarse)').matches;
+
+  // Visor de Hesperides: palette.ts (DAY), lighting.ts, sceneLayers.ts, vegetation.ts
+  const P = { plinth: '#3A3A40', plinthSide: '#2E2E35', building: '#FF1878', buildingEdge: '#C01060', context: '#7838D0', parking: '#FFB800',
+    dimmed: '#C8E8C0', hemiSky: '#FFF0D0', hemiGround: '#C0BEB8', hover: '#FFD700', green: '#1A9828', xero: '#FF9030', sidewalk: '#FF4060',
+    trunk: '#5C3318', gate: '#5A6C99' };
+  const HORA = 15.5;
+  const DESFASE = { este: 2.5, norte: 2.5 };
+
+  const COLORES = {
+    mapa: { clave: () => 'mapa', cats: [['mapa', 'Edificio del campus', P.building]] },
+    geometria: { clave: (e) => e.id.startsWith('unassigned:') ? 'sin' : e.fuente, cats: [
+      ['skp', 'Modelo del SKP', '#ff1878'], ['mapa', 'Prisma del mapa actual', '#2f7bff'], ['adaptada', 'Caseta adaptada (excepción)', '#00a39a'], ['sin', 'Pieza del SKP sin relación', '#c9c9cf']] },
+    relacion: { clave: (e) => e.relacion, cats: [
+      ['uno', 'Un edificio del mapa', '#ff1878'], ['varios', 'Agrupa varios del mapa', '#7c4dff'], ['solo_skp', 'Solo en el SKP (nuevo en el mapa)', '#00a6d6'],
+      ['solo_mapa', 'Solo en el mapa (sin pieza del SKP)', '#ff8a00'], ['sin_relacion', 'Pieza del SKP sin relación', '#c9c9cf']] },
+    avisos: { clave: (e) => e.avisos.length ? 'si' : 'no', cats: [['si', 'Con algo que revisar', '#ff3b30'], ['no', 'Sin avisos', '#9a9aa2']] },
+  };
+  const FUENTE = { skp: 'Modelo del SKP', mapa: 'Prisma del mapa actual', adaptada: 'Caseta del SKP adaptada al mapa' };
+  const RELACION = { uno: 'Un edificio del mapa', varios: 'Agrupa varios edificios del mapa', solo_skp: 'Solo en el SKP: hoy no está en el mapa',
+    solo_mapa: 'Solo en el mapa: el SKP no lo tiene', sin_relacion: 'Pieza del SKP sin relación' };
+  const MODOS = {
+    comparar: 'A la izquierda, la app tal como abre hoy; a la derecha, la propuesta, con la misma cámara. Arrastra la división para comparar cualquier parte del campus.',
+    hoy: 'La app tal como abre hoy: edificios de OpenStreetMap con su nombre, acabado brillante y las capas que trae encendidas.',
+    propuesta: 'Solo la propuesta, con el acabado y la corrección del suelo elegidos.',
+    superponer: 'La propuesta con los edificios de la app de hoy encima, en vidrio azul, para ver qué cambia de forma, posición y altura.',
+  };
+  const ESTILOS = {
+    mate: 'Materiales mate, luz de cielo y sombras de borde suave: el acabado habitual de las maquetas de arquitectura. Sin brillos.',
+    plano: 'Caras planas, sin sombras ni texturas, como en los mapas esquemáticos. Es lo más fácil de leer de lejos.',
+    actual: 'El mismo acabado de la app de hoy: barniz brillante, reflejos, paneles en relieve y sombras duras.',
+  };
+
+  // ---------- Modelo ----------
+  let buffer;
+  try {
+    const crudo = Uint8Array.from(atob(D.binario), (c) => c.charCodeAt(0));
+    buffer = await new Response(new Blob([crudo]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  } catch (e) { carga.textContent = 'No se pudo descomprimir el modelo del plano.'; return; }
+  const IDX = new Uint32Array(buffer, 0, D.bytes_indices / 4);
+  const POS = new Int16Array(buffer, D.bytes_indices);
+
+  // ---------- Renderizador y cámara compartidos ----------
+  const escena = $('escena'), lienzo = $('lienzo'), fondo = $('fondo');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, alpha: true, powerPreference: 'high-performance' }); }
+  catch (e) { carga.textContent = 'Este navegador no tiene WebGL activado, que la maqueta 3D necesita.'; return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const camara = new THREE.PerspectiveCamera(42, 1, 1, 8000);
+  const controles = new THREE.OrbitControls(camara, lienzo);
+  controles.enableDamping = !reducido;
+  controles.dampingFactor = 0.1;
+  controles.maxPolarAngle = Math.PI * 0.49;
+  controles.minDistance = 12;
+  controles.maxDistance = 3000;
+  const VISTA_INICIAL = { pos: new THREE.Vector3(380, 520, 820), objetivo: new THREE.Vector3(0, 0, -20) };
+  camara.position.copy(VISTA_INICIAL.pos);
+  controles.target.copy(VISTA_INICIAL.objetivo);
+
+  // Fondo de backdrop.ts (cielo turquesa con trama triangular)
+  function dibujarFondo(w, h) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    fondo.width = Math.round(w * dpr); fondo.height = Math.round(h * dpr);
+    const c = fondo.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const bg = c.createLinearGradient(0, 0, 0, h);
+    ['#41C9FF', '#74DFFF', '#C9F3FF', '#F6FCFF'].forEach((col, i) => bg.addColorStop([0, 0.34, 0.68, 1][i], col));
+    c.fillStyle = bg; c.fillRect(0, 0, w, h);
+    const tw = 42, th = 36; c.lineWidth = 1;
+    for (let row = -2; row < h / th + 3; row++) {
+      const y0 = row * th, fade = Math.pow(1 - Math.max(0, Math.min(1, y0 / h)), 0.8);
+      for (let col = -2; col < w / tw + 3; col++) {
+        const x0 = col * tw + (row & 1) * (tw / 2), up = ((row + col) & 1) === 0;
+        c.fillStyle = `rgba(255,255,255,${(0.05 + ((row + col) % 5 === 0 ? 0.018 : 0)) * fade})`;
+        c.strokeStyle = `rgba(255,255,255,${0.07 * fade})`;
+        c.beginPath();
+        if (up) { c.moveTo(x0, y0 + th); c.lineTo(x0 + tw / 2, y0); c.lineTo(x0 + tw, y0 + th); } else { c.moveTo(x0, y0); c.lineTo(x0 + tw / 2, y0 + th); c.lineTo(x0 + tw, y0); }
+        c.closePath(); c.fill(); c.stroke();
+      }
+    }
+  }
+
+  // Mapa de entorno de día para los reflejos (backdrop.ts environmentMap)
+  const envDia = (() => {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 256;
+    const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 256);
+    [[0, '#70B8D8'], [0.35, '#A0CCE0'], [0.45, '#FFD898'], [0.55, '#FFC878'], [0.65, '#B09868'], [1, '#705838']].forEach(([p, col]) => g.addColorStop(p, col));
+    x.fillStyle = g; x.fillRect(0, 0, 512, 256);
+    const tex = new THREE.CanvasTexture(c); tex.mapping = THREE.EquirectangularReflectionMapping; tex.encoding = THREE.sRGBEncoding;
+    const pmrem = new THREE.PMREMGenerator(renderer), t = pmrem.fromEquirectangular(tex).texture;
+    tex.dispose(); pmrem.dispose();
+    return t;
+  })();
+
+  // ---------- Texturas procedurales del visor (textures.ts) ----------
+  const aniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+  const lienzoTx = (size) => { const c = document.createElement('canvas'); c.width = c.height = size; return c; };
+  const repetida = (t, repeat) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = aniso; t.repeat.set(repeat, repeat); return t; };
+  const canvasTexture = (size, paint, repeat) => { const c = lienzoTx(size); paint(c.getContext('2d'), size); return repetida(new THREE.CanvasTexture(c), repeat); };
+  function normalTexture(size, paintHeight, strength, repeat) {
+    const src = lienzoTx(size), sc = src.getContext('2d'); paintHeight(sc, size);
+    const h = sc.getImageData(0, 0, size, size).data;
+    const at = (x, y) => h[(((y + size) % size) * size + ((x + size) % size)) * 4] / 255;
+    const out = lienzoTx(size), oc = out.getContext('2d'), img = oc.createImageData(size, size);
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const dx = (at(x - 1, y) - at(x + 1, y)) * strength, dy = (at(x, y - 1) - at(x, y + 1)) * strength;
+      const len = Math.sqrt(dx * dx + dy * dy + 1), i = (y * size + x) * 4;
+      img.data[i] = (dx / len * 0.5 + 0.5) * 255; img.data[i + 1] = (dy / len * 0.5 + 0.5) * 255; img.data[i + 2] = (1 / len * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
+    }
+    oc.putImageData(img, 0, 0);
+    return repetida(new THREE.CanvasTexture(out), repeat);
+  }
+  function grid(c, s, div, color, width) {
+    const cs = s / div; c.strokeStyle = color; c.lineWidth = width;
+    for (let i = 0; i <= div; i++) { const p = i * cs; c.beginPath(); c.moveTo(p, 0); c.lineTo(p, s); c.stroke(); c.beginPath(); c.moveTo(0, p); c.lineTo(s, p); c.stroke(); }
+  }
+  function grain(c, s, count, base, spread, dot) {
+    for (let i = 0; i < count; i++) { const v = base + Math.random() * spread; c.fillStyle = `rgb(${v},${v},${v})`; c.fillRect(Math.random() * s, Math.random() * s, dot, dot); }
+  }
+  function bumps(c, s, count, minR, spreadR, stops, inner = 0) {
+    for (let i = 0; i < count; i++) {
+      const x = Math.random() * s, y = Math.random() * s, r = minR + Math.random() * spreadR;
+      const g = c.createRadialGradient(x, y, r * inner, x, y, r); for (const [at, color] of stops) g.addColorStop(at, color);
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+    }
+  }
+  const pintor = {
+    building(c, s) {
+      const div = 4, cs = s / div;
+      for (let r = 0; r < div; r++) for (let cl = 0; cl < div; cl++) {
+        const g = c.createRadialGradient(cl * cs + cs / 2, r * cs + cs / 2, 0, cl * cs + cs / 2, r * cs + cs / 2, cs * 0.7);
+        g.addColorStop(0, '#F0E8F0'); g.addColorStop(1, '#D8D0DC'); c.fillStyle = g; c.fillRect(cl * cs, r * cs, cs, cs);
+      }
+      grid(c, s, div, '#C0B8C8', 3); c.strokeStyle = '#B0A8BC'; c.lineWidth = 5; c.strokeRect(0, 0, s, s);
+    },
+    buildingRelief(c, s) {
+      c.fillStyle = '#808080'; c.fillRect(0, 0, s, s); grain(c, s, 6000, 105, 40, 3); grid(c, s, 4, '#484848', 8);
+      const cs = s / 4;
+      for (let r = 0; r < 4; r++) for (let cl = 0; cl < 4; cl++) {
+        const x = cl * cs + cs / 2, y = r * cs + cs / 2, g = c.createRadialGradient(x, y, 0, x, y, cs * 0.42);
+        g.addColorStop(0, '#B0B0B0'); g.addColorStop(1, '#808080'); c.fillStyle = g; c.beginPath(); c.arc(x, y, cs * 0.38, 0, 7); c.fill();
+      }
+    },
+    green(c, s) {
+      const bg = c.createLinearGradient(0, 0, 0, s); bg.addColorStop(0, '#F4F4F0'); bg.addColorStop(1, '#E4E4E0'); c.fillStyle = bg; c.fillRect(0, 0, s, s);
+      for (const [x, y] of [[50, 50], [170, 40], [110, 140], [40, 200], [200, 180], [130, 240], [220, 80]]) {
+        const g = c.createRadialGradient(x, y, 0, x, y, 22); g.addColorStop(0, 'rgba(255,255,255,0.5)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; c.beginPath(); c.arc(x, y, 22, 0, 7); c.fill();
+      }
+      c.strokeStyle = '#D8D8D0'; c.lineWidth = 2;
+      for (let row = 0; row < 4; row++) { c.beginPath(); for (let x = 0; x <= s; x += 2) c.lineTo(x, row * 68 + 34 + Math.sin(x * 0.06) * 10); c.stroke(); }
+      c.fillStyle = '#D0D0C8'; for (let i = 0; i < 15; i++) { c.beginPath(); c.arc((i * 43 + 17) % s, (i * 67 + 11) % s, 2.5, 0, 7); c.fill(); }
+    },
+    greenRelief(c, s) {
+      c.fillStyle = '#808080'; c.fillRect(0, 0, s, s);
+      bumps(c, s, 30, 6, 12, [[0, '#606060'], [1, '#808080']]);
+      bumps(c, s, 100, 10, 20, [[0, '#B0B0B0'], [0.6, '#959595'], [1, '#808080']], 0.3);
+      c.lineWidth = 2;
+      for (let i = 0; i < 400; i++) {
+        const x = Math.random() * s, y = Math.random() * s, v = 140 + Math.random() * 40;
+        c.strokeStyle = `rgb(${v},${v},${v})`; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.random() * 6 - 3, y - 5 - Math.random() * 10); c.stroke();
+      }
+    },
+    ground(c, s) {
+      c.fillStyle = '#E8E8E4'; c.fillRect(0, 0, s, s); const cs = s / 4; c.fillStyle = '#F0F0EC';
+      for (let r = 0; r < 4; r++) for (let cl = 0; cl < 4; cl++) if ((r + cl) % 2) c.fillRect(cl * cs, r * cs, cs, cs);
+      grid(c, s, 4, '#D0D0C8', 4); c.fillStyle = '#D8D8D0';
+      for (let r = 0; r <= 4; r++) for (let cl = 0; cl <= 4; cl++) { c.beginPath(); c.arc(cl * cs, r * cs, 5, 0, 7); c.fill(); }
+    },
+    groundRelief(c, s) { c.fillStyle = '#808080'; c.fillRect(0, 0, s, s); grid(c, s, 4, '#484848', 8); grain(c, s, 3000, 110, 30, 2.5); },
+    parking(c, s) {
+      c.fillStyle = '#F0E8C0'; c.fillRect(0, 0, s, s); c.strokeStyle = '#E8D060'; c.lineWidth = 10;
+      for (let i = -s; i < s * 2; i += 24) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + s, s); c.stroke(); }
+    },
+    foliage(c, s) {
+      c.fillStyle = '#F0F0F0'; c.fillRect(0, 0, s, s); c.fillStyle = '#FFFFFF';
+      for (let i = 0; i < 30; i++) { c.beginPath(); c.arc(Math.random() * s, Math.random() * s, 4 + Math.random() * 8, 0, 7); c.fill(); }
+      c.fillStyle = '#E0E0E0';
+      for (let i = 0; i < 20; i++) { c.beginPath(); c.arc(Math.random() * s, Math.random() * s, 2 + Math.random() * 4, 0, 7); c.fill(); }
+    },
+    foliageRelief(c, s) { c.fillStyle = '#808080'; c.fillRect(0, 0, s, s); bumps(c, s, 60, 6, 14, [[0, '#B8B8B8'], [0.5, '#909090'], [1, '#808080']]); },
+  };
+  const TX = {
+    building: canvasTexture(256, pintor.building, 0.07), buildingNormal: normalTexture(256, pintor.buildingRelief, 4, 0.07),
+    green: canvasTexture(256, pintor.green, 0.12), greenNormal: normalTexture(256, pintor.greenRelief, 3.5, 0.12),
+    ground: canvasTexture(256, pintor.ground, 0.04), groundNormal: normalTexture(256, pintor.groundRelief, 3, 0.04),
+    parking: canvasTexture(128, pintor.parking, 0.1),
+    foliage: canvasTexture(128, pintor.foliage, 0.3), foliageNormal: normalTexture(128, pintor.foliageRelief, 3, 0.3),
+  };
+  // Huaca (Camino Prehispánico): muros de tapial, tierra apisonada. Lienzos de 128 px por metro.
+  const lienzoRect = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  function texturaRect(w, h, paint, rx, ry) {
+    const c = lienzoRect(w, h); paint(c.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = aniso; t.repeat.set(rx, ry); return t;
+  }
+  function normalRect(w, h, paintHeight, strength, rx, ry) {
+    const src = lienzoRect(w, h), sc = src.getContext('2d'); paintHeight(sc, w, h);
+    const d = sc.getImageData(0, 0, w, h).data, at = (x, y) => d[(((y + h) % h) * w + ((x + w) % w)) * 4] / 255;
+    const out = lienzoRect(w, h), oc = out.getContext('2d'), img = oc.createImageData(w, h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const dx = (at(x - 1, y) - at(x + 1, y)) * strength, dy = (at(x, y - 1) - at(x, y + 1)) * strength;
+      const len = Math.sqrt(dx * dx + dy * dy + 1), i = (y * w + x) * 4;
+      img.data[i] = (dx / len * 0.5 + 0.5) * 255; img.data[i + 1] = (dy / len * 0.5 + 0.5) * 255; img.data[i + 2] = (1 / len * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
+    }
+    oc.putImageData(img, 0, 0);
+    const t = new THREE.CanvasTexture(out); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = aniso; t.repeat.set(rx, ry); return t;
+  }
+  // Tapial del Camino Prehispánico, calcado de fotos del lugar (colores medidos en la foto «Camino Inca» de
+  // Google Maps, jul 2026): muros erosionados, grumosos y picados, con estratos de apisonado ondulados y las
+  // juntas casi borradas; piso de tierra polvorienta. Lienzos de 128 px por metro.
+  const azar = (() => { let s = 20131; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; })();
+  const mancha = (c, x, y, r, rgba0, rgba1) => {
+    const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rgba0); g.addColorStop(1, rgba1);
+    c.fillStyle = g; c.fillRect(x - r, y - r, 2 * r, 2 * r);
+  };
+  const HUACA = {
+    tapial(c, w, h) {
+      // Tono parejo con manchas sueltas (un degradado se repetiría cada 2 m y marcaría franjas)
+      c.fillStyle = '#8E6440'; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 30; i++) {
+        const claro = azar() < 0.5;
+        mancha(c, azar() * w, azar() * h, 25 + azar() * 50, claro ? 'rgba(164,121,89,0.35)' : 'rgba(110,72,44,0.30)', claro ? 'rgba(164,121,89,0)' : 'rgba(110,72,44,0)');
+      }
+      // Estratos de apisonado: bandas onduladas de tono algo distinto, cada 25 a 45 cm
+      for (let y = 0; y < h;) {
+        const alto = 32 + azar() * 26, claro = azar() < 0.5, fase = azar() * 6;
+        c.fillStyle = claro ? 'rgba(182,138,107,0.20)' : 'rgba(79,40,18,0.13)';
+        c.beginPath(); c.moveTo(0, y);
+        for (let x = 0; x <= w; x += 8) c.lineTo(x, y + Math.sin(x * 0.03 + fase) * 3);
+        for (let x = w; x >= 0; x -= 8) c.lineTo(x, y + alto + Math.sin(x * 0.025 + fase) * 4);
+        c.fill(); y += alto;
+      }
+      // Huecos de erosión
+      for (let i = 0; i < 10; i++) mancha(c, azar() * w, azar() * h, 10 + azar() * 22, 'rgba(74,32,17,0.38)', 'rgba(74,32,17,0)');
+      // Grumos: relieve con luz arriba y su sombra abajo
+      for (let i = 0; i < 700; i++) {
+        const x = azar() * w, y = azar() * h, r = 3 + azar() * 8;
+        mancha(c, x, y + r * 0.45, r * 1.1, 'rgba(74,32,17,0.22)', 'rgba(74,32,17,0)');
+        mancha(c, x, y, r, 'rgba(182,138,107,0.38)', 'rgba(182,138,107,0)');
+      }
+      // Picaduras
+      for (let i = 0; i < 1100; i++) {
+        const x = azar() * w, y = azar() * h, r = 0.7 + azar() * 2;
+        c.fillStyle = 'rgba(74,32,17,0.55)'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+        c.fillStyle = 'rgba(190,150,115,0.35)'; c.beginPath(); c.arc(x, y - r, r * 0.7, 0, 7); c.fill();
+      }
+      // Juntas verticales entre tapias, casi borradas
+      for (const x of [w / 4 + azar() * 20, 3 * w / 4 + azar() * 20]) {
+        c.strokeStyle = 'rgba(74,32,17,0.14)'; c.lineWidth = 2; c.beginPath();
+        for (let y = 0; y <= h; y += 6) c.lineTo(x + Math.sin(y * 0.2) * 2, y);
+        c.stroke();
+      }
+    },
+    tapialRelieve(c, w, h) {
+      c.fillStyle = '#808080'; c.fillRect(0, 0, w, h);
+      for (let y = 0; y < h; y += 36) { c.fillStyle = 'rgba(0,0,0,0.10)'; c.fillRect(0, y, w, 3); }
+      for (let i = 0; i < 10; i++) mancha(c, azar() * w, azar() * h, 10 + azar() * 22, 'rgba(30,30,30,0.6)', 'rgba(30,30,30,0)');
+      for (let i = 0; i < 700; i++) mancha(c, azar() * w, azar() * h, 3 + azar() * 8, 'rgba(200,200,200,0.55)', 'rgba(200,200,200,0)');
+      for (let i = 0; i < 1100; i++) { c.fillStyle = 'rgba(20,20,20,0.7)'; c.beginPath(); c.arc(azar() * w, azar() * h, 0.7 + azar() * 2, 0, 7); c.fill(); }
+    },
+    tierra(c, w, h) {
+      c.fillStyle = '#966B4C'; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 45; i++) {
+        const claro = azar() < 0.55;
+        mancha(c, azar() * w, azar() * h, 15 + azar() * 45, claro ? 'rgba(178,138,104,0.35)' : 'rgba(129,86,51,0.30)', claro ? 'rgba(178,138,104,0)' : 'rgba(129,86,51,0)');
+      }
+      for (let i = 0; i < 1800; i++) {
+        c.fillStyle = azar() < 0.5 ? 'rgba(190,152,118,0.6)' : 'rgba(100,66,40,0.5)';
+        const s = 0.8 + azar() * 2.4; c.fillRect(azar() * w, azar() * h, s, s);
+      }
+      c.strokeStyle = 'rgba(100,66,40,0.25)'; c.lineWidth = 1;
+      for (let i = 0; i < 5; i++) {
+        let x = azar() * w, y = azar() * h; c.beginPath(); c.moveTo(x, y);
+        for (let k = 0; k < 6; k++) { x += (azar() - 0.5) * 30; y += (azar() - 0.5) * 30; c.lineTo(x, y); }
+        c.stroke();
+      }
+    },
+    tierraRelieve(c, w, h) {
+      c.fillStyle = '#808080'; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 300; i++) mancha(c, azar() * w, azar() * h, 2 + azar() * 6, 'rgba(190,190,190,0.5)', 'rgba(190,190,190,0)');
+      for (let i = 0; i < 1500; i++) { c.fillStyle = azar() < 0.5 ? '#9a9a9a' : '#666666'; c.fillRect(azar() * w, azar() * h, 2, 2); }
+    },
+  };
+  // Tapial: un mosaico de 4 m × 2 m; tierra: 2 m × 2 m (las coordenadas de textura van en metros)
+  const TXH = {
+    tapial: texturaRect(512, 256, HUACA.tapial, 1 / 4, 1 / 2), tapialN: normalRect(512, 256, HUACA.tapialRelieve, 4.5, 1 / 4, 1 / 2),
+    tierra: texturaRect(256, 256, HUACA.tierra, 1 / 2, 1 / 2), tierraN: normalRect(256, 256, HUACA.tierraRelieve, 2.5, 1 / 2, 1 / 2),
+  };
+
+  const contactoTx = (() => {
+    const s = 128, c = lienzoTx(s), x = c.getContext('2d'), g = x.createRadialGradient(s / 2, s / 2, s * 0.12, s / 2, s / 2, s / 2);
+    g.addColorStop(0, 'rgba(0,0,0,0.78)'); g.addColorStop(0.38, 'rgba(0,0,0,0.40)'); g.addColorStop(0.72, 'rgba(0,0,0,0.13)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(0, 0, s, s);
+    return new THREE.CanvasTexture(c);
+  })();
+
+  // ---------- Geometrías compartidas por los dos lados ----------
+  const forma = (anillos) => {
+    const pts = (r) => { const v = []; for (let i = 0; i < r.length; i += 2) v.push(new THREE.Vector2(r[i] / 20, r[i + 1] / 20)); return v; };
+    const s = new THREE.Shape(pts(anillos[0]));
+    for (const h of anillos.slice(1)) s.holes.push(new THREE.Path(pts(h)));
+    return s;
+  };
+  function prisma(poligonos, alto, base) {
+    const g = new THREE.ExtrudeGeometry(poligonos.map(forma), { depth: alto, bevelEnabled: false, curveSegments: 1 });
+    g.rotateX(-Math.PI / 2); g.translate(0, base, 0); g.computeBoundingBox();
+    return g;
+  }
+  const GEO = {
+    campus: prisma(D.suelo.campus, 1.6, -1.6), verdes: prisma(D.suelo.verdes, 0.42, 0.03), xero: prisma(D.suelo.xerofitica, 0.56, 0.04),
+    parqueo: prisma(D.suelo.estacionamientos, 0.11, 0.01), veredas: prisma(D.suelo.veredas, 0.44, 0.06), entorno: [],
+    puerta: new THREE.BoxGeometry(1.4, 3.2, 1.4).translate(0, 1.6, 0),
+  };
+  {
+    const grupos = new Map();
+    for (const b of D.entorno) { if (!grupos.has(b.alto)) grupos.set(b.alto, []); grupos.get(b.alto).push(...b.anillos); }
+    for (const [alto, pol] of grupos) GEO.entorno.push(prisma(pol, alto + 1.6, -1.6));
+  }
+  const centro = GEO.campus.boundingBox.getCenter(new THREE.Vector3()); centro.y = 0;
+
+  function mallaSkp(e) {
+    const s = e.malla, pos = new Float32Array(s.vcount * 3);
+    for (let i = 0, j = s.voff * 3; i < s.vcount; i++, j += 3) {
+      pos[i * 3] = POS[j] * D.paso; pos[i * 3 + 1] = POS[j + 2] * D.paso; pos[i * 3 + 2] = -POS[j + 1] * D.paso;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setIndex(new THREE.BufferAttribute(IDX.slice(s.ioff, s.ioff + s.icount), 1));
+    // Sin índice, cada cara tiene su propia normal: con vértices compartidos la luz se suaviza en las esquinas.
+    const caras = g.toNonIndexed(); g.dispose();
+    caras.computeVertexNormals(); caras.computeBoundingBox();
+    return caras;
+  }
+  const entradas = D.entradas.map((e) => {
+    const geos = e.malla ? [mallaSkp(e)] : (e.prismas || []).map((p) => prisma(p.anillos, p.alto, 0));
+    const caja = new THREE.Box3(); geos.forEach((g) => caja.union(g.boundingBox));
+    return { ...e, geos, bordes: geos.map((g) => new THREE.EdgesGeometry(g, 30)), caja, cajaHoy: new THREE.Box3() };
+  });
+  const porId = new Map(entradas.map((e) => [e.id, e]));
+  const hoyB = D.hoy.map((b) => {
+    const geo = prisma(b.anillos, b.alto, 0), e = porId.get(b.entrada) || null;
+    if (e) e.cajaHoy.union(geo.boundingBox);
+    return { ...b, geo, bordes: new THREE.EdgesGeometry(geo, 30), e };
+  });
+
+  // Vegetación: posiciones y escalas de vegetation.ts (placeCrown), calculadas una vez para los dos lados
+  const construirVeg = (conBase) => {
+    const GREENS = ['#1A9828', '#28A830', '#14881E', '#30B038', '#1CA028', '#24A830'];
+    const GLOW = { ico: 1.085, palma: 1.12, cono: 1.09 };
+    const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+    const dummy = new THREE.Object3D();
+    const grupos = { ico: { m: [], g: [], c: [] }, palma: { m: [], g: [], c: [] }, cono: { m: [], g: [], c: [] } }, tronco = [], contacto = [];
+    const matriz = () => { dummy.updateMatrix(); return dummy.matrix.clone(); };
+    D.plantas.forEach(([x20, y20, h10, r10, tipo, c, b10], i) => {
+      const x = x20 / 20, z = -y20 / 20, h = h10 / 10, r = r10 / 10, lenoso = tipo === 0 || tipo === 1;
+      const base = conBase ? (b10 || 0) / 10 : 0;  // en la propuesta, apoyada en el fondo de un desnivel
+      const color = tipo === 4 ? '#D39BC4' : tipo === 3 ? '#B5C27E' : GREENS[c];
+      const copa = tipo === 1 ? 'palma' : tipo === 3 ? 'cono' : 'ico';
+      dummy.position.set(x, 0, z); dummy.rotation.set(0, (i * 2.39) % 6.28, 0);
+      if (tipo === 1) { dummy.position.y = h; dummy.scale.set(r, r * 0.42, r); }
+      else if (tipo === 3) { dummy.position.y = 0; dummy.scale.set(r, h, r); }
+      else if (lenoso) { dummy.position.y = h - r * 0.8; dummy.scale.set(r, r * 0.85, r); }
+      else { dummy.position.y = h * 0.5; dummy.scale.set(r, h * 0.5, r); }
+      dummy.position.y += base;
+      grupos[copa].m.push(matriz()); grupos[copa].c.push(color);
+      dummy.scale.multiplyScalar(GLOW[copa]); if (copa === 'cono') dummy.scale.y *= 1.04;
+      grupos[copa].g.push(matriz());
+      if (lenoso && h > 2.5) {
+        const rad = tipo === 1 ? clamp(h / 45, 0.18, 0.4) : clamp(r / 9, 0.15, 0.45);
+        dummy.position.set(x, base, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(rad, tipo === 1 ? h : h * 0.75, rad);
+        tronco.push(matriz());
+      }
+      dummy.position.set(x, base < 0 ? base + 0.05 : 0.47, z); dummy.rotation.set(0, (i * 1.37) % Math.PI, 0);
+      dummy.scale.set(Math.max(0.95, r * (tipo === 1 ? 2.4 : lenoso ? 2.05 : 1.55)), 1, Math.max(0.75, r * (tipo === 1 ? 1.7 : lenoso ? 1.8 : 1.35)));
+      contacto.push(matriz());
+    });
+    return { grupos, tronco, contacto, geo: { ico: new THREE.IcosahedronGeometry(1, 1), palma: new THREE.IcosahedronGeometry(1, 0),
+      cono: new THREE.ConeGeometry(1, 1, 8).translate(0, 0.5, 0), tronco: new THREE.CylinderGeometry(0.5, 0.8, 1, 7).translate(0, 0.5, 0),
+      contacto: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2) } };
+  };
+  const VEG_HOY = construirVeg(false), VEG_PROP = construirVeg(true);
+
+  // ---------- Desniveles de la propuesta: capas del cliente abiertas, fondo con el color del suelo y muros ----------
+  const capaProp = (nombre, estado) => {
+    const c = D.hundido[estado][nombre], q = new Set(c.quitar);
+    return D.suelo[nombre].filter((_, i) => !q.has(i)).concat(c.poner);
+  };
+  const sueloProp = (estado) => ({
+    campus: prisma(D.hundido[estado].campus, 1.6, -1.6), verdes: prisma(capaProp('verdes', estado), 0.42, 0.03),
+    xero: prisma(capaProp('xerofitica', estado), 0.56, 0.04), parqueo: prisma(capaProp('estacionamientos', estado), 0.11, 0.01),
+    veredas: prisma(capaProp('veredas', estado), 0.44, 0.06),
+  });
+  GEO.prop = { true: sueloProp('corr'), false: sueloProp('sin') };
+  function mallaPiso(s) {
+    const pos = new Float32Array(s.vcount * 3), uv = new Float32Array(s.vcount * 2);
+    for (let i = 0, j = s.voff * 3; i < s.vcount; i++, j += 3) {
+      pos[i * 3] = POS[j] * D.paso; pos[i * 3 + 1] = POS[j + 2] * D.paso; pos[i * 3 + 2] = -POS[j + 1] * D.paso;
+      uv[i * 2] = POS[j] * D.paso; uv[i * 2 + 1] = POS[j + 1] * D.paso;  // como el zócalo: la textura se repite en metros
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    g.setIndex(new THREE.BufferAttribute(IDX.slice(s.ioff, s.ioff + s.icount), 1));
+    const caras = g.toNonIndexed(); g.dispose(); caras.computeVertexNormals();
+    // Textura proyectada según la orientación de cada cara: desde arriba en pisos y rampas, de frente en gradas
+    // y muros. Proyectada siempre desde arriba, en una cara vertical quedaba estirada en franjas.
+    const p = caras.attributes.position.array, u = new Float32Array(p.length / 3 * 2);
+    for (let t = 0; t < p.length; t += 9) {
+      const ax = p[t + 3] - p[t], ay = p[t + 4] - p[t + 1], az = p[t + 5] - p[t + 2], bx = p[t + 6] - p[t], by = p[t + 7] - p[t + 1], bz = p[t + 8] - p[t + 2];
+      const nx = Math.abs(ay * bz - az * by), ny = Math.abs(az * bx - ax * bz), nz = Math.abs(ax * by - ay * bx);
+      for (let k = 0; k < 3; k++) {
+        const x = p[t + 3 * k], y = p[t + 3 * k + 1], z = p[t + 3 * k + 2], i = (t / 3 + k) * 2;
+        if (ny >= nx && ny >= nz) { u[i] = x; u[i + 1] = -z; } else if (nx >= nz) { u[i] = -z; u[i + 1] = y; } else { u[i] = x; u[i + 1] = y; }
+      }
+    }
+    caras.setAttribute('uv', new THREE.BufferAttribute(u, 2));
+    return caras;
+  }
+  function geoMuros(muros) {
+    // Bajo el zócalo (1,6 m) hasta el fondo de cada desnivel; los primeros 1,6 m los pone el borde del propio zócalo.
+    const pos = [], uv = [];
+    for (const { anillos, fondo } of muros) for (const r of anillos) {
+      const n = r.length / 2; let s = 0;
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n, x0 = r[2 * i] / 20, y0 = r[2 * i + 1] / 20, x1 = r[2 * j] / 20, y1 = r[2 * j + 1] / 20, L = Math.hypot(x1 - x0, y1 - y0);
+        pos.push(x0, -1.6, -y0, x1, -1.6, -y1, x1, -fondo, -y1, x0, -1.6, -y0, x1, -fondo, -y1, x0, -fondo, -y0);
+        uv.push(s, -1.6, s + L, -1.6, s + L, -fondo, s, -1.6, s + L, -fondo, s, -fondo);
+        s += L;
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.computeVertexNormals();
+    return g;
+  }
+  GEO.hundido = { pav: D.hundido.piso.pav ? mallaPiso(D.hundido.piso.pav) : null, jard: D.hundido.piso.jard ? mallaPiso(D.hundido.piso.jard) : null,
+    banda: D.hundido.piso.banda ? mallaPiso(D.hundido.piso.banda) : null, muros: geoMuros(D.hundido.muros),
+    fondo: D.hundido.fondo.anillos.length ? prisma(D.hundido.fondo.anillos, 0.05, -D.hundido.fondo.alto) : null };
+  GEO.huaca = D.hundido.huaca ? { tope: mallaPiso(D.hundido.huaca.tope), muro: mallaPiso(D.hundido.huaca.muro) } : null;
+
+  // Follaje de la app: borde iluminado (Fresnel) sumado como emisión (foliageMaterials.ts)
+  function follajeApp(dirSol) {
+    const mat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, flatShading: true, roughness: 0.45, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.4,
+      sheen: 0.3, sheenRoughness: 0.5, sheenColor: new THREE.Color(0x80ff80), map: TX.foliage, normalMap: TX.foliageNormal, normalScale: new THREE.Vector2(0.6, 0.6), envMapIntensity: 0.05 });
+    const uniforms = { uRimColor: { value: new THREE.Color('#FFD96A') }, uRimStrength: { value: 0.42 }, uRimPower: { value: 2.35 }, uRimSunDir: { value: dirSol }, uRimSunInfluence: { value: 0.36 } };
+    mat.onBeforeCompile = (shader) => {
+      Object.assign(shader.uniforms, uniforms);
+      shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWorldNormal;')
+        .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\n#ifdef USE_INSTANCING\n  vWorldNormal = normalize(mat3(modelMatrix * instanceMatrix) * objectNormal);\n#else\n  vWorldNormal = normalize(mat3(modelMatrix) * objectNormal);\n#endif');
+      shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 uRimColor;\nuniform float uRimStrength;\nuniform float uRimPower;\nuniform vec3 uRimSunDir;\nuniform float uRimSunInfluence;\nvarying vec3 vWorldNormal;')
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\nfloat stylizedRim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), uRimPower);\nfloat sunSide = max(dot(normalize(vWorldNormal), normalize(uRimSunDir)), 0.0);\nfloat sunBoost = mix(1.0, 0.72 + sunSide * 0.72, uRimSunInfluence);\ntotalEmissiveRadiance += uRimColor * stylizedRim * uRimStrength * sunBoost;');
+    };
+    mat.customProgramCacheKey = () => 'foliage-rim-2.35';
+    return mat;
+  }
+
+  // ---------- Recorte de nombres en las etiquetas ----------
+  // Se mide el ancho real con la fuente de la etiqueta: los nombres oficiales vienen en mayúsculas y ocupan más.
+  // 160 px son unas 23 letras en minúsculas o 19 en mayúsculas. El nombre completo sigue en el tooltip y la ficha.
+  const MAX_ETIQUETA_PX = 160;
+  try { await document.fonts.ready; } catch (e) { /* sin fuentes web, se mide con la de respaldo */ }
+  const medidor = document.createElement('canvas').getContext('2d');
+  medidor.font = '600 12px Inter, "Segoe UI", system-ui, sans-serif';
+  const anchoTexto = (t) => medidor.measureText(t).width;
+  const CONECTORES = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'en', 'a', 'al', 'con', 'para', 'por']);
+  // Si recortar dejara una sola palabra con sentido, el nombre puede llegar entero hasta este ancho
+  const TOLERANCIA_ETIQUETA_PX = 190;
+  // Abreviaturas de uso común en la PUCP; en un nombre en mayúsculas se escriben en mayúsculas
+  const ABREVIATURAS = [
+    [/\bestudios generales\b/i, 'EE.GG.'], [/\bdepartamento académico de\b/i, 'Dpto.'], [/\bdepartamento académico\b/i, 'Dpto.'],
+    [/\bdepartamento de\b/i, 'Dpto.'], [/\bdepartamento\b/i, 'Dpto.'], [/\blaboratorio de\b/i, 'Lab.'], [/\blaboratorio\b/i, 'Lab.'],
+    [/\binstituto de\b/i, 'Inst.'], [/\binstituto\b/i, 'Inst.'], [/\binvestigaci(ón|ones)\b/i, 'Inv.'], [/\bingeniería\b/i, 'Ing.'],
+    [/\basociación\b/i, 'Asoc.'], [/\bservicios\b/i, 'Serv.'], [/\buniversitaria\b/i, 'Univ.'],
+  ];
+  const abreviar = (t) => {
+    const mayus = t === t.toUpperCase();
+    return ABREVIATURAS.reduce((s, [re, ab]) => s.replace(re, mayus ? ab.toUpperCase() : ab), t).replace(/\s+/g, ' ').trim();
+  };
+  const significativas = (ps) => ps.filter((p) => !CONECTORES.has(p.toLowerCase())).length;
+  function recortar(texto) {
+    if (anchoTexto(texto) <= MAX_ETIQUETA_PX) return texto;
+    // 1. Abreviaturas comunes
+    const ab = abreviar(texto);
+    if (anchoTexto(ab) <= MAX_ETIQUETA_PX) return ab;
+    // Un nombre que apenas se pasa queda entero: recortarlo le quitaría justo la palabra que lo distingue
+    if (anchoTexto(ab) <= TOLERANCIA_ETIQUETA_PX) return ab;
+    // 2. La primera parte antes de un separador, si dice algo por sí sola
+    const primera = ab.split(/\s+\/\s+|,\s+|:\s+|\s+[-+]\s+|\s+\(/)[0].trim();
+    const separada = primera.length >= 6 && primera !== ab;
+    if (separada && anchoTexto(primera) <= MAX_ETIQUETA_PX) return primera;
+    // 3. Palabras enteras hasta que quepan con «…», sin dejar un conector colgando
+    const base = separada ? primera : ab, palabras = base.split(/\s+/);
+    const cortar = (limite) => {
+      const puestas = [];
+      for (const p of palabras) { if (anchoTexto([...puestas, p].join(' ') + '…') > limite) break; puestas.push(p); }
+      while (puestas.length > 1 && CONECTORES.has(puestas[puestas.length - 1].toLowerCase())) puestas.pop();
+      return puestas;
+    };
+    let puestas = cortar(MAX_ETIQUETA_PX);
+    if (significativas(puestas) < 2) {
+      // Una sola palabra diría muy poco: mejor el nombre entero si cabe en la tolerancia, o una palabra más
+      if (anchoTexto(base) <= TOLERANCIA_ETIQUETA_PX) return base;
+      puestas = cortar(TOLERANCIA_ETIQUETA_PX);
+    }
+    let corto = puestas.join(' ');
+    if (!corto) { corto = palabras[0]; while (corto.length > 1 && anchoTexto(corto + '…') > MAX_ETIQUETA_PX) corto = corto.slice(0, -1); }
+    return corto.replace(/[\s,:;/+-]+$/, '') + '…';
+  }
+
+  // ---------- Un lado completo: escena, luces, suelo, edificios, vegetación, puertas y etiquetas ----------
+  const capaEtq = $('etiquetas');
+  function crearLado(lado) {
+    const S = { lado, estilo: lado === 'hoy' ? 'actual' : 'mate', scene: new THREE.Scene(), cache: new Map(), edificios: [], vidrio: [], veg: [], etiquetas: [] };
+    // Luces (lighting.ts), sol de las 15:30
+    S.hemi = new THREE.HemisphereLight(P.hemiSky, P.hemiGround, 0.65);
+    S.sol = new THREE.DirectionalLight(0xffd890, 0.85);
+    S.relleno = new THREE.DirectionalLight(0xffe8c0, 0.3); S.relleno.position.set(-600, 350, 500);
+    S.borde = new THREE.DirectionalLight(0xffd0a0, 0.2); S.borde.position.set(100, 250, -700);
+    S.ambiente = new THREE.AmbientLight(0xffe4c0, 0.18);
+    S.sol.castShadow = true;
+    S.sol.shadow.mapSize.set(coarse ? 2048 : 4096, coarse ? 2048 : 4096);
+    Object.assign(S.sol.shadow.camera, { left: -720, right: 720, top: 720, bottom: -720, near: 10, far: 4000 });
+    const hAng = ((HORA - 12) * 15 * Math.PI) / 180, phi = (-12.07 * Math.PI) / 180;
+    const up = Math.cos(phi) * Math.cos(hAng), dir = new THREE.Vector3(-Math.sin(hAng), Math.max(up, 0.05), Math.sin(phi) * Math.cos(hAng)).normalize();
+    S.sol.position.copy(centro).addScaledVector(dir, 1800); S.sol.target.position.copy(centro);
+    const bajo = Math.max(0, 1 - up * 2.2); S.sol.color.setRGB(1, 1 - bajo * 0.18, 1 - bajo * 0.38);
+    S.dirSol = dir;
+    S.scene.add(S.hemi, S.sol, S.sol.target, S.relleno, S.borde, S.ambiente);
+    // Capas del mapa del cliente, en un grupo para corregir su desfase de una vez
+    S.cliente = new THREE.Group(); S.scene.add(S.cliente);
+    const suelo = (g) => { const ms = new THREE.Mesh(g); ms.receiveShadow = true; S.cliente.add(ms); return ms; };
+    // La propuesta usa las capas abiertas en los desniveles; la app de hoy, las de siempre
+    const G = lado === 'hoy' ? GEO : GEO.prop[true];
+    S.suelo = { campus: suelo(G.campus), verdes: suelo(G.verdes), xero: suelo(G.xero), parqueo: suelo(G.parqueo), veredas: suelo(G.veredas) };
+    if (lado !== 'hoy') {
+      S.hundido = {};
+      for (const k of ['pav', 'jard', 'banda', 'muros', 'fondo']) {
+        if (!GEO.hundido[k]) continue;
+        const ms = new THREE.Mesh(GEO.hundido[k]); ms.receiveShadow = true; ms.castShadow = k === 'muros' || k === 'banda';
+        S.scene.add(ms); S.hundido[k] = ms;
+      }
+      if (GEO.huaca) {
+        S.huaca = {};
+        for (const k of ['tope', 'muro']) {
+          const ms = new THREE.Mesh(GEO.huaca[k]); ms.castShadow = true; ms.receiveShadow = true;
+          S.scene.add(ms); S.huaca[k] = ms;
+        }
+      }
+    }
+    S.matPuerta = new THREE.MeshStandardMaterial({ color: P.gate, roughness: 0.6, metalness: 0 });
+    S.puertas = new THREE.Group(); S.cliente.add(S.puertas);
+    for (const [x, y] of D.puertas) { const ms = new THREE.Mesh(GEO.puerta, S.matPuerta); ms.position.set(x, 0, -y); ms.castShadow = true; S.puertas.add(ms); }
+    S.matEntorno = new THREE.MeshStandardMaterial({ color: P.context, roughness: 0.4, metalness: 0.05, transparent: true, opacity: 0.6 });
+    S.entorno = new THREE.Group(); GEO.entorno.forEach((g) => S.entorno.add(new THREE.Mesh(g, S.matEntorno))); S.scene.add(S.entorno);
+    // Materiales propios del lado (cada escena compila con su tono y sus sombras)
+    S.tenue = new THREE.MeshStandardMaterial({ color: P.dimmed, transparent: true, opacity: 0.18, depthWrite: false, roughness: 1 });
+    S.lineas = new THREE.LineBasicMaterial({ color: P.buildingEdge, transparent: true, opacity: 0.45 });
+    S.lineasSel = new THREE.LineBasicMaterial({ color: '#8a6d00' });
+    // Edificios
+    const agregar = (geo, bordes, datos, lista) => {
+      const ms = new THREE.Mesh(geo); ms.castShadow = true; ms.receiveShadow = true; ms.userData = { ...datos, lado };
+      const ln = new THREE.LineSegments(bordes, S.lineas);
+      S.scene.add(ms, ln); lista.push({ ms, ln, ...datos });
+    };
+    if (lado === 'hoy') hoyB.forEach((b) => agregar(b.geo, b.bordes, { e: b.e, b }, S.edificios));
+    else {
+      entradas.forEach((e) => e.geos.forEach((g, i) => agregar(g, e.bordes[i], { e }, S.edificios)));
+      S.matVidrio = new THREE.MeshStandardMaterial({ color: '#4d8dff', transparent: true, opacity: 0.22, depthWrite: false, roughness: 1 });
+      S.lineasVidrio = new THREE.LineBasicMaterial({ color: '#1f5fd6', transparent: true, opacity: 0.9 });
+      hoyB.forEach((b) => {
+        const ms = new THREE.Mesh(b.geo, S.matVidrio); ms.userData = { e: b.e, b, lado: 'vidrio' };
+        const ln = new THREE.LineSegments(b.bordes, S.lineasVidrio);
+        S.scene.add(ms, ln); S.vidrio.push({ ms, ln, e: b.e });
+      });
+    }
+    // Vegetación
+    S.matFollaje = null; S.matTronco = new THREE.MeshStandardMaterial({ color: P.trunk, roughness: 0.7, metalness: 0 });
+    S.matHalo = new THREE.MeshBasicMaterial({ color: '#FFE79C', transparent: true, opacity: 0.085, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending, side: THREE.BackSide });
+    S.matContacto = new THREE.MeshBasicMaterial({ map: contactoTx, color: 0x5b5448, transparent: true, opacity: 0.15, depthWrite: false, toneMapped: false });
+    const instancias = (geo, mat, matrices, colores, tipo) => {
+      const ms = new THREE.InstancedMesh(geo, mat, matrices.length);
+      matrices.forEach((mx, i) => ms.setMatrixAt(i, mx));
+      if (colores) { const col = new THREE.Color(); colores.forEach((c, i) => ms.setColorAt(i, col.set(c))); }
+      ms.userData.tipo = tipo; ms.castShadow = tipo === 'copa' || tipo === 'tronco';
+      if (tipo === 'contacto') ms.renderOrder = -0.2;
+      S.scene.add(ms); S.veg.push(ms); return ms;
+    };
+    const V = lado === 'hoy' ? VEG_HOY : VEG_PROP;
+    S.copas = Object.entries(V.grupos).filter(([, g]) => g.m.length).map(([k, g]) => instancias(V.geo[k], null, g.m, g.c, 'copa'));
+    Object.entries(V.grupos).filter(([, g]) => g.m.length).forEach(([k, g]) => instancias(V.geo[k], S.matHalo, g.g, null, 'halo'));
+    if (V.tronco.length) instancias(V.geo.tronco, S.matTronco, V.tronco, null, 'tronco');
+    instancias(V.geo.contacto, S.matContacto, V.contacto, null, 'contacto');
+    // Etiquetas (labels.ts): edificios por nombre, jardines con nombre y puertas
+    const etiqueta = (texto, clase, v, prioridad, maxDist, dy = 0, cliente = false) => {
+      const el = document.createElement('div'); el.className = `et ${clase}`;
+      el.textContent = recortar(texto);
+      if (el.textContent !== texto) el.dataset.completo = texto;
+      capaEtq.append(el);
+      S.etiquetas.push({ el, v, prioridad, maxDist, dy, cliente, w: 0, h: 0, on: false });
+    };
+    const corto = (n) => n.replace(/^Facultad de /, '').replace(/^Departamento de /, 'Depto. ').replace(/^Sección /, '').replace(/\s*\(.*\)\s*$/, '').trim();
+    const mayores = new Map();
+    if (lado === 'hoy') {
+      hoyB.forEach((b) => {
+        if (!b.nombre) return;
+        const cur = mayores.get(b.nombre);
+        if (!cur || b.area > cur.area) mayores.set(b.nombre, { area: b.area, h: b.alto, c: b.geo.boundingBox.getCenter(new THREE.Vector3()) });
+      });
+    } else {
+      entradas.forEach((e) => {
+        if (e.id.startsWith('unassigned:') || e.caja.isEmpty()) return;
+        const area = e.area_skp ?? e.area_mapa ?? 0, cur = mayores.get(e.nombre);
+        if (!cur || area > cur.area) mayores.set(e.nombre, { area, h: e.caja.max.y, c: e.caja.getCenter(new THREE.Vector3()) });
+      });
+    }
+    for (const [nombre, { area, h, c }] of mayores) etiqueta(corto(nombre), 'et-b', new THREE.Vector3(c.x, h + 3, c.z), area + h * 400, h > 12 ? 1500 : 1050);
+    for (const j of D.jardines) etiqueta(j.nombre, 'et-g', new THREE.Vector3(j.x, 1.5, -j.y), j.area * 0.5, 700, 0, true);
+    for (const [x, y] of D.puertas) etiqueta('Puerta', 'et-p', new THREE.Vector3(x, 8.5, -y), 1e9, 2200, 4, true);
+    if (lado !== 'hoy' && D.hundido.huaca) {
+      const [x, y, z] = D.hundido.huaca.etiqueta;
+      etiqueta('Camino Prehispánico', 'et-g', new THREE.Vector3(x, z + 2, -y), 5e5, 1500);
+    }
+    S.etiquetas.sort((a, b) => b.prioridad - a.prioridad);
+    return S;
+  }
+
+  // ---------- Acabado de un lado ----------
+  function matEdificio(S, color, extra = {}) {
+    const k = S.estilo + color + JSON.stringify(extra);
+    if (!S.cache.has(k)) {
+      const brillante = S.estilo === 'actual', plano = S.estilo === 'plano';
+      // La app dibuja prismas por la cara de fuera; el SKP trae caras invertidas y se dibuja por las dos,
+      // con la sombra proyectada por las traseras para que los techos no se sombreen a sí mismos.
+      const lados = S.lado === 'hoy' ? { side: THREE.FrontSide } : { side: THREE.DoubleSide, shadowSide: THREE.BackSide };
+      S.cache.set(k, brillante
+        ? new THREE.MeshPhysicalMaterial({ color, ...lados, roughness: 0.18, metalness: 0.08, clearcoat: 0.9, clearcoatRoughness: 0.12, reflectivity: 0.7,
+          sheen: 0.3, sheenColor: new THREE.Color(0xffffff), map: TX.building, normalMap: TX.buildingNormal, normalScale: new THREE.Vector2(0.7, 0.7), envMapIntensity: 0.35, ...extra })
+        : new THREE.MeshStandardMaterial({ color, ...lados, roughness: plano ? 1 : 0.88, metalness: 0, flatShading: plano, ...extra }));
+    }
+    return S.cache.get(k);
+  }
+  const matSel = (S) => matEdificio(S, P.hover, { emissive: new THREE.Color(P.hover), emissiveIntensity: 0.25 });
+  function aplicarEstilo(S, estilo) {
+    S.estilo = estilo;
+    const brillante = estilo === 'actual', plano = estilo === 'plano';
+    for (const mt of S.cache.values()) mt.dispose(); S.cache.clear();
+    S.scene.environment = brillante ? envDia : null;
+    S.sol.shadow.bias = brillante ? -0.0004 : -0.0003; S.sol.shadow.normalBias = brillante ? 0.6 : 0.45;
+    if (S.sol.shadow.map) { S.sol.shadow.map.dispose(); S.sol.shadow.map = null; }
+    S.hemi.intensity = brillante ? 0.65 : plano ? 0.95 : 0.9;
+    S.sol.intensity = brillante ? 0.85 : plano ? 0.55 : 0.7;
+    S.relleno.intensity = brillante ? 0.3 : 0.15; S.borde.intensity = brillante ? 0.2 : 0.08; S.ambiente.intensity = brillante ? 0.18 : plano ? 0.25 : 0.15;
+    const viejos = Object.values(S.suelo).flatMap((ms) => Array.isArray(ms.material) ? ms.material : [ms.material]);
+    const tex = (map, normalMap, s) => plano ? {} : { map, normalMap, normalScale: new THREE.Vector2(s, s) };
+    const mat = (o, barniz) => brillante ? new THREE.MeshPhysicalMaterial({ ...o, ...barniz }) : new THREE.MeshStandardMaterial({ ...o, roughness: 0.95, metalness: 0, envMapIntensity: 0, flatShading: plano });
+    S.suelo.campus.material = [
+      mat({ color: P.plinth, roughness: 0.3, metalness: 0.02, envMapIntensity: 0.2, ...tex(TX.ground, TX.groundNormal, 0.6) }, { clearcoat: 0.5, clearcoatRoughness: 0.2 }),
+      mat({ color: P.plinthSide, roughness: 0.35, metalness: 0.02, envMapIntensity: 0.15, ...tex(TX.ground, TX.groundNormal, 0.5) }, { clearcoat: 0.4, clearcoatRoughness: 0.25 })];
+    const cesped = { roughness: 0.55, metalness: 0, envMapIntensity: 0.05, ...tex(TX.green, TX.greenNormal, 0.8) };
+    const brilloCesped = { clearcoat: 0.2, clearcoatRoughness: 0.5, sheen: 0.25, sheenRoughness: 0.5, sheenColor: new THREE.Color(0x80ff80) };
+    S.suelo.verdes.material = mat({ color: P.green, ...cesped }, brilloCesped);
+    S.suelo.xero.material = mat({ color: P.xero, ...cesped }, brilloCesped);
+    S.suelo.parqueo.material = new THREE.MeshStandardMaterial({ color: P.parking, roughness: brillante ? 0.4 : 0.95, metalness: brillante ? 0.05 : 0, flatShading: plano, ...(plano ? {} : { map: TX.parking }) });
+    S.suelo.veredas.material = new THREE.MeshStandardMaterial({ color: P.sidewalk, roughness: brillante ? 0.4 : 0.95, metalness: brillante ? 0.05 : 0, transparent: true, opacity: 0.7, depthWrite: false, flatShading: plano });
+    viejos.forEach((mt) => mt && mt.dispose());
+    if (S.hundido) {
+      // El fondo y los muros de los desniveles llevan el material del suelo, visible por las dos caras
+      const doble = (mt) => { const c = mt.clone(); c.side = THREE.DoubleSide; return c; };
+      for (const ms of Object.values(S.hundido)) ms.material.dispose();
+      if (S.hundido.pav) S.hundido.pav.material = doble(S.suelo.campus.material[0]);
+      if (S.hundido.jard) S.hundido.jard.material = doble(S.suelo.verdes.material);
+      if (S.hundido.muros) S.hundido.muros.material = doble(S.suelo.campus.material[1]);
+      // Lo de los edificios que pasó a ser suelo (los pisos que coincidían con el zócalo ya se descartaron)
+      if (S.hundido.banda) S.hundido.banda.material = doble(S.suelo.campus.material[0]);
+      // Fondo cerrado bajo cada abertura: lo que asome por una rendija es suelo oscuro, no cielo
+      if (S.hundido.fondo) S.hundido.fondo.material = doble(S.suelo.campus.material[1]);
+    }
+    if (S.huaca) {
+      // Tierra mate en todos los acabados (el barro no brilla); en «Plano», sin texturas
+      for (const ms of Object.values(S.huaca)) ms.material.dispose();
+      const tierra = (map, normalMap, color) => new THREE.MeshStandardMaterial(plano
+        ? { color, roughness: 1, metalness: 0, flatShading: true, side: THREE.DoubleSide }
+        : { color: 0xffffff, map, normalMap, normalScale: new THREE.Vector2(0.9, 0.9), roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
+      S.huaca.tope.material = tierra(TXH.tierra, TXH.tierraN, '#966B4C');
+      S.huaca.muro.material = tierra(TXH.tapial, TXH.tapialN, '#8E6440');
+    }
+    if (S.matFollaje) S.matFollaje.dispose();
+    S.matFollaje = brillante ? follajeApp(S.dirSol) : new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: plano ? 1 : 0.95, metalness: 0, flatShading: true });
+    S.copas.forEach((c) => { c.material = S.matFollaje; });
+    S.matEntorno.roughness = brillante ? 0.4 : 0.95; S.matEntorno.flatShading = plano;
+    for (const mt of [S.matEntorno, S.matTronco, S.matPuerta, S.tenue, S.matVidrio, S.matHalo, S.matContacto].filter(Boolean)) mt.needsUpdate = true;
+    S.lineas.opacity = plano ? 0.7 : brillante ? 0.45 : 0.28;
+  }
+  const HOY = crearLado('hoy'), PROP = crearLado('propuesta');
+  aplicarEstilo(HOY, 'actual');
+
+  // ---------- Estado ----------
+  let modo = 'comparar', colorPor = 'mapa', aislado = null, seleccionado = null, division = 0.5, corregido = true;
+  const capas = { arboles: true, etiquetas: true, puertas: true, entorno: false, veredas: false };
+  const colorDe = (e) => { const def = COLORES[colorPor], k = e ? def.clave(e) : 'mapa'; return (def.cats.find((c) => c[0] === k) || def.cats[0])[2]; };
+  const fuera = (e) => aislado && (!e || COLORES[colorPor].clave(e) !== aislado);
+  function actualizar() {
+    for (const S of [HOY, PROP]) {
+      for (const o of S.edificios) {
+        o.ms.material = o.e && o.e === seleccionado ? matSel(S) : fuera(o.e) ? S.tenue : matEdificio(S, colorDe(o.e));
+        o.ln.material = o.e && o.e === seleccionado ? S.lineasSel : S.lineas;
+        o.ln.visible = !fuera(o.e);
+      }
+      S.entorno.visible = capas.entorno; S.suelo.veredas.visible = capas.veredas; S.puertas.visible = capas.puertas;
+      for (const v of S.veg) v.visible = capas.arboles && (v.userData.tipo !== 'halo' || S.estilo === 'actual') && (v.userData.tipo !== 'contacto' || S.estilo !== 'plano');
+    }
+    for (const o of PROP.vidrio) { o.ms.visible = o.ln.visible = modo === 'superponer'; o.ln.material = o.e && o.e === seleccionado ? PROP.lineasSel : PROP.lineasVidrio; }
+    PROP.cliente.position.set(corregido ? DESFASE.este : 0, 0, corregido ? -DESFASE.norte : 0);
+    // Con o sin corrección, los huecos de los desniveles quedan donde están en el plano
+    const G = GEO.prop[corregido];
+    for (const k of Object.keys(G)) PROP.suelo[k].geometry = G[k];
+    const comparar = modo === 'comparar';
+    $('divisor').hidden = !comparar; $('lado-hoy').hidden = !comparar; $('lado-prop').hidden = !comparar;
+    $('explica-modo').textContent = MODOS[modo];
+    $('explica-estilo').textContent = ESTILOS[PROP.estilo];
+    document.querySelectorAll('[data-modo]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.modo === modo)));
+    document.querySelectorAll('[data-estilo]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.estilo === PROP.estilo)));
+    document.querySelectorAll('[data-color]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.color === colorPor)));
+    colocarDivisor(); pintarLeyenda(); pintarLista(); pedirCuadro();
+  }
+  document.querySelectorAll('[data-modo]').forEach((b) => b.addEventListener('click', () => { modo = b.dataset.modo; actualizar(); }));
+  document.querySelectorAll('[data-estilo]').forEach((b) => b.addEventListener('click', () => { aplicarEstilo(PROP, b.dataset.estilo); actualizar(); }));
+  document.querySelectorAll('[data-color]').forEach((b) => b.addEventListener('click', () => { colorPor = b.dataset.color; aislado = null; actualizar(); }));
+  $('corregir').addEventListener('change', (ev) => { corregido = ev.target.checked; actualizar(); });
+  for (const k of Object.keys(capas)) $(`capa-${k}`).addEventListener('change', (ev) => { capas[k] = ev.target.checked; actualizar(); });
+
+  // División arrastrable
+  function colocarDivisor() {
+    const w = escena.clientWidth, x = Math.round(w * division);
+    $('divisor').style.left = `${x}px`;
+    $('lado-hoy').style.left = '10px';
+    $('lado-prop').style.left = `${Math.min(x + 10, w - 90)}px`;
+  }
+  {
+    const asa = $('asa');
+    let arrastrando = false;
+    asa.addEventListener('pointerdown', (ev) => { arrastrando = true; asa.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+    asa.addEventListener('pointermove', (ev) => {
+      if (!arrastrando) return;
+      const r = escena.getBoundingClientRect();
+      division = Math.min(0.95, Math.max(0.05, (ev.clientX - r.left) / r.width));
+      colocarDivisor(); pedirCuadro();
+    });
+    const soltar = () => { arrastrando = false; };
+    asa.addEventListener('pointerup', soltar); asa.addEventListener('pointercancel', soltar);
+    asa.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+      division = Math.min(0.95, Math.max(0.05, division + (ev.key === 'ArrowLeft' ? -0.03 : 0.03)));
+      colocarDivisor(); pedirCuadro(); ev.preventDefault();
+    });
+  }
+
+  // ---------- Leyenda, búsqueda y ficha ----------
+  const visiblesEnLista = () => entradas.filter((e) => !e.id.startsWith('unassigned:'));
+  function pintarLeyenda() {
+    const el = $('leyenda'); el.innerHTML = '';
+    const def = COLORES[colorPor];
+    for (const [k, texto, color] of def.cats) {
+      const n = colorPor === 'mapa' ? visiblesEnLista().length : entradas.filter((e) => def.clave(e) === k).length;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tipo'; b.setAttribute('aria-pressed', String(aislado === k));
+      b.innerHTML = '<span class="cuadro"></span><span></span><span class="n"></span>';
+      b.children[0].style.background = color; b.children[1].textContent = texto; b.children[2].textContent = String(n);
+      if (colorPor === 'mapa') { b.disabled = true; b.style.cursor = 'default'; }
+      b.addEventListener('click', () => { aislado = aislado === k ? null : k; actualizar(); });
+      el.append(b);
+    }
+    $('nota-leyenda').textContent = colorPor === 'mapa'
+      ? 'El rosado del visor. Cambia a otro color para ver de dónde sale cada edificio o qué hay que revisar; en la app de hoy, cada edificio toma el color de la relación a la que pertenece.'
+      : aislado ? 'Mostrando solo esta categoría. Vuelve a pulsarla para ver todas.' : 'Pulsa una categoría para aislarla.';
+  }
+  const normal = (t) => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  for (const e of entradas) {
+    e.texto = normal([e.nombre, ...e.alias, ...(e.codigos || []).flatMap((c) => [c.codigo, c.etiqueta]), ...(e.edificios_mapa || []).map((b) => b.nombre),
+      ...(e.pisos || []).flatMap((p) => p.places)].join(' '));
+  }
+  function pintarLista() {
+    const q = normal($('buscar').value.trim()), soloAvisos = $('solo-avisos').checked;
+    const r = visiblesEnLista().filter((e) => (!q || e.texto.includes(q)) && (!soloAvisos || e.avisos.length)).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    const lista = $('lista'); lista.innerHTML = '';
+    for (const e of r) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'fila'; b.setAttribute('role', 'listitem');
+      if (e === seleccionado) b.setAttribute('aria-current', 'true');
+      b.innerHTML = '<span class="punto"></span><span class="t"></span><span class="n"></span>';
+      b.children[0].style.background = colorDe(e);
+      b.children[1].textContent = e.nombre; b.children[1].title = e.nombre;
+      b.children[2].textContent = e.avisos.length ? `${e.avisos.length} aviso${e.avisos.length > 1 ? 's' : ''}` : (e.codigos || []).map((c) => c.codigo).join(', ');
+      b.addEventListener('click', () => { seleccionar(e); centrarEn(e); });
+      lista.append(b);
+    }
+    $('cuenta-lista').textContent = `${r.length} de ${visiblesEnLista().length} edificios`;
+  }
+  $('buscar').addEventListener('input', pintarLista);
+  $('solo-avisos').addEventListener('change', pintarLista);
+
+  const detalle = $('detalle');
+  const el = (tag, cls, texto) => { const x = document.createElement(tag); if (cls) x.className = cls; if (texto !== undefined) x.textContent = texto; return x; };
+  function mostrarDetalle(e, b) {
+    detalle.innerHTML = '';
+    detalle.append(el('h2', '', 'Edificio seleccionado'));
+    if (!e) {
+      if (b) { detalle.append(el('h3', '', b.nombre || 'Edificio sin nombre'), el('p', 'nota', 'Este edificio del mapa no está en ninguna relación.')); return; }
+      detalle.append(el('p', 'nota', 'Haz clic en un edificio de cualquiera de los dos lados o elige uno de la lista. Doble clic lo centra.')); return;
+    }
+    detalle.append(el('h3', '', e.nombre));
+    const hoyNombres = [...new Set((e.edificios_mapa || []).map((x) => x.nombre).filter(Boolean))];
+    if (hoyNombres.length && hoyNombres.join(' / ') !== e.nombre) detalle.append(el('p', 'nota', `Hoy en la app: ${hoyNombres.join(' / ')}`));
+    const chips = el('div', 'chips');
+    chips.append(el('span', 'chip', FUENTE[e.fuente] || e.fuente), el('span', 'chip', RELACION[e.relacion]));
+    if (e.avisos.length) chips.append(el('span', 'chip aviso', `${e.avisos.length} aviso${e.avisos.length > 1 ? 's' : ''}`));
+    detalle.append(chips);
+    if (e.avisos.length) { const ul = el('ul', 'avisos'); for (const a of e.avisos) ul.append(el('li', '', a)); detalle.append(ul); }
+    const dl = el('dl');
+    const fila = (k, v) => { if (v === undefined || v === null || v === '') return; dl.append(el('dt', '', k), el('dd', '', v)); };
+    fila('De dónde sale el nombre', e.origen_nombre);
+    if (e.alto_skp !== undefined) fila('Altura en el SKP', m(e.alto_skp));
+    const alturasMapa = (e.edificios_mapa || []).map((x) => x.alto);
+    if (alturasMapa.length) fila('Altura en la app hoy', `${m(Math.max(...alturasMapa))}${(e.edificios_mapa || []).every((x) => x.estimada) ? ' (estimada)' : ''}`);
+    if (e.base_skp !== undefined && Math.abs(e.base_skp) >= 1) fila('Nivel más bajo', `${n1.format(Math.abs(e.base_skp))} m ${e.base_skp < 0 ? 'bajo' : 'sobre'} el suelo`);
+    fila('Área en planta', [e.area_skp !== undefined && `SKP ${n0.format(e.area_skp)} m²`, e.area_mapa !== undefined && `hoy ${n0.format(e.area_mapa)} m²`].filter(Boolean).join(' · '));
+    if (e.iou !== undefined) fila('Superposición (IoU)', `${n0.format(e.iou * 100)} %`);
+    if (e.piezas) fila('Piezas del SKP', String(e.piezas));
+    detalle.append(dl);
+    if (e.codigos && e.codigos.length) {
+      detalle.append(el('h2', '', `Códigos oficiales (${e.codigos.length})`));
+      const ul = el('ul', 'sub');
+      for (const c of e.codigos) { const li = el('li'); li.append(document.createTextNode(`${c.codigo} · `), el('span', '', c.etiqueta)); ul.append(li); }
+      detalle.append(ul);
+    }
+    if (e.edificios_mapa && e.edificios_mapa.length) {
+      detalle.append(el('h2', '', `Edificios de la app hoy (${e.edificios_mapa.length})`));
+      const ul = el('ul', 'sub');
+      for (const x of e.edificios_mapa) { const li = el('li'); li.append(document.createTextNode(`${x.id} · ${x.nombre || 'Sin nombre'} `), el('span', '', `${m(x.alto)}${x.estimada ? ' estimados' : ''}`)); ul.append(li); }
+      detalle.append(ul);
+    }
+    if (e.alias.length) detalle.append(el('h2', '', 'Otros nombres'), el('p', 'nota', e.alias.join(' · ')));
+    if (e.pisos && e.pisos.length) {
+      const d = el('details'); d.append(el('summary', '', 'Oficinas por piso'));
+      const ul = el('ul', 'sub'); for (const p of e.pisos) ul.append(el('li', '', `Piso ${p.floor}: ${p.places.join(' · ') || 'sin información'}`));
+      d.append(ul); detalle.append(d);
+    }
+  }
+  function seleccionar(e, b) { seleccionado = e; mostrarDetalle(e, b); actualizar(); }
+
+  let vuelo = null;
+  function volarA(objetivo, posicion) {
+    if (reducido) { controles.target.copy(objetivo); camara.position.copy(posicion); pedirCuadro(); return; }
+    vuelo = { t0: performance.now(), d: 700, o0: controles.target.clone(), o1: objetivo, p0: camara.position.clone(), p1: posicion };
+    pedirCuadro();
+  }
+  function centrarEn(e) {
+    const caja = e.caja.clone().union(e.cajaHoy); if (caja.isEmpty()) return;
+    const c = caja.getCenter(new THREE.Vector3()), tam = Math.max(caja.getSize(new THREE.Vector3()).length(), 45);
+    const dir = camara.position.clone().sub(controles.target).normalize();
+    volarA(c, c.clone().add(dir.multiplyScalar(tam * 1.5)));
+  }
+  $('inicial').addEventListener('click', () => volarA(VISTA_INICIAL.objetivo.clone(), VISTA_INICIAL.pos.clone()));
+
+  // ---------- Puntero: cada lado se toca en su mitad ----------
+  const rayo = new THREE.Raycaster(), puntero = new THREE.Vector2(), tooltip = $('tooltip');
+  function ladoEn(xCss) {
+    if (modo === 'hoy') return HOY;
+    if (modo === 'comparar') return xCss < escena.clientWidth * division ? HOY : PROP;
+    return PROP;
+  }
+  function tocar(ev) {
+    const r = lienzo.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;
+    const S = ladoEn(x);
+    puntero.set((x / r.width) * 2 - 1, -(y / r.height) * 2 + 1);
+    rayo.setFromCamera(puntero, camara);
+    const hit = rayo.intersectObjects(S.edificios.map((o) => o.ms).filter((ms) => ms.material !== S.tenue), false)[0];
+    return hit ? { ...hit.object.userData, x, y } : null;
+  }
+  let pendiente = null;
+  lienzo.addEventListener('pointermove', (ev) => {
+    if (ev.buttons) { tooltip.hidden = true; return; }
+    if (pendiente) return;
+    pendiente = requestAnimationFrame(() => {
+      pendiente = null;
+      const t = tocar(ev);
+      if (!t) { tooltip.hidden = true; return; }
+      tooltip.innerHTML = '';
+      if (t.lado === 'hoy') {
+        tooltip.append(el('strong', '', t.b.nombre || 'Edificio sin nombre'), el('div', '', `La app hoy · ${m(t.b.alto)}${t.b.estimada ? ' estimados' : ''}`));
+        if (t.e && t.e.nombre !== t.b.nombre) tooltip.append(el('div', '', `En la propuesta: ${t.e.nombre}`));
+      } else {
+        tooltip.append(el('strong', '', t.e.nombre), el('div', '', `Propuesta · ${FUENTE[t.e.fuente]}${t.e.alto_skp !== undefined && t.e.fuente === 'skp' ? `, ${m(t.e.alto_skp)}` : ''}`));
+        if (t.e.avisos.length) tooltip.append(el('div', '', `${t.e.avisos.length} aviso${t.e.avisos.length > 1 ? 's' : ''}`));
+      }
+      tooltip.hidden = false;
+      const w = escena.clientWidth, h = escena.clientHeight;
+      tooltip.style.left = `${Math.min(t.x + 14, w - tooltip.offsetWidth - 8)}px`;
+      tooltip.style.top = `${t.y + 14 + tooltip.offsetHeight > h ? t.y - tooltip.offsetHeight - 10 : t.y + 14}px`;
+    });
+  });
+  lienzo.addEventListener('pointerleave', () => { tooltip.hidden = true; });
+  let inicio = null;
+  lienzo.addEventListener('pointerdown', (ev) => { inicio = [ev.clientX, ev.clientY]; });
+  lienzo.addEventListener('pointerup', (ev) => {
+    if (!inicio || Math.hypot(ev.clientX - inicio[0], ev.clientY - inicio[1]) > 4 || ev.button !== 0) return;
+    const t = tocar(ev);
+    seleccionar(t ? t.e : null, t ? t.b : null);
+  });
+  lienzo.addEventListener('dblclick', (ev) => { const t = tocar(ev); if (t && t.e) { seleccionar(t.e); centrarEn(t.e); } });
+
+  // ---------- Etiquetas: cada lado en su mitad, sin pisarse ----------
+  const proyectada = new THREE.Vector3(), desfase = new THREE.Vector3();
+  function colocarEtiquetas(S, x0, x1, w, h) {
+    const puestas = [];
+    desfase.set(S === PROP && corregido ? DESFASE.este : 0, 0, S === PROP && corregido ? -DESFASE.norte : 0);
+    for (const a of S.etiquetas) {
+      let ver = false;
+      const esPuerta = a.el.classList.contains('et-p');
+      if (capas.etiquetas && x1 > x0 && (!esPuerta || capas.puertas)) {
+        proyectada.copy(a.v); if (a.cliente) proyectada.add(desfase);
+        if (camara.position.distanceTo(proyectada) < a.maxDist) {
+          proyectada.project(camara);
+          if (proyectada.z < 1 && proyectada.z > -1) {
+            if (!a.w) { a.w = a.el.offsetWidth || 80; a.h = a.el.offsetHeight || 18; }
+            const x = (proyectada.x * 0.5 + 0.5) * w - a.w / 2, y = (-proyectada.y * 0.5 + 0.5) * h - a.h - 2 - a.dy;
+            const dentro = x >= x0 && x + a.w <= x1 && y > -a.h && y < h;
+            const pisa = puestas.some((p) => x < p[2] + 4 && x + a.w + 4 > p[0] && y < p[3] + 2 && y + a.h + 2 > p[1]);
+            if (dentro && !pisa) { puestas.push([x, y, x + a.w, y + a.h]); a.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; ver = true; }
+          }
+        }
+      }
+      if (ver !== a.on) { a.el.style.visibility = ver ? 'visible' : 'hidden'; a.on = ver; }
+    }
+  }
+
+  // ---------- Dibujo: dos pasadas con tijera cuando se compara ----------
+  function pasada(S, x, ancho, w, h, tijera) {
+    if (ancho <= 0) return;
+    const plano = S.estilo === 'plano';
+    renderer.toneMapping = plano ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = S.estilo === 'actual' ? 1.38 : plano ? 1 : 1.05;
+    renderer.shadowMap.enabled = !plano;
+    renderer.setViewport(0, 0, w, h);
+    if (tijera) renderer.setScissor(x, 0, ancho, h);
+    renderer.render(S.scene, camara);
+  }
+  function dibujar() {
+    const w = escena.clientWidth, h = escena.clientHeight;
+    if (modo === 'comparar') {
+      const d = Math.round(w * division);
+      renderer.setScissorTest(true);
+      pasada(HOY, 0, d, w, h, true); pasada(PROP, d, w - d, w, h, true);
+      renderer.setScissorTest(false);
+      colocarEtiquetas(HOY, 0, d, w, h); colocarEtiquetas(PROP, d, w, w, h);
+    } else {
+      const S = modo === 'hoy' ? HOY : PROP, otro = S === HOY ? PROP : HOY;
+      pasada(S, 0, w, w, h, false);
+      colocarEtiquetas(S, 0, w, w, h); colocarEtiquetas(otro, 0, 0, w, h);
+    }
+  }
+  let sucio = true;
+  function pedirCuadro() { sucio = true; }
+  controles.addEventListener('change', pedirCuadro);
+  function ajustar() {
+    const w = escena.clientWidth, h = escena.clientHeight;
+    renderer.setSize(w, h, false); dibujarFondo(w, h);
+    camara.aspect = w / Math.max(h, 1); camara.updateProjectionMatrix();
+    colocarDivisor(); pedirCuadro();
+  }
+  new ResizeObserver(ajustar).observe(escena);
+  function bucle(ahora) {
+    requestAnimationFrame(bucle);
+    if (vuelo) {
+      const k = Math.min((ahora - vuelo.t0) / vuelo.d, 1), s = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+      controles.target.lerpVectors(vuelo.o0, vuelo.o1, s); camara.position.lerpVectors(vuelo.p0, vuelo.p1, s);
+      if (k === 1) vuelo = null;
+      sucio = true;
+    }
+    if (controles.update() || sucio) { dibujar(); sucio = false; }
+  }
+
+  mostrarDetalle(null);
+  aplicarEstilo(PROP, 'mate');
+  actualizar(); ajustar();
+  carga.hidden = true;
+  requestAnimationFrame(bucle);
+})();
+</script>

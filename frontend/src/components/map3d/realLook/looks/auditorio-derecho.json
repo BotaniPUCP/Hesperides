@@ -1,0 +1,27 @@
+{
+  "planKey": "11900083-39e3-4786-93ec-73e89a4e8c3a",
+  "name": "Auditorio de Derecho",
+  "folder": "auditorio-derecho",
+  "photos": [
+    "auditorio-frente-otro.jpg",
+    "frente.jpg",
+    "frente2.jpg",
+    "lado1.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#b5bcb6"
+    },
+    "techo": {
+      "color": "#bdbdb8"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Volumen redondeado de concreto gris verdoso (frente2.jpg, lado1.jpg). El alero de concreto del ingreso no está en el modelo; el ventanal oscuro y las puertas no se dibujan."
+}

@@ -16,7 +16,7 @@ public record ImportPreviewResponse(long batchId, String kind, int totalRows, in
                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) List<SpeciesBinding> speciesBindings,
                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) List<SpecimenSpeciesChange> speciesChanges,
                                      @JsonInclude(JsonInclude.Include.NON_NULL) String planFingerprint,
-                                     @JsonInclude(JsonInclude.Include.NON_EMPTY) List<SkippedInactiveSpecies> skippedInactiveSpecies) {
+                                     @JsonInclude(JsonInclude.Include.NON_EMPTY) List<SkippedInactiveSpecies> skippedInactiveSpecies) implements ImportPreview {
 
     public ImportPreviewResponse(long batchId, String kind, int totalRows, int toCreate, int toUpdate,
                                  List<UnknownSpecies> unknownSpecies, List<Duplicate> duplicates, List<Issue> issues,

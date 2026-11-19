@@ -1,0 +1,37 @@
+{
+  "planKey": "3aa466cc-3cff-46f6-925b-e3f566a83966",
+  "name": "Arqueología C y Sala de Música y Coro",
+  "folder": "ARQUEOLOGÍA C Y SALA DE MUSICA Y CORO",
+  "photos": [
+    "detras.jpg",
+    "frente.jpg"
+  ],
+  "materials": {
+    "muro": {
+      "color": "#e5e3dc"
+    },
+    "techo": {
+      "color": "#c4c2bc"
+    },
+    "ventanas": {
+      "color": "#b7b9b5"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Paneles claros con puerta doble y ventanas enrejadas sueltas, como franja tenue (frente.jpg, detras.jpg)."
+}

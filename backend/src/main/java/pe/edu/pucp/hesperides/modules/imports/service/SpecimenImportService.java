@@ -35,6 +35,7 @@ public class SpecimenImportService implements ImportHandler {
 
     private final SpecimenResolver resolver;
     private final ImportBatchGate gate;
+    private final BatchPhotoZips zips;
     private final SpecimenImportWriter writer;
     private final SpecimenLookupRepository lookup;
 
@@ -48,30 +49,33 @@ public class SpecimenImportService implements ImportHandler {
     }
 
     @Override
-    public ImportPreviewResponse preview(String kind, byte[] csv, String fileName, byte[] zip, String userEmail) {
-        return previewWithBindings(kind, csv, fileName, zip, Map.of(), userEmail);
+    public ImportPreviewResponse preview(String kind, ImportUpload upload, String userEmail) {
+        return previewWithBindings(kind, upload, Map.of(), userEmail);
     }
 
     @Override
-    public ImportPreviewResponse previewWithBindings(String kind, byte[] csv, String fileName, byte[] zip,
+    public ImportPreviewResponse previewWithBindings(String kind, ImportUpload upload,
                                                       Map<String, String> speciesBindings, String userEmail) {
+        byte[] zip = upload.zip().get();
         Map<String, byte[]> photos = zip == null ? Map.of() : PhotoFiles.readStrict(zip);
-        SpecimenPreview preview = resolver.resolve(SpecimenCsvSchema.parse(CsvTable.parseStrict(csv)),
+        SpecimenPreview preview = resolver.resolve(SpecimenCsvSchema.parse(CsvTable.parseStrict(upload.csv())),
                 Set.copyOf(photos.keySet()), speciesBindings);
-        Opened opened = gate.open(KIND, fileName, userEmail, preview, zip);
+        Opened opened = gate.open(KIND, upload.fileName(), userEmail, preview);
+        zips.keep(opened.batchId(), zip);
         return PreviewMapper.toResponse(opened.batchId(), KIND, preview, opened.expiresAt(), opened.planFingerprint());
     }
 
     @Override
-    public ImportPreviewResponse reanalyze(Claimed claimed, byte[] csv, String fileName, byte[] zip,
-                                           Map<String, String> speciesBindings) {
+    public ImportPreviewResponse reanalyze(Claimed claimed, ImportUpload upload, Map<String, String> speciesBindings) {
+        byte[] zip = upload.zip().get();
         Map<String, byte[]> photos = zip == null ? Map.of() : PhotoFiles.readStrict(zip);
-        SpecimenCsvSchema.Parsed parsed = SpecimenCsvSchema.parse(CsvTable.parseStrict(csv));
+        SpecimenCsvSchema.Parsed parsed = SpecimenCsvSchema.parse(CsvTable.parseStrict(upload.csv()));
         SpecimenPreview previous = gate.report(claimed.batch(), SpecimenPreview.class);
         Map<String, String> recoveredBindings = SpecimenBindingKeyCompatibility.recover(
                 previous, parsed.drafts(), speciesBindings);
         SpecimenPreview preview = resolver.resolve(parsed, Set.copyOf(photos.keySet()), recoveredBindings);
-        Opened opened = gate.replacePreview(claimed, preview, zip);
+        zips.keep(claimed.batch().id(), zip);
+        Opened opened = gate.replacePreview(claimed, preview);
         return PreviewMapper.toResponse(opened.batchId(), KIND, preview, opened.expiresAt(), opened.planFingerprint());
     }
 
@@ -101,6 +105,6 @@ public class SpecimenImportService implements ImportHandler {
         return new ImportConfirmationSummary(claimed.batch().id(),
                 (int) included.stream().filter(row -> row.action() == ImportAction.CREATE).count(),
                 (int) included.stream().filter(row -> row.action() == ImportAction.UPDATE).count(),
-                ImportBatchGate.confirmationFingerprint(claimed.batch(), decisions));
+                ImportFingerprints.confirmationFingerprint(claimed.batch(), decisions));
     }
 }

@@ -44,6 +44,7 @@ class SpeciesImportWriter {
     private final SpeciesPhotoRepository speciesPhotos;
     private final ImportPhotos importPhotos;
     private final ImportBatchGate gate;
+    private final BatchPhotoZips zips;
     private final AuditService auditService;
     private final TransactionTemplate transaction;
     private final SpeciesSlugAllocator slugAllocator;
@@ -57,7 +58,7 @@ class SpeciesImportWriter {
                 .filter(r -> r.draft().photo() != null && !r.skipExistingPhotoLink())
                 .map(r -> new ImportPhotos.Request(r.line(), r.draft().photo()))
                 .toList();
-        Map<String, byte[]> zip = gate.registrationZip(batchId, ImportPhotos.needsZip(requests));
+        Map<String, byte[]> zip = zips.readStrict(batchId, ImportPhotos.needsZip(requests));
         Map<Integer, StoredPhoto> stored = importPhotos.store("species/import-" + batchId, requests, zip, warnings);
 
         return transaction.execute(status -> {

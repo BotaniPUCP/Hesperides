@@ -11,8 +11,6 @@ describe('moduleForPath', () => {
     ['/inventario-verde/especies/roystonea-regia', 'catalogo'],
     ['/inventario-verde/ejemplares', 'catastro'],
     ['/inventario-verde/especies/roystonea-regia/ejemplares/EV-000001', 'catastro'],
-    ['/riego', 'riego'],
-    ['/riego/', 'riego'],
     ['/intervenciones', 'intervenciones'],
     ['/intervenciones/12/editar', 'intervenciones'],
     ['/lugares', 'lugares'],
@@ -20,6 +18,10 @@ describe('moduleForPath', () => {
     ['/incidencias/7', 'incidencias'],
     ['/reportes', 'reportes'],
     ['/admin/usuarios', 'administracion'],
+    ['/directorio', 'directorio'],
+    ['/directorio/ORG-0001', 'directorio'],
+    ['/directorio/contactos/CON-0001', 'directorio'],
+    ['/directorio/registrar', 'directorio'],
   ])('%s pertenece al módulo %s', (path, module) => {
     expect(moduleForPath(path)).toBe(module);
   });

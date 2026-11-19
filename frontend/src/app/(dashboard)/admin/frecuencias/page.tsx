@@ -1,15 +1,6 @@
-import { Suspense } from 'react';
-import { LoadingSkeleton } from '@/components/ui';
-import { MaintenanceFrequenciesScreen } from '@/components/maintenance/MaintenanceFrequenciesScreen';
+import { redirect } from 'next/navigation';
 
-export const metadata = {
-  title: 'Frecuencias de Mantenimiento · Hesperides',
-};
-
-export default function FrecuenciasPage() {
-  return (
-    <Suspense fallback={<LoadingSkeleton />}>
-      <MaintenanceFrequenciesScreen />
-    </Suspense>
-  );
+/** SPEC-203 §2.3: las frecuencias se movieron a Intervenciones; la ruta antigua no rompe marcadores. */
+export default function OldFrequenciesPage() {
+  redirect('/intervenciones/frecuencias');
 }

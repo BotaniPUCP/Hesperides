@@ -88,6 +88,8 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `CONTRACT_EDITED` | ADMIN | Campos cambiados (fechas, monto, alcance) | **`audit_log`** |
 | `CONTRACT_TERMINATED` | ADMIN | `{ "statusItemId": { "before": ..., "after": ... }, "reason": "..." }` | **`audit_log`** |
 | `SYSTEM_PARAMETER_CHANGED` | ADMIN | `{ "code": "...", "value": { "before": "...", "after": "..." } }` | **`audit_log`** |
+| `PLANNING_ASSIGNMENT_CREATED` · `PLANNING_ASSIGNMENT_UPDATED` | ADMIN, COORDINADOR | `{ "setId": 3, "frequencyId": 12, "activityTypeItemId": 30 }` — qué frecuencia quedó asignada al conjunto (SPEC-203 D-16) | **`audit_log`** |
+| `PLANNING_ASSIGNMENT_DELETED` | ADMIN, COORDINADOR | `{ "setId": 3, "activityTypeItemId": 30 }` — qué dejó de planificarse en el conjunto | **`audit_log`** |
 | `SPECIES_PHOTOS_REPLACED` | ADMIN, COORDINADOR (carga CSV) · ADMIN (bandeja) | `{ "photos": 3 }` — cuántas fotos quedaron en el conjunto de la especie (SPEC-104 D-02) | **`audit_log`** |
 | `SPECIES_PHOTO_ADDED` | ADMIN, COORDINADOR | `{ "photoId": 41 }` — la foto agregada al final por formulario (SPEC-104 D-03) | **`audit_log`** |
 | `SPECIES_SOFT_DELETED` | ADMIN, COORDINADOR | Baja manual: `{ "slug": "jacaranda-mimosifolia", "isActive": { "before": true, "after": false }, "deletedAt": { "before": null, "after": "<fecha o null>" }, "reason": "...", "activeSpecimenCount": 12 }` | **`audit_log`** |
@@ -95,6 +97,21 @@ Esto no contradice SPEC-003: los catálogos configurables existen para datos de 
 | `SPECIES_UPDATED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "slug": "coffea-arabica", "scientificName": "Coffea arabica" }` — quién corrigió la especie (SPEC-105) |
 | `SPECIES_CRITICALITY_CHANGED` | ADMIN, COORDINADOR | `{ "from": true, "to": false }` — decisión de seguridad: cambia quién atiende sus ejemplares (SPEC-105) |
 | `SPECIES_REFERENCE_CHANGED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "heightFrom": 3.0, "heightTo": 2.5, "crownRadiusFrom": 1.0, "crownRadiusTo": 1.0 }` — el promedio anterior y el nuevo (SPEC-105) |
+| `ORGANIZATION_CREATED` | ADMIN, COORDINADOR | `{ "name": "CF Psicología" }` (SPEC-106) | **`audit_log`** |
+| `ORGANIZATION_UPDATED` | ADMIN, COORDINADOR | `{ "fields": ["name", "aliases"] }` — qué campos cambiaron (SPEC-106) | **`audit_log`** |
+| `ORGANIZATION_DEACTIVATED` | ADMIN, COORDINADOR | `{ "name": "CF Psicología" }` (SPEC-106) | **`audit_log`** |
+| `CONTACT_CREATED` | ADMIN, COORDINADOR | `{ "organizations": 2 }` — sin nombre ni teléfonos: son datos personales (SPEC-106 §9.3) | **`audit_log`** |
+| `CONTACT_UPDATED` | ADMIN, COORDINADOR | `{ "fields": ["mobile", "organizations"] }` — qué campos cambiaron, nunca sus valores (SPEC-106) | **`audit_log`** |
+| `CONTACT_DEACTIVATED` | ADMIN, COORDINADOR | `{}` (SPEC-106) | **`audit_log`** |
+| `CONTACT_LINKED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — la organización agregada (SPEC-106) | **`audit_log`** |
+| `CONTACT_LINK_ROLE_UPDATED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — qué vínculo cambió, nunca el valor del rol (SPEC-106 §4.3) | **`audit_log`** |
+| `GARDEN_RESERVATION_CREATED` · `GARDEN_RESERVATION_UPDATED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "place": "LUG-0004" }` — el código de la reserva y el del jardín; nunca el teléfono del contacto (SPEC-107 §9) | **`audit_log`** |
+| `GARDEN_RESERVATION_CANCELLED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "place": "LUG-0004" }`; el motivo queda en `garden_reservations.cancel_reason` (SPEC-107 D-09) | **`audit_log`** |
+| `GARDEN_RESERVATION_RESPONSIBLE_CHANGED` | ADMIN, COORDINADOR | `{ "code": "RES-0042", "from": "CON-0007", "to": "CON-0019" }` — códigos de contacto, nunca nombres ni teléfonos (SPEC-107 D-02b) | **`audit_log`** |
+| `GARDEN_RESERVATION_USAGE_CHANGED` | ADMIN, COORDINADOR, SUPERVISOR | `{ "code": "RES-0042", "from": false, "to": true }` — de qué a qué (SPEC-107, enmienda del seguimiento de uso; la confirmación de uso y su acción se retiraron el 17 nov 2026) | **`audit_log`** |
+| `CONTACT_LINK_ROLE_UPDATED` | ADMIN, COORDINADOR | `{ "organization": "ORG-0031" }` — el vínculo cuyo rol cambió, sin el valor (SPEC-106 §4.3) | **`audit_log`** |
+| `GREEN_AREA_SET_CREATED` · `GREEN_AREA_SET_UPDATED` | ADMIN, COORDINADOR | `{ "zoneCount": 18 }` — cuántos jardines quedaron en el conjunto, no la lista (SPEC-203 §9) | **`audit_log`** |
+| `GREEN_AREA_SET_DELETED` | ADMIN, COORDINADOR | `{}` — el id del conjunto basta | **`audit_log`** |
 | `LOGIN_FAILED_LOCKOUT` | (sistema, sobre cualquier email) | `{ "email": "...", "attempts": 5, "windowMinutes": 15 }` | **`audit_log`** (además de logs SLF4J, sección 3.4) |
 | `REFRESH_TOKEN_REUSE_DETECTED` | (sistema, sobre cualquier usuario) | `{ "userId": ..., "tokenId": ..., "revokedChainCount": 3 }` | **`audit_log`** |
 | Login exitoso individual | — | — | **Solo SLF4J** (sección 3.4) |
@@ -157,7 +174,7 @@ La línea que separa ambos destinos: **`audit_log` es para reconstruir una decis
 > su fuente única es el **mapa de migraciones** de [`REGISTRO.md`](../REGISTRO.md#mapa-de-migraciones).
 
 Este spec es fundacional (trazabilidad transversal, no una HU de feature). La reserva histórica de
-`V021` quedó ocupada por `V021__add_place_map_view.sql` en el mapa actual. `V036` materializa la tabla
+`V021` quedó ocupada por `V021__add_place_map_view.sql` en el mapa actual. `V070` materializa la tabla
 `audit_log` y persiste los eventos explícitos de `AuditService`; las columnas de autoría descritas en
 §4.2 y el API de lectura de §8 siguen siendo pendientes independientes.
 
@@ -167,10 +184,10 @@ La tabla materializada no significa que toda la matriz de §3.2 ya emita eventos
 pendientes. Los siete eventos de ciclo de vida/ficha de especie añadidos por SPEC-103/105 sí están
 enumerados en `AuditActionCode` y sus bajas se persisten en la transacción de dominio.
 
-### 4.1 V036 — Tabla `audit_log`
+### 4.1 V070 — Tabla `audit_log`
 
 ```sql
--- Materializada en el repositorio por V036__species_lifecycle_and_audit_log.sql
+-- Materializada en el repositorio por V070__species_lifecycle_and_audit_log.sql
 -- Bitácora de acciones administrativas sensibles. Append-only por diseño
 -- (ver sección 6): no lleva updated_at ni deleted_at, a diferencia de toda
 -- otra tabla del proyecto (excepción deliberada a REGLAS.md §5.4).
@@ -210,7 +227,7 @@ CREATE INDEX idx_audit_log_created_at ON audit_log(created_at DESC);
 
 ### 4.2 Columnas `created_by_user_id` / `updated_by_user_id` (pendiente)
 
-Estas columnas y el listener de JPA de §5 siguen definidos aquí, pero no forman parte de V036 ni de la
+Estas columnas y el listener de JPA de §5 siguen definidos aquí, pero no forman parte de V070 ni de la
 implementación de bajas de SPEC-103. No deben interpretarse como una migración ya ejecutada.
 
 **Criterio para decidir qué tabla las recibe:** se añaden solo donde **(a)** la tabla es editable después de su creación por más de un tipo de usuario a lo largo del tiempo, **y (b)** no tiene ya una columna de autoría específica que cubra la misma pregunta con más precisión. Se excluyen explícitamente las tablas append-only (nunca se "edita" una fila, solo se inserta la siguiente) y las que ya tienen su propia columna de autoría por acción de negocio.
@@ -233,7 +250,7 @@ implementación de bajas de SPEC-103. No deben interpretarse como una migración
 | `users`, `refresh_tokens` | **No** | `users` se audita por acción específica (`USER_CREATED`, `USER_DEACTIVATED`, `USER_ROLE_CHANGED`) en `audit_log`, más preciso que un `updated_by_user_id` genérico que no diría *qué* cambió. `refresh_tokens` es append-only por rotación (SPEC-001 §4.2). |
 
 ```sql
--- Contrato de columnas de autoría previsto por este spec; no se añade en V036.
+-- Contrato de columnas de autoría previsto por este spec; no se añade en V070.
 
 ALTER TABLE zones
     ADD COLUMN created_by_user_id BIGINT REFERENCES users(id),
@@ -269,7 +286,7 @@ No se declara `ON DELETE` explícito (RESTRICT implícito de PostgreSQL, consist
 
 ## 5. El mecanismo automático (Spring Data JPA Auditing)
 
-**Estado en el código:** V036 implementa la escritura transaccional de `AuditService.record(...)` en
+**Estado en el código:** V070 implementa la escritura transaccional de `AuditService.record(...)` en
 `audit_log`. La superclase `Auditable`, `AuditorAware` y las columnas genéricas de §4.2 todavía no
 están implementadas; esta sección conserva su diseño para una entrega posterior.
 
@@ -412,7 +429,7 @@ Por la misma razón, la lista de campos auditables por entidad (qué campos SÍ 
 
 ## 8. Contratos de API
 
-La persistencia de `AuditService.record(...)` en `audit_log` está implementada por V036 y participa
+La persistencia de `AuditService.record(...)` en `audit_log` está implementada por V070 y participa
 en la transacción de dominio. Las rutas de lectura siguientes todavía no están implementadas; este
 spec sigue siendo su fuente de verdad. Sobre y errores según INV-1 y SPEC-C02.
 
@@ -500,7 +517,7 @@ ni de ejemplares (SPEC-001, SPEC-002 y SPEC-103).
 
 | # | Criterio | Método de verificación |
 |---|----------|----------------------|
-| CA-01 | V036 crea la tabla sin alterar migraciones previas | `SELECT version, description, success FROM flyway_schema_history WHERE version = '036';` devuelve una fila con `success = t`; V001–V035 conservan sus checksums y `audit_log` existe. |
+| CA-01 | V070 crea la tabla sin alterar migraciones previas | `SELECT version, description, success FROM flyway_schema_history WHERE version = '070';` devuelve una fila con `success = t`; V001–V069 conservan sus checksums y `audit_log` existe. |
 | CA-02 | `audit_log` existe y es append-only por esquema (sin `updated_at`/`deleted_at`) | `SELECT column_name FROM information_schema.columns WHERE table_name = 'audit_log' ORDER BY column_name;` devuelve exactamente `action, changes, created_at, entity_id, entity_type, id, ip_address, user_id` — **sin** `updated_at` ni `deleted_at`. |
 | CA-03 | Las columnas de autoría genérica existen solo donde corresponde | `SELECT table_name, column_name FROM information_schema.columns WHERE column_name IN ('created_by_user_id','updated_by_user_id') ORDER BY 1,2;` devuelve exactamente: `contracts.updated_by_user_id`, `green_elements.updated_by_user_id`, `providers.created_by_user_id`, `providers.updated_by_user_id`, `species.created_by_user_id`, `species.updated_by_user_id`, `supplies.created_by_user_id`, `supplies.updated_by_user_id`, `system_parameters.updated_by_user_id`, `zones.created_by_user_id`, `zones.updated_by_user_id` — **11 filas**, ninguna en `interventions`, `incidents`, `users`, `catalog_items` ni en las tablas de evidencia/adjuntos. |
 | CA-04 | Desactivar un usuario genera exactamente una fila en `audit_log` con el diff correcto | Ejecutar `PATCH /api/v1/users/{id}/deactivate` (o el endpoint equivalente de SPEC-1XX de usuarios) autenticado como ADMIN. Luego `SELECT action, entity_type, entity_id, changes FROM audit_log WHERE action = 'USER_DEACTIVATED' AND entity_id = {id} ORDER BY created_at DESC LIMIT 1;` devuelve una fila con `changes` conteniendo `{"isActive": {"before": true, "after": false}}`. |

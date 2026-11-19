@@ -10,7 +10,7 @@ import type { SceneData } from '../sceneData';
 import type { CatalogTarget } from '../searchIndex';
 import type { Target } from '../target';
 import type { Viewer } from '../viewer/createViewer';
-import { catalogEntries, catalogLink, conesOf, placeCard, placeOfBuilding } from './catalogOnMap';
+import { catalogEntries, catalogLink, conesOf, placeCard, placeOfPrincipal } from './catalogOnMap';
 
 /** El catálogo resumido. Sin él, el mapa funciona igual: solo no muestra lugares ni perspectivas. */
 export function useMapCatalog(): MapCatalog | null {
@@ -22,7 +22,7 @@ export function useCatalogLinkFor(data: SceneData | null, catalog: MapCatalog | 
   return useCallback(
     (target: Target) => {
       if (!data || target.layer !== 'campusBuildings') return null;
-      const place = placeOfBuilding(catalog, data.campusBuildings[target.index].props.id);
+      const place = placeOfPrincipal(catalog, data, data.campusBuildings[target.index].props.id);
       return place ? catalogLink(place) : null;
     },
     [data, catalog],
@@ -72,7 +72,7 @@ export function useCatalogOnMap(data: SceneData | null, catalog: MapCatalog | nu
     }
     const place = catalog.places[target.index];
     const single = place.buildingIds.length === 1 ? place.buildingIds[0] : null;
-    const building = data.campusBuildings.findIndex((b) => b.props.id === single);
+    const building = single === null ? -1 : (data.buildingIndexById.get(single) ?? -1);
     if (building >= 0) return s.select({ layer: 'campusBuildings', index: building });
     if (place.lat !== null && place.lon !== null) viewer.current?.focusLatLon(place.lat, place.lon);
     showCard({ kind: 'element', card: placeCard(place) });

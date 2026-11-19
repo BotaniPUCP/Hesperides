@@ -54,14 +54,16 @@ class ComplianceSummaryTest {
     }
 
     @Test
-    void outsourcedAndBySectorAreNotEvaluable() {
+    void outsourcedIsNotEvaluable() {
         var outsourced = ComplianceSummary.row(activity(1, "OUTSOURCED", "CAMPUS_WIDE", List.of()), l -> true);
-        var bySector = ComplianceSummary.row(activity(2, "IN_HOUSE", "BY_SECTOR", List.of()), l -> true);
 
         assertThat(outsourced.evaluable()).isFalse();
         assertThat(outsourced.notEvaluableReason()).isEqualTo("OUTSOURCED");
-        assertThat(bySector.evaluable()).isFalse();
-        assertThat(bySector.notEvaluableReason()).isEqualTo("BY_SECTOR");
+    }
+
+    @Test
+    void aSetRuleIsEvaluable() {
+        assertThat(ComplianceSummary.row(activity(2, "IN_HOUSE", "BY_SET", List.of()), l -> true).evaluable()).isTrue();
     }
 
     @Test
@@ -69,13 +71,13 @@ class ComplianceSummaryTest {
         var row = ComplianceSummary.row(activity(1, "IN_HOUSE", "CAMPUS_WIDE", List.of(
                 place(10, 5, "ON_TARGET", "OVERDUE"),
                 place(11, 6, "ON_TARGET"),
-                place(12, 7, "WITHIN_TOLERANCE", "ON_TARGET"),
+                place(12, 7, "EARLY", "ON_TARGET"),
                 place(13, 8, "NOT_CONFIGURED"))), l -> true);
 
         assertThat(row.evaluable()).isTrue();
         assertThat(row.overdue()).isEqualTo(1);
         assertThat(row.onTarget()).isEqualTo(1);
-        assertThat(row.withinTolerance()).isEqualTo(1);
+        assertThat(row.early()).isEqualTo(1);
         assertThat(row.notApplicable()).isEqualTo(1);
         assertThat(row.overdueTargets()).singleElement()
                 .satisfies(t -> assertThat(t.lastExecutionDate()).isEqualTo(LocalDate.of(2026, 10, 5)));
