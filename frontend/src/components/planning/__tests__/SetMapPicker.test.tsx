@@ -203,6 +203,19 @@ describe('SetMapPicker', () => {
       expect(card('Sector 2').className).not.toMatch(/orange/);
     });
 
+    it('el clic en el estado, la cuenta o las barras también usa la tarjeta', async () => {
+      const { card, focusCard } = setup([11, 21]);
+
+      await focusCard('Sector 1');
+      await userEvent.click(within(card('Sector 1')).getByText('Sombreado'));
+      expect(within(card('Sector 1')).getByText('En foco')).toBeInTheDocument();
+
+      await userEvent.click(within(card('Sector 1')).getByText('1 de 2'));
+      expect(within(card('Sector 1')).queryByText('En foco')).not.toBeInTheDocument();
+      await userEvent.click(within(card('Sector 1')).getByText('1 jardín'));
+      expect(within(card('Sector 1')).getByText('Sombreado')).toBeInTheDocument();
+    });
+
     it('solo sombreado, mover el mapa no cambia nada', async () => {
       const { card, focusCard } = setup([11, 21]);
 
