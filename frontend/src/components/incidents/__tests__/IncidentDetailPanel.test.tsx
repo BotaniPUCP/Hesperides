@@ -82,7 +82,7 @@ it('offers to replace a cancelled intervention and asks for a reason', async () 
   render(<Panel initial={cancelled} />);
   expect(screen.getByText(/Una intervención vinculada está cancelada/)).toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Reemplazar INT-000011' }));
-  await userEvent.type(screen.getByLabelText('Buscar intervención por código o descripción'), 'INT-000012');
+  await userEvent.type(screen.getByLabelText('Buscar actividad por código o descripción'), 'INT-000012');
   await userEvent.click(await screen.findByRole('radio', { name: /INT-000012/ }));
   await userEvent.type(screen.getByLabelText('Motivo'), 'Pasa al tercero');
   await userEvent.click(screen.getByRole('button', { name: 'Confirmar reemplazo' }));
@@ -93,9 +93,9 @@ it('links an existing intervention found by its code', async () => {
   api.candidates.mockResolvedValue([{ id: 12, code: 'INT-000012', description: 'Poda', statusCode: 'PLANNED', searchKey: 'int-000012 poda' }]);
   api.link.mockResolvedValue(approvedDetail);
   render(<Panel initial={approvedDetail} />);
-  await userEvent.type(screen.getByLabelText('Buscar intervención por código o descripción'), 'INT');
+  await userEvent.type(screen.getByLabelText('Buscar actividad por código o descripción'), 'INT');
   await userEvent.click(await screen.findByRole('radio', { name: /INT-000012/ }));
-  await userEvent.click(screen.getByRole('button', { name: 'Vincular intervención' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Vincular actividad' }));
   await waitFor(() => expect(api.link).toHaveBeenCalledWith(7, 2, 12));
 });
 

@@ -19,18 +19,21 @@ public class InterventionQueriesRepository {
     private final InterventionSearchRepository search;
     public static final String FROM = """
         from interventions i join catalog_items ps on ps.id=i.planning_status_item_id
+        left join activity_executions gx on gx.intervention_id=i.id and gx.deleted_at is null
+        left join catalog_items gs on gs.id=gx.status_item_id
         cross join lateral (
           select count(*) location_count,
             count(*) filter(where s.code in ('COMPLETED','VALIDATED')) completed_location_count,
             count(*) filter(where s.code='VALIDATED') validated_location_count,
-            least(min(l.started_at),
+            COALESCE(gx.started_at,least(min(l.started_at),
               (select min((e.details->>'startedAt')::timestamptz at time zone 'UTC')
                from intervention_events e join intervention_locations el on el.id=e.intervention_location_id
                where e.intervention_id=i.id and e.action_code='STARTED' and e.deleted_at is null
-                 and el.deleted_at is null and e.details->>'startedAt' is not null)) started_at,
-            case when bool_and(s.code in ('COMPLETED','VALIDATED')) then max(l.completed_at) end completed_at,
-            case when bool_and(s.code='VALIDATED') then max(l.validated_at) end validated_at,
-            case when ps.code in ('PLANNED','CANCELLED') then ps.code
+                 and el.deleted_at is null and e.details->>'startedAt' is not null))) started_at,
+            case when gx.id IS NOT NULL then gx.executed_at when bool_and(s.code in ('COMPLETED','VALIDATED')) then max(l.completed_at) end completed_at,
+            case when gx.id IS NOT NULL then gx.finished_at when bool_and(s.code='VALIDATED') then max(l.validated_at) end validated_at,
+            case when gx.id IS NOT NULL then CASE gs.code WHEN 'EXECUTED' THEN 'COMPLETED' WHEN 'FINISHED' THEN 'VALIDATED' ELSE gs.code END
+              when ps.code in ('PLANNED','CANCELLED') then ps.code
               when bool_and(s.code='VALIDATED') then 'VALIDATED'
               when bool_or(s.code='OBSERVED') then 'OBSERVED'
               when bool_and(s.code in ('COMPLETED','VALIDATED')) then 'COMPLETED'
@@ -41,13 +44,18 @@ public class InterventionQueriesRepository {
         ) a
         """;
     public static final String SELECT = """
-        select i.*,ps.code planning_status_code,a.*,
+        select i.*,ps.code planning_status_code,a.*,(gx.id IS NOT NULL) activity_workflow,COALESCE(gx.legacy_baseline_pending,FALSE) legacy_baseline_pending,gx.progress_percentage,gx.responsible_supervisor_user_id global_responsible,
           concat_ws(' · ', (select c.label from catalog_items c where c.id=i.intervention_class_item_id),
             (select c.label from catalog_items c where c.id=i.intervention_type_item_id)) activity_title,
-          (select count(*) from intervention_evidences e join intervention_locations el on el.id=e.intervention_location_id
-           where e.intervention_id=i.id and e.uploaded_at is null and e.deleted_at is null and el.deleted_at is null) pending_evidence_count
+          case when gx.id IS NOT NULL then
+            (select count(*) from activity_evidences e where e.intervention_id=i.id and e.uploaded_at is null and e.deleted_at is null)
+          else (select count(*) from intervention_evidences e join intervention_locations el on el.id=e.intervention_location_id
+           where e.intervention_id=i.id and e.uploaded_at is null and e.deleted_at is null and el.deleted_at is null) end pending_evidence_count
         """;
 
+    public boolean isActivity(Long id) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT exists(SELECT 1 FROM activity_executions WHERE intervention_id=:id AND deleted_at IS NULL)",Map.of("id",id),Boolean.class));
+    }
     public Page<InterventionSummaryResponse> findAll(Filter f,Long actor,String role,Pageable page) {
         var order=new ArrayList<Sort.Order>();
         for(var s:page.getSort()){
@@ -61,15 +69,16 @@ public class InterventionQueriesRepository {
         if(page.getSort().getOrderFor("id")==null)order.add(Sort.Order.desc("id"));
         var result=search.search(actor,role,f.classItemId(),f.typeItemId(),f.teamId(),f.assignedToUserId(),f.statusCode(),
             f.dateFrom(),f.dateTo(),f.zoneId(),f.placeId(),f.locationStatusCode(),f.greenElementId(),f.greenElementCode(),
-            f.incidentId(),f.active(),PageRequest.of(page.getPageNumber(),page.getPageSize(),Sort.by(order)));
+            f.incidentId(),f.active(),f.activityStatusCode(),PageRequest.of(page.getPageNumber(),page.getPageSize(),Sort.by(order)));
         return new PageImpl<>(result.getContent().stream().map(this::summary).toList(),page,result.getTotalElements());
     }
     private InterventionSummaryResponse summary(Map<String,Object> r){
         var d=new InterventionSummaryResponse();
         d.setActivityTitle((String)r.get("activity_title"));d.setId(number(r,"id"));d.setCode((String)r.get("code"));d.setVersion(number(r,"version"));
+        d.setLegacyBaselinePending(Boolean.TRUE.equals(r.get("legacy_baseline_pending")));
         d.setClassItemId(number(r,"intervention_class_item_id"));d.setTypeItemId(number(r,"intervention_type_item_id"));
         d.setPlanningStatusCode((String)r.get("planning_status_code"));d.setStatusCode((String)r.get("status_code"));
-        d.setTeamId(number(r,"team_id"));d.setAssignedToUserId(number(r,"assigned_to_user_id"));
+        d.setActivityWorkflow(Boolean.TRUE.equals(r.get("activity_workflow")));d.setProgressPercentage((java.math.BigDecimal)r.get("progress_percentage"));d.setTeamId(number(r,"team_id"));d.setAssignedToUserId(number(r,d.isActivityWorkflow()?"global_responsible":"assigned_to_user_id"));
         Object date=r.get("scheduled_date");d.setScheduledDate(date instanceof java.sql.Date sqlDate?sqlDate.toLocalDate():(java.time.LocalDate)date);
         d.setUsesCuttingMachinery(Boolean.TRUE.equals(r.get("uses_cutting_machinery")));
         d.setStartedAt(instant(r.get("started_at")));d.setCompletedAt(instant(r.get("completed_at")));d.setValidatedAt(instant(r.get("validated_at")));
@@ -95,9 +104,10 @@ public class InterventionQueriesRepository {
     }
     private <T extends InterventionSummaryResponse> T summary(ResultSet r,T d)throws SQLException{
         d.setActivityTitle(r.getString("activity_title"));d.setId(r.getLong("id"));d.setCode(r.getString("code"));d.setVersion(r.getLong("version"));
+        d.setLegacyBaselinePending(r.getBoolean("legacy_baseline_pending"));
         d.setClassItemId(r.getLong("intervention_class_item_id"));d.setTypeItemId(r.getObject("intervention_type_item_id",Long.class));
         d.setPlanningStatusCode(r.getString("planning_status_code"));d.setStatusCode(r.getString("status_code"));
-        d.setTeamId(r.getObject("team_id",Long.class));d.setAssignedToUserId(r.getObject("assigned_to_user_id",Long.class));
+        d.setActivityWorkflow(r.getBoolean("activity_workflow"));d.setProgressPercentage(r.getBigDecimal("progress_percentage"));d.setTeamId(r.getObject("team_id",Long.class));d.setAssignedToUserId(r.getObject(d.isActivityWorkflow()?"global_responsible":"assigned_to_user_id",Long.class));
         d.setScheduledDate(r.getDate("scheduled_date").toLocalDate());
         d.setUsesCuttingMachinery(r.getBoolean("uses_cutting_machinery"));
         // V025 timestamps persist UTC without a zone, as Hibernate does for Instant.

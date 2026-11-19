@@ -3,8 +3,8 @@ import { PlannedInterventionForm } from '@/components/interventions/PlannedInter
 import { plannedFrom } from '@/lib/planNavigation';
 import { incidentFilters, positiveIncidentId } from '@/lib/incidentNavigation';
 
-export const metadata = { title:'Nueva intervención · Hesperides' };
-export default async function NewInterventionPage({ searchParams }: { searchParams?: Promise<Record<string,string|string[]|undefined>> } = {}) {
+export const metadata = { title:'Nueva actividad · Hesperides' };
+export default async function NewInterventionPage({ searchParams }: { searchParams?: Promise<Record<string,string|string[]|undefined>> }) {
   const query=await searchParams ?? {};
   const filters=incidentFilters(new URLSearchParams({ search: typeof query.incidentSearch==='string' ? query.incidentSearch : '',
     status: typeof query.incidentStatus==='string' ? query.incidentStatus : '', page: typeof query.incidentPage==='string' ? query.incidentPage : '0' }));

@@ -24,7 +24,7 @@ describe('buildPageTrail', () => {
   });
 
   it('no repite el nombre cuando el grupo se llama igual que su pantalla', () => {
-    expect(labels('/intervenciones')).toEqual(['Inicio', 'Intervenciones']);
+    expect(labels('/intervenciones')).toEqual(['Inicio', 'Actividades']);
   });
 
   it('una subruta enlaza a su pantalla y termina en el código', () => {
@@ -38,7 +38,7 @@ describe('buildPageTrail', () => {
 
   it.each([
     ['/incidencias/nueva', 'Informar'],
-    ['/intervenciones/nueva', 'Nueva intervención'],
+    ['/intervenciones/nueva', 'Nueva actividad'],
     ['/lugares/nuevo', 'Nuevo lugar'],
     ['/intervenciones/planificacion/nueva', 'Nueva planificación'],
     ['/intervenciones/frecuencias/nueva', 'Nueva frecuencia'],
@@ -64,7 +64,7 @@ describe('buildPageTrail', () => {
 
   it('la pantalla puede dar el nombre real de un segmento', () => {
     expect(labels('/intervenciones/13/editar', { labels: { 13: 'INT-000013' } })).toEqual([
-      'Inicio', 'Intervenciones', 'INT-000013', 'Editar',
+      'Inicio', 'Actividades', 'INT-000013', 'Editar',
     ]);
   });
 

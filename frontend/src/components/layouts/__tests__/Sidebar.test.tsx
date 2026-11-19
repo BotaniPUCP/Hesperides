@@ -215,12 +215,12 @@ describe('Sidebar', () => {
   );
 
   describe('un grupo con un solo enlace visible no es un desplegable', () => {
-    it('Intervenciones es enlace directo para quien no planifica', () => {
+    it('Actividades es enlace directo para quien no planifica', () => {
       comoRol('SUPERVISOR', 'Supervisor');
       mockPathname = '/intervenciones/10';
       render(<Sidebar />);
 
-      expect(screen.getByRole('link', { name: 'Intervenciones' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('link', { name: 'Actividades' })).toHaveAttribute('aria-current', 'page');
       expect(screen.queryByRole('button', { name: /intervenciones/i })).not.toBeInTheDocument();
     });
 
@@ -230,7 +230,7 @@ describe('Sidebar', () => {
 
       const nav = screen.getByRole('navigation', { name: /principal/i });
       expect(within(nav).queryAllByRole('button').map((b) => b.textContent)).toEqual([expect.stringContaining('Reservas')]);
-      for (const nombre of ['Catálogo de lugares', 'Especies', 'Intervenciones', 'Ejemplares']) {
+      for (const nombre of ['Catálogo de lugares', 'Especies', 'Actividades', 'Ejemplares']) {
         expect(within(nav).getByRole('link', { name: nombre })).toBeInTheDocument();
       }
     });
@@ -240,16 +240,16 @@ describe('Sidebar', () => {
       render(<Sidebar />);
 
       expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Intervenciones' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Actividades' })).toBeInTheDocument();
       // SPEC-203 D-12: sin Frecuencias, a Administración solo le queda Usuarios, que pasa a ser directo.
       expect(screen.getByRole('link', { name: 'Usuarios' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /administración/i })).not.toBeInTheDocument();
     });
 
-    it('a quien planifica, Intervenciones es desplegable con Planificación, Conjuntos y Frecuencias (SPEC-203)', () => {
+    it('a quien planifica, Actividades es desplegable con Planificación, Conjuntos y Frecuencias (SPEC-203)', () => {
       render(<Sidebar />);
 
-      expect(screen.getByRole('button', { name: 'Intervenciones' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Actividades' })).toBeInTheDocument();
     });
 
     it('a ADMIN, Lugares sigue siendo desplegable porque tiene dos enlaces', () => {
@@ -262,7 +262,7 @@ describe('Sidebar', () => {
       comoRol('SUPERVISOR', 'Supervisor');
       const onNavigate = jest.fn();
       render(<Sidebar onNavigate={onNavigate} />);
-      const link = screen.getByRole('link', { name: 'Intervenciones' });
+      const link = screen.getByRole('link', { name: 'Actividades' });
       link.addEventListener('click', (event) => event.preventDefault());
 
       await userEvent.click(link);

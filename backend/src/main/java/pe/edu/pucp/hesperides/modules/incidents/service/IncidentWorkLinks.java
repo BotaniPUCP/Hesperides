@@ -44,7 +44,7 @@ public class IncidentWorkLinks {
                 if (IncidentRoles.manages(user.getRoleCode())) result.add(unavailable(link));
                 continue;
             }
-            if (!access.canRead(user, work.getTeamId(), work.getAssignedToUserId())) continue;
+            if (!access.canRead(user, work.getId(), work.getTeamId(), work.getAssignedToUserId())) continue;
             result.add(new LinkedInterventionResponse(link.getId(), work.getId(), work.getCode(), work.getDescription(),
                     work.getStatusCode(), work.getLocationCount(), work.getValidatedLocationCount()));
         }

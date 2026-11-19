@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button, Input, Select } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { createClientUuid } from '@/lib/client-uuid';
-import { interventionsApi, interventionError, type InterventionDetail, type InterventionOptions, type InterventionPlanning, type InterventionLocation } from '@/lib/interventions-api';
+import { activitiesApi, interventionsApi, interventionError, type ActivityOptions, type ActivityPlanning, type InterventionDetail, type InterventionOptions, type InterventionPlanning, type InterventionLocation } from '@/lib/interventions-api';
 import { incidentsApi } from '@/lib/incidents-api';
 import { incidentAfterCreationHref, type IncidentFilters } from '@/lib/incidentNavigation';
 import { todayLima } from '@/lib/local-date';
@@ -32,6 +32,8 @@ export function InterventionForm(props:FormProps) {
 }
 function MappedInterventionForm({ initial, fromIncident = null, returnFilters = { search:'',status:'',page:0 }, prefill }: FormProps) {
   const { user } = useAuth();
+  const globalActivity = !initial || initial.activityWorkflow === true;
+  const [responsible, setResponsible] = useState<number|null>(initial?.responsibleSupervisorUserId ?? null);
   const origin = initial ? null : fromIncident;
   const source = useRequest(origin ? `intervention-origin:${user?.id}:${origin}` : null, () => incidentsApi.detail(origin!));
   const [dirty,setDirty] = useState(false);
@@ -43,7 +45,7 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
   if(origin&&sourceAvailable&&source.data&&!originSeeded){
     const i=source.data.incident;setIncidents([{id:i.id,code:i.code,title:i.title,statusCode:i.status.code,active:i.active,searchKey:i.searchKey}]);setOriginSeeded(true);
   }
-  const [options, setOptions] = useState<InterventionOptions | null>(null);
+  const [options, setOptions] = useState<InterventionOptions | ActivityOptions | null>(null);
   const [classId, setClassId] = useState(initial?.classItemId ?? 0);
   const [typeId, setTypeId] = useState<number | null>(initial?.typeItemId ?? prefill?.typeId ?? null);
   const [date, setDate] = useState(() => initial?.scheduledDate ?? (prefill?.date || todayLima()));
@@ -82,10 +84,10 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [uncertain, setUncertain] = useState(false);
-  const attempt = useRef<{body:InterventionPlanning; key:string} | null>(null);
+  const attempt = useRef<{body:ActivityPlanning; key:string} | null>(null);
   useEffect(() => {
     let active = true;
-    interventionsApi.options().then(o => {
+    (globalActivity ? activitiesApi.options() : interventionsApi.options()).then(o => {
       if (active) {
         setOptions(o);
         // Desde la planificación llega el tipo: la clase es su madre.
@@ -110,7 +112,7 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
   const types = catalog('INTERVENTION_TYPE').filter(t => t.parentItemId === classId);
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!initial && !uncertain && date && date < todayLima()) {
+    if (!uncertain && date && date < todayLima() && (!initial || date!==initial.scheduledDate)) {
       setError('La fecha programada debe ser hoy o una fecha futura.'); return;
     }
     const findingOrigin=options?.catalogs.find(c => c.typeCode === 'INTERVENTION_ORIGIN' && c.code === 'FINDING');
@@ -126,13 +128,14 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
     setPending(true); setError('');
     let requestSent = false;
     try {
-      let result: InterventionDetail;
-      if (initial) result = await interventionsApi.update(initial.id, body);
+      let result: {id:number};
+      const activityBody:ActivityPlanning={planning:body,responsibleSupervisorUserId:responsible};
+      if (initial) result = globalActivity ? await activitiesApi.update(initial.id, activityBody) : await interventionsApi.update(initial.id, body);
       else {
-        if (!uncertain) attempt.current = {body, key:createClientUuid()};
+        if (!uncertain) attempt.current = {body:activityBody, key:createClientUuid()};
         const saved = attempt.current!;
         requestSent = true;
-        result = await interventionsApi.create(saved.body, saved.key);
+        result = await activitiesApi.create(saved.body, saved.key);
       }
       guard.navigate(origin ? incidentAfterCreationHref(origin,null,returnFilters) : `/intervenciones/${result.id}`);
     } catch (e) {
@@ -140,12 +143,15 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
       setError(interventionError(e));
     } finally { setPending(false); }
   };
-  if (!['ADMIN','COORDINADOR'].includes(user?.role.code ?? '')) return <p>No tienes permiso para planificar intervenciones.</p>;
-  return <div className="space-y-6"><PageHeader title={initial ? `Editar ${initial.activityTitle || 'actividad'}` : 'Nueva intervención'} />
+  if (!['ADMIN','COORDINADOR'].includes(user?.role.code ?? '')) return <p>No tienes permiso para planificar actividades.</p>;
+  const supervisors=options && 'supervisors' in options ? options.supervisors : [];
+  const responsibleOptions=supervisors.map(s=>({id:s.id,code:String(s.id),label:s.name}));
+  if(responsible!==null&&!supervisors.some(s=>s.id===responsible))responsibleOptions.push({id:responsible,code:String(responsible),label:'Responsable registrado (no disponible)'});
+  return <div className="space-y-6"><PageHeader title={initial ? `Editar ${initial.activityTitle || 'actividad'}` : 'Nueva actividad'} />
   <form className="surface-card space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
     {guard.dialog}
     {origin && <Link href={incidentAfterCreationHref(origin,null,returnFilters)} className="text-brand-600 underline">Volver a la incidencia</Link>}
-    {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.code ?? `incidencia #${origin}`}. Al guardar, la intervención queda vinculada y vuelves a la incidencia.</p>}
+    {origin && <p className="text-sm text-neutral-700">Origen: {source.data?.incident.code ?? `incidencia #${origin}`}. Al guardar, la actividad queda vinculada y vuelves a la incidencia.</p>}
     {origin && !sourceAvailable && <p role="alert" className="text-sm text-action-danger">{source.loading ? 'Verificando la incidencia de origen…' : source.errorMessage ?? 'La incidencia debe estar activa, abierta y disponible para tu cuenta.'}</p>}
     {error && <p role="alert" className="text-action-danger">{error}</p>}
     {uncertain && <p role="status">No se pudo confirmar el registro. Reintentar enviará exactamente los mismos datos para evitar duplicados. También puedes consultar el listado.</p>}
@@ -158,6 +164,9 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
         <Select id="work-class" label="Clase" value={String(classId)} options={catalog('INTERVENTION_CLASS').map(c => ({...c,code:String(c.id)}))} onChange={o => {setClassId(o?.id ?? 0);setTypeId(null);}} required />
         <Select id="work-type" label="Tipo" value={typeId === null ? null : String(typeId)} options={types.map(c => ({...c,code:String(c.id)}))} onChange={o => { setTypeId(o?.id ?? null); setMachinery(m => ({ ...m, checked: machineryAfterTypeChange(m, Boolean(o && types.find(t => t.id === o.id)?.suggestsCuttingMachinery)) })); }} disabled={!types.length} required={types.length > 0} />
         <label className="grid gap-1 text-sm">Fecha programada<input className="h-11 rounded-md border border-neutral-200 p-2" type="date" min={initial ? undefined : todayLima()} required value={date} onChange={e => setDate(e.target.value)} /></label>
+        {globalActivity && <Select id="responsible-supervisor" label="Capataz responsable (opcional)" value={responsible===null?null:String(responsible)} options={responsibleOptions}
+          placeholder="Sin responsable" clearable onChange={o=>setResponsible(o?.id??null)} disabled={!!initial&&user?.role.code!=='COORDINADOR'}
+          helperText="Si lo dejas vacío, se asigna al capataz que guarde el primer avance." />}
         <MachineryField date={date} checked={machinery.checked} onChange={checked => setMachinery({ checked, touched: true })} />
         {initial && initial.scheduledDate !== date && <Input id="reschedule-reason" label="Motivo de reprogramación" value={reason} onChange={setReason} maxLength={2000} required />}
       </div>
@@ -194,6 +203,6 @@ function MappedInterventionForm({ initial, fromIncident = null, returnFilters = 
         </section>}
       </>}
     </fieldset>
-    <Button type="submit" loading={pending} disabled={!options || !sourceAvailable || (!uncertain && (!selectionReady || !preview.data))}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : origin ? 'Guardar y volver a la incidencia' : 'Crear intervención'}</Button>
+    <Button type="submit" loading={pending} disabled={!options || !sourceAvailable || (!uncertain && (!selectionReady || !preview.data))}>{uncertain ? 'Reintentar registro' : initial ? 'Guardar cambios' : origin ? 'Guardar y volver a la incidencia' : 'Crear actividad'}</Button>
   </form></div>;
 }

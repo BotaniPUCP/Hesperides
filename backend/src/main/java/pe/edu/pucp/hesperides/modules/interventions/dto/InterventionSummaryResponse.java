@@ -13,6 +13,9 @@ public class InterventionSummaryResponse {
     private Long id;
     private String code;
     private String activityTitle;
+    private boolean activityWorkflow;
+    private boolean legacyBaselinePending;
+    private java.math.BigDecimal progressPercentage;
     private Long version;
     private Long classItemId;
     private Long typeItemId;

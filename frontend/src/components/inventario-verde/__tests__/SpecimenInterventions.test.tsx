@@ -17,7 +17,7 @@ beforeEach(()=>{jest.clearAllMocks();reader={id:1,role:{code:'SUPERVISOR'}};jest
 
 it('la ficha pública no solicita ni muestra trabajos privados sin sesión',()=>{
   reader=null;render(<SpecimenInterventions id={1} code="EV-000001"/>);
-  expect(interventionsApi.list).not.toHaveBeenCalled();expect(screen.queryByText('Intervenciones del ejemplar')).not.toBeInTheDocument();
+  expect(interventionsApi.list).not.toHaveBeenCalled();expect(screen.queryByText('Actividades del ejemplar')).not.toBeInTheDocument();
 });
 it('muestra cada actividad y conserva el ejemplar al paginar',async()=>{
   render(<SpecimenInterventions id={1} code="EV-000001"/>);
@@ -40,10 +40,10 @@ it('revalida el historial al recuperar el foco y conserva la página actual',asy
 it('distingue ausencia de trabajos autorizados de un fallo recuperable',async()=>{
   jest.mocked(interventionsApi.list).mockRejectedValueOnce(new ApiError(503,'Unavailable'));
   render(<SpecimenInterventions id={1} code="EV-000001"/>);
-  await screen.findByRole('alert');expect(screen.queryByText(/No hay intervenciones vinculadas/)).not.toBeInTheDocument();
+  await screen.findByRole('alert');expect(screen.queryByText(/No hay actividades vinculadas/)).not.toBeInTheDocument();
   jest.mocked(interventionsApi.list).mockResolvedValue({content:[],page:{number:0,size:20,totalElements:0,totalPages:0}});
   fireEvent.click(screen.getByRole('button',{name:'Reintentar historial'}));
-  expect(await screen.findByText('No hay intervenciones vinculadas a este ejemplar disponibles para tu cuenta.')).toBeInTheDocument();
+  expect(await screen.findByText('No hay actividades vinculadas a este ejemplar disponibles para tu cuenta.')).toBeInTheDocument();
 });
 it('descarta respuestas tardías del ejemplar anterior',async()=>{
   let resolveFirst!:(value:InterventionPage)=>void;
@@ -59,14 +59,14 @@ it('limpia el historial al cambiar de lector y al cerrar sesión',async()=>{
   jest.mocked(interventionsApi.list).mockResolvedValue({content:[],page:{number:0,size:20,totalElements:0,totalPages:0}});
   reader={id:2,role:{code:'OPERARIO'}};view.rerender(<SpecimenInterventions id={1} code="EV-000001"/>);
   expect(screen.queryByRole('link',{name:'INT-000001'})).not.toBeInTheDocument();
-  await screen.findByText(/No hay intervenciones vinculadas/);
+  await screen.findByText(/No hay actividades vinculadas/);
   reader=null;view.rerender(<SpecimenInterventions id={1} code="EV-000001"/>);
-  expect(screen.queryByText('Intervenciones del ejemplar')).not.toBeInTheDocument();
+  expect(screen.queryByText('Actividades del ejemplar')).not.toBeInTheDocument();
 });
 it('el listado conserva el ejemplar al filtrar por estado',async()=>{
   window.history.replaceState(null,'','/intervenciones?greenElementCode=EV-000001');
   render(<InterventionsList greenElementCode="EV-000001"/>);await screen.findByRole('link',{name:'Actividad sin clasificación'});
-  fireEvent.change(screen.getByLabelText('Estado'),{target:{value:'COMPLETED'}});
+  fireEvent.change(screen.getByLabelText('Estado'),{target:{value:'EXECUTED'}});
   // Elegir un estado muestra activas e inactivas: el filtro de actividad no viaja.
-  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(0,'COMPLETED','','','EV-000001',undefined));
+  await waitFor(()=>expect(interventionsApi.list).toHaveBeenLastCalledWith(0,'EXECUTED','','','EV-000001',undefined));
 });

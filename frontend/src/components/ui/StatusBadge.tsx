@@ -22,6 +22,8 @@ const STATUS_COLORS: Record<string, string> = {
   REPORTED: 'bg-status-reported-bg text-status-reported-fg',
   IN_REVIEW: 'bg-status-in-review-bg text-status-in-review-fg',
   IN_PROGRESS: 'bg-status-in-progress-bg text-status-in-progress-fg',
+  EXECUTED: 'bg-status-in-progress-bg text-status-in-progress-fg',
+  FINISHED: 'bg-status-resolved-bg text-status-resolved-fg',
   RESOLVED: 'bg-status-resolved-bg text-status-resolved-fg',
   CLOSED: 'bg-status-resolved-bg text-status-resolved-fg',
 };
@@ -29,6 +31,7 @@ const STATUS_COLORS: Record<string, string> = {
 const UNKNOWN_STATUS = 'bg-neutral-100 text-neutral-700';
 
 const STATUS_ICONS: Record<string,string> = {
+  EXECUTED:'✓', FINISHED:'✔',
   PLANNED:'◷', ASSIGNED:'→', IN_PROGRESS:'▶', COMPLETED:'✓', VALIDATED:'✔', OBSERVED:'!', CANCELLED:'×',
 };
 

@@ -20,12 +20,12 @@ export function InterventionPicker({ value, onChange, disabled }: {
   const query = text.trim();
   const found = useMemo(() => (query ? filterByText(list.items, query) : []), [list.items, query]);
   return <div className="space-y-2">
-    <Input id={`${name}-search`} label="Buscar intervención por código o descripción" size="lg" value={text}
+    <Input id={`${name}-search`} label="Buscar actividad por código o descripción" size="lg" value={text}
       maxLength={100} disabled={disabled} onChange={(v) => { setText(v); onChange(null); }} />
     <ListStatus typed={query !== ''} loaded={list.loaded} errorMessage={list.errorMessage} onRetry={list.reload} />
     {list.loaded && query && found.length === 0 && <p className="text-sm text-neutral-700">Sin coincidencias. Las canceladas no aparecen.</p>}
     {found.length > 0 && <fieldset className="max-h-64 space-y-2 overflow-auto">
-      <legend className="sr-only">Intervenciones encontradas</legend>
+      <legend className="sr-only">Actividades encontradas</legend>
       {found.map((w) => <label key={w.id} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-md border border-neutral-200 px-3 text-sm">
         <input type="radio" name={name} checked={value === w.id} disabled={disabled} onChange={() => onChange(w.id)} />
         <span><span className="font-medium">{w.code}</span> · {w.description || 'Sin descripción'}</span>

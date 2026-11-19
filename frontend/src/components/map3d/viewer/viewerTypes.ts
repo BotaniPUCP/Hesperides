@@ -40,6 +40,8 @@ export interface ViewerStart {
 
 /** Las operaciones que la interfaz React ordena al visor. */
 export interface Viewer extends SequenceHooks {
+  /** Optional editor marks; absent on maps that do not display execution progress. */
+  setTargetMarks?: (marks:import('./targetBadges').TargetMarks) => void;
   /** Optional restrictions and reference outline; unused by the general map. */
   setEligibleSections?: (codes:readonly string[]|null) => void;
   setReferenceOutline?: (polygons:Polygon[],focus:boolean) => void;

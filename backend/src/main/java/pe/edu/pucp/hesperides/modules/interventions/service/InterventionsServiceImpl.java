@@ -68,8 +68,8 @@ public class InterventionsServiceImpl implements InterventionsService {
     private void role(User u,String... allowed){
         if(!Arrays.asList(allowed).contains(u.getRoleCode()))throw new AccessDeniedException("Action not allowed for this role");
     }
-    private void scope(User u,Long team,Long assignee){
-        access.requireRead(u,team,assignee);
+    private void scope(User u,Long id,Long team,Long assignee){
+        access.requireRead(u,id,team,assignee);
     }
     @Override public Page<InterventionSummaryResponse> findAll(Filter f,Pageable p){
         var u=actor();
@@ -85,8 +85,8 @@ public class InterventionsServiceImpl implements InterventionsService {
     }
     private InterventionDetailResponse detail(Long id,User u){
         var d=queries.detail(id).orElseThrow(()->new ResourceNotFoundException("Intervention not found"));
-        scope(u,d.getTeamId(),d.getAssignedToUserId());
-        d.setResponsibleSupervisorUserId(references.responsibleSupervisor(d.getTeamId()));
+        scope(u,id,d.getTeamId(),d.getAssignedToUserId());
+        d.setResponsibleSupervisorUserId(d.isActivityWorkflow()?d.getAssignedToUserId():references.responsibleSupervisor(d.getTeamId()));
         boolean dateAvailable=schedule.canExecute(d.getScheduledDate());
         d.setExecutionBlockedUntil(dateAvailable?null:d.getScheduledDate());
         d.setIncidentIntegrationAvailable(true);
@@ -260,8 +260,17 @@ public class InterventionsServiceImpl implements InterventionsService {
         submissions.saveAndFlush(s);return new Creation(detail(i.getId(),u),false);
     }
     @Override @Transactional public InterventionDetailResponse update(Long id,Planning r){
+        return updatePlan(id,r,false);
+    }
+    @Override @Transactional public InterventionDetailResponse updateActivityPlanning(Long id,Planning r){
+        return updatePlan(id,r,true);
+    }
+    private InterventionDetailResponse updatePlan(Long id,Planning r,boolean global){
         validate(r);
-        var u=actor();var i=locked(id,u);role(u,"ADMIN","COORDINADOR");version(i,r.version());editable(i);
+        var u=actor();role(u,"ADMIN","COORDINADOR");
+        var i=global?interventions.findForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Activity not found")):locked(id,u);
+        if(global && !queries.isActivity(id))throw new ResourceNotFoundException("Activity not found");
+        version(i,r.version());editable(i);
         var before=snapshot(i);var oldDate=i.getScheduledDate();
         boolean rescheduled=!Objects.equals(oldDate,r.scheduledDate());
         if(rescheduled&&(r.rescheduleReason()==null||r.rescheduleReason().isBlank()))throw new BusinessRuleException("Reschedule reason is required");
@@ -493,7 +502,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         // Authorize with a projection first, without caching a stale managed aggregate.
         // The nonblocking submit lock must precede any wait on the aggregate row.
         var visible = queries.detail(id).orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
-        scope(user, visible.getTeamId(), visible.getAssignedToUserId());
+        scope(user,id, visible.getTeamId(), visible.getAssignedToUserId());
         if (key == null) throw new ValidationException("Idempotency-Key UUID is required");
         if (!references.lockEvidenceSubmission(user.getId(), key, request.clientReference())) {
             throw new ConflictException("Evidence announcement is in progress");
@@ -628,7 +637,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         var user = actor();
         var intervention = interventions.findById(id).filter(i -> !i.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
-        scope(user, intervention.getTeamId(), intervention.getAssignedToUserId());
+        scope(user,id, intervention.getTeamId(), intervention.getAssignedToUserId());
         var evidence = evidence(id, evidenceId);
         if (locations.findById(evidence.getInterventionLocationId()).filter(l -> !l.isDeleted()).isEmpty()) {
             throw new ResourceNotFoundException("Evidence location not found");
@@ -709,7 +718,9 @@ public class InterventionsServiceImpl implements InterventionsService {
 
     private Intervention locked(Long id,User u){
         var i=interventions.findForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Intervention not found"));
-        scope(u,i.getTeamId(),i.getAssignedToUserId());return i;
+        scope(u,id,i.getTeamId(),i.getAssignedToUserId());
+        if(queries.isActivity(id))throw new ConflictException("Use the global activities API for this work");
+        return i;
     }
     private void version(Intervention i,Long version){
         if(version==null)throw new ValidationException("Version is required");

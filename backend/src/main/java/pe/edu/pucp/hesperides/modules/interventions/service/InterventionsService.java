@@ -19,6 +19,7 @@ public interface InterventionsService {
     InterventionZoneSelections.PreviewResponse previewZones(InterventionZoneSelections.Preview request);
     Creation create(Planning request, UUID key);
     InterventionDetailResponse update(Long id, Planning request);
+    InterventionDetailResponse updateActivityPlanning(Long id, Planning request);
     InterventionDetailResponse assign(Long id, Assignment request);
     InterventionDetailResponse cancel(Long id, Cancellation request);
     InterventionDetailResponse start(Long id, Long locationId, Start request);
