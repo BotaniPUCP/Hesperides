@@ -1,5 +1,6 @@
 'use client';
 
+import { HomeCalendar } from '@/components/homeCalendar/HomeCalendar';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { PlanningAlerts } from '@/components/planning/PlanningAlerts';
 import { Card } from '@/components/ui';
@@ -18,7 +19,8 @@ export default function HomePage() {
         title={`Hola, ${user?.fullName ?? ''}`}
         description={<>Sesión iniciada como <strong>{user?.email}</strong> con el rol <strong>{user?.role.label}</strong>.</>}
       />
-      {/* SPEC-203 §5.7: lo preventivo atrasado o próximo, antes que cualquier otra cosa. */}
+      {/* SPEC-121: el calendario de eventos y reservas va primero; los avisos de SPEC-203 §5.7, después. */}
+      <HomeCalendar />
       <PlanningAlerts />
       <Card>
         <p className="text-sm text-neutral-700">
