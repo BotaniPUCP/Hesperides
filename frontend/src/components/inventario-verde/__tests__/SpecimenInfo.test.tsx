@@ -25,6 +25,7 @@ it('al dar de baja vuelve al historial usando el ID de la generación retirada',
 
   await user.click(screen.getByRole('button', { name: 'Dar de baja' }));
   await user.type(screen.getByLabelText('Motivo de la baja'), 'Retiro en campo');
+  await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Continuar →' }));
   await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Dar de baja' }));
 
   expect(inventarioVerdeApi.deactivateSpecimen).toHaveBeenCalledWith('EV-000001', 'Retiro en campo');

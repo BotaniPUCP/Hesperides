@@ -51,9 +51,12 @@ export function SpeciesCard({ species }: SpeciesCardProps) {
             />
           )}
 
-          {/* Badge de tipo de vegetación unificado con estilo neutral */}
-          <div className="absolute top-2.5 right-2.5 shadow-2xs">
-            <Badge label={species.vegetationTypeName} color="neutral" />
+          {/* Badge de tipo de vegetación unificado con contraste garantizado sobre foto o placeholder */}
+          <div className="absolute top-2.5 right-2.5">
+            <Badge
+              label={species.vegetationTypeName}
+              className="bg-neutral-0/95 text-neutral-800 border border-neutral-200/90 backdrop-blur-xs shadow-2xs font-medium"
+            />
           </div>
         </div>
 

@@ -148,8 +148,11 @@ export function SpecimenCard({
           )}
 
           {/* Badge de tipo de vegetación en la esquina superior derecha, consistente con SpeciesCard */}
-          <div className="absolute top-2.5 right-2.5 shadow-2xs">
-            <Badge label={typeBadgeLabel} color="neutral" />
+          <div className="absolute top-2.5 right-2.5">
+            <Badge
+              label={typeBadgeLabel}
+              className="bg-neutral-0/95 text-neutral-800 border border-neutral-200/90 backdrop-blur-xs shadow-2xs font-medium"
+            />
           </div>
         </div>
 

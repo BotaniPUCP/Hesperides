@@ -273,7 +273,7 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
         </div>
       </Card>
 
-      {imp.kind === 'specimens' && imp.confirmationSummary && (
+      {(imp.kind === 'specimens' || imp.kind === 'species') && imp.confirmationSummary && (
         <ConfirmarImportacionModal
           summary={imp.confirmationSummary}
           isOpen={imp.confirmationOpen}
@@ -281,6 +281,7 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
           error={imp.error}
           onBack={imp.volverARevision}
           onConfirm={() => void imp.confirmarResumen()}
+          kind={imp.kind}
         />
       )}
     </>

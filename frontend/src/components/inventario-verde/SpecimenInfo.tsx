@@ -210,9 +210,13 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
 
                   {/* Nombre común y científico */}
                   <div className="flex items-baseline gap-2 flex-wrap mt-0.5">
-                    <span className="text-lg sm:text-xl font-bold text-neutral-800 leading-tight">
+                    <Link
+                      href={`/inventario-verde/especies/${species.slug}`}
+                      className="text-lg sm:text-xl font-bold text-neutral-900 leading-tight hover:text-brand-700 hover:underline transition-colors"
+                      title={`Ver ficha botánica de ${species.commonName}`}
+                    >
                       {species.commonName}
-                    </span>
+                    </Link>
                     <span className="text-neutral-300 font-light select-none">·</span>
                     <span className="text-sm italic text-neutral-500 font-serif">
                       {species.scientificName}
@@ -312,13 +316,6 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                     </Button>
                   </div>
                 )}
-                {canDeactivate && (
-                  <div className="w-full sm:w-auto">
-                    <Button variant="danger" size="sm" fullWidth onClick={() => setDeactivationOpen(true)}>
-                      Dar de baja
-                    </Button>
-                  </div>
-                )}
                 {!isRetired && (
                   <Link href={`/mapa?codigo=${encodeURIComponent(specimen.code)}`} className="w-full sm:w-auto">
                     <Button
@@ -334,6 +331,13 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                       Ver en Mapa 3D
                     </Button>
                   </Link>
+                )}
+                {canDeactivate && (
+                  <div className="w-full sm:w-auto sm:pt-1">
+                    <Button variant="danger" size="sm" fullWidth onClick={() => setDeactivationOpen(true)}>
+                      Dar de baja
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
@@ -482,7 +486,9 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                 }
               >
                 <span>
-                  {specimen.elementTypeName ?? (specimen.elementTypeCode === 'GROUP' ? 'Agrupación' : 'Ejemplar individual')}
+                  {specimen.elementTypeCode === 'GROUP'
+                    ? `Agrupación (${specimen.quantity} ${specimen.quantity === 1 ? 'ejemplar' : 'ejemplares'})`
+                    : (specimen.elementTypeName ?? 'Ejemplar individual')}
                 </span>
               </DetailPill>
 

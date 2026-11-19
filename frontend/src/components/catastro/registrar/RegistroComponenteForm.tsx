@@ -18,7 +18,15 @@ const NOMBRE: Record<FeatureForm['kind'], { uno: string; mismo: string }> = {
 };
 
 /** Registro de un tacho o bebedero (SPEC-103 §3): dónde está, lo propio de su tipo y una foto. */
-export function RegistroComponenteForm({ kind, onDirtyChange }: { kind: FeatureForm['kind']; onDirtyChange?: (sinGuardar: boolean) => void }) {
+export function RegistroComponenteForm({
+  kind,
+  onDirtyChange,
+  onCancel,
+}: {
+  kind: FeatureForm['kind'];
+  onDirtyChange?: (sinGuardar: boolean) => void;
+  onCancel?: () => void;
+}) {
   const r = useRegistroComponente(kind);
   // La pantalla decide si avisa al salir: también al cambiar qué se registra.
   useEffect(() => onDirtyChange?.(r.sinGuardar), [r.sinGuardar, onDirtyChange]);
@@ -80,7 +88,16 @@ export function RegistroComponenteForm({ kind, onDirtyChange }: { kind: FeatureF
           onConfirmar={() => r.enviar(true)} onRevisar={r.descartarDuplicado} />
       )}
       {r.error && <p role="alert" className="text-sm text-action-danger">{r.error}</p>}
-      {!r.duplicado && <Button type="submit" loading={r.enviando}>Registrar {nombre.uno}</Button>}
+      {!r.duplicado && (
+        <div className="flex items-center gap-3 pt-2">
+          <Button type="submit" loading={r.enviando}>Registrar {nombre.uno}</Button>
+          {onCancel && (
+            <Button variant="ghost" type="button" onClick={onCancel} disabled={r.enviando}>
+              Cancelar
+            </Button>
+          )}
+        </div>
+      )}
     </form>
   );
 }
