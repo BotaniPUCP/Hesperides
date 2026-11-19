@@ -140,17 +140,15 @@ describe('PlaceForm', () => {
     await waitFor(() => expect(update.mock.calls[0][1].aliases).toEqual(['CIA']));
   });
 
-  it('no permite agregar alias con espacios ni alias duplicados ignorando mayúsculas y tildes', () => {
+  it('acepta alias de varias palabras y rechaza duplicados ignorando mayúsculas, tildes y espacios', () => {
     render(<PlaceForm />);
 
-    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: 'dos palabras' } });
-    expect(screen.getByLabelText('Alias')).toHaveValue('');
-    expect(screen.getByRole('button', { name: 'Agregar alias' })).toBeDisabled();
-
-    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: 'Fisica' } });
+    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: 'Física nueva' } });
+    expect(screen.getByLabelText('Alias')).toHaveValue('Física nueva');
     fireEvent.click(screen.getByRole('button', { name: 'Agregar alias' }));
-    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: 'física' } });
+    expect(screen.getByRole('button', { name: 'Quitar alias Física nueva' })).toBeInTheDocument();
 
+    fireEvent.change(screen.getByLabelText('Alias'), { target: { value: '  fisica   NUEVA ' } });
     expect(screen.getByRole('button', { name: 'Agregar alias' })).toBeDisabled();
   });
 

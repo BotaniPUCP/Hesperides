@@ -50,15 +50,7 @@ describe('PlaceWorkbookExportScreen', () => {
     fireEvent.change(screen.getByLabelText('Dentro de'), { target: { value: 'LUG-0001' } });
     fireEvent.change(screen.getByLabelText('Creado desde'), { target: { value: '2026-01-01' } });
     fireEvent.change(screen.getByLabelText('Creado hasta'), { target: { value: '2026-12-31' } });
-    const coordinates = screen.getAllByRole('spinbutton');
-    fireEvent.change(coordinates[0], { target: { value: '-12.1' } });
-    fireEvent.change(coordinates[1], { target: { value: '-77.2' } });
-    fireEvent.change(coordinates[2], { target: { value: '-12.1' } });
-    fireEvent.change(coordinates[3], { target: { value: '-77.1' } });
-    fireEvent.change(coordinates[4], { target: { value: '-12.0' } });
-    fireEvent.change(coordinates[5], { target: { value: '-77.1' } });
-    fireEvent.click(screen.getByLabelText('Exportar perspectivas con su punto cardinal, ubicación, rumbo e imagen'));
-    fireEvent.click(screen.getByLabelText('Espalda'));
+    fireEvent.click(screen.getByLabelText('Exportar todas las perspectivas con su punto cardinal, ubicación, rumbo e imagen'));
     fireEvent.click(screen.getByRole('button', { name: 'Descargar Excel' }));
 
     await waitFor(() => expect(exportPlaces).toHaveBeenCalledWith({
@@ -67,24 +59,8 @@ describe('PlaceWorkbookExportScreen', () => {
       parentCode: 'LUG-0001',
       createdFrom: '2026-01-01',
       createdTo: '2026-12-31',
-      point1Lat: -12.1,
-      point1Lon: -77.2,
-      point2Lat: -12.1,
-      point2Lon: -77.1,
-      point3Lat: -12,
-      point3Lon: -77.1,
       includePerspectives: true,
-      perspectiveSides: ['FRONT', 'SIDE'],
     }));
     expect(click).toHaveBeenCalled();
-  });
-
-  it('no envía una zona si falta alguna coordenada de sus tres puntos', async () => {
-    render(<PlaceWorkbookExportScreen />);
-    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '-12.1' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Descargar Excel' }));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('Completa latitud y longitud de los tres puntos');
-    expect(exportPlaces).not.toHaveBeenCalled();
   });
 });
