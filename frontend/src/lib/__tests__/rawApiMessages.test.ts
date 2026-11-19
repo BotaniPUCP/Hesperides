@@ -18,6 +18,8 @@ const ALLOWED = new Set([
   // status 0: el mensaje de red ya viene redactado en español desde api.ts.
   'components/auth/LoginForm.tsx',
   // Comparan el mensaje con una constante para decidir qué hacer; no lo muestran.
+  'components/interventions/ActivityPhotos.tsx',
+  'components/interventions/ActivityProgressForm.tsx',
   'components/interventions/InterventionDetail.tsx',
   'components/interventions/InterventionForm.tsx',
   'components/users/ChangePasswordForm.tsx',
