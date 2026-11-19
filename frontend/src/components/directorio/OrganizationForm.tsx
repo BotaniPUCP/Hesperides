@@ -64,7 +64,7 @@ export function OrganizationForm({ organization, initialName = '', onClose, onSa
 
   return (
       <div className="space-y-4">
-        <Input id="org-name" label="Nombre" value={name} onChange={setName} required maxLength={200} autoFocus />
+        <Input id="org-name" label="Nombre de organización" value={name} onChange={setName} required maxLength={200} autoFocus />
         <SimilarList items={similar.map((s) => ({ code: s.code, title: s.name }))}
           renderAction={(item) => renderSimilarAction?.(item.code, item.title)} />
         <fieldset>

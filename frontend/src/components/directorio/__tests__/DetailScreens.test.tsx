@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ContactDetail, OrganizationDetail } from '@shared/types';
 import { directoryApi } from '@/lib/directory-api';
+import { PageFrame } from '@/components/layouts/PageFrame';
 import { ContactDetailScreen } from '../ContactDetailScreen';
 import { OrganizationDetailScreen } from '../OrganizationDetailScreen';
 
@@ -70,6 +71,18 @@ describe('OrganizationDetailScreen', () => {
     expect(await screen.findByText('Dada de baja')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Editar|Dar de baja/ })).not.toBeInTheDocument();
   });
+
+  it('el breadcrumb dice el nombre de la organización, no su código', async () => {
+    window.history.pushState({}, '', '/directorio/ORG-0012');
+    render(
+      <PageFrame><OrganizationDetailScreen code="ORG-0012" /></PageFrame>
+    );
+
+    expect(await screen.findByRole('heading', { name: 'OIE' })).toBeInTheDocument();
+    const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    await waitFor(() => expect(screen.getAllByText('OIE').length).toBeGreaterThan(1));
+    expect(within(breadcrumb).queryByText('ORG-0012')).not.toBeInTheDocument();
+  });
 });
 
 describe('ContactDetailScreen', () => {
@@ -87,5 +100,17 @@ describe('ContactDetailScreen', () => {
 
     await screen.findByRole('heading', { name: 'Juan Diego Villasante' });
     expect(screen.queryByRole('button', { name: /Editar|Dar de baja/ })).not.toBeInTheDocument();
+  });
+
+  it('el breadcrumb dice el nombre del contacto, no su código', async () => {
+    window.history.pushState({}, '', '/directorio/contactos/CON-0007');
+    render(
+      <PageFrame><ContactDetailScreen code="CON-0007" /></PageFrame>
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Juan Diego Villasante' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('Juan Diego Villasante').length).toBeGreaterThan(1));
+    const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(within(breadcrumb).queryByText('CON-0007')).not.toBeInTheDocument();
   });
 });

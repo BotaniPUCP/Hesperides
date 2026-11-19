@@ -6,7 +6,7 @@ import { Button, Input } from '@/components/ui';
 import { useSimilarContacts } from '@/hooks/useDirectory';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { directoryApi } from '@/lib/directory-api';
-import { OrganizationPicker } from './OrganizationPicker';
+import { OrganizationAddRow } from './OrganizationAddRow';
 import { SimilarList } from './SimilarList';
 
 export interface ContactPick {
@@ -37,7 +37,7 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
   const [roles, setRoles] = useState<Record<string, string>>(() =>
     Object.fromEntries((contact ? contact.organizations.filter((o) => o.active) : initialOrganizations)
       .filter((o) => o.role).map((o) => [o.code, o.role!])));
-  /** Se abre con el «+»: el buscador de organizaciones solo aparece cuando hace falta. */
+  /** Se abre con el «+»: la fila de alta solo aparece cuando hace falta. */
   const [addingOrganization, setAddingOrganization] = useState(false);
   const [extension, setExtension] = useState(contact?.extension ?? '');
   const [mobile, setMobile] = useState(contact?.mobile ?? '');
@@ -46,9 +46,10 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
   const [error, setError] = useState<string | null>(null);
   const similar = useSimilarContacts(fullName, contact === null);
 
-  const addOrganization = (o: OrganizationRef | null) => {
+  const addOrganization = (o: OrganizationRef | null, role: string | null = null) => {
     if (!o) return;
     setOrganizations((current) => (current.some((c) => c.code === o.code) ? current : [...current, o]));
+    if (role) setRoles((current) => ({ ...current, [o.code]: role }));
     setAddingOrganization(false);
   };
 
@@ -79,14 +80,14 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
 
   return (
       <div className="space-y-4">
-        <Input id="contact-name" label="Nombre completo" value={fullName} onChange={setFullName} required
+        <Input id="contact-name" label="Nombre completo de contacto" value={fullName} onChange={setFullName} required
           maxLength={200} autoFocus />
         <SimilarList
           items={similar.map((s) => ({ code: s.code, title: s.fullName,
             detail: s.organizations.map((o) => o.name).join(', ') }))}
           renderAction={(item) => renderSimilarAction?.(similar.find((s) => s.code === item.code) as ContactSummary)} />
         <div className="space-y-2">
-          <p className="text-sm font-medium text-neutral-900">Organizaciones</p>
+          <p className="text-sm font-medium text-neutral-900">Seleccionar la organización a la que pertenece el contacto</p>
           <ul className="flex flex-wrap items-center gap-2">
             {organizations.map((o) => (
               <li key={o.code} className="flex items-center gap-1 rounded-full bg-neutral-100 pl-3 pr-1 py-1 text-sm">
@@ -99,23 +100,30 @@ export function ContactForm({ contact, initialName = '', initialOrganizations = 
                   maxLength={100}
                   className="w-36 rounded-full border border-neutral-200 bg-neutral-0 px-2 py-0.5 text-xs text-neutral-900 placeholder:text-neutral-500"
                 />
-                <button type="button" aria-label={`Quitar ${o.name}`} className="px-1 text-neutral-600 hover:text-neutral-900"
-                  onClick={() => setOrganizations((current) => current.filter((c) => c.code !== o.code))}>×</button>
+                <button type="button" aria-label={`Quitar ${o.name}`} title={`Quitar ${o.name}`}
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-200 hover:text-neutral-900"
+                  onClick={() => setOrganizations((current) => current.filter((c) => c.code !== o.code))}>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </li>
             ))}
-            {/* El «+» abre el buscador de organizaciones; la alta en el mismo formulario vive dentro (§5.2). */}
-            <li>
-              <button type="button" aria-label="Añadir organización" aria-expanded={addingOrganization}
-                title="Agregar organización"
-                onClick={() => setAddingOrganization((current) => !current)}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-300 bg-neutral-0 text-lg leading-none text-neutral-700 hover:border-neutral-500 hover:text-neutral-900">
-                +
-              </button>
-            </li>
+            {/* El «+» vuelve a abrir la fila de alta; con la lista vacía la fila se ve sola (§5.2). */}
+            {organizations.length > 0 && (
+              <li>
+                <button type="button" aria-label="Añadir organización" aria-expanded={addingOrganization}
+                  title="Agregar organización"
+                  onClick={() => setAddingOrganization((current) => !current)}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-neutral-300 bg-neutral-0 text-lg leading-none text-neutral-700 hover:border-neutral-500 hover:text-neutral-900">
+                  +
+                </button>
+              </li>
+            )}
           </ul>
-          {addingOrganization && (
-            <OrganizationPicker id="contact-org" label="Agregar organización" value={null} autoFocusSearch
-              onChange={addOrganization} />
+          {(organizations.length === 0 || addingOrganization) && (
+            <OrganizationAddRow onAdd={addOrganization} />
           )}
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

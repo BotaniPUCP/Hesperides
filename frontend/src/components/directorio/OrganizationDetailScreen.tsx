@@ -7,6 +7,7 @@ import type { OrganizationDetail } from '@shared/types';
 import { Button, Card } from '@/components/ui';
 import { useCanMaintainDirectory, useOrganization } from '@/hooks/useDirectory';
 import { directoryApi } from '@/lib/directory-api';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 import { ContactFormModal } from './ContactFormModal';
 import { DeactivateAction } from './DeactivateAction';
 import { DetailFrame, DetailHeader, Field, InactiveBadge } from './DetailParts';
@@ -27,6 +28,7 @@ function OrganizationView({ organization, reload }: { organization: Organization
   const router = useRouter();
   const [editing, setEditing] = useState(0);
   const [addingContact, setAddingContact] = useState(0);
+  usePageTrail({ labels: { [organization.code]: organization.name } });
   const ref = { code: organization.code, name: organization.name, active: organization.active };
 
   return (
