@@ -49,14 +49,7 @@ export interface PlaceWorkbookExportFilters {
   parentCode: string | null;
   createdFrom: string | null;
   createdTo: string | null;
-  point1Lat: number | null;
-  point1Lon: number | null;
-  point2Lat: number | null;
-  point2Lon: number | null;
-  point3Lat: number | null;
-  point3Lon: number | null;
   includePerspectives: boolean;
-  perspectiveSides: string[];
 }
 
 /** Las fotos llegan como ruta de la API («/files/places/…»); el navegador necesita la dirección entera. */

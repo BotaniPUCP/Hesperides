@@ -140,6 +140,7 @@ export function focusPickedOutline(viewer: Viewer, data: SceneData, picked: Pick
 
   const coordinates = outline.geometry?.coordinates;
   if (outline.geometry?.type === 'Point' && coordinates) {
+    viewer.setPinLatLon?.(coordinates[1], coordinates[0]);
     viewer.focusLatLon(coordinates[1], coordinates[0]);
     return;
   }

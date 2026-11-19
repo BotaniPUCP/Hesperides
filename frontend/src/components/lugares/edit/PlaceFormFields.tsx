@@ -37,11 +37,15 @@ export function PlaceFormFields({ values, onChange, excludeCode }: PlaceFormFiel
   const parents = places
     .filter((p) => p.code !== excludeCode)
     .map((p, i) => ({ id: i + 1, code: p.code, label: p.parent ? `${p.name} · ${p.parent.name}` : p.name }));
-  const aliasKey = (alias: string) => alias.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
+  const aliasKey = (alias: string) => alias
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ');
   const aliasInputIsDuplicate = values.aliases.some((alias) => aliasKey(alias) === aliasKey(aliasInput.trim()));
   const canAddAlias = aliasInput.trim().length > 0
     && aliasInput.trim().length <= 200
-    && !/\s/.test(aliasInput.trim())
     && !aliasInputIsDuplicate;
   const addAlias = () => {
     if (!canAddAlias) return;
@@ -52,7 +56,7 @@ export function PlaceFormFields({ values, onChange, excludeCode }: PlaceFormFiel
     set({ aliases: values.aliases.filter((_, aliasIndex) => aliasIndex !== index) });
   };
   const replaceAlias = (index: number, value: string) => {
-    if (/\s/.test(value) || value.length > 200) return;
+    if (value.length > 200) return;
     if (values.aliases.some((alias, aliasIndex) => aliasIndex !== index && aliasKey(alias) === aliasKey(value.trim()))) return;
     set({ aliases: values.aliases.map((alias, aliasIndex) => aliasIndex === index ? value : alias) });
   };
@@ -106,10 +110,8 @@ export function PlaceFormFields({ values, onChange, excludeCode }: PlaceFormFiel
               id="lugar-alias"
               label="Alias"
               value={aliasInput}
-              onChange={(value) => {
-                if (!/\s/.test(value)) setAliasInput(value);
-              }}
-              placeholder="Escribe un alias de una palabra"
+              onChange={setAliasInput}
+              placeholder="Escribe un alias"
               helperText="Agrega cada alias por separado; la búsqueda también los encuentra."
               maxLength={200}
             />
@@ -125,21 +127,24 @@ export function PlaceFormFields({ values, onChange, excludeCode }: PlaceFormFiel
         </div>
 
         {values.aliases.length > 0 && (
-          <ul aria-label="Alias agregados" className="flex flex-wrap gap-2">
-            {values.aliases.map((alias, index) => (
-              <li key={`${alias}-${index}`} className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 py-1 pl-3 pr-1 text-sm text-brand-800">
-                <span>{alias}</span>
-                <button
-                  type="button"
-                  aria-label={`Quitar alias ${alias}`}
-                  onClick={() => removeAlias(index)}
-                  className="rounded-full px-1.5 font-semibold hover:bg-brand-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600"
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div>
+            <ul aria-label="Alias agregados" className="flex flex-wrap gap-2">
+              {values.aliases.slice(0, 5).map((alias, index) => (
+                <li key={`${alias}-${index}`} className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 py-1 pl-3 pr-1 text-sm text-blue-800">
+                  <span>{alias}</span>
+                  <button
+                    type="button"
+                    aria-label={`Quitar alias ${alias}`}
+                    onClick={() => removeAlias(index)}
+                    className="rounded-full px-1.5 font-semibold hover:bg-blue-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-600"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {values.aliases.length > 5 && <p aria-label={`${values.aliases.length - 5} alias más`} className="mt-1 text-sm text-neutral-500">…</p>}
+          </div>
         )}
       </div>
 
