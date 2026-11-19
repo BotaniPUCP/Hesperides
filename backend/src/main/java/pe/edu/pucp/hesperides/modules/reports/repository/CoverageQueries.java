@@ -24,6 +24,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CoverageQueries {
 
+    /** A work's last execution in a section, as a civil date (D-02). */
+    private static final String LAST_DATE = ReportSql.civilDateOfUtc("max(l.completed_at)");
+
     private final NamedParameterJdbcTemplate jdbc;
 
     /** A section of the denominator, with its current sector and area (D-12). */
@@ -89,16 +92,23 @@ public class CoverageQueries {
      */
     public List<Attendance> attendance(ReportFilter f) {
         var params = ReportSql.periodParams(f);
-        String lastDate = ReportSql.civilDateOfUtc("max(l.completed_at)");
-        String sql = "with pieces as (select i.id work_id, " + ReportSql.sectionOf("l") + " section_id, l.completed_at"
+        String sql = attendanceSql(f, params) + " having " + LAST_DATE + " <= :to";
+        return jdbc.query(sql, params, (rs, n) -> new Attendance(
+                rs.getLong("section_id"), rs.getLong("work_id"), rs.getObject("attended_on", LocalDate.class)));
+    }
+
+    /**
+     * Approved work per section ({@code work_id}, {@code section_id},
+     * {@code attended_on}), ready for a {@code having} clause. The section lists
+     * and the works behind each of their rows (SPEC-202 D-20) share it.
+     */
+    static String attendanceSql(ReportFilter f, MapSqlParameterSource params) {
+        return "with pieces as (select i.id work_id, " + ReportSql.sectionOf("l") + " section_id, l.completed_at"
                 + " from interventions i join intervention_locations l on l.intervention_id=i.id and l.deleted_at is null "
                 + ReportSql.sectionJoins("l")
                 + " where " + FinalApprovalSql.PREDICATE + ReportSql.workFilters(f, params) + ")"
-                + " select l.work_id, l.section_id, " + lastDate + " attended_on from pieces l"
-                + " where l.section_id is not null group by l.work_id, l.section_id"
-                + " having " + lastDate + " <= :to";
-        return jdbc.query(sql, params, (rs, n) -> new Attendance(
-                rs.getLong("section_id"), rs.getLong("work_id"), rs.getObject("attended_on", LocalDate.class)));
+                + " select l.work_id, l.section_id, " + LAST_DATE + " attended_on from pieces l"
+                + " where l.section_id is not null group by l.work_id, l.section_id";
     }
 
     /** Section of each zone: a subsection resolves to its parent; any other type to none (D-03). */

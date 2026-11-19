@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from './useAuth';
 import { useRequest } from './useRequest';
-import { demoDirection, demoMonthly, demoOptions, demoSections, demoWeekly } from '@/components/reports/demo/demoReports';
+import type { ReportInterventionKind } from '@shared/types';
+import {
+  demoDirection, demoInterventions, demoMonthly, demoOptions, demoSections, demoWeekly,
+} from '@/components/reports/demo/demoReports';
 import { rememberListQuery } from '@/lib/listMemory';
 import { useReportDemo } from '@/lib/reportDemo';
 import { reportsApi } from '@/lib/reports-api';
@@ -85,6 +88,24 @@ export function useDirectionReport(month: string | null | undefined) {
     source(demo, () => demoDirection(month ?? null), () => reportsApi.direction(month ?? null)),
     { keepPreviousData: true });
   return { ...request, reload };
+}
+
+/** What a figure's list asks for; {@code total} is the figure, which the demo needs to answer consistently. */
+export interface InterventionListRequest {
+  kind: ReportInterventionKind;
+  filters: MonthlyFilters;
+  total: number;
+}
+
+/** The works behind a figure (SPEC-202 D-20). Asked only once the list is opened. */
+export function useReportInterventions(request: InterventionListRequest) {
+  const scope = useReportScope();
+  const [demo] = useReportDemo();
+  const { revision, reload } = useRevision();
+  const { kind, filters, total } = request;
+  const response = useRequest(scope ? JSON.stringify([scope, 'interventions', kind, filters, revision]) : null,
+    source(demo, () => demoInterventions(kind, filters, total), () => reportsApi.interventions(kind, filters)));
+  return { ...response, reload, demo };
 }
 
 /**

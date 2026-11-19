@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReportTopList, WeeklyIncidentRow, WeeklyNotIrrigated, WeeklyReport, WeeklyWorkRow } from '@shared/types';
 import { DataTable, StatusBadge, UrgencyBadge, type DataTableColumn, type UrgencyCode } from '@/components/ui';
+import { useReportDemo } from '@/lib/reportDemo';
 import { formatDate } from '../reportFormat';
 import { WEEKLY_TEXTS } from './weeklyTexts';
 
@@ -23,8 +24,16 @@ function Board<T>({ id, title, list, columns, rowKey, empty, note }: {
   );
 }
 
-const WORK_COLUMNS: DataTableColumn<WeeklyWorkRow>[] = [
-  { key: 'code', header: WEEKLY_TEXTS.code },
+/** Each code opens its intervention (D-20); the demo's ones do not exist, so they stay as text. */
+const workColumns = (linked: boolean): DataTableColumn<WeeklyWorkRow>[] => [
+  {
+    key: 'code', header: WEEKLY_TEXTS.code,
+    render: (row) => (linked ? (
+      <Link href={`/intervenciones/${row.id}`} className="font-medium text-brand-700 underline-offset-2 hover:underline">
+        {row.code}
+      </Link>
+    ) : row.code),
+  },
   { key: 'type', header: WEEKLY_TEXTS.type, render: (row) => row.typeLabel ?? row.classLabel },
   { key: 'places', header: WEEKLY_TEXTS.places, render: (row) => row.places.map((place) => place.label).join(', ') || '—' },
   { key: 'executed', header: WEEKLY_TEXTS.executed, render: (row) => formatDate(row.lastExecutionDate) },
@@ -70,9 +79,10 @@ function incidentColumns(linkToDetail: boolean): DataTableColumn<WeeklyIncidentR
  */
 export function WeeklyTables({ report, linkIncidents }: { report: WeeklyReport; linkIncidents: boolean }) {
   const { incidents } = report;
+  const [demo] = useReportDemo();
   return (
     <div className="space-y-8">
-      <Board id="weekly-works" title={WEEKLY_TEXTS.worksTitle} list={report.interventions.items} columns={WORK_COLUMNS}
+      <Board id="weekly-works" title={WEEKLY_TEXTS.worksTitle} list={report.interventions.items} columns={workColumns(!demo)}
         rowKey={(row) => row.id} empty={WEEKLY_TEXTS.noWork} />
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <Board id="weekly-dry" title={WEEKLY_TEXTS.notIrrigatedTitle} list={report.irrigation.notIrrigated}
