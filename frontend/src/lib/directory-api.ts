@@ -5,10 +5,8 @@ import type {
   DirectoryImportKind,
   DirectoryImportOutcome,
   DirectoryImportPlan,
-  DirectoryPage,
   OrganizationDetail,
   OrganizationInput,
-  OrganizationSuggestion,
   OrganizationSummary,
 } from '@shared/types';
 import { apiClient } from './api';
@@ -17,39 +15,14 @@ import { apiClient } from './api';
 
 export const DIRECTORY_PAGE_SIZE = 20;
 
-export interface OrganizationFilters {
-  search?: string;
-  typeCode?: string;
-}
-
-export interface ContactFilters {
-  search?: string;
-  organizationCode?: string;
-  withoutOrganization?: boolean;
-}
-
 const ORGS = '/directory/organizations';
 const IMPORTS = '/imports';
 const CONTACTS = '/directory/contacts';
 const segment = encodeURIComponent;
 
-function query(entries: Record<string, string | number | boolean | undefined>): string {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(entries)) {
-    // Un texto en blanco no es un filtro: `?q=` buscaría «nada».
-    if (value === undefined || value === false || (typeof value === 'string' && value.trim() === '')) continue;
-    params.set(key, String(typeof value === 'string' ? value.trim() : value));
-  }
-  return params.toString();
-}
-
 export const directoryApi = {
-  organizations: (filters: OrganizationFilters, page: number, size = DIRECTORY_PAGE_SIZE) =>
-    apiClient.get<DirectoryPage<OrganizationSummary>>(
-      `${ORGS}?${query({ q: filters.search, typeCode: filters.typeCode, page, size })}`),
-
-  similarOrganizations: (name: string) =>
-    apiClient.get<OrganizationSuggestion[]>(`${ORGS}/similar?${query({ name })}`),
+  /** Todas las vigentes: se buscan y filtran en el navegador (SPEC-119). */
+  allOrganizations: () => apiClient.get<OrganizationSummary[]>(`${ORGS}/all`),
 
   organization: (code: string) => apiClient.get<OrganizationDetail>(`${ORGS}/${segment(code)}`),
 
@@ -59,14 +32,8 @@ export const directoryApi = {
 
   deactivateOrganization: (code: string) => apiClient.del<null>(`${ORGS}/${segment(code)}`),
 
-  contacts: (filters: ContactFilters, page: number, size = DIRECTORY_PAGE_SIZE) =>
-    apiClient.get<DirectoryPage<ContactSummary>>(`${CONTACTS}?${query({
-      q: filters.search, organizationCode: filters.organizationCode,
-      withoutOrganization: filters.withoutOrganization, page, size,
-    })}`),
-
-  similarContacts: (fullName: string) =>
-    apiClient.get<ContactSummary[]>(`${CONTACTS}/similar?${query({ fullName })}`),
+  /** Todos los vigentes: se buscan y filtran en el navegador (SPEC-119). */
+  allContacts: () => apiClient.get<ContactSummary[]>(`${CONTACTS}/all`),
 
   contact: (code: string) => apiClient.get<ContactDetail>(`${CONTACTS}/${segment(code)}`),
 

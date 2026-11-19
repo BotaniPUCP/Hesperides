@@ -13,6 +13,7 @@ export interface SpecimenMeasurementsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateRequested?: () => void;
+  isRetired?: boolean;
 }
 
 const fecha = (iso: string) =>
@@ -24,6 +25,7 @@ export function SpecimenMeasurementsModal({
   isOpen,
   onClose,
   onUpdateRequested,
+  isRetired = false,
 }: SpecimenMeasurementsModalProps) {
   const fetchMeasurements = useCallback(() => catastroApi.measurements(code), [code]);
   const { data: history, loading, errorMessage: error } = useRequest<MeasurementRecord[]>(
@@ -108,8 +110,12 @@ export function SpecimenMeasurementsModal({
                         <div className="flex items-center gap-1.5">
                           <span>{fecha(m.date)}</span>
                           {isLatest && (
-                            <span className="px-1.5 py-0.5 rounded-sm text-[10px] font-bold bg-brand-100 text-brand-800">
-                              Vigente
+                            <span
+                              className={`px-1.5 py-0.5 rounded-sm text-[10px] font-bold ${
+                                isRetired ? 'bg-neutral-100 text-neutral-700' : 'bg-brand-100 text-brand-800'
+                              }`}
+                            >
+                              {isRetired ? 'Última medición' : 'Vigente'}
                             </span>
                           )}
                           {m.origin === 'AVERAGE' && (

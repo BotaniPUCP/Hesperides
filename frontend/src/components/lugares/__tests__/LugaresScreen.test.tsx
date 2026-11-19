@@ -26,7 +26,7 @@ function place(overrides: Partial<PlaceSummary> = {}): PlaceSummary {
   return {
     code: 'LUG-0001', name: 'CIA', parent: null, kind: { code: 'OUTDOOR', label: 'Exterior' },
     category: { code: 'EDIFICIO', label: 'Edificio' }, mainPhotoUrl: 'http://api/files/places/1?size=thumb',
-    perspectiveCount: 3, hasFront: true, hasBack: true, ...overrides,
+    perspectiveCount: 3, hasFront: true, hasBack: true, searchKey: '', ...overrides,
   };
 }
 
@@ -41,6 +41,16 @@ beforeEach(() => {
 });
 
 describe('LugaresScreen', () => {
+  it('no muestra acciones de alta ni migración en el catálogo principal', async () => {
+    list.mockResolvedValue([]);
+    mockRole.current = 'ADMIN';
+    render(<LugaresScreen />);
+
+    await waitFor(() => expect(list).toHaveBeenCalled());
+    expect(screen.queryByRole('link', { name: 'Nuevo lugar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Migrar referencias' })).not.toBeInTheDocument();
+  });
+
   describe('conservar la pantalla para regresar', () => {
     it('recupera la posición del scroll cuando terminan de cargar los datos', async () => {
       const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
@@ -58,17 +68,17 @@ describe('LugaresScreen', () => {
       window.history.replaceState(null, '', `${LIST}?search=civil&category=DEPORTE&kind=INDOOR`);
       render(<LugaresScreen />);
 
-      await waitFor(() => expect(list).toHaveBeenCalledWith({ search: 'civil', category: 'DEPORTE', kind: 'INDOOR' }));
+      await waitFor(() => expect(list).toHaveBeenCalledWith());
       expect(screen.getByRole('searchbox')).toHaveValue('civil');
       expect(screen.getByLabelText('Categoría')).toHaveValue('DEPORTE');
     });
 
-    it('un tipo manipulado en la URL no llega al backend', async () => {
-      list.mockResolvedValue([]);
+    it('un tipo manipulado en la URL no filtra', async () => {
+      list.mockResolvedValue([place()]);
       window.history.replaceState(null, '', `${LIST}?kind=DROP`);
       render(<LugaresScreen />);
 
-      await waitFor(() => expect(list).toHaveBeenCalledWith({ search: undefined, category: undefined, kind: undefined }));
+      expect(await screen.findByRole('link', { name: /CIA/ })).toBeInTheDocument();
     });
 
     it('lleva los filtros a la URL y los recuerda para la ficha', async () => {
@@ -126,18 +136,36 @@ describe('LugaresScreen', () => {
     expect(pendientes).toHaveLength(1);
   });
 
-  it('busca por texto y filtra por categoría y tipo', async () => {
-    list.mockResolvedValue([]);
+  it('busca por texto (alias o perspectiva, sin tildes) en el navegador, sin volver a pedir la lista (SPEC-119)', async () => {
+    list.mockResolvedValue([
+      place({ searchKey: 'lug-0001 cia centro de informacion' }),
+      place({ code: 'LUG-0002', name: 'Ingeniería Civil', searchKey: 'lug-0002 ingenieria civil espalda de ingenieria civil' }),
+    ]);
     render(<LugaresScreen />);
-    await waitFor(() => expect(list).toHaveBeenCalled());
+    await screen.findByRole('link', { name: /CIA/ });
 
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'espalda de civil' } });
+    for (const typed of ['e', 'es', 'espalda']) {
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: typed } });
+    }
+
+    await waitFor(() => expect(screen.queryByRole('link', { name: /CIA/ })).not.toBeInTheDocument());
+    expect(screen.getByRole('link', { name: /Ingeniería Civil/ })).toBeInTheDocument();
+    expect(list).toHaveBeenCalledTimes(1);
+  });
+
+  it('filtra por categoría y tipo en el navegador', async () => {
+    list.mockResolvedValue([
+      place(),
+      place({ code: 'LUG-0004', name: 'Cancha techada', category: { code: 'DEPORTE', label: 'Deporte' }, kind: { code: 'INDOOR', label: 'Interior' } }),
+    ]);
+    render(<LugaresScreen />);
+    await screen.findByRole('link', { name: /CIA/ });
+
     fireEvent.change(screen.getByLabelText('Categoría'), { target: { value: 'DEPORTE' } });
     fireEvent.click(screen.getByRole('button', { name: 'Interior' }));
 
-    await waitFor(() =>
-      expect(list).toHaveBeenLastCalledWith({ search: 'espalda de civil', category: 'DEPORTE', kind: 'INDOOR' }),
-    );
+    await waitFor(() => expect(screen.queryByRole('link', { name: /CIA/ })).not.toBeInTheDocument());
+    expect(screen.getByRole('link', { name: /Cancha techada/ })).toBeInTheDocument();
   });
 
   it('sin resultados lo dice', async () => {

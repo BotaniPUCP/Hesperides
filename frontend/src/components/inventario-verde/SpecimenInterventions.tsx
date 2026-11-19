@@ -3,29 +3,33 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useCatalog } from '@/hooks/useCatalog';
+import { activityStatus, activityStatusLabel } from '@/components/interventions/activityPresentation';
 import { Button, LoadingSkeleton, StatusBadge } from '@/components/ui';
 import { interventionsApi, interventionError, type InterventionOptions, type InterventionPage } from '@/lib/interventions-api';
 
 export interface SpecimenInterventionsProps {
+  id: number;
   code: string;
+  refreshKey?: number;
 }
 
 /** The public specimen remains accessible without requesting private work history. */
-export function SpecimenInterventions({ code }: SpecimenInterventionsProps) {
+export function SpecimenInterventions({ id, code, refreshKey = 0 }: SpecimenInterventionsProps) {
   const { user, isLoading } = useAuth();
   if (isLoading || !user || !['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'].includes(user.role.code)) return null;
   // A session, role or specimen change must never display the previous reader's page.
   return (
     <AuthorizedHistory
-      key={`${user.id}:${user.role.code}:${code}`}
+      key={`${user.id}:${user.role.code}:${id}`}
+      id={id}
       code={code}
+      refreshKey={refreshKey}
     />
   );
 }
 
-function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
-  const statuses = useCatalog('INTERVENTION_STATUS');
+function AuthorizedHistory({ id, code, refreshKey = 0 }: SpecimenInterventionsProps) {
+
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [page, setPage] = useState(0);
   const [revision, setRevision] = useState(0);
@@ -51,7 +55,7 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
   useEffect(() => {
     let active = true;
     interventionsApi
-      .list(page, '', '', '', code)
+      .list(page, '', '', '', undefined, undefined, id)
       .then((data) => {
         if (active) {
           setResult(data);
@@ -67,33 +71,17 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
     return () => {
       active = false;
     };
-  }, [code, page, revision]);
+  }, [id, page, revision, refreshKey]);
 
   const navigate = (value: number) => {
     setLoading(true);
     setPage(value);
   };
 
-  const formatProgress = (work: InterventionPage['content'][number]) => {
-    if (work.statusCode === 'PLANNED') {
-      return work.locationCount > 1
-        ? `Planificada · ${work.locationCount} sectores programados`
-        : 'Pendiente de ejecución en campo';
-    }
-    if (work.statusCode === 'COMPLETED') {
-      return work.locationCount > 1
-        ? `Ejecutada · ${work.completedLocationCount} de ${work.locationCount} sectores atendidos (Pendiente de validación)`
-        : 'Trabajo ejecutado · Pendiente de validación técnica';
-    }
-    if (work.statusCode === 'VALIDATED') {
-      return work.locationCount > 1
-        ? `Completada y validada en ${work.validatedLocationCount} de ${work.locationCount} sectores`
-        : 'Trabajo completado y validado';
-    }
-    return `${work.completedLocationCount}/${work.locationCount} terminadas · ${work.validatedLocationCount} aprobadas`;
-  };
+  const formatProgress = (work:InterventionPage['content'][number]) => work.activityWorkflow?`Avance acumulado: ${work.progressPercentage==null?'Por registrar':`${work.progressPercentage} %`}`:activityStatusLabel(work.statusCode);
 
   const getActivityTitle = (work: InterventionPage['content'][number]) => {
+    if(work.activityTitle)return work.activityTitle;
     const classItem = options?.catalogs.find((c) => c.typeCode === 'INTERVENTION_CLASS' && c.id === work.classItemId);
     const typeItem = work.typeItemId
       ? options?.catalogs.find((c) => c.typeCode === 'INTERVENTION_TYPE' && c.id === work.typeItemId)
@@ -106,6 +94,7 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
 
 
   const totalCount = result?.page.totalElements ?? 0;
+  const historyHref = `/intervenciones?${new URLSearchParams({ greenElementId: String(id), greenElementCode: code })}`;
 
   return (
     <div className="surface-card">
@@ -128,12 +117,15 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
           </span>
           <div className="min-w-0">
             <h2 className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
-              Intervenciones del ejemplar
+              Actividades del ejemplar
             </h2>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-center shrink-0">
+          <Link href={historyHref} className="text-xs font-semibold text-brand-700 hover:underline">
+            Ver listado completo
+          </Link>
           {!loading && !error && totalCount > 0 && (
             <span className="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-700 whitespace-nowrap">
               {totalCount} {totalCount === 1 ? 'registro' : 'registros'}
@@ -167,7 +159,7 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
             {result.content.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-neutral-200/90 bg-neutral-50/50 p-5 text-center flex flex-col items-center justify-center">
                 <p className="text-xs text-neutral-500">
-                  No hay intervenciones vinculadas a este ejemplar disponibles para tu cuenta.
+                  No hay actividades vinculadas a este ejemplar disponibles para tu cuenta.
                 </p>
               </div>
             ) : (
@@ -193,10 +185,9 @@ function AuthorizedHistory({ code }: SpecimenInterventionsProps) {
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <StatusBadge
-                            code={work.statusCode}
+                            code={activityStatus(work.statusCode)}
                             label={
-                              statuses.items.find((status) => status.code === work.statusCode)?.label ??
-                              work.statusCode
+                              activityStatusLabel(work.statusCode)
                             }
                           />
                           <Link

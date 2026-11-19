@@ -34,4 +34,7 @@ public class InterventionReviewPolicy {
             throw new BusinessRuleException("Receive all pending photos for this location before approval");
         }
     }
+
+    public boolean requiresPhotoOnCompletion() { return requirePhotoOnCompletion; }
+    public boolean blocksPendingOnApproval() { return blockPendingOnApproval; }
 }

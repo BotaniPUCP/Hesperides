@@ -2,10 +2,6 @@ package pe.edu.pucp.hesperides.modules.users.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.pucp.hesperides.modules.users.dto.ChangePasswordRequest;
 import pe.edu.pucp.hesperides.modules.users.dto.CreateUserRequest;
@@ -28,6 +23,7 @@ import pe.edu.pucp.hesperides.modules.users.service.UsersService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
 
 import java.net.URI;
+import java.util.List;
 
 /**
  * Parsea, delega y envuelve. Ninguna regla de negocio vive aquí: las reglas del
@@ -44,22 +40,11 @@ public class UsersController {
 
     private final UsersService usersService;
 
-    @GetMapping
+    /** Antes que /{id}: todos los que ve quien pregunta, para buscarlos y filtrarlos en el navegador (SPEC-119). */
+    @GetMapping("/all")
     @PreAuthorize(READERS)
-    public ResponseEntity<ApiResponse<Page<UserDetailResponse>>> getAll(
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) String roleCode,
-            @RequestParam(required = false) Boolean isActive,
-            @RequestParam(required = false) Long teamId,
-            // Orden por apellido y no por createdAt: este listado se usa para
-            // buscar a una persona concreta (SPEC-100 §3).
-            @PageableDefault(size = 20, sort = "lastName", direction = Sort.Direction.ASC)
-            Pageable pageable,
-            @AuthenticationPrincipal UserDetails principal) {
-
-        Page<UserDetailResponse> page = usersService.findAll(
-                search, roleCode, isActive, teamId, pageable, principal.getUsername());
-        return ResponseEntity.ok(ApiResponse.ok("Users retrieved successfully", page));
+    public ResponseEntity<ApiResponse<List<UserDetailResponse>>> all(@AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.ok("Users retrieved successfully", usersService.all(principal.getUsername())));
     }
 
     @GetMapping("/{id}")

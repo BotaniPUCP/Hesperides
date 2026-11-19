@@ -20,6 +20,7 @@ import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenWriter;
 import pe.edu.pucp.hesperides.modules.inventory.repository.PhotoRepository;
 import pe.edu.pucp.hesperides.modules.inventory.service.InventoryPhotoService;
 import pe.edu.pucp.hesperides.shared.exception.PossibleDuplicateException;
+import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.ValidationException;
 
 import java.util.List;
@@ -65,11 +66,11 @@ public class SpecimenRegistrationService {
     }
 
     public List<AssessmentResponse> history(String code) {
-        return assessments.history(elements.elementId(code));
+        return assessments.history(elements.historicalElementId(code));
     }
 
     public List<MeasurementResponse> measurementHistory(String code) {
-        return measurements.history(elements.elementId(code));
+        return measurements.history(elements.historicalElementId(code));
     }
 
     private String save(PlannedRow row, UploadedPhoto photo, String userEmail) {
@@ -86,6 +87,9 @@ public class SpecimenRegistrationService {
         SpecimenPreview preview = resolver.resolve(
                 new SpecimenCsvSchema.Parsed(List.of(form.toDraft(code)), List.of(), false), Set.of());
         if (!preview.unknownSpecies().isEmpty()) {
+            if (preview.unknownSpecies().stream().anyMatch(species -> "INACTIVE".equals(species.reason()))) {
+                throw new BusinessRuleException("Los ejemplares nuevos solo pueden vincularse a especies activas");
+            }
             throw new ValidationException("Unknown species: " + form.scientificName()
                     + ". Ask an administrator to add it to the catalog");
         }

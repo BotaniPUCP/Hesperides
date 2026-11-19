@@ -3,24 +3,35 @@
   "name": "Facultad de Educación (Aula R102)",
   "folder": "FACULTAD DE EDUCACIÓN (AULA R102)",
   "photos": [
+    "frente-a-educacion-facultad.jpg",
     "frente-a-facultad-educacion-dos-edificios.jpg"
   ],
-  "notes": "Muro de ladrillo con remate de concreto (frente-a-facultad-educacion-dos-edificios.jpg, sin los casilleros de la otra foto).",
+  "materials": {
+    "muro": {
+      "color": "#b97a62"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "concreto": {
+      "color": "#c8c6c0"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#bdbab2",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#b4705e",
-          "photo": {
-            "tile": "educacion-r102",
-            "widthM": 6,
-            "heightM": 3.0
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            2.45,
+            3.1
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Muro de ladrillo con remate de concreto (frente-a-facultad-educacion-dos-edificios.jpg). Los casilleros de la otra foto no se dibujan."
 }

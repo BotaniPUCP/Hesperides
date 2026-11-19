@@ -205,11 +205,11 @@ cinco requisitos nuevos que ya estaban construidos sin figurar aquí.
 | 1.5 | Catálogo de especies | `HAB` | 1 | — | ✅ | 80% | 🔒 → ✅ **90 especies** limpias (de 91 nombres), con familia y nombres alternativos **por validar**, consultables en el inventario verde. **Galería de 230 fotos genéricas** (1 a 4 por especie) con autor y licencia (SPEC-104). Falta la pantalla para administrarlas. Ver `docs/modulos/inventario-verde.md` |
 | 1.6 | Catálogo de zonas del campus | `HAB` | 1 | — | 🔶 | 40% | **Sector (5) → sección (521 + 10 xerofíticas) → subsección.** Cargado con SPEC-102; falta la pantalla de administración. Todo sale del mapa v32. Las **411 referencias** oficiales se están migrando a lugares (9.4). Ver nota |
 | 1.7 | Configuración de frecuencias de mantenimiento | Media | 2 | D5 | ✅ | 70% | SPEC-101 y SPEC-203: cada cuánto por actividad, para todo el campus o un conjunto de jardines, y la planificación preventiva que dice qué toca y dónde. Falta validarlo en navegador y confirmar con el cliente que manda la estación de la última vez |
-| 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 60% | Pantalla `/admin/parametros`: política de contraseñas, intentos de inicio de sesión y hectáreas del campus. Falta la **lista de feriados** que usa 5.11 |
+| 1.8 | Parámetros generales del sistema | Baja | 1 | — | ✅ | 60% | Pantalla `/admin/parametros`: política de contraseñas, intentos de inicio de sesión y hectáreas del campus. La **lista de feriados** vive en el calendario del campus (SPEC-114, 15 nov 2026) |
 | 1.9 | Gestión de cuadrillas y asignación a sectores | **Alta** | 3 | D5 D7 | 🔶 | 0% | 3 sectores verdes (9+9+7 personas), un capataz cada uno; Polideportivo y Bosque húmedo sin cuadrilla propia. La asignación de secciones **tiene vigencia**. Falta P-15 |
 | 1.10 | Catálogo de insumos y materiales | `HAB` | 1 | — | ✅ | 0% | Lista extraída del Excel |
 | 1.11 | Catálogo de unidades de medida | `HAB` | 1 | — | ✅ | 0% | und · m · m² · m³ |
-| **1.12** | **Eventos del campus** | Media | 2 | D5 D7 | ✅ | 0% | 🆕 Periodos bloqueantes y de préstamo, sobre el campus, un sector o una sección. Ver nota |
+| **1.12** | **Eventos del campus** | Media | 2 | D5 D7 | ✅ | 80% | 🆕 Periodos bloqueantes y de préstamo, sobre el campus, un sector o una sección. Préstamos: SPEC-107. Bloqueantes y feriados: SPEC-114 (15 nov 2026), con avisos al programar y al reservar, y en el mapa. Falta la recuperación del jardín tras un préstamo, fuera por decisión del usuario. Ver nota |
 
 **Sobre 1.4 — la taxonomía es de dos niveles.** El Excel define **9 clases** (Habilitación,
 Rehabilitación, Mantenimiento, Poda, Propagación, Riego, Manejo fitosanitario, Residuos,
@@ -457,7 +457,7 @@ llenan los capataces con ayuda de las ingenieras de la sección o del propio pre
 | 5.8 | Marca de origen Centuria | Baja ⬇️ | 1 | D1 | ✅ | 0% | **Reformulado:** una marca de que la solicitud llegó por Centuria. Ver nota |
 | 5.9 | Distinguir hallazgo de mantenimiento rutinario | Media | 2 | D7 | ✅ | 0% | El Excel ya lo distingue |
 | 5.10 | Avisar a la unidad solicitante al cerrar | Media | 2 | D7 | ⏭️ | 0% | Las unidades no son usuarias y su canal es Centuria |
-| **5.11** | **Maquinaria de corte solo en sábados, domingos y feriados** | Media | 2 | D7 | ✅ | 0% | 🆕 Ver nota |
+| **5.11** | **Maquinaria de corte solo en sábados, domingos y feriados** | Media | 2 | D7 | ✅ | 90% | 🆕 SPEC-115 (16 nov 2026): casilla en la intervención, sugerida por el tipo; impide guardar fuera de sábado, domingo o feriado del calendario. Falta validar con el cliente la lista de tipos que la sugieren. Ver nota |
 
 ### Sobre 5.1 — la urgencia depende de dónde está el problema
 
@@ -566,7 +566,7 @@ eso lo incluimos en nuestro modelado aunque su mapa ya lo tenga.
 
 | ID | Requisito | Prioridad | Peso | Dolor | ¿Se puede? | Avance | Nota |
 |---|---|---|---|---|---|---|---|
-| 7.1 | Registro del turno de riego por sector | **Alta** | 3 | D5 | ✅ | 0% | Ciclo bien explicado en la 2.ª entrevista |
+| 7.1 | Registro del turno de riego por sector | **Alta** | 3 | D5 | ✅ | 0% | Ciclo bien explicado en la 2.ª entrevista. **15 nov 2026:** el riego se registra como intervención de clase Riego desde Planificación (SPEC-203); el módulo de turnos se eliminó (SPEC-113 D-08) |
 | 7.2 | Cobertura del campus en la ventana de 15 días | **Alta** | 3 | D5 | 🔶 | 0% | Falta qué cuenta como «zona regada» |
 | 7.3 | Zonas que requieren más de una pasada | Media | 2 | D5 | 🔒 | 0% | Falta la lista de esas zonas |
 | 7.4 | Control de la ventana horaria | Baja | 1 | — | ✅ | 0% | 6:30-7:00 a 11:30 |

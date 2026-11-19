@@ -5,6 +5,8 @@ import { PageHeader } from '@/components/layouts/PageHeader';
 export interface InventarioVerdeHeroProps {
   title?: string;
   totalSpecimens?: number;
+  currentTab?: 'vigentes' | 'retirados';
+  retiredCount?: number;
 }
 
 /** Total de ejemplares leñosos estimados en el campus PUCP según el dominio (C-02 y REQ 2.12) */
@@ -18,6 +20,8 @@ export const ESTIMATED_CAMPUS_SPECIMENS = 3500;
 export function InventarioVerdeHero({
   title = 'Especies',
   totalSpecimens,
+  currentTab,
+  retiredCount,
 }: InventarioVerdeHeroProps) {
   const percentage =
     totalSpecimens !== undefined && ESTIMATED_CAMPUS_SPECIMENS > 0
@@ -27,38 +31,56 @@ export function InventarioVerdeHero({
   return (
     <PageHeader
       title={title}
-      actions={totalSpecimens !== undefined && (
-        <div
-          className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-brand-50/80 border border-brand-200/70 shadow-2xs shrink-0 self-start md:self-auto"
-          title={`Avance progresivo: ${totalSpecimens.toLocaleString('es-PE')} de ~${ESTIMATED_CAMPUS_SPECIMENS.toLocaleString('es-PE')} ejemplares estimados en el campus PUCP (C-02)`}
-        >
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-neutral-600 font-medium">
-              Catastro censado:
-            </span>
-            <span className="text-sm font-bold text-neutral-900 font-mono">
-              {totalSpecimens.toLocaleString('es-PE')}
-            </span>
-            <span className="text-xs text-neutral-400 font-medium">
-              / ~{ESTIMATED_CAMPUS_SPECIMENS.toLocaleString('es-PE')}
-            </span>
-          </div>
-
-          {percentage !== null && (
-            <div className="flex items-center gap-2 pl-2.5 border-l border-brand-200/80">
-              <div className="w-14 sm:w-16 h-2 rounded-full bg-brand-200/60 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-brand-600 transition-all duration-500"
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
-              <span className="text-xs font-bold text-brand-900 font-mono">
-                {percentage}%
+      actions={
+        currentTab === 'retirados' ? (
+          retiredCount !== undefined && (
+            <div
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-neutral-100 border border-neutral-200 shadow-2xs shrink-0 self-start md:self-auto"
+              title={`Total de ejemplares retirados registrados: ${retiredCount.toLocaleString('es-PE')}`}
+            >
+              <span className="text-xs text-neutral-600 font-medium">
+                Total de ejemplares retirados:
+              </span>
+              <span className="text-sm font-bold text-neutral-900 font-mono">
+                {retiredCount.toLocaleString('es-PE')}
               </span>
             </div>
-          )}
-        </div>
-      )}
+          )
+        ) : (
+          totalSpecimens !== undefined && (
+            <div
+              className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-brand-50/80 border border-brand-200/70 shadow-2xs shrink-0 self-start md:self-auto"
+              title={`Avance progresivo: ${totalSpecimens.toLocaleString('es-PE')} de ~${ESTIMATED_CAMPUS_SPECIMENS.toLocaleString('es-PE')} ejemplares estimados en el campus PUCP (C-02)`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-neutral-600 font-medium">
+                  Ejemplares vigentes registrados:
+                </span>
+                <span className="text-sm font-bold text-neutral-900 font-mono">
+                  {totalSpecimens.toLocaleString('es-PE')}
+                </span>
+                <span className="text-xs text-neutral-400 font-medium">
+                  / ~{ESTIMATED_CAMPUS_SPECIMENS.toLocaleString('es-PE')}
+                </span>
+              </div>
+
+              {percentage !== null && (
+                <div className="flex items-center gap-2 pl-2.5 border-l border-brand-200/80">
+                  <div className="w-14 sm:w-16 h-2 rounded-full bg-brand-200/60 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-brand-600 transition-all duration-500"
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-brand-900 font-mono">
+                    {percentage}%
+                  </span>
+                </div>
+              )}
+            </div>
+          )
+        )
+      }
     />
   );
 }

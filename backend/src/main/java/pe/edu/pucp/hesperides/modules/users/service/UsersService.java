@@ -1,17 +1,17 @@
 package pe.edu.pucp.hesperides.modules.users.service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import pe.edu.pucp.hesperides.modules.users.dto.ChangePasswordRequest;
 import pe.edu.pucp.hesperides.modules.users.dto.CreateUserRequest;
 import pe.edu.pucp.hesperides.modules.users.dto.CredentialDeliveryResponse;
 import pe.edu.pucp.hesperides.modules.users.dto.UpdateUserRequest;
 import pe.edu.pucp.hesperides.modules.users.dto.UserDetailResponse;
 
+import java.util.List;
+
 public interface UsersService {
 
-    Page<UserDetailResponse> findAll(String search, String roleCode, Boolean isActive, Long teamId,
-                                     Pageable pageable, String viewerEmail);
+    /** Todos los que ve quien pregunta, activos e inactivos, por apellido: se filtran en el navegador (SPEC-119). */
+    List<UserDetailResponse> all(String viewerEmail);
 
     UserDetailResponse findById(Long id, String viewerEmail);
 

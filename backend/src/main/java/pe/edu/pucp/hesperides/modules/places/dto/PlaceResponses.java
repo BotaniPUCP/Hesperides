@@ -16,8 +16,9 @@ public final class PlaceResponses {
     }
 
     /** Una tarjeta del catálogo. */
+    /** {@code searchKey}: en qué se busca en el navegador (SPEC-119 D-01), sin tildes ni mayúsculas. */
     public record PlaceSummary(String code, String name, PlaceRef parent, CodeLabel kind, CodeLabel category,
-            String mainPhotoUrl, int perspectiveCount, boolean hasFront, boolean hasBack) {
+            String mainPhotoUrl, int perspectiveCount, boolean hasFront, boolean hasBack, String searchKey) {
     }
 
     /** De dónde sale el contorno: BUILDING, ZONE, FEATURE, DRAWN o INHERITED (interiores). */
@@ -50,7 +51,7 @@ public final class PlaceResponses {
 
     /** Una perspectiva en el mapa: su cono y lo que muestra su ficha. */
     public record MapPerspective(long id, PlaceRef place, String displayName, double lat, double lon, double headingDeg,
-            String thumbnailUrl) {
+            String thumbnailUrl, MapViewDtos.MapView mapView) {
     }
 
     public record MapCatalog(List<MapPlace> places, List<MapPerspective> perspectives) {

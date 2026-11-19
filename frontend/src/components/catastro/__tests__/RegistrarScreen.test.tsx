@@ -1,5 +1,5 @@
 import { medidasDeEspecieCritica } from '@/components/inventario-verde/__fixtures__/inventario';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@/lib/api';
 import { catastroApi } from '@/lib/catastro-api';
@@ -22,7 +22,7 @@ jest.mock('@/hooks/useCatalog', () => ({
   }),
 }));
 jest.mock('@/lib/inventario-verde-api', () => ({
-  inventarioVerdeApi: { species: jest.fn(), registerSpecies: jest.fn() },
+  inventarioVerdeApi: { allSpecies: jest.fn(), registerSpecies: jest.fn() },
 }));
 // El visor 3D no corre en jsdom: un botón hace de clic en el suelo.
 jest.mock('../registrar/MapaSelector', () => ({
@@ -32,15 +32,15 @@ jest.mock('../registrar/MapaSelector', () => ({
     </button>
   ),
 }));
-jest.mock('@/hooks/useDebouncedValue', () => ({ useDebouncedValue: <T,>(v: T) => v }));
 
 const register = jest.mocked(catastroApi.register);
 
 const MOLLE = {
-  slug: 'schinus-molle', scientificName: 'Schinus molle', commonName: 'Molle serrano', otherNames: [],
+  slug: 'schinus-molle', isActive: true, scientificName: 'Schinus molle', commonName: 'Molle serrano', otherNames: [],
   family: 'Anacardiaceae', vegetationTypeCode: 'TREE', vegetationTypeName: 'Árbol', specimenCount: 3, imageUrl: null,
   imageSource: null, photos: [],
   ...medidasDeEspecieCritica,
+  searchKey: 'schinus molle molle serrano anacardiaceae',
 };
 
 function pantalla(rol = 'SUPERVISOR') {
@@ -48,17 +48,19 @@ function pantalla(rol = 'SUPERVISOR') {
   render(<RegistrarScreen />);
 }
 
+/** El catálogo se carga al abrir el formulario (SPEC-119): por defecto trae el molle. */
 async function elegirMolleYPunto() {
-  jest.mocked(inventarioVerdeApi.species).mockResolvedValue({
-    content: [MOLLE], page: { number: 0, size: 8, totalElements: 1, totalPages: 1 },
-  });
   await userEvent.type(screen.getByLabelText(/Especie/), 'molle');
   await userEvent.click(await screen.findByRole('button', { name: /Schinus molle/ }));
   await userEvent.click(screen.getByRole('button', { name: 'clic en el mapa' }));
 }
 
 describe('RegistrarScreen', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.mocked(inventarioVerdeApi.allSpecies).mockReset();
+    jest.mocked(inventarioVerdeApi.allSpecies).mockResolvedValue([MOLLE]);
+  });
 
   it('el operario no registra', () => {
     pantalla('OPERARIO');
@@ -88,6 +90,53 @@ describe('RegistrarScreen', () => {
       false,
     );
     expect(await screen.findByText('EV-000966')).toBeInTheDocument();
+  });
+
+  it('muestra que está cargando las especies mientras espera la API', async () => {
+    jest.mocked(inventarioVerdeApi.allSpecies).mockReturnValue(new Promise(() => {}));
+    pantalla();
+
+    fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'molle' } });
+
+    expect(screen.getByRole('status')).toHaveTextContent('Cargando especies…');
+  });
+
+  it('escribir no consulta por cada letra y no ofrece especies en retiro (SPEC-119)', async () => {
+    jest.mocked(inventarioVerdeApi.allSpecies).mockResolvedValue([MOLLE,
+      { ...MOLLE, slug: 'schinus-terebinthifolia', scientificName: 'Schinus terebinthifolia', isActive: false,
+        searchKey: 'schinus terebinthifolia' }]);
+    pantalla();
+
+    await userEvent.type(screen.getByLabelText(/Especie/), 'schinus');
+
+    expect(await screen.findByRole('button', { name: /Schinus molle/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /terebinthifolia/ })).not.toBeInTheDocument();
+    expect(inventarioVerdeApi.allSpecies).toHaveBeenCalledTimes(1);
+  });
+
+  it('distingue un error de carga de una búsqueda sin resultados y permite reintentar', async () => {
+    jest.mocked(inventarioVerdeApi.allSpecies)
+      .mockRejectedValueOnce(new Error('API no disponible'))
+      .mockResolvedValueOnce([MOLLE]);
+    pantalla();
+
+    fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'molle' } });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar la lista de especies.');
+    expect(screen.queryByText(/No se encontró ninguna especie/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Reintentar búsqueda' }));
+    expect(await screen.findByRole('button', { name: /Schinus molle/ })).toBeInTheDocument();
+    expect(inventarioVerdeApi.allSpecies).toHaveBeenCalledTimes(2);
+  });
+
+  it('muestra que no hay resultados solo cuando la búsqueda termina sin error', async () => {
+    jest.mocked(inventarioVerdeApi.allSpecies).mockResolvedValue([]);
+    pantalla();
+
+    fireEvent.change(screen.getByLabelText(/Especie/), { target: { value: 'no existe' } });
+
+    expect(await screen.findByRole('region', { name: 'Sin resultados de especie' })).toHaveTextContent('No se encontró ninguna especie');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('un posible duplicado pregunta y, si es otra planta, reenvía confirmando', async () => {
@@ -170,6 +219,47 @@ describe('RegistrarScreen', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Tacho' }));
     await userEvent.click(screen.getByRole('button', { name: 'Salir sin guardar' }));
     expect(screen.getByRole('radio', { name: 'Tacho' })).toBeChecked();
+  });
+
+  it('deshabilita DAP y fuste si la especie no los usa y muestra zunchado en condicion estructural', async () => {
+    const ARBUSTO = {
+      slug: 'lantana-camara',
+      isActive: true,
+      scientificName: 'Lantana camara',
+      commonName: 'Cinco negritos',
+      otherNames: [],
+      family: 'Verbenaceae',
+      vegetationTypeCode: 'SHRUB',
+      vegetationTypeName: 'Arbusto',
+      specimenCount: 5,
+      imageUrl: null,
+      imageSource: null,
+      photos: [],
+      critical: false,
+      referenceHeightM: 1.5,
+      referenceHeightSourceCode: null,
+      referenceHeightSourceName: null,
+      referenceCrownRadiusM: 0.8,
+      referenceCrownRadiusSourceCode: null,
+      referenceCrownRadiusSourceName: null,
+      usesTrunkHeight: false,
+      usesDbh: false,
+      unmeasuredSpecimenCount: 0,
+      extraMeasures: [],
+      searchKey: 'lantana camara',
+    };
+
+    jest.mocked(inventarioVerdeApi.allSpecies).mockResolvedValue([ARBUSTO]);
+
+    pantalla();
+    await userEvent.type(screen.getByLabelText(/Especie/), 'Lantana');
+    await userEvent.click(await screen.findByRole('button', { name: /Lantana camara/ }));
+
+    expect(screen.getByLabelText(/Altura del fuste/i)).toBeDisabled();
+    expect(screen.getByLabelText(/DAP/i)).toBeDisabled();
+    expect(screen.getAllByText('No aplica para esta especie')).toHaveLength(2);
+    expect(screen.getByText('Condición estructural')).toBeInTheDocument();
+    expect(screen.getByText(/Zunchado/i)).toBeInTheDocument();
   });
 
   it('no muestra el botón de registrar nueva especie al vuelo', async () => {

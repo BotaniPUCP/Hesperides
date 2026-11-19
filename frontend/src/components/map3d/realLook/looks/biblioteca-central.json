@@ -4,51 +4,75 @@
   "folder": "bibblioteca-central",
   "photos": [
     "espalda-opuesto-de-delante.jpg",
-    "frente-visto-desde-el-jardind12-grande.jpg"
+    "frente-visto-desde-el-jardind12-grande.jpg",
+    "un-lado.jpg"
   ],
-  "notes": "Frente al este, hacia el jardín D12 (AV-0333; lo confirmó Jean Piero): las caras al este llevan una vez el centro de frente-visto-desde-el-jardind12-grande.jpg, centrado en la torre de la entrada y cortado sobre las cabezas de la gente; fuera de él, y en las demás caras, el tramo enderezado de espalda-opuesto-de-delante.jpg (columnas a plomo). frente-visto-desde-el-jardind12-grande.jpg se iguala en color con espalda-opuesto-de-delante.jpg; su cielo y follaje toman el otro tramo.",
+  "materials": {
+    "ladrillo": {
+      "color": "#c47a65"
+    },
+    "concreto": {
+      "color": "#b8b3ab"
+    },
+    "techo": {
+      "color": "#b3aea6"
+    },
+    "vidrio": {
+      "glass": "#2e3437",
+      "frame": "#e4e4df",
+      "moduleM": 1.25,
+      "heightM": 1.3,
+      "frameM": 0.08,
+      "vary": 0.05
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#a9a69e",
-      "faces": {
-        "E": {
-          "kind": "photo",
-          "wall": "#a8a69f",
-          "photo": {
-            "tile": "biblioteca-frente",
-            "widthM": 17.4,
-            "heightM": 8.05,
-            "repeat": false,
-            "beyond": {
-              "kind": "photo",
-              "wall": "#a8a69f",
-              "photo": {
-                "tile": "biblioteca-detras",
-                "widthM": 11.25,
-                "heightM": 15.3
-              }
-            }
-          },
-          "offsetM": -8.8,
-          "startM": 1.7
-        },
-        "NE": {
-          "sameAs": "E"
-        },
-        "SE": {
-          "sameAs": "E"
-        },
-        "other": {
-          "kind": "photo",
-          "wall": "#a8a69f",
-          "photo": {
-            "tile": "biblioteca-detras",
-            "widthM": 11.25,
-            "heightM": 15.3
+      "wall": "ladrillo",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "floors": {
+            "everyM": 3.9,
+            "startM": -1.2,
+            "bandM": [
+              -0.3,
+              0.45
+            ]
           }
         }
+      ],
+      "faces": {
+        "W": [
+          {
+            "material": "vidrio",
+            "u": [
+              7.6,
+              18.6
+            ],
+            "v": [
+              -1.2,
+              13.2
+            ]
+          }
+        ],
+        "E": [
+          {
+            "material": "vidrio",
+            "u": [
+              -4.6,
+              5.4
+            ],
+            "v": [
+              0,
+              14.5
+            ]
+          }
+        ]
       }
     }
-  ]
+  ],
+  "notes": "Ladrillo en un marco de losas de concreto (espalda-opuesto-de-delante.jpg, cara oeste) con el paño de vidrio del sur de esa cara. Al este, hacia el jardín D12 (AV-0333; lo confirmó Jean Piero), la torre de vidrio de la entrada (frente-visto-desde-el-jardind12-grande.jpg). Las caras norte y sur no tienen foto: ladrillo con sus losas, sin vidrio (SPEC-112 D-06). Las filas de ventanas de marco blanco (un-lado.jpg) no se dibujan: el ladrillo y las losas mandan en el color (D-04)."
 }

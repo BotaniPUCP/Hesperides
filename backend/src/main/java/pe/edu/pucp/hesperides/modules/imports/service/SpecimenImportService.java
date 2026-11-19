@@ -3,14 +3,18 @@ package pe.edu.pucp.hesperides.modules.imports.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvTable;
+import pe.edu.pucp.hesperides.modules.imports.ImportAction;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportPreviewResponse;
+import pe.edu.pucp.hesperides.modules.imports.dto.ImportConfirmationSummary;
 import pe.edu.pucp.hesperides.modules.imports.dto.ImportResultResponse;
+import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository;
 import pe.edu.pucp.hesperides.modules.imports.service.ImportBatchGate.Claimed;
 import pe.edu.pucp.hesperides.modules.imports.service.ImportBatchGate.Opened;
 import pe.edu.pucp.hesperides.modules.imports.specimens.PhotoFiles;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenCsvSchema;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenPreview.PlannedRow;
+import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenBindingKeyCompatibility;
 import pe.edu.pucp.hesperides.modules.imports.specimens.SpecimenResolver;
 import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 
@@ -32,6 +36,7 @@ public class SpecimenImportService implements ImportHandler {
     private final ImportBatchGate gate;
     private final BatchPhotoZips zips;
     private final SpecimenImportWriter writer;
+    private final SpecimenLookupRepository lookup;
 
     @Override
     public Set<String> kinds() {
@@ -40,13 +45,33 @@ public class SpecimenImportService implements ImportHandler {
 
     @Override
     public ImportPreviewResponse preview(String kind, ImportUpload upload, String userEmail) {
-        byte[] csv = upload.csv();
+        return previewWithBindings(kind, upload, Map.of(), userEmail);
+    }
+
+    @Override
+    public ImportPreviewResponse previewWithBindings(String kind, ImportUpload upload,
+                                                      Map<String, String> speciesBindings, String userEmail) {
         byte[] zip = upload.zip().get();
-        Map<String, byte[]> photos = zip == null ? Map.of() : PhotoFiles.read(zip);
-        SpecimenPreview preview = resolver.resolve(SpecimenCsvSchema.parse(CsvTable.parse(csv)), Set.copyOf(photos.keySet()));
+        Map<String, byte[]> photos = zip == null ? Map.of() : PhotoFiles.readStrict(zip);
+        SpecimenPreview preview = resolver.resolve(SpecimenCsvSchema.parse(CsvTable.parseStrict(upload.csv())),
+                Set.copyOf(photos.keySet()), speciesBindings);
         Opened opened = gate.open(KIND, upload.fileName(), userEmail, preview);
         zips.keep(opened.batchId(), zip);
-        return PreviewMapper.toResponse(opened.batchId(), KIND, preview, opened.expiresAt());
+        return PreviewMapper.toResponse(opened.batchId(), KIND, preview, opened.expiresAt(), opened.planFingerprint());
+    }
+
+    @Override
+    public ImportPreviewResponse reanalyze(Claimed claimed, ImportUpload upload, Map<String, String> speciesBindings) {
+        byte[] zip = upload.zip().get();
+        Map<String, byte[]> photos = zip == null ? Map.of() : PhotoFiles.readStrict(zip);
+        SpecimenCsvSchema.Parsed parsed = SpecimenCsvSchema.parse(CsvTable.parseStrict(upload.csv()));
+        SpecimenPreview previous = gate.report(claimed.batch(), SpecimenPreview.class);
+        Map<String, String> recoveredBindings = SpecimenBindingKeyCompatibility.recover(
+                previous, parsed.drafts(), speciesBindings);
+        SpecimenPreview preview = resolver.resolve(parsed, Set.copyOf(photos.keySet()), recoveredBindings);
+        zips.keep(claimed.batch().id(), zip);
+        Opened opened = gate.replacePreview(claimed, preview);
+        return PreviewMapper.toResponse(opened.batchId(), KIND, preview, opened.expiresAt(), opened.planFingerprint());
     }
 
     @Override
@@ -57,6 +82,24 @@ public class SpecimenImportService implements ImportHandler {
             throw new BusinessRuleException("The file has errors: fix them and upload it again");
         }
         List<PlannedRow> included = ImportBatchGate.include(preview.rows(), decisions);
-        return writer.write(batchId, preview, included, claimed.userId());
+        return writer.write(claimed, preview, included);
+    }
+
+    @Override
+    public ImportConfirmationSummary confirmationSummary(Claimed claimed, Map<Integer, Boolean> decisions) {
+        SpecimenPreview preview = gate.report(claimed.batch(), SpecimenPreview.class);
+        if (!preview.canConfirm()) {
+            throw new BusinessRuleException("The file has errors: fix them and upload it again");
+        }
+        List<PlannedRow> included = ImportBatchGate.include(preview.rows(), decisions);
+
+        // Reuse the same checks the writer performs before a confirmation. The summary is read-only.
+        writer.verifyVersions(preview.rows(), false);
+        resolver.verifyDuplicatePlanCurrent(preview.rows());
+
+        return new ImportConfirmationSummary(claimed.batch().id(),
+                (int) included.stream().filter(row -> row.action() == ImportAction.CREATE).count(),
+                (int) included.stream().filter(row -> row.action() == ImportAction.UPDATE).count(),
+                ImportFingerprints.confirmationFingerprint(claimed.batch(), decisions));
     }
 }

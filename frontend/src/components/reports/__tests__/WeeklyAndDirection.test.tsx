@@ -23,16 +23,22 @@ describe('WeeklyReport (SPEC-202 CA-S02 a CA-S04)', () => {
   it('compara con la semana anterior y muestra riego, tipos e incidencias', () => {
     show();
     expect(screen.getByText('3 más que la semana anterior')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /Riego del sector 115 de 118 secciones regadas en 3 turnos/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Riego del sector 115 de 118 secciones regadas en 3 riegos/ })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /Labores aprobadas por tipo/ })).toBeInTheDocument();
     expect(screen.getAllByText('3 días').length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: /Rama sobre la vía peatonal/ })[0])
       .toHaveAttribute('href', '/incidencias/12');
   });
 
-  it('sin turno de riego no muestra 0 % sino el aviso (D-15)', () => {
-    show({ ...weekly, irrigation: { ...weekly.irrigation, turns: 0, irrigatedSections: 0, percent: null } });
-    expect(screen.getByText('Sin turno de riego registrado esta semana')).toBeInTheDocument();
+  it('sin riego en la semana no muestra 0 % sino el aviso (D-15)', () => {
+    show({ ...weekly, irrigation: { ...weekly.irrigation, irrigations: 0, irrigatedSections: 0, percent: null } });
+    expect(screen.getByText('Sin riego registrado esta semana')).toBeInTheDocument();
+  });
+
+  it('cuenta las secciones regadas por intervenciones de riego, no por turnos (SPEC-113 D-08)', () => {
+    show({ ...weekly, irrigation: { ...weekly.irrigation, irrigations: 2, irrigatedSections: 5, totalSections: 8, percent: 62.5 } });
+    expect(screen.getAllByText('5 de 8 secciones regadas en 2 riegos').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/turno/)).not.toBeInTheDocument();
   });
 
   it('ADMIN lee las incidencias sin enlace al detalle (§2.5)', () => {

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import pe.edu.pucp.hesperides.engine.reporting.CoverageCalculator;
 import pe.edu.pucp.hesperides.engine.reporting.DateRange;
 import pe.edu.pucp.hesperides.engine.reporting.ReportPeriods;
-import pe.edu.pucp.hesperides.modules.irrigation.repository.IrrigationZoneQueries;
+import pe.edu.pucp.hesperides.modules.reports.repository.SectorQueries;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.TopList;
 import pe.edu.pucp.hesperides.modules.reports.dto.WeeklyReportResponse;
@@ -31,7 +31,7 @@ public class WeeklyReportBuilder {
     private final WeeklyWorkQueries work;
     private final IrrigationReportQueries irrigation;
     private final WeeklyIncidentQueries incidents;
-    private final IrrigationZoneQueries zones;
+    private final SectorQueries zones;
     private final ReportCalendar calendar;
 
     public WeeklyReportResponse build(LocalDate weekStart, Long sectorId, ReportScope scope) {
@@ -77,22 +77,23 @@ public class WeeklyReportBuilder {
         return new Sector(ref.id(), ref.code(), ref.name(), sections.size(), CoverageCalculator.area(area));
     }
 
-    /** Without any turn in the week the percent is null, never 0 % (D-15). */
+    /** Without any irrigation in the week the percent is null, never 0 % (D-15). */
     private Irrigation irrigation(Long sectorId, DateRange week, List<SectionRef> sections) {
-        long turns = irrigation.turns(sectorId, week);
-        Set<Long> irrigated = irrigation.irrigatedSections(sectorId, week);
+        long works = irrigation.irrigations(sectorId, week, calendar.zone());
+        Set<Long> irrigated = irrigation.irrigatedSections(sectorId, week, calendar.zone());
         int count = (int) sections.stream().filter(s -> irrigated.contains(s.sectionId())).count();
-        return new Irrigation(WeeklyReportResponse.IRRIGATION_RULE, turns, count, sections.size(),
-                turns == 0 ? null : CoverageCalculator.percent(count, sections.size()),
-                WeeklyAssembler.notIrrigated(sections, irrigated, irrigation.lastIrrigated(sectorId, week.to())));
+        return new Irrigation(WeeklyReportResponse.IRRIGATION_RULE, works, count, sections.size(),
+                works == 0 ? null : CoverageCalculator.percent(count, sections.size()),
+                WeeklyAssembler.notIrrigated(sections, irrigated,
+                        irrigation.lastIrrigated(sectorId, week.to(), calendar.zone())));
     }
 
     private Incidents incidents(ReportFilter filter, Long sectorId, LocalDate cutoff, ReportScope scope) {
         var rows = incidents.openAtCutoff(filter, sectorId, cutoff);
         var located = rows.stream().filter(r -> sectorId.equals(r.sectorId())).toList();
-        long open = located.stream().filter(r -> !"PENDING_APPROVAL".equals(r.statusCode())).count();
+        long open = located.stream().filter(r -> !WeeklyIncidentQueries.NOT_ACTIVE.equals(r.statusCode())).count();
         long unlocated = rows.stream()
-                .filter(r -> r.sectorId() == null && !"PENDING_APPROVAL".equals(r.statusCode())).count();
+                .filter(r -> r.sectorId() == null && !WeeklyIncidentQueries.NOT_ACTIVE.equals(r.statusCode())).count();
         var items = located.stream().map(r -> WeeklyAssembler.incident(r, cutoff)).toList();
         return new Incidents(cutoff, open, located.size() - open, scope.campus() ? unlocated : null,
                 TopList.of(items, WeeklyAssembler.INCIDENTS_CAP));

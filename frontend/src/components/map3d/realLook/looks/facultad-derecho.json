@@ -4,88 +4,108 @@
   "folder": "facuttad-derecho",
   "photos": [
     "frente1.jpg",
-    "frente2.jpg"
+    "frente2.jpg",
+    "frente3.jpg",
+    "lado1.jpg",
+    "desde_adentro.jpg"
   ],
-  "notes": "Frente = sur (la torre queda detrás y a la derecha en frente1.jpg). Alas blancas con ventanas (frente2.jpg), el bloque de entrada gris verdoso (frente1.jpg). La torre de concreto y vidrio no tiene una vista enderezable sin árboles ni el filo delante: lleva el patrón con sus colores medidos.",
+  "materials": {
+    "blanco": {
+      "color": "#e8e8e4"
+    },
+    "techo": {
+      "color": "#c9c7c1"
+    },
+    "ventanas": {
+      "color": "#8f989c"
+    },
+    "concreto": {
+      "color": "#c8c6c0"
+    },
+    "caqui": {
+      "color": "#b4ad96"
+    },
+    "vidrio": {
+      "glass": "#6c8288",
+      "frame": "#d0d4d2",
+      "moduleM": 1.5,
+      "heightM": 3.4,
+      "frameM": 0.06,
+      "spandrel": {
+        "color": "#577077",
+        "heightM": 1.0
+      },
+      "vary": 0.08
+    }
+  },
   "zones": [
     {
-      "id": "edificio",
-      "roof": "#d8d6cf",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#eeeeea",
-          "photo": {
-            "tile": "derecho-ala",
-            "widthM": 14,
-            "heightM": 6.0
+      "id": "alas",
+      "wall": "blanco",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            8.1
+          ],
+          "floors": {
+            "everyM": 3.9,
+            "startM": 0.2,
+            "bandM": [
+              1.0,
+              2.6
+            ]
           }
         }
-      }
+      ]
     },
     {
       "id": "bloque-entrada",
       "where": {
         "north": [
           0,
-          0.42
+          0.2
         ],
         "east": [
           0.45,
           1
-        ],
-        "heightM": [
-          0,
-          7.6
         ]
       },
-      "roof": "#cfcdc4",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#8e9083",
-          "photo": {
-            "tile": "derecho-entrada",
-            "widthM": 6,
-            "heightM": 7.0
-          }
-        }
-      }
+      "wall": "caqui",
+      "roof": "techo"
     },
     {
       "id": "torre",
       "where": {
-        "heightM": [
-          7.6,
-          30
+        "east": [
+          0.68,
+          1
+        ],
+        "north": [
+          0.25,
+          1
         ]
       },
-      "roof": "#cbc8be",
+      "wall": "concreto",
+      "roof": "techo",
       "faces": {
-        "E": {
-          "kind": "curtain",
-          "wall": "#cbc8be",
-          "glass": "#7e929c",
-          "frame": "#69727a",
-          "floorM": 3.6,
-          "moduleM": 1.4,
-          "frameM": 0.07
-        },
-        "NE": {
-          "sameAs": "E"
-        },
-        "other": {
-          "kind": "ribbon",
-          "wall": "#cdc9bd",
-          "glass": "#47525a",
-          "frame": "#3a3d40",
-          "floorM": 3.6,
-          "sillM": 1.0,
-          "windowM": 1.3,
-          "moduleM": 1.8,
-          "frameM": 0.06
-        }
+        "W": [
+          {
+            "material": "vidrio",
+            "u": [
+              -18.1,
+              5.2
+            ],
+            "v": [
+              4.0,
+              20.5
+            ]
+          }
+        ]
       }
     }
-  ]
+  ],
+  "notes": "Frente al sur (la torre queda detrás y a la derecha en frente1.jpg). Alas blancas de dos pisos con su fila de ventanas en cada piso (frente2.jpg, lado1.jpg, desde_adentro.jpg; D-04). Bloque de entrada y pórtico caqui (frente1.jpg, frente2.jpg). Torre de concreto caravista con el muro cortina en el tramo central de su cara oeste, del segundo piso arriba (frente3.jpg); la cara este no tiene foto y queda de concreto, excepción confirmada a la coherencia de D-06 (13 nov). Las letras no se dibujan."
 }

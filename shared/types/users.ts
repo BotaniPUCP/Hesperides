@@ -41,6 +41,8 @@ export interface UserDetail {
   teams: TeamSummary[];
   createdAt: string;
   updatedAt: string;
+  /** Nombre, apellido y correo sin tildes: en qué se busca en el navegador (SPEC-119). */
+  searchKey: string;
 }
 
 /** Cuerpo de POST /users. El ADMIN escribe la contraseña inicial (SPEC-100 §2.7). */

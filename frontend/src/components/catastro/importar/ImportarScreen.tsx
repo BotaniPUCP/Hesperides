@@ -36,10 +36,7 @@ export function ImportarScreen() {
       ) : imp.vista && imp.fase !== 'revisando' ? (
         <VistaPrevia imp={imp} />
       ) : (
-        <>
-          <SelectorDeArchivos key={imp.kind} imp={imp} />
-          {imp.error && <p role="alert" className="text-sm text-action-danger">{imp.error}</p>}
-        </>
+        <SelectorDeArchivos key={imp.kind} imp={imp} />
       )}
       {imp.avisoSinGuardar}
     </div>

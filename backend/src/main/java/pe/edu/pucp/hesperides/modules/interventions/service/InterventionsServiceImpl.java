@@ -45,10 +45,12 @@ public class InterventionsServiceImpl implements InterventionsService {
     private final InterventionEvidenceFiles evidenceFiles;
     private final InterventionReviewPolicy reviewPolicy;
     private final InterventionExecutionSchedule schedule;
+    private final CuttingMachineryRule machinery;
     private final InterventionAccess access;
     private final InterventionZoneSelectionsService zoneSelections;
     private final InterventionCampusSelections campusSelections;
     private final pe.edu.pucp.hesperides.modules.incidents.repository.IncidentLinkQueries incidentLinks;
+    private final pe.edu.pucp.hesperides.modules.incidents.service.IncidentLinksService incidentLinking;
 
     private void validate(Object request) {
         if(request==null)throw new ValidationException("Request is required");
@@ -66,8 +68,8 @@ public class InterventionsServiceImpl implements InterventionsService {
     private void role(User u,String... allowed){
         if(!Arrays.asList(allowed).contains(u.getRoleCode()))throw new AccessDeniedException("Action not allowed for this role");
     }
-    private void scope(User u,Long team,Long assignee){
-        access.requireRead(u,team,assignee);
+    private void scope(User u,Long id,Long team,Long assignee){
+        access.requireRead(u,id,team,assignee);
     }
     @Override public Page<InterventionSummaryResponse> findAll(Filter f,Pageable p){
         var u=actor();
@@ -83,8 +85,8 @@ public class InterventionsServiceImpl implements InterventionsService {
     }
     private InterventionDetailResponse detail(Long id,User u){
         var d=queries.detail(id).orElseThrow(()->new ResourceNotFoundException("Intervention not found"));
-        scope(u,d.getTeamId(),d.getAssignedToUserId());
-        d.setResponsibleSupervisorUserId(references.responsibleSupervisor(d.getTeamId()));
+        scope(u,id,d.getTeamId(),d.getAssignedToUserId());
+        d.setResponsibleSupervisorUserId(d.isActivityWorkflow()?d.getAssignedToUserId():references.responsibleSupervisor(d.getTeamId()));
         boolean dateAvailable=schedule.canExecute(d.getScheduledDate());
         d.setExecutionBlockedUntil(dateAvailable?null:d.getScheduledDate());
         d.setIncidentIntegrationAvailable(true);
@@ -246,21 +248,34 @@ public class InterventionsServiceImpl implements InterventionsService {
             s.softDelete();submissions.saveAndFlush(s);
         }
         schedule.requirePlanningDate(r.scheduledDate());
+        if(r.machinery())machinery.requireAllowed(r.scheduledDate());
         var i=new Intervention();i.setCode(references.nextCode());i.setVersion(0L);i.setCreatedByUserId(u.getId());
         i.setPlanningStatusItemId(status("PLANNED"));
         applyHeader(i,r);interventions.saveAndFlush(i);
         applyLocations(i,r.locations(),false);locations.flush();elements.flush();
         event(i,u,"CREATED",null,null,Map.of("planning",snapshot(i)));
+        incidentLinking.linkFromIntervention(i.getId(),r.incidentIds(),u);
         var s=new InterventionSubmission();s.setActorUserId(u.getId());s.setOperation("CREATE");s.setIdempotencyKey(key);
         s.setRequestSha256(hash);s.setInterventionId(i.getId());s.setExpiresAt(Instant.now().plus(24,ChronoUnit.HOURS));
         submissions.saveAndFlush(s);return new Creation(detail(i.getId(),u),false);
     }
     @Override @Transactional public InterventionDetailResponse update(Long id,Planning r){
+        return updatePlan(id,r,false);
+    }
+    @Override @Transactional public InterventionDetailResponse updateActivityPlanning(Long id,Planning r){
+        return updatePlan(id,r,true);
+    }
+    private InterventionDetailResponse updatePlan(Long id,Planning r,boolean global){
         validate(r);
-        var u=actor();var i=locked(id,u);role(u,"ADMIN","COORDINADOR");version(i,r.version());editable(i);
+        var u=actor();role(u,"ADMIN","COORDINADOR");
+        var i=global?interventions.findForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Activity not found")):locked(id,u);
+        if(global && !queries.isActivity(id))throw new ResourceNotFoundException("Activity not found");
+        version(i,r.version());editable(i);
         var before=snapshot(i);var oldDate=i.getScheduledDate();
         boolean rescheduled=!Objects.equals(oldDate,r.scheduledDate());
         if(rescheduled&&(r.rescheduleReason()==null||r.rescheduleReason().isBlank()))throw new BusinessRuleException("Reschedule reason is required");
+        // SPEC-115 §5.3: una fecha vieja ya inválida solo cuenta si cambian la fecha o la marca.
+        if(r.machinery()&&(rescheduled||!i.isUsesCuttingMachinery()))machinery.requireAllowed(r.scheduledDate());
         applyHeader(i,r);applyLocations(i,r.locations(),true);i.setVersion(i.getVersion()+1);interventions.saveAndFlush(i);
         locations.flush();elements.flush();
         event(i,u,"UPDATED",i.getPlanningStatusItemId(),null,Map.of("previous",before,"current",snapshot(i)));
@@ -487,7 +502,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         // Authorize with a projection first, without caching a stale managed aggregate.
         // The nonblocking submit lock must precede any wait on the aggregate row.
         var visible = queries.detail(id).orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
-        scope(user, visible.getTeamId(), visible.getAssignedToUserId());
+        scope(user,id, visible.getTeamId(), visible.getAssignedToUserId());
         if (key == null) throw new ValidationException("Idempotency-Key UUID is required");
         if (!references.lockEvidenceSubmission(user.getId(), key, request.clientReference())) {
             throw new ConflictException("Evidence announcement is in progress");
@@ -622,7 +637,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         var user = actor();
         var intervention = interventions.findById(id).filter(i -> !i.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException("Intervention not found"));
-        scope(user, intervention.getTeamId(), intervention.getAssignedToUserId());
+        scope(user,id, intervention.getTeamId(), intervention.getAssignedToUserId());
         var evidence = evidence(id, evidenceId);
         if (locations.findById(evidence.getInterventionLocationId()).filter(l -> !l.isDeleted()).isEmpty()) {
             throw new ResourceNotFoundException("Evidence location not found");
@@ -703,7 +718,9 @@ public class InterventionsServiceImpl implements InterventionsService {
 
     private Intervention locked(Long id,User u){
         var i=interventions.findForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Intervention not found"));
-        scope(u,i.getTeamId(),i.getAssignedToUserId());return i;
+        scope(u,id,i.getTeamId(),i.getAssignedToUserId());
+        if(queries.isActivity(id))throw new ConflictException("Use the global activities API for this work");
+        return i;
     }
     private void version(Intervention i,Long version){
         if(version==null)throw new ValidationException("Version is required");
@@ -740,6 +757,7 @@ public class InterventionsServiceImpl implements InterventionsService {
         if(references.code(origin).equals("FINDING")&&references.code(reported).equals("NONE"))throw new BusinessRuleException("Finding requires a report source");
         if(r.requestedAt()!=null&&r.requestedAt().isAfter(r.scheduledDate()))throw new BusinessRuleException("Request date cannot follow scheduled date");
         i.setOriginItemId(origin);i.setReportedByItemId(reported);i.setScheduledDate(r.scheduledDate());i.setDescription(r.description());
+        i.setUsesCuttingMachinery(r.machinery());
         i.setExternalCode(r.externalCode());i.setRequestedAt(r.requestedAt());
     }
     private void applyLocations(Intervention i,List<Location> requests,boolean editing){
@@ -814,7 +832,7 @@ public class InterventionsServiceImpl implements InterventionsService {
     private Map<String,Object> snapshot(Intervention i){
         var m=new LinkedHashMap<String,Object>();m.put("classItemId",i.getInterventionClassItemId());m.put("typeItemId",i.getInterventionTypeItemId());
         m.put("campusSelectionRevision",i.getCampusSelectionRevision());
-        m.put("scheduledDate",i.getScheduledDate());m.put("description",i.getDescription());m.put("teamId",i.getTeamId());
+        m.put("scheduledDate",i.getScheduledDate());m.put("usesCuttingMachinery",i.isUsesCuttingMachinery());m.put("description",i.getDescription());m.put("teamId",i.getTeamId());
         m.put("assignedToUserId",i.getAssignedToUserId());m.put("originItemId",i.getOriginItemId());m.put("reportedByItemId",i.getReportedByItemId());
         m.put("externalCode",i.getExternalCode());m.put("requestedAt",i.getRequestedAt());
         m.put("locations",locations.findByInterventionIdAndDeletedAtIsNullOrderById(i.getId()).stream().map(this::locationSnapshot).toList());return m;

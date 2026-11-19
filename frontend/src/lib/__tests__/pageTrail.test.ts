@@ -8,7 +8,7 @@ describe('buildPageTrail', () => {
   });
 
   it('una pantalla suelta del menú cuelga de Inicio', () => {
-    expect(buildPageTrail('/riego', { withHome: true })).toEqual([{ label: 'Inicio', href: '/' }, { label: 'Riego' }]);
+    expect(buildPageTrail('/reportes', { withHome: true })).toEqual([{ label: 'Inicio', href: '/' }, { label: 'Reportes' }]);
   });
 
   it('una pantalla de un grupo muestra el grupo, sin enlace porque no es una página', () => {
@@ -24,7 +24,7 @@ describe('buildPageTrail', () => {
   });
 
   it('no repite el nombre cuando el grupo se llama igual que su pantalla', () => {
-    expect(labels('/intervenciones')).toEqual(['Inicio', 'Intervenciones']);
+    expect(labels('/intervenciones')).toEqual(['Inicio', 'Actividades']);
   });
 
   it('una subruta enlaza a su pantalla y termina en el código', () => {
@@ -38,8 +38,11 @@ describe('buildPageTrail', () => {
 
   it.each([
     ['/incidencias/nueva', 'Informar'],
-    ['/intervenciones/nueva', 'Nueva intervención'],
+    ['/intervenciones/nueva', 'Nueva actividad'],
     ['/lugares/nuevo', 'Nuevo lugar'],
+    ['/intervenciones/planificacion/nueva', 'Nueva planificación'],
+    ['/intervenciones/frecuencias/nueva', 'Nueva frecuencia'],
+    ['/intervenciones/conjuntos/nuevo', 'Nuevo conjunto'],
   ])('%s tiene un nombre propio y no el segmento de la URL', (ruta, nombre) => {
     expect(labels(ruta).at(-1)).toBe(nombre);
   });
@@ -61,7 +64,7 @@ describe('buildPageTrail', () => {
 
   it('la pantalla puede dar el nombre real de un segmento', () => {
     expect(labels('/intervenciones/13/editar', { labels: { 13: 'INT-000013' } })).toEqual([
-      'Inicio', 'Intervenciones', 'INT-000013', 'Editar',
+      'Inicio', 'Actividades', 'INT-000013', 'Editar',
     ]);
   });
 

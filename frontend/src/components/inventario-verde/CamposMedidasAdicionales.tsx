@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { ExtraMeasure } from '@shared/types';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Modal, Select } from '@/components/ui';
 import { puedeCambiarCriticidad } from '@/components/catastro/permisos';
 import { useAuth } from '@/hooks/useAuth';
 import { useCatalog } from '@/hooks/useCatalog';
@@ -32,6 +32,7 @@ export function CamposMedidasAdicionales({ valores, onCambiar }: CamposMedidasAd
   const [unidad, setUnidad] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [creando, setCreando] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 
   const elegidas = new Set(valores.map((v) => v.code));
   const disponibles = [...(data ?? []), ...creadas].filter((m) => !elegidas.has(m.code));
@@ -50,8 +51,10 @@ export function CamposMedidasAdicionales({ valores, onCambiar }: CamposMedidasAd
       onCambiar([...valores, aElegida(nueva)]);
       setNombre('');
       setUnidad(null);
+      setConfirmModalOpen(false);
     } catch (err) {
       setError(err instanceof ApiError ? mensajeDeApiError(err) : 'No se pudo crear la medida.');
+      setConfirmModalOpen(false);
     } finally {
       setCreando(false);
     }
@@ -79,20 +82,21 @@ export function CamposMedidasAdicionales({ valores, onCambiar }: CamposMedidasAd
         </fieldset>
       ))}
 
-      <div className="space-y-1">
-        <label htmlFor="anadir-medida" className="block text-sm text-neutral-700">Añadir medida</label>
-        <select
-          id="anadir-medida"
-          value=""
-          onChange={(e) => anadir(e.target.value)}
-          className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-0 px-3 text-sm"
-        >
-          <option value="">Elegir del catálogo…</option>
-          {disponibles.map((m) => (
-            <option key={m.code} value={m.code}>{m.label} ({unidadCorta(m.unitCode)})</option>
-          ))}
-        </select>
-      </div>
+      <Select
+        id="anadir-medida"
+        label="Añadir medida"
+        placeholder="Elegir del catálogo…"
+        options={disponibles.map((m, i) => ({
+          id: i + 1,
+          code: m.code,
+          label: `${m.label} (${unidadCorta(m.unitCode)})`,
+        }))}
+        value=""
+        onChange={(opt) => {
+          if (opt?.code) anadir(opt.code);
+        }}
+        disabled={disponibles.length === 0}
+      />
 
       {puedeCrear && (
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
@@ -104,12 +108,58 @@ export function CamposMedidasAdicionales({ valores, onCambiar }: CamposMedidasAd
             value={unidad}
             onChange={(o) => setUnidad(o?.code ?? null)}
           />
-          <Button variant="secondary" loading={creando} disabled={!nombre.trim() || !unidad} onClick={() => void crear()}>
+          <Button
+            variant="secondary"
+            disabled={!nombre.trim() || !unidad}
+            onClick={() => setConfirmModalOpen(true)}
+          >
             Crear medida
           </Button>
         </div>
       )}
       {error && <p role="alert" className="text-xs text-action-danger">{error}</p>}
+
+      {confirmModalOpen && (
+        <Modal
+          isOpen={confirmModalOpen}
+          onClose={() => setConfirmModalOpen(false)}
+          title="Crear medida adicional"
+          size="sm"
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
+              <Button variant="secondary" onClick={() => setConfirmModalOpen(false)} disabled={creando}>
+                Cancelar
+              </Button>
+              <Button variant="primary" loading={creando} onClick={() => void crear()}>
+                Confirmar creación
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-600">
+              Se registrará una nueva medida en el catálogo global del sistema.
+            </p>
+
+            <div className="space-y-2 p-3 rounded-xl bg-neutral-50 border border-neutral-200 text-sm">
+              <div className="flex justify-between py-1 border-b border-neutral-200/60">
+                <span className="text-neutral-500">Nombre:</span>
+                <span className="font-semibold text-neutral-900">{nombre.trim()}</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-neutral-500">Unidad:</span>
+                <span className="font-medium text-neutral-800">
+                  {unidades.find((u) => u.code === unidad)?.label ?? unidadCorta(unidad ?? '')}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-neutral-500 leading-relaxed">
+              Esta medida estará disponible para su uso en otras especies. Ten en cuenta que seguirá registrada aunque canceles el registro de esta especie.
+            </p>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

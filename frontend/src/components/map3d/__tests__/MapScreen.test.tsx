@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { MapLayersResponse } from '@shared/types';
+import type { Balloon, MapLayersResponse } from '@shared/types';
 import { MapScreen } from '../MapScreen';
 import { layersWithTwoBlocks, sampleLayers, SECOND_BLOCK_ID } from '../__fixtures__/mapLayers';
 import type { CameraPose } from '../viewer/cameraRig';
@@ -9,9 +9,14 @@ import { usePlanModel } from '@/hooks/usePlanModel';
 import type { PlanModel } from '../viewer/planModel';
 import { mapApi } from '@/lib/map-api';
 import { ApiError } from '@/lib/api';
+import { ToastProvider } from '@/components/ui';
+import { saveThemePreference } from '@/lib/theme-store';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { placesApi } from '@/lib/places-api';
+import { balloonsApi } from '@/lib/balloons-api';
 import type { MapCatalog } from '@shared/types';
+import { toSceneData } from '../sceneData';
+import { defaultPerspectiveView, mapViewToPose } from '../mapView';
 
 jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
 jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: mockUser }) }));
@@ -20,6 +25,7 @@ jest.mock('@/hooks/useMapLayers', () => ({ useMapLayers: jest.fn() }));
 jest.mock('@/hooks/usePlanModel', () => ({ usePlanModel: jest.fn() }));
 jest.mock('@/lib/map-api', () => ({ mapApi: { describe: jest.fn() } }));
 jest.mock('@/lib/places-api', () => ({ placesApi: { map: jest.fn() } }));
+jest.mock('@/lib/balloons-api', () => ({ balloonsApi: { list: jest.fn(() => new Promise(() => {})) } }));
 
 const mockedCreate = createViewer as jest.MockedFunction<typeof createViewer>;
 const mockedLayers = useMapLayers as jest.MockedFunction<typeof useMapLayers>;
@@ -32,10 +38,11 @@ let testNumber = 0;
 
 function fakeViewer(): jest.Mocked<Viewer> {
   return {
-    setPaint: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setHour: jest.fn(),
+    setPaint: jest.fn(), setBalloons: jest.fn(), setAdminMode: jest.fn(),
+  setSequence: jest.fn(), setPoseNow: jest.fn(), setSequenceLook: jest.fn(), freezeFrame: jest.fn(), beginExport: jest.fn(), endExport: jest.fn(), setMarkedSections: jest.fn(), setMarkedSpecimens: jest.fn(), focusSections: jest.fn(), setMarkedBuildings: jest.fn(), sectionCodesInScreenRect: jest.fn(), specimenCodesInScreenRect: jest.fn(), setLayerVisible: jest.fn(), select: jest.fn(), setNight: jest.fn(), setSunset: jest.fn(), setSunsetHour: jest.fn(), snapshot: jest.fn(), setCaptureMode: jest.fn(), setHour: jest.fn(),
     setShadows: jest.fn(), setLabels: jest.fn(), setGrayBuildings: jest.fn(), setRealColors: jest.fn(), fit: jest.fn(), top: jest.fn(),
-    north: jest.fn(), toggleSpin: jest.fn(), pose: jest.fn(() => SAVED_POSE),
-    setViewCones: jest.fn(), flyToPose: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(), setPinLatLon: jest.fn(), dispose: jest.fn(),
+    north: jest.fn(), toggleSpin: jest.fn(), pose: jest.fn(() => SAVED_POSE), livePerspective: jest.fn(),
+    setViewCones: jest.fn(), highlightViewCone: jest.fn(), setIncidentMarkers: jest.fn(), flyToPose: jest.fn(), focusViewCone: jest.fn(), focusLatLon: jest.fn(), setPinLatLon: jest.fn(), dispose: jest.fn(),
   };
 }
 
@@ -48,7 +55,7 @@ let callbacks: ViewerCallbacks;
 
 async function renderLoaded(data?: MapLayersResponse) {
   mockedLayers.mockReturnValue(loaded(data));
-  const result = render(<MapScreen />);
+  const result = render(<MapScreen />, { wrapper: ToastProvider });
   await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
   return result;
 }
@@ -56,8 +63,10 @@ async function renderLoaded(data?: MapLayersResponse) {
 const catalog: MapCatalog = {
   places: [{ code: 'LUG-0001', name: 'Edificio de prueba', parentName: null, buildingIds: [1], lat: -12.07, lon: -77.08 }],
   perspectives: [{ id: 7, place: { code: 'LUG-0001', name: 'Edificio de prueba' }, displayName: 'Espalda de Edificio de prueba',
-    lat: -12.0701, lon: -77.08, headingDeg: 0, thumbnailUrl: 'http://api/files/places/3?size=thumb' }],
+    lat: -12.0701, lon: -77.08, headingDeg: 0, thumbnailUrl: 'http://api/files/places/3?size=thumb',
+    mapView: { camera: { lat: -12.0705, lon: -77.08, heightM: 120 }, target: { lat: -12.0701, lon: -77.08, heightM: 0 } } }],
 };
+const plane = toSceneData(sampleLayers).plane;
 
 beforeEach(() => {
   testNumber += 1;
@@ -77,20 +86,20 @@ afterEach(() => jest.clearAllMocks());
 describe('MapScreen', () => {
   it('muestra un esqueleto mientras llegan las capas', () => {
     mockedLayers.mockReturnValue({ data: null, isLoading: true, errorMessage: null, stale: false });
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     expect(screen.queryByTestId('map-3d')).not.toBeInTheDocument();
   });
 
   it('informa si no hay capas que mostrar', () => {
     mockedLayers.mockReturnValue({ data: null, isLoading: false, errorMessage: 'Sin conexión. Verifique su red.', stale: false });
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     expect(screen.getByRole('alert')).toHaveTextContent('Sin conexión');
   });
 
   it('si las capas llegan incompletas avisa en vez de romper la página', () => {
     const { vegetation: _omitted, ...incomplete } = sampleLayers.layers;
     mockedLayers.mockReturnValue(loaded({ ...sampleLayers, layers: incomplete as typeof sampleLayers.layers }));
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     expect(screen.getByRole('alert')).toHaveTextContent('Los datos del mapa están incompletos');
   });
 
@@ -181,6 +190,13 @@ describe('MapScreen', () => {
     expect(viewer.setLayerVisible).toHaveBeenLastCalledWith('supervision', true);
   });
 
+  it('arranca en colores reales: el visor nace con ellos y el botón aparece activo', async () => {
+    await renderLoaded();
+    expect(mockedCreate.mock.calls[0][6]).toMatchObject({ realColors: true });
+    expect(screen.getByRole('button', { name: 'Colores reales' })).toHaveAttribute('aria-pressed', 'true');
+    expect(viewer.setRealColors).not.toHaveBeenCalled();
+  });
+
   it('las opciones de vista llegan al visor', async () => {
     await renderLoaded();
     fireEvent.click(screen.getByRole('button', { name: 'Noche' }));
@@ -232,7 +248,7 @@ describe('MapScreen', () => {
 
   it('sin red avisa que el mapa puede estar desactualizado', async () => {
     mockedLayers.mockReturnValue({ ...loaded(), stale: true });
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     expect(await screen.findByText(/última versión descargada/)).toBeInTheDocument();
   });
 
@@ -243,7 +259,7 @@ describe('MapScreen', () => {
 
   it('al salir de la pantalla libera el visor', async () => {
     mockedLayers.mockReturnValue(loaded());
-    const { unmount } = render(<MapScreen />);
+    const { unmount } = render(<MapScreen />, { wrapper: ToastProvider });
     await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
     unmount();
     expect(viewer.dispose).toHaveBeenCalled();
@@ -251,10 +267,10 @@ describe('MapScreen', () => {
 
   it('al volver a la pantalla la cámara sigue donde se dejó', async () => {
     mockedLayers.mockReturnValue(loaded());
-    const { unmount } = render(<MapScreen />);
+    const { unmount } = render(<MapScreen />, { wrapper: ToastProvider });
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(1));
     unmount();
-    render(<MapScreen />);
+    render(<MapScreen />, { wrapper: ToastProvider });
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledTimes(2));
     expect(mockedCreate.mock.calls[1][4]).toEqual(SAVED_POSE);
   });
@@ -289,7 +305,7 @@ describe('MapScreen', () => {
       unmount();
       viewer = fakeViewer();
       mockedCreate.mockClear();
-      const result = render(<MapScreen />);
+      const result = render(<MapScreen />, { wrapper: ToastProvider });
       await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
       return result;
     }
@@ -328,6 +344,18 @@ describe('MapScreen', () => {
 
       await waitFor(() => expect(viewer.setNight).toHaveBeenCalledWith(true));
       expect(viewer.setShadows).not.toHaveBeenCalled();
+    });
+
+    it('si se apagaron los colores reales, el visor nuevo nace con ellos y los apaga', async () => {
+      const { unmount } = await renderLoaded();
+      fireEvent.click(screen.getByRole('button', { name: 'Colores reales' }));
+      viewer.setRealColors.mockClear();
+
+      await leaveAndReturn(unmount);
+
+      await waitFor(() => expect(viewer.setRealColors).toHaveBeenCalledWith(false));
+      expect(mockedCreate.mock.calls[mockedCreate.mock.calls.length - 1][6]).toMatchObject({ realColors: true });
+      expect(screen.getByRole('button', { name: 'Colores reales' })).toHaveAttribute('aria-pressed', 'false');
     });
 
     it('conserva el elemento elegido y su ficha sin mover la cámara', async () => {
@@ -559,26 +587,44 @@ describe('MapScreen', () => {
       await waitFor(() => expect(viewer.setViewCones).toHaveBeenLastCalledWith([{ id: 7, lat: -12.0701, lon: -77.08, headingDeg: 0 }]));
     });
 
-    it('pulsar un cono abre la ficha de la perspectiva con su foto y el enlace al lugar', async () => {
+    it('pulsar un cono vuela al encuadre guardado y abre la ficha de la perspectiva', async () => {
       await renderLoaded();
       await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
 
       await act(async () => callbacks.onViewConePick?.(7));
 
+      expect(viewer.highlightViewCone).toHaveBeenCalledWith(7);
+      expect(viewer.flyToPose).toHaveBeenCalledWith(mapViewToPose(plane, catalog.perspectives[0].mapView!));
       const card = await screen.findByRole('region', { name: 'Espalda de Edificio de prueba' });
       expect(within(card).getByRole('img')).toHaveAttribute('src', 'http://api/files/places/3?size=thumb');
       expect(within(card).getByRole('link', { name: /Ver Edificio de prueba en el catálogo/ })).toHaveAttribute('href', '/lugares/LUG-0001');
     });
 
-    it('el buscador encuentra una perspectiva y lleva la cámara a su cono', async () => {
+    it('el buscador encuentra una perspectiva y vuela a su encuadre guardado', async () => {
       await renderLoaded();
       await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
       const box = screen.getByRole('combobox', { name: 'Buscar en el mapa' });
       fireEvent.change(box, { target: { value: 'espalda de edificio' } });
       fireEvent.click(await screen.findByRole('option', { name: /Espalda de Edificio de prueba/ }));
 
-      expect(viewer.focusViewCone).toHaveBeenCalledWith(7);
+      expect(viewer.highlightViewCone).toHaveBeenCalledWith(7);
+      expect(viewer.flyToPose).toHaveBeenCalledWith(mapViewToPose(plane, catalog.perspectives[0].mapView!));
       expect(screen.getByRole('region', { name: 'Espalda de Edificio de prueba' })).toBeInTheDocument();
+    });
+
+    it('si la perspectiva no tiene encuadre guardado, vuela al encuadre por defecto de su rumbo', async () => {
+      const withoutSavedView: MapCatalog = {
+        ...catalog,
+        perspectives: [{ ...catalog.perspectives[0], mapView: null }],
+      };
+      (placesApi.map as jest.Mock).mockResolvedValueOnce(withoutSavedView);
+      await renderLoaded();
+      await waitFor(() => expect(placesApi.map).toHaveBeenCalled());
+      fireEvent.change(screen.getByRole('combobox', { name: 'Buscar en el mapa' }), { target: { value: 'espalda de edificio' } });
+      fireEvent.click(await screen.findByRole('option', { name: /Espalda de Edificio de prueba/ }));
+
+      const view = defaultPerspectiveView(-12.0701, -77.08, 0);
+      expect(viewer.flyToPose).toHaveBeenCalledWith(mapViewToPose(plane, view));
     });
 
     it('la ficha de un edificio del catálogo enlaza a su lugar', async () => {
@@ -649,5 +695,102 @@ describe('MapScreen', () => {
       await renderLoaded();
       expect(screen.getByTestId('map-3d')).toBeInTheDocument();
     });
+  });
+});
+
+describe('MapScreen: globos (SPEC-113)', () => {
+  const incident: Balloon = {
+    id: 'INCIDENT:4', kind: 'INCIDENT', variant: 'HIGH', attention: true, latitude: -12.07, longitude: -77.08,
+    sectorId: 1, memberCount: 1,
+    card: { title: 'Rama caída', status: 'En atención', lines: [], progress: null, photoUrl: null, href: '/incidencias/4' },
+  };
+
+  beforeEach(() => {
+    (balloonsApi.list as jest.Mock).mockResolvedValue({ generatedAt: '', balloons: [incident], unavailableKinds: [], truncated: false,
+      campusNotices: [{ typeCode: 'HOLIDAY', text: 'Hoy es feriado: Fiestas Patrias' }] });
+  });
+
+  it('el visor nace con dónde dibujar los globos y los recibe', async () => {
+    await renderLoaded();
+
+    expect(mockedCreate.mock.calls[0][6]?.balloonRoot).toBeInstanceOf(HTMLElement);
+    await waitFor(() => expect(viewer.setBalloons).toHaveBeenLastCalledWith([incident]));
+  });
+
+  it('tocar un globo abre su ficha corta con el enlace al detalle (CA-10)', async () => {
+    await renderLoaded();
+
+    act(() => callbacks.onBalloonPick?.(incident));
+
+    expect(await screen.findByRole('heading', { name: 'Rama caída' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Ver detalle/ })).toHaveAttribute('href', '/incidencias/4');
+  });
+});
+
+describe('MapScreen: movimiento de administrador', () => {
+  const ctrlShiftU = () => act(() => { fireEvent.keyDown(window, { code: 'KeyU', key: 'U', ctrlKey: true, shiftKey: true }); });
+
+  it('Ctrl+Shift+U entra al modo, avisa un momento y la segunda vez vuelve a la vista inicial', async () => {
+    await renderLoaded();
+
+    ctrlShiftU();
+    expect(viewer.setAdminMode).toHaveBeenLastCalledWith(true);
+    expect(screen.getByText('Modo de movimiento de administrador')).toBeInTheDocument();
+
+    ctrlShiftU();
+    expect(viewer.setAdminMode).toHaveBeenLastCalledWith(false);
+    expect(screen.getByText('Modo de movimiento normal')).toBeInTheDocument();
+  });
+});
+
+describe('MapScreen: día o noche según el tema', () => {
+  afterEach(() => act(() => saveThemePreference('light')));
+
+  it('con el tema oscuro el mapa nace de noche', async () => {
+    saveThemePreference('dark');
+    await renderLoaded();
+
+    expect(viewer.setNight).toHaveBeenLastCalledWith(true);
+    expect(screen.getByRole('button', { name: 'Noche' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('con el tema claro nace de día, y si el tema cambia con el mapa abierto, el mapa lo sigue', async () => {
+    await renderLoaded();
+    expect(viewer.setNight).not.toHaveBeenCalledWith(true);
+
+    act(() => saveThemePreference('dark'));
+    expect(viewer.setNight).toHaveBeenLastCalledWith(true);
+
+    act(() => saveThemePreference('light'));
+    expect(viewer.setNight).toHaveBeenLastCalledWith(false);
+  });
+
+  it('el botón Noche lo cambia a mano hasta el siguiente cambio de tema', async () => {
+    await renderLoaded();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Noche' }));
+    expect(viewer.setNight).toHaveBeenLastCalledWith(true);
+  });
+});
+
+describe('MapScreen: franja del calendario del campus (SPEC-114 §5.5)', () => {
+  beforeEach(() => {
+    (balloonsApi.list as jest.Mock).mockResolvedValue({ generatedAt: '', balloons: [], unavailableKinds: [], truncated: false,
+      campusNotices: [{ typeCode: 'HOLIDAY', text: 'Hoy es feriado: Fiestas Patrias' }] });
+    try { localStorage.clear(); } catch { /* sin almacenamiento: la franja igual se muestra */ }
+  });
+
+  it('muestra los eventos de todo el campus de hoy y se cierra hasta mañana (CA-06)', async () => {
+    const { unmount } = await renderLoaded();
+
+    const notice = await screen.findByText('Hoy es feriado: Fiestas Patrias');
+    expect(notice.closest('[role="status"]')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar avisos del campus' }));
+    expect(screen.queryByText('Hoy es feriado: Fiestas Patrias')).not.toBeInTheDocument();
+
+    unmount();
+    await renderLoaded();
+    await waitFor(() => expect(balloonsApi.list).toHaveBeenCalled());
+    expect(screen.queryByText('Hoy es feriado: Fiestas Patrias')).not.toBeInTheDocument();
   });
 });

@@ -26,7 +26,7 @@ final class SpecimenRowReader {
         if (!r.ok()) {
             return null;
         }
-        return new SpecimenDraft(r.row().line(), r.text("codigo"), species, lat, lon, quantity == null ? 1 : quantity,
+        return new SpecimenDraft(r.row().line(), r.text("codigo"), species, lat, lon, quantity,
                 sourceReference, legacyCode, sourceLocation,
                 measurement, assessment, r.text("foto"), r.text("observaciones"));
     }

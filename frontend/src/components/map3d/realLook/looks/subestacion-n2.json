@@ -3,24 +3,36 @@
   "name": "Sub-estación N-2",
   "folder": "Sub-estacion-n2",
   "photos": [
-    "Detras.jpg"
+    "Detras.jpg",
+    "Frente.jpg",
+    "Lado.jpg"
   ],
-  "notes": "Ladrillo con marco de concreto y rejilla metálica (Detras.jpg, sin el tanque de la derecha).",
+  "materials": {
+    "muro": {
+      "color": "#b97a62"
+    },
+    "techo": {
+      "color": "#b9b6af"
+    },
+    "concreto": {
+      "color": "#c4c2bc"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b3b0aa",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#a9a6a0",
-          "photo": {
-            "tile": "subestacion-n2",
-            "widthM": 5,
-            "heightM": 3.0
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            2.45,
+            3.1
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Ladrillo con marco y remate de concreto gris y rejillas metálicas (Detras.jpg, Frente.jpg, Lado.jpg). El tanque y la escalera de al lado no son parte del edificio."
 }

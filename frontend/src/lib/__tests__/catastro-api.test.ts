@@ -70,9 +70,19 @@ describe('catastroApi', () => {
   });
 
   it('confirma con la decisión de cada duplicado', async () => {
-    await catastroApi.confirmImport(12, { 3: true, 7: false });
+    await catastroApi.confirmImport(12, { 3: true, 7: false }, 'current-plan-fingerprint');
 
-    expect(api.post).toHaveBeenCalledWith('/imports/12/confirm', { duplicates: { 3: true, 7: false } });
+    expect(api.post).toHaveBeenCalledWith('/imports/12/confirm', {
+      duplicates: { 3: true, 7: false }, summaryFingerprint: 'current-plan-fingerprint',
+    });
+  });
+
+  it('solicita al backend el resumen exacto tras las decisiones de duplicados', async () => {
+    await catastroApi.confirmationSummary(12, { 3: false }, 'preview-fingerprint');
+
+    expect(api.post).toHaveBeenCalledWith('/imports/12/confirmation-summary', {
+      duplicates: { 3: false }, planFingerprint: 'preview-fingerprint',
+    });
   });
 
   it('el historial y una evaluación nueva van por el código del ejemplar', async () => {

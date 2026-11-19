@@ -5,7 +5,7 @@
 | HU relacionada | SPEC-102 (mapa 3D), sobre el modelo de SPEC-108 |
 | Autor | Jean Piero, con Claude |
 | Plataforma | Ambas: el visor es el mismo en web y en el `WebView` de Android |
-| Estado | 12 nov 2026: los 80 edificios fotografiados llevan tramos de sus fotos (D-15), verificado en navegador. Pendiente: revisión del Anexo A, la Huaca y dónde servir el atlas (P-08) |
+| Estado | 13 nov 2026: **SPEC-112 reemplaza D-04, D-06 y D-15** (colores por zonas de la fachada, sin ventanas sueltas ni tramos de foto) y hace que el modo arranque encendido (D-10). Lo demás sigue vigente. El 12 nov los 80 edificios fotografiados llevaban tramos de sus fotos (D-15), verificado en navegador |
 | Dependencias | SPEC-108 (modelo del plano, `plan_key`, `edificios-plano.glb`), rama `feature/spec-108-edificios-del-plano` |
 
 > **Lectura obligatoria:** `specs/REGLAS.md` y SPEC-108 §2 (de dónde sale el modelo).
@@ -98,6 +98,10 @@ lleva un patrón paramétrico que se dibuja en el material, con coordenadas toma
 El primer piso puede tener un patrón distinto al de los pisos de arriba. Si las fotos muestran un
 caso que estos tipos no cubren, se agrega el tipo y se anota en §8.
 
+> **Enmienda de SPEC-112 (13 nov 2026):** los patrones de ventanas salen. Cada cara lleva regiones de
+> material ubicadas en metros, y lo único que se repite son los perfiles de un vidrio y las franjas por
+> piso (SPEC-112 D-01 a D-04).
+
 **D-05 · Techos.** Llevan el color predominante de su zona. En un edificio con zonas de distinto color,
 cada techo sigue el de su zona, y así el patrón del edificio continúa arriba. Ninguna foto muestra
 techos: no se inventan detalles (tanques, claraboyas).
@@ -106,6 +110,10 @@ techos: no se inventan detalles (tanques, claraboyas).
 mismo edificio. Por defecto es la opuesta y, si no hay, la de la misma zona con más foto. La ficha lo
 dice de forma explícita («igual a: frente»), para que quede revisable. Los árboles, las palmeras y las
 personas que tapan una fachada se resuelven igual: con el color y el ritmo de la parte que sí se ve.
+
+> **Enmienda de SPEC-112 (13 nov 2026):** una cara sin foto lleva el muro y las regiones comunes de su
+> zona, sin vidrio inventado. Copia otra cara solo cuando es evidente, y la ficha dice por qué
+> (SPEC-112 D-06).
 
 **D-07 · Luz neutra.** Se registra el color del material bajo luz diurna pareja, no el tono en sombra ni
 el quemado por el sol. Las fotos se tomaron con cielo despejado y con cielo nublado, y el campus debe
@@ -140,6 +148,10 @@ modo real usa un material propio:
 Los dos materiales se arman al cargar y el botón solo cambia cuál se usa: la geometría no se rearma
 (D-10) y el modo rosado queda idéntico al de hoy (CA-03).
 
+> **Enmienda de SPEC-112 (15 nov 2026):** el material sigue sin texturas descargadas, pero cada material lleva su
+> acabado, con grano, relieve, rugosidad y metal. El vidrio refleja más y de noche se enciende en parte. Los muros
+> recuperan parte del volumen, y las sombras siguen a la cámara (SPEC-112 D-16 a D-22).
+
 **D-14 · Rendimiento** *(decisión de Claude)*. Al cargar se precalcula por vértice la parte, la zona, la
 orientación y las coordenadas de la cara. En cada cuadro el shader solo evalúa el patrón de ventanas,
 que son unas pocas operaciones por píxel. CA-08 se mide en la laptop de desarrollo y en un Android de
@@ -155,6 +167,9 @@ recuerda como las demás. Cómo se combina con los otros botones:
   por índice.
 
 Cambiar de modo no vuelve a descargar ni a armar las mallas.
+
+> **Enmienda de SPEC-112 (13 nov 2026):** el modo arranca encendido y el rosado queda a un clic
+> (SPEC-112 D-13).
 
 **D-11 · Lo que no se versiona.** Las fotos tienen personas y son material de trabajo: quedan fuera del
 repositorio. Se versionan las fichas y la tabla carpeta → `plan_key`.
@@ -177,6 +192,9 @@ tramo de la cara más parecida (D-06). En las fotos:
 Todos los tramos van en un atlas de 4096 px de ancho (`frontend/public/models/real-look/atlas.jpg`). Las
 fichas se escriben en forma compacta en `scripts/mapa/colores_reales/fichas.json` y `fichas.py` genera los
 JSON del visor. Los patrones de D-04 quedan para lo que ninguna foto muestra bien.
+
+> **Enmienda de SPEC-112 (13 nov 2026):** salen los tramos de foto, el atlas y la forma compacta de las
+> fichas. Repetir un tramo a lo largo del muro también se lee como una copia (SPEC-112 D-12).
 
 ## 4. Entrega por tandas
 

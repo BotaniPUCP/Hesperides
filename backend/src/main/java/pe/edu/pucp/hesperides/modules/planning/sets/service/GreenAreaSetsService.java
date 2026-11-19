@@ -3,6 +3,7 @@ package pe.edu.pucp.hesperides.modules.planning.sets.service;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetRequest;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Detail;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.ElementRef;
+import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.SectorSections;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetResponses.Summary;
 
 import java.util.List;
@@ -21,4 +22,7 @@ public interface GreenAreaSetsService {
 
     /** Los ejemplares del catastro que se pueden agregar a un conjunto, con su sector. */
     List<ElementRef> elementOptions();
+
+    /** Los sectores activos con sus secciones activas, para elegir desde el mapa. */
+    List<SectorSections> sectionOptions();
 }

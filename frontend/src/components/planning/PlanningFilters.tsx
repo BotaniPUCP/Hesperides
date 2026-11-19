@@ -44,14 +44,14 @@ export function PlanningFilters({ rows, value, onChange }: Props) {
             placeholder="Ej. Polideportivo" className={FIELD} />
         </label>
         <label className="block">
-          <span className={LABEL}>Actividad</span>
+          <span className={LABEL}>Filtrar por actividad</span>
           <select value={value.actividad} onChange={(e) => onChange({ actividad: e.target.value })} className={`${FIELD} bg-neutral-0`}>
             <option value="">Todas las actividades</option>
             {activities.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
           </select>
         </label>
         <label className="block">
-          <span className={LABEL}>Estado</span>
+          <span className={LABEL}>Filtrar por estado</span>
           <select value={value.estado} onChange={(e) => onChange({ estado: e.target.value })} className={`${FIELD} bg-neutral-0`}>
             <option value="">Todos los estados</option>
             {states.map((s) => <option key={s} value={s}>{STATE_LABELS[s]}</option>)}

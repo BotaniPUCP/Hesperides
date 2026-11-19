@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,6 +32,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import pe.edu.pucp.hesperides.support.TestDatabase;
+import pe.edu.pucp.hesperides.support.TestUsers;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /** SPEC-106 de punta a punta: organizaciones, contactos, vínculos y permisos. */
 @Testcontainers
@@ -44,6 +46,13 @@ class DirectoryIntegrationTest {
 
     private static final String ORGS = "/api/v1/directory/organizations";
     private static final String CONTACTS = "/api/v1/directory/contacts";
+    private static final String ALL_ORGS = ORGS + "/all";
+    private static final String ALL_CONTACTS = CONTACTS + "/all";
+
+    /** La fila de un código dentro de la lista completa (SPEC-119): {@code $.data[?(@.code == 'X')]}. */
+    private static String row(String code, String field) {
+        return "$.data[?(@.code == '" + code + "')]." + field;
+    }
 
     @Container
     static PostgreSQLContainer<?> postgres = TestDatabase.newContainer();
@@ -57,6 +66,17 @@ class DirectoryIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    /** La auditoría guarda quién actúa: los usuarios simulados de estas pruebas tienen que existir. */
+    @BeforeEach
+    void actorsExist() {
+        TestUsers.ensure(jdbc, "admin@pucp.edu.pe", "ADMIN");
+        TestUsers.ensure(jdbc, "coordinador@pucp.edu.pe", "COORDINADOR");
+        TestUsers.ensure(jdbc, "capataz@pucp.edu.pe", "SUPERVISOR");
+        TestUsers.ensure(jdbc, "operario@pucp.edu.pe", "OPERARIO");
+    }
 
     private ResultActions send(org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request,
             String body) throws Exception {
@@ -101,10 +121,9 @@ class DirectoryIntegrationTest {
         void aCoordinatorRegistersAnOrganizationAndFindsItInTheList() throws Exception {
             String code = createOrg("Facultad de Derecho");
 
-            mockMvc.perform(get(ORGS).param("q", "derecho")).andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data.items[*].code", contains(code)))
-                    .andExpect(jsonPath("$.data.items[0].type.code").value("PUCP_UNIT"))
-                    .andExpect(jsonPath("$.data.total").value(1));
+            mockMvc.perform(get(ALL_ORGS)).andExpect(status().isOk())
+                    .andExpect(jsonPath(row(code, "type.code"), contains("PUCP_UNIT")))
+                    .andExpect(jsonPath(row(code, "searchKey"), contains(code.toLowerCase() + " facultad de derecho")));
         }
 
         @Test
@@ -146,17 +165,9 @@ class DirectoryIntegrationTest {
         void theSearchFindsAnOrganizationByItsAlias() throws Exception {
             String code = createOrg("Estudios Generales Ciencias", "EEGGCC");
 
-            mockMvc.perform(get(ORGS).param("q", "eeggcc"))
-                    .andExpect(jsonPath("$.data.items[*].code", contains(code)));
-        }
-
-        @Test
-        void similarNamesAreSuggestedBeforeCreating() throws Exception {
-            String code = createOrg("Estudios Generales Ciencias");
-
-            mockMvc.perform(get(ORGS + "/similar").param("name", "estudios generales ciencia"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.data[*].code", hasItem(code)));
+            mockMvc.perform(get(ALL_ORGS))
+                    .andExpect(jsonPath(row(code, "aliases[*]"), contains("EEGGCC")))
+                    .andExpect(jsonPath(row(code, "searchKey"), contains(code.toLowerCase() + " estudios generales ciencias eeggcc")));
         }
 
         @Test
@@ -196,7 +207,7 @@ class DirectoryIntegrationTest {
             String code = createOrg("Facultad de Derecho");
             mockMvc.perform(delete(ORGS + "/" + code)).andExpect(status().isOk());
 
-            mockMvc.perform(get(ORGS).param("q", "derecho")).andExpect(jsonPath("$.data.items", hasSize(0)));
+            mockMvc.perform(get(ALL_ORGS)).andExpect(jsonPath("$.data[*].code", not(hasItem(code))));
             mockMvc.perform(get(ORGS + "/" + code)).andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.active").value(false));
         }
@@ -222,8 +233,9 @@ class DirectoryIntegrationTest {
             String company = codeOf(send(post(ORGS), orgBody("Jardines del Sur SAC", "EXTERNAL_COMPANY", "20123456789"))
                     .andExpect(status().isCreated()));
 
-            mockMvc.perform(get(ORGS).param("typeCode", "EXTERNAL_COMPANY"))
-                    .andExpect(jsonPath("$.data.items[*].code", contains(company)));
+            mockMvc.perform(get(ALL_ORGS))
+                    .andExpect(jsonPath(row(company, "type.code"), contains("EXTERNAL_COMPANY")))
+                    .andExpect(jsonPath(row(company, "searchKey"), contains(company.toLowerCase() + " jardines del sur sac 20123456789")));
         }
     }
 
@@ -349,25 +361,18 @@ class DirectoryIntegrationTest {
             String inOie = createContact("Juan Diego Villasante", oie);
             createContact("Ana Torres", daf);
 
-            mockMvc.perform(get(CONTACTS).param("organizationCode", oie))
-                    .andExpect(jsonPath("$.data.items[*].code", contains(inOie)));
+            mockMvc.perform(get(ALL_CONTACTS))
+                    .andExpect(jsonPath(row(inOie, "organizations[*].code"), contains(oie)));
         }
 
         @Test
         void theListSearchesAcrossOrganizations() throws Exception {
             String contact = createContact("Juan Diego Villasante", createOrg("OIE"));
 
-            mockMvc.perform(get(CONTACTS).param("q", "villasante"))
-                    .andExpect(jsonPath("$.data.items[*].code", contains(contact)))
-                    .andExpect(jsonPath("$.data.items[0].organizations[0].name").value("OIE"));
-        }
-
-        @Test
-        void similarContactsComeFromAnyOrganization() throws Exception {
-            String contact = createContact("Juan Diego Villasante", createOrg("OIE"));
-
-            mockMvc.perform(get(CONTACTS + "/similar").param("fullName", "juan diego villasante"))
-                    .andExpect(jsonPath("$.data[*].code", hasItem(contact)));
+            mockMvc.perform(get(ALL_CONTACTS))
+                    .andExpect(jsonPath(row(contact, "active"), contains(true)))
+                    .andExpect(jsonPath(row(contact, "organizations[0].name"), contains("OIE")))
+                    .andExpect(jsonPath(row(contact, "searchKey"), contains(contact.toLowerCase() + " juan diego villasante")));
         }
 
         @Test
@@ -378,8 +383,8 @@ class DirectoryIntegrationTest {
 
             mockMvc.perform(get(CONTACTS + "/" + contact)).andExpect(jsonPath("$.data.active").value(true))
                     .andExpect(jsonPath("$.data.hasActiveOrganization").value(false));
-            mockMvc.perform(get(CONTACTS).param("withoutOrganization", "true"))
-                    .andExpect(jsonPath("$.data.items[*].code", contains(contact)));
+            mockMvc.perform(get(ALL_CONTACTS))
+                    .andExpect(jsonPath(row(contact, "organizations[0].active"), contains(false)));
         }
 
         @Test
@@ -397,11 +402,11 @@ class DirectoryIntegrationTest {
         }
 
         @Test
-        void aDeactivatedContactLeavesTheList() throws Exception {
+        void aDeactivatedContactStaysInTheListMarkedSoTheSearchersStillFindIt() throws Exception {
             String contact = createContact("Juan Diego Villasante", createOrg("OIE"));
             mockMvc.perform(delete(CONTACTS + "/" + contact)).andExpect(status().isOk());
 
-            mockMvc.perform(get(CONTACTS).param("q", "villasante")).andExpect(jsonPath("$.data.items", hasSize(0)));
+            mockMvc.perform(get(ALL_CONTACTS)).andExpect(jsonPath(row(contact, "active"), contains(false)));
             mockMvc.perform(get(CONTACTS + "/" + contact)).andExpect(jsonPath("$.data.active").value(false));
         }
 
@@ -580,21 +585,19 @@ class DirectoryIntegrationTest {
         @Test
         @WithMockUser(username = "capataz@pucp.edu.pe", authorities = "SUPERVISOR")
         void aForemanReadsTheDirectory() throws Exception {
-            mockMvc.perform(get(ORGS)).andExpect(status().isOk());
-            mockMvc.perform(get(CONTACTS)).andExpect(status().isOk());
+            mockMvc.perform(get(ALL_ORGS)).andExpect(status().isOk());
+            mockMvc.perform(get(ALL_CONTACTS)).andExpect(status().isOk());
         }
 
         @Test
         @WithMockUser(username = "capataz@pucp.edu.pe", authorities = "SUPERVISOR")
-        void aForemanCannotWriteNorAskForSimilarNames() throws Exception {
+        void aForemanCannotWrite() throws Exception {
             send(post(ORGS), orgBody("Facultad de Derecho", "PUCP_UNIT", null)).andExpect(status().isForbidden());
             send(put(ORGS + "/ORG-0001"), orgBody("Facultad de Derecho", "PUCP_UNIT", null)).andExpect(status().isForbidden());
             mockMvc.perform(delete(ORGS + "/ORG-0001")).andExpect(status().isForbidden());
-            mockMvc.perform(get(ORGS + "/similar").param("name", "derecho")).andExpect(status().isForbidden());
             send(post(CONTACTS), contactBody("Juan", null, null, "ORG-0001")).andExpect(status().isForbidden());
             send(put(CONTACTS + "/CON-0001"), contactBody("Juan", null, null, "ORG-0001")).andExpect(status().isForbidden());
             mockMvc.perform(delete(CONTACTS + "/CON-0001")).andExpect(status().isForbidden());
-            mockMvc.perform(get(CONTACTS + "/similar").param("fullName", "juan")).andExpect(status().isForbidden());
             send(post(CONTACTS + "/CON-0001/organizations"), "{\"organizationCode\":\"ORG-0001\"}")
                     .andExpect(status().isForbidden());
             send(put(CONTACTS + "/CON-0001/organizations/ORG-0001"), "{\"role\":\"Delegado\"}")
@@ -604,8 +607,8 @@ class DirectoryIntegrationTest {
         @Test
         @WithMockUser(username = "operario@pucp.edu.pe", authorities = "OPERARIO")
         void anOperatorHasNoAccess() throws Exception {
-            mockMvc.perform(get(ORGS)).andExpect(status().isForbidden());
-            mockMvc.perform(get(CONTACTS)).andExpect(status().isForbidden());
+            mockMvc.perform(get(ALL_ORGS)).andExpect(status().isForbidden());
+            mockMvc.perform(get(ALL_CONTACTS)).andExpect(status().isForbidden());
         }
 
         @Test
@@ -619,7 +622,7 @@ class DirectoryIntegrationTest {
             String contact = createContact("Juan Diego Villasante", createOrg("OIE"));
 
             mockMvc.perform(delete(CONTACTS + "/" + contact)).andExpect(status().isOk());
-            mockMvc.perform(get(CONTACTS).param("q", "juan")).andExpect(jsonPath("$.data.items[*].code", not(hasItem(contact))));
+            mockMvc.perform(get(ALL_CONTACTS)).andExpect(jsonPath(row(contact, "active"), contains(false)));
         }
     }
 }

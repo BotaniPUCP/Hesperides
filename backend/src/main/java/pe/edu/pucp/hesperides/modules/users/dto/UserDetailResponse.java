@@ -27,5 +27,7 @@ public record UserDetailResponse(
         Instant lastLogin,
         List<TeamSummaryResponse> teams,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        /* Nombre, apellido y correo sin tildes: en qué se busca en el navegador (SPEC-119). */
+        String searchKey) {
 }

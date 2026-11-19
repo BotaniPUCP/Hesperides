@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LoadingSkeleton } from '@/components/ui';
 import { Map3DView } from '@/components/map3d/Map3DView';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
 import { cn } from '@/lib/cn';
 import { useSceneData } from '../useSceneData';
-import { buildingName, buildingsOutline, CHILDREN_OUTLINE, pickOnMap, pointOutline, toggleBuilding, type PickedOutline } from './mapPick';
+import { buildingName, buildingsOutline, CHILDREN_OUTLINE, focusPickedOutline, pickOnMap, pointOutline, toggleBuilding, type LatLon, type PickedOutline } from './mapPick';
 
 const nada = () => undefined;
 const NO_BUILDINGS: readonly number[] = [];
@@ -21,6 +21,7 @@ const HINTS: Record<Mode, string> = {
 export interface OutlinePickerProps {
   picked: PickedOutline | null;
   onPick: (picked: PickedOutline | null) => void;
+  initialCenter?: LatLon;
 }
 
 /**
@@ -28,15 +29,22 @@ export interface OutlinePickerProps {
  * estacionamiento lo toma del mapa (los edificios se suman); en modo punto, el
  * clic marca un punto; un complejo puede tomarlo de los lugares que contiene.
  */
-export function OutlinePicker({ picked, onPick }: OutlinePickerProps) {
+export function OutlinePicker({ picked, onPick, initialCenter }: OutlinePickerProps) {
   const { data, isLoading } = useSceneData();
   const [mode, setMode] = useState<Mode>(picked?.outline.fromChildren ? 'children' : 'element');
   const [viewer, setViewer] = useState<Viewer | null>(null);
+  const initialFocusSet = useRef(false);
   const buildingIds = picked?.outline.buildingIds ?? NO_BUILDINGS;
 
   useEffect(() => {
     viewer?.setMarkedBuildings(buildingIds);
   }, [viewer, buildingIds]);
+
+  useEffect(() => {
+    if (!viewer || !data || initialFocusSet.current) return;
+    initialFocusSet.current = true;
+    focusPickedOutline(viewer, data, picked, initialCenter);
+  }, [viewer, data, picked, initialCenter]);
 
   if (isLoading) return <LoadingSkeleton variant="map" />;
   if (!data) return <p className="text-sm text-neutral-600">El mapa no está disponible; no se puede elegir el contorno.</p>;

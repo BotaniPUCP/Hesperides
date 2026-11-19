@@ -12,17 +12,16 @@ import { managesIncidents } from '@/lib/incidentRoles';
 
 export interface IncidentDetailScreenProps {
   id: number;
-  selectedInterventionId?: number | null;
 }
 
-export function IncidentDetailScreen({ id, selectedInterventionId = null }: IncidentDetailScreenProps) {
+export function IncidentDetailScreen({ id }: IncidentDetailScreenProps) {
   const { user } = useAuth();
   const { filters } = useIncidentNavigation();
   const detail = useIncidentDetail(id);
   const options = useIncidentOptions();
   const reload = () => { detail.reload(); options.reload(); };
   const query = incidentQuery(filters);
-  usePageTrail({ labels: { [id]: detail.data?.incident.officialCode ?? `Incidencia #${id}` } });
+  usePageTrail({ labels: { [id]: detail.data?.incident.code ?? `Incidencia #${id}` } });
 
   // El detalle lleva en su URL los filtros de la lista. Quien salga a una
   // intervención y regrese con la flecha debe recuperarlos.
@@ -47,7 +46,7 @@ export function IncidentDetailScreen({ id, selectedInterventionId = null }: Inci
             </div>
           )}
           <IncidentDetailPanel key={id} detail={detail.data} options={options.data} optionsLoading={options.loading}
-            selectedInterventionId={selectedInterventionId} createInterventionHref={interventionCreationHref(id,filters)}
+            createInterventionHref={interventionCreationHref(id,filters)}
             coordinator={managesIncidents(user?.role.code)} onChange={detail.updateData} onReload={reload} />
         </>
       )}

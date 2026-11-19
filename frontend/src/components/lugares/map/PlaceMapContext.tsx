@@ -10,7 +10,7 @@ import type { PlaceDetail } from '@shared/types';
  * de un lugar a otro, solo vuela.
  */
 export interface PlaceMapApi {
-  show: (place: PlaceDetail, reload: () => void) => void;
+  show: (place: PlaceDetail, reload: () => void, readOnly?: boolean) => void;
   focusPerspective: (id: number | null) => void;
 }
 

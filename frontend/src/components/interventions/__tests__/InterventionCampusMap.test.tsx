@@ -16,6 +16,34 @@ function renderMap(h=handlers(),selected=[] as ReturnType<typeof toggleCampus>) 
   return {h,view};
 }
 beforeAll(()=>{installPointerEvent();Element.prototype.setPointerCapture=jest.fn();});
+it('permite seleccionar jardines y ejemplares desde una lista si WebGL no está disponible',()=>{
+  const {h}=renderMap();act(()=>props.onUnsupported());
+  expect(screen.getByRole('alert')).toHaveTextContent('Puedes continuar desde la lista');
+  fireEvent.click(screen.getByRole('checkbox',{name:/Palmera/}));
+  expect(h.onToggle).toHaveBeenCalledWith(expect.objectContaining({kind:'specimen',id:91}));
+});
+
+it('permite volver a montar el visor tras un fallo sin borrar los objetivos elegidos',()=>{
+  const selected=toggleCampus([], {kind:'specimen',id:91},options);
+  renderMap(handlers(),selected);act(()=>props.onUnsupported());
+  expect(screen.getByRole('checkbox',{name:/Palmera/})).toBeChecked();
+  fireEvent.click(screen.getByRole('button',{name:'Reintentar mapa'}));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  const viewer={setMarkedSections:jest.fn(),setMarkedSpecimens:jest.fn(),setLayerVisible:jest.fn()};
+  act(()=>props.onReady(viewer as never));
+  expect(viewer.setMarkedSpecimens).toHaveBeenCalledWith(['EV-91']);
+});
+
+it('marca los tres estados de avance con colores y símbolos, sin habilitar edición en lectura',()=>{
+  const h=handlers();const states={'area:1':'PARTIAL' as const,'area:2':'COMPLETED' as const,'specimen:91':'NOT_STARTED' as const};
+  render(<InterventionCampusMap options={options} selected={[]} disabled readOnly progressStates={states} focus={null} {...h}/>);
+  const viewer={setMarkedSections:jest.fn(),setMarkedSpecimens:jest.fn(),setTargetMarks:jest.fn(),setLayerVisible:jest.fn(),select:jest.fn()};
+  act(()=>props.onReady(viewer as never));
+  expect(viewer.setTargetMarks).toHaveBeenCalledWith(expect.objectContaining({sections:[{code:options.zones[0].code,color:'#d97706'},{code:options.zones[1].code,color:'#16a34a'}],badges:expect.arrayContaining([expect.objectContaining({text:'◐'}),expect.objectContaining({text:'✓'}),expect.objectContaining({text:'○'})])}));
+  act(()=>props.onSelect({layer:'greenAreas',index:0}));expect(h.onToggle).not.toHaveBeenCalled();
+  expect(props.selectionSweep?.enabled('specimen')).toBe(false);
+  expect(screen.queryByText(/Mantén pulsado/)).not.toBeInTheDocument();
+});
 
 it('permite áreas de distintas zonas y ejemplares independientes en el mismo mapa',()=>{
   const {h}=renderMap();

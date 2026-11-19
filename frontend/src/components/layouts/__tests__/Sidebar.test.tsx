@@ -106,6 +106,45 @@ describe('Sidebar', () => {
     expect(screen.getByRole('button', { name: /catastro verde/i })).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('Importar lugares es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/importar';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: /lugares/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Importar lugares' })).toHaveAttribute('href', '/lugares/importar');
+    expect(screen.getByRole('link', { name: 'Importar lugares' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Importar lugares' })).not.toBeInTheDocument();
+  });
+
+  it('Nuevo lugar es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/nuevo';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Nuevo lugar' })).toHaveAttribute('href', '/lugares/nuevo');
+    expect(screen.getByRole('link', { name: 'Nuevo lugar' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Nuevo lugar' })).not.toBeInTheDocument();
+  });
+
+  it('Exportar lugares es un submódulo de Lugares para administración y coordinación', () => {
+    mockPathname = '/lugares/exportar';
+    const { rerender } = render(<Sidebar />);
+
+    expect(screen.getByRole('button', { name: 'Lugares' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Exportar lugares' })).toHaveAttribute('href', '/lugares/exportar');
+    expect(screen.getByRole('link', { name: 'Exportar lugares' })).toHaveAttribute('aria-current', 'page');
+
+    comoRol('SUPERVISOR', 'Supervisor');
+    rerender(<Sidebar />);
+    expect(screen.queryByRole('link', { name: 'Exportar lugares' })).not.toBeInTheDocument();
+  });
+
   describe('al pasar a otra pantalla por un enlace interno, sin recargar', () => {
     it('abre el grupo de destino para que se vea la página actual, y cierra el de origen', () => {
       mockPathname = '/catastro/ejemplares';
@@ -176,22 +215,22 @@ describe('Sidebar', () => {
   );
 
   describe('un grupo con un solo enlace visible no es un desplegable', () => {
-    it('Intervenciones es enlace directo para quien no planifica', () => {
+    it('Actividades es enlace directo para quien no planifica', () => {
       comoRol('SUPERVISOR', 'Supervisor');
       mockPathname = '/intervenciones/10';
       render(<Sidebar />);
 
-      expect(screen.getByRole('link', { name: 'Intervenciones' })).toHaveAttribute('aria-current', 'page');
+      expect(screen.getByRole('link', { name: 'Actividades' })).toHaveAttribute('aria-current', 'page');
       expect(screen.queryByRole('button', { name: /intervenciones/i })).not.toBeInTheDocument();
     });
 
-    it('al OPERARIO no le queda ningún desplegable: ve directo las pantallas que consulta', () => {
+    it('al OPERARIO solo le queda desplegable Reservas (agenda y calendario, SPEC-114); el resto lo ve directo', () => {
       comoRol('OPERARIO', 'Operario de campo');
       render(<Sidebar />);
 
       const nav = screen.getByRole('navigation', { name: /principal/i });
-      expect(within(nav).queryAllByRole('button')).toHaveLength(0);
-      for (const nombre of ['Catálogo de lugares', 'Especies', 'Intervenciones', 'Ejemplares']) {
+      expect(within(nav).queryAllByRole('button').map((b) => b.textContent)).toEqual([expect.stringContaining('Reservas')]);
+      for (const nombre of ['Catálogo de lugares', 'Especies', 'Actividades', 'Ejemplares']) {
         expect(within(nav).getByRole('link', { name: nombre })).toBeInTheDocument();
       }
     });
@@ -201,16 +240,16 @@ describe('Sidebar', () => {
       render(<Sidebar />);
 
       expect(screen.getByRole('link', { name: 'Catálogo de lugares' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Intervenciones' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Actividades' })).toBeInTheDocument();
       // SPEC-203 D-12: sin Frecuencias, a Administración solo le queda Usuarios, que pasa a ser directo.
       expect(screen.getByRole('link', { name: 'Usuarios' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /administración/i })).not.toBeInTheDocument();
     });
 
-    it('a quien planifica, Intervenciones es desplegable con Planificación, Conjuntos y Frecuencias (SPEC-203)', () => {
+    it('a quien planifica, Actividades es desplegable con Planificación, Conjuntos y Frecuencias (SPEC-203)', () => {
       render(<Sidebar />);
 
-      expect(screen.getByRole('button', { name: 'Intervenciones' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Actividades' })).toBeInTheDocument();
     });
 
     it('a ADMIN, Lugares sigue siendo desplegable porque tiene dos enlaces', () => {
@@ -223,7 +262,7 @@ describe('Sidebar', () => {
       comoRol('SUPERVISOR', 'Supervisor');
       const onNavigate = jest.fn();
       render(<Sidebar onNavigate={onNavigate} />);
-      const link = screen.getByRole('link', { name: 'Intervenciones' });
+      const link = screen.getByRole('link', { name: 'Actividades' });
       link.addEventListener('click', (event) => event.preventDefault());
 
       await userEvent.click(link);

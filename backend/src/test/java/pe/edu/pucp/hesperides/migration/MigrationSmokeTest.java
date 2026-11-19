@@ -498,10 +498,13 @@ class MigrationSmokeTest {
         // Vive en SMTP_FROM, con el resto de la configuracion del proveedor.
         // RESERVATION_NEARBY_METERS es de SPEC-107: 10 m desde el borde del jardín.
         // RESERVATION_CONFIRMATION_MINUTES es la enmienda del seguimiento de uso:
-        // 20 minutos antes del fin en que ya no se acepta confirmar.
+        // 20 minutos antes del fin en que ya no se marca el espacio en uso. El
+        // nombre no se renombra (V044) aunque la confirmación ya no existe (V068).
         // Las dos metas del resumen de reportes salen de V051 (SPEC-202 §4).
+        // Los tres plazos de incidencias por urgencia salen de V067 (SPEC-201 §3.9).
         assertThat(codes).containsExactly(
-                "CAMPUS_TOTAL_HECTARES", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH",
+                "CAMPUS_TOTAL_HECTARES", "INCIDENT_DEADLINE_HIGH_HOURS", "INCIDENT_DEADLINE_LOW_HOURS",
+                "INCIDENT_DEADLINE_MEDIUM_HOURS", "LOGIN_MAX_ATTEMPTS", "PASSWORD_MIN_LENGTH",
                 "REPORT_COVERAGE_TARGET_PERCENT", "REPORT_IRRIGATION_TARGET_PERCENT",
                 "RESERVATION_CONFIRMATION_MINUTES", "RESERVATION_NEARBY_METERS");
     }
@@ -532,7 +535,17 @@ class MigrationSmokeTest {
         Integer live = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM system_parameters WHERE deleted_at IS NULL",
                 Integer.class);
-        // Tres sembradas por V003, la de cercanía por V039, la de confirmación por V043 y las dos metas de reportes por V051.
-        assertThat(live).isEqualTo(7);
+        // Tres sembradas por V003, la de cercanía por V039, la del corte de la marca de uso por V043, las
+        // dos metas de reportes por V051 y los tres plazos de incidencias por V067.
+        assertThat(live).isEqualTo(10);
+    }
+
+    @Test
+    void irrigationTurnTablesAreGoneBecausePlanningOwnsIrrigation() {
+        Integer tables = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_name IN ('irrigation_turns', 'irrigation_turn_sections')
+                """, Integer.class);
+        assertThat(tables).isZero();
     }
 }

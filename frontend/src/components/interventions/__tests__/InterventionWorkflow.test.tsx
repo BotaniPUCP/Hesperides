@@ -1,13 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { InterventionDetail } from '../InterventionDetail';
 import { InterventionForm } from '../InterventionForm';
-import { interventionsApi } from '@/lib/interventions-api';
+import { activitiesApi, interventionsApi } from '@/lib/interventions-api';
 import { ApiError } from '@/lib/api';
 import { todayLocal, todayLima } from '@/lib/local-date';
-import type { InterventionDetail as Detail, InterventionOptions } from '@/lib/interventions-api';
+import type { ActivityDetail, InterventionDetail as Detail, InterventionOptions } from '@/lib/interventions-api';
 import { incidentsApi } from '@/lib/incidents-api';
-import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
-import { p01Detail } from '@/components/inventario-verde/__fixtures__/inventario';
 import { approvedDetail } from '@/components/incidents/__fixtures__/incidents';
 
 const push = jest.fn();
@@ -20,15 +18,15 @@ jest.mock('@/components/ui', () => {
   const actual = jest.requireActual('@/components/ui');
   return {...actual,useToast:()=>({showToast:toast})};
 });
-jest.mock('@/lib/interventions-api', () => ({...jest.requireActual('@/lib/interventions-api'),interventionsApi:{detail:jest.fn(),options:jest.fn(),command:jest.fn(),create:jest.fn(),update:jest.fn(),photo:jest.fn(),announce:jest.fn(),upload:jest.fn(),zoneOptions:jest.fn(),previewZones:jest.fn(),campusOptions:jest.fn(),campusPreview:jest.fn()}}));
+jest.mock('@/lib/interventions-api', () => {const interventionsApi={detail:jest.fn(),options:jest.fn(),command:jest.fn(),create:jest.fn(),update:jest.fn(),photo:jest.fn(),announce:jest.fn(),upload:jest.fn(),zoneOptions:jest.fn(),previewZones:jest.fn(),campusOptions:jest.fn(),campusPreview:jest.fn()};return {...jest.requireActual('@/lib/interventions-api'),interventionsApi,activitiesApi:{options:()=>interventionsApi.options().then((o:InterventionOptions)=>({...o,supervisors:[],statuses:[]})),create:jest.fn(),update:jest.fn(),detail:jest.fn(),mapOptions:jest.fn(async()=>campusOptions)}};});
 jest.mock('@/lib/inventario-verde-api', () => ({inventarioVerdeApi:{specimen:jest.fn()}}));
-jest.mock('@/lib/incidents-api', () => ({incidentsApi:{detail:jest.fn(),linkIntervention:jest.fn()}}));
+jest.mock('@/lib/incidents-api', () => ({incidentsApi:{detail:jest.fn(),search:jest.fn(async()=>[])}}));
 jest.mock('../InterventionCampusMap',()=>({InterventionCampusMap:({options,selected,onToggle}:{options:typeof campusOptions;selected:Detail['locations'];onToggle:(t:{kind:'area'|'specimen';id:number})=>void})=><div role="group" aria-label="Mapa del campus">{options.zones.map((z,i)=><button type="button" key={z.id} aria-pressed={selected.some(l=>l.zoneId===z.id)} onClick={()=>onToggle({kind:'area',id:z.id})}>{`Area ${i+1}`}</button>)}{options.specimens.map(s=><button type="button" key={s.id} onClick={()=>onToggle({kind:'specimen',id:s.id})}>Elegir ejemplar</button>)}</div>}));
 const campusOptions={selectionRevision:'revision',zones:Array.from({length:7},(_,i)=>({id:101+i,code:`AV-${101+i}`,name:`Area ${i+1}`,geometryValid:true,geometry:{type:'Polygon',coordinates:[]},areaM2:100,point:{latitude:-12,longitude:-77},polygonCount:1})),specimens:[{id:91,code:'EV-91',name:'Palmera',point:{latitude:-12,longitude:-77},typeCode:'PALM',scientificName:'Palma',heightM:5,crownRadiusM:2,quantity:1}]};
 async function selectZones(count=1) {
   const map=await screen.findByRole('group',{name:'Mapa del campus'});
   for(let i=0;i<count;i++)fireEvent.click(within(map).getAllByRole('button',{name:/^Area /})[i]);
-  await waitFor(()=>expect(screen.getByRole('button',{name:/Crear intervenci|Guardar y volver/})).toBeEnabled());
+  await waitFor(()=>expect(screen.getByRole('button',{name:/Crear actividad|Guardar y volver/})).toBeEnabled());
 }
 const options:InterventionOptions={teams:[],places:[{id:15,name:'Jardín de prueba'}],zones:[],catalogs:[
   {id:1,code:'CLASS',label:'Jardinería',typeCode:'INTERVENTION_CLASS',parentItemId:null},
@@ -41,13 +39,64 @@ const detail = ():Detail => ({id:10,code:'INT-000010',version:5,classItemId:1,ty
   {id:21,clientReference:'a',zoneId:null,placeId:15,location:null,description:'Jardín A',locationDescription:'Jardín A',elementIds:[],unitItemId:2,requestedQuantity:2,progressQuantity:2,executedQuantity:2,statusCode:'COMPLETED',executionNotes:'Trabajo terminado',attemptNumber:1,allowedActions:['validate','observe']},
   {id:22,clientReference:'b',zoneId:null,placeId:15,location:null,description:'Jardín B',locationDescription:'Jardín B',elementIds:[],unitItemId:2,requestedQuantity:2,statusCode:'COMPLETED',attemptNumber:1,allowedActions:['validate','observe']},
 ]});
-beforeEach(()=>{jest.clearAllMocks();role='COORDINADOR';jest.mocked(interventionsApi.campusOptions).mockResolvedValue(campusOptions);jest.mocked(interventionsApi.campusPreview).mockImplementation(async(_,zones,specimens)=>({surfaceM2:zones.length?175:0,areaCount:zones.length,specimenCount:specimens.length}));jest.mocked(interventionsApi.options).mockResolvedValue(options);jest.mocked(interventionsApi.detail).mockResolvedValue(detail());jest.mocked(incidentsApi.detail).mockResolvedValue(approvedDetail);});
+const activityDetail=():ActivityDetail=>({...detail(),activityTitle:'Jardineria',percentage:null,executedAt:null,finishedAt:null,cancelledAt:null,cancellationReason:null,allowedActions:['planning'],executionBlockedUntil:null,campusSelectionRevision:'revision',plannedSurfaceM2:100,sourceIncidents:[],targets:[],history:[],evidences:[]});
+beforeEach(()=>{jest.clearAllMocks();role='COORDINADOR';jest.mocked(activitiesApi.detail).mockResolvedValue({...activityDetail(),statusCode:'PLANNED'});jest.mocked(interventionsApi.campusOptions).mockResolvedValue(campusOptions);jest.mocked(interventionsApi.campusPreview).mockImplementation(async(_,zones,specimens)=>({surfaceM2:zones.length?175:0,areaCount:zones.length,specimenCount:specimens.length}));jest.mocked(interventionsApi.options).mockResolvedValue(options);jest.mocked(interventionsApi.detail).mockResolvedValue(detail());jest.mocked(incidentsApi.detail).mockResolvedValue(approvedDetail);});
+afterEach(()=>jest.restoreAllMocks());
+
+it('crea sin cuadrilla y permite elegir responsable opcional sin iniciar trabajo',async()=>{
+  jest.spyOn(activitiesApi,'options').mockResolvedValue({catalogs:options.catalogs,statuses:[],supervisors:[{id:45,name:'Capataz de prueba'}]});
+  jest.mocked(activitiesApi.create).mockResolvedValue(activityDetail());
+  render(<InterventionForm/>);
+  const responsible=await screen.findByLabelText('Capataz responsable (opcional)');
+  await waitFor(()=>expect(responsible).toBeEnabled());
+  expect(responsible).toHaveValue('');
+  expect(screen.queryByLabelText(/Cuadrilla/)).not.toBeInTheDocument();
+  fireEvent.change(responsible,{target:{value:'45'}});
+  await selectZones();
+  fireEvent.click(screen.getByRole('button',{name:'Crear actividad'}));
+  await waitFor(()=>expect(activitiesApi.create).toHaveBeenCalledWith(expect.objectContaining({responsibleSupervisorUserId:45,planning:expect.objectContaining({classItemId:1})}),expect.any(String)));
+  expect(interventionsApi.create).not.toHaveBeenCalled();
+});
+
+it('edita una planificación global con su versión y responsable mediante la API global',async()=>{
+  jest.spyOn(activitiesApi,'options').mockResolvedValue({catalogs:options.catalogs,statuses:[],supervisors:[{id:45,name:'Capataz de prueba'}]});
+  jest.mocked(activitiesApi.update).mockResolvedValue(activityDetail());
+  const initial={...detail(),activityWorkflow:true,statusCode:'PLANNED',planningStatusCode:'PLANNED',startedAt:null,campusSelectionRevision:'revision',responsibleSupervisorUserId:null,
+    locations:[{...detail().locations[0],zoneId:101,placeId:null,elementIds:[],zoneSelectionRevision:'revision'}]};
+  render(<InterventionForm initial={initial}/>);
+  await waitFor(()=>expect(screen.getByLabelText('Capataz responsable (opcional)')).toBeEnabled());
+  fireEvent.change(screen.getByLabelText('Capataz responsable (opcional)'),{target:{value:'45'}});
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Guardar cambios'})).toBeEnabled());
+  fireEvent.click(screen.getByRole('button',{name:'Guardar cambios'}));
+  await waitFor(()=>expect(activitiesApi.update).toHaveBeenCalledWith(10,expect.objectContaining({responsibleSupervisorUserId:45,planning:expect.objectContaining({version:5})})));
+  expect(interventionsApi.update).not.toHaveBeenCalled();
+});
+
+it('las actividades globales no muestran los comandos antiguos por ubicación',async()=>{
+  jest.spyOn(activitiesApi,'options').mockResolvedValue({catalogs:options.catalogs,supervisors:[],statuses:[{id:1,code:'PLANNED',label:'Planificada'}]});
+  jest.mocked(interventionsApi.detail).mockResolvedValue({...detail(),activityWorkflow:true,statusCode:'PLANNED',startedAt:null,planningStatusCode:'PLANNED',progressPercentage:null});
+  render(<InterventionDetail id={10}/>);
+  expect(await screen.findByText(/Sin avances registrados/)).toBeInTheDocument();
+  expect(screen.getByRole('link',{name:'Editar planificación'})).toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Asignar'})).not.toBeInTheDocument();
+  expect(screen.queryByText('Intento')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Subsanar observación'})).not.toBeInTheDocument();
+});
+it('conserva un registro cerrado anterior como consulta sin comandos, cantidades ni contador de intentos',async()=>{
+  jest.mocked(interventionsApi.detail).mockResolvedValue({...detail(),statusCode:'VALIDATED',history:[{id:2,actionCode:'PROGRESS_SAVED',actorUserId:3,actorName:'Ana',occurredAt:'2026-10-23T12:00:00Z',interventionLocationId:21,reason:null,attemptNumber:4,progress:{quantity:2,unitItemId:2,notes:'Reporte que se conserva'}}]});
+  render(<InterventionDetail id={10}/>);
+  expect(await screen.findByText('Reporte que se conserva')).toBeInTheDocument();
+  expect(screen.getByText('Terminada')).toBeInTheDocument();
+  expect(screen.queryByText(/Cantidad solicitada|Cantidad ejecutada|Intento|Cuadrilla/)).not.toBeInTheDocument();
+  for(const name of ['Asignar','Registrar avance','Enviar a revisión','Subsanar observación','Observar','Aprobar'])expect(screen.queryByRole('button',{name})).not.toBeInTheDocument();
+  expect(interventionsApi.command).not.toHaveBeenCalled();
+});
 
 it('habilita los tipos de la primera clase al abrir el formulario y registra esa selección',async()=>{
   jest.mocked(interventionsApi.options).mockResolvedValue({...options,catalogs:[...options.catalogs,
     {id:4,code:'PREPARATION',label:'Preparación del terreno',typeCode:'INTERVENTION_TYPE',parentItemId:1},
   ]});
-  jest.mocked(interventionsApi.create).mockResolvedValue(detail());
+  jest.mocked(activitiesApi.create).mockResolvedValue(activityDetail());
   render(<InterventionForm/>);
   const type=screen.getByLabelText(/Tipo/);
   await waitFor(()=>expect(type).toBeEnabled());
@@ -57,8 +106,8 @@ it('habilita los tipos de la primera clase al abrir el formulario y registra esa
   fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
 
   await selectZones();
-  fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));
-  await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledWith(expect.objectContaining({classItemId:1,typeItemId:4}),expect.any(String)));
+  fireEvent.click(screen.getByRole('button',{name:'Crear actividad'}));
+  await waitFor(()=>expect(activitiesApi.create).toHaveBeenCalledWith(expect.objectContaining({planning:expect.objectContaining({classItemId:1,typeItemId:4})}),expect.any(String)));
 });
 
 it('conserva clase y tipo al editar y limpia el tipo si se cambia la clase',async()=>{
@@ -81,7 +130,7 @@ it('agrega ubicaciones y registra una intervención sin crypto.randomUUID',async
   const original=Object.getOwnPropertyDescriptor(global.crypto,'randomUUID');
   Object.defineProperty(global.crypto,'randomUUID',{configurable:true,value:undefined});
   try {
-    jest.mocked(interventionsApi.create).mockResolvedValue(detail());
+    jest.mocked(activitiesApi.create).mockResolvedValue(activityDetail());
     render(<InterventionForm/>);
     await screen.findByRole('group',{name:'Mapa del campus'});
 
@@ -89,206 +138,57 @@ it('agrega ubicaciones y registra una intervención sin crypto.randomUUID',async
     fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});
     fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
     await selectZones(2);
-    fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));
-    await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledTimes(1));
-    const [body,key]=jest.mocked(interventionsApi.create).mock.calls[0];
+    fireEvent.click(screen.getByRole('button',{name:'Crear actividad'}));
+    await waitFor(()=>expect(activitiesApi.create).toHaveBeenCalledTimes(1));
+    const [body,key]=jest.mocked(activitiesApi.create).mock.calls[0];
     const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
     expect(key).toMatch(uuid);
-    expect(body.locations[0].clientReference).toMatch(uuid);
-    expect(body.locations[1].clientReference).toMatch(uuid);
-    expect(body.locations[0].clientReference).not.toBe(body.locations[1].clientReference);
+    expect(body.planning.locations[0].clientReference).toMatch(uuid);
+    expect(body.planning.locations[1].clientReference).toMatch(uuid);
+    expect(body.planning.locations[0].clientReference).not.toBe(body.planning.locations[1].clientReference);
   } finally {
     if(original)Object.defineProperty(global.crypto,'randomUUID',original);
     else Reflect.deleteProperty(global.crypto,'randomUUID');
   }
 });
 
-it('aprueba únicamente la ubicación elegida y conserva la actividad hasta aprobar todas',async()=>{
-  const d=detail();d.version=6;d.locations[0].statusCode='VALIDATED';d.locations[0].allowedActions=[];d.validatedLocationCount=1;
-  jest.mocked(interventionsApi.command).mockResolvedValue(d);
-  render(<InterventionDetail id={10}/>);
-  await screen.findByRole('heading',{name:'Jardinería'});fireEvent.click(screen.getAllByRole('button',{name:'Aprobar'})[0]);
-  const modal=await screen.findByRole('dialog');expect(within(modal).getByText(/únicamente esta ubicación/)).toBeInTheDocument();
-  fireEvent.click(within(modal).getByRole('button',{name:'Confirmar'}));
-  await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'validate',{version:5}));
-  expect(await screen.findByText('2/2 ubicaciones terminadas · 1/2 aprobadas')).toBeInTheDocument();
-  expect(screen.getByText(/contará cuando el capataz responsable o el coordinador aprueben todas/)).toBeInTheDocument();
-});
-it('el capataz puede subsanar una ubicación observada sin aprobarla mientras está observada',async()=>{
-  role='SUPERVISOR';const d=detail();d.locations[0].statusCode='OBSERVED';d.locations[0].allowedActions=['reopen'];d.locations[1].allowedActions=[];
-  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);
-  fireEvent.click(await screen.findByRole('button',{name:'Subsanar observación'}));
-  expect(screen.queryByRole('button',{name:'Aprobar'})).not.toBeInTheDocument();
-  expect(screen.getByText(/nuevo intento/)).toBeInTheDocument();
-});
-it('el capataz aprueba cuando el backend autoriza la revisión y el conteo no exige otra firma',async()=>{
-  role='SUPERVISOR';const approved=detail();approved.approvedForCounting=true;approved.validatedLocationCount=2;
-  approved.locations.forEach(location=>{location.statusCode='VALIDATED';location.allowedActions=[];});
-  jest.mocked(interventionsApi.command).mockResolvedValue(approved);
-  render(<InterventionDetail id={10}/>);
-  fireEvent.click((await screen.findAllByRole('button',{name:'Aprobar'}))[0]);
-  fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button',{name:'Confirmar'}));
-  await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'validate',{version:5}));
-  expect(await screen.findByText('Actividad con aprobación final.')).toBeInTheDocument();
-});
-it('una observación requiere motivo antes de enviarse',async()=>{
-  render(<InterventionDetail id={10}/>);fireEvent.click((await screen.findAllByRole('button',{name:'Observar'}))[1]);
-  fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));expect(interventionsApi.command).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText(/Motivo de la observación/),{target:{value:'Falta atender una esquina'}});
-  jest.mocked(interventionsApi.command).mockResolvedValue(detail());fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
-  await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,22,'observe',{version:5,reason:'Falta atender una esquina'}));
-});
-it('mantiene visible la observación al iniciar una subsanación y actualizar la información',async()=>{
-  role='SUPERVISOR';const observed=detail();
-  observed.locations[0].statusCode='OBSERVED';observed.locations[0].allowedActions=['reopen'];
-  observed.locations[0].rejectionReason='Falta podar la esquina norte';observed.locations[1].allowedActions=[];
-  observed.history=[{id:30,actionCode:'OBSERVED',interventionLocationId:21,actorUserId:3,actorName:'Coordinador de prueba',attemptNumber:1,occurredAt:'2026-10-23T15:00:00Z',reason:'Falta podar la esquina norte'}];
-  const reopened={...observed,version:6,locations:observed.locations.map((location,index)=>index===0?{...location,statusCode:'IN_PROGRESS',attemptNumber:2,rejectionReason:null,allowedActions:['execution']}:location)};
-  jest.mocked(interventionsApi.detail).mockResolvedValue(observed);jest.mocked(interventionsApi.command).mockResolvedValue(reopened);
-  render(<InterventionDetail id={10}/>);
-  fireEvent.click(await screen.findByRole('button',{name:'Subsanar observación'}));
-  const modal=screen.getByRole('dialog');expect(within(modal).getByText('Falta podar la esquina norte')).toBeInTheDocument();
-  fireEvent.click(within(modal).getByRole('button',{name:'Confirmar'}));
-  await waitFor(()=>expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  const location=screen.getAllByRole('article')[0];
-  expect(within(location).getByText('Falta podar la esquina norte')).toBeInTheDocument();
-  expect(within(location).getByText(/intento 1/)).toBeInTheDocument();
-  jest.mocked(interventionsApi.detail).mockResolvedValue(reopened);
-  fireEvent.click(screen.getByRole('button',{name:'Actualizar información'}));
-  await screen.findByRole('status');
-  expect(within(location).getByText('Falta podar la esquina norte')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button',{name:'Registrar avance'}));
-  expect(within(screen.getByRole('dialog')).getByText('Falta podar la esquina norte')).toBeInTheDocument();
-});
-it('muestra cantidades y notas de todos los avances por ubicación e intento, incluido cero',async()=>{
-  const d=detail();
-  d.history=[
-    {id:1,actionCode:'PROGRESS_SAVED',interventionLocationId:21,actorUserId:4,actorName:'Operario de prueba',attemptNumber:1,occurredAt:'2026-10-22T15:00:00Z',reason:null,progress:{quantity:1,previousQuantity:null,notes:'Primera pasada',unitItemId:2}},
-    {id:2,actionCode:'PROGRESS_SAVED',interventionLocationId:21,actorUserId:4,actorName:'Operario de prueba',attemptNumber:1,occurredAt:'2026-10-22T16:00:00Z',reason:null,progress:{quantity:0,previousQuantity:1,notes:'Cantidad corregida',unitItemId:2}},
-    {id:3,actionCode:'PROGRESS_SAVED',interventionLocationId:22,actorUserId:4,attemptNumber:1,occurredAt:'2026-10-22T17:00:00Z',reason:null,progress:{quantity:9,notes:'Avance de otro jardín',unitItemId:2}},
-    {id:4,actionCode:'PROGRESS_SAVED',interventionLocationId:21,actorUserId:3,actorName:'Capataz de prueba',attemptNumber:2,occurredAt:'2026-10-23T15:00:00Z',reason:null,progress:{quantity:2,notes:'Subsanación realizada',unitItemId:2}},
-  ];
-  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);await screen.findByRole('heading',{name:'Jardinería'});
-  const location=within(screen.getAllByRole('article')[0]);const reports=within(location.getByRole('list',{name:'Avances registrados'}));
-  expect(reports.getAllByRole('listitem')).toHaveLength(3);
-  for(const text of ['Primera pasada','Cantidad corregida','Subsanación realizada'])expect(reports.getByText(text)).toBeInTheDocument();
-  expect(reports.getByText(/Avance acumulado: 0/)).toBeInTheDocument();
-  expect(reports.getByText(/intento 2.*Capataz de prueba/)).toBeInTheDocument();
-  expect(reports.queryByText('Avance de otro jardín')).not.toBeInTheDocument();
-});
-it('conserva el reporte tras conflicto y permite recargar la versión antes del reintento',async()=>{
-  role='SUPERVISOR';const d=detail();d.locations[0].allowedActions=['complete'];d.locations[0].statusCode='IN_PROGRESS';d.locations[1].allowedActions=[];
-  jest.mocked(interventionsApi.detail).mockResolvedValue(d);jest.mocked(interventionsApi.command).mockRejectedValueOnce(new ApiError(409,'Intervention has changed; reload before retrying'));
-  render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
-  fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Reporte que se conserva'}});
-  fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));await screen.findByText(/La intervención cambió mientras la editabas/);
-  jest.mocked(interventionsApi.detail).mockResolvedValue({...d,version:6});fireEvent.click(screen.getByRole('button',{name:'Actualizar información y conservar borrador'}));
-  await screen.findByText(/Información actualizada/);expect(screen.getByLabelText('Reporte de ejecución')).toHaveValue('Reporte que se conserva');
-  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  jest.mocked(interventionsApi.command).mockResolvedValue({...d,version:7});fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
-  await waitFor(()=>expect(interventionsApi.command).toHaveBeenLastCalledWith(10,21,'complete',{version:6,executedQuantity:2,executionNotes:'Reporte que se conserva'}));
-});
-describe('medidas al cerrar una poda',()=>{
-  const conPoda=()=>{
-    role='SUPERVISOR';const d=detail();d.classItemId=8;d.locations[0].allowedActions=['complete'];d.locations[0].statusCode='IN_PROGRESS';d.locations[0].linkedElementCodes=['EV-000700'];d.locations[0].unitItemId=null;d.locations[0].progressQuantity=null;d.locations[0].executedQuantity=null;d.locations[1].allowedActions=[];
-    jest.mocked(interventionsApi.options).mockResolvedValue({...options,catalogs:[...options.catalogs,{id:8,code:'PODA',label:'Poda',typeCode:'INTERVENTION_CLASS',parentItemId:null}]});
-    jest.mocked(interventionsApi.detail).mockResolvedValue(d);jest.mocked(interventionsApi.command).mockResolvedValue({...d,version:6});
-    jest.mocked(inventarioVerdeApi.specimen).mockResolvedValue({...p01Detail,code:'EV-000700',speciesCritical:false,measurementStatus:'MEASURED'});
-    return d;
-  };
-  it('sin elegir nada, el cierre no envía medidas',async()=>{
-    conPoda();render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
-    await screen.findByRole('group',{name:/EV-000700/});
-    fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Poda terminada'}});
-    fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
-    await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'complete',{version:5,executedQuantity:null,executionNotes:'Poda terminada'}));
-  });
-  it('envía la decisión de cada ejemplar',async()=>{
-    conPoda();render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
-    const grupo=within(await screen.findByRole('group',{name:/EV-000700/}));
-    fireEvent.click(grupo.getByRole('radio',{name:'Usar promedio'}));
-    fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Poda terminada'}});
-    fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
-    await waitFor(()=>expect(interventionsApi.command).toHaveBeenCalledWith(10,21,'complete',{version:5,executedQuantity:null,executionNotes:'Poda terminada',measurementOutcomes:[{specimenCode:'EV-000700',outcome:'AVERAGE'}]}));
-  });
-  it('una medida inválida bloquea el envío y conserva el reporte',async()=>{
-    conPoda();render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
-    const grupo=within(await screen.findByRole('group',{name:/EV-000700/}));
-    fireEvent.click(grupo.getByRole('radio',{name:'Medidas reales'}));
-    fireEvent.change(screen.getByLabelText('Reporte de ejecución'),{target:{value:'Poda terminada'}});
-    fireEvent.click(screen.getByRole('button',{name:'Confirmar'}));
-    expect(await screen.findByText('Indica al menos una medida.')).toBeInTheDocument();
-    expect(interventionsApi.command).not.toHaveBeenCalled();
-    expect(screen.getByLabelText('Reporte de ejecución')).toHaveValue('Poda terminada');
-  });
-  it('una clase distinta de poda no pregunta por medidas',async()=>{
-    const d=conPoda();d.classItemId=1;jest.mocked(interventionsApi.detail).mockResolvedValue(d);
-    render(<InterventionDetail id={10}/>);fireEvent.click(await screen.findByRole('button',{name:'Enviar a revisión'}));
-    await screen.findByLabelText('Reporte de ejecución');
-    expect(screen.queryByRole('group',{name:/EV-000700/})).not.toBeInTheDocument();
-  });
-});
-
 it('no permite crear un trabajo al capataz',()=>{
-  role='SUPERVISOR';render(<InterventionForm/>);expect(screen.getByText(/No tienes permiso para planificar/)).toBeInTheDocument();expect(screen.queryByRole('button',{name:'Crear intervención'})).not.toBeInTheDocument();
-});
-it('explica cuándo podrá ejecutarse una actividad futura y no ofrece acciones de ejecución',async()=>{
-  role='SUPERVISOR';const d=detail();d.executionBlockedUntil='2026-12-01';
-  d.locations=d.locations.map(location=>({...location,statusCode:'ASSIGNED',allowedActions:[]}));
-  jest.mocked(interventionsApi.detail).mockResolvedValue(d);render(<InterventionDetail id={10}/>);
-  expect(await screen.findByText(/El trabajo podrá ejecutarse desde el 2026-12-01/)).toBeInTheDocument();
-  for(const name of ['Iniciar trabajo','Registrar avance','Enviar a revisión','Subsanar observación'])expect(screen.queryByRole('button',{name})).not.toBeInTheDocument();
-});
-it('recupera una subida fallida sin anunciar otra foto',async()=>{
-  Object.defineProperty(global.crypto,'randomUUID',{configurable:true,value:jest.fn().mockImplementation(()=>`photo-${Math.random()}`)});
-  role='SUPERVISOR';const d=detail();d.locations[0].allowedActions=['evidence'];d.locations[0].statusCode='IN_PROGRESS';d.locations[1].allowedActions=[];
-  jest.mocked(interventionsApi.detail).mockResolvedValue(d);
-  jest.mocked(interventionsApi.announce).mockResolvedValue({id:8});
-  jest.mocked(interventionsApi.upload).mockRejectedValueOnce(new ApiError(503,'Unavailable')).mockResolvedValueOnce({});
-  render(<InterventionDetail id={10}/>);
-  const file=new File(['image'],'garden.png',{type:'image/png'});
-  fireEvent.change(await screen.findByLabelText(/Foto JPEG/),{target:{files:[file]}});
-  fireEvent.click(screen.getByRole('button',{name:'Subir foto'}));
-  await screen.findByRole('alert');await waitFor(()=>expect(screen.getByRole('button',{name:'Reintentar subida'})).toBeEnabled());
-  fireEvent.click(screen.getByRole('button',{name:'Reintentar subida'}));
-  await waitFor(()=>expect(interventionsApi.upload).toHaveBeenCalledTimes(2));
-  expect(interventionsApi.announce).toHaveBeenCalledTimes(1);
-  expect(jest.mocked(interventionsApi.upload).mock.calls).toEqual([[10,8,file],[10,8,file]]);
+  role='SUPERVISOR';render(<InterventionForm/>);expect(screen.getByText(/No tienes permiso para planificar/)).toBeInTheDocument();expect(screen.queryByRole('button',{name:'Crear actividad'})).not.toBeInTheDocument();
 });
 it('crea una sola actividad con dos ubicaciones y reintenta con la misma clave tras perder conexión',async()=>{
   Object.defineProperty(global.crypto,'randomUUID',{configurable:true,value:jest.fn().mockImplementation(()=>`ref-${Math.random()}`)});
-  jest.mocked(interventionsApi.create).mockRejectedValueOnce(new ApiError(0,'Sin conexión')).mockResolvedValueOnce(detail());
+  jest.mocked(activitiesApi.create).mockRejectedValueOnce(new ApiError(0,'Sin conexión')).mockResolvedValueOnce(activityDetail());
   render(<InterventionForm/>);await screen.findByRole('group',{name:'Mapa del campus'});
   fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
 
     await selectZones(2);
-  fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));await screen.findByRole('button',{name:'Reintentar registro'});
+  fireEvent.click(screen.getByRole('button',{name:'Crear actividad'}));await screen.findByRole('button',{name:'Reintentar registro'});
   fireEvent.click(screen.getByRole('button',{name:'Reintentar registro'}));await waitFor(()=>expect(push).toHaveBeenCalledWith('/intervenciones/10'));
-  const calls=jest.mocked(interventionsApi.create).mock.calls;expect(calls[0]).toEqual(calls[1]);expect(calls[0][0].locations).toHaveLength(2);
-  expect(calls[0][0].locations[0]).toMatchObject({elementCodes:[],location:null,unitItemId:null,requestedQuantity:null,zoneSelectionRevision:'revision'});
+  const calls=jest.mocked(activitiesApi.create).mock.calls;expect(calls[0]).toEqual(calls[1]);expect(calls[0][0].planning.locations).toHaveLength(2);
+  expect(calls[0][0].planning.locations[0]).toMatchObject({elementCodes:[],location:null,unitItemId:null,requestedQuantity:null,zoneSelectionRevision:'revision'});
 });
 
-it('crea como hallazgo y vuelve a la incidencia con preselección y filtros, sin vincular silenciosamente',async()=>{
-  jest.mocked(interventionsApi.create).mockResolvedValue(detail());
-  render(<InterventionForm fromIncident={7} returnFilters={{search:'rama',status:'OPEN',page:2}}/>);
+it('crea como hallazgo vinculada a la incidencia de origen y vuelve a ella con sus filtros (SPEC-201 §3.8)',async()=>{
+  jest.mocked(activitiesApi.create).mockResolvedValue(activityDetail());
+  render(<InterventionForm fromIncident={7} returnFilters={{search:'rama',status:'REPORTED',page:2}}/>);
   await screen.findByRole('group',{name:'Mapa del campus'});
-  expect(screen.getByRole('link',{name:'Volver a la incidencia'})).toHaveAttribute('href','/incidencias/7?search=rama&status=OPEN&page=2');
+  expect(screen.getByRole('link',{name:'Volver a la incidencia'})).toHaveAttribute('href','/incidencias/7?search=rama&status=REPORTED&page=2');
+  expect(await screen.findByText('INC-2026-0007 · Rama en riesgo')).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText(/Clasificación de origen del reporte/),{target:{value:'5'}});
   fireEvent.change(screen.getByLabelText(/Clase/),{target:{value:'1'}});
   fireEvent.change(screen.getByLabelText('Fecha programada'),{target:{value:todayLima()}});
 
   await selectZones();
   fireEvent.click(screen.getByRole('button',{name:'Guardar y volver a la incidencia'}));
-  await waitFor(()=>expect(push).toHaveBeenCalledWith('/incidencias/7?search=rama&status=OPEN&page=2&selectIntervention=10'));
-  expect(jest.mocked(interventionsApi.create).mock.calls[0][0]).toMatchObject({originItemId:4,reportedByItemId:5});
-  expect(incidentsApi.linkIntervention).not.toHaveBeenCalled();
+  await waitFor(()=>expect(push).toHaveBeenCalledWith('/incidencias/7?search=rama&status=REPORTED&page=2'));
+  expect(jest.mocked(activitiesApi.create).mock.calls[0][0].planning).toMatchObject({originItemId:4,reportedByItemId:5,incidentIds:[7]});
 });
 
-it('no habilita creación contextual si la incidencia no está registrada',async()=>{
-  jest.mocked(incidentsApi.detail).mockResolvedValue({...approvedDetail,incident:{...approvedDetail.incident,approvedAt:null}});
+it('no habilita creación contextual si la incidencia no está activa',async()=>{
+  jest.mocked(incidentsApi.detail).mockResolvedValue({...approvedDetail,incident:{...approvedDetail.incident,active:false,activatedAt:null}});
   render(<InterventionForm fromIncident={7}/>);
   expect(await screen.findByRole('button',{name:'Guardar y volver a la incidencia'})).toBeDisabled();
-  expect(interventionsApi.create).not.toHaveBeenCalled();
+  expect(activitiesApi.create).not.toHaveBeenCalled();
 });
 
 it('una intervención nueva propone hoy como fecha programada',async()=>{
@@ -321,15 +221,15 @@ it('usa un solo mapa sin lugares y muestra las cinco últimas selecciones',async
 });
 
 it('permite seleccionar solo ejemplares sin añadir áreas ni inventar metros cuadrados',async()=>{
-  jest.mocked(interventionsApi.create).mockResolvedValue(detail());
+  jest.mocked(activitiesApi.create).mockResolvedValue(activityDetail());
   render(<InterventionForm/>);
   fireEvent.click(await screen.findByRole('button',{name:'Elegir ejemplar'}));
-  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear intervención'})).toBeEnabled());
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear actividad'})).toBeEnabled());
   expect(screen.getByText('0 jardines y 1 ejemplar seleccionado')).toBeInTheDocument();
   expect(screen.getByText(/Superficie seleccionada: 0 m²/)).toBeInTheDocument();
   expect(screen.getByText('Palmera')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button',{name:'Crear intervención'}));
-  await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledWith(expect.objectContaining({campusSelectionRevision:'revision',locations:[expect.objectContaining({zoneId:null,placeId:null,elementIds:[91],location:null,requestedQuantity:null,unitItemId:null})]}),expect.any(String)));
+  fireEvent.click(screen.getByRole('button',{name:'Crear actividad'}));
+  await waitFor(()=>expect(activitiesApi.create).toHaveBeenCalledWith(expect.objectContaining({planning:expect.objectContaining({campusSelectionRevision:'revision',locations:[expect.objectContaining({zoneId:null,placeId:null,elementIds:[91],location:null,requestedQuantity:null,unitItemId:null})]})}),expect.any(String)));
 });
 
 it('no añade automáticamente ejemplares al seleccionar un área y permite retirarla desde la lista',async()=>{
@@ -339,7 +239,7 @@ it('no añade automáticamente ejemplares al seleccionar un área y permite reti
   const list=screen.getByRole('region',{name:'Selección actual'});
   expect(surface.compareDocumentPosition(list)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   fireEvent.click(screen.getByRole('button',{name:'Retirar'}));
-  expect(screen.getByRole('button',{name:'Crear intervención'})).toBeDisabled();
+  expect(screen.getByRole('button',{name:'Crear actividad'})).toBeDisabled();
   expect(screen.queryByRole('region',{name:'Selección actual'})).not.toBeInTheDocument();
 });
 
@@ -360,7 +260,7 @@ it('descarta una superficie tardía después de desmarcar lo seleccionado',async
   await waitFor(()=>expect(interventionsApi.campusPreview).toHaveBeenCalled());
   fireEvent.click(within(map).getAllByRole('button',{name:/^Area /})[0]);
   resolve({surfaceM2:999,areaCount:1,specimenCount:0});
-  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear intervención'})).toBeDisabled());
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear actividad'})).toBeDisabled());
   expect(screen.queryByText(/999 m²/)).not.toBeInTheDocument();
 });
 
@@ -379,7 +279,7 @@ it('permite confirmar el inventario actualizado también durante una creación n
   jest.mocked(interventionsApi.campusOptions).mockResolvedValue({...campusOptions,selectionRevision:'new'});
   fireEvent.click(screen.getByRole('button',{name:'Actualizar mapa'}));
   fireEvent.click(await screen.findByRole('button',{name:'Confirmar selección actual'}));
-  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear intervención'})).toBeEnabled());
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Crear actividad'})).toBeEnabled());
   expect(interventionsApi.campusPreview).toHaveBeenLastCalledWith('new',[101],[]);
 });
 
@@ -398,7 +298,7 @@ it('mantiene las últimas cinco áreas en el resumen y muestra también los ejem
 });
 
 it('impide registrar fechas pasadas y permite hoy o una fecha futura',async()=>{
-  jest.mocked(interventionsApi.create).mockResolvedValue(detail());
+  jest.mocked(activitiesApi.create).mockResolvedValue(activityDetail());
   render(<InterventionForm/>);
   await selectZones();
   const input=screen.getByLabelText('Fecha programada');
@@ -406,8 +306,8 @@ it('impide registrar fechas pasadas y permite hoy o una fecha futura',async()=>{
   fireEvent.change(input,{target:{value:'2000-01-01'}});
   fireEvent.submit(input.closest('form')!);
   expect(await screen.findByRole('alert')).toHaveTextContent('La fecha programada debe ser hoy o una fecha futura.');
-  expect(interventionsApi.create).not.toHaveBeenCalled();
+  expect(activitiesApi.create).not.toHaveBeenCalled();
   fireEvent.change(input,{target:{value:'2099-01-01'}});
   fireEvent.submit(input.closest('form')!);
-  await waitFor(()=>expect(interventionsApi.create).toHaveBeenCalledWith(expect.objectContaining({scheduledDate:'2099-01-01'}),expect.any(String)));
+  await waitFor(()=>expect(activitiesApi.create).toHaveBeenCalledWith(expect.objectContaining({planning:expect.objectContaining({scheduledDate:'2099-01-01'})}),expect.any(String)));
 });

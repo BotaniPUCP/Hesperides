@@ -8,6 +8,7 @@ import type { ContactPick } from '@/components/directorio/ContactForm';
 import { OrganizationPicker } from '@/components/directorio/OrganizationPicker';
 import { Button, Select, Textarea } from '@/components/ui';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
+import { useCampusEventCheck } from '@/hooks/useCampusEvents';
 import { useCanMaintainReservations, useReservationCheck, useReservationGardens } from '@/hooks/useReservations';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { isoFromInput, todayInLima } from '@/lib/reservation-format';
@@ -48,6 +49,8 @@ export function ReservationForm() {
   const rangeInvalid = startsAt !== null && endsAt !== null && endsAt <= startsAt;
   const checkable = placeId !== null && startsAt !== null && endsAt !== null && !rangeInvalid;
   const check = useReservationCheck(checkable ? { placeId, startsAt, endsAt } : null);
+  // SPEC-114 §5.4: el calendario del campus avisa en la misma lista; con horario, solo si se cruzan.
+  const campus = useCampusEventCheck(checkable ? { dates: [day], placeIds: [placeId], startTime, endTime } : null);
 
   if (!canMaintain) {
     return <p role="alert" className="text-sm text-alert-danger-fg">No tienes permiso para registrar reservas.</p>;
@@ -104,7 +107,7 @@ export function ReservationForm() {
     <form className="space-y-6" onChange={() => setDirty(true)} onSubmit={submit}>
       {guard.dialog}
       <PageHeader title="Nueva reserva"
-        description="Un jardín prestable, quién lo pide y quién responde por él, todos del Directorio. Los cruces y el trabajo cercano avisan, pero no impiden guardar." />
+        description="Elige el jardín, quién lo pide y quién responde por él, con fecha y horario. Los avisos de cruce son informativos y no bloquean el registro." />
       {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
       <fieldset disabled={pending} className="surface-card space-y-5 disabled:opacity-70">
         <legend className="sr-only">Datos de la reserva</legend>
@@ -114,14 +117,15 @@ export function ReservationForm() {
           helperText="Solo aparecen los jardines prestables del catálogo de lugares."
           onChange={(option) => setPlaceId(option?.id ?? null)} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <OrganizationPicker id="reservation-requested-by" label="Pedido de" value={requestedBy}
+          <OrganizationPicker id="reservation-requested-by" label="Organización que solicita" value={requestedBy}
+            helperText="La organización que pide reservar el jardín."
             onChange={(next) => { setRequestedBy(next); setRequester(null); setResponsible(null); setResponsibleTouched(false); setDirty(true); }} />
           <ContactPicker id="reservation-requester" label="Solicitante" organization={requestedBy}
             value={requester} onChange={chooseRequester} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <OrganizationPicker id="reservation-requested-for" label="Para" value={requestedFor}
-            helperText="Solo si la usará otra organización."
+          <OrganizationPicker id="reservation-requested-for" label="Organización que usará el jardín" value={requestedFor}
+            helperText="Opcional: elige otra solo si quien lo usará no es la que solicita la reserva."
             onChange={(next) => { setRequestedFor(next); setDirty(true); }} />
           <ContactPicker id="reservation-responsible" label="Responsable" organization={null}
             searchEverywhere value={responsible}
@@ -136,7 +140,7 @@ export function ReservationForm() {
         </div>
         <Textarea id="reservation-purpose" label="Motivo" value={purpose} onChange={setPurpose}
           maxLength={300} rows={3} helperText="Opcional, hasta 300 caracteres." />
-        <ReservationWarnings warnings={check.warnings} title="Avisos de este horario" />
+        <ReservationWarnings warnings={[...check.warnings, ...campus.warnings]} title="Avisos de este horario" />
         {check.errorMessage && (
           <p role="status" className="rounded-md border border-alert-warning-border bg-alert-warning-bg p-3 text-sm text-alert-warning-fg">
             No se pudieron consultar los avisos de este horario. Puedes guardar igual.

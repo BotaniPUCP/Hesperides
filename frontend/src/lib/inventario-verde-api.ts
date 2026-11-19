@@ -3,31 +3,18 @@ import type {
   InventorySummary,
   LocationCount,
   Page,
+  RetiredSpecimen,
   Species,
   SpeciesForm,
   SpecimenDetail,
   Specimen,
-  SpecimenSearchResult,
-  SpecimenSortKey,
+  SpecimenListItem,
 } from '@shared/types';
 import { apiClient } from './api';
 import { API_BASE_URL } from './constants';
 
-export interface SpeciesParams {
+export interface RetiredSpecimenParams {
   search?: string;
-  vegetationType?: string;
-  page: number;
-  size: number;
-}
-
-export interface SpecimenParams {
-  search?: string;
-  location?: string;
-  vegetationType?: string;
-  critical?: boolean;
-  measured?: boolean;
-  sortBy: SpecimenSortKey;
-  sortDirection: 'asc' | 'desc';
   page: number;
   size: number;
 }
@@ -53,52 +40,22 @@ const withSpeciesMedia = (s: Species): Species => ({
   photos: (s.photos ?? []).map((p) => ({ ...p, thumbnailUrl: media(p.thumbnailUrl) ?? p.thumbnailUrl, imageUrl: media(p.imageUrl) ?? p.imageUrl })),
 });
 const withSpecimenMedia = <T extends Specimen>(s: T): T => ({ ...s, imageUrl: media(s.imageUrl), thumbnailUrl: media(s.thumbnailUrl) });
-const mapPage = <T,>(p: Page<T>, f: (t: T) => T): Page<T> => ({ ...p, content: p.content.map(f) });
 
-const ALL = 'ALL';
-const unlessAll = (value?: string) => (value && value !== ALL ? value : undefined);
 const segment = encodeURIComponent;
 
 /** Los endpoints del inventario verde. Son públicos por ahora (README del inventario). */
 export const inventarioVerdeApi = {
   summary: () => apiClient.get<InventorySummary>('/green-inventory/summary'),
 
-  species: (p: SpeciesParams) =>
-    apiClient
-      .get<Page<Species>>(
-        `/green-inventory/species?${query({ search: p.search?.trim(), vegetationType: unlessAll(p.vegetationType), page: p.page, size: p.size })}`,
-      )
-      .then((r) => mapPage(r, withSpeciesMedia)),
+  /** Activas y en proceso de retiro: se buscan, filtran y paginan en el navegador (SPEC-119). */
+  allSpecies: () => apiClient.get<Species[]>('/green-inventory/species/all').then((list) => list.map(withSpeciesMedia)),
 
   speciesBySlug: (slug: string) =>
     apiClient.get<Species>(`/green-inventory/species/${segment(slug)}`).then(withSpeciesMedia),
 
-  specimens: (slug: string, p: SpecimenParams) =>
-    apiClient.get<Page<Specimen>>(
-      `/green-inventory/species/${segment(slug)}/specimens?${query({
-        search: p.search?.trim(),
-        location: unlessAll(p.location),
-        sort: p.sortBy,
-        direction: p.sortDirection,
-        page: p.page,
-        size: p.size,
-      })}`,
-    ).then((r) => mapPage(r, withSpecimenMedia)),
-
-  allSpecimens: (p: SpecimenParams) =>
-    apiClient.get<Page<Specimen>>(
-      `/green-inventory/specimens?${query({
-        search: p.search?.trim(),
-        location: unlessAll(p.location),
-        vegetationType: unlessAll(p.vegetationType),
-        critical: p.critical,
-        measured: p.measured,
-        sort: p.sortBy,
-        direction: p.sortDirection,
-        page: p.page,
-        size: p.size,
-      })}`,
-    ).then((r) => mapPage(r, withSpecimenMedia)),
+  /** Todos los ejemplares vigentes; la ficha de una especie los filtra por su slug (SPEC-119). */
+  allSpecimens: () =>
+    apiClient.get<SpecimenListItem[]>('/green-inventory/specimens/all').then((list) => list.map(withSpecimenMedia)),
 
   locations: (slug: string) => apiClient.get<LocationCount[]>(`/green-inventory/species/${segment(slug)}/locations`),
 
@@ -108,11 +65,6 @@ export const inventarioVerdeApi = {
     apiClient
       .get<SpecimenDetail>(`/green-inventory/specimens/${segment(code)}`)
       .then((d) => ({ ...withSpecimenMedia(d), species: withSpeciesMedia(d.species) })),
-
-  searchSpecimens: (queryText: string, limit = 10) =>
-    apiClient.get<SpecimenSearchResult[]>(
-      `/green-inventory/specimens/search?q=${segment(queryText.trim())}&limit=${limit}`,
-    ),
 
   registerSpecies: (form: SpeciesForm, photo: File | null) => {
     const data = new FormData();
@@ -128,4 +80,21 @@ export const inventarioVerdeApi = {
 
   updateSpecies: (slug: string, form: SpeciesForm) =>
     apiClient.put<Species>(`/green-inventory/species/${segment(slug)}`, form).then(withSpeciesMedia),
+
+  deactivateSpecies: (slug: string, reason: string) =>
+    apiClient.patch<void>(`/green-inventory/species/${segment(slug)}/deactivate`, { reason }),
+
+  deactivateSpecimen: (code: string, reason: string) =>
+    apiClient.patch<void>(`/green-inventory/specimens/${segment(code)}/deactivate`, { reason }),
+
+  deactivateSpecimensBatch: (codes: string[], reason: string) =>
+    apiClient.patch<{ count: number; codes: string[] }>('/green-inventory/specimens/deactivate-batch', { codes, reason }),
+
+  retiredSpecimens: (p: RetiredSpecimenParams) =>
+    apiClient.get<Page<RetiredSpecimen>>(
+      `/green-inventory/specimens/retired?${query({ search: p.search?.trim(), page: p.page, size: p.size })}`,
+    ),
+
+  retiredSpecimen: (code: string) =>
+    apiClient.get<RetiredSpecimen>(`/green-inventory/specimens/retired/${segment(code)}`),
 };

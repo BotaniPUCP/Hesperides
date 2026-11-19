@@ -7,6 +7,8 @@ export { InventarioVerdeScreen } from './InventarioVerdeScreen';
 export { InventarioEjemplaresScreen } from './InventarioEjemplaresScreen';
 export { RegistroEspecieModal } from './RegistroEspecieModal';
 export { RegistroEspecieForm } from './RegistroEspecieForm';
+export { ImportarEspeciesScreen } from './ImportarEspeciesScreen';
+export { EstandarEspeciesScreen } from './EstandarEspeciesScreen';
 
 export { SpeciesInfo } from './SpeciesInfo';
 export { SpecimenViewToggle } from './SpecimenViewToggle';
@@ -14,6 +16,11 @@ export { SpecimenFiltersBar } from './SpecimenFiltersBar';
 export { SpecimenCard } from './SpecimenCard';
 export { SpecimenGrid } from './SpecimenGrid';
 export { SpecimenTable } from './SpecimenTable';
+export { BulkActionsBar } from './BulkActionsBar';
+export { BulkDeactivationModal } from './BulkDeactivationModal';
+export { RetiredSpecimenCard } from './RetiredSpecimenCard';
+export { RetiredSpecimenGrid } from './RetiredSpecimenGrid';
+export { RetiredSpecimenTable } from './RetiredSpecimenTable';
 export { SpeciesDetailScreen } from './SpeciesDetailScreen';
 
 export { SpecimenInfo } from './SpecimenInfo';

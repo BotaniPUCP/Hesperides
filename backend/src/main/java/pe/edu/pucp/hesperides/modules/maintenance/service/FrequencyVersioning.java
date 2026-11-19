@@ -13,6 +13,10 @@ import java.util.List;
  * <p>Vive aparte del servicio porque es una responsabilidad completa: copiar una
  * version, cerrarla y trasladar sus estaciones no es orquestacion, es la regla
  * que protege el historico de cumplimiento.
+ *
+ * <p>Ninguna regla lee el reloj: {@code today} llega del servicio, ya en la zona
+ * de mantenimiento. Asi la frontera entre versiones cae en el dia de Lima y no
+ * en el del servidor.
  */
 final class FrequencyVersioning {
 
@@ -26,8 +30,8 @@ final class FrequencyVersioning {
      * periodo evaluado que proteger, y cerrarla con valid_to = ayer dejaria
      * valid_to anterior a valid_from.
      */
-    static boolean requiresNewVersion(MaintenanceFrequency current) {
-        return current.getValidFrom().isBefore(LocalDate.now());
+    static boolean requiresNewVersion(MaintenanceFrequency current, LocalDate today) {
+        return current.getValidFrom().isBefore(today);
     }
 
     /**
@@ -36,7 +40,7 @@ final class FrequencyVersioning {
      * <p>Quien la llama debe cerrar la anterior en la misma transaccion: asi
      * nunca hay dos vigentes ni un dia sin ninguna.
      */
-    static MaintenanceFrequency copyForNewVersion(MaintenanceFrequency current) {
+    static MaintenanceFrequency copyForNewVersion(MaintenanceFrequency current, LocalDate today) {
         MaintenanceFrequency next = new MaintenanceFrequency();
         next.setActivityTypeItem(current.getActivityTypeItem());
         next.setFrequencyRuleTypeItem(current.getFrequencyRuleTypeItem());
@@ -52,7 +56,7 @@ final class FrequencyVersioning {
         next.setSeasonEndMonth(current.getSeasonEndMonth());
         next.setNotes(current.getNotes());
         next.setActive(current.isActive());
-        next.setValidFrom(LocalDate.now());
+        next.setValidFrom(today);
         // Las estaciones se copian, no se mueven: la version antigua conserva las
         // suyas para que su periodo siga siendo explicable.
         current.getSeasons().forEach(s -> next.addSeason(copyOf(s)));
@@ -60,8 +64,8 @@ final class FrequencyVersioning {
     }
 
     /** Cierra la vigencia ayer, para que la nueva version empiece hoy sin solaparse. */
-    static void closeYesterday(MaintenanceFrequency current) {
-        current.setValidTo(LocalDate.now().minusDays(1));
+    static void closeYesterday(MaintenanceFrequency current, LocalDate today) {
+        current.setValidTo(today.minusDays(1));
     }
 
     static void replaceSeasons(MaintenanceFrequency f, List<SeasonalIntervalPayload> payloads) {

@@ -15,6 +15,10 @@ class CsvTableTest {
         return CsvTable.parse(text.getBytes(StandardCharsets.UTF_8));
     }
 
+    private static CsvTable parseStrict(String text) {
+        return CsvTable.parseStrict(text.getBytes(StandardCharsets.UTF_8));
+    }
+
     @Test
     void readsSemicolonSeparatedRowsWithTheirLineNumber() {
         CsvTable t = parse("codigo;latitud\nEV-000001;-12.067\n;-12.068\n");
@@ -37,6 +41,23 @@ class CsvTableTest {
 
         assertThat(t.rows().get(0).get("lugar")).isEqualTo("Frente a \"Tinkuy\"; lado norte");
         assertThat(t.rows().get(0).get("nota")).isEqualTo("dos\nlineas");
+    }
+
+    @Test
+    void strictModeAcceptsWellFormedQuotedCellsAndRejectsCorruptQuoting() {
+        CsvTable valid = parseStrict("nombre;nota\n\"Schinus molle\";\"dos; \"\"líneas\"\"\nfin\"\n");
+        assertThat(valid.rows().getFirst().get("nombre")).isEqualTo("Schinus molle");
+        assertThat(valid.rows().getFirst().get("nota")).isEqualTo("dos; \"líneas\"\nfin");
+
+        assertThatThrownBy(() -> parseStrict("nombre;nota\nSchinus \"molle\";dato\n"))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("misplaced quote");
+        assertThatThrownBy(() -> parseStrict("nombre;nota\n\"Schinus molle\" texto;dato\n"))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("misplaced quote");
+        assertThatThrownBy(() -> parseStrict("nombre;nota\n\"Schinus molle;dato\n"))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("unclosed quoted cell");
     }
 
     @Test

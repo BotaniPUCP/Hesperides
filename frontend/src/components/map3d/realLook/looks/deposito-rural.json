@@ -5,22 +5,20 @@
   "photos": [
     "imagen.jpg"
   ],
-  "notes": "Jaula de malla con marco metálico gris bajo calamina (imagen.jpg); lo que se ve a través de la malla queda tal cual.",
+  "materials": {
+    "muro": {
+      "color": "#8f9496"
+    },
+    "techo": {
+      "color": "#a9aaa6"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#a29c94",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#8c9196",
-          "photo": {
-            "tile": "deposito-rural",
-            "widthM": 4.5,
-            "heightM": 2.3
-          }
-        }
-      }
+      "wall": "muro",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Jaula de malla con marco metálico gris bajo calamina (imagen.jpg); lo que se ve a través de la malla no se dibuja."
 }

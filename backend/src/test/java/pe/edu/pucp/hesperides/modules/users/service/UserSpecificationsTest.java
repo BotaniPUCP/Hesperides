@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -55,58 +54,15 @@ class UserSpecificationsTest {
                 """, email, first, last, roleCode, active);
     }
 
-    private List<String> emailsMatching(String search, String roleCode, Boolean isActive,
-                                        Long teamId, List<Long> scopeIds) {
-        return usersRepository
-                .findAll(UserSpecifications.withFilters(search, roleCode, isActive, teamId, scopeIds),
-                        Pageable.unpaged())
-                .map(User::getEmail)
-                .getContent();
+    private List<String> emailsVisibleTo(List<Long> scopeIds) {
+        return usersRepository.findAll(UserSpecifications.visibleTo(scopeIds)).stream().map(User::getEmail).toList();
     }
 
     @Test
-    void withoutIsActiveOnlyActiveUsersComeBack() {
-        // Por defecto el listado no muestra desactivados (SPEC-100 §3).
-        assertThat(emailsMatching(null, null, null, null, null))
-                .contains("perez@pucp.edu.pe", "nunez@pucp.edu.pe")
-                .doesNotContain("baja@pucp.edu.pe");
-    }
-
-    @Test
-    void isActiveFalseShowsOnlyTheDeactivatedOnes() {
-        assertThat(emailsMatching(null, null, false, null, null))
-                .containsExactly("baja@pucp.edu.pe");
-    }
-
-    @Test
-    void searchMatchesFirstNameLastNameAndEmail() {
-        assertThat(emailsMatching("perez", null, null, null, null)).containsExactly("perez@pucp.edu.pe");
-        assertThat(emailsMatching("Juan", null, null, null, null)).containsExactly("perez@pucp.edu.pe");
-        assertThat(emailsMatching("nunez@", null, null, null, null)).containsExactly("nunez@pucp.edu.pe");
-    }
-
-    @Test
-    void searchIgnoresCase() {
-        assertThat(emailsMatching("PÉREZ", null, null, null, null)).containsExactly("perez@pucp.edu.pe");
-    }
-
-    @Test
-    void searchIgnoresAccents() {
-        // "nunez" debe encontrar a "Núñez": quien busca no escribe las tildes.
-        assertThat(emailsMatching("nunez", null, null, null, null))
-                .contains("nunez@pucp.edu.pe");
-    }
-
-    @Test
-    void roleCodeFiltersByTheCatalogCode() {
-        assertThat(emailsMatching(null, "COORDINADOR", null, null, null))
-                .containsExactly("nunez@pucp.edu.pe");
-    }
-
-    @Test
-    void filtersCombineWithAnd() {
-        assertThat(emailsMatching("gomez", "OPERARIO", false, null, null))
-                .containsExactly("baja@pucp.edu.pe");
+    void everyoneComesBackActiveOrNotToBeFilteredInTheBrowser() {
+        // Buscar, filtrar por rol, estado o cuadrilla se hace en el navegador (SPEC-119).
+        assertThat(emailsVisibleTo(null))
+                .contains("perez@pucp.edu.pe", "nunez@pucp.edu.pe", "baja@pucp.edu.pe");
     }
 
     @Test
@@ -114,14 +70,13 @@ class UserSpecificationsTest {
         Long id = jdbcTemplate.queryForObject(
                 "SELECT id FROM users WHERE email = 'perez@pucp.edu.pe'", Long.class);
 
-        assertThat(emailsMatching(null, null, null, null, List.of(id)))
-                .containsExactly("perez@pucp.edu.pe");
+        assertThat(emailsVisibleTo(List.of(id))).containsExactly("perez@pucp.edu.pe");
     }
 
     @Test
     void anEmptyScopeYieldsNothing() {
         // Un supervisor sin cuadrilla no ve a todos: no ve a nadie.
-        assertThat(emailsMatching(null, null, null, null, List.of())).isEmpty();
+        assertThat(emailsVisibleTo(List.of())).isEmpty();
     }
 
     @Test
@@ -129,25 +84,6 @@ class UserSpecificationsTest {
         jdbcTemplate.update("UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE email = ?",
                 "perez@pucp.edu.pe");
 
-        assertThat(emailsMatching(null, null, null, null, null))
-                .doesNotContain("perez@pucp.edu.pe");
-    }
-
-    @Test
-    void teamIdFiltersByCurrentMembership() {
-        Long supervisorId = jdbcTemplate.queryForObject(
-                "SELECT id FROM users WHERE email = 'nunez@pucp.edu.pe'", Long.class);
-        Long memberId = jdbcTemplate.queryForObject(
-                "SELECT id FROM users WHERE email = 'perez@pucp.edu.pe'", Long.class);
-        jdbcTemplate.update(
-                "INSERT INTO teams (code, name, supervisor_user_id) VALUES ('CS-01', 'Cuadrilla Sur', ?)",
-                supervisorId);
-        Long teamId = jdbcTemplate.queryForObject(
-                "SELECT id FROM teams WHERE code = 'CS-01'", Long.class);
-        jdbcTemplate.update("INSERT INTO team_members (team_id, user_id) VALUES (?, ?)",
-                teamId, memberId);
-
-        assertThat(emailsMatching(null, null, null, teamId, null))
-                .containsExactly("perez@pucp.edu.pe");
+        assertThat(emailsVisibleTo(null)).doesNotContain("perez@pucp.edu.pe");
     }
 }

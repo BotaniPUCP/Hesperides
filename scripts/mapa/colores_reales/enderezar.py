@@ -1,8 +1,9 @@
-"""Endereza tramos de fachada de las fotos y los junta en un atlas (prueba de SPEC-109 con fotos reales).
+"""Endereza tramos de fachada de las fotos y los junta en un atlas: una ayuda local para medir, en metros,
+dónde va cada material de una fachada (SPEC-112 D-11). El atlas sale a 40 px por metro.
 
-Uso, desde la raíz del repositorio:
+Lleva tramos de fotos con personas: se escribe fuera del repositorio y no se versiona. Uso, desde la raíz:
   python scripts/mapa/colores_reales/enderezar.py scripts/mapa/colores_reales/tramos.json <carpeta edificios-pucp>
-    frontend/public/models/real-look/atlas.jpg frontend/src/components/map3d/realLook/looks/atlas.json
+    <carpeta local>/atlas.jpg <carpeta local>/atlas.json
 tramos.json: {"id": {"foto": "carpeta/archivo.jpg", "quad": [[x,y] TL, TR, BR, BL], "anchoM": 12, "altoM": 16}}
 """
 import json

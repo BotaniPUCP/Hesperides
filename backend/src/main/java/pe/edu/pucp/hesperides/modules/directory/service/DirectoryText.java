@@ -7,11 +7,6 @@ import java.util.Objects;
 /** Limpieza común de los textos opcionales que llegan al Directorio. */
 final class DirectoryText {
 
-    /** Cuántas sugerencias de parecidos se muestran antes de crear (SPEC-106 §3). */
-    static final int MAX_SUGGESTIONS = 5;
-    /** Parecido mínimo (pg_trgm, de 0 a 1) para sugerir: por debajo, «EEGGCC» y «DAF» empezarían a sugerirse entre sí. */
-    static final double SIMILARITY_THRESHOLD = 0.4;
-
     private DirectoryText() {
     }
 

@@ -1,26 +1,64 @@
 {
   "planKey": "c657216b-dded-46da-91bd-57fd0fc3b60e",
-  "name": "Facultad de Letras y Ciencias Humanas (código 32)",
+  "name": "Departamento Académico de Humanidades (oficinas)",
   "folder": "facultad-letras-ciencias-humanas",
   "photos": [
-    "detras-frente-a-psicologia-3.jpg"
+    "detras-frente-a-psicologia-1.jpg",
+    "detras-frente-a-psicologia-2.jpg",
+    "detras-frente-a-psicologia-3.jpg",
+    "frente-hacia-eeggll-2.jpg",
+    "frente-hacia-eeggll-3.jpg",
+    "frente-hacia-eeggll.jpg"
   ],
-  "notes": "Bandas blancas con ventanas y base de ladrillo (detras-frente-a-psicologia-3.jpg); los árboles delante se reemplazan por blanco. Por confirmar el emparejamiento (Anexo A, fila 73).",
+  "materials": {
+    "muro": {
+      "color": "#eaeceb"
+    },
+    "techo": {
+      "color": "#d5d5d2"
+    },
+    "ventanas": {
+      "glass": "#5d6669",
+      "frame": "#e6e6e2",
+      "moduleM": 1.5,
+      "heightM": 1.7,
+      "frameM": 0.07,
+      "vary": 0.06
+    },
+    "ladrillo": {
+      "color": "#c08e7d"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#d5d5d2",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#e7e7e5",
-          "photo": {
-            "tile": "letras-ch",
-            "widthM": 18,
-            "heightM": 9.0
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ladrillo",
+          "v": [
+            -1,
+            0.9
+          ]
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            9.3
+          ],
+          "floors": {
+            "everyM": 3.1,
+            "startM": 0,
+            "bandM": [
+              0.9,
+              2.6
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Bandas blancas con una cinta de ventanas de marco claro en cada piso y un zócalo de ladrillo bajo las del primero (detras-frente-a-psicologia-1.jpg a -3.jpg, frente-hacia-eeggll-*.jpg). La carpeta se llama «facultad-letras-ciencias-humanas», pero frente-hacia-eeggll.jpg muestra el rótulo «Departamento de Humanidades»: es el código 32, nombre corregido por Jean Piero el 14 nov (V052)."
 }

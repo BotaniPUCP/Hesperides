@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { usePlaces } from '@/hooks/usePlaces';
+import { useMemo, useState } from 'react';
+import { usePlaceList } from '@/hooks/usePlaces';
+import { filterByText } from '@/lib/search/searchText';
 
 const MAX_RESULTS = 6;
 
@@ -12,13 +12,17 @@ export interface OtherPlacePickerProps {
   onChoose: (code: string, name: string) => void;
 }
 
-/** Cuando ninguna sugerencia acierta: buscar el lugar en el catálogo por nombre o alias. */
+/**
+ * Cuando ninguna sugerencia acierta: buscar el lugar en el catálogo por nombre o alias. El catálogo
+ * se carga al abrir el buscador y se filtra en el navegador mientras se escribe (SPEC-119).
+ */
 export function OtherPlacePicker({ chosenName, onChoose }: OtherPlacePickerProps) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
-  const search = useDebouncedValue(text, 300).trim();
-  const { places } = usePlaces({ search }, open && search !== '');
-  const results = open && search ? places.slice(0, MAX_RESULTS) : [];
+  const search = text.trim();
+  const { items } = usePlaceList(open);
+  const results = useMemo(() => (open && search ? filterByText(items, search).slice(0, MAX_RESULTS) : []),
+    [open, items, search]);
 
   if (!open) {
     return (

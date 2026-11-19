@@ -3,56 +3,93 @@
   "name": "Pabellón V",
   "folder": "PabellonV",
   "photos": [
+    "Frente.jpg",
+    "Lado1.jpg",
     "Lado1_2.jpg",
     "Lado2.jpg"
   ],
-  "notes": "Bloque crema con ventanas (Lado2.jpg, el árbol se reemplaza por crema), testeros gris verdoso ciegos y el volumen curvo ocre del oeste (Lado1_2.jpg).",
+  "materials": {
+    "crema": {
+      "color": "#e0d9c6"
+    },
+    "testero": {
+      "color": "#cfd3c9"
+    },
+    "ocre": {
+      "color": "#d9b46e"
+    },
+    "celosias": {
+      "color": "#a8434f"
+    },
+    "techo": {
+      "color": "#d2cfc6"
+    },
+    "ventanas": {
+      "glass": "#7d8a90",
+      "frame": "#e8e8e4",
+      "moduleM": 1.4,
+      "heightM": 1.6,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
   "zones": [
     {
-      "id": "edificio",
-      "roof": "#d2cfc6",
-      "faces": {
-        "E": {
-          "kind": "blind",
-          "wall": "#a7a99b"
-        },
-        "NE": {
-          "sameAs": "E"
-        },
-        "NW": {
-          "sameAs": "E"
-        },
-        "other": {
-          "kind": "photo",
-          "wall": "#dcd5c2",
-          "photo": {
-            "tile": "v-crema",
-            "widthM": 9,
-            "heightM": 14
+      "id": "bloque",
+      "wall": "crema",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            14
+          ],
+          "floors": {
+            "everyM": 3.5,
+            "startM": 0,
+            "bandM": [
+              1,
+              2.6
+            ]
           }
         }
+      ],
+      "faces": {
+        "E": [
+          {
+            "material": "testero"
+          }
+        ],
+        "NE": [
+          {
+            "material": "testero"
+          },
+          {
+            "material": "celosias",
+            "u": [
+              6.1,
+              9.6
+            ],
+            "v": [
+              0,
+              14.1
+            ]
+          }
+        ]
       }
     },
     {
-      "id": "volumen-curvo-oeste",
+      "id": "curvo-oeste",
       "where": {
         "east": [
           0,
           0.14
         ]
       },
-      "roof": "#d4c08e",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#d6b36b",
-          "photo": {
-            "tile": "v-ocre",
-            "widthM": 9,
-            "heightM": 14
-          }
-        }
-      }
+      "wall": "ocre",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Bloque crema con una cinta de ventanas de marco blanco en cada piso (Frente.jpg, Lado2.jpg). Testeros gris verdoso ciegos; en el paño en ángulo de la entrada, junto al letrero, el paño de celosías rojas (Lado1.jpg, Lado1_2.jpg; D-04: pieza que domina el color de la fachada). Al oeste, el volumen curvo ocre de los balcones (zona por planta)."
 }

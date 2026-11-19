@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import type { UserDetail, UserFilters } from '@shared/types';
-import { usersApi } from '@/lib/users-api';
-import { mensajeDeApiError } from '@/lib/api-errors';
-import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
-import { useDebouncedValue } from './useDebouncedValue';
+import { USERS_PAGE_SIZE } from '@/lib/constants';
+import { usersList } from '@/lib/preload/userLists';
+import { pageOf } from '@/lib/search/pageOf';
+import { filterByText } from '@/lib/search/searchText';
+import { usePreloadedList } from './usePreloadedList';
 
 export interface UseUsersResult {
   rows: UserDetail[];
@@ -16,81 +17,33 @@ export interface UseUsersResult {
   refresh: () => void;
 }
 
-interface Respuesta {
-  /** Consulta que produjo estos datos. Compararla con la consulta actual es lo que dice si están al día. */
-  consulta: string;
-  rows: UserDetail[];
-  totalElements: number;
-  errorMessage: string | null;
+/**
+ * `isActive` sin valor es «todos»: la pantalla abre con `true` porque eso se necesita el 95% de
+ * las veces (SPEC-100 §5.5). `false` es «solo inactivos», por eso se compara con undefined.
+ */
+export function usersMatching(users: UserDetail[], filters: UserFilters): UserDetail[] {
+  return filterByText(users, filters.search ?? '').filter((u) =>
+    (filters.isActive === undefined || u.isActive === filters.isActive)
+    && (!filters.roleCode || u.role.code === filters.roleCode)
+    && (filters.teamId === undefined || u.teams.some((t) => t.id === filters.teamId)));
 }
 
 /**
- * Listado paginado con filtros. El término de búsqueda se consulta con retraso
- * (§7.1); el resto de filtros no, porque elegir un rol en un `Select` es un
- * gesto único y esperar 300 ms tras él solo se siente lento.
- *
- * `isLoading` no es un estado propio sino una comparación: se está cargando
- * mientras la última respuesta recibida no corresponda a la consulta vigente.
- * Así no hay forma de dejarlo desincronizado —el clásico spinner eterno de un
- * `finally` que no se ejecutó— ni de encadenar un render extra por cada
- * petición solo para encender la bandera.
+ * Listado con filtros y páginas sobre la lista completa, que se carga una vez al abrir la
+ * pantalla y se filtra en el navegador mientras se escribe (SPEC-119). Crear, editar o
+ * desactivar a alguien la vuelve a pedir sola; `refresh` es para el botón «Reintentar».
  */
 export function useUsers(filters: UserFilters, page: number): UseUsersResult {
-  const [respuesta, setRespuesta] = useState<Respuesta | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
-
-  const search = useDebouncedValue(filters.search ?? '', SEARCH_DEBOUNCE_MS);
-  const { roleCode, isActive, teamId } = filters;
-
-  // Los efectos dependen de los campos sueltos y no del objeto `filters`: la
-  // página lo reconstruye en cada render, así que depender del objeto volvería
-  // a consultar el backend con cada pulsación de cualquier tecla.
-  const consulta = JSON.stringify([search, roleCode, isActive, teamId, page, reloadToken]);
-
-  const refresh = useCallback(() => setReloadToken((token) => token + 1), []);
-
-  useEffect(() => {
-    // Una respuesta lenta de una consulta ya sustituida no debe pisar a la
-    // nueva: sin esta bandera, escribir rápido puede dejar en pantalla los
-    // resultados de un término anterior.
-    let vigente = true;
-
-    usersApi
-      .list({ search, roleCode, isActive, teamId }, page)
-      .then((pagina) => {
-        if (!vigente) return;
-        setRespuesta({
-          consulta,
-          rows: pagina.content,
-          totalElements: pagina.page.totalElements,
-          errorMessage: null,
-        });
-      })
-      .catch((error: unknown) => {
-        if (!vigente) return;
-        setRespuesta({
-          consulta,
-          rows: [],
-          totalElements: 0,
-          errorMessage: mensajeDeApiError(error),
-        });
-      });
-
-    return () => {
-      vigente = false;
-    };
-  }, [consulta, search, roleCode, isActive, teamId, page]);
-
-  const isLoading = respuesta === null || respuesta.consulta !== consulta;
+  const { items, loaded, errorMessage, reload } = usePreloadedList(usersList);
+  const { search, roleCode, isActive, teamId } = filters;
+  const matching = useMemo(() => usersMatching(items, { search, roleCode, isActive, teamId }),
+    [items, search, roleCode, isActive, teamId]);
 
   return {
-    rows: respuesta?.rows ?? [],
-    totalElements: respuesta?.totalElements ?? 0,
-    isLoading,
-    // El error de la consulta anterior se retira en cuanto empieza la
-    // siguiente: dejarlo visible mientras se reintenta haría creer que el
-    // reintento ya falló.
-    errorMessage: isLoading ? null : (respuesta?.errorMessage ?? null),
-    refresh,
+    rows: pageOf(matching, page, USERS_PAGE_SIZE).rows,
+    totalElements: matching.length,
+    isLoading: !loaded && errorMessage === null,
+    errorMessage: loaded ? null : errorMessage,
+    refresh: reload,
   };
 }

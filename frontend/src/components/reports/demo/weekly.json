@@ -50,8 +50,8 @@
   },
   "attendedSections": { "rule": "PROVISIONAL_ONE_APPROVED_PER_SECTION", "covered": 9, "total": 118, "percent": 7.6 },
   "irrigation": {
-    "rule": "PROVISIONAL_ONE_TURN_PER_SECTION",
-    "turns": 3, "irrigatedSections": 115, "totalSections": 118, "percent": 97.5,
+    "rule": "PROVISIONAL_ONE_IRRIGATION_PER_SECTION",
+    "irrigations": 3, "irrigatedSections": 115, "totalSections": 118, "percent": 97.5,
     "notIrrigated": {
       "total": 3,
       "items": [

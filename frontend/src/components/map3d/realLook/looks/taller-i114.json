@@ -1,0 +1,43 @@
+{
+  "planKey": "036a5490-99c8-4a23-9121-d2f6c7fa33f9",
+  "name": "Aula/Taller I-114 (Pintura)",
+  "source": "Decisión de Jean Piero (15 nov 2026): el taller I-114 va con el estilo de los Talleres T-55 al T-71 (Escultura) (SPEC-112)",
+  "materials": {
+    "muro": {
+      "color": "#e8e9e6"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "ventanas": {
+      "color": "#c0c3c2"
+    },
+    "celosias": {
+      "color": "#a1a6a8"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
+        },
+        {
+          "material": "celosias",
+          "v": [
+            2.6,
+            3.6
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Copia los colores de c30.json. El taller I-114 va con el estilo de los Talleres T-55 al T-71 (Escultura)."
+}

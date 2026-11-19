@@ -9,15 +9,47 @@ import type {
   PlacePerspective,
   PlacePhoto,
   PlaceSummary,
-  ReferenceQueuePage,
+  ReferenceQueueGroup,
 } from '@shared/types';
 import { apiClient } from './api';
 import { API_BASE_URL } from './constants';
 
-export interface PlaceFilters {
-  search?: string;
-  category?: string;
-  kind?: string;
+export interface PlaceImportIssue {
+  row: number;
+  column: string;
+  value: string;
+  message: string;
+}
+
+export interface PlaceImportPreview {
+  rows: number;
+  canImport: boolean;
+  errors: PlaceImportIssue[];
+  locationConflicts: {
+    row: number;
+    lat: number;
+    lon: number;
+    places: { code: string; name: string }[];
+  }[];
+}
+
+export interface PlaceImportReplacement {
+  row: number;
+  placeCode: string;
+}
+
+export interface PlaceImportResult {
+  imported: number;
+  places: { code: string; name: string; replaced: boolean }[];
+}
+
+export interface PlaceWorkbookExportFilters {
+  categoryCode: string | null;
+  alias: string | null;
+  parentCode: string | null;
+  createdFrom: string | null;
+  createdTo: string | null;
+  includePerspectives: boolean;
 }
 
 /** Las fotos llegan como ruta de la API («/files/places/…»); el navegador necesita la dirección entera. */
@@ -27,19 +59,11 @@ const withMedia = (p: PlacePhoto): PlacePhoto => ({ ...p, thumbnailUrl: media(p.
 
 const segment = encodeURIComponent;
 
-function query(filters: PlaceFilters): string {
-  const q = new URLSearchParams();
-  if (filters.search?.trim()) q.set('q', filters.search.trim());
-  if (filters.category) q.set('category', filters.category);
-  if (filters.kind) q.set('kind', filters.kind);
-  const s = q.toString();
-  return s ? `?${s}` : '';
-}
-
 export const placesApi = {
-  list: (filters: PlaceFilters) =>
+  /** Todos los vigentes: se buscan y filtran en el navegador (SPEC-119). */
+  list: () =>
     apiClient
-      .get<PlaceSummary[]>(`/places${query(filters)}`)
+      .get<PlaceSummary[]>('/places')
       .then((list) => list.map((p) => ({ ...p, mainPhotoUrl: p.mainPhotoUrl ? media(p.mainPhotoUrl) : null }))),
 
   detail: (code: string) =>
@@ -69,9 +93,25 @@ export const placesApi = {
     apiClient.post<PlacePerspective>(`/places/${segment(code)}/perspectives`, input),
   updatePerspective: (code: string, id: number, input: PerspectiveInput) =>
     apiClient.put<PlacePerspective>(`/places/${segment(code)}/perspectives/${id}`, input),
+  clearPerspectiveMapView: (code: string, id: number) =>
+    apiClient.del<void>(`/places/${segment(code)}/perspectives/${id}/map-view`),
   reorderPerspectives: (code: string, ids: number[]) =>
     apiClient.put<void>(`/places/${segment(code)}/perspectives/order`, { ids }),
   removePerspective: (code: string, id: number) => apiClient.del<void>(`/places/${segment(code)}/perspectives/${id}`),
+
+  placeImportTemplate: () => apiClient.getBlob('/places/import/template'),
+  previewPlaceImport: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiClient.postForm<PlaceImportPreview>('/places/import/preview', form);
+  },
+  importPlaces: (file: File, replacements: PlaceImportReplacement[] = []) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('replacements', new Blob([JSON.stringify(replacements)], { type: 'application/json' }));
+    return apiClient.postForm<PlaceImportResult>('/places/import', form);
+  },
+  exportPlaces: (filters: PlaceWorkbookExportFilters) => apiClient.postBlob('/places/export', filters),
 
   uploadPhoto: (code: string, file: File, target: PhotoInput) => {
     const form = new FormData();
@@ -83,11 +123,8 @@ export const placesApi = {
   },
   removePhoto: (code: string, photoId: number) => apiClient.del<void>(`/places/${segment(code)}/photos/${photoId}`),
 
-  referenceQueue: (search: string, page: number, size: number) => {
-    const q = new URLSearchParams({ page: String(page), size: String(size) });
-    if (search.trim()) q.set('q', search.trim());
-    return apiClient.get<ReferenceQueuePage>(`/places/reference-links/queue?${q.toString()}`);
-  },
+  /** Toda la cola pendiente, con sus sugerencias: se busca y pagina en el navegador (SPEC-119). */
+  referenceQueue: () => apiClient.get<ReferenceQueueGroup[]>('/places/reference-links/queue/all'),
   migrationProgress: () => apiClient.get<MigrationProgress>('/places/reference-links/progress'),
   linkReferences: (referenceCodes: string[], placeCode: string, perspectiveId: number | null) =>
     apiClient.post<void>('/places/reference-links', { referenceCodes, placeCode, perspectiveId }),

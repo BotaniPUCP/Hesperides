@@ -73,15 +73,22 @@ class ReportsWeeklyIntegrationTest extends ReportsIntegrationSupport {
     }
 
     @Test
-    void irrigationCountsOnlyTurnsOfTheSectorAndListsWhatWasLeftDry() throws Exception {
-        long otherSector = fx.sector();
-        fx.turn(sector, foreman, "2026-10-12", first, second);
-        fx.turn(sector, foreman, "2026-10-27", first);
-        fx.turn(otherSector, foreman, "2026-10-28", second);
+    void irrigationCountsCompletedIrrigationWorkAndListsWhatWasLeftDry() throws Exception {
+        long irrigation = fx.type("RIEGO_MANUAL");
+        long early = fx.work(irrigation, team, operator, coordinator, "ASSIGNED");
+        fx.location(early, first, null, "COMPLETED", "2026-10-12 15:00", false, operator, coordinator);
+        fx.location(early, second, null, "COMPLETED", "2026-10-12 15:00", false, operator, coordinator);
+        long thisWeek = fx.work(irrigation, team, operator, coordinator, "ASSIGNED");
+        fx.location(thisWeek, first, null, "COMPLETED", "2026-10-27 15:00", false, operator, coordinator);
+        long unfinished = fx.work(irrigation, team, operator, coordinator, "ASSIGNED");
+        fx.location(unfinished, second, null, "IN_PROGRESS", null, false, operator, coordinator);
+        long cancelled = fx.work(irrigation, team, operator, coordinator, "CANCELLED");
+        fx.location(cancelled, second, null, "COMPLETED", "2026-10-28 15:00", false, operator, coordinator);
+        fx.approvedWork(type, team, operator, coordinator, second, "2026-10-28 15:00");
 
         week("2026-10-26", coordinator).andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.irrigation.rule").value("PROVISIONAL_ONE_TURN_PER_SECTION"))
-                .andExpect(jsonPath("$.data.irrigation.turns").value(1))
+                .andExpect(jsonPath("$.data.irrigation.rule").value("PROVISIONAL_ONE_IRRIGATION_PER_SECTION"))
+                .andExpect(jsonPath("$.data.irrigation.irrigations").value(1))
                 .andExpect(jsonPath("$.data.irrigation.irrigatedSections").value(1))
                 .andExpect(jsonPath("$.data.irrigation.percent").value(50.0))
                 .andExpect(jsonPath("$.data.irrigation.notIrrigated.total").value(1))
@@ -89,16 +96,16 @@ class ReportsWeeklyIntegrationTest extends ReportsIntegrationSupport {
                 .andExpect(jsonPath("$.data.irrigation.notIrrigated.items[0].lastIrrigatedOn").value("2026-10-12"));
 
         week("2026-10-19", coordinator).andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.irrigation.turns").value(0))
+                .andExpect(jsonPath("$.data.irrigation.irrigations").value(0))
                 .andExpect(jsonPath("$.data.irrigation.percent").value(nullValue()));
     }
 
     @Test
     void incidentsAreLocatedByCoordinatesOrByTeamAndTakenAtTheCutoff() throws Exception {
-        long byPoint = fx.incident(coordinator, null, "OPEN", "2026-10-29T10:00:00-05:00", -12.0, lon);
-        long byTeam = fx.incident(coordinator, team, "OPEN", "2026-10-30T10:00:00-05:00", null, null);
-        long resolved = fx.incident(coordinator, team, "OPEN", "2026-10-20T10:00:00-05:00", null, null);
-        fx.changeStatus(resolved, "RESOLVED", "2026-10-27T10:00:00-05:00", coordinator);
+        long byPoint = fx.incident(coordinator, null, "REPORTED", "2026-10-29T10:00:00-05:00", -12.0, lon);
+        long byTeam = fx.incident(coordinator, team, "REPORTED", "2026-10-30T10:00:00-05:00", null, null);
+        long resolved = fx.incident(coordinator, team, "REPORTED", "2026-10-20T10:00:00-05:00", null, null);
+        fx.changeStatus(resolved, "CLOSED", "2026-10-27T10:00:00-05:00", coordinator);
 
         week("2026-10-26", coordinator).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.incidents.asOf").value("2026-11-01"))

@@ -121,7 +121,7 @@ export function MapaSelector({
   };
 
   return (
-    <div className="relative h-80 overflow-hidden rounded-lg border border-neutral-200 sm:h-96">
+    <div className="relative h-72 overflow-hidden rounded-lg border border-neutral-200 sm:h-80">
       <Map3DView
         data={data}
         onReady={handleReady}
@@ -132,9 +132,11 @@ export function MapaSelector({
         onGroundPick={nada}
         onPointPick={handlePointPick}
       />
-      <p className="pointer-events-none absolute left-2 top-2 rounded bg-neutral-0/90 px-2 py-1 text-xs text-neutral-700">
-        {etiqueta}
-      </p>
+      <div className="pointer-events-none absolute left-2 top-2 z-10">
+        <p className="rounded bg-neutral-0/90 px-2 py-1 text-xs text-neutral-700 shadow-sm">
+          {etiqueta}
+        </p>
+      </div>
     </div>
   );
 }

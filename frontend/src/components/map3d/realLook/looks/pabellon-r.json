@@ -3,24 +3,68 @@
   "name": "Pabellón R: Facultad de Educación (aulas)",
   "folder": "Pabellón R Facultad de Educación (aulas)",
   "photos": [
+    "detras-1.jpg",
+    "detras-2.jpg",
+    "frente-hacia-eeggll.jpg",
     "lado.jpg"
   ],
-  "notes": "Marco de concreto con antepechos de ladrillo y ventanas en dos pisos (lado.jpg); los árboles delante se reemplazan por el concreto.",
+  "materials": {
+    "muro": {
+      "color": "#cfcbc3"
+    },
+    "techo": {
+      "color": "#c7c4bd"
+    },
+    "ventanas": {
+      "glass": "#66717a",
+      "frame": "#d8d8d3",
+      "moduleM": 1.5,
+      "heightM": 1.6,
+      "frameM": 0.07,
+      "vary": 0.06
+    },
+    "ladrillo": {
+      "color": "#bf8f74"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#bdbbb5",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#a9a7a1",
-          "photo": {
-            "tile": "pabellon-r",
-            "widthM": 16,
-            "heightM": 7.0
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ladrillo",
+          "v": [
+            0,
+            7
+          ],
+          "floors": {
+            "everyM": 3.5,
+            "startM": 0,
+            "bandM": [
+              0.1,
+              0.9
+            ]
+          }
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7
+          ],
+          "floors": {
+            "everyM": 3.5,
+            "startM": 0,
+            "bandM": [
+              0.9,
+              2.5
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Marco de concreto gris con antepechos de ladrillo y una cinta de ventanas en cada piso (lado.jpg, frente-hacia-eeggll.jpg); atrás, concreto ciego (detras-1.jpg, detras-2.jpg). Los letreros no se dibujan."
 }

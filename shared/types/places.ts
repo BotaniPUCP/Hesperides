@@ -27,6 +27,8 @@ export interface PlaceSummary {
   perspectiveCount: number;
   hasFront: boolean;
   hasBack: boolean;
+  /** Código, nombre, padre, alias y perspectivas sin tildes: en qué se busca (SPEC-119 D-01). */
+  searchKey: string;
 }
 
 /**
@@ -156,13 +158,8 @@ export interface ReferenceQueueGroup {
   /** «Frente a X» a veces es «al otro lado de la calle, mirando a X». */
   sideUncertain: boolean;
   suggestions: PlaceSuggestion[];
-}
-
-export interface ReferenceQueuePage {
-  page: number;
-  size: number;
-  totalGroups: number;
-  groups: ReferenceQueueGroup[];
+  /** El nombre sin tildes ni mayúsculas, para buscar en el navegador (SPEC-119). */
+  searchKey: string;
 }
 
 export interface MigrationProgress {
@@ -191,6 +188,8 @@ export interface MapPerspective {
   lon: number;
   headingDeg: number;
   thumbnailUrl: string | null;
+  /** Nulo: el mapa usa la vista por defecto detrás del cono, mirando hacia donde mira la foto. */
+  mapView: PlaceMapView | null;
 }
 
 export interface MapCatalog {

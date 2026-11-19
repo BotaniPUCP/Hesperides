@@ -4,7 +4,7 @@ import { InventarioVerdeScreen } from '../InventarioVerdeScreen';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { rememberedHref } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
-import { page, palmeraReal, palmeraReina, summary } from '../__fixtures__/inventario';
+import { palmeraReal, palmeraReina, summary } from '../__fixtures__/inventario';
 
 const mockUseAuth = jest.fn();
 jest.mock('@/hooks/useAuth', () => ({
@@ -14,8 +14,7 @@ jest.mock('@/hooks/useAuth', () => ({
 jest.mock('@/lib/inventario-verde-api', () => ({
   inventarioVerdeApi: {
     summary: jest.fn(),
-    species: jest.fn(),
-    searchSpecimens: jest.fn(),
+    allSpecies: jest.fn(),
     specimen: jest.fn(),
     registerSpecies: jest.fn(),
   },
@@ -31,10 +30,8 @@ beforeEach(() => {
   window.sessionStorage.clear();
   mockUseAuth.mockReturnValue({ user: null });
   api.summary.mockResolvedValue(summary);
-  api.species.mockImplementation(async ({ search }) =>
-    page(search ? [palmeraReina] : [palmeraReal, palmeraReina]),
-  );
-  api.searchSpecimens.mockResolvedValue([]);
+  api.allSpecies.mockResolvedValue([palmeraReal, palmeraReina,
+    { ...palmeraReal, slug: 'en-retiro', commonName: 'Molle retirado', isActive: false, searchKey: 'molle retirado' }]);
   api.specimen.mockResolvedValue(null as any);
 });
 
@@ -56,11 +53,7 @@ describe('InventarioVerdeScreen', () => {
       window.history.replaceState(null, '', `${LIST}?search=real&type=PALM&sort=count:desc&page=2`);
       render(<InventarioVerdeScreen />);
 
-      await waitFor(() =>
-        expect(api.species).toHaveBeenCalledWith(
-          expect.objectContaining({ search: 'real', vegetationType: 'PALM', page: 2 }),
-        ),
-      );
+      await waitFor(() => expect(api.allSpecies).toHaveBeenCalled());
       expect(screen.getByPlaceholderText(/Buscar por nombre común/i)).toHaveValue('real');
       expect(await screen.findByDisplayValue(/Más censadas/)).toHaveValue('count:desc');
     });
@@ -92,16 +85,30 @@ describe('InventarioVerdeScreen', () => {
     expect(screen.getByRole('heading', { name: 'Especies' })).toBeInTheDocument();
     expect((await screen.findAllByText('965')).length).toBeGreaterThan(0);
     expect(await screen.findByText('Palmera real')).toBeInTheDocument();
+    expect(screen.queryByText('Molle retirado')).not.toBeInTheDocument();
   });
 
-  it('busca en el backend, también por los otros nombres', async () => {
+  it('busca en el catálogo cargado, también por los otros nombres, sin consultar por letra (SPEC-119)', async () => {
     render(<InventarioVerdeScreen />);
+    await screen.findByText('Palmera real');
 
     await userEvent.type(screen.getByPlaceholderText(/Buscar por nombre común/i), 'bruja');
 
-    await waitFor(() => expect(api.species).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'bruja', page: 0 })));
+    expect(api.allSpecies).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByText('Palmera real')).not.toBeInTheDocument());
     expect(screen.getAllByText('Palmera reina').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('filtra por especies en proceso de retiro al activar el checkbox', async () => {
+    render(<InventarioVerdeScreen />);
+    await screen.findByText('Palmera real');
+
+    const checkbox = await screen.findByLabelText(/En proceso de retiro/i);
+    await userEvent.click(checkbox);
+
+    expect(await screen.findByText('Molle retirado')).toBeInTheDocument();
+    expect(screen.queryByText('Palmera real')).not.toBeInTheDocument();
+    expect(window.location.search).toContain('enRetiro=true');
   });
 
   it('la búsqueda carga directamente en el inventario de especies sin popovers de ejemplares', async () => {
@@ -109,11 +116,7 @@ describe('InventarioVerdeScreen', () => {
 
     await userEvent.type(screen.getByPlaceholderText(/Buscar por nombre común/i), 'reina');
 
-    await waitFor(() =>
-      expect(api.species).toHaveBeenLastCalledWith(
-        expect.objectContaining({ search: 'reina', page: 0 }),
-      ),
-    );
+    await waitFor(() => expect(screen.queryByText('Palmera real')).not.toBeInTheDocument());
     expect(screen.queryByText('Ir directo a la ficha')).not.toBeInTheDocument();
     expect(screen.getAllByText('Palmera reina').length).toBeGreaterThanOrEqual(1);
   });

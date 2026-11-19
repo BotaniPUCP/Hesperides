@@ -1,0 +1,9 @@
+-- Propiedad de SPEC-108 D-17. Pedido de Jean Piero del 15 nov 2026, revisando el mapa con V060: con el Auditorio
+-- Juan Pablo II 5 m más abajo, su patio de ingreso queda a −1,455 m, y a la puerta se llega por una escalera que baja
+-- de la plaza por el lado noreste del patio, donde el SKP dibuja un muro bajo. La franja de la escalera y su descanso
+-- (28,5 m²) deja de ser parte de la huella del auditorio. En el visor, la escalera del manifiesto (stairs) reemplaza
+-- ese muro y el patio es un desnivel (sunken) que abre el suelo del mapa; el GLB no cambia. El trigger de
+-- campus_buildings sube map_data_version.
+
+UPDATE campus_buildings SET footprint = ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON('{"type":"MultiPolygon","coordinates":[[[[-77.080410393,-12.069789817],[-77.080408032,-12.069764614],[-77.080400602,-12.069685399],[-77.080368638,-12.069659256],[-77.080258879,-12.069669227],[-77.080262507,-12.069707863],[-77.080230525,-12.069710774],[-77.080211901,-12.069732833],[-77.080230525,-12.069710774],[-77.080247481,-12.069724641],[-77.08017785,-12.06980711],[-77.080160895,-12.069793243],[-77.080162998,-12.069815716],[-77.080124477,-12.069819214],[-77.080107209,-12.069839671],[-77.080096233,-12.069840666],[-77.080105446,-12.069938964],[-77.080105868,-12.069943438],[-77.080132872,-12.069965522],[-77.080137418,-12.069965106],[-77.080229974,-12.069956699],[-77.080272776,-12.069952812],[-77.080270076,-12.069924003],[-77.080272363,-12.069923795],[-77.080299348,-12.069921345],[-77.080309304,-12.069909548],[-77.080308542,-12.069901449],[-77.080316781,-12.069900698],[-77.080366397,-12.069841931],[-77.080365635,-12.069833832],[-77.080373865,-12.069833081],[-77.08038383,-12.069821284],[-77.080381341,-12.069794726],[-77.08038113,-12.069792475],[-77.080398967,-12.069790857],[-77.080410393,-12.069789817]]]]}'), 4326)), updated_at = CURRENT_TIMESTAMP
+ WHERE plan_key = '0587a436-a6b7-4214-8d74-9b4883986521' AND deleted_at IS NULL;

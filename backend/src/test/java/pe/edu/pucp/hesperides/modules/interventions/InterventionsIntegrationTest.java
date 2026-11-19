@@ -168,6 +168,42 @@ class InterventionsIntegrationTest {
         mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isOk());
         assertThat(jdbc.queryForObject("select details->>'previousDate' from intervention_events where action_code='REPROGRAMMED' and intervention_id=?",String.class,id)).isEqualTo(java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
     }
+    /** SPEC-115: el próximo día de la semana pedido, desde mañana. */
+    static java.time.LocalDate next(java.time.DayOfWeek day) {
+        var d=java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).plusDays(1);
+        while(d.getDayOfWeek()!=day)d=d.plusDays(1);
+        return d;
+    }
+    @Test void cuttingMachineryOnlyOnSaturdaysSundaysOrHolidays() throws Exception {
+        var tuesday=next(java.time.DayOfWeek.TUESDAY);
+        var body=plan();body.put("scheduledDate",tuesday.toString());body.put("usesCuttingMachinery",true);
+        var error=json.readTree(mvc.perform(post("/api/v1/interventions").header("Idempotency-Key",UUID.randomUUID().toString()).contentType("application/json").content(json.writeValueAsString(body)))
+            .andExpect(status().isUnprocessableEntity()).andReturn().getResponse().getContentAsString());
+        assertThat(error.get("message").asString()).isEqualTo("Cutting machinery can only be scheduled on Saturdays, Sundays or holidays");
+        body.put("usesCuttingMachinery",false);
+        assertThat(create(body,UUID.randomUUID().toString(),201).get("usesCuttingMachinery").asBoolean()).isFalse();
+        body=plan();body.put("scheduledDate",next(java.time.DayOfWeek.SATURDAY).toString());body.put("usesCuttingMachinery",true);
+        assertThat(create(body,UUID.randomUUID().toString(),201).get("usesCuttingMachinery").asBoolean()).isTrue();
+        jdbc.update("""
+            insert into campus_events(name,type_item_id,scope,start_date,end_date,created_by_user_id)
+            values ('Feriado de prueba',(select i.id from catalog_items i join catalog_types t on t.id=i.catalog_type_id
+              where t.code='CAMPUS_EVENT_TYPE' and i.code='HOLIDAY'),'CAMPUS',?,?,?)""",tuesday,tuesday,planner);
+        body=plan();body.put("scheduledDate",tuesday.toString());body.put("usesCuttingMachinery",true);
+        create(body,UUID.randomUUID().toString(),201);
+        jdbc.update("update campus_events set deleted_at=current_timestamp where name='Feriado de prueba'");
+    }
+    @Test void anOldInvalidDateOnlyMattersWhenTheDateOrTheMarkChanges() throws Exception {
+        var body=plan();body.put("scheduledDate",next(java.time.DayOfWeek.WEDNESDAY).toString());
+        long id=create(body,UUID.randomUUID().toString(),201).get("id").asLong();
+        jdbc.update("update interventions set uses_cutting_machinery=true where id=?",id);
+        var refs=jdbc.queryForList("select id from intervention_locations where intervention_id=? order by id",id);
+        @SuppressWarnings("unchecked") var locations=(List<Map<String,Object>>)body.get("locations");
+        for(int i=0;i<3;i++)locations.get(i).put("id",refs.get(i).get("id"));
+        body.put("version",0);body.put("usesCuttingMachinery",true);body.put("description","Solo cambia la descripción");
+        mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isOk());
+        body.put("version",1);body.put("scheduledDate",next(java.time.DayOfWeek.THURSDAY).toString());body.put("rescheduleReason","Otra fecha");
+        mvc.perform(put("/api/v1/interventions/"+id).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isUnprocessableEntity());
+    }
     @Test void corsAllowsIdempotencyHeader() throws Exception {
         mvc.perform(options("/api/v1/interventions").header("Origin","http://localhost:3000").header("Access-Control-Request-Method","POST").header("Access-Control-Request-Headers","Content-Type,Idempotency-Key"))
             .andExpect(status().isOk()).andExpect(header().string("Access-Control-Allow-Headers",org.hamcrest.Matchers.containsString("Idempotency-Key")));
@@ -281,10 +317,9 @@ class InterventionsIntegrationTest {
             create(body,UUID.randomUUID().toString(),codes.get(0).equals("NO-SUCH-SPECIMEN")?422:400);
         }
         jdbc.update("update green_elements set is_active=false where id=?",element);
-        try {
-            var body=plan();@SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
-            rows.get(0).put("elementCodes",List.of(code));create(body,UUID.randomUUID().toString(),422);
-        } finally {jdbc.update("update green_elements set is_active=true where id=?",element);}
+        var body=plan();@SuppressWarnings("unchecked") var rows=(List<Map<String,Object>>)body.get("locations");
+        rows.get(0).put("elementCodes",List.of(code));create(body,UUID.randomUUID().toString(),422);
+        assertThat(jdbc.queryForObject("select is_active from green_elements where id=?",Boolean.class,element)).isFalse();
         assertThat(jdbc.queryForObject("select count(*) from interventions where created_by_user_id=? and deleted_at is null",Integer.class,planner)).isZero();
     }
     @Test void specimenHistoryByCodeIsScopedPaginatedAndDoesNotDuplicateActivities() throws Exception {
@@ -314,6 +349,80 @@ class InterventionsIntegrationTest {
         jdbc.update("update intervention_elements set deleted_at=current_timestamp where green_element_id=? and intervention_id in(select id from interventions where created_by_user_id=? and deleted_at is null)",element,planner);
         mvc.perform(get("/api/v1/interventions").param("greenElementCode",code))
             .andExpect(status().isOk()).andExpect(jsonPath("$.data.content",hasSize(0)));
+    }
+    @Test void specimenHistoryRemainsBoundToPermanentIdentityAfterDeactivation() throws Exception {
+        long species=jdbc.queryForObject("select s.id from species s where s.deleted_at is null and s.is_active "
+                + "and exists(select 1 from green_elements e where e.species_id=s.id and e.deleted_at is null and e.is_active) "
+                + "order by s.id limit 1",Long.class);
+        String code="EV-"+String.format("%06d",900000+ThreadLocalRandom.current().nextInt(100000));
+        long oldElement=jdbc.queryForObject("""
+                insert into green_elements(code,element_type_item_id,species_id,location,registered_by_user_id)
+                values (?,(select ci.id from catalog_items ci join catalog_types ct on ct.id=ci.catalog_type_id
+                           where ct.code='GREEN_ELEMENT_TYPE' and ci.code='INDIVIDUAL'),?,
+                       ST_SetSRID(ST_MakePoint(-77.07,-12.07),4326),?) returning id
+                """,Long.class,code,species,planner);
+        mvc.perform(get("/api/v1/green-inventory/specimens/"+code))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.id").value(oldElement));
+
+        var plannedBody=plan();
+        @SuppressWarnings("unchecked") var plannedRows=(List<Map<String,Object>>)plannedBody.get("locations");
+        plannedRows.get(0).put("elementIds",List.of(oldElement));
+        var planned=create(plannedBody,UUID.randomUUID().toString(),201);
+        for(int n=0;n<plannedRows.size();n++)plannedRows.get(n).put("id",planned.get("locations").get(n).get("id").asLong());
+        plannedBody.put("version",planned.get("version").asLong());
+        long plannedId=planned.get("id").asLong();
+
+        var validatedBody=plan();
+        @SuppressWarnings("unchecked") var validatedRows=(List<Map<String,Object>>)validatedBody.get("locations");
+        validatedRows.get(0).put("elementIds",List.of(oldElement));
+        long validatedId=create(validatedBody,UUID.randomUUID().toString(),201).get("id").asLong();
+        assign(validatedId,team,operator,"coordinator","COORDINADOR",0,200);
+        jdbc.update("update intervention_locations set status_item_id=?,started_at=current_timestamp - interval '2 hours',"
+                        + "completed_at=current_timestamp - interval '1 hour',validated_at=current_timestamp,executed_by_user_id=?,"
+                        + "validated_by_user_id=? where intervention_id=?",
+                statusId("VALIDATED"),planner,coordinator,validatedId);
+
+        mvc.perform(patch("/api/v1/green-inventory/specimens/"+code+"/deactivate").contentType("application/json")
+                .content("{\"reason\":\"Retiro en campo\"}"))
+            .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/interventions").param("greenElementCode",code))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(2));
+
+        mvc.perform(put("/api/v1/interventions/"+plannedId).contentType("application/json")
+                .content(json.writeValueAsString(plannedBody)))
+            .andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("select count(*) from intervention_elements where green_element_id=? and deleted_at is null",
+                Integer.class,oldElement)).isEqualTo(2);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbc.queryForObject("""
+                insert into green_elements(code,element_type_item_id,species_id,location,registered_by_user_id)
+                values (?,(select ci.id from catalog_items ci join catalog_types ct on ct.id=ci.catalog_type_id
+                           where ct.code='GREEN_ELEMENT_TYPE' and ci.code='INDIVIDUAL'),?,
+                       ST_SetSRID(ST_MakePoint(-77.08,-12.08),4326),?) returning id
+                """,Long.class,code,species,planner)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        long newElement=jdbc.queryForObject("""
+                insert into green_elements(element_type_item_id,species_id,location,registered_by_user_id)
+                values ((select ci.id from catalog_items ci join catalog_types ct on ct.id=ci.catalog_type_id
+                           where ct.code='GREEN_ELEMENT_TYPE' and ci.code='INDIVIDUAL'),?,
+                       ST_SetSRID(ST_MakePoint(-77.08,-12.08),4326),?) returning id
+                """,Long.class,species,planner);
+        String newCode=jdbc.queryForObject("select code from green_elements where id=?",String.class,newElement);
+        assertThat(newCode).isNotEqualTo(code);
+        var currentBody=plan();
+        @SuppressWarnings("unchecked") var currentRows=(List<Map<String,Object>>)currentBody.get("locations");
+        currentRows.get(0).put("elementIds",List.of(newElement));
+        create(currentBody,UUID.randomUUID().toString(),201);
+
+        mvc.perform(get("/api/v1/interventions").param("greenElementCode",code))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(2));
+        mvc.perform(get("/api/v1/interventions").param("greenElementId",Long.toString(oldElement)))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(2));
+        mvc.perform(get("/api/v1/interventions").param("greenElementId",Long.toString(oldElement)).param("statusCode","PLANNED"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(1));
+        mvc.perform(get("/api/v1/interventions").param("greenElementId",Long.toString(oldElement)).param("statusCode","VALIDATED"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(1));
+        mvc.perform(get("/api/v1/interventions").param("greenElementId",Long.toString(newElement)))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.page.totalElements").value(1));
     }
     @Test void aggregateStatusAndUnitsAreDerivedBeforeFiltering() throws Exception {
         var body=plan();
@@ -495,6 +604,42 @@ class InterventionsIntegrationTest {
             jdbc.update("update green_elements set measured_at=(select max(l.completed_at)::date from intervention_elements ie join intervention_locations l on l.id=ie.intervention_location_id where ie.green_element_id=?) where id=?",element,element);
             mvc.perform(get("/api/v1/green-inventory/specimens/"+code)).andExpect(jsonPath("$.data.measuredBeforeLastPruning").value(false));
         } finally {jdbc.update("update green_elements set measured_at=? where id=?",measuredAt,element);}
+    }
+    @Test void pruningHistoryFromADeletedSpecimenDoesNotAffectTheNextSpecimen() throws Exception {
+        long species=jdbc.queryForObject("select s.id from species s join catalog_items t on t.id=s.species_type_item_id "
+                + "where s.deleted_at is null and s.is_active "
+                + "and t.code in ('TREE','PALM') order by s.id limit 1",Long.class);
+        String code="EV-"+String.format("%06d",800000+ThreadLocalRandom.current().nextInt(100000));
+        long oldElement=jdbc.queryForObject("""
+                insert into green_elements(code,element_type_item_id,species_id,location,registered_by_user_id)
+                values (?,(select ci.id from catalog_items ci join catalog_types ct on ct.id=ci.catalog_type_id
+                           where ct.code='GREEN_ELEMENT_TYPE' and ci.code='INDIVIDUAL'),?,
+                       ST_SetSRID(ST_MakePoint(-77.07,-12.07),4326),?) returning id
+                """,Long.class,code,species,planner);
+        jdbc.update("update green_elements set height_m=5,crown_radius_m=1,data_source='MEASURED',measured_at=DATE '2026-01-01' where id=?",
+                oldElement);
+        completePruningOf(oldElement,code);
+        mvc.perform(get("/api/v1/green-inventory/specimens/"+code))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.data.measuredBeforeLastPruning").value(true));
+
+        mvc.perform(patch("/api/v1/green-inventory/specimens/"+code+"/deactivate").contentType("application/json")
+                .content("{\"reason\":\"Retiro en campo\"}"))
+            .andExpect(status().isOk());
+        long replacement=jdbc.queryForObject("""
+                insert into green_elements(element_type_item_id,species_id,location,registered_by_user_id,
+                                           height_m,crown_radius_m,data_source,measured_at)
+                values ((select ci.id from catalog_items ci join catalog_types ct on ct.id=ci.catalog_type_id
+                           where ct.code='GREEN_ELEMENT_TYPE' and ci.code='INDIVIDUAL'),?,
+                       ST_SetSRID(ST_MakePoint(-77.08,-12.08),4326),?,5,1,'MEASURED',DATE '2026-01-01') returning id
+                """,Long.class,species,planner);
+        assertThat(replacement).isNotEqualTo(oldElement);
+        assertThat(jdbc.queryForObject("select code from green_elements where id=?",String.class,replacement)).isNotEqualTo(code);
+
+        String replacementCode=jdbc.queryForObject("select code from green_elements where id=?",String.class,replacement);
+        mvc.perform(get("/api/v1/green-inventory/specimens/"+replacementCode))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.lastPruningDate").value(org.hamcrest.Matchers.nullValue()))
+            .andExpect(jsonPath("$.data.measuredBeforeLastPruning").value(false));
     }
     void completePruningOf(long element,String code) throws Exception {
         var work=startedWork("PODA",element,code);

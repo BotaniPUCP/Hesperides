@@ -165,199 +165,199 @@ function RegistroEspecieDialog({
   return (
     <>
       <Modal
-      isOpen={isOpen}
-      onClose={() => {
-        if (!saving) {
-          resetForm();
-          onClose();
-        }
-      }}
-      title="Registrar nueva especie botánica"
-      size="lg"
-      footer={
-        <div className="flex justify-end gap-3 w-full">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              resetForm();
-              onClose();
-            }}
-            disabled={saving}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            onClick={() => void handlePreSubmit()}
-            loading={saving}
-          >
-            Guardar especie
-          </Button>
-        </div>
-      }
-    >
-      <div
-        className="space-y-4"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && (e.target as HTMLElement)?.tagName === 'INPUT') {
-            e.preventDefault();
-            void handlePreSubmit();
+        isOpen={isOpen}
+        onClose={() => {
+          if (!saving) {
+            resetForm();
+            onClose();
           }
         }}
+        title="Registrar nueva especie botánica"
+        size="lg"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void handlePreSubmit()}
+              loading={saving}
+            >
+              Guardar especie
+            </Button>
+          </div>
+        }
       >
-        {error && (
-          <div role="alert" className="p-3 rounded-lg bg-action-danger/10 border border-action-danger/30 text-action-danger text-sm">
-            {error}
+        <div
+          className="space-y-4"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.target as HTMLElement)?.tagName === 'INPUT') {
+              e.preventDefault();
+              void handlePreSubmit();
+            }
+          }}
+        >
+          {error && (
+            <div role="alert" className="p-3 rounded-lg bg-action-danger/10 border border-action-danger/30 text-action-danger text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              id="scientificName"
+              label="Nombre científico"
+              value={scientificName}
+              onChange={setScientificName}
+              placeholder="ej. Jacaranda mimosifolia"
+              required
+              errorMessage={fieldErrors.scientificName}
+              helperText="El formato se normaliza automáticamente; no se verifica la taxonomía"
+            />
+
+            <Input
+              id="commonName"
+              label="Nombre común"
+              value={commonName}
+              onChange={setCommonName}
+              placeholder="ej. Jacarandá"
+              helperText="Nombre popular principal en campus"
+            />
           </div>
-        )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            id="scientificName"
-            label="Nombre científico"
-            value={scientificName}
-            onChange={setScientificName}
-            placeholder="ej. Jacaranda mimosifolia"
-            required
-            errorMessage={fieldErrors.scientificName}
-            helperText="Formato binomial en latín (Género + epíteto)"
-          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Select
+              id="vegetationType"
+              label="Tipo de vegetación"
+              value={vegetationTypeCode}
+              onChange={(opt) => {
+                const tipo = opt?.code ?? null;
+                setVegetationTypeCode(tipo);
+                setMedidas((m) => ({ ...m, critical: criticaPorTipo(tipo) }));
+              }}
+              options={typeOptions}
+              loading={loadingTypes}
+              required
+              errorMessage={fieldErrors.vegetationTypeCode}
+            />
 
-          <Input
-            id="commonName"
-            label="Nombre común"
-            value={commonName}
-            onChange={setCommonName}
-            placeholder="ej. Jacarandá"
-            helperText="Nombre popular principal en campus"
-          />
+            <Input
+              id="family"
+              label="Familia botánica"
+              value={family}
+              onChange={setFamily}
+              placeholder="ej. Bignoniaceae"
+              helperText="Familia taxonómica (opcional)"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Select
+              id="origin"
+              label="Origen / Procedencia"
+              value={originCode}
+              onChange={(opt) => setOriginCode(opt?.code ?? null)}
+              options={originOptions}
+              loading={loadingOrigins}
+              placeholder="Selecciona el origen (opcional)"
+              clearable
+            />
+
+            <Input
+              id="otherNames"
+              label="Nombres alternativos o vernáculos"
+              value={otherNamesText}
+              onChange={setOtherNamesText}
+              placeholder="ej. Tarco, Gualanday"
+              helperText="Separados por comas (opcional)"
+            />
+          </div>
+
+          <CamposMedidasEspecie valores={medidas} onCambiar={setMedidas} errores={erroresDeMedidas} />
+
+          <div className="border-t border-neutral-200/80 pt-3">
+            <CampoArchivo
+              id="speciesPhoto"
+              etiqueta="Foto de referencia de la especie (opcional)"
+              acepta="image/jpeg,image/png"
+              limite={LIMITES.foto}
+              ayuda="Foto genérica que representará a la especie en el catálogo."
+              archivo={photo}
+              onElegir={setPhoto}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 border-t border-neutral-200/80 pt-3">
+            <Input
+              id="description"
+              label="Descripción botánica (opcional)"
+              value={description}
+              onChange={setDescription}
+              placeholder="Características morfológicas..."
+            />
+            <Input
+              id="careNotes"
+              label="Notas de mantenimiento (opcional)"
+              value={careNotes}
+              onChange={setCareNotes}
+              placeholder="Requerimientos de poda, riego, etc."
+            />
+          </div>
         </div>
+      </Modal>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Select
-            id="vegetationType"
-            label="Tipo de vegetación"
-            value={vegetationTypeCode}
-            onChange={(opt) => {
-              const tipo = opt?.code ?? null;
-              setVegetationTypeCode(tipo);
-              setMedidas((m) => ({ ...m, critical: criticaPorTipo(tipo) }));
-            }}
-            options={typeOptions}
-            loading={loadingTypes}
-            required
-            errorMessage={fieldErrors.vegetationTypeCode}
-          />
-
-          <Input
-            id="family"
-            label="Familia botánica"
-            value={family}
-            onChange={setFamily}
-            placeholder="ej. Bignoniaceae"
-            helperText="Familia taxonómica (opcional)"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Select
-            id="origin"
-            label="Procedencia / Origen"
-            value={originCode}
-            onChange={(opt) => setOriginCode(opt?.code ?? null)}
-            options={originOptions}
-            loading={loadingOrigins}
-            placeholder="Selecciona el origen (opcional)"
-            clearable
-          />
-
-          <Input
-            id="otherNames"
-            label="Nombres alternativos"
-            value={otherNamesText}
-            onChange={setOtherNamesText}
-            placeholder="ej. Tarco, Gualanday"
-            helperText="Separados por comas (opcional)"
-          />
-        </div>
-
-        <CamposMedidasEspecie valores={medidas} onCambiar={setMedidas} errores={erroresDeMedidas} />
-
-        <div className="border-t border-neutral-200/80 pt-3">
-          <CampoArchivo
-            id="speciesPhoto"
-            etiqueta="Foto de referencia de la especie (opcional)"
-            acepta="image/jpeg,image/png"
-            limite={LIMITES.foto}
-            ayuda="Foto genérica que representará a la especie en el catálogo."
-            archivo={photo}
-            onElegir={setPhoto}
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 border-t border-neutral-200/80 pt-3">
-          <Input
-            id="description"
-            label="Descripción botánica (opcional)"
-            value={description}
-            onChange={setDescription}
-            placeholder="Características morfológicas..."
-          />
-          <Input
-            id="careNotes"
-            label="Notas de mantenimiento (opcional)"
-            value={careNotes}
-            onChange={setCareNotes}
-            placeholder="Requerimientos de poda, riego, etc."
-          />
-        </div>
-      </div>
-    </Modal>
-
-    <ConfirmSaveModal
-      isOpen={confirmOpen}
-      title="¿Registrar nueva especie botánica?"
-      entityLabel={scientificName.trim()}
-      subtitle="Catálogo Botánico Maestro"
-      confirmLabel="Confirmar y registrar"
-      cancelLabel="Revisar datos"
-      isWorking={saving}
-      onConfirm={handleConfirmSave}
-      onCancel={() => setConfirmOpen(false)}
-    >
-      <div className="space-y-2 p-3 rounded-xl bg-neutral-50 border border-neutral-200">
-        <div className="flex justify-between py-1 border-b border-neutral-200/60">
-          <span className="text-neutral-500">Nombre científico:</span>
-          <span className="font-semibold italic text-neutral-900">{scientificName.trim()}</span>
-        </div>
-        <div className="flex justify-between py-1 border-b border-neutral-200/60">
-          <span className="text-neutral-500">Nombre común:</span>
-          <span className="font-medium text-neutral-800">{commonName.trim() || '—'}</span>
-        </div>
-        <div className="flex justify-between py-1 border-b border-neutral-200/60">
-          <span className="text-neutral-500">Tipo de vegetación:</span>
-          <span className="font-medium text-neutral-800">
-            {typeOptions.find((t) => t.code === vegetationTypeCode)?.label ?? vegetationTypeCode}
-          </span>
-        </div>
-        {family.trim() && (
+      <ConfirmSaveModal
+        isOpen={confirmOpen}
+        title="¿Registrar nueva especie botánica?"
+        entityLabel={scientificName.trim()}
+        subtitle="Catálogo Botánico Maestro"
+        confirmLabel="Confirmar y registrar"
+        cancelLabel="Revisar datos"
+        isWorking={saving}
+        onConfirm={handleConfirmSave}
+        onCancel={() => setConfirmOpen(false)}
+      >
+        <div className="space-y-2 p-3 rounded-xl bg-neutral-50 border border-neutral-200">
           <div className="flex justify-between py-1 border-b border-neutral-200/60">
-            <span className="text-neutral-500">Familia:</span>
-            <span className="font-medium text-neutral-800">{family.trim()}</span>
+            <span className="text-neutral-500">Nombre científico:</span>
+            <span className="font-semibold italic text-neutral-900">{scientificName.trim()}</span>
           </div>
-        )}
-        {photo && (
-          <div className="flex justify-between py-1">
-            <span className="text-neutral-500">Foto oficial:</span>
-            <span className="font-medium text-neutral-800 truncate max-w-[180px]">{photo.name}</span>
+          <div className="flex justify-between py-1 border-b border-neutral-200/60">
+            <span className="text-neutral-500">Nombre común:</span>
+            <span className="font-medium text-neutral-800">{commonName.trim() || '—'}</span>
           </div>
-        )}
-      </div>
-      <p className="text-[11px] text-neutral-500 leading-relaxed">
-        Esta especie quedará disponible en el catálogo botánico para el censo y registro de ejemplares del campus.
-      </p>
-    </ConfirmSaveModal>
+          <div className="flex justify-between py-1 border-b border-neutral-200/60">
+            <span className="text-neutral-500">Tipo de vegetación:</span>
+            <span className="font-medium text-neutral-800">
+              {typeOptions.find((t) => t.code === vegetationTypeCode)?.label ?? vegetationTypeCode}
+            </span>
+          </div>
+          {family.trim() && (
+            <div className="flex justify-between py-1 border-b border-neutral-200/60">
+              <span className="text-neutral-500">Familia:</span>
+              <span className="font-medium text-neutral-800">{family.trim()}</span>
+            </div>
+          )}
+          {photo && (
+            <div className="flex justify-between py-1">
+              <span className="text-neutral-500">Foto oficial:</span>
+              <span className="font-medium text-neutral-800 truncate max-w-[180px]">{photo.name}</span>
+            </div>
+          )}
+        </div>
+        <p className="text-[11px] text-neutral-500 leading-relaxed">
+          Esta especie quedará disponible en el catálogo botánico para el censo y registro de ejemplares del campus.
+        </p>
+      </ConfirmSaveModal>
     </>
   );
 }

@@ -43,7 +43,7 @@ servidor on-premise de 2 GB.
 - Componentes nuevos (además del visor): `inventario-verde/SpeciesCover.tsx` (la foto de la ficha con
   su contador «1/3» y su etiqueta) y `forms/CampoArchivo.tsx` (selector que avisa el límite y rechaza
   lo que no cabe).
-- Componentes modificados: `SpeciesInfo.tsx` y `SpeciesCard.tsx` (etiqueta según origen),
+- Componentes modificados: `SpeciesInfo.tsx` y `SpeciesCard.tsx` (etiqueta según origen y, si `isActive = false`, badge «Inactiva» conforme a SPEC-103 D-11; las especies inactivas no aceptan cambios de galería),
   `catastro/importar/SelectorDeArchivos.tsx`, `VistaPrevia.tsx` (conjuntos por especie),
   `catastro/registrar/RegistroPlantaForm.tsx` y `RegistroComponenteForm.tsx`.
 - Constantes de límites: `lib/upload-limits.ts`.
@@ -130,10 +130,10 @@ suben por dos archivos. · No se pierde calidad visible: el sistema las guarda a
 
 | Endpoint | Autorización | Qué resuelve |
 |---|---|---|
-| `GET /api/v1/green-inventory/species` y `/species/{slug}` | Como hoy (público) | Agregan `photos` |
-| `POST /api/v1/green-inventory/species/{slug}/photo` | Como hoy (`ADMIN`, `COORDINADOR`) | Agrega una foto al final (D-03) |
-| `POST /api/v1/imports/species-photos/preview` · `/imports/{batchId}/confirm` | Como hoy (`LOADERS`) | CSV con orden y créditos (D-02) |
-| `POST /api/v1/green-inventory/species-photos/load-inbox` | ADMIN | Carga inicial desde la bandeja (D-05) |
+| `GET /api/v1/green-inventory/species` y `/species/{slug}` | Como hoy (público) | Agregan `photos`; conservan `isActive` y la visibilidad definida en SPEC-103 D-11. Una ficha nueva no hereda las fotos ni rutas de almacenamiento de una ficha histórica con el mismo nombre científico |
+| `POST /api/v1/green-inventory/species/{slug}/photo` | Como hoy (`ADMIN`, `COORDINADOR`) | Agrega una foto al final (D-03); solo para especies activas |
+| `POST /api/v1/imports/species-photos/preview` · `/imports/{batchId}/confirm` | Como hoy (`LOADERS`) | CSV con orden y créditos (D-02); especies inactivas no disponibles ni editables |
+| `POST /api/v1/green-inventory/species-photos/load-inbox` | ADMIN | Carga inicial desde la bandeja (D-05); no modifica galerías de especies inactivas |
 
 **Respuesta de especie** — se agrega `photos`; `imageUrl` se conserva y es la miniatura de la foto 1
 (o la de un ejemplar si la especie no tiene fotos propias), para no romper el listado:
@@ -141,6 +141,7 @@ suben por dos archivos. · No se pierde calidad visible: el sistema las guarda a
 ```json
 {
   "slug": "acacia-stenophylla",
+  "isActive": true,
   "imageUrl": "/files/species/12?size=thumb",
   "imageSource": "SPECIES",
   "photos": [

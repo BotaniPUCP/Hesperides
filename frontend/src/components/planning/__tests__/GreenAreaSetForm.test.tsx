@@ -8,15 +8,11 @@ const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock('@/lib/green-area-sets-api', () => ({
   greenAreaSetsApi: { get: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(),
+    sectionOptions: jest.fn().mockResolvedValue([
+      { id: 1, code: 'SEC-1', name: 'Sector 1', sections: [{ id: 11, code: 'AV-0011', name: 'Jardín Central' }] }]),
     elementOptions: jest.fn().mockResolvedValue([
       { id: 501, code: 'EV-000501', displayName: 'Palmera datilera', typeLabel: 'Palmera', sectionName: 'Jardín Central', sectorId: 1, sectorName: 'Sector 1' },
       { id: 502, code: 'EV-000502', displayName: 'Ficus', typeLabel: 'Árbol', sectionName: null, sectorId: null, sectorName: null }]) },
-}));
-jest.mock('@/lib/irrigation-api', () => ({
-  irrigationApi: {
-    sectors: jest.fn().mockResolvedValue([{ id: 1, code: 'SEC-1', name: 'Sector 1' }]),
-    sections: jest.fn().mockResolvedValue([{ id: 11, code: 'AV-0011', name: 'Jardín Central' }]),
-  },
 }));
 jest.mock('../SetMapPicker', () => ({
   SetMapPicker: ({ onConfirm, onCancel }: { onConfirm: (ids: number[], specimenIds: number[]) => void; onCancel: () => void }) => <>
@@ -132,7 +128,7 @@ describe('GreenAreaSetForm (SPEC-203 §5.2)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Ver en el mapa' }));
 
     expect(screen.getByTestId('mapa-del-conjunto')).toBeInTheDocument();
-    expect(mockSetMap).toHaveBeenLastCalledWith({ zoneCodes: ['AV-0011'], specimenCodes: ['EV-000501', 'EV-000502'], className: 'h-full' });
+    expect(mockSetMap).toHaveBeenLastCalledWith({ zoneCodes: ['AV-0011'], specimenCodes: ['EV-000501', 'EV-000502'], className: 'h-full', realColors: true });
     await userEvent.click(screen.getByRole('button', { name: 'Ocultar mapa' }));
     expect(screen.queryByTestId('mapa-del-conjunto')).not.toBeInTheDocument();
   });

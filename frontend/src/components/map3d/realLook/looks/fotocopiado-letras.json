@@ -3,24 +3,36 @@
   "name": "Centro de fotocopiado (adyacente a EE.GG.LL.)",
   "folder": "fotocopiado-letras-eeggll",
   "photos": [
+    "IMG_20261111_141121.jpg",
+    "IMG_20261111_141127.jpg",
     "IMG_20261111_141133.jpg"
   ],
-  "notes": "Muro blanco ciego del costado (IMG_20261111_141133.jpg): las vitrinas del frente tienen gente delante.",
+  "materials": {
+    "muro": {
+      "color": "#ececea"
+    },
+    "techo": {
+      "color": "#d0d0cc"
+    },
+    "ventanas": {
+      "color": "#b7bcbd"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#cfcbc1",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#ebe8e0",
-          "photo": {
-            "tile": "fotocopiado-letras",
-            "widthM": 6,
-            "heightM": 2.8
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Caseta blanca con vitrinas corridas en el frente, como franja (IMG_20261111_141121.jpg, -141127.jpg, -141133.jpg). Las franjas de colores pintadas no se dibujan."
 }

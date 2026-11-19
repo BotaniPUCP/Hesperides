@@ -20,6 +20,7 @@ export interface InventorySummary {
 /** Una especie. `slug` la identifica en la dirección de su ficha. */
 export interface Species {
   slug: string;
+  isActive: boolean;
   scientificName: string;
   commonName: string;
   /** Otros nombres coloquiales («Palmera bruja»). */
@@ -51,6 +52,8 @@ export interface Species {
   usesTrunkHeight: boolean;
   usesDbh: boolean;
   unmeasuredSpecimenCount: number;
+  /** Nombres científico, común y alternativos y familia sin tildes: en qué se busca (SPEC-119 D-01). */
+  searchKey: string;
   /** Medidas propias de la especie. Solo en la ficha; en el listado viene vacío. */
   extraMeasures: ExtraMeasure[];
 }
@@ -127,6 +130,15 @@ export interface Specimen {
   speciesScientificName?: string | null;
 }
 
+/** Un ejemplar de `/specimens/all`, con lo que el navegador necesita para filtrarlo (SPEC-119). */
+export interface SpecimenListItem extends Specimen {
+  vegetationTypeCode: string;
+  speciesCritical: boolean;
+  measured: boolean;
+  /** Código, referencia, ubicación, placa, notas y nombres de la especie sin tildes. */
+  searchKey: string;
+}
+
 /** Procedencia de las medidas (C-08). Solo MEASURED vale para decidir quién poda. */
 export type MeasurementSource = 'MEASURED' | 'GENERIC' | 'UNKNOWN';
 
@@ -152,6 +164,8 @@ export interface MeasurementRecord {
 }
 
 export interface SpecimenDetail extends Specimen {
+  /** ID inmutable de la ficha; el código operativo puede reutilizarse tras la baja. */
+  id: number;
   legacyCode: string | null;
   elementTypeCode: string;
   elementTypeName: string;
@@ -176,6 +190,10 @@ export interface SpecimenDetail extends Specimen {
   measuredBeforeLastPruning: boolean;
   pruningAssignment: PruningAssignment;
   extraMeasures: SpecimenExtraMeasure[];
+  isActive?: boolean;
+  retiredAt?: string | null;
+  retirementReason?: string | null;
+  retiredByName?: string | null;
 }
 
 export interface LocationCount {
@@ -186,6 +204,7 @@ export interface LocationCount {
 export interface SpeciesFilters {
   search?: string;
   vegetationType?: string;
+  retiring?: boolean;
 }
 
 export type SpecimenSortKey = 'reference' | 'code' | 'location';
@@ -203,12 +222,23 @@ export interface SpecimenFilters {
 
 export type SpecimenViewMode = 'cards' | 'table';
 
-export interface SpecimenSearchResult {
+/** Trazabilidad de un ejemplar botánico dado de baja lógicamente. */
+export interface RetiredSpecimen {
+  id: number;
   code: string;
-  sourceReference: string | null;
-  sourceLocation: string | null;
-  legacyCode: string | null;
+  scientificName: string;
+  commonName: string;
   speciesSlug: string;
-  speciesCommonName: string;
-  speciesScientificName: string;
+  vegetationType: string;
+  sourceLocation: string;
+  sourceReference: string | null;
+  notes: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  retiredAt: string;
+  reason: string | null;
+  retiredByName: string | null;
+  retiredByEmail: string | null;
+  interventionsCount: number;
 }
+

@@ -20,6 +20,7 @@ public class CsvTemplates {
             "waste-bins", "tachos.csv",
             "drinking-fountains", "bebederos.csv",
             "species-photos", "fotos-especies.csv",
+            "species", "especies.csv",
             "organizations", "organizaciones.csv",
             "contacts", "contactos.csv",
             "reservations", "reservas.csv");

@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { MaintenanceFrequency } from '@shared/types';
 import { PlanningFormScreen } from '../PlanningFormScreen';
+import { takeSavedPlanning } from '../savedPlanning';
 import { planningApi } from '@/lib/planning-api';
 
 const mockPush = jest.fn();
@@ -38,7 +39,8 @@ beforeEach(() => {
     frequency({ id: 4, activityType: PODA, ruleKey: 'r4', minDaysInterval: 1, maxDaysInterval: 10 }),
   ]);
   api.list.mockResolvedValue([palmerasPoda]);
-  api.create.mockResolvedValue({ id: 71, warnings: [] });
+  api.create.mockResolvedValue({ id: 71, setId: 5, activityTypeItemId: 30, warnings: [] });
+  window.sessionStorage.clear();
   api.change.mockResolvedValue({ id: 70, warnings: [] });
 });
 
@@ -77,6 +79,8 @@ describe('PlanningFormScreen (SPEC-203 D-16)', () => {
 
     expect(api.create).toHaveBeenCalledWith({ setId: 5, frequencyId: 2 });
     expect(mockPush).toHaveBeenCalledWith('/intervenciones/planificacion');
+    // La lista la mostrará primera al volver.
+    expect(takeSavedPlanning()).toBe('5:30');
   });
 
   it('cambiar de actividad suelta la frecuencia elegida antes', async () => {

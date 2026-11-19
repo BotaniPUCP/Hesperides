@@ -5,6 +5,11 @@ import { Button, Card, Textarea } from '@/components/ui';
 import { incidentsApi, newClientReference } from '@/lib/incidents-api';
 import { mensajeDeApiError } from '@/lib/api-errors';
 import { emptyLocation, LocationFields, locationPayload } from './LocationFields';
+import { IncidentSeveritySelector } from './IncidentSeverityPicker';
+
+/** Lo que no pregunta la captura de dos campos; coordinación lo completa al revisar. */
+const UNASKED = { zoneId: null, requestedByOrganizationCode: null, requestedByName: null, requesterContactCode: null,
+  requestedForOrganizationCode: null, sourceCode: null, externalCode: null };
 
 interface Attachment { file: File; reference: string; uploaded: boolean; error: string | null }
 
@@ -24,6 +29,8 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
   sender: string; onDone: (id: number) => void; onCancel: () => void;
 }) {
   const [description, setDescription] = useState('');
+  const [severity, setSeverity] = useState('');
+  const [severityError, setSeverityError] = useState('');
   const [location, setLocation] = useState(emptyLocation);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [busy, setBusy] = useState(false);
@@ -36,8 +43,10 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
     if (sending.current) return;
     if (!description.trim()) { setDescriptionError('Escribe brevemente qué pasó.'); return; }
     setDescriptionError('');
+    if (!severity) { setSeverityError('Marca qué tan grave es: baja, media o alta.'); return; }
+    setSeverityError('');
     let payload;
-    try { payload = { description: description.trim(), ...locationPayload(location) }; }
+    try { payload = { description: description.trim(), reportedUrgencyCode: severity, ...locationPayload(location), ...UNASKED }; }
     catch (ex) { setError((ex as Error).message); return; }
     sending.current = true; setBusy(true); setError('');
     try {
@@ -82,6 +91,8 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
           helperText="Una frase basta. Si puedes, indica dónde ocurrió." errorMessage={descriptionError}
           placeholder="Rama caída en puerta principal" value={description} disabled={busy || savedId !== null}
           onChange={(value) => { setDescription(value); setDescriptionError(''); }} />
+        <IncidentSeveritySelector value={severity} disabled={busy || savedId !== null} error={severityError}
+          onChange={(code) => { setSeverity(code); setSeverityError(''); }} />
         <fieldset disabled={busy || savedId !== null} className="space-y-4">
           <div className="flex flex-wrap gap-3">
             <label className="flex min-h-12 cursor-pointer items-center rounded-md border border-neutral-200 bg-neutral-0 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-50 focus-within:ring-2 focus-within:ring-brand-600">
@@ -112,7 +123,7 @@ export function IncidentCaptureForm({ sender, onDone, onCancel }: {
           </li>)}
         </ul>}
         {savedId !== null && <p role="status" className="rounded-lg border border-alert-success-border bg-alert-success-bg p-3 text-alert-success-fg">
-          Tu texto ya fue recibido con el número #{savedId}. Las fotografías pendientes se pueden reintentar o puedes continuar sin ellas.
+          Tu reporte ya fue recibido. Las fotografías pendientes se pueden reintentar o puedes continuar sin ellas.
         </p>}
         {error && <p role="alert" className="rounded-md bg-alert-danger-bg p-3 text-sm text-alert-danger-fg">{error}</p>}
         <div className="flex flex-wrap gap-3">

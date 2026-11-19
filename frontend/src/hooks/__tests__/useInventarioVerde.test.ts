@@ -8,14 +8,13 @@ import {
 } from '../useInventarioVerde';
 import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 import { ApiError } from '@/lib/api';
-import { p01, p01Detail, page, palmeraReal, summary } from '@/components/inventario-verde/__fixtures__/inventario';
+import { listed, p01, p01Detail, p02, palmeraReal, palmeraReina, summary } from '@/components/inventario-verde/__fixtures__/inventario';
 
 jest.mock('@/lib/inventario-verde-api', () => ({
   inventarioVerdeApi: {
     summary: jest.fn(),
-    species: jest.fn(),
+    allSpecies: jest.fn(),
     speciesBySlug: jest.fn(),
-    specimens: jest.fn(),
     allSpecimens: jest.fn(),
     locations: jest.fn(),
     allLocations: jest.fn(),
@@ -28,19 +27,21 @@ const api = inventarioVerdeApi as jest.Mocked<typeof inventarioVerdeApi>;
 afterEach(() => jest.resetAllMocks());
 
 describe('useInventarioVerde', () => {
-  it('pide las especies al backend con la búsqueda, el tipo y la página', async () => {
-    api.species.mockResolvedValue(page([palmeraReal], 30, 1, 24));
+  it('filtra y pagina el catálogo precargado en el navegador (SPEC-119)', async () => {
+    api.allSpecies.mockResolvedValue([palmeraReal, palmeraReina, { ...palmeraReal, slug: 'otra', vegetationTypeCode: 'TREE', searchKey: 'otra' }]);
 
-    const { result } = renderHook(() =>
-      useInventarioVerdeSpecies({ search: 'palmera', vegetationType: 'PALM', page: 1, pageSize: 24 }),
-    );
+    const { result, rerender } = renderHook(({ search }) =>
+      useInventarioVerdeSpecies({ search, vegetationType: 'PALM', page: 1, pageSize: 1 }), { initialProps: { search: 'palmera' } });
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(api.species).toHaveBeenCalledWith({ search: 'palmera', vegetationType: 'PALM', page: 1, size: 24 });
-    expect(result.current.species).toEqual([palmeraReal]);
-    expect(result.current.totalElements).toBe(30);
+    expect(result.current.species).toEqual([palmeraReina]);
+    expect(result.current.totalElements).toBe(2);
     expect(result.current.totalPages).toBe(2);
     expect(result.current.currentPage).toBe(1);
+
+    rerender({ search: 'bruja' });
+    expect(result.current.totalElements).toBe(1);
+    expect(api.allSpecies).toHaveBeenCalledTimes(1);
   });
 
   it('busca una especie por su slug', async () => {
@@ -50,6 +51,19 @@ describe('useInventarioVerde', () => {
 
     await waitFor(() => expect(result.current.species).toEqual(palmeraReal));
     expect(api.speciesBySlug).toHaveBeenCalledWith('roystonea-regia');
+  });
+
+  it('vuelve a cargar la especie cuando cambia la clave de revalidación', async () => {
+    api.speciesBySlug.mockResolvedValue(palmeraReal);
+    const { result, rerender } = renderHook(
+      ({ revision }) => useInventarioVerdeSpeciesBySlug('roystonea-regia', revision),
+      { initialProps: { revision: 0 } },
+    );
+    await waitFor(() => expect(result.current.species).toEqual(palmeraReal));
+
+    rerender({ revision: 1 });
+    await waitFor(() => expect(api.speciesBySlug).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.species).toEqual(palmeraReal));
   });
 
   it('distingue una especie inexistente de un error de red', async () => {
@@ -66,35 +80,31 @@ describe('useInventarioVerde', () => {
     expect(sinRed.current.errorMessage).toMatch(/Sin conexión/);
   });
 
-  it('pide los ejemplares con filtros y orden, y las ubicaciones de la especie', async () => {
-    api.specimens.mockResolvedValue(page([p01], 167, 0, 12));
+  it('filtra los ejemplares de la especie, los ordena y trae sus ubicaciones', async () => {
+    api.allSpecimens.mockResolvedValue([listed(p01), listed(p02), listed({ ...p01, code: 'EV-000900' }, { speciesSlug: 'otra' })]);
     api.locations.mockResolvedValue([{ location: 'Educación', count: 12 }]);
 
     const { result } = renderHook(() =>
-      useInventarioVerdeSpecimens('roystonea-regia', { location: 'Educación', sortBy: 'code', sortDirection: 'desc', pageSize: 12 }),
+      useInventarioVerdeSpecimens('roystonea-regia', { location: 'Educación', sortBy: 'code', sortDirection: 'desc', pageSize: 1 }),
     );
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(api.specimens).toHaveBeenCalledWith('roystonea-regia', {
-      search: '', location: 'Educación', sortBy: 'code', sortDirection: 'desc', page: 0, size: 12,
-    });
-    expect(result.current.totalElements).toBe(167);
-    expect(result.current.totalPages).toBe(14);
+    expect(result.current.specimens.map((s) => s.code)).toEqual(['EV-000002']);
+    expect(result.current.totalElements).toBe(2);
+    expect(result.current.totalPages).toBe(2);
+    expect(api.locations).toHaveBeenCalledWith('roystonea-regia');
     await waitFor(() => expect(result.current.availableLocations).toEqual([{ location: 'Educación', count: 12 }]));
   });
 
-  it('sin especie pide todos los ejemplares globales', () => {
-    api.allSpecimens.mockResolvedValue(page([p01], 1, 0, 12));
-    api.allLocations.mockResolvedValue([{ location: 'Educación', count: 12 }]);
-    renderHook(() => useInventarioVerdeSpecimens(null));
-    expect(api.allSpecimens).toHaveBeenCalled();
-  });
-
-  it('pasa el tipo de ejemplar al listado global', () => {
-    api.allSpecimens.mockResolvedValue(page([p01], 1, 0, 12));
+  it('sin especie usa todos los ejemplares y filtra por tipo en el navegador', async () => {
+    api.allSpecimens.mockResolvedValue([listed(p01), listed(p02, { vegetationTypeCode: 'TREE' })]);
     api.allLocations.mockResolvedValue([]);
-    renderHook(() => useInventarioVerdeSpecimens(null, { vegetationType: 'PALM' }));
-    expect(api.allSpecimens).toHaveBeenCalledWith(expect.objectContaining({ vegetationType: 'PALM' }));
+
+    const { result } = renderHook(() => useInventarioVerdeSpecimens(null, { vegetationType: 'PALM' }));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.specimens.map((s) => s.code)).toEqual(['EV-000001']);
+    expect(api.allLocations).toHaveBeenCalled();
   });
 
   it('busca un ejemplar por su código y expone su especie', async () => {

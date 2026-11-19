@@ -44,6 +44,7 @@ public class InterventionExecutionHistoryProvider implements ExecutionHistoryPro
                    l.completed_at,l.validated_at,a.approved_at,
                    coalesce(p.name,z.name,l.location_description,i.code) target_label
             from interventions i
+            left join activity_executions gx on gx.intervention_id=i.id and gx.deleted_at is null
             join intervention_locations l on l.intervention_id=i.id and l.deleted_at is null
             left join places p on p.id=l.place_id left join zones z on z.id=l.zone_id
             cross join lateral (select max(al.validated_at) approved_at
@@ -52,9 +53,10 @@ public class InterventionExecutionHistoryProvider implements ExecutionHistoryPro
               and l.completed_at is not null and l.validated_at is not null
               and """ + FinalApprovalSql.PREDICATE + """
               and (:role in ('ADMIN','COORDINADOR')
-                or (:role='OPERARIO' and i.assigned_to_user_id=:actor)
+                or (gx.id is not null and :role='SUPERVISOR' and gx.responsible_supervisor_user_id=:actor)
+                or (gx.id is null and ((:role='OPERARIO' and i.assigned_to_user_id=:actor)
                 or (:role='SUPERVISOR' and exists(select 1 from teams t where t.id=i.team_id
-                    and t.supervisor_user_id=:actor and t.is_active and t.deleted_at is null)))
+                    and t.supervisor_user_id=:actor and t.is_active and t.deleted_at is null)))))
             order by l.completed_at,i.id,l.id
             """,Map.of("activity",activity,"role",actor.getRoleCode(),"actor",actor.getId()),(r,n) -> {
                 Long place = r.getObject("place_id",Long.class), section = r.getObject("zone_id",Long.class);

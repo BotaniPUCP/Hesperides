@@ -2,6 +2,29 @@
 
 Fecha: 22 oct 2026.
 
+## Nuevo flujo Actividades — 18 nov 2026
+
+La nueva secuencia de seis etapas es independiente del rediseño R1–R6 inferior.
+**Etapa 1 cerrada:** [reglas y decisiones confirmadas](SPEC-200-actividades-etapa-1.md),
+incorporadas en SPEC-200 §2.13. Solo documentación; no se cambian código ni datos.
+
+| Etapa nueva | Alcance | Estado |
+|---|---|---|
+| 1 | Reglas y actualización del spec | Cerrada: cancela solo coordinador; ejecuta el responsable; correcciones hasta aprobación; inicio al guardar primer avance válido |
+| 2 | Modelo, historial global y compatibilidad de registros anteriores | Completada: V072 y continuidad V073 verificadas en bases temporales y aplicadas a la base local respaldada. Ver [etapa 2](SPEC-200-actividades-etapa-2.md) y [cierre e integración local](SPEC-200-cierre-de-brechas-etapas-1-5.md) |
+| 3 | Backend, permisos, estados y guardado global atómico | Completada: API global, autorización por responsable, historial atómico, evidencias e idempotencia; 138 pruebas distintas aprobadas en bases temporales. Ver [etapa 3](SPEC-200-actividades-etapa-3.md) |
+| 4 | Nombre Actividades, planificación sin cuadrilla y responsable opcional | Completada: creación/edición global, filtros de cinco estados y compatibilidad histórica. Comprobada sobre el backend local actualizado, con revisión del usuario. Ver [etapa 4](SPEC-200-actividades-etapa-4.md) |
+| 5 | Subir avance con mapa/lista, porcentaje manual y estados por objetivo | Completada: mapa/lista sincronizados, historial, validación visible, detalles desplegables y fotos en modal con cinco recibidas visibles. Comprobación en navegador y confirmación del usuario. Ver [etapa 5](SPEC-200-actividades-etapa-5.md) |
+| 6 | Verificación, adaptación de demo y entrega | Revisión general confirmada por el usuario; adaptación de demo pospuesta. Preparación de commit y PR autorizada. |
+
+§2.13 prevalece donde contradiga las decisiones operativas históricas inferiores.
+
+**Revisión posterior a etapas 1–5:** se corrigieron el filtro antiguo, el acceso al mapa
+del capataz y la permanencia de comandos retirados. El usuario confirmó continuar las
+actividades anteriores abiertas con el flujo global y conservar su historial; V073 prepara
+esa continuidad sin porcentajes ficticios. La compatibilidad ya no implica mantener el
+flujo operativo anterior en la interfaz. Ver [matriz de acuerdos y correcciones](SPEC-200-cierre-de-brechas-etapas-1-5.md).
+
 ## Rediseño solicitado el 10 nov 2026
 
 **Cambio confirmado posteriormente (11 nov):** las nuevas actividades usan un mapa único

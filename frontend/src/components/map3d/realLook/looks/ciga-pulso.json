@@ -3,24 +3,48 @@
   "name": "CIGA (Pulso PUCP), C47",
   "folder": "CIGA-Pulso-pucp",
   "photos": [
-    "lado-directament-frente-a-ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA).jpg"
+    "entrada a espacio interior.jpg",
+    "frente-aulas-moviles.jpg",
+    "lado-directament-frente-a-ARQUEOLOGÍA A  CENTRO DE INVESTIGACIÓN DE GEOGRAFIA APLICADA (CIGA).jpg",
+    "lado-frente-a-C45 · Izquierda 59 · SKP C-129.jpg",
+    "vista-espacio-interior-desde-fuera.jpg"
   ],
-  "notes": "Paneles claros con banda alta de vidrio oscuro y ventanas enrejadas (lado-directament…jpg, la vista más larga y limpia).",
+  "materials": {
+    "muro": {
+      "color": "#e9eae7"
+    },
+    "techo": {
+      "color": "#cfcfcb"
+    },
+    "ventanas": {
+      "color": "#c5c9c5"
+    },
+    "vidrio-alto": {
+      "color": "#56636a"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b8b4ab",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#e3e0d8",
-          "photo": {
-            "tile": "ciga-pulso",
-            "widthM": 14,
-            "heightM": 3.4
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
+        },
+        {
+          "material": "vidrio-alto",
+          "v": [
+            2.5,
+            3.2
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Paneles blancos con ventanas enrejadas sueltas, como franja tenue, y una cinta alta de vidrio oscuro bajo el alero (lado-directament…jpg, lado-frente-a-C45…jpg, entrada a espacio interior.jpg)."
 }

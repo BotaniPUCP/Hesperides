@@ -9,7 +9,7 @@ export interface Pin {
   hide: () => void;
 }
 
-export function createPin(scene: THREE.Scene): Pin {
+export function createPin(scene: THREE.Object3D): Pin {
   const group = new THREE.Group();
   const cone = new THREE.Mesh(
     new THREE.ConeGeometry(2.2, 7, 16),

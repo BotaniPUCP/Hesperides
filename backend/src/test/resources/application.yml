@@ -11,8 +11,11 @@
 
 hesperides:
   incidents:
-    time-zone: America/Lima
-    holidays: "2026-12-25"
+    prefill:
+      base-url: http://localhost:9
+      model: test
+      api-key: ""
+      timeout-seconds: 1
   security:
     jwt:
       secret: clave-de-prueba-suficientemente-larga-para-hs256-en-tests

@@ -32,7 +32,7 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 21 | Desconocido_07 | `e82375f3` | Desconocido_07 | nombre | seguro |
 | 22 | Desconocido_08 | `9d9846b2` | Desconocido_08 | nombre; color interior = exterior (D-08) | seguro |
 | 23 | Desconocido_12 | `40fbf3b7` | Desconocido_12 | nombre; sin malla, se pinta su prisma (D-09b) | seguro |
-| 24 | Desconocido_13 | `3441937e` | Desconocido_13 (el de 3,2 m, a 120 m de Química) | foto: losa a ras del césped con rejillas, junto a un muro de piedra; el otro Desconocido_13 está a 616 m de Química | **por confirmar** |
+| 24 | Desconocido_13 | `3441937e` | Desconocido_13 (el de 3,2 m, a 120 m de Química) | foto: losa a ras del césped con rejillas, junto a un muro de piedra; el otro Desconocido_13 está a 616 m de Química | sin usar: el 14 nov 2026 Jean Piero decidió que los «Desconocido» sin ficha van de ladrillo liso (SPEC-112 P-04); los dos Desconocido_13 lo llevan |
 | 25 | Edificio Administrativo / Maestranza | `38278886` | Edificio Administrativo / Maestranza | nombre | seguro |
 | 26 | Etnomusicologia-departamento_ciencias_contables | `af3c0f81` | Instituto de Etnomusicología… / Departamento de Ciencias Contables | nombre, C15 C14 | seguro |
 | 27 | FACULTAD DE EDUCACIÓN (AULA R102) | `773eacb8` | Facultad de Educación (Aula R102) | nombre, código 37 | seguro |
@@ -53,7 +53,7 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 42 | PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 1 | `9b3e73d7` | Sumaq Wasi 1 | nombre, C62 | seguro |
 | 43 | PROTOTIPO VIVIENDA BIOCLIMÁTICA SUMAQ WASI 2 | `3e2eae3d` | Sumaq Wasi 2 | nombre, C63 | seguro |
 | 44 | Pabellon Industrial | `be3bdfcc` | Sección Ingeniería Industrial | alias «Industrial», código 6 | seguro |
-| 45 | Pabellon-H | `80d344a8` | Facultad de Letras y Ciencias Humanas (código 41) | foto: rótulo «Pabellón H · Facultad de Letras y Ciencias Humanas»; es la grande de las dos con ese nombre | **por confirmar** |
+| 45 | Pabellon-H | `80d344a8` | Facultad de Letras y Ciencias Humanas (código 41) | foto: rótulo «Pabellón H · Facultad de Letras y Ciencias Humanas»; Jean Piero lo confirmó el 14 nov 2026 | seguro |
 | 46 | Pabellon-Z | `60bae298` | Pabellón Z | nombre | seguro |
 | 47 | PabellonV | `46c7455f` | Pabellón V | nombre, código 5 | seguro |
 | 48 | Pabellon_I | `23a5dd73` | Pabellón I: Facultad de Arte y Diseño… | nombre, código 17 | seguro |
@@ -72,16 +72,16 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 61 | aula-moviles-B | `8ec02178` | Aulas móviles (alias «Aulas móviles B») | alias, C52 | seguro |
 | 62 | bibblioteca-central | `91277172` | Biblioteca Central | nombre, código 25 | seguro |
 | 63 | comedor-artes-antiguo-eeggcc | `b9a4a553` | Caseta Comedor Generales Ciencias (alias «Comedor de arte antiguo») | alias, y la carpeta nombra EE.GG.CC., a 61 m (SPEC-108 P-06) | **por confirmar** |
-| 64 | complejo-sociales | `8f79b2cc` | Facultad de Ciencias Sociales (código 61) | cercanía: el complejo grande, a 34 m del Snack de Sociales | **por confirmar** |
+| 64 | complejo-sociales | `8f79b2cc` | Biblioteca de Ciencias Sociales (código 61; V045 la llamaba Facultad de Ciencias Sociales, corregido en V052) | cercanía: el complejo grande, a 34 m del Snack de Sociales; Jean Piero lo confirmó el 14 nov 2026 | seguro |
 | 65 | departamento-teologia | `e1692786` | Departamento Académico de Teología | nombre, código 26 | seguro |
 | 66 | dintilhac | `1d3cfcb0` | Tesorería General (alias «Dintilhac») | alias, código 24 | seguro |
 | 67 | eeggcc | `a340e861` | Estudios Generales Ciencias | alias EE.GG.CC, código 16 | seguro |
 | 68 | eeggll | `7f886877` | Estudios Generales Letras | alias EEGGLL, código 34 | seguro |
 | 69 | faci | `f7ea6a43` | Facultad de Ciencias e Ingeniería | código 1 | seguro |
 | 70 | facultad-ciencias-artes-comunicaciones | `d9793065` | Facultad de Ciencias y Artes de la Comunicación | nombre, código 29 | seguro |
-| 71 | facultad-ciencias-sociales | `d7b50529` | Facultad de Ciencias Sociales (código 18) | la otra con ese nombre | **por confirmar** |
+| 71 | facultad-ciencias-sociales | `d7b50529` | Facultad de Ciencias Sociales (código 18) | la otra con ese nombre; Jean Piero lo confirmó el 14 nov 2026 | seguro |
 | 72 | facultad-gestion | `83345054` | Facultad de Gestión y Alta Dirección | nombre, código 27 | seguro |
-| 73 | facultad-letras-ciencias-humanas | `c657216b` | Facultad de Letras y Ciencias Humanas (código 32) | cercanía: las fotos miran a Psicología (40 m) y a EE.GG.LL. (65 m) | **por confirmar** |
+| 73 | facultad-letras-ciencias-humanas | `c657216b` | Departamento Académico de Humanidades (oficinas) (código 32; V045 lo llamaba Facultad de Letras y Ciencias Humanas, corregido en V052) | cercanía: las fotos miran a Psicología (40 m) y a EE.GG.LL. (65 m); foto: rótulo «Departamento de Humanidades» (frente-hacia-eeggll.jpg), que coincide con el nombre que dio Jean Piero el 14 nov 2026 | seguro |
 | 74 | facultad-psicologia | `d365388a` | Facultad de Psicología | nombre, código 30 | seguro |
 | 75 | facuttad-derecho | `c315d792` | Facultad de Derecho | nombre, código 21 | seguro |
 | 76 | fotocopiado-letras-eeggll | `e5641098` | Centro de fotocopiado (adyacente a EE.GG.LL.) | nombre, C58 | seguro |
@@ -89,7 +89,34 @@ carpeta), **cercanía** (vecinos que nombran las fotos, medidos entre centroides
 | 78 | heladeria-gelarti | `5d0c3da2` | Gelarti | nombre, C12 | seguro |
 | 79 | polideportivo | `a0c57ec0` | Polideportivo | nombre, código 45 | seguro |
 | 80 | sala cuna | `44a6cf1a` | Sala Cuna | nombre, código 51 | seguro |
-| 81 | Desconocido_13 (segundo) | `e5800604` | Desconocido_13 (el de 3,0 m) | queda sin ficha hasta confirmar la fila 24 | — |
+| 81 | Desconocido_13 (segundo) | `e5800604` | Desconocido_13 (el de 3,0 m) | ladrillo liso por la misma decisión (SPEC-112 P-04) | — |
+| 82 | auditorio-juan-pablo-2 | `0587a436` | Auditorio Juan Pablo II | nombre, código 22; foto: rótulo «Auditorio Juan Pablo II» en el ingreso | seguro |
+| 83 | aulario | `8be4b50b` | Aulario (Pabellón A) | nombre, código 59; foto: las dos torres y las rampas de la cara sur, como en el modelo | seguro |
+| 84 | ceprepuc | `c46e56b9` | CEPREPUC | nombre, código 13; foto: rótulo «CEPRE PUCP» en la reja | seguro |
+| 85 | cia | `d093db0d` | CIA (Complejo de Innovación Académica) | nombre, código 60; cercanía: cia-1 se tomó desde Gelarti, 100 m al nor-noreste | seguro |
+| 86 | Pabellon-G | `efc7e845` | Pabellón G (edificio 2 de la Facultad de Ciencias Contables, código 15) | nombre; foto: rótulos «Pabellón G» y «Facultad de Ciencias Contables», y la forma del edificio 2 (bloque de dos pisos con el ala baja y la escalera a su azotea). El edificio 1 (código 14) sigue sin fotos | seguro |
+| 87 | instituto-corrosion | `9428bc9e` | Instituto Corrosión y Protección | nombre, código 8; foto: rótulo «Instituto de Corrosión y Protección» en el remate | seguro |
+| 88 | cetam-pabellon-K | `9c41011e` | CETAM | nombre, códigos 7 y C65; el punto «Pabellón K (Sec. Mecatrónica PUCP)» del mapa cae en el edificio | seguro |
+| 89 | aulas-moviles-A | `5c5f0f57` | Aulas Móviles A | nombre, C53; foto: el letrero «Banco de Libros», cuyo punto del mapa está en el extremo sur del bloque oeste | seguro |
+| 90 | aulas-moviles-C | `77291032` | Aulas Móviles C | nombre, C54; foto: el bloque de techo a dos aguas y el pasillo con dos escaleras de la cara sur, como en el modelo | seguro |
+| 91 | gastronomia | `c805ae90` | Facultad de Gastronomía, Hotelería y Turismo | nombre, código 63; foto: la retícula blanca de la facultad | seguro |
+| 92 | matematicas | `5cff01e0` | Matemáticas | nombre, código 10; fotos: rótulos «Matemáticas» y «Departamento Académico de Ciencias — Edificio José Tola Pasquel». El Tola Pasquel es el bloque curvo del este de la misma malla | seguro; el bloque del este, por confirmar |
+| 93 | libreria-pucp | `4ee6b413` | Librería PUCP (se llamaba «Juan Valdez» hasta V057) | código 42 («LIBRERIA PUCP, …»); fotos: rótulo «Librería PUCP»; Jean Piero marcó en el mapa lo que es del café, y el resto es la librería (SPEC-108 D-18) | seguro |
+| 94 | juan-valdez | `5c6e8c9f` | Juan Valdez (pieza de la malla de la librería, V057) | nombre; foto: el letrero «Juan Valdez Café»; es la caja que Jean Piero marcó en el mapa (SPEC-108 D-18) | seguro |
+| 95 | capu | `f6bd818a` | Centro de Asesoría Pastoral Universitaria (CAPU) | nombre, código 23; foto: rótulo «Centro de Asesoría Pastoral Universitaria CAPU» | seguro |
+| 96 | comedor-artes-antiguo-eeggcc (comedor-arte-antiguo.jpg, frente y lados) | `6eb8356a` | Comedor de Arte | código C16; el pabellón de madera con vidrios de colores, de un piso y 30 m, cerca del punto «Comedor de Arte» del mapa. Resuelve la fila «por confirmar» de esta carpeta | seguro |
+| 97 | comedor-artes-antiguo-eeggcc (detras.jpg, lado-02.jpg) | `b9a4a553` | Caseta Comedor Generales Ciencias | cercanía: el bloque blanco de servicio detrás del comedor | por confirmar |
+| 98 | comedor-letras | `bc020b20` | Comedor de Letras | nombre, código C38 | seguro |
+| 99 | snack-electronica | `8b6b383e` | Snack de Electrónica, lactarios | código 52; foto: el snack «Diodo». Va con los colores de los snacks (pedido del 15 nov) | seguro |
+| 100 | escuela-gobierno | `a836d9c8` | Escuela de Gobierno y Políticas Públicas | nombre; foto: rótulo «Escuela de Gobierno y Políticas Públicas» | seguro |
+| 101 | espacios-culturales | `e0d34049` | Pabellón W: Espacios Culturales | nombre, código 53; foto: rótulo «Espacios Culturales» | seguro |
+| 102 | estacion-meteorologica | `e667899d` | Estación Meteorológica «Hipólito Unanue» | nombre, código C04 | seguro |
+| 103 | estudio-tv | `533742e5` | Estudio de TV 2 | nombre, código 48 | seguro |
+| 104 | inras | `c4d51563` | INRAS (Instituto de Radioastronomía) | nombre, código 54; foto: rótulo «Instituto de Radioastronomía INRAS» | seguro |
+| 105 | invernadero-patrimonial | `209334da` | Invernadero (adyacente a Gabinete de Proyectos Patrimoniales) | código C49, nombre de la foto | seguro |
+| 106 | tambo-actoral | `73c6c0f7` | CFCOM | cercanía: el pabellón bajo junto al Estudio de TV 2 (la foto muestra detrás un edificio crema con celosías oscuras) | por confirmar |
+| 107 | pabellon-o | `d0e95525` | Pabellón O | nombre; foto de referencia que mandó Jean Piero el 15 nov («el Pabellón O debe ser como esta imagen») | seguro |
+| 108 | puente-huaca | `f3b65a42` | Puente Huaca | nombre; foto de un puente de arco rojo que no es del campus, solo para el color | seguro |
 
 La fila 81 no es una carpeta: aparece para dejar a la vista que el segundo `Desconocido_13` queda sin
 pintar mientras no se confirme cuál de los dos es el de las fotos.

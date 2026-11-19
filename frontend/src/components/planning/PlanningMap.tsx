@@ -33,7 +33,7 @@ export function PlanningMap({ setId, pendingZoneIds = null, pendingElementIds = 
   [setId, set.data, onlyPending, pendingElementIds]);
   return (
     <div className="relative lg:h-full">
-      <SetMap zoneCodes={zoneCodes} specimenCodes={specimenCodes} className="lg:h-full" />
+      <SetMap zoneCodes={zoneCodes} specimenCodes={specimenCodes} className="lg:h-full" realColors />
       {hasPending && set.data && (
         <div role="group" aria-label="Qué se resalta" className="absolute bottom-3 right-3 z-30 flex items-center gap-1 rounded-md bg-neutral-0 py-1 pl-3 pr-1 text-xs font-semibold text-neutral-900 shadow">
           <span aria-live="polite" className="pr-2">{onlyPending ? `Resaltado: lo que falta (${pendingLabel})` : 'Resaltado: todo el conjunto'}</span>

@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { apiClient, setAccessToken, setPasswordChangeRequiredHandler } from '../api';
 import { AuthProvider, useAuthContext } from '../auth-context';
+import { definePreloadedList } from '../preload/preloadedList';
 
 function Sonda() {
   const { user } = useAuthContext();
@@ -42,5 +43,25 @@ describe('AuthProvider', () => {
     });
 
     await waitFor(() => expect(screen.getByText('cambio:true')).toBeInTheDocument());
+  });
+
+  it.each(['login', 'logout'] as const)('al hacer %s descarta las listas precargadas del usuario anterior (SPEC-119 D-05)', async (action) => {
+    global.fetch = jest.fn(async (url: string) => respuesta(200, '',
+      url.endsWith('/auth/login') ? { accessToken: 't', user: { id: 2 } } : { id: 1 })) as unknown as typeof fetch;
+    const lista = definePreloadedList('auth-test', async () => ['secreto'], []);
+    function Acciones() {
+      const { login, logout } = useAuthContext();
+      return <>
+        <button onClick={() => void login('a@b.pe', 'x')}>login</button>
+        <button onClick={() => void logout()}>logout</button>
+      </>;
+    }
+    render(<AuthProvider><Acciones /></AuthProvider>);
+    lista.open();
+    await waitFor(() => expect(lista.snapshot().items).toEqual(['secreto']));
+
+    await act(async () => screen.getByRole('button', { name: action }).click());
+
+    await waitFor(() => expect(lista.snapshot().items).toEqual([]));
   });
 });

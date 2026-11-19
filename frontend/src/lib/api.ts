@@ -1,5 +1,6 @@
 import type { ApiResponse } from '@shared/types';
 import { API_BASE_URL } from './constants';
+import { notifyWrite } from './writeEvents';
 
 /** Error carrying the HTTP status so callers can react per SPEC-C02. */
 export class ApiError extends Error {
@@ -141,6 +142,7 @@ async function send(
     }
   }
 
+  if (method !== 'GET' && response.ok) notifyWrite(path);
   return response;
 }
 
@@ -198,6 +200,14 @@ async function getBlob(path: string): Promise<Blob> {
   return response.blob();
 }
 
+async function postBlob<T>(path: string, body: T): Promise<Blob> {
+  const response = await send('POST', path, body);
+  if (!response.ok) {
+    return unwrap<Blob>(response);
+  }
+  return response.blob();
+}
+
 export const apiClient = {
   postWithKey: async <T>(path: string, body: unknown, key: string): Promise<T> =>
     unwrap<T>(await send('POST', path, body, { 'Idempotency-Key': key })),
@@ -209,5 +219,6 @@ export const apiClient = {
   postForm: <T>(path: string, form: FormData) => request<T>('POST', path, form),
   putForm: <T>(path: string, form: FormData) => request<T>('PUT', path, form),
   getBlob,
+  postBlob,
   getIfChanged,
 };

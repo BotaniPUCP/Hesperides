@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ContactSummary } from '@shared/types';
 import { directoryApi } from '@/lib/directory-api';
+import { contact } from '@/test-utils/directoryFixtures';
 import { ContactPicker } from '../ContactPicker';
 
 const mockRole = { current: 'COORDINADOR' };
@@ -8,41 +9,39 @@ jest.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { role: { code: mo
 jest.mock('@/lib/directory-api', () => ({
   ...jest.requireActual('@/lib/directory-api'),
   directoryApi: {
-    contacts: jest.fn(), similarContacts: jest.fn(), createContact: jest.fn(),
+    allContacts: jest.fn(), createContact: jest.fn(),
     linkContact: jest.fn(), updateLinkRole: jest.fn(),
   },
 }));
 
 const api = directoryApi as jest.Mocked<typeof directoryApi>;
 const PSICOLOGIA = { code: 'ORG-0031', name: 'CF Psicología', active: true };
-const juanDiego: ContactSummary = {
-  code: 'CON-0007', fullName: 'Juan Diego Villasante', extension: '4549', mobile: null, email: null,
-  organizations: [{ code: 'ORG-0012', name: 'OIE', active: true }],
-};
-const page = (items: ContactSummary[]) => ({ page: 0, size: 8, total: items.length, items });
+const juanDiego: ContactSummary = contact('CON-0007', 'Juan Diego Villasante',
+  [{ code: 'ORG-0012', name: 'OIE', active: true }], { extension: '4549' });
 
 /** En la organización elegida no hay nadie; en todo el Directorio, Juan Diego en la OIE. */
 function onlyInAnotherOrganization() {
-  api.contacts.mockImplementation((filters) =>
-    Promise.resolve(page(filters.organizationCode ? [] : [juanDiego])));
+  api.allContacts.mockResolvedValue([juanDiego]);
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockRole.current = 'COORDINADOR';
-  api.similarContacts.mockResolvedValue([]);
 });
 
 describe('ContactPicker', () => {
   it('busca solo dentro de la organización elegida', async () => {
-    api.contacts.mockResolvedValue(page([{ ...juanDiego, organizations: [PSICOLOGIA] }]));
+    api.allContacts.mockResolvedValue([
+      contact('CON-0007', 'Juan Diego Villasante', [PSICOLOGIA]),
+      contact('CON-0008', 'Juana Ríos', [{ code: 'ORG-0012', name: 'OIE', active: true }]),
+    ]);
     const onChange = jest.fn();
     render(<ContactPicker id="c" label="Contacto" organization={PSICOLOGIA} value={null} onChange={onChange} />);
 
     fireEvent.change(screen.getByLabelText('Contacto'), { target: { value: 'juan' } });
     fireEvent.click(await screen.findByRole('button', { name: 'Juan Diego Villasante' }));
 
-    expect(api.contacts).toHaveBeenCalledWith(expect.objectContaining({ search: 'juan', organizationCode: 'ORG-0031' }), 0);
+    expect(screen.queryByText('Juana Ríos')).not.toBeInTheDocument();
     expect(onChange).toHaveBeenCalledWith({ code: 'CON-0007', fullName: 'Juan Diego Villasante' });
   });
 
@@ -107,10 +106,24 @@ describe('ContactPicker', () => {
     expect(screen.queryByRole('button', { name: /Vincular|Registrar/ })).not.toBeInTheDocument();
   });
 
+  it('un contacto dado de baja sigue apareciendo, marcado, pero no se puede elegir ni vincular', async () => {
+    api.allContacts.mockResolvedValue([
+      contact('CON-0009', 'Juana Baja', [PSICOLOGIA], { active: false }),
+      contact('CON-0010', 'Juana Otra', [{ code: 'ORG-0012', name: 'OIE', active: true }], { active: false }),
+    ]);
+    render(<ContactPicker id="c" label="Contacto" organization={PSICOLOGIA} value={null} onChange={jest.fn()} />);
+
+    fireEvent.change(screen.getByLabelText('Contacto'), { target: { value: 'juana' } });
+
+    expect(await screen.findByText('Juana Baja')).toBeInTheDocument();
+    expect(screen.getByText(/Dado de baja/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Juana Baja/ })).not.toBeInTheDocument();
+  });
+
   it('sin organización elegida no busca', () => {
     render(<ContactPicker id="c" label="Contacto" organization={null} value={null} onChange={jest.fn()} />);
 
     expect(screen.getByText(/elige primero la organización/i)).toBeInTheDocument();
-    expect(api.contacts).not.toHaveBeenCalled();
+    expect(api.allContacts).not.toHaveBeenCalled();
   });
 });

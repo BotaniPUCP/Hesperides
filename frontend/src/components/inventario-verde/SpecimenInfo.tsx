@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation';
 import type { SpeciesPhoto, SpecimenDetail } from '@shared/types';
 import { Badge, Button, ImagePlaceholder } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { puedeEditarEjemplar, esPersonalOperativo } from '@/components/catastro/permisos';
+import { puedeDarDeBaja, puedeEditarEjemplar, esPersonalOperativo } from '@/components/catastro/permisos';
 import { SpecimenMeasures } from './SpecimenMeasures';
 import { SpeciesPhotoViewer } from './SpeciesPhotoViewer';
 import { SpecimenEditModal } from './SpecimenEditModal';
+import { DefinitiveDeactivationModal } from './DefinitiveDeactivationModal';
+import { SpeciesStatusBadge } from './SpeciesStatusBadge';
+import { inventarioVerdeApi } from '@/lib/inventario-verde-api';
 
 export interface SpecimenInfoProps {
   specimen: SpecimenDetail;
@@ -46,13 +49,16 @@ const muted = (text: string) => <span className="text-neutral-400 font-normal it
 export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const canEdit = puedeEditarEjemplar(user?.role.code);
+  const isRetired = Boolean(specimen.retiredAt || specimen.isActive === false);
+  const canEdit = !isRetired && puedeEditarEjemplar(user?.role.code);
+  const canDeactivate = !isRetired && puedeDarDeBaja(user?.role.code);
   const canViewInternalData = esPersonalOperativo(user?.role.code);
 
   const [imageError, setImageError] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deactivationOpen, setDeactivationOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleUpdateSuccess = () => {
@@ -122,7 +128,7 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
   return (
     <>
       {/* TARJETA SUPERIOR HERO / ID CARD INTEGRADA */}
-      <div className="rounded-2xl border border-neutral-200/90 bg-neutral-0 shadow-xs overflow-hidden">
+      <div className="rounded-2xl border border-neutral-200/90 bg-neutral-0 shadow-xs overflow-hidden mb-6">
         <div className="p-5 sm:p-7 bg-gradient-to-br from-brand-50/40 via-brand-50/10 to-transparent">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             {/* Lado Izquierdo y Centro: Foto + Bloque de Identidad */}
@@ -168,12 +174,12 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
                       )}
                     </>
                   ) : (
-                    <ImagePlaceholder
-                      type={species.vegetationTypeCode}
-                      label={specimen.code}
-                      size="sm"
-                      className="rounded-none border-none h-full w-full"
-                    />
+                    <div className="h-full w-full bg-neutral-100 flex flex-col items-center justify-center gap-1 text-neutral-400">
+                      <svg className="w-7 h-7 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-[11px] font-medium text-neutral-400">Sin fotografía</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -215,7 +221,9 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
 
                   {/* Fila de etiquetas de clasificación y estado */}
                   <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                    {isRetired && <Badge label="Retirado" color="danger" />}
                     <Badge label={species.vegetationTypeName} color="brand" />
+                    <SpeciesStatusBadge isActive={species.isActive} inactiveLabel="Especie inactiva" />
                     {species.family && (
                       <Badge label={`Fam. ${species.family}`} color="neutral" />
                     )}
@@ -285,41 +293,131 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
             </div>
 
             {/* Lado Derecho: Acciones Contextuales y Enlace Original */}
-            <div className="flex flex-row sm:flex-col items-stretch sm:items-end justify-start gap-2.5 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-neutral-200/60">
-              {canEdit && (
-                <div className="w-full sm:w-auto">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    fullWidth
-                    onClick={() => setEditModalOpen(true)}
-                    leadingIcon={
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    }
-                  >
-                    Actualizar medidas
-                  </Button>
-                </div>
-              )}
-              <Link href={`/mapa?codigo=${encodeURIComponent(specimen.code)}`} className="w-full sm:w-auto">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  fullWidth
-                  leadingIcon={
-                    <svg className="w-3.5 h-3.5 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                    </svg>
-                  }
-                >
-                  Ver en Mapa 3D
-                </Button>
-              </Link>
-            </div>
+            {(canEdit || canDeactivate || !isRetired) && (
+              <div className="flex flex-row flex-wrap sm:flex-col items-stretch sm:items-end justify-start gap-2.5 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-neutral-200/60">
+                {canEdit && (
+                  <div className="w-full sm:w-auto">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      fullWidth
+                      onClick={() => setEditModalOpen(true)}
+                      leadingIcon={
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      }
+                    >
+                      Editar ejemplar
+                    </Button>
+                  </div>
+                )}
+                {canDeactivate && (
+                  <div className="w-full sm:w-auto">
+                    <Button variant="danger" size="sm" fullWidth onClick={() => setDeactivationOpen(true)}>
+                      Dar de baja
+                    </Button>
+                  </div>
+                )}
+                {!isRetired && (
+                  <Link href={`/mapa?codigo=${encodeURIComponent(specimen.code)}`} className="w-full sm:w-auto">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      fullWidth
+                      leadingIcon={
+                        <svg className="w-3.5 h-3.5 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                      }
+                    >
+                      Ver en Mapa 3D
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            )}
           </div></div>
       </div>
+
+      {isRetired && (
+        <section
+          role="region"
+          aria-labelledby="informacion-del-retiro"
+          className="surface-card mb-6"
+        >
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-neutral-100 gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="p-1.5 rounded-lg bg-neutral-100 text-neutral-600 shrink-0">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <h2 id="informacion-del-retiro" className="text-xs sm:text-sm font-bold text-neutral-800 uppercase tracking-wider">
+                  Información del retiro
+                </h2>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <DetailPill
+              label="Fecha de retiro"
+              icon={
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              }
+            >
+              {specimen.retiredAt ? (
+                <span>
+                  {new Date(specimen.retiredAt).toLocaleDateString('es-PE', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </span>
+              ) : (
+                muted('Sin fecha registrada')
+              )}
+            </DetailPill>
+
+            <DetailPill
+              label="Registrado por"
+              icon={
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              }
+            >
+              {specimen.retiredByName ? (
+                <span>{specimen.retiredByName}</span>
+              ) : (
+                muted('Sin responsable registrado')
+              )}
+            </DetailPill>
+
+            <DetailPill
+              wide
+              label="Motivo del retiro"
+              icon={
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              }
+            >
+              {specimen.retirementReason ? (
+                <p className="font-normal text-neutral-800 leading-relaxed break-words">
+                  {specimen.retirementReason}
+                </p>
+              ) : (
+                muted('Sin motivo especificado')
+              )}
+            </DetailPill>
+          </div>
+        </section>
+      )}
 
       {/* GRID EN 2 COLUMNAS EQUILIBRADAS (50% / 50%) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
@@ -430,6 +528,21 @@ export function SpecimenInfo({ specimen, onSpecimenUpdated }: SpecimenInfoProps)
           isOpen={editModalOpen}
           onClose={() => setEditModalOpen(false)}
           onSuccess={handleUpdateSuccess}
+        />
+      )}
+      {deactivationOpen && (
+        <DefinitiveDeactivationModal
+          entityLabel={`Ejemplar ${specimen.code}`}
+          onCancel={() => setDeactivationOpen(false)}
+          onConfirm={async (reason) => {
+            await inventarioVerdeApi.deactivateSpecimen(specimen.code, reason);
+            setDeactivationOpen(false);
+            const history = new URLSearchParams({
+              greenElementId: String(specimen.id),
+              greenElementCode: specimen.code,
+            });
+            router.push(`/intervenciones?${history.toString()}`);
+          }}
         />
       )}
     </>

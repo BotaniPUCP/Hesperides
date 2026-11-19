@@ -11,6 +11,8 @@ export interface VegetationTypeFilterProps {
   totalAllCount: number;
   searchValue?: string;
   onSearchChange?: (val: string) => void;
+  enRetiro?: boolean;
+  onEnRetiroChange?: (val: boolean) => void;
 }
 
 export function VegetationTypeFilter({
@@ -20,6 +22,8 @@ export function VegetationTypeFilter({
   totalAllCount,
   searchValue = '',
   onSearchChange,
+  enRetiro = false,
+  onEnRetiroChange,
 }: VegetationTypeFilterProps) {
   const allChips = [
     { code: 'ALL', label: 'Todos', count: totalAllCount },
@@ -59,13 +63,36 @@ export function VegetationTypeFilter({
         </div>
       )}
 
-      {/* Chips de tipo de vegetación */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
-          Tipo de vegetación
-        </label>
+      {/* Chips de tipo de vegetación y filtro en proceso de retiro */}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+            Tipo de vegetación
+          </span>
 
-        <div className="flex flex-wrap items-center gap-2 overflow-visible p-1" role="tablist" aria-label="Tipos de vegetación">
+          {onEnRetiroChange && (
+            <label
+              htmlFor="filtro-en-retiro"
+              className={cn(
+                'inline-flex items-center gap-2 cursor-pointer text-xs select-none px-2.5 py-1 rounded-md border transition-all',
+                enRetiro
+                  ? 'bg-amber-50 border-amber-300 text-amber-900 font-semibold shadow-xs'
+                  : 'bg-neutral-0 border-neutral-200 text-neutral-600 font-medium hover:bg-neutral-50 hover:text-neutral-900 hover:border-neutral-300'
+              )}
+            >
+              <input
+                type="checkbox"
+                id="filtro-en-retiro"
+                checked={enRetiro}
+                onChange={(e) => onEnRetiroChange(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-neutral-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+              />
+              <span>En proceso de retiro</span>
+            </label>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 overflow-visible p-0.5" role="tablist" aria-label="Tipos de vegetación">
           {allChips.map((chip) => {
             const isSelected = selectedType === chip.code;
 

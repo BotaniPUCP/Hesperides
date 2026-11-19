@@ -34,6 +34,29 @@ beforeEach(() => {
   list.mockResolvedValue(onePage());
 });
 
+it('ofrece únicamente los cinco estados acordados incluso si el catálogo antiguo sigue presente',async()=>{
+  render(<InterventionsList/>);await screen.findByText('INT-000010');
+  const select=screen.getByLabelText('Estado') as HTMLSelectElement;
+  expect(Array.from(select.options).map(o=>o.text)).toEqual(['Actividades en curso','Planificada','En ejecución','Ejecutada','Terminada','Cancelada']);
+  expect(screen.queryByRole('option',{name:/Asignada|Observada|Validada|Aprobada/})).not.toBeInTheDocument();
+});
+it.each([['ASSIGNED','PLANNED'],['OBSERVED','IN_PROGRESS'],['VALIDATED','FINISHED']])('normaliza un enlace guardado con %s al filtro vigente %s',async(old,current)=>{
+  window.history.replaceState(null,'',`${LIST}?status=${old}`);render(<InterventionsList/>);
+  await waitFor(()=>expect(list).toHaveBeenLastCalledWith(0,current,'','',undefined,undefined));
+  expect(screen.getByLabelText('Estado')).toHaveValue(current);
+});
+
+it('muestra el porcentaje global y distingue registros anteriores sin perderlos',async()=>{
+  const result=onePage();
+  result.content=[{...result.content[0],activityWorkflow:true,progressPercentage:42,statusCode:'IN_PROGRESS'},
+    {...result.content[0],id:11,code:'INT-000011',activityWorkflow:false}];
+  list.mockResolvedValue(result);
+  render(<InterventionsList/>);
+  expect(await screen.findByText('Avance acumulado: 42 %')).toBeInTheDocument();
+  expect(screen.getByText(/Historial conservado/)).toBeInTheDocument();
+  expect(screen.getByRole('link',{name:'Nueva actividad'})).toBeInTheDocument();
+});
+
 it('recupera la posición del scroll cuando terminan de cargar los datos', async () => {
   const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
   saveListScroll(LIST, 'page=1', 900);
@@ -48,7 +71,7 @@ it('reabre con el estado, las fechas y la página que trae la URL', async () => 
   window.history.replaceState(null, '', `${LIST}?status=COMPLETED&from=2026-10-01&to=2026-10-31&page=2`);
   render(<InterventionsList />);
 
-  await waitFor(() => expect(list).toHaveBeenCalledWith(2, 'COMPLETED', '2026-10-01', '2026-10-31', undefined, undefined));
+  await waitFor(() => expect(list).toHaveBeenCalledWith(2, 'EXECUTED', '2026-10-01', '2026-10-31', undefined, undefined));
   expect(await screen.findByText('Página 3 de 3')).toBeInTheDocument();
   expect(screen.getByLabelText('Desde')).toHaveValue('2026-10-01');
 });
@@ -90,6 +113,18 @@ it('filtrar no pierde el ejemplar por el que se llegó', async () => {
 
   await waitFor(() => expect(window.location.search).toBe('?greenElementCode=EV-000001&to=2026-10-31'));
   await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, '', '', '2026-10-31', 'EV-000001', true));
+});
+
+it('filtrar conserva la identidad inmutable cuando el código puede reutilizarse', async () => {
+  window.history.replaceState(null, '', `${LIST}?greenElementId=42&greenElementCode=EV-000001`);
+  render(<InterventionsList greenElementCode="EV-000001" greenElementId="42" />);
+  await screen.findByText('INT-000010');
+
+  fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'EXECUTED' } });
+
+  // Con un estado elegido, el filtro de actividad pasa a «Todas» y queda en la URL.
+  await waitFor(() => expect(window.location.search).toBe('?greenElementCode=EV-000001&greenElementId=42&status=EXECUTED&activity=all'));
+  await waitFor(() => expect(list).toHaveBeenLastCalledWith(0, 'EXECUTED', '', '', undefined, undefined, '42'));
 });
 
 it('al entrar por el menú estando filtrada, la pantalla ya montada empieza de cero', async () => {
@@ -137,7 +172,7 @@ it('inicia en activas y permite consultar inactivas o todas reiniciando la p?gin
 it('un estado expl?cito sigue siendo accesible y cambiar el grupo limpia ese estado',async()=>{
   window.history.replaceState(null,'',`${LIST}?status=COMPLETED`);
   render(<InterventionsList/>);
-  await waitFor(()=>expect(list).toHaveBeenLastCalledWith(0,'COMPLETED','','',undefined,undefined));
+  await waitFor(()=>expect(list).toHaveBeenLastCalledWith(0,'EXECUTED','','',undefined,undefined));
   expect(screen.getByLabelText('Mostrar')).toHaveValue('all');
   fireEvent.change(screen.getByLabelText('Mostrar'),{target:{value:'active'}});
   await waitFor(()=>expect(list).toHaveBeenLastCalledWith(0,'','','',undefined,true));

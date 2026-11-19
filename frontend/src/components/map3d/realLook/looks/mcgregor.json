@@ -1,0 +1,220 @@
+{
+  "planKey": "95fbf9df-4166-4368-b468-c957cc31ceac",
+  "name": "McGregor",
+  "source": "frontend/scripts/pabellon-n-appearance.mjs: el McGregor de Modelos 3D, que no tiene carpeta de fotos (SPEC-112 D-09)",
+  "materials": {
+    "concreto": {
+      "color": "#c5bca8"
+    },
+    "techo": {
+      "color": "#adafaa"
+    },
+    "remate": {
+      "color": "#d1d9d7"
+    },
+    "torre": {
+      "glass": "#73858a",
+      "frame": "#d6dad5",
+      "moduleM": 1.2,
+      "heightM": 3.6,
+      "frameM": 0.06,
+      "spandrel": {
+        "color": "#cbd0cc",
+        "heightM": 1.5
+      },
+      "vary": 0.12,
+      "accent": {
+        "color": "#24608b",
+        "share": 0.11
+      }
+    },
+    "bajos": {
+      "glass": "#73858a",
+      "frame": "#d6dad5",
+      "moduleM": 1.2,
+      "heightM": 3.6,
+      "frameM": 0.06,
+      "spandrel": {
+        "color": "#cbd0cc",
+        "heightM": 1.5
+      },
+      "vary": 0.12,
+      "accent": {
+        "color": "#963e3d",
+        "share": 0.11
+      }
+    },
+    "atrio": {
+      "glass": "#7f8e89",
+      "frame": "#3e5050",
+      "moduleM": 1.2,
+      "heightM": 3.6,
+      "frameM": 0.04,
+      "vary": 0.08
+    }
+  },
+  "zones": [
+    {
+      "id": "bajos",
+      "wall": "concreto",
+      "roof": "techo",
+      "faces": {
+        "N": [
+          {
+            "material": "bajos",
+            "u": [
+              -42,
+              42
+            ],
+            "v": [
+              0,
+              18
+            ]
+          },
+          {
+            "material": "remate",
+            "u": [
+              -42,
+              42
+            ],
+            "v": [
+              18,
+              19.2
+            ]
+          }
+        ],
+        "S": [
+          {
+            "material": "bajos",
+            "u": [
+              -42,
+              42
+            ],
+            "v": [
+              0,
+              18
+            ]
+          },
+          {
+            "material": "remate",
+            "u": [
+              -42,
+              42
+            ],
+            "v": [
+              18,
+              19.2
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "torre",
+      "where": {
+        "east": [
+          0.555,
+          1
+        ],
+        "north": [
+          0.447,
+          1
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo",
+      "faces": {
+        "N": [
+          {
+            "material": "torre",
+            "u": [
+              -39.8,
+              -5.2
+            ],
+            "v": [
+              0,
+              43.2
+            ]
+          },
+          {
+            "material": "remate",
+            "u": [
+              -39.8,
+              -5.2
+            ],
+            "v": [
+              43.2,
+              46.2
+            ]
+          }
+        ],
+        "S": [
+          {
+            "material": "torre",
+            "u": [
+              5.2,
+              39.8
+            ],
+            "v": [
+              0,
+              43.2
+            ]
+          },
+          {
+            "material": "remate",
+            "u": [
+              5.2,
+              39.8
+            ],
+            "v": [
+              43.2,
+              46.2
+            ]
+          },
+          {
+            "material": "atrio",
+            "u": [
+              5.2,
+              18.2
+            ],
+            "v": [
+              0,
+              18
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "testero-este",
+      "where": {
+        "east": [
+          0.617,
+          0.764
+        ],
+        "north": [
+          0,
+          0.298
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo"
+    },
+    {
+      "id": "testero-oeste",
+      "where": {
+        "east": [
+          0.078,
+          0.148
+        ],
+        "north": [
+          0,
+          0.298
+        ]
+      },
+      "wall": "concreto",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Como el McGregor de Modelos 3D: fachadas largas de vidrio en módulos de 1,2 × 3,6 m con antepecho claro, uno de cada nueve de color (azul en la torre, rojo en los cuerpos bajos); testeros de concreto beige; remates metálicos claros; techos gris cálido; el atrio de vidrio gris verdoso al pie del lado sur de la torre. Por zonas en planta, como los planos de Modelos 3D: el vidrio del bloque bajo del frente va de este −28,5 a 9,9 m desde el centro de la caja y sus dos extremos son volúmenes de concreto; el atrio y el vidrio de la torre solo visten la torre (13 nov: el atrio pintaba el extremo este del bloque)."
+}

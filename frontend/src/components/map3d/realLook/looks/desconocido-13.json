@@ -1,22 +1,21 @@
 {
   "planKey": "3441937e-1f8c-498a-bc30-36956d1da1d8",
   "name": "Desconocido_13",
-  "folder": "Desconocido_13",
-  "photos": [
-    "esta-bajo-tierra.jpg",
-    "solo se ve-eltecho-desde-el-piso.jpg"
-  ],
-  "notes": "Losa de concreto a ras del césped con rejillas (esta-bajo-tierra.jpg): no tiene fachada que enderezar; va el color del concreto medido en la foto. Por confirmar cuál de los dos Desconocido_13 es (Anexo A, fila 24).",
+  "source": "Decisión de Jean Piero (14 nov 2026): los «Desconocido» sin ficha de fotos van de ladrillo liso, sin ventanas, como Ingeniería Mecánica (SPEC-112 P-04)",
+  "materials": {
+    "ladrillo": {
+      "color": "#b9765f"
+    },
+    "techo": {
+      "color": "#b2afa8"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#a9a69d",
-      "faces": {
-        "other": {
-          "kind": "blind",
-          "wall": "#9d9a92"
-        }
-      }
+      "wall": "ladrillo",
+      "roof": "techo"
     }
-  ]
+  ],
+  "notes": "Ladrillo liso con el color y el techo de Ingeniería Mecánica, sin ventanas ni franjas. La carpeta Desconocido_13 quedaba por confirmar entre los dos con ese nombre (Anexo A, fila 24): con esta decisión no se usa."
 }

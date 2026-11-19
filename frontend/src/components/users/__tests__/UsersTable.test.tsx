@@ -18,6 +18,7 @@ function usuario(overrides: Partial<UserDetail> = {}): UserDetail {
     teams: [],
     createdAt: '2026-09-01T10:00:00Z',
     updatedAt: '2026-09-01T10:00:00Z',
+    searchKey: '',
     ...overrides,
   };
 }

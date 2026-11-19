@@ -3,24 +3,45 @@
   "name": "Servicios higiénicos (Facultad de Arte), C18",
   "folder": "C18 · Izquierda 124 · SKP C-5037, C-5032",
   "photos": [
-    "detras.jpg"
+    "detras.jpg",
+    "frente-lado.jpg"
   ],
-  "notes": "Muro blanco con zócalo gris, puerta y ventanas altas (detras.jpg, casi frontal).",
+  "materials": {
+    "muro": {
+      "color": "#ebebe8"
+    },
+    "techo": {
+      "color": "#c7c5bf"
+    },
+    "ventanas": {
+      "color": "#c1c3c3"
+    },
+    "zocalo": {
+      "color": "#a3a6a5"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b3b0a9",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#efefec",
-          "photo": {
-            "tile": "c18",
-            "widthM": 7,
-            "heightM": 2.6
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            -1,
+            0.4
+          ]
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            2.4,
+            3
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Muro blanco con zócalo gris, puerta y ventanas altas sueltas, como franja tenue (detras.jpg, frente-lado.jpg)."
 }

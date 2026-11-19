@@ -1,0 +1,33 @@
+{
+  "planKey": "249a8c11-620a-48d6-98aa-df74d1f90f69",
+  "name": "Sub-estación N-7",
+  "source": "Decisión de Jean Piero (15 nov 2026): la Sub-estación N-7 se colorea igual que la N-11 (SPEC-112)",
+  "materials": {
+    "muro": {
+      "color": "#e6e4df"
+    },
+    "techo": {
+      "color": "#c9c8c3"
+    },
+    "ventanas": {
+      "color": "#c0c3c4"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            2.2,
+            2.7
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Copia subestacion-n11.json: paneles blancos con la franja tenue de ventanitas altas. No tiene malla en el modelo: se pinta su prisma."
+}

@@ -9,6 +9,7 @@ export interface CampoArchivoProps {
   acepta: string;
   /** El máximo que se avisa y se comprueba antes de enviar (SPEC-104 D-08). */
   limite: Limite;
+  disabled?: boolean;
   /** Texto de ayuda además del máximo. */
   ayuda?: string;
   archivo: File | null;
@@ -20,7 +21,7 @@ export interface CampoArchivoProps {
  * Selector de archivo que avisa el máximo y rechaza lo que no cabe sin enviarlo:
  * nadie debería esperar a subir 60 MB para enterarse de que sobra.
  */
-export function CampoArchivo({ id, etiqueta, acepta, limite, ayuda, archivo, onElegir }: CampoArchivoProps) {
+export function CampoArchivo({ id, etiqueta, acepta, limite, ayuda, archivo, onElegir, disabled = false }: CampoArchivoProps) {
   const [error, setError] = useState<string | null>(null);
 
   const elegir = (e: ChangeEvent<HTMLInputElement>) => {
@@ -40,15 +41,32 @@ export function CampoArchivo({ id, etiqueta, acepta, limite, ayuda, archivo, onE
       <label htmlFor={id} className="block text-sm font-medium text-neutral-700">
         {etiqueta}
       </label>
-      <input
-        id={id}
-        type="file"
-        accept={acepta}
-        aria-describedby={`${id}-ayuda`}
-        aria-invalid={error ? true : undefined}
-        onChange={elegir}
-        className="block w-full text-sm text-neutral-700 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-brand-700"
-      />
+      <div className="flex items-center gap-2">
+        <input
+          id={id}
+          key={archivo ? archivo.name : 'empty'}
+          type="file"
+          accept={acepta}
+          disabled={disabled}
+          aria-describedby={`${id}-ayuda`}
+          aria-invalid={error ? true : undefined}
+          onChange={elegir}
+          className="block w-full text-sm text-neutral-700 file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+        />
+        {archivo && !disabled && (
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              onElegir(null);
+            }}
+            className="text-xs font-medium text-neutral-500 hover:text-action-danger px-2 py-1 rounded hover:bg-neutral-100 transition-colors shrink-0"
+            title="Quitar archivo seleccionado"
+          >
+            Quitar
+          </button>
+        )}
+      </div>
       <p id={`${id}-ayuda`} className="text-xs text-neutral-500">
         {detalle}
       </p>

@@ -145,20 +145,17 @@ class UsersIntegrationTest {
     // CA-06
     @Test
     @WithMockUser(username = "admin@pucp.edu.pe", authorities = "ADMIN")
-    void theListingAppliesEveryFilter() throws Exception {
+    void theListingBringsEveryoneWithWhatTheBrowserFiltersOn() throws Exception {
         mockMvc.perform(post("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON).content(createBody("filtro@pucp.edu.pe")));
+        mockMvc.perform(post("/api/v1/users/" + idOf("filtro@pucp.edu.pe") + "/deactivate")).andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/v1/users").param("search", "garcia"))
+        // Activos e inactivos: filtrar por estado, rol o cuadrilla se hace en el navegador (SPEC-119).
+        mockMvc.perform(get("/api/v1/users/all"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content[0].lastName").value("García"));
-
-        mockMvc.perform(get("/api/v1/users").param("roleCode", "ADMIN"))
-                .andExpect(jsonPath("$.data.content[0].role.code").value("ADMIN"));
-
-        // Sin isActive no aparece ningun desactivado.
-        mockMvc.perform(get("/api/v1/users"))
-                .andExpect(jsonPath("$.data.content[?(@.isActive == false)]").isEmpty());
+                .andExpect(jsonPath("$.data[?(@.email == 'filtro@pucp.edu.pe')].isActive").value(false))
+                .andExpect(jsonPath("$.data[?(@.email == 'filtro@pucp.edu.pe')].searchKey")
+                        .value("maria garcia filtro@pucp.edu.pe"));
     }
 
     // CA-08
@@ -169,7 +166,7 @@ class UsersIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody("hash@pucp.edu.pe")))
                 .andReturn();
-        MvcResult listed = mockMvc.perform(get("/api/v1/users")).andReturn();
+        MvcResult listed = mockMvc.perform(get("/api/v1/users/all")).andReturn();
 
         for (MvcResult result : new MvcResult[] {created, listed}) {
             assertThat(result.getResponse().getContentAsString())
@@ -270,7 +267,7 @@ class UsersIntegrationTest {
                          WHERE ct.code = 'ROLE' AND ci.code = 'ADMIN'), TRUE)
                 """);
 
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/v1/users/all"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message")
                         .value("Password change required before using the system"));
@@ -292,30 +289,9 @@ class UsersIntegrationTest {
                          WHERE ct.code = 'ROLE' AND ci.code = 'SUPERVISOR'))
                 """);
 
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/v1/users/all"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content.length()").value(1))
-                .andExpect(jsonPath("$.data.content[0].email").value("supervisor@pucp.edu.pe"));
-    }
-
-    @Test
-    @WithMockUser(username = "admin@pucp.edu.pe", authorities = "ADMIN")
-    void theListingPaginatesWithTheStableShapeTheFrontendConsumes() throws Exception {
-        // Spring Data serializa Page con totalElements y number en la raiz, una
-        // forma que su propia documentacion declara inestable entre versiones. El
-        // tipo Page<T> de shared/types declara {content, page:{...}}, asi que sin
-        // la propiedad que fija esta forma el frontend leeria undefined en el
-        // paginador y TypeScript no podria advertirlo: el tipo miente.
-        mockMvc.perform(get("/api/v1/users?size=1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.page.size").value(1))
-                .andExpect(jsonPath("$.data.page.number").value(0))
-                .andExpect(jsonPath("$.data.page.totalElements").exists())
-                .andExpect(jsonPath("$.data.page.totalPages").exists())
-                // La forma plana no debe reaparecer: si vuelve, ambas coexisten y
-                // el frontend elegiria la equivocada sin fallar.
-                .andExpect(jsonPath("$.data.totalElements").doesNotExist())
-                .andExpect(jsonPath("$.data.pageable").doesNotExist());
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].email").value("supervisor@pucp.edu.pe"));
     }
 }

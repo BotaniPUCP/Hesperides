@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -57,7 +56,7 @@ class UsersControllerTest {
     private UserDetailResponse sampleUser(CredentialStatus status) {
         return new UserDetailResponse(48L, "mgarcia@pucp.edu.pe", "María", "García", "María García",
                 new RoleResponse(2L, "COORDINADOR", "Coordinador"), true,
-                status, true, null, List.of(), null, null);
+                status, true, null, List.of(), null, null, "maria garcia mgarcia@pucp.edu.pe");
     }
 
     private static final String CREATE_BODY = """
@@ -69,7 +68,7 @@ class UsersControllerTest {
 
     @Test
     void listingWithoutATokenIs401() throws Exception {
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/v1/users/all"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Invalid or expired token"));
     }
@@ -77,7 +76,7 @@ class UsersControllerTest {
     @Test
     @WithMockUser(username = "operario@pucp.edu.pe", authorities = "OPERARIO")
     void anOperarioCannotListUsers() throws Exception {
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/v1/users/all"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Insufficient permissions for this action"));
     }
@@ -85,12 +84,11 @@ class UsersControllerTest {
     @Test
     @WithMockUser(username = "supervisor@pucp.edu.pe", authorities = "SUPERVISOR")
     void aSupervisorCanListUsers() throws Exception {
-        when(usersService.findAll(any(), any(), any(), any(), any(), anyString()))
-                .thenReturn(new PageImpl<>(List.of(sampleUser(CredentialStatus.DELIVERED))));
+        when(usersService.all(anyString())).thenReturn(List.of(sampleUser(CredentialStatus.DELIVERED)));
 
-        mockMvc.perform(get("/api/v1/users"))
+        mockMvc.perform(get("/api/v1/users/all"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content[0].email").value("mgarcia@pucp.edu.pe"));
+                .andExpect(jsonPath("$.data[0].email").value("mgarcia@pucp.edu.pe"));
     }
 
     @Test

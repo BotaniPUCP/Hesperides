@@ -142,7 +142,8 @@ export interface WeeklyReport {
   attendedSections: { rule: string; covered: number; total: number; percent: number | null };
   irrigation: {
     rule: string;
-    turns: number;
+    /** Intervenciones de clase Riego que llegaron al sector en la semana. */
+    irrigations: number;
     irrigatedSections: number;
     totalSections: number;
     percent: number | null;

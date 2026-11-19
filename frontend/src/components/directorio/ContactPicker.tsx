@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ContactSummary, OrganizationRef } from '@shared/types';
+import { ListStatus } from '@/components/search/ListStatus';
 import { Button, Input, Modal } from '@/components/ui';
-import { useCanMaintainDirectory, useContacts } from '@/hooks/useDirectory';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useCanMaintainDirectory, useContactList } from '@/hooks/useDirectory';
 import { mensajeDeApiError } from '@/lib/api-errors';
-import { SEARCH_DEBOUNCE_MS } from '@/lib/constants';
 import { directoryApi } from '@/lib/directory-api';
+import { filterByText } from '@/lib/search/searchText';
 import { ContactFormModal, type ContactPick } from './ContactFormModal';
 import { PickedValue, PickerOption, PickerResults } from './PickerParts';
 
@@ -24,6 +24,13 @@ export interface ContactPickerProps {
 
 const RESULTS = 8;
 const organizationsOf = (c: ContactSummary) => c.organizations.map((o) => o.name).join(', ');
+
+/**
+ * Un dado de baja sigue en el buscador, marcado, para no registrarlo de nuevo (decisión del 18 nov
+ * 2026); no se puede elegir ni vincular: reservas e incidencias no guardan contactos de baja.
+ */
+const withStatus = (c: ContactSummary, detail: string | undefined) =>
+  c.active ? detail : ['Dado de baja', detail].filter(Boolean).join(' · ');
 
 /**
  * Pide el rol del vínculo (D-08b) antes de crearlo; vacío es sin rol. Si el
@@ -83,7 +90,8 @@ function RoleAsk({ contact, organization, onClose, onDone }:
  * ella pero sí en otra, coordinación la vincula en vez de registrarla dos veces; el
  * rol del vínculo se pide ahí mismo y, si ya pertenece, se ofrece editar su rol.
  * Con `searchEverywhere` busca en todo el Directorio y no vincula: cualquier
- * contacto vale, como el responsable de una reserva (SPEC-107 D-02).
+ * contacto vale, como el responsable de una reserva (SPEC-107 D-02). Las coincidencias se calculan
+ * sobre la lista precargada del Directorio, sin consultar por cada letra (SPEC-119).
  */
 export function ContactPicker({ id, label, organization, searchEverywhere = false, value, onChange }: ContactPickerProps) {
   const canMaintain = useCanMaintainDirectory();
@@ -91,14 +99,16 @@ export function ContactPicker({ id, label, organization, searchEverywhere = fals
   const [registering, setRegistering] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [linking, setLinking] = useState<ContactSummary | null>(null);
-  const search = useDebouncedValue(text.trim(), SEARCH_DEBOUNCE_MS);
+  const search = text.trim();
   const free = searchEverywhere && organization === null;
-  const active = (organization !== null || free) && value === null && search !== '';
-  const inside = useContacts(free ? { search } : { search, organizationCode: organization?.code }, 0, 0, active);
-  const settled = active && !inside.loading && search === text.trim();
-  const lookElsewhere = !free && settled && inside.result.items.length === 0;
-  const elsewhere = useContacts({ search }, 0, 0, lookElsewhere);
-  const others = elsewhere.result.items.filter((c) => !c.organizations.some((o) => o.code === organization?.code));
+  const usable = (organization !== null || free) && value === null;
+  const { items, loaded, errorMessage, reload } = useContactList(usable);
+  const found = useMemo(() => (search === '' ? [] : filterByText(items, search)), [items, search]);
+  const belongs = (c: ContactSummary) => c.organizations.some((o) => o.code === organization?.code);
+  const inside = free ? found : found.filter(belongs);
+  const settled = usable && loaded && search !== '';
+  // Solo si en la organización no hay nadie con ese nombre se ofrece a los de otras.
+  const others = !free && inside.length === 0 ? found.filter((c) => !belongs(c)) : [];
 
   function pick(next: ContactPick) {
     onChange(next);
@@ -121,21 +131,22 @@ export function ContactPicker({ id, label, organization, searchEverywhere = fals
     <div className="space-y-2">
       <Input id={id} label={label} value={text} onChange={setText} type="search" autoComplete="off"
         helperText={free ? 'Cualquier contacto del Directorio.' : undefined} />
-      {settled && (!lookElsewhere || !elsewhere.loading) && (
-        <PickerResults empty={inside.result.items.length === 0 && others.length === 0}
+      <ListStatus typed={search !== ''} loaded={loaded} errorMessage={errorMessage} onRetry={reload} />
+      {settled && (
+        <PickerResults empty={inside.length === 0 && others.length === 0}
           emptyText={canMaintain ? `«${text.trim()}» no está en el directorio.`
             : `«${text.trim()}» no está en ${organization?.name}. Pide a coordinación que lo registre.`}
           footer={canMaintain && (
             <Button size="sm" variant="secondary" onClick={() => setRegistering(true)}>Registrar «{text.trim()}»</Button>
           )}>
-          {inside.result.items.slice(0, RESULTS).map((c) => (
+          {inside.slice(0, RESULTS).map((c) => (
             <PickerOption key={c.code} label={c.fullName}
-              detail={free || organization === null ? organizationsOf(c)
-                : c.organizations.find((o) => o.code === organization.code)?.role ?? undefined}
-              onClick={() => pick({ code: c.code, fullName: c.fullName })} />
+              detail={withStatus(c, free || organization === null ? organizationsOf(c)
+                : c.organizations.find((o) => o.code === organization.code)?.role ?? undefined)}
+              onClick={c.active ? () => pick({ code: c.code, fullName: c.fullName }) : undefined} />
           ))}
           {others.slice(0, RESULTS).map((c) => (
-            <PickerOption key={c.code} label={c.fullName} detail={organizationsOf(c)} action={linkButton(c)} />
+            <PickerOption key={c.code} label={c.fullName} detail={withStatus(c, organizationsOf(c))} action={c.active && linkButton(c)} />
           ))}
           {!canMaintain && !free && others.length > 0 && organization && (
             <li className="px-2 text-sm text-neutral-600">

@@ -7,6 +7,7 @@ import type { ContactDetail } from '@shared/types';
 import { Button, Card } from '@/components/ui';
 import { useCanMaintainDirectory, useContact } from '@/hooks/useDirectory';
 import { directoryApi } from '@/lib/directory-api';
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 import { ContactFormModal } from './ContactFormModal';
 import { DeactivateAction } from './DeactivateAction';
 import { DetailFrame, DetailHeader, Field, InactiveBadge } from './DetailParts';
@@ -25,6 +26,7 @@ function ContactView({ contact, reload }: { contact: ContactDetail; reload: () =
   const canChange = useCanMaintainDirectory() && contact.active;
   const router = useRouter();
   const [editing, setEditing] = useState(0);
+  usePageTrail({ labels: { [contact.code]: contact.fullName } });
 
   return (
     <div className="space-y-6">

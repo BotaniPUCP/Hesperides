@@ -1,0 +1,33 @@
+{
+  "planKey": "unified:lugar-prestado",
+  "name": "Lugar prestado",
+  "source": "Decisión de Jean Piero (15 nov 2026): va con el color de la Facultad de Educación (Aula R102) (SPEC-112)",
+  "materials": {
+    "muro": {
+      "color": "#b97a62"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "concreto": {
+      "color": "#c8c6c0"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "concreto",
+          "v": [
+            4.2,
+            4.85
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Copia educacion-r102.json: ladrillo con un remate de concreto de 0,65 m, aquí bajo su techo a 4,85 m."
+}

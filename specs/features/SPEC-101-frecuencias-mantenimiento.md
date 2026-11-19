@@ -284,7 +284,10 @@ El tipo TypeScript en `maintenance.ts` lo refleja como `active: boolean`.
 
 **El orden por defecto del listado es `activityType.label ASC`.** Esta pantalla se usa para
 buscar la periodicidad de una labor concreta; el orden alfabético por nombre de actividad es el
-que permite recorrerla con la vista.
+que permite recorrerla con la vista. Única excepción (17 nov 2026): al volver de crear o editar,
+la recién guardada va primera con «Recién guardada», para confirmar que se guardó sin buscarla
+(antes una nueva caía en su lugar alfabético y parecía no estar); cerrar el aviso no la mueve y
+al recargar la lista vuelve al orden alfabético. El servidor no cambia su orden.
 
 **Los endpoints de catálogo (`/activity-types`, `/rule-types`) no son operaciones de negocio**
 sino lookups de catálogo para poblar los selectores del formulario. Su autorización es amplia

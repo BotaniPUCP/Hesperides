@@ -23,28 +23,31 @@ const ACTION =
 
 /** El contenido de una tarjeta de perspectiva: nombre, lado, hito, acciones y fotos. */
 export function PerspectiveCardBody({ perspective: v, onFocus, onOpenPhoto, editing }: PerspectiveCardBodyProps) {
+  const nameOnSecondRow = v.displayName.length > 52;
+
   return (
     <>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="mb-2">
+        <div className="flex items-center justify-between gap-2">
           <Badge label={v.side.label} color={v.side.code === 'SIDE' ? 'neutral' : 'info'} />
-          <h3 className="text-sm font-semibold text-neutral-900">{v.displayName}</h3>
+          {!nameOnSecondRow && <h3 className="min-w-0 flex-1 text-sm font-semibold text-neutral-900">{v.displayName}</h3>}
+          <div className="flex shrink-0 gap-1">
+            <button type="button" onClick={() => onFocus(v.id)} aria-label={`Ver ${v.displayName} en el mapa`} className={ACTION}>
+              Ver en el mapa
+            </button>
+            {editing && (
+              <>
+                <button type="button" onClick={() => editing.onEdit(v)} aria-label={`Editar ${v.displayName}`} className={ACTION}>
+                  Editar
+                </button>
+                <button type="button" onClick={() => editing.onDelete(v)} aria-label={`Eliminar ${v.displayName}`} className={`${ACTION} text-alert-danger-fg hover:bg-alert-danger-bg`}>
+                  Eliminar
+                </button>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex gap-1">
-          <button type="button" onClick={() => onFocus(v.id)} aria-label={`Ver ${v.displayName} en el mapa`} className={ACTION}>
-            Ver en el mapa
-          </button>
-          {editing && (
-            <>
-              <button type="button" onClick={() => editing.onEdit(v)} aria-label={`Editar ${v.displayName}`} className={ACTION}>
-                Editar
-              </button>
-              <button type="button" onClick={() => editing.onDelete(v)} aria-label={`Eliminar ${v.displayName}`} className={`${ACTION} text-alert-danger-fg hover:bg-alert-danger-bg`}>
-                Eliminar
-              </button>
-            </>
-          )}
-        </div>
+        {nameOnSecondRow && <h3 className="mt-1 text-sm font-semibold text-neutral-900">{v.displayName}</h3>}
       </div>
       {v.landmark && (
         <p className="mb-2 text-xs text-neutral-600">

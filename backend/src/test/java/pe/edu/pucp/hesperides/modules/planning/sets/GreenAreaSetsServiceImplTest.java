@@ -7,6 +7,7 @@ import pe.edu.pucp.hesperides.modules.auth.repository.UsersRepository;
 import pe.edu.pucp.hesperides.modules.planning.sets.dto.GreenAreaSetRequest;
 import pe.edu.pucp.hesperides.modules.planning.sets.entity.GreenAreaSet;
 import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetQueries;
+import pe.edu.pucp.hesperides.modules.planning.sets.repository.SectionOptionQueries;
 import pe.edu.pucp.hesperides.modules.planning.sets.repository.GreenAreaSetsRepository;
 import pe.edu.pucp.hesperides.modules.planning.sets.service.GreenAreaSetsServiceImpl;
 import pe.edu.pucp.hesperides.shared.audit.AuditActionCode;
@@ -57,7 +58,7 @@ class GreenAreaSetsServiceImplTest {
         when(queries.invalidElements(anyCollection())).thenReturn(List.of());
         when(queries.zonesOf(anyLong())).thenReturn(List.of());
         when(queries.elementsOf(anyLong())).thenReturn(List.of());
-        service = new GreenAreaSetsServiceImpl(sets, queries, users, audit);
+        service = new GreenAreaSetsServiceImpl(sets, queries, mock(SectionOptionQueries.class), users, audit);
     }
 
     private static void setId(BaseEntity entity, Long id) throws Exception {

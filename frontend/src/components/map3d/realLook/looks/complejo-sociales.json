@@ -1,27 +1,78 @@
 {
   "planKey": "8f79b2cc-6701-4f4e-87f7-13db06a89a48",
-  "name": "Facultad de Ciencias Sociales (complejo, código 61)",
+  "name": "Biblioteca de Ciencias Sociales",
   "folder": "complejo-sociales",
   "photos": [
-    "detras.jpg"
+    "detras.jpg",
+    "frente1.jpg",
+    "frente2.jpg",
+    "lado.jpg",
+    "lado2.jpg"
   ],
-  "notes": "El bloque alto con celosías verticales blancas y acentos rojos (detras.jpg) va desde 12 m; debajo, el concreto de los volúmenes bajos. Por confirmar el emparejamiento (Anexo A, fila 64).",
+  "materials": {
+    "concreto": {
+      "color": "#dcdcda"
+    },
+    "techo": {
+      "color": "#c4c3bf"
+    },
+    "rojo": {
+      "color": "#b8392f"
+    },
+    "vidrio-bajo": {
+      "glass": "#5d686e",
+      "frame": "#d9dbd8",
+      "moduleM": 2.0,
+      "heightM": 3.6,
+      "frameM": 0.08,
+      "vary": 0.05
+    },
+    "celosias": {
+      "glass": "#5f6b72",
+      "frame": "#eeeeea",
+      "moduleM": 1.0,
+      "heightM": 3.6,
+      "frameM": 0.3,
+      "spandrel": {
+        "color": "#e9e9e5",
+        "heightM": 0.6
+      },
+      "vary": 0.06,
+      "accent": {
+        "color": "#c23d36",
+        "share": 0.05
+      }
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#c4c3bf",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#bdbbb5",
-          "photo": {
-            "tile": "sociales-alto",
-            "widthM": 40,
-            "heightM": 18
-          },
-          "startM": 12
+      "wall": "concreto",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "vidrio-bajo",
+          "v": [
+            0.3,
+            4.0
+          ]
+        },
+        {
+          "material": "rojo",
+          "v": [
+            10.8,
+            12.4
+          ]
+        },
+        {
+          "material": "celosias",
+          "v": [
+            12.4,
+            35.5
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Torre de celosías verticales blancas sobre vidrio, con algún paño rojo, de los 12 m para arriba (detras.jpg, frente1.jpg, frente2.jpg); en su base, la franja roja; abajo, los volúmenes de concreto claro con la planta baja vidriada (lado.jpg, lado2.jpg). Las caras del modelo van de 0 a 36 m en un paño, así que el reparto es por cota, en todas las caras. Nombre corregido por Jean Piero el 14 nov (V052): es la Biblioteca de Ciencias Sociales, no la facultad."
 }

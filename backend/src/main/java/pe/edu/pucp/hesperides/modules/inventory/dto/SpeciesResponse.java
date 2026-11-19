@@ -8,9 +8,10 @@ import java.util.List;
  * de su ficha. {@code imageUrl} es la miniatura principal y {@code imageSource}
  * dice de dónde sale: {@code SPECIES} (foto genérica), {@code SPECIMEN} (foto de
  * uno de sus ejemplares) o nulo si no hay ninguna. {@code photos} trae todas las
- * genéricas solo en la ficha; en el listado viene vacío (SPEC-104 §3).
+ * genéricas solo en la ficha; en el listado viene vacío (SPEC-104 §3). {@code searchKey}: nombres
+ * científico, común y alternativos y familia sin tildes, para buscar en el navegador (SPEC-119).
  */
-public record SpeciesResponse(String slug, String scientificName, String commonName, List<String> otherNames,
+public record SpeciesResponse(String slug, boolean isActive, String scientificName, String commonName, List<String> otherNames,
                               String family, String vegetationTypeCode, String vegetationTypeName,
                               String originCode, String originName, String description, String careNotes,
                               long specimenCount, String imageUrl, String imageSource,
@@ -19,5 +20,5 @@ public record SpeciesResponse(String slug, String scientificName, String commonN
                               String referenceHeightSourceName, BigDecimal referenceCrownRadiusM,
                               String referenceCrownRadiusSourceCode, String referenceCrownRadiusSourceName,
                               boolean usesTrunkHeight, boolean usesDbh, long unmeasuredSpecimenCount,
-                              List<ExtraMeasureResponse> extraMeasures) {
+                              List<ExtraMeasureResponse> extraMeasures, String searchKey) {
 }

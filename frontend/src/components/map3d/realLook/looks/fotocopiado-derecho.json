@@ -1,0 +1,33 @@
+{
+  "planKey": "08b88557-6dcf-468d-8b5e-a753b79c7bf6",
+  "name": "Centro de fotocopiado (adyacente a Derecho)",
+  "source": "Decisión de Jean Piero (15 nov 2026): todos los centros de fotocopiado van con los colores del de EE.GG.LL. (SPEC-112)",
+  "materials": {
+    "muro": {
+      "color": "#ececea"
+    },
+    "techo": {
+      "color": "#d0d0cc"
+    },
+    "ventanas": {
+      "color": "#b7bcbd"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.2
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Todos los centros de fotocopiado llevan los colores del de EE.GG.LL. (fotocopiado-letras.json): muro blanco, techo gris claro y su franja tenue de ventanas."
+}

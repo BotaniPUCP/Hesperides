@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Button, Card } from '@/components/ui';
-import { RegistroEspecieModal } from '@/components/inventario-verde';
 import { CopiarErrores } from '@/components/importar/CopiarErrores';
+import { EspeciesDelArchivoSection } from './EspeciesDelArchivoSection';
+import { ConfirmarImportacionModal } from './ConfirmarImportacionModal';
 import { traducirMensajeCatastro } from '../mensajes';
 import { DecisionesDeDuplicados } from './DecisionesDeDuplicados';
 import type { Importacion } from './useImportacion';
@@ -21,12 +21,11 @@ const fotos = (n: number) => (n === 1 ? '1 foto' : `${n} fotos`);
 
 /** Lo que haría la carga, antes de hacerlo (SPEC-103 §5.2). */
 export function VistaPrevia({ imp }: { imp: Importacion }) {
-  const [especieModalOpen, setEspecieModalOpen] = useState(false);
-  const [especieParaRegistrar, setEspecieParaRegistrar] = useState('');
-
   const vista = imp.vista;
   if (!vista) return null;
   const especiesOmitidas = vista.unknownSpecies.reduce((n, s) => n + s.rows, 0);
+  const especiesInactivasOmitidas = vista.skippedInactiveSpecies?.length ?? 0;
+  const reviewLocked = imp.reanalizando || imp.summaryLoading || imp.confirmationOpen || imp.fase === 'confirmando';
 
   return (
     <>
@@ -34,14 +33,57 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Cifra valor={vista.totalRows} etiqueta="filas en el archivo" />
-            {imp.kind !== 'species-photos' && <Cifra valor={vista.toCreate} etiqueta={imp.estandar.textos.nuevos} />}
+            {imp.kind !== 'species-photos' && <Cifra valor={imp.toCreateEfectivo} etiqueta={imp.estandar.textos.nuevos} />}
             <Cifra valor={vista.toUpdate} etiqueta={imp.estandar.textos.aCorregir} />
             {imp.estandar.porEspecie && <Cifra valor={especiesOmitidas} etiqueta="filas omitidas por especie" />}
+            {imp.kind === 'species' && especiesInactivasOmitidas > 0 && (
+              <Cifra valor={especiesInactivasOmitidas} etiqueta="filas inactivas protegidas" />
+            )}
           </div>
+
+          {imp.kind === 'species' && especiesInactivasOmitidas > 0 && (
+            <section role="status" aria-label="Especies inactivas omitidas" className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+              <p className="text-sm font-semibold text-neutral-800">
+                Las especies inactivas no se modificarán. Estas filas se omitirán:
+              </p>
+              <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700">
+                {vista.skippedInactiveSpecies?.map((row) => (
+                  <li key={`${row.line}-${row.scientificName}`}>
+                    Línea {row.line}: <span className="italic">{row.scientificName}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {imp.kind === 'specimens' && (vista.speciesChanges?.length ?? 0) > 0 && (
+            <section aria-labelledby="cambios-especie-ejemplares" className="space-y-2">
+              <h3 id="cambios-especie-ejemplares" className="font-semibold text-neutral-900">
+                Ejemplares con cambio de especie
+              </h3>
+              <ul aria-label="Cambios de especie propuestos" className="space-y-1 text-sm">
+                {vista.speciesChanges?.map((change) => (
+                  <li key={change.code} className="rounded-lg border border-neutral-200 bg-neutral-0 px-3 py-2">
+                    <span className="font-mono font-semibold">{change.code}</span>
+                    <span className="mx-2 text-neutral-500">·</span>
+                    <span className="italic">{change.previousScientificName ?? 'Sin especie asignada'}</span>
+                    <span className="mx-2 text-neutral-500" aria-label="cambia a">→</span>
+                    <span className="font-semibold italic">{change.nextScientificName}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {vista.decimalComma && (
             <p className="rounded-md bg-urgency-medium-bg px-3 py-2 text-sm text-urgency-medium-fg">
               El archivo usa coma decimal. Se aceptó, pero el estándar es el punto (7.5).
+            </p>
+          )}
+
+          {vista.totalRows === 0 && vista.issues.length === 0 && (
+            <p className="rounded-md bg-urgency-medium-bg px-3 py-2 text-sm text-urgency-medium-fg">
+              El archivo solo tiene la cabecera y ninguna fila de datos para cargar.
             </p>
           )}
 
@@ -77,6 +119,15 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
             </section>
           )}
 
+          {imp.kind === 'specimens' && (
+            <EspeciesDelArchivoSection
+              bindings={vista.speciesBindings ?? []}
+              unknownSpecies={vista.unknownSpecies ?? []}
+              disabled={reviewLocked}
+              onVincular={imp.vincularEspecie}
+            />
+          )}
+
           {vista.photoSets.length > 0 && (
             <section aria-labelledby="conjuntos-de-fotos" className="space-y-1">
               <h3 id="conjuntos-de-fotos" className="font-semibold text-neutral-900">
@@ -92,7 +143,7 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
             </section>
           )}
 
-          {vista.unknownSpecies.length > 0 && (
+          {imp.kind !== 'specimens' && vista.unknownSpecies.length > 0 && (
             <section
               aria-labelledby="especies-desconocidas"
               className="rounded-2xl border border-neutral-200/90 bg-neutral-50/60 p-4 space-y-3"
@@ -106,54 +157,26 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
                     </span>
                   </h3>
                   <p className="text-xs text-neutral-600 mt-0.5">
-                    Estas filas no se cargarán a menos que registres la especie. Puedes registrarla ahora mismo para incluirla en esta carga sin volver a subir el archivo.
+                    Estas filas no se cargarán porque la especie no está en el catálogo.
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={imp.reanalizar}
-                  loading={imp.reanalizando}
-                  leadingIcon={
-                    <svg className="w-3.5 h-3.5 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  }
-                >
-                  Re-analizar
-                </Button>
               </div>
 
               <ul className="space-y-2">
                 {vista.unknownSpecies.map((s) => (
-                  <li
-                    key={s.name}
-                    className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-neutral-0 border border-neutral-200/80 shadow-2xs"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="p-1.5 rounded-lg bg-brand-50 text-brand-700 border border-brand-200/60 shrink-0">
-                        🌱
-                      </span>
-                      <div className="min-w-0">
-                        <div className="font-semibold text-sm text-neutral-900 italic truncate">
-                          {s.name}
-                        </div>
-                        <div className="text-xs text-neutral-500">
-                          {s.rows} {s.rows === 1 ? 'fila' : 'filas'}
+                  <li key={s.sourceKey ?? s.name} className="rounded-xl border border-neutral-200 bg-neutral-0 p-4 shadow-xs">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span aria-hidden="true" className="mt-0.5 rounded-lg border border-brand-200 bg-brand-50 p-2 text-brand-700">🌱</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words font-semibold italic text-neutral-900">{s.name}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-600">
+                          <span>{s.rows} {s.rows === 1 ? 'fila' : 'filas'}</span>
+                          <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 border border-amber-200/80">
+                            No registrada en el catálogo
+                          </span>
                         </div>
                       </div>
                     </div>
-
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => {
-                        setEspecieParaRegistrar(s.name);
-                        setEspecieModalOpen(true);
-                      }}
-                    >
-                      + Registrar especie
-                    </Button>
                   </li>
                 ))}
               </ul>
@@ -162,28 +185,104 @@ export function VistaPrevia({ imp }: { imp: Importacion }) {
 
           {vista.duplicates.length > 0 && <DecisionesDeDuplicados imp={imp} />}
 
+          {imp.bindingsPending && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p role="status" className="text-sm text-neutral-600">
+                La vista previa debe actualizarse antes de confirmar esta asociación.
+              </p>
+              {!imp.recuperacion && (
+                <Button size="sm" variant="secondary" onClick={() => void imp.reanalizar()} disabled={reviewLocked}
+                  loading={imp.reanalizando}>
+                  Re-analizar cambios
+                </Button>
+              )}
+            </div>
+          )}
+
+          {imp.recuperacion === 'reanalyze' && (
+              <Button size="sm" variant="secondary" onClick={() => void imp.reanalizar()}
+              disabled={reviewLocked} loading={imp.reanalizando}>
+              Actualizar vista previa
+            </Button>
+          )}
+          {imp.recuperacion === 'new-preview' && (
+              <Button size="sm" variant="secondary" onClick={() => void imp.renovarVistaPrevia()}
+              disabled={reviewLocked} loading={imp.reanalizando}>
+              Crear una vista previa nueva
+            </Button>
+          )}
+
           {imp.error && <p role="alert" className="text-sm text-action-danger">{imp.error}</p>}
 
+          {vista.issues.length > 0 && (
+            <div
+              role="status"
+              aria-label="No se puede continuar con la importación"
+              className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-900 flex items-start gap-3"
+            >
+              <span className="text-base mt-0.5" aria-hidden="true">⚠️</span>
+              <div className="space-y-0.5">
+                <p className="font-semibold text-neutral-900">No se puede continuar con la importación</p>
+                <p className="text-xs text-neutral-600">
+                  Corrige los errores indicados en el archivo CSV y vuelve a subirlo. No se importará ningún ejemplar hasta que se solucionen.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {vista.issues.length === 0 && imp.sinOperaciones && (
+            <div
+              role="status"
+              aria-label="No hay registros que se puedan importar"
+              className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-900 flex items-start gap-3"
+            >
+              <span className="text-base mt-0.5" aria-hidden="true">⚠️</span>
+              <div className="space-y-0.5">
+                <p className="font-semibold text-neutral-900">
+                  {imp.kind === 'specimens'
+                    ? 'No hay ejemplares que se puedan importar'
+                    : imp.kind === 'species'
+                      ? 'No hay especies que se puedan importar'
+                      : imp.kind === 'waste-bins'
+                        ? 'No hay tachos que se puedan importar'
+                        : imp.kind === 'drinking-fountains'
+                          ? 'No hay bebederos que se puedan importar'
+                          : 'No hay registros que se puedan importar'}
+                </p>
+                <p className="text-xs text-neutral-600">
+                  {imp.kind === 'specimens'
+                    ? 'Todas las filas del archivo serán omitidas debido a duplicados descartados o especies sin asociación. Puedes cambiar tus decisiones o subir otro archivo.'
+                    : imp.kind === 'species'
+                      ? (especiesInactivasOmitidas > 0
+                        ? 'Todas las filas del archivo corresponden a especies inactivas que no se pueden modificar. Sube otro archivo con especies nuevas o activas.'
+                        : 'El archivo no contiene especies nuevas ni cambios para actualizar. Sube otro archivo.')
+                      : 'Todas las filas del archivo serán omitidas debido a duplicados descartados. Puedes cambiar tus decisiones o subir otro archivo.'}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Button onClick={imp.confirmar} disabled={!imp.puedeConfirmar} loading={imp.fase === 'confirmando'}>
+            <Button onClick={imp.confirmar} disabled={!imp.puedeConfirmar} loading={imp.summaryLoading || imp.fase === 'confirmando' || imp.reanalizando}>
               Confirmar carga
             </Button>
-            <Button variant="ghost" onClick={imp.reiniciar}>
+            <Button variant="ghost" onClick={imp.reiniciar} disabled={reviewLocked}>
               Subir otro archivo
             </Button>
           </div>
         </div>
       </Card>
 
-      <RegistroEspecieModal
-        isOpen={especieModalOpen}
-        onClose={() => setEspecieModalOpen(false)}
-        initialScientificName={especieParaRegistrar}
-        onCreated={async () => {
-          setEspecieModalOpen(false);
-          await imp.reanalizar();
-        }}
-      />
+      {imp.kind === 'specimens' && imp.confirmationSummary && (
+        <ConfirmarImportacionModal
+          summary={imp.confirmationSummary}
+          isOpen={imp.confirmationOpen}
+          isWorking={imp.fase === 'confirmando'}
+          error={imp.error}
+          onBack={imp.volverARevision}
+          onConfirm={() => void imp.confirmarResumen()}
+        />
+      )}
     </>
   );
 }

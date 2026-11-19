@@ -18,12 +18,22 @@ beforeEach(() => {
   create.mockResolvedValue({ incident: { id: 7 } } as Awaited<ReturnType<typeof incidentsApi.create>>);
 });
 
-it('sends a short sentence without title, photo, location or classification', async () => {
+const minimal = {
+  locationReference: null, latitude: null, longitude: null, zoneId: null, requestedByOrganizationCode: null,
+  requestedByName: null, requesterContactCode: null, requestedForOrganizationCode: null, sourceCode: null, externalCode: null,
+};
+
+async function describeAs(text: string, severity = 'Media') {
+  await userEvent.type(screen.getByLabelText(/¿Qué pasó?/), text);
+  await userEvent.click(screen.getByRole('radio', { name: severity }));
+}
+
+it('sends only the text and the severity: everything else is optional (SPEC-201 §3.2)', async () => {
   const done = jest.fn();
   render(<IncidentCaptureForm sender="Óscar" onDone={done} onCancel={jest.fn()} />);
-  await userEvent.type(screen.getByLabelText(/¿Qué pasó?/), 'Rama caída en puerta principal');
+  await describeAs('Rama caída en puerta principal', 'Alta');
   await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
-  expect(create).toHaveBeenCalledWith({ description: 'Rama caída en puerta principal', locationReference: null, latitude: null, longitude: null }, expect.any(String));
+  expect(create).toHaveBeenCalledWith({ description: 'Rama caída en puerta principal', reportedUrgencyCode: 'HIGH', ...minimal }, expect.any(String));
   expect(upload).not.toHaveBeenCalled();
   expect(done).toHaveBeenCalledWith(7);
 });
@@ -31,7 +41,7 @@ it('sends a short sentence without title, photo, location or classification', as
 it('retains the text and idempotency key after an uncertain network failure', async () => {
   create.mockRejectedValueOnce(new ApiError(0, 'Sin conexión. Verifique su red.'));
   render(<IncidentCaptureForm sender="Óscar" onDone={jest.fn()} onCancel={jest.fn()} />);
-  await userEvent.type(screen.getByLabelText(/¿Qué pasó?/), 'Rama');
+  await describeAs('Rama');
   await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Sin conexión');
   expect(screen.getByLabelText(/¿Qué pasó?/)).toHaveValue('Rama');
@@ -43,10 +53,10 @@ it('does not recreate the incident when a photo fails and is retried', async () 
   const done = jest.fn();
   upload.mockRejectedValueOnce(new ApiError(500, 'Storage unavailable')).mockResolvedValueOnce({ id: 1 } as never);
   render(<IncidentCaptureForm sender="Óscar" onDone={done} onCancel={jest.fn()} />);
-  await userEvent.type(screen.getByLabelText(/¿Qué pasó?/), 'Rama');
+  await describeAs('Rama');
   fireEvent.change(screen.getByLabelText('Añadir fotos'), { target: { files: [new File(['image'], 'photo.png', { type: 'image/png' })] } });
   await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
-  expect(await screen.findByText(/Tu texto ya fue recibido/)).toBeInTheDocument();
+  expect(await screen.findByText(/Tu reporte ya fue recibido/)).toBeInTheDocument();
   expect(done).not.toHaveBeenCalled();
   await waitFor(() => expect(screen.getByRole('button', { name: 'Reintentar fotos pendientes' })).toBeEnabled());
   await userEvent.click(screen.getByRole('button', { name: 'Reintentar fotos pendientes' }));
@@ -65,4 +75,12 @@ it('only rejects empty text and never requests geolocation automatically', async
   expect(locate).not.toHaveBeenCalled();
   expect(screen.getByRole('alert')).toHaveTextContent('Escribe brevemente');
   expect(screen.getByLabelText(/¿Qué pasó?/)).toHaveAttribute('aria-invalid', 'true');
+});
+
+it('asks for the severity before sending', async () => {
+  render(<IncidentCaptureForm sender="Óscar" onDone={jest.fn()} onCancel={jest.fn()} />);
+  await userEvent.type(screen.getByLabelText(/¿Qué pasó?/), 'Rama');
+  await userEvent.click(screen.getByRole('button', { name: 'Enviar' }));
+  expect(create).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toHaveTextContent('Marca qué tan grave es');
 });

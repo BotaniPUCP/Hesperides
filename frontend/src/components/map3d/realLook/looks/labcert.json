@@ -5,22 +5,55 @@
   "photos": [
     "labcert.jpg"
   ],
-  "notes": "Muro blanco con banda de ventanas y zócalo gris (labcert.jpg); quedan las sombras de las palmeras, que son reales.",
+  "materials": {
+    "muro": {
+      "color": "#eeeeeb"
+    },
+    "techo": {
+      "color": "#d0d0cc"
+    },
+    "ventanas": {
+      "glass": "#59646b",
+      "frame": "#dcdedc",
+      "moduleM": 1.5,
+      "heightM": 1,
+      "frameM": 0.07,
+      "vary": 0.06
+    },
+    "zocalo": {
+      "color": "#a3a6a5"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#d3d2ce",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#ecebe8",
-          "photo": {
-            "tile": "labcert",
-            "widthM": 9,
-            "heightM": 5.0
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "zocalo",
+          "v": [
+            -1,
+            0.4
+          ]
+        },
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            6
+          ],
+          "floors": {
+            "everyM": 3,
+            "startM": 0,
+            "bandM": [
+              1.6,
+              2.6
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Muro blanco con una cinta de ventanas y zócalo gris (labcert.jpg); las sombras de las palmeras de la foto no se dibujan."
 }

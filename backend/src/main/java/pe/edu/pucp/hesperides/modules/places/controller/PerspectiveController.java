@@ -73,6 +73,13 @@ public class PerspectiveController {
         return ResponseEntity.ok(ApiResponse.ok("Perspective updated", service.update(code, id, request)));
     }
 
+    @DeleteMapping("/{code}/perspectives/{id}/map-view")
+    @PreAuthorize(PlaceController.EDITORS)
+    public ResponseEntity<ApiResponse<Void>> clearMapView(@PathVariable String code, @PathVariable long id) {
+        service.clearMapView(code, id);
+        return ResponseEntity.ok(ApiResponse.ok("Perspective map view cleared", null));
+    }
+
     @DeleteMapping("/{code}/perspectives/{id}")
     @PreAuthorize(PlaceController.EDITORS)
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String code, @PathVariable long id) {

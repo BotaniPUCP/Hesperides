@@ -1,0 +1,24 @@
+{
+  "planKey": "e0d34049-e554-4ada-a54e-602ef8a7faf1",
+  "name": "Pabellón W: Espacios Culturales",
+  "folder": "espacios-culturales",
+  "photos": [
+    "espacio-cultural.jpg"
+  ],
+  "materials": {
+    "panel": {
+      "color": "#e3e0d6"
+    },
+    "techo": {
+      "color": "#c4c7ca"
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "panel",
+      "roof": "techo"
+    }
+  ],
+  "notes": "Paneles prefabricados crema claro con juntas, rótulo «Espacios Culturales» (espacio-cultural.jpg). Sus ventanas sueltas no se dibujan (D-04)."
+}

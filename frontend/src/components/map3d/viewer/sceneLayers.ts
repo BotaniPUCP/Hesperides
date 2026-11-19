@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { categoryOf, colorOf, MODES, type ModeId } from '../modes';
-import type { SceneData } from '../sceneData';
+import type { Polygon, SceneData } from '../sceneData';
 import type { PolyLayerId } from '../target';
 import { ringLines } from './geometry';
 import type { ScenePalette } from './palette';
 import { facetedGeometry, mergedBuildings, type PlanModel, type PlanNode, type PlanNodeKind } from './planModel';
+import { floorWithoutLawns, lawnsOverSunken } from './floorWithoutLawns';
 import { createPolyLayer, surfaceMaterial, WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { openOverSunken, type Stage } from './stage';
 import type { SceneTextures } from './textures';
@@ -82,7 +83,9 @@ export function createSceneLayers(scene: THREE.Scene, data: SceneData, textures:
   const greenColor = (i: number) => {
     const p = data.greenAreas[i].props;
     // Una categoría apagada desde la leyenda se pinta atenuada, no desaparece.
-    return state.hidden.has(categoryOf(p, state.mode)) ? state.palette.dimmed : colorOf(p, state.mode);
+    if (state.hidden.has(categoryOf(p, state.mode))) return state.palette.dimmed;
+    // En el modo General no hay nada que leer en el color: el Atardecer pone el del césped.
+    return state.mode === 'base' && state.palette.natural ? state.palette.natural.grass : colorOf(p, state.mode);
   };
   const bHeight = (i: number) => data.campusBuildings[i].props.heightM ?? DEFAULT_HEIGHT_M;
   const cHeight = (i: number) => data.contextBuildings[i].props.heightM ?? DEFAULT_HEIGHT_M;
@@ -92,9 +95,9 @@ export function createSceneLayers(scene: THREE.Scene, data: SceneData, textures:
       color: (i) => SUPERVISION_COLORS[data.supervision[i].props.code] ?? '#8090A0' }),
     greenAreas: make('greenAreas', data.greenAreas, { surface: 'green', height: () => 0.45, base: () => 0.03, color: greenColor }),
     reserve: make('reserve', data.reserve, { surface: 'plain', height: () => 0.75, base: () => 0.05, opacity: 0.45, order: 2, color: () => '#C060FF' }),
-    xerophytic: make('xerophytic', data.xerophytic, { surface: 'green', height: () => 0.6, base: () => 0.04, color: () => '#FF9030' }),
+    xerophytic: make('xerophytic', data.xerophytic, { surface: 'green', height: () => 0.6, base: () => 0.04, color: () => state.palette.natural?.xerophytic ?? '#FF9030' }),
     parking: make('parking', data.parking, { surface: 'parking', height: () => 0.12, base: () => 0.01, color: () => state.palette.parking }),
-    sidewalks: make('sidewalks', data.sidewalks, { surface: 'plain', height: () => 0.5, base: () => 0.06, opacity: 0.7, order: 3, color: () => '#FF4060' }),
+    sidewalks: make('sidewalks', data.sidewalks, { surface: 'plain', height: () => 0.5, base: () => 0.06, opacity: 0.7, order: 3, color: () => state.palette.natural?.sidewalk ?? '#FF4060' }),
     campusBuildings: createPolyLayer(scene, 'campusBuildings', data.campusBuildings.map((s) => s.g), { surface: 'building', height: bHeight,
       base: () => 0, castShadow: true, doubleSided: !!model, color: () => state.palette.building }, textures,
     mergedBuildings(data.campusBuildings, model, bHeight, () => 0)),
@@ -120,6 +123,13 @@ export interface PlanNodes {
   applyTheme: (palette: ScenePalette) => void;
 }
 
+/** El piso del modelo sin la parte que tapa un césped de la base en un desnivel (D-19): debajo se ve el jardín. */
+function openOverLawns(model: PlanModel, kind: PlanNodeKind, node: PlanNode, lawns: Polygon[][]): PlanNode {
+  if (kind !== 'suelo') return node;
+  const near = lawnsOverSunken(lawns, model.sunken.map((s) => s.g));
+  return near.length ? floorWithoutLawns(node, near, model.offset) : node;
+}
+
 /** Un material de superficie con un solo color en vez de colores por vértice, por las dos caras como las mallas del SKP. */
 function solid(surface: 'building' | 'green', textures: SceneTextures, color: string): THREE.MeshPhysicalMaterial {
   const material = surfaceMaterial(surface, textures) as THREE.MeshPhysicalMaterial;
@@ -141,10 +151,11 @@ function earth(map: THREE.Texture, normalMap: THREE.Texture): THREE.MeshStandard
 /**
  * El suelo, los desniveles, la huaca y la decoración del modelo (D-08 a D-10).
  * Se ubican en el anclaje del modelo y nadie los cliquea. El jardín hundido no
- * proyecta sombra, como en la página aprobada.
+ * proyecta sombra, como en la página aprobada. El piso se abre sobre los céspedes de la
+ * base (D-19).
  */
 export function createPlanNodes(scene: THREE.Scene, model: PlanModel, textures: SceneTextures, ground: Stage['modelGround'],
-  palette: ScenePalette): PlanNodes {
+  palette: ScenePalette, lawns: Polygon[][] = []): PlanNodes {
   const decoration = solid('building', textures, palette.building);
   const materials: Record<PlanNodeKind, THREE.Material> = {
     suelo: ground.top,
@@ -155,7 +166,8 @@ export function createPlanNodes(scene: THREE.Scene, model: PlanModel, textures: 
     decoracion: decoration,
   };
   let decorationMesh: THREE.Mesh | null = null;
-  for (const [kind, node] of Object.entries(model.nodes) as [PlanNodeKind, PlanNode][]) {
+  for (const [kind, raw] of Object.entries(model.nodes) as [PlanNodeKind, PlanNode][]) {
+    const node = openOverLawns(model, kind, raw, lawns);
     const mesh = new THREE.Mesh(facetedGeometry(node.positions, node.uv), materials[kind]);
     mesh.position.set(model.offset.x, WORLD_LIFT, model.offset.z);
     mesh.castShadow = kind !== 'jardin';

@@ -4,7 +4,7 @@
  * componentes.
  *
  * Los grupos siguen los módulos del dominio (M1 Configuración, M2 Catastro,
- * M3 Intervenciones…), no un único «Administración» que lo agrupe todo: cuando
+ * M3 Actividades…), no un único «Administración» que lo agrupe todo: cuando
  * lleguen el catastro o el riego, cada uno entra como su propio grupo en vez de
  * mezclar la configuración con el trabajo diario.
  *
@@ -40,21 +40,22 @@ export const DIRECT_LINKS: readonly NavItem[] = [
   { label: 'Incidencias', href: '/incidencias', icon: '📋', roles: INCIDENT_MEMBER_ROLES },
   // SPEC-102: los cuatro roles ven el mapa; el operario es quien más lo usa.
   { label: 'Mapa', href: '/mapa', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
-  // M7 - Riego: consulta para administrador y coordinador; registro para supervisor.
-  { label: 'Riego', href: '/riego', icon: '💧', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
   // M6 - SPEC-202 D-09: una sola pantalla con tres pestañas; el operario no lee reportes (Anexo A).
   { label: 'Reportes', href: '/reportes', icon: '📊', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
 ];
 
 export const NAVIGATION: readonly NavGroup[] = [
   {
-    // M9. Lo consultan todos; editarlo y migrar las referencias antiguas es de quien lo administra.
+    // M9. Lo consultan todos; alta, edición y migración son de quien lo administra.
     id: 'lugares',
     label: 'Lugares',
     icon: '🏛️',
     items: [
       { label: 'Catálogo de lugares', href: '/lugares', icon: '🏛️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       { label: 'Migrar referencias', href: '/lugares/migracion', icon: '🔀', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Nuevo lugar', href: '/lugares/nuevo', icon: '➕', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Importar lugares', href: '/lugares/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Exportar lugares', href: '/lugares/exportar', icon: '📤', roles: ['ADMIN', 'COORDINADOR'] },
     ],
   },
   {
@@ -65,14 +66,16 @@ export const NAVIGATION: readonly NavGroup[] = [
     items: [
       { label: 'Especies', href: '/inventario-verde', icon: '🌿', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       { label: 'Registrar especie', href: '/inventario-verde/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Importar especies', href: '/inventario-verde/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      { label: 'Estándar de especies', href: '/inventario-verde/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
     ],
   },
   {
     id: 'intervenciones',
-    label: 'Intervenciones',
+    label: 'Actividades',
     icon: '🧰',
     items: [
-      { label: 'Intervenciones', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
+      { label: 'Actividades', href: '/intervenciones', icon: '📋', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       // SPEC-203 D-12: planificar, armar conjuntos y fijar cada cuánto es trabajo de coordinación.
       { label: 'Planificación preventiva', href: '/intervenciones/planificacion', icon: '📅', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Conjuntos de áreas verdes', href: '/intervenciones/conjuntos', icon: '🗺️', roles: ['ADMIN', 'COORDINADOR'] },
@@ -88,7 +91,7 @@ export const NAVIGATION: readonly NavGroup[] = [
       // Inventario georreferenciado de ejemplares botánicos censados en el campus.
       { label: 'Ejemplares', href: '/catastro/ejemplares', icon: '🌳', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       // D-03: el supervisor registra por formulario (plantas, tachos, bebederos); la carga masiva es de quien coordina.
-      { label: 'Registrar en el catastro', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
+      { label: 'Registrar ejemplar', href: '/catastro/registrar', icon: '📍', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
       { label: 'Importar al catastro', href: '/catastro/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
       { label: 'Estándares de carga', href: '/catastro/estandares', icon: '📏', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR'] },
     ],
@@ -106,13 +109,15 @@ export const NAVIGATION: readonly NavGroup[] = [
   },
   {
     // SPEC-107: grupo propio. Los cuatro roles leen la agenda; registrar, uno a uno o
-    // por archivo, es de coordinación. Después recibirá los eventos bloqueantes de 1.12.
+    // por archivo, es de coordinación. SPEC-114 suma el calendario del campus (REQ 1.12).
     id: 'reservas',
     label: 'Reservas',
     icon: '📅',
     items: [
       { label: 'Agenda de reservas', href: '/reservas', icon: '📅', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
       { label: 'Registro masivo', href: '/reservas/importar', icon: '📥', roles: ['ADMIN', 'COORDINADOR'] },
+      // SPEC-114: los eventos bloqueantes y los feriados; los cuatro roles los leen.
+      { label: 'Calendario del campus', href: '/calendario', icon: '🗓️', roles: ['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'] },
     ],
   },
   {

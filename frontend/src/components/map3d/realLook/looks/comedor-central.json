@@ -3,24 +3,40 @@
   "name": "Comedor Central",
   "folder": "Comedor-central",
   "photos": [
-    "lado1.jpg"
+    "hesperides-espalda.jpg",
+    "hesperides-frente.jpg",
+    "hesperides-general.jpg",
+    "hesperides-lado-sureste-hacia-jardin.jpg",
+    "lado1.jpg",
+    "lado2.jpg",
+    "lado3.jpg"
   ],
-  "notes": "Muro gris claro con ventanas cuadradas y puerta (lado1.jpg); la carpa blanca de la terraza no está en el modelo.",
+  "materials": {
+    "muro": {
+      "color": "#e3e0d2"
+    },
+    "techo": {
+      "color": "#d8d6d0"
+    },
+    "ventanas": {
+      "color": "#c2c2bb"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#d8d6d0",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#c9c7bb",
-          "photo": {
-            "tile": "comedor-central",
-            "widthM": 13.5,
-            "heightM": 3.5
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            1,
+            2.4
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Muros crema con ventanas sueltas, como franja tenue (lado1.jpg a lado3.jpg, hesperides-espalda.jpg). La carpa blanca de la terraza y el ingreso vidriado bajo ella (hesperides-frente.jpg, hesperides-general.jpg) no están en el modelo."
 }

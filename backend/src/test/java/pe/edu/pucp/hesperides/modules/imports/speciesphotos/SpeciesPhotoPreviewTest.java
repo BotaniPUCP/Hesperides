@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import pe.edu.pucp.hesperides.modules.imports.csv.CsvTable;
 import pe.edu.pucp.hesperides.modules.imports.csv.Issue;
 import pe.edu.pucp.hesperides.modules.imports.repository.SpecimenLookupRepository.SpeciesRef;
+import pe.edu.pucp.hesperides.shared.text.SpeciesNameKey;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -16,8 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SpeciesPhotoPreviewTest {
 
     private static final Map<String, SpeciesRef> SPECIES = Map.of(
-            "schinus molle", new SpeciesRef(1L, "schinus-molle", "Schinus molle", "TREE"),
-            "tipuana tipu", new SpeciesRef(2L, "tipuana-tipu", "Tipuana tipu", "TREE"));
+            SpeciesNameKey.key("Schinus molle"), new SpeciesRef(1L, "schinus-molle", "Schinus molle", "TREE"),
+            SpeciesNameKey.key("Tipuana tipu"), new SpeciesRef(2L, "tipuana-tipu", "Tipuana tipu", "TREE"));
     private static final Set<String> FILES = Set.of("a.jpg", "b.jpg", "c.jpg");
 
     private static SpeciesPhotoPreview preview(String csv) {
@@ -86,5 +87,38 @@ class SpeciesPhotoPreviewTest {
         Map<Long, List<SpeciesPhotoPreview.Planned>> sets = p.sets();
         assertThat(sets.get(1L)).extracting(SpeciesPhotoPreview.Planned::photo).containsExactly("b.jpg", "a.jpg");
         assertThat(sets.get(2L)).extracting(SpeciesPhotoPreview.Planned::photo).containsExactly("c.jpg");
+    }
+
+    @Test
+    void scientificPhotoLookupDistinguishesMultiplicationSignFromLetterX() {
+        Map<String, SpeciesRef> species = Map.of(
+                SpeciesNameKey.key("Cupressocyparis × leylandii"),
+                new SpeciesRef(3L, "hybrid", "Cupressocyparis × leylandii", "TREE"),
+                SpeciesNameKey.key("Cupressocyparis x leylandii"),
+                new SpeciesRef(4L, "letter-x", "Cupressocyparis x leylandii", "TREE"));
+        SpeciesPhotoPreview preview = SpeciesPhotoPreview.of(CsvTable.parse("""
+                nombre_cientifico;foto
+                Cupressocyparis × leylandii;a.jpg
+                Cupressocyparis x leylandii;b.jpg
+                """.getBytes(StandardCharsets.UTF_8)), species, FILES);
+
+        assertThat(preview.issues()).isEmpty();
+        assertThat(preview.rows()).extracting(SpeciesPhotoPreview.Planned::speciesId)
+                .containsExactly(3L, 4L);
+    }
+
+    @Test
+    void scientificPhotoLookupPreservesTheMarkerPeriod() {
+        Map<String, SpeciesRef> species = Map.of(
+                SpeciesNameKey.key("Ficus sp."), new SpeciesRef(5L, "ficus-sp", "Ficus sp.", "TREE"));
+        SpeciesPhotoPreview preview = SpeciesPhotoPreview.of(CsvTable.parse("""
+                nombre_cientifico;foto
+                Ficus sp.;a.jpg
+                Ficus sp;b.jpg
+                """.getBytes(StandardCharsets.UTF_8)), species, FILES);
+
+        assertThat(preview.rows()).extracting(SpeciesPhotoPreview.Planned::speciesId).containsExactly(5L);
+        assertThat(preview.unknownSpecies()).singleElement()
+                .satisfies(unknown -> assertThat(unknown.name()).isEqualTo("Ficus sp"));
     }
 }

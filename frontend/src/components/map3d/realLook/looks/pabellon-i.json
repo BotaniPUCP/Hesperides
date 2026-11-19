@@ -3,24 +3,50 @@
   "name": "Pabellón I: Facultad de Arte y Diseño",
   "folder": "Pabellon_I",
   "photos": [
-    "lado de edificio sin escalera.jpg"
+    "edificio sin escalera.jpg",
+    "edificio-con-escalera.jpg",
+    "lado de edificio sin escalera.jpg",
+    "lado de edificio-con-escalera.jpg"
   ],
-  "notes": "Paneles grises con arriostres en X y bandas de ventanas en dos pisos (lado de edificio sin escalera.jpg).",
+  "materials": {
+    "muro": {
+      "color": "#d7dcdc"
+    },
+    "techo": {
+      "color": "#c9cccd"
+    },
+    "ventanas": {
+      "glass": "#6d7a82",
+      "frame": "#e3e5e5",
+      "moduleM": 1.5,
+      "heightM": 1.2,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#c8c9ca",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#cfd2d4",
-          "photo": {
-            "tile": "pabellon-i",
-            "widthM": 18,
-            "heightM": 7.6
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            7.2
+          ],
+          "floors": {
+            "everyM": 3.6,
+            "startM": 0,
+            "bandM": [
+              1.4,
+              2.6
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Paneles prefabricados gris claro con arriostres en X y una cinta de ventanas en cada piso (edificio sin escalera.jpg, lado de edificio sin escalera.jpg, lado de edificio-con-escalera.jpg). Los arriostres, la escalera y el letrero no se dibujan."
 }

@@ -1,7 +1,7 @@
 import { inventarioVerdeApi } from '../inventario-verde-api';
 import { apiClient } from '../api';
 import { API_BASE_URL } from '../constants';
-import { p01, p01Detail, page, palmeraReal } from '@/components/inventario-verde/__fixtures__/inventario';
+import { p01, p01Detail, palmeraReal } from '@/components/inventario-verde/__fixtures__/inventario';
 
 jest.mock('../api', () => ({ apiClient: { get: jest.fn() }, ApiError: class ApiError extends Error {} }));
 
@@ -39,13 +39,23 @@ describe('inventarioVerdeApi: fotos', () => {
     expect(species.imageUrl).toBe(palmeraReal.imageUrl);
   });
 
-  it('resuelve las fotos de cada ejemplar de una página', async () => {
-    mockedGet.mockResolvedValue(page([{ ...p01, imageUrl: '/files/green-elements/9?size=full', thumbnailUrl: '/files/green-elements/9?size=thumb' }]));
+  it('pide todos los ejemplares y resuelve sus fotos (SPEC-119)', async () => {
+    mockedGet.mockResolvedValue([{ ...p01, imageUrl: '/files/green-elements/9?size=full', thumbnailUrl: '/files/green-elements/9?size=thumb' }]);
 
-    const result = await inventarioVerdeApi.specimens('roystonea-regia', { sortBy: 'code', sortDirection: 'asc', page: 0, size: 12 });
+    const result = await inventarioVerdeApi.allSpecimens();
 
-    expect(result.content[0].imageUrl).toBe(`${API_BASE_URL}/files/green-elements/9?size=full`);
-    expect(result.content[0].thumbnailUrl).toBe(`${API_BASE_URL}/files/green-elements/9?size=thumb`);
+    expect(mockedGet).toHaveBeenCalledWith('/green-inventory/specimens/all');
+    expect(result[0].imageUrl).toBe(`${API_BASE_URL}/files/green-elements/9?size=full`);
+    expect(result[0].thumbnailUrl).toBe(`${API_BASE_URL}/files/green-elements/9?size=thumb`);
+  });
+
+  it('pide todo el catálogo de especies y resuelve sus fotos (SPEC-119)', async () => {
+    mockedGet.mockResolvedValue([{ ...palmeraReal, imageUrl: '/files/species/3?size=thumb' }]);
+
+    const result = await inventarioVerdeApi.allSpecies();
+
+    expect(mockedGet).toHaveBeenCalledWith('/green-inventory/species/all');
+    expect(result[0].imageUrl).toBe(`${API_BASE_URL}/files/species/3?size=thumb`);
   });
 
   it('en la ficha resuelve la foto del ejemplar y la de su especie', async () => {
@@ -59,23 +69,5 @@ describe('inventarioVerdeApi: fotos', () => {
 
     expect(detail.thumbnailUrl).toBe(`${API_BASE_URL}/files/green-elements/9?size=thumb`);
     expect(detail.species.imageUrl).toBe(`${API_BASE_URL}/files/species/3?size=thumb`);
-  });
-});
-
-describe('inventarioVerdeApi: filtro por tipo de ejemplar', () => {
-  const baseParams = { sortBy: 'code', sortDirection: 'asc', page: 0, size: 16 } as const;
-
-  beforeEach(() => mockedGet.mockResolvedValue(page([p01])));
-
-  it('envía el tipo elegido al listado global', async () => {
-    await inventarioVerdeApi.allSpecimens({ ...baseParams, vegetationType: 'PALM' });
-
-    expect(mockedGet.mock.calls[0][0]).toContain('vegetationType=PALM');
-  });
-
-  it.each(['ALL', undefined])('no envía el tipo cuando vale %s', async (vegetationType) => {
-    await inventarioVerdeApi.allSpecimens({ ...baseParams, vegetationType });
-
-    expect(mockedGet.mock.calls[0][0]).not.toContain('vegetationType');
   });
 });

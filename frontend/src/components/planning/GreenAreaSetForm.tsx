@@ -1,19 +1,18 @@
 'use client';
 
+import { usePageTrail } from '@/components/layouts/PageTrailContext';
 import { LoadingSkeleton } from '@/components/ui';
 import { useRequest } from '@/hooks/useRequest';
 import { greenAreaSetsApi } from '@/lib/green-area-sets-api';
-import { irrigationApi } from '@/lib/irrigation-api';
 import { GreenAreaSetEditor, type SetOptions } from './GreenAreaSetEditor';
 
 /** Lo que el editor necesita para elegir: secciones por sector y ejemplares. */
 async function loadOptions(): Promise<SetOptions> {
-  const [sectors, specimens] = await Promise.all([irrigationApi.sectors(), greenAreaSetsApi.elementOptions()]);
-  const groups = await Promise.all(sectors.map((s) => irrigationApi.sections(s.id)));
+  const [groups, specimens] = await Promise.all([greenAreaSetsApi.sectionOptions(), greenAreaSetsApi.elementOptions()]);
   return {
-    sectors,
+    sectors: groups.map(({ id, code, name }) => ({ id, code, name })),
     specimens,
-    sectionsBySector: Object.fromEntries(sectors.map((s, i) => [s.id, groups[i]])),
+    sectionsBySector: Object.fromEntries(groups.map((s) => [s.id, s.sections])),
   };
 }
 
@@ -21,6 +20,8 @@ async function loadOptions(): Promise<SetOptions> {
 export function GreenAreaSetForm({ setId }: { setId?: number }) {
   const options = useRequest('green-area-set-options', loadOptions);
   const existing = useRequest(setId ? `green-area-set:${setId}` : null, () => greenAreaSetsApi.get(setId!));
+  // En el breadcrumb, el nombre del conjunto en vez de su número.
+  usePageTrail(setId && existing.data ? { labels: { [setId]: existing.data.name } } : {});
 
   const error = options.errorMessage ?? existing.errorMessage
     ?? (existing.notFound ? 'El conjunto no existe o ya fue dado de baja.' : null);

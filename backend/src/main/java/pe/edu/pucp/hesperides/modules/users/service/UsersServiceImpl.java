@@ -1,8 +1,7 @@
 package pe.edu.pucp.hesperides.modules.users.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.pucp.hesperides.modules.auth.entity.User;
@@ -22,6 +21,7 @@ import pe.edu.pucp.hesperides.shared.exception.BusinessRuleException;
 import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -45,13 +45,11 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDetailResponse> findAll(String search, String roleCode, Boolean isActive,
-                                            Long teamId, Pageable pageable, String viewerEmail) {
+    public List<UserDetailResponse> all(String viewerEmail) {
         UserScopeResolver.Scope scope = scopeResolver.resolve(viewerEmail);
-        var spec = UserSpecifications.withFilters(search, roleCode, isActive, teamId,
-                scope.seesEveryone() ? null : scope.visibleUserIds());
-
-        return usersRepository.findAll(spec, pageable).map(this::withTeams);
+        var spec = UserSpecifications.visibleTo(scope.seesEveryone() ? null : scope.visibleUserIds());
+        // Por apellido y no por createdAt: este listado se usa para buscar a una persona concreta (SPEC-100 §3).
+        return usersRepository.findAll(spec, Sort.by("lastName", "firstName")).stream().map(this::withTeams).toList();
     }
 
     @Override

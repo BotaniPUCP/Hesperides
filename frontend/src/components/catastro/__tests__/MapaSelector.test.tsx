@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MapaSelector } from '../registrar/MapaSelector';
 import type { Viewer } from '@/components/map3d/viewer/createViewer';
@@ -153,5 +153,12 @@ describe('MapaSelector - Sincronización Bidireccional', () => {
 
     // No debe llamarse de nuevo porque proviene del mismo clic
     expect(mockFocusLatLon).not.toHaveBeenCalled();
+  });
+
+  it('no muestra el botón "Usar mi ubicación" al ser un módulo web no móvil', () => {
+    const onElegir = jest.fn();
+    render(<MapaSelector onElegir={onElegir} />);
+
+    expect(screen.queryByRole('button', { name: /Usar mi ubicación/i })).not.toBeInTheDocument();
   });
 });

@@ -253,6 +253,52 @@ encuadra. En Planificación, sobre el mapa, una línea dice qué conjunto muestr
 Sector verde 02 · 247 jardines») o, sin tarjeta elegida, «Elige una tarjeta para ver su conjunto
 en el mapa».
 
+**D-20 · El rectángulo elige lo que encierra y se ve (17 nov 2026).**
+Al probar, el rectángulo elegía más jardines de los encerrados: bastaba que un vértice cayera
+dentro, y los jardines vecinos comparten bordes (con la geometría real, encerrar un solo jardín
+sumaba vecinos en 248 de 522). Ahora un jardín cuenta si queda dentro al menos la mitad de él, o
+si el rectángulo cae casi entero sobre él (Ctrl + clic, o un rectángulo chico en un jardín
+grande); los puntos detrás de la cámara no cuentan. Tampoco elige los jardines que quedan en su
+mayor parte bajo la planta de un edificio (jardineras y patios que la silueta no recorta: 89 en
+develop, 49 tras los ajustes de siluetas V053–V062), porque en el mapa no se ven; se eligen desde
+la lista. Un edificio hundido, con el techo al nivel del suelo, no tapa. La regla vive en el
+visor (`screenRectSections.ts`), así que vale igual en el mapa de Intervenciones.
+*Descartado:* decidir con un rayo desde la cámara, porque dependería del ángulo de la vista
+y costaría cientos de rayos en un rectángulo grande.
+
+**D-21 · El selector de Conjuntos: lo elegido a la vista y foco por sector (18 nov 2026).**
+Pedido del equipo al probar: con todas las tarjetas a la vista y un «Ver en el mapa» por
+sector, encontrar dónde se trabajaba costaba. Ahora:
+- «Ver solo lo elegido» viene marcada siempre al abrir: la lista muestra solo lo elegido, en la
+  tarjeta de su sector, y lo que se quita deja de verse (sin nada elegido no se ve ninguna
+  tarjeta). Desmarcada, se ven todos los sectores y todo lo suyo. Buscar muestra todo lo que
+  coincide, elegido o no, y desde ahí se agrega.
+- La tarjeta se usa por pasos: un clic sombrea el sector en naranja tenue (distinto del verde
+  del césped y del cian de lo elegido) sin mover la vista; otro clic pone el foco: la vista
+  encuadra lo elegido en ese sector (el sector entero si no tiene nada); otro clic suelta el foco
+  y el sombreado. Al soltar, la vista se abre al sector entero (más que el foco, sin llegar a todo
+  el campus) y la tarjeta queda sin marca, tampoco la verde de lo último elegido. Si con el foco puesto se mueve o acerca el mapa a mano, queda «Sin foco»: sigue
+  sombreado y un clic en la tarjeta lo suelta, sin volver a poner el foco. Un clic en otra
+  tarjeta la sombrea y suelta la anterior. La tarjeta lo dice con su marco: naranja y
+  «Sombreado», naranja con halo y «En foco», naranja punteado y «Sin foco», o sin marco; su
+  título dice qué hará el próximo clic. Pliega y despliega una flecha propia de la tarjeta.
+- Dos flechas grandes recorren los sectores de la lista (con «Ver solo lo elegido», solo los
+  que tienen algo elegido) y ponen el foco en el anterior o el siguiente; dan la vuelta. «Ver
+  campus», sobre el mapa, es la única forma de volver a todo el campus y suelta el foco.
+  Reemplazan el «Ver en el mapa / Dejar de ver» de cada tarjeta.
+- Al elegir o quitar algo (clic, rectángulo, barrido o lista) se ilumina en verde la tarjeta de
+  su sector y se trae a la vista; con el rectángulo, la del sector con más de lo encerrado.
+- Los mapas de Conjuntos y Planificación nacen en colores reales, como el mapa principal
+  (SPEC-112 D-13); la ficha de reserva sigue como estaba.
+*Descartado:* un desplegable de sectores, porque la tarjeta ya lleva a su sector; y una flecha
+vertical sola, porque no deja ir directo a un sector lejano.
+
+**D-22 · Supuesto: una planificación se atiende con una sola intervención (18 nov 2026).**
+Indicación del equipo: la planificación de una actividad sobre un conjunto se resuelve con una
+sola intervención, no repartida en varias. La fila sigue a esa intervención (programada, en
+curso y su avance). Si una intervención termina sin cubrir todo el conjunto, lo que falta se ve
+como avance parcial (§5.5.1).
+
 ## 3. Contratos de API
 
 Sobre `{ok, message, data}` (INV-1) y envolturas de error de SPEC-C02, no se repiten.
@@ -330,6 +376,12 @@ horaria configurada. Para pruebas el builder puede inyectar un `Clock`.
 - `upToDateCount`, `lastDates`, `pendingZoneIds`, `pendingElementIds`: el desglose por unidad de
   §5.5.1 (cuántas están al día, cuántas se atendieron por última vez en cada fecha y cuáles
   faltan). Nulo y vacíos si la fila no tiene frecuencia.
+- `neverAttendedElementCount`, `remainingElementCount` (17 nov 2026): cuántos de los «sin registro
+  previo» y de los que faltan en curso son ejemplares (el resto, jardines); el segundo es nulo si
+  la fila no está en curso. Con ellos un conjunto mixto dice «3 jardines y 4 ejemplares sin
+  registro previo» o «faltan 1 jardín y 4 ejemplares» en vez de «7 jardines o ejemplares», que
+  no decía cuántos eran de cada tipo. En un «X de N» (avance, al día) de un conjunto mixto va solo
+  el número, porque «Contiene» ya da el desglose.
 
 ### 3.3 Atendido hace poco
 
@@ -471,18 +523,19 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
 ### 5.2 Flujo: crear un conjunto
 
 1. `/intervenciones/conjuntos` → «+ Nuevo conjunto».
-2. Abre el selector de jardines sobre el mapa: clic para agregar o quitar, **Ctrl + arrastrar**
-   para elegir varios (si todo lo que encierra el rectángulo ya estaba elegido, lo quita, con
-   «Deshacer»; si no, agrega lo que falta), buscador por nombre. No hay botón de selección
+2. Abre el selector de jardines sobre el mapa: clic para agregar o quitar, **Ctrl + arrastrar con
+   clic izquierdo** agrega lo que encierra el rectángulo y **con clic derecho** lo quita, con
+   «Deshacer» (D-20 dice qué cuenta como encerrado), buscador por nombre. No hay botón de selección
    múltiple; la rueda acerca y aleja también con Ctrl apretado. La lista de seleccionados y el
-   mapa siempre coinciden.
+   mapa siempre coinciden. La lista muestra lo elegido y el foco por sector va en la tarjeta (D-21).
 3. Nombre (obligatorio, único sin distinguir mayúsculas) y descripción opcional, en una fila.
    Sin actividades (D-16). Lo elegido se resume por tipo: los jardines, y los ejemplares de cada
    tipo (Palmera, Árbol…); «Ver en el mapa» lo muestra recorrido por grupos (D-18).
    El título dice qué se hace («Nuevo conjunto de áreas verdes», «Editar conjunto de áreas
    verdes») sin repetir el nombre, que se pide en «Datos del conjunto». «Cambiar jardines y
    ejemplares» (abre el selector) y «Ver en el mapa / Ocultar mapa» (solo mirar) son botones
-   distintos, con su ícono y a cada lado.
+   distintos, con su ícono, con marco y uno junto al otro (18 nov 2026: a la derecha y sin marco,
+   «Ver en el mapa» se perdía).
 4. Los botones van donde en el resto del sistema, al pie del formulario: «Eliminar conjunto» a la
    izquierda; «Cancelar» y «Guardar conjunto» a la derecha. Guardar vuelve a la lista.
 5. La tarjeta de cada conjunto dice qué contiene y sus ejemplares por tipo, sin sector ni
@@ -525,8 +578,9 @@ El seed de desarrollo se actualiza para no usar `target_days_interval` ni `zone_
 
 ### 5.3.2 Filtros de la planificación
 
-- Buscar conjunto (por nombre, sin distinguir mayúsculas ni tildes), Actividad y Estado. Las
-  opciones salen de las tarjetas que hay.
+- Buscar conjunto (por nombre, sin distinguir mayúsculas ni tildes), «Filtrar por actividad» y
+  «Filtrar por estado» (18 nov 2026: la etiqueta dice qué hace). Las opciones salen de las
+  tarjetas que hay.
 - Los filtros van en la URL (`?conjunto=&actividad=&estado=`). «Ver en Planificación», desde una
   frecuencia, abre la planificación con su actividad puesta.
 - Con algún filtro se lee «Mostrando X de Y planificaciones» y «Ver todas» los quita.
@@ -597,7 +651,10 @@ Con `ref`, según el tipo de regla:
 
 **Orden de la lista:** `OVERDUE` (más días tarde primero) → `DUE` (menos días primero; sin
 registro previo al principio) → `IN_PROGRESS` → `SCHEDULED` → `NOT_DUE` (menos días primero) →
-`DONE_FOR_PERIOD` → `NOT_CONFIGURED`.
+`DONE_FOR_PERIOD` → `NOT_CONFIGURED`. Única excepción (17 nov 2026): al volver de crear o editar
+una planificación, esa va primera, marcada «Recién guardada» y ya elegida en el mapa; una nueva
+sin registro entra como `DUE` y caía debajo de todas las atrasadas, así que no se veía. Al
+recargar vuelve el orden por urgencia; el servidor no lo cambia.
 
 ### 5.6 Registro de intervención prellenado
 
@@ -713,6 +770,9 @@ Bocetos aprobados en la conversación de diseño (8 nov 2026); el texto manda so
 3. En pequeño, cada cuánto: «Cada 30–35 días en primavera», «Cada 15 días», «4 al año · van 3»,
    «1 al año, entre diciembre y enero». Sin la palabra «ritmo» y sin marcar si la regla es
    propia del conjunto.
+
+Las cifras de «Contiene» (jardines y ejemplares), de «Suele realizarse» (la frecuencia) y del
+«Al día» van más grandes que el texto que las sigue (18 nov 2026): es lo primero que se lee.
 
 Botón «Planificar intervención» en `DUE`, `OVERDUE` y `NOT_DUE`; «Ver intervención» en
 `IN_PROGRESS` y `SCHEDULED`.

@@ -22,11 +22,11 @@ jest.mock('next/navigation', () => ({ useRouter: () => ({ push: mockPush }), use
 const map = { show: jest.fn(), focusPerspective: jest.fn() };
 
 /** La ficha dentro del marco y del layout de /lugares, que le da el mapa. */
-function renderScreen(code: string) {
+function renderScreen(code: string, readOnly = false) {
   return render(
     <PageFrame>
       <PlaceMapContext.Provider value={map}>
-        <PlaceDetailScreen code={code} />
+        <PlaceDetailScreen code={code} readOnly={readOnly} />
       </PlaceMapContext.Provider>
     </PageFrame>,
   );
@@ -107,7 +107,7 @@ describe('PlaceDetailScreen', () => {
     expect(screen.getByRole('link', { name: 'Piso 2' })).toHaveAttribute('href', '/lugares/LUG-0004');
     expect(screen.getByText('Espalda de CIA')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Gelarti' })).toHaveAttribute('href', '/lugares/LUG-0007');
-    expect(map.show).toHaveBeenCalledWith(cia, expect.any(Function));
+    expect(map.show).toHaveBeenCalledWith(cia, expect.any(Function), false);
   });
 
   it('una perspectiva sin fotos lo avisa', async () => {
@@ -180,5 +180,16 @@ describe('PlaceDetailScreen', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Eliminar perspectiva' }));
 
     await waitFor(() => expect(remove).toHaveBeenCalledWith('LUG-0001', 10));
+  });
+
+  it('la ficha abierta desde un conflicto de importación no permite editar', async () => {
+    mockRole.current = 'COORDINADOR';
+    detail.mockResolvedValue(cia);
+    renderScreen('LUG-0001', true);
+
+    await screen.findByRole('heading', { name: 'CIA' });
+    expect(screen.queryByRole('link', { name: 'Editar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Agregar perspectiva' })).not.toBeInTheDocument();
+    expect(map.show).toHaveBeenCalledWith(cia, expect.any(Function), true);
   });
 });

@@ -10,6 +10,8 @@ import { SpecimenAssessmentModal } from './SpecimenAssessmentModal';
 
 export interface SpecimenAssessmentsProps {
   code: string;
+  refreshKey?: number;
+  isRetired?: boolean;
 }
 
 const HALLAZGOS: [keyof Assessment, string][] = [
@@ -35,12 +37,13 @@ const fecha = (iso: string) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString('es-PE', { dateStyle: 'medium' });
 
 /** El historial de evaluaciones (SPEC-103 D-06): la primera es la vigente. */
-export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
+export function SpecimenAssessments({ code, refreshKey = 0, isRetired = false }: SpecimenAssessmentsProps) {
   const { user } = useAuth();
-  const canAssess = puedeRegistrar(user?.role.code);
+  const canAssess = !isRetired && puedeRegistrar(user?.role.code);
   const [historial, setHistorial] = useState<Assessment[] | null>(null);
-  const [fallo, setFallo] = useState(false);
+  const [falloPara, setFalloPara] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const requestKey = `${code}:${refreshKey}`;
 
   useEffect(() => {
     let vigente = true;
@@ -53,16 +56,16 @@ export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
       })
       .catch(() => {
         if (vigente) {
-          setFallo(true);
+          setFalloPara(requestKey);
         }
       });
     return () => {
       vigente = false;
     };
-  }, [code]);
+  }, [code, refreshKey, requestKey]);
 
   // La ficha vale sin el historial: si no carga, simplemente no se muestra.
-  if (fallo || historial === null) return null;
+  if (falloPara === requestKey || historial === null) return null;
 
   return (
     <div className="surface-card">
@@ -106,7 +109,9 @@ export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
       {historial.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-neutral-200/90 bg-neutral-50/50 p-6 text-center flex flex-col items-center justify-center gap-3">
           <p className="text-xs text-neutral-500 max-w-md leading-relaxed">
-            No se registran evaluaciones fitosanitarias previas para este ejemplar. Puedes registrar la primera inspección técnica de campo.
+            {isRetired
+              ? 'No se encontraron evaluaciones fitosanitarias registradas para este ejemplar.'
+              : 'No se registran evaluaciones fitosanitarias previas para este ejemplar. Puedes registrar la primera inspección técnica de campo.'}
           </p>
           {canAssess && (
             <Button
@@ -145,7 +150,10 @@ export function SpecimenAssessments({ code }: SpecimenAssessmentsProps) {
                       {fecha(a.date)}
                     </span>
                     {isLatest ? (
-                      <Badge label="vigente" color="brand" />
+                      <Badge
+                        label={isRetired ? 'última registrada' : 'vigente'}
+                        color={isRetired ? 'neutral' : 'brand'}
+                      />
                     ) : (
                       <Badge label="histórico" color="neutral" />
                     )}

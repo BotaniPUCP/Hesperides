@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Species } from '@shared/types';
-import { Badge, Card, ImagePlaceholder } from '@/components/ui';
+import { Badge, ImagePlaceholder } from '@/components/ui';
 
 export interface SpeciesCardProps {
   species: Species;
@@ -51,9 +51,9 @@ export function SpeciesCard({ species }: SpeciesCardProps) {
             />
           )}
 
-          {/* Badge de tipo de vegetación unificado */}
+          {/* Badge de tipo de vegetación unificado con estilo neutral */}
           <div className="absolute top-2.5 right-2.5 shadow-2xs">
-            <Badge label={species.vegetationTypeName} color="brand" />
+            <Badge label={species.vegetationTypeName} color="neutral" />
           </div>
         </div>
 

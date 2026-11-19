@@ -1,0 +1,41 @@
+{
+  "planKey": "c805ae90-7826-4b9e-bd42-21907b5c5adc",
+  "name": "Facultad de Gastronomía, Hotelería y Turismo",
+  "folder": "gastronomia",
+  "photos": [
+    "gastronomia-pucp.jpg"
+  ],
+  "materials": {
+    "blanco": {
+      "color": "#ebebe7"
+    },
+    "techo": {
+      "color": "#c8c6c0"
+    },
+    "reticula": {
+      "glass": "#a3abad",
+      "frame": "#ebebe7",
+      "moduleM": 1.5,
+      "heightM": 1.65,
+      "frameM": 0.3,
+      "vary": 0.1
+    }
+  },
+  "zones": [
+    {
+      "id": "edificio",
+      "wall": "blanco",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "reticula",
+          "v": [
+            0,
+            11.7
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Una retícula de concreto blanco con jardineras delante de los pisos vidriados (gastronomia-pucp.jpg). La foto muestra una cara larga y una corta con la misma retícula: el edificio es una caja que la repite en todas sus caras, así que va en todas (manda la coherencia del edificio). El tono de los paños cambia un poco de uno a otro, como el interior y las plantas detrás de la retícula."
+}

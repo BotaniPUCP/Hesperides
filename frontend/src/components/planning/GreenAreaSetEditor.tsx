@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import type { GreenAreaSetDetail, GreenAreaSetElement } from '@shared/types';
-import type { IrrigationZone } from '@shared/types/irrigation';
+import type { ZoneOption } from '@shared/types';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { Badge, Button, Card, Input } from '@/components/ui';
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -17,8 +17,8 @@ import { SetMapPicker } from './SetMapPicker';
 import { contentsLabel } from './planningTexts';
 
 export interface SetOptions {
-  sectors: IrrigationZone[];
-  sectionsBySector: Record<number, IrrigationZone[]>;
+  sectors: ZoneOption[];
+  sectionsBySector: Record<number, ZoneOption[]>;
   specimens: GreenAreaSetElement[];
 }
 
@@ -126,18 +126,16 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
         <Card title="Jardines y ejemplares" actions={<Badge color={contents > 0 ? 'brand' : 'warning'}
           label={contents === 0 ? 'Nada elegido' : contentsLabel(zoneIds.length, elementIds.length)} />}>
           <div className="space-y-3">
-            {/* Dos acciones distintas: cambiar lo elegido (abre el selector) y solo mirarlo en el mapa. */}
+            {/* Dos acciones distintas, juntas y con marco: cambiar lo elegido (abre el selector) y solo mirarlo en el mapa. */}
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="secondary" onClick={() => setPicking(true)} leadingIcon={<PencilIcon />}>
                 {contents === 0 ? 'Elegir jardines y ejemplares' : 'Cambiar jardines y ejemplares'}</Button>
               {contents > 0 && (
-                <span className="ml-auto">
-                  <Button variant="ghost" onClick={() => setMapOpen((v) => !v)} leadingIcon={<EyeIcon off={mapOpen} />}>
-                    {mapOpen ? 'Ocultar mapa' : 'Ver en el mapa'}</Button>
-                </span>
+                <Button variant="secondary" onClick={() => setMapOpen((v) => !v)} leadingIcon={<EyeIcon off={mapOpen} />}>
+                  {mapOpen ? 'Ocultar mapa' : 'Ver en el mapa'}</Button>
               )}
             </div>
-            {mapOpen && contents > 0 && <div id="mapa" className="h-[60vh]"><SetMap zoneCodes={zoneCodes} specimenCodes={specimenCodes} className="h-full" /></div>}
+            {mapOpen && contents > 0 && <div id="mapa" className="h-[60vh]"><SetMap zoneCodes={zoneCodes} specimenCodes={specimenCodes} className="h-full" realColors /></div>}
             <SelectedGardensSummary groups={byType} />
           </div>
         </Card>

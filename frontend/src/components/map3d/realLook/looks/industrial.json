@@ -5,22 +5,45 @@
   "photos": [
     "frente.jpg"
   ],
-  "notes": "Volumen blanco con ventanas oscuras y zócalo azul (ala izquierda de frente.jpg; la foto mide 516 px y se ve borrosa).",
+  "materials": {
+    "muro": {
+      "color": "#ebebe8"
+    },
+    "techo": {
+      "color": "#d0d0cc"
+    },
+    "ventanas": {
+      "glass": "#56636a",
+      "frame": "#d8dad8",
+      "moduleM": 1.5,
+      "heightM": 1.4,
+      "frameM": 0.07,
+      "vary": 0.06
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#cfcfcb",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#eeeeec",
-          "photo": {
-            "tile": "industrial",
-            "widthM": 4.5,
-            "heightM": 6.8
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "ventanas",
+          "v": [
+            0,
+            6.8
+          ],
+          "floors": {
+            "everyM": 3.4,
+            "startM": 0,
+            "bandM": [
+              1,
+              2.4
+            ]
           }
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Volumen blanco con una cinta de ventanas oscuras en cada piso (frente.jpg, la única foto, chica). El ingreso vidriado y el letrero no se dibujan."
 }

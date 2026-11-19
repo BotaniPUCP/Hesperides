@@ -27,7 +27,10 @@ import pe.edu.pucp.hesperides.shared.exception.DuplicateResourceException;
 import pe.edu.pucp.hesperides.shared.exception.ResourceNotFoundException;
 
 import java.lang.reflect.Field;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +58,11 @@ class MaintenanceFrequenciesServiceImplTest {
     @Mock
     private GreenAreaSetLookup setLookup;
 
+    private static final String LIMA = "America/Lima";
+    /** Mediodia en Lima (17:00 UTC): el mismo dia civil en ambas zonas. */
+    private static final Instant MEDIODIA_LIMA = Instant.parse("2026-11-17T17:00:00Z");
+    private static final LocalDate HOY = LocalDate.of(2026, 11, 17);
+
     private MaintenanceFrequenciesServiceImpl service;
 
     private CatalogItem activityItem;
@@ -64,8 +72,7 @@ class MaintenanceFrequenciesServiceImplTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        service = new MaintenanceFrequenciesServiceImpl(
-                frequenciesRepository, catalogItemsRepository, complianceReader, setLookup);
+        service = serviceAt(MEDIODIA_LIMA);
 
         activityItem = catalogItem(10L, "CORTE_CESPED", "Corte de césped");
         activityItem.setCatalogType(catalogType("INTERVENTION_TYPE"));
@@ -86,6 +93,12 @@ class MaintenanceFrequenciesServiceImplTest {
                 .thenAnswer(inv -> inv.getArgument(0));
         when(frequenciesRepository.saveAndFlush(any(MaintenanceFrequency.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    /** El servicio con el reloj del servidor (UTC) detenido en {@code instant}. */
+    private MaintenanceFrequenciesServiceImpl serviceAt(Instant instant) {
+        return new MaintenanceFrequenciesServiceImpl(frequenciesRepository, catalogItemsRepository,
+                complianceReader, setLookup, Clock.fixed(instant, ZoneOffset.UTC), LIMA);
     }
 
     private CatalogItem catalogItem(Long id, String code, String label) throws Exception {
@@ -134,7 +147,7 @@ class MaintenanceFrequenciesServiceImplTest {
         f.setScope("CAMPUS_WIDE");
         f.setMinDaysInterval(30);
         f.setMaxDaysInterval(45);
-        f.setValidFrom(LocalDate.now().minusDays(30));
+        f.setValidFrom(HOY.minusDays(30));
         return f;
     }
 
@@ -186,7 +199,7 @@ class MaintenanceFrequenciesServiceImplTest {
             var response = service.update(500L, editar(20, 30, null, null));
 
             assertThat(current.getValidTo()).isNotNull();
-            assertThat(response.validFrom()).isEqualTo(LocalDate.now());
+            assertThat(response.validFrom()).isEqualTo(HOY);
             assertThat(response.ruleKey()).isEqualTo(rule);
         }
 
@@ -222,7 +235,7 @@ class MaintenanceFrequenciesServiceImplTest {
             var res = service.create(crear("INTERVAL_DAYS", 30, 45, null, null, null));
 
             assertThat(res.minDaysInterval()).isEqualTo(30);
-            assertThat(res.validFrom()).isEqualTo(LocalDate.now());
+            assertThat(res.validFrom()).isEqualTo(HOY);
             assertThat(res.validTo()).isNull();
             assertThat(res.current()).isTrue();
         }
@@ -340,9 +353,9 @@ class MaintenanceFrequenciesServiceImplTest {
             var res = service.update(500L, editar(30, 60, null, null));
 
             // La anterior queda cerrada ayer: nunca hay dos vigentes ni un dia sin ninguna.
-            assertThat(actual.getValidTo()).isEqualTo(LocalDate.now().minusDays(1));
+            assertThat(actual.getValidTo()).isEqualTo(HOY.minusDays(1));
             // La nueva es otra fila, con los valores nuevos y vigencia abierta.
-            assertThat(res.validFrom()).isEqualTo(LocalDate.now());
+            assertThat(res.validFrom()).isEqualTo(HOY);
             assertThat(res.validTo()).isNull();
             assertThat(res.maxDaysInterval()).isEqualTo(60);
             verify(frequenciesRepository).saveAndFlush(actual);
@@ -354,7 +367,7 @@ class MaintenanceFrequenciesServiceImplTest {
             // Cerrarla con valid_to = ayer violaria la constraint de vigencia, y no
             // hay ningun periodo evaluado bajo esa configuracion que proteger.
             MaintenanceFrequency hoy = vigenteAntigua();
-            hoy.setValidFrom(LocalDate.now());
+            hoy.setValidFrom(HOY);
             when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(hoy));
 
             var res = service.update(500L, editar(30, 60, null, null));
@@ -395,7 +408,7 @@ class MaintenanceFrequenciesServiceImplTest {
         @DisplayName("editar una version historica se rechaza")
         void historicaNoSeEdita() throws Exception {
             MaintenanceFrequency cerrada = vigenteAntigua();
-            cerrada.setValidTo(LocalDate.now().minusDays(5));
+            cerrada.setValidTo(HOY.minusDays(5));
             when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(cerrada));
 
             assertThatThrownBy(() -> service.update(500L, editar(30, 60, null, null)))
@@ -414,6 +427,71 @@ class MaintenanceFrequenciesServiceImplTest {
         }
     }
 
+    /**
+     * El servidor corre en UTC y Lima va cinco horas detras: entre las 19:00 y la
+     * medianoche de Lima el reloj del servidor ya marca el dia siguiente. La
+     * vigencia debe seguir el dia de Lima, que es el que evalua la planificacion.
+     */
+    @Nested
+    @DisplayName("Zona horaria: 23:30 en Lima son las 04:30 UTC del dia siguiente")
+    class ZonaHoraria {
+
+        private static final Instant NOCHE_LIMA = Instant.parse("2026-11-18T04:30:00Z");
+
+        @BeforeEach
+        void deNocheEnLima() {
+            service = serviceAt(NOCHE_LIMA);
+        }
+
+        @Test
+        @DisplayName("crear rige desde hoy en Lima, no desde manana")
+        void crearUsaElDiaDeLima() {
+            var res = service.create(crear("INTERVAL_DAYS", 30, 45, null, null, null));
+
+            assertThat(res.validFrom()).isEqualTo(LocalDate.of(2026, 11, 17));
+        }
+
+        @Test
+        @DisplayName("versionar cierra ayer y abre hoy, ambos en Lima")
+        void versionarUsaElDiaDeLima() throws Exception {
+            MaintenanceFrequency actual = vigenteAntigua();
+            when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(actual));
+
+            var res = service.update(500L, editar(30, 60, null, null));
+
+            assertThat(actual.getValidTo()).isEqualTo(LocalDate.of(2026, 11, 16));
+            assertThat(res.validFrom()).isEqualTo(LocalDate.of(2026, 11, 17));
+            assertThat(res.validTo()).isNull();
+        }
+
+        @Test
+        @DisplayName("editar a las 23:30 lo creado esa tarde no versiona")
+        void laCreadaHoyEnLimaSeEditaEnSitio() throws Exception {
+            // Con el dia de UTC (18) la creada el 17 pareceria de ayer: se cerraria
+            // y naceria otra version que rige desde manana.
+            MaintenanceFrequency deEstaTarde = vigenteAntigua();
+            deEstaTarde.setValidFrom(LocalDate.of(2026, 11, 17));
+            when(frequenciesRepository.findByIdWithDetails(500L)).thenReturn(Optional.of(deEstaTarde));
+
+            var res = service.update(500L, editar(30, 60, null, null));
+
+            assertThat(deEstaTarde.getValidTo()).isNull();
+            assertThat(res.validFrom()).isEqualTo(LocalDate.of(2026, 11, 17));
+            verify(frequenciesRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
+        @DisplayName("dar de baja cierra la vigencia hoy en Lima")
+        void bajaUsaElDiaDeLima() throws Exception {
+            MaintenanceFrequency f = vigenteAntigua();
+            when(frequenciesRepository.findById(500L)).thenReturn(Optional.of(f));
+
+            service.delete(500L);
+
+            assertThat(f.getValidTo()).isEqualTo(LocalDate.of(2026, 11, 17));
+        }
+    }
+
     @Nested
     @DisplayName("Baja")
     class Baja {
@@ -429,7 +507,7 @@ class MaintenanceFrequenciesServiceImplTest {
             assertThat(f.isDeleted()).isTrue();
             assertThat(f.isActive()).isFalse();
             // Una frecuencia retirada no sigue rigiendo.
-            assertThat(f.getValidTo()).isEqualTo(LocalDate.now());
+            assertThat(f.getValidTo()).isEqualTo(HOY);
 
             ArgumentCaptor<MaintenanceFrequency> captor =
                     ArgumentCaptor.forClass(MaintenanceFrequency.class);
@@ -468,7 +546,7 @@ class MaintenanceFrequenciesServiceImplTest {
         @DisplayName("el historial incluye las versiones cerradas")
         void historial() throws Exception {
             MaintenanceFrequency cerrada = vigenteAntigua();
-            cerrada.setValidTo(LocalDate.now().minusDays(1));
+            cerrada.setValidTo(HOY.minusDays(1));
             when(frequenciesRepository.findHistory(10L, null)).thenReturn(List.of(cerrada));
 
             List<MaintenanceFrequencyResponse> res = service.findHistory(10L, null);

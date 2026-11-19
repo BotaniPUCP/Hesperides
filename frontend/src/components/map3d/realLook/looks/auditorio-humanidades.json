@@ -5,22 +5,32 @@
   "photos": [
     "frente.jpg"
   ],
-  "notes": "Ladrillo con banda granate (frente.jpg, 480 px). La otra foto de la carpeta (frente-lado-frente-a-educacion.png) muestra Estudios Generales Letras, no el auditorio: no se usa.",
+  "materials": {
+    "muro": {
+      "color": "#b8664a"
+    },
+    "techo": {
+      "color": "#b9b6af"
+    },
+    "granate": {
+      "color": "#7e2f33"
+    }
+  },
   "zones": [
     {
       "id": "edificio",
-      "roof": "#b8b5ae",
-      "faces": {
-        "other": {
-          "kind": "photo",
-          "wall": "#a8513f",
-          "photo": {
-            "tile": "auditorio-humanidades",
-            "widthM": 4,
-            "heightM": 5.0
-          }
+      "wall": "muro",
+      "roof": "techo",
+      "common": [
+        {
+          "material": "granate",
+          "v": [
+            4.2,
+            5
+          ]
         }
-      }
+      ]
     }
-  ]
+  ],
+  "notes": "Ladrillo con una banda granate en lo alto (frente.jpg, chica). La otra foto de la carpeta (frente-lado-frente-a-educacion.png) muestra Estudios Generales Letras, no el auditorio: no se usa."
 }
