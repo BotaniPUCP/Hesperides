@@ -1,4 +1,6 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render as baseRender, screen, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { ToastProvider } from '@/components/ui';
 import userEvent from '@testing-library/user-event';
 import { InventarioEjemplaresScreen } from '../InventarioEjemplaresScreen';
 import { PageFrame } from '@/components/layouts/PageFrame';
@@ -7,6 +9,9 @@ import { rememberedHref } from '@/lib/listMemory';
 import { saveListScroll } from '@/lib/listScroll';
 import { recordVisit, restartTrail } from '@/lib/navigationTrail';
 import { listed, p01, p02, page, summary } from '../__fixtures__/inventario';
+
+/** La pantalla avisa con toasts: se monta dentro de su provider, como en la app. */
+const render = (ui: ReactElement) => baseRender(ui, { wrapper: ToastProvider });
 
 jest.mock('next/navigation', () => jest.requireActual('@/test-utils/urlNavigationMock').urlNavigationMock);
 

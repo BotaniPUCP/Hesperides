@@ -52,12 +52,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const NOOP_TOAST: UseToastReturn = {
-  showToast: () => {},
-  dismissAll: () => {},
-};
-
 export function useToast(): UseToastReturn {
   const context = useContext(ToastContext);
-  return context ?? NOOP_TOAST;
+  if (context === null) {
+    throw new Error('useToast debe usarse dentro de un ToastProvider');
+  }
+  return context;
 }
