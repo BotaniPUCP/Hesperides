@@ -30,7 +30,7 @@
 | SPEC-115 | Maquinaria de corte solo en sábados, domingos y feriados | 🔄 En progreso: spec aprobada e implementada el 16 nov 2026 (`feature/spec-115-maquinaria-de-corte`, V065); falta verificar en navegador real | Jean Piero | —      |              |
 | SPEC-200 | Registro y ejecución de intervenciones | 🔄 En progreso: §2.12 reemplaza el flujo por lugares con mapa único, áreas de todo el campus y ejemplares seleccionables. V050 (antes V036) conserva datos y contratos anteriores. Pendientes revisión visual, R5 y R6; la selección fina de ejemplares se refinará posteriormente. | — | S2 (propuesto) | |
 | SPEC-201 | Incidencias de áreas verdes (rediseño del 15 nov 2026) | 🔄 En progreso: spec aprobado, implementación en `feature/spec-201-incidencias-rediseno` | —          | —      |              |
-| SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 2 (Semanal, Mensual y Resumen para OSG con gráficos y datos de demostración); falta verificar en navegador real por rol | —          | S4     |              |
+| SPEC-202 | Reportes: tres niveles (semanal, mensual, resumen para OSG) | 🔄 En progreso: Corte 2 (Semanal, Mensual y Resumen para OSG con gráficos y datos de demostración) y Corte 3 (D-20: de cada cifra a sus intervenciones, en `feature/SPEC-202-integracion-intervenciones`); falta verificar en navegador real por rol | —          | S4     |              |
 | SPEC-203 | Planificación preventiva por conjuntos de áreas verdes | 🔄 En progreso: implementada, falta verificar en navegador | —          | —      |              |
 
 **Leyenda:** ⏳ Pendiente · 📝 En spec · 👀 En revisión · 🔄 En progreso · ✅ Completado · ⛔ Superado
