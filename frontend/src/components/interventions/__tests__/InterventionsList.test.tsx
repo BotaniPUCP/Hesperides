@@ -37,7 +37,7 @@ beforeEach(() => {
 it('ofrece únicamente los cinco estados acordados incluso si el catálogo antiguo sigue presente',async()=>{
   render(<InterventionsList/>);await screen.findByText('INT-000010');
   const select=screen.getByLabelText('Estado') as HTMLSelectElement;
-  expect(Array.from(select.options).map(o=>o.text)).toEqual(['Todos los estados','Planificada','En ejecución','Ejecutada','Terminada','Cancelada']);
+  expect(Array.from(select.options).map(o=>o.text)).toEqual(['Actividades en curso','Planificada','En ejecución','Ejecutada','Terminada','Cancelada']);
   expect(screen.queryByRole('option',{name:/Asignada|Observada|Validada|Aprobada/})).not.toBeInTheDocument();
 });
 it.each([['ASSIGNED','PLANNED'],['OBSERVED','IN_PROGRESS'],['VALIDATED','FINISHED']])('normaliza un enlace guardado con %s al filtro vigente %s',async(old,current)=>{

@@ -54,7 +54,7 @@ export function InterventionsList({ greenElementCode, greenElementId }: { greenE
         <option value="active">Activas</option><option value="inactive">Inactivas</option><option value="all">Todas</option>
       </select></label>
       <Select id="intervention-status" label="Estado" value={status} onChange={o => change({ status: o?.code ?? '', activity: o ? 'all' : '' })}
-        options={ACTIVITY_STATUS_CODES.map((code,id) => ({ id, code, label:statusLabel(code) }))} placeholder="Todos los estados" clearable />
+        options={ACTIVITY_STATUS_CODES.map((code,id) => ({ id, code, label:statusLabel(code) }))} placeholder="Actividades en curso" clearable />
       <label className="grid gap-1 text-sm">Desde<input className="h-11 rounded-md border border-neutral-200 p-2" type="date" value={from} onChange={e => change({ from: e.target.value })} /></label>
       <label className="grid gap-1 text-sm">Hasta<input className="h-11 rounded-md border border-neutral-200 p-2" type="date" value={to} onChange={e => change({ to: e.target.value })} /></label>
       <p className="text-xs text-neutral-500 sm:col-span-2 lg:col-span-4">Inactivas: ejecutadas, terminadas o canceladas. Los registros anteriores conservan su historial.</p>
