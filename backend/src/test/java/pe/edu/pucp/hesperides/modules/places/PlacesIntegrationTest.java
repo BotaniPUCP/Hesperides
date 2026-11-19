@@ -126,8 +126,20 @@ class PlacesIntegrationTest {
         return placeWorkbook(name, withPerspective, withPhoto, withPoint, false);
     }
 
+    /** La posición de una columna de la plantilla, por su encabezado: la plantilla cambia de columnas. */
+    private static int col(String header) {
+        int index = PlaceWorkbookImportService.HEADERS.indexOf(header);
+        if (index < 0) throw new IllegalArgumentException("La plantilla no tiene la columna " + header);
+        return index;
+    }
+
+    private static final String LAT_COL = "Latitud de punto";
+    private static final String LON_COL = "Longitud de punto";
+    private static final String CHILDREN_COL = "Usar contorno de hijos (SI/NO)";
+    private static final String PHOTO_1_COL = "Foto perspectiva 1 (insertar en celda)";
+
     private static byte[] placeWorkbook(String name, boolean withPerspective, boolean withPhoto, boolean withPoint,
-            boolean withBuilding) throws IOException {
+            boolean withChildrenOutline) throws IOException {
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             XSSFSheet sheet = workbook.createSheet("Lugares");
             var header = sheet.createRow(0);
@@ -135,27 +147,27 @@ class PlacesIntegrationTest {
                 header.createCell(i).setCellValue(PlaceWorkbookImportService.HEADERS.get(i));
             }
             var row = sheet.createRow(1);
-            row.createCell(0).setCellValue(name);
-            row.createCell(1).setCellValue("OUTDOOR");
-            row.createCell(2).setCellValue("EDIFICIO");
-            row.createCell(4).setCellValue("Alias " + name);
+            row.createCell(col("Nombre")).setCellValue(name);
+            row.createCell(col("Tipo")).setCellValue("OUTDOOR");
+            row.createCell(col("Categoría")).setCellValue("EDIFICIO");
+            row.createCell(col("Alias (separados por ;)")).setCellValue("Alias " + name);
             if (withPoint) {
-                row.createCell(8).setCellValue(LAT);
-                row.createCell(9).setCellValue(LON);
+                row.createCell(col(LAT_COL)).setCellValue(LAT);
+                row.createCell(col(LON_COL)).setCellValue(LON);
             }
-            if (withBuilding) row.createCell(5).setCellValue("1");
+            if (withChildrenOutline) row.createCell(col(CHILDREN_COL)).setCellValue("SI");
             if (withPerspective) {
-                row.createCell(11).setCellValue("BACK");
-                row.createCell(12).setCellValue(LAT - OFFSET);
-                row.createCell(13).setCellValue(LON);
-                row.createCell(14).setCellValue(0);
+                row.createCell(col("Lado perspectiva 1")).setCellValue("BACK");
+                row.createCell(col("Latitud perspectiva 1")).setCellValue(LAT - OFFSET);
+                row.createCell(col("Longitud perspectiva 1")).setCellValue(LON);
+                row.createCell(col("Rumbo perspectiva 1")).setCellValue(0);
                 if (withPhoto) {
                     int picture = workbook.addPicture(png(), Workbook.PICTURE_TYPE_PNG);
                     XSSFClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
                     anchor.setRow1(1);
                     anchor.setRow2(2);
-                    anchor.setCol1(15);
-                    anchor.setCol2(16);
+                    anchor.setCol1(col(PHOTO_1_COL));
+                    anchor.setCol2(col(PHOTO_1_COL) + 1);
                     sheet.createDrawingPatriarch().createPicture(anchor, picture);
                 }
             }
@@ -173,12 +185,12 @@ class PlacesIntegrationTest {
             }
             for (int i = 0; i < names.length; i++) {
                 var row = sheet.createRow(i + 1);
-                row.createCell(0).setCellValue(names[i]);
-                row.createCell(1).setCellValue("OUTDOOR");
-                row.createCell(2).setCellValue("EDIFICIO");
-                row.createCell(4).setCellValue(names[i]);
-                row.createCell(8).setCellValue(LAT - 5 * OFFSET);
-                row.createCell(9).setCellValue(LON - 5 * OFFSET);
+                row.createCell(col("Nombre")).setCellValue(names[i]);
+                row.createCell(col("Tipo")).setCellValue("OUTDOOR");
+                row.createCell(col("Categoría")).setCellValue("EDIFICIO");
+                row.createCell(col("Alias (separados por ;)")).setCellValue(names[i]);
+                row.createCell(col(LAT_COL)).setCellValue(LAT - 5 * OFFSET);
+                row.createCell(col(LON_COL)).setCellValue(LON - 5 * OFFSET);
             }
             workbook.write(output);
             return output.toByteArray();
@@ -320,7 +332,7 @@ class PlacesIntegrationTest {
     }
 
     @Test
-    void exportsFilteredPlacesInTheImportTemplateFormatWithOnlySelectedPerspectivePhotos() throws Exception {
+    void exportsFilteredPlacesInTheImportTemplateFormatWithTheirPerspectivePhotos() throws Exception {
         byte[] source = placeWorkbook("Lugar para exportar", true, true);
         MockMultipartFile file = new MockMultipartFile("file", "lugares.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", source);
@@ -333,14 +345,7 @@ class PlacesIntegrationTest {
                   "parentCode": null,
                   "createdFrom": null,
                   "createdTo": null,
-                  "point1Lat": -12.07,
-                  "point1Lon": -77.09,
-                  "point2Lat": -12.07,
-                  "point2Lon": -77.07,
-                  "point3Lat": -12.06,
-                  "point3Lon": -77.08,
-                  "includePerspectives": true,
-                  "perspectiveSides": ["BACK"]
+                  "includePerspectives": true
                 }
                 """;
         byte[] exported = mockMvc.perform(post(PLACES + "/export")
@@ -357,23 +362,16 @@ class PlacesIntegrationTest {
                     .isEqualTo(PlaceWorkbookImportService.HEADERS.get(0));
             assertThat(sheet.getRow(0).getPhysicalNumberOfCells()).isEqualTo(PlaceWorkbookImportService.HEADERS.size());
             assertThat(sheet.getRow(1).getCell(0).getStringCellValue()).isEqualTo("Lugar para exportar");
-            assertThat(sheet.getRow(1).getCell(8).getNumericCellValue()).isEqualTo(LAT);
-            assertThat(sheet.getRow(1).getCell(9).getNumericCellValue()).isEqualTo(LON);
-            assertThat(sheet.getRow(1).getCell(5).getStringCellValue()).isEmpty();
-            assertThat(sheet.getRow(1).getCell(11).getStringCellValue()).isEqualTo("BACK");
-            assertThat(sheet.getRow(1).getCell(16).getStringCellValue()).isEmpty();
+            assertThat(sheet.getRow(1).getCell(col(LAT_COL)).getNumericCellValue()).isEqualTo(LAT);
+            assertThat(sheet.getRow(1).getCell(col(LON_COL)).getNumericCellValue()).isEqualTo(LON);
+            assertThat(sheet.getRow(1).getCell(col("Código de zona")).getStringCellValue()).isEmpty();
+            assertThat(sheet.getRow(1).getCell(col("Lado perspectiva 1")).getStringCellValue()).isEqualTo("BACK");
+            assertThat(sheet.getRow(1).getCell(col("Lado perspectiva 2")).getStringCellValue()).isEmpty();
             assertThat(sheet.getDrawingPatriarch().getShapes()).hasSize(1);
             XSSFClientAnchor anchor = (XSSFClientAnchor) sheet.getDrawingPatriarch().getShapes().get(0).getAnchor();
             assertThat(anchor.getRow1()).isEqualTo(1);
-            assertThat(anchor.getCol1()).isEqualTo((short) 15);
+            assertThat(anchor.getCol1()).isEqualTo((short) col(PHOTO_1_COL));
         }
-    }
-
-    @Test
-    void refusesAnIncompleteThreePointExportArea() throws Exception {
-        mockMvc.perform(post(PLACES + "/export").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"point1Lat\":-12.0,\"includePerspectives\":false}"))
-                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -510,14 +508,7 @@ class PlacesIntegrationTest {
                                   "parentCode": null,
                                   "createdFrom": null,
                                   "createdTo": null,
-                                  "point1Lat": null,
-                                  "point1Lon": null,
-                                  "point2Lat": null,
-                                  "point2Lon": null,
-                                  "point3Lat": null,
-                                  "point3Lon": null,
-                                  "includePerspectives": false,
-                                  "perspectiveSides": []
+                                  "includePerspectives": false
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -529,14 +520,13 @@ class PlacesIntegrationTest {
                     .mapToObj(sheet::getRow)
                     .filter(candidate -> "INRAS".equals(candidate.getCell(0).getStringCellValue()))
                     .findFirst().orElseThrow();
-            assertThat(row.getCell(5).getStringCellValue()).isEmpty();
-            assertThat(row.getCell(6).getStringCellValue()).isEmpty();
-            assertThat(row.getCell(7).getStringCellValue()).isEmpty();
-            assertThat(row.getCell(8).getNumericCellValue()).isCloseTo(expectedCenter[0],
+            assertThat(row.getCell(col("Código de zona")).getStringCellValue()).isEmpty();
+            assertThat(row.getCell(col("Código de estacionamiento")).getStringCellValue()).isEmpty();
+            assertThat(row.getCell(col(LAT_COL)).getNumericCellValue()).isCloseTo(expectedCenter[0],
                     org.assertj.core.data.Offset.offset(1e-9));
-            assertThat(row.getCell(9).getNumericCellValue()).isCloseTo(expectedCenter[1],
+            assertThat(row.getCell(col(LON_COL)).getNumericCellValue()).isCloseTo(expectedCenter[1],
                     org.assertj.core.data.Offset.offset(1e-9));
-            assertThat(row.getCell(10).getStringCellValue()).isEqualTo("NO");
+            assertThat(row.getCell(col(CHILDREN_COL)).getStringCellValue()).isEqualTo("NO");
         }
     }
 
