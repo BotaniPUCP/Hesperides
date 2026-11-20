@@ -14,7 +14,9 @@ import pe.edu.pucp.hesperides.modules.reports.dto.DirectionReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportFilter;
 import pe.edu.pucp.hesperides.modules.reports.dto.MonthlyReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportOptionsResponse;
+import pe.edu.pucp.hesperides.modules.reports.dto.ReportInterventionRow;
 import pe.edu.pucp.hesperides.modules.reports.dto.ReportSectionResponse;
+import pe.edu.pucp.hesperides.modules.reports.dto.TopList;
 import pe.edu.pucp.hesperides.modules.reports.dto.WeeklyReportResponse;
 import pe.edu.pucp.hesperides.modules.reports.service.ReportsService;
 import pe.edu.pucp.hesperides.shared.exception.ApiResponse;
@@ -74,6 +76,25 @@ public class ReportsController {
         ReportParams.checkPeriodShape(dateFrom, dateTo);
         var filter = new MonthlyReportFilter(dateFrom, dateTo, sectorId, sectionId, teamId, classItemId, typeItemId);
         return ResponseEntity.ok(ApiResponse.ok("Reporte mensual", service.monthly(filter, user.getUsername())));
+    }
+
+    /** The works behind a weekly or monthly figure (SPEC-202 D-20, §3.7); same filters as the monthly report. */
+    @GetMapping("/interventions")
+    @PreAuthorize(READERS)
+    public ResponseEntity<ApiResponse<TopList<ReportInterventionRow>>> interventions(
+            @RequestParam(required = false) String kind,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false) Long sectorId,
+            @RequestParam(required = false) Long sectionId,
+            @RequestParam(required = false) Long teamId,
+            @RequestParam(required = false) Long classItemId,
+            @RequestParam(required = false) Long typeItemId,
+            @AuthenticationPrincipal UserDetails user) {
+        ReportParams.checkPeriodShape(dateFrom, dateTo);
+        var filter = new MonthlyReportFilter(dateFrom, dateTo, sectorId, sectionId, teamId, classItemId, typeItemId);
+        return ResponseEntity.ok(ApiResponse.ok("Intervenciones del reporte",
+                service.interventions(kind, filter, user.getUsername())));
     }
 
     @GetMapping("/direction")

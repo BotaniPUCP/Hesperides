@@ -61,12 +61,18 @@ export function CamposMedidasAdicionales({ valores, onCambiar }: CamposMedidasAd
   }
 
   return (
-    <div className="space-y-3 border-t border-neutral-200/80 pt-3">
-      <p className="text-sm font-medium text-neutral-800">Medidas adicionales</p>
+    <div className="space-y-4 border-t border-neutral-200/80 pt-4">
+      <div>
+        <p className="text-sm font-semibold text-neutral-800">Medidas adicionales de la especie</p>
+        <p className="text-xs text-neutral-500 mt-0.5">
+          Parámetros morfológicos específicos que se registrarán durante las evaluaciones de esta especie.
+        </p>
+      </div>
 
+      {/* Lista de medidas ya asociadas a la especie */}
       {valores.map((medida) => (
-        <fieldset key={medida.code} className="grid gap-2 rounded-md border border-neutral-200 p-3 sm:grid-cols-[1fr_auto] sm:items-end">
-          <legend className="px-1 text-sm font-semibold">{medida.label}</legend>
+        <fieldset key={medida.code} className="grid gap-2 rounded-xl border border-neutral-200 p-3 sm:grid-cols-[1fr_auto] sm:items-end bg-neutral-50/50">
+          <legend className="px-1 text-sm font-semibold text-neutral-800">{medida.label}</legend>
           <Input
             id={`referencia-${medida.code}`}
             label={`Valor de referencia en ${unidadCorta(medida.unitCode)} (opcional)`}
@@ -82,39 +88,66 @@ export function CamposMedidasAdicionales({ valores, onCambiar }: CamposMedidasAd
         </fieldset>
       ))}
 
-      <Select
-        id="anadir-medida"
-        label="Añadir medida"
-        placeholder="Elegir del catálogo…"
-        options={disponibles.map((m, i) => ({
-          id: i + 1,
-          code: m.code,
-          label: `${m.label} (${unidadCorta(m.unitCode)})`,
-        }))}
-        value=""
-        onChange={(opt) => {
-          if (opt?.code) anadir(opt.code);
-        }}
-        disabled={disponibles.length === 0}
-      />
+      {/* Bloque 1: Asociar medida existente del catálogo */}
+      <div className="p-3.5 rounded-xl bg-neutral-50/70 border border-neutral-200 space-y-2">
+        <div>
+          <span className="block text-xs font-semibold text-neutral-700">Asociar una medida existente</span>
+          <span className="block text-xs text-neutral-500">
+            Elige una medida ya disponible en el catálogo común para medirla en esta especie.
+          </span>
+        </div>
+        <Select
+          id="anadir-medida"
+          label="Añadir medida"
+          placeholder="Elegir del catálogo…"
+          options={disponibles.map((m, i) => ({
+            id: i + 1,
+            code: m.code,
+            label: `${m.label} (${unidadCorta(m.unitCode)})`,
+          }))}
+          value=""
+          onChange={(opt) => {
+            if (opt?.code) anadir(opt.code);
+          }}
+          disabled={disponibles.length === 0}
+        />
+      </div>
 
+      {/* Bloque 2: Crear una nueva medida en el catálogo general (alcance global) */}
       {puedeCrear && (
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <Input id="nueva-medida" label="Nueva medida" value={nombre} onChange={setNombre} maxLength={100} />
-          <Select
-            id="unidad-medida"
-            label="Unidad"
-            options={unidades.map((u, i) => ({ id: i + 1, code: u.code, label: u.label }))}
-            value={unidad}
-            onChange={(o) => setUnidad(o?.code ?? null)}
-          />
-          <Button
-            variant="secondary"
-            disabled={!nombre.trim() || !unidad}
-            onClick={() => setConfirmModalOpen(true)}
-          >
-            Crear medida
-          </Button>
+        <div className="p-3.5 rounded-xl bg-neutral-50/40 border border-dashed border-neutral-300 space-y-2.5">
+          <div>
+            <span className="block text-xs font-semibold text-neutral-700">¿No encuentras la medida que necesitas?</span>
+            <span className="block text-xs text-neutral-500">
+              Registra una nueva medida en el catálogo general. Esta quedará disponible para todas las especies del campus.
+            </span>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <Input
+              id="nueva-medida"
+              label="Nueva medida"
+              value={nombre}
+              onChange={setNombre}
+              maxLength={100}
+              placeholder="Ej. Número de entrenudos"
+            />
+            <Select
+              id="unidad-medida"
+              label="Unidad"
+              options={unidades.map((u, i) => ({ id: i + 1, code: u.code, label: u.label }))}
+              value={unidad}
+              onChange={(o) => setUnidad(o?.code ?? null)}
+              placeholder="Elegir unidad…"
+            />
+            <Button
+              variant="secondary"
+              disabled={!nombre.trim() || !unidad}
+              onClick={() => setConfirmModalOpen(true)}
+            >
+              Crear medida
+            </Button>
+          </div>
         </div>
       )}
       {error && <p role="alert" className="text-xs text-action-danger">{error}</p>}

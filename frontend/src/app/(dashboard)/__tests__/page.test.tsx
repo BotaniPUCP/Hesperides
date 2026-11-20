@@ -9,6 +9,10 @@ jest.mock('@/hooks/useAuth', () => ({
   useAuth: () => mockAuth,
 }));
 
+jest.mock('@/components/homeCalendar/HomeCalendar', () => ({
+  HomeCalendar: () => <div data-testid="home-calendar" />,
+}));
+
 jest.mock('@/components/planning/PlanningAlerts', () => ({
   PlanningAlerts: () => <div data-testid="planning-alerts" />,
 }));
@@ -31,10 +35,11 @@ describe('HomePage', () => {
     expect(screen.getByText('admin@pucp.edu.pe')).toBeInTheDocument();
   });
 
-  it('muestra los avisos de planificación encima de la bienvenida (SPEC-203 §5.7)', () => {
+  it('muestra primero el calendario y luego los avisos de planificación (SPEC-121)', () => {
     render(<HomePage />);
 
-    expect(screen.getByTestId('planning-alerts')).toBeInTheDocument();
+    const calendar = screen.getByTestId('home-calendar'), alerts = screen.getByTestId('planning-alerts');
+    expect(calendar.compareDocumentPosition(alerts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('ya no lista enlaces a los módulos: la navegación vive en el sidebar', () => {

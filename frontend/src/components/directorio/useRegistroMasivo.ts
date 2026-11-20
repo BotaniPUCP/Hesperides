@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { DirectoryImportKind, DirectoryImportOutcome, DirectoryImportPlan } from '@shared/types';
 import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { mensajeDeApiError } from '@/lib/api-errors';
-import { detectarTipoDeImportacion, TipoNoReconocidoError } from '@/lib/directoryImportKind';
+import { detectarTipoDeImportacion, MENSAJE_TIPO_NO_RECONOCIDO, TipoNoReconocidoError } from '@/lib/directoryImportKind';
 import { directoryApi } from '@/lib/directory-api';
 import { guardarArchivo } from '@/lib/download';
 
@@ -15,7 +15,7 @@ const PLANTILLAS: Record<DirectoryImportKind, string> = {
 };
 
 function mensajeDeError(e: unknown): string {
-  return e instanceof TipoNoReconocidoError ? e.message : mensajeDeApiError(e);
+  return e instanceof TipoNoReconocidoError ? MENSAJE_TIPO_NO_RECONOCIDO : mensajeDeApiError(e);
 }
 
 /**

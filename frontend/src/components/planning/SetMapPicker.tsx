@@ -94,16 +94,17 @@ function initialMode(zoneIds: number[], specimenIds: number[]): PickMode {
 
 const sameIds = (a: Set<number>, b: number[]) => a.size === new Set(b).size && b.every((id) => a.has(id));
 
+/** Va dentro del botón de la tarjeta: solo elementos de frase (span), que un botón sí admite. */
 function Meter({ label, chosen, total }: { label: string; chosen: number; total: number }) {
   const pct = total === 0 ? 0 : Math.round((chosen / total) * 100);
   return (
-    <div className="flex items-center gap-2 text-xs">
+    <span className="flex items-center gap-2 text-xs font-normal">
       <span className="w-20 shrink-0 text-neutral-600">{label}</span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100" aria-hidden="true">
-        <div className="h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />
-      </div>
+      <span className="block h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-100" aria-hidden="true">
+        <span className="block h-full rounded-full bg-brand-600" style={{ width: `${pct}%` }} />
+      </span>
       <span className={`w-16 shrink-0 text-right ${chosen > 0 ? 'font-semibold text-brand-700' : 'text-neutral-500'}`}>{chosen} de {total}</span>
-    </div>
+    </span>
   );
 }
 
@@ -490,23 +491,24 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
                 <li key={g.key} aria-label={g.name} aria-current={isFocused ? 'true' : undefined}
                   ref={(el) => { if (el) cards.current.set(g.key, el); else cards.current.delete(g.key); }}
                   className={`overflow-hidden rounded-xl border-2 bg-neutral-0 transition-shadow ${frame}`}>
-                  <div className={`flex items-center gap-1 px-2 py-2 ${isFocused ? 'bg-orange-50 dark:bg-orange-950/40' : chosen > 0 ? 'bg-brand-50' : 'bg-neutral-0'}`}>
+                  {/* Toda la parte de arriba es un solo botón: nombre, estado, cuenta y barras. La flecha pliega aparte. */}
+                  <div className={`flex items-start ${isFocused ? 'bg-orange-50 dark:bg-orange-950/40' : chosen > 0 ? 'bg-brand-50' : 'bg-neutral-0'}`}>
                     <button type="button" aria-expanded={open} onClick={() => toggleOpen(g.key, open)}
                       aria-label={`${open ? 'Plegar' : 'Desplegar'} ${g.name}`}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 hover:bg-neutral-100">
+                      className="ml-1 mt-2 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded text-neutral-500 hover:bg-neutral-100">
                       <span aria-hidden="true" className={`transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
                     </button>
-                    <button type="button" onClick={() => onCardClick(g)} aria-pressed={isFocused}
+                    <button type="button" onClick={() => onCardClick(g)} aria-pressed={isFocused} aria-label={g.name}
                       title={look ? look.next : 'Sombrear este sector en el mapa'}
-                      className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-neutral-900">
-                      <span className="truncate" title={g.name}>{g.name}</span>
+                      className="flex min-w-0 flex-1 cursor-pointer select-none flex-col gap-1.5 rounded-r-lg py-2.5 pl-1 pr-3 text-left text-sm font-semibold text-neutral-900 hover:bg-neutral-900/5 dark:hover:bg-neutral-0/5">
+                      <span className="flex w-full items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate" title={g.name}>{g.name}</span>
+                        {look && <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${look.chip}`}>{look.label}</span>}
+                        {chosen > 0 && <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">{contentsLabel(chosenGardens.length, chosenTrees.length)}</span>}
+                      </span>
+                      {ownGardens.length > 0 && <Meter label="Jardines" chosen={chosenGardens.length} total={ownGardens.length} />}
+                      {ownTrees.length > 0 && <Meter label="Ejemplares" chosen={chosenTrees.length} total={ownTrees.length} />}
                     </button>
-                    {look && <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${look.chip}`}>{look.label}</span>}
-                    {chosen > 0 && <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">{contentsLabel(chosenGardens.length, chosenTrees.length)}</span>}
-                  </div>
-                  <div className="space-y-1.5 px-3 pb-2 pt-1">
-                    {ownGardens.length > 0 && <Meter label="Jardines" chosen={chosenGardens.length} total={ownGardens.length} />}
-                    {ownTrees.length > 0 && <Meter label="Ejemplares" chosen={chosenTrees.length} total={ownTrees.length} />}
                   </div>
                   {open && (
                     <div className="space-y-3 border-t border-neutral-200 px-3 py-3">

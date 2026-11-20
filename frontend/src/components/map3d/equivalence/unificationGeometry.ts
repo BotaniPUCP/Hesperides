@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { UserFacingError } from '../../../lib/userFacingError';
 /** Minimum-area horizontal frame, used only for the explicitly requested kiosk. */
 export function horizontalFrame(points: THREE.Vector3[]) {
   const unique = [...new Map(points.map((p) => [`${p.x.toFixed(5)},${p.z.toFixed(5)}`, p])).values()].sort((a, b) => a.x - b.x || a.z - b.z);
@@ -20,7 +21,7 @@ export function adaptKiosk(geometry: THREE.BufferGeometry, targetPoints: THREE.V
   const points = Array.from({ length: position.count }, (_, i) => new THREE.Vector3().fromBufferAttribute(position, i));
   const from = horizontalFrame(points), to = horizontalFrame(targetPoints);
   const minY = Math.min(...points.map((p) => p.y)), maxY = Math.max(...points.map((p) => p.y));
-  if (from.area <= 0 || to.area <= 0 || !Number.isFinite(from.area) || !Number.isFinite(to.area) || maxY <= minY || height <= 0) throw new Error('Dimensiones inválidas para adaptar la caseta.');
+  if (from.area <= 0 || to.area <= 0 || !Number.isFinite(from.area) || !Number.isFinite(to.area) || maxY <= minY || height <= 0) throw new UserFacingError('Dimensiones inválidas para adaptar la caseta.');
   const c = Math.cos(from.angle), s = Math.sin(from.angle), tc = Math.cos(to.angle), ts = Math.sin(to.angle);
   points.forEach((p, i) => {
     const u = to.minU + (c * p.x + s * p.z - from.minU) / (from.maxU - from.minU) * (to.maxU - to.minU);

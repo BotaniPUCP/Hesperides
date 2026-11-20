@@ -5,6 +5,7 @@ import type { Viewer } from '../viewer/createViewer';
 import { EXPORT_FPS, EXPORT_SIZE, exportSequence } from './exportSequence';
 import type { LogoState } from './logoMotion';
 import { createMp4Sink } from './mp4Sink';
+import { UserFacingError, userFacingMessage } from '@/lib/userFacingError';
 
 type LogoImages = Record<LogoState['image'], HTMLImageElement>;
 
@@ -40,7 +41,9 @@ export function useSequenceExport(): SequenceExport {
     const canvas = Object.assign(document.createElement('canvas'), EXPORT_SIZE);
     try {
       // Una imagen que no cargó haría un video sin logo: mejor fallar antes de dibujar.
-      if (logos) await Promise.all(Object.values(logos).map((image) => image.decode()));
+      if (logos) await Promise.all(Object.values(logos).map((image) => image.decode().catch(() => {
+        throw new UserFacingError('No se pudo cargar la imagen del logo; recarga la página.');
+      })));
       const sink = await createMp4Sink(canvas, EXPORT_FPS);
       const blob = await exportSequence({ viewer, canvas, sink, logos, signal: controller.signal,
         onProgress: (fraction) => setPercent(Math.floor(fraction * 100)) });
@@ -49,7 +52,7 @@ export function useSequenceExport(): SequenceExport {
     } catch (error) {
       if (controller.signal.aborted) return null;
       console.error('SPEC-118: la exportación a MP4 falló', error);
-      return error instanceof Error ? error.message : 'La exportación falló; el detalle está en la consola.';
+      return userFacingMessage(error, 'La exportación falló; el detalle está en la consola.');
     } finally {
       running.current = null;
       setPercent(null);

@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import type { WeeklyReport } from '@shared/types';
 import { Card } from '@/components/ui';
+import { EMPTY_MONTHLY_FILTERS } from '@/lib/reportNavigation';
+import { InterventionDrilldown } from '../InterventionDrilldown';
 import { categorical } from '../charts/chartTones';
 import { DonutChart } from '../charts/DonutChart';
 import { ProgressMeter } from '../charts/ProgressMeter';
@@ -22,6 +24,10 @@ function Kpi({ label, value, children }: { label: string; value: number; childre
 /** KPIs, the two meters and the work by type (SPEC-202 §7.1 «Semanal»). */
 export function WeeklySummary({ report }: { report: WeeklyReport }) {
   const { interventions: work, attendedSections: attended, irrigation, incidents } = report;
+  // The lists behind the figures ask with the week and sector this report used (D-20).
+  const filters = {
+    ...EMPTY_MONTHLY_FILTERS, dateFrom: report.week.weekStart, dateTo: report.week.weekEnd, sectorId: report.sector.id,
+  };
   const delta = work.approved - work.approvedPreviousWeek;
   const types = categorical(work.byType.map((t) => ({ key: String(t.typeItemId ?? t.typeLabel), label: t.typeLabel, value: t.approved })),
     CHART_TEXTS.others);
@@ -36,9 +42,11 @@ export function WeeklySummary({ report }: { report: WeeklyReport }) {
         </Kpi>
         <Kpi label={WEEKLY_TEXTS.pendingApproval} value={work.pendingApproval}>
           <p className="text-xs">{WEEKLY_TEXTS.pendingApprovalHelp}</p>
+          <InterventionDrilldown kind="PENDING_APPROVAL" filters={filters} total={work.pendingApproval} />
         </Kpi>
         <Kpi label={WEEKLY_TEXTS.pendingPhotos} value={work.pendingPhotos}>
           <p className="text-xs">{WEEKLY_TEXTS.pendingPhotosHelp}</p>
+          <InterventionDrilldown kind="PENDING_PHOTOS" filters={filters} total={work.pendingPhotos} />
         </Kpi>
         <Kpi label={WEEKLY_TEXTS.openIncidents} value={incidents.open}>
           <p className="text-xs">{WEEKLY_TEXTS.openIncidentsHelp(incidents.pendingApproval)}</p>

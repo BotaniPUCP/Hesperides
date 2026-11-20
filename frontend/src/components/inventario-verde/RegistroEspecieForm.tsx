@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Species, SpeciesForm } from '@shared/types';
 import { Button, Card, Input, Select, Textarea, type SelectOption } from '@/components/ui';
@@ -30,13 +30,14 @@ const TIPOS_VEGETACION_DEFAULT: SelectOption[] = [
 export interface RegistroEspecieFormProps {
   onSuccess?: (created: Species) => void;
   onDirtyChange?: (isDirty: boolean) => void;
+  onCancel?: () => void;
 }
 
 /**
  * Formulario dedicado a pantalla completa para dar de alta una nueva especie
  * botánica en el catálogo de flora del campus PUCP.
  */
-export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspecieFormProps) {
+export function RegistroEspecieForm({ onSuccess, onDirtyChange, onCancel }: RegistroEspecieFormProps) {
   const [scientificName, setScientificName] = useState('');
   const [commonName, setCommonName] = useState('');
   const [family, setFamily] = useState('');
@@ -85,6 +86,10 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
     medidas.radioM ||
     photo
   );
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   function resetForm() {
     setScientificName('');
@@ -361,12 +366,18 @@ export function RegistroEspecieForm({ onSuccess, onDirtyChange }: RegistroEspeci
         <Button type="submit" loading={saving} leadingIcon={<span aria-hidden="true">🌱</span>}>
           Registrar especie
         </Button>
-        <Link
-          href="/inventario-verde"
-          className="surface-pill text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
-        >
-          Cancelar
-        </Link>
+        {onCancel ? (
+          <Button variant="ghost" type="button" onClick={onCancel} disabled={saving}>
+            Cancelar
+          </Button>
+        ) : (
+          <Link
+            href="/inventario-verde"
+            className="surface-pill text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+          >
+            Cancelar
+          </Link>
+        )}
       </div>
     </form>
 

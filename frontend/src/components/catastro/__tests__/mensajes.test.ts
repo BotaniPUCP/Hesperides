@@ -26,6 +26,12 @@ describe('traducirMensajeCatastro', () => {
       'Species «schinus-molle» kept its previous photos: 1 of 3 could not be saved',
       'La especie «schinus-molle» conserva sus fotos anteriores: 1 de 3 no se pudieron guardar',
     ],
+    ['Trunk height cannot exceed total height', 'La altura del fuste no puede superar la altura total'],
+    ['«2026-12-01» cannot be in the future', '«2026-12-01» no puede ser una fecha futura'],
+    ['A new specimen relationship must use an active species', 'Los ejemplares solo pueden vincularse a especies activas'],
+    ['The selected species is no longer available. Re-analyze the file', 'La especie seleccionada ya no está disponible. Vuelve a analizar el archivo'],
+    ['A species selection no longer matches a name in the file', 'Una selección de especie ya no coincide con un nombre en el archivo'],
+    ['Could not read the uploaded file', 'No se pudo leer el archivo subido'],
   ])('%s', (ingles, espanol) => {
     expect(traducirMensajeCatastro(ingles)).toBe(espanol);
   });

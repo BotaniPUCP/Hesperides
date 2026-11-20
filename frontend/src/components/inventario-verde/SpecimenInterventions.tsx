@@ -11,10 +11,11 @@ export interface SpecimenInterventionsProps {
   id: number;
   code: string;
   refreshKey?: number;
+  isRetired?: boolean;
 }
 
 /** The public specimen remains accessible without requesting private work history. */
-export function SpecimenInterventions({ id, code, refreshKey = 0 }: SpecimenInterventionsProps) {
+export function SpecimenInterventions({ id, code, refreshKey = 0, isRetired = false }: SpecimenInterventionsProps) {
   const { user, isLoading } = useAuth();
   if (isLoading || !user || !['ADMIN', 'COORDINADOR', 'SUPERVISOR', 'OPERARIO'].includes(user.role.code)) return null;
   // A session, role or specimen change must never display the previous reader's page.
@@ -24,11 +25,12 @@ export function SpecimenInterventions({ id, code, refreshKey = 0 }: SpecimenInte
       id={id}
       code={code}
       refreshKey={refreshKey}
+      isRetired={isRetired}
     />
   );
 }
 
-function AuthorizedHistory({ id, code, refreshKey = 0 }: SpecimenInterventionsProps) {
+function AuthorizedHistory({ id, code, refreshKey = 0, isRetired = false }: SpecimenInterventionsProps) {
 
   const [options, setOptions] = useState<InterventionOptions | null>(null);
   const [page, setPage] = useState(0);
@@ -159,7 +161,9 @@ function AuthorizedHistory({ id, code, refreshKey = 0 }: SpecimenInterventionsPr
             {result.content.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-neutral-200/90 bg-neutral-50/50 p-5 text-center flex flex-col items-center justify-center">
                 <p className="text-xs text-neutral-500">
-                  No hay actividades vinculadas a este ejemplar disponibles para tu cuenta.
+                  {isRetired
+                    ? 'No se registran actividades históricas vinculadas a este ejemplar.'
+                    : 'No hay actividades vinculadas a este ejemplar disponibles para tu cuenta.'}
                 </p>
               </div>
             ) : (

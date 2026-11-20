@@ -35,7 +35,8 @@ export function SpecimenMeasures({
   onEditMeasures,
 }: SpecimenMeasuresProps) {
   const { user } = useAuth();
-  const canEdit = puedeEditarEjemplar(user?.role.code);
+  const isRetired = Boolean(specimen.retiredAt || specimen.isActive === false);
+  const canEdit = !isRetired && puedeEditarEjemplar(user?.role.code);
   const [historyOpen, setHistoryOpen] = useState(false);
   const measured = specimen.measurementStatus === 'MEASURED';
 
@@ -154,10 +155,16 @@ export function SpecimenMeasures({
               ))}
             </dl>
 
-            {specimen.measuredBeforeLastPruning && specimen.measuredAt && specimen.lastPruningDate && (
+            {specimen.measuredBeforeLastPruning && specimen.measuredAt && specimen.lastPruningDate ? (
               <p className="mt-3 text-xs font-medium text-alert-warning-fg">
                 Medido el {fechaCorta(specimen.measuredAt)}, antes de la poda del {fechaCorta(specimen.lastPruningDate)}
               </p>
+            ) : (
+              measured && specimen.measuredAt && (
+                <p className="mt-2.5 text-[11px] text-neutral-500 font-medium">
+                  Medición en campo registrada el {fechaCorta(specimen.measuredAt)}
+                </p>
+              )
             )}
 
           </>
@@ -167,8 +174,8 @@ export function SpecimenMeasures({
 
         <SpecimenExtraMeasures medidas={specimen.extraMeasures} />
 
-        <div className={`mt-3.5 pt-3 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center ${showOperationalRegime ? 'sm:justify-between' : 'sm:justify-end'} gap-2 text-xs`}>
-          {showOperationalRegime && (
+        <div className={`mt-3.5 pt-3 border-t border-neutral-100 flex flex-col sm:flex-row sm:items-center ${showOperationalRegime && !isRetired ? 'sm:justify-between' : 'sm:justify-end'} gap-2 text-xs`}>
+          {showOperationalRegime && !isRetired && (
             <p className="text-neutral-600">
               Atención propuesta: <strong className="font-semibold">{PROPUESTAS[specimen.pruningAssignment]}</strong>
             </p>

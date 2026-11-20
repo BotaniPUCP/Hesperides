@@ -78,6 +78,7 @@ solo con lo que ya está registrado en el sistema.
   - `WeeklyReport.tsx`, `MonthlyReport.tsx`, `DirectionReport.tsx`: un panel por pestaña; cada
     uno consulta solo cuando está activo.
   - `WeeklyFilters.tsx`, `MonthlyFilters.tsx`, `DirectionFilters.tsx`.
+  - `InterventionDrilldown.tsx`: botón y diálogo con las intervenciones detrás de una cifra (D-20).
 - **Gráficos** en `frontend/src/components/reports/charts/`, en SVG propio (D-17):
 
 | Componente | Qué dibuja | Lo usa |
@@ -145,6 +146,7 @@ pestaña Semanal es la suya.
 | **D-16** | **Indicadores del resumen:** una lista cerrada de **códigos calculados**, con la misma justificación que `ComplianceStatus`: cada código existe porque el backend sabe calcularlo, no es un dato administrable. Cada indicador trae valor, meta, valor del mes anterior y variación. Las metas salen de `system_parameters` (§4). Los indicadores sin fuente se envían con `available: false` y un código de motivo. | Escribir las metas en el código: viola INV-9 y el KPI 4 del proyecto |
 | **D-17** | **Gráficos locales a la feature:** van en `components/reports/charts/` y no en `components/ui`. Por ahora solo los usa esta feature y cumplen uno solo de los criterios de SPEC-C01 §10.2. Pasan al catálogo, con su enmienda, cuando otra feature los necesite. Se pintan con clases de tokens (`fill-brand-600`, `stroke-neutral-500`), que cambian solas en modo oscuro. | Ponerlos ya en el catálogo compartido: §10.2 lo prohíbe con un solo uso |
 | **D-19** | **Datos de demostración en JSON** (pedido del líder, 12 nov 2026): un botón «Ver con datos de demostración» reemplaza las respuestas por los JSON de `components/reports/demo/`, movidos al periodo y sector elegidos. Un aviso fijo dice que las cifras son de ejemplo; la elección dura la sesión del navegador y la clave de cada consulta la incluye, así que nunca se mezclan con datos reales. Sirve para presentar sin datos cargados | Sembrar cifras de ejemplo en la BD: se confundirían con datos reales |
+| **D-20** | **Del reporte a las intervenciones** (pedido del equipo, 19 nov 2026): las cifras de trabajo llevan a las intervenciones que cuentan. En la Semanal, cada código de la tabla abre `/intervenciones/{id}`, y «Pendientes de aprobación» y «Fotos sin subir» abren su lista. En la Mensual, la abren «Labores aprobadas», «Pendientes de aprobación» y el número de labores de cada sección más atendida. La lista sale de `GET /reports/interventions` (§3.7) y se pide **solo al abrirla**. Cada lista reutiliza **el mismo fragmento SQL** que calcula su cifra, así que nunca discrepan. Todo vive en el módulo de reportes: el módulo de intervenciones no cambia y su detalle sigue aplicando su propio alcance. En demostración (D-19) la lista sale del JSON y no enlaza, porque esas intervenciones no existen | Filtrar la lista de `/intervenciones`: no filtra por sector, sección, tipo ni cuadrilla, y añadirlo cambiaría otro módulo |
 | **D-18** | **Nombre del nivel de dirección:** el endpoint y el valor de la pestaña son `direction`/`direccion`. «Resumen para OSG» es un texto de la UI que se puede externalizar. Así el nombre de una oficina del cliente no queda en la API (INV-9 y KPI 4). | `/reports/osg` |
 
 **Permisos por pestaña (D-07):**
@@ -225,6 +227,7 @@ muestra «Sin datos», y se lista en §9 «Por validar».
 | `GET /api/v1/reports/weekly` | Ídem, con el alcance de D-08 | Reporte semanal del sector |
 | `GET /api/v1/reports/monthly` | Ídem, con el alcance de D-08 | Reporte mensual de la sección |
 | `GET /api/v1/reports/direction` | `ADMIN`, `COORDINADOR` | Resumen para OSG |
+| `GET /api/v1/reports/interventions` | `ADMIN`, `COORDINADOR`, `SUPERVISOR`, con el alcance de D-08 | Intervenciones detrás de una cifra de la Semanal o la Mensual (D-20) |
 
 `OPERARIO` recibe 403 en todos. `SUPERVISOR` recibe 403 en `/direction`.
 
@@ -499,6 +502,34 @@ Un `sectorId` inexistente o fuera del alcance responde **404**.
 
 Al cambiar de pestaña se descartan los parámetros de las otras.
 
+### 3.7 `GET /reports/interventions?kind={código}` (D-20)
+
+**Parámetros:** `kind` (obligatorio) más **los mismos de la Mensual** (§3.4), con su
+validación, sus 400/404 y su alcance. La Semanal envía `dateFrom` y `dateTo` con su semana, y
+`sectorId` con su sector.
+
+| `kind` | Lista | Cifra con la que coincide |
+|---|---|---|
+| `APPROVED` | Trabajos con aprobación final cuya fecha (D-02) cae en el periodo | `interventions.approved` de la Mensual |
+| `PENDING_APPROVAL` | Ejecutados y pendientes de aprobación | `interventions.pendingApproval` de la Semanal y la Mensual |
+| `PENDING_PHOTOS` | Trabajos con fotos anunciadas y no subidas, de cualquier fecha | `interventions.pendingPhotos` de la Semanal (suma de `pendingPhotos`) |
+| `ATTENDED_SECTION` | Trabajos que cubrieron `sectionId` en el periodo. **400** sin `sectionId` | `approvedInterventions` de esa fila en `mostAttended` |
+
+Un `kind` ausente o desconocido responde **400**. La respuesta es una lista de tope fijo
+(D-11) de **50**, ordenada por `lastExecutionDate` descendente (las nulas al final) y luego por
+`id` descendente:
+
+```json
+{ "total": 3, "items": [
+  { "id": 120, "code": "INT-000120", "classLabel": "Poda", "typeLabel": "Poda de mantenimiento",
+    "teamName": "Cuadrilla sector 02", "lastExecutionDate": "2026-10-28", "pendingPhotos": 0 } ] }
+```
+
+- **`lastExecutionDate`** es `null` si el trabajo aún no tiene ejecución (solo en `PENDING_PHOTOS`).
+- **`pendingPhotos`** cuenta las fotos del trabajo aún no subidas, en cualquier `kind`.
+- **El enlace al detalle no amplía permisos:** el SUPERVISOR solo recibe trabajos de sus
+  cuadrillas, y `/intervenciones/{id}` vuelve a comprobar el acceso.
+
 ## 4. Migración de base de datos
 
 **No crea tablas.** Solo agrega dos filas de metas en `system_parameters` (V003), para que
@@ -660,6 +691,16 @@ existe un rango genérico. Las lecturas usan los índices existentes:
 | CA-D06 | El mes en curso se rotula como parcial | `?tab=direccion&month=<mes actual>` muestra «Mes en curso: cifras parciales». Un mes futuro responde 400 |
 | CA-D07 | La variación respeta el sentido del indicador | Una baja de cobertura se muestra con badge `danger`. Una variación de «incidencias resueltas» se muestra en `neutral` |
 
+**Del reporte a las intervenciones (D-20)**
+
+| # | Criterio | Cómo verificarlo |
+|---|----------|------------------|
+| CA-I01 | Cada intervención de la Semanal abre su detalle | Clic en el código de una fila: se abre `/intervenciones/{id}`, y la flecha «Volver» regresa a `/reportes` con la misma pestaña y filtros |
+| CA-I02 | Cada cifra de trabajo abre las intervenciones que cuenta | Con 3 pendientes de aprobación, «Ver cuáles» abre un diálogo con esas 3. Con «Labores aprobadas» en 45, la lista dice «45» en total y muestra las 50 más recientes como máximo |
+| CA-I03 | Una sección más atendida abre sus labores | Una sección con «2 · ver» abre las 2 intervenciones aprobadas que la cubrieron en el periodo |
+| CA-I04 | La lista respeta el alcance | Como SUPERVISOR solo aparecen trabajos de sus cuadrillas, y un `sectorId` ajeno responde 404 |
+| CA-I05 | En demostración no se enlaza | Con «Ver con datos de demostración», la lista muestra trabajos de ejemplo sin enlace y con el aviso |
+
 ## 7. Especificación visual
 
 ### 7.1 Estructura
@@ -817,6 +858,13 @@ Alcance (D-07, D-08)
 - SUPERVISOR sin sectores → weekly 404 en cualquier sectorId; monthly con coverage.available false
 - ADMIN entra a las tres sin cambiar el mapeo global de roles
 - incidencias del SUPERVISOR: solo enviadas por él o asignadas a sus cuadrillas
+
+Del reporte a las intervenciones (D-20)
+- APPROVED y PENDING_APPROVAL listan los mismos trabajos que cuentan las cifras de la Semanal
+- ATTENDED_SECTION lista solo los trabajos que cubrieron la sección en el periodo; sin sectionId → 400; kind desconocido → 400
+- PENDING_PHOTOS trae cada trabajo con sus fotos sin subir y lastExecutionDate null si no se ejecutó
+- SUPERVISOR: solo trabajos de sus cuadrillas; sector ajeno → 404; OPERARIO → 403
+- InterventionDrilldown: no se muestra con la cifra en 0; pide la lista solo al abrirla; enlaza a /intervenciones/{id}; en demostración no enlaza; error con «Reintentar»
 
 Migración Vnext
 - MigrationNumberingTest y MigrationSmokeTest siguen en verde

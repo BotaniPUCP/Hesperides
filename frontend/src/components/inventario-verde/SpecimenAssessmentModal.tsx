@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Assessment, AssessmentForm } from '@shared/types';
 import { Button, Input, Modal } from '@/components/ui';
+import { useUnsavedChangesGuard } from '@/components/forms/unsaved/useUnsavedChangesGuard';
 import { catastroApi } from '@/lib/catastro-api';
 import { todayLocal } from '@/lib/local-date';
 import { ConfirmSaveModal } from './ConfirmSaveModal';
@@ -61,6 +62,16 @@ export function SpecimenAssessmentModal({
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const isDirty = Boolean(
+    date !== hoy ||
+    Object.values(respuestas).some((val) => val === 'si' || val === 'no') ||
+    recommendedManagement.trim() !== '' ||
+    observation.trim() !== ''
+  );
+
+  const guard = useUnsavedChangesGuard(isOpen && isDirty);
+  const cerrar = () => guard.confirm(onClose);
 
   const handleRespuestaChange = (key: string, val: SiNo) => {
     setRespuestas((prev) => ({ ...prev, [key]: val }));
@@ -135,7 +146,7 @@ export function SpecimenAssessmentModal({
     <>
       <Modal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={cerrar}
         title="Registrar evaluación fitosanitaria e inspección"
         size="lg"
         footer={
@@ -148,7 +159,7 @@ export function SpecimenAssessmentModal({
               </span>
             )}
             <div className="flex items-center gap-2">
-              <Button variant="secondary" onClick={onClose} disabled={saving} type="button">
+              <Button variant="secondary" onClick={cerrar} disabled={saving} type="button">
                 Cancelar
               </Button>
               <Button
@@ -389,6 +400,7 @@ export function SpecimenAssessmentModal({
           )}
         </div>
       </ConfirmSaveModal>
+      {guard.dialog}
     </>
   );
 }

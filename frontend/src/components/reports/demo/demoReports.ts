@@ -1,5 +1,8 @@
 import { format } from 'date-fns';
-import type { DirectionReport, MonthlyReport, ReportOptions, ReportSection, WeeklyReport } from '@shared/types';
+import type {
+  DirectionReport, MonthlyReport, ReportInterventionKind, ReportInterventionRow, ReportOptions, ReportSection,
+  ReportTopList, WeeklyReport,
+} from '@shared/types';
 import {
   mondayOf, parseIsoDate, shiftMonth, type MonthlyFilters, type WeeklyParams,
 } from '@/lib/reportNavigation';
@@ -113,6 +116,38 @@ export function demoMonthly(filters: MonthlyFilters): MonthlyReport {
     report.unattended = { total: report.unattended.items.filter(keep).length, items: report.unattended.items.filter(keep) };
   }
   return report;
+}
+
+const DEMO_WORKS = [
+  { classLabel: 'Mantenimiento de jardines', typeLabel: 'Deshierbo' },
+  { classLabel: 'Mantenimiento de jardines', typeLabel: 'Corte de césped' },
+  { classLabel: 'Poda', typeLabel: 'Poda de mantenimiento' },
+  { classLabel: 'Mantenimiento de jardines', typeLabel: 'Abonado' },
+  { classLabel: 'Fitosanitario', typeLabel: 'Control de plagas' },
+];
+
+/**
+ * The works behind a demo figure (SPEC-202 D-20). There are as many as the
+ * figure says, so opening «14 aprobadas» shows 14; their ids do not exist, so
+ * the screen does not link them. Pending photos have no execution yet.
+ */
+export function demoInterventions(kind: ReportInterventionKind, filters: MonthlyFilters,
+  total: number): ReportTopList<ReportInterventionRow> {
+  const end = filters.dateTo ?? today();
+  const from = filters.dateFrom ?? end;
+  const span = Math.max(daysBetween(from, end), 0);
+  const items = Array.from({ length: Math.min(total, 50) }, (_, index) => {
+    const work = DEMO_WORKS[index % DEMO_WORKS.length];
+    return {
+      id: -(index + 1),
+      code: `DEMO-${String(index + 1).padStart(4, '0')}`,
+      ...work,
+      teamName: `Cuadrilla sector 0${(index % 3) + 1}`,
+      lastExecutionDate: kind === 'PENDING_PHOTOS' ? null : shiftDays(end, -(index % (span + 1))),
+      pendingPhotos: kind === 'PENDING_PHOTOS' ? 1 : 0,
+    };
+  });
+  return { total, items };
 }
 
 export function demoDirection(month: string | null): DirectionReport {

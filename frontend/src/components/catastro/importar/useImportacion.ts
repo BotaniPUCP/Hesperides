@@ -179,6 +179,21 @@ export function useImportacion(initialKind: ImportKind = 'specimens') {
 
   async function confirmar() {
     if (!vista || !puedeConfirmar || summaryRequest.current) return;
+
+    if (kind === 'species') {
+      const revision = planRevision.current;
+      const summary: ImportConfirmationSummary = {
+        batchId: vista.batchId,
+        toCreate: vista.toCreate,
+        toUpdate: vista.toUpdate,
+        fingerprint: '',
+      };
+      confirmationRevision.current = revision;
+      setConfirmationSummary(summary);
+      setConfirmationOpen(true);
+      return;
+    }
+
     // Esta confirmación resumida es para el plan de ejemplares; los otros estándares conservan su flujo actual.
     if (kind !== 'specimens') {
       await ejecutarConfirmacion();
@@ -218,7 +233,7 @@ export function useImportacion(initialKind: ImportKind = 'specimens') {
       invalidarResumen();
       return;
     }
-    await ejecutarConfirmacion(confirmationSummary.fingerprint);
+    await ejecutarConfirmacion(kind === 'specimens' ? confirmationSummary.fingerprint : undefined);
   }
 
   function volverARevision() {

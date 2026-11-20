@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Species } from '@shared/types';
 import { ApiError } from '@/lib/api';
@@ -39,12 +39,13 @@ function adelfaCritica(): Species {
 }
 
 const guardar = () => fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+const confirmar = () => fireEvent.click(screen.getByRole('button', { name: /Confirmar/ }));
 
 beforeEach(() => mockUseAuth.mockReturnValue(coordinador));
 afterEach(() => jest.resetAllMocks());
 
 describe('EdicionEspecieForm', () => {
-  it('precarga la especie y guarda la corrección sin pedir confirmar si no cambia la criticidad', async () => {
+  it('precarga la especie, muestra el mini-resumen de modificaciones y sólo guarda tras confirmar', async () => {
     updateSpecies.mockResolvedValue(adelfaCritica());
     const onSaved = jest.fn();
     render(<EdicionEspecieForm species={adelfaCritica()} onSaved={onSaved} />);
@@ -55,11 +56,37 @@ describe('EdicionEspecieForm', () => {
     await userEvent.type(comun, 'Laurel rosa');
     guardar();
 
+    // Modal con mini-resumen de cambios
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Confirmar cambios en la especie')).toBeInTheDocument();
+    expect(within(dialog).getByText('1 modificación a registrar:')).toBeInTheDocument();
+    expect(within(dialog).getByText('Nombre común')).toBeInTheDocument();
+    expect(within(dialog).getByText('Laurel rosa')).toBeInTheDocument();
+    expect(updateSpecies).not.toHaveBeenCalled();
+
+    confirmar();
+
     await waitFor(() => expect(updateSpecies).toHaveBeenCalledWith(
       'nerium-oleander',
       expect.objectContaining({ scientificName: 'Nerium oleander', commonName: 'Laurel rosa', critical: true, vegetationTypeCode: 'SHRUB' }),
     ));
     expect(onSaved).toHaveBeenCalled();
+  });
+
+  it('permite revisar datos desde el mini-resumen sin perder los cambios ni llamar a la API', async () => {
+    render(<EdicionEspecieForm species={adelfaCritica()} onSaved={jest.fn()} />);
+
+    const comun = screen.getByLabelText(/Nombre común/i);
+    await userEvent.clear(comun);
+    await userEvent.type(comun, 'Laurel rosa');
+    guardar();
+
+    expect(await screen.findByText('Confirmar cambios en la especie')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Revisar datos' }));
+
+    expect(screen.queryByText('Confirmar cambios en la especie')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Nombre común/i)).toHaveValue('Laurel rosa');
+    expect(updateSpecies).not.toHaveBeenCalled();
   });
 
   it('normaliza un nombre de una palabra al editar y conserva el slug de la ficha', async () => {
@@ -69,6 +96,7 @@ describe('EdicionEspecieForm', () => {
     await userEvent.clear(scientificName);
     await userEvent.type(scientificName, 'mANGO');
     guardar();
+    confirmar();
 
     await waitFor(() => expect(updateSpecies).toHaveBeenCalledWith(
       'nerium-oleander', expect.objectContaining({ scientificName: 'Mango' }),
@@ -135,11 +163,20 @@ describe('EdicionEspecieForm', () => {
     expect(screen.getByText(/Cambiaste el tipo; revisa si esta especie debe ser crítica/)).toBeInTheDocument();
   });
 
+  it('el botón de guardar cambios permanece deshabilitado si no hay modificaciones', () => {
+    render(<EdicionEspecieForm species={adelfaCritica()} onSaved={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled();
+  });
+
   it('muestra el conflicto si el nombre ya existe', async () => {
     updateSpecies.mockRejectedValue(new ApiError(409, 'Conflict'));
     render(<EdicionEspecieForm species={adelfaCritica()} onSaved={jest.fn()} />);
 
+    const scientificName = screen.getByLabelText(/Nombre científico/i);
+    await userEvent.clear(scientificName);
+    await userEvent.type(scientificName, 'Jacaranda mimosifolia');
     guardar();
+    confirmar();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe una especie con este nombre científico');
   });

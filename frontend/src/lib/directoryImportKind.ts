@@ -12,9 +12,12 @@ const COLUMNA_DISTINTIVA: Record<DirectoryImportKind, string> = {
   contacts: 'organizaciones',
 };
 
+export const MENSAJE_TIPO_NO_RECONOCIDO =
+  'No se reconoce el archivo: su cabecera no es la de organizaciones ni de contactos. Usa una de las plantillas.';
+
 export class TipoNoReconocidoError extends Error {
   constructor() {
-    super('No se reconoce el archivo: su cabecera no es la de organizaciones ni de contactos. Usa una de las plantillas.');
+    super(MENSAJE_TIPO_NO_RECONOCIDO);
     this.name = 'TipoNoReconocidoError';
   }
 }

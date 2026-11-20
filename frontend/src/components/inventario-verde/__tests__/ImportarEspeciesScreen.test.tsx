@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ImportPreview, ImportResult } from '@shared/types';
 import { ToastProvider } from '@/components/ui';
@@ -109,6 +109,16 @@ describe('ImportarEspeciesScreen', () => {
     expect(screen.getByText('especies a actualizar')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar carga' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Confirmar importación' });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveTextContent('Se guardarán estas operaciones:');
+    expect(dialog).toHaveTextContent('Nuevos registros');
+    expect(dialog).toHaveTextContent('2');
+    expect(dialog).toHaveTextContent('Actualizaciones');
+    expect(dialog).toHaveTextContent('1');
+    expect(api.confirmImport).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar e importar' }));
     expect(api.confirmImport).toHaveBeenCalledWith(44, {});
     expect(await screen.findByText('Carga confirmada')).toBeInTheDocument();
     expect(screen.getByText('especies actualizadas')).toBeInTheDocument();
@@ -166,6 +176,7 @@ describe('ImportarEspeciesScreen', () => {
     const confirmar = screen.getByRole('button', { name: 'Confirmar carga' });
     expect(confirmar).toBeEnabled();
     await userEvent.click(confirmar);
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar e importar' }));
     expect(await screen.findByText(/filas de especies inactivas omitidas/)).toBeInTheDocument();
     expect(api.confirmImport).toHaveBeenCalledWith(44, {});
   });
@@ -181,9 +192,12 @@ describe('ImportarEspeciesScreen', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Revisar archivo' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Confirmar carga' }));
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog', { name: 'Confirmar importación' });
+    const confirm = within(dialog).getByRole('button', { name: 'Confirmar e importar' });
+    await userEvent.click(confirm);
+    expect(await within(dialog).findByRole('alert')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Confirmar carga' }));
+    await userEvent.click(confirm);
     expect(api.confirmImport).toHaveBeenCalledTimes(2);
     expect(api.confirmImport).toHaveBeenNthCalledWith(1, 44, {});
     expect(api.confirmImport).toHaveBeenNthCalledWith(2, 44, {});
@@ -203,6 +217,7 @@ describe('ImportarEspeciesScreen', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Revisar archivo' }));
     await userEvent.click(await screen.findByRole('button', { name: 'Confirmar carga' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar e importar' }));
     expect(await screen.findByRole('button', { name: 'Actualizar vista previa' })).toBeEnabled();
 
     await userEvent.click(screen.getByRole('button', { name: 'Actualizar vista previa' }));
@@ -252,5 +267,23 @@ describe('ImportarEspeciesScreen', () => {
 
     expect(await screen.findByText('especies nuevas')).toBeInTheDocument();
     expect(api.previewImport).toHaveBeenCalledTimes(2);
+  });
+
+  it('permite volver a la revisión desde el modal de confirmación de especies', async () => {
+    api.previewImport.mockResolvedValue(VISTA_ESPECIES);
+    pantalla('ADMIN');
+    await userEvent.upload(
+      screen.getByLabelText('Archivo CSV de especies'),
+      new File(['nombre_cientifico\nTabebuia rosea'], 'especies.csv', { type: 'text/csv' }),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Revisar archivo' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar carga' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Confirmar importación' });
+    expect(dialog).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Volver' }));
+
+    expect(screen.queryByRole('dialog', { name: 'Confirmar importación' })).not.toBeInTheDocument();
+    expect(api.confirmImport).not.toHaveBeenCalled();
   });
 });

@@ -17,7 +17,13 @@ import { useRegistroPlanta } from './useRegistroPlanta';
 const DECIMALES_COORDENADA = 6;
 
 /** Registro de una planta por formulario (SPEC-103 §5.1). */
-export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuardar: boolean) => void }) {
+export function RegistroPlantaForm({
+  onDirtyChange,
+  onCancel,
+}: {
+  onDirtyChange?: (sinGuardar: boolean) => void;
+  onCancel?: () => void;
+}) {
   const r = useRegistroPlanta();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [especieSeleccionada, setEspecieSeleccionada] = useState<Species | null>(null);
@@ -99,7 +105,16 @@ export function RegistroPlantaForm({ onDirtyChange }: { onDirtyChange?: (sinGuar
 
       {r.error && <p role="alert" className="text-sm text-action-danger">{r.error}</p>}
 
-      {!r.duplicado && <Button type="submit" loading={r.enviando}>Registrar planta</Button>}
+      {!r.duplicado && (
+        <div className="flex items-center gap-3 pt-2">
+          <Button type="submit" loading={r.enviando}>Registrar planta</Button>
+          {onCancel && (
+            <Button variant="ghost" type="button" onClick={onCancel} disabled={r.enviando}>
+              Cancelar
+            </Button>
+          )}
+        </div>
+      )}
     </form>
 
     <ConfirmSaveModal
