@@ -56,7 +56,8 @@ public class ReservationReadRepository {
     public record OverlapRow(String code, Instant startsAt, Instant endsAt, String organizationName) {
     }
 
-    public record WorkRow(long interventionId, String interventionCode, LocalDate scheduledDate,
+    /** {@code title} es «Clase · Tipo», el mismo nombre con que la lista de actividades muestra la intervención. */
+    public record WorkRow(long interventionId, String interventionCode, String title, LocalDate scheduledDate,
             Instant startedAt, String locationName, boolean here, Double distanceMeters) {
     }
 
@@ -372,6 +373,8 @@ public class ReservationReadRepository {
                     SELECT (SELECT geom FROM place_outlines WHERE place_id = :placeId) AS geom
                 ), candidates AS (
                     SELECT i.id AS intervention_id, i.code, i.scheduled_date, l.id AS location_id,
+                           concat_ws(' · ', (SELECT c.label FROM catalog_items c WHERE c.id = i.intervention_class_item_id),
+                                     (SELECT c.label FROM catalog_items c WHERE c.id = i.intervention_type_item_id)) AS title,
                            l.started_at, l.zone_id, l.place_id,
                            COALESCE((SELECT p.name FROM places p WHERE p.id = l.place_id),
                                     (SELECT z.name FROM zones z WHERE z.id = l.zone_id)) AS location_name,
@@ -401,11 +404,11 @@ public class ReservationReadRepository {
                                 ELSE ST_Distance(c.geom::geography, o.geom::geography) END AS distance_m
                       FROM candidates c CROSS JOIN outline o
                 )
-                SELECT intervention_id, code, scheduled_date, min(started_at) AS started_at,
+                SELECT intervention_id, code, title, scheduled_date, min(started_at) AS started_at,
                        (array_agg(location_name ORDER BY distance_m NULLS LAST))[1] AS location_name,
                        bool_or(here) AS here, min(distance_m) AS distance_m
                   FROM scored
-                 GROUP BY intervention_id, code, scheduled_date
+                 GROUP BY intervention_id, code, title, scheduled_date
                 HAVING bool_or(here) OR min(distance_m) <= :meters
                  ORDER BY bool_or(here) DESC, min(distance_m) NULLS LAST, scheduled_date""",
                 new MapSqlParameterSource()
@@ -413,7 +416,7 @@ public class ReservationReadRepository {
                         .addValue("lastDay", lastDay)
                         .addValue("startsAt", OffsetDateTime.ofInstant(startsAt, java.time.ZoneOffset.UTC))
                         .addValue("meters", meters),
-                (rs, i) -> new WorkRow(rs.getLong("intervention_id"), rs.getString("code"),
+                (rs, i) -> new WorkRow(rs.getLong("intervention_id"), rs.getString("code"), rs.getString("title"),
                         rs.getObject("scheduled_date", LocalDate.class),
                         wallInstant(rs, "started_at"), rs.getString("location_name"),
                         rs.getBoolean("here"), nullable(rs, "distance_m")));

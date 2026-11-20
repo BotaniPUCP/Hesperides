@@ -623,6 +623,26 @@ class ReservationsIntegrationTest {
         }
 
         @Test
+        void workWarningNamesTheActivityWithItsCodeInParentheses() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            long pending = intervention(day, rosalesZoneId, null);
+            String interventionCode = jdbc.queryForObject("SELECT code FROM interventions WHERE id = ?", String.class, pending);
+            String classLabel = jdbc.queryForObject("""
+                    SELECT c.label FROM interventions i JOIN catalog_items c ON c.id = i.intervention_class_item_id
+                     WHERE i.id = ?""", String.class, pending);
+
+            String json = mockMvc.perform(get(RESERVATIONS + "/check").param("placeId", String.valueOf(rosalesId))
+                            .param("startsAt", at(day, 10).toString()).param("endsAt", at(day, 14).toString()))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+            List<Map<String, Object>> warnings = JsonPath.read(json, "$.data");
+            String text = (String) warnings.stream()
+                    .filter(w -> w.get("interventionId") != null && ((Number) w.get("interventionId")).longValue() == pending)
+                    .findFirst().orElseThrow().get("text");
+            assertThat(text).contains("de " + classLabel + " (" + interventionCode + "), programada el ");
+        }
+
+        @Test
         void workScheduledAfterTheLastDayOfTheReservationDoesNotWarn() throws Exception {
             LocalDate day = LocalDate.now(LIMA).plusDays(2);
             long place = rosalesId;

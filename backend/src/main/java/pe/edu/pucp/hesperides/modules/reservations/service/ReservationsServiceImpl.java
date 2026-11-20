@@ -277,11 +277,10 @@ public class ReservationsServiceImpl implements ReservationsService {
             String when = work.startedAt() == null
                     ? "programada el " + day(work.scheduledDate())
                     : "empezó el " + day(work.startedAt());
+            String activity = work.title() + " (" + work.interventionCode() + "), " + when;
             String text = here
-                    ? where + " tiene trabajo por hacer de " + work.interventionCode() + " (" + when
-                            + "): pueden estar trabajando durante la reserva"
-                    : "A " + meters(work.distanceMeters()) + " m, " + where + " tiene trabajo por hacer de "
-                            + work.interventionCode() + " (" + when + ")";
+                    ? where + " tiene trabajo por hacer de " + activity + ": pueden estar trabajando durante la reserva"
+                    : "A " + meters(work.distanceMeters()) + " m, " + where + " tiene trabajo por hacer de " + activity;
             warnings.add(new Warning(here ? "WORK_HERE" : "NEARBY_WORK", here ? "CRITICAL" : "WARNING", text,
                     null, work.interventionId()));
         }
