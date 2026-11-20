@@ -54,6 +54,8 @@ export interface ReservationWarning {
   text: string;
   reservationCode: string | null;
   interventionId: number | null;
+  /** Lo que va resaltado después del texto; los avisos que no lo necesitan no lo traen. */
+  emphasis?: string | null;
 }
 
 export interface Reservation {

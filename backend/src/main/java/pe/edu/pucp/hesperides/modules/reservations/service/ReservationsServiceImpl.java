@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.pucp.hesperides.engine.reservations.PendingWorkWarning;
+import pe.edu.pucp.hesperides.engine.reservations.PendingWorkWarning.Wording;
 import pe.edu.pucp.hesperides.engine.reservations.ReservationFollowup;
 import pe.edu.pucp.hesperides.engine.reservations.ReservationPeriod;
 import pe.edu.pucp.hesperides.engine.reservations.ReservationState;
@@ -269,20 +271,18 @@ public class ReservationsServiceImpl implements ReservationsService {
                             + time(overlap.endsAt()) + " (" + overlap.organizationName() + ")",
                     overlap.code(), null));
         }
-        for (WorkRow work : reads.pendingWork(place.id(), start,
-                ReservationPeriod.day(start, zone()), nearbyMeters(), timeZone)) {
+        LocalDate reservationDay = ReservationPeriod.day(start, zone());
+        for (WorkRow work : reads.pendingWork(place.id(), start, reservationDay, nearbyMeters(), timeZone)) {
             boolean here = work.here();
             String where = here ? place.name()
                     : work.locationName() == null ? place.name() : work.locationName();
-            String when = work.startedAt() == null
-                    ? "programada el " + day(work.scheduledDate())
-                    : "empezó el " + day(work.startedAt());
-            String activity = work.title() + " (" + work.interventionCode() + "), " + when;
-            String text = here
-                    ? where + " tiene trabajo por hacer de " + activity + ": pueden estar trabajando durante la reserva"
-                    : "A " + meters(work.distanceMeters()) + " m, " + where + " tiene trabajo por hacer de " + activity;
-            warnings.add(new Warning(here ? "WORK_HERE" : "NEARBY_WORK", here ? "CRITICAL" : "WARNING", text,
-                    null, work.interventionId()));
+            LocalDate workDay = work.startedAt() == null ? work.scheduledDate()
+                    : work.startedAt().atZone(zone()).toLocalDate();
+            Wording wording = PendingWorkWarning.describe(new PendingWorkWarning.Work(where,
+                    work.title() + " (" + work.interventionCode() + ")", here ? null : meters(work.distanceMeters()),
+                    workDay, work.startedAt() != null, reservationDay, LocalDate.now(zone())));
+            warnings.add(new Warning(here ? "WORK_HERE" : "NEARBY_WORK", here ? "CRITICAL" : "WARNING",
+                    wording.text(), null, work.interventionId(), wording.emphasis()));
         }
         return sorted(warnings);
     }
@@ -481,10 +481,6 @@ public class ReservationsServiceImpl implements ReservationsService {
 
     private OffsetDateTime toOffset(Instant instant) {
         return instant.atZone(zone()).toOffsetDateTime();
-    }
-
-    private String day(Instant instant) {
-        return DAY.format(instant.atZone(zone()));
     }
 
     private String day(LocalDate date) {

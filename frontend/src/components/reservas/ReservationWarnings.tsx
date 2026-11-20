@@ -11,7 +11,7 @@ interface Props {
 }
 
 function Item({ warning }: { warning: ReservationWarning }) {
-  return <li>{warning.text}</li>;
+  return <li>{warning.text}{warning.emphasis && <> <strong>{warning.emphasis}</strong></>}</li>;
 }
 
 /**

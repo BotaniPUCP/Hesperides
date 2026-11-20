@@ -89,7 +89,13 @@ public final class ReservationDtos {
             String severity,
             String text,
             String reservationCode,
-            Long interventionId) {
+            Long interventionId,
+            /** Lo que el frontend resalta después del texto; nulo si no hace falta. */
+            String emphasis) {
+
+        public Warning(String kind, String severity, String text, String reservationCode, Long interventionId) {
+            this(kind, severity, text, reservationCode, interventionId, null);
+        }
     }
 
     public record Page<T>(int page, int size, long total, List<T> items) {

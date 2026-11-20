@@ -643,6 +643,23 @@ class ReservationsIntegrationTest {
         }
 
         @Test
+        void workStartedAWeekBeforeExplainsItAndStressesThatDay() throws Exception {
+            LocalDate day = LocalDate.now(LIMA).plusDays(2);
+            long pending = intervention(day.minusDays(7), rosalesZoneId, null);
+
+            String json = mockMvc.perform(get(RESERVATIONS + "/check").param("placeId", String.valueOf(rosalesId))
+                            .param("startsAt", at(day, 10).toString()).param("endsAt", at(day, 14).toString()))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+            List<Map<String, Object>> warnings = JsonPath.read(json, "$.data");
+            Map<String, Object> warning = warnings.stream()
+                    .filter(w -> w.get("interventionId") != null && ((Number) w.get("interventionId")).longValue() == pending)
+                    .findFirst().orElseThrow();
+            assertThat((String) warning.get("text")).contains("una semana antes de la reserva");
+            assertThat((String) warning.get("emphasis")).endsWith("podrían estar trabajando en este jardín.");
+        }
+
+        @Test
         void workScheduledAfterTheLastDayOfTheReservationDoesNotWarn() throws Exception {
             LocalDate day = LocalDate.now(LIMA).plusDays(2);
             long place = rosalesId;
