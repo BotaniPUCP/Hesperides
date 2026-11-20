@@ -21,8 +21,6 @@ const PICK_MODES: { value: PickMode; label: string }[] = [
   { value: 'GARDENS', label: 'Jardines' }, { value: 'SPECIMENS', label: 'Ejemplares' }, { value: 'BOTH', label: 'Ambos' },
 ];
 const OUTSIDE = 'fuera';
-/** Los mapas de Conjuntos nacen en colores reales, como el mapa principal (SPEC-112 D-13). */
-const REAL_COLORS = { realColors: true };
 /** Lo que se mueve el puntero antes de considerar que se movió el mapa y no que se hizo clic. */
 const DRAG_PX = 6;
 /** Las flechas que recorren los sectores: grandes, porque son la forma de moverse entre sectores. */
@@ -392,7 +390,7 @@ export function SetMapPicker({ sectors, sectionsBySector, specimens, selectedZon
           onPointerDownCapture={onMapPointerDown} onPointerUpCapture={onMapPointerUp}
           onWheelCapture={() => { if (!selecting) loseFocus(); }}>
           {isLoading ? <div className="p-6"><LoadingSkeleton /></div>
-            : scene && layers && !unsupported ? <Map3DView data={scene} start={REAL_COLORS}
+            : scene && layers && !unsupported ? <Map3DView data={scene}
               onReady={(v) => {
                 viewer.current = v; v.setMarkedSections(markedCodes); v.setMarkedSpecimens(markedPlantCodes);
                 const [sections, specimenCodes] = JSON.parse(tintSignature) as [string[], string[]];

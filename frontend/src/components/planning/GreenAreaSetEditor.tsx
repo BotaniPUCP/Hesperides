@@ -135,7 +135,7 @@ export function GreenAreaSetEditor({ options, existing }: { options: SetOptions;
                   {mapOpen ? 'Ocultar mapa' : 'Ver en el mapa'}</Button>
               )}
             </div>
-            {mapOpen && contents > 0 && <div id="mapa" className="h-[60vh]"><SetMap zoneCodes={zoneCodes} specimenCodes={specimenCodes} className="h-full" realColors /></div>}
+            {mapOpen && contents > 0 && <div id="mapa" className="h-[60vh]"><SetMap zoneCodes={zoneCodes} specimenCodes={specimenCodes} className="h-full" /></div>}
             <SelectedGardensSummary groups={byType} />
           </div>
         </Card>

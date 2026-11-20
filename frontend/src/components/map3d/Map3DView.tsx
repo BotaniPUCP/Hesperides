@@ -22,18 +22,21 @@ export interface Map3DViewProps extends ViewerCallbacks {
   /** El navegador no pudo crear el contexto WebGL: quien llama muestra las listas. */
   onUnsupported: () => void;
   poseMemory?: PoseMemory;
-  /** Cómo nace el visor; se lee solo al crearlo. */
+  /** Cómo nace el visor; se lee solo al crearlo. Sin él, en colores reales. */
   start?: ViewerStart;
   /** Modo captura: sin nombres ni globos sobre la maqueta. */
   bare?: boolean;
 }
+
+/** Todo mapa nace en colores reales (SPEC-112 D-13): el rosado queda solo para quien lo pida. */
+const REAL_COLORS_START: ViewerStart = { realColors: true };
 
 /**
  * Monta el visor de three.js en un div. El visor se importa al montar y no
  * arriba del archivo: three pesa ~600 kB y no tiene sentido en el servidor ni
  * en las pantallas que no muestran el mapa.
  */
-export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemory, start, bare = false, ...callbacks }: Map3DViewProps) {
+export function Map3DView({ data, model = null, onReady, onUnsupported, poseMemory, start = REAL_COLORS_START, bare = false, ...callbacks }: Map3DViewProps) {
   const container = useRef<HTMLDivElement>(null);
   const labels = useRef<HTMLDivElement>(null);
   const balloons = useRef<HTMLDivElement>(null);

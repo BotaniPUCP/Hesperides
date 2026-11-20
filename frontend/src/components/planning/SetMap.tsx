@@ -16,18 +16,14 @@ interface Props {
   zoneCodes: string[];
   specimenCodes: string[];
   className?: string;
-  /** Nace en colores reales (SPEC-112 D-13): Conjuntos y Planificación lo piden; la ficha de reserva no. */
-  realColors?: boolean;
 }
-
-const REAL_COLORS = { realColors: true };
 
 /**
  * Un conjunto en el mapa, con lo suyo iluminado. Si está disperso, se recorre por
  * grupos de cosas cercanas (Anterior · Siguiente · Ver todo) en vez de encuadrar
  * todo el campus. No toca el visor: solo lo encuadra.
  */
-export function SetMap({ zoneCodes, specimenCodes, className = '', realColors = false }: Props) {
+export function SetMap({ zoneCodes, specimenCodes, className = '' }: Props) {
   const { data: layers, isLoading, errorMessage } = useMapLayers();
   const [unsupported, setUnsupported] = useState(false);
   const viewer = useRef<Viewer | null>(null);
@@ -60,7 +56,7 @@ export function SetMap({ zoneCodes, specimenCodes, className = '', realColors = 
   const go = (i: number) => setStep({ key, index: i });
   return (
     <div className={`relative min-h-[320px] overflow-hidden rounded-lg bg-neutral-100 ${className}`}>
-      <Map3DView data={scene} start={realColors ? REAL_COLORS : undefined}
+      <Map3DView data={scene}
         onReady={(v) => {
           viewer.current = v; v.setMarkedSections(zoneCodes); v.setMarkedSpecimens(specimenCodes);
           v.focusSections(focus.zoneCodes, focus.specimenCodes); v.setLayerVisible('supervision', false);
