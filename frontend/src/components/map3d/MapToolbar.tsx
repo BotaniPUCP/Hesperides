@@ -21,6 +21,8 @@ export interface MapToolbarProps {
   onOption: (key: keyof ViewOptions, value: boolean) => void;
   /** Entra al modo captura: la maqueta sola, sin interfaz, nombres ni iconos. */
   onCapture?: () => void;
+  /** Larger touch targets when the public demo opens the toolbar on a phone. */
+  roomy?: boolean;
   viewer: RefObject<Pick<Viewer, 'fit' | 'top' | 'north' | 'toggleSpin' | 'livePerspective' | 'setSunsetHour' | 'snapshot'> | null>;
 }
 
@@ -49,12 +51,13 @@ async function downloadSnapshot(viewer: MapToolbarProps['viewer']) {
   URL.revokeObjectURL(url);
 }
 
-const button = 'rounded-md bg-neutral-0/95 px-2 py-1 text-xs text-neutral-700 shadow hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600';
+const BUTTON = 'rounded-md bg-neutral-0/95 px-2 py-1 text-xs text-neutral-700 shadow hover:bg-neutral-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600';
 
 /** Controles de cámara y de apariencia. La brújula apunta al norte y, al pulsarla, orienta la vista. */
-export function MapToolbar({ options, compass, onOption, viewer, onCapture }: MapToolbarProps) {
+export function MapToolbar({ options, compass, onOption, viewer, onCapture, roomy = false }: MapToolbarProps) {
   const onNorth = () => viewer.current?.north();
   const [sunsetHour, setSunsetHour] = useState<number>(SUNSET_HOUR);
+  const button = roomy ? `${BUTTON} pointer-events-auto min-h-10` : BUTTON;
   return (
     <div className="flex flex-wrap items-center gap-1">
       <button type="button" className={button} onClick={onNorth} aria-label="Orientar al norte" title="Orientar al norte">

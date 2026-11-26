@@ -11,6 +11,19 @@ Sistema modular en monorepo desarrollado bajo especificación (Spec Driven Devel
 
 El dominio funcional y las características específicas se definen en los specs de `specs/`. Este repositorio contiene por ahora la arquitectura base, las convenciones comunes y un sistema de catálogos configurables que permite extender tipos, estados y categorías sin recompilación.
 
+## Demo pública del mapa 3D
+
+Abre `/demo` en el frontend para recorrer el campus PUCP sin iniciar sesión. Puedes
+usar la barra del mapa (incluidos Atardecer y Colores reales), buscar edificios y
+jardines, cambiar las capas visibles y plantar hasta 20 plantas
+de prueba, con opciones para deshacer o limpiar. Las plantas desaparecen al recargar
+y no llegan al catastro.
+
+La demo funciona sin backend: el build incluye una copia pública del perímetro, las
+huellas de edificios de OpenStreetMap, los jardines y la vegetación. Para actualizar
+esa copia desde las fuentes del repositorio, ejecuta desde la raíz
+`python3 scripts/mapa/generate_demo_snapshot.py` y vuelve a construir el frontend.
+
 ## Incidencias de áreas verdes
 
 Disponible en `/incidencias` para los cuatro roles. Spec: [`SPEC-201`](specs/features/SPEC-201-incidencias.md)

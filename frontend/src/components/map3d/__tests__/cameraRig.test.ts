@@ -41,4 +41,22 @@ describe('createCameraRig', () => {
 
     expect(rig.pose().position).toEqual(here);
   });
+
+  it('mantiene el contorno completo en la vista inicial de la demo en retrato', () => {
+    const outline = [
+      { x: -500, z: -500 }, { x: 500, z: -500 }, { x: 500, z: 500 }, { x: -500, z: 500 },
+    ];
+    const rig = createCameraRig(document.createElement('div'), box, new THREE.Vector3(), true, START, outline);
+    rig.camera.aspect = 390 / 844;
+    rig.camera.updateProjectionMatrix();
+    rig.fit();
+    rig.controls.update();
+    rig.camera.updateMatrixWorld();
+
+    for (const point of outline) {
+      const projected = new THREE.Vector3(point.x, 0, point.z).project(rig.camera);
+      expect(Math.max(Math.abs(projected.x), Math.abs(projected.y))).toBeLessThan(0.86);
+    }
+    rig.controls.dispose();
+  });
 });

@@ -28,7 +28,7 @@ import { createVegetationLayer } from './vegetation';
 import { WORLD_LIFT, type PolyLayer } from './polyLayer';
 import { createViewCones } from './viewCones';
 import { createIncidentMarkers } from './incidentMarkers';
-import { sectionPoints, specimenPoints } from './frameFit';
+import { outlinePoints, sectionPoints, specimenPoints } from './frameFit';
 import { sectionCodesInScreenRect, specimenCodesInScreenRect } from './screenRectSections';
 import type { Viewer, ViewerCallbacks, ViewerStart } from './viewerTypes';
 import { createSelectionSweep, SECTION_LAYERS } from './selectionSweep';
@@ -37,6 +37,7 @@ import { BUILDING_LOOKS } from '../realLook/looks';
 import { createRealColors, NEUTRAL, setEdgesForRealColors } from '../realLook/realColors';
 import { GLASS_ENV_BOOST } from '../realLook/lookLightShader';
 import { createTargetBadges } from './targetBadges';
+import { createDemoPlants, DEMO_PLANT_HEIGHT } from './demoPlants';
 
 /** El visor 3D: arma la escena una vez y expone operaciones para la interfaz React. */
 
@@ -65,14 +66,16 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const stage = createStage(container, renderer, data.campus, textures, model?.sunken);
   const { scene, center } = stage;
   const coarse = window.matchMedia('(pointer: coarse)').matches;
-  const rig = createCameraRig(renderer.domElement, stage.box, center, window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose);
+  const outline = start.frameWholeCampus ? outlinePoints(data.campus) : undefined;
+  const rig = createCameraRig(renderer.domElement, stage.box, center,
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches, initialPose, outline);
   const lights = createLights(scene, center, coarse);
-  let night = false, gray = false, hour = 15.5, labelsOn = true, needsRender = true, golden = false, sunsetHour: number = SUNSET_HOUR;
+  let night = false, gray = start.grayBuildings ?? false, hour = 15.5, labelsOn = true, needsRender = true, golden = false, sunsetHour: number = SUNSET_HOUR;
   // Las sombras en cascada se crean la primera vez que se prende el modo; registran todo material que aparezca.
   let cascades: CascadeShadows | null = null;
   const sunset = createSunset(renderer, scene, rig.camera, stage.box, WORLD_LIFT,
     { plane: data.plane, campus: data.campus, onChange: () => { cascades?.adopt(scene); needsRender = true; }, lite: coarse });
-  const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, false) };
+  const state: PaintState = { mode: 'base', hidden: new Set(), palette: paletteFor(false, gray) };
 
   const poly = createSceneLayers(scene, data, textures, state, model);
   const planNodes = model ? createPlanNodes(scene, model, textures, stage.modelGround, state.palette, data.greenAreas.map((z) => z.g)) : null;
@@ -97,8 +100,14 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const buildingColor = poly.campusBuildings.options.color;
   poly.campusBuildings.options.color = (i) => markedBuildings.has(i)
     ? MARKED_COLOR : buildingColor(i);
-  const realColors = createRealColors(poly.campusBuildings, data.campusBuildings.map((b) => ({ planKey: b.props.planKey ?? null, g: b.g,
-    stairFrom: b.props.planKey ? model?.stairFrom.get(b.props.planKey) : undefined })), BUILDING_LOOKS);
+  const lookedBuildings = data.campusBuildings.map((b) => ({
+    planKey: b.props.planKey ?? null,
+    g: b.g,
+    stairFrom: b.props.planKey ? model?.stairFrom.get(b.props.planKey) : undefined,
+  }));
+  const planKeys = start.matchedBuildingLooks ? new Set(lookedBuildings.map((b) => b.planKey)) : null;
+  const looks = planKeys ? BUILDING_LOOKS.filter((look) => planKeys.has(look.planKey)) : BUILDING_LOOKS;
+  const realColors = createRealColors(poly.campusBuildings, lookedBuildings, looks);
   // Antes de la primera pintura: así el visor nace en el modo que la pantalla da por hecho (SPEC-112 D-13).
   if (start.realColors) {
     realColors.setEnabled(true);
@@ -135,6 +144,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   const markers = new THREE.Group();
   scene.add(markers);
   const pin = createPin(markers);
+  let demoPlants: ReturnType<typeof createDemoPlants> | undefined;
   const cones = createViewCones(markers);
   const admin = attachAdminMovement(renderer.domElement, rig.camera, rig.controls, () => { needsRender = true; });
   admin.fitTo(WORLD_LIFT, ADMIN_SPEED_RADIUS_M);
@@ -243,7 +253,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
         pin.show(at.x, hit ? hit.point.y : WORLD_LIFT, at.z);
         const [lat, lon] = data.plane.toLatLon({ x: at.x, y: -at.z });
         if (g) cb.onGroundPick(lat, lon);
-        cb.onPointPick?.(lat, lon);
+        cb.onPointPick?.(lat, lon, hit?.target ?? null);
       }
       needsRender = true;
     },
@@ -310,6 +320,14 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
   };
 
   return {
+    setDemoPlants(plants) {
+      if (plants.length && !demoPlants) demoPlants = createDemoPlants(markers, data.plane);
+      demoPlants?.set(plants);
+      targetBadges.set(plants.map(({ kind, lat, lon }, index) => ({
+        key: `demo-${index}`, lat, lon, text: 'Demo', height: DEMO_PLANT_HEIGHT[kind] + 2,
+      })));
+      needsRender = true;
+    },
     setTargetMarks(marks) {
       targetSectionColors.clear();targetSpecimenColors.clear();
       marks.sections.forEach(m=>targetSectionColors.set(m.code,m.color));marks.specimens.forEach(m=>targetSpecimenColors.set(m.code,m.color));
@@ -487,6 +505,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
       needsRender = true;
     },
     dispose() {
+      demoPlants?.dispose();
       targetBadges.dispose();
       clearReference();
       cancelAnimationFrame(frame);

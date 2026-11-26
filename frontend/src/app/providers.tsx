@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { NavigationTrailTracker } from '@/components/layouts/NavigationTrailTracker';
 import { ThemeSync } from '@/components/theme';
 import { ToastProvider } from '@/components/ui';
@@ -16,6 +17,16 @@ import { AuthProvider } from '@/lib/auth-context';
  * ambos, y este orden hace que los dos estén disponibles a la vez.
  */
 export function Providers({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  if (pathname === '/demo') {
+    return (
+      <>
+        <ThemeSync />
+        {children}
+      </>
+    );
+  }
+
   return (
     <AuthProvider>
       <ThemeSync />

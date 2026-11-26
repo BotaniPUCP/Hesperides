@@ -59,7 +59,8 @@ export interface CameraRig {
   setFree: (free: boolean) => void;
 }
 
-export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE.Vector3, reducedMotion: boolean, initialPose?: CameraPose): CameraRig {
+export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE.Vector3, reducedMotion: boolean, initialPose?: CameraPose,
+  campusOutline?: readonly GroundPoint[]): CameraRig {
   const camera = new THREE.PerspectiveCamera(38, 1, 2, 9000);
   const controls = new MapControls(camera, dom);
   Object.assign(controls, { enableDamping: true, dampingFactor: 0.09, maxPolarAngle: 1.32, minDistance: 35, maxDistance: 2600, zoomSpeed: 1.1, rotateSpeed: 0.7 });
@@ -97,9 +98,15 @@ export function createCameraRig(dom: HTMLElement, box: THREE.Box3, center: THREE
   }
 
   function fitPose(): [THREE.Vector3, THREE.Vector3] {
+    const dir = new THREE.Vector3(0.2, 0.78, 0.6).normalize();
+    if (campusOutline?.length) {
+      const dist = fitDistance(campusOutline, center, dir, { fovDeg: camera.fov, aspect: camera.aspect, fill: 0.85 });
+      orbitDistances.maxDistance = Math.max(2600, dist * 1.1);
+      controls.maxDistance = orbitDistances.maxDistance;
+      return [center.clone().addScaledVector(dir, dist), center.clone()];
+    }
     const radius = Math.hypot(box.max.x - box.min.x, box.max.z - box.min.z) / 2;
     const dist = distanceToFit(radius) * (camera.aspect < 1 ? 0.92 : 0.8);
-    const dir = new THREE.Vector3(0.2, 0.78, 0.6).normalize();
     return [center.clone().addScaledVector(dir, dist), center.clone()];
   }
 

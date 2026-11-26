@@ -58,6 +58,22 @@ referencia visual; no se vuelve a regenerar fuera.
   se importa dentro de un efecto, así que three solo se descarga en el cliente y en esta pantalla.
 - Caché de capas en IndexedDB, con la etiqueta (ETag) de la versión de datos (§5.1).
 
+#### Demo pública del visor
+
+`/demo` reutiliza el visor en una pantalla sin sesión. Carga una copia estática del
+perímetro completo, edificios de OpenStreetMap con atribución, jardines y vegetación
+ilustrativa. La copia se genera desde las fuentes del repositorio y se distribuye con
+el frontend. Reutiliza la barra del mapa interno, incluidos Atardecer, su control de
+hora, captura y Colores reales. Los materiales de fachada se aplican a las huellas
+públicas con una correspondencia inequívoca; los demás edificios conservan su
+acabado base. La demo no expone las capas operativas ni el modelo del plano oficial;
+`/mapa`, `/embed/mapa` y su API conservan el control de acceso.
+
+La navegación, la búsqueda y la siembra de prueba se resuelven en el navegador. Se
+permiten hasta 20 plantas, solo dentro de áreas verdes; cada una lleva un distintivo
+«Demo». Deshacer retira la última y limpiar retira todas. Al recargar se pierden:
+no se guardan en caché ni en el catastro.
+
 ### 2.3 Móvil
 
 **La app Android muestra el mismo visor**, dentro de un `WebView` que abre `/embed/mapa` (sin

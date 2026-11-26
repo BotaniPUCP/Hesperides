@@ -12,6 +12,14 @@ import type { Polygon } from '../sceneData';
 import type { Balloon } from '@shared/types';
 import type { SequenceHooks } from './sequenceHooks';
 
+export type DemoPlantKind = 'tree' | 'palm' | 'shrub';
+
+export interface DemoPlant {
+  kind: DemoPlantKind;
+  lat: number;
+  lon: number;
+}
+
 /** Lo que el visor avisa a la interfaz React. */
 export interface ViewerCallbacks {
   /** Mantener pulsado y arrastrar elige jardines o ejemplares, según dónde empezó; solo si la pantalla lo pide. */
@@ -19,7 +27,7 @@ export interface ViewerCallbacks {
   onSelect: (target: Target | null) => void;
   onGroundPick: (lat: number, lon: number) => void;
   /** Cualquier clic con punto (suelo, área verde, edificio): para marcar una ubicación. */
-  onPointPick?: (lat: number, lon: number) => void;
+  onPointPick?: (lat: number, lon: number, target?: Target | null) => void;
   onHover: (target: Target | null, clientX: number, clientY: number) => void;
   onCompass: (degrees: number) => void;
   /** Un clic sobre el cono de una perspectiva. */
@@ -32,6 +40,10 @@ export interface ViewerCallbacks {
 
 /** Cómo nace el visor; lo que no se dice nace como siempre. */
 export interface ViewerStart {
+  /** Apply only appearance records that have a counterpart in a reduced public scene. */
+  matchedBuildingLooks?: boolean;
+  frameWholeCampus?: boolean;
+  grayBuildings?: boolean;
   /** Los edificios con ficha nacen en sus colores reales (SPEC-112 D-13). */
   realColors?: boolean;
   /** Donde se dibujan los globos (SPEC-113); sin ella, el visor no muestra globos. */
@@ -40,6 +52,8 @@ export interface ViewerStart {
 
 /** Las operaciones que la interfaz React ordena al visor. */
 export interface Viewer extends SequenceHooks {
+  /** Plants drawn in an isolated, transient layer by the public demo. */
+  setDemoPlants?: (plants: readonly DemoPlant[]) => void;
   /** Optional editor marks; absent on maps that do not display execution progress. */
   setTargetMarks?: (marks:import('./targetBadges').TargetMarks) => void;
   /** Optional restrictions and reference outline; unused by the general map. */

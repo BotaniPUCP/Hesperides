@@ -1,12 +1,12 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { AriaAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps {
+export interface ButtonProps extends Pick<AriaAttributes, 'aria-controls' | 'aria-expanded' | 'aria-label' | 'aria-pressed'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   children: ReactNode;
@@ -17,7 +17,6 @@ export interface ButtonProps {
   fullWidth?: boolean;
   leadingIcon?: ReactNode;
   trailingIcon?: ReactNode;
-  'aria-label'?: string;
 }
 
 const VARIANTS: Record<ButtonVariant, string> = {
@@ -54,7 +53,7 @@ export function Button({
   fullWidth = false,
   leadingIcon,
   trailingIcon,
-  'aria-label': ariaLabel,
+  ...aria
 }: ButtonProps) {
   // loading implica disabled: es lo que evita el doble submit.
   const isDisabled = disabled || loading;
@@ -65,7 +64,7 @@ export function Button({
       onClick={isDisabled ? undefined : onClick}
       disabled={isDisabled}
       aria-busy={loading || undefined}
-      aria-label={ariaLabel}
+      {...aria}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors',
         'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2',

@@ -9,17 +9,19 @@ export interface FrameView { fovDeg: number; aspect: number; fill: number }
 
 const UP = new THREE.Vector3(0, 1, 0);
 
-/** Vértices del contorno exterior de las áreas pedidas: los huecos no amplían lo que hay que ver. */
-export function sectionPoints(sections: readonly { g: Polygon[]; props: { code: string } }[], codes: ReadonlySet<string>): GroundPoint[] {
+/** Outer vertices; holes do not change the framing. */
+export function outlinePoints(polygons: readonly Polygon[]): GroundPoint[] {
   const points: GroundPoint[] = [];
-  for (const section of sections) {
-    if (!codes.has(section.props.code)) continue;
-    for (const polygon of section.g) {
-      const ring = polygon[0] ?? [];
-      for (let i = 0; i < ring.length; i += 2) points.push({ x: ring[i], z: -ring[i + 1] });
-    }
+  for (const polygon of polygons) {
+    const ring = polygon[0] ?? [];
+    for (let i = 0; i < ring.length; i += 2) points.push({ x: ring[i], z: -ring[i + 1] });
   }
   return points;
+}
+
+/** Vértices del contorno exterior de las áreas pedidas. */
+export function sectionPoints(sections: readonly { g: Polygon[]; props: { code: string } }[], codes: ReadonlySet<string>): GroundPoint[] {
+  return sections.filter((section) => codes.has(section.props.code)).flatMap((section) => outlinePoints(section.g));
 }
 
 /** Los ejemplares pedidos, como puntos del suelo para encuadrarlos. */
