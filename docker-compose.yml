@@ -44,10 +44,10 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       MAINTENANCE_TIME_ZONE: ${MAINTENANCE_TIME_ZONE:-America/Lima}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-https://ollama.com}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-gpt-oss:20b}
-      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
-      OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-30}
+      GEMINI_BASE_URL: ${GEMINI_BASE_URL:-https://generativelanguage.googleapis.com}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_TIMEOUT_SECONDS: ${GEMINI_TIMEOUT_SECONDS:-30}
       # Relay SMTP de Brevo. Sin credenciales en el .env el envio falla y las
       # altas quedan en PENDING_DELIVERY, que es el comportamiento que SPEC-100
       # §5.3 exige: un correo que no sale no impide registrar a nadie.

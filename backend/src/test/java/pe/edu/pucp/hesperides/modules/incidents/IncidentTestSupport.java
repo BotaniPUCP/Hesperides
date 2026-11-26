@@ -48,7 +48,7 @@ abstract class IncidentTestSupport {
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    /** El agente real llama a Ollama Cloud; cada prueba decide qué responde. */
+    /** El agente real llama a Google Gemini; cada prueba decide qué responde. */
     @MockitoBean IncidentPrefillAgent agent;
     @Autowired JdbcTemplate jdbc;
     @Autowired IncidentCaptureService capture;

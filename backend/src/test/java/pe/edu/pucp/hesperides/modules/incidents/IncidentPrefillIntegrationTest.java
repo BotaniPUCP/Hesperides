@@ -81,7 +81,7 @@ class IncidentPrefillIntegrationTest extends IncidentTestSupport {
 
     @Test
     void aFailingAgentLeavesTheReportSavedAndTheRetryAvailable() {
-        when(agent.suggest(any())).thenThrow(new IllegalStateException("Ollama caído"));
+        when(agent.suggest(any())).thenThrow(new IllegalStateException("Gemini caído"));
         long id = reportAs(foreman).incident().id();
 
         prefill.run(id);

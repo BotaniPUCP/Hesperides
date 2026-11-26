@@ -78,10 +78,10 @@ hesperides:
     # SPEC-201 §3.4: agente de prellenado. Sin clave el reporte se guarda igual y el
     # prellenado queda fallido, con reintento manual: la IA nunca impide reportar.
     prefill:
-      base-url: ${OLLAMA_BASE_URL:https://ollama.com}
-      model: ${OLLAMA_MODEL:gpt-oss:20b}
-      api-key: ${OLLAMA_API_KEY:}
-      timeout-seconds: ${OLLAMA_TIMEOUT_SECONDS:30}
+      base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+      api-key: ${GEMINI_API_KEY:}
+      timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:30}
   maintenance:
     time-zone: ${MAINTENANCE_TIME_ZONE:America/Lima}
   security:

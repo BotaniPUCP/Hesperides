@@ -18,11 +18,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class OllamaPrefillAgentTest {
+class GeminiPrefillAgentTest {
 
+    private static final String MODEL = "gemini-3.5-flash-lite";
+    private static final String PATH = "/v1beta/models/" + MODEL + ":generateContent";
     private final ObjectMapper mapper = JsonMapper.builder().build();
     private final AtomicReference<String> receivedBody = new AtomicReference<>();
-    private final AtomicReference<String> receivedAuth = new AtomicReference<>();
+    private final AtomicReference<String> receivedKey = new AtomicReference<>();
+    private final AtomicReference<String> receivedPath = new AtomicReference<>();
     private HttpServer server;
 
     private static final PrefillRequest REQUEST = new PrefillRequest("Rama rajada en el Pontódromo, pasa mucha gente",
@@ -34,11 +37,12 @@ class OllamaPrefillAgentTest {
         if (server != null) server.stop(0);
     }
 
-    private OllamaPrefillAgent agentAnswering(int status, String body, String apiKey) throws IOException {
+    private GeminiPrefillAgent agentAnswering(int status, String body, String apiKey) throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/api/chat", exchange -> {
+        server.createContext("/", exchange -> {
+            receivedPath.set(exchange.getRequestURI().getPath());
             receivedBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
-            receivedAuth.set(exchange.getRequestHeaders().getFirst("Authorization"));
+            receivedKey.set(exchange.getRequestHeaders().getFirst("x-goog-api-key"));
             byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(status, bytes.length);
             exchange.getResponseBody().write(bytes);
@@ -46,30 +50,48 @@ class OllamaPrefillAgentTest {
         });
         server.start();
         String url = "http://127.0.0.1:" + server.getAddress().getPort() + "/";
-        return new OllamaPrefillAgent(new PrefillProperties(url, "gpt-oss:20b", apiKey, 5), mapper);
+        return new GeminiPrefillAgent(new PrefillProperties(url, MODEL, apiKey, 5), mapper);
     }
 
-    private static String chatAnswer(String content) {
-        return "{\"message\":{\"role\":\"assistant\",\"content\":" + JsonMapper.builder().build().writeValueAsString(content) + "}}";
+    private static String geminiAnswer(String text) {
+        return "{\"candidates\":[{\"content\":{\"role\":\"model\",\"parts\":[{\"text\":"
+                + JsonMapper.builder().build().writeValueAsString(text) + "}]}}]}";
     }
 
     @Test
-    void sendsTheKeyAsBearerAndAsksForJson() throws IOException {
-        var agent = agentAnswering(200, chatAnswer("{\"title\":\"Rama\",\"confidence\":0.9}"), "secret-key");
+    void callsTheModelWithTheKeyHeaderAndAsksForJson() throws IOException {
+        var agent = agentAnswering(200, geminiAnswer("{\"title\":\"Rama\",\"confidence\":0.9}"), "secret-key");
 
         agent.suggest(REQUEST);
 
-        assertThat(receivedAuth.get()).isEqualTo("Bearer secret-key");
+        assertThat(receivedPath.get()).isEqualTo(PATH);
+        assertThat(receivedKey.get()).isEqualTo("secret-key");
         var body = mapper.readTree(receivedBody.get());
-        assertThat(body.path("model").asString()).isEqualTo("gpt-oss:20b");
-        assertThat(body.path("format").asString()).isEqualTo("json");
-        assertThat(body.path("stream").asBoolean(true)).isFalse();
-        assertThat(receivedBody.get()).contains("Rama rajada en el Pontódromo").contains("42: Pontódromo");
+        assertThat(body.path("generationConfig").path("responseMimeType").asString()).isEqualTo("application/json");
+    }
+
+    @Test
+    void sendsInstructionsAndReportTogetherInASinglePrompt() throws IOException {
+        var agent = agentAnswering(200, geminiAnswer("{\"title\":\"Rama\",\"confidence\":0.9}"), "key");
+
+        agent.suggest(REQUEST);
+
+        var body = mapper.readTree(receivedBody.get());
+        assertThat(body.has("systemInstruction")).isFalse();
+        var contents = body.path("contents");
+        assertThat(contents.size()).isEqualTo(1);
+        var parts = contents.get(0).path("parts");
+        assertThat(parts.size()).isEqualTo(1);
+        assertThat(parts.get(0).path("text").asString())
+                .contains("Responde SIEMPRE y SOLO con un objeto JSON")
+                .contains("Reporte: Rama rajada en el Pontódromo")
+                .contains("42: Pontódromo")
+                .contains("BRANCH_AT_RISK: Rama en riesgo de caída");
     }
 
     @Test
     void parsesTheModelAnswerIntoASuggestion() throws IOException {
-        var agent = agentAnswering(200, chatAnswer("""
+        var agent = agentAnswering(200, geminiAnswer("""
             {"title":"Rama en riesgo","typeCode":"BRANCH_AT_RISK","zoneCode":"42","reference":"Frente a Letras",
              "thirdParty":true,"heightClass":"OVER_5M","imminentRisk":true,"imminentReason":"Pasa mucha gente",
              "plan":"1. Acordonar","justification":"rama rajada","confidence":0.83}
@@ -87,7 +109,7 @@ class OllamaPrefillAgentTest {
 
     @Test
     void toleratesOddValuesWithoutLosingTheRestOfTheAnswer() throws IOException {
-        var agent = agentAnswering(200, chatAnswer(
+        var agent = agentAnswering(200, geminiAnswer(
                 "{\"title\":\"Algo\",\"zoneCode\":\"Pontódromo\",\"heightClass\":\"ALTO\",\"confidence\":7}"), "key");
 
         var s = agent.suggest(REQUEST);
@@ -100,19 +122,26 @@ class OllamaPrefillAgentTest {
 
     @Test
     void anErrorStatusIsAFailure() throws IOException {
-        var agent = agentAnswering(401, "{\"error\":\"unauthorized\"}", "bad");
+        var agent = agentAnswering(503, "{\"error\":{\"code\":503,\"status\":\"UNAVAILABLE\"}}", "key");
+        assertThatThrownBy(() -> agent.suggest(REQUEST)).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("503");
+    }
+
+    @Test
+    void anAnswerWithoutCandidatesIsAFailure() throws IOException {
+        var agent = agentAnswering(200, "{\"promptFeedback\":{\"blockReason\":\"SAFETY\"}}", "key");
         assertThatThrownBy(() -> agent.suggest(REQUEST)).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void anAnswerThatIsNotAJsonObjectIsAFailure() throws IOException {
-        var agent = agentAnswering(200, chatAnswer("Lo siento, no puedo"), "key");
+        var agent = agentAnswering(200, geminiAnswer("Lo siento, no puedo"), "key");
         assertThatThrownBy(() -> agent.suggest(REQUEST)).isInstanceOf(RuntimeException.class);
     }
 
     @Test
     void withoutAKeyItFailsBeforeCallingAnybody() {
-        var agent = new OllamaPrefillAgent(new PrefillProperties("http://127.0.0.1:9", "m", "", 1), mapper);
+        var agent = new GeminiPrefillAgent(new PrefillProperties("http://127.0.0.1:9", MODEL, "", 1), mapper);
         assertThatThrownBy(() -> agent.suggest(REQUEST)).isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("not configured");
     }
