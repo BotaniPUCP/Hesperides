@@ -105,9 +105,7 @@ export function createViewer(container: HTMLElement, labelRoot: HTMLElement, dat
     g: b.g,
     stairFrom: b.props.planKey ? model?.stairFrom.get(b.props.planKey) : undefined,
   }));
-  const planKeys = start.matchedBuildingLooks ? new Set(lookedBuildings.map((b) => b.planKey)) : null;
-  const looks = planKeys ? BUILDING_LOOKS.filter((look) => planKeys.has(look.planKey)) : BUILDING_LOOKS;
-  const realColors = createRealColors(poly.campusBuildings, lookedBuildings, looks);
+  const realColors = createRealColors(poly.campusBuildings, lookedBuildings, BUILDING_LOOKS);
   // Antes de la primera pintura: así el visor nace en el modo que la pantalla da por hecho (SPEC-112 D-13).
   if (start.realColors) {
     realColors.setEnabled(true);

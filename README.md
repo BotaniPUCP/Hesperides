@@ -19,10 +19,13 @@ jardines, cambiar las capas visibles y plantar hasta 20 plantas
 de prueba, con opciones para deshacer o limpiar. Las plantas desaparecen al recargar
 y no llegan al catastro.
 
-La demo funciona sin backend: el build incluye una copia pública del perímetro, las
-huellas de edificios de OpenStreetMap, los jardines y la vegetación. Para actualizar
-esa copia desde las fuentes del repositorio, ejecuta desde la raíz
-`python3 scripts/mapa/generate_demo_snapshot.py` y vuelve a construir el frontend.
+La demo funciona sin backend: usa el mismo visor, mallas, fachadas y capas visuales
+del mapa interno mediante una copia estática. Para renovarla, exporta a un archivo la
+respuesta autenticada de `GET /api/v1/map/layers` de un entorno de desarrollo con los
+datos publicables del campus. Desde la raíz ejecuta
+`python3 scripts/mapa/generate_demo_snapshot.py --layers /ruta/a/capas.json` y vuelve
+a construir el frontend. El script toma el modelo de renderizado del repositorio,
+elimina metadatos y excluye de la copia las capas y detalles operativos.
 
 ## Incidencias de áreas verdes
 

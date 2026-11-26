@@ -40,8 +40,6 @@ export interface ViewerCallbacks {
 
 /** Cómo nace el visor; lo que no se dice nace como siempre. */
 export interface ViewerStart {
-  /** Apply only appearance records that have a counterpart in a reduced public scene. */
-  matchedBuildingLooks?: boolean;
   frameWholeCampus?: boolean;
   grayBuildings?: boolean;
   /** Los edificios con ficha nacen en sus colores reales (SPEC-112 D-13). */

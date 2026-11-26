@@ -1,133 +1,127 @@
-"""Export the allowlisted public layers, without reading the operational database."""
+"""Publish only the render data needed by the public campus viewer."""
 
-import csv
+import argparse
+import gzip
+import hashlib
 import json
-from collections import Counter
+from pathlib import Path
+import struct
 
-from capas import _vocabulario
-from plano_pucp.relaciones import nombres_v011
-from sql_util import DATOS, RAIZ, leer_geojson
+from sql_util import RAIZ
 
-MAP_COMPONENTS = RAIZ / "frontend/src/components/map3d"
-OUTPUT = MAP_COMPONENTS / "demo/campus.json"
-
-
-def geometry_for_demo(geometry):
-    def compact(coordinates):
-        if isinstance(coordinates[0], (int, float)):
-            return [round(value, 6) for value in coordinates[:2]]
-        return [compact(part) for part in coordinates]
-
-    return {"type": geometry["type"], "coordinates": compact(geometry["coordinates"])}
-
-
-def feature(geometry, **properties):
-    return {"type": "Feature", "geometry": geometry_for_demo(geometry), "properties": properties}
-
-
-def read_csv(name, delimiter=","):
-    with (DATOS / name).open(encoding="utf-8") as source:
-        return list(csv.DictReader(source, delimiter=delimiter))
-
-
-def building_look_keys(osm):
-    migration = RAIZ / "backend/src/main/resources/db/migration/V011__seed_map_data.sql"
-    # Relations identify footprints by their V011 row number. Assert the order before using it.
-    nombres_v011(migration.read_text(encoding="utf-8"), osm)
-    relations_path = MAP_COMPONENTS / "equivalence/final-relations.json"
-    relations = json.loads(relations_path.read_text(encoding="utf-8"))["relations"]
-    counts = Counter(map_id for relation in relations for map_id in relation["mapIds"])
-    # A facade is laid out for one building. Only match unambiguous OSM footprints.
-    return {
-        int(map_id): relation["id"]
-        for relation in relations
-        if len(relation["mapIds"]) == 1
-        for map_id in relation["mapIds"]
-        if counts[map_id] == 1
-    }
+DEMO = RAIZ / "frontend/src/components/map3d/demo"
+ASSETS = RAIZ / "frontend/public/map/demo"
+MODEL = RAIZ / "backend/src/main/resources/mapa/edificios-plano"
+ZONE_FIELDS = ("code", "name", "parentCode", "mapCode", "landscapeType", "reservable",
+               "areaM2", "useType", "irrigationCurrent", "irrigationProject")
+FIELDS = {
+    "sectors": ZONE_FIELDS,
+    "sections": ZONE_FIELDS,
+    "subsections": ZONE_FIELDS,
+    "buildings": ("id", "name", "inferredName", "category", "campus", "heightM", "levels",
+                  "baseM", "source", "parentId", "planKey", "aliases", "codes"),
+    "features": ("code", "name", "type", "typeLabel"),
+    "vegetation": ("code", "commonName", "scientificName", "speciesSlug", "typeCode", "typeLabel",
+                   "heightM", "crownRadiusM", "quantity"),
+}
+NULL_FIELDS = {
+    "sectors": ("description", "reservationOwner"),
+    "sections": ("description", "reservationOwner"),
+    "subsections": ("description", "reservationOwner"),
+    "features": ("attributes",),
+}
+FEATURE_TYPES = {
+    "CAMPUS_BOUNDARY", "GATE", "PARKING", "WASTE_BIN", "DRINKING_FOUNTAIN", "FAUNA",
+}
+MANIFEST_FIELDS = ("version", "anchor", "nodes", "groundOnly", "sunken", "huaca",
+                   "adjustments", "stairs", "pieces", "floorSteps")
+GLTF_FIELDS = ("scene", "scenes", "nodes", "meshes", "accessors", "bufferViews", "buffers")
 
 
-def buildings():
-    vocabulary, category_by_name = _vocabulario()
-    osm = leer_geojson("edificios-osm.geojson")
-    look_keys = building_look_keys(osm)
-    for index, original in enumerate(osm, start=1):
-        props = original["properties"]
-        campus = bool(props["c"])
-        term = vocabulary["vocabulario"].get(props["id"])
-        name = term["t"] if isinstance(term, dict) else term or props["n"] or None
-        levels = str(props.get("lv"))
-        yield feature(
-            original["geometry"], id=index, name=name if campus else None, inferredName=False,
-            category=category_by_name.get(name) if campus else None, campus=campus,
-            heightM=props["h"], levels=int(levels) if levels.isdigit() else None, source="OSM",
-            aliases=vocabulary["alias"].get(name) if campus else None,
-            parentId=None, planKey=look_keys.get(index) if campus else None, baseM=None, codes=None,
-        )
+def encode(value):
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
 
 
-def gardens():
-    layers = (
-        ("areas_verdes.geojson", "AV", "Área verde", "GREEN_AREA"),
-        ("xerofitica.geojson", "XE", "Jardín xerofítico", "XEROPHYTIC"),
-    )
-    for source, prefix, label, landscape in layers:
-        for index, original in enumerate(leer_geojson(source), start=1):
-            code = f"{prefix}-{index:04}"
-            name = original["properties"]["Nombre"] or f"{label} {index}"
-            yield feature(
-                original["geometry"], code=code, name=name, landscapeType=landscape,
-                description=None, parentCode=None, mapCode=None, useType=None, reservable=False,
-                reservationOwner=None, areaM2=None, irrigationCurrent=None, irrigationProject=None,
-            )
+def read_layers(source):
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    response = payload.get("data", payload)
+    layers = {}
+    for layer, fields in FIELDS.items():
+        layers[layer] = [
+            {
+                "type": "Feature",
+                "geometry": row["geometry"],
+                "properties": ({field: row["properties"][field] for field in fields}
+                               | dict.fromkeys(NULL_FIELDS.get(layer, ()))),
+            }
+            for row in response["layers"][layer]["features"]
+            if layer != "features" or row["properties"]["type"] in FEATURE_TYPES
+        ]
+    layers.update(references=[], supervisionZones=[])
+    if not any(row["properties"]["type"] == "CAMPUS_BOUNDARY" for row in layers["features"]):
+        raise ValueError("Falta el contorno del campus")
+    return response, layers
 
 
-def vegetation():
-    species = {row["nombre_cientifico"]: row for row in read_csv("especies.csv")}
-    for index, row in enumerate(read_csv("ejemplares.csv", ";"), start=1):
-        if not row["longitud"] or not row["latitud"]:
-            continue
-        plant = species[row["nombre_cientifico"]]
-        point = {"type": "Point", "coordinates": [float(row["longitud"]), float(row["latitud"])]}
-        # Local display IDs; no field records, photos, evaluations or measurements.
-        yield feature(
-            point, code=f"V-{index:04}", speciesSlug=plant["slug"], commonName=plant["nombre_comun"],
-            scientificName=plant["nombre_cientifico"], typeCode=plant["tipo"],
-            typeLabel=row["tipo_vegetacion"], quantity=int(row["cantidad"] or 1), heightM=None,
-            crownRadiusM=None,
-        )
+def strip_notes(value):
+    if isinstance(value, dict):
+        return {key: strip_notes(item) for key, item in value.items() if key not in {"why", "extras"}}
+    if isinstance(value, list):
+        return [strip_notes(item) for item in value]
+    return value
+
+
+def render_asset(path):
+    raw = path.read_bytes()
+    magic, version, size = struct.unpack_from("<4sII", raw)
+    json_size, json_type = struct.unpack_from("<I4s", raw, 12)
+    if (magic, version, size, json_type) != (b"glTF", 2, len(raw), b"JSON"):
+        raise ValueError("El modelo no es un GLB 2.0 válido")
+    source = json.loads(raw[20:20 + json_size])
+    render_only = {"asset": {"version": "2.0"}, **{key: strip_notes(source[key]) for key in GLTF_FIELDS}}
+    for collection in (render_only["buffers"], render_only["scenes"], render_only["nodes"], render_only["meshes"]):
+        if any("uri" in item or "extensions" in item for item in collection):
+            raise ValueError("El modelo público debe ser autónomo")
+    data = encode(render_only).encode("utf-8")
+    data += b" " * ((-len(data)) % 4)
+    binary = raw[20 + json_size:]
+    return (struct.pack("<4sII", b"glTF", 2, 20 + len(data) + len(binary))
+            + struct.pack("<I4s", len(data), b"JSON") + data + binary)
 
 
 def main():
-    boundary = next(row["geometry"] for row in leer_geojson("perimetro-y-veredas.geojson")
-                    if row["properties"]["layer"] == "limite_campus")
-    points = boundary["coordinates"][0]
-    origin = {
-        axis: round((min(point[i] for point in points) + max(point[i] for point in points)) / 2, 6)
-        for i, axis in enumerate(("lon", "lat"))
-    }
-    layers = {
-        "features": [feature(boundary, type="CAMPUS_BOUNDARY", typeLabel="Campus", name="Campus PUCP",
-                             code=None, attributes=None)],
-        "buildings": list(buildings()),
-        "sections": list(gardens()),
-        "vegetation": list(vegetation()),
-        "sectors": [], "subsections": [], "supervisionZones": [], "references": [],
-    }
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--layers", type=Path, required=True,
+                        help="JSON de GET /api/v1/map/layers del entorno de desarrollo")
+    args = parser.parse_args()
+    response, layers = read_layers(args.layers)
+    source_manifest = json.loads(MODEL.with_suffix(".json").read_text(encoding="utf-8"))
+    manifest = {key: strip_notes(source_manifest[key]) for key in MANIFEST_FIELDS if key in source_manifest}
+    buildings = {row["properties"]["planKey"] for row in layers["buildings"]
+                 if row["properties"]["campus"] and row["properties"]["parentId"] is None}
+    mesh_keys = {key for key, kind in manifest["nodes"].items() if kind == "edificio"}
+    if not mesh_keys.intersection(buildings) or not set(manifest["groundOnly"]).issubset(buildings):
+        raise ValueError("Las capas no corresponden al modelo de esta versión")
 
-    def encode(value):
-        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    asset = render_asset(MODEL.with_suffix(".glb"))
+    digest = hashlib.sha256(asset).hexdigest()[:16]
+    filename = f"campus-{digest}.glb.gz"
+    ASSETS.mkdir(parents=True, exist_ok=True)
+    (ASSETS / filename).write_bytes(gzip.compress(asset, compresslevel=9, mtime=0))
+    (DEMO / "plan.json").write_text(
+        encode({"url": f"/map/demo/{filename}", "manifest": manifest}) + "\n", encoding="utf-8",
+    )
 
-    # Next emits this as a fingerprinted static chunk; new data gets a new URL.
     collections = [
-        f'    "{key}":{{"type":"FeatureCollection","features":[\n'
+        f'    "{name}":{{"type":"FeatureCollection","features":[\n'
         + ",\n".join(f"      {encode(row)}" for row in rows) + "\n    ]}"
-        for key, rows in layers.items()
+        for name, rows in layers.items()
     ]
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text('{\n  "version":1,\n  "origin":' + encode(origin)
-                      + ',\n  "attributionRequired":true,\n  "layers":{\n'
-                      + ",\n".join(collections) + "\n  }\n}\n", encoding="utf-8")
+    metadata = {key: response[key] for key in ("version", "origin", "attributionRequired")}
+    (DEMO / "campus.json").write_text(
+        encode(metadata)[:-1] + ',\n  "layers":{\n' + ",\n".join(collections) + "\n  }\n}\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

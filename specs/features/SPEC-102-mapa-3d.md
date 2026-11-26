@@ -60,14 +60,13 @@ referencia visual; no se vuelve a regenerar fuera.
 
 #### Demo pública del visor
 
-`/demo` reutiliza el visor en una pantalla sin sesión. Carga una copia estática del
-perímetro completo, edificios de OpenStreetMap con atribución, jardines y vegetación
-ilustrativa. La copia se genera desde las fuentes del repositorio y se distribuye con
-el frontend. Reutiliza la barra del mapa interno, incluidos Atardecer, su control de
-hora, captura y Colores reales. Los materiales de fachada se aplican a las huellas
-públicas con una correspondencia inequívoca; los demás edificios conservan su
-acabado base. La demo no expone las capas operativas ni el modelo del plano oficial;
-`/mapa`, `/embed/mapa` y su API conservan el control de acceso.
+`/demo` reutiliza el visor y la barra del mapa interno en una pantalla sin sesión.
+La escena pública reproduce los edificios, fachadas, suelos, jardines y vegetación
+de `/mapa`, incluidos Atardecer, su control de hora, captura y Colores reales. Se
+distribuye con el frontend una copia de las capas visuales y un derivado comprimido
+de la malla de renderizado, sin las anotaciones del manifiesto, metadatos del
+exportador ni archivos del plano fuente. Se omiten las capas y los detalles
+operativos; `/mapa`, `/embed/mapa` y su API conservan el control de acceso.
 
 La navegación, la búsqueda y la siembra de prueba se resuelven en el navegador. Se
 permiten hasta 20 plantas, solo dentro de áreas verdes; cada una lleva un distintivo

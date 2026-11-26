@@ -1,43 +1,44 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { MapLayersResponse } from '@shared/types';
+import { useTheme } from '@/hooks/useTheme';
+import { infoFor } from '../infoCard';
+import { initialVisibility, LAYER_TOGGLES, OVERLAY_TOGGLES, type ToggleId } from '../layerList';
+import { LayerToggles } from '../LayerToggles';
 import { Map3DView } from '../Map3DView';
 import { MapAttribution } from '../MapAttribution';
 import { MapSearch } from '../MapSearch';
 import { MapToolbar, type ViewOptions } from '../MapToolbar';
 import { INITIAL_OPTIONS } from '../mapScreenMemory';
-import { APPLY_OPTION } from '../restoreMapScreen';
-import { toSceneData, type SceneData } from '../sceneData';
+import { ModeLegend } from '../ModeLegend';
+import type { ModeId } from '../modes';
+import { APPLY_OPTION, applyToViewer } from '../restoreMapScreen';
 import { buildSearchIndex, isCatalogTarget } from '../searchIndex';
-import type { Target } from '../target';
+import type { LayerId, Target } from '../target';
 import type { DemoPlant, DemoPlantKind, Viewer } from '../viewer/viewerTypes';
 import { DemoHelp, DemoPlantControls } from './DemoMapControls';
+import { loadDemoScene } from './loadDemoScene';
 
 const MAX_PLANTS = 20;
 const MAP_BUTTON = 'min-h-10 rounded-lg bg-neutral-0/95 px-3 py-2 text-sm font-medium text-neutral-800 shadow-sm hover:bg-neutral-100 focus-visible:ring-2 focus-visible:ring-brand-600';
-const MAP_CHECK = 'flex min-h-10 cursor-pointer items-center gap-2 px-1 text-sm';
 const NOOP = () => undefined;
-const VIEWER_START = { matchedBuildingLooks: true, frameWholeCampus: true, realColors: true };
+const PUBLIC_LAYERS = LAYER_TOGGLES.filter(({ id }) => !OVERLAY_TOGGLES.has(id) && id !== 'supervision' && id !== 'sidewalks');
 
-type LoadResult = { data: SceneData; attributionRequired: boolean } | 'failed';
+type DemoScene = Awaited<ReturnType<typeof loadDemoScene>>;
 
 export function DemoMapScreen() {
-  const [result, setResult] = useState<LoadResult>();
+  const [result, setResult] = useState<DemoScene | 'failed'>();
   useEffect(() => {
-    let mounted = true;
-    import('./campus.json')
-      .then(({ default: snapshot }) => {
-        if (mounted) setResult({ data: toSceneData(snapshot as MapLayersResponse), attributionRequired: snapshot.attributionRequired });
-      })
-      .catch(() => {
-        if (mounted) setResult('failed');
-      });
-    return () => { mounted = false; };
+    const controller = new AbortController();
+    void loadDemoScene(controller.signal).then(
+      (scene) => { if (!controller.signal.aborted) setResult(scene); },
+      () => { if (!controller.signal.aborted) setResult('failed'); },
+    );
+    return () => controller.abort();
   }, []);
 
   if (result && result !== 'failed') {
-    return <DemoCampus data={result.data} attributionRequired={result.attributionRequired} />;
+    return <DemoCampus {...result} />;
   }
   return (
     <main className="flex min-h-dvh items-center justify-center bg-neutral-50 p-6">
@@ -51,35 +52,26 @@ export function DemoMapScreen() {
   );
 }
 
-interface DemoCampusProps {
-  data: SceneData;
-  attributionRequired: boolean;
-}
-
-function DemoCampus({ data, attributionRequired }: DemoCampusProps) {
+function DemoCampus({ data, model, attributionRequired }: DemoScene) {
   const root = useRef<HTMLElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [compass, setCompass] = useState(0);
-  const [options, setOptions] = useState<ViewOptions>(INITIAL_OPTIONS);
+  const theme = useTheme();
+  const [options, setOptions] = useState<ViewOptions>(() => ({ ...INITIAL_OPTIONS, night: theme.resolved === 'dark' }));
   const [toolbarOpen, setToolbarOpen] = useState(false);
   const [capture, setCapture] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
   const [selection, setSelection] = useState<Target | null>(null);
-  const [gardens, setGardens] = useState(true);
-  const [vegetation, setVegetation] = useState(true);
+  const [visible, setVisible] = useState(initialVisibility);
+  const [mode, setMode] = useState<ModeId>('base');
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [plants, setPlants] = useState<DemoPlant[]>([]);
   const [plantKind, setPlantKind] = useState<DemoPlantKind | null>(null);
   const [plantMessage, setPlantMessage] = useState('');
 
-  const index = useMemo(() => buildSearchIndex({ ...data, vegetation: [] }), [data]);
-  const selectedLabel = publicLabel(data, selection);
-
-  useEffect(() => {
-    viewer?.setLayerVisible('greenAreas', gardens);
-    viewer?.setLayerVisible('xerophytic', gardens);
-    viewer?.setLayerVisible('vegetation', vegetation);
-  }, [viewer, gardens, vegetation]);
+  const index = useMemo(() => buildSearchIndex(data), [data]);
+  const selectedLabel = selection ? infoFor(data, selection).title : null;
 
   useEffect(() => {
     viewer?.setDemoPlants?.(plants);
@@ -106,6 +98,26 @@ function DemoCampus({ data, attributionRequired }: DemoCampusProps) {
   function changeOption(key: keyof ViewOptions, value: boolean) {
     setOptions((current) => ({ ...current, [key]: value }));
     if (viewer) APPLY_OPTION[key](viewer, value);
+  }
+
+  function toggleLayer(id: ToggleId, on: boolean) {
+    setVisible((current) => ({ ...current, [id]: on }));
+    viewer?.setLayerVisible(id as LayerId, on);
+    if (!on && (id === 'greenAreas' || id === 'xerophytic')) setPlantKind(null);
+  }
+
+  function changeMode(nextMode: ModeId) {
+    const nextHidden = new Set<string>();
+    setMode(nextMode);
+    setHidden(nextHidden);
+    viewer?.setPaint(nextMode, nextHidden);
+  }
+
+  function toggleCategory(key: string) {
+    const nextHidden = new Set(hidden);
+    if (!nextHidden.delete(key)) nextHidden.add(key);
+    setHidden(nextHidden);
+    viewer?.setPaint(mode, nextHidden);
   }
 
   function changeCapture(on: boolean) {
@@ -141,14 +153,10 @@ function DemoCampus({ data, attributionRequired }: DemoCampusProps) {
       {!unsupported && (
         <Map3DView
           data={data}
-          start={VIEWER_START}
+          model={model}
           bare={capture}
           onReady={(map) => {
-            if (window.matchMedia('(pointer: coarse)').matches) {
-              map.setShadows(false);
-              setOptions((current) => ({ ...current, shadows: false }));
-            }
-            map.fit();
+            applyToViewer(map, { mode, hidden, visible, options });
             viewerRef.current = map;
             setViewer(map);
           }}
@@ -175,7 +183,7 @@ function DemoCampus({ data, attributionRequired }: DemoCampusProps) {
             <MapSearch index={index} onPick={({ target }) => {
               if (isCatalogTarget(target)) return;
               setSelection(target);
-              if (target.layer === 'greenAreas' || target.layer === 'xerophytic') setGardens(true);
+              if (!visible[target.layer]) toggleLayer(target.layer, true);
               viewer?.select(target, true);
             }} />
           </div>
@@ -189,25 +197,17 @@ function DemoCampus({ data, attributionRequired }: DemoCampusProps) {
                 <div className="pointer-events-auto">
                   <DemoHelp topic="Cómo navegar" position="belowEnd">
                     Arrastra para moverte y usa la rueda o pellizca para acercarte. Prueba «Atardecer» y ajusta la hora.
-                    «Colores reales» muestra los acabados de los edificios que tienen ficha en la demo.
+                    «Colores reales» muestra los acabados de los edificios, igual que en el mapa de Hesperides.
                   </DemoHelp>
                 </div>
                 <details className="pointer-events-auto relative">
                   <summary className={`${MAP_BUTTON} cursor-pointer list-none`}>Capas</summary>
-                  <div className="absolute right-0 mt-1 w-56 rounded-lg border border-neutral-200 bg-neutral-0 p-2 shadow-lg sm:left-0 sm:right-auto">
-                    <label className={MAP_CHECK}>
-                      <input type="checkbox" checked={gardens} onChange={(event) => {
-                        setGardens(event.target.checked);
-                        if (!event.target.checked) setPlantKind(null);
-                      }} /> Jardines y áreas verdes
-                    </label>
-                    <label className={MAP_CHECK}>
-                      <input type="checkbox" checked={vegetation} onChange={(event) => setVegetation(event.target.checked)} />
-                      Vegetación del campus
-                    </label>
+                  <div className="absolute right-0 mt-1 max-h-[55dvh] w-56 space-y-3 overflow-y-auto rounded-lg border border-neutral-200 bg-neutral-0 p-3 shadow-lg sm:left-0 sm:right-auto">
+                    <ModeLegend mode={mode} hidden={hidden} onModeChange={changeMode} onToggleCategory={toggleCategory} />
+                    <LayerToggles layers={PUBLIC_LAYERS} visible={visible} onToggle={toggleLayer} />
                     <div className="flex items-center gap-2 border-t border-neutral-200 pt-1 text-sm">
-                      <DemoHelp topic="Qué muestran las capas" position="belowEnd">
-                        Los edificios quedan visibles para orientarte. Puedes ocultar los jardines o la vegetación registrada.
+                      <DemoHelp topic="Qué muestran las capas" position="above">
+                        Activa u oculta capas y cambia cómo se colorean los jardines.
                         Tus plantas de prueba llevan la etiqueta «Demo».
                       </DemoHelp>
                       <span>Sobre las capas</span>
@@ -241,7 +241,8 @@ function DemoCampus({ data, attributionRequired }: DemoCampusProps) {
             limit={MAX_PLANTS}
             message={plantMessage}
             onChoose={(kind) => {
-              setGardens(true);
+              toggleLayer('greenAreas', true);
+              toggleLayer('xerophytic', true);
               setPlantKind(kind);
               setPlantMessage('');
               setSelection(null);
@@ -258,16 +259,4 @@ function DemoCampus({ data, attributionRequired }: DemoCampusProps) {
       </div>
     </main>
   );
-}
-
-function publicLabel(data: SceneData, selection: Target | null): string | null {
-  if (!selection) return null;
-  const { layer, index } = selection;
-  switch (layer) {
-    case 'campusBuildings': return data.campusBuildings[index]?.props.name ?? 'Edificio del campus';
-    case 'greenAreas': return data.greenAreas[index]?.props.name ?? null;
-    case 'xerophytic': return data.xerophytic[index]?.props.name ?? null;
-    case 'vegetation': return data.vegetation[index]?.props.commonName ?? data.vegetation[index]?.props.scientificName ?? null;
-    default: return null;
-  }
 }
