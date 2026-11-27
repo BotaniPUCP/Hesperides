@@ -49,8 +49,8 @@ Disponible en `/incidencias` para los cuatro roles. Spec: [`SPEC-201`](specs/fea
   cuarto) o rojo (vencida).
 - Código propio `INC-AAAA-NNNN`. El código OSG o de Centuria real, si existe, se guarda aparte.
 
-El agente usa Ollama Cloud: configurar `OLLAMA_API_KEY` (y si hace falta `OLLAMA_MODEL`,
-`OLLAMA_BASE_URL`) en `.env`. Sin clave el módulo funciona igual, sin prellenado.
+El agente usa Google Gemini: configurar `GEMINI_API_KEY` (y si hace falta `GEMINI_MODEL`,
+`GEMINI_BASE_URL`) en `.env`. Sin clave el módulo funciona igual, sin prellenado.
 
 Fotos JPEG/PNG/WebP:
 máximo seis por incidencia y 5 MiB por archivo. La posición del teléfono se obtiene

@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * Agente de IA que prellena una incidencia (SPEC-201 §3.4). Ningún servicio de dominio conoce al
- * proveedor concreto: cambiar de Ollama Cloud a otro es otra implementación de esta interfaz.
+ * proveedor concreto: cambiar de Gemini a otro es otra implementación de esta interfaz.
  */
 public interface IncidentPrefillAgent {
 

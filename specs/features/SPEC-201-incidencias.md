@@ -63,7 +63,7 @@ estados). Se conserva su integración con Intervenciones y su robustez técnica,
   `IncidentStatusHistory`, `IncidentUpdate` (comentarios e historial) e `IncidentInterventionLink`.
 - Reglas puras en `engine/incidents/`: urgencia final, estado del plazo, si una incidencia se puede
   cerrar y qué la bloquea. Sin Spring, sin JPA, con pruebas unitarias.
-- El agente detrás de una interfaz `IncidentPrefillAgent`; primera implementación `OllamaPrefillAgent`.
+- El agente detrás de una interfaz `IncidentPrefillAgent`; implementación vigente `GeminiPrefillAgent` (antes `OllamaPrefillAgent`, ver §3.4).
 - `IncidentRoles` (de `6e3a0d4`) sigue siendo la única fuente de «quién gestiona»: ADMIN y COORDINADOR.
 
 ### 2.5 Frontend web
@@ -149,9 +149,10 @@ reporte llega de otra unidad *(confirmado el 15 nov)*.
   - Confianza < 0,7 → aviso de revisión cuidadosa.
 - Se guardan por separado la **sugerencia** y los **valores vigentes**, para mostrar «Sugerido por IA»
   o «Editado» por campo.
-- **Proveedor:** Ollama Cloud. Variables `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_API_KEY` en `.env`
-  (en `.env.example`, vacías). Cambiar a un Ollama propio es solo cambiar la URL. Tiempo máximo de
-  espera configurable; si vence, el prellenado queda fallido.
+- **Proveedor:** Google Gemini (API `generateContent`), desde el 26 nov 2026; antes Ollama Cloud.
+  Variables `GEMINI_BASE_URL`, `GEMINI_MODEL`, `GEMINI_API_KEY` en `.env` (en `.env.example`, la clave
+  vacía). Cada reporte es una sola petición con un único prompt (instrucciones y datos juntos) y la
+  respuesta pedida en JSON. Tiempo máximo de espera configurable; si vence, el prellenado queda fallido.
 - **Excepción a SPEC-000 §1:** se añade como cuarta excepción a «sin servicios externos», con la misma
   condición que el SMTP: su caída nunca impide una operación de negocio.
 
@@ -274,7 +275,7 @@ gestiona los vínculos, usando el mismo servicio de vínculos.
 
 ## 6. Enmiendas a otros specs (anotar en REGISTRO.md)
 
-- SPEC-000 §1: cuarta excepción, Ollama Cloud.
+- SPEC-000 §1: cuarta excepción, el proveedor de IA (Google Gemini; antes Ollama Cloud).
 - SPEC-001 Anexo A fila 5: §3.1.
 - SPEC-002 §4.8: `intervention_id` único → vínculos N:M.
 - SPEC-102: capa de incidencias.
@@ -284,8 +285,8 @@ gestiona los vínculos, usando el mismo servicio de vínculos.
 
 ## 7. Aceptación
 
-1. Capataz envía solo texto y gravedad: se guarda no activa, con código y hora, aunque Ollama esté caído.
-2. Con Ollama disponible, la ficha muestra lo prellenado con «Sugerido por IA»; editar marca «Editado».
+1. Capataz envía solo texto y gravedad: se guarda no activa, con código y hora, aunque Gemini esté caído.
+2. Con Gemini disponible, la ficha muestra lo prellenado con «Sugerido por IA»; editar marca «Editado».
 3. El agente no recibe nombres, contactos ni fotos (prueba sobre la petición enviada).
 4. Coordinación no puede activar sin tipo, urgencia y ubicación; ni un árbol `≥ 5 m` con propios.
 5. Vincular desde Intervenciones por código se ve en ambas vistas; la incidencia pasa a En proceso.
@@ -326,5 +327,5 @@ gestiona los vínculos, usando el mismo servicio de vínculos.
 
 ## 10. Lo que queda a criterio de quien implementa
 
-Modelo exacto de Ollama, prompt, tiempo de espera, forma de la cola en segundo plano, división final de
+Modelo exacto de Gemini, prompt, tiempo de espera, forma de la cola en segundo plano, división final de
 clases, textos de pantalla y estilo de marcadores, siempre dentro de este spec y de REGLAS.

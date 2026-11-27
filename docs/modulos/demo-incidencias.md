@@ -22,7 +22,7 @@ en 3000; configurar `APP_PUBLIC_URL=http://localhost:3000`,
 `CORS_ALLOWED_ORIGINS=http://localhost:3000` y `COOKIE_SECURE=false`.
 Para que la limpieza de volúmenes incluya las fotos de prueba, usar
 `STORAGE_TYPE=local` y `STORAGE_LOCAL_DIR=/data/storage`. Para ver el prellenado por IA,
-completar `OLLAMA_API_KEY` (y si hace falta `OLLAMA_MODEL`); sin clave la demo funciona
+completar `GEMINI_API_KEY` (y si hace falta `GEMINI_MODEL`); sin clave la demo funciona
 igual y el prellenado queda fallido, con el botón para pedir otra sugerencia.
 
 Desde la raíz, reconstruir e iniciar solo PostgreSQL/PostGIS y backend:
@@ -123,7 +123,7 @@ los límites de claves, conservación de bytes y limpieza en rollback.
 
 - Plazos provisionales (24/48/72 h), editables en los parámetros del sistema hasta que el
   cliente los confirme.
-- La IA solo sugiere; coordinación valida todo al activar. Si Ollama no responde, el
+- La IA solo sugiere; coordinación valida todo al activar. Si Gemini no responde, el
   reporte se guarda igual.
 - Sin regla de maquinaria de corte (irá en Intervenciones), sin riesgo por ubicación de la
   sección y sin reapertura de incidencias cerradas.

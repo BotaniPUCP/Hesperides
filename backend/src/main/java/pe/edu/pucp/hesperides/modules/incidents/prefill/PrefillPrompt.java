@@ -6,12 +6,19 @@ import pe.edu.pucp.hesperides.modules.incidents.service.IncidentPrefillAgent.Pre
 import java.util.List;
 import java.util.stream.Collectors;
 
-/** Instrucciones del agente de incidencias de áreas verdes y el mensaje de cada reporte. */
+/**
+ * Prompt único de cada reporte: instrucciones y datos en un solo texto, para que lo que se lee
+ * aquí sea exactamente lo que recibe el modelo, con cualquier proveedor.
+ */
 final class PrefillPrompt {
     private PrefillPrompt() {
     }
 
-    static final String SYSTEM = """
+    static String of(PrefillRequest request) {
+        return INSTRUCTIONS + "\n" + report(request);
+    }
+
+    private static final String INSTRUCTIONS = """
         Eres el asistente de la sección de áreas verdes de un campus universitario. Recibes reportes que
         escriben los capataces con sus palabras sobre problemas en jardines, árboles y riego.
 
@@ -31,7 +38,7 @@ final class PrefillPrompt {
         Reglas: nunca deduzcas la altura de la especie; nunca inventes fechas ni proveedores, solo sugiere.
         """;
 
-    static String user(PrefillRequest request) {
+    private static String report(PrefillRequest request) {
         return """
             Reporte: %s
             Gravedad marcada por el capataz: %s

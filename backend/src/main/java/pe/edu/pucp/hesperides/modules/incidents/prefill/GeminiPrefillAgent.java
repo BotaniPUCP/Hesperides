@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Component;
 import pe.edu.pucp.hesperides.engine.incidents.AgentSuggestion;
 import pe.edu.pucp.hesperides.modules.incidents.service.IncidentPrefillAgent;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -16,19 +17,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Agente sobre la API de chat de Ollama (Ollama Cloud o un Ollama propio, según la URL).
+ * Agente sobre la API generateContent de Google Gemini, con un único prompt por reporte.
  * Es la cuarta excepción a «sin servicios externos» de SPEC-000: su caída nunca impide reportar.
  */
 @Component
 @EnableConfigurationProperties(PrefillProperties.class)
-public class OllamaPrefillAgent implements IncidentPrefillAgent {
-    private static final String CHAT_PATH = "/api/chat";
+public class GeminiPrefillAgent implements IncidentPrefillAgent {
+    private static final String MODELS_PATH = "/v1beta/models/";
+    private static final String GENERATE = ":generateContent";
+    private static final String JSON_MIME = "application/json";
     private static final int HTTP_OK = 200;
     private final PrefillProperties properties;
     private final ObjectMapper mapper;
     private final HttpClient http;
 
-    public OllamaPrefillAgent(PrefillProperties properties, ObjectMapper mapper) {
+    public GeminiPrefillAgent(PrefillProperties properties, ObjectMapper mapper) {
         this.properties = properties;
         this.mapper = mapper;
         this.http = HttpClient.newBuilder().connectTimeout(timeout()).followRedirects(HttpClient.Redirect.NEVER).build();
@@ -41,25 +44,29 @@ public class OllamaPrefillAgent implements IncidentPrefillAgent {
         if (response.statusCode() != HTTP_OK) {
             throw new IllegalStateException("Prefill agent answered HTTP " + response.statusCode());
         }
-        String content = mapper.readTree(response.body()).path("message").path("content").asString("");
-        return PrefillAnswer.parse(mapper, content);
+        return PrefillAnswer.parse(mapper, answerText(response.body()));
     }
 
     private String body(PrefillRequest request) {
         return mapper.writeValueAsString(Map.of(
-                "model", properties.model(),
-                "stream", false,
-                "format", "json",
-                "messages", List.of(
-                        Map.of("role", "system", "content", PrefillPrompt.SYSTEM),
-                        Map.of("role", "user", "content", PrefillPrompt.user(request)))));
+                "contents", List.of(Map.of("role", "user",
+                        "parts", List.of(Map.of("text", PrefillPrompt.of(request))))),
+                "generationConfig", Map.of("responseMimeType", JSON_MIME)));
+    }
+
+    /** Sin candidatos (por ejemplo, un bloqueo de seguridad) no hay nada que sugerir. */
+    private String answerText(String body) {
+        JsonNode part = mapper.readTree(body).path("candidates").path(0).path("content").path("parts").path(0);
+        String text = part.path("text").asString("");
+        if (text.isBlank()) throw new IllegalStateException("Prefill agent answered without text");
+        return text;
     }
 
     private HttpResponse<String> send(String body) {
-        var request = HttpRequest.newBuilder(URI.create(properties.baseUrl().replaceAll("/+$", "") + CHAT_PATH))
+        var request = HttpRequest.newBuilder(endpoint())
                 .timeout(timeout())
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + properties.apiKey())
+                .header("Content-Type", JSON_MIME)
+                .header("x-goog-api-key", properties.apiKey())
                 .POST(HttpRequest.BodyPublishers.ofString(body)).build();
         try {
             return http.send(request, HttpResponse.BodyHandlers.ofString());
@@ -69,6 +76,10 @@ public class OllamaPrefillAgent implements IncidentPrefillAgent {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Prefill agent call interrupted", ex);
         }
+    }
+
+    private URI endpoint() {
+        return URI.create(properties.baseUrl().replaceAll("/+$", "") + MODELS_PATH + properties.model() + GENERATE);
     }
 
     private Duration timeout() {
